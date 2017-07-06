@@ -1,0 +1,16 @@
+mkdir /path/to/your/project
+cd /path/to/your/project
+git init
+git remote add origin https://l_avventura@bitbucket.org/l_avventura/ethereum.git
+git pull origin master
+
+echo "Alper" >> contributors.txt
+git add contributors.txt
+git commit -m "Initial commit with contributors"
+git push -u origin master
+
+rsync -av --progress . /Users/alper/eBlocBrokerGit --exclude node_modules --exclude docs --exclude='/.git' --filter="dir-merge,- .gitignore"
+
+
+git fetch --all
+git reset --hard origin/master
