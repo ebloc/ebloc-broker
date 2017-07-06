@@ -1,0 +1,2 @@
+
+(setq buffer-undo-list (quote (nil ("│" . -2234) (#<marker at 1 in .issue2.md.undo<source>> . -1) (" " . -2235) (#<marker at 1 in .issue2.md.undo<source>> . -1) 2236 nil (2159 . 2295) (t 22790 20528 0 0))))
