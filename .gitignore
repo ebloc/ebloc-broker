@@ -1,0 +1,16 @@
+
+*.txt~
+
+*.js~
+
+*.py~
+
+*.sh~
+
+node_modules/
+
+*.pyc
+
+old_work/
+
+contracts/\.cache/
