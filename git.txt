@@ -1,6 +1,7 @@
 mkdir /path/to/your/project
 cd /path/to/your/project
 git init
+git remote add origin https://github.com/ebloc/eBlocBroker.git
 git remote add origin https://l_avventura@bitbucket.org/l_avventura/ethereum.git
 git pull origin master
 
@@ -9,6 +10,7 @@ git add contributors.txt
 git commit -m "Initial commit with contributors"
 git push -u origin master
 
+#Git Pull:
 git fetch --all
 git reset --hard origin/master
 
