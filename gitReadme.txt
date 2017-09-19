@@ -17,3 +17,12 @@ git reset --hard origin/master
 sshfs alper@ebloc.cmpe.boun.edu.tr:/home/alper/eBlocBrokerGit /Users/alper/mkk
 cd /Users/alper/mkk
 rsync -av --progress . /Users/alper/eBlocBrokerGit --exclude node_modules --exclude docs --exclude 'password.txt' --exclude='/.git' --filter="dir-merge,- .gitignore"
+
+#Saves username	and password:
+$ git config credential.helper store
+$ git push http://example.com/repo.git
+Username: <type your username>
+Password: <type your password>
+
+Also I suggest you to read:
+$ git help credentials
