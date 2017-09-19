@@ -1,7 +1,7 @@
 # eBlocBroker
 
 ## About
-eBlocBroker is a blockchain based autonomous computational resource broker.
+eBlocBroker is a blockchain based autonomous computational resource broker. 
 
 **Website:** http://ebloc.cmpe.boun.edu.tr  or http://ebloc.org
 
@@ -9,7 +9,7 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
 
 ## Build dependencies
 
-geth, parity, [IPFS](https://ipfs.io/docs/install/)
+geth, parity, [IPFS](https://ipfs.io/docs/install/).
 
 ## Using via Amazon AWS
 
