@@ -7,7 +7,7 @@ Recently, peer-to-peer based blockchain infrastructures have emerged as disrupti
 
 ## Build dependencies
 
-geth, parity, [IPFS](https://ipfs.io/docs/install/)
+geth, parity, [IPFS](https://ipfs.io/docs/install/).
 
 ## Using via Amazon AWS
 
