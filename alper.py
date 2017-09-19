@@ -14,7 +14,7 @@ oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('aalimog1@binghamton.edu', password ); 
 
 #oc.mkdir("helloo")
-oc.share_file_with_user( "hello", "3d8e2dc2-b855-1036-807f-9dbd8c6b1579")
+oc.share_file_with_user( 'helloWorld', '3d8e2dc2-b855-1036-807f-9dbd8c6b1579@b2drop.eudat.eu', remote_user=True )
 
 #oc.share_file_with_user( "hello", "3d8e2dc2-b855-1036-807f-9dbd8c6b1579@b2drop.eudat.eu")
 
