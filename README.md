@@ -1,7 +1,6 @@
 # eBlocBroker
 
 ## About
-eBlocBroker is a blockchain based autonomous computational resource broker. 
 
 **Website:** http://ebloc.cmpe.boun.edu.tr  or http://ebloc.org
 
@@ -36,7 +35,8 @@ rm  ~/.local/share/io.parity.ethereum/network/key
 ```
 
 ```bash
-> parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=*
+parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=*
+
 Please note that password is NOT RECOVERABLE.
 Type password:
 Repeat password:
@@ -215,7 +215,7 @@ Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r58
 eBlocBroker.getClusterAddresses(); //returns all available Clusters Addresses.
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
-### Submit a Job using IPFS:
+###**Submit a Job using IPFS:**
 
 ```bash
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
@@ -238,9 +238,9 @@ if (coreNum <= clusterCoreLimit ) {//Before assigning coreNum checks the coreLim
 }
 ```
 
-### Submit a Job using IPFS+miniLock
+###**Submit a Job using IPFS+miniLock**
 
-#### miniLock Setup
+####miniLock Setup
 First do following installations:
 
 ```bash
@@ -249,7 +249,7 @@ sudo npm install -g minilock-cli@0.2.13
 
 Please check following [tutorial](https://www.npmjs.com/package/minilock-cli):
 
-##### Generate an ID
+#####Generate an ID
 
 First, you need a miniLock ID.
 
@@ -266,7 +266,7 @@ $ mlck id
 Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ```
 
-##### How to encripty your folder using miniLock
+#####How to encripty your folder using miniLock
 
 ```bash
 myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
@@ -300,7 +300,7 @@ if (coreNum <= clusterCoreLimit ) {//Before assigning coreNum checks the coreLim
 }
 ```
 
-### Submit a Job using EUDAT
+###**Submit a Job using EUDAT**
 
 Before doing this you have to be sure that you have shared your folder with cluster's FId. Please follow ...<github issue>. Otherwise your job will not accepted.
 
@@ -330,6 +330,7 @@ if (coreNum <= clusterCoreLimit ) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
+
 
 
 **Obtain Submitted Job's Information:**
