@@ -1,9 +1,7 @@
 # eBlocBroker
 
 ## About
-eBlocBroker is a blockchain based autonomous computational resource broker
-
-**Website:** http://ebloc.cmpe.boun.edu.tr  or http://ebloc.org
+Recently, peer-to-peer based blockchain infrastructures have emerged as disruptive technologies and have lead to the realization of crypto-currencies and smart contracts that can used in a globally trustless manner. eBlocBroker is a blockchain based autonomous computational resource broker
 
 ----
 
