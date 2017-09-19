@@ -1,0 +1,26 @@
+{
+  "name": "eblocbrokergit",
+  "version": "1.0.0",
+  "description": "## About Recently, peer-to-peer based blockchain infrastructures have emerged as disruptive technologies and have lead to the realization of crypto-currencies and smart contracts that can used in a globally trustless manner. eBlocBroker is a blockchain based autonomous computational resource broker",
+  "main": "main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "binstring": "^0.2.1",
+    "bs58": "^4.0.1",
+    "web3": "^0.19.0",
+    "web3_ipc": "^1.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://l_avventura@bitbucket.org/l_avventura/ethereum.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/l_avventura/ethereum#readme"
+}
