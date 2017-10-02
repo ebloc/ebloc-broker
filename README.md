@@ -3,17 +3,17 @@
 ## About
 eBlocBroker is a blockchain based autonomous computational resource broker.
 
-**Website:** http://ebloc.cmpe.boun.edu.tr  or http://ebloc.org .
+**Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr) .
 
 ----
 
 ## Build dependencies
 
-geth, parity, [IPFS](https://ipfs.io/docs/install/).
+[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/) .
 
-## Using via Amazon AWS
+## How to use eBlocBroker via Amazon EC2 Instance
 
-**Public AMI:** `eBlocBroker  ami-42173a54`
+**Public AMI:** `eBlocBroker  ami-42173a54` //TODO: update with new one.
 
 ```bash
 mkdir ~/ebloc-amazon
@@ -22,9 +22,9 @@ cd ~/ebloc-amazon
 
 #On an another console do:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
-cd mybin && nohup eblocpserver &
-cd ../eBlocBrokerGit
-python Driver.py
+cd mybin && nohup eblocpserver & //TODO: update
+cd ../eBlocBrokerGit //TODO: update
+python Driver.py //TODO: update
 ```
 
 ### Create New Account
@@ -130,7 +130,7 @@ abi=[{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":
 var eBlocBroker = web3.eth.contract(abi).at(address);
 ```
 
-### Cluster Owner: How to create a cluster:
+### Cluster Owner: How to register a cluster
 
 Please note that: if you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
 
@@ -141,7 +141,8 @@ federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 clusterMiniLockId  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 1000000000000000; //For experimental you could also give 1.
 ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieved from "ipfs id"
-eBlocBroker.createCluster(coreNumber, clusterName, federationCloudId, clusterMiniLockId, corePriceMinuteWei, ipfsID; 
+
+eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, clusterMiniLockId, corePriceMinuteWei, ipfsID; 
 ```
 
 **Trigger code on start and end of the submitted job:** Cluster should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
@@ -150,10 +151,9 @@ eBlocBroker.createCluster(coreNumber, clusterName, federationCloudId, clusterMin
 sudo chmod 755 ~/.eBlocBroker/*
 ```
 
-
 -----
 
-### Client Side: How to submit a Job with IPFS Hash:
+### Client Side: How to obtain IPFS Hash of the job:
 
 Is is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, cluster is not able to get the IPFS object from the client's node.
 
@@ -210,13 +210,12 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B ipfs_code
 ```
 Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
 
-**How To Submit a Job:** 
 
 ```bash
 eBlocBroker.getClusterAddresses(); //returns all available Clusters Addresses.
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
-###**Submit a Job using IPFS:**
+###**How to submit a job using IPFS**
 
 ```bash
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
@@ -231,15 +230,45 @@ coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
 coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-storageType       = 0 ; // Please note that 0 stands for IPFS , 1 stands for eudat.
+storageType      = 0 ; // Please note that 0 stands for IPFS , 1 stands for eudat.
 
-if (coreNum <= clusterCoreLimit ) {//Before assigning coreNum checks the coreLimit of the cluster.
-	//Following line submits the Job:
+if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && jobKey.length == 46) {
+	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+}
+```
+###**How to submit a job using EUDAT**
+
+Before doing this you have to be sure that you have shared your folder with cluster's FId. Please follow ...<github issue>. Otherwise your job will not accepted.
+
+
+Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol in between.
+
+Example:
+`jobHash="3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
+
+
+```bash
+clusterID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
+pricePerMin    = eBlocBroker.getClusterCoreMinutePrice(clusterID);
+myMiniLockId   = ""
+jobHash        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"
+coreNum        = 1; //Before assigning this value please check the coreLimit of the cluster.
+coreGasDay     = 0;
+coreGasHour    = 0;
+coreGasMin     = 10;
+jobDescription = "Science"
+coreMinuteGas  = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
+storageType    = 1 ; // Please note that 0 stands for IPFS , 1 stands for eudat.
+
+clusterCoreLimit = eBlocBroker.getClusterCoreLimit(clusterID);
+if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
-###**Submit a Job using IPFS+miniLock**
+---------
+
+###**How to submit a job using IPFS+miniLock**
 
 ####miniLock Setup
 First do following installations:
@@ -293,46 +322,12 @@ coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
 coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-storageType       = 2; // Please note that 0 stands for IPFS , 1 stands for eudat. 2 stands for IPFS with miniLock
+storageType      = 2; // Please note that 0 stands for IPFS , 1 stands for eudat. 2 stands for IPFS with miniLock
 
-if (coreNum <= clusterCoreLimit ) {//Before assigning coreNum checks the coreLimit of the cluster.
-	//Following line submits the Job:
+if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.length == 46) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
-
-###**Submit a Job using EUDAT**
-
-Before doing this you have to be sure that you have shared your folder with cluster's FId. Please follow ...<github issue>. Otherwise your job will not accepted.
-
-
-Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol in between.
-
-Example:
-`jobHash="3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
-
-
-```bash
-clusterID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
-pricePerMin    = eBlocBroker.getClusterCoreMinutePrice(clusterID);
-myMiniLockId   = ""
-jobHash        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"
-coreNum        = 1; //Before assigning this value please check the coreLimit of the cluster.
-coreGasDay     = 0;
-coreGasHour    = 0;
-coreGasMin     = 10;
-jobDescription = "Science"
-coreMinuteGas  = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-storageType     = 1 ; // Please note that 0 stands for IPFS , 1 stands for eudat.
-
-clusterCoreLimit = eBlocBroker.getClusterCoreLimit(clusterID);
-if (coreNum <= clusterCoreLimit ) {
-	//Following line submits the Job:
-	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
-}
-```
-
-
 
 **Obtain Submitted Job's Information:**
 

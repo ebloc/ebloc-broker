@@ -1,4 +1,4 @@
-pragma solidity ^0.4.7;
+pragma solidity ^0.4.17;
 import "./ReceiptLib.sol";
 
 library eBlocBrokerLib {
@@ -15,7 +15,7 @@ library eBlocBrokerLib {
 	//Variables updated by the client:
 	uint32   coreMinuteGas;
 	address       jobOwner;
-	byte       receiptFlag;
+	bool       receiptFlag;
     }
 
     struct data {
@@ -26,15 +26,15 @@ library eBlocBrokerLib {
 	uint        receivedAmount;
 	uint         blockReadFrom;
 	bytes32             ipfsId;
-	bytes               name;
-	bytes   clusterMiniLockId;
-	bytes   federationCloudId;
+	string                name;
+	string    clusterMiniLockId;
+	string    federationCloudId;
 
 	mapping(string => Status[])    jobStatus; //ipfs_in => struct, cluster
 	ReceiptLib.intervalNode      receiptList;
     }
 
-    function construct( data storage self, bytes name, bytes fID, bytes clusterMiniLockId, uint32 memLen, uint price, uint32 coreLimit, bytes32 ipfsId){
+    function construct( data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreLimit, bytes32 ipfsId) {
 	self.name              = name; 
 	self.federationCloudId = fID; 
 	self.clusterMiniLockId = clusterMiniLockId;
@@ -48,13 +48,12 @@ library eBlocBrokerLib {
 	self.receiptList.construct(coreLimit);
     }
 
-    function update( data storage self, bytes clusterName, bytes fID, bytes clusterMiniLockId, uint price, uint32 coreLimit, bytes32 ipfsId){
+    function update( data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreLimit, bytes32 ipfsId) {
 	self.name                  = clusterName;
 	self.federationCloudId     = fID;
 	self.clusterMiniLockId     = clusterMiniLockId;
 	self.coreMinutePrice       = price; //currency(wei).    
 	self.receiptList.coreLimit = coreLimit;
 	self.ipfsId                = ipfsId;
-    }
-  
+    } 
 }
