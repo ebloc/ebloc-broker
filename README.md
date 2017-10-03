@@ -138,11 +138,20 @@ Please note that: if you don't have any `Federated Cloud ID` or `MiniLock ID` gi
 coreNumber         = 128;
 clusterName        = "eBlocCluster";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-clusterMiniLockId  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+miniLockId          = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 1000000000000000; //For experimental you could also give 1.
 ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieved from "ipfs id"
 
-eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, clusterMiniLockId, corePriceMinuteWei, ipfsID; 
+//RegisterCluster
+if( federationCloudId.length < 128 && clusterName < 64 && (miniLockId.length == 0 || miniLockId.length == 45) )
+	eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID; 
+
+//UpdateCluster
+if( federationCloudId.length < 128 && clusterName < 64 && (miniLockId.length == 0 || miniLockId.length == 45) )
+	eBlocBroker.updateCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID; 
+
+//Deregister
+eBlocBroker.deregisterCluster()
 ```
 
 **Trigger code on start and end of the submitted job:** Cluster should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
@@ -268,7 +277,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 
 ---------
 
-###**How to submit a job using IPFS+miniLock**
+### **How to submit a job using IPFS+miniLock**
 
 ####miniLock Setup
 First do following installations:
@@ -296,7 +305,7 @@ $ mlck id
 Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ```
 
-#####How to encripty your folder using miniLock
+##### How to encripty your folder using miniLock
 
 ```bash
 myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
@@ -329,7 +338,9 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.len
 }
 ```
 
-**Obtain Submitted Job's Information:**
+---------------
+
+#### **Obtain Submitted Job's Information:**
 
 This will return:
 
@@ -344,7 +355,7 @@ jobHash = "QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B"
 eBlocBroker.getJobInfo(clusterID, jobHash, 0);
 ```
 
-**Events: In order to keep track of the log of receipts**
+#### **Events: In order to keep track of the log of receipts**
 
 ```bash
 fromBlock = MyContract.eth.blockNumber; //This could be also the blockNumber the job submitted.
@@ -354,19 +365,20 @@ e.watch(function(error, result){
 });
 ```
 
+---------------------
+
 **Required Installations**
 
 ```bash
-npm i --save bs58  //https://www.npmjs.com/package/bs58
-npm install web3
-npm install web3_ipc --save
+sudo npm i --save bs58  //https://www.npmjs.com/package/bs58
+sudo npm install web3 binstring
+sudo npm install web3_ipc --save
 sudo npm install -g minilock-cli@0.2.13
-sudo pip install sphinx_rtd_theme
-sudo apt-get install davfs2
-pip install pyocclient
-apt-get install mailutils
-sudo npm install binstring
+
+sudo pip install sphinx_rtd_theme pyocclient
+
+sudo apt-get install davfs2 mailutils
+sudo apt-get install -y nodejs
 
 wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
-sudo apt-get install -y nodejs
 ```

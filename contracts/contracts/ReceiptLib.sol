@@ -1,7 +1,7 @@
 pragma solidity ^0.4.17;
 
 library ReceiptLib {
-
+    
     struct Interval {
 	uint   num;
 	int32  core; 
@@ -11,15 +11,15 @@ library ReceiptLib {
     struct intervalNode {
 	Interval[] list;
 	uint32 head;
-	uint32 coreLimit;
+	uint32 coreNumber;
 	uint32 deletedItemNum;
     }
 
-    function construct(intervalNode storage self, uint32 coreLimit) {
+    function construct(intervalNode storage self, uint32 coreNumber) {
 	self.list.push(Interval( { num: 0, core: 0, next: 0 }) ); //dummy node
 	self.list.push(Interval( { num: 0, core: 0, next: 0 }) ); //dummy node
-	self.head      = 1;
-	self.coreLimit = coreLimit;
+	self.head       = 1;
+	self.coreNumber = coreNumber;
 	self.deletedItemNum = 0;
     }
 
@@ -33,7 +33,7 @@ library ReceiptLib {
 	Interval currentNode;
 
 	if( e < self.list[addr].num ) { 	 //Addr should be updated. //find index point to push the item.
-	    flag = true; //flag = '1';
+	    flag = true; 
 	    prevNode     = self.list[addr];
 	    currentNode  = self.list[prevNode.next];//eklenmeden onceki node'dan baslar.
 	    while( true ) { //tararken carried sumda tutulur.
@@ -51,7 +51,7 @@ library ReceiptLib {
 	Interval prevNodeTemp; //alper
 	
 	self.list.push(Interval( { num: e - 1, core: c, next: addr }) ); 
-	if(!flag){ //bir yaparsan if calcar prevNode = self.head. //if( flag == '0' ){
+	if(!flag){ //bir yaparsan if calcar prevNode = self.head. 
 	    addrTemp      = addr; //alper
 	    carriedSum    = c;
 	    prevNode      = self.list[ self.head = uint32(self.list.length - 1) ];
@@ -71,8 +71,8 @@ library ReceiptLib {
 		return true;
 	    } 	
 	    carriedSum += currentNode.core;
-	    if( carriedSum > int32(self.coreLimit) ){
-	    	//throw;//TODO:somehow revert it back.
+	    if( carriedSum > int32(self.coreNumber) ){
+	    	//throw;
 		
 		//alper:revert it back.------------------------------------
 		delete self.list[self.list.length-1];
