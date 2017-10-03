@@ -2,7 +2,7 @@ pragma solidity ^0.4.17;
 import "./eBlocBrokerLib.sol";
 import "./ReceiptLib.sol";
 
-//TODO: thank you populus on the paper.
+//TODO: thank you populus on the paper. delete comments.
 contract eBlocBroker {
     uint  deployedBlockNumber;
     function eBlocBroker() { deployedBlockNumber = block.number; }
@@ -15,19 +15,16 @@ contract eBlocBroker {
     eBlocBrokerLib.data             list;
     address[]            memberAddresses;
 
-    mapping(address => eBlocBrokerLib.data) clusterContract;
-    
+    mapping(address => eBlocBrokerLib.data) clusterContract;   
 
     modifier coreMinuteGasCheck(uint32 coreMinuteGas) {	
 	require( !(coreMinuteGas == 0 || coreMinuteGas > 11520) ); //max 9 day limit
 	_ ;
     }
-    //TODO: index val check exceed or not?
+    
     function refundMe( address clusterAddr, string ipfsHash, uint32 index ) returns(bool) {
 	eBlocBrokerLib.Status jobStatus = clusterContract[clusterAddr].jobStatus[ipfsHash][index]; //if does not exist throws anyway.
-	if( msg.sender != jobStatus.jobOwner ||
-	    jobStatus.receiptFlag  //	    jobStatus.receiptFlag   == '1'
-	    ) throw; //we understand that it didn't completed yet.
+	if( msg.sender != jobStatus.jobOwner || jobStatus.receiptFlag ) throw; //we understand that it didn't completed yet.
 
 	if( jobStatus.status == uint8(JobStateCodes.PENDING) ) //status: queued
 	    msg.sender.send(jobStatus.received);
@@ -71,22 +68,22 @@ contract eBlocBroker {
 	return true;
     }
 
-    function registerCluster(uint32 coreLimit, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
+    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
 	public returns(bool success) {
 	eBlocBrokerLib.data cluster = clusterContract[msg.sender];
 	if( (cluster.isExist && cluster.isRunning) 
-	    //bytes(fID).length         > 128                                   //TODO: Do this on upper level.
-	    //bytes(clusterName).length > 64                                    //TODO: Do this on upper level.
-	    //(bytes(miniLockId).length != 0 && bytes(miniLockId).length != 45) //TODO: Do this on upper level.
+	    //bytes(fID).length         > 128                                   //TODO: Do this on upper level.done
+	    //bytes(clusterName).length > 64                                    //TODO: Do this on upper level.done
+	    //(bytes(miniLockId).length != 0 && bytes(miniLockId).length != 45) //TODO: Do this on upper level.done
 	    ) throw;
 
 	if( cluster.isExist && !cluster.isRunning ){
 	    memberAddresses[cluster.memberAddressesID] = msg.sender; //0 lanmisti yenden tanimla. liste de gozuksun.
-	    cluster.update(clusterName, fID, miniLockId, price, coreLimit, ipfsId);     //update
+	    cluster.update(clusterName, fID, miniLockId, price, coreNumber, ipfsId);     //update
 	    cluster.isRunning = true;                               //running true olur.
 	}
 	else{
-	    cluster.construct(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreLimit, ipfsId);
+	    cluster.construct(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsId);
 	    memberAddresses.push( msg.sender ); //in order to obtain list of clusters.
 	}
 	return true;
@@ -103,10 +100,12 @@ contract eBlocBroker {
     }
 
     //Combine all set operations to update ClusterInfo, it will save up some gas usage.
-    function updateCluster( uint32 coreLimit, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
+    function updateCluster( uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
 	public returns(bool success) {
-	//if( bytes(clusterName).length > 64 ) throw; //TODO: Do this on upper level.
-	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreLimit, ipfsId);
+	//if( bytes(clusterName).length > 64 ) throw; //TODO: Do this on upper level.done
+	//bytes(clusterName).length > 64                                    //TODO: Do this on upper level.done
+	//(bytes(miniLockId).length != 0 && bytes(miniLockId).length != 45) //TODO: Do this on upper level.done
+	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreNumber, ipfsId);
 	return true;
     }
 
@@ -118,7 +117,7 @@ contract eBlocBroker {
 	if( msg.value < cluster.coreMinutePrice * coreMinuteGas * core    ||	   
 	    !cluster.isRunning                                            || 
 	    core == 0                                                     ||
-	    core > cluster.receiptList.coreLimit                          ||
+	    core > cluster.receiptList.coreNumber                         ||
 	    storageType > 2
 	    //coreMinuteGas == 0                                          || //done: carried to modifier.
 	    //coreMinuteGas > 11520                                       || //done: carried to modifier.
@@ -168,7 +167,7 @@ contract eBlocBroker {
 	return ( clusterContract[clusterAddr].name, 
 		 clusterContract[clusterAddr].federationCloudId, 
 		 clusterContract[clusterAddr].clusterMiniLockId,
-		 clusterContract[clusterAddr].receiptList.coreLimit, 
+		 clusterContract[clusterAddr].receiptList.coreNumber, 
 		 clusterContract[clusterAddr].coreMinutePrice, 
 		 clusterContract[clusterAddr].ipfsId );
     }

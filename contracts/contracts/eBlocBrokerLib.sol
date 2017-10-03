@@ -34,7 +34,7 @@ library eBlocBrokerLib {
 	ReceiptLib.intervalNode      receiptList;
     }
 
-    function construct( data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreLimit, bytes32 ipfsId) {
+    function construct( data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId) {
 	self.name              = name; 
 	self.federationCloudId = fID; 
 	self.clusterMiniLockId = clusterMiniLockId;
@@ -45,15 +45,15 @@ library eBlocBrokerLib {
 	self.memberAddressesID = memLen;
 	self.coreMinutePrice   = price; //currency(wei).
 	self.blockReadFrom     = block.number; //cluster's starting block number in order to check event
-	self.receiptList.construct(coreLimit);
+	self.receiptList.construct(coreNumber);
     }
 
-    function update( data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreLimit, bytes32 ipfsId) {
-	self.name                  = clusterName;
-	self.federationCloudId     = fID;
-	self.clusterMiniLockId     = clusterMiniLockId;
-	self.coreMinutePrice       = price; //currency(wei).    
-	self.receiptList.coreLimit = coreLimit;
-	self.ipfsId                = ipfsId;
+    function update( data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsId) {
+	self.name                   = clusterName;
+	self.federationCloudId      = fID;
+	self.clusterMiniLockId      = clusterMiniLockId;
+	self.coreMinutePrice        = price; //currency(wei).    
+	self.receiptList.coreNumber = coreNumber;
+	self.ipfsId                 = ipfsId;
     } 
 }
