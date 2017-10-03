@@ -29,6 +29,7 @@ def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun):
     pushBlockInfo(contract_address);
 
 def test_receipt(web3, accounts, chain):
+    web3._requestManager = web3.manager
     global blkArrayIndex;
     global runTime;
     my_contract, _   = chain.provider.get_or_deploy_contract('eBlocBroker');
@@ -50,13 +51,17 @@ def test_receipt(web3, accounts, chain):
     '''
     print(account);
     web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().registerCluster( 128, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
+    set_txn_hash     = my_contract.transact().registerCluster( 1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
     contract_address = chain.wait.for_receipt(set_txn_hash)
+
+    name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
+    print("Cluster's coreLimit:  " + str(coreLimit));
 
     set_txn_hash     = my_contract.transact().updateCluster( 128, "alper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");   
 
-    #name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
-    #print("ClusterName: " + federationCloudId)
+    name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
+    print("Cluster's coreLimit:  " + str(coreLimit));
+
 
     web3.eth.defaultAccount = accounts[0];
     set_txn_hash     = my_contract.transact().deregisterCluster( );
@@ -72,19 +77,7 @@ def test_receipt(web3, accounts, chain):
     #web3.coinbase
     web3.eth.defaultAccount = accounts[2];
     set_txn_hash     = my_contract.transact().registerCluster(128, "alper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
-    contract_address = chain.wait.for_receipt(set_txn_hash)
-    #account = accounts[1];
-
-    #o = my_contract.call().getClusterAddresses();
-    #print(set_txn_hash);
-    #print(o);
-
-
-    #output           = my_contract.call().number();
-    #print(output);
-    #print("Total score for %d " % (output))
-
-    web3._requestManager = web3.manager
+    contract_address = chain.wait.for_receipt(set_txn_hash)   
 
     currBlk = web3.eth.blockNumber;
     j = 0;
@@ -137,10 +130,8 @@ def test_receipt(web3, accounts, chain):
     size           = my_contract.call().getJobSize(account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve");
     print("JobSize " + str(size) + "----------");
     '''
-
     name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
-
 
     val = 0;
     with open(fname) as f:
