@@ -1,17 +1,37 @@
-Please install parity for following link:
-https://github.com/paritytech/parity
+**How to connect Ethereum eBloc private blockchain**
+====================================================
 
-**Dependencies:** Linux: ``$ curl https://sh.rustup.rs -sSf | sh``
-Parity also requires gcc, g++, libssl-dev/openssl, libudev-dev and
-pkg-config packages to be installed.
+**Parity**
+----------
 
-OSX:
+**Dependencies:**
+~~~~~~~~~~~~~~~~~
 
-``$ curl https://sh.rustup.rs -sSf | sh``
+**Linux**
+^^^^^^^^^
 
-``source .cargo/env``
+``$ curl https://sh.rustup.rs -sSf | sh`` Parity also requires gcc, g++,
+libssl-dev/openssl, libudev-dev and pkg-config packages to be installed.
 
-**Build from source:**
+**OSX**
+^^^^^^^
+
+::
+
+    $ curl https://sh.rustup.rs -sSf | sh
+    source .cargo/env
+
+To Install Parity
+~~~~~~~~~~~~~~~~~
+
+-  Through .deb:
+
+::
+
+    curl -O https://d1h4xl4cr1h0mo.cloudfront.net/v1.6.10/x86_64-unknown-linux-gnu/parity_1.6.10_amd64.deb
+    sudo dpkg -i parity_1.6.10_amd64.deb
+
+-  **Build from source**.
 
 ::
 
@@ -21,6 +41,9 @@ OSX:
 
     # build in release mode
     $ cargo build --release
+
+Network Setup
+~~~~~~~~~~~~~
 
 ``[$] mkdir ebloc-parity && cd ebloc-parity`` Create a file called
 ``parity.json`` and paste following code:
@@ -82,26 +105,20 @@ Create a file called ``myPrivateNetwork.txt`` and paste following lines:
 .. code:: bash
 
     enode://7f3bebdd678d5a0ebe2701b2f7858763f5ce03fc531fe989fb7bb41d2e8e1237ae5b092666171a180afba0c47f1aad055e2bf6e1287fcdc756f183902764eba2@79.123.177.145:3000
-    enode://4d331051d8fb471c87a9351b36ffb72bf445a9337727d229e03c668f99897264bf11e1b897b1561f5889825e2211b06858139fa469fdf73c64d43a567ea72479@193.140.197.126:3005
-    enode://38f074f4db8e64dfbaf87984bf290eef67772a901a7113d1b62f36216be152b8450c393d6fc562a5e38f04f99bc8f439a99010a230b1d92dc1df43bf0bd00615@176.9.3.148:3000
+    enode://4d331051d8fb471c87a9351b36ffb72bf445a9337727d229e03c668f99897264bf11e1b897b1561f5889825e2211b06858139fa469fdf73c64d43a567ea72479@193.140.197.95:3000
+    enode://9fbac6e71e1478506987872b7d3d6de19681527971ae243044daa44221a99ce5944839cd4057133f18b3610f5c59bb2fd7077fafa208d8eb52918faf06782d48@79.123.177.145:3000
 
-**To run Parity:**
+To Run Parity
+~~~~~~~~~~~~~
 
 ``Author`` is the owner of the mined block reward. You your own account
 where you have created.
 
 .. code:: bash
 
-    parity --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain localhost -ludp=debug,tcp=debug,sync=debug --author "0x75....."
+    parity --warp --geth --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=* --author "0x75....." #--unlock $COINBASE --password /home/ubuntu/EBloc/password.txt
 
-To attach Geth console to Parity, (on Linux) use:
-``geth attach ~/.local/share/io.parity.ethereum/jsonrpc.ipc``
-
-On MacOS use:
-
-.. code:: bash
-
-    geth attach /Users/username/Library/Application\ Support/io.parity.ethereum/jsonrpc.ipc console
+To attach ``Geth`` console to ``Parity``: ``geth attach``
 
 Open your favourite browser and type: localhost:8080 . I observe that
 google-chrome it better to use with it. Its UI is much better than other
