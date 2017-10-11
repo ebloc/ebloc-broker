@@ -279,7 +279,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 
 ### **How to submit a job using IPFS+miniLock**
 
-####miniLock Setup
+#### miniLock Setup
 First do following installations:
 
 ```bash
@@ -288,7 +288,7 @@ sudo npm install -g minilock-cli@0.2.13
 
 Please check following [tutorial](https://www.npmjs.com/package/minilock-cli):
 
-#####Generate an ID
+##### Generate an ID
 
 First, you need a miniLock ID.
 
@@ -340,7 +340,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.len
 
 ---------------
 
-#### **Obtain Submitted Job's Information:**
+### **Obtain Submitted Job's Information:**
 
 This will return:
 
@@ -355,7 +355,7 @@ jobHash = "QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B"
 eBlocBroker.getJobInfo(clusterID, jobHash, 0);
 ```
 
-#### **Events: In order to keep track of the log of receipts**
+### **Events: In order to keep track of the log of receipts**
 
 ```bash
 fromBlock = MyContract.eth.blockNumber; //This could be also the blockNumber the job submitted.
@@ -365,9 +365,7 @@ e.watch(function(error, result){
 });
 ```
 
----------------------
-
-**Required Installations**
+### **Required Installations**
 
 ```bash
 sudo npm i --save bs58  //https://www.npmjs.com/package/bs58
