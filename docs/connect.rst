@@ -1,13 +1,11 @@
-How to connect Ethereum eBloc private blockchain
-=========
+**How to connect Ethereum eBloc private blockchain**
+====================================================
 
-.. contents:: :local:
+**Geth**
+--------
 
-.. highlight:: sh
-
-Geth
---------------------------------
-
+**Preinstallations:**
+~~~~~~~~~~~~~~~~~~~~~
 
 **Installation Instructions for Mac:**
 
@@ -20,15 +18,16 @@ Geth
 
 **Installation Instructions for Linux:**
 
-Go-installation: (required for initial geth load)
+Go-installation (go-ethereum requires go version 1.7+.):
 
 .. code:: bash
 
-    sudo add-apt-repository ppa:ubuntu-lxc/lxd-stable
+    sudo apt-get install python-software-properties 
+    sudo add-apt-repository ppa:duh/golang
     sudo apt-get update
     sudo apt-get install golang
 
-Ethereum installation:
+**Ethereum installation:**
 
 .. code:: bash
 
@@ -51,6 +50,98 @@ Navigate into folder that go-ethereum is installed.
     /usr/local/bin/geth
 
 Now when you just type ``geth``, it should work.
+
+--------------
+
+**eBloc on Linux and macOS Private Ethereum Setup:**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: bash
+
+    mkdir MyEthereumEbloc
+    cd MyEthereumEbloc
+    ebloc_path="$PWD";
+    sudo geth --datadir="$ebloc_path" account new
+
+Your new account is locked with a password. Please give a password. Do
+not forget this password. Passphrase: //!! Enter a difficult password
+for your account !!
+
+Create an empty file called CustomGenesis.json:
+``[~] touch CustomGenesis.json`` Open the\ ``CustomGenesis.json`` in
+your favorite text editor, and paste following piece into it.
+
+.. code:: bash
+
+    {
+        "config": {
+            "homesteadBlock": 0
+        },
+        "timestamp": "0x0",
+        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "extraData": "0x00",
+        "gasLimit": "0x3B4A1B44",
+        "difficulty": "0x400",
+        "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "coinbase": "0x3333333333333333333333333333333333333333",
+        "alloc": {
+            "0xda1e61e853bb8d63b1426295f59cb45a34425b63":
+            { "balance": "1000000000000000000000000000000" }
+        }
+    }
+
+.. code:: bash
+
+    [~] sudo geth --datadir="$ebloc_path" init CustomGenesis.json
+    WARN [10-06|11:21:38] No etherbase set and no accounts found as default
+    INFO [10-06|11:21:38] Allocated cache and file handles         database=/Users/user/MyEthereumEbloc/geth/chaindata cache=16 handles=16
+    INFO [10-06|11:21:38] Writing custom genesis block
+    INFO [10-06|11:21:38] Successfully wrote genesis state         database=chaindata                      hash=a6e0e1...dab438
+    INFO [10-06|11:21:38] Allocated cache and file handles         database=/Users/user/MyEthereumEbloc/geth/lightchaindata cache=16 handles=16
+    INFO [10-06|11:21:38] Writing custom genesis block
+    INFO [10-06|11:21:38] Successfully wrote genesis state         database=lightchaindata                      hash=a6e0e1...dab438
+
+    [~] sudo geth --fast --networkid 23422 --datadir="$ebloc_path" --rpc --rpcaddr "localhost" --rpccorsdomain="*" --rpcport="8545" console
+    Welcome to the Geth JavaScript console!
+
+    instance: Geth/v1.7.0-stable-6c6c7b2a/darwin-amd64/go1.9
+     modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0
+
+    > 
+
+.. code:: bash
+
+    [geth]> net
+    {
+    listening: true,
+    peerCount: 0,
+    version: "23422",
+    getListening: function(callback),
+    getPeerCount: function(callback),
+    getVersion: function(callback)
+    }
+
+``peerCount`` should be **1**, if you are successfully connected into
+eBloc.
+
+.. code:: bash
+
+    [geth]> admin.addPeer("enode://7f3bebdd678d5a0ebe2701b2f7858763f5ce03fc531fe989fb7bb41d2e8e1237ae5b092666171a180afba0c47f1aad055e2bf6e1287fcdc756f183902764eba2@79.123.177.145:3000?discport=0");
+    [geth]> net
+    {
+    listening: true,
+    peerCount: 1,
+    version: "23422",
+    getListening: function(callback),
+    getPeerCount: function(callback),
+    getVersion: function(callback)
+    }
+    > I0215 11:38:30.852837 eth/downloader/downloader.go:326] Block synchronisation started
+    I0215 11:38:32.409662 core/blockchain.go:1064] imported   41 blocks,     0 txs (  0.000 Mg) in 805.525ms ( 0.000 Mg/s). #1401 [1e5a0d22... / 28f66e6b...]
+    I0215 11:38:32.436446 core/blockchain.go:1064] imported   50 blocks,     0 txs (  0.000 Mg) in  26.172ms ( 0.000 Mg/s). #1451 [b0a79eeb... / ecaada4b...]
+    I0215 11:38:32.554453 core/blockchain.go:1064] imported  293 blocks,     0 txs (  0.000 Mg) in 115.579ms ( 0.000 Mg/s). #1744 [ff3e8799... / 44aa42ef...]
+
+Now open a new terminal and open a client:
 
 .. code:: bash
 
@@ -96,14 +187,16 @@ flag.
 --------------
 
 **Helpful Script:**
+~~~~~~~~~~~~~~~~~~~
 
 ``[~] touch pass.js`` Open ``pass.js`` in your favorite text editor, and
 paste following piece into it.
 
 .. code:: bash
 
-    admin.addPeer("enode://7f3bebdd678d5a0ebe2701b2f7858763f5ce03fc531fe989fb7bb41d2e8e1237ae5b092666171a180afba0c47f1aad055e2bf6e1287fcdc756f183902764eba2@79.1\
-    23.177.145:3000");
+    admin.addPeer("enode://7f3bebdd678d5a0ebe2701b2f7858763f5ce03fc531fe989fb7bb41d2e8e1237ae5b092666171a180afba0c47f1aad055e2bf6e1287fcdc756f183902764eba2@79.123.177.145:3000");
+    admin.addPeer("enode://4d331051d8fb471c87a9351b36ffb72bf445a9337727d229e03c668f99897264bf11e1b897b1561f5889825e2211b06858139fa469fdf73c64d43a567ea72479@193.140.197.95:3000");
+    admin.addPeer("enode://9fbac6e71e1478506987872b7d3d6de19681527971ae243044daa44221a99ce5944839cd4057133f18b3610f5c59bb2fd7077fafa208d8eb52918faf06782d48@79.123.177.145:3000");
 
 Create an empty file called ``start_server.sh``:
 ``[~] touch start_server.sh`` Open ``start_server.sh`` in your favorite
@@ -137,23 +230,37 @@ text editor, and paste following piece into it.
 To run: ``sudo bash start_server.sh`` Now open a new terminal and run:
 ``bash client.sh``. ``net`` should return 1.
 
-Parity
---------------------------------
+**Parity**
+----------
 
-Please install parity for following link:
-https://github.com/paritytech/parity
+**Dependencies:**
+~~~~~~~~~~~~~~~~
 
-**Dependencies:** Linux: ``$ curl https://sh.rustup.rs -sSf | sh``
-Parity also requires gcc, g++, libssl-dev/openssl, libudev-dev and
-pkg-config packages to be installed.
+**Linux**
+^^^^^^^^^
 
-OSX:
+``$ curl https://sh.rustup.rs -sSf | sh`` Parity also requires gcc, g++,
+libssl-dev/openssl, libudev-dev and pkg-config packages to be installed.
 
-``$ curl https://sh.rustup.rs -sSf | sh``
+**OSX**
+^^^^^^^
 
-``source .cargo/env``
+::
 
-**Build from source:**
+    $ curl https://sh.rustup.rs -sSf | sh
+    source .cargo/env
+
+To Install Parity
+~~~~~~~~~~~~~~~~
+
+-  Through .deb:
+
+::
+
+    curl -O https://d1h4xl4cr1h0mo.cloudfront.net/v1.6.10/x86_64-unknown-linux-gnu/parity_1.6.10_amd64.deb
+    sudo dpkg -i parity_1.6.10_amd64.deb
+
+-  **Build from source**.
 
 ::
 
@@ -163,6 +270,9 @@ OSX:
 
     # build in release mode
     $ cargo build --release
+
+Network Setup
+~~~~~~~~~~~~
 
 ``[$] mkdir ebloc-parity && cd ebloc-parity`` Create a file called
 ``parity.json`` and paste following code:
@@ -224,26 +334,20 @@ Create a file called ``myPrivateNetwork.txt`` and paste following lines:
 .. code:: bash
 
     enode://7f3bebdd678d5a0ebe2701b2f7858763f5ce03fc531fe989fb7bb41d2e8e1237ae5b092666171a180afba0c47f1aad055e2bf6e1287fcdc756f183902764eba2@79.123.177.145:3000
-    enode://4d331051d8fb471c87a9351b36ffb72bf445a9337727d229e03c668f99897264bf11e1b897b1561f5889825e2211b06858139fa469fdf73c64d43a567ea72479@193.140.197.126:3005
-    enode://38f074f4db8e64dfbaf87984bf290eef67772a901a7113d1b62f36216be152b8450c393d6fc562a5e38f04f99bc8f439a99010a230b1d92dc1df43bf0bd00615@176.9.3.148:3000
+    enode://4d331051d8fb471c87a9351b36ffb72bf445a9337727d229e03c668f99897264bf11e1b897b1561f5889825e2211b06858139fa469fdf73c64d43a567ea72479@193.140.197.95:3000
+    enode://9fbac6e71e1478506987872b7d3d6de19681527971ae243044daa44221a99ce5944839cd4057133f18b3610f5c59bb2fd7077fafa208d8eb52918faf06782d48@79.123.177.145:3000
 
-**To run Parity:**
+To Run Parity
+~~~~~~~~~~~~
 
 ``Author`` is the owner of the mined block reward. You your own account
 where you have created.
 
 .. code:: bash
 
-    parity --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain localhost -ludp=debug,tcp=debug,sync=debug --author "0x75....."
+    parity --warp --geth --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=* --author "0x75....." #--unlock $COINBASE --password /home/ubuntu/EBloc/password.txt
 
-To attach Geth console to Parity, (on Linux) use:
-``geth attach ~/.local/share/io.parity.ethereum/jsonrpc.ipc``
-
-On MacOS use:
-
-.. code:: bash
-
-    geth attach /Users/username/Library/Application\ Support/io.parity.ethereum/jsonrpc.ipc console
+To attach ``Geth`` console to ``Parity``: ``geth attach``
 
 Open your favourite browser and type: localhost:8080 . I observe that
 google-chrome it better to use with it. Its UI is much better than other
@@ -253,55 +357,3 @@ Parity's has a default wrap property: warp sync is downloading snapshots
 of the state first, so you are basically synced within <60 seconds. and
 after that it slowly catches up missing blocks
 https://github.com/paritytech/parity/wiki/Warp-Sync
-
-
-Mine with Parity
-^^^^^^^^^^^^^
-
-Guide: https://github.com/ethereum/cpp-ethereum
-
-First, since it will create new DAG do on the home directory:
-``cd && rm -rf .ethash/``
-
-**Dependencies:**
-
-Linux-based:
-
-::
-
-    sudo apt-get install libleveldb-dev libcurl4-openssl-dev libmicrohttpd-dev install libudev-dev
-
-macOS:
-
-::
-
-    brew install leveldb libmicrohttpd
-
-**Install:**
-
-::
-
-    git clone --recursive https://github.com/ethereum/cpp-ethereum.git
-    cd cpp-ethereum
-
-**Build:**
-
-::
-
-    cmake -H. -Bbuild
-    cmake --build build
-
-::
-
-    [$]ethminer --version
-     ethminer version 1.3.0 | Build: ETH_BUILD_PLATFORM/ETH_BUILD_TYPE
-
-**To Mine:** This code will use full horse
-power:\ ``sudo ./ethminer -F http://localhost:8545``.
-
-    -t, --mining-threads Limit number of CPU/GPU miners to n (default:
-    use everything available on selected platform)
-
-``[~/cpp-ethereum]$ cd build/ethminer``
-``[~/cpp-ethereum/build/ethminer]$sudo ./ethminer -F http://localhost:8545 --mining-threads 2``
-
