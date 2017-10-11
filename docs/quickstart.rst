@@ -397,7 +397,7 @@ How to encripty your folder using miniLock
 --------------
 
 **Obtain Submitted Job's Information:**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This will return:
 
@@ -413,7 +413,7 @@ This will return:
     eBlocBroker.getJobInfo(clusterID, jobHash, 0);
 
 **Events: In order to keep track of the log of receipts**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
@@ -423,9 +423,8 @@ This will return:
       console.log(JSON.stringify(result));
     });
 
---------------
-
 **Required Installations**
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
