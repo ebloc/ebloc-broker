@@ -1,39 +1,34 @@
-# eBlocBroker
+# How to Use eBlocBroker 
 
 ## About
 eBlocBroker is a blockchain based autonomous computational resource broker.
 
 **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr) .
 
-----
-
 ## Build dependencies
 
 [Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/) .
 
-## How to use eBlocBroker via Amazon EC2 Instance
+## How to use eBlocBroker inside an Amazon EC2 Instance
 
-**Public AMI:** `eBlocBroker ami-4a5b9530` 
+An Amazon image (AMI name: eBlocBroker, AMI Id: **ami-4a5b9530**) is also available that contains
+Parity to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname(IPv4). 
 
 ```bash
 mkdir ~/ebloc-amazon
 sshfs -o IdentityFile=full/path/to/my.pem ubuntu@Public-DNS-hostname:/home/ubuntu ~/ebloc-amazon
 cd ~/ebloc-amazon
 
-#On an another console do:
+#On an another console you can ssh into the instance:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
 cd mybin && nohup bash eblocpserver.sh & 
 cd ../eBlocBrokerGit 
 python Driver.py 
 ```
 
-### Create New Account
+### How to create a new account
 
-This line is required to update `Parity`'s enode.
 
-```bash
-rm  ~/.local/share/io.parity.ethereum/network/key
-```
 
 ```bash
 parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=*
@@ -41,20 +36,20 @@ parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --r
 Please note that password is NOT RECOVERABLE.
 Type password:
 Repeat password:
-e427c111f968fe4ff6593a37454fdd9abf07c490
+e427c111f968fe4ff6593a37454fdd9abf07c490  //your address is generated
 ```
 
-- Inside `.profile` change `COINBASE` variable with the account owner of the mined block reward. For example, you could but your newly created account: `"0xe427c111f968fe4ff6593a37454fdd9abf07c490"` into `COINBASE`. Do not forget to put `0x` at the beginning of the account.
+- Inside `.profile` change `COINBASE` variable with the generated account address. For example, you could put your newly created address such as `"0xe427c111f968fe4ff6593a37454fdd9abf07c490"` into `COINBASE`. Do not forget to put `0x` at the beginning of the account.
 
 
-- Update following file `/home/ubuntu/EBloc/password.txt` with your account's password, that is stored under `COINBASE`: 
+- Update the following file `/home/ubuntu/EBloc/password.txt` with your account's password.
 Best to make sure the file is not readable or even listable for anyone but you. You achieve this with: `chmod 700 /home/ubuntu/EBloc/password.txt`
 
-- Open following file: `/home/ubuntu/eBlocBroker/eBlocHeader.js` and change following line with the account you defined under `COINBASE`: `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
+- Open the following file: `/home/ubuntu/eBlocBroker/eBlocHeader.js` and change following line with the account you defined under `COINBASE`, which is `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
 
-Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach ~/.local/share/io.parity.ethereum/jsonrpc.ipc`. Its alias is: `eblocpclient`. 
+Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach`.
 
-Please note that first you have to run `eblocpserver` and than `eblocpclient`.
+Please note that first you have to run `eblocpserver` and than `geth attach`.
 
 Inside Geth console when you type `eth.accounts` you should see the accounts you already created or imported.
 
@@ -63,37 +58,32 @@ Inside Geth console when you type `eth.accounts` you should see the accounts you
 ["0xe427c111f968fe4ff6593a37454fdd9abf07c490"]
 ```
 
-As final you should run Parity as follows which will unlock the account:
+This line is required to update `Parity`'s enode.
+
+```bash
+rm  ~/.local/share/io.parity.ethereum/network/key
+```
+
+As final you should run Parity as follows which will also unlocks your account:
 
 ```bash
 parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=* --unlock "0xe427c111f968fe4ff6593a37454fdd9abf07c490" --password password.txt
 ```
 
-**Required path changes you have to do on the script files:**
+## Connect to eBlocBroker Contract
 
-export EBLOCBROKER=/home/netlab/contract
-
-Additinoal changes have to make on: since SLURM script functon won't able to access .profile file.
-startCode.py endCode.py slurmScript.sh
+```bash
+address="0x8cb1d24ddb3d0d410ec60074a86cf695fc4ab3e6";
+abi=[{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTimeStamp","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"ipfsHash","type":"string"},{"name":"index","type":"uint32"}],"name":"refundMe","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"clusterName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"testCallStack","outputs":[{"name":"","type":"int256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"clusterName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTimeStamp","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"}]
+var eBlocBroker = web3.eth.contract(abi).at(address);
+```
 
 ## Start Running Cluster using eBlocBroker
 
-If you want to provide `IPFS` service please do following:
+If you want to provide `IPFS` service please do following: `ipfs init`
 
-```bash 
-ipfs uses a repository in the local file system. By default, the repo is located at ~/.ipfs. 
-To change the repo location, set the $IPFS_PATH environment variable:
-> export IPFS_PATH=/path/to/ipfsrepo
-> ipfs init
-
-initializing ipfs node at /path/to/ipfsrepogenerating 2048-bit RSA keypair...done
-peer identity: QmXudqoQUyHjmS2s8j59tY6GKCz3KR2qPXS6uMskbFV8mH
-to get started, enter:
-
-	ipfs cat /ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme
-```	
-
-#### First SLURM have to work on the background SLURM Setup:
+### SLURM Setup:
+SLURM have to work on the background.
 
 ```bash 
 sudo slurmd
@@ -111,26 +101,16 @@ sbatch -U science -N1 run.sh
 Submitted batch job 1
 ```
 
-#### Running `IPFS`, `Parity` and eBlocBroker scripts on the background:
+### Running `IPFS`, `Parity` and eBlocBroker scripts on the background:
 
 ```bash
 ipfs daemon &
-nohup eblocpserver &
+nohup bash eblocpserver.sh &
 cd $EBLOCBROKER
-nohup python py_clusterDriver.py &
+nohup python Driver.py &
 ```
 
-----
-
-## Connect to eBlocBroker Contract
-
-```bash
-address="0x8cb1d24ddb3d0d410ec60074a86cf695fc4ab3e6";
-abi=[{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTimeStamp","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"ipfsHash","type":"string"},{"name":"index","type":"uint32"}],"name":"refundMe","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"clusterName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"testCallStack","outputs":[{"name":"","type":"int256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"clusterName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTimeStamp","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"}]
-var eBlocBroker = web3.eth.contract(abi).at(address);
-```
-
-### Cluster Owner: How to register a cluster
+### Cluster Side: How to register a cluster
 
 Please note that: if you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
 
@@ -160,11 +140,9 @@ eBlocBroker.deregisterCluster()
 sudo chmod 755 ~/.eBlocBroker/*
 ```
 
------
-
 ### Client Side: How to obtain IPFS Hash of the job:
 
-Is is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, cluster is not able to get the IPFS object from the client's node.
+It is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, cluster is not able to get the IPFS object from the client's node.
 
 If IPFS is successfully running on the background you should see something like this:
 
@@ -210,7 +188,7 @@ g++ helloworld.cpp -o hello
 sleep 60;
 ```
 
-Target into the folder you want to submit and please do: `ipfs add -r .` You will face something similiar with following output:
+Target into the folder you want to submit and do: `ipfs add -r .` You will see something similiar with following output:
 
 ```bash
 added QmYsUBd5F8FA1vcUsMAHCGrN8Z92TdpNBAw6rMxWwmQeMJ ipfs_code/helloworld.cpp
@@ -224,7 +202,7 @@ Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r58
 eBlocBroker.getClusterAddresses(); //returns all available Clusters Addresses.
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
-###**How to submit a job using IPFS**
+### **How to submit a job using IPFS**
 
 ```bash
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
@@ -247,7 +225,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && jobKey.length 
 ```
 ###**How to submit a job using EUDAT**
 
-Before doing this you have to be sure that you have shared your folder with cluster's FId. Please follow ...<github issue>. Otherwise your job will not accepted.
+Before doing this you have to be sure that you have shared your folder with cluster's FId. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
 
 
 Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol in between.
@@ -274,8 +252,6 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
-
----------
 
 ### **How to submit a job using IPFS+miniLock**
 
@@ -338,14 +314,13 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.len
 }
 ```
 
----------------
 
-### **Obtain Submitted Job's Information:**
+### **How to obtain Submitted Job's Information:**
 
 This will return:
 
-- status  == `"QUEUED"` or `"RUNNING"` or `"COMPLETED"` 
-- ipfsOut == Completed Job's resulted folder. This exists if the job is completed.
+- status  could be `"QUEUED"` or `"RUNNING"` or `"COMPLETED"` 
+- `ipfsOut` is Completed Job's folder's ipfs hash. This exists if the job is completed.
 ...
 
 ```bash

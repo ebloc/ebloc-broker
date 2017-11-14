@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.abspath('.'))
 import os
 import pypandoc
 
-
 def setup(app):
     print( "hello" )
     path = os.path.abspath('.') + '/source'
