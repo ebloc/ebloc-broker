@@ -40,54 +40,54 @@ $ cargo build --release
 ```
 {
   "name": "Ebloc",
-    "engine": {
-        "Ethash": {
-	      "params": {
-	              "gasLimitBoundDivisor": "0x0400",
-		              "minimumDifficulty": "0x020000",
-			              "difficultyBoundDivisor": "0x0800",
-				              "durationLimit": "0x0d",
-					              "blockReward": "0x4563918244F40000",
-						              "registrar": "0x81a4b044831c4f12ba601adb9274516939e9b8a2",
-							              "homesteadTransition": "0x00",
-								              "eip150Transition": "0x7fffffffffffffff",
-									              "eip155Transition": "0x7fffffffffffffff",
-										              "eip160Transition": "0x7fffffffffffffff",
-											              "eip161abcTransition": "0x7fffffffffffffff",
-												              "eip161dTransition": "0x7fffffffffffffff"
-													            }
-														        }
-															  },
-															    "params": {
-															        "accountStartNonce": "0x00",
-																    "maximumExtraDataSize": "0x20",
-																        "minGasLimit": "0x1388",
-																	    "networkID": "0x5B7E",
-																	        "eip98Transition": "0x7fffffffffffffff"
-																		  },
-																		    "genesis": {
-																		        "seal": {
-																			      "ethereum": {
-																			              "nonce": "",
-																				              "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-																					            }
-																						        },
-																							    "difficulty": "0x400",
-																							        "author": "0x3333333333333333333333333333333333333333",
-																								    "timestamp": "0x00",
-																								        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-																									    "extraData": "0x00",
-																									        "gasLimit": "0x3B4A1B44"
-																										  },
-																										    "accounts": {
-																										        "0000000000000000000000000000000000000001": { "builtin": { "name": "ecrecover", "pricing": { "linear": { "base": 3000, "word": 0 } } } },
-																											    "0000000000000000000000000000000000000002": { "builtin": { "name": "sha256", "pricing": { "linear": { "base": 60, "word": 12 } } } },
-																											        "0000000000000000000000000000000000000003": { "builtin": { "name": "ripemd160", "pricing": { "linear": { "base": 600, "word": 120 } } } },
-																												    "0000000000000000000000000000000000000004": { "builtin": { "name": "identity", "pricing": { "linear": { "base": 15, "word": 3 } } } },
-																												        "0xda1e61e853bb8d63b1426295f59cb45a34425b63": { "balance": "1000000000000000000000000000000" }
-																													  }
-																													  }
-																													  ```
+  "engine": {
+    "Ethash": {
+      "params": {
+        "gasLimitBoundDivisor": "0x0400",
+        "minimumDifficulty": "0x020000",
+        "difficultyBoundDivisor": "0x0800",
+        "durationLimit": "0x0d",
+        "blockReward": "0x4563918244F40000",
+        "registrar": "0x81a4b044831c4f12ba601adb9274516939e9b8a2",
+        "homesteadTransition": "0x00",
+        "eip150Transition": "0x7fffffffffffffff",
+        "eip155Transition": "0x7fffffffffffffff",
+        "eip160Transition": "0x7fffffffffffffff",
+        "eip161abcTransition": "0x7fffffffffffffff",
+        "eip161dTransition": "0x7fffffffffffffff"
+      }
+    }
+  },
+  "params": {
+    "accountStartNonce": "0x00",
+    "maximumExtraDataSize": "0x20",
+    "minGasLimit": "0x1388",
+    "networkID": "0x5B7E",
+    "eip98Transition": "0x7fffffffffffffff"
+  },
+  "genesis": {
+    "seal": {
+      "ethereum": {
+        "nonce": "",
+        "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "difficulty": "0x400",
+    "author": "0x3333333333333333333333333333333333333333",
+    "timestamp": "0x00",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "extraData": "0x00",
+    "gasLimit": "0x3B4A1B44"
+  },
+  "accounts": {
+    "0000000000000000000000000000000000000001": { "builtin": { "name": "ecrecover", "pricing": { "linear": { "base": 3000, "word": 0 } } } },
+    "0000000000000000000000000000000000000002": { "builtin": { "name": "sha256", "pricing": { "linear": { "base": 60, "word": 12 } } } },
+    "0000000000000000000000000000000000000003": { "builtin": { "name": "ripemd160", "pricing": { "linear": { "base": 600, "word": 120 } } } },
+    "0000000000000000000000000000000000000004": { "builtin": { "name": "identity", "pricing": { "linear": { "base": 15, "word": 3 } } } },
+    "0xda1e61e853bb8d63b1426295f59cb45a34425b63": { "balance": "1000000000000000000000000000000" }
+  }
+}
+```
 
 Create a file called `myPrivateNetwork.txt` and paste following lines:
 
@@ -107,12 +107,12 @@ parity --warp --geth --force-ui --chain parity.json --network-id 23422 --reserve
 Please note that password is NOT RECOVERABLE.
 Type password:
 Repeat password:
-e427c111f968fe4ff6593a37454fdd9abf07c490  //your address is generated
+e427c111f968fe4ff6593a37454fdd9abf07c490  //your address is generated 
 ```
 
 - Inside `.profile` change `COINBASE` variable with the generated account address. For example, you could put your newly created address such as `"0xe427c111f968fe4ff6593a37454fdd9abf07c490"` into `COINBASE`. Do not forget to put `0x` at the beginning of the account.
 
- `author ` is  the owner of the mined block reward.
+ `author ` is  the owner of the mined block reward. 
 
 ```bash
 parity --warp --geth --force-ui --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=* --author "0x75..." --unlock $COINBASE --password /home/ubuntu/EBloc/password.txt
@@ -120,5 +120,6 @@ parity --warp --geth --force-ui --chain parity.json --network-id 23422 --reserve
 
 To attach `geth` console to `Parity` do: `geth attach`
 
-Open your favourite browser and type: `localhost:8080` .
+Open your favourite browser and type: `localhost:8080` . 
 <img width="1039" alt="screen shot 2017-03-23 at 17 35 09" src="https://cloud.githubusercontent.com/assets/18537398/24255800/1e6851ae-0fef-11e7-917e-ca81debe064d.png">
+

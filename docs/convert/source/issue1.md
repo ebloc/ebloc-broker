@@ -16,7 +16,7 @@ make geth
 
 Go-installation (go-ethereum requires go version 1.7+.):
 ```bash
-sudo apt-get install python-software-properties
+sudo apt-get install python-software-properties 
 sudo add-apt-repository ppa:duh/golang
 sudo apt-get update
 sudo apt-get install golang
@@ -45,7 +45,7 @@ geth
 ```
 Now when you just type `geth`, it should work.
 
-### **eBloc Setup on Linux and macOS :**
+### **eBloc Setup on Linux and macOS:**
 
 ```bash
 mkdir MyEthereumEbloc
@@ -62,20 +62,20 @@ Open the` CustomGenesis.json` in your favorite text editor, and paste following 
 ```bash
 {
     "config": {
-            "homesteadBlock": 0
-	        },
-		    "timestamp": "0x0",
-		        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-			    "extraData": "0x00",
-			        "gasLimit": "0x3B4A1B44",
-				    "difficulty": "0x400",
-				        "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-					    "coinbase": "0x3333333333333333333333333333333333333333",
-					        "alloc": {
-						        "0xda1e61e853bb8d63b1426295f59cb45a34425b63":
-							        { "balance": "1000000000000000000000000000000" }
-								    }
-								    }
+        "homesteadBlock": 0
+    },
+    "timestamp": "0x0",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "extraData": "0x00",
+    "gasLimit": "0x3B4A1B44",
+    "difficulty": "0x400",
+    "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "coinbase": "0x3333333333333333333333333333333333333333",
+    "alloc": {
+        "0xda1e61e853bb8d63b1426295f59cb45a34425b63":
+        { "balance": "1000000000000000000000000000000" }
+    }
+}
 
 ```
 
@@ -95,7 +95,7 @@ Welcome to the Geth JavaScript console!
 instance: Geth/v1.7.0-stable-6c6c7b2a/darwin-amd64/go1.9
  modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0
 
->
+> 
 ```
 
 ```bash
