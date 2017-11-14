@@ -1,8 +1,8 @@
-# **How to connect Ethereum eBloc private blockchain**
+# **How to connect into Private Ethereum Blockchain (eBloc)**
 
 ## **Geth**
 
-### **Preinstallations:**
+### **Preinstallations**
 
 **Installation Instructions for Mac:**
 
@@ -16,13 +16,13 @@ make geth
 
 Go-installation (go-ethereum requires go version 1.7+.):
 ```bash
-sudo apt-get install python-software-properties 
+sudo apt-get install python-software-properties
 sudo add-apt-repository ppa:duh/golang
 sudo apt-get update
 sudo apt-get install golang
 ```
 
-**Ethereum installation:**
+**Geth installation:**
 
 ```bash
 sudo apt-get install git
@@ -45,9 +45,7 @@ geth
 ```
 Now when you just type `geth`, it should work.
 
-------------------------------------------------------------------------------------------
-
-### **eBloc on Linux and macOS Private Ethereum Setup:**
+### **eBloc Setup on Linux and macOS :**
 
 ```bash
 mkdir MyEthereumEbloc
@@ -55,30 +53,29 @@ cd MyEthereumEbloc
 ebloc_path="$PWD";
 sudo geth --datadir="$ebloc_path" account new
 ```
-Your new account is locked with a password. Please give a password. Do not forget this password.
-Passphrase: //!! Enter a difficult password for your account !!
+Your new account is locked with a password. Please give a password. Do not forget this password. Please enter a difficult passphrase for your account.
 
 Create an empty file called CustomGenesis.json:
 `[~] touch CustomGenesis.json`
-Open the` CustomGenesis.json` in your favorite text editor, and paste following piece into it.
+Open the` CustomGenesis.json` in your favorite text editor, and paste following piece in it.
 
 ```bash
 {
     "config": {
-        "homesteadBlock": 0
-    },
-    "timestamp": "0x0",
-    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "extraData": "0x00",
-    "gasLimit": "0x3B4A1B44",
-    "difficulty": "0x400",
-    "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "coinbase": "0x3333333333333333333333333333333333333333",
-    "alloc": {
-        "0xda1e61e853bb8d63b1426295f59cb45a34425b63":
-        { "balance": "1000000000000000000000000000000" }
-    }
-}
+            "homesteadBlock": 0
+	        },
+		    "timestamp": "0x0",
+		        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+			    "extraData": "0x00",
+			        "gasLimit": "0x3B4A1B44",
+				    "difficulty": "0x400",
+				        "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+					    "coinbase": "0x3333333333333333333333333333333333333333",
+					        "alloc": {
+						        "0xda1e61e853bb8d63b1426295f59cb45a34425b63":
+							        { "balance": "1000000000000000000000000000000" }
+								    }
+								    }
 
 ```
 
@@ -98,7 +95,7 @@ Welcome to the Geth JavaScript console!
 instance: Geth/v1.7.0-stable-6c6c7b2a/darwin-amd64/go1.9
  modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0
 
-> 
+>
 ```
 
 ```bash
@@ -150,7 +147,7 @@ getPeerCount: function(callback),
 getVersion: function(callback)
 }
 ```
-To check your account inside `geth`:
+To check your account using `geth`:
 
 ```bash
 [geth]> primary = eth.accounts[0]
@@ -160,18 +157,11 @@ To check your account inside `geth`:
 [geth]> web3.fromWei(web3.eth.getBalance("0xda1e61e853bb8d63b1426295f59cb45a34425b63"));
 46221.847517764296887374      //This is the some account active on the Blockchain. If you are connected into eBloc, you should see it.
 ```
-If you would like to start your miner, just type following:
-`[geth]> miner.start()`
+If you would like to start your miner, just type following inside `geth`: `miner.start()` .To stop mining:
+`miner.stop()`
 
-To stop mining:
-`[geth]> miner.stop()`
-
-You could also decide how many CPU you would like to invest to mine. This will add additional 1 CPU.
-`[geth]> miner.start(1)`
-
-Not: You could send your transactions without starting your miner. Please double check to run `geth` without having `--nodiscover` flag.
-
-----------------------------------------------------------------------------------------------------
+You could also decide how many CPU you would like to invest to mine. For example, following line will add additional 1 CPU.
+`miner.start(1)`
 
 ### **Helpful Script:**
 
@@ -182,6 +172,7 @@ Open `pass.js` in your favorite text editor, and paste following piece into it.
 admin.addPeer("enode://7f3bebdd678d5a0ebe2701b2f7858763f5ce03fc531fe989fb7bb41d2e8e1237ae5b092666171a180afba0c47f1aad055e2bf6e1287fcdc756f183902764eba2@79.123.177.145:3000");
 admin.addPeer("enode://4d331051d8fb471c87a9351b36ffb72bf445a9337727d229e03c668f99897264bf11e1b897b1561f5889825e2211b06858139fa469fdf73c64d43a567ea72479@193.140.197.95:3000");
 admin.addPeer("enode://9fbac6e71e1478506987872b7d3d6de19681527971ae243044daa44221a99ce5944839cd4057133f18b3610f5c59bb2fd7077fafa208d8eb52918faf06782d48@79.123.177.145:3000");
+admin.addPeer("enode://4419bba10a6db49687986279aa5d70ff3a6eb64a34de0d71069474a76e140110bfd17f43881e2d75f06381af9b4d4bdee9ff89335ded2399bca958c5adf29992@184.73.134.188:30303");
 ```
 
 Create an empty file called `start_server.sh`:
