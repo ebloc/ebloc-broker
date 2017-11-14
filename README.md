@@ -5,7 +5,7 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
 
 **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr) .
 
-[Documentation] (http://ebloc.cmpe.boun.edu.tr:3015/index.html)
+[Documentation](http://ebloc.cmpe.boun.edu.tr:3015/index.html) 
 
 ## Build dependencies
 
