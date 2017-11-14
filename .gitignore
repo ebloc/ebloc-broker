@@ -20,3 +20,7 @@ contracts/tests/__pycache__/
 docs/nohup\.out
 
 docs/_build_html/
+
+*.sh#
+
+*.rst#
