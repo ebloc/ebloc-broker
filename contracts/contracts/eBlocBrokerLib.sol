@@ -1,39 +1,43 @@
-pragma solidity ^0.4.17;
+opragma solidity ^0.4.17;
 import "./ReceiptLib.sol";
 
 library eBlocBrokerLib {
     using ReceiptLib for ReceiptLib.intervalNode;
 
+    /* Submitted Job's information */
     struct Status {
-	/*Variable updated by the cluster */
-	uint8           status;
-	uint32           core;
-	uint    startTimeStamp;
-	uint          received;
-	uint   coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	/*Variable assigned by the cluster */
+	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint    startTimeStamp; /* Submitted job's starting universal time on the server side */
+	bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
 
-	/* Variables updated by the client */
-	uint32   coreMinuteGas;
-	address       jobOwner;
-	bool       receiptFlag;
+	/* Variables assigned by the client */
+	uint32   coreMinuteGas; /* Time to run job in seconds. ex: minute + hour * 60 + day * 1440; */
+	uint32           core;  /* Requested core by the client */
+	address       jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint   coreMinutePrice; /* Cluster's price for core/minute */
+	uint          received; /* Paid amount by the client */
+
     }
-
+    
+    /* Registered cluster's information */
     struct data {
-	bool               isExist;
-	bool             isRunning;
-	uint32   memberAddressesID;
-	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-	uint        receivedAmount;
-	uint         blockReadFrom;
-	bytes32             ipfsId;
-	string                name;
-	string    clusterMiniLockId;
-	string    federationCloudId;
+	bool               isExist;  /* */
+	bool             isRunning;  /* */
+	uint32   memberAddressesID;  /* Cluster's ethereum address is stored */
+	uint       coreMinutePrice;  /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint        receivedAmount;  /* Cluster's received wei price */
+	uint         blockReadFrom;  /* Blockn umber when cluster is registered in order the watch cluster's event activity */
+	bytes32             ipfsId;  /* Cluster's ipfs-d */
+	string                name;  /* Cluster's name*/
+	string    clusterMiniLockId; /* Cluster's minilock-id */
+	string    federationCloudId; /* Cluster's federation cloud-id */
 
-	mapping(string => Status[])    jobStatus; 
-	ReceiptLib.intervalNode      receiptList;
+	mapping(string => Status[])  jobStatus; /* All submitted jobs into cluster 's Status is accessible */
+	ReceiptLib.intervalNode    receiptList; /* receiptList will be use to check job's start and end time overlapped or not */
     }
 
+    /* Invoked,  when cluster calls registerCluster() */
     function construct(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId){
 	self.name              = name; 
 	self.federationCloudId = fID; 
@@ -43,16 +47,18 @@ library eBlocBrokerLib {
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
 	self.memberAddressesID = memLen;
-	self.coreMinutePrice   = price; /* currency is wei */
-	self.blockReadFrom     = block.number; /* Cluster's starting block number in order to check event */
+	self.coreMinutePrice   = price; 
+	self.blockReadFrom     = block.number;
+	
 	self.receiptList.construct(coreNumber);
     }
 
+    /* Invoked, when cluster calls updateCluster */
     function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsId) {
 	self.name                   = clusterName;
 	self.federationCloudId      = fID;
 	self.clusterMiniLockId      = clusterMiniLockId;
-	self.coreMinutePrice        = price; /* currency is wei) */
+	self.coreMinutePrice        = price; 
 	self.receiptList.coreNumber = coreNumber;
 	self.ipfsId                 = ipfsId;
     } 

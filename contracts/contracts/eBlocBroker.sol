@@ -8,12 +8,19 @@ import "./ReceiptLib.sol";
 
 contract eBlocBroker {
     uint  deployedBlockNumber;
+
+    enum JobStateCodes {
+	Null,
+	COMPLETED,
+	PENDING,
+	RUNNING
+    }
+	
     function eBlocBroker()
     {
 	deployedBlockNumber = block.number;
     }
-    enum JobStateCodes { Null, COMPLETED, PENDING, RUNNING }
-
+    
     using eBlocBrokerLib for eBlocBrokerLib.data;
     using eBlocBrokerLib for eBlocBrokerLib.Status;
     using ReceiptLib     for ReceiptLib.intervalNode;
@@ -60,16 +67,18 @@ contract eBlocBroker {
 
 	if( amountToGain > netOwed ||
 	    job.receiptFlag        ||
-	    endTimeStamp > block.timestamp
-	    //( storageType == 0 && bytes(ipfsHashOut).length != 46 ) || //TODO: Do this on upper level.
-	    ) throw;
+	    endTimeStamp > block.timestamp)
+	    //( storageType == 0 && bytes(ipfsHashOut).length != 46 ) || //TODO: Do this on upper level.	    
+	    throw;
+	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck( job.startTimeStamp, endTimeStamp, int32(job.core))) { 	    
 	    if (!job.jobOwner.send(netOwed)) /* Pay back netOwned to client */
 		throw;
-	    job.receiptFlag  = true; /* Important to check already paid job or not */
 	    
+	    job.receiptFlag  = true; /* Important to check already paid job or not */	    
 	    return false;
 	}
+	
 	/*   Gained by the cluster.               Gained by the client */
 	if (!msg.sender.send( amountToGain ) && !job.jobOwner.send( netOwed - amountToGain))
 	    throw;
@@ -97,6 +106,7 @@ contract eBlocBroker {
 	    cluster.construct(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsId);
 	    memberAddresses.push( msg.sender ); /* In order to obtain list of clusters */
 	}
+	
 	return true;
     }
 
@@ -123,13 +133,14 @@ contract eBlocBroker {
 	coreMinuteGas_StorageType_Check(coreMinuteGas, storageType) payable public returns (bool success)
     {
 	eBlocBrokerLib.data cluster = clusterContract[clusterAddr];
+	
 	if (msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   
 	    !cluster.isRunning                                         || 
 	    core == 0                                                  ||
 	    core > cluster.receiptList.coreNumber)
 	    throw;
 
-	LogJob( clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc );
+	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc);
 
 	cluster.jobStatus[jobKey].push( eBlocBrokerLib.Status({
  		        status:          uint8(JobStateCodes.PENDING),
@@ -139,8 +150,8 @@ contract eBlocBroker {
 			received:        msg.value,
 			coreMinutePrice: cluster.coreMinutePrice,  
 			startTimeStamp:  0,
-			receiptFlag:     false 
-			}) );
+			receiptFlag:     false}
+			) );
 	
 	return true;
     }
