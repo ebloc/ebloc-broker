@@ -45,7 +45,7 @@ library ReceiptLib {
 
 	    do { /*Inside while loop carriedSum is updated*/  
 		carriedSum += prevNode.core;
-		if( e >= currentNode.num ){
+		if( e >= currentNode.num ) {
 		    addr = prevNode.next; /* "addr" points the index to push the node */
 		    break;
 		}
@@ -60,7 +60,7 @@ library ReceiptLib {
 	if (!flag) { 
 	    addrTemp      = addr; 
 	    carriedSum    = c;
-	    prevNode      = self.list[ self.head = uint32(self.list.length - 1) ];
+	    prevNode      = self.list[self.head = uint32(self.list.length - 1)];
 	} else {
 	    addrTemp      = prevNode.next;
 	    prevNodeTemp  = prevNode;
@@ -107,10 +107,11 @@ library ReceiptLib {
     /* Could be commented out */
     function printIndex(intervalNode storage self, uint32 index) constant returns (uint256, int32 )
     {
-	uint32 my_index = self.head;
+	uint32 myIndex = self.head;
 	for ( uint i = 0; i < index; i++)
-	    my_index = self.list[my_index].next; 
-	return ( self.list[my_index].num, self.list[my_index].core );
+	    myIndex = self.list[myIndex].next;
+	
+	return ( self.list[myIndex].num, self.list[myIndex].core );
     }
     
 }
