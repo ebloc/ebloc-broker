@@ -24,12 +24,11 @@ library ReceiptLib {
 	self.deletedItemNum = 0;
     }
 
-    function receiptCheck(intervalNode storage self, uint s, uint e, int32 c) returns(bool success)
+    function receiptCheck(intervalNode storage self, uint s, uint e, int32 c) returns (bool success)
     {
+	bool     flag = false; 
 	uint32   addr = self.head;
 	uint32   addrTemp;     
-	bool     flag = false; 
-	
 	int32    carriedSum;
 	Interval prevNode;
 	Interval currentNode;
@@ -56,7 +55,8 @@ library ReceiptLib {
 	    } while (true);	    
 	}
 	
-	self.list.push(Interval( { num: e - 1, core: c, next: addr }) ); 
+	self.list.push(Interval({ num: e - 1, core: c, next: addr}) );
+	
 	if (!flag) { 
 	    addrTemp      = addr; 
 	    carriedSum    = c;
@@ -72,11 +72,12 @@ library ReceiptLib {
 	do {
 	    if (s > currentNode.num){ /* Covers [val, val1) s = s-1 Done */
 		self.list.push(Interval( { num: s, core: -1 * c, next: prevNode.next }) ); 
-		prevNode.next = uint32(self.list.length - 1);
-			
+		prevNode.next = uint32(self.list.length - 1);			
 		return true;
-	    } 	
+	    }
+	    
 	    carriedSum += currentNode.core;
+	    
 	    /* If enters into if statement it means throw is catch and all previoes operations are reverted back */
 	    if (carriedSum > int32(self.coreNumber)) {		
 		delete self.list[self.list.length-1];
@@ -98,13 +99,13 @@ library ReceiptLib {
     }
 
     /* Could be commented out */
-    function getReceiptListSize(intervalNode storage self) constant returns(uint32)
+    function getReceiptListSize(intervalNode storage self) constant returns (uint32)
     { 
 	return uint32(self.list.length-self.deletedItemNum); 
     }
 
     /* Could be commented out */
-    function print_index(intervalNode storage self, uint32 index) constant returns(uint256, int32 )
+    function printIndex(intervalNode storage self, uint32 index) constant returns (uint256, int32 )
     {
 	uint32 my_index = self.head;
 	for ( uint i = 0; i < index; i++)
