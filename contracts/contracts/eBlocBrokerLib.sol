@@ -5,14 +5,14 @@ library eBlocBrokerLib {
     using ReceiptLib for ReceiptLib.intervalNode;
 
     struct Status {
-	//Variable updated by the cluster:
+	/*Variable updated by the cluster */
 	uint8           status;
 	uint32           core;
 	uint    startTimeStamp;
 	uint          received;
-	uint   coreMinutePrice; //should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity
+	uint   coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 
-	//Variables updated by the client:
+	/* Variables updated by the client */
 	uint32   coreMinuteGas;
 	address       jobOwner;
 	bool       receiptFlag;
@@ -22,7 +22,7 @@ library eBlocBrokerLib {
 	bool               isExist;
 	bool             isRunning;
 	uint32   memberAddressesID;
-	uint       coreMinutePrice; //should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity.
+	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint        receivedAmount;
 	uint         blockReadFrom;
 	bytes32             ipfsId;
@@ -30,11 +30,11 @@ library eBlocBrokerLib {
 	string    clusterMiniLockId;
 	string    federationCloudId;
 
-	mapping(string => Status[])    jobStatus; //ipfs_in => struct, cluster
+	mapping(string => Status[])    jobStatus; 
 	ReceiptLib.intervalNode      receiptList;
     }
 
-    function construct( data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId) {
+    function construct( data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId ){
 	self.name              = name; 
 	self.federationCloudId = fID; 
 	self.clusterMiniLockId = clusterMiniLockId;
@@ -43,8 +43,8 @@ library eBlocBrokerLib {
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
 	self.memberAddressesID = memLen;
-	self.coreMinutePrice   = price; //currency(wei).
-	self.blockReadFrom     = block.number; //cluster's starting block number in order to check event
+	self.coreMinutePrice   = price; /* currency is wei */
+	self.blockReadFrom     = block.number; /* Cluster's starting block number in order to check event */
 	self.receiptList.construct(coreNumber);
     }
 
@@ -52,7 +52,7 @@ library eBlocBrokerLib {
 	self.name                   = clusterName;
 	self.federationCloudId      = fID;
 	self.clusterMiniLockId      = clusterMiniLockId;
-	self.coreMinutePrice        = price; //currency(wei).    
+	self.coreMinutePrice        = price; /* currency is wei) */
 	self.receiptList.coreNumber = coreNumber;
 	self.ipfsId                 = ipfsId;
     } 
