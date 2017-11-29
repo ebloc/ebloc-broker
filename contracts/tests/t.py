@@ -109,7 +109,6 @@ def test_receipt(web3, accounts, chain):
             #print(my_contract.call().hSize());
             j = j + 1;
 
-
     
     chain.wait.for_block(100);
     print( "Block_Number: " + str(web3.eth.blockNumber) );
