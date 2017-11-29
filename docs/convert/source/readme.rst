@@ -10,6 +10,8 @@ broker.
 **Website:** http://ebloc.cmpe.boun.edu.tr or
 `http://ebloc.org <http://ebloc.cmpe.boun.edu.tr>`__ .
 
+`Documentation <http://ebloc.cmpe.boun.edu.tr:3015/index.html>`__
+
 Build dependencies
 ------------------
 
