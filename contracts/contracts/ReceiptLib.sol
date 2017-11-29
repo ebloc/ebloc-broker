@@ -27,18 +27,24 @@ library ReceiptLib {
     function receiptCheck(intervalNode storage self, uint s, uint e, int32 c) returns(bool success)
     {
 	uint32   addr = self.head;
+	uint32   addrTemp;     
 	bool     flag = false; 
 	
 	int32    carriedSum;
 	Interval prevNode;
 	Interval currentNode;
-
+	Interval prevNodeTemp;
+	
+	// +-------------------------------+
+	// | Begin: Receipt Validity check |
+	// +-------------------------------+
+	
 	if (e < self.list[addr].num) { 
 	    flag = true; 
 	    prevNode     = self.list[addr];
 	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous head-node right after the insert operation */ 
 
-	    while (true) { /*Inside while loop carriedSum is updated*/  
+	    do { /*Inside while loop carriedSum is updated*/  
 		carriedSum += prevNode.core;
 		if( e >= currentNode.num ){
 		    addr = prevNode.next; /* "addr" points the index to push the node */
@@ -46,11 +52,9 @@ library ReceiptLib {
 		}
 		prevNode    = currentNode;
 		currentNode = self.list[currentNode.next]; 
-	    }
-	}
 
-	uint32   addrTemp;     
-	Interval prevNodeTemp; 
+	    } while (true);	    
+	}
 	
 	self.list.push(Interval( { num: e - 1, core: c, next: addr }) ); 
 	if (!flag) { 
@@ -86,9 +90,11 @@ library ReceiptLib {
 	    }
 	    prevNode    = currentNode;
 	    currentNode = self.list[currentNode.next]; 
-
 	} while (true);
 
+	// +-----------------------------+
+	// | End: Receipt Validity check |
+	// +-----------------------------+		
     }
 
     /* Could be commented out */
@@ -107,34 +113,3 @@ library ReceiptLib {
     }
     
 }
-
-
-
-
-
-	/*
-	while( true ) { //her kosulda kabul oluyor, s 0 da hep buyuk, counter increment yapmaya gerek yok.  
-	    if( s > currentNode.num ){ //Giving 1 block extra space with >= before it was >. //>= changed to >.
-		self.list.push(Interval( { num: s, core: -1 * c, next: prevNode.next }) ); 
-		prevNode.next = uint32(self.list.length - 1);
-			
-		return true;
-	    } 	
-	    carriedSum += currentNode.core;
-	    if( carriedSum > int32(self.coreNumber) ){
-	    	//throw;
-		
-		//alper:revert it back.------------------------------------
-		delete self.list[self.list.length-1];
-		if(!flag)
-		    self.head = addrTemp;		
-		else
-		    prevNodeTemp.next = addrTemp;		
-		self.deletedItemNum += 1;
-		return false;//alper
-		//alper:revert it back.------------------------------------	
-	    }
-	    prevNode    = currentNode;
-	    currentNode = self.list[currentNode.next]; 
-	}
-	*/

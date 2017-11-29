@@ -33,7 +33,7 @@ contract eBlocBroker {
 	_ ;
     }
     
-    function refundMe( address clusterAddr, string jobKeyHash, uint32 index ) returns(bool)
+    function refundMe( address clusterAddr, string jobKeyHash, uint32 index ) public returns(bool)
     {
 	eBlocBrokerLib.Status job = clusterContract[clusterAddr].jobStatus[jobKeyHash][index]; //if does not exist throws anyway.
 	if (msg.sender != job.jobOwner || job.receiptFlag)
@@ -100,8 +100,8 @@ contract eBlocBroker {
 	return true;
     }
 
-    function deregisterCluster()
-	public returns (bool success) /* Locks the access to the Cluster.Only cluster owner could stop it */
+    /* Locks the access to the Cluster. Only cluster owner could stop it */
+    function deregisterCluster() public returns (bool success) 
     {
 	delete memberAddresses[ clusterContract[msg.sender].memberAddressesID ];
 	clusterContract[msg.sender].isRunning = false; /* Cluster wont accept any more jobs */
@@ -146,8 +146,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    function setJobStatus( string jobKey, uint32 index, uint8 stateId, uint startTimeStamp )
-	public returns (bool success)
+    function setJobStatus( string jobKey, uint32 index, uint8 stateId, uint startTimeStamp ) public returns (bool success)
     {
 	eBlocBrokerLib.Status jS = clusterContract[msg.sender].jobStatus[jobKey][index];
 	if (jS.receiptFlag ||
@@ -167,43 +166,44 @@ contract eBlocBroker {
 	              uint endTime, string ipfsHashOut, uint8 storageType );
 
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
-   
-    function getClusterAddresses() constant returns ( address[] )
+
+    /* Returns all register cluster addresses */
+    function getClusterAddresses() constant returns (address[])
     {
-	return memberAddresses; //returns all addresses all together.
+	return memberAddresses; 
     }
 
     function getClusterInfo( address clusterAddr ) constant returns( string, string, string, uint, uint, bytes32 )
     {
-	return ( clusterContract[clusterAddr].name, 
-		 clusterContract[clusterAddr].federationCloudId, 
-		 clusterContract[clusterAddr].clusterMiniLockId,
-		 clusterContract[clusterAddr].receiptList.coreNumber, 
-		 clusterContract[clusterAddr].coreMinutePrice, 
-		 clusterContract[clusterAddr].ipfsId );
+	return (clusterContract[clusterAddr].name, 
+		clusterContract[clusterAddr].federationCloudId, 
+		clusterContract[clusterAddr].clusterMiniLockId,
+		clusterContract[clusterAddr].receiptList.coreNumber, 
+		clusterContract[clusterAddr].coreMinutePrice, 
+		clusterContract[clusterAddr].ipfsId);
     }
 
-    function getClusterReceivedAmount(address clusterAddr) constant returns ( uint )
+    function getClusterReceivedAmount(address clusterAddr) constant returns (uint)
     {
 	return clusterContract[clusterAddr].receivedAmount;
     }
 
     function getJobInfo(address clusterAddr, string jobKey, uint index) constant
-	public returns( uint8, uint32, uint, uint, uint, uint )
+	returns (uint8, uint32, uint, uint, uint, uint)
     {
 	eBlocBrokerLib.Status jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
 
 	return ( jS.status, jS.core, jS.startTimeStamp, jS.received, jS.coreMinutePrice, jS.coreMinuteGas );   
     }
 
-    function getJobSize(address clusterAddr, string jobKey) constant returns ( uint )
+    function getJobSize(address clusterAddr, string jobKey) constant returns (uint)
     {
 	if( !clusterContract[msg.sender].isExist)
 	    throw;
 	return clusterContract[clusterAddr].jobStatus[jobKey].length;
     }
 
-    function getDeployedBlockNumber() constant returns ( uint )
+    function getDeployedBlockNumber() constant returns (uint)
     {
 	return deployedBlockNumber;
     }
@@ -213,34 +213,14 @@ contract eBlocBroker {
 	return clusterContract[clusterAddr].receiptList.getReceiptListSize();
     }
 
-    function getClusterReceiptNode(address clusterAddr, uint32 index) constant returns(uint256, int32 )
+    function getClusterReceiptNode(address clusterAddr, uint32 index) constant returns (uint256, int32)
     {
 	return clusterContract[clusterAddr].receiptList.print_index(index);
     }
-    //function testCallStack() returns ( int ){ return 1; }    
+    /*
+    function testCallStack() returns (int)
+    {
+	return 1;
+    } 
+    */   
 }
-
-/* unneeded delete them*/
-//jobStatus.returned     = netOwed - amountToGain; //Log
-
-//submit job:
-	    //coreMinuteGas == 0                                          || //done: carried to modifier.
-	    //coreMinuteGas > 11520                                       || //done: carried to modifier.
-	    //bytes(jobDesc).length > 128                                 || //TODO: Do this on upper level. done.
-	    //( storageType == 0 && bytes(jobKey).length     != 46 )      || //TODO: Do this on upper level. done.
-	    //( storageType == 2 && bytes(miniLockId).length != 45 )      || //TODO: Do this on upper level. done.
-	    //storageType > 2
-
-//registerCluster
-	    //bytes(fID).length         > 128                                   //TODO: Do this on upper level.done
-	    //bytes(clusterName).length > 64                                    //TODO: Do this on upper level.done
-	    //(bytes(miniLockId).length != 0 && bytes(miniLockId).length != 45) //TODO: Do this on upper level.done
-//deregisterCluster
-//if( !clusterContract[msg.sender].isExist   &&   //if does not exist
-//    !clusterContract[msg.sender].isRunning )    //if already false.
-//    throw;
-
-//updateCluster
-	//if( bytes(clusterName).length > 64 ) throw; //TODO: Do this on upper level.done
-	//bytes(clusterName).length > 64                                    //TODO: Do this on upper level.done
-	//(bytes(miniLockId).length != 0 && bytes(miniLockId).length != 45) //TODO: Do this on upper level.done
