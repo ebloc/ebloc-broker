@@ -1,4 +1,4 @@
-#!/usr/bin/pythonA
+#!/usr/bin/python
 import StringIO
 import pytest
 
@@ -85,6 +85,7 @@ def test_receipt(web3, accounts, chain):
     fname = "/Users/alper/ebloc_eblocBrokerGit/contracts/test.txt";    
     f1=open('/Users/alper/Desktop/receipt.txt', 'w+')
     account = accounts[2];
+    x = "5b0f93fa7d28bc881f16c14b7c59a58ae5af997e3d0949d7ae6949302bd1f4d0";
     with open(fname) as f:
         for line in f:
             arguments = line.rstrip('\n').split(" ")
@@ -93,12 +94,17 @@ def test_receipt(web3, accounts, chain):
             coreNum = int(arguments[2])
 
             chain.wait.for_block(int(arguments[0]));
-            
-            set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(cg*1*coreNum, "wei") }).submitJob(
+
+            #jobKey_Description_miniLockId
+            set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(60*10000000000000000*coreNum, "wei") }).submitJob(
                 account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", coreNum, "Science", cg, 0, "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k" );
+
             contract_address = chain.wait.for_receipt(set_txn_hash)
 
-            #print( j, arguments[0], arguments[1], arguments[2], myGas );
+            gas = contract_address["gasUsed"];
+            print("submitJobb: " + str(gas));
+
+            #print( j, arguments[0], arguments[1], arguments[2], gas );
             #f1.write( '%s %s %s %d \n' % (arguments[0], arguments[1], arguments[2], myGas ) )
             #print(my_contract.call().hSize());
             j = j + 1;
@@ -110,8 +116,6 @@ def test_receipt(web3, accounts, chain):
 
     '''
     coreNum = 1;
-    set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(60*10000000000000000*coreNum, "wei") }).submitJob(
-        account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", coreNum, "Science", 60, 0, "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k" );
     contract_address = chain.wait.for_receipt(set_txn_hash)
     gUsed = contract_address["gasUsed"];
     print( "\nsubmitJobUsedGas:" + str(gUsed) + "\n" )
@@ -148,6 +152,10 @@ def test_receipt(web3, accounts, chain):
             #break;
             arguments = line.rstrip('\n').split(" ")
             receiptCheck(my_contract, chain, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, int(arguments[1]) - int(arguments[0]) );
+
+            size = my_contract.call().getClusterReceivedAmount(account);
+            print( size );
+
             #print( web3.eth.getBalance(accounts[8]) );
             val = val + 1
 
@@ -156,7 +164,8 @@ def test_receipt(web3, accounts, chain):
     for i in range(0, size):
         print(my_contract.call().getClusterReceiptNode(account, i));
 
-    
+
+
     '''
     print("Cluster's federationCloudId:  " + str(federationCloudId));
     print("Cluster's miniLockId:  "        + str(miniLockId));
@@ -171,14 +180,10 @@ def test_receipt(web3, accounts, chain):
     set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0, 3, 10);
     set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0, 3, 10);
 
-    #ipfsOut,jobStatus,jobBlkStart, blknum,jobId,coreMinGas,time, core, r1, r2 = my_contract.call().getJobInfo(account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0);
-    #print("JobInfo: " + str(jobBlkStart)+ " "+ str(time) +"\n")
 
 
     #receiptCheck(my_contract, chain, 17, 18, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0 );
 
-    size = my_contract.call().getClusterReceivedAmount(account);
-    print( size );
 
     print( web3.eth.getBalance(account) );
     print( web3.eth.getBalance(accounts[1]) );
