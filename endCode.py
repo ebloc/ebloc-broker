@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from subprocess import call
 import sys, os, time, subprocess, constants, base64
 
@@ -7,17 +8,17 @@ indexGlobal  = "";
 
 def logTest(strIn):
    print(strIn)        
-   txFile = open( constants.LOG_PATH + '/endCodeAnalyse/' + jobKeyGlobal + "_" + indexGlobal + '.txt', 'a') #folder root olarak yaratilmamali
-   txFile.write( strIn + "\n"); 
+   txFile = open( constants.LOG_PATH + '/endCodeAnalyse/' + jobKeyGlobal + "_" + indexGlobal + '.txt', 'a') # Folder should not created as root user
+   txFile.write(strIn + "\n"); 
    txFile.close();
 
-def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
+def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    endTimeStamp = os.popen( 'date +%s' ).read(); 
 
    global jobKeyGlobal; jobKeyGlobal=jobKey
    global indexGlobal;  indexGlobal=index;  
 
-   os.environ['endTimeStamp'] = endTimeStamp; #Get endTimeStamp right away.
+   os.environ['endTimeStamp'] = endTimeStamp; # Get endTimeStamp right away
    logTest( "endTimeStamp: " + endTimeStamp )
 
    eblocPath         = constants.EBLOCPATH
@@ -31,7 +32,7 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
    os.environ['cluster_id']        = constants.CLUSTER_ID
    os.environ['jobKey']            = jobKey
    os.environ['index']             = str(index)
-   os.environ["IPFS_PATH"]         = constants.IPFS_REPO #default ipfs repo path
+   os.environ["IPFS_PATH"]         = constants.IPFS_REPO # Default IPFS repo path
    os.environ['eblocPath']         = eblocPath
    os.environ['encodedShareToken'] = encodedShareToken
    os.environ['clientMiniLockId']  = miniLockId
@@ -62,8 +63,7 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
 
    logTest( "JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
-
-   timeout = time.time() + 3*60   # 3 minutes from now
+   timeout = time.time() + 3 * 60   # Timeout threshold is three minutes from now
 
    logTest( "0: " + jobInfo[0] )
    logTest( "1: " + jobInfo[2] )
@@ -75,12 +75,15 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
       clientTimeLimit = jobInfo[5];
       logTest( "TimeLimit: " + clientTimeLimit ); 
 
-      if jobInfo[0] == str( constants.job_state_code['RUNNING'] ): break; #wait until does values updated on the blockchain.         
-      if time.time() > timeout: break
+      if jobInfo[0] == str( constants.job_state_code['RUNNING'] ):
+         break; # Wait until does values updated on the blockchain
+
+      if time.time() > timeout:
+         break
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 
         logTest(  "Error: Already completed job..."); 
-        sys.exit(); #detects error on the SLURM side.
+        sys.exit(); # Detects an error on the SLURM side
 
       jobInfo = os.popen('node $eblocPath/eBlocBrokerNodeCall.js getJobInfo $cluster_id $jobKey $index').read().replace("\n", "").replace(" ", ""); 
       while(True):
@@ -92,20 +95,17 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
          time.sleep(1)
 
       jobInfo = jobInfo.split(',');
-      time.sleep(5) #short sleep here so this loop is not hogging CPU
+      time.sleep(5) # Short sleep here so this loop is not keeping CPU busy
 
    jobId = os.popen( "sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' " ).read();
    os.environ['jobId'] = jobId;
    logTest( "JOBID------------> " + str(jobId) );
 
-   #jobId               = jobInfo[4]; #delete
-   #os.environ['jobId'] = jobId; #delete
-
-   #Here we know that job is already completed.
+   # Here we know that job is already completed
    if str(storageType) == '0':
       countTry=0;
       while(True): 
-         if(countTry > 10):
+         if (countTry > 10):
             sys.exit()
          countTry = countTry + 1         
 
@@ -114,7 +114,7 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
 
          newHash = os.popen( 'ipfs add -r ' + programPath + '/${jobKey}_$index' ).read();  
 
-         if(newHash == ""):
+         if (newHash == ""):
             logTest("Generated new hash return empty error. Trying again");
          else:
             os.environ['newHash'] = newHash;
@@ -131,13 +131,14 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
       os.chdir( encrypyFolderPath )
       res = os.popen( 'tar -P -cvzf $encrypyFolderPath/result.tar.gz .' ).read();
       logTest( "tarRes: " + res )
+
       res = os.popen( 'mlck encrypt -f $encrypyFolderPath/result.tar.gz $clientMiniLockId --anonymous --output-file=$encrypyFolderPath/result.tar.gz.minilock' ).read();
       logTest(  "IPFS-miniLock add started: " + programPath + " " + jobKey + " " + index );           
       os.popen( 'find $encrypyFolderPath -type f ! -newer $encrypyFolderPath/modifiedDate.txt -delete' )
 
-      countTry=0;
+      countTry = 0;
       while(True): 
-         if(countTry > 10):
+         if (countTry > 10):
             sys.exit()
          countTry = countTry + 1                  
          
@@ -145,7 +146,7 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
          logTest( "newHash: " + newHash ) 
          newHash = newHash.split(" ")[1];
 
-         if(newHash == ""):
+         if (newHash == ""):
             logTest("Generated new hash return empty error. Trying again.");
          else:
             os.environ['newHash'] = newHash;
@@ -171,10 +172,10 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
       elapsedDay  = elapsedHour[0];
       elapsedHour = elapsedHour[1];
 
-   logTest( str(int(elapsedDay))     );     
-   logTest( str(int(elapsedHour))    );    
-   logTest( str(int(elapsedMinute))  );  
-   logTest( str(int(elapsedSeconds)) ); 
+   logTest(str(int(elapsedDay))     );     
+   logTest(str(int(elapsedHour))    );    
+   logTest(str(int(elapsedMinute))  );  
+   logTest(str(int(elapsedSeconds)) ); 
 
    elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1;
    logTest( "ElapsedRawTime: " + str(elapsedRawTime) )
@@ -189,18 +190,17 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
    if storageType == '0' or storageType == '2':                         
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().replace("\n", "").replace(" ", ""); 
       while(True):
-         if( not(transactionHash == "notconnected" or transactionHash == "") ): 
+         if (not(transactionHash == "notconnected" or transactionHash == "")): 
             break;
          else:
             logTest("Error: Please run Parity or Geth on the background.**************************************************************")
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().replace("\n", "").replace(" ", ""); 
          time.sleep(5)
-
    elif storageType == '1':
       nullByte="0x00"; os.environ['nullByte'] = nullByte
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType  $endTimeStamp').read().replace("\n", "").replace(" ", ""); 
       while(True):
-         if( not(transactionHash == "notconnected" or transactionHash == "") ): 
+         if (not(transactionHash == "notconnected" or transactionHash == "")): 
             break;
          else:
             logTest("Error: Please run Parity or Geth on the background.**************************************************************")
@@ -217,14 +217,13 @@ def endCall( jobKey, index, storageType, shareToken, miniLockId, folderName ):
       os.system( "rm $localEudatPath/.node-xmlhttprequest*" )
 
       os.chdir(localEudatPath) 
-      os.popen( 'find . -type f ! -newer $localEudatPath/modifiedDate.txt -delete' ) #Client's loaded files are deleted, no need to re-upload them.
+      os.popen( 'find . -type f ! -newer $localEudatPath/modifiedDate.txt -delete' ) # Client's loaded files are deleted, no need to re-upload them
       os.popen( 'zip -r results.zip .' ) 
       res = os.popen( 'curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@results.zip\' https://b2drop.eudat.eu/public.php/webdav/results.zip' ).read()
       logTest(res); 
-      #os.system( "rm -rf " + programPath + '/' + jobKey + "_" + index );
+      #os.system( "rm -rf " + programPath + '/' + jobKey + "_" + index ); # Deleted downloaded code from local since it is not needed anymore
 
    logTest( "ReceiptHash: " + transactionHash ); 
-
    txFile = open( logPath + '/transactions/'   + constants.CLUSTER_ID + '.txt', 'a');   
    txFile.write( transactionHash + " end_receiptCheck\n" );
    txFile.close();
@@ -240,7 +239,7 @@ if __name__ == '__main__': #py_driver.py executed as script
    endCall( jobKey, index, storageType, shareToken, miniLockId, runName )
 
 
-#delete old code.
+#delete old code:
 #out = os.popen(' find . -type f -newermt \'' + modifiedDate + '\' -exec cp -v --parents {} ' + constants.OWN_CLOUD_PATH + '/' + folderName + ' \;' ).read(); 
 #print( out ); 
 #f.write( out );       
