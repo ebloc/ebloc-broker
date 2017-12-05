@@ -1,19 +1,20 @@
 #!/usr/bin/env python
-import owncloud, hashlib, getpass, sys, os, time, subprocess, constants
-from subprocess import call
-import endCode
 
-eblocPath   = constants.EBLOCPATH;
-ipfs_hashes = constants.PROGRAM_PATH
+import owncloud, hashlib, getpass, sys, os, time, subprocess, constants, endCode
+from subprocess import call
+
+eblocPath    = constants.EBLOCPATH;
+ipfs_hashes  = constants.PROGRAM_PATH
 jobKeyGlobal = "";
 indexGlobal  = "";
+
 def logTest(strIn):
    print(strIn)        
    txFile = open( constants.LOG_PATH + '/transactions/' + jobKeyGlobal + '_' + indexGlobal + '_driverOutput' +'.txt', 'a');
    txFile.write(strIn + "\n"); 
    txFile.close();
 
-   #If non-thread tests are running.
+   # If non-thread tests are running
    txFile = open( constants.LOG_PATH + '/transactions/clusterOut.txt', 'a'); 
    txFile.write(strIn + "\n"); 
    txFile.close();
@@ -35,14 +36,16 @@ def contractCall( val ):
             time.sleep(1);
    return ret;
 
-def isIpfsDaemonOn(): #Check IPFS Daemon working on the background.
-   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().replace("\n", ""); 
-   if(len(check) == 0):
+# Checks does IPFS work on the background or not
+def isIpfsDaemonOn(): 
+   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().replace("\n", "");
+   
+   if (len(check) == 0):
       logTest( "Error: IPFS does not work on the background. Please do: ipfs daemon & " )
       return False
    return True;
 
-def driverEudatCall( jobKey, index ):
+def driverEudatCall(jobKey, index):
     global jobKeyGlobal; jobKeyGlobal=jobKey
     global indexGlobal;  indexGlobal=index;
 
@@ -51,11 +54,10 @@ def driverEudatCall( jobKey, index ):
 
     os.environ['jobKey']      = str(jobKey)
     os.environ['index']       = str(index);
-    os.environ['clusterId']  = constants.CLUSTER_ID 
+    os.environ['clusterId']   = constants.CLUSTER_ID 
     os.environ['eblocPath']   = eblocPath   
     os.environ['folderIndex'] = "1";
     os.environ['miniLockId']  = "-1";
-
     os.environ['whoami']      = constants.WHOAMI
     whoami                    = os.system( "whoami" ) #To learn running as root or userName.
 
@@ -65,21 +67,21 @@ def driverEudatCall( jobKey, index ):
 
     header     = "var mylib = require('" + eblocPath + "/eBlocHeader.js')"; os.environ['header']     = header;
 
-    f        = open( eblocPath + '/password.txt', 'r')  #Password read from the file.
+    f        = open( eblocPath + '/password.txt', 'r')  # Password is read from the file. password.txt is have only user access
     password = f.read().replace("\n", "").replace(" ", ""); f.close()
 
     logTest("Login into owncloud")
     oc = owncloud.Client('https://b2drop.eudat.eu/')
-    oc.login('aalimog1@binghamton.edu', password ); #Unlocks eudat, maybe more secure way?
+    oc.login('aalimog1@binghamton.edu', password ); # Unlocks EUDAT account
 
     shareList = oc.list_open_remote_share();
     
     logTest("finding_acceptId")
     acceptFlag = 0;
     eudatFolderName = ""
-    for i in range( len(shareList)-1, -1, -1 ): #Start iterate from last to first, #print( len(z) )
+    for i in range( len(shareList)-1, -1, -1 ): # Starts iterating from last item  to first one
        inputFolderName = shareList[i]['name']
-       inputFolderName = inputFolderName[1:] #removes '/' on the beginning.
+       inputFolderName = inputFolderName[1:]    # Removes '/' on the beginning.
        inputId         = shareList[i]['id']
        inputOwner      = shareList[i]['owner']
        shareToken      = shareList[i]['share_token'] 
@@ -100,50 +102,48 @@ def driverEudatCall( jobKey, index ):
     ownCloudPathFolder      = constants.OWN_CLOUD_PATH + '/' + folderName; os.environ['ownCloudPathFolder']      = ownCloudPathFolder;
     localOwnCloudPathFolder = ipfs_hashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
 
-    if not os.path.isdir( localOwnCloudPathFolder ): #if folder does not exist.
-       os.makedirs( localOwnCloudPathFolder )
+    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist.
+       os.makedirs(localOwnCloudPathFolder)
        
-    os.popen( "wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() #downloads shared file as zip.
+    os.popen( "wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() # Downloads shared file as zip
 
     #run.tar.gz check yap.
-    #checkRunExist = os.popen( "unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read() #checks does zip contains run.sh file.
+    #checkRunExist = os.popen( "unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read() # Checks does zip contains run.sh file
     #if( not eudatFolderName + "/run.sh" in checkRunExist ):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-    os.popen( " unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/." ).read()
-    os.popen( " mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ " ).read()   
-    os.popen( " rm    $localOwnCloudPathFolder/output.zip"                                    )
-    os.popen( " rmdir $localOwnCloudPathFolder/$eudatFolderName"                              )
-    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest( myDate );
+    os.popen( "unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/." ).read()
+    os.popen( "mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ " ).read()   
+    os.popen( "rm    $localOwnCloudPathFolder/output.zip"                                    )
+    os.popen( "rmdir $localOwnCloudPathFolder/$eudatFolderName"                              )
+    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest(myDate);
     txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
     time.sleep(0.2)
     os.popen( "tar -xf $localOwnCloudPathFolder/ipfs.tar.gz -C $localOwnCloudPathFolder/" ).read()
     os.popen( "rm $localOwnCloudPathFolder/ipfs.tar.gz"  ).read()
+    os.system("cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
 
-    os.system(' cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh' ); 
-
-    logTest( ownCloudPathFolder )
-    logTest( "localOwnCloudPathFolder: " + localOwnCloudPathFolder )
+    logTest(ownCloudPathFolder)
+    logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
 
     jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
     jobInfo    = jobInfo.split(',');
     jobCoreNum = jobInfo[1]
 
     while(True):
-       if( not(jobCoreNum == "notconnected" or jobCoreNum == "") ): 
+       if (not(jobCoreNum == "notconnected" or jobCoreNum == "")): 
           break;
        else:
           logTest("Error: Please run Parity or Geth on the background.**************************************************************")
           jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
           jobInfo    = jobInfo.split(',');
           jobCoreNum = jobInfo[1]
-          #jobCoreNum = contractCall('echo "$header; console.log( \'\' + mylib.getSubmittedJobCore( \'$clusterId\', \'$jobKey\', $index )) "');
 
     os.environ['jobCoreNum'] = jobCoreNum;
     logTest("Job's Core Number: " + jobCoreNum)
 
-    os.chdir( localOwnCloudPathFolder ) #cd into working path and call sbatch from there.
+    os.chdir( localOwnCloudPathFolder ) # 'cd' into the working path and call sbatch from there.
     if(whoami == "root"):
        jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
     else:
@@ -154,11 +154,11 @@ def driverEudatCall( jobKey, index ):
     if not jobId.isdigit():
        oc.logout()
        logTest("Error occured, jobId is not a digit.")
-       return(); #Detected an error on the SLURM side.
+       return(); # Detected an error on the SLURM side.
 
     oc.logout()
 
-def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag i ekle.
+def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ): # TODO: miniLock Flag i ekle.
     global jobKeyGlobal; jobKeyGlobal=ipfsHash
     global indexGlobal;  indexGlobal=index;
 
@@ -171,7 +171,8 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag
     os.environ['shareToken']  = "-1"
     os.environ['whoami']      = constants.WHOAMI
     whoami                    = os.system( "whoami" )
-    if(ipfsType == '0'):
+    
+    if (ipfsType == '0'):
        os.environ['miniLockId'] = "-1"
     else:
        os.environ['miniLockId'] = miniLockId
@@ -182,9 +183,9 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag
     jobSavePath = ipfs_hashes + '/' + ipfsHash + "_" + index;
     os.environ['jobSavePath']   = jobSavePath
 
-    if not os.path.isdir( jobSavePath ): #if folder does not exist.
+    if not os.path.isdir(jobSavePath): # If folder does not exist 
        os.environ['mkdirPath'] = jobSavePath;
-       if(whoami == "root"):
+       if (whoami == "root"):
           os.system("sudo -u $whoami mkdir $mkdirPath");
        else:
           os.system("                mkdir $mkdirPath");
@@ -196,15 +197,15 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag
     ipfsCallCounter=0;    
     #while(True):  #birden fazla denemek gerekebilir.
     isIPFSHashExist=""
-    if(whoami == "root"):
+    if (whoami == "root"):
        isIPFSHashExist = os.popen( "sudo -u $whoami bash $eblocPath/ipfsStat.sh $ipfsHash" ).read();
     else:
        isIPFSHashExist = os.popen( "                bash $eblocPath/ipfsStat.sh $ipfsHash" ).read();
-
+       
     logTest( isIPFSHashExist ) 
     
     #ipfsFlag=0; 
-    if( constants.IPFS_USE == 1 ):
+    if (constants.IPFS_USE == 1):
        while(True):
           if(isIpfsDaemonOn):
              break;
@@ -220,13 +221,13 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag
        #   time.sleep(10) #time required for ipfs daemon to be on.
 
 
-    if( "CumulativeSize" in isIPFSHashExist ):
-       if(whoami == "root"):
+    if ("CumulativeSize" in isIPFSHashExist):
+       if (whoami == "root"):
           os.system( 'sudo -u $whoami bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath'); 
        else:
           os.system( '                bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath'); 
 
-       if(ipfsType == '2'): #Case for the ipfsMiniLock
+       if (ipfsType == '2'): # Case for the ipfsMiniLock
           res = os.popen( 'mlck decrypt -f $jobSavePath/$ipfsHash --passphrase="exfoliation econometrics revivifying obsessions transverse salving dishes" --output-file=$jobSavePath/output.tar.gz' ).read();
           os.system( 'rm       $jobSavePath/$ipfsHash' );
           os.system( 'tar -xvf $jobSavePath/output.tar.gz && rm $jobSavePath/output.tar.gz' );
@@ -235,7 +236,7 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag
        if not os.path.isfile('run.sh'): 
           return
     else:
-       logTest("Markle not found! timeout for ipfs object stat retrieve !!!!"); #adamin onerdigi kismi ekle.
+       logTest("Markle not found! timeout for ipfs object stat retrieve !"); # IPFS file could not be accessed
        #todo: ipfs dht findprovs QmRr62nqpQM3YdXyfX4MS93Bx11ztyFeLEAsYtNiNiMNMp
        return
 
@@ -243,30 +244,28 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ):#TODO: miniLock Flag
     txFile = open( 'modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
     time.sleep(0.2)
 
-    os.system( 'cp run.sh ${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh' ); #TODO: Folder index de ekle.
+    os.system("cp run.sh ${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
 
     jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$ipfsHash\', \'$index\' ) )"');
     jobInfo    = jobInfo.split(',');
     jobCoreNum = jobInfo[1]
 
-    #jobCoreNum = contractCall('echo "$header; console.log( \'\' + mylib.getSubmittedJobCore( \'$clusterId\', \'$ipfsHash\', $index )) "');
-
     os.environ['jobCoreNum'] = jobCoreNum;
     logTest( "RequestedCoreNum: " + str(jobCoreNum) )
 
-    #SLURM submit job
-    if(whoami == "root"):
+    # SLURM submit job
+    if (whoami == "root"):
        jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfs_hashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
     else:
        jobId = os.popen('sbatch         -N$jobCoreNum $ipfs_hashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
        os.environ['jobId'] = jobId;
-       logTest( "jobId: "+ str(jobId) ); #delete.
+       logTest( "jobId: "+ str(jobId) ); # Could be deleted
 
     if not jobId.isdigit():
        logTest("Error occured, jobId is not a digit.")
-       sys.exit(); #detects error non the SLURM side.
+       sys.exit(); # Detects na error on the SLURM side
 
-    if(whoami == "root"):
+    if (whoami == "root"):
        os.popen( "sudo chown $whoami: $jobSavePath")
 
 if __name__ == '__main__': #py_driver.py executed as script
