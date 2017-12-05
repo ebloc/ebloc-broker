@@ -12,20 +12,20 @@ def startCall( jobKey, index ):
    os.environ['jobKey']    = jobKey;
    statusId                = str(constants.job_state_code['RUNNING']); 
    os.environ['statusId']  = statusId;
-
-   unixTime=os.popen('date +%s').read();
-   unixTime=str(int(unixTime) + 1)
-   os.environ['unixTime']=unixTime
-
-   txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().replace("\n", "").replace(" ", ""); 
+   
+   unixTime                = os.popen('date +%s').read();
+   unixTime                = str(int(unixTime) + 1)
+   os.environ['unixTime']  = unixTime
+   txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().replace("\n", "").replace(" ", "");
+   
    while(True):
-      if( not(txHash == "notconnected" or txHash == "") ): 
+      if (not(txHash == "notconnected" or txHash == "")): 
          break;
       else:
          os.environ['unixTime'] = unixTime;
-         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().replace("\n", "").replace(" ", ""); 
+         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().replace("\n", "").replace(" ", "");        
       time.sleep(5)
-
+      
    txFile = open( logPath + '/transactions/' + cluster_id + '.txt', 'a');
    txFile.write( txHash + " start_setJobStatus" +  " " + unixTime + "\n");
    txFile.close();

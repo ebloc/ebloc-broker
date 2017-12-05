@@ -103,7 +103,7 @@ for(i in array) {
 }
 */
 
-if(printLog==1){
+if (printLog==1) {
     sum=0;
     sum1=0;
     console.log( "Cluster Gained Amount: " + mylib.getClusterReceivedAmount(clusterID)  )

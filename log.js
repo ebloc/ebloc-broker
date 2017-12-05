@@ -6,4 +6,4 @@ console.log( '' + mylib.getDeployedBlockNumber() )
 //readFrom = mylib.getDeployedBlockNumber()
 readFrom = 1382295
 //mylib.LogJob( readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt' ); //COMPLETED olmayanlari print et.
-mylib.LogReceipt( readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt' );
+mylib.LogReceipt(readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt');
