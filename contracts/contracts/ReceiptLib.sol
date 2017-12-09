@@ -19,8 +19,8 @@ library ReceiptLib {
     {
 	self.list.push(Interval({ num: 0, core: 0, next: 0}) ); /* Dummy node */
 	self.list.push(Interval({ num: 0, core: 0, next: 0}) ); /* Dummy node */
-	self.head       = 1;
-	self.coreNumber = coreNumber;
+	self.head           = 1;
+	self.coreNumber     = coreNumber;
 	self.deletedItemNum = 0;
     }
 
@@ -39,7 +39,7 @@ library ReceiptLib {
 	// +-------------------------------+
 	
 	if (e < self.list[addr].num) { 
-	    flag = true; 
+	    flag         = true; 
 	    prevNode     = self.list[addr];
 	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous head-node right after the insert operation */ 
 
@@ -55,7 +55,7 @@ library ReceiptLib {
 	    } while (true);	    
 	}
 	
-	self.list.push(Interval({ num: e - 1, core: c, next: addr}) );
+	self.list.push(Interval({num: e - 1, core: c, next: addr}) );
 	
 	if (!flag) { 
 	    addrTemp      = addr; 
@@ -71,14 +71,14 @@ library ReceiptLib {
 
 	do {
 	    if (s > currentNode.num){ /* Covers [val, val1) s = s-1 Done */
-		self.list.push(Interval( { num: s, core: -1 * c, next: prevNode.next }) ); 
+		self.list.push(Interval( {num: s, core: -1 * c, next: prevNode.next}) ); 
 		prevNode.next = uint32(self.list.length - 1);			
 		return true;
 	    }
 	    
 	    carriedSum += currentNode.core;
 	    
-	    /* If enters into if statement it means throw is catch and all previoes operations are reverted back */
+	    /* If enters into if statement it means revert() is catch and all previoes operations are revert()ed back */
 	    if (carriedSum > int32(self.coreNumber)) {		
 		delete self.list[self.list.length-1];
 		if(!flag)
