@@ -1,4 +1,4 @@
-opragma solidity ^0.4.17;
+pragma solidity ^0.4.17;
 import "./ReceiptLib.sol";
 
 library eBlocBrokerLib {

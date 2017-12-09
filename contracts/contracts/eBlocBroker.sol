@@ -42,9 +42,9 @@ contract eBlocBroker {
     
     function refundMe(address clusterAddr, string jobKeyHash, uint32 index ) public returns(bool)
     {
-	eBlocBrokerLib.Status job = clusterContract[clusterAddr].jobStatus[jobKeyHash][index]; /* If does not exist EVM throws error */
+	eBlocBrokerLib.Status job = clusterContract[clusterAddr].jobStatus[jobKeyHash][index]; /* If does not exist EVM revert()s error */
 	if (msg.sender != job.jobOwner || job.receiptFlag)
-	    throw; /* Job has not completed yet */
+	    revert(); /* Job has not completed yet */
 
 	if (job.status == uint8(JobStateCodes.PENDING)) 
 	    msg.sender.send(job.received);
@@ -61,7 +61,7 @@ contract eBlocBroker {
     function receiptCheck(string jobKeyHash, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTimeStamp)
 	public returns (bool success) /* Payback to client and server */
     { 
-	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKeyHash][index]; /* If clusterContract[msg.sender] isExist is false EVM throws error */
+	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKeyHash][index]; /* If clusterContract[msg.sender] isExist is false EVM revert()s error */
 	uint netOwed              = job.received;
 	uint amountToGain         = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
@@ -69,11 +69,11 @@ contract eBlocBroker {
 	    job.receiptFlag        ||
 	    endTimeStamp > block.timestamp)
 	    //( storageType == 0 && bytes(ipfsHashOut).length != 46 ) || //TODO: Do this on upper level.	    
-	    throw;
+	    revert();
 	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck( job.startTimeStamp, endTimeStamp, int32(job.core))) { 	    
 	    if (!job.jobOwner.send(netOwed)) /* Pay back netOwned to client */
-		throw;
+		revert();
 	    
 	    job.receiptFlag  = true; /* Important to check already paid job or not */	    
 	    return false;
@@ -81,7 +81,7 @@ contract eBlocBroker {
 	
 	/*   Gained by the cluster.               Gained by the client */
 	if (!msg.sender.send( amountToGain ) && !job.jobOwner.send( netOwed - amountToGain))
-	    throw;
+	    revert();
 
 	clusterContract[msg.sender].receivedAmount += amountToGain;
 
@@ -96,7 +96,7 @@ contract eBlocBroker {
     {
 	eBlocBrokerLib.data cluster = clusterContract[msg.sender];
 	if (cluster.isExist && cluster.isRunning)
-	    throw;
+	    revert();
 	
 	if (cluster.isExist && !cluster.isRunning){
 	    memberAddresses[cluster.memberAddressesID] = msg.sender; 
@@ -138,7 +138,7 @@ contract eBlocBroker {
 	    !cluster.isRunning                                         || 
 	    core == 0                                                  ||
 	    core > cluster.receiptList.coreNumber)
-	    throw;
+	    revert();
 
 	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc);
 
@@ -161,7 +161,7 @@ contract eBlocBroker {
 	eBlocBrokerLib.Status jS = clusterContract[msg.sender].jobStatus[jobKey][index];
 	if (jS.receiptFlag ||
 	    stateId > 15 || startTimeStamp > block.timestamp) //TODO: carry to modifier.
-	    throw;
+	    revert();
 
 	if (stateId != 0) {
 	    jS.status         = stateId;
@@ -209,7 +209,7 @@ contract eBlocBroker {
     function getJobSize(address clusterAddr, string jobKey) constant returns (uint)
     {
 	if( !clusterContract[msg.sender].isExist)
-	    throw;
+	    revert();
 	return clusterContract[clusterAddr].jobStatus[jobKey].length;
     }
 
