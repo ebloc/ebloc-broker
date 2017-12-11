@@ -31,7 +31,7 @@ contract eBlocBroker {
     mapping(address => eBlocBrokerLib.data) clusterContract;   
 
     modifier coreMinuteGas_StorageType_Check(uint32 coreMinuteGas, uint8 storageType) {	
-	require( !(coreMinuteGas == 0 || coreMinuteGas > 11520) && (storageType < 3) ); /* coreMinuteGas has maximum 9 days */
+	require( !(coreMinuteGas == 0 || coreMinuteGas > 11520) && (storageType < 4) ); /* coreMinuteGas has maximum 9 days */
 	_ ;
     }
 
@@ -87,7 +87,7 @@ contract eBlocBroker {
 
 	job.status       = uint8(JobStateCodes.COMPLETED);
 	job.receiptFlag  = true; 
-	LogReceipt( msg.sender, jobKeyHash, index, job.jobOwner, job.received, (netOwed - amountToGain ), block.timestamp, ipfsHashOut, storageType );
+	LogReceipt(msg.sender, jobKeyHash, index, job.jobOwner, job.received, (netOwed - amountToGain ), block.timestamp, ipfsHashOut, storageType);
 	return true;
     }
 
