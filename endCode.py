@@ -228,7 +228,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    txFile.write( transactionHash + " end_receiptCheck\n" );
    txFile.close();
 
-if __name__ == '__main__': #py_driver.py executed as script
+if __name__ == '__main__': # py_driver.py executed as a script
    jobKey      = sys.argv[1];
    index       = sys.argv[2];
    storageType = sys.argv[3];
@@ -238,9 +238,4 @@ if __name__ == '__main__': #py_driver.py executed as script
 
    endCall( jobKey, index, storageType, shareToken, miniLockId, runName )
 
-
-#delete old code:
-#out = os.popen(' find . -type f -newermt \'' + modifiedDate + '\' -exec cp -v --parents {} ' + constants.OWN_CLOUD_PATH + '/' + folderName + ' \;' ).read(); 
-#print( out ); 
-#f.write( out );       
 #oc.decline_remote_share(storageType)  

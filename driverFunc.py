@@ -276,4 +276,4 @@ if __name__ == '__main__': #py_driver.py executed as script
     index  = "1"
     myType = "0" 
     miniLockId = "" 
-    driverIpfsCall(var, index, myType, miniLockId );
+    driverIpfsCall(var, index, myType, miniLockId);
