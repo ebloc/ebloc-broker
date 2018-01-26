@@ -69,8 +69,8 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    logTest( "1: " + jobInfo[2] )
 
    while True:
-      logTest( jobInfo[0] ); 
-      logTest( jobInfo[2] ); 
+      logTest(jobInfo[0]); 
+      logTest(jobInfo[2]); 
 
       clientTimeLimit = jobInfo[5];
       logTest( "TimeLimit: " + clientTimeLimit ); 
@@ -172,20 +172,20 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       elapsedDay  = elapsedHour[0];
       elapsedHour = elapsedHour[1];
 
-   logTest(str(int(elapsedDay))     );     
-   logTest(str(int(elapsedHour))    );    
-   logTest(str(int(elapsedMinute))  );  
-   logTest(str(int(elapsedSeconds)) ); 
+   logTest(str(int(elapsedDay))    );     
+   logTest(str(int(elapsedHour))   );    
+   logTest(str(int(elapsedMinute)) );  
+   logTest(str(int(elapsedSeconds))); 
 
    elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1;
    logTest( "ElapsedRawTime: " + str(elapsedRawTime) )
 
-   if( elapsedRawTime > int(clientTimeLimit) ):
+   if(elapsedRawTime > int(clientTimeLimit)):
       elapsedRawTime = clientTimeLimit
 
    os.environ['elapsedRawTime'] = str(elapsedRawTime);
-   logTest( "ElapsedRawTime: " + str(elapsedRawTime) )
-   logTest( "jobInfo: " + str(jobInfo) )
+   logTest("ElapsedRawTime: " + str(elapsedRawTime))
+   logTest("jobInfo: " + str(jobInfo))
 
    if storageType == '0' or storageType == '2':                         
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().replace("\n", "").replace(" ", ""); 
@@ -193,7 +193,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
          if (not(transactionHash == "notconnected" or transactionHash == "")): 
             break;
          else:
-            logTest("Error: Please run Parity or Geth on the background.**************************************************************")
+            logTest("Error: Please run Parity or Geth on the background.******")
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().replace("\n", "").replace(" ", ""); 
          time.sleep(5)
    elif storageType == '1':
@@ -203,23 +203,23 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
          if (not(transactionHash == "notconnected" or transactionHash == "")): 
             break;
          else:
-            logTest("Error: Please run Parity or Geth on the background.**************************************************************")
+            logTest("Error: Please run Parity or Geth on the background.******")
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType $endTimeStamp').read().replace("\n", "").replace(" ", ""); 
          time.sleep(5)
 
       jobKeyTemp = jobKey.split('=');
       folderName = jobKeyTemp[1]
-      logTest( folderName )
+      logTest(folderName)
 
       localEudatPath = programPath + '/' + jobKey + "_" + index;
       os.environ['localEudatPath'] = localEudatPath
 
-      os.system( "rm $localEudatPath/.node-xmlhttprequest*" )
+      os.system("rm $localEudatPath/.node-xmlhttprequest*")
 
       os.chdir(localEudatPath) 
-      os.popen( 'find . -type f ! -newer $localEudatPath/modifiedDate.txt -delete' ) # Client's loaded files are deleted, no need to re-upload them
-      os.popen( 'zip -r results.zip .' ) 
-      res = os.popen( 'curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@results.zip\' https://b2drop.eudat.eu/public.php/webdav/results.zip' ).read()
+      os.popen('find . -type f ! -newer $localEudatPath/modifiedDate.txt -delete') # Client's loaded files are deleted, no need to re-upload them
+      os.popen('zip -r results.zip .') 
+      res = os.popen( 'curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@results.zip\' https://b2drop.eudat.eu/public.php/webdav/results.zip').read()
       logTest(res); 
       #os.system( "rm -rf " + programPath + '/' + jobKey + "_" + index ); # Deleted downloaded code from local since it is not needed anymore
 

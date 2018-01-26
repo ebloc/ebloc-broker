@@ -15,17 +15,17 @@ library ReceiptLib {
 	uint32 deletedItemNum;
     }
 
-    function construct(intervalNode storage self, uint32 coreNumber)
+    function construct(intervalNode storage self, uint32 coreNum)
     {
-	self.list.push(Interval({ num: 0, core: 0, next: 0}) ); /* Dummy node */
-	self.list.push(Interval({ num: 0, core: 0, next: 0}) ); /* Dummy node */
+	self.list.push(Interval({num: 0, core: 0, next: 0})); /* Dummy Object */
+	self.list.push(Interval({num: 0, core: 0, next: 0})); /* Dummy Object */
 	self.head           = 1;
-	self.coreNumber     = coreNumber;
+	self.coreNumber     = coreNum;
 	self.deletedItemNum = 0;
     }
 
-    function receiptCheck(intervalNode storage self, uint s, uint e, int32 c) returns (bool success)
-    {
+    function receiptCheck(intervalNode storage self, uint startPoint, uint endPoint, int32 coreNum) returns (bool success)
+    { 
 	bool     flag = false; 
 	uint32   addr = self.head;
 	uint32   addrTemp;     
@@ -38,14 +38,14 @@ library ReceiptLib {
 	// | Begin: Receipt Validity check |
 	// +-------------------------------+
 	
-	if (e < self.list[addr].num) { 
+	if (endPoint < self.list[addr].num) { 
 	    flag         = true; 
 	    prevNode     = self.list[addr];
 	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous head-node right after the insert operation */ 
 
-	    do { /*Inside while loop carriedSum is updated*/  
+	    do { /* Inside while loop carriedSum is updated */  
 		carriedSum += prevNode.core;
-		if( e >= currentNode.num ) {
+		if (endPoint >= currentNode.num) {
 		    addr = prevNode.next; /* "addr" points the index to push the node */
 		    break;
 		}
@@ -55,12 +55,12 @@ library ReceiptLib {
 	    } while (true);	    
 	}
 	
-	self.list.push(Interval({num: e - 1, core: c, next: addr}) );
+	self.list.push(Interval({num: endPoint-1, core: coreNum, next: addr}));
 	
 	if (!flag) { 
 	    addrTemp      = addr; 
-	    carriedSum    = c;
-	    prevNode      = self.list[self.head = uint32(self.list.length - 1)];
+	    carriedSum    = coreNum;
+	    prevNode      = self.list[self.head = uint32(self.list.length-1)];
 	} else {
 	    addrTemp      = prevNode.next;
 	    prevNodeTemp  = prevNode;
@@ -70,18 +70,17 @@ library ReceiptLib {
 	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */ 
 
 	do {
-	    if (s > currentNode.num){ /* Covers [val, val1) s = s-1 Done */
-		self.list.push(Interval( {num: s, core: -1 * c, next: prevNode.next}) ); 
+	    if (startPoint > currentNode.num) { /* Covers [val, val1) s = s-1 */
+		self.list.push(Interval( {num: startPoint, core: -1*coreNum, next: prevNode.next})); 
 		prevNode.next = uint32(self.list.length - 1);			
 		return true;
-	    }
-	    
+	    }	   
 	    carriedSum += currentNode.core;
 	    
-	    /* If enters into if statement it means revert() is catch and all previoes operations are revert()ed back */
+	    /* If enters into if statement it means revert() is catch and all previoes operations are reverted back */
 	    if (carriedSum > int32(self.coreNumber)) {		
 		delete self.list[self.list.length-1];
-		if(!flag)
+		if (!flag)
 		    self.head = addrTemp;		
 		else
 		    prevNodeTemp.next = addrTemp;
@@ -108,10 +107,9 @@ library ReceiptLib {
     function printIndex(intervalNode storage self, uint32 index) constant returns (uint256, int32 )
     {
 	uint32 myIndex = self.head;
-	for ( uint i = 0; i < index; i++)
+	for (uint i = 0; i < index; i++)
 	    myIndex = self.list[myIndex].next;
 	
-	return ( self.list[myIndex].num, self.list[myIndex].core );
-    }
-    
+	return (self.list[myIndex].num, self.list[myIndex].core);
+    }    
 }
