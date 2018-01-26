@@ -59,7 +59,7 @@ def driverEudatCall(jobKey, index):
     os.environ['folderIndex'] = "1";
     os.environ['miniLockId']  = "-1";
     os.environ['whoami']      = constants.WHOAMI
-    whoami                    = os.system( "whoami" ) #To learn running as root or userName.
+    whoami                    = os.system( "whoami" ) # To learn running as root or userName
 
     jobKeyTemp = jobKey.split('=');
     owner      = jobKeyTemp[0]
@@ -81,7 +81,7 @@ def driverEudatCall(jobKey, index):
     eudatFolderName = ""
     for i in range( len(shareList)-1, -1, -1 ): # Starts iterating from last item  to first one
        inputFolderName = shareList[i]['name']
-       inputFolderName = inputFolderName[1:]    # Removes '/' on the beginning.
+       inputFolderName = inputFolderName[1:]    # Removes '/' on the beginning
        inputId         = shareList[i]['id']
        inputOwner      = shareList[i]['owner']
        shareToken      = shareList[i]['share_token'] 
@@ -102,7 +102,7 @@ def driverEudatCall(jobKey, index):
     ownCloudPathFolder      = constants.OWN_CLOUD_PATH + '/' + folderName; os.environ['ownCloudPathFolder']      = ownCloudPathFolder;
     localOwnCloudPathFolder = ipfs_hashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
 
-    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist.
+    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
        os.makedirs(localOwnCloudPathFolder)
        
     os.popen( "wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() # Downloads shared file as zip
@@ -143,7 +143,7 @@ def driverEudatCall(jobKey, index):
     os.environ['jobCoreNum'] = jobCoreNum;
     logTest("Job's Core Number: " + jobCoreNum)
 
-    os.chdir( localOwnCloudPathFolder ) # 'cd' into the working path and call sbatch from there.
+    os.chdir( localOwnCloudPathFolder ) # 'cd' into the working path and call sbatch from there
     if(whoami == "root"):
        jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
     else:
@@ -154,11 +154,11 @@ def driverEudatCall(jobKey, index):
     if not jobId.isdigit():
        oc.logout()
        logTest("Error occured, jobId is not a digit.")
-       return(); # Detected an error on the SLURM side.
+       return(); # Detected an error on the SLURM side
 
     oc.logout()
 
-def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ): # TODO: miniLock Flag i ekle.
+def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId): 
     global jobKeyGlobal; jobKeyGlobal=ipfsHash
     global indexGlobal;  indexGlobal=index;
 
@@ -195,7 +195,7 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ): # TODO: miniLock Fl
        os.system( 'rm $ipfsHash' );
 
     ipfsCallCounter=0;    
-    #while(True):  #birden fazla denemek gerekebilir.
+    #while(True):  #In case to try more than once.
     isIPFSHashExist=""
     if (whoami == "root"):
        isIPFSHashExist = os.popen( "sudo -u $whoami bash $eblocPath/ipfsStat.sh $ipfsHash" ).read();
@@ -237,7 +237,7 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ): # TODO: miniLock Fl
           return
     else:
        logTest("Markle not found! timeout for ipfs object stat retrieve !"); # IPFS file could not be accessed
-       #todo: ipfs dht findprovs QmRr62nqpQM3YdXyfX4MS93Bx11ztyFeLEAsYtNiNiMNMp
+       #TODO: ipfs dht findprovs QmRr62nqpQM3YdXyfX4MS93Bx11ztyFeLEAsYtNiNiMNMp
        return
 
     myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest( myDate );
@@ -259,7 +259,7 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ): # TODO: miniLock Fl
     else:
        jobId = os.popen('sbatch         -N$jobCoreNum $ipfs_hashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
        os.environ['jobId'] = jobId;
-       logTest( "jobId: "+ str(jobId) ); # Could be deleted
+       logTest( "jobId: "+ str(jobId) ); # Unneeded delete
 
     if not jobId.isdigit():
        logTest("Error occured, jobId is not a digit.")
@@ -268,10 +268,10 @@ def driverIpfsCall( ipfsHash, index, ipfsType, miniLockId ): # TODO: miniLock Fl
     if (whoami == "root"):
        os.popen( "sudo chown $whoami: $jobSavePath")
 
-if __name__ == '__main__': #py_driver.py executed as script
-   #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99";
-   #index      = "0";
-   #driverEudatCall( var, index );
+if __name__ == '__main__': # driverFunc.py executed as script
+    #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99";
+    #index      = "0";
+    #driverEudatCall( var, index );
     var    = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
     index  = "1"
     myType = "0" 

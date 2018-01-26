@@ -227,10 +227,4 @@ contract eBlocBroker {
     {
 	return clusterContract[clusterAddr].receiptList.printIndex(index);
     }
-    /*
-    function testCallStack() returns (int)
-    {
-	return 1;
-    } 
-    */   
 }

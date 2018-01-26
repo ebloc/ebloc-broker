@@ -19,7 +19,7 @@ def isRpcError(inputStr):
       logTest("Error: Please run Parity or Geth on the background.")
       sys.exit()
 
-# Checks does clusterDriver run on the background.
+# Checks does clusterDriver run on the background
 def isAlreadyClusterOn(): 
    check = os.popen("ps aux | grep \'Driver.py\' | grep -v \'grep\' ").read().replace("\n", "");
 
@@ -142,7 +142,7 @@ while True: #{
        logTest( "Passed Incremented blockNumber...Continue waiting from block number: " + blockReadFrom );
 
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
-    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob( $blockReadFrom, \'$jobsReadFromPath\' ) )"'); # Waits here until new job submitted into Cluster
+    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob( $blockReadFrom, \'$jobsReadFromPath\' ) )"'); # Waits here until new job submitted into the cluster
 
     if os.path.isfile( jobsReadFromPath ): # Waits until generated file on log is completed
        fR = open( jobsReadFromPath, 'r' )
