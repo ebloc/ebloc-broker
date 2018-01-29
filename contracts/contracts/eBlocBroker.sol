@@ -30,16 +30,21 @@ contract eBlocBroker {
 
     mapping(address => eBlocBrokerLib.data) clusterContract;   
 
-    modifier coreMinuteGas_StorageType_Check(uint32 coreMinuteGas, uint8 storageType) {	
-	require( !(coreMinuteGas == 0 || coreMinuteGas > 11520) && (storageType < 4) ); /* coreMinuteGas has maximum 9 days */
+    modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
+	require( !(coreMinuteGas == 0 || coreMinuteGas > 11520) && (storageType < 4)); /* coreMinuteGas has maximum 9 days */
 	_ ;
     }
 
     modifier deregisterClusterCheck() {
-	require( clusterContract[msg.sender].isExist && clusterContract[msg.sender].isRunning ); 
+	require(clusterContract[msg.sender].isExist && clusterContract[msg.sender].isRunning); 
 	_ ;
     }
-    
+
+    modifier blocktimePassed(uint time) {
+	require(time <= block.timestamp); 
+	_ ;
+    }
+
     function refundMe(address clusterAddr, string jobKeyHash, uint32 index ) public returns(bool)
     {
 	eBlocBrokerLib.Status job = clusterContract[clusterAddr].jobStatus[jobKeyHash][index]; /* If does not exist EVM revert()s error */
@@ -59,15 +64,13 @@ contract eBlocBroker {
     }
 
     function receiptCheck(string jobKeyHash, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTimeStamp)
-	public returns (bool success) /* Payback to client and server */
+	blocktimePassed(endTimeStamp) public returns (bool success) /* Payback to client and server */
     { 
 	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKeyHash][index]; /* If clusterContract[msg.sender] isExist is false EVM revert()s error */
 	uint netOwed              = job.received;
 	uint amountToGain         = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
-	if( amountToGain > netOwed ||
-	    job.receiptFlag        ||
-	    endTimeStamp > block.timestamp)
+	if( amountToGain > netOwed || job.receiptFlag ) //endTimeStamp > block.timestamp ) done.	    
 	    //( storageType == 0 && bytes(ipfsHashOut).length != 46 ) || //TODO: Do this on upper level.	    
 	    revert();
 	
@@ -98,7 +101,7 @@ contract eBlocBroker {
 	if (cluster.isExist && cluster.isRunning)
 	    revert();
 	
-	if (cluster.isExist && !cluster.isRunning){
+	if (cluster.isExist && !cluster.isRunning) {
 	    memberAddresses[cluster.memberAddressesID] = msg.sender; 
 	    cluster.update(clusterName, fID, miniLockId, price, coreNumber, ipfsId); 
 	    cluster.isRunning = true; 
@@ -113,7 +116,7 @@ contract eBlocBroker {
     /* Locks the access to the Cluster. Only cluster owner could stop it */
     function deregisterCluster() public returns (bool success) 
     {
-	delete memberAddresses[ clusterContract[msg.sender].memberAddressesID ];
+	delete memberAddresses[clusterContract[msg.sender].memberAddressesID];
 	clusterContract[msg.sender].isRunning = false; /* Cluster wont accept any more jobs */
 	return true;
     }
@@ -125,12 +128,11 @@ contract eBlocBroker {
 	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreNumber, ipfsId);
 	return true;
     }
-
-    
+   
     //TODO: miniLockId save for each user.
     /* Works as inserBack on linkedlist (FIFO) */
     function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockId)
-	coreMinuteGas_StorageType_Check(coreMinuteGas, storageType) payable public returns (bool success)
+	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) payable public returns (bool success)
     {
 	eBlocBrokerLib.data cluster = clusterContract[clusterAddr];
 	
@@ -143,38 +145,35 @@ contract eBlocBroker {
 	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc);
 
 	cluster.jobStatus[jobKey].push( eBlocBrokerLib.Status({
- 		        status:          uint8(JobStateCodes.PENDING),
+		        status:          uint8(JobStateCodes.PENDING),
 			core:            core,
-			coreMinuteGas:   coreMinuteGas, //received / (coreMinutePrice * core) ... 5000 gas saved.
+			coreMinuteGas:   coreMinuteGas, //received / (coreMinutePrice * core)... 5000 gas saved.
 			jobOwner:        msg.sender,
 			received:        msg.value,
 			coreMinutePrice: cluster.coreMinutePrice,  
 			startTimeStamp:  0,
 			receiptFlag:     false}
-			) );
-	
+			));	
 	return true;
     }
 
-    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTimeStamp) public returns (bool success)
+    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTimeStamp) blocktimePassed(startTimeStamp) public returns (bool success)
     {
 	eBlocBrokerLib.Status jS = clusterContract[msg.sender].jobStatus[jobKey][index];
-	if (jS.receiptFlag ||
-	    stateId > 15 || startTimeStamp > block.timestamp) //TODO: carry to modifier.
+	if (jS.receiptFlag || stateId > 15 )
 	    revert();
 
 	if (stateId != 0) {
 	    jS.status         = stateId;
 	    jS.startTimeStamp = startTimeStamp;
-	}
-	
+	}	
 	return true;
     }
 
     event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
     event LogReceipt(address cluster, string jobKeyHash, uint index, address recipient, uint recieved, uint returned,
 		     uint endTime, string ipfsHashOut, uint8 storageType);
-
+    
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
 
     /* Returns all register cluster addresses */
@@ -203,7 +202,7 @@ contract eBlocBroker {
     {
 	eBlocBrokerLib.Status jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
 
-	return ( jS.status, jS.core, jS.startTimeStamp, jS.received, jS.coreMinutePrice, jS.coreMinuteGas );   
+	return (jS.status, jS.core, jS.startTimeStamp, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
     }
 
     function getJobSize(address clusterAddr, string jobKey) constant returns (uint)

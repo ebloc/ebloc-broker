@@ -6,7 +6,7 @@ library eBlocBrokerLib {
 
     /* Submitted Job's information */
     struct Status {
-	/*Variable assigned by the cluster */
+	/* Variable assigned by the cluster */
 	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
 	uint    startTimeStamp; /* Submitted job's starting universal time on the server side */
 	bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
