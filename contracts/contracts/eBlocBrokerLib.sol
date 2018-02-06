@@ -8,9 +8,8 @@ library eBlocBrokerLib {
     struct Status {
 	/* Variable assigned by the cluster */
 	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint    startTimeStamp; /* Submitted job's starting universal time on the server side */
+	uint         startTime; /* Submitted job's starting universal time on the server side */
 	bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
-
 	/* Variables assigned by the client */
 	uint32   coreMinuteGas; /* Time to run job in seconds. ex: minute + hour * 60 + day * 1440; */
 	uint32           core;  /* Requested core by the client */
@@ -33,7 +32,7 @@ library eBlocBrokerLib {
 	string    clusterMiniLockId; /* Cluster's minilock-id */
 	string    federationCloudId; /* Cluster's federation cloud-id */
 
-	mapping(string => Status[])  jobStatus; /* All submitted jobs into cluster 's Status is accessible */
+	mapping(string => Status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	ReceiptLib.intervalNode    receiptList; /* receiptList will be use to check job's start and end time overlapped or not */
     }
 

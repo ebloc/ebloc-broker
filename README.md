@@ -14,7 +14,8 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
 An Amazon image (AMI name: eBlocBroker, AMI Id: **ami-4a5b9530**) is also available that contains
-Parity to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname(IPv4). 
+`Geth` to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname(IPv4). 
+
 
 ```bash
 mkdir ~/ebloc-amazon
@@ -23,17 +24,41 @@ cd ~/ebloc-amazon
 
 #On an another console you can ssh into the instance:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
-cd mybin && nohup bash eblocpserver.sh & 
-cd ../eBlocBrokerGit 
-python Driver.py 
+
+gethServer                                #To run the eBloc geth-server
+cd ../eBlocBrokerGit && python Driver.py  #To run the eBlocBroker
 ```
 
 ### How to create a new account
 
+On the console, use:
+
+```
+> personal.NewAccount()
+Passphrase:
+Repeat passphrase:
+"0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"
+```
+
+- Open the following file: `/home/ubuntu/eBlocBroker/eBlocHeader.js` and change following line with the account you defined under `COINBASE`, which is `web3.eth.defaultAccount = "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903";`
+
+Connect into eBloc private chain using Geth: `gethServer `. On another console to attach Geth console please do: `gethClient`.
+
+Please note that first you have to run `gethServer` and than `gethClient`.
+
+Inside Geth console when you type `eth.accounts` you should see the accounts you already created or imported.
+
+```bash
+> eth.accounts
+["0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"]
+```
+
+<!--- 
+### How to create a new account
 
 
 ```bash
-parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=*
+parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=*
 
 Please note that password is NOT RECOVERABLE.
 Type password:
@@ -71,7 +96,7 @@ As final you should run Parity as follows which will also unlocks your account:
 ```bash
 parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=* --unlock "0xe427c111f968fe4ff6593a37454fdd9abf07c490" --password password.txt
 ```
-
+--->
 ## Connect to eBlocBroker Contract
 
 ```bash
