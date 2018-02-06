@@ -17,8 +17,8 @@ library ReceiptLib {
 
     function construct(intervalNode storage self, uint32 coreNum)
     {
-	self.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy Object */
-	self.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy Object */
+	self.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
+	self.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
 	self.head           = 1;
 	self.coreNumber     = coreNum;
 	self.deletedItemNum = 0;
@@ -35,7 +35,7 @@ library ReceiptLib {
 	Interval prevNodeTemp;
 	
 	// +-------------------------------+
-	// | Begin: Receipt Validity check |
+	// | Begin: receiptCheck Algorithm |
 	// +-------------------------------+
 	
 	if (endTime < self.list[addr].endpoint) { 
@@ -93,7 +93,7 @@ library ReceiptLib {
 	} while (true);
 
 	// +-----------------------------+
-	// | End: Receipt Validity check |
+	// | End: receiptCheck Algorithm |
 	// +-----------------------------+		
     }
 
