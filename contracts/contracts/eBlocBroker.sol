@@ -1,4 +1,4 @@
-//TODO: storageType github add.
+//TODO: storageType github, google-drive add.
 //TODO: decode/encode string lz-string
 //TODO: desc in uint ipfs.
 
@@ -148,7 +148,7 @@ contract eBlocBroker {
 	cluster.jobStatus[jobKey].push( eBlocBrokerLib.Status({
 		        status:          uint8(JobStateCodes.PENDING),
 			core:            core,
-			coreMinuteGas:   coreMinuteGas, //received / (coreMinutePrice * core)... 5000 gas saved.
+			coreMinuteGas:   coreMinuteGas,
 			jobOwner:        msg.sender,
 			received:        msg.value,
 			coreMinutePrice: cluster.coreMinutePrice,  
