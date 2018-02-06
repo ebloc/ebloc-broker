@@ -45,15 +45,20 @@ contract eBlocBroker {
 	_ ;
     }
 
-    function refundMe(address clusterAddr, string jobKeyHash, uint32 index ) public returns(bool)
+    modifier isZero(uint32 input) {
+	require(input != 0); 
+	_ ;
+    }
+
+    function refundMe(address clusterAddr, string jobKey, uint32 index) public returns(bool)
     {
-	eBlocBrokerLib.Status job = clusterContract[clusterAddr].jobStatus[jobKeyHash][index]; /* If does not exist EVM revert()s error */
+	eBlocBrokerLib.Status job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If does not exist EVM revert()s error */
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
 	if (job.status == uint8(JobStateCodes.PENDING)) 
 	    msg.sender.send(job.received);
-	else if ((block.timestamp - job.startTimeStamp)  > job.coreMinuteGas * 60 + 600)
+	else if ((block.timestamp - job.startTime)  > job.coreMinuteGas * 60 + 600)
 	    msg.sender.send(job.received);
 
 	job.receiptFlag = true; /* Prevents double spending */
@@ -63,21 +68,20 @@ contract eBlocBroker {
 	return true;
     }
 
-    function receiptCheck(string jobKeyHash, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTimeStamp)
-	blocktimePassed(endTimeStamp) public returns (bool success) /* Payback to client and server */
+    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTime)
+	blocktimePassed(endTime) public returns (bool success) /* Payback to client and server */
     { 
-	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKeyHash][index]; /* If clusterContract[msg.sender] isExist is false EVM revert()s error */
+	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* If clusterContract[msg.sender] isExist is false EVM revert()s error */
 	uint netOwed              = job.received;
 	uint amountToGain         = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
-	if( amountToGain > netOwed || job.receiptFlag ) //endTimeStamp > block.timestamp ) done.	    
+	if(amountToGain > netOwed || job.receiptFlag) //endTime > block.timestamp ) done.	    
 	    //( storageType == 0 && bytes(ipfsHashOut).length != 46 ) || //TODO: Do this on upper level.	    
 	    revert();
 	
-	if (!clusterContract[msg.sender].receiptList.receiptCheck( job.startTimeStamp, endTimeStamp, int32(job.core))) { 	    
+	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) { 	    
 	    if (!job.jobOwner.send(netOwed)) /* Pay back netOwned to client */
-		revert();
-	    
+		revert();	    
 	    job.receiptFlag  = true; /* Important to check already paid job or not */	    
 	    return false;
 	}
@@ -90,7 +94,8 @@ contract eBlocBroker {
 
 	job.status       = uint8(JobStateCodes.COMPLETED);
 	job.receiptFlag  = true; 
-	LogReceipt(msg.sender, jobKeyHash, index, job.jobOwner, job.received, (netOwed - amountToGain ), block.timestamp, ipfsHashOut, storageType);
+
+	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain ), block.timestamp, ipfsHashOut, storageType);
 	return true;
     }
 
@@ -108,8 +113,7 @@ contract eBlocBroker {
 	} else {
 	    cluster.construct(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsId);
 	    memberAddresses.push( msg.sender ); /* In order to obtain list of clusters */
-	}
-	
+	}	
 	return true;
     }
 
@@ -122,7 +126,7 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster( uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
+    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
 	public returns (bool success)
     {
 	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreNumber, ipfsId);
@@ -132,17 +136,14 @@ contract eBlocBroker {
     //TODO: miniLockId save for each user.
     /* Works as inserBack on linkedlist (FIFO) */
     function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockId)
-	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) payable public returns (bool success)
+	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) payable public returns (bool success)
     {
 	eBlocBrokerLib.data cluster = clusterContract[clusterAddr];
 	
 	if (msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   
 	    !cluster.isRunning                                         || 
-	    core == 0                                                  ||
 	    core > cluster.receiptList.coreNumber)
 	    revert();
-
-	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc);
 
 	cluster.jobStatus[jobKey].push( eBlocBrokerLib.Status({
 		        status:          uint8(JobStateCodes.PENDING),
@@ -151,13 +152,15 @@ contract eBlocBroker {
 			jobOwner:        msg.sender,
 			received:        msg.value,
 			coreMinutePrice: cluster.coreMinutePrice,  
-			startTimeStamp:  0,
+			startTime:       0,
 			receiptFlag:     false}
-			));	
+			));
+	
+	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc);
 	return true;
     }
 
-    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTimeStamp) blocktimePassed(startTimeStamp) public returns (bool success)
+    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTime) blocktimePassed(startTime) public returns (bool success)
     {
 	eBlocBrokerLib.Status jS = clusterContract[msg.sender].jobStatus[jobKey][index];
 	if (jS.receiptFlag || stateId > 15 )
@@ -165,17 +168,14 @@ contract eBlocBroker {
 
 	if (stateId != 0) {
 	    jS.status         = stateId;
-	    jS.startTimeStamp = startTimeStamp;
+	    jS.startTime      = startTime;
 	}	
 	return true;
     }
 
     event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
-    event LogReceipt(address cluster, string jobKeyHash, uint index, address recipient, uint recieved, uint returned,
-		     uint endTime, string ipfsHashOut, uint8 storageType);
-    
+    event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);   
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
-
     /* Returns all register cluster addresses */
     function getClusterAddresses() constant returns (address[])
     {
@@ -202,7 +202,7 @@ contract eBlocBroker {
     {
 	eBlocBrokerLib.Status jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
 
-	return (jS.status, jS.core, jS.startTimeStamp, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
+	return (jS.status, jS.core, jS.startTime, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
     }
 
     function getJobSize(address clusterAddr, string jobKey) constant returns (uint)
