@@ -24,3 +24,7 @@ docs/_build_html/
 *.sh#
 
 *.rst#
+
+package-lock\.json
+
+\.node-xmlhttprequest-sync-7308
