@@ -55,7 +55,7 @@ How to Install Parity
 --------------
 
 Network Setup
--------------
+~~~~~~~~~~~~~
 
 ::
 
