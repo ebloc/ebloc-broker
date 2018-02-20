@@ -42,7 +42,7 @@ sudo bash <(curl https://get.parity.io -Lk)
 
 ------------
 
-## Network Setup
+### Network Setup
 
 ```
 git clone https://github.com/ebloc/MyEthereumEbloc_parity.git
