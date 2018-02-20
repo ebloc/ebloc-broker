@@ -3,13 +3,13 @@
 ## About
 **eBlocBroker** is a blockchain based autonomous computational resource broker.
 
-- **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr) .
+- **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr)
 
 - [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html)
 
-## How to connect into Private Ethereum Blockchain (eBloc)
+## Build dependencies
 
-Please follow our [guide](https://github.com/ebloc/eblocGeth). 
+[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/) .
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
@@ -168,7 +168,7 @@ sudo chmod 755 ~/.eBlocBroker/*
 #### **How to return all available Clusters Addresses**
 
 ```bash
-eBlocBroker.getClusterAddresses(); 
+eBlocBroker.getClusterAddresses(); //returns all 
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
 
@@ -211,7 +211,7 @@ For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git
 #### **1. How to submit a job using IPFS**
 
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; 
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
 clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
 clusterCoreLimit = clusterInfo[3]
 pricePerMin      = clusterInfo[4]
@@ -239,6 +239,7 @@ Now `jobHash` should be your `FederationCloudId` followed by the name of the fol
 Example:
 `jobHash="3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
 
+#####  **Script:**
 
 ```bash
 clusterID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
@@ -261,7 +262,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 
 #### **3. How to submit a job using IPFS+miniLock**
 
-##### miniLock Setup
+###### miniLock Setup
 
 ```bash
 sudo npm install -g minilock-cli@0.2.13
@@ -284,7 +285,7 @@ $ mlck id
 Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ```
 
-##### How to encripty your folder using miniLock
+###### How to encripty your folder using miniLock
 
 ```bash
 myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
@@ -297,9 +298,9 @@ ipfs add $ncrypyFolderPath.minilock
 added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 ```
 
-##### **Script**
+###### **Script:**
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705";
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; /* clusterID you would like to submit. */
 clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
 clusterCoreLimit = clusterInfo[3]
 pricePerMin      = clusterInfo[4]
@@ -340,7 +341,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
 }
 ```
 
-### **How to obtain submitted Job's Information**
+### **How to obtain Submitted Job's Information:**
 
 This will return:
 
