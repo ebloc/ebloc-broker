@@ -1,11 +1,11 @@
 # How to Use eBlocBroker 
 
 ## About
-eBlocBroker is a blockchain based autonomous computational resource broker.
+**eBlocBroker** is a blockchain based autonomous computational resource broker.
 
-**Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr) .
+- **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr)
 
-[Documentation](http://ebloc.cmpe.boun.edu.tr:3015/index.html) 
+- [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html)
 
 ## Build dependencies
 
@@ -14,7 +14,8 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
 An Amazon image (AMI name: eBlocBroker, AMI Id: **ami-4a5b9530**) is also available that contains
-Parity to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname(IPv4). 
+`Geth` to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname (IPv4). 
+
 
 ```bash
 mkdir ~/ebloc-amazon
@@ -23,17 +24,39 @@ cd ~/ebloc-amazon
 
 #On an another console you can ssh into the instance:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
-cd mybin && nohup bash eblocpserver.sh & 
-cd ../eBlocBrokerGit 
-python Driver.py 
+
+eblocServer                               #To run eBloc geth-server
+cd ../eBlocBrokerGit && python Driver.py  #To run the eBlocBroker
 ```
 
+### Create your Ethereum Account
+
+Inside your `geth-client`, use:
+
+```
+> personal.NewAccount()
+Passphrase:
+Repeat passphrase:
+"0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"
+
+> eth.accounts
+["0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"]
+```
+
+- Open the following file: `$HOME/eBlocBroker/eBlocHeader.js` and change following line with the account you defined under `COINBASE`, 
+
+ `COINBASE = "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903";`
+
+Connect into eBloc private chain using Geth: `eblocServer `. On another console to attach Geth console please do: `eblocClient`.
+
+Please note that first you have to run `eblocServer` and than `eblocClient`.
+
+<!--- 
 ### How to create a new account
 
 
-
 ```bash
-parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=*
+parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=*
 
 Please note that password is NOT RECOVERABLE.
 Type password:
@@ -71,7 +94,7 @@ As final you should run Parity as follows which will also unlocks your account:
 ```bash
 parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=* --unlock "0xe427c111f968fe4ff6593a37454fdd9abf07c490" --password password.txt
 ```
-
+--->
 ## Connect to eBlocBroker Contract
 
 ```bash
@@ -142,6 +165,13 @@ eBlocBroker.deregisterCluster()
 sudo chmod 755 ~/.eBlocBroker/*
 ```
 
+#### **How to return all available Clusters Addresses**
+
+```bash
+eBlocBroker.getClusterAddresses(); //returns all 
+["0x6af0204187a93710317542d383a1b547fa42e705"]
+```
+
 ### Client Side: How to obtain IPFS Hash of the job:
 
 It is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, cluster is not able to get the IPFS object from the client's node.
@@ -153,65 +183,39 @@ If IPFS is successfully running on the background you should see something like 
 avatar           24190   1.1  2.1 556620660 344784 s013  SN    3:59PM   4:10.74 ipfs daemon
 ```
 
-`mkdir ipfsCode && cd ipfsCode`
+Example code could be seen here:
 
-Create `helloworld.cpp`:
-
-```bash
-#include <iostream>
-#include <fstream>
-using namespace std;
-
-int main () {
-  ofstream myfile;
-  myfile.open ("helloworld.txt");
-  myfile << "Hello World.\n";
-  myfile.close();
-  return 0;
-}
+```
+git clone https://github.com/avatar-lavventura/simpleSlurmJob.git 
+cd simpleSlurmJob
 ```
 
 Client should put his SLURM script inside a file called `run.sh`. Please note that you do not have to identify `-n` and `-t` parameters, since they will be overritten with arguments provided by the client on the cluster side.
 
-**For example:** 
-
-Create `run.sh`:
-
-```bash
-#!/bin/bash
-#SBATCH -o slurm.out        # STDOUT
-#SBATCH -e slurm.err        # STDERR
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=alper.alimoglu@gmail.com 
-#SBATCH --requeue
-
-g++ helloworld.cpp -o hello
-./hello
-sleep 60;
-```
-
 Target into the folder you want to submit and do: `ipfs add -r .` You will see something similiar with following output:
 
 ```bash
-added QmYsUBd5F8FA1vcUsMAHCGrN8Z92TdpNBAw6rMxWwmQeMJ ipfs_code/helloworld.cpp
-added QmbTzBprmFEABAWwmw1VojGLMf3nv7Z16eSgec55DYdbiX ipfs_code/run.sh
-added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B ipfs_code
+added QmYsUBd5F8FA1vcUsMAHCGrN8Z92TdpNBAw6rMxWwmQeMJ simpleSlurmJob/helloworld.cpp
+added QmbTzBprmFEABAWwmw1VojGLMf3nv7Z16eSgec55DYdbiX simpleSlurmJob/run.sh
+added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 ```
-Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
 
+- Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
 
-```bash
-eBlocBroker.getClusterAddresses(); //returns all available Clusters Addresses.
-["0x6af0204187a93710317542d383a1b547fa42e705"]
-```
-### **How to submit a job using IPFS**
+- If you want to share it through gitHub, please push all files into github repository and share its web URL right after `https://github.com/`, which is `USERNAME/REPOSITORY.git`.
+
+For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git`, you have to submit: `avatar-lavventura/simpleSlurmJob.git`.
+
+### **How to submit a job using storageTypes**
+
+#### **1. How to submit a job using IPFS**
 
 ```bash
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
 clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
 clusterCoreLimit = clusterInfo[3]
 pricePerMin      = clusterInfo[4]
-jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = ""
 coreNum          = 1; 
 coreGasDay       = 0;
@@ -225,7 +229,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && jobKey.length 
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
-###**How to submit a job using EUDAT**
+#### **2. How to submit a job using EUDAT**
 
 Before doing this you have to be sure that you have shared your folder with cluster's FId. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
 
@@ -235,12 +239,13 @@ Now `jobHash` should be your `FederationCloudId` followed by the name of the fol
 Example:
 `jobHash="3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
 
+#####  **Script:**
 
 ```bash
 clusterID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
 pricePerMin    = eBlocBroker.getClusterCoreMinutePrice(clusterID);
 myMiniLockId   = ""
-jobHash        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"
+jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"
 coreNum        = 1; //Before assigning this value please check the coreLimit of the cluster.
 coreGasDay     = 0;
 coreGasHour    = 0;
@@ -255,10 +260,9 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 }
 ```
 
-### **How to submit a job using IPFS+miniLock**
+#### **3. How to submit a job using IPFS+miniLock**
 
-#### miniLock Setup
-First do following installations:
+###### miniLock Setup
 
 ```bash
 sudo npm install -g minilock-cli@0.2.13
@@ -266,9 +270,7 @@ sudo npm install -g minilock-cli@0.2.13
 
 Please check following [tutorial](https://www.npmjs.com/package/minilock-cli):
 
-##### Generate an ID
-
-First, you need a miniLock ID.
+###### Generate a miniLock  ID
 
 ```bash
 $ mlck id alice@example.com --save
@@ -283,7 +285,7 @@ $ mlck id
 Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ```
 
-##### How to encripty your folder using miniLock
+###### How to encripty your folder using miniLock
 
 ```bash
 myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
@@ -296,12 +298,13 @@ ipfs add $ncrypyFolderPath.minilock
 added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 ```
 
+###### **Script:**
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; /* clusterID you would like to submit. */
 clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
 clusterCoreLimit = clusterInfo[3]
 pricePerMin      = clusterInfo[4]
-jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
 coreNum          = 1; 
 coreGasDay       = 0;
@@ -311,11 +314,32 @@ jobDescription   = "Science"
 coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType      = 2; // Please note that 0 stands for IPFS , 1 stands for eudat. 2 stands for IPFS with miniLock
 
-if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.length == 46) {
+if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.length == 46 && jobKey.length == 46) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
+#### **4. How to submit a job using GitHub**
+
+```bash
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
+clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
+clusterCoreLimit = clusterInfo[3]
+pricePerMin      = clusterInfo[4]
+jobKey           = "avatar-lavventura/simpleSlurmJob.git" /* Please write link after "https://github.com/" */
+myMiniLockId     = ""
+coreNum          = 1; 
+coreGasDay       = 0;
+coreGasHour      = 0;
+coreGasMin       = 10;
+jobDescription   = "Science"
+coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
+storageType      = 3 ; /* Please note that 3 stands for github repository share */
+
+if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
+	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+}
+```
 
 ### **How to obtain Submitted Job's Information:**
 
