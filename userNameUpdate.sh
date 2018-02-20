@@ -1,8 +1,7 @@
-#/!/bin
+#!/bin/bash
 
 line_old='/alper/'
 line_new='/ubuntu/'
-
 
 sed -i "s%$line_old%$line_new%g" nodePaths.js
 sed -i "s%$line_old%$line_new%g" checkSinfo.sh
