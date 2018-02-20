@@ -4,12 +4,15 @@
 **eBlocBroker** is a blockchain based autonomous computational resource broker.
 
 - **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr)
-
 - [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html)
 
 ## Build dependencies
 
 [Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/) .
+
+## How to connect into Private Ethereum Blockchain (eBloc) using geth
+
+Please follow [here](https://github.com/ebloc/eblocGeth).
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
