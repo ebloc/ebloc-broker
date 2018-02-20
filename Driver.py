@@ -73,7 +73,7 @@ deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.g
 #blockReadFromContract = contractCall('echo "$header; console.log( \'\' + mylib.getBlockReadFrom() )"'); #TODO: event'den cek
 blockReadFromContract=str(0)
 
-logTest("-------------------------------------------------CLUSTER_ON----------------------------------------------------------------")
+logTest("------------CLUSTER_ON------------")
 logTest("deployedBlockNumber: " +  deployedBlockNumber)
 
 if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)):
