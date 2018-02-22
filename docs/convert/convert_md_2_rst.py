@@ -45,4 +45,4 @@ def convert_md_2_rst_process(filename_root):
     file_target.flush()
     file_target.close()
 
-setup("/Users/alper/eBlocBrokerGit/docs/convert")
+setup("/Users/alper/eBlocBroker/docs/convert")
