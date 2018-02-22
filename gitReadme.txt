@@ -11,8 +11,7 @@ git commit -m "Initial commit with contributors"
 git push -u origin master
 
 #Git Pull:
-git fetch --all
-git reset --hard origin/master
+git fetch --all && git reset --hard origin/master
 
 sshfs alper@ebloc.cmpe.boun.edu.tr:/home/alper/eBlocBroker /Users/alper/mkk
 cd /Users/alper/mkk
