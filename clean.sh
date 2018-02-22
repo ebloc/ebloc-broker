@@ -1,14 +1,15 @@
 #/!/bin
-rm *.pyc
-rm checkSinfoOut.txt
-rm .node-xmlhttprequest*
-rm *.*~
+rm -f *.pyc
+rm -f checkSinfoOut.txt
+rm -f .node-xmlhttprequest*
+rm -f *.*~
 rm -rf docs/_build
-rm docs/*.*~
-rm docs/nohup.out
+rm -f docs/*.*~
+rm -f docs/nohup.out
 rm -rf docs/_build_html
 rm -rf docs/__pycache__
 rm -rf contracts/tests/__pycache__
-rm nohup.out 
+rm -f nohup.out 
+rm -f ./docs/solidity_lexer.pyc
+
 pyclean docs/
-rm ./docs/solidity_lexer.pyc
