@@ -1,5 +1,5 @@
-WHOAMI          = "alper"
-CLUSTER_ID      = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"
+WHOAMI          = "whoami"
+CLUSTER_ID      = "0xffffffffffffffffffffffffffffffffffffffff"
 EBLOCPATH       = "/home/" + WHOAMI + "/eBlocBroker";
 IPFS_REPO       = "/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        = "/home/" + WHOAMI + "/.eBlocBroker";    

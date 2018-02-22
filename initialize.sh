@@ -27,26 +27,21 @@ touch  $HOME/.eBlocBroker/transactions/clusterOut.txt
 #-----------------------------------------------------
 
 # Path Name Setup:------------------------------------
-line_old='/alper/'
-line_new='/alper/'
+line_old="whoami"
+line_new="whoami"
 
-sed -i '' "s%$line_old%$line_new%g" $currentDir/nodePaths.js
-sed -i '' "s%$line_old%$line_new%g" $currentDir/checkSinfo.sh
-sed -i '' "s%$line_old%$line_new%g" $currentDir/constants.py
-sed -i '' "s%$line_old%$line_new%g" $currentDir/slurmScript.sh
-sed -i '' "s%$line_old%$line_new%g" $currentDir/ipfsStat.sh
-sed -i '' "s%$line_old%$line_new%g" $currentDir/ipfsGet.sh
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/nodePaths.js   #&& rm $currentDir/nodePaths.js.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/checkSinfo.sh  && rm $currentDir/checkSinfo.sh.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/slurmScript.sh && rm $currentDir/slurmScript.sh.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/ipfsStat.sh    && rm $currentDir/ipfsStat.sh.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/ipfsGet.sh     && rm $currentDir/ipfsGet.sh.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
 
+line_old='0xffffffffffffffffffffffffffffffffffffffff'
+line_new='0xffffffffffffffffffffffffffffffffffffffff' #line_new=$(echo $COINBASE)
 
-line_old='0x6af0204187a93710317542d383a1b547fa42e705'
-line_new='0xda1e61e853bb8d63b1426295f59cb45a34425b63' #line_new=$(echo $COINBASE)
-
-sed -i '' "s%$line_old%$line_new%g" $currentDir/constants.py
-sed -i '' "s%$line_old%$line_new%g" $currentDir/eBlocHeader.js
-sed -i '' "s%$line_old%$line_new%g" $currentDir/main.js
-
-line_old='alper'
-line_new='alper'
-
-sed -i '' "s%$line_old%$line_new%g" $currentDir/constants.py
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/eBlocHeader.js && rm $currentDir/eBlocHeader.js.bak
+sed -i.bak 's/'$line_old'/'$line_new'/' $currentDir/main.js        && rm $currentDir/main.js.bak
 #-----------------------------------------------------
