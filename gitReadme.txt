@@ -14,9 +14,9 @@ git push -u origin master
 git fetch --all
 git reset --hard origin/master
 
-sshfs alper@ebloc.cmpe.boun.edu.tr:/home/alper/eBlocBrokerGit /Users/alper/mkk
+sshfs alper@ebloc.cmpe.boun.edu.tr:/home/alper/eBlocBroker /Users/alper/mkk
 cd /Users/alper/mkk
-rsync -av --progress . /Users/alper/ebloc_eblocBrokerGit --exclude node_modules --exclude docs --exclude 'password.txt' --exclude='/.git' --filter="dir-merge,- .gitignore"
+rsync -av --progress . /Users/alper/ebloc_eblocBroker --exclude node_modules --exclude docs --exclude 'password.txt' --exclude='/.git' --filter="dir-merge,- .gitignore"
 
 #Saves username	and password:
 $ git config credential.helper store

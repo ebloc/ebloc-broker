@@ -5,7 +5,7 @@ c=$(echo $2)
 event=$(echo $2 | awk 'print $4')
 
 ##Update with your own path:----------
-scriptPath="/home/alper/eBlocBrokerGit"; #Update with the  value stored under $EBLOCPATH as an open path.
+scriptPath="/home/alper/eBlocBroker"; #Update with the  value stored under $EBLOCPATH as an open path.
 ##-------------------------------------
 
 echo "Your message | $a | $b | $c | $event  " | mail -s "Message Subject" alper.alimoglu@gmail.com

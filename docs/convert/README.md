@@ -21,7 +21,7 @@ cd ~/ebloc-amazon
 #On an another console do:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
 cd mybin && nohup eblocpserver &
-cd ../eBlocBrokerGit
+cd ../eBlocBroker
 python Driver.py
 ```
 

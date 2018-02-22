@@ -1,2 +1,2 @@
 #!/bin/sh
-sinfo &> /home/alper/eBlocBrokerGit/checkSinfoOut.txt
+sinfo &> /home/alper/.eBlocBroker/checkSinfoOut.txt
