@@ -11,3 +11,4 @@ rm -rf docs/__pycache__
 rm -rf contracts/tests/__pycache__
 rm nohup.out 
 pyclean docs/
+rm ./docs/solidity_lexer.pyc
