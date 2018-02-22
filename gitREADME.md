@@ -6,13 +6,20 @@
 git fetch --all && git reset --hard origin/master
 ```
 
-# Saves username and password:
+# How to save username and password in git
 
 ```
 git config credential.helper store
 ```
 
-Also I suggest you to read:
+then
+
+``` 
+git pull
+ 
+```
+
+## Also I suggest you to read:
 
 ```
 git help credentials
