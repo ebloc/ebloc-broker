@@ -1,2 +1,2 @@
-#!/bin/sh
-sinfo &> /home/alper/.eBlocBroker/checkSinfoOut.txt
+#!/bin/bash
+sinfo &> /home/whoami/.eBlocBroker/checkSinfoOut.txt

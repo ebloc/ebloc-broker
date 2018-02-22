@@ -7,7 +7,7 @@ printLog = 1
 
 //console.log( mylib.whoami );
 
-clusterID = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; //ebloc
+clusterID = "0xffffffffffffffffffffffffffffffffffffffff"; //ebloc
 
 console.log( "Existed Cluster addresses are: " + mylib.getClusterAddresses() + " | ");
 console.log( "ClusterInfo: " + mylib.getClusterInfo(clusterID) );

@@ -10,7 +10,7 @@ if(!web3.isConnected()){
 }
 
 //web3.eth.defaultAccount=web3.eth.accounts[0]; //check calismaya bilir.
-var COINBASE="0xda1e61e853bb8d63b1426295f59cb45a34425b63"; //Should be the address of the cluster.
+var COINBASE="0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 web3.eth.defaultAccount = COINBASE; 
 
 var whoami              = web3.eth.defaultAccount;
