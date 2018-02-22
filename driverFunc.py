@@ -4,7 +4,7 @@ import owncloud, hashlib, getpass, sys, os, time, subprocess, constants, endCode
 from subprocess import call
 
 eblocPath    = constants.EBLOCPATH;
-ipfs_hashes  = constants.PROGRAM_PATH
+ipfsHashes  = constants.PROGRAM_PATH
 jobKeyGlobal = "";
 indexGlobal  = "";
 
@@ -100,7 +100,7 @@ def driverEudatCall(jobKey, index):
        return;
 
     ownCloudPathFolder      = constants.OWN_CLOUD_PATH + '/' + folderName; os.environ['ownCloudPathFolder']      = ownCloudPathFolder;
-    localOwnCloudPathFolder = ipfs_hashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
+    localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
 
     if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
        os.makedirs(localOwnCloudPathFolder)
@@ -165,7 +165,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     os.environ['ipfsHash']    = ipfsHash;
     os.environ['index']       = str(index);
     os.environ['clusterId']  = constants.CLUSTER_ID
-    os.environ['ipfs_hashes'] = str(ipfs_hashes);   
+    os.environ['ipfsHashes'] = str(ipfsHashes);   
     os.environ['folderIndex'] = str(ipfsType);
     os.environ['eblocPath']   = eblocPath
     os.environ['shareToken']  = "-1"
@@ -180,7 +180,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     header     = "var mylib = require('" + eblocPath + "/eBlocHeader.js')"; os.environ['header']     = header;
     logTest( "ipfsHash: " + ipfsHash);
 
-    jobSavePath = ipfs_hashes + '/' + ipfsHash + "_" + index;
+    jobSavePath = ipfsHashes + '/' + ipfsHash + "_" + index;
     os.environ['jobSavePath']   = jobSavePath
 
     if not os.path.isdir(jobSavePath): # If folder does not exist 
@@ -255,9 +255,9 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     # SLURM submit job
     if (whoami == "root"):
-       jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfs_hashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+       jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
     else:
-       jobId = os.popen('sbatch         -N$jobCoreNum $ipfs_hashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+       jobId = os.popen('sbatch         -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
        os.environ['jobId'] = jobId;
        logTest( "jobId: "+ str(jobId) ); # Unneeded delete
 
