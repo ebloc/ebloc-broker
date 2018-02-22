@@ -36,8 +36,8 @@ image, you will recieve its Public DNS hostname (IPv4).
     #On an another console you can ssh into the instance:
     ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
 
-    eblocServer                               #To run eBloc geth-server
-    cd ../eBlocBrokerGit && python Driver.py  #To run the eBlocBroker
+    eblocServer                            #To run eBloc geth-server
+    cd ../eBlocBroker && python Driver.py  #To run the eBlocBroker
 
 Create your Ethereum Account
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

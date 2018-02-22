@@ -7,7 +7,7 @@ mkdir transactions ipfs_hashes endCodeAnalyse
 touch  ~/.eBlocBroker/queuedJobs.txt
 touch  ~/.eBlocBroker/transactions/clusterOut.txt
 
-sudo chmod +x ~/eBlocBrokerGit/slurmScript.sh
+sudo chmod +x ~/eBlocBroker/slurmScript.sh
 
 #Required after each reboot. Unneeded with the latest update.
 #mkdir ~/.eBlocBroker/oc

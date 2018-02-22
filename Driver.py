@@ -42,7 +42,8 @@ def isSlurmOn():
    check                 = os.popen("cat $logPath/checkSinfoOut.txt").read()
 
    if not "PARTITION" in str(check):
-      logTest("ERROR: sinfo returns emprty string, please ru-run slurmctld: \n");
+      logTest("-------------------------- \n");
+      logTest("Error: sinfo returns emprty string, please ru-run slurmctld. \n");
       logTest( check );
       sys.exit();
 
@@ -53,8 +54,8 @@ def isSlurmOn():
       logTest("/etc/init.d/munge start")
       sys.exit()
 
-yes = set(['yes','y', 'ye' ]);
-no  = set(['no' ,'n'       ]);
+yes = set(['yes','y', 'ye']);
+no  = set(['no' ,'n'      ]);
 
 isAlreadyClusterOn();
 isSlurmOn();
