@@ -123,12 +123,13 @@ while True: #{
     squeueStatus = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus):
-       logTest("SLURM is not on, please re-run");
+       logTest("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n");
        logTest(squeueStatus);
        sys.exit();
 
     logTest("Current Slurm Running jobs status: \n" + squeueStatus);
-    logTest("Waiting new job to come since block number: " + blockReadFrom + " ... | Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + clusterGainedAmount);
+    logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + clusterGainedAmount);
+    logTest("Waiting new job to come since block number: " + blockReadFrom);
 
     printFlag=0;
     currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
