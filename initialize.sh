@@ -54,4 +54,4 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocHeader.js && rm $currentD
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js        && rm $currentDir/main.js.bak
 #-----------------------------------------------------
 
-npm install
+npm install --save
