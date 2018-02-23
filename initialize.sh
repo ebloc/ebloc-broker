@@ -32,11 +32,6 @@ lineOld="whoami";
 lineNew="whoami"; #lineNew=$(logname);
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/checkSinfo.sh  && rm $currentDir/checkSinfo.sh.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentDir/slurmScript.sh.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/ipfsStat.sh    && rm $currentDir/ipfsStat.sh.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/ipfsGet.sh     && rm $currentDir/ipfsGet.sh.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
 
 # PATH Name Setup:------------------------------------
@@ -44,12 +39,8 @@ lineOld="EBLOCBROKER_PATH";
 lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
-#sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/checkSinfo.sh  && rm $currentDir/checkSinfo.sh.bak
-#sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
-#sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentDir/slurmScript.sh.bak
-#sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/ipfsStat.sh    && rm $currentDir/ipfsStat.sh.bak
-#sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/ipfsGet.sh     && rm $currentDir/ipfsGet.sh.bak
-#sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentDir/slurmScript.sh.bak
 #-----------------------------------------------------
 
 # COINBASE Address Setup:-----------------------------
