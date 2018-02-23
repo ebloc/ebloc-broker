@@ -104,7 +104,7 @@ library ReceiptLib {
     }
 
     /* Could be commented out */
-    function printIndex(intervalNode storage self, uint32 index) constant returns (uint256, int32 )
+    function printIndex(intervalNode storage self, uint32 index) constant returns (uint256, int32)
     {
 	uint32 myIndex = self.head;
 	for (uint i = 0; i < index; i++)
