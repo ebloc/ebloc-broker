@@ -43,7 +43,7 @@ def isSlurmOn():
 
    if not "PARTITION" in str(check):
       logTest("-------------------------- \n");
-      logTest("Error: sinfo returns emprty string, please ru-run slurmctld. \n");
+      logTest("Error: sinfo returns emprty string, please run \'bash runSlurm.sh\'. \n");
       logTest( check );
       sys.exit();
 
