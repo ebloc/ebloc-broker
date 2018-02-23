@@ -372,11 +372,6 @@ e.watch(function(error, result){
 ### **Required Installations**
 
 ```bash
-sudo npm i --save bs58  //https://www.npmjs.com/package/bs58
-sudo npm install web3 binstring
-sudo npm install web3_ipc --save
-sudo npm install -g minilock-cli@0.2.13
-
 sudo pip install sphinx_rtd_theme pyocclient
 
 sudo apt-get install davfs2 mailutils
