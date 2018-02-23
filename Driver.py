@@ -19,8 +19,8 @@ def isRpcError(inputStr):
       logTest("Error: Please run Parity or Geth on the background.")
       sys.exit()
 
-# Checks does clusterDriver run on the background
-def isAlreadyClusterOn(): 
+# Checks does Driver.py run on the background
+def isDriverOn(): 
    check = os.popen("ps aux | grep \'Driver.py\' | grep -v \'grep\' ").read().replace("\n", "");
 
    if(len(check) == 0):
@@ -43,7 +43,7 @@ def isSlurmOn():
 
    if not "PARTITION" in str(check):
       logTest("-------------------------- \n");
-      logTest("Error: sinfo returns emprty string, please run \'bash runSlurm.sh\'. \n");
+      logTest("Error: sinfo returns emprty string, please run \'sudo bash runSlurm.sh\'. \n");
       logTest( check );
       sys.exit();
 
@@ -57,7 +57,7 @@ def isSlurmOn():
 yes = set(['yes','y', 'ye']);
 no  = set(['no' ,'n'      ]);
 
-isAlreadyClusterOn();
+isDriverOn();
 isSlurmOn();
 if( constants.IPFS_USE == 1 ):
    if( not isIpfsOn() ):
@@ -88,7 +88,7 @@ f.close();
 
 if (not blockReadFromLocal.isdigit()):
    logTest("Error: constants.BLOCK_READ_FROM_FILE is empty or contains and invalid value")
-   logTest("Would you like to read from contract's deployed block number? y/n")
+   logTest("> Would you like to read from contract's deployed block number? y/n")
    while True:
       choice = raw_input().lower()
       if choice in yes:
@@ -96,6 +96,7 @@ if (not blockReadFromLocal.isdigit()):
          f = open(constants.BLOCK_READ_FROM_FILE, 'w')
          f.write( deployedBlockNumber + "\n" )
          f.close()
+         logTest("\n")
          break;
       elif choice in no:
          sys.exit()
@@ -115,35 +116,39 @@ else:
 #TODO: global job counter tut.
 while True: #{
     if "Error" in blockReadFrom:
-       logTest(blockReadFrom)
-       sys.exit()
+       logTest(blockReadFrom);
+       sys.exit();
 
     clusterGainedAmount   = contractCall('echo "$header; console.log( \'\' + mylib.getClusterReceivedAmount(\'$clusterId\') )"');
-    squeueStatus = os.popen("squeue").read()
+    squeueStatus = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus):
-       logTest("SLURM is not on, please re-run")
-       logTest(squeueStatus)
-       sys.exit()
+       logTest("SLURM is not on, please re-run");
+       logTest(squeueStatus);
+       sys.exit();
 
-    logTest( "Current Slurm Running jobs status: \n" + squeueStatus )
-    logTest( "Waiting new job to come since block number: " + blockReadFrom + " ... | Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + clusterGainedAmount );
+    logTest("Current Slurm Running jobs status: \n" + squeueStatus);
+    logTest("Waiting new job to come since block number: " + blockReadFrom + " ... | Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + clusterGainedAmount);
 
     printFlag=0;
     currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
     while(True):
        if (printFlag == 0):
           logTest( "Waiting currentBlockNumber to increment by one" );
-          logTest( "Current BlockNumber: " + currentBlockNumber  + "__Wanted Block Number: " + blockReadFrom);
+          logTest( "Current BlockNumber: " + currentBlockNumber  + "; wanted Block Number: " + blockReadFrom);
+          
        if (int(currentBlockNumber) >= int(blockReadFrom)):
           break;
-       printFlag = 1
-       time.sleep(1)
+       
+       printFlag = 1;
+       time.sleep(1);
        currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
-       logTest( "Passed Incremented blockNumber...Continue waiting from block number: " + blockReadFrom );
+       logTest("Passed Incremented blockNumber...Continue waiting from block number: " + blockReadFrom);
 
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
-    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob( $blockReadFrom, \'$jobsReadFromPath\' ) )"'); # Waits here until new job submitted into the cluster
+
+    # Waits here until new job submitted into the cluster
+    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob( $blockReadFrom, \'$jobsReadFromPath\' ) )"'); 
 
     if os.path.isfile( jobsReadFromPath ): # Waits until generated file on log is completed
        fR = open( jobsReadFromPath, 'r' )
@@ -171,19 +176,20 @@ while True: #{
              jobInfo = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
              jobInfo = jobInfo.split(',');
 
-             if (jobInfo[0] == str(constants.job_state_code['PENDING'])): # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
+             # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
+             if (jobInfo[0] == str(constants.job_state_code['PENDING'])): 
                 if (submittedJob[4] == '0'):
                    logTest("New job has been recieved. IPFS call |" + time.ctime())
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); #TODO: could be called as a thread but its already fast
                 elif (submittedJob[4] == '1'):
-                   logTest("New job has been recieved. EUDAT call |" + time.ctime())
-                   driverFunc.driverEudatCall( submittedJob[2], submittedJob[3])
+                   logTest("New job has been recieved. EUDAT call |" + time.ctime());
+                   driverFunc.driverEudatCall( submittedJob[2], submittedJob[3]);
                    #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3], clusterId) ) #works
                 elif (submittedJob[4] == '2'):
-                   logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime())
+                   logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime());
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
              else:
-                logTest("Job is already captured and in process")
+                logTest("Job is already captured and in process");
        #}
 
        if( submittedJob != 0 and (int(maxVal) != 0) ): # Update latest read block number

@@ -51,3 +51,5 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentD
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocHeader.js && rm $currentDir/eBlocHeader.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js        && rm $currentDir/main.js.bak
 #-----------------------------------------------------
+
+npm install
