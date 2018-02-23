@@ -39,7 +39,7 @@ library eBlocBrokerLib {
     }
 
     /* Invoked when cluster calls registerCluster() function */
-    function construct(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId){
+    function construct(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId) public {
 	self.name              = name; 
 	self.federationCloudId = fID; 
 	self.clusterMiniLockId = clusterMiniLockId;
@@ -55,7 +55,7 @@ library eBlocBrokerLib {
     }
 
     /* Invoked, when cluster calls updateCluster */
-    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsId) {
+    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsId) public {
 	self.name                   = clusterName;
 	self.federationCloudId      = fID;
 	self.clusterMiniLockId      = clusterMiniLockId;
