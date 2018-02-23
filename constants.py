@@ -1,6 +1,6 @@
 WHOAMI          = "whoami"
 CLUSTER_ID      = "0xffffffffffffffffffffffffffffffffffffffff"
-EBLOCPATH       = "EBLOCBROKER_PATH";
+EBLOCPATH       = "/Users/alper/DENe/eBlocBroker";
 IPFS_REPO       = "/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        = "/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  = "/home/" + WHOAMI + "/.eBlocBroker/oc"; 
