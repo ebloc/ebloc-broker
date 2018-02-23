@@ -15,7 +15,7 @@ library ReceiptLib {
 	uint32 deletedItemNum;
     }
 
-    function construct(intervalNode storage self, uint32 coreNum)
+    function construct(intervalNode storage self, uint32 coreNum) public
     {
 	self.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
 	self.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
@@ -24,12 +24,13 @@ library ReceiptLib {
 	self.deletedItemNum = 0;
     }
 
-    function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) returns (bool success)
+    function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public returns (bool success)
     { 
 	bool     flag = false; 
 	uint32   addr = self.head;
 	uint32   addrTemp;     
 	int32    carriedSum;
+	
 	Interval prevNode;
 	Interval currentNode;
 	Interval prevNodeTemp;
@@ -98,13 +99,13 @@ library ReceiptLib {
     }
 
     /* Could be commented out */
-    function getReceiptListSize(intervalNode storage self) constant returns (uint32)
+    function getReceiptListSize(intervalNode storage self) constant public returns (uint32)
     { 
 	return uint32(self.list.length-self.deletedItemNum); 
     }
 
     /* Could be commented out */
-    function printIndex(intervalNode storage self, uint32 index) constant returns (uint256, int32)
+    function printIndex(intervalNode storage self, uint32 index) constant public returns (uint256, int32)
     {
 	uint32 myIndex = self.head;
 	for (uint i = 0; i < index; i++)

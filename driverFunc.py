@@ -4,7 +4,7 @@ import owncloud, hashlib, getpass, sys, os, time, subprocess, constants, endCode
 from subprocess import call
 
 eblocPath    = constants.EBLOCPATH;
-ipfsHashes  = constants.PROGRAM_PATH
+ipfsHashes   = constants.PROGRAM_PATH
 jobKeyGlobal = "";
 indexGlobal  = "";
 
@@ -46,8 +46,8 @@ def isIpfsDaemonOn():
    return True;
 
 def driverEudatCall(jobKey, index):
-    global jobKeyGlobal; jobKeyGlobal=jobKey
-    global indexGlobal;  indexGlobal=index;
+   global jobKeyGlobal; jobKeyGlobal=jobKey
+   global indexGlobal;  indexGlobal=index;
 
     logTest("key: "   + jobKey)
     logTest("index: " + index)
@@ -87,11 +87,11 @@ def driverEudatCall(jobKey, index):
        shareToken      = shareList[i]['share_token'] 
 
        if( (inputFolderName == folderName) and (inputOwner == owner) ):
-           logTest("Here:_" + inputId + "_ShareToken:_" + shareToken + "**********************************")            
-           os.environ['shareToken']      = str(shareToken);
-           os.environ['eudatFolderName'] = str(inputFolderName);
-           eudatFolderName               = inputFolderName;
-           acceptFlag = 1;
+          logTest("Here:_" + inputId + "_ShareToken:_" + shareToken + "**********************************")            
+          os.environ['shareToken']      = str(shareToken);
+          os.environ['eudatFolderName'] = str(inputFolderName);
+          eudatFolderName               = inputFolderName;
+          acceptFlag = 1;
            break;    
 
     if acceptFlag == 0:
@@ -113,10 +113,10 @@ def driverEudatCall(jobKey, index):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-    os.popen( "unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/." ).read()
-    os.popen( "mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ " ).read()   
-    os.popen( "rm    $localOwnCloudPathFolder/output.zip"                                    )
-    os.popen( "rmdir $localOwnCloudPathFolder/$eudatFolderName"                              )
+    os.popen("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.").read()
+    os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read()   
+    os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   )
+    os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
     myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest(myDate);
     txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
     time.sleep(0.2)
@@ -152,15 +152,16 @@ def driverEudatCall(jobKey, index):
        logTest( "jobId: "+ str(jobId) ); 
 
     if not jobId.isdigit():
+       # Detected an error on the SLURM side
        oc.logout()
        logTest("Error occured, jobId is not a digit.")
-       return(); # Detected an error on the SLURM side
-
+       return();
+    
     oc.logout()
 
 def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId): 
-    global jobKeyGlobal; jobKeyGlobal=ipfsHash
-    global indexGlobal;  indexGlobal=index;
+   global jobKeyGlobal; jobKeyGlobal=ipfsHash
+   global indexGlobal;  indexGlobal=index;
 
     os.environ['ipfsHash']    = ipfsHash;
     os.environ['index']       = str(index);
@@ -195,31 +196,19 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
        os.system( 'rm $ipfsHash' );
 
     ipfsCallCounter=0;    
-    #while(True):  #In case to try more than once.
+
     isIPFSHashExist=""
     if (whoami == "root"):
        isIPFSHashExist = os.popen( "sudo -u $whoami bash $eblocPath/ipfsStat.sh $ipfsHash" ).read();
     else:
        isIPFSHashExist = os.popen( "                bash $eblocPath/ipfsStat.sh $ipfsHash" ).read();
        
-    logTest( isIPFSHashExist ) 
+    logTest(isIPFSHashExist);
     
-    #ipfsFlag=0; 
     if (constants.IPFS_USE == 1):
        while(True):
           if(isIpfsDaemonOn):
              break;
-
-       #else:
-       #if(whoami == "root"):
-       #   ipfsDaemon = os.popen( "sudo -u $whoami ipfs daemon &" ).read();
-       #   ipfsFlag=1; 
-       #else:
-       #   ipfsDaemon = os.popen( " ipfs daemon &" ).read();
-       #   ipfsFlag=1; 
-       #if(ipfsFlag==1):
-       #   time.sleep(10) #time required for ipfs daemon to be on.
-
 
     if ("CumulativeSize" in isIPFSHashExist):
        if (whoami == "root"):
@@ -227,7 +216,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
        else:
           os.system( '                bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath'); 
 
-       if (ipfsType == '2'): # Case for the ipfsMiniLock
+       if (ipfsType == '2'): # case for the ipfsMiniLock
           res = os.popen( 'mlck decrypt -f $jobSavePath/$ipfsHash --passphrase="exfoliation econometrics revivifying obsessions transverse salving dishes" --output-file=$jobSavePath/output.tar.gz' ).read();
           os.system( 'rm       $jobSavePath/$ipfsHash' );
           os.system( 'tar -xvf $jobSavePath/output.tar.gz && rm $jobSavePath/output.tar.gz' );
@@ -259,7 +248,6 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     else:
        jobId = os.popen('sbatch         -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
        os.environ['jobId'] = jobId;
-       logTest( "jobId: "+ str(jobId) ); # Unneeded delete
 
     if not jobId.isdigit():
        logTest("Error occured, jobId is not a digit.")
@@ -268,12 +256,16 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     if (whoami == "root"):
        os.popen( "sudo chown $whoami: $jobSavePath")
 
-if __name__ == '__main__': # driverFunc.py executed as script
-    #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99";
-    #index      = "0";
-    #driverEudatCall( var, index );
-    var    = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-    index  = "1"
-    myType = "0" 
-    miniLockId = "" 
-    driverIpfsCall(var, index, myType, miniLockId);
+# To test driverFunc.py executed as script.
+if __name__ == '__main__': #{
+   #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99";
+   #index      = "0";
+   #driverEudatCall( var, index );
+   #------
+   var    = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+   index  = "1"
+   myType = "0" 
+   miniLockId = ""
+   
+   driverIpfsCall(var, index, myType, miniLockId);
+   #}
