@@ -111,14 +111,10 @@ var eBlocBroker = web3.eth.contract(abi).at(address);
 If you want to provide `IPFS` service please do following: `ipfs init`
 
 ### SLURM Setup:
-SLURM have to work on the background.
+SLURM have to work on the background. Please run: 
 
 ```bash 
-sudo slurmd
-sudo munged -f
-/etc/init.d/munge start #Do to Amazon AWS, you may need to create new user with a password.
-sudo slurmdbd
-mkdir /tmp/slurmstate && sudo slurmctld -c
+bash runSlurm.sh
 ```
 
 Following example should successfully submit the job:

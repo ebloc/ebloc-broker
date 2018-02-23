@@ -7,5 +7,5 @@ slurmdbd
 if [ ! -d /tmp/slurmstate ]; then    
     mkdir /tmp/slurmstate 
 fi
-slurmctld -c
+slurmctld -c # -Dc 
 sinfo
