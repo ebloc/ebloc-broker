@@ -1,4 +1,5 @@
 pragma solidity ^0.4.17;
+
 import "./ReceiptLib.sol";
 
 library eBlocBrokerLib {
@@ -10,6 +11,7 @@ library eBlocBrokerLib {
 	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
 	uint         startTime; /* Submitted job's starting universal time on the server side */
 	bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
+	
 	/* Variables assigned by the client */
 	uint32   coreMinuteGas; /* Time to run job in seconds. ex: minute + hour * 60 + day * 1440; */
 	uint32           core;  /* Requested core by the client */
@@ -21,13 +23,13 @@ library eBlocBrokerLib {
     
     /* Registered cluster's information */
     struct data {
-	bool               isExist;  /* */
-	bool             isRunning;  /* */
+	bool               isExist;  /* Flag that checks is Cluster exists or not */
+	bool             isRunning;  /* Flag that checks is Cluster running or not */
 	uint32   memberAddressesID;  /* Cluster's ethereum address is stored */
 	uint       coreMinutePrice;  /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint        receivedAmount;  /* Cluster's received wei price */
 	uint         blockReadFrom;  /* Blockn umber when cluster is registered in order the watch cluster's event activity */
-	bytes32             ipfsId;  /* Cluster's ipfs-d */
+	bytes32             ipfsId;  /* Cluster's ipfsId */
 	string                name;  /* Cluster's name*/
 	string    clusterMiniLockId; /* Cluster's minilock-id */
 	string    federationCloudId; /* Cluster's federation cloud-id */
@@ -36,7 +38,7 @@ library eBlocBrokerLib {
 	ReceiptLib.intervalNode    receiptList; /* receiptList will be use to check job's start and end time overlapped or not */
     }
 
-    /* Invoked,  when cluster calls registerCluster() */
+    /* Invoked when cluster calls registerCluster() function */
     function construct(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId){
 	self.name              = name; 
 	self.federationCloudId = fID; 

@@ -1,8 +1,5 @@
-//TODO: storageType github, google-drive add.
-//TODO: decode/encode string lz-string
-//TODO: desc in uint ipfs.
-
 pragma solidity ^0.4.17;
+
 import "./eBlocBrokerLib.sol";
 import "./ReceiptLib.sol";
 
@@ -62,21 +59,17 @@ contract eBlocBroker {
 	    msg.sender.send(job.received);
 
 	job.receiptFlag = true; /* Prevents double spending */
-	//kill job on the slurm side.
-	//TODO: event olarak yollaman gerekiyor.
-	//clusterContract[clusterAddr].cancelledJob.push( eBlocBrokerLib.job({hash: ipfsHash, index: index, storageType: storageType }) );
 	return true;
     }
 
     function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTime)
 	blocktimePassed(endTime) public returns (bool success) /* Payback to client and server */
     { 
-	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* If clusterContract[msg.sender] isExist is false EVM revert()s error */
+	eBlocBrokerLib.Status job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* If clusterContract[msg.sender] isExist returns false EVM revert() */
 	uint netOwed              = job.received;
 	uint amountToGain         = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
 	if(amountToGain > netOwed || job.receiptFlag) //endTime > block.timestamp ) done.	    
-	    //( storageType == 0 && bytes(ipfsHashOut).length != 46 ) || //TODO: Do this on upper level.	    
 	    revert();
 	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) { 	    
@@ -133,7 +126,6 @@ contract eBlocBroker {
 	return true;
     }
    
-    //TODO: miniLockId save for each user.
     /* Works as inserBack on linkedlist (FIFO) */
     function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockId)
 	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) payable public returns (bool success)
@@ -174,7 +166,8 @@ contract eBlocBroker {
     }
 
     event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
-    event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);   
+    event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
+    
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
     /* Returns all register cluster addresses */
     function getClusterAddresses() constant returns (address[])
