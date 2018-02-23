@@ -1,6 +1,7 @@
 #!/bin/bash
 
 currentDir=$PWD;
+COINBASE="0xffffffffffffffffffffffffffffffffffffffff";
 
 # Folder Setup:--------------------------------------
 if [ ! -d $HOME/.eBlocBroker ]; then
@@ -29,7 +30,8 @@ sudo chmod +x $currentDir/slurmScript.sh
 
 # User Name Setup:------------------------------------
 lineOld="whoami";
-lineNew="whoami"; #lineNew=$(logname);
+lineNew="whoami";
+#lineNew=$(logname);
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
@@ -45,7 +47,7 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentD
 
 # COINBASE Address Setup:-----------------------------
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
-lineNew='0xffffffffffffffffffffffffffffffffffffffff'; #lineNew=$(echo $COINBASE);
+lineNew=$COINBASE
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocHeader.js && rm $currentDir/eBlocHeader.js.bak
