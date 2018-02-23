@@ -1,5 +1,5 @@
 module.exports = Object.freeze({
-    EBLOCBROKER: '/home/whoami/eBlocBroker',
-    LOG_PATH:    '/home/whoami/.eBlocBroker'
+    EBLOCBROKER: 'EBLOCBROKER_PATH',
+    LOG_PATH:    '$HOME/.eBlocBroker'
 });
 
