@@ -4,6 +4,7 @@ import "./eBlocBrokerLib.sol";
 import "./ReceiptLib.sol";
 
 contract eBlocBroker {
+    
     uint  deployedBlockNumber;
 
     enum JobStateCodes {
@@ -28,7 +29,7 @@ contract eBlocBroker {
     mapping(address => eBlocBrokerLib.data) clusterContract;   
 
     modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
-	require( !(coreMinuteGas == 0 || coreMinuteGas > 11520) && (storageType < 4)); /* coreMinuteGas has maximum 9 days */
+	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 4)); /* coreMinuteGas has maximum 1 day */
 	_ ;
     }
 
@@ -37,7 +38,7 @@ contract eBlocBroker {
 	_ ;
     }
 
-    modifier blocktimePassed(uint time) {
+    modifier isBehindBlockTimeStamp(uint time) {
 	require(time <= block.timestamp); 
 	_ ;
     }
@@ -49,13 +50,13 @@ contract eBlocBroker {
 
     function refundMe(address clusterAddr, string jobKey, uint32 index) public returns(bool)
     {
-	eBlocBrokerLib.Status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If does not exist EVM revert()s error */
+	eBlocBrokerLib.Status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
 	if (job.status == uint8(JobStateCodes.PENDING)) 
 	    msg.sender.transfer(job.received);
-	else if ((block.timestamp - job.startTime)  > job.coreMinuteGas * 60 + 600)
+	else if ((block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 600)
 	    msg.sender.transfer(job.received);
 
 	job.receiptFlag = true; /* Prevents double spending */
@@ -63,30 +64,33 @@ contract eBlocBroker {
     }
 
     function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTime)
-	blocktimePassed(endTime) public returns (bool success) /* Payback to client and server */
-    { 
-	eBlocBrokerLib.Status memory job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* If clusterContract[msg.sender] isExist returns false EVM revert() */
+	isBehindBlockTimeStamp(endTime) public returns (bool success) /* Payback to client and server */
+    {
+	/* If clusterContract[msg.sender] isExist returns false EVM revert() */
+	eBlocBrokerLib.Status memory job = clusterContract[msg.sender].jobStatus[jobKey][index];
+	
 	uint netOwed                     = job.received;
 	uint amountToGain                = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
-	if(amountToGain > netOwed || job.receiptFlag) //endTime > block.timestamp ) done.	    
+	if(amountToGain > netOwed || job.receiptFlag) //endTime > block.timestamp) done.	    
 	    revert();
 	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) { 	    
+	    job.receiptFlag  = true; /* Important to check already paid job or not */
 	    job.jobOwner.transfer(netOwed); /* Pay back netOwned to client */
-	    job.receiptFlag  = true; /* Important to check already paid job or not */	    
 	    return false;
 	}
 	
-	msg.sender.transfer( amountToGain); 	       /* Gained by the cluster */
-	job.jobOwner.transfer(netOwed - amountToGain); /* Gained by the client */
-
 	clusterContract[msg.sender].receivedAmount += amountToGain;
 
-	job.status       = uint8(JobStateCodes.COMPLETED);
-	job.receiptFlag  = true; 
+	job.status      = uint8(JobStateCodes.COMPLETED);
+	job.receiptFlag = true; 
 
 	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain ), block.timestamp, ipfsHashOut, storageType);
+
+	msg.sender.transfer(amountToGain); 	       /* gained ether transferred to the cluster */
+	job.jobOwner.transfer(netOwed - amountToGain); /* gained ether transferred to the client */
+
 	return true;
     }
 
@@ -126,7 +130,8 @@ contract eBlocBroker {
    
     /* Works as inserBack on linkedlist (FIFO) */
     function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockId)
-	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) payable public returns (bool success)
+	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
+	returns (bool success)
     {
 	eBlocBrokerLib.data cluster = clusterContract[clusterAddr];
 	
@@ -150,7 +155,8 @@ contract eBlocBroker {
 	return true;
     }
 
-    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTime) blocktimePassed(startTime) public returns (bool success)
+    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTime) isBehindBlockTimeStamp(startTime) public
+	returns (bool success)
     {
 	eBlocBrokerLib.Status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
 	if (jS.receiptFlag || stateId > 15 )
@@ -168,12 +174,14 @@ contract eBlocBroker {
     
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
     /* Returns all register cluster addresses */
-    function getClusterAddresses() public view returns (address[])
+    function getClusterAddresses() public view
+	returns (address[])
     {
 	return memberAddresses; 
     }
 
-    function getClusterInfo(address clusterAddr) public view returns(string, string, string, uint, uint, bytes32)
+    function getClusterInfo(address clusterAddr) public view
+	returns(string, string, string, uint, uint, bytes32)
     {
 	return (clusterContract[clusterAddr].name, 
 		clusterContract[clusterAddr].federationCloudId, 
@@ -183,7 +191,8 @@ contract eBlocBroker {
 		clusterContract[clusterAddr].ipfsId);
     }
 
-    function getClusterReceivedAmount(address clusterAddr) public view returns (uint)
+    function getClusterReceivedAmount(address clusterAddr) public view
+	returns (uint)
     {
 	return clusterContract[clusterAddr].receivedAmount;
     }
@@ -196,24 +205,28 @@ contract eBlocBroker {
 	return (jS.status, jS.core, jS.startTime, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
     }
 
-    function getJobSize(address clusterAddr, string jobKey) public view returns (uint)
+    function getJobSize(address clusterAddr, string jobKey) public view
+	returns (uint)
     {
 	if( !clusterContract[msg.sender].isExist)
 	    revert();
 	return clusterContract[clusterAddr].jobStatus[jobKey].length;
     }
 
-    function getDeployedBlockNumber() public view  returns (uint)
+    function getDeployedBlockNumber() public view
+	returns (uint)
     {
 	return deployedBlockNumber;
     }
 
-    function getClusterReceiptSize(address clusterAddr) public view returns(uint32)
+    function getClusterReceiptSize(address clusterAddr) public view
+	returns(uint32)
     {
 	return clusterContract[clusterAddr].receiptList.getReceiptListSize();
     }
 
-    function getClusterReceiptNode(address clusterAddr, uint32 index) public view returns (uint256, int32)
+    function getClusterReceiptNode(address clusterAddr, uint32 index) public view
+	returns (uint256, int32)
     {
 	return clusterContract[clusterAddr].receiptList.printIndex(index);
     }
