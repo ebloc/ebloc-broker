@@ -18,9 +18,8 @@ library eBlocBrokerLib {
 	address       jobOwner; /* Address of the client (msg.sender) has been stored */
 	uint   coreMinutePrice; /* Cluster's price for core/minute */
 	uint          received; /* Paid amount by the client */
-
     }
-    
+
     /* Registered cluster's information */
     struct data {
 	bool               isExist;  /* Flag that checks is Cluster exists or not */
@@ -39,28 +38,30 @@ library eBlocBrokerLib {
     }
 
     /* Invoked when cluster calls registerCluster() function */
-    function construct(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId) public {
-	self.name              = name; 
-	self.federationCloudId = fID; 
+    function construct(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsId)
+	public {
+	self.name              = name;
+	self.federationCloudId = fID;
 	self.clusterMiniLockId = clusterMiniLockId;
 	self.ipfsId            = ipfsId;
 	self.isExist           = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
 	self.memberAddressesID = memLen;
-	self.coreMinutePrice   = price; 
+	self.coreMinutePrice   = price;
 	self.blockReadFrom     = block.number;
-	
+
 	self.receiptList.construct(coreNumber);
     }
 
     /* Invoked, when cluster calls updateCluster */
-    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsId) public {
+    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsId)
+	public {
 	self.name                   = clusterName;
 	self.federationCloudId      = fID;
 	self.clusterMiniLockId      = clusterMiniLockId;
-	self.coreMinutePrice        = price; 
+	self.coreMinutePrice        = price;
 	self.receiptList.coreNumber = coreNumber;
 	self.ipfsId                 = ipfsId;
-    } 
+    }
 }
