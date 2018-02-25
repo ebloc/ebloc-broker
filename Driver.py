@@ -19,7 +19,7 @@ def isRpcError(inputStr):
       logTest("Error: Please run Parity or Geth on the background.")
       sys.exit()
 
-# Checks does Driver.py run on the background
+# checks: does Driver.py run on the background
 def isDriverOn(): 
    check = os.popen("ps aux | grep \'Driver.py\' | grep -v \'grep\' ").read().replace("\n", "");
 
@@ -27,7 +27,7 @@ def isDriverOn():
       logTest( "Driver is already on" )
       sys.exit()
 
-# Checks does IPFS run on the background or not
+# checks: does IPFS run on the background or not
 def isIpfsOn():
    check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().replace("\n", "");
    if(len(check) == 0):
@@ -35,7 +35,7 @@ def isIpfsOn():
       return False;
    return True;
 
-# Checks does SLURM runn on the background or not
+# checks: does SLURM run on the background or not
 def isSlurmOn(): 
    os.system("bash checkSinfo.sh")
    os.environ['logPath'] = constants.LOG_PATH;
@@ -151,7 +151,8 @@ while True: #{
     # Waits here until new job submitted into the cluster
     returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob( $blockReadFrom, \'$jobsReadFromPath\' ) )"'); 
 
-    if os.path.isfile( jobsReadFromPath ): # Waits until generated file on log is completed
+
+    if os.path.isfile(jobsReadFromPath): #{    Waits until generated file on log is completed
        fR = open( jobsReadFromPath, 'r' )
        blockReadFrom = fR.read().replace("\n", "");
        fR.close();
@@ -161,7 +162,7 @@ while True: #{
        submittedJob=0;
        maxVal = 0;
        for i in range( 0, (len(submittedJobs) - 1)  ): #{
-          logTest("-----------------------------------------------------------------------------------------------------------------------------")
+          logTest("------------------------------------------------------------------")
           submittedJob = submittedJobs[i].split(' ');
           print(submittedJob[5])
           
@@ -192,11 +193,14 @@ while True: #{
              else:
                 logTest("Job is already captured and in process");
        #}
-
-       if( submittedJob != 0 and (int(maxVal) != 0) ): # Update latest read block number
+       
+       # updates the latest read block number
+       if( submittedJob != 0 and (int(maxVal) != 0) ): #{
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w')
-          f_blockReadFrom.write( str(int(maxVal) + 1) + "\n" )  # Python will convert \n to os.linesep
+          f_blockReadFrom.write(str(int(maxVal) + 1) + "\n")  # Python will convert \n to os.linesep
           f_blockReadFrom.close()
 
           blockReadFrom = str(int(maxVal) + 1)
+       #}
+    #}
 #}
