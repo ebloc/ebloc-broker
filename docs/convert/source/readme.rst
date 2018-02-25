@@ -54,7 +54,7 @@ Inside your ``geth-client``, use:
     > eth.accounts
     ["0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"]
 
--  Open the following file: ``$HOME/eBlocBroker/eBlocHeader.js`` and
+-  Open the following file: ``$HOME/eBlocBroker/eBlocBrokerHeader.js`` and
    change following line with the account you defined under
    ``COINBASE``,
 
@@ -87,7 +87,7 @@ Please note that first you have to run ``eblocServer`` and than
    - Update the following file `/home/ubuntu/EBloc/password.txt` with your account's password.
    Best to make sure the file is not readable or even listable for anyone but you. You achieve this with: `chmod 700 /home/ubuntu/EBloc/password.txt`
 
-   - Open the following file: `/home/ubuntu/eBlocBroker/eBlocHeader.js` and change following line with the account you defined under `COINBASE`, which is `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
+   - Open the following file: `/home/ubuntu/eBlocBroker/eBlocBrokerHeader.js` and change following line with the account you defined under `COINBASE`, which is `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
 
    Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach`.
 

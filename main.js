@@ -1,7 +1,7 @@
 var conv = require('binstring');
 
 var nodePaths = require('./nodePaths');
-var mylib = require(nodePaths.EBLOCBROKER + '/eBlocHeader.js');
+var mylib = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
 
 printLog = 1
 

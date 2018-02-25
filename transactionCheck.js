@@ -1,5 +1,5 @@
 var nodePaths = require('./nodePaths');
-var mylib = require(nodePaths.EBLOCBROKER + '/eBlocHeader.js');
+var mylib = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
 
 var lineReader = require('readline').createInterface({
   input: require('fs').createReadStream('t.txt')

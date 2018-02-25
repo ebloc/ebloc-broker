@@ -50,7 +50,7 @@ lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$COINBASE
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocHeader.js && rm $currentDir/eBlocHeader.js.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js        && rm $currentDir/main.js.bak
 #-----------------------------------------------------
 
