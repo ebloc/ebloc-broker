@@ -1,7 +1,6 @@
 pragma solidity ^0.4.17;
 
-import "./eBlocBrokerLib.sol";
-import "./ReceiptLib.sol";
+import "./Library.sol";
 
 contract eBlocBroker {
     
@@ -19,14 +18,14 @@ contract eBlocBroker {
 	deployedBlockNumber = block.number;
     }
     
-    using eBlocBrokerLib for eBlocBrokerLib.data;
-    using eBlocBrokerLib for eBlocBrokerLib.Status;
-    using ReceiptLib     for ReceiptLib.intervalNode;
+    using Library for Library.intervalNode;
+    using Library for Library.data;
+    using Library for Library.status;
 
-    eBlocBrokerLib.data             list;
+    Library.data             list;
     address[]            memberAddresses;
 
-    mapping(address => eBlocBrokerLib.data) clusterContract;   
+    mapping(address => Library.data) clusterContract;   
 
     modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
 	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 4)); /* coreMinuteGas has maximum 1 day */
@@ -50,7 +49,7 @@ contract eBlocBroker {
 
     function refundMe(address clusterAddr, string jobKey, uint32 index) public returns(bool)
     {
-	eBlocBrokerLib.Status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
+	Library.status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
@@ -67,7 +66,7 @@ contract eBlocBroker {
 	isBehindBlockTimeStamp(endTime) public returns (bool success) /* Payback to client and server */
     {
 	/* If clusterContract[msg.sender] isExist returns false EVM revert() */
-	eBlocBrokerLib.Status memory job = clusterContract[msg.sender].jobStatus[jobKey][index];
+	Library.status memory job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
 	uint netOwed                     = job.received;
 	uint amountToGain                = job.coreMinutePrice * jobRunTimeMinute * job.core;
@@ -97,7 +96,7 @@ contract eBlocBroker {
     function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId) 
 	public returns (bool success)
     {
-	eBlocBrokerLib.data cluster = clusterContract[msg.sender];
+	Library.data cluster = clusterContract[msg.sender];
 	if (cluster.isExist && cluster.isRunning)
 	    revert();
 	
@@ -106,8 +105,8 @@ contract eBlocBroker {
 	    cluster.update(clusterName, fID, miniLockId, price, coreNumber, ipfsId); 
 	    cluster.isRunning = true; 
 	} else {
-	    cluster.construct(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsId);
-	    memberAddresses.push( msg.sender ); /* In order to obtain list of clusters */
+	    cluster.constructCluster(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsId);
+	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}	
 	return true;
     }
@@ -133,14 +132,14 @@ contract eBlocBroker {
 	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
 	returns (bool success)
     {
-	eBlocBrokerLib.data cluster = clusterContract[clusterAddr];
+	Library.data cluster = clusterContract[clusterAddr];
 	
 	if (msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   
 	    !cluster.isRunning                                         || 
 	    core > cluster.receiptList.coreNumber)
 	    revert();
 
-	cluster.jobStatus[jobKey].push( eBlocBrokerLib.Status({
+	cluster.jobStatus[jobKey].push( Library.status({
 		        status:          uint8(JobStateCodes.PENDING),
 			core:            core,
 			coreMinuteGas:   coreMinuteGas,
@@ -158,7 +157,7 @@ contract eBlocBroker {
     function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTime) isBehindBlockTimeStamp(startTime) public
 	returns (bool success)
     {
-	eBlocBrokerLib.Status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
+	Library.status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
 	if (jS.receiptFlag || stateId > 15 )
 	    revert();
 
@@ -168,9 +167,6 @@ contract eBlocBroker {
 	}	
 	return true;
     }
-
-    event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
-    event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
     
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
     /* Returns all register cluster addresses */
@@ -200,7 +196,7 @@ contract eBlocBroker {
     function getJobInfo(address clusterAddr, string jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, uint)
     {
-	eBlocBrokerLib.Status memory jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
+	Library.status memory jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
 
 	return (jS.status, jS.core, jS.startTime, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
     }
@@ -208,7 +204,7 @@ contract eBlocBroker {
     function getJobSize(address clusterAddr, string jobKey) public view
 	returns (uint)
     {
-	if( !clusterContract[msg.sender].isExist)
+	if(!clusterContract[msg.sender].isExist)
 	    revert();
 	return clusterContract[clusterAddr].jobStatus[jobKey].length;
     }
@@ -230,4 +226,8 @@ contract eBlocBroker {
     {
 	return clusterContract[clusterAddr].receiptList.printIndex(index);
     }
+    
+    /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
+    event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
+    event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
 }
