@@ -108,20 +108,20 @@ var eBlocBroker = web3.eth.contract(abi).at(address);
 
 ## Start Running Cluster using eBlocBroker
 
-If you want to provide `IPFS` service please do following: `ipfs init`
+If you want to provide `IPFS` service please do: `ipfs init`
 
 ### SLURM Setup:
 SLURM have to work on the background. Please run: 
 
 ```bash 
-bash runSlurm.sh
+sudo bash runSlurm.sh
 ```
 
 Following example should successfully submit the job:
 
 ```bash
-cd /home/ubuntu/slurmTest
-sbatch -U science -N1 run.sh
+cd eBlocBroker/slurmJobExample
+sbatch -N1 run.sh
 Submitted batch job 1
 ```
 
@@ -167,7 +167,7 @@ sudo chmod 755 ~/.eBlocBroker/*
 #### **How to return all available Clusters Addresses**
 
 ```bash
-eBlocBroker.getClusterAddresses(); //returns all 
+eBlocBroker.getClusterAddresses();
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
 
@@ -182,12 +182,7 @@ If IPFS is successfully running on the background you should see something like 
 avatar           24190   1.1  2.1 556620660 344784 s013  SN    3:59PM   4:10.74 ipfs daemon
 ```
 
-Example code could be seen here:
-
-```
-git clone https://github.com/avatar-lavventura/simpleSlurmJob.git 
-cd simpleSlurmJob
-```
+Example code could be seen under `eBlocBroker/slurmJobExample` directory:
 
 Client should put his SLURM script inside a file called `run.sh`. Please note that you do not have to identify `-n` and `-t` parameters, since they will be overritten with arguments provided by the client on the cluster side.
 
@@ -204,6 +199,8 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 - If you want to share it through gitHub, please push all files into github repository and share its web URL right after `https://github.com/`, which is `USERNAME/REPOSITORY.git`.
 
 For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git`, you have to submit: `avatar-lavventura/simpleSlurmJob.git`.
+
+-----------
 
 ### **How to submit a job using storageTypes**
 
@@ -262,10 +259,6 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 ) {
 #### **3. How to submit a job using IPFS+miniLock**
 
 ###### miniLock Setup
-
-```bash
-sudo npm install -g minilock-cli@0.2.13
-```
 
 Please check following [tutorial](https://www.npmjs.com/package/minilock-cli):
 
@@ -342,11 +335,8 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
 
 ### **How to obtain Submitted Job's Information:**
 
-This will return:
-
 - status  could be `"QUEUED"` or `"RUNNING"` or `"COMPLETED"` 
 - `ipfsOut` is Completed Job's folder's ipfs hash. This exists if the job is completed.
-...
 
 ```bash
 clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID that you have submitted your job.
