@@ -67,7 +67,7 @@ jobsReadFromPath = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 
 eblocPath         = constants.EBLOCPATH;
-header            = "var mylib = require('" + eblocPath + "/eBlocHeader.js')"; os.environ['header']     = header;
+header            = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 clusterId         = constants.CLUSTER_ID; os.environ['clusterId'] = clusterId
 
 deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.getDeployedBlockNumber() )"');
