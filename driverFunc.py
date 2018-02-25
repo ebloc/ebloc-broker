@@ -49,63 +49,63 @@ def driverEudatCall(jobKey, index):
    global jobKeyGlobal; jobKeyGlobal=jobKey
    global indexGlobal;  indexGlobal=index;
 
-    logTest("key: "   + jobKey)
-    logTest("index: " + index)
+   logTest("key: "   + jobKey)
+   logTest("index: " + index)
 
-    os.environ['jobKey']      = str(jobKey)
-    os.environ['index']       = str(index);
-    os.environ['clusterId']   = constants.CLUSTER_ID 
-    os.environ['eblocPath']   = eblocPath   
-    os.environ['folderIndex'] = "1";
-    os.environ['miniLockId']  = "-1";
-    os.environ['whoami']      = constants.WHOAMI
-    whoami                    = os.system( "whoami" ) # To learn running as root or userName
+   os.environ['jobKey']      = str(jobKey)
+   os.environ['index']       = str(index);
+   os.environ['clusterId']   = constants.CLUSTER_ID 
+   os.environ['eblocPath']   = eblocPath   
+   os.environ['folderIndex'] = "1";
+   os.environ['miniLockId']  = "-1";
+   os.environ['whoami']      = constants.WHOAMI
+   whoami                    = os.system( "whoami" ) # To learn running as root or userName
 
-    jobKeyTemp = jobKey.split('=');
-    owner      = jobKeyTemp[0]
-    folderName = jobKeyTemp[1]
+   jobKeyTemp = jobKey.split('=');
+   owner      = jobKeyTemp[0]
+   folderName = jobKeyTemp[1]
 
-    header     = "var mylib = require('" + eblocPath + "/eBlocHeader.js')"; os.environ['header']     = header;
+   header     = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
-    f        = open( eblocPath + '/password.txt', 'r')  # Password is read from the file. password.txt is have only user access
-    password = f.read().replace("\n", "").replace(" ", ""); f.close()
+   f        = open( eblocPath + '/password.txt', 'r')  # Password is read from the file. password.txt is have only user access
+   password = f.read().replace("\n", "").replace(" ", ""); f.close()
 
-    logTest("Login into owncloud")
-    oc = owncloud.Client('https://b2drop.eudat.eu/')
-    oc.login('aalimog1@binghamton.edu', password ); # Unlocks EUDAT account
+   logTest("Login into owncloud")
+   oc = owncloud.Client('https://b2drop.eudat.eu/')
+   oc.login('aalimog1@binghamton.edu', password ); # Unlocks EUDAT account
 
-    shareList = oc.list_open_remote_share();
+   shareList = oc.list_open_remote_share();
     
-    logTest("finding_acceptId")
-    acceptFlag = 0;
-    eudatFolderName = ""
-    for i in range( len(shareList)-1, -1, -1 ): # Starts iterating from last item  to first one
-       inputFolderName = shareList[i]['name']
-       inputFolderName = inputFolderName[1:]    # Removes '/' on the beginning
-       inputId         = shareList[i]['id']
-       inputOwner      = shareList[i]['owner']
-       shareToken      = shareList[i]['share_token'] 
+   logTest("finding_acceptId")
+   acceptFlag = 0;
+   eudatFolderName = ""
+   for i in range( len(shareList)-1, -1, -1 ): # Starts iterating from last item  to first one
+      inputFolderName = shareList[i]['name']
+      inputFolderName = inputFolderName[1:]    # Removes '/' on the beginning
+      inputId         = shareList[i]['id']
+      inputOwner      = shareList[i]['owner']
+      shareToken      = shareList[i]['share_token'] 
 
-       if( (inputFolderName == folderName) and (inputOwner == owner) ):
-          logTest("Here:_" + inputId + "_ShareToken:_" + shareToken + "**********************************")            
-          os.environ['shareToken']      = str(shareToken);
-          os.environ['eudatFolderName'] = str(inputFolderName);
-          eudatFolderName               = inputFolderName;
-          acceptFlag = 1;
-           break;    
+      if( (inputFolderName == folderName) and (inputOwner == owner) ):
+         logTest("Here:_" + inputId + "_ShareToken:_" + shareToken + "**********************************")            
+         os.environ['shareToken']      = str(shareToken);
+         os.environ['eudatFolderName'] = str(inputFolderName);
+         eudatFolderName               = inputFolderName;
+         acceptFlag = 1;
+         break;    
 
-    if acceptFlag == 0:
-       oc.logout()
-       logTest("Couldn't find the shared file");
-       return;
+   if acceptFlag == 0:
+      oc.logout()
+      logTest("Couldn't find the shared file");
+      return;
 
-    ownCloudPathFolder      = constants.OWN_CLOUD_PATH + '/' + folderName; os.environ['ownCloudPathFolder']      = ownCloudPathFolder;
-    localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
+   ownCloudPathFolder      = constants.OWN_CLOUD_PATH + '/' + folderName; os.environ['ownCloudPathFolder']      = ownCloudPathFolder;
+   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
 
-    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
-       os.makedirs(localOwnCloudPathFolder)
+   if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
+      os.makedirs(localOwnCloudPathFolder)
        
-    os.popen( "wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() # Downloads shared file as zip
+   os.popen( "wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() # Downloads shared file as zip
 
     #run.tar.gz check yap.
     #checkRunExist = os.popen( "unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read() # Checks does zip contains run.sh file
@@ -113,55 +113,54 @@ def driverEudatCall(jobKey, index):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-    os.popen("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.").read()
-    os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read()   
-    os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   )
-    os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
-    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest(myDate);
-    txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
-    time.sleep(0.2)
-    os.popen( "tar -xf $localOwnCloudPathFolder/ipfs.tar.gz -C $localOwnCloudPathFolder/" ).read()
-    os.popen( "rm $localOwnCloudPathFolder/ipfs.tar.gz"  ).read()
-    os.system("cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
+   os.popen("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.").read()
+   os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read()   
+   os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   )
+   os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
+   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest(myDate);
+   txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
+   time.sleep(0.2)
+   os.popen( "tar -xf $localOwnCloudPathFolder/ipfs.tar.gz -C $localOwnCloudPathFolder/" ).read()
+   os.popen( "rm $localOwnCloudPathFolder/ipfs.tar.gz"  ).read()
+   os.system("cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
 
-    logTest(ownCloudPathFolder)
-    logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
+   logTest(ownCloudPathFolder)
+   logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
 
-    jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
-    jobInfo    = jobInfo.split(',');
-    jobCoreNum = jobInfo[1]
+   jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
+   jobInfo    = jobInfo.split(',');
+   jobCoreNum = jobInfo[1]
 
-    while(True):
-       if (not(jobCoreNum == "notconnected" or jobCoreNum == "")): 
-          break;
-       else:
-          logTest("Error: Please run Parity or Geth on the background.**************************************************************")
-          jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
-          jobInfo    = jobInfo.split(',');
-          jobCoreNum = jobInfo[1]
+   while(True):
+      if (not(jobCoreNum == "notconnected" or jobCoreNum == "")): 
+         break;
+      else:
+         logTest("Error: Please run Parity or Geth on the background.**************************************************************")
+         jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
+         jobInfo    = jobInfo.split(',');
+         jobCoreNum = jobInfo[1]
 
-    os.environ['jobCoreNum'] = jobCoreNum;
-    logTest("Job's Core Number: " + jobCoreNum)
+   os.environ['jobCoreNum'] = jobCoreNum;
+   logTest("Job's Core Number: " + jobCoreNum)
 
-    os.chdir( localOwnCloudPathFolder ) # 'cd' into the working path and call sbatch from there
-    if(whoami == "root"):
-       jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
-    else:
-       jobId = os.popen('sbatch         -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
-       os.environ['jobId'] = jobId;
-       logTest( "jobId: "+ str(jobId) ); 
+   os.chdir( localOwnCloudPathFolder ) # 'cd' into the working path and call sbatch from there
+   if(whoami == "root"):
+      jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+   else:
+      jobId = os.popen('sbatch         -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+      os.environ['jobId'] = jobId;
+      logTest( "jobId: "+ str(jobId) ); 
 
-    if not jobId.isdigit():
-       # Detected an error on the SLURM side
-       oc.logout()
-       logTest("Error occured, jobId is not a digit.")
-       return();
-    
-    oc.logout()
+   if not jobId.isdigit():
+      # Detected an error on the SLURM side
+      oc.logout()
+      logTest("Error occured, jobId is not a digit.")
+      return();    
+   oc.logout()
 
 def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId): 
-   global jobKeyGlobal; jobKeyGlobal=ipfsHash
-   global indexGlobal;  indexGlobal=index;
+    global jobKeyGlobal; jobKeyGlobal=ipfsHash
+    global indexGlobal;  indexGlobal=index;
 
     os.environ['ipfsHash']    = ipfsHash;
     os.environ['index']       = str(index);
@@ -178,7 +177,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     else:
        os.environ['miniLockId'] = miniLockId
 
-    header     = "var mylib = require('" + eblocPath + "/eBlocHeader.js')"; os.environ['header']     = header;
+    header     = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
     logTest( "ipfsHash: " + ipfsHash);
 
     jobSavePath = ipfsHashes + '/' + ipfsHash + "_" + index;

@@ -26,7 +26,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    programPath       = constants.PROGRAM_PATH 
    encodedShareToken = base64.b64encode( shareToken + ':' )
 
-   header = "var mylib = require('" + eblocPath + "/eBlocHeader.js')"; os.environ['header']     = header;
+   header = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
    os.environ['programPath']       = str(programPath)
    os.environ['cluster_id']        = constants.CLUSTER_ID

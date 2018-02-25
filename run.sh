@@ -1,2 +1,2 @@
 #!/bin/bash
-python clusterDriver.py > /dev/null 2>&1
+python Driver.py > /dev/null 2>&1
