@@ -2,8 +2,8 @@ pragma solidity ^0.4.17;
 
 import "./Library.sol";
 
-contract eBlocBroker {
-    
+contract eBlocBroker {    
+    // The block number that was obtained when contract is deployed.
     uint  deployedBlockNumber;
 
     enum JobStateCodes {
@@ -47,7 +47,7 @@ contract eBlocBroker {
 	_ ;
     }
 
-    function refundMe(address clusterAddr, string jobKey, uint32 index) public returns(bool)
+    function refund(address clusterAddr, string jobKey, uint32 index) public returns (bool)
     {
 	Library.status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
 	if (msg.sender != job.jobOwner || job.receiptFlag)
@@ -93,7 +93,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId) 
+    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsID) 
 	public returns (bool success)
     {
 	Library.data cluster = clusterContract[msg.sender];
@@ -102,10 +102,10 @@ contract eBlocBroker {
 	
 	if (cluster.isExist && !cluster.isRunning) {
 	    memberAddresses[cluster.memberAddressesID] = msg.sender; 
-	    cluster.update(clusterName, fID, miniLockId, price, coreNumber, ipfsId); 
+	    cluster.update(clusterName, fID, miniLockId, price, coreNumber, ipfsID); 
 	    cluster.isRunning = true; 
 	} else {
-	    cluster.constructCluster(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsId);
+	    cluster.constructCluster(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsID);
 	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}	
 	return true;
@@ -120,10 +120,10 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsId)
+    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsID)
 	public returns (bool success)
     {
-	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreNumber, ipfsId);
+	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreNumber, ipfsID);
 	return true;
     }
    
@@ -184,7 +184,7 @@ contract eBlocBroker {
 		clusterContract[clusterAddr].clusterMiniLockId,
 		clusterContract[clusterAddr].receiptList.coreNumber, 
 		clusterContract[clusterAddr].coreMinutePrice, 
-		clusterContract[clusterAddr].ipfsId);
+		clusterContract[clusterAddr].ipfsID);
     }
 
     function getClusterReceivedAmount(address clusterAddr) public view
@@ -216,7 +216,7 @@ contract eBlocBroker {
     }
 
     function getClusterReceiptSize(address clusterAddr) public view
-	returns(uint32)
+	returns (uint32)
     {
 	return clusterContract[clusterAddr].receiptList.getReceiptListSize();
     }
@@ -227,10 +227,10 @@ contract eBlocBroker {
 	return clusterContract[clusterAddr].receiptList.printIndex(index);
     }
     
-    function isClusterExist(address clusterAddress) public view
+    function isClusterExist(address clusterAddr) public view
 	returns (bool)
     {
-	if(clusterContract[clusterAddress].isExist)
+	if(clusterContract[clusterAddr].isExist)
 	    return true;
 	return false;
     }
