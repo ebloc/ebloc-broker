@@ -47,7 +47,7 @@ exports.job_state_id = job_state_id;
 
 exports.jobBlkStart;
 
-exports.submitJob = function( var1, var2, var3, var4, var5, var6, var7/*, var8 */ ) {
+exports.submitJob = function(var1, var2, var3, var4, var5, var6, var7/*, var8 */) {
     //console.log( "" + var5 * myContractInstance.getClusterCoreMinutePrice(var1) )
     str =  myContractInstance.getClusterInfo( var1 )
     arr = str.toString().split(",");
@@ -62,7 +62,7 @@ exports.getTransactionGas = function( tx ) {
     return web3.eth.getTransactionReceipt( tx ).gasUsed
 }
 
-exports.isTransactionPassed = function( transaction_id ) {
+exports.isTransactionPassed = function(transaction_id) {
     var web3_extended = require('web3_ipc');
     var options       = { host: 'http://localhost:8545', ipc:false, personal: true,admin: true, debug: true };
     var web3          = web3_extended.create(options);
@@ -96,7 +96,7 @@ exports.isTransactionPassed = function( transaction_id ) {
     return checkPassed;
 };
 
-exports.setJobStatus = function( var1, var2, var3, var4  ) {
+exports.setJobStatus = function(var1, var2, var3, var4) {
     hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount,gas: gasLimit });
     console.log( hash );
 };
@@ -105,19 +105,19 @@ exports.getClusterReceivedAmount = function( var1) {
     return myContractInstance.getClusterReceivedAmount( var1 );
 };
 
-exports.getJobInfo = function( var1, var2, var3 ) {
+exports.getJobInfo = function(var1, var2, var3) {
     return myContractInstance.getJobInfo(var1, var2, var3 );
 };
 
-exports.getSubmittedJobCore = function( var1, var2, var3 ) {
+exports.getSubmittedJobCore = function(var1, var2, var3) {
     return myContractInstance.getSubmittedJobCore(var1, var2, var3 );
 };
 
-exports.getJobOwner = function( var1, var2, var3 ) {
+exports.getJobOwner = function(var1, var2, var3) {
     return myContractInstance.getJobOwner( var1, var2, var3 );
 };
 
-exports.registerCluster = function( var1, var2, var3, var4, var5, var6 ) {
+exports.registerCluster = function(var1, var2, var3, var4, var5, var6) {
     var6 =exports.bs58_encode( var6 )
     var6 = "0x" + var6.substr(4); //Trims first 4 character, 1220 and written add 0x at the beginning.
     console.log(var6)
@@ -130,7 +130,7 @@ exports.getClusterAddresses = function() {
     return myContractInstance.getClusterAddresses();
 };
 
-exports.updateCluster = function( var1, var2, var3, var4, var5, var6 ) {
+exports.updateCluster = function(var1, var2, var3, var4, var5, var6) {
     hash = myContractInstance.updateCluster( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit } );
     console.log( hash );
 };
@@ -140,10 +140,14 @@ exports.getDeployedBlockNumber = function() {
 };
 
 exports.getClusterIpfsId = function( var1 ) {
-    return myContractInstance.getClusterIpfsId( var1);
+    return myContractInstance.getClusterIpfsId(var1);
 };
 
-exports.getClusterInfo = function( var1 ) {
+exports.isClusterExist = function(var1) {
+    return myContractInstance.isClusterExist(var1);
+};
+
+exports.getClusterInfo = function(var1) {
     return myContractInstance.getClusterInfo( var1 );
 };
 
@@ -153,7 +157,7 @@ exports.highestBlock = function() {
     return sync.highestBlock;
 };
 
-exports.receiptCheck = function( var1, var2, var3, var4, var5, var6 ) {
+exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
     hash = myContractInstance.receiptCheck( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit } );
     console.log( hash );
 };
@@ -205,7 +209,7 @@ exports.LogJob = function( var1, myPath ) {
     });
 }
 
-exports.LogReceipt = function( var1, myPath ) {
+exports.LogReceipt = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -253,13 +257,13 @@ exports.LogReceipt = function( var1, myPath ) {
     });
 }
 
-exports.bs58_decode = function( var1 ) {
+exports.bs58_decode = function(var1) {
     const bs58 = require('bs58')
     bytes = Buffer.from( var1, 'hex')
     return bs58.encode(bytes) 
 };
 
-exports.bs58_encode = function( var1 ) {
+exports.bs58_encode = function(var1) {
     const bs58 = require('bs58')
     //console.log( bs58.decode( var1 ).toString('hex') )
     return bs58.decode( var1 ).toString('hex') 
