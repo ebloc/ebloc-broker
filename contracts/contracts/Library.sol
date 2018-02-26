@@ -25,7 +25,7 @@ library Library {
 	uint       coreMinutePrice;  /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint        receivedAmount;  /* Cluster's received wei price */
 	uint         blockReadFrom;  /* Blockn umber when cluster is registered in order the watch cluster's event activity */
-	bytes32             ipfsId;  /* Cluster's ipfsId */
+	bytes32             ipfsID;  /* Cluster's ipfsID */
 	string                name;  /* Cluster's name*/
 	string    clusterMiniLockId; /* Cluster's minilock-id */
 	string    federationCloudId; /* Cluster's federation cloud-id */
@@ -48,25 +48,23 @@ library Library {
     }
 
     /* Invoked, when cluster calls updateCluster */
-    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber,
-		    bytes32 ipfsId)
+    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsID)
 	public {
 	self.name                   = clusterName;
 	self.federationCloudId      = fID;
 	self.clusterMiniLockId      = clusterMiniLockId;
 	self.coreMinutePrice        = price;
 	self.receiptList.coreNumber = coreNumber;
-	self.ipfsId                 = ipfsId;
+	self.ipfsID                 = ipfsID;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32
-		       coreNumber, bytes32 ipfsId)
+    function constructCluster(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsID)
 	public {
 	self.name              = name;
 	self.federationCloudId = fID;
 	self.clusterMiniLockId = clusterMiniLockId;
-	self.ipfsId            = ipfsId;
+	self.ipfsID            = ipfsID;
 	self.isExist           = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
