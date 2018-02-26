@@ -8,7 +8,7 @@
 
 ## Build dependencies
 
-[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/) .
+[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/), [Slurm](https://github.com/SchedMD/slurm).
 
 ## How to connect into Private Ethereum Blockchain (eBloc) using geth
 
@@ -16,7 +16,7 @@ Please follow [here](https://github.com/ebloc/eblocGeth).
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
-An Amazon image (AMI name: eBlocBroker, AMI Id: **ami-4a5b9530**) is also available that contains
+An Amazon image (AMI Name: eBlocBroker, AMI ID: ami-43e6083e) is also available that contains
 `Geth` to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname (IPv4). 
 
 
@@ -136,26 +136,28 @@ nohup python Driver.py &
 
 ### Cluster Side: How to register a cluster
 
-Please note that: if you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
+Please note the following: 
 
-```bash
+-If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
+
+``bash
 coreNumber         = 128;
 clusterName        = "eBlocCluster";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
-corePriceMinuteWei = 1000000000000000; //For experimental you could also give 1.
-ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieved from "ipfs id"
+corePriceMinuteWei = 1; //For experimental you could also give 1.
+ipfsID             = "QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; //ipfs id | grep "ID"
 
 //RegisterCluster
-if( federationCloudId.length < 128 && clusterName < 64 && (miniLockId.length == 0 || miniLockId.length == 45) )
-	eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID; 
+if(federationCloudId.length < 128 && clusterName < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
+     eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000})
 
 //UpdateCluster
-if( federationCloudId.length < 128 && clusterName < 64 && (miniLockId.length == 0 || miniLockId.length == 45) )
-	eBlocBroker.updateCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID; 
+if(federationCloudId.length < 128 && clusterName < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
+	eBlocBroker.updateCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000}); 
 
 //Deregister
-eBlocBroker.deregisterCluster()
+eBlocBroker.deregisterCluster( {from: eth.coinbase, gas: 4500000} )
 ```
 
 **Trigger code on start and end of the submitted job:** Cluster should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
@@ -310,7 +312,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.len
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
-
+<!---
 #### **4. How to submit a job using GitHub**
 
 ```bash
@@ -332,6 +334,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
+-->
 
 ### **How to obtain Submitted Job's Information:**
 

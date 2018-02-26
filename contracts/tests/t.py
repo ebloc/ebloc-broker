@@ -54,6 +54,10 @@ def test_receipt(web3, accounts, chain):
     set_txn_hash     = my_contract.transact().registerCluster( 1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
     contract_address = chain.wait.for_receipt(set_txn_hash)
 
+    output = my_contract.call().isClusterExist(accounts[0]);
+    print("isExist:");
+    print(output);
+       
     name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
 
