@@ -13,3 +13,5 @@ slurmctld -c
 #slurmctld -cDvvvvvv
 
 sinfo
+
+#To Run: sudo bash runSlurm.sh 

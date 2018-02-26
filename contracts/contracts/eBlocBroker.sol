@@ -169,7 +169,7 @@ contract eBlocBroker {
     }
     
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
-    /* Returns all register cluster addresses */
+    /* Returns all register cluster addresses */    
     function getClusterAddresses() public view
 	returns (address[])
     {
@@ -227,6 +227,14 @@ contract eBlocBroker {
 	return clusterContract[clusterAddr].receiptList.printIndex(index);
     }
     
+    function isClusterExist(address clusterAddress) public view
+	returns (bool)
+    {
+	if(clusterContract[clusterAddress].isExist)
+	    return true;
+	return false;
+    }
+
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
     event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
     event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
