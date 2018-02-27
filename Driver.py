@@ -8,7 +8,7 @@ def logTest(strIn):
    txFile = open( constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n"); txFile.close();
 
-def contractCall( val ):
+def contractCall(val):
    returnedVal = os.popen( val + "| node & echo $! >" + constants.LOG_PATH + "/my-app.pid").read().replace("\n", "").replace(" ", "");
    isRpcError(returnedVal);
    return returnedVal;
@@ -55,20 +55,27 @@ def isSlurmOn():
       sys.exit()
 
 yes = set(['yes','y', 'ye']);
-no  = set(['no' ,'n'      ]);
+no  = set(['no' ,'n']);
 
 isDriverOn();
 isSlurmOn();
-if( constants.IPFS_USE == 1 ):
-   if( not isIpfsOn() ):
+if(constants.IPFS_USE == 1):
+   if(not isIpfsOn()):
       sys.exit()
 
 jobsReadFromPath = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 
-eblocPath         = constants.EBLOCPATH;
-header            = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
-clusterId         = constants.CLUSTER_ID; os.environ['clusterId'] = clusterId
+eblocPath = constants.EBLOCPATH;
+header    = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID
+
+isClusterExist = contractCall('echo "$header; console.log( \'\' + mylib.isClusterExist(\'$clusterID\') )"');
+if (isClusterExist.lower() == "false"):
+   print("Error: Your Ethereum address does not match with any cluster in eBlocBroker. \n" 
+         "Please register your cluster using your Ethereum Address in to the eBlocBroker.\n"
+         "You can use 'contractCalls/registerCluster.js' script.");
+   sys.exit()
 
 deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.getDeployedBlockNumber() )"');
 #blockReadFromContract = contractCall('echo "$header; console.log( \'\' + mylib.getBlockReadFrom() )"'); #TODO: event'den cek
@@ -119,7 +126,7 @@ while True: #{
        logTest(blockReadFrom);
        sys.exit();
 
-    clusterGainedAmount   = contractCall('echo "$header; console.log( \'\' + mylib.getClusterReceivedAmount(\'$clusterId\') )"');
+    clusterGainedAmount   = contractCall('echo "$header; console.log( \'\' + mylib.getClusterReceivedAmount(\'$clusterID\') )"');
     squeueStatus = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus):
@@ -166,7 +173,7 @@ while True: #{
           submittedJob = submittedJobs[i].split(' ');
           print(submittedJob[5])
           
-          if (clusterId == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
+          if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              logTest("BlockNum: " + submittedJob[0]  + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4] );
 
              if (int(submittedJob[0]) > int(maxVal)):
@@ -175,7 +182,7 @@ while True: #{
              os.environ['jobKey']   = submittedJob[2]
              os.environ['index'] = submittedJob[3]
 
-             jobInfo = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
+             jobInfo = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterID\', \'$jobKey\', \'$index\' ) )"');
              jobInfo = jobInfo.split(',');
 
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
@@ -186,7 +193,7 @@ while True: #{
                 elif (submittedJob[4] == '1'):
                    logTest("New job has been recieved. EUDAT call |" + time.ctime());
                    driverFunc.driverEudatCall( submittedJob[2], submittedJob[3]);
-                   #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3], clusterId) ) #works
+                   #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3], clusterID) ) #works
                 elif (submittedJob[4] == '2'):
                    logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime());
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
