@@ -17,7 +17,7 @@ var whoami              = web3.eth.defaultAccount;
 var myContractInstance  = web3.eth.contract(mylib.abi).at(mylib.address);
 var blockNumber         = web3.eth.blockNumber;
 
-var gasLimit           = 4000000;
+var gasLimit           = 4500000;
 var jobBlkStart        = 0;
 var job_state_id       = {};
 
@@ -118,12 +118,12 @@ exports.getJobOwner = function(var1, var2, var3) {
 };
 
 exports.registerCluster = function(var1, var2, var3, var4, var5, var6) {
-    var6 =exports.bs58_encode( var6 )
-    var6 = "0x" + var6.substr(4); //Trims first 4 character, 1220 and written add 0x at the beginning.
-    console.log(var6)
+    //var6 =exports.bs58_encode(var6)
+    //var6 = "0x" + var6.substr(4); //Trims first 4 character, 1220 and written add 0x at the beginning.
+    //console.log(var6)
 
-    hash = myContractInstance.registerCluster(var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit });
-    console.log( hash );
+    hash = myContractInstance.registerCluster(var1, var2, var3, var4, var5, var6, {from: web3.eth.coinbase, gas: gasLimit });
+    return hash;
 };
 
 exports.getClusterAddresses = function() {
@@ -132,14 +132,14 @@ exports.getClusterAddresses = function() {
 
 exports.updateCluster = function(var1, var2, var3, var4, var5, var6) {
     hash = myContractInstance.updateCluster( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit } );
-    console.log( hash );
+    console.log(hash);
 };
 
 exports.getDeployedBlockNumber = function() {
     return myContractInstance.getDeployedBlockNumber();
 };
 
-exports.getClusterIpfsId = function( var1 ) {
+exports.getClusterIpfsId = function(var1) {
     return myContractInstance.getClusterIpfsId(var1);
 };
 
@@ -162,7 +162,7 @@ exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
     console.log( hash );
 };
 
-exports.LogJob = function( var1, myPath ) {
+exports.LogJob = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
 

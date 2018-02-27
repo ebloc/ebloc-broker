@@ -141,20 +141,20 @@ Please note the following:
 
 -If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
 
-``bash
+```bash
 coreNumber         = 128;
 clusterName        = "eBlocCluster";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
-corePriceMinuteWei = 1; //For experimental you could also give 1.
+corePriceMinuteWei = 100; //For experimental you could also give 1.
 ipfsID             = "QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; //ipfs id | grep "ID"
 
 //RegisterCluster
-if(federationCloudId.length < 128 && clusterName < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
+if(federationCloudId.length < 128 && clusterName.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
      eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000})
 
 //UpdateCluster
-if(federationCloudId.length < 128 && clusterName < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
+if(federationCloudId.length < 128 && clusterName.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
 	eBlocBroker.updateCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000}); 
 
 //Deregister
