@@ -23,6 +23,5 @@
 	"url": "git+https://github.com/ebloc/eBlocBroker.git"
     },
     "author": "",
-    "license": "ISC",
     "homepage": "http://ebloc.cmpe.boun.edu.tr:3003"
 }

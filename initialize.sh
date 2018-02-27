@@ -31,7 +31,7 @@ sudo chmod +x $currentDir/slurmScript.sh
 # User Name Setup:------------------------------------
 lineOld="whoami";
 lineNew="whoami";
-#lineNew=$(logname);
+lineNew=$(logname);
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
