@@ -34,3 +34,7 @@ checkSinfoOut\.txt
 \.#userNameUpdate\.sh
 
 \.#package\.json
+
+*.sol#
+
+contractCalls/\.node-xmlhttprequest-sync-13830
