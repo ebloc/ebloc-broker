@@ -236,6 +236,9 @@ contract eBlocBroker {
     }
 
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
+    // Log the submitted job
     event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
+    
+    // Log the completed job's receipt
     event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
 }

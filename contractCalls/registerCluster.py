@@ -33,7 +33,3 @@ account     = web3.eth.accounts[7];
 if(len(federationCloudId) < 128 and len(clusterName) < 32 and (len(miniLockId) == 0 or len(miniLockId) == 45)):
     tx=eBlocBroker.transact({"from":account}).registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsIDbytes);
     print(tx);
-
-# --- Tersini yap.
-
-

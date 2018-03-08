@@ -2,7 +2,6 @@
 
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, thread
-
 def logTest(strIn):
    print(strIn)
    txFile = open( constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
@@ -43,8 +42,9 @@ def isSlurmOn():
 
    if not "PARTITION" in str(check):
       logTest("-------------------------- \n");
-      logTest("Error: sinfo returns emprty string, please run \'sudo bash runSlurm.sh\'. \n");
-      logTest( check );
+      logTest("Error: sinfo returns emprty string, please run: sudo bash runSlurm.sh \n");
+      
+      logTest('Error Message: \n' + check);
       sys.exit();
 
    if "sinfo: error" in str(check):
@@ -54,8 +54,8 @@ def isSlurmOn():
       logTest("/etc/init.d/munge start")
       sys.exit()
 
-yes = set(['yes','y', 'ye']);
-no  = set(['no' ,'n']);
+yes = set(['yes', 'y', 'ye']);
+no  = set(['no' , 'n']);
 
 isDriverOn();
 isSlurmOn();
@@ -68,13 +68,14 @@ os.environ['jobsReadFromPath'] = jobsReadFromPath
 
 eblocPath = constants.EBLOCPATH;
 header    = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
-clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID
+clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
 
 isClusterExist = contractCall('echo "$header; console.log( \'\' + mylib.isClusterExist(\'$clusterID\') )"');
 if (isClusterExist.lower() == "false"):
-   print("Error: Your Ethereum address does not match with any cluster in eBlocBroker. \n" 
-         "Please register your cluster using your Ethereum Address in to the eBlocBroker.\n"
-         "You can use 'contractCalls/registerCluster.js' script.");
+   print("Error: Your Ethereum address (" + clusterID + ") \n"
+         "does not match with any cluster in eBlocBroker. Please register your \n" 
+         "cluster using your Ethereum Address in to the eBlocBroker. You can \n"
+         "use 'contractCalls/registerCluster.py' script to register your cluster.");
    sys.exit()
 
 deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.getDeployedBlockNumber() )"');
@@ -138,7 +139,7 @@ while True: #{
     logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + clusterGainedAmount);
     logTest("Waiting new job to come since block number: " + blockReadFrom);
 
-    printFlag=0;
+    printFlag = 0;
     currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
     while(True):
        if (printFlag == 0):

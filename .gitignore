@@ -35,6 +35,6 @@ checkSinfoOut\.txt
 
 \.#package\.json
 
-*.sol#
+contracts/contracts/#eBlocBroker\.sol#
 
 contractCalls/\.node-xmlhttprequest-sync-13830
