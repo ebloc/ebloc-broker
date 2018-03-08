@@ -25,5 +25,9 @@ name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsID = eBlocB
 
 ipfs=ipfsBytesToString(ipfsID)
 
-print('Name: '+name);
-print('Ipfs: '+ipfs)
+print('name: ' + name);
+print('ipfsID: ' + ipfs)
+print('federationCloudId: ' + federationCloudId)
+print('miniLockId: ' + miniLockId)
+print('coreLimit: ' + str(coreLimit))
+print('coreMinutePrice: ' + str(coreMinutePrice))
