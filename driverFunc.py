@@ -67,7 +67,7 @@ def driverEudatCall(jobKey, index):
 
    header     = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
-   f        = open( eblocPath + '/password.txt', 'r')  # Password is read from the file. password.txt is have only user access
+   f        = open(eblocPath + '/eudatPassword.txt', 'r')  # Password is read from the file. password.txt is have only user access
    password = f.read().replace("\n", "").replace(" ", ""); f.close()
 
    logTest("Login into owncloud")

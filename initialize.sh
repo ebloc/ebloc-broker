@@ -1,7 +1,6 @@
 #!/bin/bash
 
 currentDir=$PWD;
-COINBASE="0xffffffffffffffffffffffffffffffffffffffff";
 
 # Folder Setup:--------------------------------------
 if [ ! -d $HOME/.eBlocBroker ]; then
@@ -56,3 +55,4 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js        && rm $currentD
 
 cd $currentDir/
 npm install --save
+echo -e "Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with: 'chmod 700 eudatPassword.txt'"

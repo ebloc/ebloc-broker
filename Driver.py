@@ -82,7 +82,7 @@ deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.g
 #blockReadFromContract = contractCall('echo "$header; console.log( \'\' + mylib.getBlockReadFrom() )"'); #TODO: event'den cek
 blockReadFromContract=str(0)
 
-logTest("------------CLUSTER_ON------------")
+logTest("------------CLUSTER_IS_ON------------")
 logTest("clusterAddress: " +  clusterID)
 logTest("deployedBlockNumber: " +  deployedBlockNumber)
 
