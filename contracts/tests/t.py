@@ -1,6 +1,9 @@
 #!/usr/bin/python
+import os
 import StringIO
 import pytest
+
+cwd = os.getcwd()
 
 blkArrayIndex = 0;
 gasUsed       = [];
@@ -85,8 +88,8 @@ def test_receipt(web3, accounts, chain):
     currBlk = web3.eth.blockNumber;
     j = 0;
     #fname = "/Users/alper/Desktop/n.txt";
-    fname = "/Users/alper/ebloc_eblocBrokerGit/contracts/test.txt";    
-    f1=open('/Users/alper/Desktop/receipt.txt', 'w+')
+    fname = cwd + '/test.txt';    
+    f1=open(cwd + '/receipt.txt', 'w+')
     account = accounts[2];
     x = "5b0f93fa7d28bc881f16c14b7c59a58ae5af997e3d0949d7ae6949302bd1f4d0";
     with open(fname) as f:
@@ -105,7 +108,8 @@ def test_receipt(web3, accounts, chain):
             contract_address = chain.wait.for_receipt(set_txn_hash)
 
             gas = contract_address["gasUsed"];
-            print("submitJobb: " + str(gas));
+            print("submitJob: " + str(gas));
+            print(my_contract.call().getJobInfo('0xdceceaf3fc5c0a63d195d69b1a90011b7b19650d', 'QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd', 0) );
 
             #print( j, arguments[0], arguments[1], arguments[2], gas );
             #f1.write( '%s %s %s %d \n' % (arguments[0], arguments[1], arguments[2], myGas ) )
