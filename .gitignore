@@ -35,10 +35,10 @@ checkSinfoOut\.txt
 
 \.#package\.json
 
-contracts/contracts/#eBlocBroker\.sol#
+*.py#
 
 contractCalls/\.#registerCluster\.py
 
-contractCalls/#registerCluster\.py#
-
 contractCalls/\.node-xmlhttprequest-sync-13830
+
+*.sol#

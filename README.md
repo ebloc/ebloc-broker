@@ -224,7 +224,7 @@ coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType      = 0; // Please note that 0 stands for IPFS , 1 stands for eudat.
 
 if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && jobKey.length == 46) {
-	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
 }
 ```
 #### **2. How to submit a job using EUDAT**
@@ -256,7 +256,7 @@ pricePerMin   = clusterInfo[4];
 
 if (coreNum <= coreLimit && jobDescription.length < 128 ) {
 	eBlocBroker.submitJob(clusterAddress, jobKey, coreNum, jobDescription,
-coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
 }
 ```
 
@@ -311,7 +311,7 @@ coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType      = 2; // Please note that 0 stands for IPFS , 1 stands for eudat. 2 stands for IPFS with miniLock
 
 if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.length == 46 && jobKey.length == 46) {
-	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
 }
 ```
 <!---
@@ -333,7 +333,7 @@ coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType      = 3 ; /* Please note that 3 stands for github repository share */
 
 if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
-	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
 }
 ```
 -->
@@ -350,12 +350,25 @@ jobHash = "QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B"
 eBlocBroker.getJobInfo(clusterID, jobHash, 0);
 ```
 
-### **Events: In order to keep track of the log of receipts**
+-----------
+
+### Events
+
+#### - Keep track of the log of receipts
 
 ```bash
-fromBlock = MyContract.eth.blockNumber; //This could be also the blockNumber the job submitted.
-var e = eBlocBroker.LogReceipt({}, {fromBlock:fromBlock, toBlock:'latest'});
-e.watch(function(error, result){
+fromBlock = eBlocBroker.getDeployedBlockNumber(); 
+var event = eBlocBroker.LogReceipt({}, {fromBlock:fromBlock, toBlock:'latest'});
+event.watch(function(error, result) {
+  console.log(JSON.stringify(result));
+});
+```
+#### - Keep track of the log of submitted jobs
+
+```bash
+fromBlock = eBlocBroker.getDeployedBlockNumber(); 
+var event = eBlocBroker.LogJob({}, {fromBlock:fromBlock, toBlock:'latest'});
+event.watch(function(error, result) {
   console.log(JSON.stringify(result));
 });
 ```
@@ -364,9 +377,7 @@ e.watch(function(error, result){
 
 ```bash
 sudo pip install sphinx_rtd_theme pyocclient
-
 sudo apt-get install davfs2 mailutils
 sudo apt-get install -y nodejs
-
 wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
 ```
