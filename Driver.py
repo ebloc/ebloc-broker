@@ -83,6 +83,7 @@ deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.g
 blockReadFromContract=str(0)
 
 logTest("------------CLUSTER_ON------------")
+logTest("clusterAddress: " +  clusterID)
 logTest("deployedBlockNumber: " +  deployedBlockNumber)
 
 if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)):
@@ -180,8 +181,8 @@ while True: #{
              if (int(submittedJob[0]) > int(maxVal)):
                 maxVal = submittedJob[0]
 
-             os.environ['jobKey']   = submittedJob[2]
-             os.environ['index'] = submittedJob[3]
+             os.environ['jobKey'] = submittedJob[2]
+             os.environ['index']  = submittedJob[3]
 
              jobInfo = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterID\', \'$jobKey\', \'$index\' ) )"');
              jobInfo = jobInfo.split(',');

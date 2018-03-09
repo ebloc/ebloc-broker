@@ -13,6 +13,6 @@ with open('abi.json', 'r') as abi_definition:
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-cluster="0xda1e61e853bb8d63b1426295f59cb45a34425b63";
+clusterAddress="0xda1e61e853bb8d63b1426295f59cb45a34425b63";
 
-print(eBlocBroker.call().isClusterExist(cluster));
+print(eBlocBroker.call().isClusterExist(clusterAddress));

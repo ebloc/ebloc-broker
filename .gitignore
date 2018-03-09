@@ -37,4 +37,8 @@ checkSinfoOut\.txt
 
 contracts/contracts/#eBlocBroker\.sol#
 
+contractCalls/\.#registerCluster\.py
+
+contractCalls/#registerCluster\.py#
+
 contractCalls/\.node-xmlhttprequest-sync-13830

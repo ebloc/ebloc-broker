@@ -1,27 +1,27 @@
 {
-    "name": "eBlocBroker",
-    "version": "1.0.0",
-    "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
-    "license": "UNLICENSED",
-    "main": "main.js",
-    "directories": {
-	"doc": "docs"
-    },
-    "dependencies": {
-	"binstring": "*",
-	"bs58": "*",
-	"web3": "*",
-	"web3_ipc": "*",
-	"minilock-cli": "*"
-    },
-    "devDependencies": {},
-    "scripts": {
-	"test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-	"type": "git",
-	"url": "git+https://github.com/ebloc/eBlocBroker.git"
-    },
-    "author": "",
-    "homepage": "http://ebloc.cmpe.boun.edu.tr:3003"
+   "name": "eBlocBroker",
+   "version": "1.0.0",
+   "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
+   "license": "UNLICENSED",
+   "main": "main.js",
+   "directories": {
+      "doc": "docs"
+   },
+   "dependencies": {
+      "binstring": "*",
+      "bs58": "*",
+      "web3": "0.20.5",
+      "web3_ipc": "*",
+      "minilock-cli": "*"
+   },
+   "devDependencies": {},
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/ebloc/eBlocBroker.git"
+   },
+   "author": "",
+   "homepage": "http://ebloc.cmpe.boun.edu.tr:3003"
 }

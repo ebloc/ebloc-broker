@@ -19,14 +19,9 @@ with open('abi.json', 'r') as abi_definition:
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-clusterAddress="0xc75497b304f42631d919f20db3e9b79dd59e88ff";
-name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsID = eBlocBroker.call().getClusterInfo(clusterAddress);
+clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
 
-ipfs=ipfsBytesToString(ipfsID)
+print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, 0));
 
-print('name: ' + name);
-print('ipfsID: ' + ipfs)
-print('federationCloudId: ' + federationCloudId)
-print('miniLockId: ' + miniLockId)
-print('coreLimit: ' + str(coreLimit))
-print('coreMinutePrice: ' + str(coreMinutePrice))
+
