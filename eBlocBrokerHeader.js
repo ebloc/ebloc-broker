@@ -1,11 +1,9 @@
-var EBLOCBROKER="./";
-var mylib = require(EBLOCBROKER + 'contract.js');
+var mylib = require('./contract.js'); 
 
 Web3 = require("web3");
 web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 if(!web3.isConnected()){
-    console.log("not connected");
     console.log("notconnected");
     process.exit();
 }
@@ -47,10 +45,10 @@ exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
 
 exports.jobBlkStart;
-
+    
 exports.submitJob = function(var1, var2, var3, var4, var5, var6, var7/*, var8 */) {
     //console.log( "" + var5 * myContractInstance.getClusterCoreMinutePrice(var1) )
-    str =  myContractInstance.getClusterInfo( var1 )
+    str =  myContractInstance.getClusterInfo(var1)
     arr = str.toString().split(",");
     clusterCoreMinutePrice = arr[4];
 
