@@ -56,4 +56,5 @@ sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slur
 
 cd $currentDir/
 npm install --save
-echo -e "Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with: 'chmod 700 eudatPassword.txt'"
+
+echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with: 'chmod 700 eudatPassword.txt'"
