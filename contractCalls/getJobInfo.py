@@ -5,6 +5,9 @@ import os
 from web3 import Web3
 import json
 from web3.providers.rpc import HTTPProvider
+import sys
+
+os.chdir(sys.path[0]);
 
 def ipfsBytesToString(ipfsID):
     val= web3.fromAscii(ipfsID);
@@ -13,15 +16,24 @@ def ipfsBytesToString(ipfsID):
     
 web3 = Web3(HTTPProvider('http://localhost:8545'))
 
-contractAddress='0xca9f407af4e36bfd4546a898d06c51cdc0da8a2a';
+fileAddr = open("address.json", "r")
+contractAddress = fileAddr.read().replace("\n", "")
+
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
-jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
-
-print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, 0));
-
-
+# To test driverFunc.py executed as script.
+if __name__ == '__main__': #{
+    if(len(sys.argv) == 4):
+        clusterAddress = str(sys.argv[1]);
+        jobKey         = str(sys.argv[2]);
+        index          = int(sys.argv[3]);
+    else:
+        clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+        jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=134633894220713919382117768988457393273";
+        index          = 3;
+    
+    print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, index));
+#}
