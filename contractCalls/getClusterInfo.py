@@ -1,10 +1,12 @@
 #!/usr/bin/env python -W ignore::DeprecationWarning
 
 from __future__ import print_function
-import os
+import os, sys
 from web3 import Web3
 import json
 from web3.providers.rpc import HTTPProvider
+
+os.chdir(sys.path[0]);
 
 def ipfsBytesToString(ipfsID):
     val= web3.fromAscii(ipfsID);
@@ -13,7 +15,9 @@ def ipfsBytesToString(ipfsID):
     
 web3 = Web3(HTTPProvider('http://localhost:8545'))
 
-contractAddress='0xca9f407af4e36bfd4546a898d06c51cdc0da8a2a';
+fileAddr = open("address.json", "r")
+contractAddress = fileAddr.read().replace("\n", "")
+
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
     

@@ -2,7 +2,7 @@
 import sys, os, constants, time
 
 def startCall( jobKey, index ):
-   cluster_id              = constants.CLUSTER_ID;
+   clusterID               = constants.CLUSTER_ID;
    eblocPath               = constants.EBLOCPATH;
    logPath                 = constants.LOG_PATH;
    
@@ -25,8 +25,8 @@ def startCall( jobKey, index ):
          txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().replace("\n", "").replace(" ", "");
       time.sleep(5);
       
-   txFile = open( logPath + '/transactions/' + cluster_id + '.txt', 'a');
-   txFile.write( txHash + " start_setJobStatus" +  " " + unixTime + "\n");
+   txFile = open(logPath + '/transactions/' + clusterID + '.txt', 'a');
+   txFile.write(txHash + " setJobStatus_started" +  " " + unixTime + "\n");
    txFile.close();
    
 if __name__ == '__main__': 

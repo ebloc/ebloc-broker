@@ -54,7 +54,7 @@ def test_receipt(web3, accounts, chain):
     '''
     print(account);
     web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().registerCluster( 1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
+    set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
     contract_address = chain.wait.for_receipt(set_txn_hash)
 
     output = my_contract.call().isClusterExist(accounts[0]);
@@ -194,12 +194,4 @@ def test_receipt(web3, accounts, chain):
     print( web3.eth.getBalance(account) );
     print( web3.eth.getBalance(accounts[1]) );
     '''
-    print("END") ;
-
-
-#set_txn_hash     = my_contract.transact().receiptCheck( s, e, ipfsHash, index, 60 );#job's run time.
-#hex_string = "7D5A99F603F231D53A4F39D1521F98D2E8BB279CF29BEBFD0687DC98458E7F89";
-#hex_data = hex_string.decode("hex"); #
-#print('dfdsfdsfdsfds '+ hex_data.encode("hex"))
-#set_txn_hash     = my_contract.transact().receiptCheck( ipfsHash, index, 60, ipfsHash, '0' );#job's run time.
-#set_txn_hash     = my_contract.transact().r( s, e, core );
+    print("END");

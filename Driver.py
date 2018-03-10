@@ -66,7 +66,11 @@ if(constants.IPFS_USE == 1):
 jobsReadFromPath = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 
-eblocPath = constants.EBLOCPATH;
+# Paths---------
+eblocPath        = constants.EBLOCPATH;
+contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
+# ---------------
+
 header    = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
 
@@ -141,28 +145,32 @@ while True: #{
     logTest("Waiting new job to come since block number: " + blockReadFrom);
 
     printFlag = 0;
+    passedPrintFlag = 0;
     currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
     while(True):
        if (printFlag == 0):
-          logTest( "Waiting currentBlockNumber to increment by one" );
-          logTest( "Current BlockNumber: " + currentBlockNumber  + "; wanted Block Number: " + blockReadFrom);
+          logTest("Waiting currentBlockNumber to increment by one");
+          logTest("Current BlockNumber: " + currentBlockNumber  + "; wanted Block Number: " + blockReadFrom);
           
        if (int(currentBlockNumber) >= int(blockReadFrom)):
           break;
        
        printFlag = 1;
-       time.sleep(1);
+       time.sleep(2);
        currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
-       logTest("Passed Incremented blockNumber...Continue waiting from block number: " + blockReadFrom);
 
+       if (passedPrintFlag == 0):
+          logTest("Passed Incremented blockNumber... Continue waiting from block number: " + blockReadFrom);
+          passedPrintFlag = 1;
+
+    passedPrintFlag = 0;      
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
 
     # Waits here until new job submitted into the cluster
-    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob( $blockReadFrom, \'$jobsReadFromPath\' ) )"'); 
-
+    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
 
     if os.path.isfile(jobsReadFromPath): #{    Waits until generated file on log is completed
-       fR = open( jobsReadFromPath, 'r' )
+       fR = open(jobsReadFromPath, 'r' )
        blockReadFrom = fR.read().replace("\n", "");
        fR.close();
 
@@ -170,23 +178,23 @@ while True: #{
 
        submittedJob=0;
        maxVal = 0;
-       for i in range( 0, (len(submittedJobs) - 1)  ): #{
+       for i in range(0, (len(submittedJobs) - 1)): #{
           logTest("------------------------------------------------------------------")
           submittedJob = submittedJobs[i].split(' ');
           print(submittedJob[5])
           
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
-             logTest("BlockNum: " + submittedJob[0]  + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4] );
+             logTest("BlockNum: " + submittedJob[0]  + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
              if (int(submittedJob[0]) > int(maxVal)):
                 maxVal = submittedJob[0]
 
-             os.environ['jobKey'] = submittedJob[2]
-             os.environ['index']  = submittedJob[3]
-
-             jobInfo = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterID\', \'$jobKey\', \'$index\' ) )"');
+             os.environ['jobKey'] = submittedJob[2];
+             os.environ['index']  = submittedJob[3];
+             
+             jobInfo=os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().replace("\n","").replace(" ","")[1:-1];             
              jobInfo = jobInfo.split(',');
-
+             
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
              if (jobInfo[0] == str(constants.job_state_code['PENDING'])): 
                 if (submittedJob[4] == '0'):
@@ -194,7 +202,7 @@ while True: #{
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); #TODO: could be called as a thread but its already fast
                 elif (submittedJob[4] == '1'):
                    logTest("New job has been recieved. EUDAT call |" + time.ctime());
-                   driverFunc.driverEudatCall( submittedJob[2], submittedJob[3]);
+                   driverFunc.driverEudatCall(submittedJob[2], submittedJob[3]);
                    #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3], clusterID) ) #works
                 elif (submittedJob[4] == '2'):
                    logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime());
@@ -203,12 +211,10 @@ while True: #{
                 logTest("Job is already captured and in process");
        #}
        
-       # updates the latest read block number
-       if( submittedJob != 0 and (int(maxVal) != 0) ): #{
-          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w')
-          f_blockReadFrom.write(str(int(maxVal) + 1) + "\n")  # Python will convert \n to os.linesep
-          f_blockReadFrom.close()
-
+       if( submittedJob != 0 and (int(maxVal) != 0) ): #{ 
+          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number      
+          f_blockReadFrom.write(str(int(maxVal) + 1) + "\n") # Python will convert \n to os.linesep
+          f_blockReadFrom.close()          
           blockReadFrom = str(int(maxVal) + 1)
        #}
     #}

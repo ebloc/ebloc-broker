@@ -28,8 +28,8 @@ cd ~/ebloc-amazon
 #On an another console you can ssh into the instance:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
 
-eblocServer                            #To run eBloc geth-server
-cd ../eBlocBroker && python Driver.py  #To run the eBlocBroker
+eblocServer                            # To run eBloc geth-server
+cd ../eBlocBroker && python Driver.py  # To run the eBlocBroker
 ```
 
 ### Create your Ethereum Account
@@ -50,9 +50,7 @@ Repeat passphrase:
 
  `COINBASE = "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903";`
 
-Connect into eBloc private chain using Geth: `eblocServer `. On another console to attach Geth console please do: `eblocClient`.
-
-Please note that first you have to run `eblocServer` and than `eblocClient`.
+Connect into eBloc private chain using Geth: `eblocServer `. On another console to attach Geth console please do: `eblocClient`. Please note that first you have to run `eblocServer` and than `eblocClient`.
 
 <!--- 
 ### How to create a new account
@@ -101,8 +99,8 @@ parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peer
 ## Connect to eBlocBroker Contract
 
 ```bash
-var address="0xca9f407af4e36bfd4546a898d06c51cdc0da8a2a";
-var abi=[{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"index","type":"uint32"}],"name":"getClusterReceiptNode","outputs":[{"name":"","type":"uint256"},{"name":"","type":"int32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceiptSize","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"isClusterExist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterName","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockId","type":"string"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTime","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterName","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockId","type":"string"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"}],"name":"refund","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTime","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"}];
+var address="0x1b1af6b7430bca84f94d807b019572bc35f9968f";
+var abi=[{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTime","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"}],"name":"refund","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterName","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockId","type":"string"},{"name":"price","type":"uint256"},{"name":"ipfsID","type":"bytes32"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTime","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterName","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockId","type":"string"},{"name":"price","type":"uint256"},{"name":"ipfsID","type":"bytes32"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"},{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"string"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"index","type":"uint32"}],"name":"getClusterReceiptNode","outputs":[{"name":"","type":"uint256"},{"name":"","type":"int32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceiptSize","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"isClusterExist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"}];
 var eBlocBroker = web3.eth.contract(abi).at(address);
 ```
 
@@ -145,7 +143,7 @@ coreNumber         = 128;
 clusterName        = "eBlocCluster";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
-corePriceMinuteWei = 100; //For experimental you could also give 1.
+corePriceMinuteWei = 100; 
 ipfsID             = "QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; //ipfs id | grep "ID"
 
 //RegisterCluster
@@ -196,12 +194,13 @@ added QmbTzBprmFEABAWwmw1VojGLMf3nv7Z16eSgec55DYdbiX simpleSlurmJob/run.sh
 added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 ```
 
-- Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
+- Main folder's IPFS hash (for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
 
+<!--- 
 - If you want to share it through gitHub, please push all files into github repository and share its web URL right after `https://github.com/`, which is `USERNAME/REPOSITORY.git`.
 
 For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git`, you have to submit: `avatar-lavventura/simpleSlurmJob.git`.
-
+--->
 -----------
 
 ### **How to submit a job using storageTypes**
@@ -209,7 +208,7 @@ For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git
 #### **1. How to submit a job using IPFS**
 
 ```bash
-clusterID        = "0xc75497b304f42631d919f20db3e9b79dd59e88ff"; 
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; 
 clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705");
 clusterCoreLimit = clusterInfo[3];
 pricePerMin      = clusterInfo[4];
@@ -239,7 +238,7 @@ Now `jobHash` should be your `FederationCloudId` followed by the name of the fol
 
 ```bash
 //USER Inputs-------------------------------------------------------
-clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
 clusterInfo    = eBlocBroker.getClusterInfo(clusterAddress);
 jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
 coreNum        = 1;
@@ -345,16 +344,16 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
 
 ```bash
 clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID that you have submitted your job.
+jobHash = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=134633894220713919382117768988457393273"
 index   = 0;      
-jobHash = "QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B"
-eBlocBroker.getJobInfo(clusterID, jobHash, 0);
+eBlocBroker.getJobInfo(clusterID, jobHash, index);
 ```
 
 -----------
 
 ### Events
 
-#### - Keep track of the log of receipts
+#### Keep track of the log of receipts
 
 ```bash
 fromBlock = eBlocBroker.getDeployedBlockNumber(); 
@@ -363,7 +362,7 @@ event.watch(function(error, result) {
   console.log(JSON.stringify(result));
 });
 ```
-#### - Keep track of the log of submitted jobs
+#### Keep track of the log of submitted jobs
 
 ```bash
 fromBlock = eBlocBroker.getDeployedBlockNumber(); 

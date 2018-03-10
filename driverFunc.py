@@ -3,8 +3,11 @@
 import owncloud, hashlib, getpass, sys, os, time, subprocess, constants, endCode
 from subprocess import call
 
-eblocPath    = constants.EBLOCPATH;
-ipfsHashes   = constants.PROGRAM_PATH
+# Paths---------
+eblocPath        = constants.EBLOCPATH;
+contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
+ipfsHashes       = constants.PROGRAM_PATH
+# ---------------
 jobKeyGlobal = "";
 indexGlobal  = "";
 
@@ -22,7 +25,7 @@ def logTest(strIn):
 def enum(**named_values):
     return type('Enum', (), named_values)
 
-def contractCall( val ):
+def contractCall(val):
    printFlag=1;
    ret = os.popen( val + "| node").read().replace("\n", "").replace(" ", "");
    while(True):
@@ -54,7 +57,7 @@ def driverEudatCall(jobKey, index):
 
    os.environ['jobKey']      = str(jobKey)
    os.environ['index']       = str(index);
-   os.environ['clusterId']   = constants.CLUSTER_ID 
+   os.environ['clusterID']   = constants.CLUSTER_ID 
    os.environ['eblocPath']   = eblocPath   
    os.environ['folderIndex'] = "1";
    os.environ['miniLockId']  = "-1";
@@ -87,7 +90,7 @@ def driverEudatCall(jobKey, index):
       shareToken      = shareList[i]['share_token'] 
 
       if( (inputFolderName == folderName) and (inputOwner == owner) ):
-         logTest("Here:_" + inputId + "_ShareToken:_" + shareToken + "**********************************")            
+         logTest("Here:_" + inputId + "_ShareToken:_" + shareToken)         
          os.environ['shareToken']      = str(shareToken);
          os.environ['eudatFolderName'] = str(inputFolderName);
          eudatFolderName               = inputFolderName;
@@ -99,7 +102,6 @@ def driverEudatCall(jobKey, index):
       logTest("Couldn't find the shared file");
       return;
 
-   ownCloudPathFolder      = constants.OWN_CLOUD_PATH + '/' + folderName; os.environ['ownCloudPathFolder']      = ownCloudPathFolder;
    localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
 
    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
@@ -117,33 +119,33 @@ def driverEudatCall(jobKey, index):
    os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read()   
    os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   )
    os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
-   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest(myDate);
-   txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
+   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); #logTest(myDate);
+   txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w'); txFile.write(myDate + '\n'); txFile.close();
    time.sleep(0.2)
-   os.popen( "tar -xf $localOwnCloudPathFolder/ipfs.tar.gz -C $localOwnCloudPathFolder/" ).read()
-   os.popen( "rm $localOwnCloudPathFolder/ipfs.tar.gz"  ).read()
+   #ipfs.tar.gz var mi diye bak!!!!!
+   #os.popen("tar -xf $localOwnCloudPathFolder/ipfs.tar.gz -C $localOwnCloudPathFolder/" ).read()
+   #os.popen("rm $localOwnCloudPathFolder/ipfs.tar.gz").read()
    os.system("cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
 
-   logTest(ownCloudPathFolder)
    logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
 
-   jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
+   jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().replace("\n", "").replace(" ", "")[1:-1];
    jobInfo    = jobInfo.split(',');
-   jobCoreNum = jobInfo[1]
+   jobCoreNum = jobInfo[1];
 
    while(True):
       if (not(jobCoreNum == "notconnected" or jobCoreNum == "")): 
          break;
       else:
          logTest("Error: Please run Parity or Geth on the background.**************************************************************")
-         jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$jobKey\', \'$index\' ) )"');
+         jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().replace("\n", "").replace(" ", "")[1:-1];
          jobInfo    = jobInfo.split(',');
          jobCoreNum = jobInfo[1]
 
    os.environ['jobCoreNum'] = jobCoreNum;
    logTest("Job's Core Number: " + jobCoreNum)
 
-   os.chdir( localOwnCloudPathFolder ) # 'cd' into the working path and call sbatch from there
+   os.chdir(localOwnCloudPathFolder) # 'cd' into the working path and call sbatch from there
    if(whoami == "root"):
       jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
    else:
@@ -164,8 +166,8 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     os.environ['ipfsHash']    = ipfsHash;
     os.environ['index']       = str(index);
-    os.environ['clusterId']  = constants.CLUSTER_ID
-    os.environ['ipfsHashes'] = str(ipfsHashes);   
+    os.environ['clusterID']   = constants.CLUSTER_ID
+    os.environ['ipfsHashes']  = str(ipfsHashes);   
     os.environ['folderIndex'] = str(ipfsType);
     os.environ['eblocPath']   = eblocPath
     os.environ['shareToken']  = "-1"
@@ -177,7 +179,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     else:
        os.environ['miniLockId'] = miniLockId
 
-    header     = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
+    header = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
     logTest( "ipfsHash: " + ipfsHash);
 
     jobSavePath = ipfsHashes + '/' + ipfsHash + "_" + index;
@@ -229,12 +231,12 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
        return
 
     myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest( myDate );
-    txFile = open( 'modifiedDate.txt', 'w' ); txFile.write( myDate + '\n' ); txFile.close();
+    txFile = open('modifiedDate.txt', 'w'); txFile.write( myDate + '\n' ); txFile.close();
     time.sleep(0.2)
 
     os.system("cp run.sh ${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
 
-    jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterId\', \'$ipfsHash\', \'$index\' ) )"');
+    jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterID\', \'$ipfsHash\', \'$index\' ) )"');
     jobInfo    = jobInfo.split(',');
     jobCoreNum = jobInfo[1]
 
@@ -246,8 +248,8 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
        jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
     else:
        jobId = os.popen('sbatch         -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
-       os.environ['jobId'] = jobId;
-
+       
+    os.environ['jobId'] = jobId;
     if not jobId.isdigit():
        logTest("Error occured, jobId is not a digit.")
        sys.exit(); # Detects na error on the SLURM side
@@ -259,7 +261,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 if __name__ == '__main__': #{
    #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99";
    #index      = "0";
-   #driverEudatCall( var, index );
+   #driverEudatCall(var, index);
    #------
    var    = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
    index  = "1"
@@ -267,4 +269,4 @@ if __name__ == '__main__': #{
    miniLockId = ""
    
    driverIpfsCall(var, index, myType, miniLockId);
-   #}
+#}

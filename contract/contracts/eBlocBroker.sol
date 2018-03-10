@@ -3,8 +3,7 @@ pragma solidity ^0.4.17;
 import "./Library.sol";
 
 contract eBlocBroker {    
-    // The block number that was obtained when contract is deployed.
-    uint  deployedBlockNumber;
+  uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
     enum JobStateCodes {
 	Null,
@@ -49,7 +48,7 @@ contract eBlocBroker {
 
     function refund(address clusterAddr, string jobKey, uint32 index) public returns (bool)
     {
-	Library.status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
+	Library.status job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
@@ -66,12 +65,12 @@ contract eBlocBroker {
 	isBehindBlockTimeStamp(endTime) public returns (bool success) /* Payback to client and server */
     {
 	/* If clusterContract[msg.sender] isExist returns false EVM revert() */
-	Library.status memory job = clusterContract[msg.sender].jobStatus[jobKey][index];
+	Library.status job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
 	uint netOwed                     = job.received;
 	uint amountToGain                = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
-	if(amountToGain > netOwed || job.receiptFlag) //endTime > block.timestamp) done.	    
+	if((amountToGain > netOwed) || job.receiptFlag) 
 	    revert();
 	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) { 	    
@@ -83,12 +82,12 @@ contract eBlocBroker {
 	clusterContract[msg.sender].receivedAmount += amountToGain;
 
 	job.status      = uint8(JobStateCodes.COMPLETED);
-	job.receiptFlag = true; 
+	job.receiptFlag = true; /* Prevents double spending */
 
-	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain ), block.timestamp, ipfsHashOut, storageType);
+	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, ipfsHashOut, storageType);
 
-	msg.sender.transfer(amountToGain); 	       /* gained ether transferred to the cluster */
-	job.jobOwner.transfer(netOwed - amountToGain); /* gained ether transferred to the client */
+	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
+	job.jobOwner.transfer(netOwed - amountToGain); /* Gained ether transferred to the client */
 
 	return true;
     }
@@ -150,7 +149,7 @@ contract eBlocBroker {
 			receiptFlag:     false}
 			));
 	
-	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length, storageType, miniLockId, jobDesc);
+	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length-1, storageType, miniLockId, jobDesc);
 	return true;
     }
 
