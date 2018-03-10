@@ -59,11 +59,11 @@ library Library {
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(data storage self, string name, string fID, string clusterMiniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsID)
+    function constructCluster(data storage self, string name, string fID, string miniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsID)
 	public {
 	self.name              = name;
 	self.federationCloudId = fID;
-	self.clusterMiniLockId = clusterMiniLockId;
+	self.clusterMiniLockId = miniLockId;
 	self.ipfsID            = ipfsID;
 	self.isExist           = true;
 	self.isRunning         = true;

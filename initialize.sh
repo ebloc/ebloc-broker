@@ -52,6 +52,7 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentD
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js        && rm $currentDir/main.js.bak
 #-----------------------------------------------------
+sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 
 cd $currentDir/
 npm install --save

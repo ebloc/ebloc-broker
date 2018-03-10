@@ -6,6 +6,7 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 if(!web3.isConnected()){
     console.log("not connected");
+    console.log("notconnected");
     process.exit();
 }
 

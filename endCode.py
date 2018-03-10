@@ -236,6 +236,6 @@ if __name__ == '__main__': # py_driver.py executed as a script
    miniLockId  = sys.argv[5];
    runName     = sys.argv[6];
 
-   endCall( jobKey, index, storageType, shareToken, miniLockId, runName )
+   endCall(jobKey, index, storageType, shareToken, miniLockId, runName)
 
 #oc.decline_remote_share(storageType)  

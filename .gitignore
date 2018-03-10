@@ -35,10 +35,16 @@ checkSinfoOut\.txt
 
 \.#package\.json
 
-*.py#
+\.node-xmlhttprequest-sync-14153
 
 contractCalls/\.#registerCluster\.py
 
-contractCalls/\.node-xmlhttprequest-sync-13830
+*.py#
 
-*.sol#
+contract/populus\.ini
+
+contract/migrations/__init__\.py
+
+eudatPassword\.txt
+
+contracts/populus\.ini
