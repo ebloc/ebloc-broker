@@ -3,12 +3,10 @@ import os, constants;
 # Paths---------
 eblocPath        = constants.EBLOCPATH;
 contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
+fname = constants.LOG_PATH + '/queuedJobs.txt';
 # ---------------
 
-fname="/home/alper/.eBlocBroker/queuedJobs.txt";
-
 sum1=0;
-
 counter = 1;
 with open(fname, "r") as ins:
     array = []
@@ -30,9 +28,6 @@ with open(fname, "r") as ins:
         print(str(counter) + " " + res[1] + " " + res[2] + " " + res[3] + " | " + constants.job_state_code[r[0]] + "," + r[1] + "," + r[2] + "," + r[3] + "," + r[4] + "," + r[5]);
         counter = counter + 1;
 
-print(counter)
-        
-    
+print(counter)            
 print("GAINED: " + str(sum1));
-
 

@@ -33,7 +33,7 @@ if __name__ == '__main__': #{
     else:
         clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
         jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=267575587427153420186990249657380315186";
-        index          = 1;
+        index          = 5;
     
     print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, index));
 #}

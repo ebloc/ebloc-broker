@@ -68,7 +68,7 @@ def driverEudatCall(jobKey, index):
    owner      = jobKeyTemp[0]
    folderName = jobKeyTemp[1]
 
-   header     = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
+   header     = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
    f        = open(eblocPath + '/eudatPassword.txt', 'r')  # Password is read from the file. password.txt is have only user access
    password = f.read().rstrip('\n').replace(" ", ""); f.close()
@@ -179,7 +179,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     else:
        os.environ['miniLockId'] = miniLockId
 
-    header = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+    header = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
     logTest( "ipfsHash: " + ipfsHash);
 
     jobSavePath = ipfsHashes + '/' + ipfsHash + "_" + index;
@@ -236,7 +236,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     os.system("cp run.sh ${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh"); 
 
-    jobInfo    = contractCall('echo "$header; console.log( \'\' + mylib.getJobInfo( \'$clusterID\', \'$ipfsHash\', \'$index\' ) )"');
+    jobInfo    = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getJobInfo( \'$clusterID\', \'$ipfsHash\', \'$index\' ) )"');
     jobInfo    = jobInfo.split(',');
     jobCoreNum = jobInfo[1]
 
