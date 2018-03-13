@@ -1,4 +1,4 @@
-var mylib = require('./contract.js'); 
+var eBlocBroker = require('./contract.js'); 
 
 Web3 = require("web3");
 web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
@@ -8,11 +8,12 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-var COINBASE="0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
+//web3.eth.defaultAccount=web3.eth.accounts[0]; //check calismaya bilir.
+var COINBASE="0x6af0204187a93710317542d383a1b547fa42e705"; //Should be the address of the cluster.
 web3.eth.defaultAccount = COINBASE; 
 
 var whoami              = web3.eth.defaultAccount;
-var myContractInstance  = web3.eth.contract(mylib.abi).at(mylib.address);
+var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
 var blockNumber         = web3.eth.blockNumber;
 
 var gasLimit           = 4500000;
@@ -37,8 +38,8 @@ job_state_id['14'] = 'SUSPENDED'
 job_state_id['15'] = 'TIMEOUT'    
 
 //Global variables are used.
-exports.address      = mylib.address;
-exports.abi          = mylib.abi;
+exports.address      = eBlocBroker.address;
+exports.abi          = eBlocBroker.abi;
 exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
@@ -66,7 +67,7 @@ exports.isTransactionPassed = function(transaction_id) {
     var web3          = web3_extended.create(options);
     if(!web3.isConnected()) 
 	console.log("not connected");
-    var myContractInstance  = web3.eth.contract(mylib.abi).at(mylib.address);
+    var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
 
     var checkPassed = 0;
     var receipt     = web3.eth.getTransactionReceipt( transaction_id );

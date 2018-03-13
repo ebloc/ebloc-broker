@@ -74,10 +74,10 @@ eblocPath        = constants.EBLOCPATH;
 contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
 # ---------------
 
-header    = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+header    = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
 
-isClusterExist = contractCall('echo "$header; console.log( \'\' + mylib.isClusterExist(\'$clusterID\') )"');
+isClusterExist = contractCall('echo "$header; console.log( \'\' + eBlocBroker.isClusterExist(\'$clusterID\') )"');
 
 if (isClusterExist.lower() == "false"):
    print("Error: Your Ethereum address (" + clusterID + ") \n"
@@ -135,7 +135,7 @@ while True: #{
        logTest(blockReadFrom);
        sys.exit();
 
-    clusterGainedAmount   = contractCall('echo "$header; console.log( \'\' + mylib.getClusterReceivedAmount(\'$clusterID\') )"');
+    clusterGainedAmount   = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
     squeueStatus = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus):
@@ -161,7 +161,7 @@ while True: #{
        
        printFlag = 1;
        time.sleep(2);
-       currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
+       currentBlockNumber = contractCall('echo "$header; console.log( \'\' + eBlocBroker.blockNumber )"');
 
        if (passedPrintFlag == 0):
           logTest("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
@@ -171,7 +171,7 @@ while True: #{
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
 
     # Waits here until new job submitted into the cluster
-    returnVal = contractCall('echo "$header; console.log( \'\' + mylib.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
+    returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
 
     if os.path.isfile(jobsReadFromPath): #{    Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r' )
