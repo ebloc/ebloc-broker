@@ -14,5 +14,4 @@ lineReader.on('line', function (line) {
     max += console.log( '' + mylib.getTransactionGas(line[0]))  
 });
 
-
 console.log("max: " +  max);

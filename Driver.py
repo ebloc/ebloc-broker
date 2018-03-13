@@ -2,13 +2,14 @@
 
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, thread
+
 def logTest(strIn):
    print(strIn)
    txFile = open( constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n"); txFile.close();
 
 def contractCall(val):
-   returnedVal = os.popen( val + "| node & echo $! >" + constants.LOG_PATH + "/my-app.pid").read().replace("\n", "").replace(" ", "");
+   returnedVal = os.popen( val + "| node & echo $! >" + constants.LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
    isRpcError(returnedVal);
    return returnedVal;
 #sudo kill -9 $(cat /tmp/my-app.pid)
@@ -20,7 +21,7 @@ def isRpcError(inputStr):
 
 # checks: does Driver.py run on the background
 def isDriverOn(): 
-   check = os.popen("ps aux | grep \'Driver.py\' | grep -v \'grep\' ").read().replace("\n", "");
+   check = os.popen("ps aux | grep \'Driver.py\' | grep -v \'grep\' ").read().rstrip('\n');
 
    if(len(check) == 0):
       logTest( "Driver is already on" )
@@ -28,7 +29,7 @@ def isDriverOn():
 
 # checks: does IPFS run on the background or not
 def isIpfsOn():
-   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().replace("\n", "");
+   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().rstrip('\n');
    if(len(check) == 0):
       logTest( "Error: IPFS does not work on the background. Please do: ipfs daemon & " )
       return False;
@@ -42,7 +43,7 @@ def isSlurmOn():
 
    if not "PARTITION" in str(check):
       logTest("-------------------------- \n");
-      logTest("Error: sinfo returns emprty string, please run: sudo bash runSlurm.sh \n");
+      logTest("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n");
       
       logTest('Error Message: \n' + check);
       sys.exit();
@@ -63,6 +64,8 @@ if(constants.IPFS_USE == 1):
    if(not isIpfsOn()):
       sys.exit()
 
+logTest("processID: " + str(os.getpid()));
+
 jobsReadFromPath = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 
@@ -75,6 +78,7 @@ header    = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.
 clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
 
 isClusterExist = contractCall('echo "$header; console.log( \'\' + mylib.isClusterExist(\'$clusterID\') )"');
+
 if (isClusterExist.lower() == "false"):
    print("Error: Your Ethereum address (" + clusterID + ") \n"
          "does not match with any cluster in eBlocBroker. Please register your \n" 
@@ -82,8 +86,7 @@ if (isClusterExist.lower() == "false"):
          "use 'contractCalls/registerCluster.py' script to register your cluster.");
    sys.exit()
 
-deployedBlockNumber   = contractCall('echo "$header; console.log( \'\' + mylib.getDeployedBlockNumber() )"');
-#blockReadFromContract = contractCall('echo "$header; console.log( \'\' + mylib.getBlockReadFrom() )"'); #TODO: event'den cek
+deployedBlockNumber = os.popen('python $contractCallPath/getDeployedBlockNumber.py').read();
 blockReadFromContract=str(0)
 
 logTest("------------CLUSTER_IS_ON------------")
@@ -96,7 +99,7 @@ if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)):
    f.close()
 
 f = open(constants.BLOCK_READ_FROM_FILE, 'r')
-blockReadFromLocal = f.read().replace("\n", "");
+blockReadFromLocal = f.read().rstrip('\n');
 f.close();
 
 if (not blockReadFromLocal.isdigit()):
@@ -146,11 +149,12 @@ while True: #{
 
     printFlag = 0;
     passedPrintFlag = 0;
-    currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
+    currentBlockNumber = os.popen('python $contractCallPath/blockNumber.py').read().rstrip('\n');
+    
     while(True):
        if (printFlag == 0):
           logTest("Waiting currentBlockNumber to increment by one");
-          logTest("Current BlockNumber: " + currentBlockNumber  + "; wanted Block Number: " + blockReadFrom);
+          logTest("Current BlockNumber: " + currentBlockNumber  + "| wanted Block Number: " + blockReadFrom);
           
        if (int(currentBlockNumber) >= int(blockReadFrom)):
           break;
@@ -160,7 +164,7 @@ while True: #{
        currentBlockNumber = contractCall('echo "$header; console.log( \'\' + mylib.blockNumber )"');
 
        if (passedPrintFlag == 0):
-          logTest("Passed Incremented blockNumber... Continue waiting from block number: " + blockReadFrom);
+          logTest("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
           passedPrintFlag = 1;
 
     passedPrintFlag = 0;      
@@ -171,7 +175,7 @@ while True: #{
 
     if os.path.isfile(jobsReadFromPath): #{    Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r' )
-       blockReadFrom = fR.read().replace("\n", "");
+       blockReadFrom = fR.read().rstrip('\n');
        fR.close();
 
        submittedJobs = blockReadFrom.split('?')
@@ -192,7 +196,7 @@ while True: #{
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
              
-             jobInfo=os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().replace("\n","").replace(" ","")[1:-1];             
+             jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];             
              jobInfo = jobInfo.split(',');
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
