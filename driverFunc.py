@@ -27,7 +27,7 @@ def enum(**named_values):
 
 def contractCall(val):
    printFlag=1;
-   ret = os.popen( val + "| node").read().replace("\n", "").replace(" ", "");
+   ret = os.popen( val + "| node").read().rstrip('\n').replace(" ", "");
    while(True):
       if( not(ret == "notconnected" or ret == "") ): 
          break;
@@ -35,13 +35,13 @@ def contractCall(val):
          if(printFlag == 1):
             logTest("Error: Please run Parity or Geth on the background.**************************************************************")
             printFlag = 0;   
-            ret = os.popen( val + "| node").read().replace("\n", "").replace(" ", "");
+            ret = os.popen( val + "| node").read().rstrip('\n').replace(" ", "");
             time.sleep(1);
    return ret;
 
 # Checks does IPFS work on the background or not
 def isIpfsDaemonOn(): 
-   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().replace("\n", "");
+   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().rstrip('\n');
    
    if (len(check) == 0):
       logTest( "Error: IPFS does not work on the background. Please do: ipfs daemon & " )
@@ -71,7 +71,7 @@ def driverEudatCall(jobKey, index):
    header     = "var mylib = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
    f        = open(eblocPath + '/eudatPassword.txt', 'r')  # Password is read from the file. password.txt is have only user access
-   password = f.read().replace("\n", "").replace(" ", ""); f.close()
+   password = f.read().rstrip('\n').replace(" ", ""); f.close()
 
    logTest("Login into owncloud")
    oc = owncloud.Client('https://b2drop.eudat.eu/')
@@ -119,7 +119,7 @@ def driverEudatCall(jobKey, index):
    os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read()   
    os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   )
    os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
-   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); #logTest(myDate);
+   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); #logTest(myDate);
    txFile = open( localOwnCloudPathFolder + '/modifiedDate.txt', 'w'); txFile.write(myDate + '\n'); txFile.close();
    time.sleep(0.2)
    #ipfs.tar.gz var mi diye bak!!!!!
@@ -129,7 +129,7 @@ def driverEudatCall(jobKey, index):
 
    logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
 
-   jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().replace("\n", "").replace(" ", "")[1:-1];
+   jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ", "")[1:-1];
    jobInfo    = jobInfo.split(',');
    jobCoreNum = jobInfo[1];
 
@@ -138,7 +138,7 @@ def driverEudatCall(jobKey, index):
          break;
       else:
          logTest("Error: Please run Parity or Geth on the background.**************************************************************")
-         jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().replace("\n", "").replace(" ", "")[1:-1];
+         jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ", "")[1:-1];
          jobInfo    = jobInfo.split(',');
          jobCoreNum = jobInfo[1]
 
@@ -147,9 +147,9 @@ def driverEudatCall(jobKey, index):
 
    os.chdir(localOwnCloudPathFolder) # 'cd' into the working path and call sbatch from there
    if(whoami == "root"):
-      jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+      jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
    else:
-      jobId = os.popen('sbatch         -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+      jobId = os.popen('sbatch         -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
       os.environ['jobId'] = jobId;
       logTest( "jobId: "+ str(jobId) ); 
 
@@ -230,7 +230,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
        #TODO: ipfs dht findprovs QmRr62nqpQM3YdXyfX4MS93Bx11ztyFeLEAsYtNiNiMNMp
        return
 
-    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().replace("\n", ""); logTest( myDate );
+    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); logTest(myDate);
     txFile = open('modifiedDate.txt', 'w'); txFile.write( myDate + '\n' ); txFile.close();
     time.sleep(0.2)
 
@@ -245,9 +245,9 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     # SLURM submit job
     if (whoami == "root"):
-       jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+       jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
     else:
-       jobId = os.popen('sbatch         -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().replace("\n", "");
+       jobId = os.popen('sbatch         -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
        
     os.environ['jobId'] = jobId;
     if not jobId.isdigit():

@@ -21,7 +21,6 @@ if [ ! -d endCodeAnalyse ]; then
     mkdir endCodeAnalyse 
 fi
 
-touch  $HOME/.eBlocBroker/queuedJobs.txt
 touch  $HOME/.eBlocBroker/transactions/clusterOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh

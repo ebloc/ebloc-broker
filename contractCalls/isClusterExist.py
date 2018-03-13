@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 from web3 import Web3
-import json, sys
+import json, sys, os
 from web3.providers.rpc import HTTPProvider
 
 os.chdir(sys.path[0]);
@@ -17,6 +17,11 @@ with open('abi.json', 'r') as abi_definition:
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-clusterAddress="0xda1e61e853bb8d63b1426295f59cb45a34425b63";
-
-print(eBlocBroker.call().isClusterExist(clusterAddress));
+if __name__ == '__main__': #{
+    if(len(sys.argv) == 2):
+        clusterAddress = str(sys.argv[1]);
+    else:
+        clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+        
+    print(str(eBlocBroker.call().isClusterExist(clusterAddress)).rstrip('\n'));
+#}

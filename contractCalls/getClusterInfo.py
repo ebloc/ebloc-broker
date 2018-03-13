@@ -23,14 +23,24 @@ with open('abi.json', 'r') as abi_definition:
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-clusterAddress="0xc75497b304f42631d919f20db3e9b79dd59e88ff";
-name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsID = eBlocBroker.call().getClusterInfo(clusterAddress);
+if __name__ == '__main__': #{
+    if(len(sys.argv) == 2):
+        clusterAddress = str(sys.argv[1]);
+    else:
+        clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+        
+    if (str(eBlocBroker.call().isClusterExist(clusterAddress)) == "False"):
+        print("Cluster is not registered")
+        sys.exit();
 
-ipfs=ipfsBytesToString(ipfsID)
+    name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsID = eBlocBroker.call().getClusterInfo(clusterAddress);
 
-print('name: ' + name);
-print('ipfsID: ' + ipfs)
-print('federationCloudId: ' + federationCloudId)
-print('miniLockId: ' + miniLockId)
-print('coreLimit: ' + str(coreLimit))
-print('coreMinutePrice: ' + str(coreMinutePrice))
+    ipfs=ipfsBytesToString(ipfsID)
+
+    print('name: ' + name);
+    print('ipfsID: ' + ipfs)
+    print('federationCloudId: ' + federationCloudId)
+    print('miniLockId: ' + miniLockId)
+    print('coreLimit: ' + str(coreLimit))
+    print('coreMinutePrice: ' + str(coreMinutePrice))
+#}

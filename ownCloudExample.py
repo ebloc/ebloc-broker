@@ -1,10 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 import owncloud, hashlib, getpass
 #https://github.com/owncloud/pyocclient/blob/master/owncloud/owncloud.py
 
 #Password read from the file.
 f = open( '/home/netlab/pyhton/password.txt', 'r')
-password = f.read().replace("\n", "").replace(" ", "")
+password = f.read().rstrip('\n').replace(" ", "")
 f.close()
 
 #Password could also entered by the user.
