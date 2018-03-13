@@ -8,7 +8,6 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-//web3.eth.defaultAccount=web3.eth.accounts[0]; //check calismaya bilir.
 var COINBASE="0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 web3.eth.defaultAccount = COINBASE; 
 
@@ -168,7 +167,7 @@ exports.LogJob = function(var1, myPath) {
     if( fs.existsSync(myPath) ) 
     	fs.unlinkSync(myPath)
 
-    var eBlocBrokerEvent = myContractInstance.LogJob({}, { fromBlock: var1, toBlock: 'latest' });
+    var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
 
     eBlocBrokerEvent.watch( function (error, result) {	
 	flag = 0;
@@ -212,10 +211,10 @@ exports.LogReceipt = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
 
-    if( fs.existsSync(myPath) ) 
+    if(fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath)
 
-    var eBlocBrokerEvent = myContractInstance.LogReceipt({}, { fromBlock: var1, toBlock: 'latest' });
+    var eBlocBrokerEvent = myContractInstance.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
 
     eBlocBrokerEvent.watch( function (error, result) {	
 	flag = 0;
@@ -233,17 +232,14 @@ exports.LogReceipt = function(var1, myPath) {
 	    eBlocBrokerEvent.stopWatching()
 	}
 
-	if( flag == 0 ){
+	if(flag == 0){
 	    var jobKey = result.args.jobKey;   
 
-	    if ( jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
-		if( result.args.cluster == web3.eth.defaultAccount ){
-
-		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+		if(result.args.cluster == web3.eth.defaultAccount){
+		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " + result.args.endTime + " " +
 				   result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
-
-
 					   //if(!err) console.log('blank write--------------------\n');		
 					   //else     console.log('error:------------- \n' + err);		
 					   //JSON.stringify( str )

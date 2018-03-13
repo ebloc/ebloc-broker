@@ -106,8 +106,6 @@ var eBlocBroker = web3.eth.contract(abi).at(address);
 
 ## Start Running Cluster using eBlocBroker
 
-If you want to provide `IPFS` service please do: `ipfs init`
-
 ### SLURM Setup:
 SLURM have to work on the background. Please run: 
 
@@ -377,6 +375,10 @@ event.watch(function(error, result) {
 ```bash
 sudo pip install sphinx_rtd_theme pyocclient
 sudo apt-get install davfs2 mailutils
+sudo apt-get install python-psutil
 sudo apt-get install -y nodejs
 wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
+
+sudo npm install -g n
+sudo n latest
 ```

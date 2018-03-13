@@ -49,6 +49,8 @@ eudatPassword\.txt
 
 contracts/populus\.ini
 
-\.node-xmlhttprequest-sync-31931
+\.node-xmlhttprequest-sync-18637
 
-contractCalls/\.node-xmlhttprequest-sync-13830
+\.#main\.js
+
+contract/receipt\.txt
