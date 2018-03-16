@@ -8,7 +8,6 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-//web3.eth.defaultAccount=web3.eth.accounts[0]; //check calismaya bilir.
 var COINBASE="0x6af0204187a93710317542d383a1b547fa42e705"; //Should be the address of the cluster.
 web3.eth.defaultAccount = COINBASE; 
 
@@ -43,7 +42,6 @@ exports.abi          = eBlocBroker.abi;
 exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
-
 exports.jobBlkStart;
     
 exports.submitJob = function(var1, var2, var3, var4, var5, var6, var7/*, var8 */) {
@@ -96,7 +94,7 @@ exports.isTransactionPassed = function(transaction_id) {
 };
 
 exports.setJobStatus = function(var1, var2, var3, var4) {
-    hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount,gas: gasLimit });
+    hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
     console.log( hash );
 };
 
@@ -114,15 +112,6 @@ exports.getSubmittedJobCore = function(var1, var2, var3) {
 
 exports.getJobOwner = function(var1, var2, var3) {
     return myContractInstance.getJobOwner( var1, var2, var3 );
-};
-
-exports.registerCluster = function(var1, var2, var3, var4, var5, var6) {
-    //var6 =exports.bs58_encode(var6)
-    //var6 = "0x" + var6.substr(4); //Trims first 4 character, 1220 and written add 0x at the beginning.
-    //console.log(var6)
-
-    hash = myContractInstance.registerCluster(var1, var2, var3, var4, var5, var6, {from: web3.eth.coinbase, gas: gasLimit });
-    return hash;
 };
 
 exports.getClusterAddresses = function() {
@@ -157,7 +146,7 @@ exports.highestBlock = function() {
 };
 
 exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
-    hash = myContractInstance.receiptCheck( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit } );
+    hash = myContractInstance.receiptCheck( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit} );
     console.log( hash );
 };
 
@@ -253,14 +242,8 @@ exports.LogReceipt = function(var1, myPath) {
     });
 }
 
-exports.bs58_decode = function(var1) {
-    const bs58 = require('bs58')
-    bytes = Buffer.from( var1, 'hex')
-    return bs58.encode(bytes) 
-};
 
-exports.bs58_encode = function(var1) {
-    const bs58 = require('bs58')
-    //console.log( bs58.decode( var1 ).toString('hex') )
-    return bs58.decode( var1 ).toString('hex') 
-};
+//exports.registerCluster = function(var1, var2, var3, var4, var5, var6) {
+//    hash = myContractInstance.registerCluster(var1, var2, var3, var4, var5, var6, {from: web3.eth.coinbase, gas: gasLimit });
+//    return hash;
+//};

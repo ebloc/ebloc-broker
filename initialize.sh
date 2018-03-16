@@ -47,10 +47,11 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentD
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$COINBASE
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py         && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js        && rm $currentDir/main.js.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js              && rm $currentDir/main.js.bak
 #-----------------------------------------------------
+var=$(echo $currentDir | sed 's/\//\\\//g')
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 
 cd $currentDir/

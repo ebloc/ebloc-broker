@@ -11,7 +11,7 @@ library Library {
 	
 	/* Variables assigned by the client */
 	uint32   coreMinuteGas; /* Time to run job in seconds. ex: minute + hour * 60 + day * 1440; */
-	uint32           core;  /* Requested core by the client */
+	uint32            core; /* Requested core by the client */
 	address       jobOwner; /* Address of the client (msg.sender) has been stored */
 	uint   coreMinutePrice; /* Cluster's price for core/minute */
 	uint          received; /* Paid amount by the client */
@@ -19,16 +19,16 @@ library Library {
 
     /* Registered cluster's information */
     struct data {
-	bool               isExist;  /* Flag that checks is Cluster exists or not */
-	bool             isRunning;  /* Flag that checks is Cluster running or not */
-	uint32   memberAddressesID;  /* Cluster's ethereum address is stored */
-	uint       coreMinutePrice;  /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-	uint        receivedAmount;  /* Cluster's received wei price */
-	uint         blockReadFrom;  /* Blockn umber when cluster is registered in order the watch cluster's event activity */
-	bytes32             ipfsID;  /* Cluster's ipfsID */
-	string                name;  /* Cluster's name*/
-	string    clusterMiniLockId; /* Cluster's minilock-id */
-	string    federationCloudId; /* Cluster's federation cloud-id */
+	bool               isExist; /* Flag that checks is Cluster exists or not */
+	bool             isRunning; /* Flag that checks is Cluster running or not */
+	uint32   memberAddressesID; /* Cluster's ethereum address is stored */
+	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint        receivedAmount; /* Cluster's received wei price */
+	uint         blockReadFrom; /* Blockn umber when cluster is registered in order the watch cluster's event activity */
+	bytes32             ipfsID; /* Cluster's ipfsID */
+	string                name; /* Cluster's name*/
+	string   clusterMiniLockId; /* Cluster's minilock-id */
+	string   federationCloudId; /* Cluster's federation cloud-id */
 
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	intervalNode    receiptList; /* receiptList will be use to check job's start and end time overlapped or not */
@@ -36,12 +36,12 @@ library Library {
 
     struct interval {
 	uint   endpoint;
-	int32  core;
+	int32  core; /* Job's requested core number */
 	uint32 next; /* Points to next the node */
     }
 
     struct intervalNode {
-	interval[] list;
+	interval[] list; /* A dynamically-sized array of `interval` structs */
 	uint32 head;
 	uint32 coreNumber;
 	uint32 deletedItemNum;
@@ -90,7 +90,6 @@ library Library {
 	uint32   addr = self.head;
 	uint32   addrTemp;
 	int32    carriedSum;
-
 	interval prevNode;
 	interval currentNode;
 	interval prevNodeTemp;

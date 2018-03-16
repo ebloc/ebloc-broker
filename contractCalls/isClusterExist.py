@@ -17,7 +17,7 @@ with open('abi.json', 'r') as abi_definition:
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-if __name__ == '__main__': #{
+if __name__ == '__main__': #{    
     if(len(sys.argv) == 2):
         clusterAddress = str(sys.argv[1]);
     else:
