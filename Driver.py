@@ -173,7 +173,7 @@ while True: #{
     # Waits here until new job submitted into the cluster
     returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
 
-    if os.path.isfile(jobsReadFromPath): #{    Waits until generated file on log is completed
+    if os.path.isfile(jobsReadFromPath): #{Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r' )
        blockReadFrom = fR.read().rstrip('\n');
        fR.close();
@@ -185,7 +185,6 @@ while True: #{
        for i in range(0, (len(submittedJobs) - 1)): #{
           logTest("------------------------------------------------------------------")
           submittedJob = submittedJobs[i].split(' ');
-          print(submittedJob[5])
           
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              logTest("BlockNum: " + submittedJob[0]  + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
@@ -203,16 +202,17 @@ while True: #{
              if (jobInfo[0] == str(constants.job_state_code['PENDING'])): 
                 if (submittedJob[4] == '0'):
                    logTest("New job has been recieved. IPFS call |" + time.ctime())
-                   driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); #TODO: could be called as a thread but its already fast
+                   driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
                 elif (submittedJob[4] == '1'):
                    logTest("New job has been recieved. EUDAT call |" + time.ctime());
                    driverFunc.driverEudatCall(submittedJob[2], submittedJob[3]);
-                   #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3], clusterID) ) #works
+                   #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3])) 
                 elif (submittedJob[4] == '2'):
                    logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime());
-                   driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
+                   driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]);
+                   #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
              else:
-                logTest("Job is already captured and in process");
+                logTest("Job is already captured and in process or completed");
        #}
        
        if( submittedJob != 0 and (int(maxVal) != 0) ): #{ 
