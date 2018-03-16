@@ -49,8 +49,12 @@ eudatPassword\.txt
 
 contracts/populus\.ini
 
+\.#main\.js
+
 contractCalls/\.node-xmlhttprequest-sync-13830
 
 contract/receipt\.txt
 
-\.#main\.js
+contract/\.cache/v/populus/project/compiled_contracts_mtime
+
+contract/\.cache/v/populus/project/compiled_contracts

@@ -31,7 +31,7 @@ def isDriverOn():
 def isIpfsOn():
    check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().rstrip('\n');
    if(len(check) == 0):
-      logTest( "Error: IPFS does not work on the background. Please do: ipfs daemon & " )
+      logTest( "Error: IPFS does not work on the background. Please do: nohup ipfs daemon & " )
       return False;
    return True;
 
@@ -196,7 +196,7 @@ while True: #{
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
              
-             jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];             
+             jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
              jobInfo = jobInfo.split(',');
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it

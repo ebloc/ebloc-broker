@@ -206,22 +206,24 @@ For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git
 #### **1. How to submit a job using IPFS**
 
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; 
-clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705");
-clusterCoreLimit = clusterInfo[3];
-pricePerMin      = clusterInfo[4];
-jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
-myMiniLockId     = "";
+//USER Inputs-------------------------------------------------------
+clusterAddress   = "0x6af0204187a93710317542d383a1b547fa42e705";  
+ipfsHash         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
 coreNum          = 1; 
 coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
+storageType      = 0; // Please note that '0' stands for IPFS
+//------------------------------------------------------------------
 coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-storageType      = 0; // Please note that 0 stands for IPFS , 1 stands for eudat.
+clusterInfo      = eBlocBroker.getClusterInfo(clusterAddress);
+coreLimit        = clusterInfo[3];
+coreMinutePrice  = clusterInfo[4];
+myMiniLockId     = "";
 
-if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && jobKey.length == 46) {
-	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
+if (coreNum <= coreLimit && jobDescription.length < 128 && ipfsHash.length == 46) {
+	eBlocBroker.submitJob(clusterAddress, ipfsHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum * coreMinutePrice * coreMinuteGas, gas: 4500000 } );
 }
 ```
 #### **2. How to submit a job using EUDAT**
@@ -229,31 +231,31 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && jobKey.length 
 Before doing this you have to be sure that you have shared your folder with cluster's FId. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
 
 
-Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol in between.
-*Example:*`jobHash="3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
+Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol (`=`) in between.
+*Example:*`jobHash = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
 
 #####  **Script:** 
 
 ```bash
 //USER Inputs-------------------------------------------------------
 clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
-clusterInfo    = eBlocBroker.getClusterInfo(clusterAddress);
 jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
 coreNum        = 1;
 coreGasDay     = 0;
 coreGasHour    = 0;
 coreGasMin     = 10;
 jobDescription = "Science";
-storageType    = 1;
-myMiniLockId   = "";
+storageType    = 1; // Please note that '1' stands for EUDAT
 //------------------------------------------------------------------
 coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
+clusterInfo    = eBlocBroker.getClusterInfo(clusterAddress);
 coreLimit     = clusterInfo[3];
 pricePerMin   = clusterInfo[4];
+myMiniLockId   = "";
 
 if (coreNum <= coreLimit && jobDescription.length < 128 ) {
 	eBlocBroker.submitJob(clusterAddress, jobKey, coreNum, jobDescription,
-coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
+coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum * pricePerMin * coreMinuteGas, gas: 4500000 } );
 }
 ```
 

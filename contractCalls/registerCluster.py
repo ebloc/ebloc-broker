@@ -28,13 +28,10 @@ miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
 corePriceMinuteWei = 100;
 ipfs               = "QMWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 # ----------------------------------------------------------------------------
-
 os.environ['ipfs'] = ipfs;
 ipfsID=os.popen('node bs58.js encode $ipfs').read().replace("\n", "");
-
-
 ipfsIDbytes = web3.toBytes(hexstr=ipfsID);
 
 if(len(federationCloudId) < 128 and len(clusterName) < 32 and (len(miniLockId) == 0 or len(miniLockId) == 45)):
     tx=eBlocBroker.transact({"from":account, "gas": 4500000}).registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsIDbytes);
-    print("TxHash: " + tx);
+    print(tx);

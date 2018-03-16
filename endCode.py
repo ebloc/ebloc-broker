@@ -7,8 +7,8 @@ jobKeyGlobal = "";
 indexGlobal  = "";
 
 def logTest(strIn):
-   print(strIn)        
-   txFile = open(constants.LOG_PATH + '/endCodeAnalyse/' + jobKeyGlobal + "_" + indexGlobal + '.txt', 'a') # Folder should not created as root user
+   print(strIn);
+   txFile = open(constants.LOG_PATH + '/endCodeAnalyse/' + jobKeyGlobal + "_" + indexGlobal + '.txt', 'a');
    txFile.write(strIn + "\n"); 
    txFile.close();
 
@@ -18,18 +18,22 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    global jobKeyGlobal; jobKeyGlobal=jobKey
    global indexGlobal;  indexGlobal=index;  
 
-   os.environ['endTimeStamp'] = endTimeStamp; # Get endTimeStamp right away
+   os.environ['endTimeStamp'] = endTimeStamp;
    logTest("endTimeStamp: " + endTimeStamp)
 
-   eblocPath         = constants.EBLOCPATH
-   logPath           = constants.LOG_PATH
-   programPath       = constants.PROGRAM_PATH 
+   # Paths---------
+   eblocPath        = constants.EBLOCPATH;
+   contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
+   logPath          = constants.LOG_PATH;
+   programPath      = constants.PROGRAM_PATH;
+   # ---------------
    encodedShareToken = base64.b64encode(shareToken + ':')
 
    header = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
-   os.environ['programPath']       = str(programPath)
-   os.environ['cluster_id']        = constants.CLUSTER_ID
+   clusterID = constants.CLUSTER_ID;
+   os.environ['programPath']       = str(programPath)   
+   os.environ['clusterID']         = clusterID;
    os.environ['jobKey']            = jobKey
    os.environ['index']             = str(index)
    os.environ["IPFS_PATH"]         = constants.IPFS_REPO # Default IPFS repo path
@@ -51,24 +55,23 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    logTest("encodedShareToken: |" + encodedShareToken + "|")
    logTest("miniLockId: |"        + miniLockId        + "|")
 
-   jobInfo = os.popen('node $eblocPath/eBlocBrokerNodeCall.js getJobInfo $cluster_id $jobKey $index').read().rstrip('\n').replace(" ", "");  
-
+   jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
    while(True):
-      if(not(jobInfo == "notconnected" or jobInfo == "")): 
+      if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
          break;
       else:
          logTest("Error: Please run Parity or Geth on the background. or unlock your Cluster Ethereum Account**************************************")
-         jobInfo = os.popen('node $eblocPath/eBlocBrokerNodeCall.js getJobInfo $cluster_id $jobKey $index').read().rstrip('\n').replace(" ", "");  
+         jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
       time.sleep(1)
 
    logTest("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
-   timeout = time.time() + 3 * 60   # Timeout threshold is three minutes from now
+   timeout = time.time() + 3 * 60; # Timeout threshold is three minutes from now
 
    logTest("0: " + jobInfo[0])
    logTest("1: " + jobInfo[2])
 
-   while True:
+   while True: #{
       logTest(jobInfo[0]); 
       logTest(jobInfo[2]); 
 
@@ -85,50 +88,54 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
         logTest( "Error: Already completed job..."); 
         sys.exit(); # Detects an error on the SLURM side
 
-      jobInfo = os.popen('node $eblocPath/eBlocBrokerNodeCall.js getJobInfo $cluster_id $jobKey $index').read().rstrip('\n').replace(" ", ""); 
+      jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
       while(True):
-         if(not(jobInfo == "notconnected" or jobInfo == "")): 
+         if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
             break;
          else:
-            logTest("Error: Please run Parity or Geth on the background.**************************************************************")
-            jobInfo = os.popen('node $eblocPath/eBlocBrokerNodeCall.js getJobInfo $cluster_id $jobKey $index').read().rstrip('\n').replace(" ", ""); 
+            logTest("Error: Please run Parity or Geth on the background.****************************")
+            jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
 
       jobInfo = jobInfo.split(',');
-      time.sleep(5) # Short sleep here so this loop is not keeping CPU busy
-
+      time.sleep(10) # Short sleep here so this loop is not keeping CPU busy
+   #}
+   
    jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read();
    os.environ['jobId'] = jobId;
    logTest("JOBID------------> " + str(jobId));
 
    # Here we know that job is already completed
-   if str(storageType) == '0':
+   if str(storageType) == '0': #{
       countTry=0;
       while(True): 
          if (countTry > 10):
             sys.exit()
          countTry = countTry + 1         
 
-         logTest("IPFS add started: " + programPath + " " + jobKey + " " + index);
-         os.popen('find . -type f ! -newer $encrypyFolderPath/modifiedDate.txt -delete')           
+         resultsFolder = programPath + "/" + jobKey + "_" + index; os.environ['resultsFolder'] = resultsFolder
+         logTest("IPFS add started: " + resultsFolder);
 
+         #os.chdir(resultsFolder);
+         #os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
          newHash = os.popen('ipfs add -r ' + programPath + '/${jobKey}_$index').read();  
 
          if (newHash == ""):
-            logTest("Generated new hash return empty error. Trying again");
+            logTest("Generated new hash return empty error. Trying again...");
          else:
             os.environ['newHash'] = newHash;
-            newHash               = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); 
+            newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); 
             os.environ['newHash'] = newHash;
             logTest("newHash: " + newHash); 
             break
-
+   #}
+   
    if str(storageType) == '2':
       encrypyFolderPath = programPath + "/" + jobKey + "_" + index;
       os.environ['encrypyFolderPath'] = encrypyFolderPath
       logTest("encrypyFolderPath: " + encrypyFolderPath)
 
-      os.chdir(encrypyFolderPath)
+      os.chdir(encrypyFolderPath);
       res = os.popen('tar -P -cvzf $encrypyFolderPath/result.tar.gz .').read();
       logTest("tarRes: " + res)
 
@@ -155,12 +162,11 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             logTest("newHash: " + newHash);
             break;
 
-   logTest("jobId: "   + jobId);
+   logTest("jobId: " + jobId);
    elapsedTime = os.popen('sacct -j $jobId --format="Elapsed" | tail -n1 | head -n1').read();
    logTest("ElapsedTime: " + elapsedTime);
 
-   elapsedTime = elapsedTime.split(':');
-
+   elapsedTime    = elapsedTime.split(':');
    elapsedDay     = "0";
    elapsedHour    = elapsedTime[0].replace(" ", "");
    elapsedMinute  = elapsedTime[1].rstrip();
@@ -171,8 +177,6 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       elapsedHour = elapsedHour.split('-');
       elapsedDay  = elapsedHour[0];
       elapsedHour = elapsedHour[1];
-
-   #logTest(str(int(elapsedDay)));     #logTest(str(int(elapsedHour)));  #logTest(str(int(elapsedMinute)));  #logTest(str(int(elapsedSeconds))); 
 
    elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1;
    logTest("ElapsedRawTime: " + str(elapsedRawTime))
@@ -193,7 +197,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             logTest("Error: Please run Parity or Geth on the background.******")
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
          time.sleep(5)
-   elif storageType == '1':
+   elif storageType == '1': #{
       nullByte="0x00"; os.environ['nullByte'] = nullByte
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType  $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       while(True):
@@ -218,9 +222,9 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       os.popen('zip -r results_$index.zip .') 
       res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@results_\'$index\'.zip\' https://b2drop.eudat.eu/public.php/webdav/results_$index.zip').read();
       #os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
-
+   #}
    logTest("ReceiptHash: " + transactionHash); 
-   txFile = open(logPath + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');   
+   txFile = open(logPath + '/transactions/' + clusterID + '.txt', 'a');   
    txFile.write(transactionHash + " end_receiptCheck\n");
    txFile.close();
 
@@ -234,5 +238,3 @@ if __name__ == '__main__': #{
 
    endCall(jobKey, index, storageType, shareToken, miniLockId, runName)
 #}
-
-#oc.decline_remote_share(storageType)  
