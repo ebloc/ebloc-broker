@@ -43,19 +43,17 @@ exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
 exports.jobBlkStart;
-    
-exports.submitJob = function(var1, var2, var3, var4, var5, var6, var7/*, var8 */) {
-    //console.log( "" + var5 * myContractInstance.getClusterCoreMinutePrice(var1) )
+
+exports.submitJob = function(var1, var2, var3, var4, var5, var6, var7, var8) {
     str =  myContractInstance.getClusterInfo(var1)
     arr = str.toString().split(",");
     clusterCoreMinutePrice = arr[4];
 
-    //from: web3.eth.accounts[var8], if TEST, additional parameter is required.
-    hash = myContractInstance.submitJob(var1, var2, var3, var4, var5, var6, var7, {from: web3.eth.defaultAccount/*web3.eth.accounts[var8]*/, gas: gasLimit, value: var3 * var5 * clusterCoreMinutePrice });
-    console.log( hash );
+    hash = myContractInstance.submitJob(var1, var2, var3, var4, var5, var6, var7, {from: web3.eth.accounts[var8], gas: gasLimit, value: var3 * var5 * clusterCoreMinutePrice});
+    console.log(hash);
 };
 
-exports.getTransactionGas = function( tx ) {
+exports.getTransactionGas = function(tx) {
     return web3.eth.getTransactionReceipt( tx ).gasUsed
 }
 
