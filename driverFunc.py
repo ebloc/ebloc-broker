@@ -62,7 +62,7 @@ def driverEudatCall(jobKey, index):
    os.environ['folderIndex'] = "1";
    os.environ['miniLockId']  = "-1";
    os.environ['whoami']      = constants.WHOAMI
-   whoami                    = os.system( "whoami" ) # To learn running as root or userName
+   whoami                    = os.system("whoami") # To learn running as root or userName
 
    jobKeyTemp = jobKey.split('=');
    owner      = jobKeyTemp[0]

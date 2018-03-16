@@ -3,7 +3,7 @@ pragma solidity ^0.4.17;
 import "./Library.sol";
 
 contract eBlocBroker {    
-  uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
+    uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
     enum JobStateCodes {
 	Null,
@@ -21,13 +21,13 @@ contract eBlocBroker {
     using Library for Library.data;
     using Library for Library.status;
 
-    Library.data             list;
-    address[]            memberAddresses;
+    Library.data list;
+    address[] memberAddresses; // A dynamically-sized array of `address` structs
 
     mapping(address => Library.data) clusterContract;   
 
     modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
-	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 4)); /* coreMinuteGas has maximum 1 day */
+	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 4)); /* coreMinuteGas is maximum 1 day */
 	_ ;
     }
 
@@ -48,7 +48,9 @@ contract eBlocBroker {
 
     function refund(address clusterAddr, string jobKey, uint32 index) public returns (bool)
     {
-	Library.status job = clusterContract[clusterAddr].jobStatus[jobKey][index]; /* If job does not exist EVM called revert() */
+	/* If 'clusterAddr' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
+	   is not mapped to a job , this will throw automatically and revert all changes */
+	Library.status job = clusterContract[clusterAddr].jobStatus[jobKey][index];
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
@@ -64,11 +66,12 @@ contract eBlocBroker {
     function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTime)
 	isBehindBlockTimeStamp(endTime) public returns (bool success) /* Payback to client and server */
     {
-	/* If clusterContract[msg.sender] isExist returns false EVM revert() */
+	/* If 'msg.sender' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
+	   is not mapped to a job , this will throw automatically and revert all changes */
 	Library.status job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
-	uint netOwed                     = job.received;
-	uint amountToGain                = job.coreMinutePrice * jobRunTimeMinute * job.core;
+	uint netOwed      = job.received;
+	uint amountToGain = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
 	if((amountToGain > netOwed) || job.receiptFlag) 
 	    revert();
@@ -126,7 +129,6 @@ contract eBlocBroker {
 	return true;
     }
    
-    /* Works as inserBack on linkedlist (FIFO) */
     function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockId)
 	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
 	returns (bool success)
@@ -139,7 +141,7 @@ contract eBlocBroker {
 	    revert();
 
 	cluster.jobStatus[jobKey].push( Library.status({
-		        status:          uint8(JobStateCodes.PENDING),
+		status:          uint8(JobStateCodes.PENDING),
 			core:            core,
 			coreMinuteGas:   coreMinuteGas,
 			jobOwner:        msg.sender,
@@ -147,7 +149,7 @@ contract eBlocBroker {
 			coreMinutePrice: cluster.coreMinutePrice,  
 			startTime:       0,
 			receiptFlag:     false}
-			));
+		));
 	
 	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length-1, storageType, miniLockId, jobDesc);
 	return true;
@@ -157,7 +159,7 @@ contract eBlocBroker {
 	returns (bool success)
     {
 	Library.status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
-	if (jS.receiptFlag || stateId > 15 )
+	if (jS.receiptFlag || stateId > 15)
 	    revert();
 
 	if (stateId != 0) {
@@ -168,7 +170,7 @@ contract eBlocBroker {
     }
     
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
-    /* Returns all register cluster addresses */    
+    /* Returns all registered cluster's Ethereum addresses */    
     function getClusterAddresses() public view
 	returns (address[])
     {
@@ -229,15 +231,15 @@ contract eBlocBroker {
     function isClusterExist(address clusterAddr) public view
 	returns (bool)
     {
-	if(clusterContract[clusterAddr].isExist)
-	    return true;
+	if (clusterContract[clusterAddr].isExist)
+	    return true;	
 	return false;
     }
 
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
-    // Log the submitted job
+    // Log submitted jobs
     event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
     
-    // Log the completed job's receipt
+    // Log completed jobs' receipt
     event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
 }
