@@ -283,9 +283,8 @@ Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ###### How to encripty your folder using miniLock
 
 ```bash
-myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
-clusterMiniLockId="9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
-encrypyFolderPath="./ipfsCode"
+clusterMiniLockId = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
+encrypyFolderPath = "./ipfsCode"
 tar -cvzf $encrypyFolderPath.tar.gz $encrypyFolderPath
 
 mlck encrypt -f $encrypyFolderPath.tar.gz $clusterMiniLockId --passphrase="$(cat mlck_password.txt)"

@@ -52,3 +52,7 @@ contracts/populus\.ini
 contractCalls/\.node-xmlhttprequest-sync-13830
 
 \.#main\.js
+
+contract/\.cache/v/populus/project/compiled_contracts
+
+contract/\.cache/v/populus/project/compiled_contracts_mtime

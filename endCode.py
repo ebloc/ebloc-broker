@@ -79,10 +79,12 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       logTest("TimeLimit: " + clientTimeLimit); 
 
       if jobInfo[0] == str(constants.job_state_code['RUNNING']):
+         logTest("Job started running"); 
          break; # Wait until does values updated on the blockchain
 
       if time.time() > timeout:
-         break
+         logTest("Timeout "); 
+         sys.exit()
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 
         logTest( "Error: Already completed job..."); 
@@ -96,7 +98,6 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             logTest("Error: Please run Parity or Geth on the background.****************************")
             jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
-
       jobInfo = jobInfo.split(',');
       time.sleep(10) # Short sleep here so this loop is not keeping CPU busy
    #}
@@ -181,12 +182,12 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1;
    logTest("ElapsedRawTime: " + str(elapsedRawTime))
 
-   if(elapsedRawTime > int(clientTimeLimit)):
+   if (elapsedRawTime > int(clientTimeLimit)):
       elapsedRawTime = clientTimeLimit
 
    os.environ['elapsedRawTime'] = str(elapsedRawTime);
    logTest("ElapsedRawTime: " + str(elapsedRawTime))
-   logTest("jobInfo: " + str(jobInfo))
+   logTest("jobInfo: " + jobInfo)
 
    if storageType == '0' or storageType == '2':                         
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
