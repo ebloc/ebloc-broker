@@ -66,7 +66,8 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
 
    logTest("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
-   timeout = time.time() + 3 * 60; # Timeout threshold is three minutes from now
+   timeout = time.time() + 30 * 60; #TODO
+   #timeout = time.time() + 3 * 60; # Timeout threshold is three minutes from now
 
    logTest("0: " + jobInfo[0])
    logTest("1: " + jobInfo[2])
@@ -186,8 +187,8 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       elapsedRawTime = clientTimeLimit
 
    os.environ['elapsedRawTime'] = str(elapsedRawTime);
-   logTest("ElapsedRawTime: " + str(elapsedRawTime))
-   logTest("jobInfo: " + jobInfo)
+   logTest("finalizedElapsedRawTime: " + str(elapsedRawTime))
+   logTest("jobInfo: " + str(jobInfo))
 
    if storageType == '0' or storageType == '2':                         
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
@@ -199,7 +200,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
          time.sleep(5)
    elif storageType == '1': #{
-      nullByte="0x00"; os.environ['nullByte'] = nullByte
+      nullByte="0x00"; os.environ['nullByte'] = nullByte;
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType  $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       while(True):
          if (not(transactionHash == "notconnected" or transactionHash == "")): 
