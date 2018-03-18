@@ -374,7 +374,8 @@ event.watch(function(error, result) {
 ### **Required Installations**
 
 ```bash
-sudo pip install sphinx_rtd_theme pyocclient
+sudo pip install sphinx_rtd_theme 
+sudo pip install pyocclient==0.4
 sudo apt-get install davfs2 mailutils
 sudo apt-get install python-psutil
 sudo apt-get install -y nodejs
