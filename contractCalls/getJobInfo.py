@@ -1,4 +1,4 @@
-#!/usr/bin/env python -W ignore::DeprecationWarning
+#!/usr/bin/env python 
 
 from __future__ import print_function
 import os
@@ -25,10 +25,10 @@ if __name__ == '__main__': #{
         index          = int(sys.argv[3]);
     else:
         clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
-        #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=267575587427153420186990249657380315186";
-        #index          = 7;
-        jobKey          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
-        index           = 8;
+        jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=267575587427153420186990249657380315186";
+        index          = 11;
+        jobKey          = "QmTXyUrHxkf2m85W6Sy6VAMBuZyZAuSDQAbjSgDcLLnEdW";
+        index           = 4;
         
     print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, index)); 
 #}

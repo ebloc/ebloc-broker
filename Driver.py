@@ -154,7 +154,7 @@ while True: #{
     while(True):
        if (printFlag == 0):
           logTest("Waiting currentBlockNumber to increment by one");
-          logTest("Current BlockNumber: " + currentBlockNumber  + "| wanted Block Number: " + blockReadFrom);
+          logTest("Current BlockNumber: " + currentBlockNumber  + "| sync from Block Number: " + blockReadFrom);
           
        if (int(currentBlockNumber) >= int(blockReadFrom)):
           break;
@@ -182,11 +182,12 @@ while True: #{
 
        submittedJob=0;
        maxVal = 0;
+       isClusterRecievedJob=0;
        for i in range(0, (len(submittedJobs) - 1)): #{
-          logTest("------------------------------------------------------------------")
-          submittedJob = submittedJobs[i].split(' ');
-          
+          submittedJob = submittedJobs[i].split(' ');          
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
+             isClusterRecievedJob = 1;
+             logTest("------------------------------------------------------------------")
              logTest("BlockNum: " + submittedJob[0]  + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
              if (int(submittedJob[0]) > int(maxVal)):
@@ -215,11 +216,18 @@ while True: #{
                 logTest("Job is already captured and in process or completed");
        #}
        
-       if( submittedJob != 0 and (int(maxVal) != 0) ): #{ 
+       if (submittedJob != 0 and (int(maxVal) != 0)): #{ 
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number      
           f_blockReadFrom.write(str(int(maxVal) + 1) + "\n") # Python will convert \n to os.linesep
           f_blockReadFrom.close()          
           blockReadFrom = str(int(maxVal) + 1)
        #}
+       
+       if isClusterRecievedJob == 0: # if there is no submitted job for the cluster, block start to read from current block number
+          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
+          f_blockReadFrom.write(str(currentBlockNumber) + "\n") # Python will convert \n to os.linesep
+          f_blockReadFrom.close()
+          blockReadFrom = str(currentBlockNumber)
+
     #}
 #}
