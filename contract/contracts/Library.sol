@@ -24,11 +24,7 @@ library Library {
 	uint32   memberAddressesID; /* Cluster's ethereum address is stored */
 	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint        receivedAmount; /* Cluster's received wei price */
-	uint         blockReadFrom; /* Blockn umber when cluster is registered in order the watch cluster's event activity */
-	bytes32             ipfsID; /* Cluster's ipfsID */
-	string                name; /* Cluster's name*/
-	string   clusterMiniLockId; /* Cluster's minilock-id */
-	string   federationCloudId; /* Cluster's federation cloud-id */
+	uint         blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
 
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	intervalNode    receiptList; /* receiptList will be use to check job's start and end time overlapped or not */
@@ -48,23 +44,14 @@ library Library {
     }
 
     /* Invoked, when cluster calls updateCluster */
-    function update(data storage self, string clusterName, string fID, string clusterMiniLockId, uint price, uint32 coreNumber, bytes32 ipfsID)
-	public {
-	self.name                   = clusterName;
-	self.federationCloudId      = fID;
-	self.clusterMiniLockId      = clusterMiniLockId;
+    function update(data storage self, uint price, uint32 coreNumber) public {
 	self.coreMinutePrice        = price;
 	self.receiptList.coreNumber = coreNumber;
-	self.ipfsID                 = ipfsID;
+	self.blockReadFrom          = block.number;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(data storage self, string name, string fID, string miniLockId, uint32 memLen, uint price, uint32 coreNumber, bytes32 ipfsID)
-	public {
-	self.name              = name;
-	self.federationCloudId = fID;
-	self.clusterMiniLockId = miniLockId;
-	self.ipfsID            = ipfsID;
+    function constructCluster(data storage self, uint32 memLen, uint price, uint32 coreNumber) public {
 	self.isExist           = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
@@ -75,7 +62,7 @@ library Library {
 	constructReceiptList(self.receiptList, coreNumber);
     }
 
-    function constructReceiptList(intervalNode storage self, uint32 coreNum) 
+    function constructReceiptList(intervalNode storage self, uint32 coreNum) public
     {
 	self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
 	self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
