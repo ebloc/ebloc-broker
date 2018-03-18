@@ -56,6 +56,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    logTest("miniLockId: |"        + miniLockId        + "|")
 
    jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+
    while(True):
       if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
          break;

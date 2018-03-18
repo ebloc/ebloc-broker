@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import owncloud, hashlib, getpass
-#https://github.com/owncloud/pyocclient/blob/master/owncloud/owncloud.py
+# https://github.com/owncloud/pyocclient/blob/master/owncloud/owncloud.py
+# https://github.com/owncloud/pyocclient/issues/199#issuecomment-309497823
 
 #Password read from the file.
 f = open( '/home/netlab/pyhton/password.txt', 'r')
@@ -14,11 +15,16 @@ f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('aalimog1@binghamton.edu', password ); 
 
-oc.share_file_with_user( 'helloWorld', '3d8e2dc2-b855-1036-807f-9dbd8c6b1579@b2drop.eudat.eu', remote_user=True )
+oc.share_file_with_user(name, 'ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu', remote_user=True, perms=31)
+
+
+
+
+# val = oc.accept_remote_share(1195);
+# print(val)
+# z = oc.list_open_remote_share();
 
 '''
-z = oc.list_open_remote_share();
-
 #oc.put_file( "/DfQlm5J42nEGnH7", "/home/alper/alper/run.sh")
 #oc.put_file(  "DfQlm5J42nEGnH7", "/home/alper/alper/run.sh")
 
@@ -39,7 +45,7 @@ for i in range(0, len(z) ):
     #oc.decline_remote_share(int(z[i]['id']))
 
 
-#val = oc.accept_remote_share("163");
+val = oc.accept_remote_share("1195");
 #print(val)
 #oc.decline_remote_share(68)
 #oc.remove 

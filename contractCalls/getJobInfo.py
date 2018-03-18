@@ -18,7 +18,7 @@ with open('abi.json', 'r') as abi_definition:
     
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-if __name__ == '__main__': #{
+ if __name__ == '__main__': #{
     if(len(sys.argv) == 4): 
         clusterAddress = str(sys.argv[1]);
         jobKey         = str(sys.argv[2]);

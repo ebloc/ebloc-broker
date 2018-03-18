@@ -21,7 +21,6 @@ eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
     if(len(sys.argv) == 10):
-        print("args")
         clusterAddress = str(sys.argv[1]);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
         jobKey         = str(sys.argv[2]);

@@ -12,7 +12,7 @@ jobKeyGlobal = "";
 indexGlobal  = "";
 
 def logTest(strIn):
-   #print(strIn)       
+   print(strIn)       
    txFile = open(constants.LOG_PATH + '/transactions/' + jobKeyGlobal + '_' + indexGlobal + '_driverOutput' +'.txt', 'a');
    txFile.write(strIn + "\n"); 
    txFile.close();
@@ -67,7 +67,6 @@ def driverEudatCall(jobKey, index):
    jobKeyTemp = jobKey.split('=');
    owner      = jobKeyTemp[0]
    folderName = jobKeyTemp[1]
-
    header     = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
    f        = open(eblocPath + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
@@ -76,24 +75,23 @@ def driverEudatCall(jobKey, index):
    logTest("Login into owncloud")
    oc = owncloud.Client('https://b2drop.eudat.eu/')
    oc.login('aalimog1@binghamton.edu', password ); # Unlocks EUDAT account
-
-   shareList = oc.list_open_remote_share();
+   shareList = oc.list_open_remote_share(); 
     
    logTest("finding_acceptId")
    acceptFlag = 0;
    eudatFolderName = ""
-   for i in range(len(shareList)-1, -1, -1 ): # Starts iterating from last item  to first one
+   for i in range(len(shareList)-1, -1, -1): # Starts iterating from last item  to first one
       inputFolderName = shareList[i]['name']
-      inputFolderName = inputFolderName[1:]    # Removes '/' on the beginning
+      inputFolderName = inputFolderName[1:] # Removes '/' on the beginning
       inputId         = shareList[i]['id']
       inputOwner      = shareList[i]['owner']
       shareToken      = shareList[i]['share_token'] 
 
-      if ((inputFolderName == folderName)and (inputOwner == owner)):
-         logTest("Here:_" + inputId + "_ShareToken:_" + shareToken)        
+      if ((inputFolderName == folderName) and (inputOwner == owner)):
+         logTest("InputId:_" + inputId + "_ShareToken:_" + shareToken)        
          os.environ['shareToken']      = str(shareToken);
          os.environ['eudatFolderName'] = str(inputFolderName);
-         eudatFolderName               = inputFolderName;
+         eudatFolderName               = inputFolderName;     
          acceptFlag = 1;
          break;    
 
@@ -102,12 +100,12 @@ def driverEudatCall(jobKey, index):
       logTest("Couldn't find the shared file");
       return;
 
-   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;    os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
+   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder
 
    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
       os.makedirs(localOwnCloudPathFolder)
        
-   os.popen("wget -q https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read()# Downloads shared file as zip
+   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read()# Downloads shared file as zip
 
     #run.tar.gz check yap.
     #checkRunExist = os.popen("unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
