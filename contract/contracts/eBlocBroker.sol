@@ -56,10 +56,12 @@ contract eBlocBroker {
 
 	if (job.status == uint8(JobStateCodes.PENDING)) 
 	    msg.sender.transfer(job.received);
-	else if ((block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 600)
+	else if ((block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600) 
 	    msg.sender.transfer(job.received);
 
 	job.receiptFlag = true; /* Prevents double spending */
+
+	LogRefund(clusterAddr, jobKey, index);
 	return true;
     }
 
@@ -87,15 +89,14 @@ contract eBlocBroker {
 	job.status      = uint8(JobStateCodes.COMPLETED);
 	job.receiptFlag = true; /* Prevents double spending */
 
-	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, ipfsHashOut, storageType);
-
 	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(netOwed - amountToGain); /* Gained ether transferred to the client */
-
+	
+	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, ipfsHashOut, storageType);
 	return true;
     }
 
-    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsID) 
+    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, string ipfsAddress) 
 	public returns (bool success)
     {
 	Library.data cluster = clusterContract[msg.sender];
@@ -104,12 +105,14 @@ contract eBlocBroker {
 	
 	if (cluster.isExist && !cluster.isRunning) {
 	    memberAddresses[cluster.memberAddressesID] = msg.sender; 
-	    cluster.update(clusterName, fID, miniLockId, price, coreNumber, ipfsID); 
+	    cluster.update(price, coreNumber); 
 	    cluster.isRunning = true; 
 	} else {
-	    cluster.constructCluster(clusterName, fID, miniLockId, uint32(memberAddresses.length), price, coreNumber, ipfsID);
+	    cluster.constructCluster(uint32(memberAddresses.length), price, coreNumber);
 	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
-	}	
+	}
+	
+	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, price, ipfsAddress);
 	return true;
     }
 
@@ -122,10 +125,12 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, bytes32 ipfsID)
+    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, string ipfsAddress)
 	public returns (bool success)
     {
-	clusterContract[msg.sender].update(clusterName, fID, miniLockId, price, coreNumber, ipfsID);
+	clusterContract[msg.sender].update(price, coreNumber);
+	
+	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, price, ipfsAddress);
 	return true;
     }
    
@@ -178,14 +183,12 @@ contract eBlocBroker {
     }
 
     function getClusterInfo(address clusterAddr) public view
-	returns(string, string, string, uint, uint, bytes32)
+	returns(uint, uint, uint)
     {
-	return (clusterContract[clusterAddr].name, 
-		clusterContract[clusterAddr].federationCloudId, 
-		clusterContract[clusterAddr].clusterMiniLockId,
-		clusterContract[clusterAddr].receiptList.coreNumber, 
-		clusterContract[clusterAddr].coreMinutePrice, 
-		clusterContract[clusterAddr].ipfsID);
+	if (clusterContract[clusterAddr].isExist)	    
+	    return (clusterContract[clusterAddr].blockReadFrom, clusterContract[clusterAddr].receiptList.coreNumber, clusterContract[clusterAddr].coreMinutePrice);
+	else
+	    return (0, 0, 0);
     }
 
     function getClusterReceivedAmount(address clusterAddr) public view
@@ -242,4 +245,10 @@ contract eBlocBroker {
     
     // Log completed jobs' receipt
     event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
+
+    // Log cluster info (fID stands for federationCloudId)
+    event LogCluster(address cluster, uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, string ipfsAddress);
+
+    // Log refund
+    event LogRefund(address clusterAddr, string jobKey, uint32 index);
 }

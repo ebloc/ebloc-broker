@@ -54,18 +54,18 @@ def test_receipt(web3, accounts, chain):
     '''
     print(account);
     web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
+    set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
     contract_address = chain.wait.for_receipt(set_txn_hash)
 
     output = my_contract.call().isClusterExist(accounts[0]);
     print("isExist: "+str(output));
 
-    name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
+    blockReadFrom, coreLimit, coreMinutePrice = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
 
     set_txn_hash     = my_contract.transact().updateCluster( 128, "alper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");   
 
-    name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
+    blockReadFrom, coreLimit, coreMinutePrice = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
 
 
@@ -140,7 +140,7 @@ def test_receipt(web3, accounts, chain):
     size           = my_contract.call().getJobSize(account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve");
     print("JobSize " + str(size) + "----------");
     '''
-    name, federationCloudId, miniLockId, coreLimit, coreMinutePrice, ipfsId = my_contract.call().getClusterInfo(account);
+    blockReadFrom, coreLimit, coreMinutePrice  = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
 
     val = 0;
@@ -170,28 +170,4 @@ def test_receipt(web3, accounts, chain):
     for i in range(0, size):
         print(my_contract.call().getClusterReceiptNode(account, i));
 
-
-
-    '''
-    print("Cluster's federationCloudId:  " + str(federationCloudId));
-    print("Cluster's miniLockId:  "        + str(miniLockId));
-
-    #set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(60*10000000000000000, "wei") }).submitJob(account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve", 128, "Science", 0 , 0, 60 );
-    #contract_address = chain.wait.for_receipt(set_txn_hash)
-
-    web3.eth.defaultAccount = accounts[2];
-    print( "Block_Number: " + str(web3.eth.blockNumber) );
-
-    web3.eth.defaultAccount = accounts[2];
-    set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0, 3, 10);
-    set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0, 3, 10);
-
-
-
-    #receiptCheck(my_contract, chain, 17, 18, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", 0 );
-
-
-    print( web3.eth.getBalance(account) );
-    print( web3.eth.getBalance(accounts[1]) );
-    '''
     print("END");
