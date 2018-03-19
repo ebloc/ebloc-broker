@@ -55,6 +55,7 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js              && rm $cu
 #-----------------------------------------------------
 var=$(echo $currentDir | sed 's/\//\\\//g')
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
+grep "MailProg" /usr/local/etc/slurm.conf
 
 cd $currentDir/
 npm install --save
