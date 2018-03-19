@@ -29,7 +29,7 @@ if __name__ == '__main__': #{
         coreMinuteGas  = int(sys.argv[5]);
         storageType    = int(sys.argv[6]);
         myMiniLockId   = str(sys.argv[7]);
-        accountID      = int(sys.argv[10]);
+        accountID      = int(sys.argv[8]);
     else:
         print(len(sys.argv))
         sys.exit()
@@ -37,7 +37,7 @@ if __name__ == '__main__': #{
     msgValue = coreNum * pricePerMin * coreMinuteGas;
     gasLimit = 3000000;
 
-    if (eBlocBroker.call().isClusterExist(clusterAddress)):
+    if (not eBlocBroker.call().isClusterExist(clusterAddress)):
         print("Requested Cluster's Ethereum Address does not exist.")
         sys.exit();
 
