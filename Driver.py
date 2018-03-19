@@ -21,10 +21,9 @@ def isRpcError(inputStr):
 
 # checks: does Driver.py run on the background
 def isDriverOn(): 
-   check = os.popen("ps aux | grep \'Driver.py\' | grep -v \'grep\' ").read().rstrip('\n');
-
+   check = os.popen("ps aux | grep \'[D]river.py\'").read().rstrip('\n');                     
    if(len(check) == 0):
-      logTest( "Driver is already on" )
+      logTest("Driver is already on")
       sys.exit()
 
 # checks: does IPFS run on the background or not
@@ -66,25 +65,23 @@ if(constants.IPFS_USE == 1):
 
 logTest("processID: " + str(os.getpid()));
 
-jobsReadFromPath = constants.JOBS_READ_FROM_FILE;
-os.environ['jobsReadFromPath'] = jobsReadFromPath
-
 # Paths---------
+jobsReadFromPath = constants.JOBS_READ_FROM_FILE; os.environ['jobsReadFromPath'] = jobsReadFromPath
 eblocPath        = constants.EBLOCPATH;
 contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
 # ---------------
-
 header    = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
 
 isClusterExist = contractCall('echo "$header; console.log( \'\' + eBlocBroker.isClusterExist(\'$clusterID\') )"');
 
-if (isClusterExist.lower() == "false"):
+if (isClusterExist.lower() == "false"): #{
    print("Error: Your Ethereum address (" + clusterID + ") \n"
          "does not match with any cluster in eBlocBroker. Please register your \n" 
          "cluster using your Ethereum Address in to the eBlocBroker. You can \n"
          "use 'contractCalls/registerCluster.py' script to register your cluster.");
    sys.exit()
+#}
 
 deployedBlockNumber = os.popen('python $contractCallPath/getDeployedBlockNumber.py').read();
 blockReadFromContract=str(0)
@@ -93,19 +90,20 @@ logTest("------------CLUSTER_IS_ON------------")
 logTest("clusterAddress: " +  clusterID)
 logTest("deployedBlockNumber: " +  deployedBlockNumber)
 
-if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)):
+if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
    f.write( deployedBlockNumber + "\n" )
    f.close()
+#}
 
 f = open(constants.BLOCK_READ_FROM_FILE, 'r')
 blockReadFromLocal = f.read().rstrip('\n');
 f.close();
 
-if (not blockReadFromLocal.isdigit()):
+if (not blockReadFromLocal.isdigit()): #{
    logTest("Error: constants.BLOCK_READ_FROM_FILE is empty or contains and invalid value")
    logTest("> Would you like to read from contract's deployed block number? y/n")
-   while True:
+   while True: #{
       choice = raw_input().lower()
       if choice in yes:
          blockReadFromLocal = deployedBlockNumber;
@@ -118,7 +116,8 @@ if (not blockReadFromLocal.isdigit()):
          sys.exit()
       else:
          sys.stdout.write("Please respond with 'yes' or 'no'")
-
+   #}
+#}
 
 blockReadFrom = 0;
 if (int(blockReadFromLocal) < int(blockReadFromContract)):
@@ -129,7 +128,6 @@ if (int(blockReadFromLocal) < int(blockReadFromContract)):
 else:
    blockReadFrom = blockReadFromLocal
 
-#TODO: global job counter tut.
 while True: #{
     if "Error" in blockReadFrom:
        logTest(blockReadFrom);
@@ -178,10 +176,10 @@ while True: #{
        blockReadFrom = fR.read().rstrip('\n');
        fR.close();
 
+       submittedJob  = 0;
        submittedJobs = blockReadFrom.split('?')
-
-       submittedJob=0;
-       maxVal = 0;
+       maxVal        = 0;
+       
        isClusterRecievedJob=0;
        for i in range(0, (len(submittedJobs) - 1)): #{
           submittedJob = submittedJobs[i].split(' ');          
@@ -223,7 +221,7 @@ while True: #{
           blockReadFrom = str(int(maxVal) + 1)
        #}
        
-       if isClusterRecievedJob == 0: # if there is no submitted job for the cluster, block start to read from current block number
+       if isClusterRecievedJob == 0: # If there is no submitted job for the cluster, block start to read from current block number
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
           f_blockReadFrom.write(str(currentBlockNumber) + "\n") # Python will convert \n to os.linesep
           f_blockReadFrom.close()
