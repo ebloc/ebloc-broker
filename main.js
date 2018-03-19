@@ -1,9 +1,5 @@
-var conv = require('binstring');
-
 var nodePaths = require('./nodePaths');
 var eBlocBroker = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
-
-printLog = 1
 
 clusterID = "0x6af0204187a93710317542d383a1b547fa42e705"; 
 
@@ -14,7 +10,7 @@ var array = fs.readFileSync(nodePaths.LOG_PATH + '/queuedJobs.txt').toString().s
 for(i in array) {
     var arr = array[i].split(" ");
     if( array[i] != '' && clusterID == arr[1] ){
-	var str = eBlocBroker.getJobInfo(arr[1], arr[2], 0).toString().split(",");
+	var str = eBlocBroker.getJobInfo(arr[1], arr[2], arr[3]).toString().split(",");
 	str = str.toString()
 	//str = str.replace('0x0000000000000000000000000000000000000000000000000000000000000000,', '')
 	console.log( "Job " + i + ": "  + " | "+ arr[2], arr[3], arr[4], arr[5] + "|" +  eBlocBroker.job_state_id[str[0]] + ' ' +str);

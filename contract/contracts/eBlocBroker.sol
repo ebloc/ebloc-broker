@@ -96,7 +96,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, string ipfsAddress) 
+    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint coreMinutePrice, string ipfsAddress) 
 	public returns (bool success)
     {
 	Library.data cluster = clusterContract[msg.sender];
@@ -105,14 +105,14 @@ contract eBlocBroker {
 	
 	if (cluster.isExist && !cluster.isRunning) {
 	    memberAddresses[cluster.memberAddressesID] = msg.sender; 
-	    cluster.update(price, coreNumber); 
+	    cluster.update(coreMinutePrice, coreNumber); 
 	    cluster.isRunning = true; 
 	} else {
-	    cluster.constructCluster(uint32(memberAddresses.length), price, coreNumber);
+	    cluster.constructCluster(uint32(memberAddresses.length), coreMinutePrice, coreNumber);
 	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 	
-	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, price, ipfsAddress);
+	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, coreMinutePrice, ipfsAddress);
 	return true;
     }
 
@@ -125,12 +125,12 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, string ipfsAddress)
+    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint coreMinutePrice, string ipfsAddress)
 	public returns (bool success)
     {
-	clusterContract[msg.sender].update(price, coreNumber);
+	clusterContract[msg.sender].update(coreMinutePrice, coreNumber);
 	
-	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, price, ipfsAddress);
+	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, coreMinutePrice, ipfsAddress);
 	return true;
     }
    
@@ -249,7 +249,7 @@ contract eBlocBroker {
     event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
 
     // Log cluster info (fID stands for federationCloudId)
-    event LogCluster(address cluster, uint32 coreNumber, string clusterName, string fID, string miniLockId, uint price, string ipfsAddress);
+    event LogCluster(address cluster, uint32 coreNumber, string clusterName, string fID, string miniLockId, uint coreMinutePrice, string ipfsAddress);
 
     // Log refund
     event LogRefund(address clusterAddr, string jobKey, uint32 index);
