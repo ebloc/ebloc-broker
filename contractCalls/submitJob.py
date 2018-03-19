@@ -51,7 +51,7 @@ if __name__ == '__main__': #{
     msgValue = coreNum * pricePerMin * coreMinuteGas;
     gasLimit = 3000000;
 
-    if (eBlocBroker.call().isClusterExist(clusterAddress)):
+    if (not eBlocBroker.call().isClusterExist(clusterAddress)):
         print("Requested Cluster's Ethereum Address does not exist.")
         sys.exit();
     
