@@ -44,7 +44,9 @@ if __name__ == '__main__': #{
         jobDescription = "Science";
         storageType    = 1;
         myMiniLockId   = "";
-        # ----------------------------------------------------------------------------        
+        # ----------------------------------------------------------------------------
+        accountID      = 2;
+        
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue = coreNum * pricePerMin * coreMinuteGas;
     gasLimit = 3000000;
