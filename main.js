@@ -7,7 +7,22 @@ printLog = 1
 
 clusterID = "0x6af0204187a93710317542d383a1b547fa42e705"; 
 
-tx="0x5224a5a7a7a957f57ce18330b9f1b8ea50fd4746f37fcf642061a2d6ced519f3"
+//LOG-RECEIPT
+console.log( "Cluster Gained Amount: " + eBlocBroker.getClusterReceivedAmount(clusterID))
+var fs = require('fs');
+var array = fs.readFileSync(nodePaths.LOG_PATH + '/queuedJobs.txt').toString().split("\n");
+for(i in array) {
+    var arr = array[i].split(" ");
+    if( array[i] != '' && clusterID == arr[1] ){
+	var str = eBlocBroker.getJobInfo(arr[1], arr[2], 0).toString().split(",");
+	str = str.toString()
+	//str = str.replace('0x0000000000000000000000000000000000000000000000000000000000000000,', '')
+	console.log( "Job " + i + ": "  + " | "+ arr[2], arr[3], arr[4], arr[5] + "|" +  eBlocBroker.job_state_id[str[0]] + ' ' +str);
+    }
+}
+
+
+//tx="0x5224a5a7a7a957f57ce18330b9f1b8ea50fd4746f37fcf642061a2d6ced519f3"
 //console.log( "TransactionPassed ?= " + tx + " " + eBlocBroker.isTransactionPassed(tx) );
 
 //eBlocBroker.updateCluster( 4, "ebloc", "0x", "0x", 1, "0x"); 
@@ -25,23 +40,6 @@ for(i = 2; i < 12; i++)
 for(i = 2; i < 12; i++)
     console.log( "miniLockId of web3.eth.accounts[" + i + "]: " + eBlocBroker.getMiniLockId( i ) )
 */
-
-
-
-//LOG-RECEIPT
-console.log( "Cluster Gained Amount: " + eBlocBroker.getClusterReceivedAmount(clusterID))
-var fs = require('fs');
-var array = fs.readFileSync(nodePaths.LOG_PATH + '/queuedJobs.txt').toString().split("\n");
-for(i in array) {
-    var arr = array[i].split(" ");
-    if( array[i] != '' && clusterID == arr[1] ){
-	var str = eBlocBroker.getJobInfo(arr[1], arr[2], 0).toString().split(",");
-	str = str.toString()
-	//str = str.replace('0x0000000000000000000000000000000000000000000000000000000000000000,', '')
-	console.log( "Job " + i + ": "  + " | "+ arr[2], arr[3], arr[4], arr[5] + "|" +  eBlocBroker.job_state_id[str[0]] + ' ' +str);
-    }
-}
-
 
 /*
 if (printLog==1) {

@@ -170,7 +170,9 @@ contract eBlocBroker {
 	if (stateId != 0) {
 	    jS.status    = stateId;
 	    jS.startTime = startTime;
-	}	
+	}
+
+	LogSetJob(msg.sender, jobKey, index);
 	return true;
     }
     
@@ -251,4 +253,7 @@ contract eBlocBroker {
 
     // Log refund
     event LogRefund(address clusterAddr, string jobKey, uint32 index);
+
+    // Log setJob
+    event LogSetJob(address clusterAddr, string jobKey, uint32 index);
 }

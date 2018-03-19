@@ -67,12 +67,10 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
 
    logTest("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
-   timeout = time.time() + 30 * 60; #TODO
-   #timeout = time.time() + 3 * 60; # Timeout threshold is three minutes from now
 
    logTest("0: " + jobInfo[0])
    logTest("1: " + jobInfo[2])
-
+   
    while True: #{
       logTest(jobInfo[0]); 
       logTest(jobInfo[2]); 
@@ -80,13 +78,9 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       clientTimeLimit = jobInfo[5];
       logTest("TimeLimit: " + clientTimeLimit); 
 
-      if jobInfo[0] == str(constants.job_state_code['RUNNING']):
+      if jobInfo[0] == str(constants.job_state_code['RUNNING']): # It will come here eventually, when setJob() is deployed.
          logTest("Job started running"); 
          break; # Wait until does values updated on the blockchain
-
-      if time.time() > timeout:
-         logTest("Timeout "); 
-         sys.exit()
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 
         logTest( "Error: Already completed job..."); 
@@ -101,7 +95,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
       jobInfo = jobInfo.split(',');
-      time.sleep(10) # Short sleep here so this loop is not keeping CPU busy
+      time.sleep(30) # Short sleep here so this loop is not keeping CPU busy
    #}
    
    jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read();
