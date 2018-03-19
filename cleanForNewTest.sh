@@ -6,3 +6,5 @@ sudo rm -f ~/.eBlocBroker/checkSinfoOut.txt
 sudo rm -f nohup.out
 sudo rm -f ~/.eBlocBroker/logJobs.txt
 sudo rm -f ~/.eBlocBroker/queuedJobs.txt
+
+sudo bash killall.sh

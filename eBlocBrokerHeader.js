@@ -203,7 +203,7 @@ exports.LogReceipt = function(var1, myPath) {
 	    eBlocBrokerEvent.stopWatching()
 	}
 
-	if(result == null && flag == 0){
+	if (result == null && flag == 0) {
 	    fs.appendFile( myPath, "notconnected", function(err) {
 		process.exit();
 	    });
@@ -213,16 +213,11 @@ exports.LogReceipt = function(var1, myPath) {
 
 	if(flag == 0){
 	    var jobKey = result.args.jobKey;   
-
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
 		if(result.args.cluster == web3.eth.defaultAccount){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " + result.args.endTime + " " +
 				   result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
-					   //if(!err) console.log('blank write--------------------\n');		
-					   //else     console.log('error:------------- \n' + err);		
-					   //JSON.stringify( str )
-					   //eBlocBrokerEvent.stopWatching();
 					   process.exit();
 				   }); 	
 		}
@@ -230,9 +225,3 @@ exports.LogReceipt = function(var1, myPath) {
 	}
     });
 }
-
-
-//exports.registerCluster = function(var1, var2, var3, var4, var5, var6) {
-//    hash = myContractInstance.registerCluster(var1, var2, var3, var4, var5, var6, {from: web3.eth.coinbase, gas: gasLimit });
-//    return hash;
-//};
