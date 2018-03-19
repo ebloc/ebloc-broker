@@ -128,6 +128,7 @@ if (int(blockReadFromLocal) < int(blockReadFromContract)):
 else:
    blockReadFrom = blockReadFromLocal
 
+clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
 while True: #{
     if "Error" in blockReadFrom:
        logTest(blockReadFrom);
@@ -142,7 +143,7 @@ while True: #{
        sys.exit();
 
     logTest("Current Slurm Running jobs status: \n" + squeueStatus);
-    logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + clusterGainedAmount);
+    logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     logTest("Waiting new job to come since block number: " + blockReadFrom);
 
     printFlag = 0;

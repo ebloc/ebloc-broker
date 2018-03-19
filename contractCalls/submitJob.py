@@ -20,7 +20,7 @@ with open('abi.json', 'r') as abi_definition:
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 10):
+    if(len(sys.argv) == 11):
         clusterAddress = str(sys.argv[1]);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
         jobKey         = str(sys.argv[2]);
@@ -31,6 +31,7 @@ if __name__ == '__main__': #{
         jobDescription = str(sys.argv[7]);
         storageType    = int(sys.argv[8]);
         myMiniLockId   = str(sys.argv[9]);
+        accountID      = int(sys.argv[10]);
     else:
         # USER Inputs----------------------------------------------------------------
         clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
@@ -53,7 +54,7 @@ if __name__ == '__main__': #{
         sys.exit();
     
     if (coreNum <= coreNumber and len(jobDescription) < 128 ):
-        tx=eBlocBroker.transact({"from": web3.eth.accounts[0], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId);
+        tx=eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId);
         print(tx);
 #}
 
