@@ -21,18 +21,18 @@ def isRpcError(inputStr):
 
 # checks: does Driver.py run on the background
 def isDriverOn(): 
-   check = os.popen("ps aux | grep \'[D]river.py\'").read().rstrip('\n');                     
-   if(len(check) == 0):
-      logTest("Driver is already on")
+   check = os.popen("ps aux | grep \'[D]river.py\' | wc -l").read().rstrip('\n');
+
+   if(int(check) > 1):
+      logTest("Driver is already on or multiple Drivers are launch. Please run:\nFor Daemon:  sudo bash runDaemon.sh\nFor Process: sudo bash run.sh")
       sys.exit()
 
 # checks: does IPFS run on the background or not
 def isIpfsOn():
-   check = os.popen("ps aux | grep \'ipfs daemon\' | grep -v \'grep\' ").read().rstrip('\n');
-   if(len(check) == 0):
-      logTest( "Error: IPFS does not work on the background. Please do: nohup ipfs daemon & " )
-      return False;
-   return True;
+   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
+   if(int(check) == 0):
+      logTest( "Error: IPFS does not work on the background. Please do:\nnohup ipfs daemon & " )
+      sys.exit()
 
 # checks: does SLURM run on the background or not
 def isSlurmOn(): 
@@ -60,8 +60,7 @@ no  = set(['no' , 'n']);
 isDriverOn();
 isSlurmOn();
 if(constants.IPFS_USE == 1):
-   if(not isIpfsOn()):
-      sys.exit()
+   isIpfsOn();
 
 logTest("processID: " + str(os.getpid()));
 
@@ -76,7 +75,7 @@ clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
 isClusterExist = contractCall('echo "$header; console.log( \'\' + eBlocBroker.isClusterExist(\'$clusterID\') )"');
 
 if (isClusterExist.lower() == "false"): #{
-   print("Error: Your Ethereum address (" + clusterID + ") \n"
+   print("Error: Your Ethereum address '" + clusterID + "' \n"
          "does not match with any cluster in eBlocBroker. Please register your \n" 
          "cluster using your Ethereum Address in to the eBlocBroker. You can \n"
          "use 'contractCalls/registerCluster.py' script to register your cluster.");
@@ -129,6 +128,8 @@ else:
    blockReadFrom = blockReadFromLocal
 
 clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
+print("Cluster's initial money: " + clusterGainedAmountInit);
+
 while True: #{
     if "Error" in blockReadFrom:
        logTest(blockReadFrom);
@@ -141,8 +142,9 @@ while True: #{
        logTest("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n");
        logTest(squeueStatus);
        sys.exit();
-
+    
     logTest("Current Slurm Running jobs status: \n" + squeueStatus);
+    logTest("------------------------------------------------------------------------------------------------------------------------------------")
     logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     logTest("Waiting new job to come since block number: " + blockReadFrom);
 
@@ -186,8 +188,8 @@ while True: #{
           submittedJob = submittedJobs[i].split(' ');          
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              isClusterRecievedJob = 1;
-             logTest("------------------------------------------------------------------")
-             logTest("BlockNum: " + submittedJob[0]  + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
+             logTest("------------------------------------------------------------------------------------------------------------------------------------")
+             logTest("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
              if (int(submittedJob[0]) > int(maxVal)):
                 maxVal = submittedJob[0]
