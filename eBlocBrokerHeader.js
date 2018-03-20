@@ -8,7 +8,7 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-var COINBASE="0x6af0204187a93710317542d383a1b547fa42e705"; //Should be the address of the cluster.
+var COINBASE="0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 web3.eth.defaultAccount = COINBASE; 
 
 var whoami              = web3.eth.defaultAccount;
@@ -92,7 +92,7 @@ exports.getClusterReceivedAmount = function( var1) {
 };
 
 exports.getJobInfo = function(var1, var2, var3) {
-    return myContractInstance.getJobInfo(var1, var2, var3 );
+    return myContractInstance.getJobInfo(var1, var2, var3);
 };
 
 exports.getSubmittedJobCore = function(var1, var2, var3) {
@@ -164,7 +164,7 @@ exports.LogJob = function(var1, myPath) {
 	    eBlocBrokerEvent.stopWatching()
 	}
 
-	if( flag == 0 ){
+	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
 
 	    if ( jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
@@ -190,7 +190,7 @@ exports.LogReceipt = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
 
-    if(fs.existsSync(myPath)) 
+    if (fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath)
 
     var eBlocBrokerEvent = myContractInstance.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
