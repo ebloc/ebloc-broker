@@ -8,8 +8,7 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-var COINBASE="0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
-web3.eth.defaultAccount = COINBASE; 
+web3.eth.defaultAccount = "0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 
 var whoami              = web3.eth.defaultAccount;
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
