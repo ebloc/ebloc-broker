@@ -144,7 +144,7 @@ while True: #{
        sys.exit();
     
     logTest("Current Slurm Running jobs status: \n" + squeueStatus);
-    logTest("------------------------------------------------------------------------------------------------------------------------------------")
+    logTest("-------------------------------------------------------------------------------------")
     logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     logTest("Waiting new job to come since block number: " + blockReadFrom);
 

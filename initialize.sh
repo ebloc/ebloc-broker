@@ -47,7 +47,7 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentD
 
 # COINBASE Address Setup:-----------------------------
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
-lineNew=$COINBASE
+lineNew=$(echo $COINBASE);
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py         && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
