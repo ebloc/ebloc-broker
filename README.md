@@ -385,5 +385,6 @@ sudo apt-get install davfs2 mailutils
 sudo apt-get install python-psutil
 sudo apt-get install -y nodejs
 
+sudo apt-get install munge
 
 ```
