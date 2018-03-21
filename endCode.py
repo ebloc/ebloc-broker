@@ -21,12 +21,12 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    os.environ['endTimeStamp'] = endTimeStamp;
    logTest("endTimeStamp: " + endTimeStamp)
 
-   # Paths---------
+   # Paths--------------------------------------
    eblocPath        = constants.EBLOCPATH;
    contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
    logPath          = constants.LOG_PATH;
    programPath      = constants.PROGRAM_PATH;
-   # ---------------
+   # -------------------------------------------
    encodedShareToken = base64.b64encode(shareToken + ':')
 
    header = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
@@ -98,8 +98,9 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       time.sleep(30) # Short sleep here so this loop is not keeping CPU busy
    #}
    
+   logTest("jobName: " + str(folderName));
    jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read();
-   os.environ['jobId'] = jobId;
+   os.environ['jobId'] = jobId; ################
    logTest("JOBID------------> " + str(jobId));
 
    # Here we know that job is already completed

@@ -59,7 +59,7 @@ no  = set(['no' , 'n']);
 
 isDriverOn();
 isSlurmOn();
-if(constants.IPFS_USE == 1):
+if (constants.IPFS_USE == 1):
    isIpfsOn();
 
 logTest("processID: " + str(os.getpid()));

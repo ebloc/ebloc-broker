@@ -1,7 +1,7 @@
 var nodePaths = require('./nodePaths');
 var eBlocBroker = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
 
-clusterID = "0x6af0204187a93710317542d383a1b547fa42e705"; 
+clusterID = "0xe056d08f050503c1f068dc81fc7f7b705fc2c503"; 
 
 var storageType = {};
 storageType['1'] = 'EUDAT';
@@ -26,7 +26,7 @@ for(i in array) {
 	var arr1 = str.split(",");
 	//str = str.replace('0x0000000000000000000000000000000000000000000000000000000000000000,', '')
 	sum +=  parseInt(arr1[3]);
-	console.log( "Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageType[arr[4]] + "\t" + arr[5] +  eBlocBroker.job_state_id[str[0]] +
+	console.log( "Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageType[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
 		     "\t" + arr1[1] + "\t" + arr1[2]  + "\t" + arr1[3]  + "\t" + arr1[4]  + "\t" + arr1[5] );
     }
 }

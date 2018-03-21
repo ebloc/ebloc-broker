@@ -138,7 +138,7 @@ exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
     console.log( hash );
 };
 
-exports.LogJob = function(var1, myPath) {
+exports.LogJob = function(var1, myPath, clusterID) {
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -166,9 +166,9 @@ exports.LogJob = function(var1, myPath) {
 	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
 
-	    if ( jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
-		if( result.args.cluster == web3.eth.defaultAccount ){
-		    if(result.args.myMiniLockID == "")
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+		if( result.args.cluster == clusterID){
+		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
@@ -185,7 +185,7 @@ exports.LogJob = function(var1, myPath) {
     });
 }
 
-exports.LogReceipt = function(var1, myPath) {
+exports.LogReceipt = function(var1, myPath, clusterID) {
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -213,7 +213,7 @@ exports.LogReceipt = function(var1, myPath) {
 	if(flag == 0){
 	    var jobKey = result.args.jobKey;   
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
-		if(result.args.cluster == web3.eth.defaultAccount){
+		if(result.args.cluster == clusterID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " + result.args.endTime + " " +
 				   result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
