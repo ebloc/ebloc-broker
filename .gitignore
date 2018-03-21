@@ -64,3 +64,5 @@ contract/\.cache/v/populus/project/
 contract/receipt\.txt
 
 \.node-xmlhttprequest-sync-18637
+
+nohup\.out

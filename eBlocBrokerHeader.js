@@ -167,7 +167,7 @@ exports.LogJob = function(var1, myPath, clusterID) {
 	    var jobKey = result.args.jobKey;   
 
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
-		if( result.args.cluster == clusterID){
+		if (result.args.cluster == web3.eth.defaultAccount){
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +

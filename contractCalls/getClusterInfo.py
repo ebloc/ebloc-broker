@@ -49,7 +49,5 @@ if __name__ == '__main__': #{
     print('coreNumber: '      + str(coreNumber))
     print('coreMinutePrice: ' + str(coreMinutePrice))
 
-
-    
-
+    #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'_from': '0x6af0204187a93710317542d383a1b547fa42e705'}})
 #}
