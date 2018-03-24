@@ -138,7 +138,7 @@ exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
     console.log( hash );
 };
 
-exports.LogJob = function(var1, myPath, clusterID) {
+exports.LogJob = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -168,6 +168,53 @@ exports.LogJob = function(var1, myPath, clusterID) {
 
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
 		if (result.args.cluster == web3.eth.defaultAccount){
+		    if (result.args.myMiniLockID == "")
+			result.args.myMiniLockID = "-1"
+		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
+				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
+				   result.args.miniLockId + ' ?\n', function(err) { // '?' end of line identifier.
+					   //if(!err) console.log('blank write--------------------\n');		
+					   //else     console.log('error:------------- \n' + err);		
+					   //JSON.stringify( str )
+					   //eBlocBrokerEvent.stopWatching();
+					   process.exit();
+				   }); 	
+		}
+	    }
+	}
+    });
+}
+
+exports.LogJobResults = function(var1, myPath, clusterID) {
+    var path  = require('path');     
+    var fs    = require('fs');
+
+    if( fs.existsSync(myPath) ) 
+    	fs.unlinkSync(myPath)
+
+    var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
+
+    eBlocBrokerEvent.watch( function (error, result) {	
+	flag = 0;
+	if(error) {
+	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if(result == null && flag == 0){
+	    fs.appendFile( myPath, "notconnected", function(err) {
+		process.exit();
+	    });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (flag == 0) {
+	    var jobKey = result.args.jobKey;   
+
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+		if (result.args.cluster == clusterID){
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
