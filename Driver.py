@@ -12,7 +12,6 @@ def contractCall(val):
    returnedVal = os.popen( val + "| node & echo $! >" + constants.LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
    isRpcError(returnedVal);
    return returnedVal;
-#sudo kill -9 $(cat /tmp/my-app.pid)
 
 def isRpcError(inputStr):
    if(inputStr == "notconnected"):
@@ -36,9 +35,9 @@ def isIpfsOn():
 
 # checks: does SLURM run on the background or not
 def isSlurmOn(): 
-   os.system("bash checkSinfo.sh")
    os.environ['logPath'] = constants.LOG_PATH;
-   check                 = os.popen("cat $logPath/checkSinfoOut.txt").read()
+   os.system("bash checkSinfo.sh")  
+   check = os.popen("cat $logPath/checkSinfoOut.txt").read()
 
    if not "PARTITION" in str(check):
       logTest("-------------------------- \n");
@@ -70,9 +69,10 @@ eblocPath        = constants.EBLOCPATH;
 contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
 # ---------------
 header    = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
-clusterID = constants.CLUSTER_ID; os.environ['clusterID'] = clusterID;
+clusterID = constants.CLUSTER_ID;
+os.environ['clusterID'] = clusterID;
 
-isClusterExist = contractCall('echo "$header; console.log( \'\' + eBlocBroker.isClusterExist(\'$clusterID\') )"');
+isClusterExist = os.popen('python $contractCallPath/isClusterExist.py $clusterID').read();
 
 if (isClusterExist.lower() == "false"): #{
    print("Error: Your Ethereum address '" + clusterID + "' \n"
@@ -135,26 +135,27 @@ while True: #{
        logTest(blockReadFrom);
        sys.exit();
 
-    clusterGainedAmount   = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
-    squeueStatus = os.popen("squeue").read();
+    clusterGainedAmount = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
+    squeueStatus       = os.popen("squeue").read();
 
-    if "squeue: error:" in str(squeueStatus):
+    if "squeue: error:" in str(squeueStatus): #{
        logTest("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n");
        logTest(squeueStatus);
        sys.exit();
+    #}
     
     logTest("Current Slurm Running jobs status: \n" + squeueStatus);
     logTest("-------------------------------------------------------------------------------------")
     logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     logTest("Waiting new job to come since block number: " + blockReadFrom);
 
-    printFlag = 0;
-    passedPrintFlag = 0;
+    printFlag          = 0;
+    passedPrintFlag    = 0;
     currentBlockNumber = os.popen('python $contractCallPath/blockNumber.py').read().rstrip('\n');
     
-    while(True):
+    while(True): #{
        if (printFlag == 0):
-          logTest("Waiting currentBlockNumber to increment by one");
+          logTest("Waiting new block to increment by one.");
           logTest("Current BlockNumber: " + currentBlockNumber  + "| sync from Block Number: " + blockReadFrom);
           
        if (int(currentBlockNumber) >= int(blockReadFrom)):
@@ -162,25 +163,26 @@ while True: #{
        
        printFlag = 1;
        time.sleep(2);
-       currentBlockNumber = contractCall('echo "$header; console.log( \'\' + eBlocBroker.blockNumber )"');
+       currentBlockNumber = os.popen('python $contractCallPath/blockNumber.py').read().rstrip('\n');
 
        if (passedPrintFlag == 0):
           logTest("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
           passedPrintFlag = 1;
-
+    #}
+    
     passedPrintFlag = 0;      
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
 
     # Waits here until new job submitted into the cluster
     returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
 
-    if os.path.isfile(jobsReadFromPath): #{Waits until generated file on log is completed
+    if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r' )
        blockReadFrom = fR.read().rstrip('\n');
        fR.close();
 
        submittedJob  = 0;
-       submittedJobs = blockReadFrom.split('?')
+       submittedJobs = blockReadFrom.split('?');
        maxVal        = 0;
        
        isClusterRecievedJob=0;
@@ -188,7 +190,7 @@ while True: #{
           submittedJob = submittedJobs[i].split(' ');          
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              isClusterRecievedJob = 1;
-             logTest("------------------------------------------------------------------------------------------------------------------------------------")
+             logTest("-----------------------------------")
              logTest("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
              if (int(submittedJob[0]) > int(maxVal)):

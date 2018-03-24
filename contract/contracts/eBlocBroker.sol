@@ -96,7 +96,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint coreMinutePrice, string ipfsAddress) 
+    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress) 
 	public returns (bool success)
     {
 	Library.data cluster = clusterContract[msg.sender];
@@ -112,7 +112,7 @@ contract eBlocBroker {
 	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 	
-	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, coreMinutePrice, ipfsAddress);
+	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockID, coreMinutePrice, ipfsAddress);
 	return true;
     }
 
@@ -125,16 +125,16 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockId, uint coreMinutePrice, string ipfsAddress)
+    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress)
 	public returns (bool success)
     {
 	clusterContract[msg.sender].update(coreMinutePrice, coreNumber);
 	
-	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockId, coreMinutePrice, ipfsAddress);
+	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockID, coreMinutePrice, ipfsAddress);
 	return true;
     }
    
-    function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockId)
+    function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType, string miniLockID)
 	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
 	returns (bool success)
     {
@@ -156,7 +156,7 @@ contract eBlocBroker {
 			receiptFlag:     false}
 		));
 	
-	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length-1, storageType, miniLockId, jobDesc);
+	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length-1, storageType, miniLockID, jobDesc);
 	return true;
     }
 
@@ -243,13 +243,13 @@ contract eBlocBroker {
 
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
     // Log submitted jobs
-    event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockId, string desc);
+    event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockID, string desc);
     
     // Log completed jobs' receipt
     event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
 
     // Log cluster info (fID stands for federationCloudId)
-    event LogCluster(address cluster, uint32 coreNumber, string clusterName, string fID, string miniLockId, uint coreMinutePrice, string ipfsAddress);
+    event LogCluster(address cluster, uint32 coreNumber, string clusterName, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress);
 
     // Log refund
     event LogRefund(address clusterAddr, string jobKey, uint32 index);

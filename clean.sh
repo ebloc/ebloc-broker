@@ -15,3 +15,6 @@ rm -f ./docs/solidity_lexer.pyc
 rm -f contractCalls/*.*~
 
 pyclean docs/
+
+#git fetch
+#git checkout origin/master -- .gitignore

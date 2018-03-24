@@ -21,11 +21,6 @@ An Amazon image (AMI Name: eBlocBroker, AMI ID: ami-43e6083e) is also available 
 
 
 ```bash
-mkdir ~/ebloc-amazon
-sshfs -o IdentityFile=full/path/to/my.pem ubuntu@Public-DNS-hostname:/home/ubuntu ~/ebloc-amazon
-cd ~/ebloc-amazon
-
-#On an another console you can ssh into the instance:
 ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
 
 eblocServer                            # To run eBloc geth-server
@@ -386,5 +381,4 @@ sudo apt-get install python-psutil
 sudo apt-get install -y nodejs
 
 sudo apt-get install munge
-
 ```
