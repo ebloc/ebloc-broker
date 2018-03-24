@@ -7,4 +7,5 @@ sudo rm -f ~/.eBlocBroker/logJobs.txt
 sudo rm -f ~/.eBlocBroker/queuedJobs.txt
 sudo cat /dev/null > nohup.out
 
-# sudo bash killall.sh
+sudo bash killall.sh
+sudo bash clean.sh

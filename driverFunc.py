@@ -220,9 +220,9 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
           logTest("Run.sh does not exist")
           return
     else:
-       logTest("Markle not found! timeout for ipfs object stat retrieve !"); # IPFS file could not be accessed
+       logTest("Markle not found! timeout for ipfs object stat retrieve ! <========="); # IPFS file could not be accessed
        #TODO: ipfs dht findprovs QmRr62nqpQM3YdXyfX4MS93Bx11ztyFeLEAsYtNiNiMNMp
-       return
+       sys.exit();
 
     myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); logTest(myDate);
     txFile = open('modifiedDate.txt', 'w'); txFile.write(myDate + '\n' ); txFile.close();
