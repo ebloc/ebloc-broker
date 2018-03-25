@@ -375,6 +375,7 @@ sudo n latest
 
 sudo pip install sphinx_rtd_theme 
 sudo pip install pyocclient==0.4
+sudo pip install colored
 
 sudo apt-get install davfs2 mailutils
 sudo apt-get install python-psutil

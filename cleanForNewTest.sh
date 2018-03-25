@@ -1,11 +1,13 @@
 #!/bin/bash
 
-sudo rm -rf ~/.eBlocBroker/*/*
-sudo rm -f ~/.eBlocBroker/my-app.pid
-sudo rm -f ~/.eBlocBroker/checkSinfoOut.txt
-sudo rm -f ~/.eBlocBroker/logJobs.txt
-sudo rm -f ~/.eBlocBroker/queuedJobs.txt
+sudo rm -rf $HOME/.eBlocBroker/*/*
+sudo rm -f  $HOME/.eBlocBroker/my-app.pid
+sudo rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
+sudo rm -f  $HOME/.eBlocBroker/logJobs.txt
+sudo rm -f  $HOME/.eBlocBroker/queuedJobs.txt
 sudo cat /dev/null > nohup.out
 
 sudo bash killall.sh
 sudo bash clean.sh
+
+python contractCalls/blockNumber.py > $HOME/.eBlocBroker/blockReadFrom.txt

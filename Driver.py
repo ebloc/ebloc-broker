@@ -2,6 +2,8 @@
 
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, thread
+from colored import stylize
+from colored import fg
 
 def logTest(strIn):
    print(strIn)
@@ -41,8 +43,7 @@ def isSlurmOn():
 
    if not "PARTITION" in str(check):
       logTest("-------------------------- \n");
-      logTest("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n");
-      
+      logTest("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n");      
       logTest('Error Message: \n' + check);
       sys.exit();
 
@@ -58,7 +59,7 @@ no  = set(['no' , 'n']);
 
 isDriverOn();
 isSlurmOn();
-if (constants.IPFS_USE == 1):
+if constants.IPFS_USE == 1:
    isIpfsOn();
 
 logTest("processID: " + str(os.getpid()));
@@ -75,10 +76,10 @@ os.environ['clusterID'] = clusterID;
 isClusterExist = os.popen('python $contractCallPath/isClusterExist.py $clusterID').read();
 
 if (isClusterExist.lower() == "false"): #{
-   print("Error: Your Ethereum address '" + clusterID + "' \n"
-         "does not match with any cluster in eBlocBroker. Please register your \n" 
-         "cluster using your Ethereum Address in to the eBlocBroker. You can \n"
-         "use 'contractCalls/registerCluster.py' script to register your cluster.");
+   print(stylize("Error: Your Ethereum address '" + clusterID + "' \n"
+                 "does not match with any cluster in eBlocBroker. Please register your \n" 
+                 "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
+                 "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')));
    sys.exit()
 #}
 
