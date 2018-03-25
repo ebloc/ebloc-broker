@@ -62,7 +62,10 @@ npm install --save
 
 echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudatPassword.txt'"
 
-echo -e "Note: Update the following file 'miniLockPassword.txt' with your Minilock account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 miniLockPassword.txt'"
+echo -e "\nNote: Update the following file 'miniLockPassword.txt' with your Minilock account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 miniLockPassword.txt'"
 
 # IPFS setups
 chown -R "$logname:$logname" ~/.ipfs/
+
+# pip install
+sudo pip install colored

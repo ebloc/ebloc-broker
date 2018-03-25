@@ -36,11 +36,21 @@ def contractCall(val):
             time.sleep(1);
    return ret;
 
+# checks: does SLURM run on the background or not
+def isSlurmOn(): 
+   os.environ['logPath'] = constants.LOG_PATH;
+   os.system("bash checkSinfo.sh")  
+   check = os.popen("cat $logPath/checkSinfoOut.txt").read()
+
+   if (not "PARTITION" in str(check)) or ("sinfo: error" in str(check)):
+      print('slurm is not on.')
+      os.system("sudo bash runSlurm.sh");
+
 # checks: does IPFS run on the background or not
 def isIpfsOn():
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if (int(check) == 0):
-      logTest( "Error: IPFS does not work on the background. Please do:\nnohup ipfs daemon & " )
+      logTest( "Error: IPFS does not work on the background. Please do:\nipfs daemon & " )
       sys.exit()
 
 def driverEudatCall(jobKey, index):
@@ -82,7 +92,7 @@ def driverEudatCall(jobKey, index):
       inputOwner      = shareList[i]['owner']
       shareToken      = shareList[i]['share_token']
 
-      if ((inputFolderName == folderName) and (inputOwner == owner)):
+      if (inputFolderName == folderName) and (inputOwner == owner):
          logTest("InputId:_" + inputId + "_ShareToken:_" + shareToken)
          os.environ['shareToken']      = str(shareToken);
          os.environ['eudatFolderName'] = str(inputFolderName);
@@ -102,7 +112,7 @@ def driverEudatCall(jobKey, index):
 
    os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read()# Downloads shared file as zip
 
-    #run.tar.gz check yap.
+    #run.tar.gz check yap.    
     #checkRunExist = os.popen("unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
     #if (not eudatFolderName + "/run.sh" in checkRunExist ):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
@@ -115,9 +125,12 @@ def driverEudatCall(jobKey, index):
    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); #logTest(myDate);
    txFile = open(localOwnCloudPathFolder + '/modifiedDate.txt', 'w'); txFile.write(myDate + '\n'); txFile.close();
    time.sleep(0.2)
-   #ipfs.tar.gz var mi diye bak!!!!!
-   #os.popen("tar -xf $localOwnCloudPathFolder/ipfs.tar.gz -C $localOwnCloudPathFolder/" ).read()
-   #os.popen("rm $localOwnCloudPathFolder/ipfs.tar.gz").read()
+
+   isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
+   if int(isTarExist) > 0:
+      os.popen("tar -xf $localOwnCloudPathFolder/*.tar.gz -C $localOwnCloudPathFolder/" ).read();
+      os.popen("rm $localOwnCloudPathFolder/*.tar.gz").read();
+      
    os.system("cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh");
 
    logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
@@ -127,7 +140,7 @@ def driverEudatCall(jobKey, index):
    jobCoreNum = jobInfo[1];
 
    while(True):
-      if (not(jobCoreNum == "notconnected" or jobCoreNum == "")):
+      if not(jobCoreNum == "notconnected" or jobCoreNum == ""):
          break;
       else:
          logTest("Error: Please run Parity or Geth on the background.**************************************************************")
@@ -138,21 +151,23 @@ def driverEudatCall(jobKey, index):
    os.environ['jobCoreNum'] = jobCoreNum;
    logTest("Job's Core Number: " + jobCoreNum)
 
+   isSlurmOn();
+
    os.chdir(localOwnCloudPathFolder) # 'cd' into the working path and call sbatch from there
-   if (whoami == "root"):
+   if whoami == "root":
       jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
    else:
       jobId = os.popen('sbatch         -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
       os.environ['jobId'] = jobId;
       logTest("jobId: "+ str(jobId));
 
-   if not jobId.isdigit():
-      # Detected an error on the SLURM side
-      oc.logout()
-      logTest("Error occured, jobId is not a digit.")
+   oc.logout();
+   if not jobId.isdigit(): #{
+      # Detected an error on the SLURM side      
+      logTest("Error occured, jobId is not a digit.");
       return();
-   oc.logout()
-
+   #}
+   
 def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     global jobKeyGlobal; jobKeyGlobal=ipfsHash
     global indexGlobal;  indexGlobal=index;
@@ -221,8 +236,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
           return
     else:
        logTest("Markle not found! timeout for ipfs object stat retrieve ! <========="); # IPFS file could not be accessed
-       #TODO: ipfs dht findprovs QmRr62nqpQM3YdXyfX4MS93Bx11ztyFeLEAsYtNiNiMNMp
-       sys.exit();
+       return;
 
     myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); logTest(myDate);
     txFile = open('modifiedDate.txt', 'w'); txFile.write(myDate + '\n' ); txFile.close();
@@ -230,8 +244,8 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     os.system("cp run.sh ${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh");
 
-    jobInfo    = contractCall('echo "$header; console.log(\'\' + eBlocBroker.getJobInfo(\'$clusterID\', \'$ipfsHash\', \'$index\' ))"');
-    jobInfo    = jobInfo.split(',');
+    jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $ipfsHash $index').read().rstrip('\n').replace(" ","")[1:-1];         
+    jobInfo = jobInfo.split(',');
     jobCoreNum = jobInfo[1]
 
     os.environ['jobCoreNum'] = jobCoreNum;
@@ -246,7 +260,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     os.environ['jobId'] = jobId;
     if not jobId.isdigit():
        logTest("Error occured, jobId is not a digit.")
-       sys.exit(); # Detects na error on the SLURM side
+       return(); # Detects na error on the SLURM side
 
     if (whoami == "root"):
        os.popen("sudo chown $whoami: $jobSavePath")
