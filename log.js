@@ -12,8 +12,3 @@ else{
 }
 
 eBlocBroker.deneme(readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt', clusterID);
-
-
-
-
-

@@ -5,6 +5,8 @@ sudo rm -f  $HOME/.eBlocBroker/my-app.pid
 sudo rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
 sudo rm -f  $HOME/.eBlocBroker/logJobs.txt
 sudo rm -f  $HOME/.eBlocBroker/queuedJobs.txt
+sudo rm -f  $HOME/.eBlocBroker/test.txt
+
 sudo cat /dev/null > nohup.out
 
 sudo bash killall.sh

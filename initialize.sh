@@ -47,7 +47,7 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentD
 
 # COINBASE Address Setup:-----------------------------
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
-lineNew=$(echo $COINBASE);
+lineNew='';
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py         && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
@@ -60,12 +60,12 @@ grep "MailProg" /usr/local/etc/slurm.conf
 cd $currentDir/
 npm install --save
 
-echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudatPassword.txt'"
-
-echo -e "\nNote: Update the following file 'miniLockPassword.txt' with your Minilock account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 miniLockPassword.txt'"
-
 # IPFS setups
 chown -R "$logname:$logname" ~/.ipfs/
 
 # pip install
 sudo pip install colored
+
+echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudatPassword.txt'"
+
+echo -e "\nNote: Update the following file 'miniLockPassword.txt' with your Minilock account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 miniLockPassword.txt'"
