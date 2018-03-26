@@ -131,6 +131,8 @@ else:
 clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
 print("Cluster's initial money: " + clusterGainedAmountInit);
 
+os.system('rm -f $jobsReadFromPath')
+       
 while True: #{
     if "Error" in blockReadFrom:
        logTest(blockReadFrom);
@@ -177,6 +179,7 @@ while True: #{
     # Waits here until new job submitted into the cluster
     returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
 
+    
     if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r' )
        blockReadFrom = fR.read().rstrip('\n');
@@ -187,11 +190,12 @@ while True: #{
        maxVal        = 0;
        
        isClusterRecievedJob=0;
+
        for i in range(0, (len(submittedJobs) - 1)): #{
           submittedJob = submittedJobs[i].split(' ');          
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              isClusterRecievedJob = 1;
-             logTest("-----------------------------------")
+             logTest("-------------------------------------------------------")
              logTest("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
              if (int(submittedJob[0]) > int(maxVal)):
@@ -218,7 +222,7 @@ while True: #{
                    #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
              else:
                 logTest("Job is already captured and in process or completed");
-       #}
+       #}    
        
        if (submittedJob != 0 and (int(maxVal) != 0)): #{ 
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number      
@@ -226,6 +230,7 @@ while True: #{
           f_blockReadFrom.close()          
           blockReadFrom = str(int(maxVal) + 1)
        #}
+       
        
        if isClusterRecievedJob == 0: # If there is no submitted job for the cluster, block start to read from current block number
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
