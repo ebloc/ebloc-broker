@@ -8,7 +8,7 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-web3.eth.defaultAccount = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; //Should be the address of the cluster.
+web3.eth.defaultAccount = "0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 
 var whoami              = web3.eth.defaultAccount;
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
