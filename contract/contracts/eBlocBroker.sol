@@ -2,7 +2,7 @@ pragma solidity ^0.4.17;
 
 import "./Library.sol";
 
-contract eBlocBroker {    
+contract eBlocBroker {
     uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
     enum JobStateCodes {
@@ -240,20 +240,47 @@ contract eBlocBroker {
 	    return true;	
 	return false;
     }
-
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
     // Log submitted jobs
-    event LogJob    (address cluster, string jobKey, uint index, uint8 storageType, string miniLockID, string desc);
+    event LogJob(address cluster,
+		 string jobKey,
+		 uint index,
+		 uint8 storageType,
+		 string miniLockID,
+		 string desc
+		 );
     
     // Log completed jobs' receipt
-    event LogReceipt(address cluster, string jobKey, uint index, address recipient, uint recieved, uint returned, uint endTime, string ipfsHashOut, uint8 storageType);
+    event LogReceipt(address cluster,
+		     string jobKey,
+		     uint index,
+		     address recipient,
+		     uint recieved,
+		     uint returned,
+		     uint endTime,
+		     string ipfsHashOut,
+		     uint8 storageType
+		     );
 
     // Log cluster info (fID stands for federationCloudId)
-    event LogCluster(address cluster, uint32 coreNumber, string clusterName, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress);
+    event LogCluster(address cluster,
+		     uint32 coreNumber,
+		     string clusterName,
+		     string fID,
+		     string miniLockID,
+		     uint coreMinutePrice,
+		     string ipfsAddress
+		     );
 
     // Log refund
-    event LogRefund(address clusterAddr, string jobKey, uint32 index);
+    event LogRefund(address clusterAddr,
+		    string jobKey,
+		    uint32 index
+		    );
 
     // Log setJob
-    event LogSetJob(address clusterAddr, string jobKey, uint32 index);
+    event LogSetJob(address clusterAddr,
+		    string jobKey,
+		    uint32 index
+		    );
 }
