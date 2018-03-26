@@ -30,7 +30,7 @@ if __name__ == '__main__': #{
     if(len(sys.argv) == 2):
         clusterAddress = str(sys.argv[1]);
     else:
-        clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+        clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
         
     if (str(eBlocBroker.call().isClusterExist(clusterAddress)) == "False"):
         print("Cluster is not registered")
@@ -50,4 +50,7 @@ if __name__ == '__main__': #{
     print('coreMinutePrice: ' + str(coreMinutePrice))
 
     #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'_from': '0x6af0204187a93710317542d383a1b547fa42e705'}})
+    #transfer_filter = eBlocBroker.on('LogCluster')
+    transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
+    print(my_filter.get_all_entries())
 #}
