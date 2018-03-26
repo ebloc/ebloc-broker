@@ -8,7 +8,7 @@ if(!web3.isConnected()){
     process.exit();
 }
 
-web3.eth.defaultAccount = "0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
+web3.eth.defaultAccount = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; //Should be the address of the cluster.
 
 var whoami              = web3.eth.defaultAccount;
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
@@ -17,7 +17,6 @@ var blockNumber         = web3.eth.blockNumber;
 var gasLimit           = 4500000;
 var jobBlkStart        = 0;
 var job_state_id       = {};
-
                 // = 0 #dummy do nothing
 job_state_id['1']  = 'COMPLETED'
 job_state_id['2']  = 'PENDING'    
@@ -185,54 +184,7 @@ exports.LogJob = function(var1, myPath) {
     });
 }
 
-exports.LogJobResults = function(var1, myPath, clusterID) {
-    var path  = require('path');     
-    var fs    = require('fs');
-
-    if( fs.existsSync(myPath) ) 
-    	fs.unlinkSync(myPath)
-
-    var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
-
-    eBlocBrokerEvent.watch( function (error, result) {	
-	flag = 0;
-	if(error) {
-	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
-	    flag=1;
-	    eBlocBrokerEvent.stopWatching()
-	}
-
-	if(result == null && flag == 0){
-	    fs.appendFile( myPath, "notconnected", function(err) {
-		process.exit();
-	    });
-	    flag=1;
-	    eBlocBrokerEvent.stopWatching()
-	}
-
-	if (flag == 0) {
-	    var jobKey = result.args.jobKey;   
-
-	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
-		if (result.args.cluster == clusterID){
-		    if (result.args.myMiniLockID == "")
-			result.args.myMiniLockID = "-1"
-		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
-				   result.args.miniLockId + ' ?\n', function(err) { // '?' end of line identifier.
-					   //if(!err) console.log('blank write--------------------\n');		
-					   //else     console.log('error:------------- \n' + err);		
-					   //JSON.stringify( str )
-					   //eBlocBrokerEvent.stopWatching();
-					   process.exit();
-				   }); 	
-		}
-	    }
-	}
-    });
-}
-
-exports.LogReceipt = function(var1, myPath, clusterID) {
+exports.LogReceipt = function(var1, myPath, clusterID) {    
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -271,3 +223,118 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 	}
     });
 }
+
+exports.LogJobResults = function(var1, myPath, clusterID) {
+    var gain = [];
+    var fs    = require('fs');
+
+    var text = fs.readFileSync(myPath,'utf8')
+    var arr = text.toString().split("\n");
+    
+    for (i=0; i < arr.length-1; i++) {
+	var arr1 = arr[i].toString().split(" ");
+	gain[arr1[0]] = arr1[1]
+    }
+
+    var path  = require('path');     
+
+    if (fs.existsSync(myPath)) 
+    	fs.unlinkSync(myPath)
+
+    var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
+
+    eBlocBrokerEvent.watch(function (error, result) {
+	flag = 0;
+	if(error) {
+	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if(result == null && flag == 0){
+	    fs.appendFile( myPath, "notconnected", function(err) {
+		process.exit();
+	    });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (flag == 0) {
+	    var jobKey = result.args.jobKey;   
+
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+		if (result.args.cluster == clusterID){
+		    if (result.args.myMiniLockID == "")
+			result.args.myMiniLockID = "-1"
+		    
+		    myStr='';
+		    if(typeof gain[result.args.cluster +  '_' + jobKey + '_' + result.args.index] === 'undefined')
+			myStr='';
+		    else
+			myStr=gain[result.args.cluster + '_' + jobKey + '_' + result.args.index].toString();
+		    
+		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
+				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
+				   result.args.miniLockId + " " + myStr + ' ?\n', function(err) { // '?' end of line identifier.
+					   //if(!err) console.log('blank write--------------------\n');		
+					   //else     console.log('error:------------- \n' + err);		
+					   //JSON.stringify( str )
+					   //eBlocBrokerEvent.stopWatching();
+					   process.exit();
+				   }); 	
+		}
+	    }
+	}
+    });
+
+}
+
+exports.deneme = function(var1, myPath, clusterID) {
+    var path  = require('path');     
+    var fs    = require('fs');
+
+    if (fs.existsSync(myPath)) 
+    	fs.unlinkSync(myPath)
+
+    var eBlocBrokerEvent = myContractInstance.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
+
+    eBlocBrokerEvent.watch( function (error, result) {	
+	flag = 0;
+	if(error) {
+	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (result == null && flag == 0) {
+	    fs.appendFile( myPath, "notconnected", function(err) {
+		process.exit();
+	    });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if(flag == 0){
+	    var jobKey = result.args.jobKey;   
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+		if(result.args.cluster == clusterID){
+		    gainedStr=(parseInt(result.args.recieved) - parseInt(result.args.returned)).toString();
+		    
+
+		    fs.appendFile(myPath, result.args.cluster + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { // '?' end of line identifier.			
+			eBlocBrokerEvent.stopWatching();
+                        process.exit();
+                    });
+
+
+
+		}
+	    }
+	}
+
+    });
+
+    
+}
+
+

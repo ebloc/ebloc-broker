@@ -11,8 +11,7 @@ else{
     clusterID = "0xcc8de90b4ada1c67d68c1958617970308e4ee75e";   
 }
 
-eBlocBroker.deneme(readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt', clusterID);
-
+eBlocBroker.LogJobResults(readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt', clusterID); /* All jobs sent */
 
 
 

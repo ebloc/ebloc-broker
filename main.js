@@ -3,7 +3,12 @@
 var nodePaths = require('./nodePaths');
 var eBlocBroker = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
 
-clusterID = "0x6af0204187a93710317542d383a1b547fa42e705"; 
+if (process.argv.length == 3){
+    clusterID = process.argv[2];       
+}
+else{
+    clusterID = "0xcc8de90b4ada1c67d68c1958617970308e4ee75e";   
+}
 
 var storageType = {};
 storageType['0'] = 'IPFS';
@@ -20,18 +25,23 @@ for(i in array) {
     
     if (array[i] != '' && clusterID == arr[1]) {
 	if (titleFlag == 0){
-	    console.log("Job #\tjobKey______________________________________________________________________\tindex\tType\tStatus  \tcoreNum\tblockNum\tGained\tPrice\tcoreMinuteGas");
+	    console.log("Job #\tjobKey______________________________________________________________________\tindex\tType\tStatus  \tcoreNum\tblockNum\tRecieved\tPrice\tcoreMinuteGas\tGained");
 	    titleFlag = 1;
 	}
 	var str = eBlocBroker.getJobInfo(arr[1], arr[2], arr[3]).toString().split(",");
 	str = str.toString();
 	var arr1 = str.split(",");
 
+	//LogJob
+	//if(str[0] == '1')
+	//sum +=  parseInt(arr1[3]);
+
+	//LogReceipt
 	if(str[0] == '1')
-	    sum +=  parseInt(arr1[3]);
-	
+	    sum += parseInt(arr[6]);
+
 	console.log( "Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageType[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
-		     "\t" + arr1[1] + "\t" + arr1[2]  + "\t" + arr1[3]  + "\t" + arr1[4]  + "\t" + arr1[5] );
+		     "\t" + arr1[1] + "\t" + arr1[2]  + "\t" + arr1[3]  + "\t" + arr1[4] + "\t" + arr1[5] + "\t" + arr[6] );
     }
 }
 console.log( "Cluster Gained Amount: " + sum)
