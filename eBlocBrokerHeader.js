@@ -175,7 +175,7 @@ exports.LogJob = function(var1, myPath) {
 					   //if(!err) console.log('blank write--------------------\n');		
 					   //else     console.log('error:------------- \n' + err);		
 					   //JSON.stringify( str )
-					   //eBlocBrokerEvent.stopWatching();
+					   eBlocBrokerEvent.stopWatching();
 					   process.exit();
 				   }); 	
 		}
