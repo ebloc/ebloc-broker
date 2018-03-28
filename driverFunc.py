@@ -6,13 +6,13 @@ from subprocess import call
 # Paths---------
 eblocPath        = constants.EBLOCPATH;
 contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
-ipfsHashes       = constants.PROGRAM_PATH
+ipfsHashes       = constants.PROGRAM_PATH;
 # ---------------
 jobKeyGlobal = "";
 indexGlobal  = "";
 
 def logTest(strIn):
-   print(strIn)
+   print(strIn);
    txFile = open(constants.LOG_PATH + '/transactions/' + jobKeyGlobal + '_' + indexGlobal + '_driverOutput' +'.txt', 'a');
    txFile.write(strIn + "\n");
    txFile.close();
@@ -26,7 +26,7 @@ def contractCall(val):
    printFlag=1;
    ret = os.popen(val + "| node").read().rstrip('\n').replace(" ", "");
    while(True):
-      if (not(ret == "notconnected" or ret == "")):
+      if not(ret == "notconnected" or ret == ""):
          break;
       else:
          if (printFlag == 1):
@@ -50,9 +50,13 @@ def isSlurmOn():
 def isIpfsOn():
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if (int(check) == 0):
-      logTest( "Error: IPFS does not work on the background. Please do:\nipfs daemon & " )
-      sys.exit()
-
+      logTest("Error: IPFS does not work on the background. Running:\nipfs daemon &");
+      os.system("bash " + eblocPath + "/runIPFS.sh");
+      time.sleep(5);
+      os.system("cat ipfs.out");
+   else:
+      logTest("IPFS is already on");
+      
 def driverEudatCall(jobKey, index):
    global jobKeyGlobal; jobKeyGlobal=jobKey
    global indexGlobal;  indexGlobal=index;
@@ -204,6 +208,10 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     if os.path.isfile(ipfsHash):
        os.system('rm $ipfsHash');
 
+    #IPFS check side
+    if constants.IPFS_USE == 1:
+       isIpfsOn();
+
     ipfsCallCounter=0;
 
     isIPFSHashExist=""
@@ -214,14 +222,11 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     logTest(isIPFSHashExist);
 
-    if (constants.IPFS_USE == 1):
-          isIpfsOn();
-
     if ("CumulativeSize" in isIPFSHashExist):
-       if (whoami == "root"):
-          os.system('sudo -u $whoami bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath');
-       else:
-          os.system('                bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath');
+       #if (whoami == "root"):
+       os.system('bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath');
+       #else:
+       #os.system('                bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath');
 
        if (ipfsType == '2'): # case for the ipfsMiniLock
           os.environ['passW'] = 'exfoliation econometrics revivifying obsessions transverse salving dishes';
