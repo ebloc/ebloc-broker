@@ -165,17 +165,13 @@ exports.LogJob = function(var1, myPath) {
 	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
 
-	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if (result.args.cluster == web3.eth.defaultAccount){
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
 				   result.args.miniLockId + ' ?\n', function(err) { // '?' end of line identifier.
-					   //if(!err) console.log('blank write--------------------\n');		
-					   //else     console.log('error:------------- \n' + err);		
-					   //JSON.stringify( str )
-					   eBlocBrokerEvent.stopWatching();
 					   process.exit();
 				   }); 	
 		}
@@ -211,7 +207,7 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 
 	if(flag == 0){
 	    var jobKey = result.args.jobKey;   
-	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if(result.args.cluster == clusterID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " + result.args.endTime + " " +
@@ -262,7 +258,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
 
-	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
+	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if (result.args.cluster == clusterID){
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
@@ -276,10 +272,6 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
 				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
 				   result.args.miniLockId + " " + myStr + ' ?\n', function(err) { // '?' end of line identifier.
-					   //if(!err) console.log('blank write--------------------\n');		
-					   //else     console.log('error:------------- \n' + err);		
-					   //JSON.stringify( str )
-					   //eBlocBrokerEvent.stopWatching();
 					   process.exit();
 				   }); 	
 		}
