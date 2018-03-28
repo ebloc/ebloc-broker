@@ -25,7 +25,7 @@ def isDriverOn():
    check = os.popen("ps aux | grep \'[D]river.py\' | wc -l").read().rstrip('\n');
 
    if(int(check) > 1):
-      logTest("Driver is already on or multiple Drivers are launch. Please run:\nFor Daemon:  sudo bash runDaemon.sh\nFor Process: sudo bash run.sh")
+      logTest("Driver is already on or multiple Drivers are launch. Please run:\nFor Daemon: bash runDaemon.sh\nFor Process: sudo bash run.sh")
       sys.exit()
 
 # checks: does IPFS run on the background or not
@@ -100,7 +100,7 @@ f = open(constants.BLOCK_READ_FROM_FILE, 'r')
 blockReadFromLocal = f.read().rstrip('\n');
 f.close();
 
-if (not blockReadFromLocal.isdigit()): #{
+if not blockReadFromLocal.isdigit(): #{
    logTest("Error: constants.BLOCK_READ_FROM_FILE is empty or contains and invalid value")
    logTest("> Would you like to read from contract's deployed block number? y/n")
    while True: #{
@@ -178,18 +178,16 @@ while True: #{
 
     # Waits here until new job submitted into the cluster
     returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
-
     
     if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r' )
        blockReadFrom = fR.read().rstrip('\n');
        fR.close();
 
-       submittedJob  = 0;
-       submittedJobs = blockReadFrom.split('?');
-       maxVal        = 0;
-       
-       isClusterRecievedJob=0;
+       submittedJob         = 0;
+       submittedJobs        = blockReadFrom.split('?');
+       maxVal               = 0;       
+       isClusterRecievedJob = 0;
 
        for i in range(0, (len(submittedJobs) - 1)): #{
           submittedJob = submittedJobs[i].split(' ');          
@@ -232,11 +230,10 @@ while True: #{
        #}
        
        
-       if isClusterRecievedJob == 0: # If there is no submitted job for the cluster, block start to read from current block number
+       if isClusterRecievedJob == 0: #{ If there is no submitted job for the cluster, block start to read from current block number
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
           f_blockReadFrom.write(str(currentBlockNumber) + "\n") # Python will convert \n to os.linesep
           f_blockReadFrom.close()
           blockReadFrom = str(currentBlockNumber)
-
     #}
 #}
