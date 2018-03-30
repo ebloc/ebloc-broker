@@ -1,3 +1,4 @@
+//var nodePaths = require('./nodePaths');
 var eBlocBroker = require('./contract.js'); 
 
 Web3 = require("web3");
@@ -8,6 +9,7 @@ if(!web3.isConnected()){
     process.exit();
 }
 
+//web3.eth.defaultAccount = nodePaths.CLUSTER_ID; //Should be the address of the cluster.
 web3.eth.defaultAccount = "0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 
 var whoami              = web3.eth.defaultAccount;
@@ -35,12 +37,12 @@ job_state_id['14'] = 'SUSPENDED'
 job_state_id['15'] = 'TIMEOUT'    
 
 //Global variables are used.
+exports.jobBlkStart;
 exports.address      = eBlocBroker.address;
 exports.abi          = eBlocBroker.abi;
 exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
-exports.jobBlkStart;
 
 exports.getTransactionGas = function(tx) {
     return web3.eth.getTransactionReceipt( tx ).gasUsed
@@ -278,10 +280,9 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 	    }
 	}
     });
-
 }
 
-exports.deneme = function(var1, myPath, clusterID) {
+exports.saveReceipts = function(var1, myPath, clusterID) {
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -323,10 +324,7 @@ exports.deneme = function(var1, myPath, clusterID) {
 		}
 	    }
 	}
-
-    });
-
-    
+    });   
 }
 
 

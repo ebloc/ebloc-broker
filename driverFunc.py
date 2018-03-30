@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import owncloud, hashlib, getpass, sys, os, time, subprocess, constants, endCode
-from subprocess import call
+from   subprocess import call
 
 # Paths---------
 eblocPath        = constants.EBLOCPATH;
@@ -70,8 +70,6 @@ def driverEudatCall(jobKey, index):
    os.environ['eblocPath']   = eblocPath
    os.environ['folderIndex'] = "1";
    os.environ['miniLockId']  = "-1";
-   os.environ['whoami']      = constants.WHOAMI
-   whoami                    = os.system("whoami")# To learn running as root or userName
 
    jobKeyTemp = jobKey.split('=');
    owner      = jobKeyTemp[0]
@@ -128,7 +126,7 @@ def driverEudatCall(jobKey, index):
    os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); #logTest(myDate);
    txFile = open(localOwnCloudPathFolder + '/modifiedDate.txt', 'w'); txFile.write(myDate + '\n'); txFile.close();
-   time.sleep(0.2)
+   time.sleep(0.25);
 
    isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
@@ -158,16 +156,13 @@ def driverEudatCall(jobKey, index):
    isSlurmOn();
 
    os.chdir(localOwnCloudPathFolder) # 'cd' into the working path and call sbatch from there
-   if whoami == "root":
-      jobId = os.popen('sbatch -U root -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
-   else:
-      jobId = os.popen('sbatch         -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
-      os.environ['jobId'] = jobId;
-      logTest("jobId: "+ str(jobId));
 
+   jobId = os.popen('sbatch -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
+   logTest("jobId: "+ str(jobId));
    oc.logout();
-   if not jobId.isdigit(): #{
-      # Detected an error on the SLURM side      
+
+   # Detected an error on the SLURM side 
+   if not jobId.isdigit(): #{ 
       logTest("Error occured, jobId is not a digit.");
       return();
    #}
@@ -183,8 +178,6 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     os.environ['folderIndex'] = str(ipfsType);
     os.environ['eblocPath']   = eblocPath
     os.environ['shareToken']  = "-1"
-    os.environ['whoami']      = constants.WHOAMI
-    whoami                    = os.system("whoami" )
 
     if (ipfsType == '0'):
        os.environ['miniLockId'] = "-1"
@@ -199,10 +192,7 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
 
     if not os.path.isdir(jobSavePath): # If folder does not exist
        os.environ['mkdirPath'] = jobSavePath;
-       if (whoami == "root"):
-          os.system("sudo -u $whoami mkdir $mkdirPath");
-       else:
-          os.system("                mkdir $mkdirPath");
+       os.system("mkdir $mkdirPath");
 
     os.chdir(jobSavePath)
     if os.path.isfile(ipfsHash):
@@ -212,21 +202,13 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     if constants.IPFS_USE == 1:
        isIpfsOn();
 
-    ipfsCallCounter=0;
-
-    isIPFSHashExist=""
-    if (whoami == "root"):
-       isIPFSHashExist = os.popen("sudo -u $whoami bash $eblocPath/ipfsStat.sh $ipfsHash").read();
-    else:
-       isIPFSHashExist = os.popen("                bash $eblocPath/ipfsStat.sh $ipfsHash").read();
+    ipfsCallCounter = 0;
+    isIPFSHashExist = os.popen("bash $eblocPath/ipfsStat.sh $ipfsHash").read();
 
     logTest(isIPFSHashExist);
 
     if ("CumulativeSize" in isIPFSHashExist):
-       #if (whoami == "root"):
        os.system('bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath');
-       #else:
-       #os.system('                bash $eblocPath/ipfsGet.sh $ipfsHash $jobSavePath');
 
        if (ipfsType == '2'): # case for the ipfsMiniLock
           os.environ['passW'] = 'exfoliation econometrics revivifying obsessions transverse salving dishes';
@@ -257,18 +239,12 @@ def driverIpfsCall(ipfsHash, index, ipfsType, miniLockId):
     logTest("RequestedCoreNum: " + str(jobCoreNum))
 
     # SLURM submit job
-    if (whoami == "root"):
-       jobId = os.popen('sbatch -U root -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
-    else:
-       jobId = os.popen('sbatch         -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
+    jobId = os.popen('sbatch -N$jobCoreNum $ipfsHashes/${ipfsHash}_$index/${ipfsHash}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
 
     os.environ['jobId'] = jobId;
     if not jobId.isdigit():
        logTest("Error occured, jobId is not a digit.")
        return(); # Detects na error on the SLURM side
-
-    if (whoami == "root"):
-       os.popen("sudo chown $whoami: $jobSavePath")
 
 # To test driverFunc.py executed as script.
 if __name__ == '__main__': #{
@@ -276,10 +252,9 @@ if __name__ == '__main__': #{
    #index      = "0";
    #driverEudatCall(var, index);
    #------
-   var    = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-   index  = "1"
-   myType = "0"
+   var        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+   index      = "1"
+   myType     = "0"
    miniLockId = ""
-
    driverIpfsCall(var, index, myType, miniLockId);
 #}
