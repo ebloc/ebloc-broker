@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# pre-installation:
+sudo pip install colored
+npm install --save
+
 # Update git repository
 # git fetch --all && git reset --hard origin/master
 
@@ -48,24 +52,22 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentD
 # COINBASE Address Setup:-----------------------------
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew='';
+#lineNew=$(echo $COINBASE);
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py         && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/main.js              && rm $currentDir/main.js.bak
 #-----------------------------------------------------
 var=$(echo $currentDir | sed 's/\//\\\//g')
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 grep "MailProg" /usr/local/etc/slurm.conf
 
-cd $currentDir/
-npm install --save
-
 # IPFS setups
-chown -R "$logname:$logname" ~/.ipfs/
-
-# pip install
-sudo pip install colored
+sudo chown -R "$logname:$logname" ~/.ipfs/
 
 echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudatPassword.txt'"
 
-echo -e "\nNote: Update the following file 'miniLockPassword.txt' with your Minilock account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 miniLockPassword.txt'"
+echo -e "\nUpdate the following file 'miniLockPassword.txt' with your Minilock accounts password."
+echo -e "Please enter your miniLock password,"
+read -s PASSWORD
+echo $PASSWORD > miniLockPassword.txt
+chmod 700 miniLockPassword.txt
