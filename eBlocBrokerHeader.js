@@ -1,4 +1,4 @@
-//var nodePaths = require('./nodePaths');
+var nodePaths   = require('./nodePaths');
 var eBlocBroker = require('./contract.js'); 
 
 Web3 = require("web3");
@@ -10,7 +10,6 @@ if(!web3.isConnected()){
 }
 
 web3.eth.defaultAccount = nodePaths.CLUSTER_ID; //Should be the address of the cluster.
-// web3.eth.defaultAccount = "0xffffffffffffffffffffffffffffffffffffffff"; //Should be the address of the cluster.
 
 var whoami              = web3.eth.defaultAccount;
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
@@ -48,6 +47,7 @@ exports.getTransactionGas = function(tx) {
     return web3.eth.getTransactionReceipt( tx ).gasUsed
 }
 
+//--------------------
 exports.isTransactionPassed = function(transaction_id) {
     var web3_extended = require('web3_ipc');
     var options       = { host: 'http://localhost:8545', ipc:false, personal: true,admin: true, debug: true };
@@ -81,6 +81,7 @@ exports.isTransactionPassed = function(transaction_id) {
     //console.log( checkPassed );
     return checkPassed;
 };
+//--------------------
 
 exports.setJobStatus = function(var1, var2, var3, var4) {
     hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
