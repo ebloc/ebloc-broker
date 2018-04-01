@@ -17,7 +17,6 @@ def logTest(strIn):
    txFile.write(strIn + "\n");
    txFile.close();
 
-   # If non-thread tests are running
    txFile = open(constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n");
    txFile.close();
@@ -114,7 +113,6 @@ def driverEudatCall(jobKey, index):
 
    os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read()# Downloads shared file as zip
 
-    #run.tar.gz check yap.    
     #checkRunExist = os.popen("unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
     #if (not eudatFolderName + "/run.sh" in checkRunExist ):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
@@ -154,7 +152,6 @@ def driverEudatCall(jobKey, index):
    logTest("Job's Core Number: " + jobCoreNum)
 
    isSlurmOn();
-
    os.chdir(localOwnCloudPathFolder) # 'cd' into the working path and call sbatch from there
 
    jobId = os.popen('sbatch -N$jobCoreNum $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
