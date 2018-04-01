@@ -9,6 +9,20 @@ npm install --save
 
 currentDir=$PWD;
 
+if [[ ! -v COINBASE ]]; then
+    echo "COINBASE is not set";
+    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
+    read clusterID # TODO check valid Ethereum address.
+    echo 'export COINBASE="$clusterID"' >>~/.profile   
+elif [[ -z "$COINBASE" ]]; then
+    echo "COINBASE is set to the empty string"
+    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
+    read clusterID # TODO check valid Ethereum address.
+    echo 'export COINBASE="$clusterID"' >>~/.profile   
+else
+    echo "COINBASE has the value: $COINBASE"
+fi
+
 # Folder Setup:--------------------------------------
 if [ ! -d $HOME/.eBlocBroker ]; then
     mkdir $HOME/.eBlocBroker;

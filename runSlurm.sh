@@ -1,10 +1,12 @@
 #!/bin/bash
+# To Run: sudo bash runSlurm.sh
+#------------------------------
 
-sudo killall slurmctld slurmdbd
+sudo killall slurmctld slurmdbd slurmd
 
-slurmd
+sudo slurmd
 sudo munged -f
-/etc/init.d/munge start # note: On Amazon AWS, you may need to create new user with a password.
+sudo /etc/init.d/munge start 
 slurmdbd &
 
 if [ ! -d /tmp/slurmstate ]; then    
@@ -15,5 +17,3 @@ slurmctld -c
 #slurmctld -cDvvvvvv
 
 sinfo
-
-#To Run: sudo bash runSlurm.sh 
