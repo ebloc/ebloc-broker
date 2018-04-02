@@ -1,6 +1,6 @@
-WHOAMI          = "whoami"
+WHOAMI          = "alper"
 CLUSTER_ID      = "0xffffffffffffffffffffffffffffffffffffffff"
-EBLOCPATH       = "EBLOCBROKER_PATH";
+EBLOCPATH       = "/home/alper/eBlocBroker";
 IPFS_REPO       = "/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        = "/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  = "/home/" + WHOAMI + "/.eBlocBroker/oc"; 
@@ -8,7 +8,7 @@ OWN_CLOUD_PATH  = "/home/" + WHOAMI + "/.eBlocBroker/oc";
 PROGRAM_PATH         = LOG_PATH + "/ipfsHashes" 
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
-IPFS_USE             = 0
+IPFS_USE             = 1;
 
 ## Create the hashmap
 job_state_code = {};
@@ -30,3 +30,21 @@ job_state_code['SPECIAL_EXIT'] = 12
 job_state_code['STOPPED']      = 13
 job_state_code['SUSPENDED']    = 14
 job_state_code['TIMEOUT']      = 15
+
+def logTest(strIn):
+   print(strIn);
+   txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a');
+   txFile.write(strIn + "\n");
+   txFile.close();
+
+# checks: does IPFS run on the background or not
+def isIpfsOn(os, time): #{
+   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
+   if (int(check) == 0):
+      logTest("Error: IPFS does not work on the background. Running:\nipfs daemon &");
+      os.system("bash " + EBLOCPATH + "/runIPFS.sh");
+      time.sleep(5);
+      os.system("cat ipfs.out");
+   else:
+      logTest("IPFS is already on.");
+#}

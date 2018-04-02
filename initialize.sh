@@ -1,11 +1,17 @@
 #!/bin/bash
 
-# pre-installation:
+# pre-installation:-----------------------------------------
+
+# pip install
+#curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+#sudo python get-pip.py
+
 pip install colored
-npm install --save
+#npm install --save
 
 # Update git repository
 # git fetch --all && git reset --hard origin/master
+#------------------------------------------------------------
 
 currentDir=$PWD;
 
@@ -20,7 +26,13 @@ elif [[ -z "$COINBASE" ]]; then
     read clusterID # TODO check valid Ethereum address.
     echo 'export COINBASE="$clusterID"' >>~/.profile   
 else
-    echo "COINBASE has the value: $COINBASE"
+    echo "COINBASE is: $COINBASE"
+    check=$(node contractCalls/isAddress.js $COINBASE);
+    str2="true"
+    if [ "$check" != "$str2" ]; then
+       echo "Ethereum address is not valid, please use a valid one.";
+       exit
+    fi
 fi
 
 # Folder Setup:--------------------------------------

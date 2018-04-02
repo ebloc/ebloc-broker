@@ -315,7 +315,7 @@ clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you
 clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
 clusterCoreLimit = clusterInfo[3]
 pricePerMin      = clusterInfo[4]
-jobKey           = "avatar-lavventura/simpleSlurmJob.git" /* Please write link after "https://github.com/" */
+jobKey           = "avatar-lavventura=simpleSlurmJob" /* Please write link after "https://github.com/" Your username followed by the folder name having '=' in between. */
 myMiniLockId     = ""
 coreNum          = 1; 
 coreGasDay       = 0;

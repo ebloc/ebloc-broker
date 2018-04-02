@@ -55,12 +55,12 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    logTest("encodedShareToken: |" + encodedShareToken + "|")
    logTest("miniLockId: |"        + miniLockId        + "|")
 
-   jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
-
+   jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];
    while(True):
       if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
          break;
       else:
+         logTest('jobInfo: ' + jobInfo);
          logTest("Error: Please run Parity or Geth on the background. or unlock your Cluster Ethereum Account**************************************")
          jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
       time.sleep(1)
@@ -101,11 +101,11 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    logTest("jobName: " + str(folderName));
    jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read();
    os.environ['jobId'] = jobId; ################
-   logTest("JOBID------------> " + str(jobId));
+   logTest("JOBID ------------> " + str(jobId));
 
    # Here we know that job is already completed
-   if str(storageType) == '0': #{
-      countTry=0;
+   if str(storageType) == '0' or str(storageType) == '3': #{
+      countTry = 0;
       while(True): 
          if (countTry > 10):
             sys.exit()
@@ -186,13 +186,13 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    logTest("finalizedElapsedRawTime: " + str(elapsedRawTime))
    logTest("jobInfo: " + str(jobInfo))
 
-   if storageType == '0' or storageType == '2':                         
+   if storageType == '0' or storageType == '2' or storageType == '3':                         
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       while(True):
-         if (not(transactionHash == "notconnected" or transactionHash == "")): 
+         if not(transactionHash == "notconnected" or transactionHash == ""): 
             break;
          else:
-            logTest("Error: Please run Parity or Geth on the background.******")
+            logTest("Error: Please run Parity or Geth on the background. ***")
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
          time.sleep(5)
    elif storageType == '1': #{
@@ -202,19 +202,18 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
          if (not(transactionHash == "notconnected" or transactionHash == "")): 
             break;
          else:
-            logTest("Error: Please run Parity or Geth on the background.******")
+            logTest("Error: Please run Parity or Geth on the background. ++******++")
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
          time.sleep(5)
 
       jobKeyTemp = jobKey.split('=');
-      folderName = jobKeyTemp[1]
-      logTest(folderName)
+      folderName = jobKeyTemp[1];
+      logTest(folderName);
 
       localEudatPath = programPath + '/' + jobKey + "_" + index;
-      os.environ['localEudatPath'] = localEudatPath
-
-      os.system("rm $localEudatPath/.node-xmlhttprequest*")
-
+      os.environ['localEudatPath'] = localEudatPath;
+      os.system("rm $localEudatPath/.node-xmlhttprequest*");
+      
       os.chdir(localEudatPath) 
       os.popen('find . -type f ! -newer $localEudatPath/modifiedDate.txt -delete') # Client's loaded files are deleted, no need to re-upload them
       os.popen('zip -r results_$index.zip .') 
