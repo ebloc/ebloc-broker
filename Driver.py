@@ -5,10 +5,15 @@ import sys, os, time, subprocess, string, driverFunc, constants, thread
 from colored import stylize
 from colored import fg
 
-def logTest(strIn):
-   print(strIn)
-   txFile = open( constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
-   txFile.write(strIn + "\n"); txFile.close();
+def logTest(strIn, color):
+   if color != '':
+      print(stylize(strIn, fg(color)));
+   else:
+      print(strIn)
+      
+   txFile = open(constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
+   txFile.write(strIn + "\n");
+   txFile.close();   
 
 def contractCall(val):
    returnedVal = os.popen( val + "| node & echo $! >" + constants.LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
@@ -26,13 +31,6 @@ def isDriverOn():
 
    if(int(check) > 1):
       logTest("Driver is already on or multiple Drivers are launch. Please run:\nFor Daemon: bash runDaemon.sh\nFor Process: sudo bash run.sh")
-      sys.exit()
-
-# checks: does IPFS run on the background or not
-def isIpfsOn():
-   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
-   if(int(check) == 0):
-      logTest( "Error: IPFS does not work on the background. Please do:\nnohup ipfs daemon & " )
       sys.exit()
 
 # checks: does SLURM run on the background or not
@@ -60,16 +58,13 @@ no  = set(['no' , 'n']);
 isDriverOn();
 isSlurmOn();
 if constants.IPFS_USE == 1:
-   isIpfsOn();
-
-logTest("processID: " + str(os.getpid()));
+   constants.isIpfsOn(os, time);
 
 # Paths---------
 jobsReadFromPath = constants.JOBS_READ_FROM_FILE; os.environ['jobsReadFromPath'] = jobsReadFromPath
-eblocPath        = constants.EBLOCPATH;
 contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
 # ---------------
-header    = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 clusterID = constants.CLUSTER_ID;
 os.environ['clusterID'] = clusterID;
 
@@ -86,9 +81,9 @@ if (isClusterExist.lower() == "false"): #{
 deployedBlockNumber = os.popen('python $contractCallPath/getDeployedBlockNumber.py').read();
 blockReadFromContract=str(0)
 
-logTest("------------CLUSTER_IS_ON------------")
-logTest("clusterAddress: " +  clusterID)
-logTest("deployedBlockNumber: " +  deployedBlockNumber)
+logTest("---------------------CLUSTER_IS_ON---------------------", "green")
+logTest("clusterAddress: " +  clusterID, "")
+logTest("deployedBlockNumber: " +  deployedBlockNumber, "")
 
 if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
@@ -110,7 +105,7 @@ if not blockReadFromLocal.isdigit(): #{
          f = open(constants.BLOCK_READ_FROM_FILE, 'w')
          f.write( deployedBlockNumber + "\n" )
          f.close()
-         logTest("\n")
+         logTest("\n", "")
          break;
       elif choice in no:
          sys.exit()
@@ -130,27 +125,26 @@ else:
 
 clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
 print("Cluster's initial money: " + clusterGainedAmountInit);
-
 os.system('rm -f $jobsReadFromPath')
        
 while True: #{
     if "Error" in blockReadFrom:
-       logTest(blockReadFrom);
+       logTest(blockReadFrom, "");
        sys.exit();
 
     clusterGainedAmount = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
-    squeueStatus       = os.popen("squeue").read();
+    squeueStatus        = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus): #{
-       logTest("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n");
-       logTest(squeueStatus);
+       logTest("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n", "");
+       logTest(squeueStatus, "");
        sys.exit();
     #}
     
-    logTest("Current Slurm Running jobs status: \n" + squeueStatus);
-    logTest("-------------------------------------------------------------------------------------")
-    logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
-    logTest("Waiting new job to come since block number: " + blockReadFrom);
+    logTest("Current Slurm Running jobs status: \n" + squeueStatus, "");
+    logTest("-------------------------------------------------------------------------------------", "green")
+    logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)), "");
+    logTest("Waiting new job to come since block number: " + blockReadFrom, "");
 
     printFlag          = 0;
     passedPrintFlag    = 0;
@@ -158,10 +152,10 @@ while True: #{
     
     while(True): #{
        if (printFlag == 0):
-          logTest("Waiting new block to increment by one.");
-          logTest("Current BlockNumber: " + currentBlockNumber  + "| sync from Block Number: " + blockReadFrom);
+          logTest("Waiting new block to increment by one.", "");
+          logTest("Current BlockNumber: " + currentBlockNumber  + "| sync from Block Number: " + blockReadFrom, "");
           
-       if (int(currentBlockNumber) >= int(blockReadFrom)):
+       if int(currentBlockNumber) >= int(blockReadFrom):
           break;
        
        printFlag = 1;
@@ -169,7 +163,7 @@ while True: #{
        currentBlockNumber = os.popen('python $contractCallPath/blockNumber.py').read().rstrip('\n');
 
        if (passedPrintFlag == 0):
-          logTest("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
+          logTest("Passed incremented block number... Continue to wait from block number: " + blockReadFrom, "");
           passedPrintFlag = 1;
     #}
     
@@ -193,8 +187,8 @@ while True: #{
           submittedJob = submittedJobs[i].split(' ');          
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              isClusterRecievedJob = 1;
-             logTest("-------------------------------------------------------")
-             logTest("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
+             logTest("-------------------------------------------------------", "")
+             logTest("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4], "");
 
              if (int(submittedJob[0]) > int(maxVal)):
                 maxVal = submittedJob[0]
@@ -208,18 +202,21 @@ while True: #{
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
              if (jobInfo[0] == str(constants.job_state_code['PENDING'])): 
                 if (submittedJob[4] == '0'):
-                   logTest("New job has been recieved. IPFS call |" + time.ctime())
+                   logTest("New job has been recieved. IPFS call |" + time.ctime(), "")
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
                 elif (submittedJob[4] == '1'):
-                   logTest("New job has been recieved. EUDAT call |" + time.ctime());
+                   logTest("New job has been recieved. EUDAT call |" + time.ctime(), "");
                    driverFunc.driverEudatCall(submittedJob[2], submittedJob[3]);
                    #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3])) 
                 elif (submittedJob[4] == '2'):
-                   logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime());
+                   logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime(), "");
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]);
                    #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
+                elif (submittedJob[4] == '3'):
+                   logTest("New job has been recieved. GitHub call |" + time.ctime(), "");
+                   driverFunc.driverGithubCall(submittedJob[2], submittedJob[3]);
              else:
-                logTest("Job is already captured and in process or completed");
+                logTest("Job is already captured and in process or completed", "");
        #}    
        
        if (submittedJob != 0 and (int(maxVal) != 0)): #{ 

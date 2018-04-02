@@ -44,7 +44,7 @@ if __name__ == '__main__': #{
     msgValue = coreNum * pricePerMin * coreMinuteGas;
     gasLimit = 3000000;
 
-    if (not eBlocBroker.call().isClusterExist(clusterAddress)):
+    if not eBlocBroker.call().isClusterExist(clusterAddress):
         print("Requested Cluster's Ethereum Address does not exist.")
         sys.exit();
 
@@ -55,7 +55,7 @@ if __name__ == '__main__': #{
     if storageType == 0 or storageType == 2:
         isIpfsOn();
         
-    if (coreNum <= coreNumber and len(jobDescription) < 128):
+    if coreNum <= coreNumber and len(jobDescription) < 128:
         tx=eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription,
 coreMinuteGas, storageType, myMiniLockId);
         print(tx);
