@@ -96,7 +96,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    function registerCluster(uint32 coreNumber, string clusterName, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress) 
+    function registerCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress) 
 	public returns (bool success)
     {
 	Library.data cluster = clusterContract[msg.sender];
@@ -112,7 +112,7 @@ contract eBlocBroker {
 	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 	
-	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockID, coreMinutePrice, ipfsAddress);
+	LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
 	return true;
     }
 
@@ -125,12 +125,12 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster(uint32 coreNumber, string clusterName, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress)
+    function updateCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress)
 	public returns (bool success)
     {
 	clusterContract[msg.sender].update(coreMinutePrice, coreNumber);
 	
-	LogCluster(msg.sender, coreNumber, clusterName, fID, miniLockID, coreMinutePrice, ipfsAddress);
+	LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
 	return true;
     }
    
@@ -265,7 +265,7 @@ contract eBlocBroker {
     // Log cluster info (fID stands for federationCloudId)
     event LogCluster(address cluster,
 		     uint32 coreNumber,
-		     string clusterName,
+		     string clusterEmail,
 		     string fID,
 		     string miniLockID,
 		     uint coreMinutePrice,
