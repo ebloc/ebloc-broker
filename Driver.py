@@ -5,6 +5,8 @@ import sys, os, time, subprocess, string, driverFunc, constants, thread
 from colored import stylize
 from colored import fg
 
+rows, columns = os.popen('stty size', 'r').read().split()
+
 def logTest(strIn, color):
    if color != '':
       print(stylize(strIn, fg(color)));
@@ -55,6 +57,7 @@ def isSlurmOn():
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 
+logTest('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
 isDriverOn();
 isSlurmOn();
 if constants.IPFS_USE == 1:
@@ -81,13 +84,12 @@ if (isClusterExist.lower() == "false"): #{
 deployedBlockNumber = os.popen('python $contractCallPath/getDeployedBlockNumber.py').read();
 blockReadFromContract=str(0)
 
-logTest("---------------------CLUSTER_IS_ON---------------------", "green")
 logTest("clusterAddress: " +  clusterID, "")
 logTest("deployedBlockNumber: " +  deployedBlockNumber, "")
 
 if (not os.path.isfile(constants.BLOCK_READ_FROM_FILE)): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
-   f.write( deployedBlockNumber + "\n" )
+   f.write( deployedBlockNumber + "\n")
    f.close()
 #}
 
@@ -103,7 +105,7 @@ if not blockReadFromLocal.isdigit(): #{
       if choice in yes:
          blockReadFromLocal = deployedBlockNumber;
          f = open(constants.BLOCK_READ_FROM_FILE, 'w')
-         f.write( deployedBlockNumber + "\n" )
+         f.write( deployedBlockNumber + "\n")
          f.close()
          logTest("\n", "")
          break;
@@ -118,12 +120,12 @@ blockReadFrom = 0;
 if (int(blockReadFromLocal) < int(blockReadFromContract)):
    blockReadFrom = blockReadFromContract
    #f = open(constants.BLOCK_READ_FROM_FILE, 'w')
-   #f.write( blockReadFromContract + "\n" )  # python will convert \n to os.linesep
+   #f.write( blockReadFromContract + "\n")  # python will convert \n to os.linesep
    #f.close()
 else:
    blockReadFrom = blockReadFromLocal
 
-clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
+clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\'))"');
 print("Cluster's initial money: " + clusterGainedAmountInit);
 os.system('rm -f $jobsReadFromPath')
        
@@ -132,7 +134,7 @@ while True: #{
        logTest(blockReadFrom, "");
        sys.exit();
 
-    clusterGainedAmount = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\') )"');
+    clusterGainedAmount = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\'))"');
     squeueStatus        = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus): #{
@@ -142,7 +144,7 @@ while True: #{
     #}
     
     logTest("Current Slurm Running jobs status: \n" + squeueStatus, "");
-    logTest("-------------------------------------------------------------------------------------", "green")
+    logTest('-' * int(columns), "green")
     logTest("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)), "");
     logTest("Waiting new job to come since block number: " + blockReadFrom, "");
 
@@ -171,10 +173,10 @@ while True: #{
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
 
     # Waits here until new job submitted into the cluster
-    returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\') )"'); 
+    returnVal = contractCall('echo "$header; console.log( \'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\'))"'); 
     
     if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
-       fR = open(jobsReadFromPath, 'r' )
+       fR = open(jobsReadFromPath, 'r')
        blockReadFrom = fR.read().rstrip('\n');
        fR.close();
 
@@ -187,7 +189,7 @@ while True: #{
           submittedJob = submittedJobs[i].split(' ');          
           if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
              isClusterRecievedJob = 1;
-             logTest("-------------------------------------------------------", "")
+             logTest('-' * int(columns), "green")
              logTest("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4], "");
 
              if (int(submittedJob[0]) > int(maxVal)):

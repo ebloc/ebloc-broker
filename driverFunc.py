@@ -67,7 +67,8 @@ def isIpfsOn(): #{
 
 def sbatchCall(): #{
    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); logTest(myDate);
-   txFile = open('modifiedDate.txt', 'w'); txFile.write(myDate + '\n' ); txFile.close();
+   txFile = open('modifiedDate.txt', 'w'); txFile.write(myDate + '\n' );
+   txFile.close();
    time.sleep(0.25)
 
    os.system("cp run.sh ${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh");
@@ -110,7 +111,7 @@ def driverGithubCall(jobKey, index):
    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
       os.makedirs(localOwnCloudPathFolder)
  
-   os.popen("git clone https://github.com/$jobKeyGit.git $localOwnCloudPathFolder/");
+   os.popen("git clone https://github.com/$jobKeyGit.git $localOwnCloudPathFolder/"); # Gets the source code
    os.chdir(localOwnCloudPathFolder);   
    sbatchCall(); 
    
@@ -135,14 +136,14 @@ def driverEudatCall(jobKey, index):
    f        = open(constants.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
    password = f.read().rstrip('\n').replace(" ", ""); f.close()
 
-   logTest("Login into owncloud")
-   oc = owncloud.Client('https://b2drop.eudat.eu/')
-   oc.login('aalimog1@binghamton.edu', password ); # Unlocks EUDAT account
+   logTest("Login into owncloud");
+   oc = owncloud.Client('https://b2drop.eudat.eu/');
+   oc.login('aalimog1@binghamton.edu', password); # Unlocks EUDAT account
    shareList = oc.list_open_remote_share();
 
    logTest("finding_acceptId")
-   acceptFlag = 0;
-   eudatFolderName = ""
+   acceptFlag      = 0;
+   eudatFolderName = "";
    for i in range(len(shareList)-1, -1, -1): # Starts iterating from last item  to first one
       inputFolderName = shareList[i]['name']
       inputFolderName = inputFolderName[1:] # Removes '/' on the beginning
@@ -168,31 +169,24 @@ def driverEudatCall(jobKey, index):
    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
       os.makedirs(localOwnCloudPathFolder)
 
-   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read()# Downloads shared file as zip
+   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() # Downloads shared file as .zip.
 
     #checkRunExist = os.popen("unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
     #if (not eudatFolderName + "/run.sh" in checkRunExist ):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-   os.popen("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.").read()
-   os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read()
-   os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   )
-   os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             )
-   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); #logTest(myDate);
-   txFile = open(localOwnCloudPathFolder + '/modifiedDate.txt', 'w'); txFile.write(myDate + '\n'); txFile.close();
-   time.sleep(0.25);
-
+   os.popen("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.").read();
+   os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read();
+   os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   );
+   os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             );
+   
    isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
       os.popen("tar -xf $localOwnCloudPathFolder/*.tar.gz -C $localOwnCloudPathFolder/" ).read();
       os.popen("rm $localOwnCloudPathFolder/*.tar.gz").read();
       
-   os.system("cp $localOwnCloudPathFolder/run.sh $localOwnCloudPathFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh");
-   logTest("localOwnCloudPathFolder: " + localOwnCloudPathFolder)
-
-   os.chdir(localOwnCloudPathFolder) # 'cd' into the working path and call sbatch from there
-
+   os.chdir(localOwnCloudPathFolder); # 'cd' into the working path and call sbatch from there
    sbatchCall();
       
 def driverIpfsCall(jobKey, index, folderType, miniLockId):
@@ -210,7 +204,8 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId):
     else:
        os.environ['miniLockId'] = miniLockId
 
-    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')";
+    os.environ['header'] = header;
     logTest("jobKey: " + jobKey);
 
     jobSavePath = ipfsHashes + '/' + jobKey + "_" + index;
@@ -224,9 +219,7 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId):
     if os.path.isfile(jobKey):
        os.system('rm $jobKey');
 
-    # IPFS check.
-    if constants.IPFS_USE == 1:
-       isIpfsOn();
+    isIpfsOn();
 
     ipfsCallCounter = 0;
     isIPFSHashExist = os.popen("bash $eblocPath/ipfsStat.sh $jobKey").read();
