@@ -90,7 +90,7 @@ def sbatchCall(): #{
 
 #------------------------------------------------------------------------------
       
-def driverGithubCall(jobKey, index):
+def driverGithubCall(jobKey, index): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -114,8 +114,9 @@ def driverGithubCall(jobKey, index):
    os.popen("git clone https://github.com/$jobKeyGit.git $localOwnCloudPathFolder/"); # Gets the source code
    os.chdir(localOwnCloudPathFolder);   
    sbatchCall(); 
-   
-def driverEudatCall(jobKey, index):
+#}
+
+def driverEudatCall(jobKey, index): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -134,7 +135,8 @@ def driverEudatCall(jobKey, index):
    header     = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
 
    f        = open(constants.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
-   password = f.read().rstrip('\n').replace(" ", ""); f.close()
+   password = f.read().rstrip('\n').replace(" ", "");
+   f.close()
 
    logTest("Login into owncloud");
    oc = owncloud.Client('https://b2drop.eudat.eu/');
@@ -176,10 +178,10 @@ def driverEudatCall(jobKey, index):
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-   os.popen("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.").read();
-   os.popen("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ").read();
-   os.popen("rm    $localOwnCloudPathFolder/output.zip"                                   );
-   os.popen("rmdir $localOwnCloudPathFolder/$eudatFolderName"                             );
+   os.system("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.");
+   os.system("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ");
+   os.system("rm    $localOwnCloudPathFolder/output.zip");
+   os.system("rmdir $localOwnCloudPathFolder/$eudatFolderName");
    
    isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
@@ -188,8 +190,9 @@ def driverEudatCall(jobKey, index):
       
    os.chdir(localOwnCloudPathFolder); # 'cd' into the working path and call sbatch from there
    sbatchCall();
-      
-def driverIpfsCall(jobKey, index, folderType, miniLockId):
+#}
+
+def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
     global jobKeyGlobal; jobKeyGlobal=jobKey
     global indexGlobal;  indexGlobal=index;
 
@@ -215,7 +218,7 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId):
        os.environ['mkdirPath'] = jobSavePath;
        os.system("mkdir $mkdirPath");
 
-    os.chdir(jobSavePath)
+    os.chdir(jobSavePath);
     if os.path.isfile(jobKey):
        os.system('rm $jobKey');
 
@@ -238,14 +241,15 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId):
           os.system('tar -xf $jobSavePath/output.tar.gz && rm $jobSavePath/output.tar.gz');
 
        if not os.path.isfile('run.sh'):
-          logTest("Run.sh does not exist")
+          logTest("run.sh does not exist")
           return
     else:
-       logTest("Markle not found! timeout for ipfs object stat retrieve ! <========="); # IPFS file could not be accessed
+       logTest("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!"); # IPFS file could not be accessed
        return;
     
     sbatchCall();
-   
+#}
+
 # To test driverFunc.py executed as script.
 if __name__ == '__main__': #{
    #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99";
