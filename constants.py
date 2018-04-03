@@ -1,4 +1,4 @@
-WHOAMI          = "alper"
+WHOAMI          = "whoami"
 CLUSTER_ID      = "0xffffffffffffffffffffffffffffffffffffffff"
 EBLOCPATH       = "/home/alper/eBlocBroker";
 IPFS_REPO       = "/home/" + WHOAMI + "/.ipfs";
@@ -8,7 +8,7 @@ OWN_CLOUD_PATH  = "/home/" + WHOAMI + "/.eBlocBroker/oc";
 PROGRAM_PATH         = LOG_PATH + "/ipfsHashes" 
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
-IPFS_USE             = 1;
+IPFS_USE             = 0;
 
 ## Create the hashmap
 job_state_code = {};
