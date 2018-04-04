@@ -17,7 +17,8 @@ contractAddress = fileAddr.read().replace("\n", "")
 
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
-    
+
+contractAddress = web3.toChecksumAddress(contractAddress);    
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 # USER Inputs----------------------------------------------------------------
 account            = web3.eth.accounts[0]; # Cluster's Ethereum Address
@@ -32,6 +33,7 @@ ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 #ipfsID=os.popen('node bs58.js encode $ipfs').read().replace("\n", "");
 #ipfsIDbytes = web3.toBytes(hexstr=ipfsID);
 
-if(len(federationCloudId) < 128 and len(clusterName) < 32 and (len(miniLockId) == 0 or len(miniLockId) == 45)):
-    tx=eBlocBroker.transact({"from":account, "gas": 4500000}).registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsAddress);
-    print(tx);
+if(len(federationCloudId) < 128 and len(clusterName) < 32 and (len(miniLockId) == 0 or len(miniLockId) == 45)): #{
+    tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsAddress);
+    print('Tx: ' + tx.hex());
+#}

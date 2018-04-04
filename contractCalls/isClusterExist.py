@@ -14,14 +14,16 @@ contractAddress = fileAddr.read().replace("\n", "")
 
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
-    
+
+contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{    
     if(len(sys.argv) == 2):
         clusterAddress = str(sys.argv[1]);
     else:
-        clusterAddress = "0xc75497b304f42631d919f20db3e9b79dd59e88ff";
+        clusterAddress = "0xda1E61E853bB8D63B1426295f59cb45A34425B63";
         
-    print(str(eBlocBroker.call().isClusterExist(clusterAddress)).rstrip('\n'));
+    clusterAddress = web3.toChecksumAddress(clusterAddress);
+    print(str(eBlocBroker.functions.isClusterExist(clusterAddress).call()).rstrip('\n'));
 #}

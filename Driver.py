@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from subprocess import call
-import sys, os, time, subprocess, string, driverFunc, constants, thread
+import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
 

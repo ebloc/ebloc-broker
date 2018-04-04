@@ -15,7 +15,8 @@ contractAddress = fileAddr.read().replace("\n", "")
 
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
-    
+
+contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
@@ -30,5 +31,5 @@ if __name__ == '__main__': #{
         #jobKey          = "QmTXyUrHxkf2m85W6Sy6VAMBuZyZAuSDQAbjSgDcLLnEdW";
         #index           = 4;
         
-    print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, index)); 
+    print(eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, index).call()); 
 #}
