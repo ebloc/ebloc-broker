@@ -2,13 +2,26 @@
 
 # pre-installation:-----------------------------------------
 
-# pip install
-# curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
-# sudo python get-pip.py
+# Python 3.5.2
+#cd /usr/src
+#sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
+#sudo tar xzf Python-3.5.2.tgz
+#cd Python-3.5.2
+#sudo ./configure --enable-optimizations
+#sudo make altinstall
+#--------------------------
 
-sudo pip install colored
-sudo pip install pyocclient==0.4
-#npm install --save
+# pip install
+# sudo apt-get install python3-pip
+# sudo pip3 install virtualenv 
+# once:
+# $ virtualenv -p python3 ~/.venv-py3
+# each session:
+# $ source ~/.venv-py3/bin/activate
+
+# pip install colored
+# pip install pyocclient==0.4
+# pip install web3
 
 # Update git repository
 # git fetch --all && git reset --hard origin/master
@@ -19,6 +32,8 @@ sudo pip install pyocclient==0.4
 # echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
 # source .profile
 # gdrive about
+
+# npm install --save
 #------------------------------------------------------------
 
 if [[ ! -v COINBASE ]]; then
@@ -48,7 +63,7 @@ if [ ! -d $HOME/.eBlocBroker ]; then
     mkdir $HOME/.eBlocBroker;
 fi
 
-cd     $HOME/.eBlocBroker
+cd $HOME/.eBlocBroker
 
 if [ ! -d transactions ]; then
     mkdir transactions
@@ -62,12 +77,13 @@ if [ ! -d endCodeAnalyse ]; then
     mkdir endCodeAnalyse 
 fi
 
-touch  $HOME/.eBlocBroker/transactions/clusterOut.txt
+touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh
 #-----------------------------------------------------
 
 # EBLOCPATH setup
+cd $currentDir
 eBlocBrokerPath="$PWD"
 var=$(echo $eBlocBrokerPath | sed 's/\//\\\//g')
 sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" constants.py && rm constants.py.bak

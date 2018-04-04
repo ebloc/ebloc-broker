@@ -23,7 +23,8 @@ contractAddress = fileAddr.read().replace("\n", "")
 
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
-    
+
+contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
@@ -31,26 +32,27 @@ if __name__ == '__main__': #{
         clusterAddress = str(sys.argv[1]);
     else:
         clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
-        
-    if (str(eBlocBroker.call().isClusterExist(clusterAddress)) == "False"):
+
+    clusterAddress = web3.toChecksumAddress(clusterAddress);
+    
+    if (str(eBlocBroker.functions.isClusterExist(clusterAddress).call()) == "False"):
         print("Cluster is not registered")
         sys.exit();
 
-    blockReadFrom, coreNumber, coreMinutePrice = eBlocBroker.call().getClusterInfo(clusterAddress);
+    blockReadFrom, coreNumber, coreMinutePrice = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
 
-    # ipfs=ipfsBytesToString(ipfsID)
+    print('blockReadFrom: '   + str(blockReadFrom))
+    print('coreNumber: '      + str(coreNumber))
+    print('coreMinutePrice: ' + str(coreMinutePrice))
 
+    #ipfs=ipfsBytesToString(ipfsID)
     #print('name: ' + name);
     #print('ipfsID: ' + ipfs)
     #print('federationCloudId: ' + federationCloudId)
     #print('miniLockId: ' + miniLockId)
-
-    print('blockReadFrom: '      + str(blockReadFrom))
-    print('coreNumber: '      + str(coreNumber))
-    print('coreMinutePrice: ' + str(coreMinutePrice))
-
+    
     #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'_from': '0x6af0204187a93710317542d383a1b547fa42e705'}})
     #transfer_filter = eBlocBroker.on('LogCluster')
-    transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
-    print(my_filter.get_all_entries())
+    #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
+    #print(my_filter.get_all_entries())
 #}

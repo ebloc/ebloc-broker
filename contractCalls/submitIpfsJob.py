@@ -17,7 +17,8 @@ contractAddress = fileAddr.read().replace("\n", "")
 
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
-    
+
+contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 # USER Inputs----------------------------------------------------------------
 account          = web3.eth.accounts[1]; # Sender's Ethereum Account

@@ -93,6 +93,28 @@ contractCalls/ipfs\.out
 
 miniLockPassword\.txt
 
+venv/pyvenv\.cfg
+
+venv/bin/activate
+
+venv/bin/activate\.csh
+
+venv/bin/activate\.fish
+
+venv/bin/python
+
+venv/bin/python3
+
+venv/lib64
+
 modifiedDate\.txt
+
+\.node-xmlhttprequest-sync-27351
+
+\.node-xmlhttprequest-sync-27769
+
+\.node-xmlhttprequest-sync-30119
+
+\.node-xmlhttprequest-sync-5486
 
 ipfs\.out
