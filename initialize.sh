@@ -2,16 +2,16 @@
 
 # pre-installation:-----------------------------------------
 
-# Python 3.5.2
-#cd /usr/src
-#sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
-#sudo tar xzf Python-3.5.2.tgz
-#cd Python-3.5.2
-#sudo ./configure --enable-optimizations
-#sudo make altinstall
+## Python 3.5.2
+# cd /usr/src
+# sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
+# sudo tar xzf Python-3.5.2.tgz
+# cd Python-3.5.2
+# sudo ./configure --enable-optimizations
+# sudo make altinstall
 #--------------------------
 
-# pip install
+## pip install
 # sudo apt-get install python3-pip
 # sudo pip3 install virtualenv 
 # once:
@@ -19,15 +19,15 @@
 # each session:
 # $ source ~/.venv-py3/bin/activate
 
+# pip install typing==3.6.4 (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
 # pip install colored
 # pip install pyocclient==0.4
 # pip install web3
-# pip install typing==3.6.4
 
 # Update git repository
 # git fetch --all && git reset --hard origin/master
 
-# gdrive install:
+## gdrive install:
 # go get github.com/prasmussen/gdrive
 # gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
 # echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
