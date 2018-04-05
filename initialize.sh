@@ -22,6 +22,7 @@
 # pip install colored
 # pip install pyocclient==0.4
 # pip install web3
+# pip install typing==3.6.4
 
 # Update git repository
 # git fetch --all && git reset --hard origin/master
