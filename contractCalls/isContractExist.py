@@ -17,8 +17,8 @@ with open('abi.json', 'r') as abi_definition:
 contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-if __name__ == '__main__': #{    
-    if web3.eth.getCode(contractAddress) == '0x':
+if __name__ == '__main__': #{
+    if web3.eth.getCode(contractAddress) == '0x' or web3.eth.getCode(contractAddress) == b'':
         print('False')
     else:
         print('True')
