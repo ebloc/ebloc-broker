@@ -1,6 +1,6 @@
-WHOAMI="whoami"
+WHOAMI=""
 CLUSTER_ID="0xffffffffffffffffffffffffffffffffffffffff"
-EBLOCPATH="/home/whoami/eBlocBroker";
+EBLOCPATH=""
 
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
@@ -9,6 +9,7 @@ OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
 PROGRAM_PATH         = LOG_PATH + "/ipfsHashes" 
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
+
 IPFS_USE             = 0;
 RPC_PORT             = 8545;
 
