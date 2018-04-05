@@ -3,7 +3,7 @@
 import os, json, sys, time
 from web3 import Web3
 from web3.providers.rpc import HTTPProvider
-
+sys.path.insert(1, os.path.join(sys.path[0], '..')); import constants
 os.chdir(sys.path[0]);
 
 # checks: does IPFS run on the background or not
@@ -16,7 +16,7 @@ def isIpfsOn():
 # Note that you should create only one RPCProvider per process,
 # as it recycles underlying TCP/IP network connections between
 # your process and Ethereum node
-web3 = Web3(HTTPProvider('http://localhost:8545'))
+web3 = Web3(HTTPProvider('http://localhost:' + str(constants.RPC_PORT)))
 
 fileAddr = open("address.json", "r")
 contractAddress = fileAddr.read().replace("\n", "")
