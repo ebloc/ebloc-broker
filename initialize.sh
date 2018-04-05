@@ -93,8 +93,8 @@ sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" constants.py && rm constants.py.bak
 lineOld="whoami";
 lineNew=$(logname);
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
+sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" constants.py     && rm constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js && rm $currentDir/nodePaths.js.bak
 
 # PATH Name Setup:------------------------------------
 lineOld="EBLOCBROKER_PATH";

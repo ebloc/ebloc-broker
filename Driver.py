@@ -59,6 +59,16 @@ def isSlurmOn():
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 
+
+if constants.WHOAMI == '':
+   print('Once please run: bash initialize.sh');
+   sys.exit();
+
+isContractExist = os.popen('python $contractCallPath/isContractExist.py $clusterID').read();
+if isContractExist == 'False':
+   print('Please check that you are using eBloc-blockchain.');
+   sys.exit();
+
 logTest('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
 isDriverOn();
 isSlurmOn();
@@ -66,9 +76,12 @@ if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
 
 # Paths---------
-jobsReadFromPath = constants.JOBS_READ_FROM_FILE; os.environ['jobsReadFromPath'] = jobsReadFromPath
-contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
+jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
+os.environ['jobsReadFromPath'] = jobsReadFromPath
+contractCallPath               = constants.EBLOCPATH + '/contractCalls';
+os.environ['contractCallPath'] = contractCallPath;
 # ---------------
+   
 header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 clusterID = constants.CLUSTER_ID;
 os.environ['clusterID'] = clusterID;
