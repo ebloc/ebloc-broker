@@ -63,7 +63,7 @@ if constants.WHOAMI == '':
    print('Once please run: bash initialize.sh');
    sys.exit();
 
-isContractExist = os.popen('python $contractCallPath/isContractExist.py').read();
+isContractExist = os.popen('$contractCallPath/isContractExist.py').read();
 
 if 'False' in isContractExist:
    print('Please check that you are using eBloc-blockchain.');
@@ -86,7 +86,7 @@ header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerH
 clusterID = constants.CLUSTER_ID;
 os.environ['clusterID'] = clusterID;
 
-isClusterExist = os.popen('python $contractCallPath/isClusterExist.py $clusterID').read();
+isClusterExist = os.popen('$contractCallPath/isClusterExist.py $clusterID').read();
 
 if (isClusterExist.lower() == "false"): #{
    print(stylize("Error: Your Ethereum address '" + clusterID + "' \n"
@@ -96,7 +96,7 @@ if (isClusterExist.lower() == "false"): #{
    sys.exit()
 #}
 
-deployedBlockNumber = os.popen('python $contractCallPath/getDeployedBlockNumber.py').read();
+deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read();
 blockReadFromContract=str(0)
 
 logTest("clusterAddress: " +  clusterID, "yellow")
@@ -163,7 +163,7 @@ while True: #{
 
     printFlag          = 0;
     passedPrintFlag    = 0;
-    currentBlockNumber = os.popen('python $contractCallPath/blockNumber.py').read().rstrip('\n');
+    currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
     
     while(True): #{
        if (printFlag == 0):
@@ -175,7 +175,7 @@ while True: #{
        
        printFlag = 1;
        time.sleep(2);
-       currentBlockNumber = os.popen('python $contractCallPath/blockNumber.py').read().rstrip('\n');
+       currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
 
        if (passedPrintFlag == 0):
           logTest("Passed incremented block number... Continue to wait from block number: " + blockReadFrom, "");
@@ -211,7 +211,7 @@ while True: #{
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
              
-             jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+             jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
              jobInfo = jobInfo.split(',');
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it

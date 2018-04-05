@@ -72,7 +72,7 @@ def sbatchCall(): #{
    time.sleep(0.25)
 
    os.system("cp run.sh ${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh");
-   jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+   jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');
    jobCoreNum = jobInfo[1]
 
@@ -269,7 +269,7 @@ if __name__ == '__main__': #{
          break;
       else:
          logTest("Error: Please run Parity or Geth on the background.**************************************************************")
-         jobInfo    = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ", "")[1:-1];
+         jobInfo    = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ", "")[1:-1];
          jobInfo    = jobInfo.split(',');
          jobCoreNum = jobInfo[1];
    '''
