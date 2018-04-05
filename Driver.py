@@ -59,13 +59,13 @@ def isSlurmOn():
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 
-
 if constants.WHOAMI == '':
    print('Once please run: bash initialize.sh');
    sys.exit();
 
-isContractExist = os.popen('python $contractCallPath/isContractExist.py $clusterID').read();
-if isContractExist == 'False':
+isContractExist = os.popen('python $contractCallPath/isContractExist.py').read();
+
+if 'False' in isContractExist:
    print('Please check that you are using eBloc-blockchain.');
    sys.exit();
 
