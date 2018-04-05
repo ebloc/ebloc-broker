@@ -56,6 +56,7 @@ else
        exit
     fi
 fi
+
 source $HOME/.profile
 
 currentDir=$PWD;
@@ -118,7 +119,7 @@ sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slur
 grep "MailProg" /usr/local/etc/slurm.conf
 
 # IPFS setups
-sudo chown -R "$logname:$logname" ~/.ipfs/
+sudo chown -R "$logname:$logname" $HOME/.ipfs/
 
 echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudatPassword.txt'"
 
