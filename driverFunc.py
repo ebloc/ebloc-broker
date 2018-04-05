@@ -180,13 +180,13 @@ def driverEudatCall(jobKey, index): #{
 
    os.system("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.");
    os.system("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ");
-   os.system("rm    $localOwnCloudPathFolder/output.zip");
+   os.system("rm -f $localOwnCloudPathFolder/output.zip");
    os.system("rmdir $localOwnCloudPathFolder/$eudatFolderName");
    
    isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
       os.popen("tar -xf $localOwnCloudPathFolder/*.tar.gz -C $localOwnCloudPathFolder/" ).read();
-      os.popen("rm $localOwnCloudPathFolder/*.tar.gz").read();
+      os.popen("rm -f $localOwnCloudPathFolder/*.tar.gz").read();
       
    os.chdir(localOwnCloudPathFolder); # 'cd' into the working path and call sbatch from there
    sbatchCall();
@@ -220,7 +220,7 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
 
     os.chdir(jobSavePath);
     if os.path.isfile(jobKey):
-       os.system('rm $jobKey');
+       os.system('rm -f $jobKey');
 
     isIpfsOn();
 
@@ -237,8 +237,8 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
           res = os.popen('mlck decrypt -f $jobSavePath/$jobKey --passphrase="$passW" --output-file=$jobSavePath/output.tar.gz').read();
           logTest(res)
 
-          os.system('rm $jobSavePath/$jobKey');
-          os.system('tar -xf $jobSavePath/output.tar.gz && rm $jobSavePath/output.tar.gz');
+          os.system('rm -f $jobSavePath/$jobKey');
+          os.system('tar -xf $jobSavePath/output.tar.gz && rm -f $jobSavePath/output.tar.gz');
 
        if not os.path.isfile('run.sh'):
           logTest("run.sh does not exist")
