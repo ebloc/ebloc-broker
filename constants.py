@@ -1,16 +1,18 @@
-WHOAMI          = "whoami"
-CLUSTER_ID      = "0xffffffffffffffffffffffffffffffffffffffff"
-EBLOCPATH       = "$HOME/eBlocBroker";
-IPFS_REPO       = "$HOME/.ipfs";
-LOG_PATH        = "$HOME/.eBlocBroker";    
-OWN_CLOUD_PATH  = "$HOME/.eBlocBroker/oc"; 
+WHOAMI="whoami"
+CLUSTER_ID="0xffffffffffffffffffffffffffffffffffffffff"
+EBLOCPATH="/home/whoami/eBlocBroker";
+
+IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
+LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
+OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
 
 PROGRAM_PATH         = LOG_PATH + "/ipfsHashes" 
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
 IPFS_USE             = 0;
+RPC_PORT             = 8545;
 
-## Create the hashmap
+## Creates the hashmap.
 job_state_code = {};
 
 # Add keys to the hashmap #https://slurm.schedmd.com/squeue.html
