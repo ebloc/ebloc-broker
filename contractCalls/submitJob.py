@@ -37,7 +37,8 @@ eBlocBroker     = web3.eth.contract(contractAddress, abi=abi);
 if __name__ == '__main__': #{
     if(len(sys.argv) == 11):
         clusterAddress = str(sys.argv[1]);
-        blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);       
+        blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
+        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
         jobKey         = str(sys.argv[2]);
         coreNum        = int(sys.argv[3]);
         coreGasDay     = int(sys.argv[4]);
@@ -52,8 +53,8 @@ if __name__ == '__main__': #{
         clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
         clusterAddress = web3.toChecksumAddress(clusterAddress);    
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
-        
-        jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
+        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
+        jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"; # "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
         coreNum        = 1;
         coreGasDay     = 0;
         coreGasHour    = 0;
@@ -65,7 +66,10 @@ if __name__ == '__main__': #{
         # ----------------------------------------------------------------------------
     if storageType == 0 or storageType == 2:
        isIpfsOn();
+       output = os.popen('ipfs swarm connect ' + my_filter.get_all_entries()[0].args['ipfsAddress']).read();
+       print(output)
 
+    sys.exit(); 
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
 
