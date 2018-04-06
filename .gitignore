@@ -124,3 +124,7 @@ clusterDriver\.out
 \.node-xmlhttprequest-sync-8770
 
 \.node*
+
+contractCalls/\.#submitIpfsJob\.py
+
+contractCalls/\.#getClusterInfo\.py
