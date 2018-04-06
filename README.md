@@ -16,7 +16,7 @@ Please follow [here](https://github.com/ebloc/eblocGeth).
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
-An Amazon image (AMI Name: eBlocBroker, AMI ID: ami-43e6083e) is also available that contains
+An Amazon image (AMI Name: eBlocBroker, AMI ID: `ami-43e6083e`) is also available that contains
 `Geth` to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname (IPv4). 
 
 
@@ -307,7 +307,7 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.len
 	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
 }
 ```
-<!---
+
 #### **4. How to submit a job using GitHub**
 
 ```bash
@@ -329,7 +329,6 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
 	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
 }
 ```
--->
 
 ### **How to obtain Submitted Job's Information:**
 

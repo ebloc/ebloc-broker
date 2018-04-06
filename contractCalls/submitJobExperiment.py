@@ -31,6 +31,7 @@ if __name__ == '__main__': #{
     if(len(sys.argv) == 9):
         clusterAddress = str(sys.argv[1]);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
+        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
         jobKey         = str(sys.argv[2]);
         coreNum        = int(sys.argv[3]);
         jobDescription = str(sys.argv[4]);
@@ -55,6 +56,8 @@ if __name__ == '__main__': #{
 
     if storageType == 0 or storageType == 2:
         isIpfsOn();
+        output = os.popen('ipfs swarm connect ' + my_filter.get_all_entries()[0].args['ipfsAddress']).read();
+        print(output);
         
     if coreNum <= coreNumber and len(jobDescription) < 128:
         tx=eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription,

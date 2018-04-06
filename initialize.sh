@@ -23,6 +23,7 @@
 # pip install colored
 # pip install pyocclient==0.4
 # pip install web3
+# pip install --pre --upgrade web3
 
 # Update git repository
 # git fetch --all && git reset --hard origin/master

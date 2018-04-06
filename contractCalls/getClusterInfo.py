@@ -33,15 +33,22 @@ if __name__ == '__main__': #{
     clusterAddress = web3.toChecksumAddress(clusterAddress);
     
     if (str(eBlocBroker.functions.isClusterExist(clusterAddress).call()) == "False"):
-        print("Cluster is not registered")
+        print("Cluster is not registered. Please try again with registered Ethereum Address as cluster.")
         sys.exit();
 
     blockReadFrom, coreNumber, coreMinutePrice = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
+    my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
+           
+    print('{0: <17}'.format('blockReadFrom: ')   + str(blockReadFrom))    
+    print('{0: <17}'.format('coreNumber: ')      + str(coreNumber))
+    print('{0: <17}'.format('coreMinutePrice: ') + str(coreMinutePrice))       
+    print('{0: <17}'.format('clusterName: ')     + my_filter.get_all_entries()[0].args['clusterName'])
+    print('{0: <17}'.format('miniLockId: ')      + my_filter.get_all_entries()[0].args['miniLockId'])
+    print('{0: <17}'.format('ipfsAddress: ')     + my_filter.get_all_entries()[0].args['ipfsAddress'])   
+    print('{0: <17}'.format('fID: ') + my_filter.get_all_entries()[0].args['fID'])
+#}
 
-    print('blockReadFrom: '   + str(blockReadFrom))
-    print('coreNumber: '      + str(coreNumber))
-    print('coreMinutePrice: ' + str(coreMinutePrice))
-
+     # transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
     #ipfs=ipfsBytesToString(ipfsID)
     #print('name: ' + name);
     #print('ipfsID: ' + ipfs)
@@ -52,4 +59,3 @@ if __name__ == '__main__': #{
     #transfer_filter = eBlocBroker.on('LogCluster')
     #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
     #print(my_filter.get_all_entries())
-#}
