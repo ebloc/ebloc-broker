@@ -1,6 +1,6 @@
 WHOAMI=""
-CLUSTER_ID="0xffffffffffffffffffffffffffffffffffffffff"
 EBLOCPATH=""
+CLUSTER_ID=""
 
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
