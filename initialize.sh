@@ -111,16 +111,16 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentD
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$(echo $COINBASE);
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py         && rm $currentDir/constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/eBlocBrokerHeader.js && rm $currentDir/eBlocBrokerHeader.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js         && rm $currentDir/nodePaths.js.bak
+sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" $currentDir/constants.py && rm $currentDir/constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/'             $currentDir/nodePaths.js && rm $currentDir/nodePaths.js.bak
 #-----------------------------------------------------
 var=$(echo $currentDir | sed 's/\//\\\//g')
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 grep "MailProg" /usr/local/etc/slurm.conf
 
 # IPFS setups
-sudo chown -R "$logname:$logname" $HOME/.ipfs/
+l=$(logname)
+sudo chown -R "$l:$l" $HOME/.ipfs/
 
 echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudatPassword.txt'"
 
