@@ -63,21 +63,21 @@ source $HOME/.profile
 currentDir=$PWD;
 # Folder Setup:--------------------------------------
 if [ ! -d $HOME/.eBlocBroker ]; then
-    mkdir $HOME/.eBlocBroker;
+    mkdir -p $HOME/.eBlocBroker;
 fi
 
 cd $HOME/.eBlocBroker
 
 if [ ! -d transactions ]; then
-    mkdir transactions
+    mkdir -p transactions
 fi
 
 if [ ! -d ipfsHashes ]; then
-    mkdir ipfsHashes
+    mkdir -p ipfsHashes
 fi
 
 if [ ! -d endCodeAnalyse ]; then
-    mkdir endCodeAnalyse 
+    mkdir -p endCodeAnalyse 
 fi
 
 touch $HOME/.eBlocBroker/transactions/clusterOut.txt

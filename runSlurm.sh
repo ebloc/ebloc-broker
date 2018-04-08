@@ -8,12 +8,8 @@ sudo slurmd
 sudo munged -f
 sudo /etc/init.d/munge start 
 slurmdbd &
-
-if [ ! -d /tmp/slurmstate ]; then    
-    mkdir /tmp/slurmstate 
-fi
+mkdir -p /tmp/slurmstate 
 
 slurmctld -c
 #slurmctld -cDvvvvvv
-
 sinfo
