@@ -22,7 +22,7 @@ with open(fname, "r") as ins:
 
 	sum1 += (int(res[7]) - int(res[8]))
 
-        jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];             
+        jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];             
         r=jobInfo.split(',')
 
         print(str(counter) + " " + res[1] + " " + res[2] + " " + res[3] + " | " + constants.job_state_code[r[0]] + "," + r[1] + "," + r[2] + "," + r[3] + "," + r[4] + "," + r[5]);
@@ -30,4 +30,3 @@ with open(fname, "r") as ins:
 
 print(counter)            
 print("GAINED: " + str(sum1));
-

@@ -44,23 +44,22 @@ def isSlurmOn():
    check = os.popen("cat $logPath/checkSinfoOut.txt").read()
 
    if not "PARTITION" in str(check):
-      logTest("-------------------------- \n");
-      logTest("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n");      
-      logTest('Error Message: \n' + check);
+      logTest("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "");      
+      logTest('Error Message: \n' + check, "");
       sys.exit();
 
    if "sinfo: error" in str(check):
-      logTest("Error on munged: \n" + check)
-      logTest("Please Do:\n")
-      logTest("sudo munged -f")
-      logTest("/etc/init.d/munge start")
+      logTest("Error on munged: \n" + check, "")
+      logTest("Please Do:\n", "")
+      logTest("sudo munged -f", "")
+      logTest("/etc/init.d/munge start", "")
       sys.exit()
 
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 
-if constants.WHOAMI == '':
-   print('Once please run: bash initialize.sh');
+if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '':
+   print('Once please run:  bash initialize.sh');
    sys.exit();
 
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read();
@@ -96,7 +95,7 @@ if (isClusterExist.lower() == "false"): #{
    sys.exit()
 #}
 
-deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read();
+deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
 blockReadFromContract=str(0)
 
 logTest("clusterAddress: " +  clusterID, "yellow")
@@ -211,7 +210,7 @@ while True: #{
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
              
-             jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+             jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
              jobInfo = jobInfo.split(',');
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it

@@ -50,26 +50,28 @@ if __name__ == '__main__': #{
         accountID      = int(sys.argv[10]);
     else:
         # USER Inputs----------------------------------------------------------------
-        clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
+        clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63";
         clusterAddress = web3.toChecksumAddress(clusterAddress);    
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
-        jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"; # "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+        #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
+        jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
         coreNum        = 1;
         coreGasDay     = 0;
         coreGasHour    = 0;
         coreGasMin     = 1;
         jobDescription = "Science";
-        storageType    = 1;
+        storageType    = 0;
         myMiniLockId   = "";
         accountID      = 0;
         # ----------------------------------------------------------------------------
     if storageType == 0 or storageType == 2:
        isIpfsOn();
-       output = os.popen('ipfs swarm connect ' + my_filter.get_all_entries()[0].args['ipfsAddress']).read();
+       strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
+       print("Trying to connect into: " + strVal);
+       output = os.popen('ipfs swarm connect ' + strVal).read();
        print(output)
 
-    sys.exit(); 
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
 
