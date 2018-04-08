@@ -15,54 +15,63 @@ def logTest(strIn):
 def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    endTimeStamp = os.popen('date +%s').read(); 
 
-   global jobKeyGlobal; jobKeyGlobal=jobKey
-   global indexGlobal;  indexGlobal=index;  
+   global jobKeyGlobal; jobKeyGlobal = jobKey
+   global indexGlobal;  indexGlobal  = index;  
 
    os.environ['endTimeStamp'] = endTimeStamp;
    logTest("endTimeStamp: " + endTimeStamp)
 
    # Paths--------------------------------------
-   eblocPath        = constants.EBLOCPATH;
    contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
-   logPath          = constants.LOG_PATH;
    programPath      = constants.PROGRAM_PATH;
    # -------------------------------------------
-   encodedShareToken = base64.b64encode(shareToken + ':')
+   #os.chdir(constants.EBLOCPATH + '/contractCalls');
+   
+   encodedShareToken = '';
+   if shareToken != '-1':
+      encodedShareToken = base64.b64encode(shareToken + ':')
 
-   header = "var eBlocBroker = require('" + eblocPath + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
+   header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 
    clusterID = constants.CLUSTER_ID;
-   os.environ['programPath']       = str(programPath)   
+   os.environ['programPath']       = str(programPath);
    os.environ['clusterID']         = clusterID;
-   os.environ['jobKey']            = jobKey
-   os.environ['index']             = str(index)
-   os.environ["IPFS_PATH"]         = constants.IPFS_REPO # Default IPFS repo path
-   os.environ['eblocPath']         = eblocPath
-   os.environ['encodedShareToken'] = encodedShareToken
-   os.environ['clientMiniLockId']  = miniLockId
-   os.environ['jobName']           = folderName
-   os.environ['storageType']       = str(storageType)
+   os.environ['jobKey']            = jobKey;
+   os.environ['index']             = str(index);
+   os.environ["IPFS_PATH"]         = constants.IPFS_REPO; # Default IPFS repo path
+   os.environ['eblocPath']         = constants.EBLOCPATH;
+   os.environ['encodedShareToken'] = encodedShareToken;
+   os.environ['clientMiniLockId']  = miniLockId;
+   os.environ['jobName']           = folderName;
+   os.environ['storageType']       = str(storageType);
 
    fDate = open(programPath + '/' + jobKey + "_" + index + '/modifiedDate.txt', 'r')
    modifiedDate = fDate.read().rstrip('\n');
    os.environ['modifiedDate'] = modifiedDate; fDate.close()
    logTest(modifiedDate)
+   logTest(jobKey + ' ' + index + ' ' + storageType + ' ' + shareToken + ' ' + miniLockId + ' ' + folderName);
+   
+   logTest("jobKey: "            + jobKey);
+   logTest("index: "             + index);
+   logTest("storageType: "       + storageType);
+   logTest("shareToken: "        + shareToken);
+   logTest("encodedShareToken: " + encodedShareToken);
+   logTest("miniLockId: "        + miniLockId);
+   logTest("folderName: "        + folderName);
+   
+   jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
+   logTest(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
 
-   logTest("keyHash: "            + jobKey                 )
-   logTest("Index: "              + index                  )
-   logTest("storageType: "        + storageType            )
-   logTest("shareToken: |"        + shareToken        + "|")
-   logTest("encodedShareToken: |" + encodedShareToken + "|")
-   logTest("miniLockId: |"        + miniLockId        + "|")
-
-   jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];
    while(True):
-      if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
+      if not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno"): 
          break;
       else:
          logTest('jobInfo: ' + jobInfo);
-         logTest("Error: Please run Parity or Geth on the background. or unlock your Cluster Ethereum Account**************************************")
-         jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+         logTest(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
+         logTest(os.popen('whoami').read().rstrip('\n'));
+         logTest(os.popen('pwd').read().rstrip('\n'));
+         logTest("Error: Please run Parity or Geth on the background. *****")
+         jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       time.sleep(1)
 
    logTest("JOB_INFO:" + jobInfo)
@@ -86,13 +95,13 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
         logTest( "Error: Already completed job..."); 
         sys.exit(); # Detects an error on the SLURM side
 
-      jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+      jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       while(True):
          if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
             break;
          else:
             logTest("Error: Please run Parity or Geth on the background.****************************")
-            jobInfo = os.popen('python $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n').replace(" ","")[1:-1];         
+            jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
       jobInfo = jobInfo.split(',');
       time.sleep(30) # Short sleep here so this loop is not keeping CPU busy
@@ -100,7 +109,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    
    logTest("jobName: " + str(folderName));
    jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read();
-   os.environ['jobId'] = jobId; ################
+   os.environ['jobId'] = jobId;
    logTest("JOBID ------------> " + str(jobId));
 
    # Here we know that job is already completed
@@ -221,17 +230,18 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
       #os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
    #}
    logTest("ReceiptHash: " + transactionHash); 
-   txFile = open(logPath + '/transactions/' + clusterID + '.txt', 'a');   
+   txFile = open(constants.LOG_PATH + '/transactions/' + clusterID + '.txt', 'a');   
    txFile.write(transactionHash + " end_receiptCheck\n");
    txFile.close();
 
 if __name__ == '__main__': #{
+   #jobKey, index, storageType, shareToken, miniLockId, folderName
    jobKey      = sys.argv[1];
    index       = sys.argv[2];
    storageType = sys.argv[3];
    shareToken  = sys.argv[4];
    miniLockId  = sys.argv[5];
-   runName     = sys.argv[6];
+   folderName  = sys.argv[6];
 
-   endCall(jobKey, index, storageType, shareToken, miniLockId, runName)
+   endCall(jobKey, index, storageType, shareToken, miniLockId, folderName)
 #}

@@ -1,2 +1,3 @@
 #!/bin/bash
-nohup ipfs daemon > ipfs.out&
+
+ipfs daemon > ipfs.out&
