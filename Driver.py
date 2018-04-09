@@ -113,8 +113,7 @@ f.close();
 
 if not blockReadFromLocal.isdigit(): #{
    logTest("Error: constants.BLOCK_READ_FROM_FILE is empty or contains and invalid value", "")
-   logTest("> Would you like to read from contract's deployed block number? y/n", "")
-   
+   logTest("> Would you like to read from contract's deployed block number? y/n", "")   
    while True: #{
       choice = input().lower()
       if choice in yes:

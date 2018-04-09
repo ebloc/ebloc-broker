@@ -1,15 +1,13 @@
 #!/bin/bash
-# To Run: sudo bash runSlurm.sh
+# To Run:  sudo bash runSlurm.sh
 #------------------------------
 
 sudo killall slurmctld slurmdbd slurmd
 
-sudo slurmd
 sudo munged -f
 sudo /etc/init.d/munge start 
+sudo slurmd
 slurmdbd &
-mkdir -p /tmp/slurmstate 
-
-slurmctld -c
-#slurmctld -cDvvvvvv
+sudo -u $(logname) mkdir -p /tmp/slurmstate 
+slurmctld -c #-cDvvvvvv
 sinfo
