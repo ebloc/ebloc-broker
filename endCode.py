@@ -6,13 +6,14 @@ import sys, os, time, subprocess, constants, base64
 jobKeyGlobal = "";
 indexGlobal  = "";
 
-def logTest(strIn):
+def logTest(strIn): #{
    print(strIn);
    txFile = open(constants.LOG_PATH + '/endCodeAnalyse/' + jobKeyGlobal + "_" + indexGlobal + '.txt', 'a');
    txFile.write(strIn + "\n"); 
    txFile.close();
-
-def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
+#}
+   
+def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    endTimeStamp = os.popen('date +%s').read(); 
 
    global jobKeyGlobal; jobKeyGlobal = jobKey
@@ -79,8 +80,13 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
 
    logTest("0: " + jobInfo[0])
    logTest("1: " + jobInfo[2])
-   
+
+   countTry = 0;
    while True: #{
+      if countTry > 10:
+         sys.exit()
+      countTry = countTry + 1                  
+
       logTest(jobInfo[0]); 
       logTest(jobInfo[2]); 
 
@@ -112,7 +118,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    os.environ['jobId'] = jobId;
    logTest("JOBID ------------> " + str(jobId));
 
-   # Here we know that job is already completed
+   # Here we know that job is already completed ----------------
    if str(storageType) == '0' or str(storageType) == '3': #{
       countTry = 0;
       while(True): 
@@ -137,7 +143,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             break
    #}
    
-   if str(storageType) == '2':
+   if str(storageType) == '2': #{
       encrypyFolderPath = programPath + "/" + jobKey + "_" + index;
       os.environ['encrypyFolderPath'] = encrypyFolderPath
       logTest("encrypyFolderPath: " + encrypyFolderPath)
@@ -152,9 +158,9 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
 
       countTry = 0;
       while(True): 
-         if (countTry > 10):
+         if countTry > 10:
             sys.exit()
-         countTry = countTry + 1                  
+         countTry = countTry + 1;
          
          newHash = os.popen('ipfs add $encrypyFolderPath/result.tar.gz.minilock').read();
          logTest("newHash: " + newHash) 
@@ -168,7 +174,8 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             os.environ['newHash'] = newHash;
             logTest("newHash: " + newHash);
             break;
-
+   #}
+   
    logTest("jobId: " + jobId);
    elapsedTime = os.popen('sacct -j $jobId --format="Elapsed" | tail -n1 | head -n1').read();
    logTest("ElapsedTime: " + elapsedTime);
@@ -205,7 +212,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
             transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
          time.sleep(5)
    elif storageType == '1': #{
-      nullByte="0x00"; os.environ['nullByte'] = nullByte;
+      os.environ['nullByte'] = "0x00";
       transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType  $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       while(True):
          if (not(transactionHash == "notconnected" or transactionHash == "")): 
@@ -233,9 +240,9 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName):
    txFile = open(constants.LOG_PATH + '/transactions/' + clusterID + '.txt', 'a');   
    txFile.write(transactionHash + " end_receiptCheck\n");
    txFile.close();
+#}
 
 if __name__ == '__main__': #{
-   #jobKey, index, storageType, shareToken, miniLockId, folderName
    jobKey      = sys.argv[1];
    index       = sys.argv[2];
    storageType = sys.argv[3];

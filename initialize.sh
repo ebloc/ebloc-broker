@@ -2,7 +2,7 @@
 
 # pre-installation:-----------------------------------------
 
-## Python 3.5.2
+## Python 3.5.2 # not-nessesary.
 # cd /usr/src
 # sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
 # sudo tar xzf Python-3.5.2.tgz
