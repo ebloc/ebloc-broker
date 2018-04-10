@@ -9,16 +9,13 @@ os.chdir(sys.path[0]);
 # checks: does IPFS run on the background or not
 def isIpfsOn():
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
-   if (int(check) == 0):
+   if int(check) == 0:
       print("Error: IPFS does not work on the background.\nPlease run:  ipfs daemon &");
       os.system("bash ../runIPFS.sh");
       time.sleep(5);
       os.system("cat ipfs.out");      
    else:
-      print("IPFS is already on");
-      
-   os.popen("ipfs swarm connect");   
-   # Do swarm connect!
+      print("IPFS is already on");     
       
 # Note that you should create only one RPCProvider per process,
 # as it recycles underlying TCP/IP network connections between
@@ -65,34 +62,33 @@ if __name__ == '__main__': #{
         myMiniLockId   = "";
         accountID      = 0;
         # ----------------------------------------------------------------------------
-    if storageType == 0 or storageType == 2:
+    if storageType == 0 or storageType == 2: #{
        isIpfsOn();
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
        print("Trying to connect into: " + strVal);
        output = os.popen('ipfs swarm connect ' + strVal).read();
        print(output)
-
+    #}
+    
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
 
-    if (not eBlocBroker.functions.isClusterExist(clusterAddress).call()):
+    if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
        print("Requested Cluster's Ethereum Address does not exist.")
        sys.exit();
-
-    if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46):
-       print("IPFS Hash's length does not match with original length.")
-       sys.exit();
-
-    #if storageType == 0 or storageType == 2:
-    #       isIpfsOn();
-
-    gas_price = web3.eth.gasPrice * 2;
-    nonce = web3.eth.getTransactionCount(web3.eth.accounts[accountID])
+    #}
     
-    gasLimit=3000000; 
-    if (coreNum <= coreNumber and len(jobDescription) < 128):
+    if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46) or (storageType == 4 and len(jobKey) != 33): #{
+       print("jobKey's length does not match with its original length. Please check your jobKey.")
+       sys.exit();
+    #}
+    
+    gasLimit = 4500000; 
+    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5: #{
        tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId);
        print('Tx: ' + tx.hex());
+    #}
+    
 #}
 
 

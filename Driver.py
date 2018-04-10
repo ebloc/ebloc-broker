@@ -99,7 +99,7 @@ deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').re
 blockReadFromContract=str(0)
 
 logTest("clusterAddress: " +  clusterID, "yellow")
-logTest("deployedBlockNumber: " +  deployedBlockNumber, "")
+
 
 if not os.path.isfile(constants.BLOCK_READ_FROM_FILE): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
@@ -137,7 +137,8 @@ else:
    blockReadFrom = blockReadFromLocal;
 
 clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\'))"');
-print("Cluster's initial money: " + clusterGainedAmountInit);
+
+logTest("deployedBlockNumber: " +  deployedBlockNumber + " |Cluster's initial money: " + clusterGainedAmountInit, "")
 os.system('rm -f $jobsReadFromPath')
        
 while True: #{
@@ -166,7 +167,7 @@ while True: #{
     while(True): #{
        if (printFlag == 0):
           logTest("Waiting new block to increment by one.", "");
-          logTest("Current BlockNumber: " + currentBlockNumber  + "| sync from Block Number: " + blockReadFrom, "");
+          logTest("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom, "");
           
        if int(currentBlockNumber) >= int(blockReadFrom):
           break;
@@ -225,9 +226,13 @@ while True: #{
                    logTest("New job has been recieved. IPFS with miniLock call |" + time.ctime(), "");
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]);
                    #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
-                elif (submittedJob[4] == '3'):
+                elif (submittedJob[4] == '4'): # '3'
                    logTest("New job has been recieved. GitHub call |" + time.ctime(), "");
-                   driverFunc.driverGithubCall(submittedJob[2], submittedJob[3]);
+                   driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4]);
+                elif (submittedJob[4] == '3'): # '4' 
+                   logTest("New job has been recieved. gdrive call |" + time.ctime(), "");
+                   driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
+
              else:
                 logTest("Job is already captured and in process or completed", "");
        #}    

@@ -7,7 +7,7 @@ sudo rm -f  $HOME/.eBlocBroker/logJobs.txt
 sudo rm -f  $HOME/.eBlocBroker/queuedJobs.txt
 sudo rm -f  $HOME/.eBlocBroker/test.txt
 
-sudo cat /dev/null > nohup.out
+sudo cat /dev/null > clusterDriver.out
 
 sudo bash killall.sh
 sudo bash clean.sh

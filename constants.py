@@ -2,6 +2,7 @@ WHOAMI=""
 EBLOCPATH=""
 CLUSTER_ID=""
 
+GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive";
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";

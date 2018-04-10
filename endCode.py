@@ -3,8 +3,8 @@
 from subprocess import call
 import sys, os, time, subprocess, constants, base64
 
-jobKeyGlobal = "";
-indexGlobal  = "";
+jobKeyGlobal    = "";
+indexGlobal     = "";
 
 def logTest(strIn): #{
    print(strIn);
@@ -12,12 +12,30 @@ def logTest(strIn): #{
    txFile.write(strIn + "\n"); 
    txFile.close();
 #}
+
+def receiptCheckTx(): #{
+   transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+
+   while(True): #{
+      if not(transactionHash == "notconnected" or transactionHash == ""): 
+         break;
+      else:
+         logTest("Error: Please run Parity or Geth on the background.")
+         transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+      time.sleep(5);
+   #}
    
+   logTest("ReceiptHash: " + transactionHash); 
+   txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');   
+   txFile.write(transactionHash + " receiptCheckTx\n");
+   txFile.close();
+#}
+
 def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    endTimeStamp = os.popen('date +%s').read(); 
 
    global jobKeyGlobal; jobKeyGlobal = jobKey
-   global indexGlobal;  indexGlobal  = index;  
+   global indexGlobal;  indexGlobal  = index;
 
    os.environ['endTimeStamp'] = endTimeStamp;
    logTest("endTimeStamp: " + endTimeStamp)
@@ -25,18 +43,16 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    # Paths--------------------------------------
    contractCallPath = constants.EBLOCPATH + '/contractCalls'; os.environ['contractCallPath'] = contractCallPath;
    programPath      = constants.PROGRAM_PATH;
-   # -------------------------------------------
-   #os.chdir(constants.EBLOCPATH + '/contractCalls');
-   
+   # -------------------------------------------   
    encodedShareToken = '';
    if shareToken != '-1':
       encodedShareToken = base64.b64encode(shareToken + ':')
 
    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 
-   clusterID = constants.CLUSTER_ID;
    os.environ['programPath']       = str(programPath);
-   os.environ['clusterID']         = clusterID;
+   os.environ['clusterID']         = constants.CLUSTER_ID;
+   os.environ['GDRIVE_METADATA']   = constants.GDRIVE_METADATA;
    os.environ['jobKey']            = jobKey;
    os.environ['index']             = str(index);
    os.environ["IPFS_PATH"]         = constants.IPFS_REPO; # Default IPFS repo path
@@ -46,12 +62,15 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    os.environ['jobName']           = folderName;
    os.environ['storageType']       = str(storageType);
 
-   fDate = open(programPath + '/' + jobKey + "_" + index + '/modifiedDate.txt', 'r')
-   modifiedDate = fDate.read().rstrip('\n');
-   os.environ['modifiedDate'] = modifiedDate; fDate.close()
-   logTest(modifiedDate)
    logTest(jobKey + ' ' + index + ' ' + storageType + ' ' + shareToken + ' ' + miniLockId + ' ' + folderName);
    
+   if os.path.isfile(programPath + '/' + jobKey + "_" + index + '/modifiedDate.txt'):
+      fDate = open(programPath + '/' + jobKey + "_" + index + '/modifiedDate.txt', 'r')
+      modifiedDate = fDate.read().rstrip('\n');
+      os.environ['modifiedDate'] = modifiedDate;
+      fDate.close();
+      logTest(modifiedDate);
+      
    logTest("jobKey: "            + jobKey);
    logTest("index: "             + index);
    logTest("storageType: "       + storageType);
@@ -59,39 +78,44 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    logTest("encodedShareToken: " + encodedShareToken);
    logTest("miniLockId: "        + miniLockId);
    logTest("folderName: "        + folderName);
+
+   logTest("whoami: " + os.popen('whoami').read().rstrip('\n'));
+   logTest("pwd: "    + os.popen('pwd').read().rstrip('\n'));
    
+   resultsFolder = programPath + "/" + jobKey + "_" + index; 
+   os.environ['resultsFolder'] = resultsFolder;
+   logTest("resultsFolder: " + resultsFolder);
+
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
    logTest(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
-
    while(True):
       if not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno"): 
          break;
       else:
          logTest('jobInfo: ' + jobInfo);
          logTest(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
-         logTest(os.popen('whoami').read().rstrip('\n'));
-         logTest(os.popen('pwd').read().rstrip('\n'));
-         logTest("Error: Please run Parity or Geth on the background. *****")
+         logTest("Error: Please run Parity or Geth on the background.")
          jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       time.sleep(1)
 
    logTest("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
 
-   logTest("0: " + jobInfo[0])
-   logTest("1: " + jobInfo[2])
+   if jobInfo[0] == str(constants.job_state_code['COMPLETED']): #{
+      logTest('Job is already get paid.')
+      sys.exit();
+   #}
 
+   clientTimeLimit = jobInfo[5];
+   logTest("clientGasMinuteLimit: " + clientTimeLimit); # Clients minuteGas for the job
+      
    countTry = 0;
    while True: #{
       if countTry > 10:
          sys.exit()
       countTry = countTry + 1                  
 
-      logTest(jobInfo[0]); 
-      logTest(jobInfo[2]); 
-
-      clientTimeLimit = jobInfo[5];
-      logTest("TimeLimit: " + clientTimeLimit); 
+      logTest("Waiting... "); 
 
       if jobInfo[0] == str(constants.job_state_code['RUNNING']): # It will come here eventually, when setJob() is deployed.
          logTest("Job started running"); 
@@ -114,20 +138,17 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    #}
    
    logTest("jobName: " + str(folderName));
-   jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read();
-   os.environ['jobId'] = jobId;
+   jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read().rstrip('\n'); os.environ['jobId'] = jobId;
    logTest("JOBID ------------> " + str(jobId));
 
    # Here we know that job is already completed ----------------
+   ''' uncomment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
    if str(storageType) == '0' or str(storageType) == '3': #{
       countTry = 0;
       while(True): 
          if (countTry > 10):
             sys.exit()
          countTry = countTry + 1         
-
-         resultsFolder = programPath + "/" + jobKey + "_" + index; os.environ['resultsFolder'] = resultsFolder
-         logTest("IPFS add started: " + resultsFolder);
 
          #os.chdir(resultsFolder);
          #os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
@@ -142,19 +163,15 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
             logTest("newHash: " + newHash); 
             break
    #}
-   
-   if str(storageType) == '2': #{
-      encrypyFolderPath = programPath + "/" + jobKey + "_" + index;
-      os.environ['encrypyFolderPath'] = encrypyFolderPath
-      logTest("encrypyFolderPath: " + encrypyFolderPath)
-
-      os.chdir(encrypyFolderPath);
-      res = os.popen('tar -P -cvzf $encrypyFolderPath/result.tar.gz .').read();
+   '''
+   if str(storageType) == '2': #{      
+      os.chdir(resultsFolder);
+      res = os.popen('tar -P -cvzf $resultsFolder/result.tar.gz .').read();
       logTest("tarRes: " + res)
 
-      res = os.popen('mlck encrypt -f $encrypyFolderPath/result.tar.gz $clientMiniLockId --anonymous --output-file=$encrypyFolderPath/result.tar.gz.minilock').read();
-      logTest("IPFS-miniLock add started: " + programPath + " " + jobKey + " " + index);           
-      os.popen('find $encrypyFolderPath -type f ! -newer $encrypyFolderPath/modifiedDate.txt -delete')
+      res = os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read();
+      logTest(res);           
+      os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
 
       countTry = 0;
       while(True): 
@@ -162,7 +179,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
             sys.exit()
          countTry = countTry + 1;
          
-         newHash = os.popen('ipfs add $encrypyFolderPath/result.tar.gz.minilock').read();
+         newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read();
          logTest("newHash: " + newHash) 
          newHash = newHash.split(" ")[1];
 
@@ -170,12 +187,11 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
             logTest("Generated new hash return empty error. Trying again.");
          else:
             os.environ['newHash'] = newHash;
-            newHash               = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); 
-            os.environ['newHash'] = newHash;
+            newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); os.environ['newHash'] = newHash;
             logTest("newHash: " + newHash);
             break;
    #}
-   
+      
    logTest("jobId: " + jobId);
    elapsedTime = os.popen('sacct -j $jobId --format="Elapsed" | tail -n1 | head -n1').read();
    logTest("ElapsedTime: " + elapsedTime);
@@ -187,7 +203,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    elapsedSeconds = elapsedTime[2].rstrip();
 
    if "-" in str(elapsedHour):
-      logTest(elapsedHour)
+      # logTest(elapsedHour)
       elapsedHour = elapsedHour.split('-');
       elapsedDay  = elapsedHour[0];
       elapsedHour = elapsedHour[1];
@@ -195,51 +211,49 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1;
    logTest("ElapsedRawTime: " + str(elapsedRawTime))
 
-   if (elapsedRawTime > int(clientTimeLimit)):
+   if elapsedRawTime > int(clientTimeLimit):
       elapsedRawTime = clientTimeLimit
 
    os.environ['elapsedRawTime'] = str(elapsedRawTime);
-   logTest("finalizedElapsedRawTime: " + str(elapsedRawTime))
-   logTest("jobInfo: " + str(jobInfo))
+   logTest("finalizedElapsedRawTime: " + str(elapsedRawTime));
+   logTest("jobInfo: " + str(jobInfo));
 
-   if storageType == '0' or storageType == '2' or storageType == '3':                         
-      transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
-      while(True):
-         if not(transactionHash == "notconnected" or transactionHash == ""): 
-            break;
-         else:
-            logTest("Error: Please run Parity or Geth on the background. ***")
-            transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
-         time.sleep(5)
-   elif storageType == '1': #{
-      os.environ['nullByte'] = "0x00";
-      transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType  $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
-      while(True):
-         if (not(transactionHash == "notconnected" or transactionHash == "")): 
-            break;
-         else:
-            logTest("Error: Please run Parity or Geth on the background. ++******++")
-            transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $nullByte $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
-         time.sleep(5)
-
+   if storageType == '1': #{
+      os.environ['newHash'] = "0x00";
+   
       jobKeyTemp = jobKey.split('=');
       folderName = jobKeyTemp[1];
       logTest(folderName);
-
-      localEudatPath = programPath + '/' + jobKey + "_" + index;
-      os.environ['localEudatPath'] = localEudatPath;
-      os.system("rm $localEudatPath/.node-xmlhttprequest*");
       
-      os.chdir(localEudatPath) 
-      os.popen('find . -type f ! -newer $localEudatPath/modifiedDate.txt -delete') # Client's loaded files are deleted, no need to re-upload them
+      os.system("rm $resultsFolder/.node-xmlhttprequest*");
+      
+      os.chdir(resultsFolder) 
+      os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete') # Client's loaded files are deleted, no need to re-upload them
       os.popen('zip -r results_$index.zip .') 
       res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@results_\'$index\'.zip\' https://b2drop.eudat.eu/public.php/webdav/results_$index.zip').read();
       #os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
+   #}   
+   elif str(storageType) == '3': #{ == '4'
+      os.environ['newHash'] = "0x00";            
+      mimeType = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
+      logTest('mimeType: ' + mimeType); #delete
+      
+      if 'folder' in mimeType:
+         logTest('folder');         
+         os.chdir(resultsFolder);         
+         os.system('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
+         res = os.popen('zip -r results_$index.zip .').read();
+         logTest(res);
+         time.sleep(0.25);         
+         res = os.popen('gdrive upload --parent $jobKey results_$index.zip -c $GDRIVE_METADATA').read();
+         logTest(res);
+
+      elif 'gzip' in mimeType:
+         print('zip');      
+
    #}
-   logTest("ReceiptHash: " + transactionHash); 
-   txFile = open(constants.LOG_PATH + '/transactions/' + clusterID + '.txt', 'a');   
-   txFile.write(transactionHash + " end_receiptCheck\n");
-   txFile.close();
+   
+   receiptCheckTx();   
 #}
 
 if __name__ == '__main__': #{
