@@ -133,19 +133,19 @@ Please note the following:
 
 ```bash
 coreNumber         = 128;
-clusterName        = "eBlocCluster";
+clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100; 
 ipfsID             = "QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; //ipfs id | grep "ID"
 
 //RegisterCluster
-if(federationCloudId.length < 128 && clusterName.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
-     eBlocBroker.registerCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000})
+if(federationCloudId.length < 128 && clusterEmail.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
+     eBlocBroker.registerCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000})
 
 //UpdateCluster
-if(federationCloudId.length < 128 && clusterName.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
-	eBlocBroker.updateCluster(coreNumber, clusterName, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000}); 
+if(federationCloudId.length < 128 && clusterEmail.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
+	eBlocBroker.updateCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000}); 
 
 //Deregister
 eBlocBroker.deregisterCluster( {from: eth.coinbase, gas: 4500000} )
@@ -168,13 +168,6 @@ eBlocBroker.getClusterAddresses();
 
 It is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, cluster is not able to get the IPFS object from the client's node.
 
-If IPFS is successfully running on the background you should see something like this:
-
-```bash
-[~] ps aux | grep 'ipfs daemon' | grep -v 'grep'
-avatar           24190   1.1  2.1 556620660 344784 s013  SN    3:59PM   4:10.74 ipfs daemon
-```
-
 Example code could be seen under `eBlocBroker/slurmJobExample` directory:
 
 Client should put his SLURM script inside a file called `run.sh`. Please note that you do not have to identify `-n` and `-t` parameters, since they will be overritten with arguments provided by the client on the cluster side.
@@ -187,7 +180,7 @@ added QmbTzBprmFEABAWwmw1VojGLMf3nv7Z16eSgec55DYdbiX simpleSlurmJob/run.sh
 added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 ```
 
-- Main folder's IPFS hash (for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
+- Main folder's IPFS hash (for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted `jobKey` to the `eBlocBroker` by the client.
 
 <!--- 
 - If you want to share it through gitHub, please push all files into github repository and share its web URL right after `https://github.com/`, which is `USERNAME/REPOSITORY.git`.
@@ -198,10 +191,12 @@ For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git
 
 ### **How to submit a job using storageTypes**
 
+You can use `contractCall/submitJob.py` to submit your jobs. To run: `python contractCall/submitJob.py`
+
 #### **1. How to submit a job using IPFS**
 
 ```bash
-//USER Inputs-------------------------------------------------------
+# USER Inputs-------------------------------------------------------
 clusterAddress   = "0x6af0204187a93710317542d383a1b547fa42e705";  
 ipfsHash         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
 coreNum          = 1; 
@@ -209,21 +204,13 @@ coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
-storageType      = 0; // Please note that '0' stands for IPFS
-//------------------------------------------------------------------
-coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-clusterInfo      = eBlocBroker.getClusterInfo(clusterAddress);
-coreLimit        = clusterInfo[3];
-coreMinutePrice  = clusterInfo[4];
-myMiniLockId     = "";
-
-if (coreNum <= coreLimit && jobDescription.length < 128 && ipfsHash.length == 46) {
-	eBlocBroker.submitJob(clusterAddress, ipfsHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum * coreMinutePrice * coreMinuteGas, gas: 4500000 } );
-}
+storageType      = 0; // Please note that '0' stands for IPFS repository share. Fixed.
+# ------------------------------------------------------------------
+myMiniLockId     = ""; #Fixed.
 ```
 #### **2. How to submit a job using EUDAT**
 
-Before doing this you have to be sure that you have shared your folder with cluster's FId. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
+Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
 
 
 Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol (`=`) in between.
@@ -232,7 +219,7 @@ Now `jobHash` should be your `FederationCloudId` followed by the name of the fol
 #####  **Script:** 
 
 ```bash
-//USER Inputs-------------------------------------------------------
+# USER Inputs-------------------------------------------------------
 clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
 jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
 coreNum        = 1;
@@ -240,18 +227,9 @@ coreGasDay     = 0;
 coreGasHour    = 0;
 coreGasMin     = 10;
 jobDescription = "Science";
-storageType    = 1; // Please note that '1' stands for EUDAT
-//------------------------------------------------------------------
-coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-clusterInfo    = eBlocBroker.getClusterInfo(clusterAddress);
-coreLimit     = clusterInfo[3];
-pricePerMin   = clusterInfo[4];
-myMiniLockId   = "";
-
-if (coreNum <= coreLimit && jobDescription.length < 128 ) {
-	eBlocBroker.submitJob(clusterAddress, jobKey, coreNum, jobDescription,
-coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum * pricePerMin * coreMinuteGas, gas: 4500000 } );
-}
+storageType    = 1; # Please note that '1' stands for EUDAT repository share. Fixed.
+# ------------------------------------------------------------------
+myMiniLockId     = ""; # Fixed
 ```
 
 #### **3. How to submit a job using IPFS+miniLock**
@@ -289,46 +267,82 @@ added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 
 ###### **Script:**
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; /* clusterID you would like to submit. */
-clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
-clusterCoreLimit = clusterInfo[3]
-pricePerMin      = clusterInfo[4]
+# USER Inputs-------------------------------------------------------
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit. 
 jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
 coreNum          = 1; 
 coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
-coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-storageType      = 2; // Please note that 0 stands for IPFS , 1 stands for eudat. 2 stands for IPFS with miniLock
-
-if (coreNum <= clusterCoreLimit && jobDescription.length < 128 && miniLockId.length == 46 && jobKey.length == 46) {
-	eBlocBroker.submitJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
-}
+storageType      = 2; // Please note 2 stands for IPFS with miniLock repository share. Fixed.
+myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
+# ------------------------------------------------------------------
 ```
 
 #### **4. How to submit a job using GitHub**
 
+If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`
+
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
-clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
-clusterCoreLimit = clusterInfo[3]
-pricePerMin      = clusterInfo[4]
-jobKey           = "avatar-lavventura=simpleSlurmJob" /* Please write link after "https://github.com/" Your username followed by the folder name having '=' in between. */
-myMiniLockId     = ""
+# USER Inputs-------------------------------------------------------
+clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit.
+jobKey           = "avatar-lavventura=simpleSlurmJob" 
 coreNum          = 1; 
 coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
-coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-storageType      = 3 ; /* Please note that 3 stands for github repository share */
-
-if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
-	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 4500000 } );
-}
+storageType      = 3 ; # Please note that 4 stands for github repository share. Fixed.
+# ------------------------------------------------------------------
+myMiniLockId     = ""; # Fixed
 ```
+-------------------------
+
+#### **5. How to submit a job using Google-Drive**
+
+##### [gdrive] (https://github.com/prasmussen/gdrive) install:
+
+```
+$ go get github.com/prasmussen/gdrive
+$ gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
+$ echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
+$ source .profile
+$ gdrive about # This line authenticates the user only once on the same node.
+Authentication needed
+Go to the following url in your browser:
+https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=...e=state
+Enter verification code:
+```
+
+First you have to share your folder with the cluster:
+
+```
+folderPath='/home/prc/multiple/workingTestIpfs'
+folderName='ipfs'
+clusterToShare='aalimog1@binghamton.edu'
+gdrive upload --recursive $folderPath/$folderName
+jobKey=$(gdrive list | grep $folderName | awk '{print $1}')
+echo $jobKey # This is jobKey
+gdrive share $jobKey  --role writer --type user --email $clusterToShare
+```
+
+---------
+
+```bash
+# USER Inputs-------------------------------------------------------
+clusterID        = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; # clusterID you would like to submit.
+jobKey           = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
+coreNum          = 1; 
+coreGasDay       = 0;
+coreGasHour      = 0;
+coreGasMin       = 10;
+jobDescription   = "Science"
+storageType      = 4; # Please note that 4 stands for gdrive repository share. Fixed. 
+# ------------------------------------------------------------------
+myMiniLockId     = ""; # Fixed.
+```
+
 
 ### **How to obtain Submitted Job's Information:**
 
@@ -336,12 +350,11 @@ if (coreNum <= clusterCoreLimit && jobDescription.length < 128) {
 - `ipfsOut` is Completed Job's folder's ipfs hash. This exists if the job is completed.
 
 ```bash
-clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID that you have submitted your job.
+clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.
 jobHash = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=134633894220713919382117768988457393273"
 index   = 0;      
 eBlocBroker.getJobInfo(clusterID, jobHash, index);
 ```
-
 -----------
 
 ### Events

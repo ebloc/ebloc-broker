@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from datetime import datetime, timedelta
 import owncloud, hashlib, getpass, sys, os, time, subprocess, constants, endCode
 from   subprocess import call
 import os.path
@@ -67,51 +68,90 @@ def isIpfsOn(): #{
 
 def sbatchCall(): #{
    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); logTest(myDate);
-   txFile = open('modifiedDate.txt', 'w'); txFile.write(myDate + '\n' );
+   txFile = open('modifiedDate.txt', 'w');
+   txFile.write(myDate + '\n' );   
    txFile.close();
-   time.sleep(0.25)
+   time.sleep(0.25);
 
    os.system("cp run.sh ${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh");
+   
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');
-   jobCoreNum = jobInfo[1]
+
+   jobCoreNum    = jobInfo[1];
+   coreSecondGas = timedelta(seconds=int(int(jobInfo[5]) * 60)); # Client's requested seconds to run his/her job
+   d             = datetime(1,1,1) + coreSecondGas;
+   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute); os.environ['timeLimit'] = timeLimit;
+   
 
    os.environ['jobCoreNum'] = jobCoreNum;
-   logTest("RequestedCoreNum: " + str(jobCoreNum))
+   logTest("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
    jobId = os.popen('sbatch -N$jobCoreNum $ipfsHashes/${jobKey}_$index/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
-
-   os.environ['jobId'] = jobId;
+   os.environ['jobId'] = jobId;  
+   os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit');
+   
    if not jobId.isdigit():
       logTest("Error occured, jobId is not a digit.")
       return(); # Detects an error on the SLURM side
 #}
 
 #------------------------------------------------------------------------------
-      
-def driverGithubCall(jobKey, index): #{
+
+def driverGdriveCall(jobKey, index, folderType): #{
+   global jobKeyGlobal; jobKeyGlobal = jobKey
+   global indexGlobal;  indexGlobal  = index;
+
+   logTest("key: "   + jobKey);
+   logTest("index: " + index);
+
+   os.environ['jobKey']      = str(jobKey)
+   os.environ['index']       = str(index);
+   os.environ['ipfsHashes']  = str(ipfsHashes);
+   os.environ['folderIndex'] = folderType; 
+   os.environ['shareToken']  = "-1";
+   os.environ['miniLockId']  = "-1";
+
+   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;
+   os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder;
+   
+   if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
+      os.makedirs(localOwnCloudPathFolder)
+
+   mimeType = os.popen('gdrive info $jobKey | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
+   if 'folder' in mimeType:
+      folderName = os.popen('gdrive info $jobKey | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n');
+      os.environ['folderName']  = folderName;
+      os.system("gdrive download --recursive $jobKey --force --path $localOwnCloudPathFolder"); # Gets the source code      
+      os.system("mv $localOwnCloudPathFolder/$folderName/* $localOwnCloudPathFolder/ ");
+      os.system("rm -rf $localOwnCloudPathFolder/$folderName");      
+   elif 'gzip' in mimeType:
+      print('gzip');
+
+   os.chdir(localOwnCloudPathFolder);
+   sbatchCall();    
+#}
+def driverGithubCall(jobKey, index, folderType): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
    logTest("key: "   + jobKey);
    logTest("index: " + index)
 
-   os.environ['jobKey']      = str(jobKey)
    os.environ['jobKeyGit']   = str(jobKey).replace("=", "/")
    os.environ['index']       = str(index);
-
    os.environ['ipfsHashes']  = str(ipfsHashes);
-   os.environ['folderIndex'] = "3"; 
+   os.environ['folderIndex'] = folderType; 
    os.environ['shareToken']  = "-1";
    os.environ['miniLockId']  = "-1";
 
    localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder;
    
    if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
-      os.makedirs(localOwnCloudPathFolder)
+      os.makedirs(localOwnCloudPathFolder);
  
-   os.popen("git clone https://github.com/$jobKeyGit.git $localOwnCloudPathFolder/"); # Gets the source code
+   os.system("git clone https://github.com/$jobKeyGit.git $localOwnCloudPathFolder/"); # Gets the source code
    os.chdir(localOwnCloudPathFolder);   
    sbatchCall(); 
 #}
@@ -130,9 +170,9 @@ def driverEudatCall(jobKey, index): #{
    os.environ['miniLockId']  = "-1";
 
    jobKeyTemp = jobKey.split('=');
-   owner      = jobKeyTemp[0]
-   folderName = jobKeyTemp[1]
-   header     = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header']     = header;
+   owner      = jobKeyTemp[0];
+   folderName = jobKeyTemp[1];
+   header     = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 
    f        = open(constants.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
    password = f.read().rstrip('\n').replace(" ", "");
@@ -178,10 +218,10 @@ def driverEudatCall(jobKey, index): #{
     #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-   os.system("unzip $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.");
-   os.system("mv    $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ");
-   os.system("rm -f $localOwnCloudPathFolder/output.zip");
-   os.system("rmdir $localOwnCloudPathFolder/$eudatFolderName");
+   os.system("unzip  $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.");
+   os.system("mv     $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ");
+   os.system("rm -f  $localOwnCloudPathFolder/output.zip");
+   os.system("rm -rf $localOwnCloudPathFolder/$eudatFolderName");
    
    isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
@@ -200,7 +240,7 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
     os.environ['index']       = str(index);
     os.environ['ipfsHashes']  = str(ipfsHashes);
     os.environ['folderIndex'] = str(folderType);
-    os.environ['shareToken']  = "-1"
+    os.environ['shareToken']  = "-1";
     
     if folderType == '0':
        os.environ['miniLockId'] = "-1"
