@@ -27,7 +27,7 @@ contract eBlocBroker {
     mapping(address => Library.data) clusterContract;   
 
     modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
-	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 4)); /* coreMinuteGas is maximum 1 day */
+	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 5) ); /* coreMinuteGas is maximum 1 day */
 	_ ;
     }
 

@@ -38,9 +38,9 @@ library Library {
 
     struct intervalNode {
 	interval[] list; /* A dynamically-sized array of `interval` structs */
-	uint32 head;
-	uint32 coreNumber;
-	uint32 deletedItemNum;
+	uint32 head; /* */
+	uint32 coreNumber; /* Core number of the cluster */
+	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
 
     /* Invoked, when cluster calls updateCluster */
