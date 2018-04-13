@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-library Library {
+library Lib {
     
     /* Submitted Job's information */
     struct status {
@@ -38,20 +38,22 @@ library Library {
 
     struct intervalNode {
 	interval[] list; /* A dynamically-sized array of `interval` structs */
-	uint32 tail; /* */
+	uint32 tail; /* Tail of the linked list */
 	uint32 coreNumber; /* Core number of the cluster */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
 
     /* Invoked, when cluster calls updateCluster */
-    function update(data storage self, uint price, uint32 coreNumber) public {
+    function update(data storage self, uint price, uint32 coreNumber) public
+    {
 	self.coreMinutePrice        = price;
 	self.receiptList.coreNumber = coreNumber;
 	self.blockReadFrom          = block.number;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(data storage self, uint32 memLen, uint price, uint32 coreNumber) public {
+    function constructCluster(data storage self, uint32 memLen, uint price, uint32 coreNumber) public
+    {
 	self.isExist           = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
@@ -59,19 +61,15 @@ library Library {
 	self.coreMinutePrice   = price;
 	self.blockReadFrom     = block.number;
 
-	constructReceiptList(self.receiptList, coreNumber);
+	intervalNode storage selfReceiptList = self.receiptList;
+	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
+	selfReceiptList.tail           = 0;
+	selfReceiptList.coreNumber     = coreNumber;
+	selfReceiptList.deletedItemNum = 0;
     }
 
-    function constructReceiptList(intervalNode storage self, uint32 coreNum) public
-    {
-	self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
-	//self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
-	self.tail           = 0;
-	self.coreNumber     = coreNum;
-	self.deletedItemNum = 0;
-    }
-
-    function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public returns (bool success)
+    function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public
+	returns (bool success)
     {
 	bool     flag = false;
 	uint32   addr = self.tail;

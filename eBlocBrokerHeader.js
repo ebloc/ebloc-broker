@@ -88,26 +88,6 @@ exports.setJobStatus = function(var1, var2, var3, var4) {
     console.log( hash );
 };
 
-exports.getClusterReceivedAmount = function( var1) {
-    return myContractInstance.getClusterReceivedAmount( var1 );
-};
-
-exports.getJobInfo = function(var1, var2, var3) {
-    return myContractInstance.getJobInfo(var1, var2, var3);
-};
-
-exports.getSubmittedJobCore = function(var1, var2, var3) {
-    return myContractInstance.getSubmittedJobCore(var1, var2, var3 );
-};
-
-exports.getJobOwner = function(var1, var2, var3) {
-    return myContractInstance.getJobOwner( var1, var2, var3 );
-};
-
-exports.getClusterAddresses = function() {
-    return myContractInstance.getClusterAddresses();
-};
-
 exports.updateCluster = function(var1, var2, var3, var4, var5, var6) {
     hash = myContractInstance.updateCluster( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit } );
     console.log(hash);
@@ -121,12 +101,8 @@ exports.getClusterIpfsId = function(var1) {
     return myContractInstance.getClusterIpfsId(var1);
 };
 
-exports.isClusterExist = function(var1) {
-    return myContractInstance.isClusterExist(var1);
-};
-
 exports.getClusterInfo = function(var1) {
-    return myContractInstance.getClusterInfo( var1 );
+    return myContractInstance.getClusterInfo(var1);
 };
 
 exports.highestBlock = function() {
