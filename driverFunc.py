@@ -15,7 +15,7 @@ ipfsHashes       = constants.PROGRAM_PATH;
 os.environ['eblocPath'] = constants.EBLOCPATH;
 os.environ['clusterID'] = constants.CLUSTER_ID
 
-def logTest(strIn): #{
+def log(strIn): #{
    print(strIn);
    txFile = open(constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n");
@@ -36,7 +36,7 @@ def contractCall(val): #{
          break;
       else:
          if (printFlag == 1):
-            logTest("Error: Please run Parity or Geth on the background.**************************************************************")
+            log("Error: Please run Parity or Geth on the background.**************************************************************")
             printFlag = 0;
             ret = os.popen(val + "| node").read().rstrip('\n').replace(" ", "");
             time.sleep(1);
@@ -58,16 +58,16 @@ def isSlurmOn(): #{
 def isIpfsOn(): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if (int(check) == 0):
-      logTest("Error: IPFS does not work on the background. Running:\nipfs daemon &");
+      log("Error: IPFS does not work on the background. Running:\nipfs daemon &");
       os.system("bash " + constants.EBLOCPATH + "/runIPFS.sh");
       time.sleep(5);
       os.system("cat ipfs.out");
    else:
-      logTest("IPFS is already on");
+      log("IPFS is already on");
 #}
 
 def sbatchCall(): #{
-   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); logTest(myDate);
+   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n'); log(myDate);
    txFile = open('modifiedDate.txt', 'w');
    txFile.write(myDate + '\n' );   
    txFile.close();
@@ -81,19 +81,18 @@ def sbatchCall(): #{
    jobCoreNum    = jobInfo[1];
    coreSecondGas = timedelta(seconds=int(int(jobInfo[5]) * 60)); # Client's requested seconds to run his/her job
    d             = datetime(1,1,1) + coreSecondGas;
-   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute); os.environ['timeLimit'] = timeLimit;
-   
+   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute); os.environ['timeLimit'] = timeLimit;   
 
    os.environ['jobCoreNum'] = jobCoreNum;
-   logTest("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
+   log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sbatch -N$jobCoreNum $ipfsHashes/${jobKey}_$index/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
+   jobId = os.popen('sbatch -N$jobCoreNum $ipfsHashes/${jobKey}_$index/JOB_TO_RUN/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
    os.environ['jobId'] = jobId;  
    os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit');
    
    if not jobId.isdigit():
-      logTest("Error occured, jobId is not a digit.")
+      log("Error occured, jobId is not a digit.")
       return(); # Detects an error on the SLURM side
 #}
 
@@ -103,8 +102,8 @@ def driverGdriveCall(jobKey, index, folderType): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
-   logTest("key: "   + jobKey);
-   logTest("index: " + index);
+   log("key: "   + jobKey);
+   log("index: " + index);
 
    os.environ['jobKey']      = str(jobKey)
    os.environ['index']       = str(index);
@@ -113,31 +112,31 @@ def driverGdriveCall(jobKey, index, folderType): #{
    os.environ['shareToken']  = "-1";
    os.environ['miniLockId']  = "-1";
 
-   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index;
-   os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder;
+   resultsFolder = ipfsHashes + '/' + jobKey + "_" + index;
+   os.environ['resultsFolder'] = resultsFolder;
    
-   if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
-      os.makedirs(localOwnCloudPathFolder)
+   if not os.path.isdir(resultsFolder): # If folder does not exist
+      os.makedirs(resultsFolder)
 
    mimeType = os.popen('gdrive info $jobKey | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
    if 'folder' in mimeType:
       folderName = os.popen('gdrive info $jobKey | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n');
       os.environ['folderName']  = folderName;
-      os.system("gdrive download --recursive $jobKey --force --path $localOwnCloudPathFolder"); # Gets the source code      
-      os.system("mv $localOwnCloudPathFolder/$folderName/* $localOwnCloudPathFolder/ ");
-      os.system("rm -rf $localOwnCloudPathFolder/$folderName");      
+      os.system("gdrive download --recursive $jobKey --force --path $resultsFolder"); # Gets the source code      
+      os.system("mv $resultsFolder/$folderName $resultsFolder/JOB_TO_RUN");
    elif 'gzip' in mimeType:
       print('gzip');
 
-   os.chdir(localOwnCloudPathFolder);
+   os.chdir(resultsFolder + '/JOB_TO_RUN');
    sbatchCall();    
 #}
+
 def driverGithubCall(jobKey, index, folderType): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
-   logTest("key: "   + jobKey);
-   logTest("index: " + index)
+   log("key: "   + jobKey);
+   log("index: " + index)
 
    os.environ['jobKeyGit']   = str(jobKey).replace("=", "/")
    os.environ['index']       = str(index);
@@ -146,13 +145,13 @@ def driverGithubCall(jobKey, index, folderType): #{
    os.environ['shareToken']  = "-1";
    os.environ['miniLockId']  = "-1";
 
-   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder;
+   resultsFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['resultsFolder'] = resultsFolder;
    
-   if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
-      os.makedirs(localOwnCloudPathFolder);
+   if not os.path.isdir(resultsFolder): # If folder does not exist
+      os.makedirs(resultsFolder);
  
-   os.system("git clone https://github.com/$jobKeyGit.git $localOwnCloudPathFolder/"); # Gets the source code
-   os.chdir(localOwnCloudPathFolder);   
+   os.system("git clone https://github.com/$jobKeyGit.git $resultsFolder/JOB_TO_RUN"); # Gets the source code
+   os.chdir(resultsFolder + '/JOB_TO_RUN');
    sbatchCall(); 
 #}
 
@@ -160,8 +159,8 @@ def driverEudatCall(jobKey, index): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
-   logTest("key: "   + jobKey)
-   logTest("index: " + index)
+   log("key: "   + jobKey)
+   log("index: " + index)
 
    os.environ['jobKey']      = str(jobKey);
    os.environ['index']       = str(index);
@@ -178,12 +177,12 @@ def driverEudatCall(jobKey, index): #{
    password = f.read().rstrip('\n').replace(" ", "");
    f.close()
 
-   logTest("Login into owncloud");
+   log("Login into owncloud");
    oc = owncloud.Client('https://b2drop.eudat.eu/');
    oc.login('aalimog1@binghamton.edu', password); # Unlocks EUDAT account
    shareList = oc.list_open_remote_share();
 
-   logTest("finding_acceptId")
+   log("finding_acceptId")
    acceptFlag      = 0;
    eudatFolderName = "";
    for i in range(len(shareList)-1, -1, -1): # Starts iterating from last item  to first one
@@ -194,7 +193,7 @@ def driverEudatCall(jobKey, index): #{
       shareToken      = shareList[i]['share_token']
 
       if (inputFolderName == folderName) and (inputOwner == owner):
-         logTest("InputId:_" + inputId + "_ShareToken:_" + shareToken)
+         log("InputId:_" + inputId + "_ShareToken:_" + shareToken)
          os.environ['shareToken']      = str(shareToken);
          os.environ['eudatFolderName'] = str(inputFolderName);
          eudatFolderName               = inputFolderName;
@@ -203,32 +202,30 @@ def driverEudatCall(jobKey, index): #{
 
    if acceptFlag == 0:
       oc.logout()
-      logTest("Couldn't find the shared file");
+      log("Couldn't find the shared file");
       return;
 
-   localOwnCloudPathFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['localOwnCloudPathFolder'] = localOwnCloudPathFolder;
+   resultsFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['resultsFolder'] = resultsFolder;
 
-   if not os.path.isdir(localOwnCloudPathFolder): # If folder does not exist
-      os.makedirs(localOwnCloudPathFolder)
+   if not os.path.isdir(resultsFolder): # If folder does not exist
+      os.makedirs(resultsFolder)
 
-   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$localOwnCloudPathFolder/output.zip" ).read() # Downloads shared file as .zip.
+   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolder/output.zip").read() # Downloads shared file as .zip, much faster.
 
-    #checkRunExist = os.popen("unzip -l $localOwnCloudPathFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
+    #checkRunExist = os.popen("unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
     #if (not eudatFolderName + "/run.sh" in checkRunExist ):
-    #logTest("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
+    #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-   os.system("unzip  $localOwnCloudPathFolder/output.zip -d      $localOwnCloudPathFolder/.");
-   os.system("mv     $localOwnCloudPathFolder/$eudatFolderName/* $localOwnCloudPathFolder/ ");
-   os.system("rm -f  $localOwnCloudPathFolder/output.zip");
-   os.system("rm -rf $localOwnCloudPathFolder/$eudatFolderName");
+   os.system("unzip -j $resultsFolder/output.zip -d $resultsFolder/JOB_TO_RUN");
+   os.system("rm -f $resultsFolder/output.zip");
    
-   isTarExist = os.popen("ls $localOwnCloudPathFolder/*.tar.gz | wc -l").read();
+   isTarExist = os.popen("ls $resultsFolder/JOB_TO_RUN/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
-      os.popen("tar -xf $localOwnCloudPathFolder/*.tar.gz -C $localOwnCloudPathFolder/" ).read();
-      os.popen("rm -f $localOwnCloudPathFolder/*.tar.gz").read();
-      
-   os.chdir(localOwnCloudPathFolder); # 'cd' into the working path and call sbatch from there
+      os.popen("tar -xf $resultsFolder/JOB_TO_RUN/*.tar.gz -C $resultsFolder/JOB_TO_RUN" ).read();
+      os.popen("rm -f $resultsFolder/JOB_TO_RUN/*.tar.gz").read();
+
+   os.chdir(resultsFolder + '/JOB_TO_RUN'); # 'cd' into the working path and call sbatch from there
    sbatchCall();
 #}
 
@@ -236,54 +233,55 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
     global jobKeyGlobal; jobKeyGlobal=jobKey
     global indexGlobal;  indexGlobal=index;
 
+    isIpfsOn();
     os.environ['jobKey']      = jobKey;
     os.environ['index']       = str(index);
     os.environ['ipfsHashes']  = str(ipfsHashes);
     os.environ['folderIndex'] = str(folderType);
     os.environ['shareToken']  = "-1";
     
+    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+
     if folderType == '0':
        os.environ['miniLockId'] = "-1"
     else:
        os.environ['miniLockId'] = miniLockId
+       
+    log("jobKey: " + jobKey);
 
-    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')";
-    os.environ['header'] = header;
-    logTest("jobKey: " + jobKey);
+    resultsFolder = ipfsHashes + '/' + jobKey + "_" + index;
 
-    jobSavePath = ipfsHashes + '/' + jobKey + "_" + index;
-    os.environ['jobSavePath']   = jobSavePath
+    if not os.path.isdir(resultsFolder): # If folder does not exist
+       os.system("mkdir -p " + resultsFolder);
+       os.system("mkdir -p " + resultsFolder + '/JOB_TO_RUN');
 
-    if not os.path.isdir(jobSavePath): # If folder does not exist
-       os.system("mkdir -p " + jobSavePath);
-
-    os.chdir(jobSavePath);
+    os.chdir(resultsFolder + '/JOB_TO_RUN');
+    
     if os.path.isfile(jobKey):
-       os.system('rm -f $jobKey');
-
-    isIpfsOn();
+       os.system('rm -f $jobKey');    
 
     ipfsCallCounter = 0;
     isIPFSHashExist = os.popen("bash $eblocPath/ipfsStat.sh $jobKey").read();
 
-    logTest(isIPFSHashExist);
-
+    log(isIPFSHashExist);
+    
+    os.environ['resultsFolder'] = resultsFolder + '/JOB_TO_RUN';
     if ("CumulativeSize" in isIPFSHashExist):
-       os.system('bash $eblocPath/ipfsGet.sh $jobKey $jobSavePath');
+       os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
 
        if (folderType == '2'): # case for the ipfsMiniLock
           os.environ['passW'] = 'exfoliation econometrics revivifying obsessions transverse salving dishes';
-          res = os.popen('mlck decrypt -f $jobSavePath/$jobKey --passphrase="$passW" --output-file=$jobSavePath/output.tar.gz').read();
-          logTest(res)
+          res = os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read();
+          log(res)
 
-          os.system('rm -f $jobSavePath/$jobKey');
-          os.system('tar -xf $jobSavePath/output.tar.gz && rm -f $jobSavePath/output.tar.gz');
+          os.system('rm -f $resultsFolder/$jobKey');
+          os.system('tar -xf $resultsFolder/output.tar.gz && rm -f $resultsFolder/output.tar.gz');
 
        if not os.path.isfile('run.sh'):
-          logTest("run.sh does not exist")
+          log("run.sh does not exist")
           return
     else:
-       logTest("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!"); # IPFS file could not be accessed
+       log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!"); # IPFS file could not be accessed
        return;
     
     sbatchCall();
@@ -307,7 +305,7 @@ if __name__ == '__main__': #{
       if not(jobCoreNum == "notconnected" or jobCoreNum == ""):
          break;
       else:
-         logTest("Error: Please run Parity or Geth on the background.**************************************************************")
+         log("Error: Please run Parity or Geth on the background.**************************************************************")
          jobInfo    = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
          jobInfo    = jobInfo.split(',');
          jobCoreNum = jobInfo[1];

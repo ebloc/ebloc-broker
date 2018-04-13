@@ -36,6 +36,7 @@ job_state_code['SUSPENDED']    = 14
 job_state_code['TIMEOUT']      = 15
 
 def logTest(strIn):
+def log(strIn):
    print(strIn);
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n");
@@ -46,9 +47,11 @@ def isIpfsOn(os, time): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if (int(check) == 0):
       logTest("Error: IPFS does not work on the background. Running:\nipfs daemon &");
+      log("Error: IPFS does not work on the background. Running:\nipfs daemon &");
       os.system("bash " + EBLOCPATH + "/runIPFS.sh");
       time.sleep(5);
       os.system("cat ipfs.out");
    else:
       logTest("IPFS is already on.");
+      log("IPFS is already on.");
 #}
