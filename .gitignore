@@ -128,3 +128,5 @@ clusterDriver\.out
 contractCalls/\.#submitIpfsJob\.py
 
 contractCalls/\.#getClusterInfo\.py
+
+\.#slurmScript\.sh
