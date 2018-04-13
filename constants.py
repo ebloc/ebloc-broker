@@ -35,7 +35,6 @@ job_state_code['STOPPED']      = 13
 job_state_code['SUSPENDED']    = 14
 job_state_code['TIMEOUT']      = 15
 
-def logTest(strIn):
 def log(strIn):
    print(strIn);
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a');
