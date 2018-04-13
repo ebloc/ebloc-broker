@@ -87,7 +87,7 @@ def sbatchCall(): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sbatch -N$jobCoreNum $ipfsHashes/${jobKey}_$index/JOB_TO_RUN/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
+   jobId = os.popen('sbatch -N$jobCoreNum $resultsFolder/${jobKey}_${index}_${folderIndex}_${shareToken}_$miniLockId.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
    os.environ['jobId'] = jobId;  
    os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit');
    
@@ -96,8 +96,6 @@ def sbatchCall(): #{
       return(); # Detects an error on the SLURM side
 #}
 
-#------------------------------------------------------------------------------
-
 def driverGdriveCall(jobKey, index, folderType): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
@@ -105,29 +103,53 @@ def driverGdriveCall(jobKey, index, folderType): #{
    log("key: "   + jobKey);
    log("index: " + index);
 
-   os.environ['jobKey']      = str(jobKey)
-   os.environ['index']       = str(index);
-   os.environ['ipfsHashes']  = str(ipfsHashes);
-   os.environ['folderIndex'] = folderType; 
-   os.environ['shareToken']  = "-1";
-   os.environ['miniLockId']  = "-1";
+   os.environ['jobKey']          = str(jobKey)
+   os.environ['index']           = str(index);
+   os.environ['folderIndex']     = folderType; 
+   os.environ['shareToken']      = "-1";
+   os.environ['miniLockId']      = "-1";
+   os.environ['GDRIVE_METADATA'] = constants.GDRIVE_METADATA;
 
-   resultsFolder = ipfsHashes + '/' + jobKey + "_" + index;
-   os.environ['resultsFolder'] = resultsFolder;
+   resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
+   os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
+   os.environ['resultsFolder']     = resultsFolder;
    
-   if not os.path.isdir(resultsFolder): # If folder does not exist
-      os.makedirs(resultsFolder)
+   if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
+      os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
+      
+   mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n')
+   folderName = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n');
+   os.environ['folderName']  = folderName;
+   log(mimeType);
+   
+   if 'folder' in mimeType: # Recieved job is in folder format
+      log(os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()); # Gets the source code      
+      os.system("mv $resultsFolderPrev/$folderName $resultsFolder");
 
-   mimeType = os.popen('gdrive info $jobKey | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
-   if 'folder' in mimeType:
-      folderName = os.popen('gdrive info $jobKey | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n');
-      os.environ['folderName']  = folderName;
-      os.system("gdrive download --recursive $jobKey --force --path $resultsFolder"); # Gets the source code      
-      os.system("mv $resultsFolder/$folderName $resultsFolder/JOB_TO_RUN");
-   elif 'gzip' in mimeType:
-      print('gzip');
-
-   os.chdir(resultsFolder + '/JOB_TO_RUN');
+      isTarExist = os.popen("ls $resultsFolder/*.tar.gz | wc -l").read();
+      if int(isTarExist) > 0:
+         log(os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read());
+         os.popen("rm -f $resultsFolder/*.tar.gz").read();
+         
+      isZipExist = os.popen("ls $resultsFolder/*.zip | wc -l").read();
+      if int(isTarExist) > 0:
+         os.popen("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder").read();
+         os.popen("rm -f $resultsFolder/*.zip").read();      
+   elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
+      os.system("mkdir -p $resultsFolder"); # Gets the source code
+      os.system("gdrive download $jobKey --force --path $resultsFolder/../"); # Gets the source code
+      log(os.popen("tar -xf $resultsFolder/../*.tar.gz -C $resultsFolder" ).read());
+      os.popen("rm -f $resultsFolder/../*.tar.gz").read();      
+   elif 'zip' in mimeType: # Recieved job is in zip format
+      os.system("mkdir -p $resultsFolder"); # Gets the source code
+      os.system("gdrive download $jobKey --force --path $resultsFolderPrev/"); # Gets the source code
+      log(os.popen('echo gdrive download --recursive $jobKey --force --path $resultsFolderPrev/').read())
+      os.system("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder");
+      os.system("rm -f $resultsFolderPrev/$folderName");      
+   else:
+      sys.exit();
+      
+   os.chdir(resultsFolder);
    sbatchCall();    
 #}
 
@@ -140,18 +162,18 @@ def driverGithubCall(jobKey, index, folderType): #{
 
    os.environ['jobKeyGit']   = str(jobKey).replace("=", "/")
    os.environ['index']       = str(index);
-   os.environ['ipfsHashes']  = str(ipfsHashes);
    os.environ['folderIndex'] = folderType; 
    os.environ['shareToken']  = "-1";
    os.environ['miniLockId']  = "-1";
 
-   resultsFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['resultsFolder'] = resultsFolder;
-   
-   if not os.path.isdir(resultsFolder): # If folder does not exist
-      os.makedirs(resultsFolder);
+   resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; 
+   os.environ['resultsFolder'] = resultsFolder;
+
+   if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
+      os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
  
-   os.system("git clone https://github.com/$jobKeyGit.git $resultsFolder/JOB_TO_RUN"); # Gets the source code
-   os.chdir(resultsFolder + '/JOB_TO_RUN');
+   os.system("git clone https://github.com/$jobKeyGit.git $resultsFolder"); # Gets the source code
+   os.chdir(resultsFolder);
    sbatchCall(); 
 #}
 
@@ -164,9 +186,12 @@ def driverEudatCall(jobKey, index): #{
 
    os.environ['jobKey']      = str(jobKey);
    os.environ['index']       = str(index);
-   os.environ['ipfsHashes']  = str(ipfsHashes);
    os.environ['folderIndex'] = "1";
    os.environ['miniLockId']  = "-1";
+
+   resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
+   os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
+   os.environ['resultsFolder'] = resultsFolder;
 
    jobKeyTemp = jobKey.split('=');
    owner      = jobKeyTemp[0];
@@ -205,41 +230,47 @@ def driverEudatCall(jobKey, index): #{
       log("Couldn't find the shared file");
       return;
 
-   resultsFolder = ipfsHashes + '/' + jobKey + "_" + index; os.environ['resultsFolder'] = resultsFolder;
+   if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
+      os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
 
-   if not os.path.isdir(resultsFolder): # If folder does not exist
-      os.makedirs(resultsFolder)
-
-   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolder/output.zip").read() # Downloads shared file as .zip, much faster.
+   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read() # Downloads shared file as .zip, much faster.
 
     #checkRunExist = os.popen("unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
     #if (not eudatFolderName + "/run.sh" in checkRunExist ):
     #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
     #return; #detects error on the SLURM side.
 
-   os.system("unzip -j $resultsFolder/output.zip -d $resultsFolder/JOB_TO_RUN");
-   os.system("rm -f $resultsFolder/output.zip");
+   os.system("unzip -j $resultsFolderPrev/output.zip -d $resultsFolder");
+   os.system("rm -f $resultsFolderPrev/output.zip");
    
-   isTarExist = os.popen("ls $resultsFolder/JOB_TO_RUN/*.tar.gz | wc -l").read();
+   isTarExist = os.popen("ls $resultsFolder/*.tar.gz | wc -l").read();
    if int(isTarExist) > 0:
-      os.popen("tar -xf $resultsFolder/JOB_TO_RUN/*.tar.gz -C $resultsFolder/JOB_TO_RUN" ).read();
-      os.popen("rm -f $resultsFolder/JOB_TO_RUN/*.tar.gz").read();
+      os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read();
+      os.popen("rm -f $resultsFolder/*.tar.gz").read();
 
-   os.chdir(resultsFolder + '/JOB_TO_RUN'); # 'cd' into the working path and call sbatch from there
+   isZipExist = os.popen("ls $resultsFolder/*.zip | wc -l").read();
+   if int(isTarExist) > 0:
+      log(os.popen("" ).read());
+      os.popen("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder").read();
+      os.popen("rm -f $resultsFolder/*.zip").read();
+
+   os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
    sbatchCall();
 #}
 
 def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
-    global jobKeyGlobal; jobKeyGlobal=jobKey
-    global indexGlobal;  indexGlobal=index;
+    global jobKeyGlobal; jobKeyGlobal = jobKey
+    global indexGlobal;  indexGlobal  = index;
 
     isIpfsOn();
     os.environ['jobKey']      = jobKey;
     os.environ['index']       = str(index);
-    os.environ['ipfsHashes']  = str(ipfsHashes);
     os.environ['folderIndex'] = str(folderType);
     os.environ['shareToken']  = "-1";
-    
+
+    resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; 
+    os.environ['resultsFolder'] = resultsFolder;
+
     header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 
     if folderType == '0':
@@ -249,13 +280,11 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
        
     log("jobKey: " + jobKey);
 
-    resultsFolder = ipfsHashes + '/' + jobKey + "_" + index;
-
-    if not os.path.isdir(resultsFolder): # If folder does not exist
+    if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
+       os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)   
        os.system("mkdir -p " + resultsFolder);
-       os.system("mkdir -p " + resultsFolder + '/JOB_TO_RUN');
 
-    os.chdir(resultsFolder + '/JOB_TO_RUN');
+    os.chdir(resultsFolder);
     
     if os.path.isfile(jobKey):
        os.system('rm -f $jobKey');    
@@ -265,14 +294,12 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
 
     log(isIPFSHashExist);
     
-    os.environ['resultsFolder'] = resultsFolder + '/JOB_TO_RUN';
     if "CumulativeSize" in isIPFSHashExist:
        os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
 
        if folderType == '2': # case for the ipfsMiniLock
           os.environ['passW'] = 'exfoliation econometrics revivifying obsessions transverse salving dishes';
-          res = os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read();
-          log(res)
+          log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read());
 
           os.system('rm -f $resultsFolder/$jobKey');
           os.system('tar -xf $resultsFolder/output.tar.gz && rm -f $resultsFolder/output.tar.gz');

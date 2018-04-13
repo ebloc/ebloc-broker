@@ -138,7 +138,7 @@ else:
 
 clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
 
-log("deployedBlockNumber: " +  deployedBlockNumber + " |Cluster's initial money: " + clusterGainedAmountInit, "")
+log("deployedBlockNumber: " +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit, "")
 os.system('rm -f $jobsReadFromPath')
        
 while True: #{
