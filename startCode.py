@@ -2,7 +2,7 @@
 
 import sys, os, constants, time
 
-def startCall( jobKey, index ): #{
+def startCall(jobKey, index): #{
    os.environ['eblocPath'] = constants.EBLOCPATH;
    os.environ['index']     = str(index);
    os.environ['jobKey']    = jobKey;
@@ -12,8 +12,13 @@ def startCall( jobKey, index ): #{
    os.environ['unixTime']  = unixTime;
    
    txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");
-   
-   while(True):
+
+   countTry = 0;
+   while True:
+      if countTry > 10:
+         sys.exit()
+      countTry = countTry + 1                  
+
       if not(txHash == "notconnected" or txHash == ""): 
          break;      
       else:

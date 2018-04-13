@@ -1,8 +1,9 @@
 pragma solidity ^0.4.17;
 
-import "./Library.sol";
+import "./Lib.sol";
 
 contract eBlocBroker {
+    
     uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
     enum JobStateCodes {
@@ -17,14 +18,14 @@ contract eBlocBroker {
 	deployedBlockNumber = block.number;
     }
     
-    using Library for Library.intervalNode;
-    using Library for Library.data;
-    using Library for Library.status;
+    using Lib for Lib.intervalNode;
+    using Lib for Lib.data;
+    using Lib for Lib.status;
 
-    Library.data list;
+    Lib.data list;
     address[] memberAddresses; // A dynamically-sized array of `address` structs
 
-    mapping(address => Library.data) clusterContract;   
+    mapping(address => Lib.data) clusterContract;   
 
     modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
 	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 5) ); /* coreMinuteGas is maximum 1 day */
@@ -50,7 +51,7 @@ contract eBlocBroker {
     {
 	/* If 'clusterAddr' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
-	Library.status job = clusterContract[clusterAddr].jobStatus[jobKey][index];
+	Lib.status job = clusterContract[clusterAddr].jobStatus[jobKey][index];
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
@@ -70,7 +71,7 @@ contract eBlocBroker {
     {
 	/* If 'msg.sender' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
-	Library.status job = clusterContract[msg.sender].jobStatus[jobKey][index];
+	Lib.status job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
 	uint netOwed      = job.received;
 	uint amountToGain = job.coreMinutePrice * jobRunTimeMinute * job.core;
@@ -99,7 +100,7 @@ contract eBlocBroker {
     function registerCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress) 
 	public returns (bool success)
     {
-	Library.data cluster = clusterContract[msg.sender];
+	Lib.data cluster = clusterContract[msg.sender];
 	if (cluster.isExist && cluster.isRunning)
 	    revert();
 	
@@ -138,14 +139,14 @@ contract eBlocBroker {
 	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
 	returns (bool success)
     {
-	Library.data cluster = clusterContract[clusterAddr];
+	Lib.data cluster = clusterContract[clusterAddr];
 	
 	if (msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   
 	    !cluster.isRunning                                         || 
 	    core > cluster.receiptList.coreNumber)
 	    revert();
 
-	cluster.jobStatus[jobKey].push( Library.status({
+	cluster.jobStatus[jobKey].push( Lib.status({
 		status:          uint8(JobStateCodes.PENDING),
 			core:            core,
 			coreMinuteGas:   coreMinuteGas,
@@ -163,7 +164,7 @@ contract eBlocBroker {
     function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTime) isBehindBlockTimeStamp(startTime) public
 	returns (bool success)
     {
-	Library.status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
+	Lib.status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
 	if (jS.receiptFlag || stateId > 15)
 	    revert();
 
@@ -202,7 +203,7 @@ contract eBlocBroker {
     function getJobInfo(address clusterAddr, string jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, uint)
     {
-	Library.status memory jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
+	Lib.status memory jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
 
 	return (jS.status, jS.core, jS.startTime, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
     }
@@ -210,7 +211,7 @@ contract eBlocBroker {
     function getJobSize(address clusterAddr, string jobKey) public view
 	returns (uint)
     {
-	if(!clusterContract[msg.sender].isExist)
+	if (!clusterContract[msg.sender].isExist)
 	    revert();
 	return clusterContract[clusterAddr].jobStatus[jobKey].length;
     }
@@ -241,7 +242,7 @@ contract eBlocBroker {
 	return false;
     }
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
-    // Log submitted jobs
+    /* Log submitted jobs */
     event LogJob(address cluster,
 		 string jobKey,
 		 uint index,
@@ -250,7 +251,7 @@ contract eBlocBroker {
 		 string desc
 		 );
     
-    // Log completed jobs' receipt
+    /* Log completed jobs' receipt */
     event LogReceipt(address cluster,
 		     string jobKey,
 		     uint index,
@@ -262,7 +263,7 @@ contract eBlocBroker {
 		     uint8 storageType
 		     );
 
-    // Log cluster info (fID stands for federationCloudId)
+    /* Log cluster info (fID stands for federationCloudId) */
     event LogCluster(address cluster,
 		     uint32 coreNumber,
 		     string clusterEmail,
@@ -272,13 +273,13 @@ contract eBlocBroker {
 		     string ipfsAddress
 		     );
 
-    // Log refund
+    /* Log refund */
     event LogRefund(address clusterAddr,
 		    string jobKey,
 		    uint32 index
 		    );
 
-    // Log setJob
+    /* Log setJob */
     event LogSetJob(address clusterAddr,
 		    string jobKey,
 		    uint32 index

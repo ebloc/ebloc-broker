@@ -41,7 +41,7 @@ def isDriverOn():
 def isSlurmOn(): 
    os.environ['logPath'] = constants.LOG_PATH;
    os.system("bash checkSinfo.sh")  
-   check = os.popen("cat $logPath/checkSinfoOut.txt").read()
+   check = os.popen("cat $logPath/checkSinfoOut.txt").read();
 
    if not "PARTITION" in str(check):
       log("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "");      
@@ -62,10 +62,10 @@ if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID =
    print('Once please run:  bash initialize.sh');
    sys.exit();
 
-isContractExist = os.popen('$contractCallPath/isContractExist.py').read();
+isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
 
 if 'False' in isContractExist:
-   print('Please check that you are using eBloc-blockchain.');
+   print('Please check that you are using eBloc blockchain.');
    sys.exit();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
@@ -85,9 +85,9 @@ header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerH
 clusterID = constants.CLUSTER_ID;
 os.environ['clusterID'] = clusterID;
 
-isClusterExist = os.popen('$contractCallPath/isClusterExist.py $clusterID').read();
+isClusterExist = os.popen('$contractCallPath/isClusterExist.py $clusterID').read().rstrip('\n');
 
-if (isClusterExist.lower() == "false"): #{
+if "false" in isClusterExist.lower(): #{
    print(stylize("Error: Your Ethereum address '" + clusterID + "' \n"
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
@@ -99,7 +99,6 @@ deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').re
 blockReadFromContract=str(0)
 
 log("clusterAddress: " +  clusterID, "yellow")
-
 
 if not os.path.isfile(constants.BLOCK_READ_FROM_FILE): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
@@ -136,7 +135,8 @@ if (int(blockReadFromLocal) < int(blockReadFromContract)):
 else:
    blockReadFrom = blockReadFromLocal;
 
-clusterGainedAmountInit = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\'))"');
+
+clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
 
 log("deployedBlockNumber: " +  deployedBlockNumber + " |Cluster's initial money: " + clusterGainedAmountInit, "")
 os.system('rm -f $jobsReadFromPath')
@@ -146,7 +146,7 @@ while True: #{
        log(blockReadFrom, "");
        sys.exit();
 
-    clusterGainedAmount = contractCall('echo "$header; console.log( \'\' + eBlocBroker.getClusterReceivedAmount(\'$clusterID\'))"');
+    clusterGainedAmount = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
     squeueStatus        = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus): #{
@@ -164,7 +164,7 @@ while True: #{
     passedPrintFlag    = 0;
     currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
     
-    while(True): #{
+    while True: #{
        if (printFlag == 0):
           log("Waiting new block to increment by one.", "");
           log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom, "");
@@ -199,12 +199,12 @@ while True: #{
 
        for i in range(0, (len(submittedJobs) - 1)): #{
           submittedJob = submittedJobs[i].split(' ');          
-          if (clusterID == submittedJob[1]): # Only obtain jobs that are submitted to the cluster
+          if clusterID == submittedJob[1]: # Only obtain jobs that are submitted to the cluster
              isClusterRecievedJob = 1;
              log('-' * int(columns), "green")
              log("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4], "");
 
-             if (int(submittedJob[0]) > int(maxVal)):
+             if int(submittedJob[0]) > int(maxVal):
                 maxVal = submittedJob[0]
 
              os.environ['jobKey'] = submittedJob[2];
@@ -226,13 +226,12 @@ while True: #{
                    log("New job has been recieved. IPFS with miniLock call |" + time.ctime(), "");
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]);
                    #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
-                elif (submittedJob[4] == '4'): # '3'
+                elif (submittedJob[4] == '3'): 
                    log("New job has been recieved. GitHub call |" + time.ctime(), "");
                    driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4]);
-                elif (submittedJob[4] == '3'): # '4' 
+                elif (submittedJob[4] == '4'): 
                    log("New job has been recieved. gdrive call |" + time.ctime(), "");
                    driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
-
              else:
                 log("Job is already captured and in process or completed", "");
        #}    

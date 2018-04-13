@@ -266,10 +266,10 @@ def driverIpfsCall(jobKey, index, folderType, miniLockId): #{
     log(isIPFSHashExist);
     
     os.environ['resultsFolder'] = resultsFolder + '/JOB_TO_RUN';
-    if ("CumulativeSize" in isIPFSHashExist):
+    if "CumulativeSize" in isIPFSHashExist:
        os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
 
-       if (folderType == '2'): # case for the ipfsMiniLock
+       if folderType == '2': # case for the ipfsMiniLock
           os.environ['passW'] = 'exfoliation econometrics revivifying obsessions transverse salving dishes';
           res = os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read();
           log(res)
