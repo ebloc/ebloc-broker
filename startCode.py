@@ -22,7 +22,7 @@ def startCall( jobKey, index ): #{
       time.sleep(5);
       
    txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
-   txFile.write(txHash + " setJobStatus_started" +  " " + unixTime + "\n");
+   txFile.write(txHash + "| setJobStatus_started" +  " " + unixTime + "\n");
    txFile.close();
 #}
 
