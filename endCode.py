@@ -147,9 +147,13 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
             sys.exit()
          countTry = countTry + 1         
 
-         #os.chdir(resultsFolder);
+         os.chdir(resultsFolder);         
+         log(os.popen('d=$(cat $resultsFolder/modifiedDate.txt); tar -N \'$d\' -jcvf results.tar.gz *').read());
          #os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
-         newHash = os.popen('ipfs add -r ' + programPath + '/${jobKey}_$index').read();  
+         
+         newHash = os.popen('ipfs add ' + resultsFolder + '/' + results.tar.gz).read();
+         log(os.popen('rm -f $resultsFolder/results.tar.gz').read());         
+         #newHash = os.popen('ipfs add -r ' + programPath + '/${jobKey}_$index').read();  
 
          if (newHash == ""):
             log("Generated new hash return empty error. Trying again...");
@@ -200,7 +204,6 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    elapsedSeconds = elapsedTime[2].rstrip();
 
    if "-" in str(elapsedHour):
-      # log(elapsedHour)
       elapsedHour = elapsedHour.split('-');
       elapsedDay  = elapsedHour[0];
       elapsedHour = elapsedHour[1];
@@ -217,40 +220,42 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
 
    if storageType == '1': #{
       os.environ['newHash'] = "0x00";
-   
       jobKeyTemp = jobKey.split('=');
       folderName = jobKeyTemp[1];
       log(folderName);
       
       os.system("rm $resultsFolder/.node-xmlhttprequest*");      
       os.chdir(resultsFolder);
-
-      os.environ['c'] = constants.CLUSTER_ID[2:]; #0x is removed
+      
       os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them.
-      log(os.popen('zip -r result-$c-$index.zip .').read());
-      
-      os.system('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$c\'-\'$index\'.zip\' https://b2drop.eudat.eu/public.php/webdav/result-$c-$index.zip');
-      #os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
+      log(os.popen('zip -r result-$clusterID-$index.zip .').read());      
+      os.system('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$clusterID\'-\'$index\'.zip\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.zip');      
    #}   
-   elif str(storageType) == '4': #{ 
-      os.environ['newHash'] = "0x00";            
-      mimeType = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
-      
-      if 'folder' in mimeType:
-         log('folder');         
-         os.chdir(resultsFolder);         
+   elif str(storageType) == '4': #{      
+      os.environ['newHash'] = "0x00";
+      mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
+      log('mimeType: ' + str(mimeType));         
+      os.chdir(resultsFolder);
+
+      if 'folder' in mimeType: # Recieved job is in folder format
          os.system('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
-         res = os.popen('zip -r result-$c-$index.zip .').read();
-         log(res);
-         time.sleep(0.25);         
-         res = os.popen('gdrive upload --parent $jobKey result-$c-$index.zip -c $GDRIVE_METADATA').read();
-         log(res);
+         
+      res = os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read(); log(res);
+      time.sleep(0.25);
 
-      elif 'gzip' in mimeType:
-         print('zip');      
-
+      if 'folder' in mimeType: # Recieved job is in folder format
+         log('mimeType: folder');         
+         log(os.popen('gdrive upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
+      elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
+         log('mimeType: tar.gz');
+         log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
+      elif '/zip' in mimeType: # Recieved job is in zip format
+         log('zip');
+         log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
    #}   
-   receiptCheckTx();   
+   receiptCheckTx();
+   
+   #os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
 #}
 
 if __name__ == '__main__': #{

@@ -327,6 +327,8 @@ echo $jobKey # This is jobKey
 gdrive share $jobKey  --role writer --type user --email $clusterToShare
 ```
 
+If your work is zipper under folder name such as folderPath/folderName/RUN.zip ; please name it `RUN.zip` or `RUN.tar.gz`.
+
 ---------
 
 ```bash
