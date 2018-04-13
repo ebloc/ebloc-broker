@@ -1,9 +1,9 @@
 {
    "name": "eBlocBroker",
-   "version": "1.0.0",
+   "version": "1.0.6",
    "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
    "license": "UNLICENSED",
-   "main": "main.js",
+   "main": "Driver.py",
    "directories": {
       "doc": "docs"
    },

@@ -86,9 +86,8 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    log("clusterID: "         + constants.CLUSTER_ID);
 
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
-   log(os.popen(' echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n')); #delete.
 
-   while(True):
+   while True:
       if not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno"): 
          break;
       else:
@@ -125,7 +124,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
         sys.exit(); # Detects an error on the SLURM side
 
       jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
-      while(True):
+      while True:
          if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
             break;
          else:
@@ -141,10 +140,9 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
    log("JOBID ------------> " + str(jobId));
 
    # Here we know that job is already completed ----------------
-   ''' uncomment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
    if str(storageType) == '0' or str(storageType) == '3': #{
       countTry = 0;
-      while(True): 
+      while True: 
          if (countTry > 10):
             sys.exit()
          countTry = countTry + 1         
@@ -162,7 +160,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
             log("newHash: " + newHash); 
             break
    #}
-   '''
+
    if str(storageType) == '2': #{      
       os.chdir(resultsFolder);
       res = os.popen('tar -P -cvzf $resultsFolder/result.tar.gz .').read();
@@ -173,7 +171,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
       os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
 
       countTry = 0;
-      while(True): 
+      while True: 
          if countTry > 10:
             sys.exit()
          countTry = countTry + 1;
@@ -230,17 +228,13 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
       os.environ['c'] = constants.CLUSTER_ID[2:]; #0x is removed
       os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them.
       log(os.popen('zip -r result-$c-$index.zip .').read());
-      log(os.popen('echo result-$c-$index.zip').read()); #delete
-      log(os.popen('echo $c').read()); #delete
-      log(os.popen('ls').read()); #delete
       
       os.system('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$c\'-\'$index\'.zip\' https://b2drop.eudat.eu/public.php/webdav/result-$c-$index.zip');
       #os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
    #}   
-   elif str(storageType) == '3': #{ == '4' #######################################33
+   elif str(storageType) == '4': #{ 
       os.environ['newHash'] = "0x00";            
       mimeType = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
-      log('mimeType: ' + mimeType); #delete
       
       if 'folder' in mimeType:
          log('folder');         
@@ -255,8 +249,7 @@ def endCall(jobKey, index, storageType, shareToken, miniLockId, folderName): #{
       elif 'gzip' in mimeType:
          print('zip');      
 
-   #}
-   
+   #}   
    receiptCheckTx();   
 #}
 
