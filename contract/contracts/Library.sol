@@ -38,7 +38,7 @@ library Library {
 
     struct intervalNode {
 	interval[] list; /* A dynamically-sized array of `interval` structs */
-	uint32 head; /* */
+	uint32 tail; /* */
 	uint32 coreNumber; /* Core number of the cluster */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
@@ -65,8 +65,8 @@ library Library {
     function constructReceiptList(intervalNode storage self, uint32 coreNum) public
     {
 	self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
-	self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
-	self.head           = 1;
+	//self.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
+	self.tail           = 0;
 	self.coreNumber     = coreNum;
 	self.deletedItemNum = 0;
     }
@@ -74,7 +74,7 @@ library Library {
     function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public returns (bool success)
     {
 	bool     flag = false;
-	uint32   addr = self.head;
+	uint32   addr = self.tail;
 	uint32   addrTemp;
 	int32    carriedSum;
 	interval prevNode;
@@ -88,7 +88,7 @@ library Library {
 	if (endTime < self.list[addr].endpoint) {
 	    flag         = true;
 	    prevNode     = self.list[addr];
-	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous head-node right after the insert operation */
+	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
 
 	    do { /* Inside while loop carriedSum is updated */
 		carriedSum += prevNode.core;
@@ -107,7 +107,7 @@ library Library {
 	if (!flag) {
 	    addrTemp      = addr;
 	    carriedSum    = coreNum;
-	    prevNode      = self.list[self.head = uint32(self.list.length-1)];
+	    prevNode      = self.list[self.tail = uint32(self.list.length-1)];
 	} else {
 	    addrTemp      = prevNode.next;
 	    prevNodeTemp  = prevNode;
@@ -128,7 +128,7 @@ library Library {
 	    if (carriedSum > int32(self.coreNumber)) {
 		delete self.list[self.list.length-1];
 		if (!flag)
-		    self.head = addrTemp;
+		    self.tail = addrTemp;
 		else
 		    prevNodeTemp.next = addrTemp;
 
@@ -155,7 +155,7 @@ library Library {
     function printIndex(intervalNode storage self, uint32 index) public view
 	returns (uint256, int32)
     {
-	uint32 myIndex = self.head;
+	uint32 myIndex = self.tail;
 	for (uint i = 0; i < index; i++)
 	    myIndex = self.list[myIndex].next;
 

@@ -37,7 +37,6 @@
 
 # npm install --save
 #------------------------------------------------------------
-
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set";
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
@@ -129,3 +128,6 @@ echo -e "Please enter your miniLock password,"
 read -s PASSWORD
 echo $PASSWORD > miniLockPassword.txt
 chmod 700 miniLockPassword.txt
+
+# gdrive initialize
+# rm -rf $HOME/.gdrive/
