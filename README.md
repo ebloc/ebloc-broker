@@ -213,15 +213,17 @@ myMiniLockId     = ""; #Fixed.
 Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
 
 
-Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol (`=`) in between.
+<!--- 
+`FederationCloudId` followed by the name of the folder your are sharing having equal symbol (`=`) in between.
 *Example:*`jobHash = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
+---->
 
 #####  **Script:** 
 
 ```bash
 # USER Inputs-------------------------------------------------------
 clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
-jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
+jobKey         = "folderName";
 coreNum        = 1;
 coreGasDay     = 0;
 coreGasHour    = 0;
