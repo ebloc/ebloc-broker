@@ -52,7 +52,7 @@ if __name__ == '__main__': #{
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
-        jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+        jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"; #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
         coreNum        = 1;
         coreGasDay     = 0;
         coreGasHour    = 0;
@@ -84,7 +84,7 @@ if __name__ == '__main__': #{
     #}
     
     gasLimit = 4500000; 
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5: #{
+    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 255: #{
        tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId);
        print('Tx: ' + tx.hex());
     #}

@@ -17,8 +17,13 @@ library Lib {
 	uint          received; /* Paid amount by the client */
     }
 
+    /* Registered user's information -----------*/
+    struct userData {
+	uint     blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
+    }
+    //-------------------------
     /* Registered cluster's information */
-    struct data {
+    struct clusterData {
 	bool               isExist; /* Flag that checks is Cluster exists or not */
 	bool             isRunning; /* Flag that checks is Cluster running or not */
 	uint32   memberAddressesID; /* Cluster's ethereum address is stored */
@@ -44,7 +49,7 @@ library Lib {
     }
 
     /* Invoked, when cluster calls updateCluster */
-    function update(data storage self, uint price, uint32 coreNumber) public
+    function update(clusterData storage self, uint price, uint32 coreNumber) public
     {
 	self.coreMinutePrice        = price;
 	self.receiptList.coreNumber = coreNumber;
@@ -52,7 +57,7 @@ library Lib {
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(data storage self, uint32 memLen, uint price, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint32 memLen, uint price, uint32 coreNumber) public
     {
 	self.isExist           = true;
 	self.isRunning         = true;

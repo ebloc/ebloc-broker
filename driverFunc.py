@@ -122,23 +122,24 @@ def driverGdriveCall(jobKey, index, folderType): #{
    os.environ['folderName']  = folderName;
    log(mimeType);
    
-   if 'folder' in mimeType: # Recieved job is in folder format
+   if 'folder' in mimeType: #{ # Recieved job is in folder format
       log(os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()); # Gets the source code      
       os.system("mv $resultsFolderPrev/$folderName $resultsFolder");
 
-      isTarExist = os.popen("ls $resultsFolder/*.tar.gz | wc -l").read();
-      if int(isTarExist) > 0:
+      isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
+      if int(isTarExist) > 0:         
          log(os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read());
          os.popen("rm -f $resultsFolder/*.tar.gz").read();
-         
-      isZipExist = os.popen("ls $resultsFolder/*.zip | wc -l").read();
-      if int(isTarExist) > 0:
-         os.popen("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder").read();
-         os.popen("rm -f $resultsFolder/*.zip").read();      
+
+      isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
+      if int(isZipExist) > 0:
+         os.popen("unzip -j $resultsFolder/*.zip -d $resultsFolder").read();
+         os.popen("rm -f $resultsFolder/*.zip").read();
+   #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
       os.system("mkdir -p $resultsFolder"); # Gets the source code
       os.system("gdrive download $jobKey --force --path $resultsFolder/../"); # Gets the source code
-      log(os.popen("tar -xf $resultsFolder/../*.tar.gz -C $resultsFolder" ).read());
+      log(os.popen("tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder" ).read());
       os.popen("rm -f $resultsFolder/../*.tar.gz").read();      
    elif 'zip' in mimeType: # Recieved job is in zip format
       os.system("mkdir -p $resultsFolder"); # Gets the source code
@@ -242,13 +243,13 @@ def driverEudatCall(jobKey, index): #{
 
    os.system("unzip -j $resultsFolderPrev/output.zip -d $resultsFolder");
    os.system("rm -f $resultsFolderPrev/output.zip");
-   
-   isTarExist = os.popen("ls $resultsFolder/*.tar.gz | wc -l").read();
+
+   isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0:
       os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read();
       os.popen("rm -f $resultsFolder/*.tar.gz").read();
 
-   isZipExist = os.popen("ls $resultsFolder/*.zip | wc -l").read();
+   isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0:
       log(os.popen("" ).read());
       os.popen("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder").read();
