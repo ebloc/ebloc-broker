@@ -24,8 +24,8 @@ contract eBlocBroker {
     using Lib for Lib.status;
 
     Lib.clusterData list;
-    address[]  memberAddresses; // A dynamically-sized array of `address` structs
-    address[]    userAddresses; // A dynamically-sized array of `address` structs
+    address[]  clusterAddresses; // A dynamically-sized array of `address` structs for clusters
+    address[]    userAddresses; // A dynamically-sized array of `address` structs for users.
 
     mapping(address => Lib.clusterData) clusterContract;
     mapping(address => Lib.userData)       userContract;   
@@ -117,12 +117,12 @@ contract eBlocBroker {
 	    revert();
 	
 	if (cluster.isExist && !cluster.isRunning) {
-	    memberAddresses[cluster.memberAddressesID] = msg.sender; 
+	    clusterAddresses[cluster.clusterAddressesID] = msg.sender; 
 	    cluster.update(coreMinutePrice, coreNumber); 
 	    cluster.isRunning = true; 
 	} else {
-	    cluster.constructCluster(uint32(memberAddresses.length), coreMinutePrice, coreNumber);
-	    memberAddresses.push(msg.sender); /* In order to obtain list of clusters */
+	    cluster.constructCluster(uint32(clusterAddresses.length), coreMinutePrice, coreNumber);
+	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 	
 	LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
@@ -132,7 +132,7 @@ contract eBlocBroker {
     /* Locks the access to the Cluster. Only cluster owner could stop it */
     function deregisterCluster() public returns (bool success) 
     {
-	delete memberAddresses[clusterContract[msg.sender].memberAddressesID];
+	delete clusterAddresses[clusterContract[msg.sender].clusterAddressesID];
 	clusterContract[msg.sender].isRunning = false; /* Cluster wont accept any more jobs */
 	return true;
     }
@@ -200,7 +200,7 @@ contract eBlocBroker {
     function getClusterAddresses() public view
 	returns (address[])
     {
-	return memberAddresses; 
+	return clusterAddresses; 
     }
 
     function getClusterInfo(address clusterAddr) public view

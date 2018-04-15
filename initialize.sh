@@ -2,6 +2,11 @@
 
 # pre-installation:-----------------------------------------
 
+## npm
+# wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
+# sudo npm install -g n
+# sudo n latest
+#--------------------------
 ## Python 3.5.2 # not-nessesary.
 # cd /usr/src
 # sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
@@ -10,7 +15,12 @@
 # sudo ./configure --enable-optimizations
 # sudo make altinstall
 #--------------------------
-
+## Linux Packages
+# sudo apt-get install davfs2 mailutils
+# sudo apt-get install python-psutil
+# sudo apt-get install -y nodejs
+# sudo apt-get install munge
+#--------------------------
 ## pip install
 # sudo apt-get install python3-pip
 # sudo pip3 install virtualenv 
@@ -24,6 +34,7 @@
 # pip install pyocclient==0.4
 # pip install web3
 # pip install --pre --upgrade web3
+# pip install sphinx_rtd_theme
 
 # Update git repository
 # git fetch --all && git reset --hard origin/master

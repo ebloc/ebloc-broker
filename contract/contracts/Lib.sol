@@ -26,7 +26,7 @@ library Lib {
     struct clusterData {
 	bool               isExist; /* Flag that checks is Cluster exists or not */
 	bool             isRunning; /* Flag that checks is Cluster running or not */
-	uint32   memberAddressesID; /* Cluster's ethereum address is stored */
+	uint32  clusterAddressesID; /* Cluster's ethereum address is stored */
 	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint        receivedAmount; /* Cluster's received wei price */
 	uint         blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
@@ -62,7 +62,7 @@ library Lib {
 	self.isExist           = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
-	self.memberAddressesID = memLen;
+	self.clusterAddressesID = memLen;
 	self.coreMinutePrice   = price;
 	self.blockReadFrom     = block.number;
 
