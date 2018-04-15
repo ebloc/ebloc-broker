@@ -53,9 +53,23 @@ def test_receipt(web3, accounts, chain):
     print( web3.eth.getBalance(accounts[8]) );
     '''
     print(account);
+    
     web3.eth.defaultAccount = accounts[0];
     set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
     contract_address = chain.wait.for_receipt(set_txn_hash)
+    print("usedGas registerCluster: " + str(contract_address["gasUsed"]));
+
+    web3.eth.defaultAccount = accounts[0];
+    set_txn_hash     = my_contract.transact().registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+    contract_address = chain.wait.for_receipt(set_txn_hash)   
+    print("usedGas registerUser: " + str(contract_address["gasUsed"]));
+
+    web3.eth.defaultAccount = accounts[0];
+    set_txn_hash     = my_contract.transact().registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+    contract_address = chain.wait.for_receipt(set_txn_hash)   
+    print("usedGas registerUser: " + str(contract_address["gasUsed"]));
+
+
 
     output = my_contract.call().isClusterExist(accounts[0]);
     print("isExist: "+str(output));
@@ -102,14 +116,16 @@ def test_receipt(web3, accounts, chain):
             chain.wait.for_block(int(arguments[0]));
 
             #jobKey_Description_miniLockId
+            jobKey     = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd";
+            miniLockId = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k";
+            
             set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(60*10000000000000000*coreNum, "wei") }).submitJob(
-                account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", coreNum, "Science", cg, 0, "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k" );
+                account, jobKey, coreNum, "Science", cg, 1);
 
             contract_address = chain.wait.for_receipt(set_txn_hash)
 
-            gas = contract_address["gasUsed"];
-            print("submitJob: " + str(gas));
-            print(my_contract.call().getJobInfo('0xdceceaf3fc5c0a63d195d69b1a90011b7b19650d', 'QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd', 0) );
+            print("submitJob: " + str(contract_address["gasUsed"]));
+            print(my_contract.call().getJobInfo('0xdceceaf3fc5c0a63d195d69b1a90011b7b19650d', jobKey, 0));
 
             #print( j, arguments[0], arguments[1], arguments[2], gas );
             #f1.write( '%s %s %s %d \n' % (arguments[0], arguments[1], arguments[2], myGas ) )

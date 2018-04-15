@@ -130,3 +130,5 @@ contractCalls/\.#submitIpfsJob\.py
 contractCalls/\.#getClusterInfo\.py
 
 \.#slurmScript\.sh
+
+\.#driverFunc\.py

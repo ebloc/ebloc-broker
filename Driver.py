@@ -4,7 +4,7 @@ from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
-
+                
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
 
@@ -68,7 +68,9 @@ if 'False' in isContractExist:
    print('Please check that you are using eBloc blockchain.');
    sys.exit();
 
-log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
+log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
+log('rootdir: ' + os.getcwd() + '\n', "");
+
 isDriverOn();
 isSlurmOn();
 if constants.IPFS_USE == 1:
@@ -96,7 +98,7 @@ if "false" in isClusterExist.lower(): #{
 #}
 
 deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
-blockReadFromContract=str(0)
+blockReadFromContract = str(0);
 
 log("clusterAddress: " +  clusterID, "yellow")
 
@@ -134,8 +136,7 @@ if (int(blockReadFromLocal) < int(blockReadFromContract)):
    blockReadFrom = blockReadFromContract;
 else:
    blockReadFrom = blockReadFromLocal;
-
-
+             
 clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
 
 log("deployedBlockNumber: " +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit, "")
@@ -185,7 +186,7 @@ while True: #{
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
 
     # Waits here until new job submitted into the cluster
-    returnVal = contractCall('echo "$header; console.log(\'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\'))"'); 
+    contractCall('echo "$header; console.log(\'\' + eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\'))"'); 
     
     if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r')
@@ -209,12 +210,14 @@ while True: #{
 
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
+
+             strCheck = os.popen('bash strCheck.sh $jobKey').read();
              
              jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
              jobInfo = jobInfo.split(',');
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
-             if (jobInfo[0] == str(constants.job_state_code['PENDING'])): 
+             if (not 'False' in strCheck) and jobInfo[0] == str(constants.job_state_code['PENDING']): 
                 if (submittedJob[4] == '0'):
                    log("New job has been recieved. IPFS call |" + time.ctime(), "")
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
@@ -233,7 +236,10 @@ while True: #{
                    log("New job has been recieved. gdrive call |" + time.ctime(), "");
                    driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
              else:
-                log("Job is already captured and in process or completed", "");
+                if 'False' in strCheck:
+                   log('Filename contains invalid character', 'red');
+                else:
+                   log("Job is already captured and in process or completed", "blue");
        #}    
        
        if submittedJob != 0 and (int(maxVal) != 0): #{ 
