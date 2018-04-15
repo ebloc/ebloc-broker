@@ -218,21 +218,21 @@ while True: #{
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
              if (not 'False' in strCheck) and jobInfo[0] == str(constants.job_state_code['PENDING']): 
-                if (submittedJob[4] == '0'):
+                if submittedJob[4] == '0':
                    log("New job has been recieved. IPFS call |" + time.ctime(), "")
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]); 
-                elif (submittedJob[4] == '1'):
+                elif submittedJob[4] == '1':
                    log("New job has been recieved. EUDAT call |" + time.ctime(), "");
                    driverFunc.driverEudatCall(submittedJob[2], submittedJob[3]);
                    #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3])) 
-                elif (submittedJob[4] == '2'):
+                elif submittedJob[4] == '2':
                    log("New job has been recieved. IPFS with miniLock call |" + time.ctime(), "");
                    driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]);
                    #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
-                elif (submittedJob[4] == '3'): 
+                elif submittedJob[4] == '3': 
                    log("New job has been recieved. GitHub call |" + time.ctime(), "");
                    driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4]);
-                elif (submittedJob[4] == '4'): 
+                elif submittedJob[4] == '4': 
                    log("New job has been recieved. gdrive call |" + time.ctime(), "");
                    driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
              else:
@@ -243,16 +243,16 @@ while True: #{
        #}    
        
        if submittedJob != 0 and (int(maxVal) != 0): #{ 
-          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number      
-          f_blockReadFrom.write(str(int(maxVal) + 1) + "\n") # Python will convert \n to os.linesep
-          f_blockReadFrom.close()          
-          blockReadFrom = str(int(maxVal) + 1)
+          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w'); # Updates the latest read block number      
+          f_blockReadFrom.write(str(int(maxVal) + 1) + '\n'); # Python will convert \n to os.linesep
+          f_blockReadFrom.close();
+          blockReadFrom = str(int(maxVal) + 1);
        #}
               
        if isClusterRecievedJob == 0: #{ If there is no submitted job for the cluster, block start to read from current block number
-          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
-          f_blockReadFrom.write(str(currentBlockNumber) + "\n") # Python will convert \n to os.linesep
-          f_blockReadFrom.close()
-          blockReadFrom = str(currentBlockNumber)
+          f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w'); # Updates the latest read block number
+          f_blockReadFrom.write(str(currentBlockNumber) + '\n'); # Python will convert \n to os.linesep
+          f_blockReadFrom.close();
+          blockReadFrom = str(currentBlockNumber);
     #}
 #}
