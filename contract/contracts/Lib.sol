@@ -57,13 +57,13 @@ library Lib {
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint32 memLen, uint price, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint32 memLen, uint coreMinutePrice, uint32 coreNumber) public
     {
 	self.isExist           = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
 	self.clusterAddressesID = memLen;
-	self.coreMinutePrice   = price;
+	self.coreMinutePrice   = coreMinutePrice;
 	self.blockReadFrom     = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
