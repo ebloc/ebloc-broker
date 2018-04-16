@@ -13,10 +13,10 @@ def isIpfsOn():
       print("Error: IPFS does not work on the background.\nPlease run:  ipfs daemon &");
       os.system("bash ../runIPFS.sh");
       time.sleep(5);
-      os.system("cat ipfs.out");      
+      os.system("cat ipfs.out");
    else:
-      print("IPFS is already on");     
-      
+      print("IPFS is already on");
+
 # Note that you should create only one RPCProvider per process,
 # as it recycles underlying TCP/IP network connections between
 # your process and Ethereum node
@@ -27,30 +27,29 @@ contractAddress = fileAddr.read().replace("\n", "")
 
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
-   
-contractAddress = web3.toChecksumAddress(contractAddress);    
+
+contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker     = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 10):
+    if(len(sys.argv) == 8):
         clusterAddress = str(sys.argv[1]);
         clusterAddress = web3.toChecksumAddress(clusterAddress);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
         jobKey         = str(sys.argv[2]);
         coreNum        = int(sys.argv[3]);
-        coreGasDay     = int(sys.argv[4]);
-        coreGasHour    = int(sys.argv[5]);
-        coreGasMin     = int(sys.argv[6]);
-        jobDescription = str(sys.argv[7]);
-        storageType    = int(sys.argv[8]);
-        accountID      = int(sys.argv[9]);
+        coreMinuteGas  = int(sys.argv[5]);
+        jobDescription = str(sys.argv[4]);
+        storageType    = int(sys.argv[6]);
+        accountID      = int(sys.argv[7]);
+        print(jobDescription)
     else:
         # USER Inputs----------------------------------------------------------------
         clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63";
-        clusterAddress = web3.toChecksumAddress(clusterAddress);    
+        clusterAddress = web3.toChecksumAddress(clusterAddress);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
-        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
+        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
         jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"; #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
         coreNum        = 1;
@@ -68,25 +67,22 @@ if __name__ == '__main__': #{
        output = os.popen('ipfs swarm connect ' + strVal).read();
        print(output)
     #}
-    
-    coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
+
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
 
     if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
        print("Requested Cluster's Ethereum Address does not exist.")
        sys.exit();
     #}
-    
+
     if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46) or (storageType == 4 and len(jobKey) != 33): #{
        print("jobKey's length does not match with its original length. Please check your jobKey.")
        sys.exit();
     #}
-    
-    gasLimit = 4500000; 
+
+    gasLimit = 4500000;
     if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 255: #{
        tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType);
        print('Tx: ' + tx.hex());
     #}
 #}
-
-
