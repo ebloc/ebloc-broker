@@ -32,7 +32,7 @@ contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker     = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 11):
+    if(len(sys.argv) == 10):
         clusterAddress = str(sys.argv[1]);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
@@ -43,8 +43,7 @@ if __name__ == '__main__': #{
         coreGasMin     = int(sys.argv[6]);
         jobDescription = str(sys.argv[7]);
         storageType    = int(sys.argv[8]);
-        myMiniLockId   = str(sys.argv[9]);
-        accountID      = int(sys.argv[10]);
+        accountID      = int(sys.argv[9]);
     else:
         # USER Inputs----------------------------------------------------------------
         clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63";
@@ -59,7 +58,6 @@ if __name__ == '__main__': #{
         coreGasMin     = 1;
         jobDescription = "Science";
         storageType    = 0;
-        myMiniLockId   = "";
         accountID      = 0;
         # ----------------------------------------------------------------------------
     if storageType == 0 or storageType == 2: #{
@@ -85,10 +83,9 @@ if __name__ == '__main__': #{
     
     gasLimit = 4500000; 
     if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 255: #{
-       tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId);
+       tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType);
        print('Tx: ' + tx.hex());
     #}
-    
 #}
 
 
