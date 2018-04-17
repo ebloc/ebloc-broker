@@ -30,7 +30,7 @@ contract eBlocBroker {
     mapping(address => Lib.userData)       userContract;   
 
     modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
-	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && (storageType < 5)); /* coreMinuteGas is maximum 1 day */
+	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && storageType < 5); /* coreMinuteGas is maximum 1 day */
 	_ ;
     }
 
@@ -159,9 +159,10 @@ contract eBlocBroker {
 	if (!cluster.isRunning                                         ||
 	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   	    
 	    bytes(jobKey).length > 255                                 || // Max length is 255, becuase it will used as a filename at cluster
+ 	    //isUserExist(msg.sender)                                  ||  
 	    core > cluster.receiptList.coreNumber)
 	    revert();
-
+	
 	cluster.jobStatus[jobKey].push(Lib.status({
  		        status:          uint8(JobStateCodes.PENDING),
 			core:            core,
@@ -175,6 +176,7 @@ contract eBlocBroker {
 		));
 	
 	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length-1, storageType, jobDesc);
+
 	return true;
     }
 
@@ -200,6 +202,15 @@ contract eBlocBroker {
 	returns (address[])
     {
 	return clusterAddresses; 
+    }
+
+    function getUserInfo(address userAddr) public view
+	returns(uint)
+    {
+	if (userContract[userAddr].blockReadFrom != 0)	    
+	    return (userContract[userAddr].blockReadFrom);
+	else
+	    return (0);
     }
 
     function getClusterInfo(address clusterAddr) public view
@@ -258,6 +269,15 @@ contract eBlocBroker {
 	    return true;	
 	return false;
     }
+
+    function isUserExist(address userAddr) public view
+	returns (bool)
+    {
+	if (userContract[userAddr].blockReadFrom > 0)
+	    return true;	
+	return false;
+    }
+
     /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
     /* Log submitted jobs */
     event LogJob(address cluster,
