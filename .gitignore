@@ -138,3 +138,7 @@ contract/logs/geth-20180416-110301-temp-stdout\.log
 contract/logs/geth-20180416-110301-temp-stderr\.log
 
 contract/build/contracts\.json
+
+contractCalls/\.#address\.json
+
+contractCalls/#address\.json#

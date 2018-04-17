@@ -1,10 +1,10 @@
 # How to Deploy using geth-console:
 
 '''
-$ echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > e.js
+
+$ rm e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > e.js
 
 loadScript("e.js")
-
 var myLinkedListLib = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:Lib"].abi))
 
 var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + testOutput.contracts["e.sol:Lib"].bin, gas: 4700000},
@@ -16,9 +16,12 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
   }
 );
 
-var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g, "befcfe90b27322576204c449a44960d870073a6d")
 
-var myArray = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:eBlocBroker"].abi));
+
+
+
+var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g, "be331b559af35ba6fb0df9e4fa526dbd1297d56a")
+var myArray   = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:eBlocBroker"].abi));
 
 var eBlocBroker = myArray.new({ from: eth.accounts[0], data: "0x" + arrayCode, gas: 4700000},
   function (e, contract) {
@@ -28,4 +31,5 @@ var eBlocBroker = myArray.new({ from: eth.accounts[0], data: "0x" + arrayCode, g
     }
   }
 );
+
 '''
