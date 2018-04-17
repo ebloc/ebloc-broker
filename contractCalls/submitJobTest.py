@@ -43,7 +43,6 @@ if __name__ == '__main__': #{
         jobDescription = str(sys.argv[4]);
         storageType    = int(sys.argv[6]);
         accountID      = int(sys.argv[7]);
-        print(jobDescription)
     else:
         # USER Inputs----------------------------------------------------------------
         clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63";
