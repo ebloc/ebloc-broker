@@ -53,31 +53,35 @@ def test_receipt(web3, accounts, chain):
     print( web3.eth.getBalance(accounts[8]) );
     '''
     print(account);
-    
     web3.eth.defaultAccount = accounts[0];
     set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print("usedGas registerCluster: " + str(contract_address["gasUsed"]));
 
-    web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+    web3.eth.defaultAccount = accounts[8];
+    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]));
 
-    web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]));
 
+    print("isUserExist: "           + str(my_contract.call().isUserExist(accounts[8])));
+    print("User's blockReadFrom:  " + str(my_contract.call().getUserInfo(accounts[8])));
 
+    output = my_contract.call().isUserExist(accounts[1]);
+    print("isUserExist: " + str(output));
 
+    web3.eth.defaultAccount = accounts[0];
     output = my_contract.call().isClusterExist(accounts[0]);
     print("isExist: "+str(output));
 
     blockReadFrom, coreLimit, coreMinutePrice = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
 
-    set_txn_hash     = my_contract.transact().updateCluster( 128, "alper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");   
+    web3.eth.defaultAccount = accounts[0];
+    set_txn_hash     = my_contract.transact().updateCluster(128, "alper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");   
 
     blockReadFrom, coreLimit, coreMinutePrice = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
@@ -121,7 +125,6 @@ def test_receipt(web3, accounts, chain):
             
             set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(60*10000000000000000*coreNum, "wei") }).submitJob(
                 account, jobKey, coreNum, "Science", cg, 1);
-
             contract_address = chain.wait.for_receipt(set_txn_hash)
 
             print("submitJob: " + str(contract_address["gasUsed"]));
