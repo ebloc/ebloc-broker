@@ -42,8 +42,8 @@ if __name__ == '__main__': #{
     print('{0: <17}'.format('blockReadFrom: ')   + str(blockReadFrom))    
     print('{0: <17}'.format('coreNumber: ')      + str(coreNumber))
     print('{0: <17}'.format('coreMinutePrice: ') + str(coreMinutePrice))       
-    print('{0: <17}'.format('clusterName: ')     + my_filter.get_all_entries()[0].args['clusterName'])
-    print('{0: <17}'.format('miniLockId: ')      + my_filter.get_all_entries()[0].args['miniLockId'])
+    print('{0: <17}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'])
+    print('{0: <17}'.format('miniLockID: ')      + my_filter.get_all_entries()[0].args['miniLockID'])
     print('{0: <17}'.format('ipfsAddress: ')     + my_filter.get_all_entries()[0].args['ipfsAddress'])   
     print('{0: <17}'.format('fID: ') + my_filter.get_all_entries()[0].args['fID'])
 #}
