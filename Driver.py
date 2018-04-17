@@ -44,8 +44,8 @@ def isSlurmOn():
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
 
    if not "PARTITION" in str(check):
-      log("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "");      
-      log('Error Message: \n' + check, "");
+      log("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "red");      
+      log('Error Message: \n' + check, "red");
       sys.exit();
 
    if "sinfo: error" in str(check):

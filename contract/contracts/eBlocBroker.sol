@@ -23,9 +23,8 @@ contract eBlocBroker {
     using Lib for Lib.userData;
     using Lib for Lib.status;
 
-    Lib.clusterData list;
-    address[]  clusterAddresses; // A dynamically-sized array of `address` structs for clusters
-    address[]    userAddresses; // A dynamically-sized array of `address` structs for users.
+    address[] clusterAddresses; // A dynamically-sized array of `address` structs
+    address[]    userAddresses; // A dynamically-sized array of `address` structs
 
     mapping(address => Lib.clusterData) clusterContract;
     mapping(address => Lib.userData)       userContract;   
@@ -219,11 +218,11 @@ contract eBlocBroker {
     }
 
     function getJobInfo(address clusterAddr, string jobKey, uint index) public view
-	returns (uint8, uint32, uint, uint, uint, uint)
+	returns (uint8, uint32, uint, uint, uint, uint, address)
     {
-	Lib.status memory jS = clusterContract[clusterAddr].jobStatus[jobKey][index];
+	Lib.status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index];
 
-	return (jS.status, jS.core, jS.startTime, jS.received, jS.coreMinutePrice, jS.coreMinuteGas);   
+	return (job.status, job.core, job.startTime, job.received, job.coreMinutePrice, job.coreMinuteGas, job.jobOwner);   
     }
 
     function getJobSize(address clusterAddr, string jobKey) public view
