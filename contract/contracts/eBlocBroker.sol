@@ -273,7 +273,7 @@ contract eBlocBroker {
     function isUserExist(address userAddr) public view
 	returns (bool)
     {
-	if (userContract[userAddr].blockReadFrom > 0)
+	if (userContract[userAddr].blockReadFrom != 0)
 	    return true;	
 	return false;
     }
