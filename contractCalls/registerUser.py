@@ -19,16 +19,18 @@ with open('abi.json', 'r') as abi_definition:
 
 contractAddress = web3.toChecksumAddress(contractAddress);    
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
-# USER Inputs----------------------------------------------------------------
-account            = web3.eth.accounts[0]; # Cluster's Ethereum Address
 
-userEmail          = "alper.alimoglu@gmail.com";
-federationCloudId  = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579";
-miniLockID         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
-ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
-# ----------------------------------------------------------------------------
+if __name__ == '__main__': #{
+    # USER Inputs----------------------------------------------------------------
+    account            = web3.eth.accounts[0]; # User's Ethereum Address
 
-if len(federationCloudId) < 128 and len(userEmail) < 128: #{
-    tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudId, miniLockID, ipfsAddress);
-    print('Tx: ' + tx.hex());
+    userEmail          = "alper.alimoglu@gmail.com";
+    federationCloudId  = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579";
+    miniLockID         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
+    ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
+    # ----------------------------------------------------------------------------
+    
+    if len(federationCloudId) < 128 and len(userEmail) < 128: #{
+        tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudId, miniLockID, ipfsAddress);
+        print('Tx: ' + tx.hex());
 #}

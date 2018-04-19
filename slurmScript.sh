@@ -23,10 +23,9 @@ if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
     argu1=$(echo $name | cut -d "_" -f 2)
     argu2=$(echo $name | cut -d "_" -f 3) 
     argu3=$(echo $name | cut -d "_" -f 4) 
-    argu4=$(echo $name | cut -d "_" -f 5)
     
-    echo "COMPLETED fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3 argu4:$argu4" | mail -s "Message Subject" alper.alimoglu@gmail.com
-    python $scriptPath/endCode.py $argu0 $argu1 $argu2 $argu3 $argu4 $name    
+    echo "COMPLETED fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3 " | mail -s "Message Subject" alper.alimoglu@gmail.com
+    python $scriptPath/endCode.py $argu0 $argu1 $argu2 $argu3 $name    
 fi
 
 if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
@@ -35,10 +34,9 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     argu1=$(echo $name | cut -d "_" -f 2)
     argu2=$(echo $name | cut -d "_" -f 3) 
     argu3=$(echo $name | cut -d "_" -f 4) 
-    argu4=$(echo $name | cut -d "_" -f 5)
     
-    echo "TIMEOUT fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3 argu4:$argu4" | mail -s "Message Subject" alper.alimoglu@gmail.com
-    python $scriptPath/endCode.py $argu0 $argu1 $argu2 $argu3 $argu4 $name    
+    echo "TIMEOUT fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3" | mail -s "Message Subject" alper.alimoglu@gmail.com
+    python $scriptPath/endCode.py $argu0 $argu1 $argu2 $argu3 $name    
 fi
 
 if [[ $event == *" Failed, "* ]]; then # Cancelled job won't catched here

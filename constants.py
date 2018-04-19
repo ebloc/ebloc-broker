@@ -1,6 +1,8 @@
-WHOAMI="alper"
-EBLOCPATH="/home/alper/eBlocBroker"
-CLUSTER_ID="0xda1e61e853bb8d63b1426295f59cb45a34425b63"
+import os, sys;
+
+WHOAMI=""
+EBLOCPATH=""
+CLUSTER_ID=""
 
 GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive";
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
@@ -35,6 +37,9 @@ job_state_code['STOPPED']      = 13
 job_state_code['SUSPENDED']    = 14
 job_state_code['TIMEOUT']      = 15
 
+header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')";
+os.environ['header'] = header;
+
 def log(strIn):
    print(strIn);
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a');
@@ -54,3 +59,16 @@ def isIpfsOn(os, time): #{
       logTest("IPFS is already on.");
       log("IPFS is already on.");
 #}
+
+def contractCall(val): #{   
+   returnedVal = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
+
+   if returnedVal == "notconnected": #{
+      log("Error: Please run Parity or Geth on the background.")
+      sys.exit();
+   #}
+   
+   return returnedVal;
+#}
+
+
