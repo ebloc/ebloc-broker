@@ -2,7 +2,7 @@
 
 key=$1
 # Is valid characters exist
-if ! [[ $key =~ ^[0-9a-zA-Z._=-]+$ ]]; then
+if ! [[ $key =~ ^[0-9a-zA-Z._-]+$ ]]; then
     echo 'False'; exit
 fi
 

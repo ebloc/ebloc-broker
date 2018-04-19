@@ -6,6 +6,7 @@ rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
 rm -f  $HOME/.eBlocBroker/logJobs.txt
 rm -f  $HOME/.eBlocBroker/queuedJobs.txt
 rm -f  $HOME/.eBlocBroker/test.txt
+rm -f  $HOME/.eBlocBroker/ipfs.out
 
 cat /dev/null > clusterDriver.out
 
