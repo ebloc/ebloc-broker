@@ -47,7 +47,7 @@
 # gdrive about
 
 # npm install --save
-#------------------------------------------------------------
+#======================================================================
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set";
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
@@ -71,7 +71,7 @@ fi
 source $HOME/.profile
 
 currentDir=$PWD;
-# Folder Setup:--------------------------------------
+# Folder Setup:========================================================
 if [ ! -d $HOME/.eBlocBroker ]; then
     mkdir -p $HOME/.eBlocBroker;
 fi
@@ -93,7 +93,7 @@ fi
 touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh
-#-----------------------------------------------------
+#======================================================================
 
 # EBLOCPATH setup
 cd $currentDir
@@ -101,7 +101,7 @@ eBlocBrokerPath="$PWD"
 var=$(echo $eBlocBrokerPath | sed 's/\//\\\//g')
 sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" constants.py && rm constants.py.bak
 
-# User Name Setup:------------------------------------
+# User Name Setup:======================================================
 lineOld="whoami";
 lineNew=$(logname);
 
@@ -115,15 +115,15 @@ lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentDir/slurmScript.sh.bak
-#-----------------------------------------------------
+#======================================================================
 
-# COINBASE Address Setup:-----------------------------
+# COINBASE Address Setup:==============================================
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$(echo $COINBASE);
 
 sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" $currentDir/constants.py && rm $currentDir/constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/'             $currentDir/nodePaths.js && rm $currentDir/nodePaths.js.bak
-#-----------------------------------------------------
+#======================================================================
 var=$(echo $currentDir | sed 's/\//\\\//g')
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 grep "MailProg" /usr/local/etc/slurm.conf

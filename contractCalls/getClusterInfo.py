@@ -39,23 +39,12 @@ if __name__ == '__main__': #{
     blockReadFrom, coreNumber, coreMinutePrice = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
     my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
            
-    print('{0: <17}'.format('blockReadFrom: ')   + str(blockReadFrom))    
-    print('{0: <17}'.format('coreNumber: ')      + str(coreNumber))
-    print('{0: <17}'.format('coreMinutePrice: ') + str(coreMinutePrice))       
-    print('{0: <17}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'])
-    print('{0: <17}'.format('miniLockID: ')      + my_filter.get_all_entries()[0].args['miniLockID'])
-    print('{0: <17}'.format('ipfsAddress: ')     + my_filter.get_all_entries()[0].args['ipfsAddress'])   
-    print('{0: <17}'.format('fID: ') + my_filter.get_all_entries()[0].args['fID'])
+    print('{0: <17}'.format('blockReadFrom: ')   + str(blockReadFrom));
+    print('{0: <17}'.format('coreNumber: ')      + str(coreNumber));
+    print('{0: <17}'.format('coreMinutePrice: ') + str(coreMinutePrice));
+    print('{0: <17}'.format('clusterEmail: ')    + my_filter.get_all_entries()[0].args['clusterEmail']);
+    print('{0: <17}'.format('miniLockID: ')      + my_filter.get_all_entries()[0].args['miniLockID']);
+    print('{0: <17}'.format('ipfsAddress: ')     + my_filter.get_all_entries()[0].args['ipfsAddress']);   
+    print('{0: <17}'.format('fID: ')             + my_filter.get_all_entries()[0].args['fID']);
+    print('.');
 #}
-
-     # transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
-    #ipfs=ipfsBytesToString(ipfsID)
-    #print('name: ' + name);
-    #print('ipfsID: ' + ipfs)
-    #print('federationCloudId: ' + federationCloudId)
-    #print('miniLockId: ' + miniLockId)
-    
-    #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'_from': '0x6af0204187a93710317542d383a1b547fa42e705'}})
-    #transfer_filter = eBlocBroker.on('LogCluster')
-    #transfer_filter = eBlocBroker.on('LogCluster', {'filter': {'clusterAddr': clusterAddress}})
-    #print(my_filter.get_all_entries())

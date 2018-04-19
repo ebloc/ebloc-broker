@@ -2,7 +2,7 @@ var nodePaths   = require('./nodePaths');
 var eBlocBroker = require('./contract.js'); 
 
 Web3 = require("web3");
-web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:" + nodePaths.RPC_PORT ));
 
 if(!web3.isConnected()){
     console.log("notconnected");
@@ -18,6 +18,7 @@ var blockNumber         = web3.eth.blockNumber;
 var gasLimit           = 4500000;
 var jobBlkStart        = 0;
 var job_state_id       = {};
+
                 // = 0 #dummy do nothing
 job_state_id['1']  = 'COMPLETED'
 job_state_id['2']  = 'PENDING'    
@@ -43,14 +44,11 @@ exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
 
-exports.getTransactionGas = function(tx) {
-    return web3.eth.getTransactionReceipt( tx ).gasUsed
-}
+exports.getTransactionGas = function(Tx) {return web3.eth.getTransactionReceipt(Tx).gasUsed}
 
-//--------------------
 exports.isTransactionPassed = function(transaction_id) {
     var web3_extended = require('web3_ipc');
-    var options       = { host: 'http://localhost:8545', ipc:false, personal: true,admin: true, debug: true };
+    var options       = { host: 'http://localhost:' + nodePaths.RPC_PORT, ipc:false, personal: true,admin: true, debug: true };
     var web3          = web3_extended.create(options);
     if(!web3.isConnected()) 
 	console.log("not connected");
@@ -103,6 +101,27 @@ exports.getClusterIpfsId = function(var1) {
 
 exports.getClusterInfo = function(var1) {
     return myContractInstance.getClusterInfo(var1);
+};
+
+exports.getUserInfo = function(myPath, userAddress) {
+    var fs    = require('fs');
+    fromBlock            = myContractInstance.getUserInfo(userAddress);
+    var eBlocBrokerEvent = myContractInstance.LogUser({}, {fromBlock: fromBlock, toBlock: fromBlock});
+    var v = '';
+    eBlocBrokerEvent.watch( function (error, result) {
+	if(result == null){ eBlocBrokerEvent.stopWatching()}
+
+	eBlocBrokerEvent.stopWatching();
+
+	fs.writeFile(myPath, "blockReadFrom: " + fromBlock        + ',' +
+		      "userEmail: "     + result.args.userEmail   + ',' +
+		      "miniLockID: "    + result.args.miniLockID  + ',' +
+		      "ipfsAddress: "   + result.args.ipfsAddress + ',' +
+		      "fID: " + result.args.fID, function(err) { 
+			  process.exit();
+		      }); 	
+    });
+    return
 };
 
 exports.highestBlock = function() {

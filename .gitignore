@@ -150,3 +150,7 @@ contract/\.cache/v/cache/lastfailed
 contract/\.pytest_cache/v/cache/lastfailed
 
 contract/\.pytest_cache/v/cache/nodeids
+
+contractCalls/venv/
+
+\.#constants\.py

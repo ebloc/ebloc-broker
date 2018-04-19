@@ -1,3 +1,4 @@
 #!/bin/bash
 
-ipfs daemon > ipfs.out&
+# logPath=$1 
+ipfs daemon > $1/ipfs.out &
