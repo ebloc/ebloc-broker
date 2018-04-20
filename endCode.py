@@ -95,18 +95,14 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
       time.sleep(1)
    #}
 
-   log("pwd: "               + os.popen('pwd').read().rstrip('\n')); #delete
 
    log("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
 
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
-   log('userID: '      +  jobInfo[6].replace("u'", "").replace("'", "")); #delete
-
 
    constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')');
    time.sleep(1);
-   log(os.popen('python -V').read());
    
    userInfo = os.popen('cat $resultsFolderPrev/userInfo.txt').read().replace(" ", "");   
    userInfo = userInfo.split(',');
@@ -121,7 +117,6 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
    log("\nwhoami: "          + os.popen('whoami').read().rstrip('\n'));
    log("pwd: "               + os.popen('pwd').read().rstrip('\n'));
    log("resultsFolder: "     + resultsFolder);
-   log("home: "              + os.popen('echo $HOME').read().rstrip('\n'));
    log("jobKey: "            + jobKey);
    log("index: "             + index);
    log("storageType: "       + storageType);
@@ -129,7 +124,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
    log("encodedShareToken: " + encodedShareToken);   
    log("folderName: "        + folderName);
    log("clusterID: "         + constants.CLUSTER_ID);
-   log("miniLockId: "        + userInfo[2]);
+   log("clientMiniLockId: "  + userInfo[2]);
    log("");
    
    if jobInfo[0] == str(constants.job_state_code['COMPLETED']): #{
@@ -152,7 +147,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
          break; # Wait until does values updated on the blockchain
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 
-        log( "Error: Already completed job is recieved.", 'red'); 
+        log( "Error: Already completed job is received.", 'red'); 
         sys.exit(); # Detects an error on the SLURM side
 
       jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
@@ -250,8 +245,6 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
 
    if storageType == '1': #{ #EUDAT
       os.environ['newHash'] = "0x00";
-      folderName = jobKey;  #delete
-      log(folderName); #delete
       
       os.system("rm $resultsFolder/.node-xmlhttprequest*");      
       os.chdir(resultsFolder);
@@ -274,19 +267,19 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
       log('mimeType: ' + str(mimeType));         
       os.chdir(resultsFolder);
 
-      if 'folder' in mimeType: # Recieved job is in folder format
+      if 'folder' in mimeType: # Received job is in folder format
          os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
          
       res = os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read(); log(res);
       time.sleep(0.25);
 
-      if 'folder' in mimeType: # Recieved job is in folder format
+      if 'folder' in mimeType: # Received job is in folder format
          log('mimeType: folder');         
          log(os.popen('gdrive upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
-      elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
+      elif 'gzip' in mimeType: # Received job is in folder tar.gz
          log('mimeType: tar.gz');
          log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
-      elif '/zip' in mimeType: # Recieved job is in zip format
+      elif '/zip' in mimeType: # Received job is in zip format
          log('zip');
          log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
    #}

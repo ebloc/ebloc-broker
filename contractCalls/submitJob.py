@@ -32,7 +32,7 @@ contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker     = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 10):
+    if(len(sys.argv) == 10): #{
         clusterAddress = str(sys.argv[1]);
         clusterAddress = web3.toChecksumAddress(clusterAddress);
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
@@ -45,8 +45,9 @@ if __name__ == '__main__': #{
         jobDescription = str(sys.argv[7]);
         storageType    = int(sys.argv[8]);
         accountID      = int(sys.argv[9]);
-    else:
-        # USER Inputs----------------------------------------------------------------
+    #}
+    else: #{
+        # USER Inputs ================================================================
         clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63";
         clusterAddress = web3.toChecksumAddress(clusterAddress);    
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
@@ -60,7 +61,21 @@ if __name__ == '__main__': #{
         jobDescription = "Science";
         storageType    = 0;
         accountID      = 0;
-        # ----------------------------------------------------------------------------
+        # =============================================================================
+    #}
+
+    if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
+       print("Requested cluster's Ethereum Address (" + clusterAddress + ") does not exist.")
+       sys.exit();
+    #}
+    
+    fromAccount = web3.eth.accounts[accountID];
+    fromAccount = web3.toChecksumAddress(fromAccount);
+    if not eBlocBroker.functions.isUserExist(fromAccount).call(): #{
+       print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
+       sys.exit();
+    #}
+    
     if storageType == 0 or storageType == 2: #{
        isIpfsOn();
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
@@ -71,11 +86,6 @@ if __name__ == '__main__': #{
     
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
-
-    if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
-       print("Requested Cluster's Ethereum Address does not exist.")
-       sys.exit();
-    #}
     
     if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46) or (storageType == 4 and len(jobKey) != 33): #{
        print("jobKey's length does not match with its original length. Please check your jobKey.")
@@ -83,7 +93,7 @@ if __name__ == '__main__': #{
     #}
     
     gasLimit = 4500000; 
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 255: #{
+    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 64: #{
        tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType);
        print('Tx: ' + tx.hex());
     #}

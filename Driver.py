@@ -5,7 +5,13 @@ import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
 
-os.environ['logPath'] = constants.LOG_PATH;
+# Paths================================================================
+jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
+os.environ['jobsReadFromPath'] = jobsReadFromPath
+contractCallPath               = constants.EBLOCPATH + '/contractCalls';
+os.environ['contractCallPath'] = contractCallPath;
+os.environ['logPath']          = constants.LOG_PATH;
+# ======================================================================
 
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
@@ -50,29 +56,23 @@ yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 
 if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '':
-   print('Once please run:  bash initialize.sh');
+   print('Once please run:  bash initialize.sh', 'red');
    sys.exit();
 
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
 
 if 'False' in isContractExist:
-   print('Please check that you are using eBloc blockchain.');
+   print('Please check that you are using eBloc blockchain.', 'red');
    sys.exit();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
-log('rootdir: ' + os.getcwd() + '\n');
+log('rootdir: ' + os.getcwd());
 
 isDriverOn();
 isSlurmOn();
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
-# Paths---------
-jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
-os.environ['jobsReadFromPath'] = jobsReadFromPath
-contractCallPath               = constants.EBLOCPATH + '/contractCalls';
-os.environ['contractCallPath'] = contractCallPath;
-# ---------------  
 header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
 clusterID = constants.CLUSTER_ID;
 os.environ['clusterID'] = clusterID;
@@ -90,7 +90,7 @@ if "false" in isClusterExist.lower(): #{
 deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
 blockReadFromContract = str(0);
 
-log("clusterAddress: " +  clusterID, "yellow")
+log('{0: <21}'.format('clusterAddress:') +  clusterID, "yellow")
 
 if not os.path.isfile(constants.BLOCK_READ_FROM_FILE): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
@@ -129,7 +129,7 @@ else:
              
 clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
 
-log("deployedBlockNumber: " +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit)
+log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit)
 os.system('rm -f $jobsReadFromPath')
        
 while True: #{
@@ -185,12 +185,12 @@ while True: #{
        submittedJob         = 0;
        submittedJobs        = blockReadFrom.split('?');
        maxVal               = 0;       
-       isClusterRecievedJob = 0;
+       isClusterReceivedJob = 0;
 
        for i in range(0, (len(submittedJobs) - 1)): #{
           submittedJob = submittedJobs[i].split(' ');          
           if clusterID == submittedJob[1]: # Only obtain jobs that are submitted to the cluster
-             isClusterRecievedJob = 1;
+             isClusterReceivedJob = 1;
              log('-' * int(columns), "green")
              log("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
@@ -218,7 +218,6 @@ while True: #{
              # log(userInfo[3]); #ipfsAddress
              # log(userInfo[4]); #eudatID
 
-             # delete ------------
              if not jobInfo[0] == str(constants.job_state_code['PENDING']):
                 log("Job is already captured and in process or completed", 'red');
                 break;
@@ -231,21 +230,21 @@ while True: #{
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
              if submittedJob[4] == '0':
-                log("New job has been recieved. IPFS call |" + time.ctime(), "green")
+                log("New job has been received. IPFS call |" + time.ctime(), "green")
                 driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4]); 
              elif submittedJob[4] == '1':
-                log("New job has been recieved. EUDAT call |" + time.ctime(), "green");
+                log("New job has been received. EUDAT call |" + time.ctime(), "green");
                 driverFunc.driverEudatCall(submittedJob[2], submittedJob[3], userInfo[4]);
                 #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3])) 
              elif submittedJob[4] == '2':
-                log("New job has been recieved. IPFS with miniLock call |" + time.ctime(), "green");
+                log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green");
                 driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4]);
                 #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
              elif submittedJob[4] == '3': 
-                log("New job has been recieved. GitHub call |" + time.ctime(), "green");
+                log("New job has been received. GitHub call |" + time.ctime(), "green");
                 driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4]);
              elif submittedJob[4] == '4': 
-                log("New job has been recieved. gdrive call |" + time.ctime(), "green");
+                log("New job has been received. gdrive call |" + time.ctime(), "green");
                 driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
        #}    
        
@@ -256,7 +255,7 @@ while True: #{
           blockReadFrom = str(int(maxVal) + 1);
        #}
               
-       if isClusterRecievedJob == 0: #{ If there is no submitted job for the cluster, block start to read from current block number
+       if isClusterReceivedJob == 0: #{ If there is no submitted job for the cluster, block start to read from current block number
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w'); # Updates the latest read block number
           f_blockReadFrom.write(str(currentBlockNumber) + '\n'); # Python will convert \n to os.linesep
           f_blockReadFrom.close();
