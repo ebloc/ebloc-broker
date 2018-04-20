@@ -1,8 +1,11 @@
-import os, sys;
+import os, sys, subprocess;
+from colored import stylize
+from colored import fg
 
 WHOAMI=""
 EBLOCPATH=""
 CLUSTER_ID=""
+RPC_PORT=8545
 
 GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive";
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
@@ -14,7 +17,7 @@ JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
 
 IPFS_USE             = 0;
-RPC_PORT             = 8545;
+
 
 ## Creates the hashmap.
 job_state_code = {};
@@ -40,8 +43,12 @@ job_state_code['TIMEOUT']      = 15
 header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')";
 os.environ['header'] = header;
 
-def log(strIn):
-   print(strIn);
+def log(strIn, color=''): #{
+   if color != '':
+      print(stylize(strIn, fg(color)));
+   else:
+      print(strIn)
+
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n");
    txFile.close();
@@ -49,15 +56,13 @@ def log(strIn):
 # checks: does IPFS run on the background or not
 def isIpfsOn(os, time): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
-   if (int(check) == 0):
-      logTest("Error: IPFS does not work on the background. Running:\nipfs daemon &");
-      log("Error: IPFS does not work on the background. Running:\nipfs daemon &");
-      os.system("bash " + EBLOCPATH + "/runIPFS.sh");
-      time.sleep(5);
-      os.system("cat ipfs.out");
+   if int(check) == 0:
+      log("Error: IPFS does not work on the background. Running: ipfs daemon &", 'red');
+      os.system('ipfs daemon > ' + LOG_PATH + '/ipfs.out &');      
+      time.sleep(15);
+      log(os.popen("cat " + LOG_PATH + "/ipfs.out").read(), 'blue');
    else:
-      logTest("IPFS is already on.");
-      log("IPFS is already on.");
+      log("IPFS is already on.", 'green');
 #}
 
 def contractCall(val): #{   

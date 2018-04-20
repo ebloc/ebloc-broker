@@ -180,19 +180,19 @@ contract eBlocBroker {
 	return true;
     }
 
-    function setJobStatus(string jobKey, uint32 index, uint8 stateId, uint startTime) isBehindBlockTimeStamp(startTime) public
+    function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
 	returns (bool success)
     {
 	Lib.status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
-	if (jS.receiptFlag || stateId > 15)
+	if (jS.receiptFlag || stateID > 15)
 	    revert();
 
-	if (stateId != 0) {
-	    jS.status    = stateId;
+	if (stateID != 0) {
+	    jS.status    = stateID;
 	    jS.startTime = startTime;
 	}
 
-	LogSetJob(msg.sender, jobKey, index);
+	LogSetJob(msg.sender, jobKey, index, startTime);
 	return true;
     }
     
@@ -278,7 +278,7 @@ contract eBlocBroker {
 	return false;
     }
 
-    /* ------------------------------------------------------------EVENTS------------------------------------------------------------------------- */
+    /* -----------------------------------------------------EVENTS---------------------------------------------------------*/
     /* Log submitted jobs */
     event LogJob(address cluster,
 		 string jobKey,
@@ -292,7 +292,7 @@ contract eBlocBroker {
 		     string jobKey,
 		     uint index,
 		     address recipient,
-		     uint recieved,
+		     uint received,
 		     uint returned,
 		     uint endTime,
 		     string ipfsHashOut,
@@ -326,6 +326,7 @@ contract eBlocBroker {
     /* Log setJob */
     event LogSetJob(address clusterAddr,
 		    string jobKey,
-		    uint32 index
+		    uint32 index,
+		    uint startTime		    
 		    );
 }
