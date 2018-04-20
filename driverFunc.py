@@ -6,6 +6,7 @@ from   subprocess import call
 import os.path
 from colored import stylize
 from colored import fg
+import subprocess
 
 jobKeyGlobal = "";
 indexGlobal  = "";
@@ -59,19 +60,19 @@ def isSlurmOn(): #{
       print('slurm is not on.')
       os.system("sudo bash runSlurm.sh");
 #}
-
+'''
 # checks: does IPFS run on the background or not
 def isIpfsOn(): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
-   if (int(check) == 0):
+   if int(check) == 0:
       log("Error: IPFS does not work on the background. Running: ipfs daemon &", 'red');
-      os.system("bash " + constants.EBLOCPATH + "/runIPFS.sh " + constants.LOG_PATH);
+      subprocess.Popen(["bash", "runIPFS.sh", constants.LOG_PATH])      
       time.sleep(10);
-      os.system("cat ipfs.out");
+      os.system("cat " + constants.LOG_PATH + "/ipfs.out");
    else:
       log("IPFS is already on", 'green');
 #}
-
+'''
 def sbatchCall(): #{
    myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n');
    log(myDate);
@@ -193,7 +194,6 @@ def driverEudatCall(jobKey, index, fID): #{
    os.environ['jobKey']      = str(jobKey);
    os.environ['index']       = str(index);
    os.environ['folderIndex'] = "1";
-   os.environ['fID']         = fID;
 
    resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
    os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
@@ -266,7 +266,7 @@ def driverIpfsCall(jobKey, index, folderType): #{
     global jobKeyGlobal; jobKeyGlobal = jobKey
     global indexGlobal;  indexGlobal  = index;
 
-    isIpfsOn();
+    constants.isIpfsOn(os, time);
     os.environ['jobKey']      = jobKey;
     os.environ['index']       = str(index);
     os.environ['folderIndex'] = str(folderType);

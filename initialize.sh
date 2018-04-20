@@ -108,21 +108,28 @@ lineNew=$(logname);
 sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" constants.py     && rm constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js && rm $currentDir/nodePaths.js.bak
 
-# PATH Name Setup:------------------------------------
+# RPC PORT Setup:======================================================
+lineOld="8545";
+lineNew="8545"; # Please change if you have different RPC_PORT number
+
+sed -i.bak "s/^\(RPC_PORT=\).*/\1$lineNew/" constants.py     && rm constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/'       nodePaths.js     && rm nodePaths.js.bak
+
+# PATH Name Setup:===================================================
 lineOld="EBLOCBROKER_PATH";
 lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js   && rm $currentDir/nodePaths.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/constants.py   && rm $currentDir/constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/slurmScript.sh && rm $currentDir/slurmScript.sh.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' nodePaths.js   && rm nodePaths.js.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' constants.py   && rm constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' slurmScript.sh && rm slurmScript.sh.bak
 #======================================================================
 
 # COINBASE Address Setup:==============================================
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$(echo $COINBASE);
 
-sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" $currentDir/constants.py && rm $currentDir/constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/'             $currentDir/nodePaths.js && rm $currentDir/nodePaths.js.bak
+sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" constants.py && rm constants.py.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/'             nodePaths.js && rm nodePaths.js.bak
 #======================================================================
 var=$(echo $currentDir | sed 's/\//\\\//g')
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak

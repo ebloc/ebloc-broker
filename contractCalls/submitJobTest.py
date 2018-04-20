@@ -59,6 +59,19 @@ if __name__ == '__main__': #{
         storageType    = 0;
         accountID      = 0;
         # ----------------------------------------------------------------------------
+
+    if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
+       print("Requested cluster's Ethereum Address (" + clusterAddress + ") does not exist.")
+       sys.exit();
+    #}
+    
+    fromAccount = web3.eth.accounts[accountID];
+    fromAccount = web3.toChecksumAddress(fromAccount);
+    if not eBlocBroker.functions.isUserExist(fromAccount).call(): #{
+       print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
+       sys.exit();
+    #}
+    
     if storageType == 0 or storageType == 2: #{
        isIpfsOn();
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
@@ -69,18 +82,13 @@ if __name__ == '__main__': #{
 
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
 
-    if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
-       print("Requested Cluster's Ethereum Address does not exist.")
-       sys.exit();
-    #}
-
     if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46) or (storageType == 4 and len(jobKey) != 33): #{
        print("jobKey's length does not match with its original length. Please check your jobKey.")
        sys.exit();
     #}
 
     gasLimit = 4500000;
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 255: #{
+    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 64: #{
        tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType);
        print('Tx: ' + tx.hex());
     #}
