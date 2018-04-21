@@ -49,11 +49,11 @@ contract eBlocBroker {
 	_ ;
     }
 
-    function refund(address clusterAddr, string jobKey, uint32 index) public returns (bool)
+    function refund(address clusterAddress, string jobKey, uint32 index) public returns (bool)
     {
-	/* If 'clusterAddr' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
+	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
-	Lib.status job = clusterContract[clusterAddr].jobStatus[jobKey][index];
+	Lib.status job = clusterContract[clusterAddress].jobStatus[jobKey][index];
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
@@ -64,11 +64,11 @@ contract eBlocBroker {
 
 	job.receiptFlag = true; /* Prevents double spending */
 
-	LogRefund(clusterAddr, jobKey, index);
+	LogRefund(clusterAddress, jobKey, index);
 	return true;
     }
 
-    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string ipfsHashOut, uint8 storageType, uint endTime)
+    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash, uint8 storageType, uint endTime)
 	isBehindBlockTimeStamp(endTime) public returns (bool success) /* Payback to client and server */
     {
 	/* If 'msg.sender' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
@@ -95,7 +95,7 @@ contract eBlocBroker {
 	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(netOwed - amountToGain); /* Gained ether transferred to the client */
 	
-	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, ipfsHashOut, storageType);
+	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, resultIpfsHash, storageType);
 	return true;
     }
     /* Registers and also updates userData */
@@ -150,11 +150,11 @@ contract eBlocBroker {
 	return true;
     }
    
-    function submitJob(address clusterAddr, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType)
+    function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType)
 	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
 	returns (bool success)
     {
-	Lib.clusterData cluster = clusterContract[clusterAddr];
+	Lib.clusterData cluster = clusterContract[clusterAddress];
 	
 	if (!cluster.isRunning                                         ||
 	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   	    
@@ -175,7 +175,7 @@ contract eBlocBroker {
 			}
 		));
 	
-	LogJob(clusterAddr, jobKey, cluster.jobStatus[jobKey].length-1, storageType, jobDesc);
+	LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageType, jobDesc);
 
 	return true;
     }
@@ -204,44 +204,45 @@ contract eBlocBroker {
 	return clusterAddresses; 
     }
 
-    function getUserInfo(address userAddr) public view
+    /* Returns user's registered block number that will help to check is user registered and points block that has its recoreded event */
+    function getUserInfo(address userAddress) public view
 	returns(uint)
     {
-	if (userContract[userAddr].blockReadFrom != 0)	    
-	    return (userContract[userAddr].blockReadFrom);
+	if (userContract[userAddress].blockReadFrom != 0)	    
+	    return (userContract[userAddress].blockReadFrom);
 	else
 	    return (0);
     }
 
-    function getClusterInfo(address clusterAddr) public view
+    function getClusterInfo(address clusterAddress) public view
 	returns(uint, uint, uint)
     {
-	if (clusterContract[clusterAddr].isExist)	    
-	    return (clusterContract[clusterAddr].blockReadFrom, clusterContract[clusterAddr].receiptList.coreNumber, clusterContract[clusterAddr].coreMinutePrice);
+	if (clusterContract[clusterAddress].isExist)	    
+	    return (clusterContract[clusterAddress].blockReadFrom, clusterContract[clusterAddress].receiptList.coreNumber, clusterContract[clusterAddress].coreMinutePrice);
 	else
 	    return (0, 0, 0);
     }
 
-    function getClusterReceivedAmount(address clusterAddr) public view
+    function getClusterReceivedAmount(address clusterAddress) public view
 	returns (uint)
     {
-	return clusterContract[clusterAddr].receivedAmount;
+	return clusterContract[clusterAddress].receivedAmount;
     }
 
-    function getJobInfo(address clusterAddr, string jobKey, uint index) public view
+    function getJobInfo(address clusterAddress, string jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, uint, address)
     {
-	Lib.status memory job = clusterContract[clusterAddr].jobStatus[jobKey][index];
+	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];
 
 	return (job.status, job.core, job.startTime, job.received, job.coreMinutePrice, job.coreMinuteGas, job.jobOwner);   
     }
 
-    function getJobSize(address clusterAddr, string jobKey) public view
+    function getJobSize(address clusterAddress, string jobKey) public view
 	returns (uint)
     {
 	if (!clusterContract[msg.sender].isExist)
 	    revert();
-	return clusterContract[clusterAddr].jobStatus[jobKey].length;
+	return clusterContract[clusterAddress].jobStatus[jobKey].length;
     }
 
     function getDeployedBlockNumber() public view
@@ -250,30 +251,30 @@ contract eBlocBroker {
 	return deployedBlockNumber;
     }
 
-    function getClusterReceiptSize(address clusterAddr) public view
+    function getClusterReceiptSize(address clusterAddress) public view
 	returns (uint32)
     {
-	return clusterContract[clusterAddr].receiptList.getReceiptListSize();
+	return clusterContract[clusterAddress].receiptList.getReceiptListSize();
     }
 
-    function getClusterReceiptNode(address clusterAddr, uint32 index) public view
+    function getClusterReceiptNode(address clusterAddress, uint32 index) public view
 	returns (uint256, int32)
     {
-	return clusterContract[clusterAddr].receiptList.printIndex(index);
+	return clusterContract[clusterAddress].receiptList.printIndex(index);
     }
     
-    function isClusterExist(address clusterAddr) public view
+    function isClusterExist(address clusterAddress) public view
 	returns (bool)
     {
-	if (clusterContract[clusterAddr].isExist)
+	if (clusterContract[clusterAddress].isExist)
 	    return true;	
 	return false;
     }
 
-    function isUserExist(address userAddr) public view
+    function isUserExist(address userAddress) public view
 	returns (bool)
     {
-	if (userContract[userAddr].blockReadFrom != 0)
+	if (userContract[userAddress].blockReadFrom != 0)
 	    return true;	
 	return false;
     }
@@ -295,7 +296,7 @@ contract eBlocBroker {
 		     uint received,
 		     uint returned,
 		     uint endTime,
-		     string ipfsHashOut,
+		     string resultIpfsHash,
 		     uint8 storageType
 		     );
 
@@ -318,13 +319,13 @@ contract eBlocBroker {
 		  );
     
     /* Log refund */
-    event LogRefund(address clusterAddr,
+    event LogRefund(address clusterAddress,
 		    string jobKey,
 		    uint32 index
 		    );
 
     /* Log setJob */
-    event LogSetJob(address clusterAddr,
+    event LogSetJob(address clusterAddress,
 		    string jobKey,
 		    uint32 index,
 		    uint startTime		    

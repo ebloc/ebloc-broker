@@ -41,17 +41,10 @@ def test_receipt(web3, accounts, chain):
 
     account = accounts[0];
     print( "\n");
-    '''
-    print( web3.eth.getBalance(accounts[0]) );
-    print( web3.eth.getBalance(accounts[1]) );
-    print( web3.eth.getBalance(accounts[2]) );
-    print( web3.eth.getBalance(accounts[3]) );
-    print( web3.eth.getBalance(accounts[4]) );
-    print( web3.eth.getBalance(accounts[5]) );
-    print( web3.eth.getBalance(accounts[6]) );
-    print( web3.eth.getBalance(accounts[7]) );
-    print( web3.eth.getBalance(accounts[8]) );
-    '''
+
+    for i in range(0, 9):
+        print(web3.eth.getBalance(accounts[i]));
+
     print(account);
     web3.eth.defaultAccount = accounts[0];
     set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
