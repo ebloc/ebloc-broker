@@ -168,7 +168,7 @@ exports.LogJob = function(var1, myPath) {
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
+				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
 				   result.args.miniLockId + ' ?\n', function(err) { // '?' end of line identifier.
 					   process.exit();
 				   }); 	
@@ -208,7 +208,7 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if(result.args.cluster == clusterID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " + result.args.endTime + " " +
+				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
 				   result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
 					   process.exit();
 				   }); 	
@@ -268,7 +268,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 			myStr=gain[result.args.cluster + '_' + jobKey + '_' + result.args.index].toString();
 		    
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageType + " " +
+				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
 				   result.args.miniLockId + " " + myStr + ' ?\n', function(err) { // '?' end of line identifier.
 					   process.exit();
 				   }); 	
