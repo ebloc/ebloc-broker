@@ -18,11 +18,11 @@ contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 2:
         userAddress = str(sys.argv[1]);
         printType   = str(sys.argv[2]);
     else:
-        userAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
+        userAddress = "0x82f0d257a9832fa1381881b8dce2d2e6aebc8251";
         printType   = '0';
 
     userAddress = web3.toChecksumAddress(userAddress);
@@ -32,8 +32,11 @@ if __name__ == '__main__': #{
         sys.exit();
 
     blockReadFrom = eBlocBroker.functions.getUserInfo(userAddress).call();
-    my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
 
+    my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
+    # my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom + 1),'toBlock':int(blockReadFrom)})
+
+    
     if printType == '0':
         print('{0: <17}'.format('blockReadFrom: ') + str(blockReadFrom))    
         print('{0: <17}'.format('userEmail: ')     + my_filter.get_all_entries()[0].args['userEmail'])
