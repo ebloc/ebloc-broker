@@ -73,9 +73,9 @@ def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
               os.environ['runTime']  = str(val);
            else:
               log("RunTimeInMinutes: " + '360', path)
-              os.environ['runTime']   = "360" # 6 hours delete on others
+              os.environ['runTime']   = "360" # 6 hours for nasEUDAT simulation test.
            
-           log("hash: " + ipfsHash[0] + " | TimeToRun: " + str(ipfsHash[1]) + " | Core:" + ipfsHash[2], path)
+           log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core:" + ipfsHash[2], path)
 
            account_id = randint(2,11);
            account_id = str(account_id);
@@ -108,6 +108,7 @@ def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
     counter += 1;
   #}
 
-  print("!!!!!!!!!ENDED!!!!!!!!!");
+  print("END");
+  print(".");
   f.close();
 #}
