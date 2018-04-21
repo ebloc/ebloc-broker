@@ -29,8 +29,8 @@ contract eBlocBroker {
     mapping(address => Lib.clusterData) clusterContract;
     mapping(address => Lib.userData)       userContract;   
 
-    modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageType) {	
-	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && storageType < 5); /* coreMinuteGas is maximum 1 day */
+    modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageID) {	
+	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && storageID < 5); /* coreMinuteGas is maximum 1 day */
 	_ ;
     }
 
@@ -68,7 +68,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash, uint8 storageType, uint endTime)
+    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash, uint8 storageID, uint endTime)
 	isBehindBlockTimeStamp(endTime) public returns (bool success) /* Payback to client and server */
     {
 	/* If 'msg.sender' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
@@ -95,7 +95,7 @@ contract eBlocBroker {
 	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(netOwed - amountToGain); /* Gained ether transferred to the client */
 	
-	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, resultIpfsHash, storageType);
+	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, resultIpfsHash, storageID);
 	return true;
     }
     /* Registers and also updates userData */
@@ -150,8 +150,8 @@ contract eBlocBroker {
 	return true;
     }
    
-    function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageType)
-	coreMinuteGas_StorageType_check(coreMinuteGas, storageType) isZero(core) public payable
+    function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageID)
+	coreMinuteGas_StorageType_check(coreMinuteGas, storageID) isZero(core) public payable
 	returns (bool success)
     {
 	Lib.clusterData cluster = clusterContract[clusterAddress];
@@ -175,7 +175,7 @@ contract eBlocBroker {
 			}
 		));
 	
-	LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageType, jobDesc);
+	LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageID, jobDesc);
 
 	return true;
     }
@@ -284,7 +284,7 @@ contract eBlocBroker {
     event LogJob(address cluster,
 		 string jobKey,
 		 uint index,
-		 uint8 storageType,		 
+		 uint8 storageID,		 
 		 string desc
 		 );
     
@@ -297,7 +297,7 @@ contract eBlocBroker {
 		     uint returned,
 		     uint endTime,
 		     string resultIpfsHash,
-		     uint8 storageType
+		     uint8 storageID
 		     );
 
     /* Log cluster info (fID stands for federationCloudId) */

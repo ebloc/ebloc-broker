@@ -20,14 +20,14 @@ def log(strIn, color=''): #{
 #}
 
 def receiptCheckTx(): #{
-   transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+   transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
 
    while(True): #{
       if not(transactionHash == "notconnected" or transactionHash == ""): 
          break;
       else:
          log("Error: Please run Parity or Geth on the background.", 'red')
-         transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageType $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+         transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       time.sleep(5);
    #}
    
@@ -37,7 +37,7 @@ def receiptCheckTx(): #{
    txFile.close();
 #}
 
-def endCall(jobKey, index, storageType, shareToken, folderName): #{
+def endCall(jobKey, index, storageID, shareToken, folderName): #{
    endTimeStamp = os.popen('date +%s').read(); 
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
@@ -65,9 +65,9 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
    os.environ['eblocPath']         = constants.EBLOCPATH;
    os.environ['encodedShareToken'] = encodedShareToken;  
    os.environ['jobName']           = folderName;
-   os.environ['storageType']       = str(storageType);
+   os.environ['storageID']       = str(storageID);
 
-   log(jobKey + ' ' + index + ' ' + storageType + ' ' + shareToken + ' ' + folderName);
+   log(jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName);
 
    resultsFolder     = programPath + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
    resultsFolderPrev = programPath + "/" + jobKey + "_" + index;
@@ -119,7 +119,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
    log("resultsFolder: "     + resultsFolder);
    log("jobKey: "            + jobKey);
    log("index: "             + index);
-   log("storageType: "       + storageType);
+   log("storageID: "       + storageID);
    log("shareToken: "        + shareToken);
    log("encodedShareToken: " + encodedShareToken);   
    log("folderName: "        + folderName);
@@ -167,7 +167,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
    log("JOBID ==> " + str(jobId));
 
    # Here we know that job is already completed 
-   if str(storageType) == '0' or str(storageType) == '3': #{
+   if str(storageID) == '0' or str(storageID) == '3': #{
       countTry = 0;
       while True: 
          if (countTry > 10):
@@ -193,7 +193,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
          #}
    #}
 
-   if str(storageType) == '2': #{      
+   if str(storageID) == '2': #{      
       os.chdir(resultsFolder);
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read());
       #log(os.popen('tar -P -cvzf $resultsFolder/result.tar.gz .').read());      
@@ -243,7 +243,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
    log("finalizedElapsedRawTime: " + str(elapsedRawTime));
    log("jobInfo: " + str(jobInfo));
 
-   if storageType == '1': #{ #EUDAT
+   if storageID == '1': #{ #EUDAT
       os.environ['newHash'] = "0x00";
       
       os.system("rm $resultsFolder/.node-xmlhttprequest*");      
@@ -261,7 +261,7 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
          sys.exit();      
    #}
    
-   elif str(storageType) == '4': #{ #GDRIVE
+   elif str(storageID) == '4': #{ #GDRIVE
       os.environ['newHash'] = "0x00";
       mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
       log('mimeType: ' + str(mimeType));         
@@ -292,9 +292,9 @@ def endCall(jobKey, index, storageType, shareToken, folderName): #{
 if __name__ == '__main__': #{
    jobKey      = sys.argv[1];
    index       = sys.argv[2];
-   storageType = sys.argv[3];
+   storageID = sys.argv[3];
    shareToken  = sys.argv[4];
    folderName  = sys.argv[5];
 
-   endCall(jobKey, index, storageType, shareToken, folderName)
+   endCall(jobKey, index, storageID, shareToken, folderName)
 #}
