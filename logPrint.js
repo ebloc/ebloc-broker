@@ -10,10 +10,10 @@ else{
     clusterID = "0xcc8de90b4ada1c67d68c1958617970308e4ee75e";   
 }
 
-var storageType = {};
-storageType['0'] = 'IPFS';
-storageType['1'] = 'EUDAT';
-storageType['2'] = 'IPFSandMiniLock';
+var storageID = {};
+storageID['0'] = 'IPFS';
+storageID['1'] = 'EUDAT';
+storageID['2'] = 'IPFSandMiniLock';
 
 var fs        = require('fs');
 var array     = fs.readFileSync(nodePaths.LOG_PATH + '/queuedJobs.txt').toString().split("\n");
@@ -47,7 +47,7 @@ for(i in array) {
 	
 	totalPaid += parseInt(arr1[3]);
 	
-	console.log( "Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageType[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
+	console.log( "Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageID[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
 		     "\t" + arr1[1] + "\t" + arr1[2]  + "\t" + arr1[3]  + "\t" + arr1[4] + "\t" + arr1[5] + "\t" + arr[6]);
     }
 }
