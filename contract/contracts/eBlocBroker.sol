@@ -29,7 +29,7 @@ contract eBlocBroker {
     mapping(address => Lib.clusterData) clusterContract;
     mapping(address => Lib.userData)       userContract;   
 
-    modifier coreMinuteGas_StorageType_check(uint32 coreMinuteGas, uint8 storageID) {	
+    modifier coreMinuteGas_storageID_check(uint32 coreMinuteGas, uint8 storageID) {	
 	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && storageID < 5); /* coreMinuteGas is maximum 1 day */
 	_ ;
     }
@@ -151,7 +151,7 @@ contract eBlocBroker {
     }
    
     function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageID)
-	coreMinuteGas_StorageType_check(coreMinuteGas, storageID) isZero(core) public payable
+	coreMinuteGas_storageID_check(coreMinuteGas, storageID) isZero(core) public payable
 	returns (bool success)
     {
 	Lib.clusterData cluster = clusterContract[clusterAddress];
@@ -159,7 +159,7 @@ contract eBlocBroker {
 	if (!cluster.isRunning                                         ||
 	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   	    
 	    bytes(jobKey).length > 255                                 || // Max length is 255, becuase it will used as a filename at cluster
- 	    //isUserExist(msg.sender)                                  ||  
+ 	    !isUserExist(msg.sender)                                   ||  
 	    core > cluster.receiptList.coreNumber)
 	    revert();
 	
