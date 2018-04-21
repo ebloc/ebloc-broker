@@ -160,3 +160,5 @@ dd\.sh
 \.#runIPFS\.sh
 
 contract/\.pytest_cache/v/populus/project/compiled_contracts_mtime
+
+contract/tests/\.#test\.py

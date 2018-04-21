@@ -19,7 +19,7 @@ library Lib {
 
     /* Registered user's information -----------*/
     struct userData {
-	uint     blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
+	uint     blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
     }
     //-------------------------
     /* Registered cluster's information */
