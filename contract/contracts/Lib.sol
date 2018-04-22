@@ -24,7 +24,7 @@ library Lib {
     //-------------------------
     /* Registered cluster's information */
     struct clusterData {
-	bool               isExist; /* Flag that checks is Cluster exists or not */
+	//bool               isExist; /* Flag that checks is Cluster exists or not */
 	bool             isRunning; /* Flag that checks is Cluster running or not */
 	uint32  clusterAddressesID; /* Cluster's ethereum address is stored */
 	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
@@ -59,7 +59,7 @@ library Lib {
     /* Invoked when cluster calls registerCluster() function */
     function constructCluster(clusterData storage self, uint32 memLen, uint coreMinutePrice, uint32 coreNumber) public
     {
-	self.isExist           = true;
+	//self.isExist         = true;
 	self.isRunning         = true;
 	self.receivedAmount    = 0;
 	self.clusterAddressesID = memLen;
@@ -165,3 +165,4 @@ library Lib {
 	return (self.list[myIndex].endpoint, self.list[myIndex].core);
     }
 }
+
