@@ -166,3 +166,11 @@ contract/tests/\.#test\.py
 \.#*
 
 \#*
+
+contractCalls/test/lib/python3\.5/weakref\.py
+
+contractCalls/test/lib/python3\.5/
+
+contractCalls/test/include/
+
+contractCalls/test/bin/

@@ -37,7 +37,7 @@ if __name__ == '__main__': #{
         sys.exit();
 
     blockReadFrom, coreNumber, coreMinutePrice = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
-    my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
+    my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock': int(blockReadFrom),'toBlock': int(blockReadFrom) + 1})
            
     print('{0: <17}'.format('blockReadFrom: ')   + str(blockReadFrom));
     print('{0: <17}'.format('coreNumber: ')      + str(coreNumber));
