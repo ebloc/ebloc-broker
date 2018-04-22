@@ -162,3 +162,7 @@ dd\.sh
 contract/\.pytest_cache/v/populus/project/compiled_contracts_mtime
 
 contract/tests/\.#test\.py
+
+\.#consoleDeployContract\.md
+
+\#consoleDeployContract\.md#

@@ -1,6 +1,4 @@
-pragma solidity ^0.4.17;
-
-import "./Lib.sol";
+pragma solidity ^0.4.17; import "./Lib.sol";
 
 contract eBlocBroker {
     
@@ -35,7 +33,7 @@ contract eBlocBroker {
     }
 
     modifier deregisterClusterCheck() {
-	require(clusterContract[msg.sender].isExist && clusterContract[msg.sender].isRunning); 
+	require(clusterContract[msg.sender].blockReadFrom != 0 && clusterContract[msg.sender].isRunning); 
 	_ ;
     }
 
@@ -112,10 +110,10 @@ contract eBlocBroker {
 	public returns (bool success)
     {
 	Lib.clusterData cluster = clusterContract[msg.sender];
-	if (cluster.isExist && cluster.isRunning)
+	if (cluster.blockReadFrom != 0 && cluster.isRunning)
 	    revert();
 	
-	if (cluster.isExist && !cluster.isRunning) {
+	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender; 
 	    cluster.update(coreMinutePrice, coreNumber); 
 	    cluster.isRunning = true; 
@@ -141,7 +139,7 @@ contract eBlocBroker {
 	public returns (bool success)
     {
 	Lib.clusterData cluster = clusterContract[msg.sender];
-	if (cluster.isExist == false)
+	if (cluster.blockReadFrom == 0)
 	    revert();
 		
 	clusterContract[msg.sender].update(coreMinutePrice, coreNumber);
@@ -217,7 +215,7 @@ contract eBlocBroker {
     function getClusterInfo(address clusterAddress) public view
 	returns(uint, uint, uint)
     {
-	if (clusterContract[clusterAddress].isExist)	    
+	if (clusterContract[clusterAddress].blockReadFrom != 0)	    
 	    return (clusterContract[clusterAddress].blockReadFrom, clusterContract[clusterAddress].receiptList.coreNumber, clusterContract[clusterAddress].coreMinutePrice);
 	else
 	    return (0, 0, 0);
@@ -240,7 +238,7 @@ contract eBlocBroker {
     function getJobSize(address clusterAddress, string jobKey) public view
 	returns (uint)
     {
-	if (!clusterContract[msg.sender].isExist)
+	if (clusterContract[msg.sender].blockReadFrom == 0)
 	    revert();
 	return clusterContract[clusterAddress].jobStatus[jobKey].length;
     }
@@ -266,7 +264,7 @@ contract eBlocBroker {
     function isClusterExist(address clusterAddress) public view
 	returns (bool)
     {
-	if (clusterContract[clusterAddress].isExist)
+	if (clusterContract[clusterAddress].blockReadFrom != 0)
 	    return true;	
 	return false;
     }
