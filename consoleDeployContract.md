@@ -1,9 +1,16 @@
 # How to Deploy using geth-console:
 
+## Console
+
+'''
+dir='/Users/alper/DENE/eBlocBroker/contract/contracts'
+cat $dir/Lib.sol > ~/e.sol && tail -n+3 $dir/eBlocBroker.sol >> ~/e.sol
+rm e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > e.js
 '''
 
-$ rm e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > e.js
+## geth-Console
 
+'''
 loadScript("e.js")
 var myLinkedListLib = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:Lib"].abi))
 
