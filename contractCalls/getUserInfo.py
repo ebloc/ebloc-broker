@@ -18,7 +18,7 @@ contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         userAddress = str(sys.argv[1]);
         printType   = str(sys.argv[2]);
     else:
@@ -48,6 +48,6 @@ if __name__ == '__main__': #{
               my_filter.get_all_entries()[0].args['userEmail']   + ',' +
               my_filter.get_all_entries()[0].args['miniLockID']  + ',' +
               my_filter.get_all_entries()[0].args['ipfsAddress'] + ',' +
-              my_filter.get_all_entries()[0].args['fID']
+              my_filter.get_all_entries()[0].args['fID']         + ',' 
         );
 #}

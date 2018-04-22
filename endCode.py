@@ -100,31 +100,40 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    jobInfo = jobInfo.split(',');
 
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
+   # userInfo = os.popen('#!/bin/bash; source venv/bin/activate; python3 $contractCallPath/getUserInfo.py $userID 1  2>/dev/null').read().rstrip('\n').replace(" ", "");
 
-   constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')');
-   time.sleep(1);
+   userInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getUserInfo.py $userID 1').read().rstrip('\n').replace(" ", "");
+   # log(userInfo)    # delete
+   # log(os.popen('echo python3 $contractCallPath/getUserInfo.py $userID 1').read()) #delete
+   # log(os.popen('which python3').read()) #delete
    
-   userInfo = os.popen('cat $resultsFolderPrev/userInfo.txt').read().replace(" ", "");   
-   userInfo = userInfo.split(',');
+   # constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')'); #|
+   # time.sleep(1);                                                                                       #|
+   # userInfo = os.popen('cat $resultsFolderPrev/userInfo.txt').read().replace(" ", "");                  #|
 
-   log(userInfo[1]); #email
-   log(userInfo[2]); #miniLockID
-   log(userInfo[3]); #ipfsAddress
-   log(userInfo[4]); #eudatID
-   
-   os.environ['clientMiniLockId']  = userInfo[2];
-   
    log("\nwhoami: "          + os.popen('whoami').read().rstrip('\n'));
    log("pwd: "               + os.popen('pwd').read().rstrip('\n'));
    log("resultsFolder: "     + resultsFolder);
    log("jobKey: "            + jobKey);
    log("index: "             + index);
-   log("storageID: "       + storageID);
+   log("storageID: "         + storageID);
    log("shareToken: "        + shareToken);
    log("encodedShareToken: " + encodedShareToken);   
    log("folderName: "        + folderName);
    log("clusterID: "         + constants.CLUSTER_ID);
-   log("clientMiniLockId: "  + userInfo[2]);
+
+   if ',' in userInfo: #{
+      userInfo = userInfo.split(',');
+      log("jobOwner's Info: "); 
+      log('{0: <13}'.format('userEmail: ')     + userInfo[1])
+      log('{0: <13}'.format('miniLockID: ')    + userInfo[2])
+      log('{0: <13}'.format('ipfsAddress: ')   + userInfo[3])
+      log('{0: <13}'.format('fID: ')           + userInfo[4])
+      os.environ['clientMiniLockId']  = userInfo[2];
+   #}
+   else:     
+      log("userInfo split Failure")
+      
    log("");
    
    if jobInfo[0] == str(constants.job_state_code['COMPLETED']): #{
@@ -175,7 +184,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
          countTry = countTry + 1         
 
          os.chdir(resultsFolder);         
-         #os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete');
+         # os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Not needed, already uploaded files won't uploaded again.
          
          # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read()); #| 
          # newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read();                                 #| Upload as .tar.gz.
@@ -292,7 +301,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
 if __name__ == '__main__': #{
    jobKey      = sys.argv[1];
    index       = sys.argv[2];
-   storageID = sys.argv[3];
+   storageID   = sys.argv[3];
    shareToken  = sys.argv[4];
    folderName  = sys.argv[5];
 
