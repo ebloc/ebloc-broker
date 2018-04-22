@@ -9,6 +9,7 @@ from colored import fg
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 contractCallPath               = constants.EBLOCPATH + '/contractCalls';
+os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['logPath']          = constants.LOG_PATH;
 # ======================================================================
@@ -200,7 +201,7 @@ while True: #{
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
 
-             strCheck = os.popen('bash strCheck.sh $jobKey').read();
+             strCheck = os.popen('bash $eblocPath/strCheck.sh $jobKey').read();
              
              jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
              jobInfo = jobInfo.split(',');

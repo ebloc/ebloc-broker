@@ -14,7 +14,18 @@
 # cd Python-3.5.2
 # sudo ./configure --enable-optimizations
 # sudo make altinstall
-#--------------------------
+
+## Python3 setup, required for all clusters! ========================================================
+# python3 -m venv venv
+# python3 -m venv venv
+# . venv/bin/activate
+# pip install web3
+# pip install colored
+# pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
+# pip install pyocclient==0.4
+# pip install --pre --upgrade web3
+# pip install sphinx_rtd_theme
+# ==================================================================================================
 ## Linux Packages
 # sudo apt-get install davfs2 mailutils
 # sudo apt-get install python-psutil

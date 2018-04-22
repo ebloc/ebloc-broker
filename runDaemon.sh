@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source $HOME/.venv-py3/bin/activate
+# source $HOME/.venv-py3/bin/activate
+source venv/bin/activate
 
 if [[ $EUID -ne 0 ]]; then
     nohup python -u Driver.py > clusterDriver.out 2>&1 &

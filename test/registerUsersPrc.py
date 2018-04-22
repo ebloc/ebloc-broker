@@ -15,4 +15,4 @@ os.environ['ipfsAddress'] = ipfsAddress;
 for x in range(2, 12):
     os.environ['accountID'] = str(x);
     tx = os.popen('python /home/prc/eBlocBroker/contractCalls/registerUser.py $accountID $userEmail $fID $miniLockID $ipfsAddress 2>/dev/null').read().rstrip('\n');
-    print(tx)
+    print(str(x) + ' ' + tx)
