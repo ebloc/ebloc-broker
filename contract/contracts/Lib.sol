@@ -80,9 +80,9 @@ library Lib {
 	uint32   addr = self.tail;
 	uint32   addrTemp;
 	int32    carriedSum;
-	interval prevNode;
-	interval currentNode;
-	interval prevNodeTemp;
+	interval storage prevNode;
+	interval storage currentNode;
+	interval storage prevNodeTemp;
 
 	// +-------------------------------+
 	// | Begin: receiptCheck Algorithm |

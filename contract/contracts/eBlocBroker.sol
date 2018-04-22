@@ -51,7 +51,7 @@ contract eBlocBroker {
     {
 	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
-	Lib.status job = clusterContract[clusterAddress].jobStatus[jobKey][index];
+	Lib.status storage job = clusterContract[clusterAddress].jobStatus[jobKey][index];
 	if (msg.sender != job.jobOwner || job.receiptFlag)
 	    revert(); /* Job has not completed yet */
 
@@ -71,7 +71,7 @@ contract eBlocBroker {
     {
 	/* If 'msg.sender' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
-	Lib.status job = clusterContract[msg.sender].jobStatus[jobKey][index];
+	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
 	uint netOwed      = job.received;
 	uint amountToGain = job.coreMinutePrice * jobRunTimeMinute * job.core;
@@ -109,7 +109,7 @@ contract eBlocBroker {
     function registerCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress) 
 	public returns (bool success)
     {
-	Lib.clusterData cluster = clusterContract[msg.sender];
+	Lib.clusterData storage cluster = clusterContract[msg.sender];
 	if (cluster.blockReadFrom != 0 && cluster.isRunning)
 	    revert();
 	
@@ -138,7 +138,7 @@ contract eBlocBroker {
     function updateCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress)
 	public returns (bool success)
     {
-	Lib.clusterData cluster = clusterContract[msg.sender];
+	Lib.clusterData storage cluster = clusterContract[msg.sender];
 	if (cluster.blockReadFrom == 0)
 	    revert();
 		
@@ -152,7 +152,7 @@ contract eBlocBroker {
 	coreMinuteGas_storageID_check(coreMinuteGas, storageID) isZero(core) public payable
 	returns (bool success)
     {
-	Lib.clusterData cluster = clusterContract[clusterAddress];
+	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 	
 	if (!cluster.isRunning                                         ||
 	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||	   	    
@@ -181,7 +181,7 @@ contract eBlocBroker {
     function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
 	returns (bool success)
     {
-	Lib.status jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
+	Lib.status storage jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
 	if (jS.receiptFlag || stateID > 15)
 	    revert();
 
