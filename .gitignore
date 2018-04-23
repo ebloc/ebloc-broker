@@ -174,3 +174,5 @@ contractCalls/test/lib/python3\.5/
 contractCalls/test/include/
 
 contractCalls/test/bin/
+
+docs/convert/get-pip\.py
