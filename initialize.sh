@@ -46,10 +46,10 @@
 ## gdrive install:
 # go get github.com/prasmussen/gdrive
 # gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
-# echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
-# source .profile
+# echo 'export PATH=$PATH:'$(echo $gopath)'/bin'
+# source $HOME/.profile
 # gdrive about
-
+# echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
 # IPFS check
 # nc IP PORT
 # Should return: /multistream/1.0.0
