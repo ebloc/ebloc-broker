@@ -81,7 +81,7 @@ def sbatchCall(): #{
    txFile.close();
    time.sleep(0.25);
 
-   os.system("cp run.sh ${jobKey}_${index}_${folderIndex}_$shareToken.sh");
+   os.system("cp run.sh ${jobKey},${index},${folderIndex},$shareToken.sh");
    
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');

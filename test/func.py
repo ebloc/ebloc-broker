@@ -26,8 +26,8 @@ def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
 
   while True: #{
     if counter >= 0:
-        if counter >= len(ipfsHashNo) - 1:
-           log("Exceed hashOutput.txt's limit Total item number: " + str(len(ipfsHashNo) - 1), path)
+        if counter >= len(ipfsHashNo):
+           log("Exceed hashOutput.txt's limit Total item number: " + str(len(ipfsHashNo)), path)
            break;
 
         line2          = f.readline();
@@ -56,11 +56,14 @@ def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
               os.environ['type']     = '1';
               eudatFlag = 1;
            elif (testType == 'ipfs'):
-              os.environ['ipfsHash'] = ipfsHash[0];
+              os.environ['ipfsHash'] = str(ipfsHash[0]);
               os.environ['type']     = '0';
            elif (testType == 'ipfsMiniLock'):
-              os.environ['ipfsHash'] = ipfsHash[0];
+              os.environ['ipfsHash'] = str(ipfsHash[0]);
               os.environ['type']     = '2';
+           elif (testType == 'gdrive'):
+              os.environ['ipfsHash'] = str(ipfsHash[0]);
+              os.environ['type']     = '4';
 
            ipfsHash = ipfsHashNo[counter].split(" ");
 
