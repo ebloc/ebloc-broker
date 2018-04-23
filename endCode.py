@@ -272,14 +272,21 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    
    elif str(storageID) == '4': #{ #GDRIVE
       os.environ['newHash'] = "0x00";
+
+      log(os.popen('gdrive info $jobKey -c $GDRIVE_METADATA').read().rstrip('\n')); #delete
+      
       mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
-      log('mimeType: ' + str(mimeType));         
+      log('mimeType: ' + str(mimeType));
+      if mimeType == '':         
+         log('mimeType returns empty string.', 'red')
+         sys.exit();
+
       os.chdir(resultsFolder);
 
       if 'folder' in mimeType: # Received job is in folder format
          os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
          
-      res = os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read(); log(res);
+      log(os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read());
       time.sleep(0.25);
 
       if 'folder' in mimeType: # Received job is in folder format
@@ -291,6 +298,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       elif '/zip' in mimeType: # Received job is in zip format
          log('zip');
          log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
+      else:
+         log('Files could not be uploaded', 'red')
+         sys.exit();
    #}
    
    receiptCheckTx();
