@@ -17,7 +17,6 @@
 
 ## Python3 setup, required for all clusters! ========================================================
 # python3 -m venv venv
-# python3 -m venv venv
 # . venv/bin/activate
 # pip install web3
 # pip install colored
