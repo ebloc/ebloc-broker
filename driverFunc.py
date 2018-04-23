@@ -81,7 +81,7 @@ def sbatchCall(): #{
    txFile.close();
    time.sleep(0.25);
 
-   os.system("cp run.sh ${jobKey},${index},${folderIndex},$shareToken.sh");
+   os.system("cp run.sh ${jobKey}*${index}*${folderIndex}*$shareToken.sh");
    
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');
@@ -95,7 +95,7 @@ def sbatchCall(): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sbatch -N$jobCoreNum $resultsFolder/${jobKey},${index},${folderIndex},$shareToken.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
+   jobId = os.popen('sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${folderIndex}*$shareToken.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
    os.environ['jobId'] = jobId;  
    os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit');
    

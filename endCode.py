@@ -175,6 +175,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read().rstrip('\n'); os.environ['jobId'] = jobId;
    log("JOBID ==> " + str(jobId));
 
+   if str(jobId) == '':
+      log("jobID is empty");
+      sys.exit(); 
+   
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{
       countTry = 0;
