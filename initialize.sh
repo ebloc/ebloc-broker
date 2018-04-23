@@ -26,6 +26,7 @@
 # pip install sphinx_rtd_theme
 # ==================================================================================================
 ## Linux Packages
+# sudo apt-get install python3-venv
 # sudo apt-get install davfs2 mailutils
 # sudo apt-get install python-psutil
 # sudo apt-get install -y nodejs
@@ -39,13 +40,6 @@
 # each session:
 # $ source ~/.venv-py3/bin/activate
 
-# pip install typing==3.6.4 (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-# pip install colored
-# pip install pyocclient==0.4
-# pip install web3
-# pip install --pre --upgrade web3
-# pip install sphinx_rtd_theme
-
 # Update git repository
 # git fetch --all && git reset --hard origin/master
 
@@ -55,6 +49,10 @@
 # echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
 # source .profile
 # gdrive about
+
+# IPFS check
+# nc IP PORT
+# Should return: /multistream/1.0.0
 
 # npm install --save
 #======================================================================
@@ -156,6 +154,9 @@ echo -e "Please enter your miniLock password,"
 read -s PASSWORD
 echo $PASSWORD > miniLockPassword.txt
 chmod 700 miniLockPassword.txt
+
+# Setup
+sudo ln -s /usr/bin/node /usr/local/bin/node
 
 # gdrive initialize
 # rm -rf $HOME/.gdrive/

@@ -60,13 +60,13 @@ yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 
 if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '':
-   print('Once please run:  bash initialize.sh', 'red');
+   print(stylize('Once please run:  bash initialize.sh \n', fg('red')));
    sys.exit();
 
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
 
 if 'False' in isContractExist:
-   print('Please check that you are using eBloc blockchain.', 'red');
+   log('Please check that you are using eBloc blockchain.', 'red');
    sys.exit();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
