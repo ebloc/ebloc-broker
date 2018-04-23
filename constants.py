@@ -18,8 +18,7 @@ PROGRAM_PATH         = LOG_PATH + "/ipfsHashes"
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
 
-IPFS_USE             = 0;
-
+IPFS_USE             = 1;
 
 ## Creates the hashmap.
 job_state_code = {};
@@ -59,8 +58,8 @@ def log(strIn, color=''): #{
 def isIpfsOn(os, time): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if int(check) == 0:
-      log("Error: IPFS does not work on the background. Running: ipfs daemon &", 'red');
-      os.system('ipfs daemon > ' + LOG_PATH + '/ipfs.out &');      
+      log("Error: IPFS does not work on the background. Running: nohup ipfs daemon &", 'red');
+      os.system('nohup ipfs daemon > ' + LOG_PATH + '/ipfs.out 2>&1 &');
       time.sleep(15);
       log(os.popen("cat " + LOG_PATH + "/ipfs.out").read(), 'blue');
    else:
