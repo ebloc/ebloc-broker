@@ -5,12 +5,14 @@ from colored import fg
 WHOAMI=""
 EBLOCPATH=""
 CLUSTER_ID=""
+GDRIVE=""
 RPC_PORT=8545
 
 GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive";
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
+
 
 PROGRAM_PATH         = LOG_PATH + "/ipfsHashes" 
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"

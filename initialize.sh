@@ -102,9 +102,15 @@ touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh
 #======================================================================
+cd $currentDir
+
+# GDRIVE path setup
+lineNew=$(which gdrive | sed 's/\//\\\//g')
+echo $lineNew
+sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" constants.py && rm constants.py.bak
+
 
 # EBLOCPATH setup
-cd $currentDir
 eBlocBrokerPath="$PWD"
 var=$(echo $eBlocBrokerPath | sed 's/\//\\\//g')
 sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" constants.py && rm constants.py.bak
