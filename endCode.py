@@ -274,8 +274,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    elif str(storageID) == '4': #{ #GDRIVE
       os.environ['newHash'] = "0x00";
 
-      log(os.popen('which $GDRIVE').read()); #delete
-      log(os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA').read()); #delete
+      # log(os.popen('which $GDRIVE').read()); #delete
+      # log(os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA').read()); #delete
       
       mimeType   = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
       log('mimeType: ' + str(mimeType));

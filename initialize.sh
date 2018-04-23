@@ -46,7 +46,7 @@
 ## gdrive install:
 # go get github.com/prasmussen/gdrive
 # gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
-# echo 'export PATH=$PATH:'$(echo $gopath)'/bin'
+# echo 'export PATH=$PATH:'$(echo $gopath)'/bin' >> $HOME/.profile
 # source $HOME/.profile
 # gdrive about
 # echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
@@ -106,9 +106,7 @@ cd $currentDir
 
 # GDRIVE path setup
 lineNew=$(which gdrive | sed 's/\//\\\//g')
-echo $lineNew
 sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" constants.py && rm constants.py.bak
-
 
 # EBLOCPATH setup
 eBlocBrokerPath="$PWD"
