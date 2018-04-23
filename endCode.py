@@ -82,7 +82,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       log(modifiedDate);
    #}
    
-   jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
+   jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
 
    while True: #{
       if not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno"): 
@@ -91,7 +91,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
          log('jobInfo: ' + jobInfo);
          log(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
          log("Error: Please run Parity or Geth on the background.", 'red')
-         jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
+         jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       time.sleep(1)
    #}
 
@@ -100,12 +100,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    jobInfo = jobInfo.split(',');
 
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
-   # userInfo = os.popen('#!/bin/bash; source venv/bin/activate; python3 $contractCallPath/getUserInfo.py $userID 1  2>/dev/null').read().rstrip('\n').replace(" ", "");
-
    userInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getUserInfo.py $userID 1').read().rstrip('\n').replace(" ", "");
    # log(userInfo)    # delete
-   # log(os.popen('echo python3 $contractCallPath/getUserInfo.py $userID 1').read()) #delete
-   # log(os.popen('which python3').read()) #delete
    
    # constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')'); #|
    # time.sleep(1);                                                                                       #|
@@ -159,13 +155,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
         log( "Error: Already completed job is received.", 'red'); 
         sys.exit(); # Detects an error on the SLURM side
 
-      jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
+      jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       while True:
          if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
             break;
          else:
             log("Error: Please run Parity or Geth on the background.", 'red')
-            jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
+            jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
       jobInfo = jobInfo.split(',');
       time.sleep(30) # Short sleep here so this loop is not keeping CPU busy
@@ -180,7 +176,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       sys.exit(); 
    
    # Here we know that job is already completed 
-   if str(storageID) == '0' or str(storageID) == '3': #{
+   if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
       countTry = 0;
       while True: 
          if (countTry > 10):
@@ -206,7 +202,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
          #}
    #}
 
-   if str(storageID) == '2': #{      
+   if str(storageID) == '2': #{ IPFS & miniLock
       os.chdir(resultsFolder);
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read());
       #log(os.popen('tar -P -cvzf $resultsFolder/result.tar.gz .').read());      
