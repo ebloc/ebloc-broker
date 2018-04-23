@@ -50,6 +50,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    programPath           = constants.PROGRAM_PATH;   
    os.environ['contractCallPath'] = contractCallPath;
    os.environ['logPath'] = constants.LOG_PATH;
+   os.environ['GDRIVE']  = constants.GDRIVE;
    # -------------------------------------------   
 
    encodedShareToken = '';
@@ -172,7 +173,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    log("JOBID ==> " + str(jobId));
 
    if str(jobId) == '':
-      log("jobID is empty");
+      log("jobID is empty", 'red');
       sys.exit(); 
    
    # Here we know that job is already completed 
@@ -273,9 +274,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    elif str(storageID) == '4': #{ #GDRIVE
       os.environ['newHash'] = "0x00";
 
-      log(os.popen('gdrive info $jobKey -c $GDRIVE_METADATA').read().rstrip('\n')); #delete
+      log(os.popen('which $GDRIVE').read()); #delete
+      log(os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA').read()); #delete
       
-      mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
+      mimeType   = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
       log('mimeType: ' + str(mimeType));
       if mimeType == '':         
          log('mimeType returns empty string.', 'red')
@@ -291,13 +293,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
 
       if 'folder' in mimeType: # Received job is in folder format
          log('mimeType: folder');         
-         log(os.popen('gdrive upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
+         log(os.popen('$GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
       elif 'gzip' in mimeType: # Received job is in folder tar.gz
          log('mimeType: tar.gz');
-         log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
+         log(os.popen('$GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
       elif '/zip' in mimeType: # Received job is in zip format
          log('zip');
-         log(os.popen('gdrive update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
+         log(os.popen('$GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read());
       else:
          log('Files could not be uploaded', 'red')
          sys.exit();
