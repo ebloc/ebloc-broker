@@ -4,6 +4,9 @@ from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
+import cancelJob
+
+# p = subprocess.Popen([sys.executable, '-c', 'print (\'hello\'); cancelJob.cancelJob()'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT); print('finished')
 
 # Paths================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;

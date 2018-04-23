@@ -71,7 +71,7 @@ if __name__ == '__main__': #{
        print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
        sys.exit();
     #}
-    
+
     if storageType == 0 or storageType == 2: #{
        isIpfsOn();
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];

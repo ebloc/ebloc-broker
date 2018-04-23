@@ -152,7 +152,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       countTry = countTry + 1                  
 
       if jobInfo[0] == str(constants.job_state_code['RUNNING']): # It will come here eventually, when setJob() is deployed.
-         log("Job started to run."); 
+         log("Job started to run.", 'green'); 
          break; # Wait until does values updated on the blockchain
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 

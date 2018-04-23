@@ -5,10 +5,10 @@ contract eBlocBroker {
     uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
     enum JobStateCodes {
-	Null,
-	COMPLETED,
-	PENDING,
-	RUNNING
+	NULL,      //0
+	COMPLETED, //1
+	PENDING,   //2
+	RUNNING    //3
     }
 	
     function eBlocBroker() public
@@ -47,23 +47,30 @@ contract eBlocBroker {
 	_ ;
     }
 
+    modifier stateID_check(uint8 stateID) {
+	require(stateID <= 15 && stateID > 1); /*stateID cannot be NULL, COMPLETED on setJobStatus call.*/ 
+	_ ;
+    }
+
     function refund(address clusterAddress, string jobKey, uint32 index) public returns (bool)
     {
 	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
 	Lib.status storage job = clusterContract[clusterAddress].jobStatus[jobKey][index];
-	if (msg.sender != job.jobOwner || job.receiptFlag)
-	    revert(); /* Job has not completed yet */
+	if (msg.sender != job.jobOwner ||
+	    job.receiptFlag) /* Job has not completed yet */
+	    revert(); 
 
-	if (job.status == uint8(JobStateCodes.PENDING)) 
+	if (job.status == uint8(JobStateCodes.PENDING) || /* If job have not been started running*/
+	   (job.status == uint8(JobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600)) {/* Job status remain running after one hour
+ that job should have completed */
 	    msg.sender.transfer(job.received);
-	else if ((block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600) 
-	    msg.sender.transfer(job.received);
-
-	job.receiptFlag = true; /* Prevents double spending */
-
-	LogRefund(clusterAddress, jobKey, index);
-	return true;
+	    job.receiptFlag = true; /* Prevents double spending */
+	    LogRefund(clusterAddress, jobKey, index); /* scancel log */
+	    return true;
+	}
+	else
+	    revert(); 
     }
 
     function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash, uint8 storageID, uint endTime)
@@ -179,16 +186,16 @@ contract eBlocBroker {
     }
 
     function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
-	returns (bool success)
+	stateID_check(stateID) returns (bool success)
     {
 	Lib.status storage jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
-	if (jS.receiptFlag || stateID > 15)
+	if (jS.receiptFlag ||
+	    jS.status == uint8(JobStateCodes.RUNNING)) /* Cluster can sets job's status as RUNNING and its startTime only one time */
 	    revert();
 
-	if (stateID != 0) {
-	    jS.status    = stateID;
+	jS.status = stateID;
+	if (stateID == uint8(JobStateCodes.RUNNING))
 	    jS.startTime = startTime;
-	}
 
 	LogSetJob(msg.sender, jobKey, index, startTime);
 	return true;
