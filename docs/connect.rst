@@ -331,7 +331,6 @@ Please try following commands on your ``geth-client`` console.
 -  `Sending Ether on
    geth-client <https://github.com/ethereum/go-ethereum/wiki/Sending-ether>`__
 
-
 Please note that you can not mine with CPU node using ``Parity``. In
 order to mine you should you ``geth`` node.
 

@@ -330,4 +330,3 @@ Please try following commands on your ``geth-client`` console.
    accounts <https://github.com/ethereum/go-ethereum/wiki/Managing-your-accounts>`__
 -  `Sending Ether on
    geth-client <https://github.com/ethereum/go-ethereum/wiki/Sending-ether>`__
-
