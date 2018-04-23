@@ -129,7 +129,7 @@ lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' nodePaths.js   && rm nodePaths.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' constants.py   && rm constants.py.bak
-sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh     && rm slurmScript.sh.py.bak
+sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh && rm slurmScript.sh.bak
 #======================================================================
 
 # COINBASE Address Setup:==============================================
