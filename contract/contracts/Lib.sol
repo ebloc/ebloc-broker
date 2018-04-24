@@ -7,7 +7,7 @@ library Lib {
 	/* Variable assigned by the cluster */
 	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
 	uint         startTime; /* Submitted job's starting universal time on the server side */
-	bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
+	// bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
 	
 	/* Variables assigned by the client */
 	uint32   coreMinuteGas; /* Time to run job in seconds. ex: minute + hour * 60 + day * 1440; */
