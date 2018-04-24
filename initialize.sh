@@ -16,6 +16,8 @@
 # sudo make altinstall
 
 ## Python3 setup, required for all clusters! ========================================================
+# sudo apt-get install python3-dev
+# sudo apt-get install python3-venv
 # python3 -m venv venv
 # . venv/bin/activate
 # pip install web3
@@ -26,7 +28,6 @@
 # pip install sphinx_rtd_theme
 # ==================================================================================================
 ## Linux Packages
-# sudo apt-get install python3-venv
 # sudo apt-get install davfs2 mailutils
 # sudo apt-get install python-psutil
 # sudo apt-get install -y nodejs

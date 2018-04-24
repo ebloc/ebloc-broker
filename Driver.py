@@ -219,7 +219,7 @@ while True: #{
              userInfo = userInfo.split(',');            
 
              if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
-                log("Job is completed.", 'red');
+                log("Job is already completed.", 'red');
                 break;
              if jobInfo[0] == str(constants.job_state_code['REFUNDED']):
                 log("Job is refunded.", 'red');

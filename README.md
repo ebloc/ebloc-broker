@@ -235,12 +235,12 @@ Please check following [tutorial](https://www.npmjs.com/package/minilock-cli):
 
 ###### Generate a miniLock  ID
 
+Do following code only once and do not lose your passphrase:
+
 ```bash
-$ mlck id alice@example.com --save
-period dry million besides usually wild everybody
- 
-Passphrase (leave blank to quit): 
+$ mlck id alice@gmail.com --save --passphrase='bright wind east is pen be lazy usual'
 ```
+
 You can look up your miniLock ID any time.
 
 ```bash
