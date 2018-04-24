@@ -13,12 +13,10 @@ IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
 
-
+IPFS_USE             = 0;
 PROGRAM_PATH         = LOG_PATH + "/ipfsHashes" 
 JOBS_READ_FROM_FILE  = LOG_PATH + "/test.txt"
 BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
-
-IPFS_USE             = 1;
 
 ## Creates the hashmap.
 job_state_code = {};
@@ -53,8 +51,9 @@ def log(strIn, color=''): #{
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n");
    txFile.close();
+#}
 
-# checks: does IPFS run on the background or not
+# Checks that does IPFS run on the background or not
 def isIpfsOn(os, time): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if int(check) == 0:
@@ -70,7 +69,7 @@ def contractCall(val): #{
    returnedVal = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
 
    if returnedVal == "notconnected": #{
-      log("Error: Please run Parity or Geth on the background.")
+      log("Error: Please run Parity or Geth on the background.", 'red')
       sys.exit();
    #}
    

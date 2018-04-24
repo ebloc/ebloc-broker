@@ -1,4 +1,4 @@
 #!/bin/bash
 
 . venv/bin/activate # source ~/.venv-py3/bin/activate
-python Driver.py
+python -B Driver.py
