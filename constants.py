@@ -22,22 +22,23 @@ BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
 job_state_code = {};
 
 # Add keys to the hashmap #https://slurm.schedmd.com/squeue.html
-                             # = 0 #dummy do nothing
+                             # = 0 # dummy as QUEUED.
 job_state_code['COMPLETED']    = 1
-job_state_code['PENDING']      = 2
-job_state_code['RUNNING']      = 3
-job_state_code['BOOT_FAIL']    = 4
-job_state_code['CANCELLED']    = 5
-job_state_code['CONFIGURING']  = 6
-job_state_code['COMPLETING']   = 7
-job_state_code['FAILED']       = 8
-job_state_code['NODE_FAIL']    = 9
-job_state_code['PREEMPTED']    = 10
-job_state_code['REVOKED']      = 11
-job_state_code['SPECIAL_EXIT'] = 12
-job_state_code['STOPPED']      = 13
-job_state_code['SUSPENDED']    = 14
-job_state_code['TIMEOUT']      = 15
+job_state_code['REFUNDED']     = 2
+job_state_code['PENDING']      = 3
+job_state_code['RUNNING']      = 4
+job_state_code['BOOT_FAIL']    = 5
+job_state_code['CANCELLED']    = 6
+job_state_code['CONFIGURING']  = 7
+job_state_code['COMPLETING']   = 8
+job_state_code['FAILED']       = 9
+job_state_code['NODE_FAIL']    = 10
+job_state_code['PREEMPTED']    = 11
+job_state_code['REVOKED']      = 12
+job_state_code['SPECIAL_EXIT'] = 13
+job_state_code['STOPPED']      = 14
+job_state_code['SUSPENDED']    = 15
+job_state_code['TIMEOUT']      = 16
 
 header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')";
 os.environ['header'] = header;

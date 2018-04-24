@@ -4,11 +4,12 @@ contract eBlocBroker {
     
     uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
-    enum JobStateCodes {
-	NULL,      //0
-	COMPLETED, //1
-	PENDING,   //2
-	RUNNING    //3
+    enum jobStateCodes {
+	QUEUED,    //0
+	COMPLETED, //1 /* Prevents double spending, flag to store if receiptCheck successfully completed */
+	REFUNDED,  //2 /* Prevents double spending, flag to store if receiptCheck successfully refunded */
+	PENDING,   //3
+	RUNNING    //4	
     }
 	
     function eBlocBroker() public
@@ -48,7 +49,7 @@ contract eBlocBroker {
     }
 
     modifier stateID_check(uint8 stateID) {
-	require(stateID <= 15 && stateID > 1); /*stateID cannot be NULL, COMPLETED on setJobStatus call.*/ 
+	require(stateID <= 15 && stateID > 2); /*stateID cannot be NULL, COMPLETED on setJobStatus call.*/ 
 	_ ;
     }
 
@@ -58,14 +59,16 @@ contract eBlocBroker {
 	   is not mapped to a job , this will throw automatically and revert all changes */
 	Lib.status storage job = clusterContract[clusterAddress].jobStatus[jobKey][index];
 	if (msg.sender != job.jobOwner ||
-	    job.receiptFlag) /* Job has not completed yet */
+	    job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED)
+	    ) /* Job has not completed yet */
 	    revert(); 
 
-	if (job.status == uint8(JobStateCodes.PENDING) || /* If job have not been started running*/
-	   (job.status == uint8(JobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600)) {/* Job status remain running after one hour
+	if (job.status == uint8(jobStateCodes.PENDING) || /* If job have not been started running*/
+	   (job.status == uint8(jobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600)) {/* Job status remain running after one hour
  that job should have completed */
 	    msg.sender.transfer(job.received);
-	    job.receiptFlag = true; /* Prevents double spending */
+	    
+	    job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
 	    LogRefund(clusterAddress, jobKey, index); /* scancel log */
 	    return true;
 	}
@@ -83,19 +86,18 @@ contract eBlocBroker {
 	uint netOwed      = job.received;
 	uint amountToGain = job.coreMinutePrice * jobRunTimeMinute * job.core;
 
-	if((amountToGain > netOwed) || job.receiptFlag) 
+	if((amountToGain > netOwed) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) ) 
 	    revert();
 	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) { 	    
-	    job.receiptFlag  = true; /* Important to check already paid job or not */
+	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
 	    job.jobOwner.transfer(netOwed); /* Pay back netOwned to client */
 	    return false;
 	}
 	
 	clusterContract[msg.sender].receivedAmount += amountToGain;
 
-	job.status      = uint8(JobStateCodes.COMPLETED);
-	job.receiptFlag = true; /* Prevents double spending */
+	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
 
 	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(netOwed - amountToGain); /* Gained ether transferred to the client */
@@ -169,14 +171,13 @@ contract eBlocBroker {
 	    revert();
 	
 	cluster.jobStatus[jobKey].push(Lib.status({
- 		        status:          uint8(JobStateCodes.PENDING),
+ 		        status:          uint8(jobStateCodes.PENDING),
 			core:            core,
 			coreMinuteGas:   coreMinuteGas,
 			jobOwner:        msg.sender,
 			received:        msg.value,
 			coreMinutePrice: cluster.coreMinutePrice,  
-			startTime:       0,
-			receiptFlag:     false
+			startTime:       0
 			}
 		));
 	
@@ -188,14 +189,14 @@ contract eBlocBroker {
     function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
 	stateID_check(stateID) returns (bool success)
     {
-	Lib.status storage jS = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
-	if (jS.receiptFlag ||
-	    jS.status == uint8(JobStateCodes.RUNNING)) /* Cluster can sets job's status as RUNNING and its startTime only one time */
+	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
+	if (job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) ||
+	    job.status == uint8(jobStateCodes.RUNNING)) /* Cluster can sets job's status as RUNNING and its startTime only one time */
 	    revert();
 
-	jS.status = stateID;
-	if (stateID == uint8(JobStateCodes.RUNNING))
-	    jS.startTime = startTime;
+	job.status = stateID;
+	if (stateID == uint8(jobStateCodes.RUNNING))
+	    job.startTime = startTime;
 
 	LogSetJob(msg.sender, jobKey, index, startTime);
 	return true;

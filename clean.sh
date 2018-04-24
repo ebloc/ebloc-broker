@@ -1,5 +1,6 @@
 #/!/bin
 
+rm -f \#*
 rm -f *.pyc
 rm -f checkSinfoOut.txt
 rm -f .node-xmlhttprequest*
