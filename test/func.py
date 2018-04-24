@@ -91,7 +91,7 @@ def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
            txFile.write(tx + " " + account_id + "\n");
            txFile.close();
 
-           sleepSeconds=int(sleepTime) * 60;
+           sleepSeconds = int(sleepTime);
            for remaining in range(sleepSeconds, 0, -1): #{
               sys.stdout.write("\r")
               sys.stdout.write("{:2d} seconds remaining...".format(remaining))

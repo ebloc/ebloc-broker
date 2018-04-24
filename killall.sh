@@ -19,6 +19,4 @@ do
     sudo kill -9 $pId
 done
 
-sudo killall ipfs
-
-
+# sudo killall ipfs
