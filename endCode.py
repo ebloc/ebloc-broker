@@ -48,9 +48,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    # Paths--------------------------------------
    contractCallPath      = constants.EBLOCPATH + '/contractCalls'; 
    programPath           = constants.PROGRAM_PATH;   
-   os.environ['contractCallPath'] = contractCallPath;
    os.environ['logPath'] = constants.LOG_PATH;
    os.environ['GDRIVE']  = constants.GDRIVE;
+   os.environ['contractCallPath'] = contractCallPath;
    # -------------------------------------------   
 
    encodedShareToken = '';

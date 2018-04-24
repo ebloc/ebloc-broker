@@ -217,13 +217,15 @@ while True: #{
              
              userInfo = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
              userInfo = userInfo.split(',');            
-             # log(userInfo[1]); #email
-             # log(userInfo[2]); #miniLockID
-             # log(userInfo[3]); #ipfsAddress
-             # log(userInfo[4]); #eudatID
 
+             if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
+                log("Job is completed.", 'red');
+                break;
+             if jobInfo[0] == str(constants.job_state_code['REFUNDED']):
+                log("Job is refunded.", 'red');
+                break;
              if not jobInfo[0] == str(constants.job_state_code['PENDING']):
-                log("Job is already captured and in process or completed", 'red');
+                log("Job is already captured and in process or completed.", 'red');
                 break;
              if "false" in isUserExist.lower(): 
                 log('jobOwner is not registered', 'red');
