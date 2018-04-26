@@ -5,7 +5,7 @@ contract eBlocBroker {
     uint  deployedBlockNumber; /* The block number that was obtained when contract is deployed */
 
     enum jobStateCodes {
-	QUEUED,    //0
+	NULL,      //0
 	COMPLETED, //1 /* Prevents double spending, flag to store if receiptCheck successfully completed */
 	REFUNDED,  //2 /* Prevents double spending, flag to store if receiptCheck successfully refunded */
 	PENDING,   //3
@@ -49,7 +49,7 @@ contract eBlocBroker {
     }
 
     modifier stateID_check(uint8 stateID) {
-	require(stateID <= 15 && stateID > 2); /*stateID cannot be NULL, COMPLETED on setJobStatus call.*/ 
+	require(stateID <= 15 && stateID > 2); /*stateID cannot be NULL, COMPLETED, REFUNDED on setJobStatus call.*/ 
 	_ ;
     }
 
@@ -189,8 +189,9 @@ contract eBlocBroker {
     function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
 	stateID_check(stateID) returns (bool success)
     {
-	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* used as a pointer to a storage */
-	if (job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) ||
+	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* Used as a pointer to a storage */
+	if (job.status == uint8(jobStateCodes.COMPLETED) ||
+	    job.status == uint8(jobStateCodes.REFUNDED)  ||
 	    job.status == uint8(jobStateCodes.RUNNING)) /* Cluster can sets job's status as RUNNING and its startTime only one time */
 	    revert();
 

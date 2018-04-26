@@ -40,7 +40,7 @@ def isDriverOn():
       sys.exit();
 
 # checks: does SLURM run on the background or not
-def isSlurmOn(): 
+def isSlurmOn(): #{
    os.system("bash checkSinfo.sh")  
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
 
@@ -55,6 +55,7 @@ def isSlurmOn():
       log("sudo munged -f")
       log("/etc/init.d/munge start")
       sys.exit()
+#}
 
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
