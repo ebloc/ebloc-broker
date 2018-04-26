@@ -40,18 +40,11 @@ def test_receipt(web3, accounts, chain):
     print(accounts)
 
     account = accounts[0];
-    print( "\n");
-    '''
-    print( web3.eth.getBalance(accounts[0]) );
-    print( web3.eth.getBalance(accounts[1]) );
-    print( web3.eth.getBalance(accounts[2]) );
-    print( web3.eth.getBalance(accounts[3]) );
-    print( web3.eth.getBalance(accounts[4]) );
-    print( web3.eth.getBalance(accounts[5]) );
-    print( web3.eth.getBalance(accounts[6]) );
-    print( web3.eth.getBalance(accounts[7]) );
-    print( web3.eth.getBalance(accounts[8]) );
-    '''
+    print("\n");
+
+    for i in range(0, 9):
+        print(web3.eth.getBalance(accounts[i]));
+
     print(account);
     web3.eth.defaultAccount = accounts[0];
     set_txn_hash     = my_contract.transact().registerCluster(1, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
@@ -118,8 +111,6 @@ def test_receipt(web3, accounts, chain):
             coreNum = int(arguments[2])
 
             chain.wait.for_block(int(arguments[0]));
-
-            #jobKey_Description_miniLockId
             jobKey     = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd";
             miniLockId = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k";
             
@@ -129,36 +120,12 @@ def test_receipt(web3, accounts, chain):
 
             print("submitJob: " + str(contract_address["gasUsed"]));
             print(my_contract.call().getJobInfo('0xdceceaf3fc5c0a63d195d69b1a90011b7b19650d', jobKey, 0));
-
-            #print( j, arguments[0], arguments[1], arguments[2], gas );
-            #f1.write( '%s %s %s %d \n' % (arguments[0], arguments[1], arguments[2], myGas ) )
-            #print(my_contract.call().hSize());
             j = j + 1;
 
     
     chain.wait.for_block(100);
     print( "Block_Number: " + str(web3.eth.blockNumber) );
 
-    '''
-    coreNum = 1;
-    contract_address = chain.wait.for_receipt(set_txn_hash)
-    gUsed = contract_address["gasUsed"];
-    print( "\nsubmitJobUsedGas:" + str(gUsed) + "\n" )
-
-    coreNum = 127;
-    contract_address = chain.wait.for_receipt(set_txn_hash)
-    set_txn_hash     = my_contract.transact({"from": accounts[8], "value": web3.toWei(60*10000000000000000*coreNum, "wei") }).submitJob(
-        account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", coreNum, "Science", 60, 0, "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k" );
-    contract_address = chain.wait.for_receipt(set_txn_hash)
-    initial_myGas = contract_address["gasUsed"];
-    print( "Gas Used on Insert: " + str(initial_myGas) + "-------------------")
-
-    
-    web3.eth.defaultAccount = accounts[2];
-
-    size           = my_contract.call().getJobSize(account, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve");
-    print("JobSize " + str(size) + "----------");
-    '''
     blockReadFrom, coreLimit, coreMinutePrice  = my_contract.call().getClusterInfo(account);
     print("Cluster's coreLimit:  " + str(coreLimit));
 
@@ -167,21 +134,17 @@ def test_receipt(web3, accounts, chain):
         for line in f:
             #print(line)
             arguments = line.rstrip('\n').split(" ")
-            set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, 3, int(arguments[0]) );    
+            set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, 4, int(arguments[0]) );    
             val = val + 1
 
     val = 0;
     with open(fname) as f:
         for line in f:
-            #if(val ==2):
-            #break;
             arguments = line.rstrip('\n').split(" ")
-            receiptCheck(my_contract, chain, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, int(arguments[1]) - int(arguments[0]) );
+            receiptCheck(my_contract, chain, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, int(arguments[1]));
 
             size = my_contract.call().getClusterReceivedAmount(account);
-            print( size );
-
-            #print( web3.eth.getBalance(accounts[8]) );
+            print(size);
             val = val + 1
 
             

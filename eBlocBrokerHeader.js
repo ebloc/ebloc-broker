@@ -19,22 +19,23 @@ var gasLimit           = 4500000;
 var jobBlkStart        = 0;
 var job_state_id       = {};
 
-                // = 0 #dummy do nothing
+job_state_id['0']  = 'NULL'
 job_state_id['1']  = 'COMPLETED'
-job_state_id['2']  = 'PENDING'    
-job_state_id['3']  = 'RUNNING'
-job_state_id['4']  = 'BOOT_FAIL';
-job_state_id['5']  = 'CANCELLED'
-job_state_id['6']  = 'CONFIGURING'
-job_state_id['7']  = 'COMPLETING'  
-job_state_id['8']  = 'FAILED'      
-job_state_id['9']  = 'NODE_FAIL'
-job_state_id['10'] = 'PREEMPTED'
-job_state_id['11'] = 'REVOKED'    
-job_state_id['12'] = 'SPECIAL_EXIT'
-job_state_id['13'] = 'STOPPED'  
-job_state_id['14'] = 'SUSPENDED'
-job_state_id['15'] = 'TIMEOUT'    
+job_state_id['2']  = 'REFUNDED'
+job_state_id['3']  = 'PENDING'
+job_state_id['4']  = 'RUNNING'
+job_state_id['5']  = 'BOOT_FAIL';
+job_state_id['6']  = 'CANCELLED'
+job_state_id['7']  = 'CONFIGURING'
+job_state_id['8']  = 'COMPLETING'
+job_state_id['9']  = 'FAILED'
+job_state_id['10']  = 'NODE_FAIL'
+job_state_id['11'] = 'PREEMPTED'
+job_state_id['12'] = 'REVOKED'
+job_state_id['13'] = 'SPECIAL_EXIT'
+job_state_id['14'] = 'STOPPED'
+job_state_id['15'] = 'SUSPENDED'
+job_state_id['16'] = 'TIMEOUT'
 
 //Global variables are used.
 exports.jobBlkStart;
@@ -80,15 +81,13 @@ exports.isTransactionPassed = function(transaction_id) {
     return checkPassed;
 };
 //--------------------
+exports.getJobInfo = function(var1, var2, var3) {
+    return myContractInstance.getJobInfo(var1, var2, var3);
+};
 
 exports.setJobStatus = function(var1, var2, var3, var4) {
     hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
     console.log( hash );
-};
-
-exports.updateCluster = function(var1, var2, var3, var4, var5, var6) {
-    hash = myContractInstance.updateCluster( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit } );
-    console.log(hash);
 };
 
 exports.getDeployedBlockNumber = function() {
@@ -287,10 +286,11 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
 
     var eBlocBrokerEvent = myContractInstance.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
 
-    eBlocBrokerEvent.watch( function (error, result) {	
+    eBlocBrokerEvent.watch(function (error, result) {	
 	flag = 0;
 	if(error) {
-	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    fs.appendFile(myPath, var1 + "\n", function(err) { process.exit(); });
+	    fs.appendFile(myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
 	    flag=1;
 	    eBlocBrokerEvent.stopWatching()
 	}
@@ -304,20 +304,14 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
 	}
 
 	if(flag == 0){
+
 	    var jobKey = result.args.jobKey;   
-	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { //not accepting any string containing '#' wrong string input affects string splitting
-		if(result.args.cluster == clusterID){
-		    gainedStr=(parseInt(result.args.recieved) - parseInt(result.args.returned)).toString();
-		    
-
-		    fs.appendFile(myPath, result.args.cluster + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { // '?' end of line identifier.			
-			eBlocBrokerEvent.stopWatching();
-                        process.exit();
-                    });
-
-
-
-		}
+	    if(result.args.cluster == clusterID){		    		    
+		gainedStr=(parseInt(result.args.recieved) - parseInt(result.args.returned)).toString();		    
+		fs.appendFile(myPath, result.args.cluster + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { 
+		    eBlocBrokerEvent.stopWatching();
+                    process.exit();
+                });
 	    }
 	}
     });   

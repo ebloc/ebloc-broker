@@ -189,7 +189,6 @@ You can use `contractCall/submitJob.py` to submit your jobs. To run: `python con
 #### **1. How to submit a job using IPFS**
 
 ```bash
-# USER Inputs----------------------------------------------------------------------
 clusterAddress   = "0x6af0204187a93710317542d383a1b547fa42e705";  
 ipfsHash         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
 coreNum          = 1; 
@@ -198,8 +197,6 @@ coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
 storageType      = 0; // Please note that '0' stands for IPFS repository share. Fixed.
-# ----------------------------------------------------------------------------------
-myMiniLockId     = ""; #Fixed.
 ```
 #### **2. How to submit a job using EUDAT**
 
@@ -214,7 +211,6 @@ Before doing this you have to be sure that you have shared your folder with clus
 #####  **Script:** 
 
 ```bash
-# USER Inputs----------------------------------------------------------------------
 clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
 jobKey         = "folderName";
 coreNum        = 1;
@@ -223,19 +219,13 @@ coreGasHour    = 0;
 coreGasMin     = 10;
 jobDescription = "Science";
 storageType    = 1; # Please note that '1' stands for EUDAT repository share. Fixed.
-# ----------------------------------------------------------------------------------
-myMiniLockId     = ""; # Fixed
 ```
 
 #### **3. How to submit a job using IPFS+miniLock**
 
 ###### miniLock Setup
 
-Please check following [tutorial](https://www.npmjs.com/package/minilock-cli):
-
-###### Generate a miniLock  ID
-
-Do following code only once and do not lose your passphrase:
+Please check following [tutorial](https://www.npmjs.com/package/minilock-cli). Do following code only to generate miniLock ID once and do not lose your passphrase:
 
 ```bash
 $ mlck id alice@gmail.com --save --passphrase='bright wind east is pen be lazy usual'
@@ -262,7 +252,6 @@ added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 
 ###### **Script:**
 ```bash
-# USER Inputs----------------------------------------------------------------------
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit. 
 jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 coreNum          = 1; 
@@ -271,8 +260,6 @@ coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
 storageType      = 2; // Please note 2 stands for IPFS with miniLock repository share. Fixed.
-myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
-# ----------------------------------------------------------------------------------
 ```
 
 #### **4. How to submit a job using GitHub**
@@ -280,7 +267,6 @@ myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
 If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`
 
 ```bash
-# USER Inputs----------------------------------------------------------------------
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit.
 jobKey           = "avatar-lavventura=simpleSlurmJob" 
 coreNum          = 1; 
@@ -288,9 +274,7 @@ coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
-storageType      = 3 ; # Please note that 4 stands for github repository share. Fixed.
-# ----------------------------------------------------------------------------------
-myMiniLockId     = ""; # Fixed
+storageType      = 3 ; # Please note that 3 stands for github repository share. Fixed.
 ```
 -------------------------
 
@@ -327,7 +311,6 @@ If your work is zipper under folder name such as folderPath/folderName/RUN.zip ;
 ---------
 
 ```bash
-# USER Inputs----------------------------------------------------------------------
 clusterID        = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; # clusterID you would like to submit.
 jobKey           = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
 coreNum          = 1; 
@@ -336,15 +319,12 @@ coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
 storageType      = 4; # Please note that 4 stands for gdrive repository share. Fixed. 
-# ----------------------------------------------------------------------------------
-myMiniLockId     = ""; # Fixed.
 ```
 
 
 ### **How to obtain Submitted Job's Information:**
 
-- status  could be `"QUEUED"` or `"RUNNING"` or `"COMPLETED"` 
-- `ipfsOut` is Completed Job's folder's ipfs hash. This exists if the job is completed.
+- status  could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING` or `COMPLETED`. 
 
 ```bash
 clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.

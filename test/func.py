@@ -7,7 +7,9 @@ def log(strIn, path):
    txFile.write( strIn + "\n" ); 
    txFile.close();
 
-def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
+def testFunc(path, readTest, workloadTest, testType, clusterID): #{
+  os.environ['clusterID']     = clusterID;
+
   ipfsHashNo = {} #create a dictionary called ipfsHashNo
   lineNumCounter = 0;
   with open(path + '/' + readTest) as test:
@@ -83,11 +85,11 @@ def testFunc(path, readTest, workloadTest, testType, cluster_id): #{
            account_id = randint(2,11);
            account_id = str(account_id);
            os.environ['accountID'] = account_id;
-           # log(os.popen('echo /home/prc/eBlocBroker/contractCalls/submitJobTest.py $cluster_id $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n'), path);          
-           tx = os.popen('python /home/prc/eBlocBroker/contractCalls/submitJobTest.py $cluster_id $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n');
+           # log(os.popen('echo /home/prc/eBlocBroker/contractCalls/submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n'), path);          
+           tx = os.popen('python /home/prc/eBlocBroker/contractCalls/submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n');
            log(tx, path)
 
-           txFile     = open(path + '/' + cluster_id + '.txt', 'a');
+           txFile     = open(path + '/' + clusterID + '.txt', 'a');
            txFile.write(tx + " " + account_id + "\n");
            txFile.close();
 
