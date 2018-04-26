@@ -22,7 +22,7 @@ BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt";
 job_state_code = {};
 
 # Add keys to the hashmap #https://slurm.schedmd.com/squeue.html
-                             # = 0 # dummy as QUEUED.
+                             # = 0 # dummy as NULL.
 job_state_code['COMPLETED']    = 1
 job_state_code['REFUNDED']     = 2
 job_state_code['PENDING']      = 3
