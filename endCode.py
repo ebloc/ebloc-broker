@@ -66,7 +66,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    os.environ['eblocPath']         = constants.EBLOCPATH;
    os.environ['encodedShareToken'] = encodedShareToken;  
    os.environ['jobName']           = folderName;
-   os.environ['storageID']       = str(storageID);
+   os.environ['storageID']         = str(storageID);
 
    log(jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName);
 
@@ -102,8 +102,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
 
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
    userInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getUserInfo.py $userID 1').read().rstrip('\n').replace(" ", "");
-   # log(userInfo)    # delete
-   
+   # log(userInfo)    # delete   
    # constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')'); #|
    # time.sleep(1);                                                                                       #|
    # userInfo = os.popen('cat $resultsFolderPrev/userInfo.txt').read().replace(" ", "");                  #|
@@ -143,8 +142,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       
    countTry = 0;
    while True: #{
-      log("Waiting... " + str(countTry), 'yellow'); 
-      if countTry > 25:
+      log("Waiting... " + str(countTry * 100), 'yellow'); 
+      if countTry > 100:
          sys.exit()
       countTry = countTry + 1                  
 

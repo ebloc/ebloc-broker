@@ -130,7 +130,12 @@ def driverGdriveCall(jobKey, index, folderType): #{
    log(mimeType);
    
    if 'folder' in mimeType: #{ # Recieved job is in folder format
-      log(os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()); # Gets the source code      
+      log(os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()); # Gets the source code
+
+      if os.path.isdir(resultsFolderPrev + '/' + folderName) == 'False': # Check before mv operation.
+         log('Folder is not downloaded successfully.', 'red');
+         sys.exit();
+      
       os.system("mv $resultsFolderPrev/$folderName $resultsFolder");
 
       isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
@@ -297,7 +302,7 @@ def driverIpfsCall(jobKey, index, folderType): #{
        os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
 
        if folderType == '2': # case for the ipfsMiniLock
-          os.environ['passW'] = 'exfoliation econometrics revivifying obsessions transverse salving dishes';
+          os.environ['passW'] = 'bright wind east is pen be lazy usual';
           log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read());
 
           os.system('rm -f $resultsFolder/$jobKey');

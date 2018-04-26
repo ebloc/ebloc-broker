@@ -10,24 +10,33 @@ def startCall(jobKey, index): #{
    os.environ['statusId']  = statusId;   
    unixTime                = str(int(os.popen('date +%s').read()) + 1);
    os.environ['unixTime']  = unixTime;
+
+   '''
+   resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
+   txFile = open(resultsFolderPrev + '/unixTime.txt', 'w');
+   txFile.write(unixTime + '\n' );   
+   txFile.close();
+   time.sleep(0.25);
+   '''
    
    txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");
-
+   txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
+   
    countTry = 0;
    while True:
       if countTry > 10:
          sys.exit()
       countTry = countTry + 1                  
-
+      
       if not(txHash == "notconnected" or txHash == ""): 
          break;      
       else:
          os.environ['unixTime'] = unixTime;
-         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");         
-      time.sleep(5);
-      
-   txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
-   txFile.write(txHash + "| setJobStatus_started" +  " " + unixTime + "\n");
+         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");
+      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry));
+      time.sleep(5);      
+
+   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + unixTime + "\n");
    txFile.close();
 #}
 

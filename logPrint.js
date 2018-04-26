@@ -10,10 +10,14 @@ else{
     clusterID = "0xcc8de90b4ada1c67d68c1958617970308e4ee75e";   
 }
 
+console.log(process.argv.length)
+console.log('clusterID: ' + clusterID);
 var storageID = {};
 storageID['0'] = 'IPFS';
 storageID['1'] = 'EUDAT';
-storageID['2'] = 'IPFSandMiniLock';
+storageID['2'] = 'IPFS_MiniLock';
+storageID['3'] = 'GitHub';
+storageID['4'] = 'GoogleDrive';
 
 var fs        = require('fs');
 var array     = fs.readFileSync(nodePaths.LOG_PATH + '/queuedJobs.txt').toString().split("\n");
@@ -22,10 +26,6 @@ var titleFlag = 0;
 sum       = 0;
 totalPaid = 0;
 for(i in array) {
-
-    if (i == 32){
-	break;
-    }
     var arr = array[i].split(" ");
     
     if (array[i] != '' && clusterID == arr[1]) {

@@ -21,7 +21,6 @@ contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 # USER Inputs----------------------------------------------------------------
 account            = web3.eth.accounts[0]; # Cluster's Ethereum Address
-
 coreNumber         = 2;
 clusterEmail       = "alper.alimoglu@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
