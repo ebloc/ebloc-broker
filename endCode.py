@@ -204,7 +204,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
 
    if str(storageID) == '2': #{ IPFS & miniLock
       os.chdir(resultsFolder);
-      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read());
+      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result.tar.gz *').read());
 
       log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read());
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
