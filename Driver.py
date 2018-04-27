@@ -224,7 +224,7 @@ while True: #{
              
              jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
 
-             if ',' in jobInfo or jobInfo == '': #{
+             if not ',' in jobInfo or jobInfo == '': #{
                 log("jobInfo is returned as empty string. Geth might be closed", 'red');
                 break;
              #}
