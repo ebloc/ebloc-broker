@@ -252,7 +252,7 @@ while True: #{
                 log("New job has been received. GitHub call |" + time.ctime(), "green");
                 driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4]);
              elif submittedJob[4] == '4': 
-                log("New job has been received. gdrive call |" + time.ctime(), "green");
+                log("New job has been received. Googe Drive call |" + time.ctime(), "green");
                 driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
        #}    
        
