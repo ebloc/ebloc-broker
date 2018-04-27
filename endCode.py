@@ -102,7 +102,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
 
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
    userInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getUserInfo.py $userID 1').read().rstrip('\n').replace(" ", "");
-   # log(userInfo)    # delete   
+
    # constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')'); #|
    # time.sleep(1);                                                                                       #|
    # userInfo = os.popen('cat $resultsFolderPrev/userInfo.txt').read().replace(" ", "");                  #|
@@ -143,7 +143,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    countTry = 0;
    while True: #{
       log("Waiting... " + str(countTry * 100), 'yellow'); 
-      if countTry > 100:
+      if countTry > 200:
          sys.exit()
       countTry = countTry + 1                  
 
@@ -164,7 +164,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
             jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
       jobInfo = jobInfo.split(',');
-      time.sleep(30) # Short sleep here so this loop is not keeping CPU busy
+      time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
    #}
    
    log("jobName: " + str(folderName));
@@ -205,7 +205,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    if str(storageID) == '2': #{ IPFS & miniLock
       os.chdir(resultsFolder);
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read());
-      #log(os.popen('tar -P -cvzf $resultsFolder/result.tar.gz .').read());      
 
       log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read());
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete');

@@ -60,21 +60,9 @@ def isSlurmOn(): #{
       print('slurm is not on.')
       os.system("sudo bash runSlurm.sh");
 #}
-'''
-# checks: does IPFS run on the background or not
-def isIpfsOn(): #{
-   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
-   if int(check) == 0:
-      log("Error: IPFS does not work on the background. Running: ipfs daemon &", 'red');
-      subprocess.Popen(["bash", "runIPFS.sh", constants.LOG_PATH])      
-      time.sleep(10);
-      os.system("cat " + constants.LOG_PATH + "/ipfs.out");
-   else:
-      log("IPFS is already on", 'green');
-#}
-'''
+
 def sbatchCall(): #{
-   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S:%N %Y"' ).read().rstrip('\n');
+   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S %Y"' ).read().rstrip('\n');
    log(myDate);
    txFile = open('../modifiedDate.txt', 'w');
    txFile.write(myDate + '\n' );   
@@ -240,13 +228,13 @@ def driverEudatCall(jobKey, index, fID): #{
 
    if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
+      
+   #checkRunExist = os.popen("unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
+   #if (not eudatFolderName + "/run.sh" in checkRunExist ):
+   #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
+   #return; #detects error on the SLURM side.
 
    os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read() # Downloads shared file as .zip, much faster.
-
-    #checkRunExist = os.popen("unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
-    #if (not eudatFolderName + "/run.sh" in checkRunExist ):
-    #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
-    #return; #detects error on the SLURM side.
 
    os.system("unzip -j $resultsFolderPrev/output.zip -d $resultsFolder");
    os.system("rm -f $resultsFolderPrev/output.zip");
@@ -330,15 +318,3 @@ if __name__ == '__main__': #{
 
    driverIpfsCall(var, index, myType);
 #}
-
-   '''
-   while(True):
-      if not(jobCoreNum == "notconnected" or jobCoreNum == ""):
-         break;
-      else:
-         log("Error: Please run Parity or Geth on the background.**************************************************************")
-         jobInfo    = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
-         jobInfo    = jobInfo.split(',');
-         jobCoreNum = jobInfo[1];
-   '''
-   
