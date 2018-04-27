@@ -92,7 +92,9 @@ log('rootdir: ' + os.getcwd());
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
-header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')";
+os.environ['header'] = header;
+
 clusterID = constants.CLUSTER_ID;
 os.environ['clusterID'] = clusterID;
 
