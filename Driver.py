@@ -138,7 +138,7 @@ clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.p
 log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit)
 os.system('rm -f $jobsReadFromPath')
        
-while True: #{
+while True: #{    
     if "Error" in blockReadFrom:
        log(blockReadFrom);
        sys.exit();
@@ -182,7 +182,7 @@ while True: #{
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
     
     constants.contractCall('eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\')'); # Waits here until new job submitted into the cluster
-    
+    print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
     if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
        fR = open(jobsReadFromPath, 'r')
        blockReadFrom = fR.read().rstrip('\n');
