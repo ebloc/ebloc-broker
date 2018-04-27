@@ -92,7 +92,7 @@ if __name__ == '__main__': #{
     #}
 
     gasLimit = 4500000;
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 64: #{
+    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 64 and coreMinuteGas != 0: #{
        tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType);
        print('Tx: ' + tx.hex());
     #}
