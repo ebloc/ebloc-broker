@@ -103,10 +103,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
    userInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getUserInfo.py $userID 1').read().rstrip('\n').replace(" ", "");
 
-   # constants.contractCall('eBlocBroker.getUserInfo(\'$resultsFolderPrev/userInfo.txt\', \'$userID\')'); #|
-   # time.sleep(1);                                                                                       #|
-   # userInfo = os.popen('cat $resultsFolderPrev/userInfo.txt').read().replace(" ", "");                  #|
-
    log("\nwhoami: "          + os.popen('whoami').read().rstrip('\n'));
    log("pwd: "               + os.popen('pwd').read().rstrip('\n'));
    log("resultsFolder: "     + resultsFolder);
