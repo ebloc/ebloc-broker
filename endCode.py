@@ -255,7 +255,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       
       # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them.
       # log(os.popen('tar -jcvf result-$clusterID-$index.tar.gz *').read());
-      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result-$clusterID-$index.tar.gz *').read()); 
+      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read()); 
       
       res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz').read();
       log(res)
@@ -279,10 +279,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
 
       os.chdir(resultsFolder);
 
-      if 'folder' in mimeType: # Received job is in folder format
-         os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
-         
-      log(os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read());
+      #if 'folder' in mimeType: # Received job is in folder format
+      #   os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
+
+      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read());   
+      # log(os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read()); #delete
       time.sleep(0.25);
 
       if 'folder' in mimeType: # Received job is in folder format
