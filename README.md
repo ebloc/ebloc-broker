@@ -238,16 +238,10 @@ $ mlck id
 Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ```
 
-###### How to encripty your folder using miniLock
+###### How to decript your folder using miniLock
 
 ```bash
-clusterMiniLockId = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
-encrypyFolderPath = "./ipfsCode"
-tar -cvzf $encrypyFolderPath.tar.gz $encrypyFolderPath
-
-mlck encrypt -f $encrypyFolderPath.tar.gz $clusterMiniLockId --passphrase="$(cat mlck_password.txt)"
-ipfs add $ncrypyFolderPath.minilock
-added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
+mlck decrypt -f fileName --passphrase="$(cat mlck_password.txt)" --output-file=./output.tar.gz
 ```
 
 ###### **Script:**
