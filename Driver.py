@@ -31,7 +31,16 @@ def log(strIn, color=''): #{
    txFile.close();   
 #}
 
-# checks: does Driver.py run on the background
+# checks: does Geth runs on the background
+def isGethOn(): #{  
+   check = os.popen("ps aux | grep [g]eth | grep 8545 | wc -l").read().rstrip('\n');
+
+   if int(check) == 0:
+      log("Geth is not running on the background.", 'red');
+      sys.exit();      
+#}
+
+# checks: does Driver.py runs on the background
 def isDriverOn(): 
    check = os.popen("ps aux | grep \'[D]river.py\' | wc -l").read().rstrip('\n');
 
@@ -39,7 +48,7 @@ def isDriverOn():
       log("Driver is already running.", 'green');
       sys.exit();
 
-# checks: does SLURM run on the background or not
+# checks: does Slurm runs on the background or not
 def isSlurmOn(): #{
    os.system("bash checkSinfo.sh")  
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
@@ -64,8 +73,13 @@ if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID =
    print(stylize('Once please run:  bash initialize.sh \n', fg('red')));
    sys.exit();
 
-isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
+isDriverOn();
+isSlurmOn();
+isGethOn();
 
+print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
+   
+isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
 if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red');
    sys.exit();
@@ -73,8 +87,7 @@ if 'False' in isContractExist:
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
 log('rootdir: ' + os.getcwd());
 
-isDriverOn();
-isSlurmOn();
+
 
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
@@ -143,7 +156,7 @@ while True: #{
        log(blockReadFrom);
        sys.exit();
 
-    clusterGainedAmount = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
+    clusterGainedAmount = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');    
     squeueStatus        = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus): #{
@@ -154,7 +167,8 @@ while True: #{
     
     log("Current Slurm Running jobs status: \n" + squeueStatus);
     log('-' * int(columns), "green")
-    log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
+    if 'notconnected' != clusterGainedAmount:
+       log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     log("Waiting new job to come since block number: " + blockReadFrom);
 
     printFlag          = 0;
@@ -209,11 +223,15 @@ while True: #{
              strCheck = os.popen('bash $eblocPath/strCheck.sh $jobKey').read();
              
              jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
+
+             if ',' in jobInfo or jobInfo == '': #{
+                log("jobInfo is returned as empty string. Geth might be closed", 'red');
+                break;
+             #}
+             
              jobInfo = jobInfo.split(',');
-
-             log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""))
-
-             os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "")
+             log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));             
+             os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
              
              isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');
              

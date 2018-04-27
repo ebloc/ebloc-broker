@@ -7,7 +7,12 @@ sys.path.insert(1, os.path.join(sys.path[0], '..')); import constants
 os.chdir(sys.path[0]);
 
 web3 = Web3(HTTPProvider('http://localhost:' + str(constants.RPC_PORT)))
+print('F')
 
+if not web3.isConnected():
+    print('notconnected')
+    sys.exit()
+    
 fileAddr = open("address.json", "r")
 contractAddress = fileAddr.read().replace("\n", "")
 
