@@ -33,7 +33,7 @@ def log(strIn, color=''): #{
 
 # checks: does Geth runs on the background
 def isGethOn(): #{  
-   check = os.popen("ps aux | grep [g]eth | grep 8545 | wc -l").read().rstrip('\n');
+   check = os.popen("ps aux | grep [g]eth | grep " + str(constants.RPC_PORT) + "| wc -l").read().rstrip('\n');
 
    if int(check) == 0:
       log("Geth is not running on the background.", 'red');
