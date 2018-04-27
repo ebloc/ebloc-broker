@@ -121,7 +121,7 @@ def driverGdriveCall(jobKey, index, folderType): #{
    if 'folder' in mimeType: #{ # Recieved job is in folder format
       log(os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()); # Gets the source code
 
-      if os.path.isdir(resultsFolderPrev + '/' + folderName) == 'False': # Check before mv operation.
+      if not os.path.isdir(resultsFolderPrev + '/' + folderName): # Check before mv operation.
          log('Folder is not downloaded successfully.', 'red');
          sys.exit();
       
@@ -150,9 +150,10 @@ def driverGdriveCall(jobKey, index, folderType): #{
       os.system("rm -f $resultsFolderPrev/$folderName");      
    else:
       sys.exit();
-      
-   os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
-   sbatchCall();    
+
+   if os.path.isdir(resultsFolder): # Check before mv operation.
+      os.chdir(resultsFolder);      # 'cd' into the working path and call sbatch from there
+      sbatchCall();    
 #}
 
 def driverGithubCall(jobKey, index, folderType): #{
