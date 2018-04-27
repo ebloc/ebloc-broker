@@ -105,8 +105,9 @@ def driverGdriveCall(jobKey, index, folderType): #{
    os.environ['shareToken']      = "-1";
    os.environ['GDRIVE_METADATA'] = constants.GDRIVE_METADATA;
 
-   resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
-   os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
+   resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
+   resultsFolder     = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
+   os.environ['resultsFolderPrev'] = resultsFolderPrev;
    os.environ['resultsFolder']     = resultsFolder;
    
    if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
