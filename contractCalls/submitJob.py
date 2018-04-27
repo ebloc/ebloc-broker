@@ -20,6 +20,10 @@ def isIpfsOn():
 # your process and Ethereum node
 web3 = Web3(HTTPProvider('http://localhost:' + str(constants.RPC_PORT)))
 
+if not web3.isConnected():
+    print('notconnected')
+    sys.exit()
+
 fileAddr        = open("address.json", "r")
 contractAddress = fileAddr.read().replace("\n", "")
 

@@ -8,5 +8,10 @@ os.chdir(sys.path[0]);
 
 os.chdir(sys.path[0]);    
 web3 = Web3(HTTPProvider('http://localhost:' + str(constants.RPC_PORT)))
+
+if not web3.isConnected():
+    print('notconnected')
+    sys.exit()
+
 print(str(web3.eth.blockNumber).replace("\n", ""));
     
