@@ -36,7 +36,7 @@ def isDriverOn():
    check = os.popen("ps aux | grep \'[D]river.py\' | wc -l").read().rstrip('\n');
 
    if int(check) > 1:
-      log("Driver is already running.");
+      log("Driver is already running.", 'green');
       sys.exit();
 
 # checks: does SLURM run on the background or not
@@ -75,6 +75,7 @@ log('rootdir: ' + os.getcwd());
 
 isDriverOn();
 isSlurmOn();
+
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    

@@ -14,8 +14,6 @@ def isIpfsOn():
       os.system("bash ../runIPFS.sh");
       time.sleep(5);
       os.system("cat ipfs.out");      
-   else:
-      print("IPFS is already on");     
       
 # Note that you should create only one RPCProvider per process,
 # as it recycles underlying TCP/IP network connections between
@@ -33,8 +31,7 @@ eBlocBroker     = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
     if(len(sys.argv) == 10): #{
-        clusterAddress = str(sys.argv[1]);
-        clusterAddress = web3.toChecksumAddress(clusterAddress);
+        clusterAddress = web3.toChecksumAddress(str(sys.argv[1]));
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress);
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
         jobKey         = str(sys.argv[2]);
@@ -48,8 +45,7 @@ if __name__ == '__main__': #{
     #}
     else: #{
         # USER Inputs ================================================================
-        clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63";
-        clusterAddress = web3.toChecksumAddress(clusterAddress);    
+        clusterAddress = web3.toChecksumAddress("0xda1e61e853bb8d63b1426295f59cb45a34425b63");    
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
@@ -79,9 +75,10 @@ if __name__ == '__main__': #{
     if storageType == 0 or storageType == 2: #{
        isIpfsOn();
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
-       print("Trying to connect into: " + strVal);
        output = os.popen('ipfs swarm connect ' + strVal).read();
-       print(output)
+       # print("Trying to connect into: " + strVal);
+       if 'success' in output:
+          print(output)
     #}
     
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
@@ -98,5 +95,3 @@ if __name__ == '__main__': #{
        print('Tx: ' + tx.hex());
     #}
 #}
-
-
