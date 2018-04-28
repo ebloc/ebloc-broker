@@ -45,49 +45,15 @@ exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
 
-exports.getTransactionGas = function(Tx) {return web3.eth.getTransactionReceipt(Tx).gasUsed}
+exports.getTransactionGas = function(Tx) {return web3.eth.getTransactionReceipt(Tx).gasUsed};
 
-exports.isTransactionPassed = function(transaction_id) {
-    var web3_extended = require('web3_ipc');
-    var options       = { host: 'http://localhost:' + nodePaths.RPC_PORT, ipc:false, personal: true,admin: true, debug: true };
-    var web3          = web3_extended.create(options);
-    if(!web3.isConnected()) 
-	console.log("not connected");
-    var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
-
-    var checkPassed = 0;
-    var receipt     = web3.eth.getTransactionReceipt( transaction_id );
-
-    if( (receipt != null) ) { //first it has to pass receipt check
-	var status          = web3.debug.traceTransaction( transaction_id );
-	//prevents for returning error message.
-	//if ( status.structLogs[status.structLogs.length-1].error == "{}" )
-	if( status.structLogs[status.structLogs.length-1].error == null ) { //status.structLogs[status.structLogs.length-1].error == "" )
-	    //"RETURN"
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
-	    //console.log( status.structLogs[status.structLogs.length-1].error )
-	    checkPassed = 1;
-	}
-	else{
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
-	    //console.log( status.structLogs[status.structLogs.length-1].error )
-	    //---
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].op));
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].error));
-	}
-    }
-    //console.log( "TransactionPassed ?= " + transaction_id + ": " + checkPassed );
-    //console.log( checkPassed );
-    return checkPassed;
-};
-//--------------------
 exports.getJobInfo = function(var1, var2, var3) {
     return myContractInstance.getJobInfo(var1, var2, var3);
 };
 
 exports.setJobStatus = function(var1, var2, var3, var4) {
     hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
-    console.log( hash );
+    console.log(hash);
 };
 
 exports.getDeployedBlockNumber = function() {
@@ -130,28 +96,28 @@ exports.highestBlock = function() {
 };
 
 exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
-    hash = myContractInstance.receiptCheck( var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit} );
-    console.log( hash );
+    hash = myContractInstance.receiptCheck(var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit});
+    console.log(hash);
 };
 
 exports.LogJob = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
 
-    if( fs.existsSync(myPath) ) 
-    	fs.unlinkSync(myPath)
+    if (fs.existsSync(myPath)) 
+    	fs.unlinkSync(myPath);
 
     var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
 
     eBlocBrokerEvent.watch( function (error, result) {	
 	flag = 0;
-	if(error) {
+	if (error) {
 	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
 	    flag=1;
 	    eBlocBrokerEvent.stopWatching()
 	}
 
-	if(result == null && flag == 0){
+	if (result == null && flag == 0){
 	    fs.appendFile( myPath, "notconnected", function(err) {
 		process.exit();
 	    });
@@ -164,18 +130,15 @@ exports.LogJob = function(var1, myPath) {
 
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if (result.args.cluster == web3.eth.defaultAccount){
-		    if (result.args.myMiniLockID == "")
-			result.args.myMiniLockID = "-1"
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
-				   result.args.miniLockId + ' ?\n', function(err) { // '?' end of line identifier.
+				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
 					   process.exit();
 				   }); 	
 		}
 	    }
 	}
     });
-}
+};
 
 exports.LogReceipt = function(var1, myPath, clusterID) {    
     var path  = require('path');     
@@ -215,7 +178,7 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 	    }
 	}
     });
-}
+};
 
 exports.LogJobResults = function(var1, myPath, clusterID) {
     var gain = [];
@@ -261,7 +224,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 			result.args.myMiniLockID = "-1"
 		    
 		    myStr='';
-		    if(typeof gain[result.args.cluster +  '_' + jobKey + '_' + result.args.index] === 'undefined')
+		    if(typeof gain[result.args.cluster +  '_' + jobKey + '_' + result.args.index] == 'undefined')
 			myStr='';
 		    else
 			myStr=gain[result.args.cluster + '_' + jobKey + '_' + result.args.index].toString();
@@ -275,7 +238,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 	    }
 	}
     });
-}
+};
 
 exports.saveReceipts = function(var1, myPath, clusterID) {
     var path  = require('path');     
@@ -315,6 +278,38 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
 	    }
 	}
     });   
-}
+};
 
+exports.isTransactionPassed = function(transaction_id) {
+    var web3_extended = require('web3_ipc');
+    var options       = { host: 'http://localhost:' + nodePaths.RPC_PORT, ipc:false, personal: true,admin: true, debug: true };
+    var web3          = web3_extended.create(options);
+    if(!web3.isConnected()) 
+	console.log("not connected");
+    var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
 
+    var checkPassed = 0;
+    var receipt     = web3.eth.getTransactionReceipt(transaction_id);
+
+    if( (receipt != null) ) { //first it has to pass receipt check
+	var status          = web3.debug.traceTransaction(transaction_id);
+	//prevents for returning error message.
+	//if ( status.structLogs[status.structLogs.length-1].error == "{}" )
+	if( status.structLogs[status.structLogs.length-1].error == null ) { //status.structLogs[status.structLogs.length-1].error == "" )
+	    //"RETURN"
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
+	    //console.log( status.structLogs[status.structLogs.length-1].error )
+	    checkPassed = 1;
+	}
+	else{
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
+	    //console.log( status.structLogs[status.structLogs.length-1].error )
+	    //---
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].op));
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].error));
+	}
+    }
+    //console.log( "TransactionPassed ?= " + transaction_id + ": " + checkPassed );
+    //console.log( checkPassed );
+    return checkPassed;
+};

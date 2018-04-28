@@ -2,6 +2,9 @@
 
 import sys, os, constants, time
 
+contractCallPath               = constants.EBLOCPATH + '/contractCalls';
+os.environ['contractCallPath'] = contractCallPath;
+
 def startCall(jobKey, index): #{
    os.environ['eblocPath'] = constants.EBLOCPATH;
    os.environ['index']     = str(index);
@@ -14,16 +17,22 @@ def startCall(jobKey, index): #{
    '''
    resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
    txFile = open(resultsFolderPrev + '/unixTime.txt', 'w');
-   txFile.write(unixTime + '\n' );   
+   txFile.write(unixTime);   
    txFile.close();
    time.sleep(0.25);
    '''
-   
+   resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
+   txFile = open(resultsFolderPrev + '/unixTime.txt', 'w');
+   txFile.write(os.popen('echo $contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n'));   
+   txFile.close();
+   time.sleep(0.25);   
+
+   # txHash = os.popen('$contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
    txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");
    txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
-   
+
    countTry = 0;
-   while True:
+   while True: #{
       if countTry > 10:
          sys.exit()
       countTry = countTry + 1                  
@@ -32,9 +41,11 @@ def startCall(jobKey, index): #{
          break;      
       else:
          os.environ['unixTime'] = unixTime;
-         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");
-      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry));
+         # txHash = os.popen('$contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
+         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");         
+      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + '\n');
       time.sleep(5);      
+   #}
 
    txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + unixTime + "\n");
    txFile.close();

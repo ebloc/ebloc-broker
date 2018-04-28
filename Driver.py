@@ -87,8 +87,6 @@ if 'False' in isContractExist:
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
 log('rootdir: ' + os.getcwd());
 
-
-
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
@@ -151,8 +149,8 @@ else:
 clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterID').read().rstrip('\n');
 
 log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit)
-os.system('rm -f $jobsReadFromPath')
-       
+
+os.system('rm -f $logPath/queuedJobs.txt && rm -f $jobsReadFromPath'); # Remove queuedJobs from previous test.
 while True: #{    
     if "Error" in blockReadFrom:
        log(blockReadFrom);
@@ -196,24 +194,37 @@ while True: #{
     
     passedPrintFlag = 0;      
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
+
     
     constants.contractCall('eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\')'); # Waits here until new job submitted into the cluster
     print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
-    if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed
-       fR = open(jobsReadFromPath, 'r')
-       blockReadFrom = fR.read().rstrip('\n');
-       fR.close();
+    if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed       
+       submittedJobs = set() # holds lines already seen
+       for line in open(jobsReadFromPath, "r"):
+          if line not in submittedJobs: # not a duplicate
+             submittedJobs.add(line)
 
-       submittedJob         = 0;
-       submittedJobs        = blockReadFrom.split('?');
+       submittedJobs= sorted(submittedJobs);
+       
+       # fR = open(jobsReadFromPath, 'r')
+       # blockReadFrom = fR.read().rstrip('\n');
+       # fR.close();
+       # submittedJobs        = blockReadFrom.split('?');
+       
+       
+       
        maxVal               = 0;       
-       isClusterReceivedJob = 0;
+       isClusterReceivedJob = 0;       
+       submittedJob         = 0;
+       counter = 0;
 
-       for i in range(0, (len(submittedJobs) - 1)): #{
-          submittedJob = submittedJobs[i].split(' ');          
+       for e in submittedJobs: #{
+          runFlag = 0;
+          submittedJob = e.rstrip('\n').split(' ');          
           if clusterID == submittedJob[1]: # Only obtain jobs that are submitted to the cluster
              isClusterReceivedJob = 1;
-             log('-' * int(columns), "green")
+             log(str(counter) + ' ' + '-' * (int(columns) - 2), "green");
+             counter += 1;
              log("BlockNum: " + submittedJob[0].rstrip('\n') + " " + submittedJob[1] + " " + submittedJob[2] + " " + submittedJob[3] + " " + submittedJob[4]);
 
              if int(submittedJob[0]) > int(maxVal):
@@ -228,7 +239,7 @@ while True: #{
 
              if not ',' in jobInfo or jobInfo == '': #{
                 log("jobInfo is returned as empty string. Geth might be closed", 'red');
-                break;
+                runFlag = 1;
              #}
              
              jobInfo = jobInfo.split(',');
@@ -242,22 +253,24 @@ while True: #{
 
              if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
                 log("Job is already completed.", 'red');
-                break;
+                runFlag = 1;
              if jobInfo[0] == str(constants.job_state_code['REFUNDED']):
                 log("Job is refunded.", 'red');
-                break;
-             if not jobInfo[0] == str(constants.job_state_code['PENDING']):
+                runFlag = 1;
+             if runFlag == 0 and not jobInfo[0] == str(constants.job_state_code['PENDING']):
                 log("Job is already captured and in process or completed.", 'red');
-                break;
+                runFlag = 1;
              if "false" in isUserExist.lower(): 
                 log('jobOwner is not registered', 'red');
-                break;
+                runFlag = 1;
              if 'False' in strCheck:
                 log('Filename contains invalid character', 'red');
-                break;
+                runFlag = 1;
              
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
-             if submittedJob[4] == '0':
+             if runFlag == 1:
+                pass;
+             elif submittedJob[4] == '0':
                 log("New job has been received. IPFS call |" + time.ctime(), "green")
                 driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4]); 
              elif submittedJob[4] == '1':
