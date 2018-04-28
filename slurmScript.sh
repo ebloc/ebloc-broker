@@ -5,7 +5,6 @@ b=$(echo $1)
 c=$(echo $2)
 event=$(echo $c | awk '{print $8}')
 echo "Your message | $a | $b | $c //$event ." | mail -s "Message Subject" alper.alimoglu@gmail.com
-
 EBLOCBROKER_PATH="/home/alper/eBlocBroker"
 
 if [[ $c == *" Began, "* ]]; then

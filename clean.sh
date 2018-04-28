@@ -1,4 +1,4 @@
-#/!/bin
+#!/bash/bin
 
 rm -f \#*
 rm -f *.pyc
@@ -20,5 +20,5 @@ rm -rf docs/_build
 
 pyclean docs/
 
-#git fetch
-#git checkout origin/master -- .gitignore
+# git fetch
+# git checkout origin/master -- .gitignore

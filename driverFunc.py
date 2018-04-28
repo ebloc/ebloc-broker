@@ -62,7 +62,7 @@ def isSlurmOn(): #{
 #}
 
 def sbatchCall(): #{
-   myDate = os.popen('LANG=en_us_88591 && date +"%b %d %k:%M:%S %Y"' ).read().rstrip('\n');
+   myDate = os.popen('LANG=en_us_88591 && date --date=\'1 seconds\' +"%b %d %k:%M:%S %Y"' ).read().rstrip('\n');
    log(myDate);
    txFile = open('../modifiedDate.txt', 'w');
    txFile.write(myDate + '\n' );   
@@ -194,9 +194,8 @@ def driverEudatCall(jobKey, index, fID): #{
    os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
    os.environ['resultsFolder'] = resultsFolder;
    
-   header     = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
-
-   f        = open(constants.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
+   header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
+   f      = open(constants.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
    password = f.read().rstrip('\n').replace(" ", "");
    f.close()
 
@@ -243,9 +242,9 @@ def driverEudatCall(jobKey, index, fID): #{
 
    isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0:
-      # os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read();
-      os.popen("for a in $resultsFolder/*.tar.gz; do tar -xf \"$a\" -C $resultsFolder; done" ).read(); # Extracting all *.tar.gz files.
-      os.popen("rm -f $resultsFolder/*.tar.gz").read();
+      os.popen("bash $eblocPath/tar.sh $resultsFolder" ).read(); # Extracting all *.tar.gz files.
+      # os.popen("#!/bin/bash for a in $resultsFolder/*.tar.gz; do if [[ \"$a\" != result-* ]] ; then tar -xf \"$a\" -C $resultsFolder; fi done" ).read(); # Extracting all *.tar.gz files.
+      # os.popen("rm -f $resultsFolder/*.tar.gz").read(); #uncomment
 
    isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0:
