@@ -67,14 +67,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    os.environ['encodedShareToken'] = encodedShareToken;  
    os.environ['jobName']           = folderName;
    os.environ['storageID']         = str(storageID);
-
+   
    log(jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName);
 
    resultsFolder     = programPath + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
    resultsFolderPrev = programPath + "/" + jobKey + "_" + index;
    os.environ['resultsFolder']     = resultsFolder;
    os.environ['resultsFolderPrev'] = resultsFolderPrev;
-
+   os.system('rm -f $resultsFolder/result-*tar.gz')
+   
    if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'): #{
       fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
       modifiedDate = fDate.read().rstrip('\n');
@@ -254,7 +255,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       os.chdir(resultsFolder);
       
       # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them.
-      # log(os.popen('tar -jcvf result-$clusterID-$index.tar.gz *').read());
+      # log(os.popen('tar -jcvf result-$clusterID-$index.tar.gz *').read());      
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read()); 
       
       res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz').read();
