@@ -15,6 +15,7 @@ contractCallPath               = constants.EBLOCPATH + '/contractCalls';
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['logPath']          = constants.LOG_PATH;
+totalCore = os.popen('sinfo | awk \'{print $4}\' | tail -n +2').read().rstrip('\n');
 # ======================================================================
 
 #rows, columns = os.popen('stty size', 'r').read().split();
@@ -31,6 +32,27 @@ def log(strIn, color=''): #{
    txFile.close();   
 #}
 
+def slurmPendingJobCheck(): #{
+    global totalCore;    
+    printFlag = 0;
+    usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
+
+    if usedCoreNum == '':
+       usedCoreNum = 0;
+
+    # log('There is ' +  usedCoreNum + ' used core out of ' + totalCore + '.', 'green');    
+    while True: #{
+       if int(totalCore) - int(usedCoreNum) > 0:
+          log('There is ' +  usedCoreNum + ' used core out of ' + totalCore + '.', 'green')       
+          break;
+       if printFlag == 0:
+          log('Waiting running jobs to be completed.', 'blue')
+          printFlag = 1;
+       time.sleep(10);       
+       usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
+    #}     
+#}
+
 # checks: does Geth runs on the background
 def isGethOn(): #{  
    check = os.popen("ps aux | grep [g]eth | grep " + str(constants.RPC_PORT) + "| wc -l").read().rstrip('\n');
@@ -42,7 +64,7 @@ def isGethOn(): #{
 
 # checks: does Driver.py runs on the background
 def isDriverOn(): 
-   check = os.popen("ps aux | grep \'[D]river.py\' | wc -l").read().rstrip('\n');
+   check = os.popen("ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l").read().rstrip('\n');
 
    if int(check) > 1:
       log("Driver is already running.", 'green');
@@ -50,6 +72,7 @@ def isDriverOn():
 
 # checks: does Slurm runs on the background or not
 def isSlurmOn(): #{
+
    os.system("bash checkSinfo.sh")  
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
 
@@ -64,6 +87,9 @@ def isSlurmOn(): #{
       log("sudo munged -f")
       log("/etc/init.d/munge start")
       sys.exit()
+
+   global totalCore;
+   totalCore = os.popen('sinfo | awk \'{print $4}\' | tail -n +2 | paste -sd+ - | bc').read().rstrip('\n');
 #}
 
 yes = set(['yes', 'y', 'ye']);
@@ -76,8 +102,6 @@ if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID =
 isDriverOn();
 isSlurmOn();
 isGethOn();
-
-print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
    
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
 if 'False' in isContractExist:
@@ -85,6 +109,7 @@ if 'False' in isContractExist:
    sys.exit();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
+log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
 log('rootdir: ' + os.getcwd());
 
 if constants.IPFS_USE == 1:
@@ -195,6 +220,7 @@ while True: #{
     passedPrintFlag = 0;      
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
 
+    slurmPendingJobCheck()
     
     constants.contractCall('eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\')'); # Waits here until new job submitted into the cluster
     print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
@@ -205,14 +231,7 @@ while True: #{
              submittedJobs.add(line)
 
        submittedJobs= sorted(submittedJobs);
-       
-       # fR = open(jobsReadFromPath, 'r')
-       # blockReadFrom = fR.read().rstrip('\n');
-       # fR.close();
-       # submittedJobs        = blockReadFrom.split('?');
-       
-       
-       
+             
        maxVal               = 0;       
        isClusterReceivedJob = 0;       
        submittedJob         = 0;
@@ -266,7 +285,8 @@ while True: #{
              if 'False' in strCheck:
                 log('Filename contains invalid character', 'red');
                 runFlag = 1;
-             
+                
+             slurmPendingJobCheck()
              # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
              if runFlag == 1:
                 pass;
