@@ -51,11 +51,6 @@ exports.getJobInfo = function(var1, var2, var3) {
     return myContractInstance.getJobInfo(var1, var2, var3);
 };
 
-exports.setJobStatus = function(var1, var2, var3, var4) {
-    hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
-    console.log(hash);
-};
-
 exports.getDeployedBlockNumber = function() {
     return myContractInstance.getDeployedBlockNumber();
 };
@@ -313,3 +308,10 @@ exports.isTransactionPassed = function(transaction_id) {
     //console.log( checkPassed );
     return checkPassed;
 };
+
+/*
+exports.setJobStatus = function(var1, var2, var3, var4) {
+    hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
+    console.log(hash);
+};
+*/
