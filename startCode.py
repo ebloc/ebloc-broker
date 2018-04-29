@@ -27,10 +27,9 @@ def startCall(jobKey, index): #{
    txFile.close();
    time.sleep(0.25);   
 
-   # txHash = os.popen('$contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
-   txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");
    txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
-
+   txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
+  
    countTry = 0;
    while True: #{
       if countTry > 10:
@@ -41,8 +40,7 @@ def startCall(jobKey, index): #{
          break;      
       else:
          os.environ['unixTime'] = unixTime;
-         # txHash = os.popen('$contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
-         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js setJobStatus $jobKey $index $statusId $unixTime').read().rstrip('\n').replace(" ", "");         
+         txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
       txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + '\n');
       time.sleep(5);      
    #}
