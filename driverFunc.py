@@ -237,7 +237,7 @@ def driverEudatCall(jobKey, index, fID): #{
 
    os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read() # Downloads shared file as .zip, much faster.
 
-   os.system("unzip -j $resultsFolderPrev/output.zip -d $resultsFolder");
+   os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder");
    os.system("rm -f $resultsFolderPrev/output.zip");
 
    isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
@@ -249,7 +249,7 @@ def driverEudatCall(jobKey, index, fID): #{
    isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0:
       log(os.popen("" ).read());
-      os.popen("unzip -j $resultsFolderPrev/$jobKey -d $resultsFolder").read();
+      os.popen("unzip -jo $resultsFolderPrev/$jobKey -d $resultsFolder").read();
       os.popen("rm -f $resultsFolder/*.zip").read();
 
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
