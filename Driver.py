@@ -43,10 +43,10 @@ def slurmPendingJobCheck(): #{
     # log('There is ' +  usedCoreNum + ' used core out of ' + totalCore + '.', 'green');    
     while True: #{
        if int(totalCore) - int(usedCoreNum) > 0:
-          log('There is ' +  usedCoreNum + ' used core out of ' + totalCore + '.', 'green')       
+          log('There is ' +  str(usedCoreNum) + ' used core out of ' + str(totalCore) + '.', 'green')       
           break;
        if printFlag == 0:
-          log('Waiting running jobs to be completed.', 'blue')
+          log('Waiting running jobs to be completed...', 'blue')
           printFlag = 1;
        time.sleep(10);       
        usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
