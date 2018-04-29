@@ -23,7 +23,7 @@ with open('abi.json', 'r') as abi_definition:
     
 contractAddress = web3.toChecksumAddress(contractAddress);    
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
-# USER Inputs----------------------------------------------------------------
+
 jobKey    = str(sys.argv[1]);
 index     = int(sys.argv[2]);
 stateID   = int(sys.argv[3]);
@@ -31,4 +31,3 @@ startTime = int(sys.argv[4]);
 
 tx = eBlocBroker.transact({"from":web3.toChecksumAddress(constants.CLUSTER_ID), "gas": 4500000}).setJobStatus(jobKey, index, stateID, startTime);
 print(tx.hex());
-#}

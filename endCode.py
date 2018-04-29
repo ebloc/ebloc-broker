@@ -19,21 +19,22 @@ def log(strIn, color=''): #{
    txFile.close();
 #}
 
-def receiptCheckTx(): #{
-   transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+def receiptCheckTx(jobKey, index): #{
+   txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
 
    while(True): #{
-      if not(transactionHash == "notconnected" or transactionHash == ""): 
+      if not(txHash == "notconnected" or txHash == ""): 
          break;
       else:
          log("Error: Please run Parity or Geth on the background.", 'red')
-         transactionHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       time.sleep(5);
    #}
    
-   log("ReceiptHash: " + transactionHash); 
-   txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');   
-   txFile.write(transactionHash + " receiptCheckTx\n");
+   log("ReceiptHash: " + txHash); 
+   txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
+
+   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| receiptCheckTx\n");
    txFile.close();
 #}
 
@@ -301,8 +302,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
          sys.exit();
    #}
    
-   receiptCheckTx();
-   
+   receiptCheckTx(jobKey, index);   
    # os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
 #}
 
