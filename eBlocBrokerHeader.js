@@ -261,11 +261,11 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
 	    eBlocBrokerEvent.stopWatching()
 	}
 
-	if(flag == 0){
-
+	if(flag == 0) {
 	    var jobKey = result.args.jobKey;   
 	    if(result.args.cluster == clusterID){		    		    
-		gainedStr=(parseInt(result.args.recieved) - parseInt(result.args.returned)).toString();		    
+		gainedStr=(parseInt(result.args.received) - parseInt(result.args.returned)).toString();
+
 		fs.appendFile(myPath, result.args.cluster + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { 
 		    eBlocBrokerEvent.stopWatching();
                     process.exit();

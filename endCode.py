@@ -140,13 +140,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       
    countTry = 0;
    while True: #{
-      log("Waiting... " + str(countTry * 100), 'yellow'); 
-      if countTry > 200:
-         sys.exit()
+      log("Waiting... " + str(countTry * 60) + 'seconds', 'yellow'); 
+      #if countTry > 200: # setJobStatus may deploy late.
+      #   sys.exit()
       countTry = countTry + 1                  
 
       if jobInfo[0] == str(constants.job_state_code['RUNNING']): # It will come here eventually, when setJob() is deployed.
-         log("Job started to run.", 'green'); 
+         log("Job has been started to run.", 'green'); 
          break; # Wait until does values updated on the blockchain
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 
@@ -162,6 +162,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
             jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(1)
       jobInfo = jobInfo.split(',');
+
       time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
    #}
    

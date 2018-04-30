@@ -47,7 +47,6 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
            log("Job: " + str(counter-skippedLines) + "| Current Time: " + time.ctime() +"| BlockNumber: " + blockNumber, path);
            log("Nasa Submit range: " + line2_splitted[0] + " " + line2_splitted[1], path)
            log("Sleep Time to submit next job: " + sleepTime, path)
-           log(ipfsHashNo[counter], path)
 
            eudatFlag = 0;
            if (testType == 'eudat'):
@@ -80,7 +79,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
               log("RunTimeInMinutes: " + '360', path)
               os.environ['runTime']   = "360" # 6 hours for nasEUDAT simulation test.
            
-           log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core:" + ipfsHash[2], path)
+           log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core: " + ipfsHash[2], path)
 
            account_id = randint(2,11);
            account_id = str(account_id);
@@ -113,7 +112,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
     counter += 1;
   #}
 
-  print("END");
-  print(".");
+  log("END");
+  log(".");
   f.close();
 #}
