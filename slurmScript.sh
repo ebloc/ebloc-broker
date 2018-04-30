@@ -13,7 +13,7 @@ if [[ $c == *" Began, "* ]]; then
     arg1=$(echo $name | cut -d "*" -f 2)
 
     echo "JOB STARTED: $name |$arg0 $arg1 " | mail -s "Message Subject" alper.alimoglu@gmail.com
-    python $EBLOCBROKER_PATH/startCode.py $arg0 $arg1     
+    . $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/startCode.py $arg0 $arg1     
 fi
 
 if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
