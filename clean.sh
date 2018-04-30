@@ -7,7 +7,7 @@ rm -f .node-xmlhttprequest*
 rm -f *.*~
 rm -f docs/*.*~
 rm -f docs/nohup.out
-rm -f nohup.out 
+rm -f nohup.out
 rm -f ./docs/solidity_lexer.pyc
 rm -f contractCalls/*.*~
 rm -f ipfs.out

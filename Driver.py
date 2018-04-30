@@ -8,15 +8,15 @@ import cancelJob
 
 # p = subprocess.Popen([sys.executable, '-c', 'print (\'hello\'); cancelJob.cancelJob()'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT); print('finished')
 
-# Paths================================================================
+# Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 contractCallPath               = constants.EBLOCPATH + '/contractCalls';
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['logPath']          = constants.LOG_PATH;
-totalCore = os.popen('sinfo | awk \'{print $4}\' | tail -n +2').read().rstrip('\n');
 # ======================================================================
+totalCore = os.popen('sinfo | awk \'{print $4}\' | tail -n +2').read().rstrip('\n');
 
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
@@ -37,11 +37,10 @@ def slurmPendingJobCheck(): #{
     printFlag = 0;
     usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
 
-    if usedCoreNum == '':
-       usedCoreNum = 0;
-
     # log('There is ' +  usedCoreNum + ' used core out of ' + totalCore + '.', 'green');    
     while True: #{
+       if usedCoreNum == '':
+          usedCoreNum = 0;          
        if int(totalCore) - int(usedCoreNum) > 0:
           log('There is ' +  str(usedCoreNum) + ' used core out of ' + str(totalCore) + '.', 'green')       
           break;

@@ -10,7 +10,7 @@ sudo slurmd
 slurmdbd &
 # sudo -u $(logname) mkdir -p /tmp/slurmstate
 # sudo chown -R $(logname) /tmp/slurmstate
-slurmctld -c #-cDvvvvvv
+sudo slurmctld -c #-cDvvvvvv
 sinfo
 
 
