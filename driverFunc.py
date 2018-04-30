@@ -75,10 +75,11 @@ def sbatchCall(): #{
    jobInfo = jobInfo.split(',');
 
    jobCoreNum    = jobInfo[1];
-   coreSecondGas = timedelta(seconds=int(int(jobInfo[5]) * 60)); # Client's requested seconds to run his/her job
+   coreSecondGas = timedelta(seconds=int((int(jobInfo[5]) + 1) * 60)); # Client's requested seconds to run his/her job, 1 minute additional given.
    d             = datetime(1,1,1) + coreSecondGas;
-   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute); os.environ['timeLimit'] = timeLimit;   
+   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute);
 
+   os.environ['timeLimit']  = timeLimit;   
    os.environ['jobCoreNum'] = jobCoreNum;
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 

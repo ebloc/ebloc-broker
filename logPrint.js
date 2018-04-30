@@ -25,9 +25,13 @@ var titleFlag = 0;
 
 sum       = 0;
 totalPaid = 0;
-for(i in array) {
+for (i in array) {
     var arr = array[i].split(" ");
-    
+
+
+    if (i == 102)
+	break;
+
     if (array[i] != '' && clusterID == arr[1]) {
 	if (titleFlag == 0){
 	    console.log("Job #\tjobKey______________________________________________________________________\tindex\tType\tStatus  \tcoreNum\tblockNum\tRecieved\tPrice\tcoreMinuteGas\tGained");
@@ -42,16 +46,15 @@ for(i in array) {
 	//sum +=  parseInt(arr1[3]);
 
 	//LogReceipt
-	if(str[0] == '1')
-	    sum += parseInt(arr[6]);
+	if (str[0] == '1')
+	    sum += parseInt(arr[6])
 	
 	totalPaid += parseInt(arr1[3]);
-	
-	console.log( "Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageID[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
+
+	//break;
+	console.log("Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageID[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
 		     "\t" + arr1[1] + "\t" + arr1[2]  + "\t" + arr1[3]  + "\t" + arr1[4] + "\t" + arr1[5] + "\t" + arr[6]);
     }
 }
 console.log( "Cluster Gained Amount: " + sum);
 console.log( "Total Paid: "            + totalPaid);
-//tx="0x5224a5a7a7a957f57ce18330b9f1b8ea50fd4746f37fcf642061a2d6ced519f3"
-//console.log( "TransactionPassed ?= " + tx + " " + eBlocBroker.isTransactionPassed(tx) );

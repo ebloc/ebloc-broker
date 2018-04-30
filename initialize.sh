@@ -1,11 +1,29 @@
 #!/bin/bash
 
+# Update git repository
+# git fetch --all && git reset --hard origin/master
+
+newRpcPort="8545"; # Please change if you have different RPC_PORT number
 # pre-installation:-----------------------------------------
+
+## Python3 setup, required for all clusters! ========================================================
+# sudo apt-get install python3-dev
+# sudo apt-get install python3-venv
+# python3 -m venv venv
+# . venv/bin/activate
+# pip install web3
+# pip install colored
+# pip install pyocclient==0.4
+
+# pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
+# pip install --pre --upgrade web3
+# pip install sphinx_rtd_theme
 
 ## npm
 # wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
 # sudo npm install -g n
 # sudo n latest
+# npm install web3
 #--------------------------
 ## Python 3.5.2 # not-nessesary.
 # cd /usr/src
@@ -15,35 +33,14 @@
 # sudo ./configure --enable-optimizations
 # sudo make altinstall
 
-## Python3 setup, required for all clusters! ========================================================
-# sudo apt-get install python3-dev
-# sudo apt-get install python3-venv
-# python3 -m venv venv
-# . venv/bin/activate
-# pip install web3
-# pip install colored
-# pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-# pip install pyocclient==0.4
-# pip install --pre --upgrade web3
-# pip install sphinx_rtd_theme
-# ==================================================================================================
+#==================================================================================================
 ## Linux Packages
 # sudo apt-get install davfs2 mailutils
 # sudo apt-get install python-psutil
 # sudo apt-get install -y nodejs
 # sudo apt-get install munge
+# sudo apt-get install bc
 #--------------------------
-## pip install
-# sudo apt-get install python3-pip
-# sudo pip3 install virtualenv 
-# once:
-# $ virtualenv -p python3 ~/.venv-py3
-# each session:
-# $ source ~/.venv-py3/bin/activate
-
-# Update git repository
-# git fetch --all && git reset --hard origin/master
-
 ## gdrive install:
 # go get github.com/prasmussen/gdrive
 # gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
@@ -51,6 +48,7 @@
 # source $HOME/.profile
 # gdrive about
 # echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
+
 # IPFS check
 # nc IP PORT
 # Should return: /multistream/1.0.0
@@ -123,10 +121,9 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js && rm $currentDir
 
 # RPC PORT Setup:======================================================
 lineOld="8545";
-lineNew="8545"; # Please change if you have different RPC_PORT number
 
-sed -i.bak "s/^\(RPC_PORT=\).*/\1$lineNew/" constants.py     && rm constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/'       nodePaths.js     && rm nodePaths.js.bak
+sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" constants.py     && rm constants.py.bak
+sed -i.bak 's/'$lineOld'/'$newRpcPort'/'       nodePaths.js     && rm nodePaths.js.bak
 
 # PATH Name Setup:===================================================
 lineOld="EBLOCBROKER_PATH";
@@ -165,3 +162,14 @@ sudo ln -s /usr/bin/node /usr/local/bin/node
 
 # gdrive initialize
 # rm -rf $HOME/.gdrive/
+
+
+
+
+## pip install
+# sudo apt-get install python3-pip
+# sudo pip3 install virtualenv 
+# once:
+# $ virtualenv -p python3 ~/.venv-py3
+# each session:
+# $ source ~/.venv-py3/bin/activate
