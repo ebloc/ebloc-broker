@@ -124,7 +124,7 @@ def driverGdriveCall(jobKey, index, folderType): #{
 
       if not os.path.isdir(resultsFolderPrev + '/' + folderName): # Check before mv operation.
          log('Folder is not downloaded successfully.', 'red');
-         sys.exit();
+         return;
       
       os.system("mv $resultsFolderPrev/$folderName $resultsFolder");
 
@@ -150,7 +150,7 @@ def driverGdriveCall(jobKey, index, folderType): #{
       os.system("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder");
       os.system("rm -f $resultsFolderPrev/$folderName");      
    else:
-      sys.exit();
+      return;
 
    if os.path.isdir(resultsFolder): # Check before mv operation.
       os.chdir(resultsFolder);      # 'cd' into the working path and call sbatch from there

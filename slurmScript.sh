@@ -24,7 +24,7 @@ if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
     argu3=$(echo $name | cut -d "*" -f 4) 
     
     echo "COMPLETED fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3 " | mail -s "Message Subject" alper.alimoglu@gmail.com
-    python $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name    
+    . $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name    
 fi
 
 if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
@@ -35,7 +35,7 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     argu3=$(echo $name | cut -d "*" -f 4) 
     
     echo "TIMEOUT fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3" | mail -s "Message Subject" alper.alimoglu@gmail.com
-    python $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name    
+    . $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name    
 fi
 
 if [[ $event == *" Failed, "* ]]; then # Cancelled job won't catched here
