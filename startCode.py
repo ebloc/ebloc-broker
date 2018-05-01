@@ -5,52 +5,40 @@ import sys, os, constants, time
 contractCallPath               = constants.EBLOCPATH + '/contractCalls';
 os.environ['contractCallPath'] = contractCallPath;
 
-def startCall(jobKey, index): #{
+def startCall(jobKey, index, jobID): #{
    os.environ['eblocPath'] = constants.EBLOCPATH;
    os.environ['index']     = str(index);
    os.environ['jobKey']    = jobKey;
    statusId                = str(constants.job_state_code['RUNNING']);
-   os.environ['statusId']  = statusId;   
-   unixTime                = str(int(os.popen('date +%s').read()) + 1);
-   os.environ['unixTime']  = unixTime;
+   os.environ['statusId']  = statusId;
+   os.environ['jobID'] = jobID;
 
-   '''
-   resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
-   txFile = open(resultsFolderPrev + '/unixTime.txt', 'w');
-   txFile.write(unixTime);   
-   txFile.close();
-   time.sleep(0.25);
-   '''
-   resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
-   txFile = open(resultsFolderPrev + '/unixTime.txt', 'w');
-   txFile.write(os.popen('echo $contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n'));   
-   txFile.close();
-   time.sleep(0.25);   
-
+   starTime = os.popen('date -d $(scontrol show job $jobID | grep \'StartTime\'| grep -o -P \'(?<=StartTime=).*(?= E)\') +"%s"').read().rstrip('\n');
+   os.environ['starTime']  = starTime;
+            
    txFile = open(constants.LOG_PATH + '/transactions/' + constants.CLUSTER_ID + '.txt', 'a');
-   txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
-  
-   countTry = 0;
-   while True: #{
+   txFile.write(os.popen('echo $contractCallPath/setJobStatus.py $jobKey $index $statusId $starTime').read().rstrip('\n'));   
+   time.sleep(0.25);
+
+   countTry = 0;   
+   txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $starTime').read().rstrip('\n');   
+   while txHash == "notconnected" or txHash == "": #{
       if countTry > 10:
-         sys.exit()
-      countTry = countTry + 1                  
-      
-      if not(txHash == "notconnected" or txHash == ""): 
-         break;      
-      else:
-         os.environ['unixTime'] = unixTime;
-         txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $unixTime').read().rstrip('\n');
-      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + '\n');
-      time.sleep(5);      
+         sys.exit();
+      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + " " + txHash + '\n');
+      txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $starTime').read().rstrip('\n');      
+      countTry = countTry + 1;
+      time.sleep(15);      
    #}
 
-   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + unixTime + "\n");
+   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + starTime + "\n");
    txFile.close();
 #}
 
 if __name__ == '__main__': #{
    jobKey   = sys.argv[1];
    index    = sys.argv[2];
-   startCall(jobKey, index);
+   jobID    = sys.argv[3];
+   
+   startCall(jobKey, index, jobID);
 #}
