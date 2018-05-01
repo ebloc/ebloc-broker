@@ -24,6 +24,7 @@ newRpcPort="8545"; # Please change if you have different RPC_PORT number
 # sudo npm install -g n
 # sudo n latest
 # npm install web3
+# npm install web3_ipc
 #--------------------------
 ## Python 3.5.2 # not-nessesary.
 # cd /usr/src
@@ -141,8 +142,15 @@ lineNew=$(echo $COINBASE);
 sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" constants.py && rm constants.py.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/'             nodePaths.js && rm nodePaths.js.bak
 #======================================================================
+
+# SLURM setup
+sudo killall slurmctld slurmdbd slurmd
 var=$(echo $currentDir | sed 's/\//\\\//g')
+# With JobRequeue=0 or --no-requeue, the job will not restart automatically  https://stackoverflow.com/a/43366542/2402577
+sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/"                /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
+# MinJobAge assingned to '1' day, The minimum age of a completed job before its record is purged from Slurm's active database.
+sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\186400/"                /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
 grep "MailProg" /usr/local/etc/slurm.conf
 
 # IPFS setups

@@ -84,7 +84,7 @@ contract eBlocBroker {
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
 	uint netOwed      = job.received;
-	uint amountToGain = job.coreMinutePrice * jobRunTimeMinute * job.core;
+	uint amountToGain = job.coreMinutePrice * job.core * jobRunTimeMinute;
 
 	if((amountToGain > netOwed) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) ) 
 	    revert();
@@ -172,12 +172,12 @@ contract eBlocBroker {
 	
 	cluster.jobStatus[jobKey].push(Lib.status({
  		        status:          uint8(jobStateCodes.PENDING),
-			core:            core,
-			coreMinuteGas:   coreMinuteGas,
-			jobOwner:        msg.sender,
-			received:        msg.value,
-			coreMinutePrice: cluster.coreMinutePrice,  
-			startTime:       0
+			core:            core,                    //
+			coreMinuteGas:   coreMinuteGas,           //
+			jobOwner:        msg.sender,              //
+			received:        msg.value,               //
+			coreMinutePrice: cluster.coreMinutePrice, //
+			startTime:       0                        //
 			}
 		));
 	
