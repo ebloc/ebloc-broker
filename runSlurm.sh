@@ -1,7 +1,12 @@
-#!/bin/bash
-# To Run:  sudo bash runSlurm.sh
-#------------------------------
+#!/bin/bash                     |
+#                               |
+# To Run:  sudo bash runSlurm.sh|
+#--------------------------------
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
 
 sudo killall slurmctld slurmdbd slurmd
 sudo munged -f
@@ -12,9 +17,3 @@ slurmdbd &
 # sudo chown -R $(logname) /tmp/slurmstate
 sudo slurmctld -c #-cDvvvvvv
 sinfo
-
-
-# echo "This script must be run as root. Please run:  sudo bash runSlurm.sh" 
-
-
-

@@ -67,14 +67,12 @@ def isIpfsOn(os, time): #{
 #}
 
 def contractCall(val): #{   
-   returnedVal = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
+   ret = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
 
-   if returnedVal == "notconnected": #{
+   if ret == "notconnected": #{
       log("Error: Please run Parity or Geth on the background.", 'red')
       sys.exit();
    #}
    
-   return returnedVal;
+   return ret;
 #}
-
-
