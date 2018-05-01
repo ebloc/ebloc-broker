@@ -52,7 +52,7 @@ for (i in array) {
 	totalPaid += parseInt(arr1[3]);
 
 	//break;
-	console.log("Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageID[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]] +
+	console.log("Job " + i + "\t" + arr[2] + "\t" +  arr[3] + "\t" +  storageID[arr[4]] + "\t" + arr[5] + "\t" + eBlocBroker.job_state_id[str[0]].padStart(10) +
 		     "\t" + arr1[1] + "\t" + arr1[2]  + "\t" + arr1[3]  + "\t" + arr1[4] + "\t" + arr1[5] + "\t" + arr[6]);
     }
 }
