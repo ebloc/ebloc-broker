@@ -35,9 +35,8 @@ def log(strIn, color=''): #{
 def slurmPendingJobCheck(): #{
     global totalCore;    
     printFlag = 0;
+    
     usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
-
-    # log('There is ' +  usedCoreNum + ' used core out of ' + totalCore + '.', 'green');    
     while True: #{
        if usedCoreNum == '':
           usedCoreNum = 0;          
@@ -147,7 +146,7 @@ f.close();
 
 if not blockReadFromLocal.isdigit(): #{
    log("Error: constants.BLOCK_READ_FROM_FILE is empty or contains and invalid value")
-   log("> Would you like to read from contract's deployed block number? y/n")   
+   log("#> Would you like to read from contract's deployed block number? y/n")   
    while True: #{
       choice = input().lower()
       if choice in yes:
@@ -194,31 +193,17 @@ while True: #{
     if 'notconnected' != clusterGainedAmount:
        log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     log("Waiting new job to come since block number: " + blockReadFrom);
-
-    printFlag          = 0;
-    passedPrintFlag    = 0;
-    currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
     
-    while True: #{
-       if (printFlag == 0):
-          log("Waiting new block to increment by one.");
-          log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom);
-          
-       if int(currentBlockNumber) >= int(blockReadFrom):
-          break;
-       
-       printFlag = 1;
+    currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
+    log("Waiting new block to increment by one.");
+    log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom);    
+    while int(currentBlockNumber) < int(blockReadFrom): #{          
        time.sleep(2);
        currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
-
-       if (passedPrintFlag == 0):
-          log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
-          passedPrintFlag = 1;
-    #}
-    
-    passedPrintFlag = 0;      
+    #}    
+    log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
+   
     os.environ['blockReadFrom'] = str(blockReadFrom) # Starting reading event's location has been updated
-
     slurmPendingJobCheck()
     
     constants.contractCall('eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\')'); # Waits here until new job submitted into the cluster
@@ -259,34 +244,35 @@ while True: #{
                 log("jobInfo is returned as empty string. Geth might be closed", 'red');
                 runFlag = 1;
              #}
+             else: #{
+                jobInfo = jobInfo.split(',');
+                log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));             
+                os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
              
-             jobInfo = jobInfo.split(',');
-             log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));             
-             os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
+                isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');
              
-             isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');
-             
-             userInfo = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
-             userInfo = userInfo.split(',');            
+                userInfo = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
+                userInfo = userInfo.split(',');            
 
-             if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
-                log("Job is already completed.", 'red');
-                runFlag = 1;
-             if jobInfo[0] == str(constants.job_state_code['REFUNDED']):
-                log("Job is refunded.", 'red');
-                runFlag = 1;
-             if runFlag == 0 and not jobInfo[0] == str(constants.job_state_code['PENDING']):
-                log("Job is already captured and in process or completed.", 'red');
-                runFlag = 1;
-             if "false" in isUserExist.lower(): 
-                log('jobOwner is not registered', 'red');
-                runFlag = 1;
-             if 'False' in strCheck:
-                log('Filename contains invalid character', 'red');
-                runFlag = 1;
-                
-             slurmPendingJobCheck()
-             # Checks isAlreadyCaptured job or not. If it is completed job do not obtain it
+                if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
+                   log("Job is already completed.", 'red');
+                   runFlag = 1;
+                if jobInfo[0] == str(constants.job_state_code['REFUNDED']):
+                   log("Job is refunded.", 'red');
+                   runFlag = 1;
+                if runFlag == 0 and not jobInfo[0] == str(constants.job_state_code['PENDING']):
+                   log("Job is already captured and in process or completed.", 'red');
+                   runFlag = 1;
+                if "false" in isUserExist.lower(): 
+                   log('jobOwner is not registered', 'red');
+                   runFlag = 1;
+                if 'False' in strCheck:
+                   log('Filename contains invalid character', 'red');
+                   runFlag = 1;
+                   
+                slurmPendingJobCheck()
+             #}
+             
              if runFlag == 1:
                 pass;
              elif submittedJob[4] == '0':

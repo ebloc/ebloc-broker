@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 pids=$(squeue | tail -n+2 | awk '{print $1}')
 for pId in $pids
 do

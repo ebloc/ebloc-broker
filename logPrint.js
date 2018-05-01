@@ -28,10 +28,10 @@ totalPaid = 0;
 for (i in array) {
     var arr = array[i].split(" ");
 
-
+    /*
     if (i == 102)
 	break;
-
+    */
     if (array[i] != '' && clusterID == arr[1]) {
 	if (titleFlag == 0){
 	    console.log("Job #\tjobKey______________________________________________________________________\tindex\tType\tStatus  \tcoreNum\tblockNum\tRecieved\tPrice\tcoreMinuteGas\tGained");

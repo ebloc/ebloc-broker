@@ -20,14 +20,15 @@ def log(strIn, color=''): #{
 #}
 
 def receiptCheckTx(jobKey, index): #{
+   endTimeStamp = os.popen('date -d $(scontrol show job $jobID | grep \'EndTime\'| grep -o -P \'(?<=EndTime=).*(?= )\') +"%s"').read().rstrip('\n');
+   os.environ['endTimeStamp'] = endTimeStamp;
+   log("endTimeStamp: " + endTimeStamp);
+     
    txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
 
-   while(True): #{
-      if not(txHash == "notconnected" or txHash == ""): 
-         break;
-      else:
-         log("Error: Please run Parity or Geth on the background.", 'red')
-         txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+   while txHash == "notconnected" or txHash == "": #{
+      log("Error: Please run Parity or Geth on the background.", 'red')
+      txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
       time.sleep(5);
    #}
    
@@ -38,14 +39,14 @@ def receiptCheckTx(jobKey, index): #{
    txFile.close();
 #}
 
-def endCall(jobKey, index, storageID, shareToken, folderName): #{
-   endTimeStamp = os.popen('date +%s').read(); 
+def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
-   os.environ['endTimeStamp'] = endTimeStamp;
-   log("endTimeStamp: " + endTimeStamp);
-
+   log('endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID);
+   log("jobID: " + jobID);
+   os.environ['jobID'] = jobID;   
+   
    # Paths--------------------------------------
    contractCallPath      = constants.EBLOCPATH + '/contractCalls'; 
    programPath           = constants.PROGRAM_PATH;   
@@ -53,11 +54,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    os.environ['GDRIVE']  = constants.GDRIVE;
    os.environ['contractCallPath'] = contractCallPath;
    # -------------------------------------------   
-
    encodedShareToken = '';
-   if shareToken != '-1':
-      encodedShareToken = base64.b64encode(shareToken + ':')
-      
+   if shareToken != '-1':      
+      encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8');
+      # encodedShareToken = encodedShareToken #delete
+      # encodedShareToken = base64.b64encode(shareToken + ':') #delete
+
+   log("encodedShareToken: " + encodedShareToken);
+   
    os.environ['programPath']       = str(programPath);
    os.environ['clusterID']         = constants.CLUSTER_ID;
    os.environ['GDRIVE_METADATA']   = constants.GDRIVE_METADATA;
@@ -67,9 +71,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    os.environ['eblocPath']         = constants.EBLOCPATH;
    os.environ['encodedShareToken'] = encodedShareToken;  
    os.environ['jobName']           = folderName;
-   os.environ['storageID']         = str(storageID);
-   
-   log(jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName);
+   os.environ['storageID']         = str(storageID);   
 
    resultsFolder     = programPath + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
    resultsFolderPrev = programPath + "/" + jobKey + "_" + index;
@@ -87,17 +89,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    
    jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
 
-   while True: #{
-      if not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno"): 
-         break;
-      else:
-         log('jobInfo: ' + jobInfo);
-         log(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
-         log("Error: Please run Parity or Geth on the background.", 'red')
-         jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
-      time.sleep(1)
+   while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
+      log('jobInfo: ' + jobInfo);
+      log(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
+      log("Error: Please run Parity or Geth on the background.", 'red')
+      jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
+      time.sleep(5)
    #}
-
 
    log("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
@@ -139,66 +137,56 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    log("clientGasMinuteLimit: " + clientTimeLimit); # Clients minuteGas for the job
       
    countTry = 0;
-   while True: #{
-      log("Waiting... " + str(countTry * 60) + 'seconds', 'yellow'); 
+   while True: #{      
       #if countTry > 200: # setJobStatus may deploy late.
       #   sys.exit()
-      countTry = countTry + 1                  
-
+      # countTry = countTry + 1                  
+      log("Waiting... " + str(countTry * 60) + 'seconds', 'yellow'); 
       if jobInfo[0] == str(constants.job_state_code['RUNNING']): # It will come here eventually, when setJob() is deployed.
          log("Job has been started to run.", 'green'); 
          break; # Wait until does values updated on the blockchain
       
       if jobInfo[0] == constants.job_state_code['COMPLETED']: 
-        log( "Error: Already completed job is received.", 'red'); 
+        log("Error: Already completed job is received.", 'red'); 
         sys.exit(); # Detects an error on the SLURM side
 
       jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
-      while True:
-         if(not(jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno")): 
-            break;
-         else:
-            log("Error: Please run Parity or Geth on the background.", 'red')
-            jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
-         time.sleep(1)
+      while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
+         log("Error: Please run Parity or Geth on the background.", 'red')
+         jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
+         time.sleep(5)
+      #}      
       jobInfo = jobInfo.split(',');
-
       time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
    #}
    
    log("jobName: " + str(folderName));
-   jobId = os.popen("sacct --name $jobName.sh  -n | awk '{print $1}' | head -n 1 | sed -r 's/[.batch]+//g' ").read().rstrip('\n'); os.environ['jobId'] = jobId;
-   log("JOBID ==> " + str(jobId));
-
-   if str(jobId) == '':
-      log("jobID is empty", 'red');
-      sys.exit(); 
    
+   os.system('scontrol show job $jobID > $resultsFolder/slurmJob_$jobID_info.out');
+      
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
+      # os.chdir(resultsFolder); #delete      
+      newHash = os.popen('ipfs add -r $resultsFolder').read(); # Upload as folder.      
       countTry = 0;
-      while True: 
+      while newHash == "": #{
          if (countTry > 10):
             sys.exit()
          countTry = countTry + 1         
-
-         os.chdir(resultsFolder);         
-         # os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Not needed, already uploaded files won't uploaded again.
          
+         # os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Not needed, already uploaded files won't uploaded again.         
          # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read()); #| 
          # newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read();                                 #| Upload as .tar.gz.
          # log(os.popen('rm -f $resultsFolder/result.tar.gz').read()); #un-comment                                    #|
+         log("Generated new hash return empty error. Trying again...", 'yellow');
+         newHash = os.popen('ipfs add -r $resultsFolder').read(); # upload as files.
+         time.sleep(5);
+      #}
          
-         newHash = os.popen('ipfs add -r $resultsFolder').read(); # Upload as folder.                                    
-         if newHash == "":
-            log("Generated new hash return empty error. Trying again...", 'yellow');
-         else: #{
-            os.environ['newHash'] = newHash;
-            newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); 
-            os.environ['newHash'] = newHash;
-            log("newHash: " + newHash); 
-            break
-         #}
+      os.environ['newHash'] = newHash;
+      newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); 
+      os.environ['newHash'] = newHash;
+      log("newHash: " + newHash);       
    #}
 
    if str(storageID) == '2': #{ IPFS & miniLock
@@ -208,25 +196,25 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read());
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete');
 
+      newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read();      
       countTry = 0;
-      while True: 
+      while newHash == "": #{
          if countTry > 10:
             sys.exit()
-         countTry = countTry + 1;
-         
+         countTry = countTry + 1;                  
+         log("Generated new hash return empty error. Trying again.", 'yellow');
          newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read();
-         newHash = newHash.split(" ")[1];
-         if newHash == "":
-            log("Generated new hash return empty error. Trying again.", 'yellow');
-         else:
-            os.environ['newHash'] = newHash;
-            newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); os.environ['newHash'] = newHash;
-            log("newHash: " + newHash);
-            break;
+         time.sleep(5);
+      #}
+      
+      newHash = newHash.split(" ")[1];
+      os.environ['newHash'] = newHash;
+      newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n'); os.environ['newHash'] = newHash;
+      log("newHash: " + newHash);
+      
    #}
       
-   log("jobId: " + jobId);
-   elapsedTime = os.popen('sacct -j $jobId --format="Elapsed" | tail -n1 | head -n1').read();
+   elapsedTime = os.popen('sacct -j $jobID --format="Elapsed" | tail -n1 | head -n1').read();
    log("ElapsedTime: " + elapsedTime);
 
    elapsedTime    = elapsedTime.split(':');
@@ -256,7 +244,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
       os.system("rm $resultsFolder/.node-xmlhttprequest*");      
       os.chdir(resultsFolder);
       
-      # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them.
+      # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete'); # Client's loaded files are removed, no need to re-upload them.
       # log(os.popen('tar -jcvf result-$clusterID-$index.tar.gz *').read());      
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read()); 
       
@@ -270,23 +258,25 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    
    elif str(storageID) == '4': #{ #GDRIVE
       os.environ['newHash'] = "0x00";
-
-      # log(os.popen('which $GDRIVE').read()); #delete
-      # log(os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA').read()); #delete
       
-      mimeType   = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
+      mimeType = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');
+      countTry=0;
+      while mimeType == "": #{
+         if countTry > 10: # mimeType may just return empty string, lets try few more time...
+            sys.exit()                        
+         log('mimeType returns empty string. Try: ' + str(countTry), 'red')            
+         mimeType = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n');            
+         countTry = countTry + 1;
+         time.sleep(15);         
+      #}      
       log('mimeType: ' + str(mimeType));
-      if mimeType == '':         
-         log('mimeType returns empty string.', 'red')
-         sys.exit();
-
+               
       os.chdir(resultsFolder);
 
       #if 'folder' in mimeType: # Received job is in folder format
-      #   os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Client's loaded files are deleted, no need to re-upload them
+      #   os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete'); # Client's loaded files are removed, no need to re-upload them
 
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read());   
-      # log(os.popen('tar -czvf result-$clusterID-$index.tar.gz .').read()); #delete
       time.sleep(0.25);
 
       if 'folder' in mimeType: # Received job is in folder format
@@ -304,7 +294,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName): #{
    #}
    
    receiptCheckTx(jobKey, index);   
-   # os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Deleted downloaded code from local since it is not needed anymore
+   # os.system("rm -rf " + programPath + '/' + jobKey + "_" + index); # Removed downloaded code from local since it is not needed anymore
 #}
 
 if __name__ == '__main__': #{
@@ -313,6 +303,7 @@ if __name__ == '__main__': #{
    storageID   = sys.argv[3];
    shareToken  = sys.argv[4];
    folderName  = sys.argv[5];
+   jobID       = sys.argv[6];
 
-   endCall(jobKey, index, storageID, shareToken, folderName)
+   endCall(jobKey, index, storageID, shareToken, folderName, jobID)
 #}
