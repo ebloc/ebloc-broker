@@ -147,7 +147,7 @@ def test_receipt(web3, accounts, chain):
             print(size);
             val = val + 1
 
-            
+    # Prints finalize version of the linked list.
     size = my_contract.call().getClusterReceiptSize(account);
     for i in range(0, size):
         print(my_contract.call().getClusterReceiptNode(account, i));

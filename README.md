@@ -17,15 +17,7 @@ Please follow [here](https://github.com/ebloc/eblocGeth).
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
 An Amazon image (AMI Name: eBlocBroker, AMI ID: `ami-43e6083e`) is also available that contains
-`Geth` to connect to our local Ethereum based blockchain system. First launch an instance using this Amazon image, you will recieve its Public DNS hostname (IPv4). 
-
-
-```bash
-ssh -v -i "full/path/to/my.pem" ubuntu@Public-DNS-hostname
-
-eblocServer                            # To run eBloc geth-server
-cd ../eBlocBroker && python Driver.py  # To run the eBlocBroker
-```
+`geth` setup to connect to our local Ethereum based blockchain system.  
 
 ### Create your Ethereum Account
 
@@ -41,56 +33,24 @@ Repeat passphrase:
 ["0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"]
 ```
 
-- Open the following file: `$HOME/eBlocBroker/eBlocBrokerHeader.js` and change following line with the account you defined under `COINBASE`, 
+- Open the following file: `$HOME/eBlocBroker/.profile` and change following line with the account you defined under `COINBASE`, 
 
  `COINBASE = "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903";`
 
 Connect into eBloc private chain using Geth: `eblocServer `. On another console to attach Geth console please do: `eblocClient`. Please note that first you have to run `eblocServer` and than `eblocClient`.
 
-<!--- 
-### How to create a new account
 
-
-```bash
-parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=*
-
-Please note that password is NOT RECOVERABLE.
-Type password:
-Repeat password:
-e427c111f968fe4ff6593a37454fdd9abf07c490  //your address is generated
-```
-
-- Inside `.profile` change `COINBASE` variable with the generated account address. For example, you could put your newly created address such as `"0xe427c111f968fe4ff6593a37454fdd9abf07c490"` into `COINBASE`. Do not forget to put `0x` at the beginning of the account.
-
-
-- Update the following file `/home/ubuntu/EBloc/password.txt` with your account's password.
-Best to make sure the file is not readable or even listable for anyone but you. You achieve this with: `chmod 700 /home/ubuntu/EBloc/password.txt`
-
-- Open the following file: `/home/ubuntu/eBlocBroker/eBlocBrokerHeader.js` and change following line with the account you defined under `COINBASE`, which is `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
-
-Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach`.
-
-Please note that first you have to run `eblocpserver` and than `geth attach`.
-
-Inside Geth console when you type `eth.accounts` you should see the accounts you already created or imported.
+Please do following inside your Amazon instance.
 
 ```bash
-> eth.accounts
-["0xe427c111f968fe4ff6593a37454fdd9abf07c490"]
+$ eblocServer # To run eBloc geth-server
+$ nohup ipfs daemon & #Runs IPFS daemon
+
+# To run the eBlocBroker Daemon
+$ cd $HOME/eBlocBroker 
+$ bash initialize.sh # Do it only once.
+$ bash runDaemon.sh  
 ```
-
-This line is required to update `Parity`'s enode.
-
-```bash
-rm  ~/.local/share/io.parity.ethereum/network/key
-```
-
-As final you should run Parity as follows which will also unlocks your account:
-
-```bash
-parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=* --unlock "0xe427c111f968fe4ff6593a37454fdd9abf07c490" --password password.txt
-```
---->
 
 ## Start Running Cluster using eBlocBroker
 
@@ -109,20 +69,22 @@ sbatch -N1 run.sh
 Submitted batch job 1
 ```
 
-### Running `IPFS`, `Parity` and eBlocBroker scripts on the background:
+### Running `IPFS`, `geth` and eBlocBroker scripts on the background:
 
 ```bash
-ipfs daemon &
-nohup bash eblocpserver.sh &
-cd $EBLOCBROKER
-bash runDaemon.sh
+nohup ipfs daemon &
+
+# To run the eBlocBroker Daemon
+$ cd $HOME/eBlocBroker 
+$ bash initialize.sh # Do it only once.
+$ bash runDaemon.sh 
 ```
 
 ### Cluster Side: How to register a cluster
 
 Please note the following: 
 
-- If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
+- If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `contractCall/registerCluster.py` to submit your jobs. To run: `python3 contractCall/registerCluster`
 
 ```bash
 coreNumber         = 128;
@@ -130,18 +92,7 @@ clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100; 
-ipfsID             = "QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; //ipfs id | grep "ID"
-
-//RegisterCluster
-if(federationCloudId.length < 128 && clusterEmail.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
-     eBlocBroker.registerCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000})
-
-//UpdateCluster
-if(federationCloudId.length < 128 && clusterEmail.length < 32 && (miniLockId.length == 0 || miniLockId.length == 45))
-	eBlocBroker.updateCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, corePriceMinuteWei, ipfsID, {from: eth.coinbase, gas: 4500000}); 
-
-//Deregister
-eBlocBroker.deregisterCluster( {from: eth.coinbase, gas: 4500000} )
+ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; 
 ```
 
 **Trigger code on start and end of the submitted job:** Cluster should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
@@ -322,7 +273,7 @@ storageType      = 4; # Please note that 4 stands for gdrive repository share. F
 
 ```bash
 clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.
-jobHash = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=134633894220713919382117768988457393273"
+jobHash = "134633894220713919382117768988457393273"
 index   = 0;      
 eBlocBroker.getJobInfo(clusterID, jobHash, index);
 ```
@@ -348,3 +299,72 @@ event.watch(function(error, result) {
   console.log(JSON.stringify(result));
 });
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--- 
+OLD
+### How to create a new account
+
+
+```bash
+parity --chain /home/ubuntu/EBloc/parity.json account new --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --rpccorsdomain=*
+
+Please note that password is NOT RECOVERABLE.
+Type password:
+Repeat password:
+e427c111f968fe4ff6593a37454fdd9abf07c490  //your address is generated
+```
+
+- Inside `.profile` change `COINBASE` variable with the generated account address. For example, you could put your newly created address such as `"0xe427c111f968fe4ff6593a37454fdd9abf07c490"` into `COINBASE`. Do not forget to put `0x` at the beginning of the account.
+
+
+- Update the following file `/home/ubuntu/EBloc/password.txt` with your account's password.
+Best to make sure the file is not readable or even listable for anyone but you. You achieve this with: `chmod 700 /home/ubuntu/EBloc/password.txt`
+
+- Open the following file: `/home/ubuntu/eBlocBroker/eBlocBrokerHeader.js` and change following line with the account you defined under `COINBASE`, which is `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
+
+Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach`.
+
+Please note that first you have to run `eblocpserver` and than `geth attach`.
+
+Inside Geth console when you type `eth.accounts` you should see the accounts you already created or imported.
+
+```bash
+> eth.accounts
+["0xe427c111f968fe4ff6593a37454fdd9abf07c490"]
+```
+
+This line is required to update `Parity`'s enode.
+
+```bash
+rm  ~/.local/share/io.parity.ethereum/network/key
+```
+
+As final you should run Parity as follows which will also unlocks your account:
+
+```bash
+parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peers /home/ubuntu/EBloc/myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --author $COINBASE --rpccorsdomain=* --unlock "0xe427c111f968fe4ff6593a37454fdd9abf07c490" --password password.txt
+```
+--->
