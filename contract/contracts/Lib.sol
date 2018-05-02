@@ -94,22 +94,21 @@ library Lib {
 	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
 
 	    do { /* Inside while loop carriedSum is updated */
-		carriedSum += prevNode.core;
-		if (endTime >= currentNode.endpoint) {
+		//carriedSum += prevNode.core;
+		if (endTime > currentNode.endpoint) {
 		    addr = prevNode.next; /* "addr" points the index to push the node */
 		    break;
 		}
 		prevNode    = currentNode;
 		currentNode = self.list[currentNode.next];
-
 	    } while (true);
 	}
 
-	self.list.push(interval({endpoint: endTime - 1, core: coreNum, next: addr}));
-
+	self.list.push(interval({endpoint: endTime, core: coreNum, next: addr})); /* Inserted while keeping sorted order */
+	carriedSum = coreNum;
+	
 	if (!flag) {
-	    addrTemp      = addr;
-	    carriedSum    = coreNum;
+	    addrTemp      = addr;	    
 	    prevNode      = self.list[self.tail = uint32(self.list.length-1)];
 	} else {
 	    addrTemp      = prevNode.next;
@@ -120,14 +119,14 @@ library Lib {
 	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */
 
 	do {
-	    if (startTime > currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
+	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
 		self.list.push(interval( {endpoint: startTime, core: -1*coreNum, next: prevNode.next}));
 		prevNode.next = uint32(self.list.length - 1);
 		return true;
 	    }
 	    carriedSum += currentNode.core;
 
-	    /* If enters into if statement it means revert() is catch and all previoes operations are reverted back */
+	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
 	    if (carriedSum > int32(self.coreNumber)) {
 		delete self.list[self.list.length-1];
 		if (!flag)
