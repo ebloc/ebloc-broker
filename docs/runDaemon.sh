@@ -1,3 +1,3 @@
 #!/bin/bash
 
-nohup run.sh &
+nohup bash run.sh &
