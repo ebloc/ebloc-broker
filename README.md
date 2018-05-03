@@ -136,7 +136,7 @@ coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
-storageType      = 0; // Please note that '0' stands for IPFS repository share. Fixed.
+storageType      = 0; # Please note that '0' stands for IPFS repository share. Fixed.
 ```
 #### **2. How to submit a job using EUDAT**
 
@@ -187,7 +187,7 @@ coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
 jobDescription   = "Science"
-storageType      = 2; // Please note 2 stands for IPFS with miniLock repository share. Fixed.
+storageType      = 2; # Please note 2 stands for IPFS with miniLock repository share. Fixed.
 ```
 
 #### **4. How to submit a job using GitHub**
