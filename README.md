@@ -16,7 +16,8 @@ Please follow [here](https://github.com/ebloc/eblocGeth).
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
-An Amazon image (AMI Name: eBlocBroker, AMI ID: `ami-43e6083e`) is also available that contains
+
+An Amazon image (AMI Name: eBloc, AMI ID: `ami-f5c47f8a`) is also available that contains
 `geth` setup to connect to our local Ethereum based blockchain system.  
 
 ### Create your Ethereum Account
@@ -43,10 +44,10 @@ Connect into eBloc private chain using Geth: `eblocServer `. On another console 
 Please do following inside your Amazon instance.
 
 ```bash
-$ eblocServer # To run eBloc geth-server
-$ nohup ipfs daemon & #Runs IPFS daemon
+$ eblocServer          # To run eBloc Etheruem node
+$ nohup ipfs daemon &  # Runs IPFS daemon
 
-# To run the eBlocBroker Daemon
+## To run eBlocBroker Daemon
 $ cd $HOME/eBlocBroker 
 $ bash initialize.sh # Do it only once.
 $ bash runDaemon.sh  
@@ -69,22 +70,11 @@ sbatch -N1 run.sh
 Submitted batch job 1
 ```
 
-### Running `IPFS`, `geth` and eBlocBroker scripts on the background:
-
-```bash
-nohup ipfs daemon &
-
-# To run the eBlocBroker Daemon
-$ cd $HOME/eBlocBroker 
-$ bash initialize.sh # Do it only once.
-$ bash runDaemon.sh 
-```
-
 ### Cluster Side: How to register a cluster
 
 Please note the following: 
 
-- If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `contractCall/registerCluster.py` to submit your jobs. To run: `python3 contractCall/registerCluster`
+- If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `contractCall/registerCluster.py` to submit your jobs. To run: `python3 contractCall/registerCluster.py`.  
 
 ```bash
 coreNumber         = 128;
@@ -93,19 +83,13 @@ federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100; 
 ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; 
-```
-
-**Trigger code on start and end of the submitted job:** Cluster should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
-
-```bash
-sudo chmod 755 ~/.eBlocBroker/*
+python3 contractCall/registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 ```
 
 #### **How to return all available Clusters Addresses**
 
-```bash
-eBlocBroker.getClusterAddresses();
-["0x6af0204187a93710317542d383a1b547fa42e705"]
+```
+$ python3 contractCall/getClusterAddresses.py
 ```
 
 ### Client Side: How to obtain IPFS Hash of the job:
@@ -126,18 +110,15 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 
 - Main folder's IPFS hash (for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted `jobKey` to the `eBlocBroker` by the client.
 
-<!--- 
-- If you want to share it through gitHub, please push all files into github repository and share its web URL right after `https://github.com/`, which is `USERNAME/REPOSITORY.git`.
-
-For example, web URL of `https://github.com/avatar-lavventura/simpleSlurmJob.git`, you have to submit: `avatar-lavventura/simpleSlurmJob.git`.
---->
 -----------
 
 ### **How to submit a job using storageTypes**
 
-You can use `contractCall/submitJob.py` to submit your jobs. To run: `python contractCall/submitJob.py`
+You can use `contractCall/submitJob.py` to submit your jobs. To run: `python3 contractCall/submitJob.py`
 
 #### **1. How to submit a job using IPFS**
+
+Please update following arguments inside `submitJob.py` file.
 
 ```bash
 clusterAddress   = "0x6af0204187a93710317542d383a1b547fa42e705";  
@@ -151,15 +132,7 @@ storageType      = 0; // Please note that '0' stands for IPFS repository share. 
 ```
 #### **2. How to submit a job using EUDAT**
 
-Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted.
-
-
-<!--- 
-`FederationCloudId` followed by the name of the folder your are sharing having equal symbol (`=`) in between.
-*Example:*`jobHash = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"`
----->
-
-#####  **Script:** 
+Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted. Please update following arguments inside `submitJob.py` file.
 
 ```bash
 clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
@@ -194,8 +167,10 @@ Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 ```bash
 mlck decrypt -f fileName --passphrase="$(cat mlck_password.txt)" --output-file=./output.tar.gz
 ```
+---------
 
-###### **Script:**
+Please update following arguments inside `submitJob.py` file.
+
 ```bash
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit. 
 jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
@@ -209,7 +184,7 @@ storageType      = 2; // Please note 2 stands for IPFS with miniLock repository 
 
 #### **4. How to submit a job using GitHub**
 
-If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`
+If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`. Please update following arguments inside `submitJob.py` file. 
 
 ```bash
 clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit.
@@ -251,9 +226,11 @@ echo $jobKey # This is jobKey
 gdrive share $jobKey  --role writer --type user --email $clusterToShare
 ```
 
-If your work is zipper under folder name such as folderPath/folderName/RUN.zip ; please name it `RUN.zip` or `RUN.tar.gz`.
+If your work is compressed under folder name such as folderPath/folderName/RUN.zip ; please name it `RUN.zip` or `RUN.tar.gz`.
 
 ---------
+
+Please update following arguments inside `submitJob.py` file.
 
 ```bash
 clusterID        = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; # clusterID you would like to submit.
@@ -269,14 +246,17 @@ storageType      = 4; # Please note that 4 stands for gdrive repository share. F
 
 ### **How to obtain Submitted Job's Information:**
 
-- status  could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING` or `COMPLETED`. 
+You can use `contractCall/getJobInfo.py` to submit your jobs. To run: `python3 contractCall/getJobInfo.py`
 
 ```bash
 clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.
-jobHash = "134633894220713919382117768988457393273"
-index   = 0;      
-eBlocBroker.getJobInfo(clusterID, jobHash, index);
+jobKey = "134633894220713919382117768988457393273"
+index   = 0;   
+python3 contractCall/getJobInfo.py $clusterID $jobKey $index
 ```
+
+- status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING` or `COMPLETED`. 
+
 -----------
 
 ### Events

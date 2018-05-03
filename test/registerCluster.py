@@ -32,6 +32,15 @@ corePriceMinuteWei = 100;
 ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 
 
+# TETAM
+account            = web3.eth.accounts[0]; # Cluster's Ethereum Address
+coreNumber         = 128;
+clusterEmail       = "alper01234alper@gmail.com";
+federationCloudId  = "";
+miniLockId         = "";
+corePriceMinuteWei = 100;
+ipfsAddress        = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV47WttP9hAoPEXeCMKsh3Cap4";
+
 
 # Google-Drive
 account            = web3.eth.accounts[0]; # Cluster's Ethereum Address
@@ -49,7 +58,7 @@ clusterEmail       = "";
 federationCloudId  = "";
 miniLockId         = "";
 corePriceMinuteWei = 100;
-ipfsAddress        = "/ip4/172.31.40.200/tcp/4001/ipfs/QmZGdKGqFUpXyZGcEQUMjCcvutQ1j3NH9g8x94gbUHztvm";
+ipfsAddress        = "/ip4/54.145.188.102/tcp/4001/ipfs/QmTkEBxqiX68P9ByBk5f4b58Dg2vyEFf9Cc6FPL8SskbJx";
 
 # AWS-IPFS_miniLock
 account            = web3.eth.accounts[0]; # Cluster's Ethereum Address
@@ -58,7 +67,7 @@ clusterEmail       = "";
 federationCloudId  = "";
 miniLockId         = "yWfGR7GEdfw5kphyZYcs3smvx2MmBoQdBE6hAxTv5d3ZV";
 corePriceMinuteWei = 100;
-ipfsAddress        = "/ip4/52.71.45.54/tcp/4001/ipfs/QmTDHH9n8qbaeuwjsDuBzUu2DySNay2TNL8v9WeiBtNjge";
+ipfsAddress        = "/ip4/174.129.113.214/tcp/4001/ipfs/QmTDHH9n8qbaeuwjsDuBzUu2DySNay2TNL8v9WeiBtNjge";
 
 
 

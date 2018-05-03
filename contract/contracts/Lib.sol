@@ -105,7 +105,7 @@ library Lib {
 	}
 
 	self.list.push(interval({endpoint: endTime, core: coreNum, next: addr})); /* Inserted while keeping sorted order */
-	carriedSum = coreNum;
+	carriedSum = coreNum; /* Carried sum variable is assigned with job's given core number */
 	
 	if (!flag) {
 	    addrTemp      = addr;	    
