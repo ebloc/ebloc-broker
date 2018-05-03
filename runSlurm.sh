@@ -4,7 +4,7 @@
 #--------------------------------
 
 if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
+  then echo "Please run as root."
   exit
 fi
 
@@ -13,7 +13,8 @@ sudo munged -f
 sudo /etc/init.d/munge start 
 sudo slurmd
 slurmdbd &
-# sudo -u $(logname) mkdir -p /tmp/slurmstate
-# sudo chown -R $(logname) /tmp/slurmstate
-sudo slurmctld -c #-cDvvvvvv
+sudo -u $(logname) mkdir -p /tmp/slurmstate
+sudo chown -R $(logname) /tmp/slurmstate
+sleep 1
+sudo slurmctld -c # sudo slurmctld -cDvvvvvv
 sinfo

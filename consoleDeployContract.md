@@ -27,7 +27,7 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
 
 
 
-var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g, "08ec896ac9fb9e650699c0461207c2a228774502")
+var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g, "be331b559af35ba6fb0df9e4fa526dbd1297d56a")
 var myArray   = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:eBlocBroker"].abi));
 
 var eBlocBroker = myArray.new({ from: eth.accounts[0], data: "0x" + arrayCode, gas: 4700000},
