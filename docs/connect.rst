@@ -109,8 +109,7 @@ Downloading
 Initialises a new genesis block and definition for the network
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:warning: Do ``bash initialize.sh`` only once. You do not need to do it
-again :warning:
+Do ``bash initialize.sh`` only once. You do not need to do it again.
 
 .. code:: bash
 
@@ -214,11 +213,10 @@ To Run
 -  Please open ``stats.sh`` file under ``eblocGeth``\ directory. Write
    your unique name instead of ``mynameis``.
 
--  :warning: Change ``DATADIR`` variable with path for
-   ``eth-net-intelligence-api`` directory :warning:
+-  Change ``DATADIR`` variable with path for
+   ``eth-net-intelligence-api`` directory.
 
--  :warning: ``geth-server`` should be running on the background
-   :warning:
+-  ``geth-server`` should be running on the background.
 
 Finally you should run following command
 ''''''''''''''''''''''''''''''''''''''''
