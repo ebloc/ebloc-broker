@@ -57,8 +57,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    encodedShareToken = '';
    if shareToken != '-1':      
       encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8');
-      # encodedShareToken = encodedShareToken #delete
-      # encodedShareToken = base64.b64encode(shareToken + ':') #delete
 
    log("encodedShareToken: " + encodedShareToken);
    
@@ -166,7 +164,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
-      # os.chdir(resultsFolder); #delete      
       newHash = os.popen('ipfs add -r $resultsFolder').read(); # Upload as folder.      
       countTry = 0;
       while newHash == "": #{

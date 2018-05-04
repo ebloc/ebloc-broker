@@ -120,12 +120,14 @@ def driverGdriveCall(jobKey, index, folderType): #{
    log(mimeType);
    
    if 'folder' in mimeType: #{ # Recieved job is in folder format      
-      res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()
-      while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res): #{
+      res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read();
+      while ('googleapi: Error 403' in res) or
+            ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or
+            ('googleapi' in res and 'error' in res): #{
          time.sleep(10)            
          res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read(); # Gets the source code
          log(res); 
-      #}
+      #}      
       log(res);             
 
       if not os.path.isdir(resultsFolderPrev + '/' + folderName): # Check before mv operation.

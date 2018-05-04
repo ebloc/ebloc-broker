@@ -28,7 +28,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
   while True: #{
     if counter >= 0:
-        if counter >= len(ipfsHashNo):
+        if counter >= (len(ipfsHashNo)-1):
            log("Exceed hashOutput.txt's limit Total item number: " + str(len(ipfsHashNo)), path)
            break;
 
