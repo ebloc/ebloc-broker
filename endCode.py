@@ -45,6 +45,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
    log('endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID);
    log("jobID: " + jobID);
+
+   if jobKey == 'run' and index == 'run':
+      log('JobKey and index returned as \'run\'', 'red');
+      sys.exit();
+      
    os.environ['jobID'] = jobID;   
    
    # Paths--------------------------------------
@@ -122,7 +127,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       os.environ['clientMiniLockId']  = userInfo[2];
    #}
    else:     
-      log("userInfo split Failure")
+      log("userInfo split Failure", 'red')
       
    log("");
    
