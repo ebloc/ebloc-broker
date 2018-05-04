@@ -33,7 +33,7 @@ hashesFile = open(path + '/' + readTest, 'w+')
 commentStr = "QmQANSjxQaziHPdMuj37LC53j65cVtXXwQYvu8GxJCPFJE"; #dummy hash string.
 with open(path + "/nasa.txt") as test:
     for line in test:
-        f = open(path + '/ipfs/run.sh', 'w+')
+        f = open(path + '../ipfs/run.sh', 'w+')
         lineIn = line.split(" ");
 
         if ((int(lineIn[1]) - int(lineIn[0])) > 60 ):
@@ -41,7 +41,7 @@ with open(path + "/nasa.txt") as test:
            print( "CoreNum: "  + str(int(lineIn[2])) )
            print(line)
 
-           with open(path + "/ipfs/run_temp.sh") as ff:
+           with open(path + "../ipfs/run_temp.sh") as ff:
               for line in ff:
                  f.write(line);
 

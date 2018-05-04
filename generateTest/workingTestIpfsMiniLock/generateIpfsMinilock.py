@@ -35,7 +35,7 @@ commentStr  = "QmQANSjxQaziHPdMuj37LC53j65cVtXXwQYvu8GxJCPFJE"; #dummy hash stri
 os.environ['clusterMiniLockId'] = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn";
 with open(path + "/test_DAS2-fs1-2003-1.swf") as test: #{
     for line in test:
-        f = open(path + '/ipfs/run.sh', 'w+')
+        f = open(path + '../ipfs/run.sh', 'w+')
         lineIn = line.split(" ");
 
         if ((int(lineIn[1]) - int(lineIn[0])) > 60 ):
@@ -45,7 +45,7 @@ with open(path + "/test_DAS2-fs1-2003-1.swf") as test: #{
            print( "CoreNum: "  + str(int(lineIn[2])) )
            print(line)
 
-           with open(path + "/ipfs/run_temp.sh") as ff:
+           with open(path + "../ipfs/run_temp.sh") as ff:
               for line in ff:
                  f.write(line);
                  
@@ -55,12 +55,12 @@ with open(path + "/test_DAS2-fs1-2003-1.swf") as test: #{
            f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n" ); #add random line to create different hash.
            f.close();
 
-           encrypyFolderPath="/home/prc/multiple/workingTestIpfsMiniLock/ipfs";
+           encrypyFolderPath = path + "../ipfs";
            os.chdir(encrypyFolderPath)
            os.environ['encrypyFolderPath'] = encrypyFolderPath
-           os.popen('tar -P -cvzf $path/ipfs.tar.gz .').read();
-           os.popen('mlck encrypt -f $path/ipfs.tar.gz $clusterMiniLockId --passphrase="gene threatens achieving ireland stalkers spoiling preoccupying"').read();
-           ipfsHash = os.popen( 'ipfs add $path/ipfs.tar.gz.minilock' ).read();
+           os.popen('tar -P -cvzf $path/../ipfs.tar.gz .').read();
+           os.popen('mlck encrypt -f $path/../ipfs.tar.gz $clusterMiniLockId --passphrase="gene threatens achieving ireland stalkers spoiling preoccupying"').read();
+           ipfsHash = os.popen( 'ipfs add $path/../ipfs.tar.gz.minilock' ).read();
            ipfsHash = ipfsHash.split(" ")[1];
            print(ipfsHash)
            commentStr = ipfsHash;
