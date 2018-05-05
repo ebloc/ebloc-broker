@@ -18,4 +18,4 @@ cat /dev/null > $HOME/.eBlocBroker/clusterDriver.out
 sudo bash killall.sh
 sudo bash clean.sh
 
-python contractCalls/blockNumber.py > $HOME/.eBlocBroker/blockReadFrom.txt
+python3 -uB contractCalls/blockNumber.py > $HOME/.eBlocBroker/blockReadFrom.txt
