@@ -46,8 +46,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log('endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID);
    log("jobID: " + jobID);
 
-   if jobKey == 'run' and index == 'run':
-      log('JobKey and index returned as \'run\'', 'red');
+   if jobKey == index:
+      log('JobKey and index are same.', 'red');
       sys.exit();
       
    os.environ['jobID'] = jobID;   
