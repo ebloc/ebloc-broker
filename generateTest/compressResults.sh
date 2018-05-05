@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tar -czvf workingTestIpfs.tar.gz         workingTestIpfs
-tar -czvf workingTestIpfsMiniLock.tar.gz workingTestIpfsMiniLock
-tar -czvf nasEudat.tar.gz                nasEudat
-tar -czvf workingGdrive.tar.gz           workingGdrive
+tar -czvf testIpfs.tar.gz         testIpfs
+tar -czvf testIpfsMiniLock.tar.gz testIpfsMiniLock
+tar -czvf testNasEudat.tar.gz     testNasEudat
+tar -czvf testGdrive.tar.gz       testGdrive
