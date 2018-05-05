@@ -2,18 +2,25 @@
 
 killall python
 
-cd workingTestIpfs
+cd testIpfs
 bash cleanForNewTest.sh
 bash runDaemon.sh a
 
-cd ../workingTestIpfsMiniLock
+cd ../testIpfsMiniLock
 bash cleanForNewTest.sh
 bash runDaemon.sh a
 
-cd ../nasEudat
+cd ../testNasEudat
 bash cleanForNewTest.sh
 bash runDaemon.sh a
 
-cd ../workingGdrive
+cd ../testGdrive
 bash cleanForNewTest.sh
 bash runDaemon.sh a
+
+
+
+
+
+
+
