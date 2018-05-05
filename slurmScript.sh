@@ -14,7 +14,10 @@ if [[ $c == *" Began, "* ]]; then
     arg1=$(echo $name | cut -d "*" -f 2)    
     
     echo "JOB STARTED: $name |$arg0 $arg1 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
-    . $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/startCode.py $arg0 $arg1 $jobID
+    
+    if [ "$argu0" != "$argu0" ]; then # jobKey and index should not be same
+	. $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/startCode.py $arg0 $arg1 $jobID
+    fi
 fi
 
 if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
@@ -27,7 +30,10 @@ if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
     argu3=$(echo $name | cut -d "*" -f 4)
             
     echo "COMPLETED fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
-    . $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name $jobID
+
+    if [ "$argu0" != "$argu0" ]; then # jobKey and index should not be same
+	. $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name $jobID
+    fi
 fi
 
 if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
@@ -40,7 +46,10 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     argu3=$(echo $name | cut -d "*" -f 4) 
     
     echo "TIMEOUT fileName:$name |argu0:$argu0 argu1:$argu1 argu2:$argu2 argu3:$argu3 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
-    . $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name $jobID
+
+    if [ "$argu0" != "$argu0" ]; then # jobKey and index should not be same
+	. $EBLOCBROKER_PATH/venv/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $argu0 $argu1 $argu2 $argu3 $name $jobID
+    fi
 fi
 
 if [[ $event == *" Failed, "* ]]; then # Cancelled job won't catched here
