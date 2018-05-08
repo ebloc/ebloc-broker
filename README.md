@@ -122,7 +122,14 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 
 ### **How to submit a job using storageTypes**
 
-You can use `contractCall/submitJob.py` to submit your jobs. To run: `python3 contractCall/submitJob.py`
+In order to submit your job each user should already registered into eBlocBroker.You can use `contractCall/registerUser.py` to register. To run: `python3 contractCall/registerUser.py`. Please update followin arguments inside `registerUser.py` file.
+
+`account`, `userEmail`, `federationCloudID`, `miniLockID`, and `ipfsAddress`.
+
+
+-----------
+
+Later, you can use `contractCall/submitJob.py` to submit your jobs. To run: `python3 contractCall/submitJob.py`.
 
 #### **1. How to submit a job using IPFS**
 
@@ -138,6 +145,7 @@ coreGasMin       = 10;
 jobDescription   = "Science"
 storageType      = 0; # Please note that '0' stands for IPFS repository share. Fixed.
 ```
+
 #### **2. How to submit a job using EUDAT**
 
 Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted. Please update following arguments inside `submitJob.py` file.
