@@ -7,9 +7,10 @@ event=$(echo $c | awk '{print $8}')
 echo "Your message | $a | $b | $c //$event ." | mail -s "Message Subject" alper.alimoglu@gmail.com
 EBLOCBROKER_PATH="/home/alper/eBlocBroker"
 
-if [[ $c == *" Began, "* ]]; then    
-    jobID=$(echo "$c"   | grep -o -P '(?<=Job_id=).*(?= Name)')
-    name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Began)')
+jobID=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
+
+if [[ $c == *" Began, "* ]]; then        
+    name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Began)')    
     arg0=$(echo $name | cut -d "*" -f 1)
     arg1=$(echo $name | cut -d "*" -f 2)    
     
@@ -20,10 +21,8 @@ if [[ $c == *" Began, "* ]]; then
     fi
 fi
 
-if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
-    jobID=$(echo "$c"   | grep -o -P '(?<=Job_id=).*(?= Name)')
-    
-    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
+if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here        
+    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')   
     argu0=$(echo $name | cut -d "*" -f 1)
     argu1=$(echo $name | cut -d "*" -f 2)
     argu2=$(echo $name | cut -d "*" -f 3) 
@@ -37,9 +36,7 @@ if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
 fi
 
 if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
-    jobID=$(echo "$c"   | grep -o -P '(?<=Job_id=).*(?= Name)')
-    
-    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Failed)')
+    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Failed)')    
     argu0=$(echo $name | cut -d "*" -f 1)
     argu1=$(echo $name | cut -d "*" -f 2)
     argu2=$(echo $name | cut -d "*" -f 3) 
@@ -52,6 +49,11 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     fi
 fi
 
+if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
+
+fi
+
 if [[ $event == *" Failed, "* ]]; then # Cancelled job won't catched here
 
 fi
+
