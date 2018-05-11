@@ -30,16 +30,22 @@ def log(strIn, color=''): #{
    txFile.close();   
 #}
 
-def slurmPendingJobCheck(): #{
+
+def idleCoreNumber(printFlag=1): #{
     coreInfo = os.popen('sinfo -h -o%C').read().rstrip('\n');
     coreInfo = coreInfo.split("/");
-
     if len(coreInfo) != 0:
-       idleCore = coreInfo[1];    
-       log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] + '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3]);               
+       idleCore = coreInfo[1];
+       if printFlag == 1:
+          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] + '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue');               
     else:
        log("sinfo return emptry string.", 'red');
        idleCore = 0;
+    return idleCore;
+#}   
+
+def slurmPendingJobCheck(): #{
+    idleCore = idleCoreNumber();
        
     printFlag = 0;    
     while idleCore == '0':  #{
@@ -47,14 +53,7 @@ def slurmPendingJobCheck(): #{
           log('Waiting running jobs to be completed...', 'blue');
           printFlag = 1;
        time.sleep(10);
-       coreInfo = os.popen('sinfo -h -o%C').read().rstrip('\n');
-       coreInfo = coreInfo.split("/");
-
-       if len(coreInfo) != 0:
-          idleCore = coreInfo[1];
-       else:
-          log("sinfo return emptry string.", 'red');
-          idleCore = 0;          
+       idleCore = idleCoreNumber(0);
     #}
 #}
 
@@ -190,6 +189,7 @@ while True: #{
        log(squeueStatus);
        sys.exit();
     #}
+    idleCoreNumber();
     
     log("Current Slurm Running jobs status: \n" + squeueStatus);
     log('-' * int(columns), "green")
