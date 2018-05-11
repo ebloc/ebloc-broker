@@ -1,6 +1,10 @@
-#!/bash/bin
+#!/bin/bash                  |
+#                            |
+# To Run:  sudo bash clean.sh|
+#-----------------------------
 
-rm -f \#*
+pyclean docs/
+
 rm -f *.pyc
 rm -f checkSinfoOut.txt
 rm -f .node-xmlhttprequest*
@@ -17,8 +21,4 @@ rm -rf docs/__pycache__
 rm -rf contract/tests/__pycache__
 rm -rf __pycache__/
 rm -rf docs/_build
-
-pyclean docs/
-
-# git fetch
-# git checkout origin/master -- .gitignore
+rm -f \#*
