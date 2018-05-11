@@ -84,7 +84,7 @@ def sbatchCall(): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${folderIndex}*$shareToken.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
+   jobId = os.popen('sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${folderIndex}*$shareToken.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
    os.environ['jobId'] = jobId;  
    os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit');
    
@@ -121,9 +121,7 @@ def driverGdriveCall(jobKey, index, folderType): #{
    
    if 'folder' in mimeType: #{ # Recieved job is in folder format      
       res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read();
-      while ('googleapi: Error 403' in res) or
-            ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or
-            ('googleapi' in res and 'error' in res): #{
+      while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or ('googleapi' in res and 'error' in res): #{
          time.sleep(10)            
          res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read(); # Gets the source code
          log(res); 
