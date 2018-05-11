@@ -4,7 +4,6 @@ from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
-import cancelJob
 
 # p = subprocess.Popen([sys.executable, '-c', 'print (\'hello\'); cancelJob.cancelJob()'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT); print('finished')
 
@@ -16,7 +15,6 @@ os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['logPath']          = constants.LOG_PATH;
 # ======================================================================
-totalCore = os.popen('sinfo | awk \'{print $4}\' | tail -n +2').read().rstrip('\n');
 
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
@@ -33,22 +31,31 @@ def log(strIn, color=''): #{
 #}
 
 def slurmPendingJobCheck(): #{
-    global totalCore;    
-    printFlag = 0;
-    
-    usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
-    while True: #{
-       if usedCoreNum == '':
-          usedCoreNum = 0;          
-       if int(totalCore) - int(usedCoreNum) > 0:
-          log('There is ' +  str(usedCoreNum) + ' used core out of ' + str(totalCore) + '.', 'green')       
-          break;
+    coreInfo = os.popen('sinfo -h -o%C').read().rstrip('\n');
+    coreInfo = coreInfo.split("/");
+
+    if len(coreInfo) != 0:
+       idleCore = coreInfo[1];    
+       log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] + '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3]);               
+    else:
+       log("sinfo return emptry string.", 'red');
+       idleCore = 0;
+       
+    printFlag = 0;    
+    while idleCore == '0':  #{
        if printFlag == 0:
-          log('Waiting running jobs to be completed...', 'blue')
+          log('Waiting running jobs to be completed...', 'blue');
           printFlag = 1;
-       time.sleep(10);       
-       usedCoreNum = os.popen('squeue | grep -P \' R      \' | awk \'{print $7}\' | paste -sd+ - | bc').read().rstrip('\n');
-    #}     
+       time.sleep(10);
+       coreInfo = os.popen('sinfo -h -o%C').read().rstrip('\n');
+       coreInfo = coreInfo.split("/");
+
+       if len(coreInfo) != 0:
+          idleCore = coreInfo[1];
+       else:
+          log("sinfo return emptry string.", 'red');
+          idleCore = 0;          
+    #}
 #}
 
 # checks: does Geth runs on the background
@@ -70,7 +77,6 @@ def isDriverOn():
 
 # checks: does Slurm runs on the background or not
 def isSlurmOn(): #{
-
    os.system("bash checkSinfo.sh")  
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
 
@@ -85,9 +91,6 @@ def isSlurmOn(): #{
       log("sudo munged -f")
       log("/etc/init.d/munge start")
       sys.exit()
-
-   global totalCore;
-   totalCore = os.popen('sinfo | awk \'{print $4}\' | tail -n +2 | paste -sd+ - | bc').read().rstrip('\n');
 #}
 
 yes = set(['yes', 'y', 'ye']);

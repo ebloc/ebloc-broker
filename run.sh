@@ -1,4 +1,7 @@
 #!/bin/bash
+#                          |
+# To Run:  sudo bash run.sh|
+#---------------------------
 
-. venv/bin/activate # source ~/.venv-py3/bin/activate
-python -B Driver.py
+. venv/bin/activate
+python3 -Bu Driver.py
