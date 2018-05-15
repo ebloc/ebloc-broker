@@ -1,4 +1,4 @@
-#!/bin/bash                  |
+#!/bin/bash                  
 #                            |
 # To Run:  sudo bash clean.sh|
 #-----------------------------
