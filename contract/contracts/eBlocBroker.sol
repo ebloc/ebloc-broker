@@ -109,12 +109,12 @@ contract eBlocBroker {
 	return true;
     }
     /* registerUser function registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
-    function registerUser(string userEmail, string fID, string miniLockID, string ipfsAddress) 
+    function registerUser(string userEmail, string fID, string miniLockID, string ipfsAddress, string orcID, string githubUserName) 
 	public returns (bool success)
     {
 	userContract[msg.sender].blockReadFrom = block.number;
 	
-	LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress);
+	LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName);
 	return true;
     }
 
@@ -338,7 +338,9 @@ contract eBlocBroker {
 		  string userEmail,
 		  string fID,
 		  string miniLockID,
-		  string ipfsAddress
+		  string ipfsAddress,
+		  string orcID,
+		  string githubUserName
 		  );
     
     /* LogRefund event records the refunded jobs' information under refund() method call. */

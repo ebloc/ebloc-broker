@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import os
 import StringIO
 import pytest
@@ -27,11 +28,11 @@ def pushBlockInfo(contract_address):
     return;
 
 def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun):
-    set_txn_hash     = my_contract.transact().receiptCheck( ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve", 0, e );#job's run time.
+    set_txn_hash     = my_contract.transact().receiptCheck( ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve", 0, e );
     contract_address = chain.wait.for_receipt(set_txn_hash)
     pushBlockInfo(contract_address);
 
-def test_receipt(web3, accounts, chain):
+def test_receipt(web3, accounts, chain): #{
     web3._requestManager = web3.manager
     global blkArrayIndex;
     global runTime;
@@ -52,11 +53,11 @@ def test_receipt(web3, accounts, chain):
     print("usedGas registerCluster: " + str(contract_address["gasUsed"]));
 
     web3.eth.defaultAccount = accounts[8];
-    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc');
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]));
 
-    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc');
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]));
 
@@ -132,7 +133,6 @@ def test_receipt(web3, accounts, chain):
     val = 0;
     with open(fname) as f:
         for line in f:
-            #print(line)
             arguments = line.rstrip('\n').split(" ")
             set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, 4, int(arguments[0]) );    
             val = val + 1
@@ -153,3 +153,5 @@ def test_receipt(web3, accounts, chain):
         print(my_contract.call().getClusterReceiptNode(account, i));
 
     print("END");
+    print(".");
+#}
