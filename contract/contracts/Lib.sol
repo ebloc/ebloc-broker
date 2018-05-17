@@ -20,6 +20,7 @@ library Lib {
     /* Registered user's information -----------*/
     struct userData {
 	uint     blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	string   orcid; /* User's orcid */
     }
     //-------------------------
     /* Registered cluster's information */

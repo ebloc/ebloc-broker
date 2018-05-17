@@ -18,7 +18,7 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
   function (e, contract) {
     console.log(e, contract);
     if (typeof contract.address !== 'undefined') {
-         console.log('Lib mined! address: ' + contract.address + ' transactionHash: ' + contract.transactionHash);
+         console.log('Lib mined! address: ' + contract.address.substring(2) + ' transactionHash: ' + contract.transactionHash);
     }
   }
 );
@@ -27,7 +27,8 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
 
 
 
-var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g, "be331b559af35ba6fb0df9e4fa526dbd1297d56a")
+
+var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g, "05b63d110b79a00986f962d36fe0501905d04ac5")
 var myArray   = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:eBlocBroker"].abi));
 
 var eBlocBroker = myArray.new({ from: eth.accounts[0], data: "0x" + arrayCode, gas: 4700000},
