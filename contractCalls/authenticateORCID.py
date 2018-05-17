@@ -25,13 +25,18 @@ contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
 if __name__ == '__main__': #{
-    account            = web3.eth.accounts[0];    
+    account            = web3.eth.accounts[0];
     # USER Inputs----------------------------------------------------------------
     if len(sys.argv) == 2:
         orcID = str(sys.argv[1]);
     else:
         orcID = "0000-0001-7642-0552";
     # ----------------------------------------------------------------------------
-    tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateORCID(orcID);
-    print('Tx: ' + tx.hex());
+
+    ret = eBlocBroker.functions.isOrcIdVerified(orcID).call();
+    if ret == 0:
+        tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateORCID(orcID);
+        print('Tx: ' + tx.hex());
+    else:
+        print(orcID + 'is already authenticated.')
 #}
