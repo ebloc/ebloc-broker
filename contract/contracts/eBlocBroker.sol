@@ -28,8 +28,8 @@ contract eBlocBroker {
     address[] userAddresses;    // A dynamically-sized array of `address` structs
 
     mapping(address => Lib.clusterData) clusterContract;
-    mapping(address => Lib.userData)    userContract;   
-    mapping(string => uint)             verifyOrcid;   
+    mapping(address => Lib.userData)       userContract;   
+    mapping(string  => uint32)              verifyOrcid;   
 
     modifier coreMinuteGas_storageID_check(uint32 coreMinuteGas, uint8 storageID) {	
 	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && storageID < 5); /* coreMinuteGas is maximum 1 day */
@@ -229,7 +229,7 @@ contract eBlocBroker {
     }
 
     function isOrcIdVerified(string orcid) public view
-	returns (uint)
+	returns (uint32)
     {
 	return verifyOrcid[orcid];
     }
@@ -239,7 +239,7 @@ contract eBlocBroker {
        It takes Ethereum address of the user (userAddress), which can be obtained by calling LogUser event.
     */
     function getUserInfo(address userAddress) public view
-	returns(uint, string, uint)
+	returns(uint, string, uint32)
     {
 	if (userContract[userAddress].blockReadFrom != 0)	    
 	    return (userContract[userAddress].blockReadFrom, userContract[userAddress].orcid, verifyOrcid[userContract[userAddress].orcid] );

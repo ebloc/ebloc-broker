@@ -28,7 +28,7 @@ if __name__ == '__main__': #{
     userAddress = web3.toChecksumAddress(userAddress);
     
     if (str(eBlocBroker.functions.isUserExist(userAddress).call()) == "False"):
-        print("User is not registered. Please try again with registered Ethereum Address as user.")
+        print("User is not registered. Please try again with registered Ethereum Address as user. \nYou can register your user using: registerUser.py script.")
         sys.exit();
 
     blockReadFrom = eBlocBroker.functions.getUserInfo(userAddress).call();
