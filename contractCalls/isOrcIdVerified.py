@@ -6,16 +6,7 @@ from web3.providers.rpc import HTTPProvider
 sys.path.insert(1, os.path.join(sys.path[0], '..')); import constants
 os.chdir(sys.path[0]);
 
-def ipfsBytesToString(ipfsID):
-    val= web3.fromAscii(ipfsID);
-    os.environ['val'] = '1220'+val[2:];
-    return os.popen('node bs58.js decode $val').read().replace("\n", "");
-
 web3 = Web3(HTTPProvider('http://localhost:' + str(constants.RPC_PORT)))
-
-if not web3.isConnected():
-    print('notconnected')
-    sys.exit()
 
 fileAddr = open("address.json", "r")
 contractAddress = fileAddr.read().replace("\n", "")
@@ -23,7 +14,14 @@ contractAddress = fileAddr.read().replace("\n", "")
 with open('abi.json', 'r') as abi_definition:
     abi = json.load(abi_definition)
 
-contractAddress = web3.toChecksumAddress(contractAddress);    
+contractAddress = web3.toChecksumAddress(contractAddress);
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi);
 
-print(eBlocBroker.functions.getDeployedBlockNumber().call());
+if __name__ == '__main__': #{
+    if len(sys.argv) == 2:
+        orcid = str(sys.argv[1]);
+    else:
+        orcid = "0000-0001-7642-0552";
+
+    print(eBlocBroker.functions.isOrcIdVerified(orcid).call())
+#}
