@@ -61,8 +61,14 @@ def test_receipt(web3, accounts, chain): #{
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]));
 
+    web3.eth.defaultAccount = accounts[0];
+    set_txn_hash     = my_contract.transact().authenticateORCID('0000-0001-7642-0552'); # ORCID should be registered.
+    
+
+    
     print("isUserExist: "           + str(my_contract.call().isUserExist(accounts[8])));
-    print("User's blockReadFrom:  " + str(my_contract.call().getUserInfo(accounts[8])));
+    blockReadFrom, b, c  = my_contract.call().getUserInfo(accounts[8]);
+    print("User's blockReadFrom:  " + str(blockReadFrom));
 
     output = my_contract.call().isUserExist(accounts[1]);
     print("isUserExist: " + str(output));
@@ -82,9 +88,12 @@ def test_receipt(web3, accounts, chain): #{
 
 
     web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().deregisterCluster( );
+    set_txn_hash     = my_contract.transact().deregisterCluster();
     contract_address = chain.wait.for_receipt(set_txn_hash)
-
+    
+    web3.eth.defaultAccount = accounts[0];
+    set_txn_hash     = my_contract.transact().authenticateORCID('alper');
+        
     web3.eth.defaultAccount = accounts[0];
     set_txn_hash     = my_contract.transact().registerCluster( 128, "alperalperalper", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x");
 
@@ -120,7 +129,7 @@ def test_receipt(web3, accounts, chain): #{
             contract_address = chain.wait.for_receipt(set_txn_hash)
 
             print("submitJob: " + str(contract_address["gasUsed"]));
-            print(my_contract.call().getJobInfo('0xdceceaf3fc5c0a63d195d69b1a90011b7b19650d', jobKey, 0));
+            # print(my_contract.call().getJobInfo('0xdceceaf3fc5c0a63d195d69b1a90011b7b19650d', jobKey, 0));
             j = j + 1;
 
     
