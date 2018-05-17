@@ -12,6 +12,7 @@ rm e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interfa
 
 '''
 
+
 loadScript("e.js")
 var myLinkedListLib = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:Lib"].abi))
 
@@ -24,11 +25,13 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
   }
 );
 
+
 '''
 
 -------------------
 
 '''
+
 
 var arrayCode = testOutput.contracts["e.sol:eBlocBroker"].bin.replace(/__e.sol:Lib__________________+/g,
 "3e247de89a056aea4bbb8ef4f85c952cea188516")
@@ -42,5 +45,6 @@ var eBlocBroker = myArray.new({ from: eth.accounts[0], data: "0x" + arrayCode, g
     }
   }
 );
+
 
 '''
