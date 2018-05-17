@@ -1,7 +1,11 @@
 #!bin/bash 
 
-sudo killall cat
+# sudo killall cat
+while [ 1 ]
+do
+    cat > /eBloc/fifo
+done
 
-nohup cat > /eBloc/fifo 2>&1 & 
-nohup cat /eBloc/fifo | xargs -I {} bash orcid.sh {} &
+
+
 

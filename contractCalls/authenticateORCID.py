@@ -38,5 +38,5 @@ if __name__ == '__main__': #{
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateORCID(orcID);
         print('Tx: ' + tx.hex());
     else:
-        print(orcID + 'is already authenticated.')
+        print(orcID + ' is already authenticated.')
 #}
