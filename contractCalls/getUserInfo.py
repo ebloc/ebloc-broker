@@ -31,7 +31,7 @@ if __name__ == '__main__': #{
         print("User is not registered. Please try again with registered Ethereum Address as user. \nYou can register your user using: registerUser.py script.")
         sys.exit();
 
-    blockReadFrom = eBlocBroker.functions.getUserInfo(userAddress).call();
+    blockReadFrom, orcid , orcidVerify = eBlocBroker.functions.getUserInfo(userAddress).call();
 
     my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
     # my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom + 1),'toBlock':int(blockReadFrom)})
@@ -43,6 +43,8 @@ if __name__ == '__main__': #{
         print('{0: <17}'.format('miniLockID: ')    + my_filter.get_all_entries()[0].args['miniLockID'])
         print('{0: <17}'.format('ipfsAddress: ')   + my_filter.get_all_entries()[0].args['ipfsAddress'])   
         print('{0: <17}'.format('fID: ')           + my_filter.get_all_entries()[0].args['fID'])
+        print('{0: <17}'.format('orcid: ')         + orcid)
+        print('{0: <17}'.format('orcidVerify: ')   + str(orcidVerify))
     else:
         print(str(blockReadFrom) + ',' +
               my_filter.get_all_entries()[0].args['userEmail']   + ',' +
