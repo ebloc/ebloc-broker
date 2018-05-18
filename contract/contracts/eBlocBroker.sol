@@ -12,7 +12,8 @@ contract eBlocBroker {
 	PENDING,   //3
 	RUNNING    //4	
     }
-	
+
+    // eBlocBroker() function is executed at initialization. It sets contract's deployed block number and the owner of the contract.
     function eBlocBroker() public
     {
 	deployedBlockNumber = block.number;
@@ -128,8 +129,11 @@ contract eBlocBroker {
 	return true;
     }
     
-    function authenticateORCID(string orcid) isOwner(msg.sender) {
+    function authenticateORCID(string orcid) isOwner(msg.sender)
+	public returns (bool success)
+    {
 	verifyOrcid[orcid] = 1;
+	return true;
     }
 
     /* registerCluster function registers a provider's (msg.sender's) cluster to eBlocBroker. */
@@ -232,6 +236,7 @@ contract eBlocBroker {
 	return clusterAddresses; 
     }
 
+    // isOrcIdVerified() function checks whether or not the given ORCID iD is already authenticated in eBlocBroker.
     function isOrcIdVerified(string orcid) public view
 	returns (uint32)
     {
@@ -260,6 +265,8 @@ contract eBlocBroker {
 	    return (0, 0, 0);
     }
 
+    // getClusterReceivedAmount() function returns cluster provider's earned mon\-ey amount in Wei.
+    // It takes a cluster's Ethereum address (clusterAddress) as parameter.
     function getClusterReceivedAmount(address clusterAddress) public view
 	returns (uint)
     {
@@ -284,29 +291,18 @@ contract eBlocBroker {
 	return (job.status, job.core, job.startTime, job.received, job.coreMinutePrice, job.coreMinuteGas, job.jobOwner);   
     }
 
+    // getDeployedBlockNumber() function returns the contract's deployed block number. 
     function getDeployedBlockNumber() public view
 	returns (uint)
     {
 	return deployedBlockNumber;
     }
     
-
+    // getOwner() function returns the owner of the contract.
     function getOwner() public view
 	returns (address)
     {
 	return owner;
-    }
-
-    function getClusterReceiptSize(address clusterAddress) public view
-	returns (uint32)
-    {
-	return clusterContract[clusterAddress].receiptList.getReceiptListSize();
-    }
-
-    function getClusterReceiptNode(address clusterAddress, uint32 index) public view
-	returns (uint256, int32)
-    {
-	return clusterContract[clusterAddress].receiptList.printIndex(index);
     }
 
     /* isClusterExist function checks whether or not the given Ethereum address of the provider (clusterAddress) is already registered in eBlocBroker. */
@@ -325,6 +321,18 @@ contract eBlocBroker {
 	if (userContract[userAddress].blockReadFrom != 0)
 	    return true;	
 	return false;
+    }
+
+    function getClusterReceiptSize(address clusterAddress) public view
+	returns (uint32)
+    {
+	return clusterContract[clusterAddress].receiptList.getReceiptListSize();
+    }
+
+    function getClusterReceiptNode(address clusterAddress, uint32 index) public view
+	returns (uint256, int32)
+    {
+	return clusterContract[clusterAddress].receiptList.printIndex(index);
     }
 
     /* -----------------------------------------------------EVENTS---------------------------------------------------------*/
