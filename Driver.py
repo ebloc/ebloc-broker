@@ -5,7 +5,8 @@ import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
 
-# p = subprocess.Popen([sys.executable, '-c', 'print (\'hello\'); cancelJob.cancelJob()'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT); print('finished')
+# p = subprocess.Popen([sys.executable, '-c', 'cancelDriver'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT);print('finished')
+subprocess.Popen(["python3","driverCancel.py"])
 
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;

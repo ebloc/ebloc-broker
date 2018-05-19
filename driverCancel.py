@@ -8,6 +8,18 @@ os.environ['cancelledJobsReadFromPath'] = cancelledJobsReadFromPath;
 contractCallPath               = constants.EBLOCPATH + '/contractCalls';
 os.environ['contractCallPath'] = contractCallPath;
 
+def log(strIn, color=''): #{
+   '''
+   if color != '':
+      print(stylize(strIn, fg(color)));
+   else:
+      print(strIn)
+   '''
+   txFile = open(constants.LOG_PATH + '/cancelledJobsLog.out', 'a');
+   txFile.write(strIn + "\n");
+   txFile.close();   
+#}
+
 f = open(constants.CANCEL_BLOCK_READ_FROM_FILE, 'r')
 cancelBlockReadFromLocal = f.read().rstrip('\n');
 f.close();
@@ -18,7 +30,7 @@ if not cancelBlockReadFromLocal.isdigit():
 else:
     os.environ['cancelBlockReadFromLocal'] = cancelBlockReadFromLocal;
 
-print('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
+log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
 
 maxVal               = 0;       
 while True: #{
@@ -35,7 +47,7 @@ while True: #{
         cancelledJob = e.rstrip('\n').split(' ');
         os.environ['jobKey'] = cancelledJob[2];
         os.environ['index']  = cancelledJob[3];        
-        print(cancelledJob[0] + ' ' + cancelledJob[1] + ' ' + cancelledJob[2] + ' ' + cancelledJob[3]  )
+        log(cancelledJob[0] + ' ' + cancelledJob[1] + ' ' + cancelledJob[2] + ' ' + cancelledJob[3]  )
 
         if int(cancelledJob[0]) > int(maxVal):
             maxVal = cancelledJob[0]
@@ -45,7 +57,7 @@ while True: #{
         res = os.popen('sacct --name $jobName | tail -n1 | awk \'{print $1}\'').read().rstrip('\n');
         
         if res.isdigit():
-            print('JobID: ' + res + ' is cancelled.')
+            log('JobID: ' + res + ' is cancelled.')
             os.popen('scancel ' + res).read();        
         
         #}
@@ -56,7 +68,7 @@ while True: #{
         f_blockReadFrom.close();
         cancelBlockReadFromLocal = str(int(maxVal) + 1);
         os.environ['cancelBlockReadFromLocal'] = cancelBlockReadFromLocal;
-        print('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
+        log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
     #}
     else:
         currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n')
@@ -65,5 +77,5 @@ while True: #{
         f_blockReadFrom.write(str(currentBlockNumber) + '\n'); 
         f_blockReadFrom.close();
         os.environ['cancelBlockReadFromLocal'] = currentBlockNumber;
-        print('Waiting cancelled jobs from :' + currentBlockNumber)
+        log('Waiting cancelled jobs from :' + currentBlockNumber)
 #}
