@@ -12,13 +12,6 @@ contract eBlocBroker {
 	PENDING,   //3
 	RUNNING    //4	
     }
-
-    // eBlocBroker() function is executed at initialization. It sets contract's deployed block number and the owner of the contract.
-    function eBlocBroker() public
-    {
-	deployedBlockNumber = block.number;
-	owner = msg.sender; /* Owner of the smart contract */
-    }
     
     using Lib for Lib.intervalNode;
     using Lib for Lib.clusterData;
@@ -62,23 +55,33 @@ contract eBlocBroker {
 	_ ;
     }
 
+    // eBlocBroker() function is executed at initialization. It sets contract's deployed block number and the owner of the contract.
+    function eBlocBroker() public
+    {
+	deployedBlockNumber = block.number;
+	owner = msg.sender; /* Owner of the smart contract */
+    }
+
     /* refund function pays back to client if a job is still on pending status or is not completed one hour after its required time. */
-    function refund(address clusterAddress, string jobKey, uint32 index) public returns (bool)
+    function cancelRefund(address clusterAddress, string jobKey, uint32 index) public returns (bool)
     {
 	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
 	   is not mapped to a job , this will throw automatically and revert all changes */
 	Lib.status storage job = clusterContract[clusterAddress].jobStatus[jobKey][index];
-	if (msg.sender != job.jobOwner ||
-	    job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED)
-	    ) /* Job has not completed yet */
+	
+	if (msg.sender != job.jobOwner || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED)) 
 	    revert(); 
 
 	if (job.status == uint8(jobStateCodes.PENDING) || /* If job have not been started running*/
-	   (job.status == uint8(jobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600)) { /* Job status remain running after one hour that job should have completed */
-	    msg.sender.transfer(job.received);
-	    
+	   (job.status == uint8(jobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600)) /* Job status remain running after one hour that job should have completed */
+	    { 
+	    msg.sender.transfer(job.received);	    
 	    job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
-	    LogRefund(clusterAddress, jobKey, index); /* scancel log */
+	    LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
+	    return true;
+	}
+	else if (job.status == uint8(jobStateCodes.RUNNING)){
+	    LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
 	    return true;
 	}
 	else
@@ -95,15 +98,15 @@ contract eBlocBroker {
 	   is not mapped to a job , this will throw automatically and revert all changes */
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 	
-	uint netOwed      = job.received;
+	uint netOwned     = job.received;
 	uint amountToGain = job.coreMinutePrice * job.core * jobRunTimeMinute;
 
-	if((amountToGain > netOwed) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) ) 
+	if((amountToGain > netOwned) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) ) 
 	    revert();
 	
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) { 	    
 	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
-	    job.jobOwner.transfer(netOwed); /* Pay back netOwned to client */
+	    job.jobOwner.transfer(netOwned); /* Pay back netOwned to client */
 	    return false;
 	}
 	
@@ -112,9 +115,9 @@ contract eBlocBroker {
 	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
 
 	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
-	job.jobOwner.transfer(netOwed - amountToGain); /* Gained ether transferred to the client */
+	job.jobOwner.transfer(netOwned - amountToGain); /* Gained ether transferred to the client */
 	
-	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwed - amountToGain), block.timestamp, resultIpfsHash, storageID);
+	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwned - amountToGain), block.timestamp, resultIpfsHash, storageID);
 	return true;
     }
     /* registerUser function registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
@@ -123,8 +126,7 @@ contract eBlocBroker {
     {
 	userContract[msg.sender].blockReadFrom = block.number;
 	userContract[msg.sender].orcid         = orcid;
-	
-	
+		
 	LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcid, githubUserName);
 	return true;
     }
@@ -248,10 +250,10 @@ contract eBlocBroker {
        It takes Ethereum address of the user (userAddress), which can be obtained by calling LogUser event.
     */
     function getUserInfo(address userAddress) public view
-	returns(uint, string, uint32)
+	returns(uint, string)
     {
 	if (userContract[userAddress].blockReadFrom != 0)	    
-	    return (userContract[userAddress].blockReadFrom, userContract[userAddress].orcid, verifyOrcid[userContract[userAddress].orcid] );
+	    return (userContract[userAddress].blockReadFrom, userContract[userAddress].orcid);
     }
 
     /* getClusterInfo} function returns the registered cluster's information. It takes
@@ -377,7 +379,7 @@ contract eBlocBroker {
 		  );
     
     /* LogRefund event records the refunded jobs' information under refund() method call. */
-    event LogRefund(address clusterAddress,
+    event LogCancelRefund(address clusterAddress,
 		    string jobKey,
 		    uint32 index
 		    );
