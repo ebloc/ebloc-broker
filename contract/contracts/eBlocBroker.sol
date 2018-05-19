@@ -339,7 +339,7 @@ contract eBlocBroker {
 
     /* -----------------------------------------------------EVENTS---------------------------------------------------------*/
     /* LogJob event records the submitted jobs' information under submitJob() method call.*/
-    event LogJob(address cluster,
+    event LogJob(address clusterAddress,
 		 string jobKey,
 		 uint index,
 		 uint8 storageID,		 
@@ -347,7 +347,7 @@ contract eBlocBroker {
 		 );
     
     /* LogReceipt event records the completed jobs' information under receiptCheck() method call.*/
-    event LogReceipt(address cluster,
+    event LogReceipt(address clusterAddress,
 		     string jobKey,
 		     uint index,
 		     address recipient,
@@ -359,7 +359,7 @@ contract eBlocBroker {
 		     );
 
     /* LogCluster event records the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
-    event LogCluster(address cluster,
+    event LogCluster(address clusterAddress,
 		     uint32 coreNumber,
 		     string clusterEmail,
 		     string fID,
@@ -369,7 +369,7 @@ contract eBlocBroker {
 		     );
     
     /* LogUser event records the registered users' registered information under registerUser method call.*/
-    event LogUser(address cluster,
+    event LogUser(address clusterAddress,
 		  string userEmail,
 		  string fID,
 		  string miniLockID,
