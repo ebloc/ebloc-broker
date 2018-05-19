@@ -124,9 +124,9 @@ exports.LogJob = function(var1, myPath) {
 	    var jobKey = result.args.jobKey;   
 
 	    if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
-		if (result.args.cluster == web3.eth.defaultAccount){
+		if (result.args.clusterAddress == web3.eth.defaultAccount){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
-				  result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
+				  result.args.clusterAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
 				      process.exit();
 				   }); 	
 		}
@@ -202,9 +202,9 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 	if(flag == 0){
 	    var jobKey = result.args.jobKey;   
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
-		if(result.args.cluster == clusterID){
+		if(result.args.clusterAddress == clusterID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
-				  result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
+				  result.args.clusterAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
 				  result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
 					  process.exit();
 				  }); 	
@@ -253,18 +253,18 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 	    var jobKey = result.args.jobKey;   
 
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
-		if (result.args.cluster == clusterID){
+		if (result.args.clusterAddress == clusterID){
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    
 		    myStr='';
-		    if(typeof gain[result.args.cluster +  '_' + jobKey + '_' + result.args.index] == 'undefined')
+		    if(typeof gain[result.args.clusterAddress +  '_' + jobKey + '_' + result.args.index] == 'undefined')
 			myStr='';
 		    else
-			myStr=gain[result.args.cluster + '_' + jobKey + '_' + result.args.index].toString();
+			myStr=gain[result.args.clusterAddress + '_' + jobKey + '_' + result.args.index].toString();
 		    
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
+				   result.args.clusterAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
 				   result.args.miniLockId + " " + myStr + ' ?\n', function(err) { // '?' end of line identifier.
 					   process.exit();
 				   }); 	
@@ -302,10 +302,10 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
 
 	if(flag == 0) {
 	    var jobKey = result.args.jobKey;   
-	    if(result.args.cluster == clusterID){		    		    
+	    if(result.args.clusterAddress == clusterID){		    		    
 		gainedStr=(parseInt(result.args.received) - parseInt(result.args.returned)).toString();
 
-		fs.appendFile(myPath, result.args.cluster + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { 
+		fs.appendFile(myPath, result.args.clusterAddress + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { 
 		    eBlocBrokerEvent.stopWatching();
                     process.exit();
                 });
