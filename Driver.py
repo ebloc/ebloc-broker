@@ -297,7 +297,7 @@ while True: #{
                 driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
        #}    
        
-       if submittedJob != 0 and (int(maxVal) != 0): #{ 
+       if submittedJob != 0 and int(maxVal) != 0: #{ 
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w'); # Updates the latest read block number      
           f_blockReadFrom.write(str(int(maxVal) + 1) + '\n'); 
           f_blockReadFrom.close();
