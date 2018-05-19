@@ -50,18 +50,8 @@ if __name__ == '__main__': #{
     else: #{
         # USER Inputs ================================================================
         clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c");    
-        blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
-        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
-        #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
-        
         jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"; # Long Sleep Job.
-        # jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"; #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
-        coreNum        = 1;
-        coreGasDay     = 0;
-        coreGasHour    = 0;
-        coreGasMin     = 1;
-        jobDescription = "Science";
-        storageType    = 0;
+        index          = 1;
         accountID      = 0;
         # =============================================================================
     #}
@@ -77,27 +67,7 @@ if __name__ == '__main__': #{
        print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
        sys.exit();
     #}
-    
-    if storageType == 0 or storageType == 2: #{
-       isIpfsOn();
-       strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
-       output = os.popen('ipfs swarm connect ' + strVal).read();
-       # print("Trying to connect into: " + strVal);
-       if 'success' in output:
-          print(output)
-    #}
-    
-    coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
-    msgValue      = coreNum * pricePerMin * coreMinuteGas;
-    
-    if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46) or (storageType == 4 and len(jobKey) != 33): #{
-       print("jobKey's length does not match with its original length. Please check your jobKey.")
-       sys.exit();
-    #}
-    
-    gasLimit = 4500000; 
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageType) < 5 and len(jobKey) <= 64 and coreMinuteGas != 0: #{
-       tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageType);
-       print('Tx: ' + tx.hex());
-    #}
+      
+    tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "gas": 4500000}).cancelRefund(clusterAddress, jobKey, index);
+    print('Tx: ' + tx.hex());
 #}
