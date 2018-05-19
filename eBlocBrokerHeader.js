@@ -74,12 +74,12 @@ exports.getUserInfo = function(myPath, userAddress) {
 	eBlocBrokerEvent.stopWatching();
 
 	fs.writeFile(myPath, "blockReadFrom: " + fromBlock        + ',' +
-		      "userEmail: "     + result.args.userEmail   + ',' +
-		      "miniLockID: "    + result.args.miniLockID  + ',' +
-		      "ipfsAddress: "   + result.args.ipfsAddress + ',' +
-		      "fID: " + result.args.fID, function(err) { 
-			  process.exit();
-		      }); 	
+		     "userEmail: "     + result.args.userEmail   + ',' +
+		     "miniLockID: "    + result.args.miniLockID  + ',' +
+		     "ipfsAddress: "   + result.args.ipfsAddress + ',' +
+		     "fID: " + result.args.fID, function(err) { 
+			 process.exit();
+		     }); 	
     });
     return
 };
@@ -116,21 +116,60 @@ exports.LogJob = function(var1, myPath) {
 	    fs.appendFile( myPath, "notconnected", function(err) {
 		process.exit();
 	    });
-	    flag=1;
+	    flag = 1;
 	    eBlocBrokerEvent.stopWatching()
 	}
 
 	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
 
-	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
+	    if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
 		if (result.args.cluster == web3.eth.defaultAccount){
-		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
-					   process.exit();
+		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
+				  result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
+				      process.exit();
 				   }); 	
 		}
 	    }
+	}
+    });
+};
+
+exports.LogCancelRefund = function(var1, myPath) {
+    var path  = require('path');     
+    var fs    = require('fs');
+
+    if (fs.existsSync(myPath)) 
+    	fs.unlinkSync(myPath);
+
+    var eBlocBrokerEvent = myContractInstance.LogCancelRefund({}, {fromBlock: var1, toBlock: 'latest'});
+
+    eBlocBrokerEvent.watch( function (error, result) {	
+	flag = 0;
+	if (error) {
+	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (result == null && flag == 0){
+	    fs.appendFile(myPath, "notconnected", function(err) {
+		process.exit();
+	    });
+	    flag = 1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (flag == 0) {
+	    var jobKey = result.args.jobKey;   
+	    //if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
+	    if (result.args.clusterAddress == web3.eth.defaultAccount) {
+		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
+				  result.args.clusterAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
+				      process.exit();
+				  }); 	
+	        }
+	  //  }
 	}
     });
 };
@@ -165,10 +204,10 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if(result.args.cluster == clusterID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
-				   result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
-				   result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
-					   process.exit();
-				   }); 	
+				  result.args.cluster + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
+				  result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
+					  process.exit();
+				  }); 	
 		}
 	    }
 	}
@@ -310,8 +349,8 @@ exports.isTransactionPassed = function(transaction_id) {
 };
 
 /*
-exports.setJobStatus = function(var1, var2, var3, var4) {
-    hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
-    console.log(hash);
-};
+  exports.setJobStatus = function(var1, var2, var3, var4) {
+  hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
+  console.log(hash);
+  };
 */

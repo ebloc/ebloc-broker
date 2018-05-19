@@ -138,7 +138,7 @@ log('{0: <21}'.format('clusterAddress:') +  clusterID, "yellow")
 
 if not os.path.isfile(constants.BLOCK_READ_FROM_FILE): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
-   f.write( deployedBlockNumber + "\n")
+   f.write(deployedBlockNumber + "\n")
    f.close()
 #}
 
@@ -222,7 +222,7 @@ while True: #{
        maxVal               = 0;       
        isClusterReceivedJob = 0;       
        submittedJob         = 0;
-       counter = 0;
+       counter              = 0;
 
        for e in submittedJobs: #{
           runFlag = 0;
@@ -299,14 +299,14 @@ while True: #{
        
        if submittedJob != 0 and (int(maxVal) != 0): #{ 
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w'); # Updates the latest read block number      
-          f_blockReadFrom.write(str(int(maxVal) + 1) + '\n'); # Python will convert \n to os.linesep
+          f_blockReadFrom.write(str(int(maxVal) + 1) + '\n'); 
           f_blockReadFrom.close();
           blockReadFrom = str(int(maxVal) + 1);
        #}
               
        if isClusterReceivedJob == 0: #{ If there is no submitted job for the cluster, block start to read from current block number
           f_blockReadFrom = open(constants.BLOCK_READ_FROM_FILE, 'w'); # Updates the latest read block number
-          f_blockReadFrom.write(str(currentBlockNumber) + '\n'); # Python will convert \n to os.linesep
+          f_blockReadFrom.write(str(currentBlockNumber) + '\n');
           f_blockReadFrom.close();
           blockReadFrom = str(currentBlockNumber);
     #}
