@@ -62,11 +62,10 @@ def test_receipt(web3, accounts, chain): #{
     print("usedGas registerUser: " + str(contract_address["gasUsed"]));
 
     web3.eth.defaultAccount = accounts[0];
-    set_txn_hash     = my_contract.transact().authenticateORCID('0000-0001-7642-0552'); # ORCID should be registered.
-    
+    set_txn_hash     = my_contract.transact().authenticateORCID('0000-0001-7642-0552'); # ORCID should be registered.   
     
     print("isUserExist: "           + str(my_contract.call().isUserExist(accounts[8])));
-    blockReadFrom, b, c  = my_contract.call().getUserInfo(accounts[8]);
+    blockReadFrom, b = my_contract.call().getUserInfo(accounts[8]);
     print("User's blockReadFrom:  " + str(blockReadFrom));
 
     output = my_contract.call().isUserExist(accounts[1]);
