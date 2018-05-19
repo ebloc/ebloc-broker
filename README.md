@@ -126,6 +126,7 @@ In order to submit your job each user should already registered into eBlocBroker
 
 `account`, `userEmail`, `federationCloudID`, `miniLockID`, and `ipfsAddress`.
 
+After registiration is done,  each user should authenticate his ORCID id using following [link](http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php).
 
 -----------
 

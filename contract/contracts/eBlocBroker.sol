@@ -62,7 +62,10 @@ contract eBlocBroker {
 	owner = msg.sender; /* Owner of the smart contract */
     }
 
-    /* refund function pays back to client if a job is still on pending status or is not completed one hour after its required time. */
+    /* cancelRefund() function refunds the complete amount to client if requested job is still in the pending state or 
+    is not completed one hour after its required time. 
+    If the job is in the running state, it triggers LogCancelRefund event on the blockchain, which will be caught by the cluster in   
+    order to cancel the job. */
     function cancelRefund(address clusterAddress, string jobKey, uint32 index) public returns (bool)
     {
 	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index' 
@@ -277,6 +280,7 @@ contract eBlocBroker {
 
     function getJobSize(address clusterAddress, string jobKey) public view
 	returns (uint)
+
     {
 	if (clusterContract[msg.sender].blockReadFrom == 0)
 	    revert();

@@ -13,11 +13,12 @@ IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
 
-IPFS_USE                   = 0;
-PROGRAM_PATH               = LOG_PATH + "/ipfsHashes";
-JOBS_READ_FROM_FILE        = LOG_PATH + "/test.txt";
-CANCEL_JOBS_READ_FROM_FILE = LOG_PATH + "/cancelledJobs.txt"
-BLOCK_READ_FROM_FILE       = LOG_PATH + "/blockReadFrom.txt";
+IPFS_USE                    = 0;
+PROGRAM_PATH                = LOG_PATH + "/ipfsHashes";
+JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt";
+CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + "/cancelledJobs.txt"
+BLOCK_READ_FROM_FILE        = LOG_PATH + "/blockReadFrom.txt";
+CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + "/cancelledBlockReadFrom.txt";
 
 ## Creates the hashmap.
 job_state_code = {};

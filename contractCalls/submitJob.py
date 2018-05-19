@@ -11,7 +11,7 @@ def isIpfsOn():
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if int(check) == 0:
       print("Error: IPFS does not work on the background.\nPlease run:  ipfs daemon &");
-      os.system("bash ../runIPFS.sh");
+      os.system("nohup ipfs daemon &");
       time.sleep(5);
       os.system("cat ipfs.out");      
       
