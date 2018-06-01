@@ -4,9 +4,10 @@ from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
+import hashlib
 
 # p = subprocess.Popen([sys.executable, '-c', 'cancelDriver'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT);print('finished')
-subprocess.Popen(["python3","driverCancel.py"])
+# subprocess.Popen(["python3","driverCancel.py"])
 
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
@@ -244,13 +245,16 @@ while True: #{
              
              jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
 
+             userID="";
              if not ',' in jobInfo or jobInfo == '': #{
                 log("jobInfo is returned as empty string. Geth might be closed", 'red');
                 runFlag = 1;
              #}
              else: #{
                 jobInfo = jobInfo.split(',');
-                log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));             
+                log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));
+                
+                userID = jobInfo[6].replace("u'", "").replace("'", "");
                 os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
              
                 isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');
@@ -275,27 +279,30 @@ while True: #{
                    runFlag = 1;
                    
                 slurmPendingJobCheck()
+
+                print(os.popen('sudo bash user.sh $userID $logPath').read()); # Create user's work directory.
              #}
-             
+                         
              if runFlag == 1:
                 pass;
              elif submittedJob[4] == '0':
                 log("New job has been received. IPFS call |" + time.ctime(), "green")
-                driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4]); 
+                driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], hashlib.md5(userID.encode('utf-8')).hexdigest()); 
              elif submittedJob[4] == '1':
                 log("New job has been received. EUDAT call |" + time.ctime(), "green");
-                driverFunc.driverEudatCall(submittedJob[2], submittedJob[3], userInfo[4]);
+                driverFunc.driverEudatCall(submittedJob[2], submittedJob[3], userInfo[4], hashlib.md5(userID.encode('utf-8')).hexdigest());
                 #thread.start_new_thread(driverFunc.driverEudatCall, (submittedJob[2], submittedJob[3])) 
              elif submittedJob[4] == '2':
                 log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green");
-                driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4]);
+                driverFunc.driverIpfsCall(submittedJob[2], submittedJob[3], submittedJob[4], hashlib.md5(userID.encode('utf-8')).hexdigest());
                 #thread.start_new_thread(driverFunc.driverIpfsCall, (submittedJob[2], submittedJob[3], submittedJob[4], submittedJob[5]))
              elif submittedJob[4] == '3': 
                 log("New job has been received. GitHub call |" + time.ctime(), "green");
-                driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4]);
+                driverFunc.driverGithubCall(submittedJob[2], submittedJob[3], submittedJob[4], hashlib.md5(userID.encode('utf-8')).hexdigest());
              elif submittedJob[4] == '4': 
                 log("New job has been received. Googe Drive call |" + time.ctime(), "green");
-                driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4]);
+                driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4], hashlib.md5(userID.encode('utf-8')).hexdigest());
+             # exit(); # Delete
        #}    
        
        if submittedJob != 0 and int(maxVal) != 0: #{ 

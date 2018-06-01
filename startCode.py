@@ -11,7 +11,7 @@ def startCall(jobKey, index, jobID): #{
    os.environ['jobKey']    = jobKey;
    statusId                = str(constants.job_state_code['RUNNING']);
    os.environ['statusId']  = statusId;
-   os.environ['jobID'] = jobID;
+   os.environ['jobID']     = jobID;
 
    starTime = os.popen('date -d $(scontrol show job $jobID | grep \'StartTime\'| grep -o -P \'(?<=StartTime=).*(?= E)\') +"%s"').read().rstrip('\n');
    os.environ['starTime']  = starTime;
