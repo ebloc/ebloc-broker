@@ -90,10 +90,6 @@ if [ ! -d transactions ]; then
     mkdir -p transactions
 fi
 
-if [ ! -d ipfsHashes ]; then
-    mkdir -p ipfsHashes
-fi
-
 if [ ! -d endCodeAnalyse ]; then
     mkdir -p endCodeAnalyse 
 fi
@@ -101,6 +97,10 @@ fi
 if [ ! -d USERS ]; then
     mkdir -p USERS 
 fi
+
+#if [ ! -d ipfsHashes ]; then    # delete
+#    mkdir -p ipfsHashes         # delete
+#fi                              # delete
 
 touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
