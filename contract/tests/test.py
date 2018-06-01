@@ -11,7 +11,7 @@ gasUsed       = [];
 blockNumber   = [];
 runTime       = [];
 myGas         = 0;
-
+            
 def pushBlockInfo(contract_address):
     global blkArrayIndex;
     global gasUsed;
@@ -36,6 +36,7 @@ def test_receipt(web3, accounts, chain): #{
     web3._requestManager = web3.manager
     global blkArrayIndex;
     global runTime;
+
     my_contract, _   = chain.provider.get_or_deploy_contract('eBlocBroker');
 
     print(accounts)
