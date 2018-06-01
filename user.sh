@@ -5,9 +5,6 @@ BASEDIR=$2;
 
 USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4); # Convert Ethereum User Address into 32-bits
 
-sudo userdel $USERNAME
-sudo rm -rf $BASEDIR/USERS/$USERNAME
-
 if ! id -u $USERNAME > /dev/null 2>&1; then
     sudo useradd -m -d $BASEDIR/USERS/$USERNAME $USERNAME;
     echo $USER_ADDRESS / $USERNAME 'is added as user.';
@@ -16,3 +13,5 @@ else
     echo $USER_ADDRESS / $USERNAME 'is already created.';
 fi
 
+# sudo userdel $USERNAME
+# sudo rm -rf $BASEDIR/USERS/$USERNAME

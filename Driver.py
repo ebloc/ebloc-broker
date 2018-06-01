@@ -7,7 +7,8 @@ from colored import fg
 import hashlib
 
 # p = subprocess.Popen([sys.executable, '-c', 'cancelDriver'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT);print('finished')
-# subprocess.Popen(["python3","driverCancel.py"])
+
+subprocess.Popen(["python3","driverCancel.py"])
 
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
@@ -201,7 +202,8 @@ while True: #{
     
     currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
     log("Waiting new block to increment by one.");
-    log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom);    
+    log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom);
+    
     while int(currentBlockNumber) < int(blockReadFrom): #{          
        time.sleep(2);
        currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
@@ -279,8 +281,7 @@ while True: #{
                    runFlag = 1;
                    
                 slurmPendingJobCheck()
-
-                print(os.popen('sudo bash user.sh $userID $logPath').read()); # Create user's work directory.
+                print(os.popen('sudo bash user.sh $userID $logPath').read()); # Create user and its work directory.
              #}
                          
              if runFlag == 1:
@@ -302,7 +303,6 @@ while True: #{
              elif submittedJob[4] == '4': 
                 log("New job has been received. Googe Drive call |" + time.ctime(), "green");
                 driverFunc.driverGdriveCall(submittedJob[2], submittedJob[3], submittedJob[4], hashlib.md5(userID.encode('utf-8')).hexdigest());
-             # exit(); # Delete
        #}    
        
        if submittedJob != 0 and int(maxVal) != 0: #{ 
