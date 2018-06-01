@@ -270,20 +270,17 @@ def driverIpfsCall(jobKey, index, folderType, userID): #{
     os.environ['folderIndex'] = str(folderType);
     os.environ['shareToken']  = "-1";
     
-    # resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; # delete
-    # os.environ['resultsFolder'] = resultsFolder;    # delete
     resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
     os.environ['resultsFolder'] = resultsFolder;
+    resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;    
    
-    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
-       
+    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;   
     log("jobKey: " + jobKey);
 
-    if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
-       os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)   
+    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
+       os.makedirs(resultsFolderPrev)   
        os.system("mkdir -p " + resultsFolder);
 
-    print(resultsFolder) # delete
     os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
     
     if os.path.isfile(jobKey):
@@ -310,7 +307,6 @@ def driverIpfsCall(jobKey, index, folderType, userID): #{
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red'); # IPFS file could not be accessed
        return;
-    
     sbatchCall();
 #}
 
