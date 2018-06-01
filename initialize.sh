@@ -98,6 +98,10 @@ if [ ! -d endCodeAnalyse ]; then
     mkdir -p endCodeAnalyse 
 fi
 
+if [ ! -d USERS ]; then
+    mkdir -p USERS 
+fi
+
 touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh

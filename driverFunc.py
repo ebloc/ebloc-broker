@@ -62,7 +62,7 @@ def isSlurmOn(): #{
 #}
 
 def sbatchCall(): #{
-   myDate = os.popen('LANG=en_us_88591 && date --date=\'1 seconds\' +"%b %d %k:%M:%S %Y"' ).read().rstrip('\n');
+   myDate = os.popen('LANG=en_us_88591 && date --date=\'1 seconds\' +"%b %d %k:%M:%S %Y"').read().rstrip('\n');
    log(myDate);
    txFile = open('../modifiedDate.txt', 'w');
    txFile.write(myDate + '\n' );   
@@ -93,7 +93,7 @@ def sbatchCall(): #{
       return(); # Detects an error on the SLURM side
 #}
 
-def driverGdriveCall(jobKey, index, folderType): #{
+def driverGdriveCall(jobKey, index, folderType, userID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -106,13 +106,11 @@ def driverGdriveCall(jobKey, index, folderType): #{
    os.environ['shareToken']      = "-1";
    os.environ['GDRIVE_METADATA'] = constants.GDRIVE_METADATA;
 
-   resultsFolderPrev = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
-   resultsFolder     = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
-   os.environ['resultsFolderPrev'] = resultsFolderPrev;
-   os.environ['resultsFolder']     = resultsFolder;
+   resultsFolder     = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder']     = resultsFolder;
+   resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;                 os.environ['resultsFolderPrev'] = resultsFolderPrev;
    
-   if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
-      os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
+   if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
+      os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
       
    mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n')
    folderName = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n');
@@ -163,7 +161,7 @@ def driverGdriveCall(jobKey, index, folderType): #{
       sbatchCall();    
 #}
 
-def driverGithubCall(jobKey, index, folderType): #{
+def driverGithubCall(jobKey, index, folderType, userID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -175,18 +173,18 @@ def driverGithubCall(jobKey, index, folderType): #{
    os.environ['folderIndex'] = folderType; 
    os.environ['shareToken']  = "-1";
 
-   resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; 
-   os.environ['resultsFolder'] = resultsFolder;
+   resultsFolder     = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder']     = resultsFolder;
+   # resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;                 os.environ['resultsFolderPrev'] = resultsFolderPrev;
 
-   if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
-      os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
+   if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
+      os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
  
    os.system("git clone https://github.com/$jobKeyGit.git $resultsFolder"); # Gets the source code
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
    sbatchCall(); 
 #}
 
-def driverEudatCall(jobKey, index, fID): #{
+def driverEudatCall(jobKey, index, fID, userID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -197,10 +195,9 @@ def driverEudatCall(jobKey, index, fID): #{
    os.environ['index']       = str(index);
    os.environ['folderIndex'] = "1";
 
-   resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
-   os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + jobKey + "_" + index;
-   os.environ['resultsFolder'] = resultsFolder;
-   
+   resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder'] = resultsFolder;
+   os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;
+      
    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
    f      = open(constants.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
    password = f.read().rstrip('\n').replace(" ", "");
@@ -234,8 +231,8 @@ def driverEudatCall(jobKey, index, fID): #{
       log("Couldn't find the shared file", 'red');
       return;
 
-   if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
-      os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)
+   if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
+      os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
       
    #checkRunExist = os.popen("unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
    #if (not eudatFolderName + "/run.sh" in checkRunExist ):
@@ -263,7 +260,7 @@ def driverEudatCall(jobKey, index, fID): #{
    sbatchCall();
 #}
 
-def driverIpfsCall(jobKey, index, folderType): #{
+def driverIpfsCall(jobKey, index, folderType, userID): #{
     global jobKeyGlobal; jobKeyGlobal = jobKey
     global indexGlobal;  indexGlobal  = index;
 
@@ -272,18 +269,21 @@ def driverIpfsCall(jobKey, index, folderType): #{
     os.environ['index']       = str(index);
     os.environ['folderIndex'] = str(folderType);
     os.environ['shareToken']  = "-1";
-
-    resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; 
+    
+    # resultsFolder = constants.PROGRAM_PATH + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; # delete
+    # os.environ['resultsFolder'] = resultsFolder;    # delete
+    resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
     os.environ['resultsFolder'] = resultsFolder;
-
+   
     header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
        
     log("jobKey: " + jobKey);
 
-    if not os.path.isdir(constants.PROGRAM_PATH + "/" + jobKey + "_" + index): # If folder does not exist
-       os.makedirs(constants.PROGRAM_PATH + "/" + jobKey + "_" + index)   
+    if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
+       os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)   
        os.system("mkdir -p " + resultsFolder);
 
+    print(resultsFolder) # delete
     os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
     
     if os.path.isfile(jobKey):
