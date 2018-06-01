@@ -4,6 +4,7 @@ from subprocess import call
 import sys, os, time, subprocess, constants, base64
 from colored import stylize
 from colored import fg
+import hashlib
 
 jobKeyGlobal    = "";
 indexGlobal     = "";
@@ -75,21 +76,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    os.environ['encodedShareToken'] = encodedShareToken;  
    os.environ['jobName']           = folderName;
    os.environ['storageID']         = str(storageID);   
-
-   resultsFolder     = programPath + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
-   resultsFolderPrev = programPath + "/" + jobKey + "_" + index;
-   os.environ['resultsFolder']     = resultsFolder;
-   os.environ['resultsFolderPrev'] = resultsFolderPrev;
-   os.system('rm -f $resultsFolder/result-*tar.gz')
-   
-   if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'): #{
-      fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
-      modifiedDate = fDate.read().rstrip('\n');
-      os.environ['modifiedDate'] = modifiedDate;
-      fDate.close();
-      log(modifiedDate);
-   #}
-   
+      
    jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];
 
    while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
@@ -103,8 +90,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log("JOB_INFO:" + jobInfo)
    jobInfo = jobInfo.split(',');
 
+   userIDAddr = hashlib.md5(jobInfo[6].replace("u'", "").replace("'", "").encode('utf-8')).hexdigest(); # Convert Ethereum User Address into 32-bits
    os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
    userInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getUserInfo.py $userID 1').read().rstrip('\n').replace(" ", "");
+
+   resultsFolder     = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
+   resultsFolderPrev = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index;
+   os.environ['resultsFolder']     = resultsFolder;
+   os.environ['resultsFolderPrev'] = resultsFolderPrev;
+   os.system('rm -f $resultsFolder/result-*tar.gz')
 
    log("\nwhoami: "          + os.popen('whoami').read().rstrip('\n'));
    log("pwd: "               + os.popen('pwd').read().rstrip('\n'));
@@ -116,6 +110,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log("encodedShareToken: " + encodedShareToken);   
    log("folderName: "        + folderName);
    log("clusterID: "         + constants.CLUSTER_ID);
+   log("userIDAddr: "        + userIDAddr);   
+
+   if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'): #{
+      fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
+      modifiedDate = fDate.read().rstrip('\n');
+      os.environ['modifiedDate'] = modifiedDate;
+      fDate.close();
+      log(modifiedDate);
+   #}
 
    if ',' in userInfo: #{
       userInfo = userInfo.split(',');
