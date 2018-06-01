@@ -201,12 +201,12 @@ contract eBlocBroker {
 	
 	cluster.jobStatus[jobKey].push(Lib.status({
  		        status:          uint8(jobStateCodes.PENDING),
-			core:            core,                    //
-			coreMinuteGas:   coreMinuteGas,           //
-			jobOwner:        msg.sender,              //
-			received:        msg.value,               //
+			core:            core,                    // Requested Core value
+			coreMinuteGas:   coreMinuteGas,           // 
+			jobOwner:        msg.sender,              
+			received:        msg.value,               
 			coreMinutePrice: cluster.coreMinutePrice, //
-			startTime:       0                        //
+			startTime:       0                        
 			}
 		));
 	

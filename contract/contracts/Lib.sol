@@ -1,20 +1,19 @@
 pragma solidity ^0.4.17;
 
 library Lib {
-    
+
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
 	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
 	uint         startTime; /* Submitted job's starting universal time on the server side */
-	// bool       receiptFlag; /* Prevents double spending, flag to store if receiptCheck successfully completed */
 	
-	/* Variables assigned by the client */
-	uint32   coreMinuteGas; /* Time to run job in seconds. ex: minute + hour * 60 + day * 1440; */
-	uint32            core; /* Requested core by the client */
+	/* Variables assigned by the client */	
 	address       jobOwner; /* Address of the client (msg.sender) has been stored */
-	uint   coreMinutePrice; /* Cluster's price for core/minute */
 	uint          received; /* Paid amount by the client */
+	uint   coreMinutePrice; /* Cluster's price for core/minute */
+	uint32   coreMinuteGas; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint32            core; /* Requested core by the client */
     }
 
     /* Registered user's information -----------*/
