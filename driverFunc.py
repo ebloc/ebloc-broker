@@ -62,6 +62,8 @@ def isSlurmOn(): #{
 #}
 
 def sbatchCall(): #{
+   os.system('sudo chown -R $userID .'); # Give permission to user that will send jobs to Slurm.
+   
    myDate = os.popen('LANG=en_us_88591 && date --date=\'1 seconds\' +"%b %d %k:%M:%S %Y"').read().rstrip('\n');
    log(myDate);
    txFile = open('../modifiedDate.txt', 'w');
@@ -84,13 +86,16 @@ def sbatchCall(): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${folderIndex}*$shareToken.sh --mail-type=ALL | cut -d " " -f4-').read().rstrip('\n');
-   os.environ['jobId'] = jobId;  
+   jobId = os.popen('sudo su - $userID -c "sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${folderIndex}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n');
+   jobId = jobId.split()[3];
+   
+   os.environ['jobId'] = jobId;
    os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit');
    
-   if not jobId.isdigit():
+   if not jobId.isdigit(): #{
       log("Error occured, jobId is not a digit.", 'red')
       return(); # Detects an error on the SLURM side
+   #}
 #}
 
 def driverGdriveCall(jobKey, index, folderType, userID): #{
@@ -263,13 +268,14 @@ def driverEudatCall(jobKey, index, fID, userID): #{
 def driverIpfsCall(jobKey, index, folderType, userID): #{
     global jobKeyGlobal; jobKeyGlobal = jobKey
     global indexGlobal;  indexGlobal  = index;
-
+    
     constants.isIpfsOn(os, time);
     os.environ['jobKey']      = jobKey;
     os.environ['index']       = str(index);
     os.environ['folderIndex'] = str(folderType);
     os.environ['shareToken']  = "-1";
-    
+    os.environ['userID']      = userID;
+        
     resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
     os.environ['resultsFolder'] = resultsFolder;
     resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;    
@@ -294,19 +300,20 @@ def driverIpfsCall(jobKey, index, folderType, userID): #{
     if "CumulativeSize" in isIPFSHashExist:
        os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
 
-       if folderType == '2': # case for the ipfsMiniLock
+       if folderType == '2': #{ Case for the ipfsMiniLock
           os.environ['passW'] = 'bright wind east is pen be lazy usual';
           log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read());
 
           os.system('rm -f $resultsFolder/$jobKey');
           os.system('tar -xf $resultsFolder/output.tar.gz && rm -f $resultsFolder/output.tar.gz');
-
+       #}
        if not os.path.isfile('run.sh'):
           log("run.sh does not exist", 'red')
           return
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red'); # IPFS file could not be accessed
        return;
+    
     sbatchCall();
 #}
 
