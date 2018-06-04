@@ -7,5 +7,9 @@ do
 done
 
 
+# chmod 700 eBloc
+# chown www-data eBloc
+# sudo chown www-data eBloc
+# sudo chown alper eBloc
 
 
