@@ -15,7 +15,8 @@ OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
 
 
 # PROGRAM_PATH                = LOG_PATH + "/ipfsHashes"; LOG_PATH + "/USERS";
-PROGRAM_PATH                = LOG_PATH + "/USERS";
+# PROGRAM_PATH                = LOG_PATH + "/USERS";
+PROGRAM_PATH                = '/var/eBlocBroker';
 
 IPFS_USE                    = 0;
 JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt";
