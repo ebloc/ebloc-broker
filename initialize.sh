@@ -169,6 +169,9 @@ read -s PASSWORD
 echo $PASSWORD > miniLockPassword.txt
 chmod 700 miniLockPassword.txt
 
+
+sudo chmod 700 /home/*
+
 # Setup
 # sudo ln -s /usr/bin/node /usr/local/bin/node
 # gdrive initialize

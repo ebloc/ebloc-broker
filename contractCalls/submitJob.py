@@ -53,8 +53,9 @@ if __name__ == '__main__': #{
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call();
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName";
-        
-        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"; # Long Sleep Job.
+
+        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"
+        # jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"; # Long Sleep Job.
         # jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"; #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
         coreNum        = 1;
         coreGasDay     = 0;

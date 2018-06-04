@@ -7,8 +7,7 @@ from colored import fg
 import hashlib
 
 # p = subprocess.Popen([sys.executable, '-c', 'cancelDriver'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT);print('finished')
-
-subprocess.Popen(["python3","driverCancel.py"])
+# subprocess.Popen(["python3","driverCancel.py"])
 
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
@@ -17,6 +16,7 @@ contractCallPath               = constants.EBLOCPATH + '/contractCalls';
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['logPath']          = constants.LOG_PATH;
+os.environ['programPath']      = constants.PROGRAM_PATH;
 # ======================================================================
 
 #rows, columns = os.popen('stty size', 'r').read().split();
@@ -281,7 +281,7 @@ while True: #{
                    runFlag = 1;
                    
                 slurmPendingJobCheck()
-                print(os.popen('sudo bash user.sh $userID $logPath').read()); # Create user and its work directory.
+                print(os.popen('sudo bash user.sh $userID $programPath').read()); # Create user and its work directory.
              #}
                          
              if runFlag == 1:
