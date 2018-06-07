@@ -8,8 +8,8 @@ About
 broker.
 
 -  **Website:** http://ebloc.cmpe.boun.edu.tr or
-   `http://ebloc.org <http://ebloc.cmpe.boun.edu.tr>`__
--  `Documentation <http://ebloc.cmpe.boun.edu.tr:3003/index.html>`__
+   `http://ebloc.org <http://ebloc.cmpe.boun.edu.tr>`__.
+-  `Documentation <http://ebloc.cmpe.boun.edu.tr:3003/index.html>`__.
 
 Build dependencies
 ------------------
@@ -19,20 +19,24 @@ Build dependencies
 `IPFS <https://ipfs.io/docs/install/>`__,
 `Slurm <https://github.com/SchedMD/slurm>`__.
 
-How to connect into Private Ethereum Blockchain (eBloc) using geth
-------------------------------------------------------------------
+How to connect into Private Ethereum Blockchain (eBloc) via Geth
+----------------------------------------------------------------
 
 Please follow `here <https://github.com/ebloc/eblocGeth>`__.
 
 How to use eBlocBroker inside an Amazon EC2 Instance
 ----------------------------------------------------
 
-An Amazon image (AMI Name: eBloc, AMI ID: ``ami-f5c47f8a``) is also
-available that contains ``geth`` setup to connect to our local Ethereum
-based blockchain system.
+An Amazon image (**AMI Name:** ``eBloc``, **AMI ID:** ``ami-f5c47f8a``)
+is also available that contains ``geth`` setup to connect to our local
+Ethereum based blockchain system.
 
 Create your Ethereum Account
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Connect into eBloc private chain using Geth: ``eblocServer``. On another
+console to attach Geth console please do: ``eblocClient``. Please note
+that first you have to run ``eblocServer`` and than ``eblocClient``.
 
 Inside your ``geth-client``, use:
 
@@ -42,29 +46,23 @@ Inside your ``geth-client``, use:
     Passphrase:
     Repeat passphrase:
     "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"
-
     > eth.accounts
     ["0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"]
 
--  Open the following file: ``$HOME/eBlocBroker/.profile`` and change
-   following line with the account you defined under ``COINBASE``,
+-  Open the following file: ``$HOME/eBlocBroker/.profile`` and set
+   ``COINBASE`` with your created Ethereum Address.
 
-``COINBASE = "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903";``
-
-Connect into eBloc private chain using Geth: ``eblocServer``. On another
-console to attach Geth console please do: ``eblocClient``. Please note
-that first you have to run ``eblocServer`` and than ``eblocClient``.
-
-Please do following inside your Amazon instance.
+Laater, please do following inside your Amazon instance.
 
 .. code:: bash
 
-    $ eblocServer          # To run eBloc Etheruem node
-    $ nohup ipfs daemon &  # Runs IPFS daemon
+    $ eblocServer          # To run eBloc Etheruem Node
+    $ nohup ipfs daemon &  # Runs IPFS Daemon
 
     ## To run eBlocBroker Daemon
     $ cd $HOME/eBlocBroker 
     $ bash initialize.sh # Do it only once.
+    $ sudo bash runSlurm.sh
     $ bash runDaemon.sh  
 
 Connect to eBlocBroker Contract
@@ -72,8 +70,8 @@ Connect to eBlocBroker Contract
 
 .. code:: bash
 
-    var address="0x8c22de03d3ce0b9dcb39617e7c31483ec484c720"
-    var abi=[{"constant":true,"inputs":[{"name":"userAddress","type":"address"}],"name":"isUserExist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"resultIpfsHash","type":"string"},{"name":"storageID","type":"uint8"},{"name":"endTime","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"getClusterReceiptSize","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"userAddress","type":"address"}],"name":"getUserInfo","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"userEmail","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockID","type":"string"},{"name":"ipfsAddress","type":"string"}],"name":"registerUser","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageID","type":"uint8"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"index","type":"uint32"}],"name":"getClusterReceiptNode","outputs":[{"name":"","type":"uint256"},{"name":"","type":"int32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterEmail","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockID","type":"string"},{"name":"coreMinutePrice","type":"uint256"},{"name":"ipfsAddress","type":"string"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"isClusterExist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterEmail","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockID","type":"string"},{"name":"coreMinutePrice","type":"uint256"},{"name":"ipfsAddress","type":"string"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateID","type":"uint8"},{"name":"startTime","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"}],"name":"refund","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageID","type":"uint8"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"received","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"resultIpfsHash","type":"string"},{"indexed":false,"name":"storageID","type":"uint8"}],"name":"LogReceipt","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"coreNumber","type":"uint32"},{"indexed":false,"name":"clusterEmail","type":"string"},{"indexed":false,"name":"fID","type":"string"},{"indexed":false,"name":"miniLockID","type":"string"},{"indexed":false,"name":"coreMinutePrice","type":"uint256"},{"indexed":false,"name":"ipfsAddress","type":"string"}],"name":"LogCluster","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"userEmail","type":"string"},{"indexed":false,"name":"fID","type":"string"},{"indexed":false,"name":"miniLockID","type":"string"},{"indexed":false,"name":"ipfsAddress","type":"string"}],"name":"LogUser","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint32"}],"name":"LogRefund","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint32"},{"indexed":false,"name":"startTime","type":"uint256"}],"name":"LogSetJob","type":"event"}]
+    var address="0x128c9f368f12c24cc2a4f88dcdcf3daa13c9667e"
+    var abi=[{"constant":true,"inputs":[{"name":"userAddress","type":"address"}],"name":"isUserExist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"}],"name":"cancelRefund","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"resultIpfsHash","type":"string"},{"name":"storageID","type":"uint8"},{"name":"endTime","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"orcid","type":"string"}],"name":"isOrcIdVerified","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"getClusterReceiptSize","outputs":[{"name":"","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"userAddress","type":"address"}],"name":"getUserInfo","outputs":[{"name":"","type":"uint256"},{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"userEmail","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockID","type":"string"},{"name":"ipfsAddress","type":"string"},{"name":"orcid","type":"string"},{"name":"githubUserName","type":"string"}],"name":"registerUser","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageID","type":"uint8"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"index","type":"uint32"}],"name":"getClusterReceiptNode","outputs":[{"name":"","type":"uint256"},{"name":"","type":"int32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"orcid","type":"string"}],"name":"authenticateORCID","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterEmail","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockID","type":"string"},{"name":"coreMinutePrice","type":"uint256"},{"name":"ipfsAddress","type":"string"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"}],"name":"isClusterExist","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"clusterAddress","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"coreNumber","type":"uint32"},{"name":"clusterEmail","type":"string"},{"name":"fID","type":"string"},{"name":"miniLockID","type":"string"},{"name":"coreMinutePrice","type":"uint256"},{"name":"ipfsAddress","type":"string"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateID","type":"uint8"},{"name":"startTime","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageID","type":"uint8"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"received","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"resultIpfsHash","type":"string"},{"indexed":false,"name":"storageID","type":"uint8"}],"name":"LogReceipt","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"coreNumber","type":"uint32"},{"indexed":false,"name":"clusterEmail","type":"string"},{"indexed":false,"name":"fID","type":"string"},{"indexed":false,"name":"miniLockID","type":"string"},{"indexed":false,"name":"coreMinutePrice","type":"uint256"},{"indexed":false,"name":"ipfsAddress","type":"string"}],"name":"LogCluster","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"userEmail","type":"string"},{"indexed":false,"name":"fID","type":"string"},{"indexed":false,"name":"miniLockID","type":"string"},{"indexed":false,"name":"ipfsAddress","type":"string"},{"indexed":false,"name":"orcid","type":"string"},{"indexed":false,"name":"githubUserName","type":"string"}],"name":"LogUser","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint32"}],"name":"LogCancelRefund","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"clusterAddress","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint32"},{"indexed":false,"name":"startTime","type":"uint256"}],"name":"LogSetJob","type":"event"}]
     var eBlocBroker = web3.eth.contract(abi).at(address);
 
 Start Running Cluster using eBlocBroker
@@ -114,6 +112,7 @@ Please note the following:
     miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
     corePriceMinuteWei = 100; 
     ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; 
+
     python3 contractCall/registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 
 **How to return all available Clusters Addresses**
@@ -133,10 +132,10 @@ IPFS object from the client's node.
 Example code could be seen under ``eBlocBroker/slurmJobExample``
 directory:
 
-Client should put his SLURM script inside a file called ``run.sh``.
+Client should put his Slurm script inside a file called ``run.sh``.
 Please note that you do not have to identify ``-n`` and ``-t``
 parameters, since they will be overritten with arguments provided by the
-client on the cluster side.
+client on the cluster end
 
 Target into the folder you want to submit and do: ``ipfs add -r .`` You
 will see something similiar with following output:
@@ -157,8 +156,22 @@ will see something similiar with following output:
 **How to submit a job using storageTypes**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use ``contractCall/submitJob.py`` to submit your jobs. To run:
-``python3 contractCall/submitJob.py``
+In order to submit your job each user should already registered into
+eBlocBroker.You can use ``contractCall/registerUser.py`` to register. To
+run: ``python3 contractCall/registerUser.py``. Please update followin
+arguments inside ``registerUser.py`` file.
+
+``account``, ``userEmail``, ``federationCloudID``, ``miniLockID``, and
+``ipfsAddress``.
+
+After registiration is done, each user should authenticate his ORCID id
+using following
+`link <http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php>`__.
+
+--------------
+
+Later, you can use ``contractCall/submitJob.py`` to submit your jobs. To
+run: ``python3 contractCall/submitJob.py``.
 
 **1. How to submit a job using IPFS**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
