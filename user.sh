@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USER_ADDRESS=$1 # "0x75a4c787c5c18c587b284a904165ff06"
-BASEDIR=$2; # /var/eBlocBroker
+BASEDIR=$2;     # /var/eBlocBroker
 
 USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4); # Convert Ethereum User Address into 32-bits
 SLURMUSER='alper';
