@@ -60,8 +60,8 @@ var eBlocBroker = web3.eth.contract(abi).at(address);
 
 ## Start Running Cluster using eBlocBroker
 
-### SLURM Setup:
-SLURM have to work on the background. Please run: 
+### Slurm Setup:
+Slurm should run on the background. Please run: 
 
 ```bash 
 sudo bash runSlurm.sh
@@ -79,7 +79,7 @@ Submitted batch job 1
 
 Please note the following: 
 
-- If you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `contractCall/registerCluster.py` to submit your jobs. To run: `python3 contractCall/registerCluster.py`.  
+- If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `contractCall/registerCluster.py` to submit your jobs. To run: `python3 contractCall/registerCluster.py`.  
 
 ```bash
 coreNumber         = 128;
