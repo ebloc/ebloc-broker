@@ -11,7 +11,7 @@ newRpcPort="8545"; # Please change if you have different RPC_PORT number
 # sudo apt-get install python3-venv
 # python3 -m venv venv
 # . venv/bin/activate
-# pip install web3
+# pip install web3==4.4.1 # pip install --upgrade web3
 # pip install colored
 # pip install pyocclient==0.4
 

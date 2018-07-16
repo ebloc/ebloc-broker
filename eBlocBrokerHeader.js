@@ -4,7 +4,7 @@ var eBlocBroker = require('./contract.js');
 Web3 = require("web3");
 web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:" + nodePaths.RPC_PORT ));
 
-if(!web3.isConnected()){
+if(!web3.eth.net.isListening().then(console.log)){ //web3@1.0.0-beta.34    
     console.log("notconnected");
     process.exit();
 }
@@ -12,7 +12,7 @@ if(!web3.isConnected()){
 web3.eth.defaultAccount = nodePaths.CLUSTER_ID; //Should be the address of the cluster.
 
 var whoami              = web3.eth.defaultAccount;
-var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
+var myContractInstance  = new web3.eth.Contract(eBlocBroker.abi, eBlocBroker.address);
 var blockNumber         = web3.eth.blockNumber;
 
 var gasLimit           = 4500000;
@@ -98,18 +98,35 @@ exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
 exports.LogJob = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
+    var sleep = require('sleep');
 
+    
     if (fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath);
 
-    var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
+    var check = '[]';
+    while (check == '[]') {
+        myContractInstance.getPastEvents('LogJob', {        
+            filter: {clusterAddress: [web3.eth.defaultAccount]},
+            fromBlock: 1899162,
+            toBlock: 'latest'
+        }, function(error, event){
+            check = event;
+            console.log(event.address);
+        })
+        //sleep.sleep(15); // sleep for ten seconds
+        console.log(check);
+        break;
+    }
 
-    eBlocBrokerEvent.watch( function (error, result) {	
+    
+    /*
 	flag = 0;
 	if (error) {
 	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
 	    flag=1;
-	    eBlocBrokerEvent.stopWatching()
+            process.exit();
+	    //eBlocBrokerEvent.stopWatching()
 	}
 
 	if (result == null && flag == 0){
@@ -117,7 +134,8 @@ exports.LogJob = function(var1, myPath) {
 		process.exit();
 	    });
 	    flag = 1;
-	    eBlocBrokerEvent.stopWatching()
+            process.exit();
+	    //eBlocBrokerEvent.stopWatching()
 	}
 
 	if (flag == 0) {
@@ -133,6 +151,7 @@ exports.LogJob = function(var1, myPath) {
 	    }
 	}
     });
+    */
 };
 
 exports.LogCancelRefund = function(var1, myPath) {
@@ -142,9 +161,40 @@ exports.LogCancelRefund = function(var1, myPath) {
     if (fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath);
 
-    var eBlocBrokerEvent = myContractInstance.LogCancelRefund({}, {fromBlock: var1, toBlock: 'latest'});
+    myContractInstance.events.LogCancelRefund({
+        filter: {clusterAddress: [web3.eth.defaultAccount]},
+        fromBlock: var1
+    }, function(error, event){
+        flag = 0;
+	if (error) {
+	    fs.appendFile(myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    flag=1;
+            process.exit();
+	}
 
-    eBlocBrokerEvent.watch( function (error, result) {	
+	if (result == null && flag == 0){
+	    fs.appendFile(myPath, "notconnected", function(err) {
+		process.exit();
+	    });
+	    flag = 1;
+            process.exit();
+	}
+
+	if (flag == 0) {
+	    var jobKey = result.args.jobKey;   
+	    if (result.args.clusterAddress == web3.eth.defaultAccount) {
+		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
+				  result.args.clusterAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
+				      process.exit();
+				  }); 	
+	    }
+
+	}
+    })
+
+    /*
+    var eBlocBrokerEvent = myContractInstance.events.LogCancelRefund({}, {fromBlock: var1, toBlock: 'latest'});
+    eBlocBrokerEvent.watch(function (error, result) {	
 	flag = 0;
 	if (error) {
 	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
@@ -172,6 +222,7 @@ exports.LogCancelRefund = function(var1, myPath) {
 	  //  }
 	}
     });
+    */
 };
 
 exports.LogReceipt = function(var1, myPath, clusterID) {    
@@ -320,7 +371,7 @@ exports.isTransactionPassed = function(transaction_id) {
     var web3          = web3_extended.create(options);
     if(!web3.isConnected()) 
 	console.log("not connected");
-    var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
+    var myContractInstance  = new web3.eth.Contract(eBlocBroker.abi).at(eBlocBroker.address);
 
     var checkPassed = 0;
     var receipt     = web3.eth.getTransactionReceipt(transaction_id);
@@ -347,10 +398,3 @@ exports.isTransactionPassed = function(transaction_id) {
     //console.log( checkPassed );
     return checkPassed;
 };
-
-/*
-  exports.setJobStatus = function(var1, var2, var3, var4) {
-  hash = myContractInstance.setJobStatus(var1, var2, var3, var4, {from: web3.eth.defaultAccount, gas: gasLimit });
-  console.log(hash);
-  };
-*/
