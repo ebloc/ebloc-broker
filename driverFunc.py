@@ -7,6 +7,7 @@ import os.path
 from colored import stylize
 from colored import fg
 import subprocess
+import glob, errno
 
 jobKeyGlobal = "";
 indexGlobal  = "";
@@ -19,11 +20,29 @@ os.environ['contractCallPath'] = contractCallPath;
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['clusterID']        = constants.CLUSTER_ID
 
+#TODO: switch from rm -rf to os.remove()
+def silentremove(filename): #{
+    try:
+        os.remove(filename)
+    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+       pass;
+#}
+
+def removeFiles(filename): #{
+   if "*" in filename: #{
+       for fl in glob.glob(filename):
+           print(fl)
+           silentremove(fl);
+   #}
+   else:
+       silentremove(filename);
+#}
+
 def log(strIn, color=''): #{
    if color != '':
-      print(stylize(strIn, fg(color)));
+       print(stylize(strIn, fg(color)));
    else:
-      print(strIn)
+       print(strIn)
    
    txFile = open(constants.LOG_PATH + '/transactions/clusterOut.txt', 'a');
    txFile.write(strIn + "\n");
@@ -111,11 +130,13 @@ def driverGdriveCall(jobKey, index, folderType, userID): #{
    os.environ['shareToken']      = "-1";
    os.environ['GDRIVE_METADATA'] = constants.GDRIVE_METADATA;
 
-   resultsFolder     = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder']     = resultsFolder;
-   resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;                 os.environ['resultsFolderPrev'] = resultsFolderPrev;
+   resultsFolder     = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
+   os.environ['resultsFolder']     = resultsFolder;
+   resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;
+   os.environ['resultsFolderPrev'] = resultsFolderPrev;
    
    if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
-      os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
+       os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
       
    mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n')
    folderName = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n');
@@ -148,18 +169,18 @@ def driverGdriveCall(jobKey, index, folderType, userID): #{
          # os.popen("rm -f $resultsFolder/*.zip").read(); # May delete anyother file ending with .tar.gz.
    #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
-      os.system("mkdir -p $resultsFolder"); # Gets the source code
-      os.system("gdrive download $jobKey --force --path $resultsFolder/../"); # Gets the source code
-      log(os.popen("tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder" ).read());
-      os.popen("rm -f $resultsFolderPrev/*.tar.gz").read();      
+       os.makedirs(resultsFolder, exist_ok=True); # Gets the source code     
+       os.system("gdrive download $jobKey --force --path $resultsFolder/../"); # Gets the source code
+       log(os.popen("tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder" ).read());
+       os.popen("rm -f $resultsFolderPrev/*.tar.gz").read();      
    elif 'zip' in mimeType: # Recieved job is in zip format
-      os.system("mkdir -p $resultsFolder"); # Gets the source code
-      os.system("gdrive download $jobKey --force --path $resultsFolderPrev/"); # Gets the source code
-      log(os.popen('echo gdrive download --recursive $jobKey --force --path $resultsFolderPrev/').read())
-      os.system("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder");
-      os.system("rm -f $resultsFolderPrev/$folderName");      
+       os.makedirs(resultsFolder, exist_ok=True); # Gets the source code
+       os.system("gdrive download $jobKey --force --path $resultsFolderPrev/"); # Gets the source code
+       log(os.popen('echo gdrive download --recursive $jobKey --force --path $resultsFolderPrev/').read())
+       os.system("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder");
+       os.system("rm -f $resultsFolderPrev/$folderName");      
    else:
-      return;
+       return;
 
    if os.path.isdir(resultsFolder): # Check before mv operation.
       os.chdir(resultsFolder);      # 'cd' into the working path and call sbatch from there
@@ -284,8 +305,8 @@ def driverIpfsCall(jobKey, index, folderType, userID): #{
     log("jobKey: " + jobKey);
 
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
-       os.makedirs(resultsFolderPrev)   
-       os.system("mkdir -p " + resultsFolder);
+       os.makedirs(resultsFolderPrev, exist_ok=True);
+       os.makedirs(resultsFolder,     exist_ok=True);
 
     os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
     

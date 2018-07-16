@@ -10,7 +10,7 @@ SLURMUSER='alper';
 # sudo userdel $USERNAME
 # sudo rm -rf $BASEDIR/$USERNAME
 # sacctmgr remove user where user=$USERNAME --immediate
-# -------------------------------
+# -------------------------------------
 
 if ! id -u $USERNAME > /dev/null 2>&1; then
     sudo useradd -d $BASEDIR/$USERNAME -m $USERNAME;
