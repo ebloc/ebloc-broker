@@ -6,8 +6,8 @@ from colored import stylize
 from colored import fg
 import hashlib
 
-# p = subprocess.Popen([sys.executable, '-c', 'cancelDriver'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT);print('finished')
-# subprocess.Popen(["python3","driverCancel.py"])
+if int(os.popen("ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l").read().rstrip('\n')) == 0:
+   subprocess.Popen(["python3","driverCancel.py"]);
 
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
@@ -48,8 +48,7 @@ def idleCoreNumber(printFlag=1): #{
 #}   
 
 def slurmPendingJobCheck(): #{
-    idleCore = idleCoreNumber();
-       
+    idleCore  = idleCoreNumber();       
     printFlag = 0;    
     while idleCore == '0':  #{
        if printFlag == 0:
@@ -60,47 +59,46 @@ def slurmPendingJobCheck(): #{
     #}
 #}
 
-# checks: does Geth runs on the background
+# checks whether geth runs on the background
 def isGethOn(): #{  
    check = os.popen("ps aux | grep [g]eth | grep " + str(constants.RPC_PORT) + "| wc -l").read().rstrip('\n');
-
    if int(check) == 0:
       log("Geth is not running on the background.", 'red');
       sys.exit();      
 #}
 
 # checks: does Driver.py runs on the background
-def isDriverOn(): 
+def isDriverOn(): #{
    check = os.popen("ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l").read().rstrip('\n');
-
    if int(check) > 1:
       log("Driver is already running.", 'green');
       sys.exit();
+#}
 
-# checks: does Slurm runs on the background or not
+# checks whether  Slurm runs on the background or not
 def isSlurmOn(): #{
    os.system("bash checkSinfo.sh")  
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
-
-   if not "PARTITION" in str(check):
+   if not "PARTITION" in str(check): #{
       log("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "red");      
       log('Error Message: \n' + check, "red");
       sys.exit();
-
-   if "sinfo: error" in str(check):
-      log("Error on munged: \n" + check)
-      log("Please Do:\n")
-      log("sudo munged -f")
-      log("/etc/init.d/munge start")
-      sys.exit()
+   #}   
+   if "sinfo: error" in str(check): #{
+      log("Error on munged: \n" + check);
+      log("Please Do:\n");
+      log("sudo munged -f");
+      log("/etc/init.d/munge start");
+      sys.exit();
+   #}
 #}
 
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
-
-if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '':
+if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '': #{
    print(stylize('Once please run:  bash initialize.sh \n', fg('red')));
    sys.exit();
+#}
 
 isDriverOn();
 isSlurmOn();
@@ -114,11 +112,10 @@ if 'False' in isContractExist:
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
 log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
 log('rootdir: ' + os.getcwd());
-
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
-header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')";
+header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')";
 os.environ['header'] = header;
 
 clusterID = constants.CLUSTER_ID;
@@ -131,21 +128,20 @@ if "false" in isClusterExist.lower(): #{
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
                  "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')));
-   sys.exit()
+   sys.exit();
 #}
 
 deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
 blockReadFromContract = str(0);
 
 log('{0: <21}'.format('clusterAddress:') +  clusterID, "yellow")
-
 if not os.path.isfile(constants.BLOCK_READ_FROM_FILE): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
    f.write(deployedBlockNumber + "\n")
    f.close()
 #}
 
-f = open(constants.BLOCK_READ_FROM_FILE, 'r')
+f = open(constants.BLOCK_READ_FROM_FILE, 'r');
 blockReadFromLocal = f.read().rstrip('\n');
 f.close();
 
@@ -217,12 +213,12 @@ while True: #{
     print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
     if os.path.isfile(jobsReadFromPath): #{ Waits until generated file on log is completed       
        submittedJobs = set() # holds lines already seen
-       for line in open(jobsReadFromPath, "r"):
+       for line in open(jobsReadFromPath, "r"): #{
           if line not in submittedJobs: # not a duplicate
              submittedJobs.add(line)
-
-       submittedJobs= sorted(submittedJobs);
-             
+       #}
+       
+       submittedJobs        = sorted(submittedJobs);            
        maxVal               = 0;       
        isClusterReceivedJob = 0;       
        submittedJob         = 0;
@@ -231,7 +227,7 @@ while True: #{
        for e in submittedJobs: #{
           runFlag = 0;
           submittedJob = e.rstrip('\n').split(' ');          
-          if clusterID == submittedJob[1]: # Only obtain jobs that are submitted to the cluster
+          if clusterID == submittedJob[1]: #{ Only obtain jobs that are submitted to the cluster
              isClusterReceivedJob = 1;
              log(str(counter) + ' ' + '-' * (int(columns) - 2), "green");
              counter += 1;
@@ -243,15 +239,12 @@ while True: #{
              os.environ['jobKey'] = submittedJob[2];
              os.environ['index']  = submittedJob[3];
 
-             strCheck = os.popen('bash $eblocPath/strCheck.sh $jobKey').read();
-             
-             jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
-
-             userID="";
-             if not ',' in jobInfo or jobInfo == '': #{
+             strCheck = os.popen('bash $eblocPath/strCheck.sh $jobKey').read();            
+             jobInfo  = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
+             userID   = "";
+             if not ',' in jobInfo or jobInfo == '': 
                 log("jobInfo is returned as empty string. Geth might be closed", 'red');
                 runFlag = 1;
-             #}
              else: #{
                 jobInfo = jobInfo.split(',');
                 log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));
@@ -259,10 +252,9 @@ while True: #{
                 userID = jobInfo[6].replace("u'", "").replace("'", "");
                 os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
              
-                isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');
-             
-                userInfo = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
-                userInfo = userInfo.split(',');            
+                isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');             
+                userInfo    = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
+                userInfo    = userInfo.split(',');            
 
                 if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
                    log("Job is already completed.", 'red');
