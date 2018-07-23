@@ -7,14 +7,20 @@
 ```
 mkdir -p ~/myContract
 cp $HOME/eBlocBroker/contract/contracts/* ~/myContract
-sed -i 's/\/\*emit\*\//emit/g'           ~/myContract/eBlocBroker.sol
-sed -i 's/eBlocBroker()/constructor()/g' ~/myContract/eBlocBroker.sol
+sed -i 's/\/\*emit\*\//emit/g'           ~/myContract/eBlocBroker.sol    
+sed -i 's/function eBlocBroker()/constructor()/g' ~/myContract/eBlocBroker.sol
 cat ~/myContract/Lib.sol > ~/myContract/e.sol && tail -n+3 ~/myContract/eBlocBroker.sol >> ~/myContract/e.sol && cd ~/myContract
 rm -f ~/myContract/e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > ~/myContract/e.js
 bash ../eblocPOA/client.sh
 ```
 
-
+### MAC
+```
+mkdir -p ~/myContract
+cp $HOME/eBlocBroker/contract/contracts/* ~/myContract
+sed -i '.original' 's/\/\*emit\*\//emit/g'           ~/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
+sed -i '.original' 's/function eBlocBroker()/constructor()/g' ~/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
+```
  
 ## Geth-Console
 
@@ -44,5 +50,6 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
   }
 );
 
+testOutput.contracts["e.sol:eBlocBroker"].abi
 
 ```
