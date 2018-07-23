@@ -9,6 +9,7 @@ newRpcPort="8545"; # Please change if you have different RPC_PORT number
 ## Python3 setup, required for all clusters! ========================================================
 # sudo apt-get install python3-dev
 # sudo apt-get install python3-venv
+
 # python3 -m venv venv
 # . venv/bin/activate
 # pip install web3==4.4.1 # pip install --upgrade web3
@@ -26,13 +27,6 @@ newRpcPort="8545"; # Please change if you have different RPC_PORT number
 # npm install web3
 # npm install web3_ipc
 #--------------------------
-## Python 3.5.2 # not-nessesary.
-# cd /usr/src
-# sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
-# sudo tar xzf Python-3.5.2.tgz
-# cd Python-3.5.2
-# sudo ./configure --enable-optimizations
-# sudo make altinstall
 
 #==================================================================================================
 ## Linux Packages
@@ -187,3 +181,12 @@ sudo chmod 700 /home/*
 # $ virtualenv -p python3 ~/.venv-py3
 # each session:
 # $ source ~/.venv-py3/bin/activate
+
+
+## Python 3.5.2 # not-nessesary.
+# cd /usr/src
+# sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
+# sudo tar xzf Python-3.5.2.tgz
+# cd Python-3.5.2
+# sudo ./configure --enable-optimizations
+# sudo make altinstall

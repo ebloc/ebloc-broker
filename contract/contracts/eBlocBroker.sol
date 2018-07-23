@@ -26,7 +26,7 @@ contract eBlocBroker {
     mapping(string  => uint32)              verifyOrcid;   
 
     modifier coreMinuteGas_storageID_check(uint32 coreMinuteGas, uint8 storageID) {	
-	require(!(coreMinuteGas == 0 || coreMinuteGas > 1440) && storageID < 5); /* coreMinuteGas is maximum 1 day */
+	require(storageID < 5 && !(coreMinuteGas == 0 || coreMinuteGas > 1440)); /* coreMinuteGas is maximum 1 day */
 	_ ;
     }
 
@@ -80,11 +80,11 @@ contract eBlocBroker {
 	    { 
 	    msg.sender.transfer(job.received);	    
 	    job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
-	    LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
+	    /*emit*/ LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
 	    return true;
 	}
 	else if (job.status == uint8(jobStateCodes.RUNNING)){
-	    LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
+	    /*emit*/ LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
 	    return true;
 	}
 	else
@@ -120,7 +120,7 @@ contract eBlocBroker {
 	msg.sender.transfer(amountToGain); 	       /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(netOwned - amountToGain); /* Gained ether transferred to the client */
 	
-	LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwned - amountToGain), block.timestamp, resultIpfsHash, storageID);
+	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwned - amountToGain), block.timestamp, resultIpfsHash, storageID);
 	return true;
     }
     /* registerUser function registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
@@ -130,7 +130,7 @@ contract eBlocBroker {
 	userContract[msg.sender].blockReadFrom = block.number;
 	userContract[msg.sender].orcid         = orcid;
 		
-	LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcid, githubUserName);
+	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcid, githubUserName);
 	return true;
     }
     
@@ -158,7 +158,7 @@ contract eBlocBroker {
 	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 	
-	LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
+	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
 	return true;
     }
 
@@ -180,7 +180,7 @@ contract eBlocBroker {
 		
 	clusterContract[msg.sender].update(coreMinutePrice, coreNumber);
 	
-	LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
+	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID, coreMinutePrice, ipfsAddress);
 	return true;
     }
 
@@ -209,8 +209,7 @@ contract eBlocBroker {
 			startTime:       0                        
 			}
 		));
-	
-	LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageID, jobDesc);
+	/*emit*/ LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageID, jobDesc);
 
 	return true;
     }
@@ -229,7 +228,7 @@ contract eBlocBroker {
 	if (stateID == uint8(jobStateCodes.RUNNING))
 	    job.startTime = startTime;
 
-	LogSetJob(msg.sender, jobKey, index, startTime);
+	/*emit*/ LogSetJob(msg.sender, jobKey, index, startTime);
 	return true;
     }
     
@@ -343,7 +342,7 @@ contract eBlocBroker {
 
     /* -----------------------------------------------------EVENTS---------------------------------------------------------*/
     /* LogJob event records the submitted jobs' information under submitJob() method call.*/
-    event LogJob(address clusterAddress,
+    event LogJob(address indexed clusterAddress,
 		 string jobKey,
 		 uint index,
 		 uint8 storageID,		 
@@ -373,7 +372,7 @@ contract eBlocBroker {
 		     );
     
     /* LogUser event records the registered users' registered information under registerUser method call.*/
-    event LogUser(address clusterAddress,
+    event LogUser(address userAddress,
 		  string userEmail,
 		  string fID,
 		  string miniLockID,
@@ -384,9 +383,9 @@ contract eBlocBroker {
     
     /* LogRefund event records the refunded jobs' information under refund() method call. */
     event LogCancelRefund(address clusterAddress,
-		    string jobKey,
-		    uint32 index
-		    );
+			  string jobKey,
+			  uint32 index
+			  );
 
     /* LogSetJob event records the updated jobs' information under setJobStatus() method call. */
     event LogSetJob(address clusterAddress,
