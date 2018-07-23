@@ -17,8 +17,8 @@ if ! id -u $USERNAME > /dev/null 2>&1; then
     echo $USER_ADDRESS / $USERNAME 'is added as user.';
     
     sudo chmod 700 $BASEDIR/$USERNAME # Block others and people in the same group to do read/write/execute
-    sudo setfacl -R -m user:$MAINUSER:rwx  $BASEDIR/$USERNAME
-    sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME
+    sudo setfacl -R -m user:$MAINUSER:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
+    sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME #Give read/write/execute access to USER2 on give folder.
     
     sacctmgr add account $USERNAME --immediate
     sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate    

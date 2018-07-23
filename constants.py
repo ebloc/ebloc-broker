@@ -2,11 +2,12 @@ import os, sys, subprocess;
 from colored import stylize
 from colored import fg
 
-WHOAMI=""
-EBLOCPATH=""
-CLUSTER_ID=""
-GDRIVE=""
-RPC_PORT=8545
+WHOAMI="";
+EBLOCPATH="";
+CLUSTER_ID="";
+GDRIVE="";
+RPC_PORT=8545;
+POA_CHAIN=1;
 
 GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive";
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
@@ -64,7 +65,8 @@ def log(strIn, color=''): #{
 def isIpfsOn(os, time): #{
    check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n');
    if int(check) == 0:
-      log("Error: IPFS does not work on the background. Running: nohup ipfs daemon &", 'red');
+      log("Error: IPFS does not work on the background.", 'red');
+      log(" * Starting IPFS: nohup ipfs daemon &");
       os.system('nohup ipfs daemon > ' + LOG_PATH + '/ipfs.out 2>&1 &');
       time.sleep(15);
       log(os.popen("cat " + LOG_PATH + "/ipfs.out").read(), 'blue');
@@ -74,11 +76,9 @@ def isIpfsOn(os, time): #{
 
 def contractCall(val): #{   
    ret = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "");
-
    if ret == "notconnected": #{
       log("Error: Please run Parity or Geth on the background.", 'red')
       sys.exit();
    #}
-   
    return ret;
 #}
