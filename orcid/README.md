@@ -6,11 +6,9 @@ tmux_cheatSheat (https://gist.github.com/henrik/1967800)
 ## Setup
 
 ```
-chmod 700 /eBloc
-chown www-data /eBloc
-
-sudo chown www-data /eBloc
-sudo chown alper    /eBloc
+sudo chmod 700 /eBloc
+sudo setfacl -R -m user:alper:rwx    /eBloc
+sudo setfacl -R -m user:www-data:rwx /eBloc
 ```
 
 ---------
