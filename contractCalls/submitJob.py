@@ -64,15 +64,17 @@ if __name__ == '__main__': #{
        print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
        sys.exit();
     #}
-    
+
+    '''
     if storageID == 0 or storageID == 2: #{
-       isIpfsOn();
+       isIpfsOn(); # uncomment for experiments.
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
        output = os.popen('ipfs swarm connect ' + strVal).read();
        # print("Trying to connect into: " + strVal);
        if 'success' in output:
           print(output)
     #}
+    '''
     
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
@@ -86,8 +88,7 @@ if __name__ == '__main__': #{
     if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageID) < 5 and len(jobKey) <= 64 and coreMinuteGas != 0: #{
        tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID);
        print('Tx: ' + tx.hex());
-
-       print('Value: ' + str(msgValue));
-       print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID))
+       #print('Value: ' + str(msgValue));
+       #print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID))
     #}
 #}

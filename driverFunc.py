@@ -90,7 +90,7 @@ def sbatchCall(): #{
    txFile.close();
    time.sleep(0.25);
 
-   os.system("cp run.sh ${jobKey}*${index}*${folderIndex}*$shareToken.sh");
+   os.system("cp run.sh ${jobKey}*${index}*${storageID}*$shareToken.sh");
    
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');
@@ -105,7 +105,7 @@ def sbatchCall(): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sudo su - $userID -c "sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${folderIndex}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n');
+   jobId = os.popen('sudo su - $userID -c "sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n');
    jobId = jobId.split()[3];
    
    os.environ['jobId'] = jobId;
@@ -117,7 +117,7 @@ def sbatchCall(): #{
    #}
 #}
 
-def driverGdriveCall(jobKey, index, folderType, userID): #{
+def driverGdriveCall(jobKey, index, storageID, userID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -126,7 +126,7 @@ def driverGdriveCall(jobKey, index, folderType, userID): #{
 
    os.environ['jobKey']          = str(jobKey)
    os.environ['index']           = str(index);
-   os.environ['folderIndex']     = folderType; 
+   os.environ['storageID']       = str(storageID); 
    os.environ['shareToken']      = "-1";
    os.environ['GDRIVE_METADATA'] = constants.GDRIVE_METADATA;
 
@@ -187,7 +187,7 @@ def driverGdriveCall(jobKey, index, folderType, userID): #{
       sbatchCall();    
 #}
 
-def driverGithubCall(jobKey, index, folderType, userID): #{
+def driverGithubCall(jobKey, index, storageID, userID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
    global indexGlobal;  indexGlobal  = index;
 
@@ -196,7 +196,7 @@ def driverGithubCall(jobKey, index, folderType, userID): #{
 
    os.environ['jobKeyGit']   = str(jobKey).replace("=", "/")
    os.environ['index']       = str(index);
-   os.environ['folderIndex'] = folderType; 
+   os.environ['storageID'] = storageID; 
    os.environ['shareToken']  = "-1";
 
    resultsFolder     = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder']     = resultsFolder;
@@ -219,7 +219,7 @@ def driverEudatCall(jobKey, index, fID, userID): #{
 
    os.environ['jobKey']      = str(jobKey);
    os.environ['index']       = str(index);
-   os.environ['folderIndex'] = "1";
+   os.environ['storageID'] = "1";
 
    resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder'] = resultsFolder;
    os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;
@@ -286,16 +286,16 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    sbatchCall();
 #}
 
-def driverIpfsCall(jobKey, index, folderType, userID): #{
+def driverIpfsCall(jobKey, index, storageID, userID): #{
     global jobKeyGlobal; jobKeyGlobal = jobKey
     global indexGlobal;  indexGlobal  = index;
     
     constants.isIpfsOn(os, time);
-    os.environ['jobKey']      = jobKey;
-    os.environ['index']       = str(index);
-    os.environ['folderIndex'] = str(folderType);
-    os.environ['shareToken']  = "-1";
-    os.environ['userID']      = userID;
+    os.environ['jobKey']     = jobKey;
+    os.environ['index']      = str(index);
+    os.environ['storageID']  = str(storageID);
+    os.environ['shareToken'] = "-1";
+    os.environ['userID']     = userID;
         
     resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
     os.environ['resultsFolder'] = resultsFolder;
@@ -321,7 +321,7 @@ def driverIpfsCall(jobKey, index, folderType, userID): #{
     if "CumulativeSize" in isIPFSHashExist:
        os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
 
-       if folderType == '2': #{ Case for the ipfsMiniLock
+       if storageID == '2': #{ Case for the ipfsMiniLock
           os.environ['passW'] = 'bright wind east is pen be lazy usual';
           log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read());
 
