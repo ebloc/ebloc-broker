@@ -3,7 +3,7 @@
 from imports import *
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 4):
+    if len(sys.argv) == 4:
         clusterAddress = str(sys.argv[1]);
         jobKey         = str(sys.argv[2]);
         index          = int(sys.argv[3]);

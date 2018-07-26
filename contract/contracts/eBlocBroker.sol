@@ -56,7 +56,7 @@ contract eBlocBroker {
     }
 
     // Following function is executed at initialization. It sets contract's deployed block number and the owner of the contract.
-    function eBlocBroker() public // constructor() public
+    function eBlocBroker() public //constructor() public
     {
 	deployedBlockNumber = block.number;
 	owner = msg.sender; /* Owner of the smart contract */
