@@ -188,3 +188,7 @@ orcid\.out
 screenlog\.0
 
 \.Python
+
+\._Driver\.py
+
+\._\.DS_Store
