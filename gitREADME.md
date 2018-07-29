@@ -1,12 +1,12 @@
 # Git Guide
 
-# Git Pull
+## Git Pull
 
-```
+```  Update git repository with the origin/master
 git fetch --all && git reset --hard origin/master
 ```
 
-# How to save username and password in git
+## How to save username and password in git
 
 ```
 git config credential.helper store
