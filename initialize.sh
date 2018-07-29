@@ -1,60 +1,51 @@
 #!/bin/bash
 
-# Update git repository
-# git fetch --all && git reset --hard origin/master
-
+preInstall=0;
 newRpcPort="8545"; # Please change if you have different RPC_PORT number
-# pre-installation:-----------------------------------------
 
-## Python3 setup, required for all clusters! ========================================================
-# sudo apt-get install python3-dev
-# sudo apt-get install python3-venv
-# python3 -m venv venv
-# . venv/bin/activate
-# pip install web3==4.4.1 # pip install --upgrade web3
-# pip install colored
-# pip install pyocclient==0.4
+# Pre-installation:-----------------------------------------
+if [ $preInstall -eq 1 ]; then
+    ## Python3 setup, required for all clusters! ========================================================
+    sudo apt-get install python3-dev
+    sudo apt-get install python3-venv
+    python3 -m venv venv
+    . venv/bin/activate
+    pip install web3==4.4.1 # pip install --upgrade web3
+    pip install colored
+    pip install pyocclient==0.4
+    pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
+    pip install --pre --upgrade web3
+    pip install sphinx_rtd_theme
 
-# pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-# pip install --pre --upgrade web3
-# pip install sphinx_rtd_theme
+    ## NPM
+    wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
+    sudo npm install -g n # npm install --save
+    sudo n latest
+    npm install web3
+    npm install web3_ipc
 
-## npm
-# wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
-# sudo npm install -g n
-# sudo n latest
-# npm install web3
-# npm install web3_ipc
-#--------------------------
-## Python 3.5.2 # not-nessesary.
-# cd /usr/src
-# sudo curl -O https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tgz
-# sudo tar xzf Python-3.5.2.tgz
-# cd Python-3.5.2
-# sudo ./configure --enable-optimizations
-# sudo make altinstall
+    #==================================================================================================
+    ## Linux Packages
+    sudo apt-get install davfs2 mailutils
+    sudo apt-get install python-psutil
+    sudo apt-get install -y nodejs
+    sudo apt-get install munge
+    sudo apt-get install bc
+    #--------------------------
 
-#==================================================================================================
-## Linux Packages
-# sudo apt-get install davfs2 mailutils
-# sudo apt-get install python-psutil
-# sudo apt-get install -y nodejs
-# sudo apt-get install munge
-# sudo apt-get install bc
-#--------------------------
-## gdrive install:
-# go get github.com/prasmussen/gdrive
-# gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
-# echo 'export PATH=$PATH:'$(echo $gopath)'/bin' >> $HOME/.profile
-# source $HOME/.profile
-# gdrive about
-# echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
+    ## gdrive install:
+    go get github.com/prasmussen/gdrive
+    gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
+    echo 'export PATH=$PATH:'$(echo $gopath)'/bin' >> $HOME/.profile
+    source $HOME/.profile
+    gdrive about
+    echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
+fi
 
 # IPFS check
 # nc IP PORT
 # Should return: /multistream/1.0.0
 
-# npm install --save
 #======================================================================
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set";

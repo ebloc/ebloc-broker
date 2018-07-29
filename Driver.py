@@ -5,18 +5,18 @@ import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
 import hashlib
-import sys
+import sys,signal
 
 sys.path.insert(0, 'contractCalls')
 import LogJob
 os.chdir('..');
 
-'''
+
 # Running driverCancel.py on the background
 if int(os.popen("ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l").read().rstrip('\n')) == 0:
-   subprocess.Popen(["python3","driverCancel.py"]);
-'''
+   pro = subprocess.Popen(["python3","driverCancel.py"]);
 
+   
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
@@ -29,6 +29,11 @@ os.environ['programPath']      = constants.PROGRAM_PATH;
 
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
+
+def termiante(): #{
+   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the signal to all the process groups   
+   terminate();
+#}
 
 def log(strIn, color=''): #{
    if color != '':
@@ -72,7 +77,7 @@ def isGethOn(): #{
    check = os.popen("ps aux | grep [g]eth | grep " + str(constants.RPC_PORT) + "| wc -l").read().rstrip('\n');
    if int(check) == 0:
       log("Geth is not running on the background.", 'red');
-      sys.exit();      
+      terminate();      
 #}
 
 # checks: does Driver.py runs on the background
@@ -80,7 +85,7 @@ def isDriverOn(): #{
    check = os.popen("ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l").read().rstrip('\n');
    if int(check) > 1:
       log("Driver is already running.", 'green');
-      sys.exit();
+      terminate();
 #}
 
 # checks whether  Slurm runs on the background or not
@@ -90,14 +95,14 @@ def isSlurmOn(): #{
    if not "PARTITION" in str(check): #{
       log("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "red");      
       log('Error Message: \n' + check, "red");
-      sys.exit();
+      terminate();
    #}   
    if "sinfo: error" in str(check): #{
       log("Error on munged: \n" + check);
       log("Please Do:\n");
       log("sudo munged -f");
       log("/etc/init.d/munge start");
-      sys.exit();
+      terminate();
    #}
 #}
 
@@ -105,7 +110,7 @@ yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '': #{
    print(stylize('Once please run:  bash initialize.sh \n', fg('red')));
-   sys.exit();
+   terminate();
 #}
 
 isDriverOn();
@@ -115,7 +120,7 @@ isGethOn();
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
 if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red');
-   sys.exit();
+   terminate();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
 log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
@@ -136,7 +141,7 @@ if "false" in isClusterExist.lower(): #{
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
                  "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')));
-   sys.exit();
+   terminate();
 #}
 
 deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
@@ -166,7 +171,7 @@ if not blockReadFromLocal.isdigit(): #{
          log("\n")
          break;
       elif choice in no:
-         sys.exit()
+         terminate()
       else:
          sys.stdout.write("Please respond with 'yes' or 'no'");
    #}
@@ -186,7 +191,7 @@ os.system('rm -f $logPath/queuedJobs.txt && rm -f $jobsReadFromPath'); # Remove 
 while True: #{    
     if "Error" in blockReadFrom:
        log(blockReadFrom);
-       sys.exit();
+       terminate();
 
     clusterGainedAmount = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterAddress').read().rstrip('\n');    
     squeueStatus        = os.popen("squeue").read();
@@ -194,7 +199,7 @@ while True: #{
     if "squeue: error:" in str(squeueStatus): #{
        log("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n");
        log(squeueStatus);
-       sys.exit();
+       terminate();
     #}
     idleCoreNumber();
     
@@ -213,19 +218,12 @@ while True: #{
        currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
     #}
 
-    log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);
-   
-    blockReadFrom = str(blockReadFrom) # Starting reading event's location has been updated
+    log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);   
+    blockReadFrom = str(blockReadFrom); # Starting reading event's location has been updated
     # blockReadFrom = 875683; 
     slurmPendingJobCheck()
     
-    # constants.contractCall('eBlocBroker.LogJob($blockReadFrom, \'$jobsReadFromPath\')'); # Waits here until new job submitted into the cluster #TODO: fix
-    # LogJobOut  = os.popen('$contractCallPath/LogJob.py $blockReadFrom $clusterAddress 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
-    #print(LogJobOut)    
-
-    loggedJobs = LogJob.run(blockReadFrom, clusterAddress)
-       
-    # print(loggedJobs)
+    loggedJobs = LogJob.run(blockReadFrom, clusterAddress)       
             
     print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
     maxVal               = 0;
@@ -317,6 +315,5 @@ while True: #{
        f_blockReadFrom.write(str(currentBlockNumber) + '\n');
        f_blockReadFrom.close();
        blockReadFrom = str(currentBlockNumber);
-    #}
     #}
 #}

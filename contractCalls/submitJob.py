@@ -56,16 +56,16 @@ if __name__ == '__main__': #{
     fromAccount = web3.toChecksumAddress(fromAccount);
 
     blockReadFrom, orcid = eBlocBroker.functions.getUserInfo(fromAccount).call();
-    if str(eBlocBroker.functions.isOrcIdVerified(orcid).call()) == '0':
+    if str(eBlocBroker.functions.isOrcIdVerified(orcid).call()) == '0': #{
        print('User\'s orcid: ' + orcid + ' is not verified.')
        sys.exit()
+    #}
     
     if not eBlocBroker.functions.isUserExist(fromAccount).call(): #{
        print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
        sys.exit();
     #}
 
-    '''
     if storageID == 0 or storageID == 2: #{
        isIpfsOn(); # uncomment for experiments.
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
@@ -74,7 +74,6 @@ if __name__ == '__main__': #{
        if 'success' in output:
           print(output)
     #}
-    '''
     
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
     msgValue      = coreNum * pricePerMin * coreMinuteGas;
