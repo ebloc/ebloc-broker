@@ -5,18 +5,16 @@ import sys, os, time, subprocess, string, driverFunc, constants, _thread
 from colored import stylize
 from colored import fg
 import hashlib
-import sys,signal
+import sys, signal
 
 sys.path.insert(0, 'contractCalls')
 import LogJob
 os.chdir('..');
 
-
 # Running driverCancel.py on the background
 if int(os.popen("ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l").read().rstrip('\n')) == 0:
    pro = subprocess.Popen(["python3","driverCancel.py"]);
 
-   
 # Paths ================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
@@ -30,9 +28,9 @@ os.environ['programPath']      = constants.PROGRAM_PATH;
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
 
-def termiante(): #{
-   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the signal to all the process groups   
-   terminate();
+def terminate(): #{
+   os.killpg(os.getpgid(pro.pid), signal.SIGTERM);  # Send the kill signal to all the process groups   
+   sys.exit();
 #}
 
 def log(strIn, color=''): #{
