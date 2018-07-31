@@ -14,9 +14,6 @@ IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs";
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker";    
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc";
 
-
-# PROGRAM_PATH                = LOG_PATH + "/ipfsHashes"; LOG_PATH + "/USERS";
-# PROGRAM_PATH                = LOG_PATH + "/USERS";
 PROGRAM_PATH                = '/var/eBlocBroker';
 
 IPFS_USE                    = 0;
