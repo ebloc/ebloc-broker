@@ -80,5 +80,6 @@ def contractCall(val): #{
       log("Error: Please run Parity or Geth on the background.", 'red')
       sys.exit();
    #}
+
    return ret;
 #}
