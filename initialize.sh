@@ -50,12 +50,12 @@ fi
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set";
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID # TODO check valid Ethereum address.
+    read clusterID 
     echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
 elif [[ -z "$COINBASE" ]]; then
     echo "COINBASE is set to the empty string"
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID # TODO check valid Ethereum address.
+    read clusterID 
     echo 'export COINBASE="'$clusterID'"' >>~/.profile   
 else
     echo "COINBASE is: $COINBASE"
@@ -88,10 +88,6 @@ fi
 if [ ! -d USERS ]; then
     mkdir -p USERS 
 fi
-
-#if [ ! -d ipfsHashes ]; then    # delete
-#    mkdir -p ipfsHashes         # delete
-#fi                              # delete
 
 touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
