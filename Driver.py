@@ -28,11 +28,6 @@ os.environ['programPath']      = constants.PROGRAM_PATH;
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;
 
-def terminate(): #{
-   os.killpg(os.getpgid(pro.pid), signal.SIGTERM);  # Send the kill signal to all the process groups   
-   sys.exit();
-#}
-
 def log(strIn, color=''): #{
    if color != '':
       print(stylize(strIn, fg(color)));
@@ -44,6 +39,14 @@ def log(strIn, color=''): #{
    txFile.close();   
 #}
 
+def terminate(): #{
+   log('Terminated')
+   os.popen("sudo bash killall.sh").read(); # Kill all dependent processes and exit.
+
+   # Following lines are added in case bash killall.sh does not work due to sudo:
+   os.killpg(os.getpgid(pro.pid), signal.SIGTERM);  # Send the kill signal to all the process groups
+   sys.exit();
+#}
 
 def idleCoreNumber(printFlag=1): #{
     coreInfo = os.popen('sinfo -h -o%C').read().rstrip('\n');
