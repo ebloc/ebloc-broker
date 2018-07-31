@@ -67,10 +67,10 @@ if __name__ == '__main__': #{
     #}
 
     if storageID == 0 or storageID == 2: #{
-       isIpfsOn(); # uncomment for experiments.
+       isIpfsOn(); 
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'];
        output = os.popen('ipfs swarm connect ' + strVal).read();
-       # print("Trying to connect into: " + strVal);
+       print("Trying to connect into: " + strVal);
        if 'success' in output:
           print(output)
     #}

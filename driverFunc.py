@@ -20,11 +20,10 @@ os.environ['contractCallPath'] = contractCallPath;
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['clusterID']        = constants.CLUSTER_ID
 
-#TODO: switch from rm -rf to os.remove()
 def silentremove(filename): #{
     try:
         os.remove(filename)
-    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+    except OSError as e: # This would be "except OSError, e:" before Python 2.6
        pass;
 #}
 
@@ -160,13 +159,11 @@ def driverGdriveCall(jobKey, index, storageID, userID): #{
 
       isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
       if int(isTarExist) > 0:         
-         log(os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read());
-         # os.popen("rm -f $resultsFolder/*.tar.gz").read(); # May delete anyother file ending with .tar.gz.
+         log(os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read()); # This may remove anyother file ending with .tar.gz.
 
       isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
       if int(isZipExist) > 0:
-         os.popen("unzip -j $resultsFolder/*.zip -d $resultsFolder").read();
-         # os.popen("rm -f $resultsFolder/*.zip").read(); # May delete anyother file ending with .tar.gz.
+         os.popen("unzip -j $resultsFolder/*.zip -d $resultsFolder").read(); # This may remove anyother file ending with .tar.gz.
    #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
        os.makedirs(resultsFolder, exist_ok=True); # Gets the source code     
@@ -272,16 +269,16 @@ def driverEudatCall(jobKey, index, fID, userID): #{
 
    isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0:
-      os.popen("bash $eblocPath/tar.sh $resultsFolder" ).read(); # Extracting all *.tar.gz files.
-      # os.popen("#!/bin/bash for a in $resultsFolder/*.tar.gz; do if [[ \"$a\" != result-* ]] ; then tar -xf \"$a\" -C $resultsFolder; fi done" ).read(); # Extracting all *.tar.gz files.
-      # os.popen("rm -f $resultsFolder/*.tar.gz").read(); #uncomment
+      os.popen("bash $eblocPath/tar.sh $resultsFolder" ).read(); # Extracting all *.tar.gz files.      
+      os.popen("rm -f $resultsFolder/*.tar.gz").read(); # Removing all tar.gz files after extraction is done.
 
    isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
-   if int(isTarExist) > 0:
+   if int(isTarExist) > 0: #{
       log(os.popen("" ).read());
       os.popen("unzip -jo $resultsFolderPrev/$jobKey -d $resultsFolder").read();
       os.popen("rm -f $resultsFolder/*.zip").read();
-
+   #}
+   
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
    sbatchCall();
 #}
