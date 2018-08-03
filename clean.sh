@@ -13,7 +13,6 @@ rm -rf docs/_build
 rm -rf contractCalls/__pycache__/
 rm -f  contractCalls/*.*~
 rm -f  contractCalls/nohup.out
-rm -f *.pyc
 rm -f checkSinfoOut.txt
 rm -f .node-xmlhttprequest*
 rm -f *.*~
@@ -24,6 +23,6 @@ rm -f ./docs/solidity_lexer.pyc
 rm -f ipfs.out
 rm -f modifiedDate.txt
 rm -f \#*
-
+find . -name '*.pyc' -delete
 
 
