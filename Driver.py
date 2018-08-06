@@ -94,7 +94,7 @@ def isSlurmOn(): #{
    os.system("bash checkSinfo.sh")  
    check = os.popen("cat $logPath/checkSinfoOut.txt").read();
    if not "PARTITION" in str(check): #{
-      log("Error: sinfo returns emprty string, please run:\nsudo bash runSlurm.sh\n", "red");      
+      log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red");      
       log('Error Message: \n' + check, "red");
       terminate();
    #}   
@@ -119,13 +119,16 @@ isSlurmOn();
 isGethOn();
    
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
-if 'False' in isContractExist:
+if 'False' in isContractExist: #{
    log('Please check that you are using eBloc blockchain.', 'red');
    terminate();
+#}
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
-log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
+log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read(.rstrip('\n'))
 log('rootdir: ' + os.getcwd());
+log('Contract Address: ' + os.popen('cat contractCalls/address.json').read().rstrip('\n'));
+
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
