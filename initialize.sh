@@ -1,7 +1,7 @@
 #!/bin/bash
 
 preInstall=0;
-newRpcPort="8545"; # Please change if you have different RPC_PORT number
+newRpcPort="8546"; # Please change it if you have different RPC_PORT number.
 
 # Pre-installation:-----------------------------------------
 if [ $preInstall -eq 1 ]; then
@@ -17,7 +17,7 @@ if [ $preInstall -eq 1 ]; then
     pip install --pre --upgrade web3
     pip install sphinx_rtd_theme
 
-    ## NPM
+    ## npm
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
     sudo n latest
@@ -31,9 +31,8 @@ if [ $preInstall -eq 1 ]; then
     sudo apt-get install -y nodejs
     sudo apt-get install munge
     sudo apt-get install bc
-    #--------------------------
 
-    ## gdrive install:
+    ## Install google-drive:
     go get github.com/prasmussen/gdrive
     gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
     echo 'export PATH=$PATH:'$(echo $gopath)'/bin' >> $HOME/.profile
@@ -60,8 +59,7 @@ elif [[ -z "$COINBASE" ]]; then
 else
     echo "COINBASE is: \"$COINBASE\""
     check=$(python contractCalls/isAddress.py $COINBASE);
-    str2="True"
-    if [ "$check" != "$str2" ]; then
+    if [ "$check" != "True" ]; then
        echo "Ethereum address is not valid, please use a valid one.";
        exit
     fi

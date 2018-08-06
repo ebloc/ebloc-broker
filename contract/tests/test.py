@@ -161,5 +161,4 @@ def test_receipt(web3, accounts, chain): #{
         print(my_contract.call().getClusterReceiptNode(account, i));
 
     print("END");
-    print(".");
 #}
