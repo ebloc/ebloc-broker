@@ -1,5 +1,6 @@
 pragma solidity ^0.4.17;
 
+// GitHub Commit Hash: 
 library Lib {
 
     /* Submitted Job's information */
