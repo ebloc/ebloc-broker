@@ -110,7 +110,7 @@ def isSlurmOn(): #{
 yes = set(['yes', 'y', 'ye']);
 no  = set(['no' , 'n']);
 if constants.WHOAMI == '' or constants.EBLOCPATH == '' or constants.CLUSTER_ID == '': #{
-   print(stylize('Once please run:  bash initialize.sh \n', fg('red')));
+   print(stylize('Once please run:  ./initialize.sh \n', fg('red')));
    terminate();
 #}
 
@@ -119,15 +119,14 @@ isSlurmOn();
 isGethOn();
    
 isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
-if 'False' in isContractExist: #{
+if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red');
    terminate();
-#}
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
-log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read(.rstrip('\n'))
+log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
 log('rootdir: ' + os.getcwd());
-log('Contract Address: ' + os.popen('cat contractCalls/address.json').read().rstrip('\n'));
+log('{0: <20}'.format('contractAddress:') + "\"" + os.popen('cat contractCalls/address.json').read().rstrip('\n') + "\"", "yellow");
 
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
@@ -151,7 +150,7 @@ if "false" in isClusterExist.lower(): #{
 deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
 blockReadFromContract = str(0);
 
-log('{0: <21}'.format('clusterAddress:') +  clusterAddress, "yellow")
+log('{0: <20}'.format('clusterAddress:') + "\"" + clusterAddress + "\"", "yellow");
 if not os.path.isfile(constants.BLOCK_READ_FROM_FILE): #{
    f = open(constants.BLOCK_READ_FROM_FILE, 'w')
    f.write(deployedBlockNumber + "\n")
@@ -201,7 +200,7 @@ while True: #{
     squeueStatus        = os.popen("squeue").read();
 
     if "squeue: error:" in str(squeueStatus): #{
-       log("SLURM is not running on the background, please run \'sudo bash runSlurm.sh\'. \n");
+       log("SLURM is not running on the background, please run \'sudo ./runSlurm.sh\'. \n");
        log(squeueStatus);
        terminate();
     #}
