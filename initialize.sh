@@ -58,9 +58,9 @@ elif [[ -z "$COINBASE" ]]; then
     read clusterID 
     echo 'export COINBASE="'$clusterID'"' >>~/.profile   
 else
-    echo "COINBASE is: $COINBASE"
-    check=$(node contractCalls/isAddress.js $COINBASE);
-    str2="true"
+    echo "COINBASE is: \"$COINBASE\""
+    check=$(python contractCalls/isAddress.py $COINBASE);
+    str2="True"
     if [ "$check" != "$str2" ]; then
        echo "Ethereum address is not valid, please use a valid one.";
        exit
