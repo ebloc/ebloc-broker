@@ -9,19 +9,19 @@ def log(strIn, path): #{
 #}
 
 def testFunc(path, readTest, workloadTest, testType, clusterID): #{
-  os.environ['clusterID']     = clusterID;
-
   ipfsHashNo = {} #create a dictionary called ipfsHashNo
+  os.environ['clusterID']     = clusterID;
   lineNumCounter = 0;
-  with open(path + '/' + readTest) as test:
-      for line in test:
+  with open(path + '/' + readTest) as test: #{
+      for line in test: #{
           ipfsHashNo[lineNumCounter] = line.rstrip(); # Assign value to key counter.
           lineNumCounter += 1
-
-  f       = open(path + "/" + workloadTest); #put fixed file name.
-  line1   = f.readline();
-  line1_in = line1.split(" ")
-
+      #}
+  #}
+  
+  f            = open(path + "/" + workloadTest); #put fixed file name.
+  line1        = f.readline();
+  line1_in     = line1.split(" ")
   counter      = 0;
   printCounter = counter;
   skippedLines = 0;
@@ -79,17 +79,16 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
               log("RunTimeInMinutes: " + '360', path)
               os.environ['runTime']   = "360" # 6 hours for nasEUDAT simulation test.
            
-           log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core: " + ipfsHash[2], path)
+           accountID = randint(0, 9);
+           accountID = str(accountID);
+           os.environ['accountID'] = accountID;
 
-           account_id = randint(2,11);
-           account_id = str(account_id);
-           os.environ['accountID'] = account_id;
-           # log(os.popen('echo /home/prc/eBlocBroker/contractCalls/submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n'), path);          
+           log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core: " + ipfsHash[2] + "| accountID: " + accountID, path)
            tx = os.popen('python /home/prc/eBlocBroker/contractCalls/submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n');
            log(tx, path)
 
            txFile     = open(path + '/' + clusterID + '.txt', 'a');
-           txFile.write(tx + " " + account_id + "\n");
+           txFile.write(tx + " " + accountID + "\n");
            txFile.close();
 
            sleepSeconds = int(sleepTime);
