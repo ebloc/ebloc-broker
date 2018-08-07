@@ -90,11 +90,6 @@ exports.highestBlock = function() {
     return sync.highestBlock;
 };
 
-exports.receiptCheck = function(var1, var2, var3, var4, var5, var6) {
-    hash = myContractInstance.receiptCheck(var1, var2, var3, var4, var5, var6, {from: web3.eth.defaultAccount, gas: gasLimit});
-    console.log(hash);
-};
-
 exports.LogJob = function(var1, myPath) {
     var path  = require('path');     
     var fs    = require('fs');
