@@ -25,11 +25,12 @@ def receiptCheckTx(jobKey, index): #{
    os.environ['endTimeStamp'] = endTimeStamp;
    log("endTimeStamp: " + endTimeStamp);
      
-   txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
-
+   txHash = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/receiptCheck.py $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp  2>/dev/null').read().rstrip('\n');   
    while txHash == "notconnected" or txHash == "": #{
-      log("Error: Please run Parity or Geth on the background.", 'red')
-      txHash = os.popen('node $eblocPath/eBlocBrokerNodeCall.js receiptCheck $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n').replace(" ", ""); 
+      log("Error: Please run geth on the background.", 'red')
+      print(os.popen('echo $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp').read().rstrip('\n'));
+
+      txHash = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/receiptCheck.py $jobKey $index $elapsedRawTime $newHash $storageID $endTimeStamp  2>/dev/null').read().rstrip('\n');
       time.sleep(5);
    #}
    
@@ -82,7 +83,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
       log('jobInfo: ' + jobInfo);
       log(os.popen('echo $contractCallPath/getJobInfo.py $clusterID $jobKey $index').read().rstrip('\n'));
-      log("Error: Please run Parity or Geth on the background.", 'red')
+      log("Error: Please run geth on the background.", 'red')
       jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       time.sleep(5)
    #}
@@ -158,7 +159,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
       jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
       while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
-         log("Error: Please run Parity or Geth on the background.", 'red')
+         log("Error: Please run geth on the background.", 'red')
          jobInfo = os.popen('. $eblocPath/venv/bin/activate && $eblocPath/venv/bin/python3 $contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
          time.sleep(5)
       #}      
@@ -193,7 +194,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       os.environ['newHash'] = newHash;
       log("newHash: " + newHash);       
    #}
-
    if str(storageID) == '2': #{ IPFS & miniLock
       os.chdir(resultsFolder);
       log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result.tar.gz *').read());
@@ -259,8 +259,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       if '<d:error' in res:
          log('EUDAT repository did not successfully loaded.', 'red')
          sys.exit();      
-   #}
-   
+   #}   
    elif str(storageID) == '4': #{ #GDRIVE
       os.environ['newHash'] = "0x00";
       
