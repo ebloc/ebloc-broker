@@ -20,9 +20,7 @@ rm -f modifiedDate.txt
 rm -f \#*
 rm -f package-lock.json
 
-rm -rf contract/tests/__pycache__/
-rm -rf contractCalls/__pycache__/
+find . -name __pycache__ -type d -exec rm -rf {} +
 rm -rf docs/_build_html/
-rm -rf docs/__pycache__/
 rm -rf __pycache__/
 rm -rf docs/_build/

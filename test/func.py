@@ -1,11 +1,12 @@
 import os, time, math, random, sys
 from random import randint
 
-def log(strIn, path):
+def log(strIn, path): #{
    print( strIn )
    txFile     = open(path + '/clientOutput.txt', 'a'); 
    txFile.write( strIn + "\n" ); 
    txFile.close();
+#}
 
 def testFunc(path, readTest, workloadTest, testType, clusterID): #{
   os.environ['clusterID']     = clusterID;
@@ -25,7 +26,6 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
   printCounter = counter;
   skippedLines = 0;
 
-
   while True: #{
     if counter >= 0:
         if counter >= (len(ipfsHashNo)-1):
@@ -38,11 +38,11 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
         if str(ipfsHash[1]) != '0' and (line2_splitted[0] != line2_splitted[1]) and (int(ipfsHash[2]) != 0): # Requested core shouldn't be 0.
            if not line2:
-              break  # EOF
+              break;  # EOF
            line2_in = line2.split(" ")
            sleepTime = str(int(line2_in[0]) -  int(line1_in[0])); # time to sleep in seconds
 
-           blockNumber = os.popen('python /home/prc/eBlocBroker/contractCalls/blockNumber.py').read().rstrip('\n');
+           blockNumber = os.popen('python $HOME/eBlocBroker/contractCalls/blockNumber.py').read().rstrip('\n');
            log("\n------------------------------------------", path)
            log("Job: " + str(counter-skippedLines) + "| Current Time: " + time.ctime() +"| BlockNumber: " + blockNumber, path);
            log("Nasa Submit range: " + line2_splitted[0] + " " + line2_splitted[1], path)

@@ -1,6 +1,5 @@
 pragma solidity ^0.4.17;
 
-// GitHub Commit Hash: 98f612a915bcc368af2a7c42dfa83878d735b924 20a9520e8d281ae3e73a586d4f8b79797875f028
 library Lib {
 
     /* Submitted Job's information */
