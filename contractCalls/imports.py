@@ -3,9 +3,12 @@
 import os, json, sys, time
 from web3 import Web3
 from web3.providers.rpc import HTTPProvider
-from web3 import Web3, IPCProvider 
+from web3 import Web3, IPCProvider
+from os.path import expanduser
 sys.path.insert(1, os.path.join(sys.path[0], '..')); import constants
 os.chdir(sys.path[0]);
+
+home = expanduser("~");
 
 if constants.POA_CHAIN == 0:
     # Note that you should create only one RPCProvider per process,
@@ -13,7 +16,7 @@ if constants.POA_CHAIN == 0:
     # your process and Ethereum node
     web3 = Web3(HTTPProvider('http://localhost:' + str(constants.RPC_PORT)))
 else: #{
-    web3 = Web3(IPCProvider('/home/alper/eblocPOA/private/geth.ipc'));
+    web3 = Web3(IPCProvider(home + '/eblocPOA/private/geth.ipc'));
     from web3.middleware import geth_poa_middleware
     # inject the poa compatibility middleware to the innermost layer
     web3.middleware_stack.inject(geth_poa_middleware, layer=0)

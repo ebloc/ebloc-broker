@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17; import "./Lib.sol";
 
-// GitHub Commit Hash: 2c60cb2fc48ec01f5fc5e50c2ba475e67b7a3888 98f612a915bcc368af2a7c42dfa83878d735b924
+// Contract Address: 0x611dc53934550684825f3477ecb68029b1b908f3
 contract eBlocBroker {
 
     uint    deployedBlockNumber; /* The block number that was obtained when contract is deployed */

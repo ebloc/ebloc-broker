@@ -48,7 +48,7 @@ if __name__ == '__main__': #{
     #}
     
     if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): #{
-       print("Requested cluster's Ethereum Address (" + clusterAddress + ") does not exist.")
+       print("Requested cluster's Ethereum Address \"" + clusterAddress + "\" does not exist.")
        sys.exit();
     #}
     
@@ -56,15 +56,15 @@ if __name__ == '__main__': #{
     fromAccount = web3.toChecksumAddress(fromAccount);
 
     blockReadFrom, orcid = eBlocBroker.functions.getUserInfo(fromAccount).call();
+    if not eBlocBroker.functions.isUserExist(fromAccount).call(): #{
+       print("Requested user's Ethereum Address \"" + fromAccount + "\" does not exist.")
+       sys.exit();
+    #}
+
     if str(eBlocBroker.functions.isOrcIdVerified(orcid).call()) == '0': #{
        print('User\'s orcid: ' + orcid + ' is not verified.')
        sys.exit()
-    #}
-    
-    if not eBlocBroker.functions.isUserExist(fromAccount).call(): #{
-       print("Requested user's Ethereum Address (" + fromAccount + ") does not exist.")
-       sys.exit();
-    #}
+    #}    
 
     if storageID == 0 or storageID == 2: #{
        isIpfsOn(); 
