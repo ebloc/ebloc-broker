@@ -16,7 +16,6 @@ indexGlobal  = "";
 contractCallPath = constants.EBLOCPATH + '/contractCalls';
 ipfsHashes       = constants.PROGRAM_PATH;
 # ========================================================
-
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['clusterID']        = constants.CLUSTER_ID
@@ -80,7 +79,11 @@ def isSlurmOn(): #{
       os.system("sudo bash runSlurm.sh");
 #}
 
-def sbatchCall(): #{
+def sbatchCall(userID, resultsFolder): #{
+   print('--------------------------------------------------------------------------------') #delete   
+   os.environ['userID'] = str(userID);
+   os.environ['resultsFolder'] = str(resultsFolder);
+   
    os.system('sudo chown -R $userID .'); # Give permission to user that will send jobs to Slurm.
    
    myDate = os.popen('LANG=en_us_88591 && date --date=\'1 seconds\' +"%b %d %k:%M:%S %Y"').read().rstrip('\n');
@@ -89,8 +92,9 @@ def sbatchCall(): #{
    txFile.write(myDate + '\n' );   
    txFile.close();
    time.sleep(0.25);
-
-   os.system("cp run.sh ${jobKey}*${index}*${storageID}*$shareToken.sh");
+   
+   os.system('sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh"');
+   # os.system("cp run.sh ${jobKey}*${index}*${storageID}*$shareToken.sh"); # delete
    
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');
@@ -105,7 +109,7 @@ def sbatchCall(): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sudo su - $userID -c "sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n');
+   jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n');
    jobId = jobId.split()[3];
    
    os.environ['jobId'] = jobId;
@@ -183,7 +187,7 @@ def driverGdriveCall(jobKey, index, storageID, userID): #{
 
    if os.path.isdir(resultsFolder): # Check before mv operation.
       os.chdir(resultsFolder);      # 'cd' into the working path and call sbatch from there
-      sbatchCall();    
+      sbatchCall(userID, resultsFolder);    
 #}
 
 def driverGithubCall(jobKey, index, storageID, userID): #{
@@ -206,13 +210,13 @@ def driverGithubCall(jobKey, index, storageID, userID): #{
  
    os.system("git clone https://github.com/$jobKeyGit.git $resultsFolder"); # Gets the source code
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
-   sbatchCall(); 
+   sbatchCall(userID, resultsFolder);   
 #}
 
 def driverEudatCall(jobKey, index, fID, userID): #{
    global jobKeyGlobal; jobKeyGlobal = jobKey
-   global indexGlobal;  indexGlobal  = index;
-
+   global indexGlobal;  indexGlobal  = index;   
+   
    log("key: "   + jobKey);
    log("index: " + index);
 
@@ -286,7 +290,7 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    #}
    
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
-   sbatchCall();
+   sbatchCall(userID, resultsFolder);
 #}
 
 def driverIpfsCall(jobKey, index, storageID, userID): #{
@@ -337,8 +341,8 @@ def driverIpfsCall(jobKey, index, storageID, userID): #{
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red'); # IPFS file could not be accessed
        return;
-    #}    
-    sbatchCall();
+    #}
+    sbatchCall(userID, resultsFolder);
 #}
 
 # To test driverFunc.py executed as script.

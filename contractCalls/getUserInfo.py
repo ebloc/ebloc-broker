@@ -6,11 +6,9 @@ if __name__ == '__main__': #{
     if len(sys.argv) == 3:
         userAddress = str(sys.argv[1]);
         printType   = str(sys.argv[2]);
-        requestType = 'nil'        
     else:
         userAddress = "0x82f0d257a9832fa1381881b8dce2d2e6aebc8251";
         printType   = '0';
-        requestType = 'nil';        
 
     userAddress = web3.toChecksumAddress(userAddress);
     

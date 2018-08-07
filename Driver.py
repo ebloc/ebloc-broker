@@ -223,7 +223,7 @@ while True: #{
 
     log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);   
     blockReadFrom = str(blockReadFrom); # Starting reading event's location has been updated
-    # blockReadFrom = 875683; 
+    # blockReadFrom = 945140; # delete for test purposes
     slurmPendingJobCheck()
     
     loggedJobs = LogJob.run(blockReadFrom, clusterAddress)       
@@ -260,10 +260,8 @@ while True: #{
 
           userID = jobInfo[6].replace("u'", "").replace("'", "");
           os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
-
-          isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');             
-          userInfo    = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
-          userInfo    = userInfo.split(',');            
+          
+          isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');  
 
           if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
              log("Job is already completed.", 'red');
@@ -274,13 +272,16 @@ while True: #{
           if runFlag == 0 and not jobInfo[0] == str(constants.job_state_code['PENDING']):
              log("Job is already captured and in process or completed.", 'red');
              runFlag = 1;
-          if "false" in isUserExist.lower(): 
-             log('jobOwner is not registered', 'red');
-             runFlag = 1;
           if 'False' in strCheck:
              log('Filename contains invalid character', 'red');
              runFlag = 1;
-
+          if "false" in isUserExist.lower(): 
+             log('jobOwner is not registered', 'red');
+             runFlag = 1;
+          else:
+             userInfo    = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
+             userInfo    = userInfo.split(',');
+             
           slurmPendingJobCheck()
           print(os.popen('sudo bash user.sh $userID $programPath').read()); # Create user and its work directory.
        #}
@@ -291,7 +292,7 @@ while True: #{
           log("New job has been received. IPFS call |" + time.ctime(), "green")
           driverFunc.driverIpfsCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest()); 
        elif str(loggedJobs[i].args['storageID']) == '1':
-          log("New job has been received. EUDAT call |" + time.ctime(), "green");
+          log("New job has been received. EUDAT call |" + time.ctime(), "green");          
           driverFunc.driverEudatCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4], hashlib.md5(userID.encode('utf-8')).hexdigest());
           #thread.start_new_thread(driverFunc.driverEudatCall, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
