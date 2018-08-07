@@ -28,10 +28,10 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
   while True: #{
     if counter >= 0:
-        if counter >= (len(ipfsHashNo)-1):
+        if counter >= (len(ipfsHashNo)-1): #{
            log("Exceed hashOutput.txt's limit Total item number: " + str(len(ipfsHashNo)), path)
            break;
-
+        #}
         line2          = f.readline();
         line2_splitted = line2.split(" ")
         ipfsHash = ipfsHashNo[counter].split(" ");
@@ -84,6 +84,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
            os.environ['accountID'] = accountID;
 
            log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core: " + ipfsHash[2] + "| accountID: " + accountID, path)
+           # print(os.popen('echo submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n'));
            tx = os.popen('python /home/prc/eBlocBroker/contractCalls/submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n');
            log(tx, path)
 
