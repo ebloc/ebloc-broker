@@ -192,3 +192,5 @@ screenlog\.0
 \._Driver\.py
 
 \._\.DS_Store
+
+generateTest/nasEudat/password\.txt
