@@ -169,8 +169,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    
    log("jobName: " + str(folderName));
    
-   os.system('scontrol show job $jobID > $resultsFolder/slurmJob_$jobID_info.out');
-      
+   os.system('scontrol show job $jobID > $resultsFolder/slurmJobInfo.out');
+   
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
       newHash = os.popen('ipfs add -r $resultsFolder').read(); # Upload as folder.      
