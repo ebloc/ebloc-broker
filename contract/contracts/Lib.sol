@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-// GitHub Commit Hash: 
+// GitHub Commit Hash: 98f612a915bcc368af2a7c42dfa83878d735b924 20a9520e8d281ae3e73a586d4f8b79797875f028
 library Lib {
 
     /* Submitted Job's information */
@@ -17,12 +17,12 @@ library Lib {
 	uint32            core; /* Requested core by the client */
     }
 
-    /* Registered user's information -----------*/
+    /* Registered user's information */
     struct userData {
 	uint     blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
 	string   orcid; /* User's orcid */
     }
-    //-------------------------
+
     /* Registered cluster's information */
     struct clusterData {
 	//bool               isExist; /* Flag that checks is Cluster exists or not */
@@ -49,7 +49,7 @@ library Lib {
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
 
-    /* Invoked, when cluster calls updateCluster */
+    /* Invoked, when cluster calls updateCluster() function */
     function update(clusterData storage self, uint price, uint32 coreNumber) public
     {
 	self.coreMinutePrice        = price;

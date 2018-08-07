@@ -4,28 +4,30 @@
 
 ## Terminal
 
+### Linux
 ```
-mkdir -p ~/myContract
-cp $HOME/eBlocBroker/contract/contracts/* ~/myContract
-sed -i 's/\/\*emit\*\//emit/g'           ~/myContract/eBlocBroker.sol    
-sed -i 's/function eBlocBroker()/constructor()/g' ~/myContract/eBlocBroker.sol
-cat ~/myContract/Lib.sol > ~/myContract/e.sol && tail -n+3 ~/myContract/eBlocBroker.sol >> ~/myContract/e.sol && cd ~/myContract
-rm -f ~/myContract/e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > ~/myContract/e.js
-bash ../eblocPOA/client.sh
+mkdir -p $HOME/myContract
+cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
+sed -i 's/\/\*emit\*\//emit/g'           $HOME/myContract/eBlocBroker.sol
+sed -i 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
+cat $HOME/myContract/Lib.sol > $HOME/myContract/e.sol && tail -n+3 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol && cd $HOME/myContract
+rm -f $HOME/myContract/e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > $HOME/myContract/e.js
+bash $HOME/eblocPOA/client.sh
 ```
 
 ### MAC
 ```
-mkdir -p ~/myContract
-cp $HOME/eBlocBroker/contract/contracts/* ~/myContract
-sed -i '.original' 's/\/\*emit\*\//emit/g'           ~/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
-sed -i '.original' 's/function eBlocBroker()/constructor()/g' ~/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
+mkdir -p $HOME/myContract
+cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
+sed -i '.original' 's/\/\*emit\*\//emit/g'           $HOME/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
+sed -i '.original' 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
 ```
- 
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 ## Geth-Console
 
 ```
-
 loadScript("e.js")
 var myLinkedListLib = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:Lib"].abi))
 
@@ -45,11 +47,15 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
                   console.log('*** eBlocBroker mined! address: ' + contract.address + ' transactionHash: ' + contract.transactionHash);
               }
            }
-        );		 
+        );
     }
   }
 );
 
 testOutput.contracts["e.sol:eBlocBroker"].abi
 
+```
+
+```
+$HOME/eBlocBroker/contractCalls/fixAbi.sh
 ```
