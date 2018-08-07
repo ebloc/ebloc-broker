@@ -15,7 +15,7 @@ os.chdir('..');
 if int(os.popen("ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l").read().rstrip('\n')) == 0:
    pro = subprocess.Popen(["python3","driverCancel.py"]);
 
-# Paths ================================================================
+# Paths =================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
 os.environ['jobsReadFromPath'] = jobsReadFromPath
 contractCallPath               = constants.EBLOCPATH + '/contractCalls';
@@ -23,7 +23,7 @@ os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['logPath']          = constants.LOG_PATH;
 os.environ['programPath']      = constants.PROGRAM_PATH;
-# ======================================================================
+# =======================================================================
 
 #rows, columns = os.popen('stty size', 'r').read().split();
 columns = 100;

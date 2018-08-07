@@ -63,10 +63,10 @@ contract eBlocBroker {
 	owner = msg.sender; /* Owner of the smart contract */
     }
 
-    /* cancelRefund() function refunds the complete amount to client if requested job is still in the pending state or
-    is not completed one hour after its required time.
-    If the job is in the running state, it triggers LogCancelRefund event on the blockchain, which will be caught by the cluster in
-    order to cancel the job. */
+    /* Refund funds the complete amount to client if requested job is still in the pending state or
+       is not completed one hour after its required time.
+       If the job is in the running state, it triggers LogCancelRefund event on the blockchain, which will be caught by the cluster in
+       order to cancel the job. */
     function cancelRefund(address clusterAddress, string jobKey, uint32 index) public returns (bool)
     {
 	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index'
@@ -81,18 +81,18 @@ contract eBlocBroker {
 	    {
 		msg.sender.transfer(job.received);
 		job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
-		/*emit*/ LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
+		/*emit*/ LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
 		return true;
 	    }
 	else if (job.status == uint8(jobStateCodes.RUNNING)){
-	    /*emit*/ LogCancelRefund(clusterAddress, jobKey, index);   /* scancel log */
+	    /*emit*/ LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
 	    return true;
 	}
 	else
 	    revert();
     }
 
-    /* receiptCheck function is a general-purpose mechanism for performing payment withdrawal
+    /* Following function is a general-purpose mechanism for performing payment withdrawal
        by the cluster provider and paying of unused core usage cost back to the client
     */
     function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash, uint8 storageID, uint endTime)
@@ -124,7 +124,7 @@ contract eBlocBroker {
 	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwned - amountToGain), block.timestamp, resultIpfsHash, storageID);
 	return true;
     }
-    /* registerUser function registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
+    /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
     function registerUser(string userEmail, string fID, string miniLockID, string ipfsAddress, string orcid, string githubUserName)
 	public returns (bool success)
     {
@@ -142,7 +142,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    /* registerCluster function registers a provider's (msg.sender's) cluster to eBlocBroker. */
+    /* Registers a provider's (msg.sender's) cluster to eBlocBroker. */
     function registerCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID, uint coreMinutePrice, string ipfsAddress)
 	public returns (bool success)
     {
@@ -185,7 +185,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    /* submitJob function performs a job submission to eBlocBroker by a client. */
+    /* Performs a job submission to eBlocBroker by a client. */
     function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas, uint8 storageID)
 	coreMinuteGas_storageID_check(coreMinuteGas, storageID) isZero(core) public payable
 	returns (bool success)
@@ -193,10 +193,10 @@ contract eBlocBroker {
 	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 
 	if (!cluster.isRunning                                         ||
-	        msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||
+	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||
 	    bytes(jobKey).length > 255                                 || // Max length is 255, becuase it will used as a filename at cluster
 	    !isUserExist(msg.sender)                                   ||
-	        verifyOrcid[userContract[msg.sender].orcid] == 0           ||
+	    verifyOrcid[userContract[msg.sender].orcid] == 0           ||
 	    core > cluster.receiptList.coreNumber)
 	    revert();
 
@@ -215,7 +215,7 @@ contract eBlocBroker {
 	return true;
     }
 
-    /* setJobStatus function sets the job's state (stateID) which is obtained from Slurm. */
+    /* Sets the job's state (stateID) which is obtained from Slurm. */
     function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
 	stateID_check(stateID) returns (bool success)
     {
@@ -234,21 +234,21 @@ contract eBlocBroker {
     }
 
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
-    /* getClusterAddresses} contract call returns a list of registered cluster Ethereum addresses. */
+    /* Returns a list of registered cluster Ethereum addresses. */
     function getClusterAddresses() public view
 	returns (address[])
     {
 	return clusterAddresses;
     }
 
-    // isOrcIdVerified() function checks whether or not the given ORCID iD is already authenticated in eBlocBroker.
+    // Checks whether or not the given ORCID iD is already authenticated in eBlocBroker.
     function isOrcIdVerified(string orcid) public view
 	returns (uint32)
     {
 	return verifyOrcid[orcid];
     }
 
-    /* getUserInfo function returns the enrolled user's
+    /* Returns the enrolled user's
        block number of the enrolled user, which points to the block that logs \textit{LogUser} event.
        It takes Ethereum address of the user (userAddress), which can be obtained by calling LogUser event.
     */
@@ -259,7 +259,7 @@ contract eBlocBroker {
 	    return (userContract[userAddress].blockReadFrom, userContract[userAddress].orcid);
     }
 
-    /* getClusterInfo} function returns the registered cluster's information. It takes
+    /* Returns the registered cluster's information. It takes
        Ethereum address of the cluster (clusterAddress), which can be obtained by calling getClusterAddresses. */
     function getClusterInfo(address clusterAddress) public view
 	returns(uint, uint, uint)
@@ -270,7 +270,7 @@ contract eBlocBroker {
 	    return (0, 0, 0);
     }
 
-    // getClusterReceivedAmount() function returns cluster provider's earned mon\-ey amount in Wei.
+    // Returns cluster provider's earned mon\-ey amount in Wei.
     // It takes a cluster's Ethereum address (clusterAddress) as parameter.
     function getClusterReceivedAmount(address clusterAddress) public view
 	returns (uint)
@@ -287,7 +287,7 @@ contract eBlocBroker {
 	return clusterContract[clusterAddress].jobStatus[jobKey].length;
     }
 
-    // getJobInfo function returns various information about the submitted job such as the hash of output files generated by IPFS,
+    // Returns various information about the submitted job such as the hash of output files generated by IPFS,
     //   UNIX timestamp on job's start time, received Wei value from the client etc.
     function getJobInfo(address clusterAddress, string jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, uint, address)
@@ -297,21 +297,21 @@ contract eBlocBroker {
 	return (job.status, job.core, job.startTime, job.received, job.coreMinutePrice, job.coreMinuteGas, job.jobOwner);
     }
 
-    // getDeployedBlockNumber() function returns the contract's deployed block number.
+    // Returns the contract's deployed block number.
     function getDeployedBlockNumber() public view
 	returns (uint)
     {
 	return deployedBlockNumber;
     }
 
-    // getOwner() function returns the owner of the contract.
+    // Returns the owner of the contract.
     function getOwner() public view
 	returns (address)
     {
 	return owner;
     }
 
-    /* isClusterExist function checks whether or not the given Ethereum address of the provider (clusterAddress) is already registered in eBlocBroker. */
+    /* Checks whether or not the given Ethereum address of the provider (clusterAddress) is already registered in eBlocBroker. */
     function isClusterExist(address clusterAddress) public view
 	returns (bool)
     {
@@ -320,7 +320,7 @@ contract eBlocBroker {
 	return false;
     }
 
-    /* isUserExistfunction checks whether or not the given Ethereum address of the provider (userAddress) is already registered in eBlocBroker. */
+    /* Checks whether or not the given Ethereum address of the provider (userAddress) is already registered in eBlocBroker. */
     function isUserExist(address userAddress) public view
 	returns (bool)
     {
@@ -341,16 +341,16 @@ contract eBlocBroker {
 	return clusterContract[clusterAddress].receiptList.printIndex(index);
     }
 
-    /* -----------------------------------------------------EVENTS---------------------------------------------------------*/
-    /* LogJob event records the submitted jobs' information under submitJob() method call.*/
+    /* -----------------------------------------------------EVENTS---------------------------------------------------------*/    
+    /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
 		 string jobKey,
 		 uint index,
 		 uint8 storageID,
-		  string desc
+		 string desc
 		 );
 
-    /* LogReceipt event records the completed jobs' information under receiptCheck() method call.*/
+    /* Records the completed jobs' information under receiptCheck() method call.*/
     event LogReceipt(address clusterAddress,
 		     string jobKey,
 		     uint index,
@@ -359,39 +359,39 @@ contract eBlocBroker {
 		     uint returned,
 		     uint endTime,
 		     string resultIpfsHash,
-		          uint8 storageID
+		     uint8 storageID
 		     );
 
-    /* LogCluster event records the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
+    /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
     event LogCluster(address clusterAddress,
 		     uint32 coreNumber,
 		     string clusterEmail,
 		     string fID,
 		     string miniLockID,
 		     uint coreMinutePrice,
-		          string ipfsAddress
+		     string ipfsAddress
 		     );
 
-    /* LogUser event records the registered users' registered information under registerUser method call.*/
+    /* Records the registered users' registered information under registerUser method call.*/
     event LogUser(address userAddress,
 		  string userEmail,
 		  string fID,
 		  string miniLockID,
 		  string ipfsAddress,
 		  string orcid,
-		    string githubUserName
+		  string githubUserName
 		  );
 
-    /* LogRefund event records the refunded jobs' information under refund() method call. */
+    /* Records the refunded jobs' information under refund() method call. */
     event LogCancelRefund(address clusterAddress,
 			  string jobKey,
-			    uint32 index
+			  uint32 index
 			  );
 
-    /* LogSetJob event records the updated jobs' information under setJobStatus() method call. */
+    /* Records the updated jobs' information under setJobStatus() method call. */
     event LogSetJob(address clusterAddress,
 		    string jobKey,
 		    uint32 index,
-		        uint startTime
+		    uint startTime
 		    );
 }
