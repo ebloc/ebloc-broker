@@ -16,6 +16,7 @@ indexGlobal  = "";
 contractCallPath = constants.EBLOCPATH + '/contractCalls';
 ipfsHashes       = constants.PROGRAM_PATH;
 # ========================================================
+
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['clusterID']        = constants.CLUSTER_ID
@@ -151,9 +152,10 @@ def driverGdriveCall(jobKey, index, storageID, userID): #{
       #}      
       log(res);             
 
-      if not os.path.isdir(resultsFolderPrev + '/' + folderName): # Check before mv operation.
+      if not os.path.isdir(resultsFolderPrev + '/' + folderName): #{ Check before mv operation.
          log('Folder is not downloaded successfully.', 'red');
          return;
+      #}
       
       os.system("mv $resultsFolderPrev/$folderName $resultsFolder");
 
@@ -234,26 +236,29 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    log("finding_acceptId")
    acceptFlag      = 0;
    eudatFolderName = "";
-   for i in range(len(shareList)-1, -1, -1): # Starts iterating from last item  to first one
+   for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
       inputFolderName = shareList[i]['name']
       inputFolderName = inputFolderName[1:] # Removes '/' on the beginning
       inputId         = shareList[i]['id']
       inputOwner      = shareList[i]['owner']
       shareToken      = shareList[i]['share_token']
 
-      if (inputFolderName == jobKey) and (inputOwner == fID):
+      if (inputFolderName == jobKey) and (inputOwner == fID): #{
          log("InputId:_" + inputId + "_ShareToken:_" + shareToken)
          os.environ['shareToken']      = str(shareToken);
          os.environ['eudatFolderName'] = str(inputFolderName);
          eudatFolderName               = inputFolderName;
          acceptFlag = 1;
          break;
-
-   if acceptFlag == 0:
+      #}
+   #}
+   
+   if acceptFlag == 0: #{
       oc.logout();
       log("Couldn't find the shared file", 'red');
       return;
-
+   #}
+   
    if not os.path.isdir(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
       
@@ -268,10 +273,11 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    os.system("rm -f $resultsFolderPrev/output.zip");
 
    isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
-   if int(isTarExist) > 0:
+   if int(isTarExist) > 0: #{
       os.popen("bash $eblocPath/tar.sh $resultsFolder" ).read(); # Extracting all *.tar.gz files.      
       os.popen("rm -f $resultsFolder/*.tar.gz").read(); # Removing all tar.gz files after extraction is done.
-
+   #}
+   
    isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0: #{
       log(os.popen("" ).read());
@@ -315,9 +321,8 @@ def driverIpfsCall(jobKey, index, storageID, userID): #{
 
     log(isIPFSHashExist);
     
-    if "CumulativeSize" in isIPFSHashExist:
+    if "CumulativeSize" in isIPFSHashExist: #{
        os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder');
-
        if storageID == '2': #{ Case for the ipfsMiniLock
           os.environ['passW'] = 'bright wind east is pen be lazy usual';
           log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read());
@@ -325,13 +330,14 @@ def driverIpfsCall(jobKey, index, storageID, userID): #{
           os.system('rm -f $resultsFolder/$jobKey');
           os.system('tar -xf $resultsFolder/output.tar.gz && rm -f $resultsFolder/output.tar.gz');
        #}
-       if not os.path.isfile('run.sh'):
-          log("run.sh does not exist", 'red')
-          return
+       
+       if not os.path.isfile('run.sh'): 
+          log("run.sh does not exist", 'red');
+          return;
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red'); # IPFS file could not be accessed
        return;
-    
+    #}    
     sbatchCall();
 #}
 
