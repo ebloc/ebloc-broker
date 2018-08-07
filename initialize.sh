@@ -1,7 +1,7 @@
 #!/bin/bash
 
 preInstall=0;
-newRpcPort="8546"; # Please change it if you have different RPC_PORT number.
+newRpcPort="8545"; # Please change it if you have different RPC_PORT number.
 
 # Pre-installation:-----------------------------------------
 if [ $preInstall -eq 1 ]; then

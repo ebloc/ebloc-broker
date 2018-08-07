@@ -3,18 +3,19 @@
 # To Run:  sudo bash cleanForNewTest.sh|
 #---------------------------------------
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
+if [ "$EUID" -eq 0 ]
+  then echo "Please run without sudo keyword."
   exit
 fi
 
-rm -rf $HOME/.eBlocBroker/*/*
-rm -f  $HOME/.eBlocBroker/my-app.pid
-rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
-rm -f  $HOME/.eBlocBroker/logJobs.txt
-rm -f  $HOME/.eBlocBroker/queuedJobs.txt
-rm -f  $HOME/.eBlocBroker/test.txt
-rm -f  $HOME/.eBlocBroker/ipfs.out
+sudo rm -rf /var/eBlocBroker/*
+sudo rm -rf $HOME/.eBlocBroker/*/*
+sudo rm -f  $HOME/.eBlocBroker/my-app.pid
+sudo rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
+sudo rm -f  $HOME/.eBlocBroker/logJobs.txt
+sudo rm -f  $HOME/.eBlocBroker/queuedJobs.txt
+sudo rm -f  $HOME/.eBlocBroker/test.txt
+sudo rm -f  $HOME/.eBlocBroker/ipfs.out
 
 cat /dev/null > $HOME/.eBlocBroker/clusterDriver.out
 
