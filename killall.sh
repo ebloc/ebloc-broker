@@ -40,4 +40,4 @@ do
     scancel $pids
 done
 
-echo 'DONE'
+echo 'Killall is done.'
