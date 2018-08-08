@@ -100,7 +100,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
               time.sleep(1)
            #}
 
-           sys.stdout.write("\rSleeping is done!\n")
+           sys.stdout.write("\rSleeping is done!               \n")
            line1    = line2;
            line1_in = line2_in;
         else:

@@ -17,10 +17,3 @@ bash runDaemon.sh a
 cd ../testGdrive
 bash cleanForNewTest.sh
 bash runDaemon.sh a
-
-
-
-
-
-
-
