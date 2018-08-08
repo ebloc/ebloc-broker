@@ -282,7 +282,7 @@ while True: #{
              userInfo    = userInfo.split(',');
              
           slurmPendingJobCheck();
-          print(os.popen('sudo bash $eblocPath/user.sh $userID $programPath').read()); # Create user and its work directory.
+          print(os.popen('sudo $eblocPath/user.sh $userID $programPath').read()); # Create user and its work directory.
        #}
 
        if runFlag == 1:
