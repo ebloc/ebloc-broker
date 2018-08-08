@@ -28,16 +28,16 @@ do
     sudo kill -9 $pId
 done
 
-pids=$(squeue | tail -n+2 | awk '{print $1}')
-for pId in $pids
-do
-    scancel $pids
-done
-
 pids=$(ps aux | grep "[D]river.py" | awk '{print $2}')
 for pId in $pids
 do
     sudo kill -9 $pId
+done
+
+pids=$(squeue | tail -n+2 | awk '{print $1}')
+for pId in $pids
+do
+    scancel $pids
 done
 
 echo 'DONE'
