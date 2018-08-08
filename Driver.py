@@ -86,7 +86,6 @@ def isDriverOn(): #{
    check = os.popen("ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l").read().rstrip('\n');
    if int(check) > 1:
       log("Driver is already running.", 'green');
-      terminate();
 #}
 
 # checks whether  Slurm runs on the background or not
@@ -282,8 +281,8 @@ while True: #{
              userInfo    = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
              userInfo    = userInfo.split(',');
              
-          slurmPendingJobCheck()
-          print(os.popen('sudo bash user.sh $userID $programPath').read()); # Create user and its work directory.
+          slurmPendingJobCheck();
+          print(os.popen('sudo bash $eblocPath/user.sh $userID $programPath').read()); # Create user and its work directory.
        #}
 
        if runFlag == 1:

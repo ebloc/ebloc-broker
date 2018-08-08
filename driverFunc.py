@@ -80,7 +80,6 @@ def isSlurmOn(): #{
 #}
 
 def sbatchCall(userID, resultsFolder): #{
-   print('--------------------------------------------------------------------------------') #delete   
    os.environ['userID'] = str(userID);
    os.environ['resultsFolder'] = str(resultsFolder);
    
@@ -93,9 +92,7 @@ def sbatchCall(userID, resultsFolder): #{
    txFile.close();
    time.sleep(0.25);
    
-   os.system('sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh"');
-   # os.system("cp run.sh ${jobKey}*${index}*${storageID}*$shareToken.sh"); # delete
-   
+   os.system('sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh"');   
    jobInfo = os.popen('$contractCallPath/getJobInfo.py $clusterID $jobKey $index 2>/dev/null').read().rstrip('\n').replace(" ","")[1:-1];         
    jobInfo = jobInfo.split(',');
 
@@ -169,7 +166,7 @@ def driverGdriveCall(jobKey, index, storageID, userID): #{
 
       isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
       if int(isZipExist) > 0:
-         os.popen("unzip -j $resultsFolder/*.zip -d $resultsFolder").read(); # This may remove anyother file ending with .tar.gz.
+         os.system("unzip -j $resultsFolder/*.zip -d $resultsFolder"); # This may remove anyother file ending with .tar.gz.
    #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
        os.makedirs(resultsFolder, exist_ok=True); # Gets the source code     
@@ -224,7 +221,9 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    os.environ['index']       = str(index);
    os.environ['storageID'] = "1";
 
-   resultsFolder = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'; os.environ['resultsFolder'] = resultsFolder;
+   resultsFolder     = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN';
+   resultsFolderPrev = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;
+   os.environ['resultsFolder']     = resultsFolder;   
    os.environ['resultsFolderPrev'] = constants.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index;
       
    header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;
@@ -271,22 +270,24 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
    #return; #detects error on the SLURM side.
 
-   os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read() # Downloads shared file as .zip, much faster.
-
-   os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder");
-   os.system("rm -f $resultsFolderPrev/output.zip");
-
+   print(os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read()); # Downloads shared file as .zip, much faster.
+   time.sleep(0.25);
+   if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
+       os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder");
+       os.system("rm -f $resultsFolderPrev/output.zip");
+   #}
+   
    isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
    if int(isTarExist) > 0: #{
       os.popen("bash $eblocPath/tar.sh $resultsFolder" ).read(); # Extracting all *.tar.gz files.      
       os.popen("rm -f $resultsFolder/*.tar.gz").read(); # Removing all tar.gz files after extraction is done.
    #}
    
-   isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read();
-   if int(isTarExist) > 0: #{
+   isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read()
+   if int(isZipExist) > 0: #{
       log(os.popen("" ).read());
-      os.popen("unzip -jo $resultsFolderPrev/$jobKey -d $resultsFolder").read();
-      os.popen("rm -f $resultsFolder/*.zip").read();
+      os.system("unzip -jo $resultsFolderPrev/$jobKey -d $resultsFolder");
+      os.system("rm -f $resultsFolder/*.zip");
    #}
    
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
