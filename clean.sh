@@ -21,3 +21,5 @@ rm -f package-lock.json
 rm -rf docs/_build_html/
 rm -rf __pycache__/
 rm -rf docs/_build/
+
+echo 'Cleaning is done.'
