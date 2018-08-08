@@ -106,7 +106,10 @@ def sbatchCall(userID, resultsFolder): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum)); 
 
    # SLURM submit job
-   jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n');
+   # jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n'); # Real mode -C is used.
+
+   # print(os.popen('sudo su - $userID -c "cd $resultsFolder && whoami"').read().rstrip('\n')); # Emulator-mode -N is used.  delete
+   jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n'); # Emulator-mode -N is used.   
    jobId = jobId.split()[3];
    
    os.environ['jobId'] = jobId;
@@ -234,11 +237,12 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    log("Login into owncloud" );
    oc = owncloud.Client('https://b2drop.eudat.eu/');
    oc.login('aalimog1@binghamton.edu', password); # Unlocks EUDAT account
-   shareList = oc.list_open_remote_share();
 
+   shareList = oc.list_open_remote_share();
    log("finding_acceptId")
    acceptFlag      = 0;
    eudatFolderName = "";
+
    for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
       inputFolderName = shareList[i]['name']
       inputFolderName = inputFolderName[1:] # Removes '/' on the beginning
@@ -255,7 +259,7 @@ def driverEudatCall(jobKey, index, fID, userID): #{
          break;
       #}
    #}
-   
+
    if acceptFlag == 0: #{
       oc.logout();
       log("Couldn't find the shared file", 'red');
@@ -270,11 +274,17 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
    #return; #detects error on the SLURM side.
 
-   print(os.popen("wget https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read()); # Downloads shared file as .zip, much faster.
+   # Downloads shared file as .zip, much faster.
+   ret = os.popen("ret=$(wget -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip); echo \"$ret\"").read();   
+   if "ERROR 404: Not Found" in ret:
+       log(ret, 'red');
+       return;   
+   print(ret);       
+
    time.sleep(0.25);
    if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
        os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder");
-       os.system("rm -f $resultsFolderPrev/output.zip");
+       os.system("rm -f $resultsFolderPrev/output.zip"); 
    #}
    
    isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read();
@@ -287,7 +297,7 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    if int(isZipExist) > 0: #{
       log(os.popen("" ).read());
       os.system("unzip -jo $resultsFolderPrev/$jobKey -d $resultsFolder");
-      os.system("rm -f $resultsFolder/*.zip");
+      os.system("rm -f $resultsFolder/*.zip"); 
    #}
    
    os.chdir(resultsFolder); # 'cd' into the working path and call sbatch from there
