@@ -5,8 +5,13 @@ https://slurm.schedmd.com/faq.html#multi_slurmd
 ```
 git clone  https://github.com/SchedMD/slurm
 cd slurm
-./configure --enable-debug --enable-front-end
-make install
+sudo ./configure --enable-debug --enable-front-end
+sudo make install
 ```
-/usr/local/etc/slurm.conf
-/usr/local/etc/slurmdbd.conf
+
+# Required files to be updated
+
+```
+sudo emacs -nw /usr/local/etc/slurm.conf
+sudo emacs -nw /usr/local/etc/slurmdbd.conf
+```
