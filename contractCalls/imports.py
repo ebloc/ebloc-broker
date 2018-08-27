@@ -8,7 +8,7 @@ from os.path import expanduser
 sys.path.insert(1, os.path.join(sys.path[0], '..')); import constants
 os.chdir(sys.path[0]);
 
-home = expanduser("~");
+home = expanduser("~"); 
 
 if constants.POA_CHAIN == 0:
     # Note that you should create only one RPCProvider per process,
