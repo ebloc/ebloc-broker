@@ -12,10 +12,10 @@ import glob, errno
 jobKeyGlobal = "";
 indexGlobal  = "";
 
-# Paths==================================================
+# Paths===================================================
 contractCallPath = constants.EBLOCPATH + '/contractCalls';
 ipfsHashes       = constants.PROGRAM_PATH;
-# ========================================================
+# =========================================================
 os.environ['contractCallPath'] = contractCallPath;
 os.environ['eblocPath']        = constants.EBLOCPATH;
 os.environ['clusterID']        = constants.CLUSTER_ID
@@ -107,8 +107,6 @@ def sbatchCall(userID, resultsFolder): #{
 
    # SLURM submit job
    # jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n'); # Real mode -C is used.
-
-   # print(os.popen('sudo su - $userID -c "cd $resultsFolder && whoami"').read().rstrip('\n')); # Emulator-mode -N is used.  delete
    jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n'); # Emulator-mode -N is used.   
    jobId = jobId.split()[3];
    
@@ -239,10 +237,10 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    oc.login('aalimog1@binghamton.edu', password); # Unlocks EUDAT account
 
    shareList = oc.list_open_remote_share();
-   log("finding_acceptId")
+
    acceptFlag      = 0;
    eudatFolderName = "";
-
+   log("Finding acceptID:")
    for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
       inputFolderName = shareList[i]['name']
       inputFolderName = inputFolderName[1:] # Removes '/' on the beginning
@@ -251,7 +249,7 @@ def driverEudatCall(jobKey, index, fID, userID): #{
       shareToken      = shareList[i]['share_token']
 
       if (inputFolderName == jobKey) and (inputOwner == fID): #{
-         log("InputId:_" + inputId + "_ShareToken:_" + shareToken)
+         log("InputId: " + inputId + " |ShareToken: " + shareToken);
          os.environ['shareToken']      = str(shareToken);
          os.environ['eudatFolderName'] = str(inputFolderName);
          eudatFolderName               = inputFolderName;
@@ -274,14 +272,18 @@ def driverEudatCall(jobKey, index, fID, userID): #{
    #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
    #return; #detects error on the SLURM side.
 
+   # TODO: fix ------------------------------------------------------------------------------------------------ # delete   
+   # print(os.popen("echo wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read()) #delete
    # Downloads shared file as .zip, much faster.
-   ret = os.popen("ret=$(wget -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip); echo \"$ret\"").read();   
+   ret = os.popen("ret=$(wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip); echo \"$ret\"").read();   
    if "ERROR 404: Not Found" in ret:
        log(ret, 'red');
-       return;   
-   print(ret);       
-
-   time.sleep(0.25);
+       log('File not found The specified document has not been found on the server.', 'red');
+       # TODO: since folder does not exist, do complete refund to the user.
+       return; 
+   print(ret);
+   # ------------------------------------------------------------------------------------------------ # delete  
+   time.sleep(0.25); 
    if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
        os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder");
        os.system("rm -f $resultsFolderPrev/output.zip"); 
