@@ -28,7 +28,7 @@ def main(): #{
     print('PubKey: ' + web3.shh.getPublicKey(kId))
     myFilter = web3.shh.newMessageFilter({'topic': '0x07678231', 'privateKeyID': kId})
     myFilter.poll_interval = 600; #make it equal with the live-time of the message
-    print(myFilter.filter_id)
+    print('FilterID: ' + myFilter.filter_id)
 
     loop = asyncio.get_event_loop()
     try:

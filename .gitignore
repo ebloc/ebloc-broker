@@ -198,3 +198,5 @@ generateTest/nasEudat/password\.txt
 generateTest/nasEudat/ipfs/NPB3\.3-SER/
 
 docs/nohup.out
+
+venv/
