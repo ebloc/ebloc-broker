@@ -11,9 +11,24 @@ sys.path.insert(0, 'contractCalls')
 import LogJob
 os.chdir('..');
 
-# Running driverCancel.py on the background
-if int(os.popen("ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l").read().rstrip('\n')) == 0:
-   pro = subprocess.Popen(["python3","driverCancel.py"]);
+# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
+p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE);
+#-----------
+p2 = subprocess.Popen(['grep', '[d]riverCancel'], stdin=p1.stdout, stdout=subprocess.PIPE);
+p1.stdout.close();
+#-----------
+p3 = subprocess.Popen(['grep', 'python3'], stdin=p2.stdout,stdout=subprocess.PIPE);
+p2.stdout.close();
+#-----------
+p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE);
+p3.stdout.close();
+#-----------
+out = p4.communicate()[0].decode('utf-8').strip();
+# ----------------------------------------------------------------
+
+if int(out) == 0:
+   # Running driverCancel.py on the background
+   pro = subprocess.Popen(['python3','driverCancel.py']);
 
 # Paths =================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
@@ -25,7 +40,8 @@ os.environ['logPath']          = constants.LOG_PATH;
 os.environ['programPath']      = constants.PROGRAM_PATH;
 # =======================================================================
 
-#rows, columns = os.popen('stty size', 'r').read().split();
+# res = subprocess.check_output(["stty", "size"]).strip().decode('utf-8').split();
+# rows = res[0]; columns = res[1];
 columns = 100;
 
 def log(strIn, color=''): #{
@@ -41,15 +57,17 @@ def log(strIn, color=''): #{
 
 def terminate(): #{
    log('Terminated')
-   os.popen("sudo bash killall.sh").read(); # Kill all dependent processes and exit.
+   subprocess.check_output(['sudo', 'bash', 'killall.sh']); # Kill all dependent processes and exit.   
 
-   # Following lines are added in case bash killall.sh does not work due to sudo:
+   # Following lines are added in ./killall.sh does not work due to sudo:
    os.killpg(os.getpgid(pro.pid), signal.SIGTERM);  # Send the kill signal to all the process groups
    sys.exit();
 #}
 
 def idleCoreNumber(printFlag=1): #{
-    coreInfo = os.popen('sinfo -h -o%C').read().rstrip('\n');
+    coreInfo = subprocess.Popen(["sinfo", "-h", "-o%C"],
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True).communicate()[0].strip();
     coreInfo = coreInfo.split("/");
     if len(coreInfo) != 0:
        idleCore = coreInfo[1];
@@ -75,23 +93,49 @@ def slurmPendingJobCheck(): #{
 
 # checks whether geth runs on the background
 def isGethOn(): #{  
-   check = os.popen("ps aux | grep [g]eth | grep " + str(constants.RPC_PORT) + "| wc -l").read().rstrip('\n');
-   if int(check) == 0:
+   # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
+   p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE);
+   #-----------
+   p2 = subprocess.Popen(['grep', '[g]eth'], stdin=p1.stdout, stdout=subprocess.PIPE);
+   p1.stdout.close();
+   #-----------
+   p3 = subprocess.Popen(['grep', str(constants.RPC_PORT)], stdin=p2.stdout,stdout=subprocess.PIPE);
+   p2.stdout.close();
+   #-----------
+   p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE);
+   p3.stdout.close();
+   #-----------
+   out = p4.communicate()[0].decode('utf-8').strip();
+   
+   if int(out) == 0:
       log("Geth is not running on the background.", 'red');
       terminate();      
 #}
 
 # checks: does Driver.py runs on the background
 def isDriverOn(): #{
-   check = os.popen("ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l").read().rstrip('\n');
-   if int(check) > 1:
+   # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
+   p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE);
+   #-----------
+   p2 = subprocess.Popen(['grep', '[D]river.py'], stdin=p1.stdout, stdout=subprocess.PIPE);
+   p1.stdout.close();
+   #-----------
+   p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE);
+   p2.stdout.close();
+   #-----------
+   p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE);
+   p3.stdout.close();
+   #-----------
+   out = p4.communicate()[0].decode('utf-8').strip();
+   
+   if int(out) > 1:
       log("Driver is already running.", 'green');
 #}
 
 # checks whether  Slurm runs on the background or not
 def isSlurmOn(): #{
    os.system("bash checkSinfo.sh")  
-   check = os.popen("cat $logPath/checkSinfoOut.txt").read();
+   check = os.popen("cat $logPath/checkSinfoOut.txt").read(); 
    if not "PARTITION" in str(check): #{
       log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red");      
       log('Error Message: \n' + check, "red");
@@ -117,7 +161,10 @@ isDriverOn();
 isSlurmOn();
 isGethOn();
    
-isContractExist = os.popen('$contractCallPath/isContractExist.py').read().rstrip('\n');
+isContractExist = subprocess.Popen([contractCallPath + '/isContractExist.py'],
+                                   stdout=subprocess.PIPE,
+                                   universal_newlines=True).communicate()[0].strip();
+
 if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red');
    terminate();
