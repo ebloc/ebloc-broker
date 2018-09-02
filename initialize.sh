@@ -83,6 +83,10 @@ if [ ! -d endCodeAnalyse ]; then
     mkdir -p endCodeAnalyse 
 fi
 
+if [ ! -d cache ]; then
+    mkdir -p cache
+fi
+
 touch $HOME/.eBlocBroker/transactions/clusterOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh
@@ -131,11 +135,18 @@ sed -i.bak 's/'$lineOld'/'$lineNew'/'             nodePaths.js && rm nodePaths.j
 # SLURM setup
 sudo killall slurmctld slurmdbd slurmd
 var=$(echo $currentDir | sed 's/\//\\\//g')
-# With JobRequeue=0 or --no-requeue, the job will not restart automatically  https://stackoverflow.com/a/43366542/2402577
-sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/"                /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
-sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
-# MinJobAge assingned to '1' day, The minimum age of a completed job before its record is purged from Slurm's active database.
-sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\186400/"                /usr/local/etc/slurm.conf && sudo rm /usr/local/etc/slurm.conf.bak
+# With JobRequeue=0 or --no-requeue,
+# the job will not restart automatically, please see https://stackoverflow.com/a/43366542/2402577
+sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/" /usr/local/etc/slurm.conf 
+sudo rm -f /usr/local/etc/slurm.conf.bak
+
+sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf
+sudo rm -f /usr/local/etc/slurm.conf.bak
+
+# MinJobAge assingned to '1' day,
+# The minimum age of a completed job before its record is purged from Slurm's active database.
+sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\186400/" /usr/local/etc/slurm.conf 
+sudo rm /usr/local/etc/slurm.conf.bak
 grep "MailProg" /usr/local/etc/slurm.conf
 
 # IPFS setups
@@ -150,16 +161,13 @@ read -s PASSWORD
 echo $PASSWORD > miniLockPassword.txt
 chmod 700 miniLockPassword.txt
 
-
 sudo chmod 700 /home/*
+
 
 # Setup
 # sudo ln -s /usr/bin/node /usr/local/bin/node
 # gdrive initialize
 # rm -rf $HOME/.gdrive/
-
-
-
 
 ## pip install
 # sudo apt-get install python3-pip

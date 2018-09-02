@@ -1,3 +1,3 @@
 #!/bin/bash
 
-tar -czvf eB.tar.gz ../.eBlocBroker/
+tar -czvf eBlocBroker_results.tar.gz $HOME/.eBlocBroker
