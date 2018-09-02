@@ -26,18 +26,14 @@ p3.stdout.close();
 out = p4.communicate()[0].decode('utf-8').strip();
 # ----------------------------------------------------------------
 
-if int(out) == 0:
+if int(out) == 0: #{
    # Running driverCancel.py on the background
    pro = subprocess.Popen(['python3','driverCancel.py']);
+#}
 
 # Paths =================================================================
 jobsReadFromPath               = constants.JOBS_READ_FROM_FILE;
-os.environ['jobsReadFromPath'] = jobsReadFromPath
 contractCallPath               = constants.EBLOCPATH + '/contractCalls';
-os.environ['eblocPath']        = constants.EBLOCPATH;
-os.environ['contractCallPath'] = contractCallPath;
-os.environ['logPath']          = constants.LOG_PATH;
-os.environ['programPath']      = constants.PROGRAM_PATH;
 # =======================================================================
 
 # res = subprocess.check_output(["stty", "size"]).strip().decode('utf-8').split();
@@ -64,8 +60,8 @@ def terminate(): #{
    sys.exit();
 #}
 
-def contractCalls(call, arg1=''): #{  
-   return subprocess.Popen([contractCallPath + '/' + call, arg1],
+def contractCalls(call, args): #{
+   return subprocess.Popen([contractCallPath + '/' + call] + args,
                            stdout=subprocess.PIPE,
                            universal_newlines=True).communicate()[0].strip();
 #}
@@ -169,13 +165,13 @@ isDriverOn();
 isSlurmOn();
 isGethOn();
    
-isContractExist = contractCalls('isContractExist.py');
+isContractExist = contractCalls('isContractExist.py', []);
 if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red');
    terminate();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
-log('isWeb3Connected: ' + contractCalls('isWeb3Connected.py'));
+log('isWeb3Connected: ' + contractCalls('isWeb3Connected.py', []));
 log('rootdir: ' + os.getcwd());
 with open('contractCalls/address.json', 'r') as content_file:
    log('{0: <20}'.format('contractAddress:') + "\"" + content_file.read().strip() + "\"", "yellow");
@@ -183,13 +179,8 @@ with open('contractCalls/address.json', 'r') as content_file:
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
-header = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')";
-os.environ['header'] = header;
-
 clusterAddress = constants.CLUSTER_ID;
-os.environ['clusterAddress'] = clusterAddress;
-
-isClusterExist = contractCalls('isClusterExist.py', clusterAddress)
+isClusterExist = contractCalls('isClusterExist.py', [clusterAddress])
 
 if "false" in isClusterExist.lower(): #{
    print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
@@ -199,7 +190,7 @@ if "false" in isClusterExist.lower(): #{
    terminate();
 #}
 
-deployedBlockNumber = contractCalls('getDeployedBlockNumber.py')
+deployedBlockNumber = contractCalls('getDeployedBlockNumber.py', [])
 blockReadFromContract = str(0);
 
 log('{0: <20}'.format('clusterAddress:') + "\"" + clusterAddress + "\"", "yellow");
@@ -233,23 +224,25 @@ if not blockReadFromLocal.isdigit(): #{
 #}
 
 blockReadFrom = 0;
-if (int(blockReadFromLocal) < int(blockReadFromContract)):
+if int(blockReadFromLocal) < int(blockReadFromContract):
    blockReadFrom = blockReadFromContract;
 else:
    blockReadFrom = blockReadFromLocal;
-             
-clusterGainedAmountInit = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterAddress').read().rstrip('\n');
 
+clusterGainedAmountInit = contractCalls('getClusterReceivedAmount.py', [clusterAddress]);
 log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber + "| Cluster's initial money: " + clusterGainedAmountInit)
 
-os.system('rm -f $logPath/queuedJobs.txt && rm -f $jobsReadFromPath'); # Remove queuedJobs from previous test.
+# Remove queuedJobs from previous test.
+subprocess.check_output(['rm', '-rf', constants.LOG_PATH + 'queuedJobs.txt']); 
+subprocess.check_output(['rm', '-f',  constants.JOBS_READ_FROM_FILE]);
+
 while True: #{    
     if "Error" in blockReadFrom:
        log(blockReadFrom);
        terminate();
 
-    clusterGainedAmount = os.popen('$contractCallPath/getClusterReceivedAmount.py $clusterAddress').read().rstrip('\n');    
-    squeueStatus        = os.popen("squeue").read();
+    clusterGainedAmount = contractCalls('getClusterReceivedAmount.py', [clusterAddress]);
+    squeueStatus        = subprocess.check_output(['squeue']).decode('utf-8').strip();    
 
     if "squeue: error:" in str(squeueStatus): #{
        log("SLURM is not running on the background, please run \'sudo ./runSlurm.sh\'. \n");
@@ -264,23 +257,24 @@ while True: #{
        log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)));
     log("Waiting new job to come since block number: " + blockReadFrom);
     
-    currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
+    currentBlockNumber = contractCalls('blockNumber.py', [])
     log("Waiting new block to increment by one.");
     log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom);
 
     while int(currentBlockNumber) < int(blockReadFrom): #{          
        time.sleep(2);
-       currentBlockNumber = os.popen('$contractCallPath/blockNumber.py').read().rstrip('\n');
+       currentBlockNumber = contractCalls('blockNumber.py', []);
     #}
 
     log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom);   
     blockReadFrom = str(blockReadFrom); # Starting reading event's location has been updated
-    # blockReadFrom = 945140; # delete for test purposes
+    # blockReadFrom = 1094262; # used for test purposes.
     slurmPendingJobCheck()
     
     loggedJobs = LogJob.run(blockReadFrom, clusterAddress)       
-            
-    print('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
+
+    
+    print('isWeb3Connected: ' + contractCalls('isWeb3Connected.py', []))
     maxVal               = 0;
     isClusterReceivedJob = 0;
     counter              = 0;
@@ -297,11 +291,14 @@ while True: #{
        if loggedJobs[i]['blockNumber'] > int(maxVal):
           maxVal = loggedJobs[i]['blockNumber']
 
-       os.environ['jobKey'] = loggedJobs[i].args['jobKey'];
-       os.environ['index']  = str(loggedJobs[i].args['index']);
+       jobKey = loggedJobs[i].args['jobKey'];
+       index  = str(loggedJobs[i].args['index']);
 
-       strCheck = os.popen('bash $eblocPath/strCheck.sh $jobKey').read();            
-       jobInfo  = os.popen('$contractCallPath/getJobInfo.py $clusterAddress $jobKey $index 2>/dev/null 2>/dev/null').read().rstrip('\n').replace(" ", "")[1:-1];
+       strCheck = subprocess.Popen(["bash", constants.EBLOCPATH + "/strCheck.sh", jobKey],
+                                   stdout=subprocess.PIPE,
+                                   universal_newlines=True).communicate()[0].strip();
+       
+       jobInfo  = contractCalls('getJobInfo.py', [clusterAddress, jobKey, index]).replace(" ", "")[1:-1];       
        userID   = "";
        if not ',' in jobInfo or jobInfo == '': 
           log("jobInfo is returned as empty string. Geth might be closed", 'red');
@@ -310,10 +307,8 @@ while True: #{
           jobInfo = jobInfo.split(',');
           log('jobOwner/userID: ' +  jobInfo[6].replace("u'", "").replace("'", ""));
 
-          userID = jobInfo[6].replace("u'", "").replace("'", "");
-          os.environ['userID'] = jobInfo[6].replace("u'", "").replace("'", "");
-          
-          isUserExist = os.popen('$contractCallPath/isUserExist.py $userID 2>/dev/null').read().rstrip('\n');  
+          userID = jobInfo[6].replace("u'", "").replace("'", "");          
+          isUserExist = contractCalls('isUserExist.py', [userID])          
 
           if jobInfo[0] == str(constants.job_state_code['COMPLETED']):
              log("Job is already completed.", 'red');
@@ -331,11 +326,11 @@ while True: #{
              log('jobOwner is not registered', 'red');
              runFlag = 1;
           else:
-             userInfo    = os.popen('$contractCallPath/getUserInfo.py $userID 1 2>/dev/null').read().rstrip('\n').replace(" ", "");
+             userInfo    = contractCalls('getUserInfo.py', [userID, '1']).replace(" ", "")
              userInfo    = userInfo.split(',');
              
           slurmPendingJobCheck();
-          print(os.popen('sudo $eblocPath/user.sh $userID $programPath').read()); # Create user and its work directory.
+          print(subprocess.check_output(['sudo', 'bash', constants.EBLOCPATH + '/user.sh', userID, constants.PROGRAM_PATH]).decode('utf-8').strip());          
        #}
 
        if runFlag == 1:
