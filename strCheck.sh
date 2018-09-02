@@ -17,3 +17,5 @@ key=$(echo $key | cut -c1-1)
 if ! [[ $key =~ ^[0-9a-zA-Z]+$ ]]; then
     echo 'False'; exit
 fi
+
+echo 'True';
