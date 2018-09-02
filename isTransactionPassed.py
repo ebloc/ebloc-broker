@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import constants, os, sys
 
 header    = "var eBlocBroker = require('" + constants.EBLOCPATH + "/eBlocBrokerHeader.js')"; os.environ['header'] = header;

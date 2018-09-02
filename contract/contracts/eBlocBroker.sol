@@ -1,3 +1,10 @@
+/*
+file:   eBlocBroker.sol
+author: Alper Alimoglu
+email:  alper.alimoglu AT gmail.com
+
+*/
+
 pragma solidity ^0.4.17; import "./Lib.sol";
 
 /* Contract Address: 0x611dc53934550684825f3477ecb68029b1b908f3 */

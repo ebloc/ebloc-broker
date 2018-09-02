@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from imports import *
 
 if __name__ == '__main__': #{
