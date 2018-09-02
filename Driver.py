@@ -64,6 +64,12 @@ def terminate(): #{
    sys.exit();
 #}
 
+def contractCalls(call, arg1=''): #{  
+   return subprocess.Popen([contractCallPath + '/' + call, arg1],
+                           stdout=subprocess.PIPE,
+                           universal_newlines=True).communicate()[0].strip();
+#}
+        
 def idleCoreNumber(printFlag=1): #{
     coreInfo = subprocess.Popen(["sinfo", "-h", "-o%C"],
                                 stdout=subprocess.PIPE,
@@ -134,8 +140,10 @@ def isDriverOn(): #{
 
 # checks whether  Slurm runs on the background or not
 def isSlurmOn(): #{
-   os.system("bash checkSinfo.sh")  
-   check = os.popen("cat $logPath/checkSinfoOut.txt").read(); 
+   subprocess.check_output(['bash', 'checkSinfo.sh']);  
+   with open(constants.LOG_PATH + '/checkSinfoOut.txt', 'r') as content_file:
+      check = content_file.read()
+   
    if not "PARTITION" in str(check): #{
       log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red");      
       log('Error Message: \n' + check, "red");
@@ -161,19 +169,17 @@ isDriverOn();
 isSlurmOn();
 isGethOn();
    
-isContractExist = subprocess.Popen([contractCallPath + '/isContractExist.py'],
-                                   stdout=subprocess.PIPE,
-                                   universal_newlines=True).communicate()[0].strip();
-
+isContractExist = contractCalls('isContractExist.py');
 if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red');
    terminate();
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green");
-log('isWeb3Connected: ' + os.popen('$contractCallPath/isWeb3Connected.py').read().rstrip('\n'))
+log('isWeb3Connected: ' + contractCalls('isWeb3Connected.py'));
 log('rootdir: ' + os.getcwd());
-log('{0: <20}'.format('contractAddress:') + "\"" + os.popen('cat contractCalls/address.json').read().rstrip('\n') + "\"", "yellow");
-
+with open('contractCalls/address.json', 'r') as content_file:
+   log('{0: <20}'.format('contractAddress:') + "\"" + content_file.read().strip() + "\"", "yellow");
+   
 if constants.IPFS_USE == 1:
    constants.isIpfsOn(os, time);
    
@@ -183,7 +189,7 @@ os.environ['header'] = header;
 clusterAddress = constants.CLUSTER_ID;
 os.environ['clusterAddress'] = clusterAddress;
 
-isClusterExist = os.popen('$contractCallPath/isClusterExist.py $clusterAddress').read().rstrip('\n');
+isClusterExist = contractCalls('isClusterExist.py', clusterAddress)
 
 if "false" in isClusterExist.lower(): #{
    print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
@@ -193,7 +199,7 @@ if "false" in isClusterExist.lower(): #{
    terminate();
 #}
 
-deployedBlockNumber = os.popen('$contractCallPath/getDeployedBlockNumber.py').read().rstrip('\n');
+deployedBlockNumber = contractCalls('getDeployedBlockNumber.py')
 blockReadFromContract = str(0);
 
 log('{0: <20}'.format('clusterAddress:') + "\"" + clusterAddress + "\"", "yellow");
