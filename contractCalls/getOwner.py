@@ -2,4 +2,4 @@
 
 from imports import *
 
-print(eBlocBroker.functions.getOwner().call());
+print(eBlocBroker.functions.getOwner().call()) 

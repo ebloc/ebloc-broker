@@ -1,19 +1,43 @@
 #!/usr/bin/env python
 
-from imports import *
+import sys 
+
+def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
+    if eBlocBroker != None and web3 != None:
+        clusterAddress = web3.toChecksumAddress(clusterAddress) 
+        print(clusterAddress)
+        print(jobKey)
+        print(index)
+        
+        # res = ",".join(map(str,     ) )
+        # return res 
+        return eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, index).call()
+    else:
+        import os 
+        sys.path.insert(1, os.path.join(sys.path[0], '..')) 
+        from imports import connectEblocBroker
+        from imports import getWeb3
+        
+        web3           = getWeb3() 
+        eBlocBroker    = connectEblocBroker(web3)        
+        clusterAddress = web3.toChecksumAddress(clusterAddress) 
+
+        ret = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, index).call()
+        
+        return eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, index).call()
+#}
 
 if __name__ == '__main__': #{
-    if len(sys.argv) == 4:
-        clusterAddress = str(sys.argv[1]);
-        jobKey         = str(sys.argv[2]);
-        index          = int(sys.argv[3]);
+    if len(sys.argv) == 3:
+        clusterAddress = str(sys.argv[1]) 
+        jobKey         = str(sys.argv[2]) 
+        index          = int(sys.argv[3]) 
+
+        print(getJobInfo(clusterAddress, jobKey, index)) 
     else:
-        clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
-        jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=117649886378445811229351254502963812811";
-        index          = 3;
-        #jobKey          = "QmTXyUrHxkf2m85W6Sy6VAMBuZyZAuSDQAbjSgDcLLnEdW";
-        #index           = 4;
-    clusterAddress = web3.toChecksumAddress(clusterAddress);
-    print(eBlocBroker.call().getJobInfo(clusterAddress, jobKey, index));
-    # print(eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, index).call());
+        clusterAddress = "0x4e4a0750350796164d8defc442a712b7557bf282" 
+        jobKey         = "153802737479941507912962421857730686964" 
+        index          = 1
+        
+        print(getJobInfo(clusterAddress, jobKey, index)) 
 #}
