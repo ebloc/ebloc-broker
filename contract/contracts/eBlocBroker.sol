@@ -305,8 +305,14 @@ contract eBlocBroker {
     function getJobInfo(address clusterAddress, string jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, uint, address)
     {
-	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];
-
+	uint arrayLength = clusterContract[clusterAddress].jobStatus[jobKey].length;
+        if (arrayLength == 0)
+	    return (0, 0,  0, 0, 0, 0, address(0x0));
+	
+        if (arrayLength <= index)
+	    return (0, 0,  0, 0, 0, 0, address(0x0));
+	
+	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];	
 	return (job.status, job.core, job.startTime, job.received, job.coreMinutePrice, job.coreMinuteGas, job.jobOwner);
     }
 
