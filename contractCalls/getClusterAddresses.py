@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 
-from imports import *
+import sys
 
-array = eBlocBroker.functions.getClusterAddresses().call() 
+def getClusterAddresses(eBlocBroker=None): #{
+    if eBlocBroker is None: #{
+        import os 
+        sys.path.insert(1, os.path.join(sys.path[0], '..')) 
+        from imports import connectEblocBroker
+        eBlocBroker    = connectEblocBroker()
+    #}
+    return eBlocBroker.functions.getClusterAddresses().call() 
+#}
 
-for i in range(0, len(array)): #{
-    print(array[i])
+if __name__ == '__main__': #{
+    clusterList = getClusterAddresses()
+    for i in range(0, len(clusterList)):
+        print(clusterList[i])            
 #}

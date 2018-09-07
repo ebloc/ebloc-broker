@@ -5,6 +5,8 @@ import sys, os, time, subprocess, lib, base64
 from colored import stylize
 from colored import fg
 import hashlib
+from imports import connectEblocBroker
+from imports import getWeb3
 
 sys.path.insert(0, './contractCalls')
 from contractCalls.getJobInfo import getJobInfo
