@@ -21,9 +21,17 @@ def main(): #{
     Shh.attach(web3, "shh")
     print(web3.shh.info)
 
-    pKey = '0xa82ff6abcf75393084edb06d100e53268c5e118884d59282ef9d3396c8537011'; #web3.shh.newKeyPair();
+    '''
+    # First time running:
+    kId = web3.shh.newKeyPair()
+    receiver_pub = web3.shh.getPublicKey(kId)
+    print('receiverPubK: '     + receiver_pub);
+    print('receiverPrivateK: ' + web3.shh.getPrivateKey(kId));
+    '''
+    
+    privateKey = '0x5fc212a0774add56f4a32b59a1cf6100ae0ef8fe1481c1ab7d011796d1e53320' 
+    kId = web3.shh.addPrivateKey(privateKey)
 
-    kId = web3.shh.addPrivateKey(pKey)
     print(web3.shh.hasKeyPair(kId))
     print('PubKey: ' + web3.shh.getPublicKey(kId))
     myFilter = web3.shh.newMessageFilter({'topic': '0x07678231', 'privateKeyID': kId})
