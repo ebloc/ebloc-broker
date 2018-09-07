@@ -13,7 +13,7 @@ def isIpfsOn(): #{
 #}
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 10): #{
+    if len(sys.argv) == 10: #{
         clusterAddress = web3.toChecksumAddress(str(sys.argv[1])) 
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress) 
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
