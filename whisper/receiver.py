@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from web3.auto import w3
 import asyncio
 from web3 import Web3, HTTPProvider
@@ -37,6 +39,11 @@ def main(): #{
     myFilter = web3.shh.newMessageFilter({'topic': '0x07678231', 'privateKeyID': kId})
     myFilter.poll_interval = 600; #make it equal with the live-time of the message
     print('FilterID: ' + myFilter.filter_id)
+
+    retreived_messages = web3.shh.getMessages('c173ea8111b199b3b88255ac0e6c395b7a1dfe1e771457dad66bac8b87cb19ca') 
+    for i in range(0, len(retreived_messages)):
+        print(retreived_messages[i]['payload'].decode("utf-8"))
+        print(retreived_messages[i])
 
     loop = asyncio.get_event_loop()
     try:
