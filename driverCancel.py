@@ -40,7 +40,8 @@ log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
 
 maxVal = 0        
 while True: #{
-    lib.contractCall('eBlocBroker.LogCancelRefund($cancelBlockReadFromLocal, \'$cancelledJobsReadFromPath\')')  # Waits here until new job cancelled into the cluster
+    # Waits here until new job cancelled into the cluster
+    lib.contractCallNode('eBlocBroker.LogCancelRefund($cancelBlockReadFromLocal, \'$cancelledJobsReadFromPath\')')   
 
     if os.path.isfile(cancelledJobsReadFromPath): #{ Waits until generated file on log is completed       
         cancelledJobs = set() # holds lines already seen

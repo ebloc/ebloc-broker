@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 
-from imports import *
+import os, sys, time
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import lib
+from imports import connectEblocBroker
+from imports import getWeb3
 
-# checks: does IPFS run on the background or not
-def isIpfsOn(): #{
-   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n') 
-   if int(check) == 0:
-      print("Error: IPFS does not work on the background.\nPlease run:  ipfs daemon &") 
-      os.system("nohup ipfs daemon &") 
-      time.sleep(5) 
-      os.system("cat ipfs.out")       
-#}
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 if __name__ == '__main__': #{
     if len(sys.argv) == 10: #{
@@ -67,7 +64,7 @@ if __name__ == '__main__': #{
     #}    
 
     if storageID == 0 or storageID == 2: #{
-       isIpfsOn()  
+       lib.isIpfsOn()
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'] 
        output = os.popen('ipfs swarm connect ' + strVal).read() 
        print("Trying to connect into: " + strVal) 
