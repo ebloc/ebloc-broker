@@ -6,8 +6,8 @@ from imports import connectEblocBroker
 from imports import getWeb3
     
 def updateCluster(): #{
-    web3           = getWeb3() 
-    eBlocBroker    = connectEblocBroker(web3)
+    web3        = getWeb3() 
+    eBlocBroker = connectEblocBroker(web3)
     # USER Inputs----------------------------------------------------------------
     account            = web3.eth.accounts[0]  # Cluster's Ethereum Address
     coreNumber         = 128 

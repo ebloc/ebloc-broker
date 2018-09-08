@@ -7,7 +7,7 @@ def getClusterAddresses(eBlocBroker=None): #{
         import os 
         sys.path.insert(1, os.path.join(sys.path[0], '..')) 
         from imports import connectEblocBroker
-        eBlocBroker    = connectEblocBroker()
+        eBlocBroker = connectEblocBroker()
     #}
     return eBlocBroker.functions.getClusterAddresses().call() 
 #}

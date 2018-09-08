@@ -40,9 +40,9 @@ p3.stdout.close()
 out = p4.communicate()[0].decode('utf-8').strip()
 # ----------------------------------------------------------------
 
-if int(out) == 0: #{
+if int(out) == 0: #{   
    # Running driverCancel.py on the background
-   pro = subprocess.Popen(['python3','driverCancel.py'])
+   pro = subprocess.Popen(['python3','driverCancel.py']) 
 #}
 
 # Paths =================================================================
@@ -185,7 +185,7 @@ with open('contractCalls/address.json', 'r') as content_file:
    log('{0: <20}'.format('contractAddress:') + "\"" + content_file.read().strip() + "\"", "yellow")
    
 if lib.IPFS_USE == 1:
-   lib.isIpfsOn(os, time)
+   lib.isIpfsOn()
    
 clusterAddress = lib.CLUSTER_ID
 isClusterExist = isClusterExist(clusterAddress, eBlocBroker, web3)

@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 
-from imports import *
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import lib
+from imports import connectEblocBroker
+from imports import getWeb3
 
-# checks: does IPFS run on the background or not
-def isIpfsOn(): #{
-   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n') 
-   if int(check) == 0:
-      print("Error: IPFS does not work on the background.\nPlease run:  ipfs daemon &") 
-      os.system("bash ../runIPFS.sh") 
-      time.sleep(5) 
-      os.system("cat ipfs.out") 
-   else:
-      print("IPFS is already on") 
-#}
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
+
 
 if __name__ == '__main__': #{
-    if(len(sys.argv) == 8):
+    if len(sys.argv) == 8:
         clusterAddress = str(sys.argv[1]) 
         clusterAddress = web3.toChecksumAddress(clusterAddress) 
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress) 
@@ -28,7 +24,7 @@ if __name__ == '__main__': #{
         accountID      = int(sys.argv[7]) 
     else:
         # USER Inputs----------------------------------------------------------------
-        clusterAddress = "0xda1e61e853bb8d63b1426295f59cb45a34425b63" 
+        clusterAddress = "0x4e4a0750350796164D8DefC442a712B7557BF282" 
         clusterAddress = web3.toChecksumAddress(clusterAddress) 
         blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
@@ -56,14 +52,15 @@ if __name__ == '__main__': #{
     #}
 
     if storageType == 0 or storageType == 2: #{
-       isIpfsOn() 
+       lib.isIpfsOn() 
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'] 
        print("Trying to connect into: " + strVal) 
        output = os.popen('ipfs swarm connect ' + strVal).read() 
        print(output)
     #}
 
-    msgValue      = coreNum * pricePerMin * coreMinuteGas 
+    coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
+    msgValue      = coreNum * pricePerMin * coreMinuteGas
 
     if (storageType == 0 and len(jobKey) != 46) or (storageType == 2 and len(jobKey) != 46) or (storageType == 4 and len(jobKey) != 33): #{
        print("jobKey's length does not match with its original length. Please check your jobKey.")
