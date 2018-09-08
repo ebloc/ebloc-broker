@@ -8,8 +8,8 @@ def authenticateORCID(orcID, eBlocBroker=None, web3=None): #{
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
         from imports import getWeb3
-        web3           = getWeb3()
-        eBlocBroker    = connectEblocBroker(web3)
+        web3        = getWeb3()
+        eBlocBroker = connectEblocBroker(web3)
     #}
     
     account = web3.eth.accounts[0]     

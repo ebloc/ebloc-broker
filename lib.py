@@ -1,11 +1,11 @@
-import os, sys, subprocess 
+import os, sys, subprocess, time
 from colored import stylize
 from colored import fg
 
-WHOAMI=""
-EBLOCPATH=""
-CLUSTER_ID=""
-GDRIVE=""
+WHOAMI="alper"
+EBLOCPATH="/home/alper/eBlocBroker"
+CLUSTER_ID="0x4e4a0750350796164d8defc442a712b7557bf282"
+GDRIVE="/usr/local/bin/gdrive"
 RPC_PORT=8545
 POA_CHAIN=1 
 
@@ -44,7 +44,17 @@ job_state_code['SUSPENDED']    = 15
 job_state_code['TIMEOUT']      = 16
 
 header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')" 
-os.environ['header'] = header 
+os.environ['header'] = header
+
+# def LogCancelRefund(val): #{   
+def contractCallNode(val): #{   
+   ret = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "") 
+   if ret == "notconnected": #{
+      log("Error: Please run Parity or Geth on the background.", 'red')
+      sys.exit() 
+   #}
+   return ret 
+#}
 
 def log(strIn, color=''): #{
    if color != '':
@@ -57,25 +67,34 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
+def preexec_function():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    
 # Checks that does IPFS run on the background or not
-def isIpfsOn(os, time): #{
-   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n') 
+def isIpfsOn(): #{
+   # cmd: ps aux | grep '[i]pfs daemon' | wc -l
+   p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['grep', '[i]pfs daemon'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   p3 = subprocess.Popen(['wc', '-l'], stdin=p2.stdout,stdout=subprocess.PIPE)
+   p2.stdout.close()
+   #-----------
+   check = p3.communicate()[0].decode('utf-8').strip()
+
    if int(check) == 0:
       log("Error: IPFS does not work on the background.", 'red') 
-      log(" * Starting IPFS: nohup ipfs daemon &") 
-      os.system('nohup ipfs daemon > ' + LOG_PATH + '/ipfs.out 2>&1 &') 
-      time.sleep(15) 
-      log(os.popen("cat " + LOG_PATH + "/ipfs.out").read(), 'blue') 
+      log(" * Starting IPFS: nohup ipfs daemon &")
+      
+      subprocess.Popen(['nohup', 'ipfs', 'daemon'],
+                 stdout=open(LOG_PATH + '/ipfs.out', 'w'),
+                 stderr=open(LOG_PATH + '/ipfs.out', 'a'),
+                 preexec_fn=os.setpgrp)
+      
+      time.sleep(5)
+      with open(LOG_PATH + '/ipfs.out', 'r') as content_file:
+         log(content_file.read(), 'blue') 
    else:
       log("IPFS is already on.", 'green') 
-#}
-
-def contractCall(val): #{   
-   ret = os.popen('echo "$header  console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "") 
-   if ret == "notconnected": #{
-      log("Error: Please run Parity or Geth on the background.", 'red')
-      sys.exit() 
-   #}
-
-   return ret 
 #}

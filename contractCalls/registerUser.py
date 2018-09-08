@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 
-from imports import *
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from imports import connectEblocBroker
+from imports import getWeb3
+from contractCalls.isUserExist import isUserExist
+
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 if __name__ == '__main__': #{
     if len(sys.argv) == 8:
-        account = web3.eth.accounts[int(sys.argv[1])] 
+        account            = web3.eth.accounts[int(sys.argv[1])] 
         userEmail          = str(sys.argv[2]) 
         federationCloudID  = str(sys.argv[3]) 
         miniLockID         = str(sys.argv[4]) 
@@ -20,7 +27,12 @@ if __name__ == '__main__': #{
         orcid              = "0000-0001-7642-0552" 
         githubUserName     = "eBloc" 
 
+    if isUserExist(account, eBlocBroker, web3):
+        print('User is already registered.')
+        sys.exit()
+    
     if len(federationCloudID) < 128 and len(userEmail) < 128 and len(orcid) == 19 and orcid.replace("-", "").isdigit(): #{
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID, miniLockID, ipfsAddress, orcid, githubUserName) 
-        print('Tx: ' + tx.hex()) 
+        print( 'Tx: ' + tx.hex())
+        
 #}
