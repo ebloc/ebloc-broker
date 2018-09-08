@@ -22,7 +22,6 @@ def isWeb3Connected(web3=None): #{
         #}
     #}
     return web3.isConnected()
-
 #}
 
 

@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
-from imports import *
+import os, sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from imports import connectEblocBroker
+from imports import getWeb3
+from contractCalls.isUserExist import isUserExist
+
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 # checks: does IPFS run on the background or not
 def isIpfsOn(): #{
@@ -28,9 +35,9 @@ if __name__ == '__main__': #{
     #}
     else: #{
         # USER Inputs ================================================================
-        clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")     
-        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"  # Long Sleep Job.
-        index          = 1 
+        clusterAddress = web3.toChecksumAddress("0x4e4a0750350796164D8DefC442a712B7557BF282")
+        jobKey         = "153802737479941507912962421857730686964"  # Long Sleep Job
+        index          = 0
         accountID      = 0 
         # =============================================================================
     #}
