@@ -14,7 +14,7 @@ def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, end
         web3        = getWeb3()
         eBlocBroker = connectEblocBroker(web3)
     #}
-    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID), "gas": 4500000}).receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, endTime) 
+    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID), "gas": 4500000}).receiptCheck(str(jobKey), int(index), int(jobRunTimeMinute), str(resultIpfsHash), int(storageID), int(endTime)) 
     return 'Tx: ' + tx.hex()
 #}
 if __name__ == '__main__': #{

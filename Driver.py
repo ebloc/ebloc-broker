@@ -22,8 +22,8 @@ from contractCalls.isWeb3Connected          import isWeb3Connected
 
 import LogJob
 
-eBlocBroker = connectEblocBroker()
 web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
 p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
