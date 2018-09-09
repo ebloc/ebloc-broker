@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 
 import sys, lib, time, subprocess
+from imports import connectEblocBroker
+from imports import getWeb3
+
+sys.path.insert(0, './contractCalls')
+from contractCalls.setJobStatus import setJobStatus
+
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 def startCall(jobKey, index, jobID): #{
    statusID                = str(lib.job_state_code['RUNNING'])
-
    # cmd: scontrol show job jobID | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
    #-----------
@@ -22,14 +29,12 @@ def startCall(jobKey, index, jobID): #{
    time.sleep(0.25) 
 
    countTry = 0    
-   txHash = subprocess.check_output(["python", lib.EBLOCPATH + "/contractCalls/setJobStatus.py",
-                                     jobKey, index, statusID, startTime]).decode('utf-8').strip()
+   txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
    while txHash == "notconnected" or txHash == "": #{
       if countTry > 10:
          sys.exit() 
-      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + " " + txHash + '\n') 
-      txHash = subprocess.check_output(["python", lib.EBLOCPATH + "/contractCalls/setJobStatus.py",
-                                        jobKey, index, statusID, startTime]).decode('utf-8').strip()      
+      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + " " + txHash + '\n')
+      txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
       countTry += 1 
       time.sleep(15)       
    #}
