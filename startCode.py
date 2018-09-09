@@ -1,37 +1,40 @@
 #!/usr/bin/env python
 
-import sys, os, lib, time
-
-contractCallPath               = lib.EBLOCPATH + '/contractCalls' 
-os.environ['contractCallPath'] = contractCallPath 
+import sys, lib, time, subprocess
 
 def startCall(jobKey, index, jobID): #{
-   os.environ['eblocPath'] = lib.EBLOCPATH 
-   os.environ['index']     = str(index) 
-   os.environ['jobKey']    = jobKey 
-   statusId                = str(lib.job_state_code['RUNNING']) 
-   os.environ['statusId']  = statusId 
-   os.environ['jobID']     = jobID 
+   statusID                = str(lib.job_state_code['RUNNING'])
 
-   starTime = os.popen('date -d $(scontrol show job $jobID | grep \'StartTime\'| grep -o -P \'(?<=StartTime=).*(?= E)\') +"%s"').read().rstrip('\n') 
-   os.environ['starTime']  = starTime 
-            
-   txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
-   txFile.write(os.popen('echo $contractCallPath/setJobStatus.py $jobKey $index $statusId $starTime').read().rstrip('\n'))    
+   # cmd: scontrol show job jobID | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
+   p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['grep', 'StartTime'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=StartTime=).*(?= E)'], stdin=p2.stdout,stdout=subprocess.PIPE)
+   p2.stdout.close()
+   date      = p3.communicate()[0].decode('utf-8').strip()
+   # cmd: date -d 2018-09-09T18:38:29 +"%s"
+   startTime = subprocess.check_output(["date", "-d", date, '+\'%s\'']).strip().decode('utf-8').replace("\'","")
+   
+   txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a')        
+   txFile.write(lib.EBLOCPATH + "/contractCalls/setJobStatus.py" + ' ' + jobKey + ' ' + index + ' ' + statusID + ' ' + startTime + '\n')    
    time.sleep(0.25) 
 
    countTry = 0    
-   txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $starTime').read().rstrip('\n')    
+   txHash = subprocess.check_output(["python", lib.EBLOCPATH + "/contractCalls/setJobStatus.py",
+                                     jobKey, index, statusID, startTime]).decode('utf-8').strip()
    while txHash == "notconnected" or txHash == "": #{
       if countTry > 10:
          sys.exit() 
       txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + " " + txHash + '\n') 
-      txHash = os.popen('$eblocPath/venv/bin/python3 $contractCallPath/setJobStatus.py $jobKey $index $statusId $starTime').read().rstrip('\n')       
+      txHash = subprocess.check_output(["python", lib.EBLOCPATH + "/contractCalls/setJobStatus.py",
+                                        jobKey, index, statusID, startTime]).decode('utf-8').strip()      
       countTry += 1 
       time.sleep(15)       
    #}
 
-   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + starTime + "\n") 
+   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + startTime + "\n") 
    txFile.close() 
 #}
 

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-import sys
+import sys, os
 
 def setJobStatus(jobKey, index, stateID, startTime, eBlocBroker=None, web3=None): #{
     if eBlocBroker == None and web3 == None: #{
-        import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
         from imports import getWeb3
@@ -12,8 +11,8 @@ def setJobStatus(jobKey, index, stateID, startTime, eBlocBroker=None, web3=None)
         eBlocBroker    = connectEblocBroker(web3)
     #}
     import lib
-    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID), "gas": 4500000}).setJobStatus(jobKey, index, stateID, startTime) 
-    return 'Tx: ' + tx.hex()
+    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID), "gas": 4500000}).setJobStatus(jobKey, int(index), int(stateID), int(startTime)) 
+    return tx.hex()
 #}
 
 if __name__ == '__main__': #{
