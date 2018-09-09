@@ -195,7 +195,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          countTry += 1         
          
          # os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
-         # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt)  tar -N \'$d\' -jcvf result.tar.gz *').read())  #| 
+         # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read())  #| 
          # newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read()                                  #| Upload as .tar.gz.
          # log(os.popen('rm -f $resultsFolder/result.tar.gz').read())  #un-comment                                    #|
          log("Generated new hash return empty error. Trying again...", 'yellow') 
@@ -210,7 +210,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    #}
    if str(storageID) == '2': #{ IPFS & miniLock
       os.chdir(resultsFolder) 
-      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt)  tar -N \"$d\" -jcvf result.tar.gz *').read()) 
+      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt);  tar -N \"$d\" -jcvf result.tar.gz *').read()) 
 
       log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read()) 
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete') 
@@ -266,7 +266,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       
       # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them.
       # log(os.popen('tar -jcvf result-$clusterID-$index.tar.gz *').read())       
-      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt)  tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read())  
+      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read())  
       
       res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz').read() 
       log(res)
@@ -295,7 +295,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       #if 'folder' in mimeType: # Received job is in folder format
       #   os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them
 
-      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt)  tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read())    
+      log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read())    
       time.sleep(0.25) 
 
       if 'folder' in mimeType: # Received job is in folder format

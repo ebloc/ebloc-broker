@@ -7,7 +7,7 @@ if (process.argv.length == 3){
     clusterID = process.argv[2];       
 }
 else{
-    clusterID = "0xcc8de90b4ada1c67d68c1958617970308e4ee75e";   
+    clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282";   
 }
 
 console.log(process.argv.length)
@@ -28,10 +28,7 @@ totalPaid = 0;
 for (i in array) {
     var arr = array[i].split(" ");
 
-    /*
-    if (i == 102)
-	break;
-    */
+    // if (i == 102) break;
     if (array[i] != '' && clusterID == arr[1]) {
 	if (titleFlag == 0){
 	    console.log("Job #\tjobKey______________________________________________________________________\tindex\tType\tStatus  \tcoreNum\tblockNum\tRecieved\tPrice\tcoreMinuteGas\tGained");

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env
 
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, lib, _thread
@@ -73,6 +73,7 @@ def terminate(): #{
    sys.exit()
 #}
 
+
 def shellCommand(args): #{
    return subprocess.check_output(args).decode('utf-8').strip() 
 #}
@@ -119,7 +120,7 @@ def isGethOn(): #{
    
    if int(out) == 0:
       log("Geth is not running on the background.", 'red')
-      terminate()      
+      lib.terminate()      
 #}
 
 # checks: does Driver.py runs on the background
@@ -142,26 +143,6 @@ def isDriverOn(): #{
       log("Driver is already running.", 'green')
 #}
 
-# checks whether  Slurm runs on the background or not
-def isSlurmOn(): #{
-   subprocess.run(['bash', 'checkSinfo.sh'])  
-   with open(lib.LOG_PATH + '/checkSinfoOut.txt', 'r') as content_file:
-      check = content_file.read()
-   
-   if not "PARTITION" in str(check): #{
-      log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")      
-      log('Error Message: \n' + check, "red")
-      terminate()
-   #}   
-   if "sinfo: error" in str(check): #{
-      log("Error on munged: \n" + check)
-      log("Please Do:\n")
-      log("sudo munged -f")
-      log("/etc/init.d/munge start")
-      terminate()
-   #}
-#}
-
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
 if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': #{
@@ -170,7 +151,7 @@ if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': #{
 #}
 
 isDriverOn()
-isSlurmOn()
+lib.isSlurmOn()
 isGethOn()
    
 isContractExist = isContractExist(web3)
