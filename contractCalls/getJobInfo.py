@@ -14,10 +14,9 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
     #}
       
     clusterAddress = web3.toChecksumAddress(clusterAddress)
-
     res = None
     try:
-        res = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, index).call()
+        res = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
     except Exception:
         return 'Exception: web3.exceptions.BadFunctionCallOutput'
     return res
