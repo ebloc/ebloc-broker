@@ -46,7 +46,6 @@ job_state_code['TIMEOUT']      = 16
 header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')" 
 os.environ['header'] = header
 
-# def LogCancelRefund(val): #{   
 def contractCallNode(val): #{   
    ret = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "") 
    if ret == "notconnected": #{
@@ -54,6 +53,30 @@ def contractCallNode(val): #{
       sys.exit() 
    #}
    return ret 
+#}
+
+# Checks whether Slurm runs on the background or not, if not runs slurm
+def isSlurmOn(): #{
+   while True: #{
+      subprocess.run(['bash', 'checkSinfo.sh'])
+      with open(LOG_PATH + '/checkSinfoOut.txt', 'r') as content_file:
+         check = content_file.read()
+
+      if not "PARTITION" in str(check): #{
+         log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")
+         log('Error Message: \n' + check, "red")
+         subprocess.run(['sudo', 'bash', 'runSlurm.sh'])
+      #}
+      elif "sinfo: error" in str(check): #{
+         log("Error on munged: \n" + check)
+         log("Please Do:\n")
+         log("sudo munged -f")
+         log("/etc/init.d/munge start")
+      #}
+      else:
+         log('Slurm is on', 'green')
+         break
+   #}
 #}
 
 def log(strIn, color=''): #{

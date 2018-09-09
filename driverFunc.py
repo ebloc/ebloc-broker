@@ -11,13 +11,13 @@ import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
 jobKeyGlobal = "" 
-indexGlobal  = "" 
+indexGlobal  = ""
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
-os.environ['eblocPath']        = lib.EBLOCPATH 
-os.environ['clusterID']        = lib.CLUSTER_ID 
+os.environ['eblocPath'] = lib.EBLOCPATH 
+os.environ['clusterID'] = lib.CLUSTER_ID 
 
 def silentremove(filename): #{
     try:
@@ -52,27 +52,16 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
-# checks: does SLURM run on the background or not
-def isSlurmOn(): #{
-   os.environ['logPath'] = lib.LOG_PATH 
-   os.system("bash checkSinfo.sh")  
-   check = os.popen("cat $logPath/checkSinfoOut.txt").read()
-
-   if (not "PARTITION" in str(check)) or ("sinfo: error" in str(check)):
-      print('slurm is not on.')
-      os.system("sudo bash runSlurm.sh") 
-#}
-
 def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    os.environ['userID'] = str(userID) 
    os.environ['resultsFolder'] = str(resultsFolder) 
    
    os.system('sudo chown -R $userID .')  # Give permission to user that will send jobs to Slurm.
    
-   myDate = os.popen('LANG=en_us_88591 && date --date=\'1 seconds\' +"%b %d %k:%M:%S %Y"').read().rstrip('\n') 
-   log(myDate) 
+   date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'], env={'LANG': 'en_us_88591'}).decode('utf-8').strip()   
+   log(date) 
    txFile = open('../modifiedDate.txt', 'w') 
-   txFile.write(myDate + '\n' )    
+   txFile.write(date + '\n' )    
    txFile.close() 
    time.sleep(0.25) 
    
