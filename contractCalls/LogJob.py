@@ -4,9 +4,9 @@
 asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-events
 '''
 
-import sys         
+import sys, asyncio, time
 from web3.auto import w3
-import asyncio
+
    
 def handle_event(event):
     '''
@@ -43,12 +43,24 @@ def log_ret(event_filter, poll_interval): #{
     #}
 #}    
 
-def run(fromBlock, clusterAddress, eBlocBroker): #{
+def runLogJob(fromBlock, clusterAddress, eBlocBroker): #{
    myFilter = eBlocBroker.events.LogJob.createFilter(
        fromBlock=int(fromBlock),       
        argument_filters={'clusterAddress': str(clusterAddress)}
-   ) 
-   
+   )    
+   loggedJobs = myFilter.get_all_entries() 
+
+   if len(loggedJobs) > 0:       
+       return loggedJobs 
+   else:
+       return log_ret(myFilter, 2) 
+#}
+
+def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker): #{
+   myFilter = eBlocBroker.events.LogCancelRefund.createFilter(
+       fromBlock=int(fromBlock),       
+       # argument_filters={'clusterAddress': str(clusterAddress)}
+   )
    loggedJobs = myFilter.get_all_entries() 
 
    if len(loggedJobs) > 0:       
@@ -59,12 +71,13 @@ def run(fromBlock, clusterAddress, eBlocBroker): #{
 
 
 def logJob(eBlocBroker=None): #{
-   if eBlocBroker is None:
+   if eBlocBroker is None: #{
        import os 
        sys.path.insert(1, os.path.join(sys.path[0], '..')) 
        from imports import connectEblocBroker
        eBlocBroker    = connectEblocBroker()
-       
+   #}
+   
    loggedJobs = run(fromBlock, clusterAddress, eBlocBroker) 
 
    # print(myFilter.filter_params)

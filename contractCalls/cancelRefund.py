@@ -9,16 +9,6 @@ from contractCalls.isUserExist import isUserExist
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-# checks: does IPFS run on the background or not
-def isIpfsOn(): #{
-   check = os.popen("ps aux | grep \'[i]pfs daemon\' | wc -l").read().rstrip('\n') 
-   if int(check) == 0:
-      print("Error: IPFS does not work on the background.\nPlease run:  ipfs daemon &") 
-      os.system("bash ../runIPFS.sh") 
-      time.sleep(5) 
-      os.system("cat ipfs.out")       
-#}
-
 if __name__ == '__main__': #{
     if len(sys.argv) == 10: #{
         clusterAddress = web3.toChecksumAddress(str(sys.argv[1])) 
@@ -36,7 +26,7 @@ if __name__ == '__main__': #{
     else: #{
         # USER Inputs ================================================================
         clusterAddress = web3.toChecksumAddress("0x4e4a0750350796164D8DefC442a712B7557BF282")
-        jobKey         = "153802737479941507912962421857730686964"  # Long Sleep Job
+        jobKey         = "105948189774037812791543685388909450727"  # Long Sleep Job
         index          = 0
         accountID      = 0 
         # =============================================================================

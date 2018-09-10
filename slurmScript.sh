@@ -56,4 +56,3 @@ fi
 if [[ $event == *" Failed, "* ]]; then # Cancelled job won't catched here
 
 fi
-

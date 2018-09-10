@@ -22,7 +22,7 @@ if __name__ == '__main__': #{
         jobKey         = str(sys.argv[2]) 
     else:
         clusterAddress = "0x4e4a0750350796164d8defc442a712b7557bf282" 
-        jobKey         = "153802737479941507912962421857730686964" 
+        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR" 
 
     print(getJobSize(clusterAddress))
 #}
