@@ -42,7 +42,7 @@ out = p4.communicate()[0].decode('utf-8').strip()
 
 if int(out) == 0: #{   
    # Running driverCancel.py on the background
-   pro = subprocess.Popen(['python3','driverCancel.py']) 
+   pro = subprocess.Popen(['python3','driverCancel.py'])
 #}
 
 # Paths =================================================================
