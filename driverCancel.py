@@ -10,7 +10,7 @@ from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
 
 web3        = getWeb3() 
 eBlocBroker = connectEblocBroker() 
-testFlag    = 1
+testFlag    = 0
 
 def log(strIn, color=''): #{
    if testFlag: #{
@@ -26,7 +26,6 @@ def log(strIn, color=''): #{
 
 with open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'r') as content_file:
    cancelBlockReadFromLocal = content_file.read().strip()
-
 
 if not cancelBlockReadFromLocal.isdigit():
     cancelBlockReadFromLocal = getDeployedBlockNumber(eBlocBroker)    
@@ -58,7 +57,9 @@ while True: #{
          # sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c 'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | xargs -n 1 basename); sacct --name $jobName' | head -n3 | tail -n1
         # output: 51           231555615+      debug cc6b74f19+          1  COMPLETED      0:0
         
-        res = subprocess.check_output(['sudo', 'su', '-', userName, '-c', 'jobName=$(echo ' + jobKey + '_' + str(index) + '/JOB_TO_RUN/' + jobKey + '*' + str(index) + '*sh | xargs -n 1 basename); sacct --name $jobName | head -n3 | tail -1 | awk \'{print $1}\'']).decode('utf-8').split()
+        res = subprocess.check_output(['sudo', 'su', '-', userName, '-c',
+                                       'jobName=$(echo ' + jobKey + '_' + str(index) + '/JOB_TO_RUN/' + jobKey + '*' + str(index) + '*sh | xargs -n 1 basename);' +
+                                       'sacct --name $jobName | head -n3 | tail -1 | awk \'{print $1}\'']).decode('utf-8').split()
         jobID = res[0].replace('.batch','')
         print('jobID=' + jobID)
         
