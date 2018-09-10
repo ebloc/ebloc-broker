@@ -55,10 +55,13 @@ def log(strIn, color=''): #{
 def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    os.environ['userID'] = str(userID) 
    os.environ['resultsFolder'] = str(resultsFolder) 
+
+   # Give permission to user that will send jobs to Slurm.
+   subprocess.check_output(['sudo', 'chown', '-R', userID, '.'])
+   # os.system('sudo chown -R $userID .')  delete
    
-   os.system('sudo chown -R $userID .')  # Give permission to user that will send jobs to Slurm.
-   
-   date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'], env={'LANG': 'en_us_88591'}).decode('utf-8').strip()   
+   date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
+                                  env={'LANG': 'en_us_88591'}).decode('utf-8').strip()   
    log(date) 
    txFile = open('../modifiedDate.txt', 'w') 
    txFile.write(date + '\n' )    
@@ -197,7 +200,7 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    log("index: " + index) 
 
    os.environ['jobKey']      = str(jobKey) 
-   os.environ['index']       = str(index) 
+   os.environ['index']       = str(index)  
    os.environ['storageID'] = "1" 
 
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
@@ -249,34 +252,35 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
    #return  #detects error on the SLURM side.
 
-   # TODO: fix ------------------------------------------------------------------------------------------------ # delete   
-   # print(os.popen("echo wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip").read()) #delete
    # Downloads shared file as .zip, much faster.
-   ret = os.popen("ret=$(wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip)  echo \"$ret\"").read()    
+   # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
+   ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareToken +
+                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
    if "ERROR 404: Not Found" in ret:
        log(ret, 'red') 
        log('File not found The specified document has not been found on the server.', 'red') 
        # TODO: since folder does not exist, do complete refund to the user.
        return  
    print(ret) 
-   # ------------------------------------------------------------------------------------------------ # delete  
+
    time.sleep(0.25)  
    if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
-       os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder") 
-       os.system("rm -f $resultsFolderPrev/output.zip")  
+       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder])
+       # os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder") delete
+       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
    #}
    
-   isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read() 
-   if int(isTarExist) > 0: #{
-      os.popen("bash $eblocPath/tar.sh $resultsFolder" ).read()  # Extracting all *.tar.gz files.      
-      os.popen("rm -f $resultsFolder/*.tar.gz").read()  # Removing all tar.gz files after extraction is done.
+   if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
+      # Extracting all *.tar.gz files.
+      subprocess.run(['bash', lib.EBLOCPATH + '/tar.sh', resultsFolder])      
+      # Removing all tar.gz files after extraction is done.
+      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.tar.gz"))
    #}
    
    isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read()
-   if int(isZipExist) > 0: #{
-      log(os.popen("" ).read()) 
-      os.system("unzip -jo $resultsFolderPrev/$jobKey -d $resultsFolder") 
-      os.system("rm -f $resultsFolder/*.zip")  
+   if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
+      subprocess.run(['unzip', '-jo', resultsFolderPrev + '/' + jobKey, '-d', resultsFolder])
+      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.zip"))
    #}
    
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
@@ -309,11 +313,12 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     
     if os.path.isfile(jobKey):
-       os.system('rm -f $jobKey')     
+       subprocess.run(['rm', '-f', jobKey])
+       # os.system('rm -f $jobKey') delete
 
     ipfsCallCounter = 0 
-    isIPFSHashExist = os.popen("bash $eblocPath/ipfsStat.sh $jobKey").read() 
-
+    isIPFSHashExist = subprocess.check_output(['bash', lib.EBLOCPATH + '/ipfsStat.sh', jobKey]).decode('utf-8').split()
+    # os.popen("bash $eblocPath/ipfsStat.sh $jobKey").read() delete        
     log(isIPFSHashExist) 
     
     if "CumulativeSize" in isIPFSHashExist: #{
