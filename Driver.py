@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, lib, _thread
@@ -68,11 +68,10 @@ def terminate(): #{
    log('Terminated')
    subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit.   
 
-   # Following lines are added in ./killall.sh does not work due to sudo:
+   # Following line is added, in case ./killall.sh does not work due to sudo
    os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the kill signal to all the process groups
    sys.exit()
 #}
-
 
 def shellCommand(args): #{
    return subprocess.check_output(args).decode('utf-8').strip() 
@@ -259,8 +258,7 @@ while True: #{
     blockReadFrom = str(blockReadFrom) # Starting reading event's location has been updated
     # blockReadFrom = 1094262 # used for test purposes.
     slurmPendingJobCheck()    
-    loggedJobs = LogJob.run(blockReadFrom, clusterAddress, eBlocBroker)       
-    
+    loggedJobs = LogJob.runLogJob(blockReadFrom, clusterAddress, eBlocBroker)       
     print('isWeb3Connected: ' + str(isWeb3Connected(web3)))
     maxVal               = 0
     isClusterReceivedJob = 0
@@ -290,7 +288,7 @@ while True: #{
           runFlag = 1
        else: #{
           log('jobOwner/userID: ' + jobInfo[6])
-          userID    = jobInfo[6]          
+          userID    = jobInfo[6].lower()
           userExist = isUserExist(userID, eBlocBroker, web3)          
 
           if jobInfo[0] == str(lib.job_state_code['COMPLETED']):
