@@ -45,45 +45,6 @@ exports.whoami       = whoami;
 exports.blockNumber  = blockNumber;
 exports.job_state_id = job_state_id;
 
-exports.getTransactionGas = function(Tx) {return web3.eth.getTransactionReceipt(Tx).gasUsed};
-
-exports.getJobInfo = function(var1, var2, var3) {
-    return myContractInstance.getJobInfo(var1, var2, var3);
-};
-
-exports.getDeployedBlockNumber = function() {
-    return myContractInstance.getDeployedBlockNumber();
-};
-
-exports.getClusterIpfsId = function(var1) {
-    return myContractInstance.getClusterIpfsId(var1);
-};
-
-exports.getClusterInfo = function(var1) {
-    return myContractInstance.getClusterInfo(var1);
-};
-
-exports.getUserInfo = function(myPath, userAddress) {
-    var fs    = require('fs');
-    fromBlock            = myContractInstance.getUserInfo(userAddress);
-    var eBlocBrokerEvent = myContractInstance.LogUser({}, {fromBlock: fromBlock, toBlock: fromBlock});
-    var v = '';
-    eBlocBrokerEvent.watch( function (error, result) {
-	if(result == null){ eBlocBrokerEvent.stopWatching()}
-
-	eBlocBrokerEvent.stopWatching();
-
-	fs.writeFile(myPath, "blockReadFrom: " + fromBlock        + ',' +
-		     "userEmail: "     + result.args.userEmail   + ',' +
-		     "miniLockID: "    + result.args.miniLockID  + ',' +
-		     "ipfsAddress: "   + result.args.ipfsAddress + ',' +
-		     "fID: " + result.args.fID, function(err) { 
-			 process.exit();
-		     }); 	
-    });
-    return
-};
-
 exports.highestBlock = function() {
     var sync = web3.eth.syncing;
     console.log( sync.highestBlock );
@@ -186,39 +147,8 @@ exports.LogCancelRefund = function(var1, myPath) {
 
 	}
     })
-
-    /*
-    var eBlocBrokerEvent = myContractInstance.events.LogCancelRefund({}, {fromBlock: var1, toBlock: 'latest'});
-    eBlocBrokerEvent.watch(function (error, result) {	
-	flag = 0;
-	if (error) {
-	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
-	    flag=1;
-	    eBlocBrokerEvent.stopWatching()
-	}
-
-	if (result == null && flag == 0){
-	    fs.appendFile(myPath, "notconnected", function(err) {
-		process.exit();
-	    });
-	    flag = 1;
-	    eBlocBrokerEvent.stopWatching()
-	}
-
-	if (flag == 0) {
-	    var jobKey = result.args.jobKey;   
-	    //if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
-	    if (result.args.clusterAddress == web3.eth.defaultAccount) {
-		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
-				  result.args.clusterAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
-				      process.exit();
-				  }); 	
-	        }
-	  //  }
-	}
-    });
-    */
 };
+
 
 exports.LogReceipt = function(var1, myPath, clusterID) {    
     var path  = require('path');     
@@ -227,7 +157,7 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
     if (fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath)
 
-    var eBlocBrokerEvent = myContractInstance.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
+    var eBlocBrokerEvent = myContractInstance.events.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
 
     eBlocBrokerEvent.watch( function (error, result) {	
 	flag = 0;
@@ -260,6 +190,7 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
     });
 };
 
+/*
 exports.LogJobResults = function(var1, myPath, clusterID) {
     var gain = [];
     var fs    = require('fs');
@@ -277,7 +208,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
     if (fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath)
 
-    var eBlocBrokerEvent = myContractInstance.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
+    var eBlocBrokerEvent = myContractInstance.events.LogJob({}, {fromBlock: var1, toBlock: 'latest'});
 
     eBlocBrokerEvent.watch(function (error, result) {
 	flag = 0;
@@ -319,6 +250,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 	}
     });
 };
+*/
 
 exports.saveReceipts = function(var1, myPath, clusterID) {
     var path  = require('path');     
@@ -327,7 +259,7 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
     if (fs.existsSync(myPath)) 
     	fs.unlinkSync(myPath)
 
-    var eBlocBrokerEvent = myContractInstance.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
+    var eBlocBrokerEvent = myContractInstance.events.LogReceipt({}, {fromBlock: var1, toBlock: 'latest'});
 
     eBlocBrokerEvent.watch(function (error, result) {	
 	flag = 0;
@@ -393,3 +325,78 @@ exports.isTransactionPassed = function(transaction_id) {
     //console.log( checkPassed );
     return checkPassed;
 };
+
+/* ----------------------------------------------------------------------------------------------------------------
+ not used anymore
+exports.getTransactionGas = function(Tx) {return web3.eth.getTransactionReceipt(Tx).gasUsed};
+
+exports.getJobInfo = function(var1, var2, var3) {
+    return myContractInstance.getJobInfo(var1, var2, var3);
+};
+
+exports.getDeployedBlockNumber = function() {
+    return myContractInstance.getDeployedBlockNumber();
+};
+
+exports.getClusterIpfsId = function(var1) {
+    return myContractInstance.getClusterIpfsId(var1);
+};
+
+exports.getClusterInfo = function(var1) {
+    return myContractInstance.getClusterInfo(var1);
+};
+
+exports.getUserInfo = function(myPath, userAddress) {
+    var fs    = require('fs');
+    fromBlock            = myContractInstance.getUserInfo(userAddress);
+    var eBlocBrokerEvent = myContractInstance.LogUser({}, {fromBlock: fromBlock, toBlock: fromBlock});
+    var v = '';
+    eBlocBrokerEvent.watch( function (error, result) {
+	if(result == null){ eBlocBrokerEvent.stopWatching()}
+
+	eBlocBrokerEvent.stopWatching();
+
+	fs.writeFile(myPath, "blockReadFrom: " + fromBlock        + ',' +
+		     "userEmail: "     + result.args.userEmail   + ',' +
+		     "miniLockID: "    + result.args.miniLockID  + ',' +
+		     "ipfsAddress: "   + result.args.ipfsAddress + ',' +
+		     "fID: " + result.args.fID, function(err) { 
+			 process.exit();
+		     }); 	
+    });
+    return
+};
+*/
+
+    /*
+    var eBlocBrokerEvent = myContractInstance.events.LogCancelRefund({}, {fromBlock: var1, toBlock: 'latest'});
+    eBlocBrokerEvent.watch(function (error, result) {	
+	flag = 0;
+	if (error) {
+	    fs.appendFile( myPath, "error related to event watch: " + error + "\n", function(err) { process.exit(); });
+	    flag=1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (result == null && flag == 0){
+	    fs.appendFile(myPath, "notconnected", function(err) {
+		process.exit();
+	    });
+	    flag = 1;
+	    eBlocBrokerEvent.stopWatching()
+	}
+
+	if (flag == 0) {
+	    var jobKey = result.args.jobKey;   
+	    //if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
+	    if (result.args.clusterAddress == web3.eth.defaultAccount) {
+		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
+				  result.args.clusterAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
+				      process.exit();
+				  }); 	
+	        }
+	  //  }
+	}
+    });
+    */
+

@@ -5,7 +5,6 @@ import asyncio
 from web3 import Web3, HTTPProvider
 from web3.shh import Shh
 
-
 def handle_event(event):
     print(event)
     print(event['payload'].decode("utf-8"));

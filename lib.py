@@ -2,10 +2,10 @@ import os, sys, subprocess, time
 from colored import stylize
 from colored import fg
 
-WHOAMI="alper"
-EBLOCPATH="/home/alper/eBlocBroker"
-CLUSTER_ID="0x4e4a0750350796164d8defc442a712b7557bf282"
-GDRIVE="/usr/local/bin/gdrive"
+WHOAMI=""
+EBLOCPATH=""
+CLUSTER_ID=""
+GDRIVE=""
 RPC_PORT=8545
 POA_CHAIN=1 
 
