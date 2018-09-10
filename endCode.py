@@ -183,8 +183,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
    #}
    
-   log("jobName: " + str(folderName)) 
-   
+   log("jobName: " + str(folderName))    
    os.system('scontrol show job $jobID > $resultsFolder/slurmJobInfo.out') 
    
    # Here we know that job is already completed 
@@ -194,10 +193,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       while newHash == "": #{
          if (countTry > 10):
             sys.exit()
-         countTry += 1         
-         
+         countTry += 1                  
          # os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
-         # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \'$d\' -jcvf result.tar.gz *').read())  #| 
+         # with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
+         #    date = content_file.read().strip()
+         # log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))                     
          # newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read()                                  #| Upload as .tar.gz.
          # log(os.popen('rm -f $resultsFolder/result.tar.gz').read())  #un-comment                                    #|
          log("Generated new hash return empty error. Trying again...", 'yellow') 
@@ -215,7 +215,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
       log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))            
-      # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt);  tar -N \"$d\" -jcvf result.tar.gz *').read()) #delete
      
       log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read()) 
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete') 
@@ -271,7 +270,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
       log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))            
-      # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read()) # delete
       
       res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz').read() 
       log(res)
@@ -302,7 +300,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       with open(f, resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
       log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))            
-      # log(os.popen('d=$(cat $resultsFolderPrev/modifiedDate.txt); tar -N \"$d\" -jcvf result-$clusterID-$index.tar.gz *').read()) #delete
       time.sleep(0.25) 
 
       if 'folder' in mimeType: # Received job is in folder format

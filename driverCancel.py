@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import sys, os, lib, _thread
-
+import sys, os, lib, _thread, time, hashlib, subprocess
+sys.path.insert(0, './contractCalls')
+import LogJob
 from imports import connectEblocBroker
 from imports import getWeb3
 from contractCalls.blockNumber            import blockNumber
@@ -9,80 +10,86 @@ from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
 
 web3        = getWeb3() 
 eBlocBroker = connectEblocBroker() 
-
-cancelledJobsReadFromPath = lib.CANCEL_JOBS_READ_FROM_FILE 
-os.environ['cancelledJobsReadFromPath'] = cancelledJobsReadFromPath 
+testFlag    = 1
 
 def log(strIn, color=''): #{
-   '''
-   if color != '':
-      print(stylize(strIn, fg(color))) 
-   else:
-      print(strIn)
-   '''
+   if testFlag: #{
+      if color != '':
+         print(stylize(strIn, fg(color))) 
+      else:
+         print(strIn)
+   #}   
    txFile = open(lib.LOG_PATH + '/cancelledJobsLog.out', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close()    
 #}
 
-f = open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'r')
-cancelBlockReadFromLocal = f.read().rstrip('\n') 
-f.close() 
+with open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'r') as content_file:
+   cancelBlockReadFromLocal = content_file.read().strip()
+
 
 if not cancelBlockReadFromLocal.isdigit():
-    cancelBlockReadFromLocal = getDeployedBlockNumber(eBlocBroker) 
-    
-    os.environ['cancelBlockReadFromLocal'] = cancelBlockReadFromLocal 
-else:
-    os.environ['cancelBlockReadFromLocal'] = cancelBlockReadFromLocal 
+    cancelBlockReadFromLocal = getDeployedBlockNumber(eBlocBroker)    
 
 log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
 
 maxVal = 0        
 while True: #{
     # Waits here until new job cancelled into the cluster
-    lib.contractCallNode('eBlocBroker.LogCancelRefund($cancelBlockReadFromLocal, \'$cancelledJobsReadFromPath\')')   
+    # cancelBlockReadFromLocal = 1140950
+    loggedJobs = LogJob.runLogCancelRefund(cancelBlockReadFromLocal, lib.CLUSTER_ID, eBlocBroker)
 
-    if os.path.isfile(cancelledJobsReadFromPath): #{ Waits until generated file on log is completed       
-        cancelledJobs = set() # holds lines already seen
-        for line in open(cancelledJobsReadFromPath, "r"):
-            if line not in cancelledJobs: # not a duplicate
-                cancelledJobs.add(line)
-
-    cancelledJobs= sorted(cancelledJobs) 
-    for e in cancelledJobs: #{
-        cancelledJob = e.rstrip('\n').split(' ') 
-        os.environ['jobKey'] = cancelledJob[2] 
-        os.environ['index']  = cancelledJob[3]         
-        log(cancelledJob[0] + ' ' + cancelledJob[1] + ' ' + cancelledJob[2] + ' ' + cancelledJob[3]  )
-
-        if int(cancelledJob[0]) > int(maxVal):
-            maxVal = cancelledJob[0]
-
-        jobName = os.popen('echo ~/.eBlocBroker/ipfsHashes/$jobKey\_$index/JOB_TO_RUN/$jobKey\*$index*sh | xargs -n 1 basename').read()
-        os.environ['jobName']  = jobName         
-        res = os.popen('sacct --name $jobName | tail -n1 | awk \'{print $1}\'').read().rstrip('\n') 
+    for e in range(0, len(loggedJobs)): #{
+        msg_sender = web3.eth.getTransactionReceipt(loggedJobs[e]['transactionHash'].hex())['from'].lower()
+        userName   = hashlib.md5(msg_sender.encode('utf-8')).hexdigest();
         
-        if res.isdigit():
-            log('JobID: ' + res + ' is cancelled.')
-            os.popen('scancel ' + res).read()         
+        #print(msg_sender)
+        #print(loggedJobs[e])
+        #print(userName)
         
-        #}
+        blockNumber = loggedJobs[e]['blockNumber']
+        jobKey = loggedJobs[e].args['jobKey']
+        index  = loggedJobs[e].args['index']        
+        log('blockNumber=' + str(blockNumber) + ' jobKey=' + jobKey + ' index=' + str(index)) 
+               
+        if blockNumber > maxVal:
+           maxVal = blockNumber
 
-    if int(maxVal) != 0: #{ 
+         # sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c 'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | xargs -n 1 basename); sacct --name $jobName' | head -n3 | tail -n1
+        # output: 51           231555615+      debug cc6b74f19+          1  COMPLETED      0:0
+        
+        res = subprocess.check_output(['sudo', 'su', '-', userName, '-c', 'jobName=$(echo ' + jobKey + '_' + str(index) + '/JOB_TO_RUN/' + jobKey + '*' + str(index) + '*sh | xargs -n 1 basename); sacct --name $jobName | head -n3 | tail -1 | awk \'{print $1}\'']).decode('utf-8').split()
+        jobID = res[0].replace('.batch','')
+        print('jobID=' + jobID)
+        
+        if jobID.isdigit():
+            subprocess.run(['scancel', jobID])
+            time.sleep(2) # wait few seconds to cancel the requested job.
+
+            p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
+            #-----------
+            p2 = subprocess.Popen(['grep', 'JobState='], stdin=p1.stdout, stdout=subprocess.PIPE)
+            p1.stdout.close()
+            
+            out = p2.communicate()[0].decode('utf-8').strip()
+            if 'JobState=CANCELLED' in out:
+               log('JobID=' + jobID + ' is successfully cancelled.')
+            else:
+               log('Error: jobID=' + jobID + ' is not cancelled, something went wrong or already cancelled. ' + out)                        
+                    
+    if int(maxVal) != 0:
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'w')  # Updates the latest read block number      
         f_blockReadFrom.write(str(int(maxVal) + 1) + '\n')  
         f_blockReadFrom.close() 
-        cancelBlockReadFromLocal = str(int(maxVal) + 1) 
-        os.environ['cancelBlockReadFromLocal'] = cancelBlockReadFromLocal 
+        cancelBlockReadFromLocal = str(int(maxVal) + 1)
+        log('---------------------------------------------')
         log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
-    #}
     else:
-        currentBlockNumber = blockNumber(web3) 
-        
+        currentBlockNumber = blockNumber(web3)         
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'w')  # Updates the latest read block number      
         f_blockReadFrom.write(str(currentBlockNumber) + '\n')  
-        f_blockReadFrom.close() 
-        os.environ['cancelBlockReadFromLocal'] = currentBlockNumber 
+        f_blockReadFrom.close()
+        log('---------------------------------------------')
         log('Waiting cancelled jobs from :' + currentBlockNumber)
+    #}
 #}

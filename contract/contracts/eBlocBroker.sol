@@ -403,7 +403,7 @@ contract eBlocBroker {
 		  );
 
     /* Records the refunded jobs' information under refund() method call. */
-    event LogCancelRefund(address clusterAddress,
+    event LogCancelRefund(address indexed clusterAddress,
 			  string jobKey,
 			  uint32 index
 			  );
