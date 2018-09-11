@@ -58,7 +58,6 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
 
    # Give permission to user that will send jobs to Slurm.
    subprocess.check_output(['sudo', 'chown', '-R', userID, '.'])
-   # os.system('sudo chown -R $userID .')  delete
    
    date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
                                   env={'LANG': 'en_us_88591'}).decode('utf-8').strip()   
@@ -207,15 +206,14 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
    os.environ['resultsFolder']     = resultsFolder    
    os.environ['resultsFolderPrev'] = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
-      
-   f      = open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') # Password is read from the file. password.txt is have only user access
-   password = f.read().rstrip('\n').replace(" ", "") 
-   f.close()
+
+   with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
+       password = content_file.read().strip()
 
    log("Login into owncloud" ) 
    oc = owncloud.Client('https://b2drop.eudat.eu/') 
    oc.login('aalimog1@binghamton.edu', password)  # Unlocks EUDAT account
-
+   password = None   
    shareList = oc.list_open_remote_share() 
 
    acceptFlag      = 0 
@@ -266,7 +264,6 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    time.sleep(0.25)  
    if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
        subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder])
-       # os.system("unzip -jo $resultsFolderPrev/output.zip -d $resultsFolder") delete
        subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
    #}
    
@@ -314,7 +311,6 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     
     if os.path.isfile(jobKey):
        subprocess.run(['rm', '-f', jobKey])
-       # os.system('rm -f $jobKey') delete
 
     ipfsCallCounter = 0 
     isIPFSHashExist = subprocess.check_output(['bash', lib.EBLOCPATH + '/ipfsStat.sh', jobKey]).decode('utf-8').split()
