@@ -136,12 +136,10 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
       
       os.system("mv $resultsFolderPrev/$folderName $resultsFolder") 
 
-      isTarExist = os.popen("ls -1 $resultsFolder/*.tar.gz 2>/dev/null | wc -l").read() 
-      if int(isTarExist) > 0:         
+      if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
          log(os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read())  # This may remove anyother file ending with .tar.gz.
-
-      isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read() 
-      if int(isZipExist) > 0:
+         
+      if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist         
          os.system("unzip -j $resultsFolder/*.zip -d $resultsFolder")  # This may remove anyother file ending with .tar.gz.
    #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
@@ -274,7 +272,6 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.tar.gz"))
    #}
    
-   isZipExist = os.popen("ls -1 $resultsFolder/*.zip 2>/dev/null | wc -l").read()
    if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/' + jobKey, '-d', resultsFolder])
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.zip"))

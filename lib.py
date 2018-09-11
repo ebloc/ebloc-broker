@@ -46,15 +46,6 @@ job_state_code['TIMEOUT']      = 16
 header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')" 
 os.environ['header'] = header
 
-def contractCallNode(val): #{   
-   ret = os.popen('echo "$header; console.log(\'\' + ' + val + ")\" | /usr/local/bin/node & echo $! >" + LOG_PATH + "/my-app.pid").read().rstrip('\n').replace(" ", "") 
-   if ret == "notconnected": #{
-      log("Error: Please run Parity or Geth on the background.", 'red')
-      sys.exit() 
-   #}
-   return ret 
-#}
-
 # Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn(): #{
    while True: #{

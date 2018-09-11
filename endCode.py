@@ -193,20 +193,31 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       while newHash == "": #{
          if (countTry > 10):
             sys.exit()
-         countTry += 1                  
-         # os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
-         # with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
-         #    date = content_file.read().strip()
-         # log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))                     
-         # newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read()                                  #| Upload as .tar.gz.
-         # log(os.popen('rm -f $resultsFolder/result.tar.gz').read())  #un-comment                                    #|
+         countTry += 1
+         '''
+         # Approach to upload as .tar.gz. Currently not used.
+         os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
+         with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
+            date = content_file.read().strip()
+         log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))                     
+         newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read() #| Upload as .tar.gz.
+         log(os.popen('rm -f $resultsFolder/result.tar.gz').read())                #|
+         '''
          log("Generated new hash return empty error. Trying again...", 'yellow') 
          newHash = os.popen('ipfs add -r $resultsFolder').read()  # upload as files.
          time.sleep(5) 
       #}
          
-      os.environ['newHash'] = newHash 
-      newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1' ).read().rstrip('\n')  
+      # cmd: echo newHash | tail -n1 | awk '{print $2}'
+      p1 = subprocess.Popen(['echo', text], stdout=subprocess.PIPE)
+      #-----------
+      p2 = subprocess.Popen(['tail', '-n1'], stdin=p1.stdout, stdout=subprocess.PIPE)
+      p1.stdout.close()
+      #-----------
+      p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+      p2.stdout.close()
+      #-----------
+      newHash = p3.communicate()[0].decode('utf-8').strip()
       log("newHash: " + newHash)        
    #}
    if str(storageID) == '2': #{ IPFS & miniLock
@@ -226,17 +237,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
             sys.exit()
          countTry += 1                   
          log("Generated new hash return empty error. Trying again.", 'yellow') 
-         newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read() 
+         newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read()
+         newHash = newHash.split(' ')[1]
          time.sleep(5) 
-      #}
-      
-      newHash = newHash.split(" ")[1] 
-      os.environ['newHash'] = newHash 
-      newHash = os.popen('echo $newHash | tr " " "\n" | tail -n2 | head -n1').read().rstrip('\n')
+      #}      
       log("newHash: " + newHash)       
    #}
       
-   elapsedTime = os.popen('sacct -j $jobID --format="Elapsed" | tail -n1 | head -n1').read() 
+   elapsedTime = os.popen('sacct -n -X -j $jobID --format="Elapsed"').read() 
    log("ElapsedTime: " + elapsedTime) 
 
    elapsedTime    = elapsedTime.split(':') 
