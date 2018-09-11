@@ -292,39 +292,7 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
     });   
 };
 
-exports.isTransactionPassed = function(transaction_id) {
-    var web3_extended = require('web3_ipc');
-    var options       = { host: 'http://localhost:' + nodePaths.RPC_PORT, ipc:false, personal: true,admin: true, debug: true };
-    var web3          = web3_extended.create(options);
-    if(!web3.isConnected()) 
-	console.log("not connected");
-    var myContractInstance  = new web3.eth.Contract(eBlocBroker.abi).at(eBlocBroker.address);
 
-    var checkPassed = 0;
-    var receipt     = web3.eth.getTransactionReceipt(transaction_id);
-
-    if( (receipt != null) ) { //first it has to pass receipt check
-	var status          = web3.debug.traceTransaction(transaction_id);
-	//prevents for returning error message.
-	//if ( status.structLogs[status.structLogs.length-1].error == "{}" )
-	if( status.structLogs[status.structLogs.length-1].error == null ) { //status.structLogs[status.structLogs.length-1].error == "" )
-	    //"RETURN"
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
-	    //console.log( status.structLogs[status.structLogs.length-1].error )
-	    checkPassed = 1;
-	}
-	else{
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
-	    //console.log( status.structLogs[status.structLogs.length-1].error )
-	    //---
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].op));
-	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].error));
-	}
-    }
-    //console.log( "TransactionPassed ?= " + transaction_id + ": " + checkPassed );
-    //console.log( checkPassed );
-    return checkPassed;
-};
 
 /* ----------------------------------------------------------------------------------------------------------------
  not used anymore
@@ -400,3 +368,38 @@ exports.getUserInfo = function(myPath, userAddress) {
     });
     */
 
+/*
+exports.isTransactionPassed = function(transaction_id) {
+    var web3_extended = require('web3_ipc');
+    var options       = { host: 'http://localhost:' + nodePaths.RPC_PORT, ipc:false, personal: true,admin: true, debug: true };
+    var web3          = web3_extended.create(options);
+    if(!web3.isConnected()) 
+	console.log("not connected");
+    var myContractInstance  = new web3.eth.Contract(eBlocBroker.abi).at(eBlocBroker.address);
+
+    var checkPassed = 0;
+    var receipt     = web3.eth.getTransactionReceipt(transaction_id);
+
+    if( (receipt != null) ) { //first it has to pass receipt check
+	var status          = web3.debug.traceTransaction(transaction_id);
+	//prevents for returning error message.
+	//if ( status.structLogs[status.structLogs.length-1].error == "{}" )
+	if( status.structLogs[status.structLogs.length-1].error == null ) { //status.structLogs[status.structLogs.length-1].error == "" )
+	    //"RETURN"
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
+	    //console.log( status.structLogs[status.structLogs.length-1].error )
+	    checkPassed = 1;
+	}
+	else{
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1]));
+	    //console.log( status.structLogs[status.structLogs.length-1].error )
+	    //---
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].op));
+	    //console.log(JSON.stringify(status.structLogs[status.structLogs.length-1].error));
+	}
+    }
+    //console.log( "TransactionPassed ?= " + transaction_id + ": " + checkPassed );
+    //console.log( checkPassed );
+    return checkPassed;
+};
+*/
