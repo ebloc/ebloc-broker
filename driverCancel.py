@@ -10,7 +10,7 @@ from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
 
 web3        = getWeb3() 
 eBlocBroker = connectEblocBroker() 
-testFlag    = 0
+testFlag    = False
 
 def log(strIn, color=''): #{
    if testFlag: #{
@@ -32,16 +32,17 @@ if not cancelBlockReadFromLocal.isdigit():
 
 log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
 
-maxVal = 0        
+maxVal = 0
 while True: #{
+    if testFlag:
+       cancelBlockReadFromLocal = 1146520
+       
     # Waits here until new job cancelled into the cluster
-    # cancelBlockReadFromLocal = 1140950
     loggedJobs = LogJob.runLogCancelRefund(cancelBlockReadFromLocal, lib.CLUSTER_ID, eBlocBroker)
 
     for e in range(0, len(loggedJobs)): #{
         msg_sender = web3.eth.getTransactionReceipt(loggedJobs[e]['transactionHash'].hex())['from'].lower()
-        userName   = hashlib.md5(msg_sender.encode('utf-8')).hexdigest();
-        
+        userName   = hashlib.md5(msg_sender.encode('utf-8')).hexdigest();        
         #print(msg_sender)
         #print(loggedJobs[e])
         #print(userName)
@@ -54,29 +55,32 @@ while True: #{
         if blockNumber > maxVal:
            maxVal = blockNumber
 
-         # sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c 'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | xargs -n 1 basename); sacct --name $jobName' | head -n3 | tail -n1
-        # output: 51           231555615+      debug cc6b74f19+          1  COMPLETED      0:0
-        
+        '''
+        cmd: sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c 'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | xargs -n 1 basename); sacct -n -X --format jobid --name $jobName'
+        output: 51           231555615+      debug cc6b74f19+          1  COMPLETED      0:0
+        '''
         res = subprocess.check_output(['sudo', 'su', '-', userName, '-c',
                                        'jobName=$(echo ' + jobKey + '_' + str(index) + '/JOB_TO_RUN/' + jobKey + '*' + str(index) + '*sh | xargs -n 1 basename);' +
-                                       'sacct --name $jobName | head -n3 | tail -1 | awk \'{print $1}\'']).decode('utf-8').split()
-        jobID = res[0].replace('.batch','')
-        print('jobID=' + jobID)
-        
-        if jobID.isdigit():
-            subprocess.run(['scancel', jobID])
-            time.sleep(2) # wait few seconds to cancel the requested job.
-
-            p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
-            #-----------
-            p2 = subprocess.Popen(['grep', 'JobState='], stdin=p1.stdout, stdout=subprocess.PIPE)
-            p1.stdout.close()
+                                       'sacct -n -X --format jobid --name $jobName']).decode('utf-8').split()
+        try:
+           jobID = res[0]
+           print('jobID=' + jobID)
+           if jobID.isdigit():
+              subprocess.run(['scancel', jobID])
+              time.sleep(2) # wait few seconds to cancel the requested job.
+              p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
+              #-----------
+              p2 = subprocess.Popen(['grep', 'JobState='], stdin=p1.stdout, stdout=subprocess.PIPE)
+              p1.stdout.close()
             
-            out = p2.communicate()[0].decode('utf-8').strip()
-            if 'JobState=CANCELLED' in out:
-               log('JobID=' + jobID + ' is successfully cancelled.')
-            else:
-               log('Error: jobID=' + jobID + ' is not cancelled, something went wrong or already cancelled. ' + out)                        
+              out = p2.communicate()[0].decode('utf-8').strip()
+              if 'JobState=CANCELLED' in out:
+                 log('JobID=' + jobID + ' is successfully cancelled.')
+              else:
+                 log('Error: jobID=' + jobID + ' is not cancelled, something went wrong or already cancelled. ' + out)
+        except IndexError:
+           log('Something went wrong, jobID is returned as None.')
+        
                     
     if int(maxVal) != 0:
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'w')  # Updates the latest read block number      
