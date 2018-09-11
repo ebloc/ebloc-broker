@@ -54,7 +54,7 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
       time.sleep(5) 
    #}
    
-   log("receiptCheck  " + txHash)  
+   log("receiptCheck " + txHash)  
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
 
    txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| receiptCheckTx\n") 
@@ -112,7 +112,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
    log("JOB_INFO: " + ",".join(map(str, jobInfo)))
 
-   userID     = jobInfo[6].replace("u'", "").replace("'", "")
+   userID     = jobInfo[6].replace("u'", "").replace("'", "").lower()
    userIDAddr = hashlib.md5(userID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
    userInfo   = getUserInfo(userID, '1', eBlocBroker, web3)
 
@@ -166,7 +166,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       countTry += 1                  
       log("Waiting... " + str(countTry * 60) + ' seconds passed.', 'yellow')  
       if jobInfo[0] == lib.job_state_code['RUNNING']: # It will come here eventually, when setJob() is deployed.
-         log("Job has been started to run.", 'green')  
+         log("Job has been started.", 'green')  
          break  # Wait until does values updated on the blockchain
       
       if jobInfo[0] == lib.job_state_code['COMPLETED']: 
