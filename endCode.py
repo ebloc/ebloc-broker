@@ -119,8 +119,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    resultsFolder     = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index 
    os.environ['resultsFolder']     = resultsFolder 
-   os.environ['resultsFolderPrev'] = resultsFolderPrev 
-   os.system('rm -f $resultsFolder/result-*tar.gz')
+   os.environ['resultsFolderPrev'] = resultsFolderPrev
+
+   subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/result-*tar.gz'))  
 
    log("\nwhoami: "          + os.popen('whoami').read().rstrip('\n')) 
    log("pwd: "               + os.popen('pwd').read().rstrip('\n')) 
@@ -184,11 +185,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    #}
    
    log("jobName: " + str(folderName))    
-   os.system('scontrol show job $jobID > $resultsFolder/slurmJobInfo.out') 
+   # cmd: scontrol show job $jobID > $resultsFolder/slurmJobInfo.out
+   with open(resultsFolder + '/slurmJobInfo.out', 'w') as stdout:
+      subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=stdout)
    
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
-      newHash = os.popen('ipfs add -r $resultsFolder').read()  # Upload as folder.      
+      # Uploaded as folder
+      newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).strip().decode('utf-8')      
       countTry = 0 
       while newHash == "": #{
          if (countTry > 10):
@@ -200,11 +204,12 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
          log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))                     
-         newHash = os.popen('ipfs add ' + resultsFolder + '/result.tar.gz').read() #| Upload as .tar.gz.
-         log(os.popen('rm -f $resultsFolder/result.tar.gz').read())                #|
+         newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz']).strip().decode('utf-8')
+         newHash = newHash.split(' ')[1]
+         subprocess.run(['rm', '-f', resultsFolder + '/result.tar.gz'])
          '''
-         log("Generated new hash return empty error. Trying again...", 'yellow') 
-         newHash = os.popen('ipfs add -r $resultsFolder').read()  # upload as files.
+         log("Generated new hash return empty error. Trying again...", 'yellow')
+         newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).strip().decode('utf-8')      
          time.sleep(5) 
       #}
          
@@ -230,14 +235,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read()) 
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete') 
 
-      newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read()       
+      newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
+      newHash = newHash.split(' ')[1]
       countTry = 0 
       while newHash == "": #{
          if countTry > 10:
             sys.exit()
          countTry += 1                   
-         log("Generated new hash return empty error. Trying again.", 'yellow') 
-         newHash = os.popen('ipfs add $resultsFolder/result.tar.gz.minilock').read()
+         log("Generated new hash return empty error. Trying again.", 'yellow')
+         newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
          newHash = newHash.split(' ')[1]
          time.sleep(5) 
       #}      
@@ -268,8 +274,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log("jobInfo: " + str(jobInfo)) 
 
    if storageID == '1': #{ #EUDAT
-      newHash = '0x00'      
-      os.system("rm $resultsFolder/.node-xmlhttprequest*")       
+      newHash = '0x00'
+      # cmd: rm $resultsFolder/.node-xmlhttprequest*
+      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/.node-xmlhttprequest*'))
       os.chdir(resultsFolder) 
       
       # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them.
@@ -323,8 +330,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          log('Files could not be uploaded', 'red')
          sys.exit() 
    #}
-   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID)    
-   # os.system("rm -rf " + programPath + '/' + jobKey + "_" + index)  # Removed downloaded code from local since it is not needed anymore
+   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID)
+
+   # Removed downloaded code from local since it is not needed anymore
+   subprocess.run(['rm', '-rf', programPath + '/' + jobKey + "_" + index])
 #}
 
 if __name__ == '__main__': #{
