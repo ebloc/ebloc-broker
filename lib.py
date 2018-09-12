@@ -100,12 +100,11 @@ def isIpfsOn(): #{
    if int(check) == 0:
       log("Error: IPFS does not work on the background.", 'red') 
       log(" * Starting IPFS: nohup ipfs daemon &")
-      
-      subprocess.Popen(['nohup', 'ipfs', 'daemon'],
-                 stdout=open(LOG_PATH + '/ipfs.out', 'w'),
-                 stderr=open(LOG_PATH + '/ipfs.out', 'a'),
-                 preexec_fn=os.setpgrp)
-      
+      with open(LOG_PATH + '/ipfs.out', 'w') as stdout:
+         subprocess.Popen(['nohup', 'ipfs', 'daemon'],
+                          stdout=stdout,
+                          stderr=stdout,
+                          preexec_fn=os.setpgrp)      
       time.sleep(5)
       with open(LOG_PATH + '/ipfs.out', 'r') as content_file:
          log(content_file.read(), 'blue') 
