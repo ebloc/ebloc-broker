@@ -49,7 +49,7 @@ if int(out) == 0: #{
 jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
 # =======================================================================
 
-# res = subprocess.check_output(['stty', 'size']).strip().decode('utf-8').split()
+# res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
 # rows = res[0] columns = res[1]
 columns = 100
 
