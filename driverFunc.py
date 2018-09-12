@@ -10,13 +10,14 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-jobKeyGlobal = "" 
-indexGlobal  = ""
+jobKeyGlobal    = '' 
+indexGlobal     = ''
+storageIDGlobal = ''
+shareTokenGlobal = '-1'
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
-os.environ['eblocPath'] = lib.EBLOCPATH 
 os.environ['clusterID'] = lib.CLUSTER_ID 
 
 def silentremove(filename): #{
@@ -67,7 +68,11 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    txFile.close() 
    time.sleep(0.25) 
    
-   os.system('sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh"')    
+   # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
+   subprocess.run(['sudo', 'su', '-', userID, '-c',
+                   'cp ' + resultsFolder + '/run.sh ' +
+                   resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh']);
+                            
    jobInfo = getJobInfo(lib.CLUSTER_ID, jobKeyGlobal, int(indexGlobal), eBlocBroker, web3) 
    jobCoreNum    = jobInfo[1] 
    coreSecondGas = timedelta(seconds=int((int(jobInfo[5]) + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
@@ -94,10 +99,14 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
 
 def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    global jobKeyGlobal
-   global indexGlobal   
+   global indexGlobal
+   global storageIDGlobal
+   global shareTokenGlobal
+   
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
-
+   storageIDGlobal = storageID
+   
    log("key: "   + jobKey) 
    log("index: " + index) 
 
@@ -132,27 +141,43 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
       if not os.path.isdir(resultsFolderPrev + '/' + folderName): #{ Check before mv operation.
          log('Folder is not downloaded successfully.', 'red') 
          return 
-      #}
+      #}      
+      # cmd: mv $resultsFolderPrev/$folderName $resultsFolder
+      subprocess.run(['mv', resultsFolderPrev + '/folderName', resultsFolder])
       
-      os.system("mv $resultsFolderPrev/$folderName $resultsFolder") 
-
       if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
-         log(os.popen("tar -xf $resultsFolder/*.tar.gz -C $resultsFolder" ).read())  # This may remove anyother file ending with .tar.gz.
-         
+         # cmd: tar -xf $resultsFolder/*.tar.gz -C $resultsFolder
+         # Remove any file ending with .tar.gz.
+         for tarFile in glob.glob(resultsFolder + '/*.tar.gz'):
+             subprocess.run(['tar', '-xf', tarFile, '-C', resultsFolder])
+
       if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist         
-         os.system("unzip -j $resultsFolder/*.zip -d $resultsFolder")  # This may remove anyother file ending with .tar.gz.
+         # cmd: unzip -j $resultsFolder/*.zip -d $resultsFolder
+         # This may remove anyother file ending with .zip
+         for zipFile in glob.glob(resultsFolder + '/*.zip'):
+             subprocess.run(['unzip', '-j', zipFile, '-d', resultsFolder])
+         
    #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
        os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code     
-       os.system("gdrive download $jobKey --force --path $resultsFolder/../")  # Gets the source code
-       log(os.popen("tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder" ).read()) 
-       os.popen("rm -f $resultsFolderPrev/*.tar.gz").read()       
+       # cmd: gdrive download $jobKey --force --path $resultsFolder/../
+       subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev + '/../']) # Gets the source code
+       
+       log(os.popen("tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder" ).read())
+       # cmd: rm -f $resultsFolderPrev/*.tar.gz
+       subprocess.run(['rm', '-f'] + glob.glob(resultsFolderPrev + '/*.tar.gz'))
    elif 'zip' in mimeType: # Recieved job is in zip format
        os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code
-       os.system("gdrive download $jobKey --force --path $resultsFolderPrev/")  # Gets the source code
+       # cmd: gdrive download $jobKey --force --path $resultsFolderPrev/
+       subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev]) # Gets the source code
+       
        log(os.popen('echo gdrive download --recursive $jobKey --force --path $resultsFolderPrev/').read())
-       os.system("unzip -j $resultsFolderPrev/$folderName -d $resultsFolder") 
-       os.system("rm -f $resultsFolderPrev/$folderName")       
+
+       # cmd: unzip -j $resultsFolderPrev/$folderName -d $resultsFolder
+       subprocess.run(['unzip', '-j', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])       
+
+       # cmd: rm -f $resultsFolderPrev/$folderName
+       subprocess.run(['rm', '-rf', resultsFolderPrev + '/' + folderName])
    else:
        return 
 
@@ -163,10 +188,14 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
 
 def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    global jobKeyGlobal
-   global indexGlobal   
+   global indexGlobal
+   global storageIDGlobal
+   global shareTokenGlobal
+
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
-
+   storageIDGlobal = storageID
+   
    log("key: "   + jobKey) 
    log("index: " + index)
 
@@ -181,24 +210,29 @@ def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
 
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
- 
-   os.system("git clone https://github.com/$jobKeyGit.git $resultsFolder")  # Gets the source code
+
+   # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
+   subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
    sbatchCall(userID, resultsFolder, eBlocBroker, web3)    
 #}
 
 def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    global jobKeyGlobal
-   global indexGlobal   
+   global indexGlobal
+   global storageIDGlobal
+   global shareTokenGlobal
+
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
-   
+   storageIDGlobal = '1'
+      
    log("key: "   + jobKey) 
    log("index: " + index) 
 
    os.environ['jobKey']      = str(jobKey) 
    os.environ['index']       = str(index)  
-   os.environ['storageID'] = "1" 
+   os.environ['storageID'] = '1' 
 
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
@@ -218,15 +252,17 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    eudatFolderName = "" 
    log("Finding acceptID:")
    for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
-      inputFolderName = shareList[i]['name']
-      inputFolderName = inputFolderName[1:] # Removes '/' on the beginning
-      inputId         = shareList[i]['id']
-      inputOwner      = shareList[i]['owner']
-      shareToken      = shareList[i]['share_token']
-
+      inputFolderName  = shareList[i]['name']
+      inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
+      inputId          = shareList[i]['id']
+      inputOwner       = shareList[i]['owner']
+      shareToken       = shareList[i]['share_token']
+      shareTokenGlobal = shareList[i]['share_token']
+      
       if (inputFolderName == jobKey) and (inputOwner == fID): #{
          log("InputId: " + inputId + " |ShareToken: " + shareToken) 
-         os.environ['shareToken']      = str(shareToken) 
+         os.environ['shareToken']      = str(shareToken)
+         shareTokenGlobal              = str(shareToken)
          os.environ['eudatFolderName'] = str(inputFolderName) 
          eudatFolderName               = inputFolderName 
          acceptFlag = 1 
@@ -269,7 +305,7 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
       # Extracting all *.tar.gz files.
       subprocess.run(['bash', lib.EBLOCPATH + '/tar.sh', resultsFolder])      
       # Removing all tar.gz files after extraction is done.
-      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.tar.gz"))
+      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/*.tar.gz'))
    #}
    
    if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
@@ -278,14 +314,18 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    #}
    
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   sbatchCall(userID, resultsFolder, eBlocBroker, web3) 
+   sbatchCall(userID, resultsFolder, eBlocBroker,  web3) 
 #}
 
 def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     global jobKeyGlobal
-    global indexGlobal   
+    global indexGlobal
+    global storageIDGlobal
+    global shareTokenGlobal
+    
     jobKeyGlobal = jobKey  
-    indexGlobal  = index 
+    indexGlobal  = index
+    storageIDGlobal = storageID
     
     lib.isIpfsOn(os, time) 
     os.environ['jobKey']     = jobKey 
@@ -309,19 +349,24 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     if os.path.isfile(jobKey):
        subprocess.run(['rm', '-f', jobKey])
 
-    ipfsCallCounter = 0 
+    ipfsCallCounter = 0
+    # cmd: bash $eblocPath/ipfsStat.sh $jobKey
     isIPFSHashExist = subprocess.check_output(['bash', lib.EBLOCPATH + '/ipfsStat.sh', jobKey]).decode('utf-8').split()
-    # os.popen("bash $eblocPath/ipfsStat.sh $jobKey").read() delete        
     log(isIPFSHashExist) 
     
     if "CumulativeSize" in isIPFSHashExist: #{
-       os.system('bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder') 
+       # cmd: bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder
+       subprocess.run(['bash', lib.EBLOCPATH + '/ipfsGet.sh', jobKey, resultsFolder])        
+       
        if storageID == '2': #{ Case for the ipfsMiniLock
           os.environ['passW'] = 'bright wind east is pen be lazy usual' 
           log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read()) 
-
-          os.system('rm -f $resultsFolder/$jobKey') 
-          os.system('tar -xf $resultsFolder/output.tar.gz && rm -f $resultsFolder/output.tar.gz') 
+          # cmd: rm -f $resultsFolder/$jobKey
+          subprocess.run(['rm', '-f', resultsFolder + '/' + jobKey])         
+          # cmd: tar -xf $resultsFolder/output.tar.gz
+          subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
+          # cmd: rm -f $resultsFolder/output.tar.gz
+          subprocess.run(['rm', '-f', resultsFolder + '/output.tar.gz'])
        #}
        
        if not os.path.isfile('run.sh'): 
@@ -336,10 +381,6 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
 
 # To test driverFunc.py executed as script.
 if __name__ == '__main__': #{
-   #var        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=QmVvHrWzVmK3VASrGax7czDwfavwjgXgGmoeYRJtU6Az99" 
-   #index      = "0" 
-   #driverEudatCall(var, index) 
-   #------
    var        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
    index      = "1"
    myType     = "0"

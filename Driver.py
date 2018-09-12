@@ -49,7 +49,7 @@ if int(out) == 0: #{
 jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
 # =======================================================================
 
-# res = subprocess.check_output(["stty", "size"]).strip().decode('utf-8').split()
+# res = subprocess.check_output(['stty', 'size']).strip().decode('utf-8').split()
 # rows = res[0] columns = res[1]
 columns = 100
 
@@ -68,8 +68,9 @@ def terminate(): #{
    log('Terminated')
    subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit.   
 
-   # Following line is added, in case ./killall.sh does not work due to sudo
-   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  # Send the kill signal to all the process groups
+   ''' Following line is added, in case ./killall.sh does not work due to sudo.
+   Send the kill signal to all the process groups '''
+   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  
    sys.exit()
 #}
 
@@ -200,7 +201,7 @@ if not blockReadFromLocal.isdigit(): #{
       if choice in yes:
          blockReadFromLocal = deployedBlockNumber
          f = open(lib.BLOCK_READ_FROM_FILE, 'w')
-         f.write( deployedBlockNumber + "\n")
+         f.write(deployedBlockNumber + "\n")
          f.close()
          log("\n")
          break
