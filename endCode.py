@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, time, subprocess, lib, base64, glob
-
-from subprocess import call
+import sys, os, time, lib, base64, glob, getpass, subprocess
 from colored import stylize
 from colored import fg
 import hashlib
@@ -85,8 +83,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8') 
 
    log("encodedShareToken: " + encodedShareToken) 
-
-   clusterAddress = lib.CLUSTER_ID;
    
    os.environ['programPath']       = str(programPath) 
    os.environ['clusterID']         = lib.CLUSTER_ID 
@@ -98,15 +94,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    os.environ['encodedShareToken'] = encodedShareToken   
    os.environ['jobName']           = folderName 
       
-   jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+   jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
    
    # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
    while not jobInfo:      
       log('jobInfo: ' + jobInfo) 
 
-      log('getJobInfo.py ' + ' ' + clusterAddress + ' ' + jobKey + ' ' + index)
+      log('getJobInfo.py ' + ' ' + lib.CLUSTER_ID + ' ' + jobKey + ' ' + index)
       log("Error: Please run geth on the background.", 'red')
-      jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+      jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       time.sleep(5)
    #}
 
@@ -123,8 +119,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
    subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/result-*tar.gz'))  
 
-   log("\nwhoami: "          + os.popen('whoami').read().rstrip('\n')) 
-   log("pwd: "               + os.popen('pwd').read().rstrip('\n')) 
+   log("\nwhoami: "          + getpass.getuser())  #whoami
+   log("pwd: "               + os.getcwd()) #pwd
    log("resultsFolder: "     + resultsFolder) 
    log("jobKey: "            + jobKey) 
    log("index: "             + index) 
@@ -148,18 +144,18 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log('{0: <13}'.format('miniLockID: ')    + userInfo[2])
    log('{0: <13}'.format('ipfsAddress: ')   + userInfo[3])
    log('{0: <13}'.format('fID: ')           + userInfo[4])
-   os.environ['clientMiniLockId']  = userInfo[2] 
+   clientMiniLockID = userInfo[2] 
+   os.environ['clientMiniLockID']  = userInfo[2] 
       
    log("") 
    
    if jobInfo[0] == str(lib.job_state_code['COMPLETED']): #{
       log('Job is already get paid.', 'red') 
       sys.exit() 
-   #}
-
+   #}   
    clientTimeLimit = jobInfo[5] 
    log("clientGasMinuteLimit: " + str(clientTimeLimit))  # Clients minuteGas for the job
-   
+            
    countTry = 0 
    while True: #{      
       #if countTry > 200: # setJobStatus may deploy late.
@@ -174,11 +170,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
         log("Error: Already completed job is received.", 'red')  
         sys.exit()  # Detects an error on the SLURM side
 
-      jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+      jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       #while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
       while not jobInfo:      
          log("Error: Please run geth on the background.", 'red')
-         jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+         jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
          time.sleep(5)
       #}      
       time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
@@ -192,7 +188,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
       # Uploaded as folder
-      newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).strip().decode('utf-8')      
+      newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).decode('utf-8').strip()
       countTry = 0 
       while newHash == "": #{
          if (countTry > 10):
@@ -200,10 +196,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          countTry += 1
          '''
          # Approach to upload as .tar.gz. Currently not used.
-         os.popen('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
+         os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
          with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
-         log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))                     
+         log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))                     
          newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz']).strip().decode('utf-8')
          newHash = newHash.split(' ')[1]
          subprocess.run(['rm', '-f', resultsFolder + '/result.tar.gz'])
@@ -230,9 +226,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
-      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))            
-     
-      log(os.popen('mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockId --anonymous --output-file=$resultsFolder/result.tar.gz.minilock').read()) 
+      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
+      # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
+      res = subprocess.check_output(['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', clientMiniLockID,
+                                     '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
+      log(res)         
       # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete') 
 
       newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
@@ -248,9 +246,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          time.sleep(5) 
       #}      
       log("newHash: " + newHash)       
-   #}
-      
-   elapsedTime = os.popen('sacct -n -X -j $jobID --format="Elapsed"').read() 
+   #}     
+   #cmd: sacct -n -X -j $jobID --format="Elapsed"
+   elapsedTime = subprocess.check_output(['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed']).decode('utf-8').strip()   
    log("ElapsedTime: " + elapsedTime) 
 
    elapsedTime    = elapsedTime.split(':') 
@@ -279,29 +277,62 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/.node-xmlhttprequest*'))
       os.chdir(resultsFolder) 
       
-      # os.popen('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them.
-      # log(os.popen('tar -jcvf result-$clusterID-$index.tar.gz *').read())
+      # os.system('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them.
+      # cmd: tar -jcvf result-$clusterID-$index.tar.gz *
+      # log(subprocess.check_output(['tar', '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))
 
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
-      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))            
-      
-      res = os.popen('curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz').read() 
-      log(res)
+      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
 
-      if '<d:error' in res:
+      ''' cmd: (https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577)
+      curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
+      --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz
+      '''      
+      p = Popen(['curl', '--fail', '-X', 'PUT', '-H', 'Content-Type: text/plain', '-H',
+                 'Authorization: Basic ' +  encodedShareToken,
+                 '--data-binary',  '@result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz',
+                 'https://b2drop.eudat.eu/public.php/webdav/result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'], stdout=PIPE, stderr=subprocess.PIPE)
+      output, err = p.communicate()
+      log('curl output: ' + output.decode('utf-8'))
+      if p.returncode != 0:
+         log('EUDAT repository did not successfully loaded.', 'red')
+         log("curl failed %d %s" % (p.returncode, err.decode('utf-8')))
+         sys.exit()
+        
+      if '<d:error' in output: 
          log('EUDAT repository did not successfully loaded.', 'red')
          sys.exit()       
    #}   
    elif str(storageID) == '4': #{ #GDRIVE
       newHash = '0x00'
-      mimeType = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n') 
+      # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
+      p1 = subprocess.Popen([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
+      #-----------
+      p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
+      p1.stdout.close()
+      #-----------
+      p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+      p2.stdout.close()
+      #-----------
+      mimeType = p3.communicate()[0].decode('utf-8').strip()
+      
       countTry=0 
       while mimeType == "": #{
          if countTry > 10: # mimeType may just return empty string, lets try few more time...
             sys.exit()                        
          log('mimeType returns empty string. Try: ' + str(countTry), 'red')            
-         mimeType = os.popen('$GDRIVE info $jobKey -c $GDRIVE_METADATA| grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n')             
+         # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
+         p1 = subprocess.Popen([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
+         #-----------
+         p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
+         p1.stdout.close()
+         #-----------
+         p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+         p2.stdout.close()
+         #-----------
+         mimeType = p3.communicate()[0].decode('utf-8').strip()
+
          countTry += 1 
          time.sleep(15)          
       #}      
@@ -314,18 +345,24 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
       with open(f, resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
-      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz' ] + glob.glob("*")).decode('utf-8'))            
+      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
       time.sleep(0.25) 
 
       if 'folder' in mimeType: # Received job is in folder format
          log('mimeType: folder')          
-         log(os.popen('$GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read()) 
+         # cmd: $GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
+         log(subprocess.check_output([lib.GDRIVE, 'upload', '--parent', jobKey,
+                                      'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz', '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       elif 'gzip' in mimeType: # Received job is in folder tar.gz
          log('mimeType: tar.gz') 
-         log(os.popen('$GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read()) 
+         # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
+         log(subprocess.check_output([lib.GDRIVE, 'upload', jobKey,
+                                      'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz', '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       elif '/zip' in mimeType: # Received job is in zip format
-         log('zip') 
-         log(os.popen('$GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA').read()) 
+         log('mimeType: zip')
+         # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
+         log(subprocess.check_output([lib.GDRIVE, 'upload', jobKey,
+                                      'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz', '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       else:
          log('Files could not be uploaded', 'red')
          sys.exit() 
