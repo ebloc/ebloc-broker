@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, endCode, zipfile
 from datetime import datetime, timedelta
-import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, endCode
 from   subprocess import call
 import os.path
 from colored import stylize
@@ -58,7 +58,7 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    os.environ['resultsFolder'] = str(resultsFolder) 
 
    # Give permission to user that will send jobs to Slurm.
-   subprocess.check_output(['sudo', 'chown', '-R', userID, '.'])
+   subprocess.run(['sudo', 'chown', '-R', userID, '.'])
    
    date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
                                   env={'LANG': 'en_us_88591'}).decode('utf-8').strip()   
@@ -83,17 +83,19 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    os.environ['jobCoreNum'] = str(jobCoreNum) 
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum))  
 
-   # SLURM submit job
-   # jobID = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n')  # Real mode -C is used.
-   jobID = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n')  # Emulator-mode -N is used.   
-   jobID = jobID.split()[3]    
+   # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
+   # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+   jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
+                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + str(jobCoreNum) + ' ' + 
+                                    resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh' + ' ' + 
+                                    '--mail-type=ALL']).decode('utf-8').strip()
+   jobID = jobID.split()[3]
+   log('jobID=' + jobID) # delete
    try:
        # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
        subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
    except subprocess.CalledProcessError as e:
        log(e.output.decode('utf-8').strip())
-
-   subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit])
       
    if not jobID.isdigit(): #{
       log("Error occured, jobID is not a digit.", 'red')
@@ -128,16 +130,38 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
        os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
       
-   mimeType   = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'').read().rstrip('\n')
-   folderName = os.popen('gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Name\' | awk \'{print $2}\'').read().rstrip('\n') 
+   # cmd: gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
+   p1 = subprocess.Popen(['gdrive', 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   # p1.stdout.close() delete
+   #-----------
+   p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+   p2.stdout.close()
+   #-----------
+   mimeType = p3.communicate()[0].decode('utf-8').strip()
+
+   # cmd: gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Name\' | awk \'{print $2}\'
+   # p1 = subprocess.Popen(['gdrive', 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE) already obtained from prevous command. delete
+   #-----------
+   p2 = subprocess.Popen(['grep', 'Name'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+   p2.stdout.close()
+   #-----------
+   folderName = p3.communicate()[0].decode('utf-8').strip()
+   
    os.environ['folderName']  = folderName 
    log(mimeType) 
    
    if 'folder' in mimeType: #{ # Recieved job is in folder format      
-      res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read() 
+      # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
+      res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8')
       while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or ('googleapi' in res and 'error' in res): #{
          time.sleep(10)            
-         res = os.popen("gdrive download --recursive $jobKey --force --path $resultsFolderPrev/").read()  # Gets the source code
+         # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
+         res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8').strip()
          log(res)  
       #}      
       log(res)              
@@ -165,18 +189,16 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
        os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code     
        # cmd: gdrive download $jobKey --force --path $resultsFolder/../
-       subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev + '/../']) # Gets the source code
-       
-       log(os.popen("tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder" ).read())
+       subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev + '/../']) # Gets the source code       
+       # cmd: tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder
+       log(subprocess.check_output(['tar', '-xf'] + glob.glob(resultsFolderPrev + '/*.tar.gz') + ['C', resultsFolder]).decode('utf-8'))       
        # cmd: rm -f $resultsFolderPrev/*.tar.gz
        subprocess.run(['rm', '-f'] + glob.glob(resultsFolderPrev + '/*.tar.gz'))
    elif 'zip' in mimeType: # Recieved job is in zip format
        os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code
        # cmd: gdrive download $jobKey --force --path $resultsFolderPrev/
        subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev]) # Gets the source code
-       
-       log(os.popen('echo gdrive download --recursive $jobKey --force --path $resultsFolderPrev/').read())
-
+       log('gdrive download --recursive ' + jobKey + '--force --path ' + resultsFolderPrev)
        # cmd: unzip -j $resultsFolderPrev/$folderName -d $resultsFolder
        subprocess.run(['unzip', '-j', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])       
 
@@ -283,11 +305,19 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
       
-   #checkRunExist = os.popen("unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh" ).read()# Checks does zip contains run.sh file
-   #if (not eudatFolderName + "/run.sh" in checkRunExist ):
-   #log("Error: Folder does not contain run.sh file or client does not run ipfs daemon on the background.")
-   #return  #detects error on the SLURM side.
-
+   '''
+   # cmd: unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh
+   # Checks does zip contains run.sh file
+   p1 = subprocess.Popen(['unzip', '-l', resultsFolder + '/output.zip'], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['grep', eudatFolderName + '/run.sh'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   out = p2.communicate()[0].decode('utf-8').strip()   
+   if not '/run.sh' in out:
+       log("Error: Folder does not contain run.sh file.")
+       return  
+   '''   
    # Downloads shared file as .zip, much faster.
    # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
    ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareToken +
@@ -363,8 +393,13 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        subprocess.run(['bash', lib.EBLOCPATH + '/ipfsGet.sh', jobKey, resultsFolder])        
        
        if storageID == '2': #{ Case for the ipfsMiniLock
-          os.environ['passW'] = 'bright wind east is pen be lazy usual' 
-          log(os.popen('mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz').read()) 
+          passW = 'bright wind east is pen be lazy usual' 
+          # os.environ['passW'] = 'bright wind east is pen be lazy usual' # delete
+
+          # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
+          log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey +
+                                       '--passphrase=' + passW,
+                                       '--output-file=' + resultsFolder + '/output.tar.gz']).decode('utf-8'))          
           # cmd: rm -f $resultsFolder/$jobKey
           subprocess.run(['rm', '-f', resultsFolder + '/' + jobKey])         
           # cmd: tar -xf $resultsFolder/output.tar.gz
