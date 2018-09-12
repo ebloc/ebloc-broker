@@ -84,15 +84,19 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum))  
 
    # SLURM submit job
-   # jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n')  # Real mode -C is used.
-   jobId = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n')  # Emulator-mode -N is used.   
-   jobId = jobId.split()[3] 
-   
-   os.environ['jobId'] = jobId 
-   os.popen('scontrol update jobid=$jobId TimeLimit=$timeLimit') 
-   
-   if not jobId.isdigit(): #{
-      log("Error occured, jobId is not a digit.", 'red')
+   # jobID = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n')  # Real mode -C is used.
+   jobID = os.popen('sudo su - $userID -c "cd $resultsFolder && sbatch -N$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL"').read().rstrip('\n')  # Emulator-mode -N is used.   
+   jobID = jobID.split()[3]    
+   try:
+       # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
+       subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
+   except subprocess.CalledProcessError as e:
+       log(e.output.decode('utf-8').strip())
+
+   subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit])
+      
+   if not jobID.isdigit(): #{
+      log("Error occured, jobID is not a digit.", 'red')
       return()  # Detects an error on the SLURM side
    #}
 #}
