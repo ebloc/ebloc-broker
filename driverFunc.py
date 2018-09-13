@@ -59,15 +59,29 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
 
    # Give permission to user that will send jobs to Slurm.
    subprocess.run(['sudo', 'chown', '-R', userID, '.'])
-   
+
+   # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
    date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
-                                  env={'LANG': 'en_us_88591'}).decode('utf-8').strip()   
-   log(date) 
-   txFile = open('../modifiedDate.txt', 'w') 
-   txFile.write(date + '\n' )    
-   txFile.close() 
-   time.sleep(0.25) 
+                                  env={'LANG': 'en_us_88591'}).decode('utf-8').strip()
+   log('Date=' + date)
+   f = open('../modifiedDate.txt', 'w') 
+   f.write(date + '\n' )    
+   f.close()
+
+   # echo date | date +%s
+   p1 = subprocess.Popen(['echo', date], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['date', '+%s'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   timestamp = p2.communicate()[0].decode('utf-8').strip()
+   log('Timestamp=' + timestamp)
+
+   f = open('../timestamp.txt', 'w') 
+   f.write(timestamp + '\n' )    
+   f.close()
    
+   time.sleep(0.25)    
    # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
    subprocess.run(['sudo', 'su', '-', userID, '-c',
                    'cp ' + resultsFolder + '/run.sh ' +
@@ -129,9 +143,12 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
        os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
-      
-   # cmd: gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
-   p1 = subprocess.Popen(['gdrive', 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
+
+   #cmd: gdrive info $jobKey -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost   
+   gdriveInfo = subprocess.check_output(['gdrive', 'info', jobKey, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip() 
+   
+   # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
+   p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
    #-----------
    p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
    # p1.stdout.close() delete
@@ -141,8 +158,8 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    #-----------
    mimeType = p3.communicate()[0].decode('utf-8').strip()
 
-   # cmd: gdrive info $jobKey -c $GDRIVE_METADATA | grep \'Name\' | awk \'{print $2}\'
-   # p1 = subprocess.Popen(['gdrive', 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE) already obtained from prevous command. delete
+   # cmd: echo gdriveInfo | grep \'Name\' | awk \'{print $2}\'
+   p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
    #-----------
    p2 = subprocess.Popen(['grep', 'Name'], stdin=p1.stdout, stdout=subprocess.PIPE)
    p1.stdout.close()
