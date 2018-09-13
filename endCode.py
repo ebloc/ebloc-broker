@@ -59,13 +59,28 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
    txFile.close() 
 #}
 
+# Client's loaded files are removed, no need to re-upload them.
+def removeSourceCode(resultsFolderPrev): #{
+      # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
+      filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']).decode('utf-8').strip()
+      log('Files to be removed: \n' + filesToRemove)
+
+      # cmd: echo out | xargs rm -rf
+      p1 = subprocess.Popen(['echo', filesToRemove], stdout=subprocess.PIPE)
+      #-----------
+      p2 = subprocess.Popen(['xargs', 'rm', '-rf'], stdin=p1.stdout, stdout=subprocess.PIPE)
+      p1.stdout.close()
+      #-----------
+      p2.communicate()   
+#}
+
 def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    global jobKeyGlobal
    global indexGlobal   
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
    
-   log('endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID) 
+   log('./endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID) 
    log("jobID: " + jobID) 
 
    if jobKey == index:
@@ -196,7 +211,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          countTry += 1
          '''
          # Approach to upload as .tar.gz. Currently not used.
-         os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Not needed, already uploaded files won't uploaded again.         
+         removeSourceCode(resultsFolderPrev)
          with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
          log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))                     
@@ -230,9 +245,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
       res = subprocess.check_output(['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', clientMiniLockID,
                                      '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
-      log(res)         
-      # os.system('find $resultsFolder -type f ! -newer $resultsFolder/modifiedDate.txt -delete') 
-
+      log(res)
+      
+      removeSourceCode(resultsFolderPrev)
+  
       newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
       newHash = newHash.split(' ')[1]
       countTry = 0 
@@ -276,8 +292,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       # cmd: rm $resultsFolder/.node-xmlhttprequest*
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/.node-xmlhttprequest*'))
       os.chdir(resultsFolder) 
+
+      removeSourceCode(resultsFolderPrev)      
       
-      # os.system('find . -type f ! -newer $resultsFolder/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them.
       # cmd: tar -jcvf result-$clusterID-$index.tar.gz *
       # log(subprocess.check_output(['tar', '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))
 
@@ -344,8 +361,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       os.chdir(resultsFolder) 
 
       #if 'folder' in mimeType: # Received job is in folder format
-      #   os.system('find . -type f ! -newer $resultsFolderPrev/modifiedDate.txt -delete')  # Client's loaded files are removed, no need to re-upload them
-
+      removeSourceCode(resultsFolderPrev)
+      
       with open(f, resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
       log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
