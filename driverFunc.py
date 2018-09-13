@@ -18,7 +18,6 @@ shareTokenGlobal = '-1'
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
-os.environ['clusterID'] = lib.CLUSTER_ID 
 
 def silentremove(filename): #{
     try:
@@ -54,9 +53,6 @@ def log(strIn, color=''): #{
 #}
 
 def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
-   os.environ['userID'] = str(userID) 
-   os.environ['resultsFolder'] = str(resultsFolder) 
-
    # Give permission to user that will send jobs to Slurm.
    subprocess.run(['sudo', 'chown', '-R', userID, '.'])
 
@@ -93,8 +89,6 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    d             = datetime(1,1,1) + coreSecondGas 
    timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute) 
 
-   os.environ['timeLimit']  = timeLimit    
-   os.environ['jobCoreNum'] = str(jobCoreNum) 
    log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum))  
 
    # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
@@ -130,16 +124,8 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    log("key: "   + jobKey) 
    log("index: " + index) 
 
-   os.environ['jobKey']          = str(jobKey)
-   os.environ['index']           = str(index) 
-   os.environ['storageID']       = str(storageID)  
-   os.environ['shareToken']      = "-1" 
-   os.environ['GDRIVE_METADATA'] = lib.GDRIVE_METADATA 
-
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
-   os.environ['resultsFolder']     = resultsFolder 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
-   os.environ['resultsFolderPrev'] = resultsFolderPrev 
    
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
        os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
@@ -169,7 +155,6 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    #-----------
    folderName = p3.communicate()[0].decode('utf-8').strip()
    
-   os.environ['folderName']  = folderName 
    log(mimeType) 
    
    if 'folder' in mimeType: #{ # Recieved job is in folder format      
@@ -235,21 +220,16 @@ def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    global storageIDGlobal
    global shareTokenGlobal
 
-   jobKeyGlobal = jobKey  
-   indexGlobal  = index 
+   jobKeyGlobal    = jobKey  
+   indexGlobal     = index 
    storageIDGlobal = storageID
+   jobKeyGit       = str(jobKey).replace("=", "/")
    
    log("key: "   + jobKey) 
    log("index: " + index)
 
-   os.environ['jobKeyGit']   = str(jobKey).replace("=", "/")
-   os.environ['index']       = str(index) 
-   os.environ['storageID'] = storageID  
-   os.environ['shareToken']  = "-1" 
-
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'
-   os.environ['resultsFolder'] = resultsFolder 
-   # resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index                  os.environ['resultsFolderPrev'] = resultsFolderPrev 
+   # resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
 
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
@@ -273,14 +253,8 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    log("key: "   + jobKey) 
    log("index: " + index) 
 
-   os.environ['jobKey']      = str(jobKey) 
-   os.environ['index']       = str(index)  
-   os.environ['storageID'] = '1' 
-
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
-   os.environ['resultsFolder']     = resultsFolder    
-   os.environ['resultsFolderPrev'] = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
 
    with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
        password = content_file.read().strip()
@@ -304,10 +278,8 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
       
       if (inputFolderName == jobKey) and (inputOwner == fID): #{
          log("InputId: " + inputId + " |ShareToken: " + shareToken) 
-         os.environ['shareToken']      = str(shareToken)
          shareTokenGlobal              = str(shareToken)
-         os.environ['eudatFolderName'] = str(inputFolderName) 
-         eudatFolderName               = inputFolderName 
+         eudatFolderName               = str(inputFolderName)
          acceptFlag = 1 
          break 
       #}
@@ -379,14 +351,8 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     storageIDGlobal = storageID
     
     lib.isIpfsOn(os, time) 
-    os.environ['jobKey']     = jobKey 
-    os.environ['index']      = str(index) 
-    os.environ['storageID']  = str(storageID) 
-    os.environ['shareToken'] = "-1" 
-    os.environ['userID']     = userID 
         
     resultsFolder = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
-    os.environ['resultsFolder'] = resultsFolder 
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index     
    
     log("jobKey: " + jobKey) 
@@ -411,7 +377,6 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        
        if storageID == '2': #{ Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
-          # os.environ['passW'] = 'bright wind east is pen be lazy usual' # delete
 
           # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
           log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey +
