@@ -87,28 +87,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       log('JobKey and index are same.', 'red') 
       sys.exit() 
       
-   os.environ['jobID'] = jobID      
    # Paths--------------------------------------
    programPath           = lib.PROGRAM_PATH    
-   os.environ['logPath'] = lib.LOG_PATH 
-   os.environ['GDRIVE']  = lib.GDRIVE 
    # -------------------------------------------   
    encodedShareToken = '' 
    if shareToken != '-1':      
       encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8') 
 
    log("encodedShareToken: " + encodedShareToken) 
-   
-   os.environ['programPath']       = str(programPath) 
-   os.environ['clusterID']         = lib.CLUSTER_ID 
-   os.environ['GDRIVE_METADATA']   = lib.GDRIVE_METADATA 
-   os.environ['jobKey']            = jobKey 
-   os.environ['index']             = str(index) 
-   os.environ["IPFS_PATH"]         = lib.IPFS_REPO  # Default IPFS repo path
-   os.environ['eblocPath']         = lib.EBLOCPATH 
-   os.environ['encodedShareToken'] = encodedShareToken   
-   os.environ['jobName']           = folderName 
-      
+         
    jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
    
    # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
@@ -129,8 +116,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
    resultsFolder     = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index 
-   os.environ['resultsFolder']     = resultsFolder 
-   os.environ['resultsFolderPrev'] = resultsFolderPrev
 
    subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/result-*tar.gz'))  
 
@@ -149,7 +134,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'): #{
       fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
       modifiedDate = fDate.read().rstrip('\n') 
-      os.environ['modifiedDate'] = modifiedDate 
       fDate.close() 
       log(modifiedDate) 
    #}
@@ -160,7 +144,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log('{0: <13}'.format('ipfsAddress: ')   + userInfo[3])
    log('{0: <13}'.format('fID: ')           + userInfo[4])
    clientMiniLockID = userInfo[2] 
-   os.environ['clientMiniLockID']  = userInfo[2] 
       
    log("") 
    

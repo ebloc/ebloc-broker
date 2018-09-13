@@ -2,10 +2,10 @@ import os, sys, subprocess, time
 from colored import stylize
 from colored import fg
 
-WHOAMI=""
-EBLOCPATH=""
-CLUSTER_ID=""
-GDRIVE=""
+WHOAMI="alper"
+EBLOCPATH="/home/alper/eBlocBroker"
+CLUSTER_ID="0x4e4a0750350796164d8defc442a712b7557bf282"
+GDRIVE="/usr/local/bin/gdrive"
 RPC_PORT=8545
 POA_CHAIN=1 
 
@@ -42,9 +42,6 @@ job_state_code['SPECIAL_EXIT'] = 13
 job_state_code['STOPPED']      = 14
 job_state_code['SUSPENDED']    = 15
 job_state_code['TIMEOUT']      = 16
-
-header = "var eBlocBroker = require('" + EBLOCPATH + "/eBlocBrokerHeader.js')" 
-os.environ['header'] = header
 
 # Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn(): #{
