@@ -63,15 +63,11 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
 def removeSourceCode(resultsFolderPrev): #{
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
       filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']).decode('utf-8').strip()
-      log('Files to be removed: \n' + filesToRemove)
+      if filesToRemove is not '' or filesToRemove is not None:
+         log('\nFiles to be removed: \n' + filesToRemove + '\n')
 
-      # cmd: echo out | xargs rm -rf
-      p1 = subprocess.Popen(['echo', filesToRemove], stdout=subprocess.PIPE)
-      #-----------
-      p2 = subprocess.Popen(['xargs', 'rm', '-rf'], stdin=p1.stdout, stdout=subprocess.PIPE)
-      p1.stdout.close()
-      #-----------
-      p2.communicate()   
+      # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
+      subprocess.run(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
 #}
 
 def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
@@ -283,7 +279,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
-      log(subprocess.check_output(['tar', '-N', date, '-jcvf', 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
+      log('Files to be archived using tar: \n' +
+          subprocess.check_output(['tar', '-N', date, '-jcvf',
+                                   'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
 
       ''' cmd: (https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577)
       curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
