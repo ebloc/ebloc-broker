@@ -289,15 +289,18 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
       --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz
       '''      
-      p = Popen(['curl', '--fail', '-X', 'PUT', '-H', 'Content-Type: text/plain', '-H',
-                 'Authorization: Basic ' +  encodedShareToken,
-                 '--data-binary',  '@result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz',
-                 'https://b2drop.eudat.eu/public.php/webdav/result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'], stdout=PIPE, stderr=subprocess.PIPE)
+      p = subprocess.Popen(['curl', '--fail', '-X', 'PUT', '-H', 'Content-Type: text/plain', '-H',
+                            'Authorization: Basic ' +  encodedShareToken,
+                            '--data-binary',  '@result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz',
+                            'https://b2drop.eudat.eu/public.php/webdav/result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       output, err = p.communicate()
-      log('curl output: ' + output.decode('utf-8'))
+      output = output.decode('utf-8')
+      
+      # log('curl output: ' + output)
       if p.returncode != 0:
          log('EUDAT repository did not successfully loaded.', 'red')
-         log("curl failed %d %s" % (p.returncode, err.decode('utf-8')))
+         log("curl failed %d %s . %s" % (p.returncode, err.decode('utf-8'), output))
          sys.exit()
         
       if '<d:error' in output: 
