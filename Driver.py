@@ -284,21 +284,21 @@ while True: #{
 
        jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
        userID   = ""
-       if not jobInfo: #if not ',' in jobInfo or jobInfo == '': 
-          log("jobInfo is returned as empty list. Geth might be closed", 'red')
+       if type(jobInfo) is str: #if not ',' in jobInfo or jobInfo == '': 
+          log(jobInfo, 'red')
           runFlag = 1
        else: #{
-          log('jobOwner/userID: ' + jobInfo[6])
-          userID    = jobInfo[6].lower()
+          log('jobOwner/userID: ' + jobInfo['jobOwner'])
+          userID    = jobInfo['jobOwner'].lower()
           userExist = isUserExist(userID, eBlocBroker, web3)          
 
-          if jobInfo[0] == str(lib.job_state_code['COMPLETED']):
+          if jobInfo['status'] == str(lib.job_state_code['COMPLETED']):
              log("Job is already completed.", 'red')
              runFlag = 1
-          if jobInfo[0] == str(lib.job_state_code['REFUNDED']):
+          if jobInfo['status'] == str(lib.job_state_code['REFUNDED']):
              log("Job is refunded.", 'red')
              runFlag = 1
-          if runFlag == 0 and not jobInfo[0] == lib.job_state_code['PENDING']:
+          if runFlag == 0 and not jobInfo['status'] == lib.job_state_code['PENDING']:
              log("Job is already captured and in process or completed.", 'red')
              runFlag = 1
           if 'False' in strCheck:
