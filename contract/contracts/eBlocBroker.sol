@@ -363,7 +363,7 @@ contract eBlocBroker {
     /* -----------------------------------------------------EVENTS---------------------------------------------------------*/    
     /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
-		 string jobKey,
+		 string indexed jobKey,
 		 uint index,
 		 uint8 storageID,
 		 string desc,
@@ -403,7 +403,7 @@ contract eBlocBroker {
 		  );
 
     /* Records the refunded jobs' information under refund() method call. */
-    event LogCancelRefund(address indexed clusterAddress,
+    event LogCancelRefund(address clusterAddress,
 			  string jobKey,
 			  uint32 index
 			  );

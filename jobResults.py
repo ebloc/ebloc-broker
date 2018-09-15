@@ -29,8 +29,15 @@ with open(fname, "r") as ins: #{
 
         sum1 += int(res[7]) - int(res[8])
         jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
-        print(str(counter) + " " + res[1] + " " + res[2] + " " + res[3] + " | " + lib.job_state_code[jobInfo[0]] +
-              "," + jobInfo[1] + "," + jobInfo[2] + "," + jobInfo[3] + "," + jobInfo[4] + "," + jobInfo[5]) 
+
+        print(str(counter) + ' ' + res[1] + ' ' + res[2] + ' ' + res[3] + '|' +
+              '{0: <16}'.format('status:') + lib.job_state_code[str(jobInfo['status'])] + ' ' +
+              '{0: <16}'.format('core"') + str(jobInfo['core']) + ' ' +
+              '{0: <16}'.format('startTime"') + str(jobInfo['startTime']) + ' ' +
+              '{0: <16}'.format('received:') + str(jobInfo['received']) + ' ' +
+              '{0: <16}'.format('coreMinutePrice:') + str(jobInfo['coreMinutePrice']) + ' ' +
+              '{0: <16}'.format('coreMinuteGas:') + str(jobInfo['coreMinuteGas']) + ' ' +
+              '{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])
         counter += 1
 #}
 print(counter)            
