@@ -84,17 +84,17 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
                    resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh']);
                             
    jobInfo = getJobInfo(lib.CLUSTER_ID, jobKeyGlobal, int(indexGlobal), eBlocBroker, web3) 
-   jobCoreNum    = jobInfo[1] 
-   coreSecondGas = timedelta(seconds=int((int(jobInfo[5]) + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
+   jobCoreNum    = str(jobInfo['core'])
+   coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
    d             = datetime(1,1,1) + coreSecondGas 
    timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute) 
 
-   log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + str(jobCoreNum))  
+   log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + jobCoreNum)  
 
    # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
    # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
    jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
-                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + str(jobCoreNum) + ' ' + 
+                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
                                     resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh' + ' ' + 
                                     '--mail-type=ALL']).decode('utf-8').strip()
    jobID = jobID.split()[3]

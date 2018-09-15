@@ -6,7 +6,6 @@ asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#exampl
 
 import sys, asyncio, time
 from web3.auto import w3
-
    
 def handle_event(event):
     '''
@@ -69,7 +68,6 @@ def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker): #{
        return log_ret(myFilter, 2) 
 #}
 
-
 def logJob(eBlocBroker=None): #{
    if eBlocBroker is None: #{
        import os 
@@ -99,7 +97,7 @@ def logJob(eBlocBroker=None): #{
 if __name__ == '__main__': #{
    if len(sys.argv) == 2:
         fromBlock      = int(sys.argv[1]) 
-        clusterAddress = str(sys.argv[2])  # Only obtains jobs that are submitted to the cluster.
+        clusterAddress = str(sys.argv[2]) # Only obtains jobs that are submitted to the cluster.
         logJob() 
    else:
        fromBlock      = 954795 
