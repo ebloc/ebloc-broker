@@ -65,7 +65,7 @@ def removeSourceCode(resultsFolderPrev): #{
       filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']).decode('utf-8').strip()
       if filesToRemove is not '' or filesToRemove is not None:
          log('\nFiles to be removed: \n' + filesToRemove + '\n')
-
+         
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
       subprocess.run(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
 #}
@@ -105,8 +105,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    #}
 
    log("JOB_INFO: " + ",".join(map(str, jobInfo)))
-
-   userID     = jobInfo[6].replace("u'", "").replace("'", "").lower()
+   
+   userID     = jobInfo['jobOwner'].lower()
    userIDAddr = hashlib.md5(userID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
    userInfo   = getUserInfo(userID, '1', eBlocBroker, web3)
 
@@ -143,11 +143,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       
    log("") 
    
-   if jobInfo[0] == str(lib.job_state_code['COMPLETED']): #{
+   if jobInfo['status'] == str(lib.job_state_code['COMPLETED']): #{
       log('Job is already get paid.', 'red') 
       sys.exit() 
    #}   
-   clientTimeLimit = jobInfo[5] 
+   clientTimeLimit = jobInfo['coreMinuteGas'] 
    log("clientGasMinuteLimit: " + str(clientTimeLimit))  # Clients minuteGas for the job
             
    countTry = 0 
@@ -156,17 +156,17 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       #   sys.exit()
       countTry += 1                  
       log("Waiting... " + str(countTry * 60) + ' seconds passed.', 'yellow')  
-      if jobInfo[0] == lib.job_state_code['RUNNING']: # It will come here eventually, when setJob() is deployed.
+      if jobInfo['status'] == lib.job_state_code['RUNNING']: # It will come here eventually, when setJob() is deployed.
          log("Job has been started.", 'green')  
          break  # Wait until does values updated on the blockchain
       
-      if jobInfo[0] == lib.job_state_code['COMPLETED']: 
+      if jobInfo['status'] == lib.job_state_code['COMPLETED']: 
         log("Error: Already completed job is received.", 'red')  
         sys.exit()  # Detects an error on the SLURM side
 
       jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       #while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
-      while not jobInfo:      
+      while not jobInfo: #TODO check      
          log("Error: Please run geth on the background.", 'red')
          jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
          time.sleep(5)

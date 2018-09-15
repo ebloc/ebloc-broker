@@ -14,12 +14,15 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
     #}
       
     clusterAddress = web3.toChecksumAddress(clusterAddress)
-    res = None
+    job = None
+
     try:
-        res = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
+        job = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
+        jobDict = {'status': job[0], 'core': job[1], 'startTime': job[2], 'received': job[3], 'coreMinutePrice': job[4], 'coreMinuteGas': job[5], 'jobOwner': job[6]}
+        #nprint "dict['Name']: ", dict['Name']
     except Exception:
         return 'Exception: web3.exceptions.BadFunctionCallOutput'
-    return res
+    return jobDict
 #}
 
 if __name__ == '__main__': #{
@@ -31,6 +34,20 @@ if __name__ == '__main__': #{
         clusterAddress = "0x4e4a0750350796164d8defc442a712b7557bf282" 
         jobKey         = "153802737479941507912962421857730686964" 
         index          = 0
+        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"  # Long Sleep Job
+        index          = 4
+
+    jobInfo = getJobInfo(clusterAddress, jobKey, index)
+
+    if type(jobInfo) is dict:   
+        print('{0: <16}'.format('status:') + str(jobInfo['status']))
+        print('{0: <16}'.format('core"') + str(jobInfo['core']))
+        print('{0: <16}'.format('startTime"') + str(jobInfo['startTime']))
+        print('{0: <16}'.format('received:') + str(jobInfo['received']))
+        print('{0: <16}'.format('coreMinutePrice:') + str(jobInfo['coreMinutePrice']))
+        print('{0: <16}'.format('coreMinuteGas:') + str(jobInfo['coreMinuteGas']))
+        print('{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])
         
-    print(getJobInfo(clusterAddress, jobKey, index))     
+    else:
+        print(jobInfo)
 #}
