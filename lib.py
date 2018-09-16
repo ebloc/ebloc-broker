@@ -43,6 +43,29 @@ job_state_code['STOPPED']      = 14
 job_state_code['SUSPENDED']    = 15
 job_state_code['TIMEOUT']      = 16
 
+def log(strIn, color=''): #{
+   if color != '':
+      print(stylize(strIn, fg(color))) 
+   else:
+      print(strIn)
+
+   txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
+   txFile.write(strIn + "\n") 
+   txFile.close() 
+#}
+
+def web3Exception(check): #{
+   while check  is 'ConnectionRefusedError' or check is 'notconnected': #{
+      log('Error(web3): ' +  check + '. Please run geth on the background.', 'red')
+      check = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
+      time.sleep(5)
+   #}
+   if check is 'BadFunctionCallOutput': #{
+      log('Error(web3): ' +  check + '.', 'red')
+      # sys.exit()
+   #}
+#}
+   
 # Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn(): #{
    while True: #{
@@ -65,17 +88,6 @@ def isSlurmOn(): #{
          log('Slurm is on', 'green')
          break
    #}
-#}
-
-def log(strIn, color=''): #{
-   if color != '':
-      print(stylize(strIn, fg(color))) 
-   else:
-      print(strIn)
-
-   txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
-   txFile.write(strIn + "\n") 
-   txFile.close() 
 #}
 
 def preexec_function():

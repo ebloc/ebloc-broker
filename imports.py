@@ -20,17 +20,17 @@ def getWeb3(): #{
         # inject the poa compatibility middleware to the innermost layer
         web3.middleware_stack.inject(geth_poa_middleware, layer=0)
     #}
-
     if not web3.isConnected(): #{
-        print('notconnected') 
-        sys.exit() 
+        return 'notconnected'
     #}
     return web3 
 #}
 
 def connectEblocBroker(web3=None): #{
     if web3 == None:
-        web3 = getWeb3()         
+        web3 = getWeb3()
+        if web3 == 'notconnected':
+            return 'notconnected'        
     fileAddr = open(home + '/eBlocBroker/contractCalls/address.json', "r")
     contractAddress = fileAddr.read().replace("\n", "")
 
@@ -38,10 +38,13 @@ def connectEblocBroker(web3=None): #{
         abi = json.load(abi_definition)
 
     contractAddress = web3.toChecksumAddress(contractAddress) 
-    eBlocBroker     = web3.eth.contract(contractAddress, abi=abi) 
+    eBlocBroker     = web3.eth.contract(contractAddress, abi=abi)
     return eBlocBroker 
 #}
 
 if __name__ == '__main__': #{
     eBlocBroker = connectEblocBroker() 
 #}
+
+# [Errno 111] Connection refused => web3 is not connected (class.name: ConnectionRefusedError)
+# Exception: web3.exceptions.BadFunctionCallOutput => wrong mapping input is give (class.name: BadFunctionCallOutput)
