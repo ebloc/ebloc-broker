@@ -83,7 +83,7 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
                    'cp ' + resultsFolder + '/run.sh ' +
                    resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh']);
                             
-   jobInfo = getJobInfo(lib.CLUSTER_ID, jobKeyGlobal, int(indexGlobal), eBlocBroker, web3) 
+   jobInfo = getJobInfo(lib.CLUSTER_ID, jobKeyGlobal, int(indexGlobal), eBlocBroker, web3)
    jobCoreNum    = str(jobInfo['core'])
    coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
    d             = datetime(1,1,1) + coreSecondGas 
