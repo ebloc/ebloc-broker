@@ -165,12 +165,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
         sys.exit()  # Detects an error on the SLURM side
 
       jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
-      #while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
-      while not jobInfo: #TODO check      
-         log("Error: Please run geth on the background.", 'red')
-         jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
-         time.sleep(5)
-      #}      
+      lib.web3Exception(jobInfo)
+      
       time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
    #}
    
