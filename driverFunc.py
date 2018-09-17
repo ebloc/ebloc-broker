@@ -41,7 +41,7 @@ def log(strIn, color=''): #{
        print(stylize(strIn, fg(color))) 
    else:
        print(strIn)
-   
+       
    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
@@ -350,7 +350,7 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     indexGlobal  = index
     storageIDGlobal = storageID
     
-    lib.isIpfsOn(os, time) 
+    lib.isIpfsOn() 
         
     resultsFolder = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index     
@@ -368,7 +368,7 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
 
     ipfsCallCounter = 0
     # cmd: bash $eblocPath/ipfsStat.sh $jobKey
-    isIPFSHashExist = subprocess.check_output(['bash', lib.EBLOCPATH + '/ipfsStat.sh', jobKey]).decode('utf-8').split()
+    isIPFSHashExist = subprocess.check_output(['bash', lib.EBLOCPATH + '/ipfsStat.sh', jobKey]).decode('utf-8').strip()
     log(isIPFSHashExist) 
     
     if "CumulativeSize" in isIPFSHashExist: #{
