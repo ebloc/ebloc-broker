@@ -8,29 +8,33 @@
 ```
 mkdir -p $HOME/myContract
 cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
-sed -i 's/\/\*emit\*\//emit/g'           $HOME/myContract/eBlocBroker.sol
+sed -i 's/\/\*emit\*\//emit/g'            $HOME/myContract/eBlocBroker.sol
 sed -i 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
-cat $HOME/myContract/Lib.sol > $HOME/myContract/e.sol && tail -n+3 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol && cd $HOME/myContract
+cat $HOME/myContract/Lib.sol > $HOME/myContract/e.sol && tail -n+10 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol && cd $HOME/myContract
 rm -f $HOME/myContract/e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > $HOME/myContract/e.js
-bash $HOME/eblocPOA/client.sh
 ```
 
 ### MAC
 ```
 mkdir -p $HOME/myContract
 cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
-sed -i '.original' 's/\/\*emit\*\//emit/g'           $HOME/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
-sed -i '.original' 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol && rm eBlocBroker.sol.original
+sed -i '.original' 's/\/\*emit\*\//emit/g'           $HOME/myContract/eBlocBroker.sol
+rm $HOME/myContract/eBlocBroker.sol.original
+sed -i '.original' 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
+rm $HOME/myContract/eBlocBroker.sol.original
+cat $HOME/myContract/Lib.sol > $HOME/myContract/e.sol && tail -n+10 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol && cd $HOME/myContract
+rm -f $HOME/myContract/e.js && echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > $HOME/myContract/e.js
 ```
 
---------------------------------------------------------------------------------------------------------------------------------------------
-
-## Geth-Console
+### Geth-Console
+```
+cd $HOME/myContract
+bash $HOME/eblocPOA/client.sh
+```
 
 ```
 loadScript("e.js")
 var myLinkedListLib = web3.eth.contract(JSON.parse(testOutput.contracts["e.sol:Lib"].abi))
-
 var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + testOutput.contracts["e.sol:Lib"].bin, gas: 4700000},
   function (e, contract) {
     console.log(e, contract);
@@ -53,7 +57,6 @@ var linkedListLib = myLinkedListLib.new({ from: eth.accounts[0], data: "0x" + te
 );
 
 testOutput.contracts["e.sol:eBlocBroker"].abi
-
 ```
 
 ```
