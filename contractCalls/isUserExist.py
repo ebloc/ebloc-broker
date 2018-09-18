@@ -13,7 +13,7 @@ def isUserExist(userAddress,eBlocBroker=None, web3=None): #{
         eBlocBroker = connectEblocBroker(web3)
     #}    
     userAddress = web3.toChecksumAddress(userAddress) 
-    return str(eBlocBroker.functions.isUserExist(userAddress).call()).rstrip('\n') 
+    return eBlocBroker.functions.isUserExist(userAddress).call() 
 #}
 
 if __name__ == '__main__': #{    

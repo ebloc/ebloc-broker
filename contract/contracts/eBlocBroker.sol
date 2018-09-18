@@ -362,7 +362,7 @@ contract eBlocBroker {
     /* -----------------------------------------------------EVENTS---------------------------------------------------------*/    
     /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
-		 string indexed jobKey,
+		 string jobKey,
 		 uint index,
 		 uint8 storageID,
 		 string desc,
