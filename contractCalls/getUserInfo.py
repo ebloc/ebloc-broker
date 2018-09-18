@@ -38,7 +38,7 @@ def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
                 my_filter.get_all_entries()[0].args['ipfsAddress'],
                 my_filter.get_all_entries()[0].args['fID'],
                 orcid,
-                str(eBlocBroker.functions.isOrcIdVerified(orcid).call())]         
+                str(eBlocBroker.functions.isOrcIDVerified(orcid).call())]         
     #}
 #}
 
