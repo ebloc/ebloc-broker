@@ -28,7 +28,7 @@ def submitJob(clusterAddress, jobKey, coreNum, coreGasDay, coreGasHour, coreGasM
        return "Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."
     #}
 
-    if str(eBlocBroker.functions.isOrcIdVerified(orcid).call()) == '0': #{
+    if str(eBlocBroker.functions.isOrcIDVerified(orcid).call()) == '0': #{
        return 'User\'s orcid: ' + orcid + ' is not verified.'
     #}    
 
@@ -43,14 +43,17 @@ def submitJob(clusterAddress, jobKey, coreNum, coreGasDay, coreGasHour, coreGasM
     
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440 
     msgValue      = coreNum * pricePerMin * coreMinuteGas 
+    folderHash = '00000000000000000000000000000000'
+
+    if not len(folderHash):
+        return 'folderHash should be 32 characters.'
     
-    if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): #{
+    if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
        return "jobKey's length does not match with its original length. Please check your jobKey."
-    #}
 
     gasLimit = 4500000  
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageID) < 5 and len(jobKey) <= 64 and coreMinuteGas != 0: #{
-       tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID) 
+    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageID) < 5 and len(jobKey) <= 64 and coreMinuteGas != 0: #{              
+       tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, folderHash) 
        return 'Tx: ' + tx.hex()
        #print('Value: ' + str(msgValue)) 
        #print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID))
@@ -71,16 +74,16 @@ if __name__ == '__main__': #{
     #}
     else: #{
         # USER Inputs ================================================================
-        clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'        
+        clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'
+        jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR'
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
-        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"
         # jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"  # Long Sleep Job.
         # jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
         coreNum        = 1 
         coreGasDay     = 0 
         coreGasHour    = 0 
         coreGasMin     = 1 
-        jobDescription = "Science" 
+        jobDescription = 'Science'
         storageID      = 0 
         accountID      = 0        
         # =============================================================================

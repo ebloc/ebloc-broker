@@ -271,6 +271,7 @@ while True: #{
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
 
+       print(loggedJobs[i].args['jobKey'])
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " + loggedJobs[i].args['jobKey'] + " " +
            str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " + loggedJobs[i].args['desc'])
 
@@ -281,12 +282,13 @@ while True: #{
        index  = int(loggedJobs[i].args['index'])
 
        strCheck = shellCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
-
        jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+
        userID   = ""
-       if type(jobInfo) is str: #if not ',' in jobInfo or jobInfo == '': 
-          log(jobInfo, 'red')
+       if jobInfo['core'] == 0: #if not ',' in jobInfo or jobInfo == '': 
+          log('Job does not exist', 'red')
           runFlag = 1
+          sys.exit()
        else: #{
           log('jobOwner/userID: ' + jobInfo['jobOwner'])
           userID    = jobInfo['jobOwner'].lower()
@@ -304,7 +306,7 @@ while True: #{
           if 'False' in strCheck:
              log('Filename contains invalid character', 'red')
              runFlag = 1
-          if "false" in userExist.lower(): 
+          if not userExist: 
              log('jobOwner is not registered', 'red')
              runFlag = 1
           else:

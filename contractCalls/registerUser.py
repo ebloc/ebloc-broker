@@ -28,11 +28,10 @@ if __name__ == '__main__': #{
         githubUserName     = "eBloc" 
 
     if isUserExist(account, eBlocBroker, web3):
-        print('User is already registered.')
+        print('User (' + web3.eth.accounts[int(sys.argv[1])]  + ') is already registered.')
         sys.exit()
     
     if len(federationCloudID) < 128 and len(userEmail) < 128 and len(orcid) == 19 and orcid.replace("-", "").isdigit(): #{
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID, miniLockID, ipfsAddress, orcid, githubUserName) 
-        print( 'Tx: ' + tx.hex())
-        
+        print( 'Tx: ' + tx.hex())       
 #}
