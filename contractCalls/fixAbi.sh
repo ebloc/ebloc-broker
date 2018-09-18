@@ -10,3 +10,5 @@ fi
 sed -i 's/\"\[/\[/g' abi.json
 sed -i 's/\]\"/\]/g' abi.json
 sed -i 's/\\\"/\"/g' abi.json
+
+echo 'Fixed.'
