@@ -36,15 +36,15 @@ if __name__ == '__main__': #{
         clusterAddress = "0x4e4a0750350796164d8defc442a712b7557bf282" 
         # jobKey         = "153802737479941507912962421857730686964" 
         index          = 0
-        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"  # Long Sleep Job
-        index          = 20
+        jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR'  # Long Sleep Job
+        index          = 0
         
     jobInfo = getJobInfo(clusterAddress, jobKey, index)
         
     if type(jobInfo) is dict:   
         print('{0: <16}'.format('status:') + str(jobInfo['status']))
-        print('{0: <16}'.format('core"') + str(jobInfo['core']))
-        print('{0: <16}'.format('startTime"') + str(jobInfo['startTime']))
+        print('{0: <16}'.format('core') + str(jobInfo['core']))
+        print('{0: <16}'.format('startTime') + str(jobInfo['startTime']))
         print('{0: <16}'.format('received:') + str(jobInfo['received']))
         print('{0: <16}'.format('coreMinutePrice:') + str(jobInfo['coreMinutePrice']))
         print('{0: <16}'.format('coreMinuteGas:') + str(jobInfo['coreMinuteGas']))

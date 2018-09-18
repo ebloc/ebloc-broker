@@ -64,7 +64,7 @@ def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None): #{
 
    myFilter = eBlocBroker.events.LogJob.createFilter(
        fromBlock=int(fromBlock),       
-       argument_filters={'jobKey': str(jobKey)}
+       # argument_filters={'jobKey': str(jobKey)}
    )    
    loggedJobs = myFilter.get_all_entries() 
 
@@ -90,6 +90,10 @@ if __name__ == '__main__': #{
            print('Tx: ' + loggedJobs[i]['transactionHash'].hex() )
            print('blockNumber: ' + str(loggedJobs[i]['blockNumber']))
            print('clusterAddress: ' + loggedJobs[i].args['clusterAddress'])
+
+           print(loggedJobs[i].args['jobKey'])
+           
+
            print('jobKey: ' + loggedJobs[i].args['jobKey'])
            print('index: ' + str(loggedJobs[i].args['index']))
            print('storageID: ' + str(loggedJobs[i].args['storageID']))
