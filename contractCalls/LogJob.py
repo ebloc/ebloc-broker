@@ -7,59 +7,6 @@ asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#exampl
 import sys, asyncio, time
 from web3.auto import w3
 
-# -----------------
-def handle_event(event):
-
-    # print(event.blockNumber)
-    # print(event.args.clusterAddress)
-    # print(event.args.jobKey)
-    # print(event.args.index)
-    # print(event.args.storageID)
-
-    print(event)
-
-def log_loop(event_filter, poll_interval): #{
-    flag = 1 
-    for event in event_filter.get_all_entries():
-        handle_event(event)
-        flag = 0 
-    
-    while True and flag: #{
-        for event in event_filter.get_new_entries():
-            handle_event(event)
-            flag = 0 
-        if flag == 0:
-            break 
-        time.sleep(poll_interval)              
-    #}
-#}    
-
-def logJob(eBlocBroker=None): #{
-   if eBlocBroker is None: #{
-       import os 
-       sys.path.insert(1, os.path.join(sys.path[0], '..')) 
-       from imports import connectEblocBroker
-       eBlocBroker = connectEblocBroker()
-   #}
-   
-   loggedJobs = runLogJob(fromBlock, clusterAddress, eBlocBroker) 
-
-   # print(myFilter.filter_params)
-   if len(loggedJobs) == 0:
-       log_loop(myFilter, 2)
-   else: #{
-       # print(myFilter.get_all_entries())
-       for i in range(0, len(loggedJobs)):
-           print(loggedJobs[i]) 
-           print(loggedJobs[i]['blockNumber']) 
-           print(loggedJobs[i].args['clusterAddress']) 
-           print(loggedJobs[i].args['jobKey']) 
-           print(loggedJobs[i].args['index']) 
-           print(loggedJobs[i].args['storageID']) 
-           print(loggedJobs[i].args['desc']) 
-   #}    
-#}
-# -----------------
 
 def getEbloBroker(): #{
     import os 
@@ -100,7 +47,7 @@ def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None): #{
    #}
    myFilter = eBlocBroker.events.LogCancelRefund.createFilter(
        fromBlock=int(fromBlock),       
-       # argument_filters={'clusterAddress': str(clusterAddress)} #TODO: uncomment
+       argument_filters={'clusterAddress': str(clusterAddress)}
    )
    loggedJobs = myFilter.get_all_entries() 
 
@@ -110,26 +57,42 @@ def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None): #{
        return logReturn(myFilter, 2) 
 #}
 
+def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None): #{
+   if eBlocBroker is None: #{
+       eBlocBroker = getEbloBroker()
+   #}
+
+   myFilter = eBlocBroker.events.LogJob.createFilter(
+       fromBlock=int(fromBlock),       
+       argument_filters={'jobKey': str(jobKey)}
+   )    
+   loggedJobs = myFilter.get_all_entries() 
+
+   if len(loggedJobs) > 0:
+       for i in range(0, len(loggedJobs)):
+           if loggedJobs[i]['transactionHash'].hex() is transactionHash:
+               return loggedJobs[i]['index']
+   else:
+       return logReturn(myFilter, 2) 
+#}
+
 if __name__ == '__main__': #{
-   if len(sys.argv) == 2: #{
+   if len(sys.argv) == 2: 
         fromBlock      = int(sys.argv[1]) 
         clusterAddress = str(sys.argv[2]) # Only obtains jobs that are submitted to the cluster.
-   #}
-   else: #{
+   else:
        fromBlock      = 954795 
        clusterAddress = '0x4e4a0750350796164d8defc442a712b7557bf282'
-   #}   
 
    loggedJobs = runLogJob(fromBlock, clusterAddress)
    for i in range(0, len(loggedJobs)):
            print(loggedJobs[i])
-           print(loggedJobs[i]['blockNumber'])
-           print(loggedJobs[i].args['clusterAddress'])
-           print(loggedJobs[i].args['jobKey'])
-           print(loggedJobs[i].args['index'])
-           print(loggedJobs[i].args['storageID'])
-           print(loggedJobs[i].args['desc'])
-   #}   
+           print('Tx: ' + loggedJobs[i]['transactionHash'].hex() )
+           print('blockNumber: ' + str(loggedJobs[i]['blockNumber']))
+           print('clusterAddress: ' + loggedJobs[i].args['clusterAddress'])
+           print('jobKey: ' + loggedJobs[i].args['jobKey'])
+           print('index: ' + str(loggedJobs[i].args['index']))
+           print('storageID: ' + str(loggedJobs[i].args['storageID']))
+           print('desc: ' + loggedJobs[i].args['desc'])
+           print('------------------------------------------------------------------------------------------------------------')
 #}
-
-
