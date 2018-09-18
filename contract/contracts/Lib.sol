@@ -2,7 +2,6 @@
 file:   Lib.sol
 author: Alper Alimoglu
 email:  alper.alimoglu AT gmail.com
-
 */
 
 pragma solidity ^0.4.17;
