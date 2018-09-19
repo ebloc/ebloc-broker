@@ -43,6 +43,8 @@ job_state_code['STOPPED']      = 14
 job_state_code['SUSPENDED']    = 15
 job_state_code['TIMEOUT']      = 16
 
+inv_job_state_code = {v: k for k, v in job_state_code.items()}
+
 def log(strIn, color=''): #{
    if color != '':
       print(stylize(strIn, fg(color))) 
