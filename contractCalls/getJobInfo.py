@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import sys 
+import sys, os
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import lib
 
 def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
     if eBlocBroker == None and web3 == None: #{
@@ -41,8 +43,8 @@ if __name__ == '__main__': #{
         
     jobInfo = getJobInfo(clusterAddress, jobKey, index)
         
-    if type(jobInfo) is dict:   
-        print('{0: <16}'.format('status:') + str(jobInfo['status']))
+    if type(jobInfo) is dict:        
+        print('{0: <16}'.format('status:') + lib.inv_job_state_code[jobInfo['status']])
         print('{0: <16}'.format('core') + str(jobInfo['core']))
         print('{0: <16}'.format('startTime') + str(jobInfo['startTime']))
         print('{0: <16}'.format('received:') + str(jobInfo['received']))
