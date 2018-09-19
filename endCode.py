@@ -200,7 +200,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       #}
          
       # cmd: echo newHash | tail -n1 | awk '{print $2}'
-      p1 = subprocess.Popen(['echo', text], stdout=subprocess.PIPE)
+      p1 = subprocess.Popen(['echo', newHash], stdout=subprocess.PIPE)
       #-----------
       p2 = subprocess.Popen(['tail', '-n1'], stdin=p1.stdout, stdout=subprocess.PIPE)
       p1.stdout.close()

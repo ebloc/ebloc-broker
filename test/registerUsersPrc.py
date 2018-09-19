@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
-import os
+'''
+For experiment purposes reqisters 10 users at prc-95
+'''
 
-# Reqister 10 users for prc-95 for experiment purposes.
+import os
 
 os.environ['userEmail']         = "aalimog1@binghamton.edu";
 os.environ['federationCloudID'] = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579";

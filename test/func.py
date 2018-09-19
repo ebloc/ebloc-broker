@@ -1,6 +1,13 @@
 import os, time, math, random, sys
 from random import randint
 
+from os.path import expanduser
+home = expanduser("~")
+
+sys.path.append(home + "/eBlocBroker")
+sys.path.insert(0, './contractCalls') 
+from contractCalls.submitJob import submitJob
+
 def log(strIn, path): #{
    print( strIn )
    txFile     = open(path + '/clientOutput.txt', 'a'); 
@@ -9,12 +16,11 @@ def log(strIn, path): #{
 #}
 
 def testFunc(path, readTest, workloadTest, testType, clusterID): #{
-  ipfsHashNo = {} #create a dictionary called ipfsHashNo
-  os.environ['clusterID']     = clusterID;
+  jobKeyNum = {} #create a dictionary called jobKeyNum
   lineNumCounter = 0;
   with open(path + '/' + readTest) as test: #{
       for line in test: #{
-          ipfsHashNo[lineNumCounter] = line.rstrip(); # Assign value to key counter.
+          jobKeyNum[lineNumCounter] = line.rstrip(); # Assign value to key counter.
           lineNumCounter += 1
       #}
   #}
@@ -28,15 +34,15 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
   while True: #{
     if counter >= 0:
-        if counter >= (len(ipfsHashNo)-1): #{
-           log("Exceed hashOutput.txt's limit Total item number: " + str(len(ipfsHashNo)), path)
+        if counter >= (len(jobKeyNum)-1): #{
+           log("Exceed hashOutput.txt's limit Total item number: " + str(len(jobKeyNum)), path)
            break;
         #}
         line2          = f.readline();
         line2_splitted = line2.split(" ")
-        ipfsHash = ipfsHashNo[counter].split(" ");
+        jobKey = jobKeyNum[counter].split(" ");
 
-        if str(ipfsHash[1]) != '0' and (line2_splitted[0] != line2_splitted[1]) and (int(ipfsHash[2]) != 0): # Requested core shouldn't be 0.
+        if str(jobKey[1]) != '0' and (line2_splitted[0] != line2_splitted[1]) and (int(jobKey[2]) != 0): # Requested core shouldn't be 0.
            if not line2:
               break;  # EOF
            line2_in = line2.split(" ")
@@ -50,46 +56,39 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
            eudatFlag = 0;
            if (testType == 'eudat'):
-              os.environ['ipfsHash'] = str(ipfsHash[0]);
-              os.environ['type']     = '1';
+              storageID = 1;
            elif (testType == 'eudat-nas'):
-              os.environ['ipfsHash'] = str(ipfsHash[0]);
-              os.environ['type']     = '1';
+              storageID = 1;
               eudatFlag = 1;
            elif (testType == 'ipfs'):
-              os.environ['ipfsHash'] = str(ipfsHash[0]);
-              os.environ['type']     = '0';
+              storageID = 0;
            elif (testType == 'ipfsMiniLock'):
-              os.environ['ipfsHash'] = str(ipfsHash[0]);
-              os.environ['type']     = '2';
+              storageID = 2;
            elif (testType == 'gdrive'):
-              os.environ['ipfsHash'] = str(ipfsHash[0]);
-              os.environ['type']     = '4';
-
-           ipfsHash = ipfsHashNo[counter].split(" ");
-
-           os.environ['coreNum']  = ipfsHash[2];
-           os.environ['desc']     = "science";
+              storageID = 4;
+              
+           jobKey = str(jobKey[0]);
+           coreNum  = int(jobKey[2])
+           jobDescription = 'Science';
 
            if eudatFlag == 0:
-              val = int(math.ceil(float(ipfsHash[1]) / 60));           
+              coreMinuteGas = int(math.ceil(float(jobKey[1]) / 60));           
               log("RunTimeInMinutes: " + str(val), path)
-              os.environ['runTime']  = str(val);
            else:
               log("RunTimeInMinutes: " + '360', path)
-              os.environ['runTime']   = "360" # 6 hours for nasEUDAT simulation test.
+              coreMinuteGas   = 360 # 6 hours for nasEUDAT simulation test.
            
            accountID = randint(0, 9);
-           accountID = str(accountID);
-           os.environ['accountID'] = accountID;
 
-           log("hash: " + ipfsHash[0] + "| TimeToRun: " + str(ipfsHash[1]) + "| Core: " + ipfsHash[2] + "| accountID: " + accountID, path)
-           # print(os.popen('echo submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n'));
-           tx = os.popen('python /home/prc/eBlocBroker/contractCalls/submitJobTest.py $clusterID $ipfsHash $coreNum $desc $runTime $type $accountID 2>/dev/null').read().rstrip('\n');
+           log("hash: " + jobKey[0] + "| TimeToRun: " + str(coreMinuteGas) + "| Core: " + str(coreNum) + "| accountID: " + str(accountID), path)
+
+           print('submitJob(' + clusterID + ', ' + jobKey + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + jobDescription + ', ' + str(storageID) + ', ' + folderHash + ', ' + str(accountID) + ')')
+           folderHash     = '00000000000000000000000000000000'
+           tx = submitJob(clusterID, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID);                     
            log(tx, path)
 
            txFile     = open(path + '/' + clusterID + '.txt', 'a');
-           txFile.write(tx + " " + accountID + "\n");
+           txFile.write(tx + " " + str(accountID) + "\n");
            txFile.close();
 
            sleepSeconds = int(sleepTime);
@@ -111,7 +110,6 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
     #}
     counter += 1;
   #}
-
   log("END");
   log(".");
   f.close();

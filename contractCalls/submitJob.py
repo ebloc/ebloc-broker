@@ -9,8 +9,7 @@ from imports import getWeb3
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-
-def submitJob(clusterAddress, jobKey, coreNum, coreGasDay, coreGasHour, coreGasMin, jobDescription, storageID, accountID): #{
+def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID): #{
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
     # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW        
     blockReadFrom, coreNumber, pricePerMin = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
@@ -41,27 +40,44 @@ def submitJob(clusterAddress, jobKey, coreNum, coreGasDay, coreGasHour, coreGasM
           print(output)
     #}
     
-    coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440 
-    msgValue      = coreNum * pricePerMin * coreMinuteGas 
-    folderHash = '00000000000000000000000000000000'
-
-    if not len(folderHash):
-        return 'folderHash should be 32 characters.'
+    msgValue = coreNum * pricePerMin * coreMinuteGas
+    gasLimit = 4500000
     
+    if not len(folderHash):
+        return 'folderHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
        return "jobKey's length does not match with its original length. Please check your jobKey."
-
-    gasLimit = 4500000  
-    if coreNum <= coreNumber and len(jobDescription) < 128 and int(storageID) < 5 and len(jobKey) <= 64 and coreMinuteGas != 0: #{              
-       tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, folderHash) 
-       return 'Tx: ' + tx.hex()
-       #print('Value: ' + str(msgValue)) 
-       #print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID))
-    #}
+    if coreNum > coreNumber:
+        return 'Requested core number is greater than the cluster\'s core number.'
+    if len(jobDescription) >= 128:
+        return 'Length of jobDescription is greater than 128, please provide lesser.'
+    if int(storageID) >= 5:
+        return 'Wrong storageID value is given. Please provide from 0 to 4.'
+    if len(jobKey) >= 64:
+        return 'Length of jobDescription is greater than 64, please provide lesser.'
+    if coreMinuteGas == 0: 
+        return 'coreMinuteGas provided as 0. Please give non-zero value'
+        
+    #print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(msgValue))
+    tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, folderHash) 
+    return 'Tx: ' + tx.hex()
 #}
 
 if __name__ == '__main__': #{
-    if len(sys.argv) == 10: #{
+    if len(sys.argv) == 9:
+        clusterAddress = str(sys.argv[1]) 
+        clusterAddress = web3.toChecksumAddress(clusterAddress) 
+        blockReadFrom, coreNumber, pricePerMin = eBlocBroker.call().getClusterInfo(clusterAddress) 
+        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
+        jobKey         = str(sys.argv[2]) 
+        coreNum        = int(sys.argv[3]) 
+        coreMinuteGas  = int(sys.argv[4])         
+        jobDescription = str(sys.argv[5])         
+        storageType    = int(sys.argv[6])
+        folderHash     = str(sys.argv[7]) 
+        accountID      = int(sys.argv[8])
+    #}
+    if len(sys.argv) == 11: #{
         clusterAddress = str(sys.argv[1])
         jobKey         = str(sys.argv[2]) 
         coreNum        = int(sys.argv[3]) 
@@ -69,25 +85,31 @@ if __name__ == '__main__': #{
         coreGasHour    = int(sys.argv[5]) 
         coreGasMin     = int(sys.argv[6]) 
         jobDescription = str(sys.argv[7]) 
-        storageID      = int(sys.argv[8]) 
-        accountID      = int(sys.argv[9])
+        storageID      = int(sys.argv[8])
+        folderHash     = str(sys.argv[9]) 
+        accountID      = int(sys.argv[10])        
     #}
     else: #{
+        test = 'ipfs'
+        
         # USER Inputs ================================================================
         clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'
-        jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR'
+        if test == 'ipfs':
+            jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
+            #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
-        # jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"  # Long Sleep Job.
-        # jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
         coreNum        = 1 
         coreGasDay     = 0 
         coreGasHour    = 0 
         coreGasMin     = 1 
         jobDescription = 'Science'
-        storageID      = 0 
-        accountID      = 0        
+        storageID      = 0
+        folderHash     = '00000000000000000000000000000000'
+        accountID      = 0
+
+        
         # =============================================================================
     #}
-    ret = submitJob(clusterAddress, jobKey, coreNum, coreGasDay, coreGasHour, coreGasMin, jobDescription, storageID, accountID)
-    print(ret)
+    coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
+    print(submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID))
 #}
