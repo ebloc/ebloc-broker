@@ -46,17 +46,17 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
     if not len(folderHash):
         return 'folderHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
-       return "jobKey's length does not match with its original length. Please check your jobKey."
+       return "Error: jobKey's length does not match with its original length. Please check your jobKey."
     if coreNum > coreNumber:
-        return 'Requested core number is greater than the cluster\'s core number.'
+        return 'Error: Requested core number is greater than the cluster\'s core number.'
     if len(jobDescription) >= 128:
-        return 'Length of jobDescription is greater than 128, please provide lesser.'
+        return 'Error: Length of jobDescription is greater than 128, please provide lesser.'
     if int(storageID) >= 5:
-        return 'Wrong storageID value is given. Please provide from 0 to 4.'
+        return 'Error: Wrong storageID value is given. Please provide from 0 to 4.'
     if len(jobKey) >= 64:
-        return 'Length of jobDescription is greater than 64, please provide lesser.'
+        return 'Error: Length of jobDescription is greater than 64, please provide lesser.'
     if coreMinuteGas == 0: 
-        return 'coreMinuteGas provided as 0. Please give non-zero value'
+        return 'Error: coreMinuteGas provided as 0. Please give non-zero value'
         
     #print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(msgValue))
     tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, folderHash) 
