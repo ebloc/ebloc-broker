@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-import sys
+import sys, os
 
 def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
     if eBlocBroker == None and web3 == None: #{
-        import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
         from imports import getWeb3
