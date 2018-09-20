@@ -60,5 +60,7 @@ testOutput.contracts["e.sol:eBlocBroker"].abi
 ```
 
 ```
-$HOME/eBlocBroker/contractCalls/fixAbi.sh
+cd $HOME/eBlocBroker/contractCalls/
+cp printed_ABI =========> abi.json
+bash fixAbi.sh
 ```

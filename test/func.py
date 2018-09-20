@@ -6,11 +6,13 @@ home = expanduser("~")
 
 sys.path.append(home + "/eBlocBroker")
 sys.path.insert(0, './contractCalls') 
-from contractCalls.submitJob import submitJob
+from contractCalls.submitJob   import submitJob
+from contractCalls.blockNumber import blockNumber
+
 
 def log(strIn, path): #{
-   print( strIn )
-   txFile     = open(path + '/clientOutput.txt', 'a'); 
+   print(strIn)
+   txFile = open(path + '/clientOutput.txt', 'a'); 
    txFile.write( strIn + "\n" ); 
    txFile.close();
 #}
@@ -48,7 +50,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
            line2_in = line2.split(" ")
            sleepTime = str(int(line2_in[0]) -  int(line1_in[0])); # time to sleep in seconds
 
-           blockNumber = os.popen('python $HOME/eBlocBroker/contractCalls/blockNumber.py').read().rstrip('\n');
+           blockNumber = blockNumber()
            log("\n------------------------------------------", path)
            log("Job: " + str(counter-skippedLines) + "| Current Time: " + time.ctime() +"| BlockNumber: " + blockNumber, path);
            log("Nasa Submit range: " + line2_splitted[0] + " " + line2_splitted[1], path)
@@ -82,8 +84,8 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
            log("hash: " + jobKey[0] + "| TimeToRun: " + str(coreMinuteGas) + "| Core: " + str(coreNum) + "| accountID: " + str(accountID), path)
 
-           print('submitJob(' + clusterID + ', ' + jobKey + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + jobDescription + ', ' + str(storageID) + ', ' + folderHash + ', ' + str(accountID) + ')')
            folderHash     = '00000000000000000000000000000000'
+           log('submitJob(' + clusterID + ', ' + jobKey + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + jobDescription + ', ' + str(storageID) + ', ' + folderHash + ', ' + str(accountID) + ')', path)
            tx = submitJob(clusterID, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID);                     
            log(tx, path)
 
