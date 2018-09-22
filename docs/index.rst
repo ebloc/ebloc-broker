@@ -21,7 +21,7 @@ Contents:
 .. toctree::
 
    connect
+   eblocPOW
    quickstart
-
 
 .. _github repository: https://github.com/ebloc/eBlocBroker

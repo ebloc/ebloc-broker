@@ -8,13 +8,17 @@ def getClusterAddresses(eBlocBroker=None): #{
         from imports import connectEblocBroker
         eBlocBroker = connectEblocBroker()
     #}
+    if eBlocBroker == 'notconnected':
+        return eBlocBroker
     return eBlocBroker.functions.getClusterAddresses().call() 
 #}
 
 if __name__ == '__main__': #{
     clusterList = getClusterAddresses()
     if clusterList == 'notconnected':
-        return clusterList        
+        print(clusterList)
+        sys.exit()
+    
     for i in range(0, len(clusterList)):
         print(clusterList[i])            
 #}
