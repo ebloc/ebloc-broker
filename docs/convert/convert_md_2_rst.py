@@ -20,7 +20,7 @@ def setup(app):
     for dir,subdir,files in os.walk(path):
         for file in files:
             filename = os.path.join(dir, file)
-	    filename_parts = os.path.splitext(filename)
+            filename_parts = os.path.splitext(filename)
             if len(filename_parts) > 1:
                 filename_ext = filename_parts[1]
                 if filename_ext == '.md':
@@ -29,7 +29,7 @@ def setup(app):
 def convert_md_2_rst_process(filename_root):
     filename_source = filename_root + ".md"
     filename_target = filename_root + ".rst"
-    print 'Converting', os.path.basename(filename_source), 'to', os.path.basename(filename_target)
+    print ('Converting', os.path.basename(filename_source), 'to', os.path.basename(filename_target))
     file_source = open(filename_source)
     lines = file_source.readlines()
 
