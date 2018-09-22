@@ -8,7 +8,7 @@
 
 ## Build dependencies
 
-[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [Parity](https://parity.io), [IPFS](https://ipfs.io/docs/install/), [Slurm](https://github.com/SchedMD/slurm).
+[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [IPFS](https://ipfs.io/docs/install/), [Slurm](https://github.com/SchedMD/slurm).
 
 ## How to connect into Private Ethereum Blockchain (eBloc) via Geth
 
@@ -207,7 +207,7 @@ storageType      = 3 ; # Please note that 3 stands for github repository share.
 
 #### **5. How to submit a job using Google-Drive**
 
-##### [gdrive] (https://github.com/prasmussen/gdrive) install:
+##### [gdrive](https://github.com/prasmussen/gdrive) install:
 
 ```
 $ go get github.com/prasmussen/gdrive
