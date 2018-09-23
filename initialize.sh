@@ -15,6 +15,7 @@ if [ $preInstall -eq 1 ]; then
     pip install pyocclient==0.4
     pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
     pip install --pre --upgrade web3
+    pip install -U python-dotenv
     pip install sphinx_rtd_theme
 
     ## npm
@@ -45,28 +46,6 @@ fi
 # nc IP PORT
 # Should return: /multistream/1.0.0
 
-#======================================================================
-if [[ ! -v COINBASE ]]; then
-    echo "COINBASE is not set";
-    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID 
-    echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
-elif [[ -z "$COINBASE" ]]; then
-    echo "COINBASE is set to the empty string"
-    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID 
-    echo 'export COINBASE="'$clusterID'"' >>~/.profile   
-else
-    echo "COINBASE is: \"$COINBASE\""
-    check=$(python contractCalls/isAddress.py $COINBASE);
-    if [ "$check" != "True" ]; then
-       echo "Ethereum address is not valid, please use a valid one.";
-       exit
-    fi
-fi
-
-source $HOME/.profile
-
 currentDir=$PWD;
 # Folder Setup:========================================================
 if [ ! -d $HOME/.eBlocBroker ]; then
@@ -95,44 +74,72 @@ cd $currentDir
 
 # GDRIVE path setup
 lineNew=$(which gdrive | sed 's/\//\\\//g')
-sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" constants.py && rm constants.py.bak
+sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" .env
+rm .env.bak
 
 # EBLOCPATH setup
 eBlocBrokerPath="$PWD"
 var=$(echo $eBlocBrokerPath | sed 's/\//\\\//g')
-sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" constants.py && rm constants.py.bak
+sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" .env
+rm .env.bak
 
 # User Name Setup:======================================================
 lineOld="whoami";
 lineNew=$(logname);
 
-sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" constants.py     && rm constants.py.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js && rm $currentDir/nodePaths.js.bak
+sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" .env
+rm .env.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js
+rm $currentDir/nodePaths.js.bak
 
 # RPC PORT Setup:======================================================
 lineOld="8545";
 
-sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" constants.py     && rm constants.py.bak
-sed -i.bak 's/'$lineOld'/'$newRpcPort'/'       nodePaths.js     && rm nodePaths.js.bak
+sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" .env
+rm .env.bak
+sed -i.bak 's/'$lineOld'/'$newRpcPort'/'       nodePaths.js
+rm nodePaths.js.bak
 
 # PATH Name Setup:===================================================
 lineOld="EBLOCBROKER_PATH";
 lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' nodePaths.js   && rm nodePaths.js.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' constants.py   && rm constants.py.bak
-sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh && rm slurmScript.sh.bak
-#======================================================================
+sed -i.bak 's/'$lineOld'/'$lineNew'/' nodePaths.js
+rm nodePaths.js.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' .env
+rm .env.bak
+sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh
+rm slurmScript.sh.bak
 
 # COINBASE Address Setup:==============================================
 lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$(echo $COINBASE);
 
-sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" constants.py && rm constants.py.bak
+sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" .env && rm .env.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/'             nodePaths.js && rm nodePaths.js.bak
 #======================================================================
+if [[ ! -v COINBASE ]]; then
+    echo "COINBASE is not set";
+    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
+    read clusterID 
+    echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
+elif [[ -z "$COINBASE" ]]; then
+    echo "COINBASE is set to the empty string"
+    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
+    read clusterID 
+    echo 'export COINBASE="'$clusterID'"' >>~/.profile   
+else
+    echo "COINBASE is: \"$COINBASE\""
+    check=$(python contractCalls/isAddress.py $COINBASE);
+    if [ "$check" != "True" ]; then
+       echo "Ethereum address is not valid, please use a valid one.";
+       exit
+    fi
+fi
 
-# SLURM setup
+source $HOME/.profile
+
+# SLURM Setup:======================================================================
 sudo killall slurmctld slurmdbd slurmd
 var=$(echo $currentDir | sed 's/\//\\\//g')
 # With JobRequeue=0 or --no-requeue,
