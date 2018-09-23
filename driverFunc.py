@@ -367,9 +367,20 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        subprocess.run(['rm', '-f', jobKey])
 
     ipfsCallCounter = 0
-    # cmd: bash $eblocPath/ipfsStat.sh $jobKey
-    isIPFSHashExist = subprocess.check_output(['bash', lib.EBLOCPATH + '/ipfsStat.sh', jobKey]).decode('utf-8').strip()
-    log(isIPFSHashExist) 
+    while True: #{
+        try:
+            # cmd: timeout 300 ipfs object stat $jobKey
+            # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
+            isIPFSHashExist = subprocess.check_output(['timeout', '300', 'ipfs', 'object', 'stat', jobKey]).decode('utf-8').strip() # Wait Max 5 minutes.
+            log(isIPFSHashExist)
+            break
+        except subprocess.CalledProcessError as e: # Catches resource temporarily unavailable on ipfs
+            log(e.output.decode('utf-8').strip(), 'red')
+            if ipfsCallCounter == 5:
+                return
+            ipfsCallCounter += 1
+            time.sleep(10)
+    #}
     
     if "CumulativeSize" in isIPFSHashExist: #{
        # cmd: bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder
