@@ -1,13 +1,15 @@
 import os, sys, subprocess, time
 from colored import stylize
 from colored import fg
+from dotenv import load_dotenv
+load_dotenv()
 
-WHOAMI=""
-EBLOCPATH=""
-CLUSTER_ID=""
-GDRIVE=""
-RPC_PORT=8545
-POA_CHAIN=1 
+WHOAMI     = os.getenv("WHOAMI")
+EBLOCPATH  = os.getenv("EBLOCPATH")
+CLUSTER_ID = os.getenv("CLUSTER_ID")
+GDRIVE     = os.getenv("GDRIVE")
+RPC_PORT   = os.getenv("RPC_PORT")
+POA_CHAIN  = os.getenv("POA_CHAIN")
 
 GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive" 
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs" 
