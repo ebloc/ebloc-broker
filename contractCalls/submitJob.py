@@ -60,7 +60,7 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
         
     #print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(msgValue))
     tx = eBlocBroker.transact({"from": fromAccount, "value": msgValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, folderHash) 
-    return 'Tx: ' + tx.hex()
+    return tx.hex()
 #}
 
 if __name__ == '__main__': #{
@@ -111,5 +111,18 @@ if __name__ == '__main__': #{
         # =============================================================================
     #}
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
-    print(submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID))
+    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID)   
+    print('Tx: ' + tx_hash)
+
+    print('Waiting job to be deployed...')
+    while True: #{
+        receipt = web3.eth.getTransactionReceipt(tx_hash)
+        if receipt is None:
+            time.sleep(2)
+            receipt = web3.eth.getTransactionReceipt(tx_hash)
+        else:
+            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+            print('Job\'s index is ' + str(logs[0].args['index']))
+            break
+    #}
 #}
