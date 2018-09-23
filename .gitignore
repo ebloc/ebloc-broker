@@ -202,3 +202,5 @@ docs/nohup.out
 venv/
 
 whisper/work/
+
+\.env
