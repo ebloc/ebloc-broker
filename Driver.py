@@ -40,7 +40,7 @@ p3.stdout.close()
 out = p4.communicate()[0].decode('utf-8').strip()
 # ----------------------------------------------------------------
 
-if int(out) == 0: #{   
+if int(out) == 0: #{
    # Running driverCancel.py on the background
    pro = subprocess.Popen(['python3','driverCancel.py'])
 #}
@@ -58,24 +58,24 @@ def log(strIn, color=''): #{
       print(stylize(strIn, fg(color)))
    else:
       print(strIn)
-      
+
    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
    txFile.write(strIn + "\n")
-   txFile.close()   
+   txFile.close()
 #}
 
 def terminate(): #{
    log('Terminated')
-   subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit.   
+   subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit
 
    ''' Following line is added, in case ./killall.sh does not work due to sudo.
    Send the kill signal to all the process groups '''
-   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)  
+   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
    sys.exit()
 #}
 
 def shellCommand(args): #{
-   return subprocess.check_output(args).decode('utf-8').strip() 
+   return subprocess.check_output(args).decode('utf-8').strip()
 #}
 
 def idleCoreNumber(printFlag=1): #{
@@ -83,7 +83,7 @@ def idleCoreNumber(printFlag=1): #{
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
        if printFlag == 1:
-          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] + '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue')               
+          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] + '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue')
     else:
        log("sinfo return emptry string.", 'red')
        idleCore = 0
@@ -93,7 +93,7 @@ def idleCoreNumber(printFlag=1): #{
 def slurmPendingJobCheck(): #{
     idleCore  = idleCoreNumber()       
     printFlag = 0    
-    while idleCore == '0':  #{
+    while idleCore == '0': #{
        if printFlag == 0:
           log('Waiting running jobs to be completed...', 'blue')
           printFlag = 1
@@ -153,7 +153,7 @@ if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': #{
 isDriverOn()
 lib.isSlurmOn()
 isGethOn()
-   
+
 isContractExist = isContractExist(web3)
 if 'False' in isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red')
@@ -164,10 +164,10 @@ log('isWeb3Connected: ' + str(isWeb3Connected(web3)))
 log('rootdir: ' + os.getcwd())
 with open('contractCalls/address.json', 'r') as content_file:
    log('{0: <20}'.format('contractAddress:') + "\"" + content_file.read().strip() + "\"", "yellow")
-   
+
 if lib.IPFS_USE == 1:
    lib.isIpfsOn()
-   
+
 clusterAddress = lib.CLUSTER_ID
 isClusterExist = isClusterExist(clusterAddress, eBlocBroker, web3)
 
@@ -275,7 +275,7 @@ while True: #{
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " + loggedJobs[i].args['jobKey'] + " " +
            str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " + loggedJobs[i].args['desc'])
 
-       if loggedJobs[i]['blockNumber'] > int(maxVal):
+       if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
 
        jobKey = loggedJobs[i].args['jobKey']
@@ -285,7 +285,7 @@ while True: #{
        jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
 
        userID   = ""
-       if jobInfo['core'] == 0: #if not ',' in jobInfo or jobInfo == '': 
+       if jobInfo['core'] == 0: 
           log('Job does not exist', 'red')
           runFlag = 1
           sys.exit()
@@ -311,9 +311,8 @@ while True: #{
              runFlag = 1
           else:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
-                         
           slurmPendingJobCheck()
-          print(shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))          
+          print(shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))
        #}
 
        if runFlag == 1:
@@ -322,9 +321,9 @@ while True: #{
           log("New job has been received. IPFS call |" + time.ctime(), "green")
           driverFunc.driverIpfsCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
                                     str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
-                                    eBlocBroker, web3) 
+                                    eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
-          log("New job has been received. EUDAT call |" + time.ctime(), "green")          
+          log("New job has been received. EUDAT call |" + time.ctime(), "green")
           driverFunc.driverEudatCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
                                      hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                      eBlocBroker, web3)
@@ -335,30 +334,28 @@ while True: #{
                                     str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                     eBlocBroker, web3)
           #thread.start_new_thread(driverFunc.driverIpfsCall, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
-       elif str(loggedJobs[i].args['storageID']) == '3': 
+       elif str(loggedJobs[i].args['storageID']) == '3':
           log("New job has been received. GitHub call |" + time.ctime(), "green")
           driverFunc.driverGithubCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
                                       str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                       eBlocBroker, web3)
-       elif str(loggedJobs[i].args['storageID']) == '4': 
+       elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverFunc.driverGdriveCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
                                       hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                       eBlocBroker, web3)
-    #}    
-
-    if len(loggedJobs) > 0 and int(maxVal) != 0: #{ 
-       f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number      
-       f_blockReadFrom.write(str(int(maxVal) + 1) + '\n') 
-       f_blockReadFrom.close()
-       blockReadFrom = str(int(maxVal) + 1)
     #}
 
+    if len(loggedJobs) > 0 and int(maxVal) != 0:
+       f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
+       f_blockReadFrom.write(str(int(maxVal) + 1) + '\n')
+       f_blockReadFrom.close()
+       blockReadFrom = str(int(maxVal) + 1)
+
     # If there is no submitted job for the cluster, block start to read from current block number
-    if isClusterReceivedJob == 0: #{ 
+    if isClusterReceivedJob == 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
        f_blockReadFrom.write(str(currentBlockNumber) + '\n')
        f_blockReadFrom.close()
        blockReadFrom = str(currentBlockNumber)
-    #}
 #}
