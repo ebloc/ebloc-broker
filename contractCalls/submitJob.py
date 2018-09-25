@@ -95,7 +95,7 @@ if __name__ == '__main__': #{
         # USER Inputs ================================================================
         clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'
         if test == 'ipfs':
-            jobKey         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
+            jobKey         = "QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg"  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
             #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
         coreNum        = 1 
@@ -105,9 +105,7 @@ if __name__ == '__main__': #{
         jobDescription = 'Science'
         storageID      = 0
         folderHash     = '00000000000000000000000000000000'
-        accountID      = 0
-
-        
+        accountID      = 0        
         # =============================================================================
     #}
     coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
