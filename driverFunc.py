@@ -23,15 +23,14 @@ def silentremove(filename): #{
     try:
         os.remove(filename)
     except OSError as e: # This would be "except OSError, e:" before Python 2.6
-       pass 
+       pass
 #}
 
 def removeFiles(filename): #{
-   if "*" in filename: #{
+   if "*" in filename: 
        for fl in glob.glob(filename):
            print(fl)
            silentremove(fl) 
-   #}
    else:
        silentremove(filename) 
 #}

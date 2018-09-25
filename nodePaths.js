@@ -1,7 +1,10 @@
+require('dotenv').config();
+
 module.exports = Object.freeze({
-    EBLOCBROKER: '/home/whoami/eBlocBroker',
-    LOG_PATH:    '/home/whoami/.eBlocBroker',
-    CLUSTER_ID:  '0xffffffffffffffffffffffffffffffffffffffff', // Should be the address of the cluster    
-    RPC_PORT:    '8545'
+    WHOAMI:      process.env.WHOAMI,
+    EBLOCBROKER: process.env.EBLOCPATH,
+    LOG_PATH:    process.env.LOG_PATH,
+    CLUSTER_ID:  process.env.CLUSTER_ID,
+    RPC_PORT:    process.env.RPC_PORT
 });
 

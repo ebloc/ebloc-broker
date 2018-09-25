@@ -16,7 +16,7 @@ IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs"
 LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker"     
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc" 
 
-IPFS_USE                    = 0 
+IPFS_USE                    = 0
 PROGRAM_PATH                = '/var/eBlocBroker' 
 JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt" 
 CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + "/cancelledJobs.txt"
