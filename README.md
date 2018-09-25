@@ -12,7 +12,7 @@
 
 ## How to connect into Private Ethereum Blockchain (eBloc) via Geth
 
-Please follow [here](https://github.com/ebloc/eblocGeth).
+Please follow [here](https://github.com/ebloc/eblocPOW).
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
