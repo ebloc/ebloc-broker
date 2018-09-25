@@ -24,7 +24,7 @@ if [ $preInstall -eq 1 ]; then
     sudo n latest
     npm install web3
     npm install web3_ipc
-
+    npm install dotenv
     #==================================================================================================
     ## Linux Packages
     sudo apt-get install davfs2 mailutils
@@ -72,10 +72,16 @@ sudo chmod +x $currentDir/slurmScript.sh
 #======================================================================
 cd $currentDir
 
+# LOG_PATH path setup
+lineNew=$HOME/.eBlocBroker
+var=$(echo $lineNew | sed 's/\//\\\//g')
+sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" .env
+rm -f .env.bak
+
 # GDRIVE path setup
 lineNew=$(which gdrive | sed 's/\//\\\//g')
 sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" .env
-rm .env.bak
+rm -f .env.bak
 
 # EBLOCPATH setup
 eBlocBrokerPath="$PWD"
@@ -88,24 +94,18 @@ lineOld="whoami";
 lineNew=$(logname);
 
 sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" .env
-rm .env.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $currentDir/nodePaths.js
-rm $currentDir/nodePaths.js.bak
+rm -f .env.bak
 
 # RPC PORT Setup:======================================================
 lineOld="8545";
 
 sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" .env
 rm .env.bak
-sed -i.bak 's/'$lineOld'/'$newRpcPort'/'       nodePaths.js
-rm nodePaths.js.bak
 
 # PATH Name Setup:===================================================
 lineOld="EBLOCBROKER_PATH";
 lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' nodePaths.js
-rm nodePaths.js.bak
 sed -i.bak 's/'$lineOld'/'$lineNew'/' .env
 rm .env.bak
 sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh
@@ -116,7 +116,6 @@ lineOld='0xffffffffffffffffffffffffffffffffffffffff';
 lineNew=$(echo $COINBASE);
 
 sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" .env && rm .env.bak
-sed -i.bak 's/'$lineOld'/'$lineNew'/'             nodePaths.js && rm nodePaths.js.bak
 #======================================================================
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set";

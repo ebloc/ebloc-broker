@@ -15,14 +15,14 @@ Build dependencies
 ------------------
 
 `Geth <https://github.com/ethereum/go-ethereum/wiki/geth>`__,
-`Parity <https://parity.io>`__,
 `IPFS <https://ipfs.io/docs/install/>`__,
 `Slurm <https://github.com/SchedMD/slurm>`__.
 
-How to connect into Private Ethereum Blockchain (eBloc) via Geth
-----------------------------------------------------------------
+How to connect into Private Ethereum Blockchain (eBloc)
+-------------------------------------------------------
 
-Please follow `here <https://github.com/ebloc/eblocPOW>`__.
+-  Connect into `eBlocPOA <https://github.com/ebloc/eblocPOA>`__
+-  Connect into `eBlocPOW <https://github.com/ebloc/eblocPOW>`__
 
 How to use eBlocBroker inside an Amazon EC2 Instance
 ----------------------------------------------------
@@ -31,39 +31,78 @@ An Amazon image (**AMI Name:** ``eBloc``, **AMI ID:** ``ami-f5c47f8a``)
 is also available that contains ``geth`` setup to connect to our local
 Ethereum based blockchain system.
 
-Create your Ethereum Account
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create an Ethereum Account
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Connect into eBloc private chain using Geth: ``eblocServer``. On another
-console to attach Geth console please do: ``eblocClient``. Please note
-that first you have to run ``eblocServer`` and than ``eblocClient``.
+**Creating an account:**
 
-Inside your ``geth-client``, use:
+.. code:: bash
 
-::
-
-    > personal.NewAccount()
+    $ cd eblocPOA
+    $ eblocPath="$PWD"
+    $ geth --datadir="$eblocPath" account new
+    Your new account is locked with a password. Please give a password. Do not forget this password.
     Passphrase:
     Repeat passphrase:
-    "0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"
-    > eth.accounts
-    ["0x2384a05f8958f3490fbb8ab6919a6ddea1ca0903"]
+    Address: {a0a50a64cac0744dea5287d1025b8ef28aeff36e}
 
--  Open the following file: ``$HOME/eBlocBroker/.profile`` and set
-   ``COINBASE`` with your created Ethereum Address.
+Your new account is locked with a password. Please give a password. Do
+not forget this password. Please enter a difficult passphrase for your
+account.
+
+You should see your ``Keystore File (UTC / JSON)``\ under ``keystore``
+directory.
+
+.. code:: bash
+
+    [~/eblocPOA]$ ls keystore
+    UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
+
+**On the console, use:**
+
+You can also create your Ethereum account inside your ``geth-client``.
+Here your ``Keystore File`` will be created with root permission,
+``eBlocWallet`` will not able to unlock it.
+
+.. code:: bash
+
+    > personal.newAccount()
+    Passphrase:
+    Repeat passphrase:
+    "0x7d334606c71417f944ff8ba5c09e3672066244f8"
+    > eth.accounts
+    ["0x7d334606c71417f944ff8ba5c09e3672066244f8"]
+
+Now you should see your ``Keystore File (UTC / JSON)``\ under
+``private/keystore`` directory.
+
+.. code:: bash
+
+    [~/eblocPOA]$ ls private/keystore
+    UTC--2018-02-14T11-00-59.995395000Z--7d334606c71417f944ff8ba5c09e3672066244f8
+
+To give open acccess to the keystore file:
+
+.. code:: bash
+
+    sudo chown -R $(whoami) private/keystore/UTC--...
+
+-  Afterwards, open the following file: ``$HOME/eBlocBroker/.profile``
+   and set ``COINBASE`` with your created Ethereum Address.
+
+--------------
 
 Laater, please do following inside your Amazon instance.
 
 .. code:: bash
 
-    $ eblocServer          # To run eBloc Etheruem Node
-    $ nohup ipfs daemon &  # Runs IPFS Daemon
+    # To run eBloc Etheruem Node
+    $ eblocServer          
 
-    ## To run eBlocBroker Daemon
+    # To run eBlocBroker Driver
     $ cd $HOME/eBlocBroker 
     $ bash initialize.sh # Do it only once.
-    $ sudo bash runSlurm.sh
-    $ bash runDaemon.sh  
+    $ sudo ./Driver.sh
 
 Start Running Cluster using eBlocBroker
 ---------------------------------------
@@ -91,11 +130,10 @@ Cluster Side: How to register a cluster
 Please note the following:
 
 -  If you do not have any ``Federated Cloud ID`` or ``MiniLock ID`` give
-   an empty string: ``""``. You can use
-   ``contractCall/registerCluster.py`` to submit your jobs. To run:
-   ``python3 contractCall/registerCluster.py``.
+   an empty string: ``""``. You can use ``./registerCluster.py`` to
+   submit your jobs.
 
-.. code:: bash
+.. code:: python
 
     coreNumber         = 128;
     clusterEmail       = "ebloc@gmail.com";
@@ -104,14 +142,14 @@ Please note the following:
     corePriceMinuteWei = 100; 
     ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; 
 
-    python3 contractCall/registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
+    ./registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 
 **How to return all available Clusters Addresses**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-    $ python3 contractCall/getClusterAddresses.py
+    ./getClusterAddresses.py
 
 Client Side: How to obtain IPFS Hash of the job:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,9 +186,8 @@ will see something similiar with following output:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to submit your job each user should already registered into
-eBlocBroker.You can use ``contractCall/registerUser.py`` to register. To
-run: ``python3 contractCall/registerUser.py``. Please update followin
-arguments inside ``registerUser.py`` file.
+eBlocBroker.You can use ``./registerUser.py`` to register. Please update
+followin arguments inside ``registerUser.py`` file.
 
 ``account``, ``userEmail``, ``federationCloudID``, ``miniLockID``, and
 ``ipfsAddress``.
@@ -161,15 +198,14 @@ using following
 
 --------------
 
-Later, you can use ``contractCall/submitJob.py`` to submit your jobs. To
-run: ``python3 contractCall/submitJob.py``.
+Later, you can use ``./submitJob.py`` to submit your jobs.
 
 **1. How to submit a job using IPFS**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Please update following arguments inside ``submitJob.py`` file.
 
-.. code:: bash
+.. code:: python
 
     clusterAddress   = "0x6af0204187a93710317542d383a1b547fa42e705";  
     ipfsHash         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
@@ -189,7 +225,7 @@ with cluster's FID. Please
 Otherwise your job will not be accepted. Please update following
 arguments inside ``submitJob.py`` file.
 
-.. code:: bash
+.. code:: python
 
     clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
     jobKey         = "folderName";
@@ -232,7 +268,7 @@ How to decript your folder using miniLock
 
 Please update following arguments inside ``submitJob.py`` file.
 
-.. code:: bash
+.. code:: python
 
     clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit. 
     jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
@@ -252,7 +288,7 @@ write your username followed by the folder name having '=' in between.
 Example: ``avatar-lavventura=simpleSlurmJob``. Please update following
 arguments inside ``submitJob.py`` file.
 
-.. code:: bash
+.. code:: python
 
     clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit.
     jobKey           = "avatar-lavventura=simpleSlurmJob" 
@@ -303,7 +339,7 @@ folderPath/folderName/RUN.zip ; please name it ``RUN.zip`` or
 
 Please update following arguments inside ``submitJob.py`` file.
 
-.. code:: bash
+.. code:: python
 
     clusterID        = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; # clusterID you would like to submit.
     jobKey           = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
@@ -317,15 +353,14 @@ Please update following arguments inside ``submitJob.py`` file.
 **How to obtain Submitted Job's Information:**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use ``contractCall/getJobInfo.py`` to submit your jobs. To run:
-``python3 contractCall/getJobInfo.py``
+You can use ``./getJobInfo.py`` to submit your jobs.
 
-.. code:: bash
+.. code:: python
 
-    clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.
-    jobKey = "134633894220713919382117768988457393273"
-    index   = 0;   
-    python3 contractCall/getJobInfo.py $clusterID $jobKey $index
+    clusterID = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.
+    jobKey    = "134633894220713919382117768988457393273"
+    index     = 0;   
+    ./getJobInfo.py $clusterID $jobKey $index
 
 -  status of the job could be ``QUEUED``, ``REFUNDED``, ``RUNNING``,
    ``PENDING`` or ``COMPLETED``.
