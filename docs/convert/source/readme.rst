@@ -22,7 +22,7 @@ Build dependencies
 How to connect into Private Ethereum Blockchain (eBloc) via Geth
 ----------------------------------------------------------------
 
-Please follow `here <https://github.com/ebloc/eblocGeth>`__.
+Please follow `here <https://github.com/ebloc/eblocPOW>`__.
 
 How to use eBlocBroker inside an Amazon EC2 Instance
 ----------------------------------------------------
