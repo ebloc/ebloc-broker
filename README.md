@@ -120,7 +120,7 @@ ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 ./registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 ```
 
-#### **How to return all available Clusters Addresses**
+#### **How to return available Clusters Addresses**
 
 ```
 ./getClusterAddresses.py
@@ -146,7 +146,7 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 
 -----------
 
-### **How to submit a job using storageTypes**
+### **How to Submit a Job**
 
 In order to submit your job each user should already registered into eBlocBroker.You can use `./registerUser.py` to register. Please update followin arguments inside `registerUser.py` file.
 
@@ -163,7 +163,7 @@ Later, you can use `./submitJob.py` to submit your jobs.
 Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterAddress   = "0x6af0204187a93710317542d383a1b547fa42e705";  
+clusterAddress   = "0x4e4a0750350796164D8DefC442a712B7557BF282";  
 ipfsHash         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
 coreNum          = 1; 
 coreGasDay       = 0;
@@ -178,7 +178,7 @@ storageType      = 0; # Please note that '0' stands for IPFS repository share.
 Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted. Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterAddress = "0x6af0204187a93710317542d383a1b547fa42e705";
+clusterAddress = "0x4e4a0750350796164D8DefC442a712B7557BF282";
 jobKey         = "folderName";
 coreNum        = 1;
 coreGasDay     = 0;
@@ -215,7 +215,7 @@ mlck decrypt -f fileName --passphrase="$(cat mlck_password.txt)" --output-file=.
 Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit. 
+clusterID        = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID you would like to submit. 
 jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 coreNum          = 1; 
 coreGasDay       = 0;
@@ -230,7 +230,7 @@ storageType      = 2; # Please note 2 stands for IPFS with miniLock repository s
 If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`. Please update following arguments inside `submitJob.py` file. 
 
 ```python
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID you would like to submit.
+clusterID        = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID you would like to submit.
 jobKey           = "avatar-lavventura=simpleSlurmJob" 
 coreNum          = 1; 
 coreGasDay       = 0;
@@ -292,7 +292,7 @@ storageType      = 4; # Please note that 4 stands for gdrive repository share.
 You can use `./getJobInfo.py` to submit your jobs. 
 
 ```python
-clusterID = "0x6af0204187a93710317542d383a1b547fa42e705"; # clusterID that you have submitted your job.
+clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID that you have submitted your job.
 jobKey    = "134633894220713919382117768988457393273"
 index     = 0;   
 ./getJobInfo.py $clusterID $jobKey $index

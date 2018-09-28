@@ -201,12 +201,12 @@ contract eBlocBroker {
     {
 	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 
-	if (!cluster.isRunning                                         ||
-	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core ||
-	    bytes(jobKey).length > 255                                 || /* Max length is 255 for the filename */
-	    bytes(folderHash).length != 32                             ||
-	    !isUserExist(msg.sender)                                   ||
-	    verifyOrcID[userContract[msg.sender].orcID] == 0           ||	    
+	if (!cluster.isRunning                                                ||
+	    msg.value < cluster.coreMinutePrice * coreMinuteGas * core        ||
+	    bytes(jobKey).length > 255                                        || /* Max length is 255 for the filename */
+	    (bytes(folderHash).length != 32 && bytes(folderHash).length != 0) ||
+	    !isUserExist(msg.sender)                                          ||
+	    verifyOrcID[userContract[msg.sender].orcID] == 0                  ||	    
 	    core > cluster.receiptList.coreNumber)
 	    revert();
 
