@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(); // https://github.com/motdotla/dotenv
 
 module.exports = Object.freeze({
     WHOAMI:      process.env.WHOAMI,

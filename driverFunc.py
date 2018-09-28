@@ -51,6 +51,13 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
+def cache(cacheType): #{
+    if cacheType is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
+        x = 1
+    elif cacheType is 'ipfs':
+        x = 1
+#}
+    
 def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
    # Give permission to user that will send jobs to Slurm.
    subprocess.run(['sudo', 'chown', '-R', userID, '.'])
@@ -159,15 +166,17 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    if 'folder' in mimeType: #{ # Recieved job is in folder format      
       # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
       res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8')
-      while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or ('googleapi' in res and 'error' in res): #{
+      flag = 1
+      while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or ('googleapi' in res and 'error' in res):
          time.sleep(10)            
          # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
          res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8').strip()
-         log(res)  
-      #}      
-      log(res)              
-
-      if not os.path.isdir(resultsFolderPrev + '/' + folderName): #{ Check before mv operation.
+         log(res)
+         flag = 0
+         
+      if flag is 1:
+          log(res)       
+      if not os.path.isdir(resultsFolderPrev + '/' + folderName): #{ Checking before mv operation
          log('Folder is not downloaded successfully.', 'red') 
          return 
       #}      
@@ -184,8 +193,7 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
          # cmd: unzip -j $resultsFolder/*.zip -d $resultsFolder
          # This may remove anyother file ending with .zip
          for zipFile in glob.glob(resultsFolder + '/*.zip'):
-             subprocess.run(['unzip', '-j', zipFile, '-d', resultsFolder])
-         
+             subprocess.run(['unzip', '-j', zipFile, '-d', resultsFolder])         
    #}       
    elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
        os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code     
@@ -202,7 +210,6 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        log('gdrive download --recursive ' + jobKey + '--force --path ' + resultsFolderPrev)
        # cmd: unzip -j $resultsFolderPrev/$folderName -d $resultsFolder
        subprocess.run(['unzip', '-j', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])       
-
        # cmd: rm -f $resultsFolderPrev/$folderName
        subprocess.run(['rm', '-rf', resultsFolderPrev + '/' + folderName])
    else:
@@ -379,12 +386,13 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
                 return
             ipfsCallCounter += 1
             time.sleep(10)
-    #}
-    
+    #}    
     if "CumulativeSize" in isIPFSHashExist: #{
-       # cmd: bash $eblocPath/ipfsGet.sh $jobKey $resultsFolder
-       subprocess.run(['bash', lib.EBLOCPATH + '/ipfsGet.sh', jobKey, resultsFolder])        
-       
+       # cmd: ipfs get $jobKey --output=$resultsFolder
+       # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
+       res = subprocess.check_output(['ipfs', 'get', jobKey, '--output='+resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
+       print(res)
+              
        if storageID == '2': #{ Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
 
