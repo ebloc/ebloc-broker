@@ -202,7 +202,3 @@ docs/nohup.out
 venv/
 
 whisper/work/
-
-\.env
-
-owncloudScripts/password\.txt
