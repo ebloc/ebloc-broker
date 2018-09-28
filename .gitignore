@@ -204,3 +204,5 @@ venv/
 whisper/work/
 
 \.env
+
+owncloudScripts/password\.txt
