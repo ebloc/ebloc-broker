@@ -23,14 +23,13 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
         job = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
         jobDict = {'status': job[0], 'core': job[1], 'startTime': job[2], 'received': job[3], 'coreMinutePrice': job[4], 'coreMinuteGas': job[5], 'jobOwner': job[6]}
     except Exception as e:
-        # print(e)
         return e.__class__.__name__
         # return 'Exception: web3.exceptions.BadFunctionCallOutput'
     return jobDict
 #}
 
 if __name__ == '__main__': #{
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 4:
         clusterAddress = str(sys.argv[1]) 
         jobKey         = str(sys.argv[2]) 
         index          = int(sys.argv[3]) 
@@ -42,9 +41,14 @@ if __name__ == '__main__': #{
         index          = 0
         
     jobInfo = getJobInfo(clusterAddress, jobKey, index)
-        
+
+    if str(jobInfo['core']) == '0':
+        print('Out of index.')
+        sys.exit()
+
     if type(jobInfo) is dict:        
         print('{0: <16}'.format('status:') + lib.inv_job_state_code[jobInfo['status']])
+        print('{0: <16}'.format('status:') + str(jobInfo['status']))
         print('{0: <16}'.format('core') + str(jobInfo['core']))
         print('{0: <16}'.format('startTime') + str(jobInfo['startTime']))
         print('{0: <16}'.format('received:') + str(jobInfo['received']))
