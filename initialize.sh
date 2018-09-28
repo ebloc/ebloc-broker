@@ -26,12 +26,20 @@ if [ $preInstall -eq 1 ]; then
     npm install web3_ipc
     npm install dotenv
     #==================================================================================================
-    ## Linux Packages
-    sudo apt-get install davfs2 mailutils
-    sudo apt-get install python-psutil
-    sudo apt-get install -y nodejs
-    sudo apt-get install munge
-    sudo apt-get install bc
+    machineOS=$(bash $HOME/eBlocBroker/scripts/machine.sh)
+    if [ "$machineOS" == "Mac" ]; then
+        # Mac Packages
+        brew install realpath
+    else
+        echo 'alper'
+        ## Linux Packages
+        sudo apt-get install davfs2 mailutils
+        sudo apt-get install python-psutil
+        sudo apt-get install -y nodejs
+        sudo apt-get install munge
+        sudo apt-get install bc
+        sudo apt-get install realpath        
+    fi
 
     ## Install google-drive:
     go get github.com/prasmussen/gdrive
@@ -41,7 +49,6 @@ if [ $preInstall -eq 1 ]; then
     gdrive about
     echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
 fi
-
 # IPFS check
 # nc IP PORT
 # Should return: /multistream/1.0.0
