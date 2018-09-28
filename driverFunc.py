@@ -10,9 +10,9 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-jobKeyGlobal    = '' 
-indexGlobal     = ''
-storageIDGlobal = ''
+jobKeyGlobal    = None
+indexGlobal     = None
+storageIDGlobal = None
 shareTokenGlobal = '-1'
 
 # Paths===================================================
@@ -51,11 +51,104 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
-def cache(cacheType): #{
+def cache(userID, cacheType): #{    
     if cacheType is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
-        x = 1
+        globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
+        if not os.path.isdir(globalCacheFolder): # If folder does not exist
+            os.makedirs(globalCacheFolder)
+                   
+        cachedFolder = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal
+        if not os.path.isdir(cachedFolder):                        
+            eudatDownloadFolder(globalCacheFolder, cachedFolder)
+        else:            
+            res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
+            if res == jobKeyGlobal: #Checking is already downloaded folder's hash matches with the given hash
+                log('Already cached folder.', 'green')
+            else:
+                eudatDownloadFolder(globalCacheFolder, cachedFolder)
     elif cacheType is 'ipfs':
         x = 1
+#}
+
+def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
+   '''
+   # cmd: unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh
+   # Checks does zip contains run.sh file
+   p1 = subprocess.Popen(['unzip', '-l', resultsFolder + '/output.zip'], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['grep', eudatFolderName + '/run.sh'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   out = p2.communicate()[0].decode('utf-8').strip()   
+   if not '/run.sh' in out:
+       log("Error: Folder does not contain run.sh file.")
+       return  
+   '''
+
+   # Downloads shared file as .zip, much faster.
+   # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
+   ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
+                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
+   if "ERROR 404: Not Found" in ret:
+       log(ret, 'red') 
+       log('File not found The specified document has not been found on the server.', 'red') 
+       # TODO: since folder does not exist, do complete refund to the user.
+       return 0
+   log(ret) 
+
+   time.sleep(0.25)  
+   if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
+       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder])
+       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
+   #}
+   
+   if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
+      # Extracting all *.tar.gz files.
+      subprocess.run(['bash', lib.EBLOCPATH + '/tar.sh', resultsFolder])      
+      # Removing all tar.gz files after extraction is done.
+      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/*.tar.gz'))
+   #}
+   
+   if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
+      subprocess.run(['unzip', '-jo', resultsFolderPrev + '/' + jobKey, '-d', resultsFolder])
+      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.zip"))
+   #}
+#}
+    
+def eudatGetShareToken(fID): #{
+   global shareTokenGlobal
+   with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
+       password = content_file.read().strip()
+
+   log("Login into owncloud") 
+   oc = owncloud.Client('https://b2drop.eudat.eu/') 
+   oc.login('aalimog1@binghamton.edu', password)  # Unlocks EUDAT account
+   password = None   
+   shareList = oc.list_open_remote_share() 
+
+   acceptFlag      = 0 
+   eudatFolderName = "" 
+   log("Finding share token...")
+   for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
+      inputFolderName  = shareList[i]['name']
+      inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
+      inputID          = shareList[i]['id']
+      inputOwner       = shareList[i]['owner']
+      shareToken       = shareList[i]['share_token']
+      
+      if (inputFolderName == jobKeyGlobal) and (inputOwner == fID): #{
+         log("Found. InputId=" + inputID + " |ShareToken: " + shareToken) 
+         shareTokenGlobal = str(shareToken)
+         eudatFolderName  = str(inputFolderName)
+         acceptFlag = 1 
+         break 
+      #}
+   #}
+   
+   if acceptFlag == 0:
+      oc.logout() 
+      log("Couldn't find the shared file", 'red') 
+      return 0
 #}
     
 def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
@@ -113,7 +206,7 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
       
    if not jobID.isdigit(): #{
       log("Error occured, jobID is not a digit.", 'red')
-      return()  # Detects an error on the SLURM side
+      return 0   # Detects an error on the SLURM side
    #}
 #}
 
@@ -178,7 +271,7 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
           log(res)       
       if not os.path.isdir(resultsFolderPrev + '/' + folderName): #{ Checking before mv operation
          log('Folder is not downloaded successfully.', 'red') 
-         return 
+         return 0
       #}      
       # cmd: mv $resultsFolderPrev/$folderName $resultsFolder
       subprocess.run(['mv', resultsFolderPrev + '/folderName', resultsFolder])
@@ -213,11 +306,13 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        # cmd: rm -f $resultsFolderPrev/$folderName
        subprocess.run(['rm', '-rf', resultsFolderPrev + '/' + folderName])
    else:
-       return 
+       return 0 
 
    if os.path.isdir(resultsFolder): # Check before mv operation.
       os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
-      sbatchCall(userID, resultsFolder, eBlocBroker, web3)     
+      if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
+          return 0
+      
 #}
 
 def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
@@ -243,7 +338,8 @@ def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
    subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   sbatchCall(userID, resultsFolder, eBlocBroker, web3)    
+   if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
+       return 0
 #}
 
 def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
@@ -251,7 +347,7 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    global indexGlobal
    global storageIDGlobal
    global shareTokenGlobal
-
+   
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
    storageIDGlobal = '1'
@@ -262,88 +358,17 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
 
-   with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
-       password = content_file.read().strip()
-
-   log("Login into owncloud" ) 
-   oc = owncloud.Client('https://b2drop.eudat.eu/') 
-   oc.login('aalimog1@binghamton.edu', password)  # Unlocks EUDAT account
-   password = None   
-   shareList = oc.list_open_remote_share() 
-
-   acceptFlag      = 0 
-   eudatFolderName = "" 
-   log("Finding acceptID:")
-   for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
-      inputFolderName  = shareList[i]['name']
-      inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
-      inputId          = shareList[i]['id']
-      inputOwner       = shareList[i]['owner']
-      shareToken       = shareList[i]['share_token']
-      shareTokenGlobal = shareList[i]['share_token']
-      
-      if (inputFolderName == jobKey) and (inputOwner == fID): #{
-         log("InputId: " + inputId + " |ShareToken: " + shareToken) 
-         shareTokenGlobal              = str(shareToken)
-         eudatFolderName               = str(inputFolderName)
-         acceptFlag = 1 
-         break 
-      #}
-   #}
-
-   if acceptFlag == 0: #{
-      oc.logout() 
-      log("Couldn't find the shared file", 'red') 
-      return 
-   #}
+   eudatGetShareToken(fID)
+   cache(userID, 'local')
    
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
-      
-   '''
-   # cmd: unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh
-   # Checks does zip contains run.sh file
-   p1 = subprocess.Popen(['unzip', '-l', resultsFolder + '/output.zip'], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['grep', eudatFolderName + '/run.sh'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   out = p2.communicate()[0].decode('utf-8').strip()   
-   if not '/run.sh' in out:
-       log("Error: Folder does not contain run.sh file.")
-       return  
-   '''   
-   # Downloads shared file as .zip, much faster.
-   # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
-   ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareToken +
-                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
-   if "ERROR 404: Not Found" in ret:
-       log(ret, 'red') 
-       log('File not found The specified document has not been found on the server.', 'red') 
-       # TODO: since folder does not exist, do complete refund to the user.
-       return  
-   print(ret) 
 
-   time.sleep(0.25)  
-   if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
-       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder])
-       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
-   #}
-   
-   if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
-      # Extracting all *.tar.gz files.
-      subprocess.run(['bash', lib.EBLOCPATH + '/tar.sh', resultsFolder])      
-      # Removing all tar.gz files after extraction is done.
-      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/*.tar.gz'))
-   #}
-   
-   if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
-      subprocess.run(['unzip', '-jo', resultsFolderPrev + '/' + jobKey, '-d', resultsFolder])
-      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.zip"))
-   #}
-   
+   # Copy from cached folder into user's path that run will occur
+   subprocess.run(['cp', '-a', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal, resultsFolder])
+      
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   sbatchCall(userID, resultsFolder, eBlocBroker,  web3) 
+   sbatchCall(userID, resultsFolder, eBlocBroker,  web3)
 #}
 
 def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
@@ -351,7 +376,7 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     global indexGlobal
     global storageIDGlobal
     global shareTokenGlobal
-    
+
     jobKeyGlobal = jobKey  
     indexGlobal  = index
     storageIDGlobal = storageID
@@ -383,7 +408,7 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
         except subprocess.CalledProcessError as e: # Catches resource temporarily unavailable on ipfs
             log(e.output.decode('utf-8').strip(), 'red')
             if ipfsCallCounter == 5:
-                return
+                return 0
             ipfsCallCounter += 1
             time.sleep(10)
     #}    
@@ -410,12 +435,13 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        
        if not os.path.isfile('run.sh'): 
           log("run.sh does not exist", 'red') 
-          return 
+          return 0 
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
-       return 
+       return 0 
     #}
-    sbatchCall(userID, resultsFolder, eBlocBroker, web3) 
+    if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
+        return 0
 #}
 
 # To test driverFunc.py executed as script.

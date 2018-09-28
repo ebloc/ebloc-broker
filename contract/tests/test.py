@@ -120,6 +120,7 @@ def test_receipt(web3, accounts, chain): #{
             jobKey     = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
             miniLockId = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
             folderHash = "e3fbef873405145274256ee0ee2b580f"
+            # folderHash = ""
             
             set_txn_hash = my_contract.transact({"from": accounts[8], "value":
                                                  web3.toWei(60*10000000000000000*coreNum, "wei")
