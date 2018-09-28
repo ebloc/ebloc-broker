@@ -6,8 +6,9 @@ from random import randint
 if len(sys.argv) is not 2:
     print('Please provide folder name.')
     sys.exit()
+
 folderName = sys.argv[1]
-          
+
 # Password read from the file.
 f = open( 'password.txt', 'r') 
 password = f.read().replace("\n", "").replace(" ", "")

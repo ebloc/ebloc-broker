@@ -6,6 +6,7 @@ load_dotenv()
 
 WHOAMI     = os.getenv("WHOAMI")
 EBLOCPATH  = os.getenv("EBLOCPATH")
+LOG_PATH   = os.getenv("LOG_PATH") 
 CLUSTER_ID = os.getenv("CLUSTER_ID")
 GDRIVE     = os.getenv("GDRIVE")
 RPC_PORT   = os.getenv("RPC_PORT")
@@ -13,7 +14,7 @@ POA_CHAIN  = os.getenv("POA_CHAIN")
 
 GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive" 
 IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs" 
-LOG_PATH        ="/home/" + WHOAMI + "/.eBlocBroker"     
+
 OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc" 
 
 IPFS_USE                    = 0
