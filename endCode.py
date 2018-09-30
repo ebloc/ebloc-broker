@@ -60,9 +60,16 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
 #}
 
 # Client's loaded files are removed, no need to re-upload them.
-def removeSourceCode(resultsFolderPrev): #{
+def removeSourceCode(resultsFolderPrev): #{     
+      #delete---- to prevent error on shell on move on
+      #p = subprocess.Popen(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt'], stdout=subprocess.PIPE)
+      #filesToRemove = p.communicate()[0].decode('utf-8').strip()
+      #print(p.returncode)
+      #print(filesToRemove)
+      #delete----
+   
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
-      filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']).decode('utf-8').strip()
+      filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt'], stderr=subprocess.STDOUT).decode('utf-8').strip()
       if filesToRemove is not '' or filesToRemove is not None:
          log('\nFiles to be removed: \n' + filesToRemove + '\n')
          
@@ -155,7 +162,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       #if countTry > 200: # setJobStatus may deploy late.
       #   sys.exit()
       countTry += 1                  
-      log("Waiting... " + str(countTry * 60) + ' seconds passed.', 'yellow')  
+      log("Waiting... " + str(countTry * 15) + ' seconds passed.', 'yellow')  
       if jobInfo['status'] == lib.job_state_code['RUNNING']: # It will come here eventually, when setJob() is deployed.
          log("Job has been started.", 'green')  
          break  # Wait until does values updated on the blockchain
@@ -167,7 +174,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       lib.web3Exception(jobInfo)
       
-      time.sleep(60) # Short sleep here so this loop is not keeping CPU busy
+      time.sleep(15) # Short sleep here so this loop is not keeping CPU busy
    #}
    
    log("jobName: " + str(folderName))    
@@ -237,7 +244,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          time.sleep(5) 
       #}      
       log("newHash: " + newHash)       
-   #}     
+   #}
+   
    #cmd: sacct -n -X -j $jobID --format="Elapsed"
    elapsedTime = subprocess.check_output(['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed']).decode('utf-8').strip()   
    log("ElapsedTime: " + elapsedTime) 
@@ -262,7 +270,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
    log("jobInfo: " + str(jobInfo)) 
 
-   if storageID == '1': #{ #EUDAT
+   if str(storageID) == '1': #{ #EUDAT
+      log('Entered into Eudat case')
       newHash = '0x00'
       # cmd: rm $resultsFolder/.node-xmlhttprequest*
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/.node-xmlhttprequest*'))
@@ -275,13 +284,16 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
+         
       log('Files to be archived using tar: \n' +
           subprocess.check_output(['tar', '-N', date, '-jcvf',
-                                   'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
+                                      'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'] + glob.glob("*")).decode('utf-8'))            
 
-      ''' cmd: (https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577)
+      ''' cmd: ( https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577 )
       curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
-      --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz
+            --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz
+
+      curl --fail -X PUT -H 'Content-Type: text/plain' -H 'Authorization: Basic 'SjQzd05XM2NNcFoybkFLOg'==' --data-binary '@0b2fe6dd7d8e080e84f1aa14ad4c9a0f_0.txt' https://b2drop.eudat.eu/public.php/webdav/result.txt
       '''      
       p = subprocess.Popen(['curl', '--fail', '-X', 'PUT', '-H', 'Content-Type: text/plain', '-H',
                             'Authorization: Basic ' +  encodedShareToken,
@@ -362,12 +374,12 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
                                       'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz', '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       else:
          log('Files could not be uploaded', 'red')
-         sys.exit() 
+         sys.exit()
    #}
    receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID)
 
    # Removed downloaded code from local since it is not needed anymore
-   subprocess.run(['rm', '-rf', programPath + '/' + jobKey + "_" + index])
+   # subprocess.run(['rm', '-rf', programPath + '/' + jobKey + "_" + index])
 #}
 
 if __name__ == '__main__': #{
