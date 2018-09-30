@@ -57,17 +57,19 @@ def cache(userID, cacheType): #{
         if not os.path.isdir(globalCacheFolder): # If folder does not exist
             os.makedirs(globalCacheFolder)
                    
-        cachedFolder = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal
-        if not os.path.isdir(cachedFolder):                        
+        cachedFolder  = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal
+        cachedTarFile = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz'
+
+        if not os.path.isfile(cachedTarFile):
             eudatDownloadFolder(globalCacheFolder, cachedFolder)
-        else:            
-            res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
+        else:
+            res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
             if res == jobKeyGlobal: #Checking is already downloaded folder's hash matches with the given hash
-                log('Already cached folder.', 'green')
+                log('Already cached.', 'green')
             else:
                 eudatDownloadFolder(globalCacheFolder, cachedFolder)
     elif cacheType is 'ipfs':
-        x = 1
+        pass
 #}
 
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
@@ -97,22 +99,25 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
    log(ret) 
 
    time.sleep(0.25)  
-   if os.path.isfile(resultsFolderPrev + '/output.zip'): #{
-       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder])
+   if os.path.isfile(resultsFolderPrev + '/output.zip'): #{       
+       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
+       # subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev])       
        subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
    #}
    
+   '''   
    if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
       # Extracting all *.tar.gz files.
       subprocess.run(['bash', lib.EBLOCPATH + '/tar.sh', resultsFolder])      
       # Removing all tar.gz files after extraction is done.
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/*.tar.gz'))
    #}
-   
+    
    if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
-      subprocess.run(['unzip', '-jo', resultsFolderPrev + '/' + jobKey, '-d', resultsFolder])
+      subprocess.run(['unzip', resultsFolderPrev + '/' + jobKey, '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.zip"))
    #}
+   '''
 #}
     
 def eudatGetShareToken(fID): #{
@@ -197,7 +202,7 @@ def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
                                     resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh' + ' ' + 
                                     '--mail-type=ALL']).decode('utf-8').strip()
    jobID = jobID.split()[3]
-   log('jobID=' + jobID) # delete
+   log('jobID=' + jobID) 
    try:
        # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
        subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
@@ -236,7 +241,7 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
    #-----------
    p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   # p1.stdout.close() delete
+   p1.stdout.close()
    #-----------
    p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
@@ -311,8 +316,7 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    if os.path.isdir(resultsFolder): # Check before mv operation.
       os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
       if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
-          return 0
-      
+          return 0      
 #}
 
 def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
@@ -359,14 +363,19 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
 
    eudatGetShareToken(fID)
-   cache(userID, 'local')
+   cache(userID, 'local')   
    
-   if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
-      os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
+   if not os.path.isdir(resultsFolderPrev): # If folder does not exist
+      os.makedirs(resultsFolderPrev)
+      os.makedirs(resultsFolder)
 
-   # Copy from cached folder into user's path that run will occur
-   subprocess.run(['cp', '-a', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal, resultsFolder])
-      
+   # Copy from cached folder into user's path that run will occur if folder is used
+   #subprocess.run(['rsync', '-avq', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder])
+
+   # untar cached tar file
+   print(resultsFolder)
+   subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
+   
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
    sbatchCall(userID, resultsFolder, eBlocBroker,  web3)
 #}
