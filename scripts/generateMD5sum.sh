@@ -5,6 +5,17 @@ if [ "$#" -ne 1 ]; then
     exit;
 fi
 
+
+if [[ $1 = *".tar.gz" ]]; then
+    if [ ! -f $1 ]; then
+        echo "File not found! Path="$1
+        exit
+    fi
+    md5sum $1 | awk '{print $1}'
+    exit
+fi
+
+
 if [[ $1 = *"//"* ]]; then
     echo "Please do not use // on your folder path."
     exit;

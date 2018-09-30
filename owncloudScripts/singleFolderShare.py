@@ -2,6 +2,8 @@
 
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
 from random import randint
+from os.path import expanduser
+home = expanduser("~")
 
 if len(sys.argv) is not 2:
     print('Please provide folder name.')
@@ -16,7 +18,7 @@ f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('alper.alimoglu@boun.edu.tr', password)
 
-folderNames = os.listdir("oc")
+folderNames = os.listdir(home + "/oc")
 
 if not oc.is_shared(folderName):
     oc.share_file_with_user(folderName, 'ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu', remote_user=True, perms=31)
