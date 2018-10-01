@@ -61,13 +61,6 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
 
 # Client's loaded files are removed, no need to re-upload them.
 def removeSourceCode(resultsFolderPrev): #{     
-      #delete---- to prevent error on shell on move on
-      #p = subprocess.Popen(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt'], stdout=subprocess.PIPE)
-      #filesToRemove = p.communicate()[0].decode('utf-8').strip()
-      #print(p.returncode)
-      #print(filesToRemove)
-      #delete----
-   
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
       filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt'], stderr=subprocess.STDOUT).decode('utf-8').strip()
       if filesToRemove is not '' or filesToRemove is not None:

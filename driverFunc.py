@@ -13,6 +13,7 @@ from contractCalls.getJobInfo import getJobInfo
 jobKeyGlobal    = None
 indexGlobal     = None
 storageIDGlobal = None
+cacheTypeGlobal = None
 shareTokenGlobal = '-1'
 
 # Paths===================================================
@@ -45,14 +46,14 @@ def log(strIn, color=''): #{
    txFile.write(strIn + "\n") 
    txFile.close() 
 
-   fname = lib.LOG_PATH + '/transactions/' + jobKeyGlobal + '_' + indexGlobal + '_driverOutput' +'.txt'      
+   fname = lib.LOG_PATH + '/transactions/' + jobKeyGlobal + '_' + indexGlobal + '_driverOutput' + '.txt'
    txFile = open(fname, 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
 #}
 
-def cache(userID, cacheType): #{    
-    if cacheType is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
+def cache(userID): #{
+    if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
         globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
         if not os.path.isdir(globalCacheFolder): # If folder does not exist
             os.makedirs(globalCacheFolder)
@@ -68,8 +69,11 @@ def cache(userID, cacheType): #{
                 log('Already cached.', 'green')
             else:
                 eudatDownloadFolder(globalCacheFolder, cachedFolder)
-    elif cacheType is 'ipfs':
-        pass
+    '''
+    elif cacheTypeGlobal is 'ipfs':
+        ipfsHash = subprocess.check_output(['ipfs', 'add', lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz']).decode('utf-8').strip()
+        return ipfsHash.split()[1]
+   '''
 #}
 
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
@@ -101,7 +105,6 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
    time.sleep(0.25)  
    if os.path.isfile(resultsFolderPrev + '/output.zip'): #{       
        subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
-       # subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev])       
        subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
    #}
    
@@ -119,7 +122,8 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
    #}
    '''
 #}
-    
+
+#TODO: before this check is it shared or not
 def eudatGetShareToken(fID): #{
    global shareTokenGlobal
    with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
@@ -127,7 +131,7 @@ def eudatGetShareToken(fID): #{
 
    log("Login into owncloud") 
    oc = owncloud.Client('https://b2drop.eudat.eu/') 
-   oc.login('aalimog1@binghamton.edu', password)  # Unlocks EUDAT account
+   oc.login('5f0db7e4-3078-4988-8fa5-f066984a8a97', password)  # Unlocks EUDAT account
    password = None   
    shareList = oc.list_open_remote_share() 
 
@@ -139,21 +143,38 @@ def eudatGetShareToken(fID): #{
       inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
       inputID          = shareList[i]['id']
       inputOwner       = shareList[i]['owner']
-      shareToken       = shareList[i]['share_token']
-      
+
       if (inputFolderName == jobKeyGlobal) and (inputOwner == fID): #{
-         log("Found. InputId=" + inputID + " |ShareToken: " + shareToken) 
-         shareTokenGlobal = str(shareToken)
+         shareTokenGlobal = str(shareList[i]['share_token'])
          eudatFolderName  = str(inputFolderName)
-         acceptFlag = 1 
+         acceptFlag = 1
+         log("Found. InputId=" + inputID + " |ShareToken: " + shareTokenGlobal)
+         '''
+         if cacheTypeGlobal is 'ipfs': #{
+             val = oc.accept_remote_share(int(inputID));
+             print(val) #delete
+             tryCount = 0;
+             while True: #{
+                 if tryCount is 5:
+                     break
+                 time.sleep(10)
+                 try:
+                     print(oc.list(jobKeyGlobal))
+                     break
+                 except:
+                     print('Remote share did not accepted yet...')
+                 tryCount += 1
+             #}
+         #} 
+         '''      
          break 
       #}
    #}
-   
    if acceptFlag == 0:
       oc.logout() 
-      log("Couldn't find the shared file", 'red') 
-      return 0
+      log("Couldn't find the shared file", 'red')
+      return False
+   return True
 #}
     
 def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
@@ -351,10 +372,12 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    global indexGlobal
    global storageIDGlobal
    global shareTokenGlobal
+   global cacheTypeGlobal  
    
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
    storageIDGlobal = '1'
+   cacheTypeGlobal = 'local'
       
    log("key: "   + jobKey) 
    log("index: " + index) 
@@ -362,8 +385,9 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
 
-   eudatGetShareToken(fID)
-   cache(userID, 'local')   
+   if not eudatGetShareToken(fID):
+       return 
+   cache(userID)
    
    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
       os.makedirs(resultsFolderPrev)
@@ -372,9 +396,14 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
    # Copy from cached folder into user's path that run will occur if folder is used
    #subprocess.run(['rsync', '-avq', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder])
 
-   # untar cached tar file
-   print(resultsFolder)
+   #if cacheTypeGlobal is 'local':
+   # Untar cached tar file into local directory
    subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
+   '''
+   elif cacheTypeGlobal is 'ipfs':
+       log('Reading from IPFS')
+       subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
+   '''
    
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
    sbatchCall(userID, resultsFolder, eBlocBroker,  web3)
