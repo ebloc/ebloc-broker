@@ -76,6 +76,7 @@ def cache(userID): #{
    '''
 #}
 
+# Assume job is sent and .tar.gz file
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
    '''
    # cmd: unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh
@@ -395,11 +396,12 @@ def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
 
    # Copy from cached folder into user's path that run will occur if folder is used
    #subprocess.run(['rsync', '-avq', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder])
-
-   #if cacheTypeGlobal is 'local':
+  
    # Untar cached tar file into local directory
    subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
+   
    '''
+   #if cacheTypeGlobal is 'local':
    elif cacheTypeGlobal is 'ipfs':
        log('Reading from IPFS')
        subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
