@@ -18,10 +18,10 @@ def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddres
         eBlocBroker    = connectEblocBroker(web3)
     #}
     account = web3.eth.accounts[int(accountID)]  # User's Ethereum Address
-    
+
     if isUserExist(account, eBlocBroker, web3):
         return 'User (' + account  + ') is already registered.'
-        
+    
     if len(federationCloudID) < 128 and len(userEmail) < 128 and len(orcID) == 19 and orcID.replace("-", "").isdigit(): 
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID, miniLockID, ipfsAddress, orcID, githubUserName) 
         return  'Tx: ' + tx.hex()
@@ -39,7 +39,7 @@ if __name__ == '__main__': #{
     else:
         account            = 0  # User's Ethereum Address
         userEmail          = "alper.alimoglu@gmail.com" 
-        federationCloudID  = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579" 
+        federationCloudID  = "059ab6ba-4030-48bb-b81b-12115f531296" 
         miniLockID         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
         ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf" 
         orcID              = "0000-0001-7642-0552" 
