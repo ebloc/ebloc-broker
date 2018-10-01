@@ -13,8 +13,7 @@ f.close()
 #password = getpass.getpass("Enter your Eudat password:")
 
 oc = owncloud.Client('https://b2drop.eudat.eu/')
-oc.login('aalimog1@binghamton.edu', password ); 
-
+oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 oc.share_file_with_user(name, 'ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu', remote_user=True, perms=31)
 
 
