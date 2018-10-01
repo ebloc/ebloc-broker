@@ -12,10 +12,10 @@ GDRIVE     = os.getenv("GDRIVE")
 RPC_PORT   = os.getenv("RPC_PORT")
 POA_CHAIN  = os.getenv("POA_CHAIN")
 
-GDRIVE_METADATA ="/home/" + WHOAMI + "/.gdrive" 
-IPFS_REPO       ="/home/" + WHOAMI + "/.ipfs" 
-
-OWN_CLOUD_PATH  ="/home/" + WHOAMI + "/.eBlocBroker/oc" 
+OC = "/home/" + WHOAMI + "/ocCluster" 
+GDRIVE_METADATA = "/home/" + WHOAMI + "/.gdrive" 
+IPFS_REPO       = "/home/" + WHOAMI + "/.ipfs" 
+OWN_CLOUD_PATH  = "/home/" + WHOAMI + "/.eBlocBroker/oc" 
 
 IPFS_USE                    = 0
 PROGRAM_PATH                = '/var/eBlocBroker' 
@@ -115,7 +115,7 @@ def isIpfsOn(): #{
       log("Error: IPFS does not work on the background.", 'red') 
       log(" * Starting IPFS: nohup ipfs daemon &")
       with open(LOG_PATH + '/ipfs.out', 'w') as stdout:
-         subprocess.Popen(['nohup', 'ipfs', 'daemon'],
+         subprocess.Popen(['nohup', 'ipfs', 'daemon', '--mount'],
                           stdout=stdout,
                           stderr=stdout,
                           preexec_fn=os.setpgrp)      

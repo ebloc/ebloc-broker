@@ -12,7 +12,7 @@ if __name__ == '__main__': #{
     account            = web3.eth.accounts[0]  # Cluster's Ethereum Address
     coreNumber         = 2 
     clusterEmail       = "alper.alimoglu@gmail.com" 
-    federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu" 
+    federationCloudId  = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
     miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
     corePriceMinuteWei = 100 
     ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf" 
