@@ -8,6 +8,7 @@ import hashlib
 import sys, signal
 from imports import connectEblocBroker
 from imports import getWeb3
+from driverEudat import driverEudat
 
 sys.path.insert(0, './contractCalls')
 from contractCalls.getDeployedBlockNumber   import getDeployedBlockNumber
@@ -319,29 +320,29 @@ while True: #{
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
           log("New job has been received. IPFS call |" + time.ctime(), "green")
-          driverFunc.driverIpfsCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
+          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
                                     str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                     eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
           log("New job has been received. EUDAT call |" + time.ctime(), "green")
-          driverFunc.driverEudatCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
+          driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
                                      hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                      eBlocBroker, web3)
-          #thread.start_new_thread(driverFunc.driverEudatCall, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
+          #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
           log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green")
-          driverFunc.driverIpfsCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
+          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
                                     str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                     eBlocBroker, web3)
-          #thread.start_new_thread(driverFunc.driverIpfsCall, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
+          #thread.start_new_thread(driverFunc.driverIpfs, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
        elif str(loggedJobs[i].args['storageID']) == '3':
           log("New job has been received. GitHub call |" + time.ctime(), "green")
-          driverFunc.driverGithubCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
+          driverFunc.driverGithub(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
                                       str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                       eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
-          driverFunc.driverGdriveCall(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
+          driverFunc.driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
                                       hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                       eBlocBroker, web3)
     #}
