@@ -109,7 +109,7 @@ Please note the following:
 
 - If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `./registerCluster.py` to submit your jobs. 
 
-```python
+```bash
 coreNumber         = 128;
 clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
@@ -122,7 +122,7 @@ ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 
 #### **How to return available Clusters Addresses**
 
-```
+```bash
 ./getClusterAddresses.py
 ```
 
@@ -245,7 +245,7 @@ storageType      = 3 ; # Please note that 3 stands for github repository share.
 
 ##### [gdrive](https://github.com/prasmussen/gdrive) install:
 
-```
+```bash
 $ go get github.com/prasmussen/gdrive
 $ gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
 $ echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
@@ -259,7 +259,7 @@ Enter verification code:
 
 First you have to share your folder with the cluster:
 
-```
+```bash
 folderPath='/home/prc/multiple/workingTestIpfs'
 folderName='ipfs'
 clusterToShare='aalimog1@binghamton.edu'
@@ -291,7 +291,7 @@ storageType      = 4; # Please note that 4 stands for gdrive repository share.
 
 You can use `./getJobInfo.py` to submit your jobs. 
 
-```python
+```bash
 clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID that you have submitted your job.
 jobKey    = "134633894220713919382117768988457393273"
 index     = 0;   
