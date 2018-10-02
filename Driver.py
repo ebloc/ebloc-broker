@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import owncloud
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, lib, _thread
 from colored import stylize
@@ -25,7 +26,7 @@ import LogJob
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
-
+oc = None
 # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
 p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
 #-----------
@@ -324,10 +325,18 @@ while True: #{
                                     str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                     eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
+          if oc is None:             
+                log("Login into owncloud")
+                with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
+                   password = content_file.read().strip()
+                oc = owncloud.Client('https://b2drop.eudat.eu/') 
+                oc.login('5f0db7e4-3078-4988-8fa5-f066984a8a97', password)  # Unlocks EUDAT account
+                password = None   
+
           log("New job has been received. EUDAT call |" + time.ctime(), "green")
           driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
                                      hashlib.md5(userID.encode('utf-8')).hexdigest(),
-                                     eBlocBroker, web3)
+                                     eBlocBroker, web3, oc)
           #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
           log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green")
