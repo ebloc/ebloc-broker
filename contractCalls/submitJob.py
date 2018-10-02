@@ -61,6 +61,8 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
 #}
 
 if __name__ == '__main__': #{
+    test = 0
+    
     if len(sys.argv) == 9:
         clusterAddress = str(sys.argv[1])
         clusterAddress = web3.toChecksumAddress(clusterAddress) 
