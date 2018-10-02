@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, endCode, zipfile
+import owncloud, hashlib, getpass, sys, os, time, subprocess, lib
 from datetime import datetime, timedelta
 from   subprocess import call
 import os.path
@@ -52,192 +52,7 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
-def cache(userID): #{
-    if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
-        globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
-        if not os.path.isdir(globalCacheFolder): # If folder does not exist
-            os.makedirs(globalCacheFolder)
-                   
-        cachedFolder  = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal
-        cachedTarFile = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz'
-
-        if not os.path.isfile(cachedTarFile):
-            eudatDownloadFolder(globalCacheFolder, cachedFolder)
-        else:
-            res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
-            if res == jobKeyGlobal: #Checking is already downloaded folder's hash matches with the given hash
-                log('Already cached.', 'green')
-            else:
-                eudatDownloadFolder(globalCacheFolder, cachedFolder)
-    '''
-    elif cacheTypeGlobal is 'ipfs':
-        ipfsHash = subprocess.check_output(['ipfs', 'add', lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz']).decode('utf-8').strip()
-        return ipfsHash.split()[1]
-   '''
-#}
-
-# Assume job is sent and .tar.gz file
-def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
-   '''
-   # cmd: unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh
-   # Checks does zip contains run.sh file
-   p1 = subprocess.Popen(['unzip', '-l', resultsFolder + '/output.zip'], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['grep', eudatFolderName + '/run.sh'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   out = p2.communicate()[0].decode('utf-8').strip()   
-   if not '/run.sh' in out:
-       log("Error: Folder does not contain run.sh file.")
-       return  
-   '''
-
-   # Downloads shared file as .zip, much faster.
-   # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
-   ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
-                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
-   if "ERROR 404: Not Found" in ret:
-       log(ret, 'red') 
-       log('File not found The specified document has not been found on the server.', 'red') 
-       # TODO: since folder does not exist, do complete refund to the user.
-       return 0
-   log(ret) 
-
-   time.sleep(0.25)  
-   if os.path.isfile(resultsFolderPrev + '/output.zip'): #{       
-       subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
-       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
-   #}
-   
-   '''   
-   if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
-      # Extracting all *.tar.gz files.
-      subprocess.run(['bash', lib.EBLOCPATH + '/tar.sh', resultsFolder])      
-      # Removing all tar.gz files after extraction is done.
-      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/*.tar.gz'))
-   #}
-    
-   if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist
-      subprocess.run(['unzip', resultsFolderPrev + '/' + jobKey, '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
-      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + "/*.zip"))
-   #}
-   '''
-#}
-
-#TODO: before this check is it shared or not
-def eudatGetShareToken(fID): #{
-   global shareTokenGlobal
-   with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
-       password = content_file.read().strip()
-
-   log("Login into owncloud") 
-   oc = owncloud.Client('https://b2drop.eudat.eu/') 
-   oc.login('5f0db7e4-3078-4988-8fa5-f066984a8a97', password)  # Unlocks EUDAT account
-   password = None   
-   shareList = oc.list_open_remote_share() 
-
-   acceptFlag      = 0 
-   eudatFolderName = "" 
-   log("Finding share token...")
-   for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
-      inputFolderName  = shareList[i]['name']
-      inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
-      inputID          = shareList[i]['id']
-      inputOwner       = shareList[i]['owner']
-
-      if (inputFolderName == jobKeyGlobal) and (inputOwner == fID): #{
-         shareTokenGlobal = str(shareList[i]['share_token'])
-         eudatFolderName  = str(inputFolderName)
-         acceptFlag = 1
-         log("Found. InputId=" + inputID + " |ShareToken: " + shareTokenGlobal)
-         '''
-         if cacheTypeGlobal is 'ipfs': #{
-             val = oc.accept_remote_share(int(inputID));
-             print(val) #delete
-             tryCount = 0;
-             while True: #{
-                 if tryCount is 5:
-                     break
-                 time.sleep(10)
-                 try:
-                     print(oc.list(jobKeyGlobal))
-                     break
-                 except:
-                     print('Remote share did not accepted yet...')
-                 tryCount += 1
-             #}
-         #} 
-         '''      
-         break 
-      #}
-   #}
-   if acceptFlag == 0:
-      oc.logout() 
-      log("Couldn't find the shared file", 'red')
-      return False
-   return True
-#}
-    
-def sbatchCall(userID, resultsFolder, eBlocBroker, web3): #{
-   # Give permission to user that will send jobs to Slurm.
-   subprocess.run(['sudo', 'chown', '-R', userID, '.'])
-
-   # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
-   date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
-                                  env={'LANG': 'en_us_88591'}).decode('utf-8').strip()
-   log('Date=' + date)
-   f = open('../modifiedDate.txt', 'w') 
-   f.write(date + '\n' )    
-   f.close()
-
-   # echo date | date +%s
-   p1 = subprocess.Popen(['echo', date], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['date', '+%s'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   timestamp = p2.communicate()[0].decode('utf-8').strip()
-   log('Timestamp=' + timestamp)
-
-   f = open('../timestamp.txt', 'w') 
-   f.write(timestamp + '\n' )    
-   f.close()
-   
-   time.sleep(0.25)    
-   # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
-   subprocess.run(['sudo', 'su', '-', userID, '-c',
-                   'cp ' + resultsFolder + '/run.sh ' +
-                   resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh']);
-                            
-   jobInfo = getJobInfo(lib.CLUSTER_ID, jobKeyGlobal, int(indexGlobal), eBlocBroker, web3)
-   jobCoreNum    = str(jobInfo['core'])
-   coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
-   d             = datetime(1,1,1) + coreSecondGas 
-   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute) 
-
-   log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + jobCoreNum)  
-
-   # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
-   # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-   jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
-                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
-                                    resultsFolder + '/' + jobKeyGlobal + '*' + str(indexGlobal) + '*' + str(storageIDGlobal) + '*' + shareTokenGlobal + '.sh' + ' ' + 
-                                    '--mail-type=ALL']).decode('utf-8').strip()
-   jobID = jobID.split()[3]
-   log('jobID=' + jobID) 
-   try:
-       # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
-       subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
-   except subprocess.CalledProcessError as e:
-       log(e.output.decode('utf-8').strip())
-      
-   if not jobID.isdigit(): #{
-      log("Error occured, jobID is not a digit.", 'red')
-      return 0   # Detects an error on the SLURM side
-   #}
-#}
-
-def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
+def driverGdrive(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    global jobKeyGlobal
    global indexGlobal
    global storageIDGlobal
@@ -250,8 +65,8 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    log("key: "   + jobKey) 
    log("index: " + index) 
 
-   resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
+   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'    
    
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
        os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
@@ -335,13 +150,12 @@ def driverGdriveCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    else:
        return 0 
 
-   if os.path.isdir(resultsFolder): # Check before mv operation.
-      os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
-      if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
-          return 0      
+   # if os.path.isdir(resultsFolder): # Check before mv operation.
+   os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
+   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
 #}
 
-def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
+def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    global jobKeyGlobal
    global indexGlobal
    global storageIDGlobal
@@ -355,63 +169,20 @@ def driverGithubCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    log("key: "   + jobKey) 
    log("index: " + index)
 
-   resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'
    # resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
-
+   resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'
+   
    if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
 
    # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
    subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
+
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
-       return 0
+   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
 #}
 
-def driverEudatCall(jobKey, index, fID, userID, eBlocBroker, web3): #{
-   global jobKeyGlobal
-   global indexGlobal
-   global storageIDGlobal
-   global shareTokenGlobal
-   global cacheTypeGlobal  
-   
-   jobKeyGlobal = jobKey  
-   indexGlobal  = index 
-   storageIDGlobal = '1'
-   cacheTypeGlobal = 'local'
-      
-   log("key: "   + jobKey) 
-   log("index: " + index) 
-
-   resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
-   resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
-
-   if not eudatGetShareToken(fID):
-       return 
-   cache(userID)
-   
-   if not os.path.isdir(resultsFolderPrev): # If folder does not exist
-      os.makedirs(resultsFolderPrev)
-      os.makedirs(resultsFolder)
-
-   # Copy from cached folder into user's path that run will occur if folder is used
-   #subprocess.run(['rsync', '-avq', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder])
-  
-   # Untar cached tar file into local directory
-   subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
-   
-   '''
-   #if cacheTypeGlobal is 'local':
-   elif cacheTypeGlobal is 'ipfs':
-       log('Reading from IPFS')
-       subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
-   '''
-   
-   os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   sbatchCall(userID, resultsFolder, eBlocBroker,  web3)
-#}
-
-def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
+def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     global jobKeyGlobal
     global indexGlobal
     global storageIDGlobal
@@ -422,10 +193,10 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     storageIDGlobal = storageID
     
     lib.isIpfsOn() 
-        
-    resultsFolder = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
-    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index     
-   
+
+    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
+    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
+       
     log("jobKey: " + jobKey) 
 
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
@@ -480,8 +251,9 @@ def driverIpfsCall(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
        return 0 
     #}
-    if not sbatchCall(userID, resultsFolder, eBlocBroker, web3):
-        return 0
+
+    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
+    lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
 #}
 
 # To test driverFunc.py executed as script.
@@ -490,5 +262,5 @@ if __name__ == '__main__': #{
    index      = "1"
    myType     = "0"
 
-   driverIpfsCall(var, index, myType) 
+   driverIpfs(var, index, myType) 
 #}

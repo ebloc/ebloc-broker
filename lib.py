@@ -125,3 +125,65 @@ def isIpfsOn(): #{
    else:
       log("IPFS is already on.", 'green') 
 #}
+
+def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, eBlocBroker, web3): #{
+   from contractCalls.getJobInfo import getJobInfo
+   from datetime import datetime, timedelta
+   
+   # Give permission to user that will send jobs to Slurm.
+   subprocess.run(['sudo', 'chown', '-R', userID, '.'])
+
+   # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
+   date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
+                                  env={'LANG': 'en_us_88591'}).decode('utf-8').strip()
+   log('Date=' + date)
+   f = open('../modifiedDate.txt', 'w') 
+   f.write(date + '\n' )    
+   f.close()
+
+   # echo date | date +%s
+   p1 = subprocess.Popen(['echo', date], stdout=subprocess.PIPE)
+   #-----------
+   p2 = subprocess.Popen(['date', '+%s'], stdin=p1.stdout, stdout=subprocess.PIPE)
+   p1.stdout.close()
+   #-----------
+   timestamp = p2.communicate()[0].decode('utf-8').strip()
+   log('Timestamp=' + timestamp)
+
+   f = open('../timestamp.txt', 'w') 
+   f.write(timestamp + '\n' )    
+   f.close()
+   
+   time.sleep(0.25)    
+   # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
+   subprocess.run(['sudo', 'su', '-', userID, '-c',
+                   'cp ' + resultsFolder + '/run.sh ' +
+                   resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh']);
+                            
+   jobInfo       = getJobInfo(CLUSTER_ID, jobKey, int(index), eBlocBroker, web3)
+   jobCoreNum    = str(jobInfo['core'])
+   coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
+   d             = datetime(1,1,1) + coreSecondGas 
+   timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute) 
+
+   log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + jobCoreNum)  
+
+   # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
+   # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+   jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
+                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
+                                    resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
+                                    '--mail-type=ALL']).decode('utf-8').strip()
+   jobID = jobID.split()[3]
+   log('jobID=' + jobID) 
+   try:
+       # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
+       subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
+   except subprocess.CalledProcessError as e:
+       log(e.output.decode('utf-8').strip())
+      
+   if not jobID.isdigit(): #{
+      log("Error occured, jobID is not a digit.", 'red')
+      return 0   # Detects an error on the SLURM side
+   #}
+#}
