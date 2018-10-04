@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''
 asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-events

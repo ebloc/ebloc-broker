@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 def blockNumber(web3=None): #{
     if web3 != None:

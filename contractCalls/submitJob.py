@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, sys, time
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
