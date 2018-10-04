@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, sys, os, time, subprocess, lib
+import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, re
 from datetime import datetime, timedelta
 from   subprocess import call
 import os.path
@@ -20,22 +20,6 @@ shareTokenGlobal = '-1'
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
 
-def silentremove(filename): #{
-    try:
-        os.remove(filename)
-    except OSError as e: # This would be "except OSError, e:" before Python 2.6
-       pass
-#}
-
-def removeFiles(filename): #{
-   if "*" in filename: 
-       for fl in glob.glob(filename):
-           print(fl)
-           silentremove(fl) 
-   else:
-       silentremove(filename) 
-#}
-
 def log(strIn, color=''): #{
    if color != '':
        print(stylize(strIn, fg(color))) 
@@ -52,108 +36,6 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
-def driverGdrive(jobKey, index, storageID, userID, eBlocBroker, web3): #{
-   global jobKeyGlobal
-   global indexGlobal
-   global storageIDGlobal
-   global shareTokenGlobal
-   
-   jobKeyGlobal = jobKey  
-   indexGlobal  = index 
-   storageIDGlobal = storageID
-   
-   log("key: "   + jobKey) 
-   log("index: " + index) 
-
-   resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
-   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'    
-   
-   if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
-       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
-
-   #cmd: gdrive info $jobKey -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost   
-   gdriveInfo = subprocess.check_output(['gdrive', 'info', jobKey, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip() 
-   
-   # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
-   p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   #-----------
-   mimeType = p3.communicate()[0].decode('utf-8').strip()
-
-   # cmd: echo gdriveInfo | grep \'Name\' | awk \'{print $2}\'
-   p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['grep', 'Name'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   #-----------
-   folderName = p3.communicate()[0].decode('utf-8').strip()
-   
-   log(mimeType) 
-   
-   if 'folder' in mimeType: #{ # Recieved job is in folder format      
-      # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
-      res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8')
-      flag = 1
-      while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or ('googleapi' in res and 'error' in res):
-         time.sleep(10)            
-         # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
-         res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8').strip()
-         log(res)
-         flag = 0
-         
-      if flag is 1:
-          log(res)       
-      if not os.path.isdir(resultsFolderPrev + '/' + folderName): #{ Checking before mv operation
-         log('Folder is not downloaded successfully.', 'red') 
-         return 0
-      #}      
-      # cmd: mv $resultsFolderPrev/$folderName $resultsFolder
-      subprocess.run(['mv', resultsFolderPrev + '/folderName', resultsFolder])
-      
-      if glob.glob(resultsFolder + '/*.tar.gz'): #{  check file ending in .tar.gz exist
-         # cmd: tar -xf $resultsFolder/*.tar.gz -C $resultsFolder
-         # Remove any file ending with .tar.gz.
-         for tarFile in glob.glob(resultsFolder + '/*.tar.gz'):
-             subprocess.run(['tar', '-xf', tarFile, '-C', resultsFolder])
-
-      if glob.glob(resultsFolder + '/*.zip'): #{  check file ending in .zip exist         
-         # cmd: unzip -j $resultsFolder/*.zip -d $resultsFolder
-         # This may remove anyother file ending with .zip
-         for zipFile in glob.glob(resultsFolder + '/*.zip'):
-             subprocess.run(['unzip', '-j', zipFile, '-d', resultsFolder])         
-   #}       
-   elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
-       os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code     
-       # cmd: gdrive download $jobKey --force --path $resultsFolder/../
-       subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev + '/../']) # Gets the source code       
-       # cmd: tar -xf $resultsFolderPrev/*.tar.gz -C $resultsFolder
-       log(subprocess.check_output(['tar', '-xf'] + glob.glob(resultsFolderPrev + '/*.tar.gz') + ['C', resultsFolder]).decode('utf-8'))       
-       # cmd: rm -f $resultsFolderPrev/*.tar.gz
-       subprocess.run(['rm', '-f'] + glob.glob(resultsFolderPrev + '/*.tar.gz'))
-   elif 'zip' in mimeType: # Recieved job is in zip format
-       os.makedirs(resultsFolder, exist_ok=True)  # Gets the source code
-       # cmd: gdrive download $jobKey --force --path $resultsFolderPrev/
-       subprocess.run(['gdrive', 'download', jobKey, '--force', '--path', resultsFolderPrev]) # Gets the source code
-       log('gdrive download --recursive ' + jobKey + '--force --path ' + resultsFolderPrev)
-       # cmd: unzip -j $resultsFolderPrev/$folderName -d $resultsFolder
-       subprocess.run(['unzip', '-j', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])       
-       # cmd: rm -f $resultsFolderPrev/$folderName
-       subprocess.run(['rm', '-rf', resultsFolderPrev + '/' + folderName])
-   else:
-       return 0 
-
-   # if os.path.isdir(resultsFolder): # Check before mv operation.
-   os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
-   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
-#}
 
 def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3): #{
    global jobKeyGlobal

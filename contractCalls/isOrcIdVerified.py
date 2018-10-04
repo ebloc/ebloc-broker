@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
-def isOrcIdVerified(orcID, eBlocBroker=None): #{
+def isOrcIDVerified(orcID, eBlocBroker=None): #{
     if eBlocBroker is None: #{
         import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -10,7 +10,7 @@ def isOrcIdVerified(orcID, eBlocBroker=None): #{
         eBlocBroker = connectEblocBroker()
     #}
 
-    if eBlocBroker.functions.isOrcIdVerified(orcID).call() == 0:
+    if eBlocBroker.functions.isOrcIDVerified(orcID).call() == 0:
         return 'False'
     else:
         return 'True'
@@ -22,5 +22,5 @@ if __name__ == '__main__': #{
     else:
         orcID = "0000-0001-7642-0552"
         
-    print(isOrcIdVerified(orcID))
+    print(isOrcIDVerified(orcID))
 #}

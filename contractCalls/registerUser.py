@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -38,7 +38,7 @@ if __name__ == '__main__': #{
         githubUserName     = str(sys.argv[7]) 
     else:
         account            = 0  # User's Ethereum Address
-        userEmail          = "alper.alimoglu@gmail.com" 
+        userEmail          = "alper01234alper@gmail.com" # "alper.alimoglu@gmail.com" 
         federationCloudID  = "059ab6ba-4030-48bb-b81b-12115f531296" 
         miniLockID         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
         ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf" 
