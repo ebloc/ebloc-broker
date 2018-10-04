@@ -1,6 +1,4 @@
 import os, sys, subprocess, time
-from colored import stylize
-from colored import fg
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -49,6 +47,9 @@ job_state_code['TIMEOUT']      = 16
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 def log(strIn, color=''): #{
+   from colored import stylize
+   from colored import fg
+
    if color != '':
       print(stylize(strIn, fg(color))) 
    else:
@@ -57,6 +58,22 @@ def log(strIn, color=''): #{
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
+#}
+
+def silentremove(filename): #{
+    try:
+        os.remove(filename)
+    except OSError as e: # This would be "except OSError, e:" before Python 2.6
+       pass
+#}
+
+def removeFiles(filename): #{
+   if "*" in filename: 
+       for fl in glob.glob(filename):
+           print(fl)
+           silentremove(fl) 
+   else:
+       silentremove(filename) 
 #}
 
 def web3Exception(check): #{
@@ -78,17 +95,15 @@ def isSlurmOn(): #{
       with open(LOG_PATH + '/checkSinfoOut.txt', 'r') as content_file:
          check = content_file.read()
 
-      if not "PARTITION" in str(check): #{
+      if not "PARTITION" in str(check):
          log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")
          log('Error Message: \n' + check, "red")
          subprocess.run(['sudo', 'bash', 'runSlurm.sh'])
-      #}
-      elif "sinfo: error" in str(check): #{
+      elif "sinfo: error" in str(check): 
          log("Error on munged: \n" + check)
          log("Please Do:\n")
          log("sudo munged -f")
          log("/etc/init.d/munge start")
-      #}
       else:
          log('Slurm is on', 'green')
          break
@@ -113,7 +128,7 @@ def isIpfsOn(): #{
 
    if int(check) == 0:
       log("Error: IPFS does not work on the background.", 'red') 
-      log(" * Starting IPFS: nohup ipfs daemon &")
+      log('* Starting IPFS: nohup ipfs daemon --mount &', 'green')
       with open(LOG_PATH + '/ipfs.out', 'w') as stdout:
          subprocess.Popen(['nohup', 'ipfs', 'daemon', '--mount'],
                           stdout=stdout,
@@ -183,7 +198,8 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, eBlo
        log(e.output.decode('utf-8').strip())
       
    if not jobID.isdigit(): #{
+      # Detects an error on the SLURM side
       log("Error occured, jobID is not a digit.", 'red')
-      return 0   # Detects an error on the SLURM side
+      return False
    #}
 #}

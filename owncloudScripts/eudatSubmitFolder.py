@@ -40,10 +40,8 @@ def eudatSubmitJob(tarHash=None): #{ # fc33e7908fdf76f731900e9d8a382984
     storageID=1
     accountID=0
 
-    res = subprocess.check_output(['python', '../contractCalls/submitJob.py', str(clusterID), str(tarHash), str(coreNum), str(coreMinuteGas), jobDescription, str(storageID), tarHash, str(accountID)]).decode('utf-8').strip()
+    res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
     print(res)
-    # tx = submitJob(clusterID, tarHash, coreNum, coreMinuteGas, jobDescription, storageID, tarHash, accountID);
-    # print(tx)
 #}
 
 if __name__ == "__main__":

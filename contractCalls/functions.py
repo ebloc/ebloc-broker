@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 def ipfsBytesToString(ipfsID): #{
     val= web3.fromAscii(ipfsID) 

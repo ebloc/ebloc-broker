@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import owncloud
 from subprocess import call
@@ -10,6 +10,7 @@ import sys, signal
 from imports import connectEblocBroker
 from imports import getWeb3
 from driverEudat import driverEudat
+from driverGrive import driverGdrive
 
 sys.path.insert(0, './contractCalls')
 from contractCalls.getDeployedBlockNumber   import getDeployedBlockNumber
@@ -27,6 +28,10 @@ import LogJob
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 oc = None
+
+# Dummy sudo command to get the password only one time
+subprocess.run(['sudo', 'echo', '']) 
+   
 # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
 p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
 #-----------
@@ -351,7 +356,7 @@ while True: #{
                                       eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
-          driverFunc.driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
+          driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
                                       hashlib.md5(userID.encode('utf-8')).hexdigest(),
                                       eBlocBroker, web3)
     #}
