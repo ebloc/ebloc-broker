@@ -9,6 +9,8 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
+global eudatFolderType
+
 jobKeyGlobal    = None
 indexGlobal     = None
 storageIDGlobal = None
@@ -116,12 +118,12 @@ def cache(userID, resultsFolderPrev): #{
 
             if res == jobKeyGlobal: #Checking is already downloaded folder's hash matches with the given hash
                 log('Already cached.', 'green')
+                return True, ''
             else:
                 eudatDownloadFolder(globalCacheFolder, cachedFolder)
     elif cacheTypeGlobal is 'ipfs':
         log('Adding from owncloud mount point into IPFS...', 'blue')
-        tarFile = lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'
-        global eudatFolderType
+        tarFile = lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'        
         if os.path.isfile(tarFile):            
             eudatFolderType = 'tar.gz'
             ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip()
@@ -129,7 +131,7 @@ def cache(userID, resultsFolderPrev): #{
             eudatFolderType = 'folder'
             ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', lib.OC + '/' + jobKeyGlobal]).decode('utf-8').strip()            
             ipfsHash = ipfsHash.splitlines()
-            ipfsHash = ipfsHash[int(len(ipfsHash) - 1)]
+            ipfsHash = ipfsHash[int(len(ipfsHash) - 1)] # Last line of ipfs hash output is obtained which has the root folder's hash
         return True, ipfsHash.split()[1]
     return True, ''
 #}
@@ -137,19 +139,20 @@ def cache(userID, resultsFolderPrev): #{
 # Assume job is sent as .tar.gz file
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
    # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
+   log('Downloading output.zip -> ' + resultsFolderPrev + '/output.zip')
    ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
                                   '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
    if "ERROR 404: Not Found" in ret:
        log(ret, 'red') 
        log('File not found The specified document has not been found on the server.', 'red') 
        # TODO: since folder does not exist, do complete refund to the user.
-       return 0
+       return False
    log(ret) 
    isTarExistsInZip(resultsFolderPrev)
    
    time.sleep(0.25) 
    if os.path.isfile(resultsFolderPrev + '/output.zip'):
-       if eudatFolderType == 'tar.gz':
+       if eudatFolderType == 'tar.gz':           
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
        else:
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
@@ -232,12 +235,9 @@ def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, ocIn): #{
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
    
-   if not eudatGetShareToken(fID):
-       return
-
+   if not eudatGetShareToken(fID): return   
    check, ipfsHash = cache(userID, resultsFolderPrev)   
-   if not check:
-       return   
+   if not check: return   
    
    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
       os.makedirs(resultsFolderPrev)
