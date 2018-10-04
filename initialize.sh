@@ -86,6 +86,7 @@ sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" .env
 rm -f .env.bak
 
 # GDRIVE path setup
+sudo chown $(whoami) -R $HOME/.gdrive 
 lineNew=$(which gdrive | sed 's/\//\\\//g')
 sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" .env
 rm -f .env.bak
