@@ -9,14 +9,14 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-global eudatFolderType
+global folderType
 
 jobKeyGlobal    = None
 indexGlobal     = None
 storageIDGlobal = None
 cacheTypeGlobal = None
 shareTokenGlobal = '-1'
-eudatFolderType = None
+folderType = None
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
@@ -60,18 +60,18 @@ def isRunExistInTar(tarPath): #{
         res = subprocess.check_output(['tar', 'ztf', tarPath, '--wildcards', '*/run.sh'], stderr=FNULL).decode('utf-8').strip()
         FNULL.close()
         if res.count('/') == 1: # Main folder should contain the 'run.sh' file
-            log('./run.sh exists under the root folder', 'green')
+            log('./run.sh exists under the parent folder', 'green')
             return True
         else:
-            log('run.sh does not exist under the root folder', 'red')
+            log('run.sh does not exist under the parent folder', 'red')
             return False            
     except:
-        log('run.sh does not exist under the root folder', 'red')
+        log('run.sh does not exist under the parent folder', 'red')
         return False
 #}
 
 def isTarExistsInZip(resultsFolderPrev): #{
-    global eudatFolderType
+    global folderType
     # cmd: unzip -l $resultsFolder/output.zip | grep $eudatFolderName/run.sh
     # Checks does zip contains .tar.gz file or not
     p1 = subprocess.Popen(['unzip', '-l', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
@@ -81,10 +81,10 @@ def isTarExistsInZip(resultsFolderPrev): #{
     #-----------
     out = p2.communicate()[0].decode('utf-8').strip()    
     if jobKeyGlobal + '.tar.gz' in out:
-        eudatFolderType = 'tar.gz'
+        folderType = 'tar.gz'
     else:
-        eudatFolderType = 'folder'
-    log('eudatFolderType=' + eudatFolderType)
+        folderType = 'folder'
+    log('folderType=' + folderType)
 #}
 
 def cache(userID, resultsFolderPrev): #{
@@ -100,24 +100,24 @@ def cache(userID, resultsFolderPrev): #{
             if os.path.isfile(cachedFolder + '/run.sh'):
                 res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
                 if res == jobKeyGlobal: #Checking is already downloaded folder's hash matches with the given hash
-                    global eudatFolderType
-                    eudatFolderType = 'folder'
-                    log('Already cached.', 'green')
+                    global folderType
+                    folderType = 'folder'
+                    log('Already cached ...', 'green')
                     return True, ''
                 
             eudatDownloadFolder(globalCacheFolder, cachedFolder)            
-            if eudatFolderType == 'tar.gz' and not isRunExistInTar(cachedTarFile):
+            if folderType == 'tar.gz' and not isRunExistInTar(cachedTarFile):
                 subprocess.run(['rm', '-f', cachedTarFile])
                 return False, ''            
         else:
             res = None
-            if eudatFolderType == 'tar.gz':
+            if folderType == 'tar.gz':
                 res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
-            elif eudatFolderType == 'folder':
+            elif folderType == 'folder':
                 res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
 
             if res == jobKeyGlobal: #Checking is already downloaded folder's hash matches with the given hash
-                log('Already cached.', 'green')
+                log('Already cached ...', 'green')
                 return True, ''
             else:
                 eudatDownloadFolder(globalCacheFolder, cachedFolder)
@@ -125,10 +125,10 @@ def cache(userID, resultsFolderPrev): #{
         log('Adding from owncloud mount point into IPFS...', 'blue')
         tarFile = lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'        
         if os.path.isfile(tarFile):            
-            eudatFolderType = 'tar.gz'
+            folderType = 'tar.gz'
             ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip()
         else:
-            eudatFolderType = 'folder'
+            folderType = 'folder'
             ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', lib.OC + '/' + jobKeyGlobal]).decode('utf-8').strip()            
             ipfsHash = ipfsHash.splitlines()
             ipfsHash = ipfsHash[int(len(ipfsHash) - 1)] # Last line of ipfs hash output is obtained which has the root folder's hash
@@ -152,7 +152,7 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
    
    time.sleep(0.25) 
    if os.path.isfile(resultsFolderPrev + '/output.zip'):
-       if eudatFolderType == 'tar.gz':           
+       if folderType == 'tar.gz':           
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
        else:
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
@@ -166,9 +166,9 @@ def eudatGetShareToken(fID): #{
    if os.path.isdir(lib.OC + '/' + jobKeyGlobal): # and cacheTypeGlobal is 'ipfs'
        log('Eudat shared folder is already accepted and exist on Eudat mounted folder...', 'green')              
        if os.path.isfile(lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'):
-           eudatFolderType = 'tar.gz'
+           folderType = 'tar.gz'
        else:
-           eudatFolderType = 'folder'
+           folderType = 'folder'
        return True
    
    global oc, shareTokenGlobal
@@ -193,7 +193,7 @@ def eudatGetShareToken(fID): #{
              log('Sleeping 3 seconds for accepted folder to emerger on mounted Eudat folder...')
              time.sleep(3)
 
-             tryCount = 0;
+             tryCount = 0
              while True: #{
                  if tryCount is 5:
                      log('Mounted Eudat does not see shared folder\'s path.', 'red')
@@ -245,13 +245,13 @@ def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, ocIn): #{
 
    if cacheTypeGlobal is 'local':
        # Untar cached tar file into local directory
-       if eudatFolderType == 'tar.gz':
+       if folderType == 'tar.gz':
            subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
-       elif eudatFolderType == 'folder':
+       elif folderType == 'folder':
            subprocess.run(['rsync', '-avq', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder])              
    elif cacheTypeGlobal is 'ipfs':
        log('Reading from IPFS hash=' + ipfsHash)
-       if eudatFolderType == 'tar.gz':
+       if folderType == 'tar.gz':
            subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
        elif eudatFolderType == 'folder':
            # Copy from cached IPFS folder into user's path           

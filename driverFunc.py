@@ -101,7 +101,7 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
         except subprocess.CalledProcessError as e: # Catches resource temporarily unavailable on ipfs
             log(e.output.decode('utf-8').strip(), 'red')
             if ipfsCallCounter == 5:
-                return 0
+                return False
             ipfsCallCounter += 1
             time.sleep(10)
     #}    
@@ -128,10 +128,10 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        
        if not os.path.isfile('run.sh'): 
           log("run.sh does not exist", 'red') 
-          return 0 
+          return False 
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
-       return 0 
+       return False 
     #}
 
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
