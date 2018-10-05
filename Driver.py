@@ -10,7 +10,7 @@ import sys, signal
 from imports import connectEblocBroker
 from imports import getWeb3
 from driverEudat import driverEudat
-from driverGrive import driverGdrive
+from driverGdrive import driverGdrive
 
 sys.path.insert(0, './contractCalls')
 from contractCalls.getDeployedBlockNumber   import getDeployedBlockNumber
@@ -279,8 +279,9 @@ while True: #{
        counter += 1
 
        print(loggedJobs[i].args['jobKey'])
+       receivedFolderHash = loggedJobs[i].args['folderHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " + loggedJobs[i].args['jobKey'] + " " +
-           str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " + loggedJobs[i].args['desc'])
+           str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " + loggedJobs[i].args['desc'] + " " + receivedFolderHash)
 
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -357,8 +358,7 @@ while True: #{
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
-                                      hashlib.md5(userID.encode('utf-8')).hexdigest(),
-                                      eBlocBroker, web3)
+                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), receivedFolderHash, eBlocBroker, web3)
     #}
 
     if len(loggedJobs) > 0 and int(maxVal) != 0:
