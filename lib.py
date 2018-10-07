@@ -203,3 +203,19 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, eBlo
       return False
    #}
 #}
+
+def isRunExistInTar(tarPath): #{   
+    try:
+        FNULL = open(os.devnull, 'w')
+        res = subprocess.check_output(['tar', 'ztf', tarPath, '--wildcards', '*/run.sh'], stderr=FNULL).decode('utf-8').strip()
+        FNULL.close()
+        if res.count('/') == 1: # Main folder should contain the 'run.sh' file
+            log('./run.sh exists under the parent folder', 'green')
+            return True
+        else:
+            log('run.sh does not exist under the parent folder', 'red')
+            return False            
+    except:
+        log('run.sh does not exist under the parent folder', 'red')
+        return False
+#}
