@@ -36,23 +36,6 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
-def isRunExistInTar(tarPath): #{
-   try:
-      FNULL = open(os.devnull, 'w')
-      res = subprocess.check_output(['tar', 'ztf', tarPath, '--wildcards', '*/run.sh'], stderr=FNULL).decode('utf-8').strip()
-      FNULL.close()
-      
-      if res.count('/') == 1: # Main folder should contain the 'run.sh' file
-         log('./run.sh exists under the parent folder', 'green')
-         return True
-      else:
-         log('run.sh does not exist under the parent folder', 'red')
-         return False
-   except:
-      log('run.sh does not exist under the parent folder', 'red')
-      return False
-#}
-
 def cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, folderType): #{
     if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
         globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
@@ -66,29 +49,23 @@ def cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, folderType)
         if folderType == 'gzip':
            if not os.path.isfile(cachedTarFile):
               if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return False
-              if not isRunExistInTar(cachedTarFile):
+              if not lib.isRunExistInTar(cachedTarFile):
                  subprocess.run(['rm', '-f', cachedTarFile])
                  return False, ''              
            else:
               res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
               if res == folderHash: #Checking is already downloaded folder's hash matches with the given hash
                  log('Already cached ...', 'green')
-                 return True, ''
               else:
                  if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return
         elif folderType == 'folder':
            if os.path.isfile(cachedFolder + '/' + folderName + '/run.sh'):
-              res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder + '/' + folderName]).decode('utf-8').strip()
-                
+              res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder + '/' + folderName]).decode('utf-8').strip()                
               if res == folderHash: #Checking is already downloaded folder's hash matches with the given hash
                  log('Already cached ...', 'green')
-                 return True, ''
               else:
-                 if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return
-                
-              if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return False            
-              subprocess.run(['mv', cachedFolder + '/' + folderName, cachedFolder + '/' + jobKey])
-              
+                 if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return False
+                 subprocess.run(['mv', cachedFolder + '/' + folderName, cachedFolder + '/' + jobKey])
     '''
     elif cacheTypeGlobal is 'ipfs':
         log('Adding from owncloud mount point into IPFS...', 'blue')
