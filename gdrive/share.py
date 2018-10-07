@@ -1,18 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 import subprocess, sys, os
+
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 sys.path.insert(0, './contractCalls')
-from contractCalls.submitJob import submitJob
 
 if len(sys.argv) < 2:
+    print('Please provide folder type: tar/folder')
     sys.exit()
+
+from contractCalls.submitJob import submitJob
 
 folderType = sys.argv[1]
 
 folderToShare='exampleFolderToShare'
-
-
-
 clusterToShare='aalimog1@binghamton.edu' #'alper01234alper@gmail.com'
 
 # subprocess.run(['sudo', 'chmod', '-R', '777', folderToShare])
@@ -22,9 +23,11 @@ if folderType == 'folder': #{
     tarHash = tarHash.split(' ', 1)[0]
     print('hash=' + tarHash)
 
-    subprocess.run(['cp', '-a', folderToShare, tarHash])
+    if not os.path.isdir(tarHash):
+        subprocess.run(['cp', '-a', folderToShare, tarHash])
     folderToShare = tarHash
-    
+
+    sys.exit()
     #cmd: gdrive list --query "name contains 'exampleFolderToShare'" --no-header
     res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
     if res is '':
