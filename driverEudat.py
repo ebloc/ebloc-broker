@@ -105,7 +105,7 @@ def cache(userID, resultsFolderPrev): #{
                     log('Already cached ...', 'green')
                     return True, ''
                 
-            eudatDownloadFolder(globalCacheFolder, cachedFolder)            
+            if not eudatDownloadFolder(globalCacheFolder, cachedFolder): return False, ''
             if folderType == 'tar.gz' and not isRunExistInTar(cachedTarFile):
                 subprocess.run(['rm', '-f', cachedTarFile])
                 return False, ''            
@@ -120,7 +120,7 @@ def cache(userID, resultsFolderPrev): #{
                 log('Already cached ...', 'green')
                 return True, ''
             else:
-                eudatDownloadFolder(globalCacheFolder, cachedFolder)
+                if not eudatDownloadFolder(globalCacheFolder, cachedFolder): return False, ''
     elif cacheTypeGlobal is 'ipfs':
         log('Adding from owncloud mount point into IPFS...', 'blue')
         tarFile = lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'        
@@ -156,7 +156,8 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
        else:
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
-       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])                 
+       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
+   return True
 #}
 
 def eudatGetShareToken(fID): #{
