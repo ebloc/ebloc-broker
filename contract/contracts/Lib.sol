@@ -15,7 +15,7 @@ library Lib {
 	uint         startTime; /* Submitted job's starting universal time on the server side */	
 	/* Variables assigned by the client */	
 	uint          received; /* Paid amount by the client */
-	uint   coreMinutePrice; /* Cluster's price for core/minute */
+	uint   coreMinPrice; /* Cluster's price for core/minute */
 	uint32   coreMinuteGas; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
 	uint32            core; /* Requested core by the client */
 	address       jobOwner; /* Address of the client (msg.sender) has been stored */
@@ -31,7 +31,8 @@ library Lib {
     struct clusterData {
 	bool             isRunning; /* Flag that checks is Cluster running or not */
 	uint32  clusterAddressesID; /* Cluster's ethereum address is stored */
-	uint       coreMinutePrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint       coreMinPrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint     memoryMinPrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint        receivedAmount; /* Cluster's received wei price */
 	uint         blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
 
@@ -53,20 +54,22 @@ library Lib {
     }
 
     /* Invoked, when cluster calls updateCluster() function */
-    function update(clusterData storage self, uint price, uint32 coreNumber) public
+    function update(clusterData storage self, uint coreMinPrice, uint memoryMinPrice, uint32 coreNumber) public
     {
-	self.coreMinutePrice        = price;
+	self.coreMinPrice        = coreMinPrice;
+	self.memoryMinPrice      = memoryMinPrice;
 	self.receiptList.coreNumber = coreNumber;
 	self.blockReadFrom          = block.number;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint32 memLen, uint coreMinutePrice, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint32 memLen, uint coreMinPrice, uint memoryMinPrice, uint32 coreNumber) public
     {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
 	self.clusterAddressesID = memLen;
-	self.coreMinutePrice    = coreMinutePrice;
+	self.coreMinPrice    = coreMinPrice;
+	self.memoryMinPrice  = memoryMinPrice;
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
