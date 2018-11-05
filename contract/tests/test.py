@@ -45,9 +45,12 @@ def test_receipt(web3, accounts, chain): #{
     for i in range(0, 9):
         print(web3.eth.getBalance(accounts[i]))
 
-    print(account)
+
+	print(account)
+	whisperPubKey = "0x04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
+	memoryMinPrice = 1
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster(1, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf")
+    set_txn_hash     = my_contract.transact().registerCluster(1, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, memoryMinPrice, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print("usedGas registerCluster: " + str(contract_address["gasUsed"]))
 
@@ -74,13 +77,13 @@ def test_receipt(web3, accounts, chain): #{
     output = my_contract.call().isClusterExist(accounts[0])
     print("isExist: "+str(output))
 
-    blockReadFrom, coreLimit, coreMinutePrice = my_contract.call().getClusterInfo(account)
+    blockReadFrom, coreLimit, coreMinPrice = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  " + str(coreLimit))
 
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().updateCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x")   
+    set_txn_hash     = my_contract.transact().updateCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, memoryMinPrice, "0x", whisperPubKey)   
 
-    blockReadFrom, coreLimit, coreMinutePrice = my_contract.call().getClusterInfo(account)
+    blockReadFrom, coreLimit, coreMinPrice = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  " + str(coreLimit))
 
 
@@ -92,7 +95,7 @@ def test_receipt(web3, accounts, chain): #{
     set_txn_hash     = my_contract.transact().authenticateOrcID('cluster@gmail.com')
         
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x")
+    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, memoryMinPrice, "0x", whisperPubKey)
 
     initial_myGas = contract_address["gasUsed"]
     print("usedGas empty:23499: " + str(initial_myGas))
@@ -100,7 +103,7 @@ def test_receipt(web3, accounts, chain): #{
     #web3.coinbase = accounts[0]
     #web3.coinbase
     web3.eth.defaultAccount = accounts[2]
-    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, "0x")
+    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, memoryMinPrice, "0x", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     
     currBlk = web3.eth.blockNumber
@@ -139,7 +142,7 @@ def test_receipt(web3, accounts, chain): #{
     chain.wait.for_block(100)
     print("Block_Number: " + str(web3.eth.blockNumber))
 
-    blockReadFrom, coreLimit, coreMinutePrice  = my_contract.call().getClusterInfo(account)
+    blockReadFrom, coreLimit, coreMinPrice  = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  " + str(coreLimit))
 
     val = 0
