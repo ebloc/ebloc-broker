@@ -1,5 +1,6 @@
 #!/bin/bash 
- 
+
+# Should do sshfs first
 # sshfs alper@ebloc.cmpe.boun.edu.tr:/home/alper/eBlocBroker /Users/alper/eB 
  
 sourceFolder='/Users/alper/eB'; 

@@ -33,18 +33,22 @@ def main():
    topic = '0x07678231'
 
    if not os.path.isfile('data.txt'):
-      # First time running:
-      print('Initializing...')
-      kId = web3.shh.newKeyPair()
-      publicKey = web3.shh.getPublicKey(kId)
+   	# First time running:
+	   print('Initializing...')
+	   kId = web3.shh.newKeyPair()
+	   publicKey = web3.shh.getPublicKey(kId)
 
-      data = {}
-      data['kId'] = kId
-      data['publicKey'] = publicKey
-      data['filterID'] = filterID
+	   myFilter = web3.shh.newMessageFilter({'topic': topic, 'privateKeyID': kId, 'recipientPublicKey': publicKey})
+	   myFilter.poll_interval = 600; #make it equal with the live-time of the message
+	   filterID = myFilter.filter_id
 
-      with open('data.txt', 'w') as outfile:
-         json.dump(data, outfile)
+	   data = {}
+	   data['kId'] = kId
+	   data['publicKey'] = publicKey
+	   data['filterID'] = filterID
+
+	   with open('data.txt', 'w') as outfile:
+		   json.dump(data, outfile)
    else:
       with open('data.txt') as json_file:
          data = json.load(json_file)
@@ -58,13 +62,13 @@ def main():
    filterID = myFilter.filter_id
 
    # Obtained from node_1 and assigned here.
-   receiver_pub = "0x04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
+   receiver_pub = "0x04b3b8efbea4fbdcbaee11771a23bb76ec571aee4c0a78e52b0705822146e70a59b8e92eade03393c78b3f6bf6890564abf0ecc664a382cf59c5a59075abc99d6a"
 
    payloads = [web3.toHex(text=publicKey), web3.toHex(text="2nd test message")]
 
    web3.shh.post({
-        'powTarget': 2.5,
-        'powTime': 2,
+        'powTarget': 2, # 2.5
+        'powTime': 5,   # 2
         'ttl': 60,
         'payload': payloads[0],
         'topic': topic,
@@ -82,5 +86,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
