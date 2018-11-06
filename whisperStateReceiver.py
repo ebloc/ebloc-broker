@@ -18,27 +18,31 @@ testFlag    = True
 def log(strIn):
 	if testFlag:
 		print(strIn)
-	
+
+def post(message):
+	try:
+		web3.shh.post({
+			'powTarget': 2, # 2.5
+			'powTime': 5,   # 2
+			'ttl': 60,
+			'payload': web3.toHex(text='I am on.'),
+			'topic': topic,
+			'pubKey': message,
+		})
+	except:
+		post(message)
+
+
 def handle_event(event):
-   #print(event)
+    #print(event)
 	message = event['payload'].decode("utf-8")
-	log(message);
-
-	web3.shh.post({
-      'powTarget': 2.5,
-      'powTime': 2,
-      'ttl': 60,
-      'payload': web3.toHex(text='I am on.'),
-      'topic': topic,
-      'pubKey': message,
-	})
-
-    # and whatever
+	log(message)
+	post(message)
 
 async def log_loop(event_filter, poll_interval):
     while True:
         for event in event_filter.get_new_entries():
-            handle_event(event)
+            handle_event(event) # TODO: add try catch
         await asyncio.sleep(poll_interval)
 
 
@@ -47,8 +51,8 @@ def receiver(kId, publicKey, filterID, myFilter):
 
 	log('whisperPublicKey: ' + publicKey);
 	'''
-	log('FilterID: ' + filterID)	
-	log('receiverPrivateK: ' + web3.shh.getPrivateKey(kId));		
+	log('FilterID: ' + filterID)
+	log('receiverPrivateK: ' + web3.shh.getPrivateKey(kId));
 	log(web3.shh.hasKeyPair(kId))
 	log('PubKey: ' + web3.shh.getPublicKey(kId))
 	'''
@@ -65,10 +69,10 @@ def receiver(kId, publicKey, filterID, myFilter):
 				log_loop(myFilter, 2)))
 	finally:
 		loop.close()
-		  
-def main():	
-	# print(web3.shh.info)			
-	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):		
+
+def main():
+	# print(web3.shh.info)
+	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
 		# First time running:
 		log('Please first run: python whisperInitialize.py')
 		sys.exit()
@@ -79,14 +83,14 @@ def main():
 		publicKey = data['publicKey']
 		if not web3.shh.hasKeyPair(kId):
 			log("Whisper node's private key of a key pair did not match with the given ID")
-			sys.exit()		
+			sys.exit()
 		myFilter = web3.shh.newMessageFilter({'topic': topic, 'privateKeyID': kId, 'recipientPublicKey': publicKey})
 		myFilter.poll_interval = 600; # Make it equal with the live-time of the message
 		filterID = data['filterID']
-		# privateKey = "0xc0995bb51a0a74fcedf972662569849de4b4d0e8ceca8e4e6e8846a5d00f0b0c" 
+		# privateKey = "0xc0995bb51a0a74fcedf972662569849de4b4d0e8ceca8e4e6e8846a5d00f0b0c"
 		# kId = web3.shh.addPrivateKey(privateKey)
-		
+
 	receiver(kId, publicKey, filterID, myFilter)
-		
+
 if __name__ == '__main__':
     main()
