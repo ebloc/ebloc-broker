@@ -123,13 +123,13 @@ def cache(userID, resultsFolderPrev): #{
                 if not eudatDownloadFolder(globalCacheFolder, cachedFolder): return False, ''
     elif cacheTypeGlobal is 'ipfs':
         log('Adding from owncloud mount point into IPFS...', 'blue')
-        tarFile = lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'        
+        tarFile = lib.OWN_CLOUD_PATH + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'        
         if os.path.isfile(tarFile):            
             folderType = 'tar.gz'
             ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip()
         else:
             folderType = 'folder'
-            ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', lib.OC + '/' + jobKeyGlobal]).decode('utf-8').strip()            
+            ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', lib.OWN_CLOUD_PATH + '/' + jobKeyGlobal]).decode('utf-8').strip()            
             ipfsHash = ipfsHash.splitlines()
             ipfsHash = ipfsHash[int(len(ipfsHash) - 1)] # Last line of ipfs hash output is obtained which has the root folder's hash
         return True, ipfsHash.split()[1]
@@ -138,9 +138,9 @@ def cache(userID, resultsFolderPrev): #{
 
 # Assume job is sent as .tar.gz file
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
-   # cmd: wget -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
+   # cmd: wget --continue -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
    log('Downloading output.zip -> ' + resultsFolderPrev + '/output.zip')
-   ret = subprocess.check_output(['wget', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
+   ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
                                   '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
    if "ERROR 404: Not Found" in ret:
        log(ret, 'red') 
@@ -155,7 +155,7 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
        if folderType == 'tar.gz':           
            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
        else:
-           subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
+           subprocess.run(['unzip', '-o', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
        subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
    return True
 #}
@@ -164,9 +164,9 @@ def eudatGetShareToken(fID): #{
    global cacheTypeGlobal
    # Checks already shared or not
    # TODO: store shareToken id with jobKey in some file, later do: oc.decline_remote_share(int(<share_id>)) to cancel shared folder at endCode or after some time later
-   if os.path.isdir(lib.OC + '/' + jobKeyGlobal): # and cacheTypeGlobal is 'ipfs'
+   if os.path.isdir(lib.OWN_CLOUD_PATH + '/' + jobKeyGlobal): # and cacheTypeGlobal is 'ipfs'
        log('Eudat shared folder is already accepted and exist on Eudat mounted folder...', 'green')              
-       if os.path.isfile(lib.OC + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'):
+       if os.path.isfile(lib.OWN_CLOUD_PATH + '/' + jobKeyGlobal + '/' + jobKeyGlobal + '.tar.gz'):
            folderType = 'tar.gz'
        else:
            folderType = 'folder'
@@ -184,7 +184,7 @@ def eudatGetShareToken(fID): #{
       inputID          = shareList[i]['id']
       inputOwner       = shareList[i]['owner']
 
-      if (inputFolderName == jobKeyGlobal) and (inputOwner == fID): #{
+      if inputFolderName == jobKeyGlobal and inputOwner == fID: #{
          shareTokenGlobal = str(shareList[i]['share_token'])
          eudatFolderName  = str(inputFolderName)
          acceptFlag = 1
@@ -199,7 +199,7 @@ def eudatGetShareToken(fID): #{
                  if tryCount is 5:
                      log('Mounted Eudat does not see shared folder\'s path.', 'red')
                      return False              
-                 if os.path.isdir(lib.OC + '/' + jobKeyGlobal): # Checking is shared file emerged on mounted owncloud
+                 if os.path.isdir(lib.OWN_CLOUD_PATH + '/' + jobKeyGlobal): # Checking is shared file emerged on mounted owncloud
                      break
                  tryCount += 1
                  log('Sleeping 10 seconds...')
@@ -249,7 +249,7 @@ def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, ocIn): #{
        if folderType == 'tar.gz':
            subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
        elif folderType == 'folder':
-           subprocess.run(['rsync', '-avq', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder])              
+           subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKeyGlobal + '/', resultsFolder]) 
    elif cacheTypeGlobal is 'ipfs':
        log('Reading from IPFS hash=' + ipfsHash)
        if folderType == 'tar.gz':

@@ -1,3 +1,21 @@
+# Headless Usage & Authorization 
+
+```
+$ google-drive-ocamlfuse -headless -label me -id ##yourClientID##.apps.googleusercontent.com -secret ###yoursecret#####
+```
+
+https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization
+
+
+
+Set shared_with_me=true in the config file to have read-only access to all your "Shared with me" files under ./.shared.
+
+```
+$ cat ~/.gdfuse/me/config | grep shared_with_me
+shared_with_me=true
+```
+
+
 # Load:
 
 ```

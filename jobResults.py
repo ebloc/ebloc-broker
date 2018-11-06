@@ -9,13 +9,13 @@ from contractCalls.getJobInfo import getJobInfo
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
-# Paths---------
-eblocPath        = lib.EBLOCPATH 
+# Paths----------------------------------
+eblocPath = lib.EBLOCPATH 
 fname = lib.LOG_PATH + '/queuedJobs.txt' 
-# ---------------
-sum1=0 
+# ---------------------------------------
+sum1 = 0 
 counter = 1 
-with open(fname, "r") as ins: #{
+with open(fname, "r") as ins:
     array = []
     for line in ins:
         #print(line.rstrip('\n'))
@@ -35,10 +35,11 @@ with open(fname, "r") as ins: #{
               '{0: <16}'.format('core"') + str(jobInfo['core']) + ' ' +
               '{0: <16}'.format('startTime"') + str(jobInfo['startTime']) + ' ' +
               '{0: <16}'.format('received:') + str(jobInfo['received']) + ' ' +
-              '{0: <16}'.format('coreMinutePrice:') + str(jobInfo['coreMinutePrice']) + ' ' +
+              '{0: <16}'.format('coreMinPrice:') + str(jobInfo['coreMinPrice']) + ' ' +
+				  '{0: <16}'.format('memoryMinPrice:') + str(jobInfo['memoryMinPrice']) + ' ' +
               '{0: <16}'.format('coreMinuteGas:') + str(jobInfo['coreMinuteGas']) + ' ' +
               '{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])
         counter += 1
-#}
+
 print(counter)            
 print("GAINED: " + str(sum1)) 
