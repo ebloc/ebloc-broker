@@ -13,8 +13,8 @@ from contractCalls.submitJob import submitJob
 
 folderType = sys.argv[1]
 
-folderToShare='exampleFolderToShare'
-clusterToShare='aalimog1@binghamton.edu' #'alper01234alper@gmail.com'
+folderToShare  = 'exampleFolderToShare'
+clusterToShare = 'alper.alimoglu@gmail.com' # 'alper01234alper@gmail.com'
 
 # subprocess.run(['sudo', 'chmod', '-R', '777', folderToShare])
 
@@ -27,7 +27,6 @@ if folderType == 'folder': #{
         subprocess.run(['cp', '-a', folderToShare, tarHash])
     folderToShare = tarHash
 
-    sys.exit()
     #cmd: gdrive list --query "name contains 'exampleFolderToShare'" --no-header
     res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
     if res is '':

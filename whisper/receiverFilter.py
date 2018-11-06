@@ -11,7 +11,7 @@ from hexbytes import (
     HexBytes,
 )
 
-loadFlag = 1
+loadFlag = 0
 
 if loadFlag == 1:
     privateKey = '0x5fc212a0774add56f4a32b59a1cf6100ae0ef8fe1481c1ab7d011796d1e53320' 
@@ -19,7 +19,10 @@ if loadFlag == 1:
 else:
     kId          = web3.shh.newKeyPair()
 
+receiver_priv = web3.shh.getPrivateKey(kId)
 receiver_pub = web3.shh.getPublicKey(kId)
+
+print('receiverPrivK: ' + receiver_priv);
 print('receiverPubK: ' + receiver_pub);
 
 myFilter = web3.shh.newMessageFilter({'topic': '0x07678231', 'privateKeyID': kId})
@@ -31,5 +34,6 @@ received_messages = [];
 received_messages = myFilter.get_new_entries()
 print(len(received_messages)) 
 
+print(web3.shh.info.memory)
 print(received_messages[0])
-print(web3.shh.info.memory)  
+
