@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import owncloud
+import owncloud, json
 from subprocess import call
 import sys, os, time, subprocess, string, driverFunc, lib, _thread
 from colored import stylize
@@ -28,57 +28,90 @@ import LogJob
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 oc = None
+driverCancelProcess = None
+driverReceiverProcess = None
 
-# Dummy sudo command to get the password only one time
+# Dummy sudo command to get the password when session starts. 
 subprocess.run(['sudo', 'echo', '']) 
-   
-# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
-p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-#-----------
-p2 = subprocess.Popen(['grep', '[d]riverCancel'], stdin=p1.stdout, stdout=subprocess.PIPE)
-p1.stdout.close()
-#-----------
-p3 = subprocess.Popen(['grep', 'python3'], stdin=p2.stdout,stdout=subprocess.PIPE)
-p2.stdout.close()
-#-----------
-p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
-p3.stdout.close()
-#-----------
-out = p4.communicate()[0].decode('utf-8').strip()
-# ----------------------------------------------------------------
 
-if int(out) == 0: #{
-   # Running driverCancel.py on the background
-   pro = subprocess.Popen(['python3','driverCancel.py'])
-#}
+def runDriverCancel():
+	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
+	p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+	#-----------
+	p2 = subprocess.Popen(['grep', '[d]riverCancel'], stdin=p1.stdout, stdout=subprocess.PIPE)
+	p1.stdout.close()
+	#-----------
+	p3 = subprocess.Popen(['grep', 'python3'], stdin=p2.stdout,stdout=subprocess.PIPE)
+	p2.stdout.close()
+	#-----------
+	p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
+	p3.stdout.close()
+	#-----------
+	out = p4.communicate()[0].decode('utf-8').strip()
+	# ----------------------------------------------------------------
+	if int(out) == 0:
+		# Running driverCancel.py on the background
+		driverCancelProcess = subprocess.Popen(['python3','driverCancel.py'])
 
+def runWhisperStateReceiver():
+	if not os.path.isfile(lib.HOME + '/.eBlocBroker/whisperInfo.txt'):
+      # First time running:
+		log('Please first run: python whisperInitialize.py')
+		sys.exit()
+	else:
+		with open(lib.HOME + '/.eBlocBroker/whisperInfo.txt') as json_file:
+			data = json.load(json_file)
+		kId = data['kId']
+		publicKey = data['publicKey']
+		if not web3.shh.hasKeyPair(kId):
+			log("Whisper node's private key of a key pair did not match with the given ID", "red")
+			sys.exit()
+			
+	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
+	p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+	#-----------
+	p2 = subprocess.Popen(['grep', '[d]riverReceiver'], stdin=p1.stdout, stdout=subprocess.PIPE)
+	p1.stdout.close()
+	#-----------
+	p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
+	p2.stdout.close()
+	#-----------
+	p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
+	p3.stdout.close()
+	#-----------
+	out = p4.communicate()[0].decode('utf-8').strip()
+	# ----------------------------------------------------------------
+	if int(out) == 0:
+		# Running driverCancel.py on the background
+		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py'])
+		
 # Paths =================================================================
 jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
 # =======================================================================
-
 # res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
 # rows = res[0] columns = res[1]
 columns = 100
 
 def log(strIn, color=''): #{
-   if color != '':
-      print(stylize(strIn, fg(color)))
-   else:
-      print(strIn)
+	if color != '':
+		print(stylize(strIn, fg(color)))
+	else:
+		print(strIn)
 
-   txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
-   txFile.write(strIn + "\n")
-   txFile.close()
+	txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
+	txFile.write(strIn + "\n")
+	txFile.close()
 #}
 
 def terminate(): #{
-   log('Terminated')
-   subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit
+	log('Terminated')
+	subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit
 
-   ''' Following line is added, in case ./killall.sh does not work due to sudo.
-   Send the kill signal to all the process groups '''
-   os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
-   sys.exit()
+	''' Following line is added, in case ./killall.sh does not work due to sudo.
+	Send the kill signal to all the process groups '''
+	os.killpg(os.getpgid(driverCancelProcess.pid), signal.SIGTERM)
+	os.killpg(os.getpgid(driverReceiverProcess.pid), signal.SIGTERM)	
+	sys.exit()
 #}
 
 def shellCommand(args): #{
@@ -100,13 +133,12 @@ def idleCoreNumber(printFlag=1): #{
 def slurmPendingJobCheck(): #{
     idleCore  = idleCoreNumber()       
     printFlag = 0    
-    while idleCore == '0': #{
+    while idleCore == '0':
        if printFlag == 0:
           log('Waiting running jobs to be completed...', 'blue')
           printFlag = 1
        time.sleep(10)
        idleCore = idleCoreNumber(0)
-    #}
 #}
 
 # checks whether geth runs on the background
@@ -152,14 +184,16 @@ def isDriverOn(): #{
 
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
-if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': #{
+if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': 
    print(stylize('Once please run:  ./initialize.sh \n', fg('red')))
    terminate()
-#}
 
+# Start-up functions are called	
 isDriverOn()
 lib.isSlurmOn()
 isGethOn()
+runDriverCancel()
+runWhisperStateReceiver()
 
 isContractExist = isContractExist(web3)
 if 'False' in isContractExist:
@@ -190,11 +224,10 @@ deployedBlockNumber = getDeployedBlockNumber(eBlocBroker)
 blockReadFromContract = str(0)
 
 log('{0: <20}'.format('clusterAddress:') + "\"" + clusterAddress + "\"", "yellow")
-if not os.path.isfile(lib.BLOCK_READ_FROM_FILE): #{
+if not os.path.isfile(lib.BLOCK_READ_FROM_FILE): 
    f = open(lib.BLOCK_READ_FROM_FILE, 'w')
    f.write(deployedBlockNumber + "\n")
    f.close()
-#}
 
 f = open(lib.BLOCK_READ_FROM_FILE, 'r')
 blockReadFromLocal = f.read().rstrip('\n')
@@ -280,8 +313,9 @@ while True: #{
 
        print(loggedJobs[i].args['jobKey'])
        receivedFolderHash = loggedJobs[i].args['folderHash']
-       log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " + loggedJobs[i].args['jobKey'] + " " +
-           str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " + loggedJobs[i].args['desc'] + " " + receivedFolderHash)
+       log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " +
+           loggedJobs[i].args['jobKey'] + " " + str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " +
+           loggedJobs[i].args['desc'] + " " + receivedFolderHash)
 
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -297,7 +331,7 @@ while True: #{
           log('Job does not exist', 'red')
           runFlag = 1
           sys.exit()
-       else: #{
+       else: 
           log('jobOwner/userID: ' + jobInfo['jobOwner'])
           userID    = jobInfo['jobOwner'].lower()
           userExist = isUserExist(userID, eBlocBroker, web3)          
@@ -320,9 +354,7 @@ while True: #{
           else:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
           slurmPendingJobCheck()
-          print(shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))
-       #}
-       
+          print(shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
