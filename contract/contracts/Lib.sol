@@ -32,7 +32,7 @@ library Lib {
 	bool             isRunning; /* Flag that checks is Cluster running or not */
 	uint32  clusterAddressesID; /* Cluster's ethereum address is stored */
 	uint       coreMinPrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-	uint     memoryMinPrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint     memoryMinPrice; /* Should be defined in wei. */
 	uint        receivedAmount; /* Cluster's received wei price */
 	uint         blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
 
@@ -73,7 +73,7 @@ library Lib {
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
-	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node */
+	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted */
 	selfReceiptList.tail           = 0;
 	selfReceiptList.coreNumber     = coreNumber;
 	selfReceiptList.deletedItemNum = 0;

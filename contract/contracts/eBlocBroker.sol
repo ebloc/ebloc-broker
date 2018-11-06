@@ -141,8 +141,8 @@ contract eBlocBroker {
     }
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
     function registerUser(string userEmail, string fID, string miniLockID, string ipfsAddress,
-			  string orcID, string githubUserName)
-	public returns (bool success)
+			  string orcID, string githubUserName) public
+	returns (bool success)
     {
 	userContract[msg.sender].blockReadFrom = block.number;
 	userContract[msg.sender].orcID         = orcID;
@@ -160,8 +160,8 @@ contract eBlocBroker {
 
     /* Registers a provider's (msg.sender's) cluster to eBlocBroker. */
     function registerCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID,
-			     uint coreMinPrice, uint memoryMinPrice, string ipfsAddress, string whisperPublicKey) public
-	//
+			     uint coreMinPrice, uint memoryMinPrice, string ipfsAddress,
+			     string whisperPublicKey) public
 	returns (bool success)
     {
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
@@ -224,13 +224,13 @@ contract eBlocBroker {
 	    revert();
 
 	cluster.jobStatus[jobKey].push(Lib.status({
-      		        status:          uint8(jobStateCodes.PENDING),
-			core:            core,                    // Requested Core value
-			coreMinuteGas:   coreMinuteGas,           //
-			jobOwner:        msg.sender,
-			received:        msg.value,
-			coreMinPrice: cluster.coreMinPrice, //
-			startTime:       0
+      		        status:        uint8(jobStateCodes.PENDING),
+			core:          core,                 // Requested Core value
+			coreMinuteGas: coreMinuteGas,        //
+			jobOwner:      msg.sender,
+			received:      msg.value,
+			coreMinPrice:  cluster.coreMinPrice, //
+			startTime:     0
 			}
 		));
 	/*emit*/ LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageID, jobDesc, folderHash);
