@@ -6,7 +6,7 @@ from os.path import expanduser
 home = expanduser("~")
 
 # Password read from the file.
-f = open( 'password.txt', 'r') 
+f = open('/home/alper/.eBlocBroker/password_owncloud.txt', 'r') 
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')

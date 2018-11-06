@@ -11,15 +11,18 @@ from hexbytes import (
     HexBytes,
 )
 
-receiver_pub='0x041574ff388a4b1a7257c3ca38b109588be170cf55a7ade13828ecb119b0f390e5d81b44231a95d15cb45930085f7ba863b9234807ebe54deb258de942440a416b'; # obtained from node_1 and assigned here.
+# Obtained from node_1 and assigned here.
+receiver_pub = '0x04560656f15856e3666c285f05d9f8fcc65b4771605f82392f1174e6fe26ecf923d0846f4371e18db1f187e78d02a1f0c36aab6006447e2905ddf36c1d3532fa82'
 
-topic = '0x13370000'
-payloads = [web3.toHex(text="test message :)"), web3.toHex(text="2nd test message")]
+topic = '0x07678231'
+payloads = [web3.toHex(text="test message :)"),
+				web3.toHex(text="2nd test message")]
 
 web3.shh.post({
         'powTarget': 2.5,
         'powTime': 2,
         'ttl': 60,
         'payload': payloads[0],
+        'topic': topic,
         'pubKey': receiver_pub
 })

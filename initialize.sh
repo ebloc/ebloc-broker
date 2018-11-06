@@ -17,7 +17,9 @@ if [ $preInstall -eq 1 ]; then
     pip install --pre --upgrade web3
     pip install -U python-dotenv
     pip install sphinx_rtd_theme
-
+    pip install google
+    pip install google-cloud-storage
+        
     ## npm
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
@@ -48,6 +50,13 @@ if [ $preInstall -eq 1 ]; then
     source $HOME/.profile
     gdrive about
     echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
+
+    ## gdfuse
+    # shared_with_me=true to have read-only access to all your "Shared with me" files under ./.shared.
+    sed -i.bak "s/^\(download_docs=\).*/\1false/" $HOME/.gdfuse/me/config
+    # https://github.com/astrada/google-drive-ocamlfuse/issues/499#issuecomment-430269233
+    # download_docs=false  
+    sed -i.bak "s/^\(shared_with_me=\).*/\1true/" $HOME/.gdfuse/me/config    
 fi
 # IPFS check
 # nc IP PORT

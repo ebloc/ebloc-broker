@@ -10,10 +10,11 @@ GDRIVE     = os.getenv("GDRIVE")
 RPC_PORT   = os.getenv("RPC_PORT")
 POA_CHAIN  = os.getenv("POA_CHAIN")
 
-OC = "/home/" + WHOAMI + "/ocCluster" 
-GDRIVE_METADATA = "/home/" + WHOAMI + "/.gdrive" 
-IPFS_REPO       = "/home/" + WHOAMI + "/.ipfs" 
-OWN_CLOUD_PATH  = "/home/" + WHOAMI + "/.eBlocBroker/oc" 
+GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo" 
+OWN_CLOUD_PATH    = "/home/" + WHOAMI + "/ocCluster" 
+GDRIVE_METADATA   = "/home/" + WHOAMI + "/.gdrive" 
+IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs" 
+HOME              = "/home/" + WHOAMI
 
 IPFS_USE                    = 0
 PROGRAM_PATH                = '/var/eBlocBroker' 
