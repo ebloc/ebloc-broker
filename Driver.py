@@ -55,18 +55,18 @@ def runDriverCancel():
 
 def runWhisperStateReceiver():
 	if not os.path.isfile(lib.HOME + '/.eBlocBroker/whisperInfo.txt'):
-      # First time running:
-		log('Please first run: python whisperInitialize.py')
+		# First time running:
+		log('Please first run: python scripts/whisperInitialize.py')
 		sys.exit()
 	else:
 		with open(lib.HOME + '/.eBlocBroker/whisperInfo.txt') as json_file:
 			data = json.load(json_file)
 		kId = data['kId']
 		publicKey = data['publicKey']
+		print(web3.shh.hasKeyPair(kId))
 		if not web3.shh.hasKeyPair(kId):
-			log("Whisper node's private key of a key pair did not match with the given ID", "red")
-			sys.exit()
-			
+			log("Error: Whisper node's private key of a key pair did not match with the given ID", "red")
+			sys.exit()			
 	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
 	p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
 	#-----------
@@ -92,7 +92,7 @@ jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
 # rows = res[0] columns = res[1]
 columns = 100
 
-def log(strIn, color=''): #{
+def log(strIn, color=''): 
 	if color != '':
 		print(stylize(strIn, fg(color)))
 	else:
@@ -101,9 +101,8 @@ def log(strIn, color=''): #{
 	txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
 	txFile.write(strIn + "\n")
 	txFile.close()
-#}
 
-def terminate(): #{
+def terminate():
 	log('Terminated')
 	subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit
 
@@ -112,11 +111,9 @@ def terminate(): #{
 	os.killpg(os.getpgid(driverCancelProcess.pid), signal.SIGTERM)
 	os.killpg(os.getpgid(driverReceiverProcess.pid), signal.SIGTERM)	
 	sys.exit()
-#}
 
-def shellCommand(args): #{
+def shellCommand(args): 
    return subprocess.check_output(args).decode('utf-8').strip()
-#}
 
 def idleCoreNumber(printFlag=1): #{
     coreInfo = shellCommand(['sinfo', '-h', '-o%C']).split("/")
@@ -188,12 +185,13 @@ if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '':
    print(stylize('Once please run:  ./initialize.sh \n', fg('red')))
    terminate()
 
-# Start-up functions are called	
+# Start-up functions are called
 isDriverOn()
 lib.isSlurmOn()
 isGethOn()
 runDriverCancel()
 runWhisperStateReceiver()
+# -----------------------------
 
 isContractExist = isContractExist(web3)
 if 'False' in isContractExist:
