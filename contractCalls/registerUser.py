@@ -1,33 +1,47 @@
 #!/usr/bin/env python3
 
-import os, sys
+import os, sys, json
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from imports import connectEblocBroker
 from imports import getWeb3
 from contractCalls.isUserExist import isUserExist
+from os.path import expanduser
+home = expanduser("~")
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
 def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddress, orcID, githubUserName, eBlocBroker=None, web3=None): #{
-    if eBlocBroker == None and web3 == None: #{
-        sys.path.insert(1, os.path.join(sys.path[0], '..'))
-        from imports import connectEblocBroker
-        from imports import getWeb3
-        web3           = getWeb3()
-        eBlocBroker    = connectEblocBroker(web3)
-    #}
-    account = web3.eth.accounts[int(accountID)]  # User's Ethereum Address
+	if eBlocBroker == None and web3 == None: 
+		sys.path.insert(1, os.path.join(sys.path[0], '..'))
+		from imports import connectEblocBroker
+		from imports import getWeb3
+		web3           = getWeb3()
+		eBlocBroker    = connectEblocBroker(web3)
 
-    if isUserExist(account, eBlocBroker, web3):
-        return 'User (' + account  + ') is already registered.'
+	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
+		# First time running:
+		log('Please first run: python whisperInitialize.py')
+		sys.exit()
+	else:
+		with open(home + '/.eBlocBroker/whisperInfo.txt') as json_file:
+			data = json.load(json_file)
+			kId = data['kId']
+			publicKey = data['publicKey']
+		if not web3.shh.hasKeyPair(kId):
+			log("Whisper node's private key of a key pair did not match with the given ID")
+			sys.exit()
+	account = web3.eth.accounts[int(accountID)]  # User's Ethereum Address
+
+	if isUserExist(account, eBlocBroker, web3):
+		return 'User (' + account  + ') is already registered.'
     
-    if len(federationCloudID) < 128 and len(userEmail) < 128 and len(orcID) == 19 and orcID.replace("-", "").isdigit(): 
-        tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID, miniLockID, ipfsAddress, orcID, githubUserName) 
-        return  'Tx: ' + tx.hex()
+	if len(federationCloudID) < 128 and len(userEmail) < 128 and len(orcID) == 19 and orcID.replace("-", "").isdigit(): 
+		tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID, miniLockID, ipfsAddress, orcID, githubUserName) # ,publicKey)
+		return  'Tx: ' + tx.hex()
 #}
-    
-if __name__ == '__main__': #{
+
+if __name__ == '__main__': 
     if len(sys.argv) == 8:
         account            = int(sys.argv[1])
         userEmail          = str(sys.argv[2]) 
@@ -47,4 +61,3 @@ if __name__ == '__main__': #{
 
     res = registerUser(account, userEmail, federationCloudID, miniLockID, ipfsAddress, orcID, githubUserName)
     print(res)
-#}

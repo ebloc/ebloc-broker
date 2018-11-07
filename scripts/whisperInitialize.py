@@ -28,3 +28,7 @@ data['filterID'] = filterID
 
 with open(home + '/.eBlocBroker/whisperInfo.txt', 'w') as outfile:  
 	json.dump(data, outfile)
+
+print('Done.')
+print('You can access whisper info on ~/.eBlocBroker/whisperInfo.txt')	
+
