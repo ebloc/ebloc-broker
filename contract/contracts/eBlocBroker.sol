@@ -141,13 +141,12 @@ contract eBlocBroker {
     }
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
     function registerUser(string userEmail, string fID, string miniLockID, string ipfsAddress,
-			  string orcID, string githubUserName) public
+			  string orcID, string githubUserName, string whisperPublicKey) public
 	returns (bool success)
     {
 	userContract[msg.sender].blockReadFrom = block.number;
-	userContract[msg.sender].orcID         = orcID;
-
-	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName);
+	userContract[msg.sender].orcID = orcID;
+	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName, whisperPublicKey);
 	return true;
     }
 
@@ -412,7 +411,8 @@ contract eBlocBroker {
 		  string miniLockID,
 		  string ipfsAddress,
 		  string orcID,
-		  string githubUserName
+		  string githubUserName,
+		  string whisperPublicKey
 		  );
 
     /* Records the refunded jobs' information under refund() method call. */
