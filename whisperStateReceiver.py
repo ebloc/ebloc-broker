@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # from web3.auto import w3
-import asyncio
+import asyncio, lib
 from web3 import Web3, HTTPProvider
 web3 = Web3(HTTPProvider('http://localhost:8545'))
 from web3.shh import Shh
@@ -13,12 +13,16 @@ from os.path import expanduser
 home = expanduser("~")
 
 topic = '0x07678231'
-testFlag    = True
+testFlag = True
 
 def log(strIn):
 	if testFlag:
 		print(strIn)
-
+	else:
+		txFile = open(lib.LOG_PATH + '/whisperStateReceiverLog.out', 'a')
+		txFile.write(strIn + "\n")
+		txFile.close()
+		
 def post(message):
 	try:
 		web3.shh.post({
@@ -59,9 +63,9 @@ def receiver(kId, publicKey, filterID, myFilter):
 	# retreived_messages = web3.shh.getMessages('13723641127bc212ab379100a5d9e05e09b8c34fe1357f51e54cf17b568918cc')
 	log('Received Messages:')
 	for i in range(0, len(retreived_messages)):
+		# log(retreived_messages[i])
 		log(retreived_messages[i]['payload'].decode("utf-8"))
-		log('---------------------------------')
-		# print(retreived_messages[i])
+		log('---------------------------------')		
 	loop = asyncio.get_event_loop()
 	try:
 		loop.run_until_complete(
@@ -70,7 +74,13 @@ def receiver(kId, publicKey, filterID, myFilter):
 	finally:
 		loop.close()
 
-def main():
+def main(flag):
+	global testFlag
+	if flag == '0':
+		testFlag = False
+	else:
+		testFlag = True
+	
 	# print(web3.shh.info)
 	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
 		# First time running:
@@ -89,8 +99,13 @@ def main():
 		filterID = data['filterID']
 		# privateKey = "0xc0995bb51a0a74fcedf972662569849de4b4d0e8ceca8e4e6e8846a5d00f0b0c"
 		# kId = web3.shh.addPrivateKey(privateKey)
-
 	receiver(kId, publicKey, filterID, myFilter)
-
+	
 if __name__ == '__main__':
-    main()
+	if len(sys.argv) is 1:	
+		main('1')		
+	elif len(sys.argv) is 2:	
+		main(sys.argv[1])
+	else:
+		print('Please enter correct number of arguments')
+		sys.exit()
