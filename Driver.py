@@ -83,7 +83,7 @@ def runWhisperStateReceiver():
 	# ----------------------------------------------------------------
 	if int(out) == 0:
 		# Running driverCancel.py on the background
-		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py'])
+		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '1']) #TODO: should be '0' to store log at file.
 		
 # Paths =================================================================
 jobsReadFromPath               = lib.JOBS_READ_FROM_FILE

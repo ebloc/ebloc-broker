@@ -1,7 +1,7 @@
 # How to Use eBlocBroker 
 
 ## About
-**eBlocBroker** is a blockchain based autonomous computational resource broker.
+*eBlocBroker* is a blockchain based autonomous computational resource broker.
 
 - **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr).
 - [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html).
@@ -19,7 +19,7 @@
 
 
 An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also available that contains
-`geth` setup to connect to our local Ethereum based blockchain system.  
+`geth` setup to connect to our Ethereum based private proof-of-authority blockchain network (eBlocPOA).
 
 ### Create an Ethereum Account
 
@@ -88,21 +88,6 @@ $ sudo ./Driver.sh
 
 ## Start Running Cluster using eBlocBroker
 
-### Slurm Setup:
-Slurm should run on the background. Please run: 
-
-```bash 
-sudo ./runSlurm.sh
-```
-
-Following example should successfully submit the job:
-
-```bash
-cd eBlocBroker/slurmJobExample
-sbatch -N1 run.sh
-Submitted batch job 1
-```
-
 ### Cluster Side: How to register a cluster
 
 Please note the following: 
@@ -120,11 +105,26 @@ ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 ./registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 ```
 
-#### **How to return available Clusters Addresses**
+- A Python daemon program called *Driver* is responsible for facilitating the communication between the eBlocBroker smart contract and the Slurm resource manager. After the cluster is registered please run: `./Driver.py`
+
+<!---
+### Slurm Setup:
+Slurm should run on the background. Please run: 
+
+```bash 
+sudo ./runSlurm.sh
+```
+
+Following example should successfully submit the job:
 
 ```bash
-./getClusterAddresses.py
+cd eBlocBroker/slurmJobExample
+sbatch -N1 run.sh
+Submitted batch job 1
 ```
+-->
+
+------------------------------
 
 ### Client Side: How to obtain IPFS Hash of the job:
 
@@ -143,6 +143,12 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 ```
 
 - Main folder's IPFS hash (for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted `jobKey` to the `eBlocBroker` by the client.
+
+#### **How to return available Clusters Addresses**
+
+```bash
+./getClusterAddresses.py
+```
 
 -----------
 
