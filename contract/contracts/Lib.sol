@@ -7,18 +7,18 @@ email:  alper.alimoglu AT gmail.com
 pragma solidity ^0.4.17;
 
 library Lib {
-
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
-	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint         startTime; /* Submitted job's starting universal time on the server side */	
+	uint8          status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint        startTime; /* Submitted job's starting universal time on the server side */	
 	/* Variables assigned by the client */	
-	uint          received; /* Paid amount by the client */
-	uint   coreMinPrice; /* Cluster's price for core/minute */
-	uint32   coreMinuteGas; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
-	uint32            core; /* Requested core by the client */
-	address       jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint         received; /* Paid amount by the client */
+	uint     priceCoreMin; /* Cluster's price for core/minute */
+	uint       gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint priceBandwidthMB;
+	uint32           core; /* Requested core by the client */
+	address      jobOwner; /* Address of the client (msg.sender) has been stored */
     }
 
     /* Registered user's information */
@@ -29,15 +29,15 @@ library Lib {
 
     /* Registered cluster's information */
     struct clusterData {
-	bool             isRunning; /* Flag that checks is Cluster running or not */
-	uint32  clusterAddressesID; /* Cluster's ethereum address is stored */
-	uint       coreMinPrice; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-	uint     memoryMinPrice; /* Should be defined in wei. */
-	uint        receivedAmount; /* Cluster's received wei price */
-	uint         blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
+	bool            isRunning; /* Flag that checks is Cluster running or not */
+	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */
+	uint         priceCoreMin; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint     priceBandwidthMB; /* Should be defined in wei. */
+	uint       receivedAmount; /* Cluster's received wei price */
+	uint        blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
 
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
-	intervalNode    receiptList; /* receiptList will be use to check job's start and end time overlapped or not */
+	intervalNode    receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
     }
 
     struct interval {
@@ -54,22 +54,22 @@ library Lib {
     }
 
     /* Invoked, when cluster calls updateCluster() function */
-    function update(clusterData storage self, uint coreMinPrice, uint memoryMinPrice, uint32 coreNumber) public
+    function update(clusterData storage self, uint priceCoreMin, uint priceBandwidthMB, uint32 coreNumber) public
     {
-	self.coreMinPrice        = coreMinPrice;
-	self.memoryMinPrice      = memoryMinPrice;
+	self.priceCoreMin           = priceCoreMin;
+	self.priceBandwidthMB       = priceBandwidthMB;
 	self.receiptList.coreNumber = coreNumber;
 	self.blockReadFrom          = block.number;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint32 memLen, uint coreMinPrice, uint memoryMinPrice, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint32 memLen, uint priceCoreMin, uint priceBandwidthMB, uint32 coreNumber) public
     {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
 	self.clusterAddressesID = memLen;
-	self.coreMinPrice    = coreMinPrice;
-	self.memoryMinPrice  = memoryMinPrice;
+	self.priceCoreMin    = priceCoreMin;
+	self.priceBandwidthMB  = priceBandwidthMB;
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
