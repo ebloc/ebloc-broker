@@ -34,9 +34,9 @@ contract eBlocBroker {
     mapping(address => Lib.userData)    userContract;
     mapping(string  => uint32)          verifyOrcID;
 
-    modifier coreMinuteGas_storageID_check(uint32 coreMinuteGas, uint8 storageID) {
-	/* coreMinuteGas is maximum 1 day */
-	require(storageID < 5 && !(coreMinuteGas == 0 || coreMinuteGas > 1440)); 
+    modifier check_gasCoreMin_storageID(uint32 gasCoreMin, uint8 storageID) {
+	/* gasCoreMin is maximum 1 day */
+	require(storageID < 5 && !(gasCoreMin == 0 || gasCoreMin > 1440)); 
 	_ ;
     }
 
@@ -50,13 +50,13 @@ contract eBlocBroker {
 	require(time <= block.timestamp);
 	_ ;
     }
-
+    /*
     modifier isZero(uint32 input) {
 	require(input != 0);
 	_ ;
     }
-
-    modifier stateID_check(uint8 stateID) {
+    */
+    modifier checkStateID(uint8 stateID) {
 	require(stateID <= 15 && stateID > 2); /*stateID cannot be NULL, COMPLETED, REFUNDED on setJobStatus call.*/
 	_ ;
     }
@@ -91,7 +91,7 @@ contract eBlocBroker {
 	    revert();
 
 	if (job.status == uint8(jobStateCodes.PENDING) || /* If job have not been started running*/
-	    (job.status == uint8(jobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.coreMinuteGas * 60 + 3600)) /* Job status remain running after one hour that job should have completed */
+	    (job.status == uint8(jobStateCodes.RUNNING) && (block.timestamp - job.startTime) > job.gasCoreMin * 60 + 3600)) /* Job status remain running after one hour that job should have completed */
 	    {
 		msg.sender.transfer(job.received);
 		job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
@@ -109,7 +109,8 @@ contract eBlocBroker {
     /* Following function is a general-purpose mechanism for performing payment withdrawal
        by the cluster provider and paying of unused core usage cost back to the client
     */
-    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash, uint8 storageID, uint endTime)
+    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash,
+			  uint8 storageID, uint endTime, uint usedBandwidth)
 	isBehindBlockTimeStamp(endTime) public
 	returns (bool success) /* Payback to client and server */
     {
@@ -117,26 +118,27 @@ contract eBlocBroker {
 	   is not mapped to a job , this will throw automatically and revert all changes */
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 
-	uint netOwned     = job.received;
-	uint amountToGain = job.coreMinPrice * job.core * jobRunTimeMinute;
+	//uint netOwned     = job.received;
+	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMinute;
 
-	if((amountToGain > netOwned) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) )
+	if((amountToGain > job.received) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) )
 	    revert();
 
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) {
 	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
-	    job.jobOwner.transfer(netOwned); /* Pay back netOwned to client */
+	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client */
 	    return false;
 	}
 
 	clusterContract[msg.sender].receivedAmount += amountToGain;
 
 	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
+	
+	
+	msg.sender.transfer(amountToGain); /* Gained ether transferred to the cluster */
+	job.jobOwner.transfer(job.received - amountToGain); /* Gained ether transferred to the client */
 
-	msg.sender.transfer(amountToGain);        /* Gained ether transferred to the cluster */
-	job.jobOwner.transfer(netOwned - amountToGain); /* Gained ether transferred to the client */
-
-	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (netOwned - amountToGain), block.timestamp, resultIpfsHash, storageID);
+	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain), block.timestamp, resultIpfsHash, storageID);
 	return true;
     }
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
@@ -159,25 +161,28 @@ contract eBlocBroker {
 
     /* Registers a provider's (msg.sender's) cluster to eBlocBroker. */
     function registerCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID,
-			     uint coreMinPrice, uint memoryMinPrice, string ipfsAddress,
+			     uint priceCoreMin, uint priceBandwidthMB, string ipfsAddress,
 			     string whisperPublicKey) public
 	returns (bool success)
     {
+	if (coreNumber == 0 || priceCoreMin == 0 || priceBandwidthMB == 0)
+	    revert();
+	
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
 	if (cluster.blockReadFrom != 0 && cluster.isRunning)
 	    revert();
 
 	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender;
-	    cluster.update(coreMinPrice, memoryMinPrice, coreNumber);
+	    cluster.update(priceCoreMin, priceBandwidthMB, coreNumber);
 	    cluster.isRunning = true;
 	} else {
-	    cluster.constructCluster(uint32(clusterAddresses.length), coreMinPrice, memoryMinPrice, coreNumber);
+	    cluster.constructCluster(uint32(clusterAddresses.length), priceCoreMin, priceBandwidthMB, coreNumber);
 	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    coreMinPrice, memoryMinPrice, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
@@ -191,55 +196,64 @@ contract eBlocBroker {
 
     /* All set operations are combined to save up some gas usage */
     function updateCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID,
-			   uint coreMinPrice, uint memoryMinPrice, string ipfsAddress, string whisperPublicKey)
+			   uint priceCoreMin, uint bandwidthPrice, string ipfsAddress, string whisperPublicKey)
 	public returns (bool success)
     {
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
 	if (cluster.blockReadFrom == 0)
 	    revert();
 
-	clusterContract[msg.sender].update(coreMinPrice, memoryMinPrice, coreNumber);
+	clusterContract[msg.sender].update(priceCoreMin, bandwidthPrice, coreNumber);
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    coreMinPrice, memoryMinPrice, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, bandwidthPrice, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
     /* Performs a job submission to eBlocBroker by a client. */
-    function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc, uint32 coreMinuteGas,
-		       uint8 storageID, string folderHash)
-	coreMinuteGas_storageID_check(coreMinuteGas, storageID) isZero(core) public payable
+    function submitJob(address clusterAddress,
+		       string jobKey,
+		       uint32 core,
+		       string jobDesc,
+		       uint32 gasCoreMin,
+		       uint32 gasBandwidthMB,
+		       uint8 storageID,
+		       string folderHash)
+	check_gasCoreMin_storageID(gasCoreMin, storageID)  /*isZero(core)*/  public payable
 	returns (bool success)
-    {
-	Lib.clusterData storage cluster = clusterContract[clusterAddress];
+    {	
+ 	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 
-	if (!cluster.isRunning                                                ||
-	    msg.value < cluster.coreMinPrice * coreMinuteGas * core           ||
-	    bytes(jobKey).length > 255                                        || /* Max length is 255 for the filename */
+	if (core == 0 || msg.value == 0                                       ||
+	    !cluster.isRunning                                                ||
+	    msg.value < cluster.priceCoreMin * gasCoreMin * core              ||
+	    bytes(jobKey).length > 255                                        || // Max length is 255 for the filename 
 	    (bytes(folderHash).length != 32 && bytes(folderHash).length != 0) ||
 	    !isUserExist(msg.sender)                                          ||
-	    verifyOrcID[userContract[msg.sender].orcID] == 0                  ||
+	    verifyOrcID[userContract[msg.sender].orcID] == 0                  ||	    
 	    core > cluster.receiptList.coreNumber)
 	    revert();
 
-	cluster.jobStatus[jobKey].push(Lib.status({
-      		        status:        uint8(jobStateCodes.PENDING),
-			core:          core,                 // Requested Core value
-			coreMinuteGas: coreMinuteGas,        //
-			jobOwner:      msg.sender,
-			received:      msg.value,
-			coreMinPrice:  cluster.coreMinPrice, //
-			startTime:     0
-			}
-		));
-	/*emit*/ LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length-1, storageID, jobDesc, folderHash);
+	Lib.status [] jobStatus = cluster.jobStatus[jobKey];
 
+	jobStatus.push(Lib.status({
+      		        status:         uint8(jobStateCodes.PENDING),
+			core:           core,                       /* Requested core value */
+			gasCoreMin:     gasCoreMin,                 //
+			jobOwner:       msg.sender,
+			received:       msg.value,
+			priceCoreMin:   cluster.priceCoreMin,       //
+			priceBandwidthMB: cluster.priceBandwidthMB, //
+			startTime:      0
+			}
+		));	
+	/*emit*/ LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, folderHash);
 	return true;
     }
 
     /* Sets the job's state (stateID) which is obtained from Slurm. */
     function setJobStatus(string jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
-	stateID_check(stateID) returns (bool success)
+	checkStateID(stateID) returns (bool success)
     {
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* Used as a pointer to a storage */
 	if (job.status == uint8(jobStateCodes.COMPLETED) ||
@@ -286,7 +300,7 @@ contract eBlocBroker {
 	returns(uint, uint, uint)
     {
 	if (clusterContract[clusterAddress].blockReadFrom != 0)
-	    return (clusterContract[clusterAddress].blockReadFrom, clusterContract[clusterAddress].receiptList.coreNumber, clusterContract[clusterAddress].coreMinPrice);
+	    return (clusterContract[clusterAddress].blockReadFrom, clusterContract[clusterAddress].receiptList.coreNumber, clusterContract[clusterAddress].priceCoreMin);
 	else
 	    return (0, 0, 0);
     }
@@ -323,7 +337,7 @@ contract eBlocBroker {
 	    return (0, 0,  0, 0, 0, 0, address(0x0));
 	
 	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];	
-	return (job.status, job.core, job.startTime, job.received, job.coreMinPrice, job.coreMinuteGas, job.jobOwner);
+	return (job.status, job.core, job.startTime, job.received, job.priceCoreMin, job.gasCoreMin, job.jobOwner);
     }
 
     /* Returns the contract's deployed block number. */
@@ -398,8 +412,8 @@ contract eBlocBroker {
 		     string clusterEmail,
 		     string fID,
 		     string miniLockID,
-		     uint coreMinPrice,
-		     uint memoryMinPrice,
+		     uint priceCoreMin,
+		     uint priceBandwidthMB,
 		     string ipfsAddress,
 		     string whisperPublicKey
 		     );
