@@ -18,11 +18,16 @@ sudo killall cat
 
 tmux new -s pipe1
 bash orcidPipeIn.sh &
-cntrl-B then D   or   exit 
+cntrl-B then D # exit tmux window without quitting the terminal program
+exit # to close 
+
 
 tmux new -s pipe2
 bash orcidPipeOut.sh &
-cntrl-B then D  or exit
+cntrl-B then D # exit tmux window without quitting the terminal program
+exit # to close 
 
+To connect to tmux session:
+tmux attach # pipe2
 tmux attach # pipe2
 ```
