@@ -109,8 +109,8 @@ contract eBlocBroker {
     /* Following function is a general-purpose mechanism for performing payment withdrawal
        by the cluster provider and paying of unused core usage cost back to the client
     */
-    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMinute, string resultIpfsHash,
-			  uint8 storageID, uint endTime, uint usedBandwidth)
+    function receiptCheck(string jobKey, uint32 index, uint32 jobRunTimeMin, string resultIpfsHash,
+			  uint8 storageID, uint endTime, uint usedBandwidthMB)
 	isBehindBlockTimeStamp(endTime) public
 	returns (bool success) /* Payback to client and server */
     {
@@ -119,26 +119,29 @@ contract eBlocBroker {
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 
 	//uint netOwned     = job.received;
-	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMinute;
+	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMin + job.priceBandwidthMB * usedBandwidthMB;
 
-	if((amountToGain > job.received) || job.status == uint8(jobStateCodes.COMPLETED) || job.status == uint8(jobStateCodes.REFUNDED) )
+	if (amountToGain > job.received ||
+	    job.status == uint8(jobStateCodes.COMPLETED) ||
+	    job.status == uint8(jobStateCodes.REFUNDED))
 	    revert();
 
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) {
 	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
-	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client */
+	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
+
+	    /*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
+				resultIpfsHash, storageID, usedBandwidthMB);
 	    return false;
 	}
-
-	clusterContract[msg.sender].receivedAmount += amountToGain;
-
 	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
-	
+	clusterContract[msg.sender].receivedAmount += amountToGain;
 	
 	msg.sender.transfer(amountToGain); /* Gained ether transferred to the cluster */
-	job.jobOwner.transfer(job.received - amountToGain); /* Gained ether transferred to the client */
+	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
-	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain), block.timestamp, resultIpfsHash, storageID);
+	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain),
+			    block.timestamp, resultIpfsHash, storageID, usedBandwidthMB);
 	return true;
     }
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
@@ -196,28 +199,23 @@ contract eBlocBroker {
 
     /* All set operations are combined to save up some gas usage */
     function updateCluster(uint32 coreNumber, string clusterEmail, string fID, string miniLockID,
-			   uint priceCoreMin, uint bandwidthPrice, string ipfsAddress, string whisperPublicKey)
+			   uint priceCoreMin, uint priceBandwidthMB, string ipfsAddress, string whisperPublicKey)
 	public returns (bool success)
     {
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
 	if (cluster.blockReadFrom == 0)
 	    revert();
 
-	clusterContract[msg.sender].update(priceCoreMin, bandwidthPrice, coreNumber);
+	clusterContract[msg.sender].update(priceCoreMin, priceBandwidthMB, coreNumber);
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, bandwidthPrice, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
     /* Performs a job submission to eBlocBroker by a client. */
-    function submitJob(address clusterAddress,
-		       string jobKey,
-		       uint32 core,
-		       string jobDesc,
-		       uint32 gasCoreMin,
-		       uint32 gasBandwidthMB,
-		       uint8 storageID,
+    function submitJob(address clusterAddress, string jobKey, uint32 core, string jobDesc,
+		       uint32 gasCoreMin, uint32 gasBandwidthMB, uint8 storageID,
 		       string folderHash)
 	check_gasCoreMin_storageID(gasCoreMin, storageID)  /*isZero(core)*/  public payable
 	returns (bool success)
@@ -297,12 +295,15 @@ contract eBlocBroker {
     /* Returns the registered cluster's information. It takes
        Ethereum address of the cluster (clusterAddress), which can be obtained by calling getClusterAddresses. */
     function getClusterInfo(address clusterAddress) public view
-	returns(uint, uint, uint)
+	returns(uint, uint, uint, uint)
     {
 	if (clusterContract[clusterAddress].blockReadFrom != 0)
-	    return (clusterContract[clusterAddress].blockReadFrom, clusterContract[clusterAddress].receiptList.coreNumber, clusterContract[clusterAddress].priceCoreMin);
+	    return (clusterContract[clusterAddress].blockReadFrom,
+		    clusterContract[clusterAddress].receiptList.coreNumber,
+		    clusterContract[clusterAddress].priceCoreMin,
+		    clusterContract[clusterAddress].priceBandwidthMB);
 	else
-	    return (0, 0, 0);
+	    return (0, 0, 0, 0);
     }
 
     /* Returns cluster provider's earned money amount in Wei.
@@ -403,7 +404,8 @@ contract eBlocBroker {
 		     uint returned,
 		     uint endTime,
 		     string resultIpfsHash,
-		     uint8 storageID
+		     uint8 storageID,
+		     uint usedBandwidthMB
 		     );
 
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
