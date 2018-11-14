@@ -34,7 +34,7 @@ driverReceiverProcess = None
 # Dummy sudo command to get the password when session starts. 
 subprocess.run(['sudo', 'echo', '']) 
 
-def runDriverCancel():
+def runDriverCancel():	
 	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
 	p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
 	#-----------
@@ -210,13 +210,12 @@ if lib.IPFS_USE == 1:
 clusterAddress = lib.CLUSTER_ID
 isClusterExist = isClusterExist(clusterAddress, eBlocBroker, web3)
 
-if "false" in isClusterExist.lower(): #{
+if "false" in isClusterExist.lower(): 
    print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
                  "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')))
    terminate()
-#}
 
 deployedBlockNumber = getDeployedBlockNumber(eBlocBroker)
 blockReadFromContract = str(0)

@@ -12,10 +12,9 @@ from singleFolderShare import singleFolderShare
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 
-def eudatSubmitJob(tarHash=None): #{ # fc33e7908fdf76f731900e9d8a382984
+def eudatSubmitJob(tarHash=None):
     # if not isOcMounted():
-    #     sys.exit()
-               
+    #     sys.exit()               
     if tarHash is None:
         folderToShare = 'exampleFolderToShare'    
         subprocess.run(['chmod', '-R', '777', folderToShare])
@@ -54,7 +53,6 @@ def eudatSubmitJob(tarHash=None): #{ # fc33e7908fdf76f731900e9d8a382984
 
     res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
     print(res)
-#}
 
 if __name__ == "__main__":
     if(len(sys.argv) == 2):
