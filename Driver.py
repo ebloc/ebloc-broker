@@ -34,7 +34,7 @@ driverReceiverProcess = None
 # Dummy sudo command to get the password when session starts. 
 subprocess.run(['sudo', 'echo', '']) 
 
-def runDriverCancel():	
+def runDriverCancel():
 	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
 	p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
 	#-----------
@@ -93,14 +93,14 @@ jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
 columns = 100
 
 def log(strIn, color=''): 
-	if color != '':
-		print(stylize(strIn, fg(color)))
-	else:
-		print(strIn)
+    if color != '':
+        print(stylize(strIn, fg(color)))
+    else:
+        print(strIn)
 
-	txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
-	txFile.write(strIn + "\n")
-	txFile.close()
+    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
+    txFile.write(strIn + "\n")
+    txFile.close()
 
 def terminate():
 	log('Terminated')
@@ -127,7 +127,7 @@ def idleCoreNumber(printFlag=1): #{
     return idleCore
 #}   
 
-def slurmPendingJobCheck(): #{
+def slurmPendingJobCheck(): 
     idleCore  = idleCoreNumber()       
     printFlag = 0    
     while idleCore == '0':
@@ -136,7 +136,6 @@ def slurmPendingJobCheck(): #{
           printFlag = 1
        time.sleep(10)
        idleCore = idleCoreNumber(0)
-#}
 
 # checks whether geth runs on the background
 def isGethOn(): #{  
@@ -210,7 +209,7 @@ if lib.IPFS_USE == 1:
 clusterAddress = lib.CLUSTER_ID
 isClusterExist = isClusterExist(clusterAddress, eBlocBroker, web3)
 
-if "false" in isClusterExist.lower(): 
+if "false" in isClusterExist.lower():
    print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
@@ -230,10 +229,10 @@ f = open(lib.BLOCK_READ_FROM_FILE, 'r')
 blockReadFromLocal = f.read().rstrip('\n')
 f.close()
 
-if not blockReadFromLocal.isdigit(): #{
+if not blockReadFromLocal.isdigit(): 
    log("Error: lib.BLOCK_READ_FROM_FILE is empty or contains and invalid value")
    log("#> Would you like to read from contract's deployed block number? y/n")   
-   while True: #{
+   while True: 
       choice = input().lower()
       if choice in yes:
          blockReadFromLocal = deployedBlockNumber
@@ -246,8 +245,6 @@ if not blockReadFromLocal.isdigit(): #{
          terminate()
       else:
          sys.stdout.write("Please respond with 'yes' or 'no'")
-   #}
-#}
 
 blockReadFrom = 0
 if int(blockReadFromLocal) < int(blockReadFromContract):
