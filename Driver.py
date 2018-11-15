@@ -284,10 +284,9 @@ while True: #{
     log("Waiting new block to increment by one.")
     log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom)
 
-    while int(currentBlockNumber) < int(blockReadFrom): #{          
+    while int(currentBlockNumber) < int(blockReadFrom):
        time.sleep(2)
        currentBlockNumber = blockNumber(web3)
-    #}
 
     log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom)   
     blockReadFrom = str(blockReadFrom) # Starting reading event's location has been updated
@@ -306,10 +305,10 @@ while True: #{
        counter += 1
 
        print(loggedJobs[i].args['jobKey'])
-       receivedFolderHash = loggedJobs[i].args['folderHash']
+       sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " +
            loggedJobs[i].args['jobKey'] + " " + str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " +
-           loggedJobs[i].args['desc'] + " " + receivedFolderHash)
+           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + loggedJobs[i].args['gasBandwidthMB'])
 
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -384,7 +383,7 @@ while True: #{
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
-                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), receivedFolderHash, eBlocBroker, web3)
+                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), sourceCodeHash, eBlocBroker, web3)
     #}
 
     if len(loggedJobs) > 0 and int(maxVal) != 0:

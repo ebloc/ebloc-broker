@@ -121,7 +121,8 @@ def test_receipt(web3, accounts, chain): #{
         for line in f:
             arguments = line.rstrip('\n').split(" ")
 
-            cg      = int(arguments[1]) - int(arguments[0])
+            gasCoreMin     = int(arguments[1]) - int(arguments[0])
+            gasBandwidthMB = 100
             coreNum = int(arguments[2])
 
             chain.wait.for_block(int(arguments[0]))
@@ -132,10 +133,12 @@ def test_receipt(web3, accounts, chain): #{
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
 			# print("Contract Balance before: " + str(web3.eth.getBalance(accounts[0])))
             # jobPriceValue = 60 * 10000000000000000 * coreNum
-            jobPriceValue = 120 * priceCoreMin * coreNum + priceBandwidthMB * 100 # execution cost + BW-100MB cost is paid
+            
+            jobPriceValue = gasCoreMin * priceCoreMin * coreNum + priceBandwidthMB * gasBandwidthMB # execution cost + BW-100MB cost is paid
+            print('jobPriceValue: ' + str(jobPriceValue))
             set_txn_hash = my_contract.transact({"from": accounts[8],
                                                  "value":web3.toWei(jobPriceValue, "wei"
-                                                 )}).submitJob(account, jobKey, coreNum, "Science", cg, 1, 1, folderHash)
+                                                 )}).submitJob(account, jobKey, coreNum, "Science", gasCoreMin, gasBandwidthMB, 1, folderHash)
             contract_address = chain.wait.for_receipt(set_txn_hash)
             print("submitJob: " + str(contract_address["gasUsed"]))
 			# print("Contract Balance after: " + str(web3.eth.getBalance(accounts[0])))

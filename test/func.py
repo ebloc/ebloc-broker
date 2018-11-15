@@ -84,9 +84,9 @@ def testFunc(path, readTest, workloadTest, testType, clusterID): #{
 
            log("hash: " + jobKey[0] + "| TimeToRun: " + str(coreMinuteGas) + "| Core: " + str(coreNum) + "| accountID: " + str(accountID), path)
 
-           folderHash     = '00000000000000000000000000000000'
-           log('submitJob(' + clusterID + ', ' + jobKey + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + jobDescription + ', ' + str(storageID) + ', ' + folderHash + ', ' + str(accountID) + ')', path)
-           tx = submitJob(clusterID, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID);                     
+           sourceCodeHash     = '00000000000000000000000000000000'
+           log('submitJob(' + clusterID + ', ' + jobKey + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + jobDescription + ', ' + str(storageID) + ', ' + sourceCodeHash + ', ' + str(accountID) + ')', path)
+           tx = submitJob(clusterID, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, sourceCodeHash, accountID);                     
            log(tx, path)
 
            txFile     = open(path + '/' + clusterID + '.txt', 'a');

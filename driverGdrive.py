@@ -36,7 +36,7 @@ def log(strIn, color=''): #{
    txFile.close() 
 #}
 
-def cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, folderType): #{
+def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderType): #{
     if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
         globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
         
@@ -54,14 +54,14 @@ def cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, folderType)
                  return False, ''              
            else:
               res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
-              if res == folderHash: #Checking is already downloaded folder's hash matches with the given hash
+              if res == sourceCodeHash: #Checking is already downloaded folder's hash matches with the given hash
                  log('Already cached ...', 'green')
               else:
                  if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return
         elif folderType == 'folder':
            if os.path.isfile(cachedFolder + '/' + folderName + '/run.sh'):              
               res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder + '/' + folderName]).decode('utf-8').strip()                
-              if res == folderHash: #Checking is already downloaded folder's hash matches with the given hash
+              if res == sourceCodeHash: #Checking is already downloaded folder's hash matches with the given hash
                  log('Already cached ...', 'green')
               else:                 
                  if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return False
@@ -150,7 +150,7 @@ def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType): #{
     return True
 #}
     
-def driverGdrive(jobKey, index, storageID, userID, folderHash, eBlocBroker, web3): #{
+def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, web3): #{
    global jobKeyGlobal
    global indexGlobal
    global storageIDGlobal
@@ -182,15 +182,15 @@ def driverGdrive(jobKey, index, storageID, userID, folderHash, eBlocBroker, web3
 
    if cacheTypeGlobal is 'local':
       if 'folder' in mimeType: # Recieved job is in folder format
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, 'folder')
+         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
          if not check: return   
          subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + folderName + '/', resultsFolder])      
       elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, 'gzip')
+         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'gzip')
          if not check: return   
          subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + folderName, '--strip-components=1', '-C', resultsFolder])
       elif 'zip' in mimeType: # Recieved job is in zip format
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, 'zip')
+         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'zip')
          if not check: return   
          # cmd: unzip -o $resultsFolderPrev/$folderName -d $resultsFolder
          subprocess.run(['unzip', '-o', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])       
@@ -200,13 +200,13 @@ def driverGdrive(jobKey, index, storageID, userID, folderHash, eBlocBroker, web3
          return False
    elif cacheTypeGlobal is 'ipfs':
       if 'folder' in mimeType:
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, 'folder')
+         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
          if not check: return   
          log('Reading from IPFS hash=' + ipfsHash)
          # Copy from cached IPFS folder into user's path           
          subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
       elif 'gzip' in mimeType:
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, folderHash, 'gzip')
+         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'gzip')
          if not check: return            
          log('Reading from IPFS hash=' + ipfsHash)
          subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
