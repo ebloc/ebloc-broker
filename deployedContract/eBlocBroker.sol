@@ -1,15 +1,178 @@
 /*
-file:   eBlocBroker.sol
+file:   Lib.sol
 author: Alper Alimoglu
 email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.4.17; import "./Lib.sol";
+pragma solidity ^0.4.24;
 
-/* Contract Address: 0x611dc53934550684825f3477ecb68029b1b908f3 */
-/// @title eBlocBroker is a blockchain based autonomous computational resource
-///        broker.
+library Lib {
+    /* Submitted Job's information */
+    struct status {
+	/* Variable assigned by the cluster */
+	uint8          status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint        startTime; /* Submitted job's starting universal time on the server side */	
+	/* Variables assigned by the client */	
+	uint         received; /* Paid amount by the client */
+	uint     priceCoreMin; /* Cluster's price for core/minute */
+	uint       gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint priceBandwidthMB;
+	uint32           core; /* Requested core by the client */
+	address      jobOwner; /* Address of the client (msg.sender) has been stored */
+    }
+
+    /* Registered user's information */
+    struct userData {
+	uint     blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	string   orcID; /* User's orcID */
+    }
+
+    /* Registered cluster's information */
+    struct clusterData {
+	bool            isRunning; /* Flag that checks is Cluster running or not */
+	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */
+	uint         priceCoreMin; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
+	uint     priceBandwidthMB; /* Should be defined in wei. */
+	uint       receivedAmount; /* Cluster's received wei price */
+	uint        blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
+
+	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
+	intervalNode    receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
+    }
+
+    struct interval {
+	uint   endpoint;
+	int32  core; /* Job's requested core number */
+	uint32 next; /* Points to next the node */
+    }
+
+    struct intervalNode {
+	interval[] list; /* A dynamically-sized array of `interval` structs */
+	uint32 tail; /* Tail of the linked list */
+	uint32 coreNumber; /* Core number of the cluster */
+	uint32 deletedItemNum; /* Keep track of deleted nodes */
+    }
+
+    /* Invoked, when cluster calls updateCluster() function */
+    function update(clusterData storage self, uint priceCoreMin, uint priceBandwidthMB, uint32 coreNumber) public
+    {
+	self.priceCoreMin           = priceCoreMin;
+	self.priceBandwidthMB       = priceBandwidthMB;
+	self.receiptList.coreNumber = coreNumber;
+	self.blockReadFrom          = block.number;
+    }    
+
+    /* Invoked when cluster calls registerCluster() function */
+    function constructCluster(clusterData storage self, uint32 memLen, uint priceCoreMin, uint priceBandwidthMB, uint32 coreNumber) public
+    {
+	self.isRunning          = true;
+	self.receivedAmount     = 0;
+	self.clusterAddressesID = memLen;
+	self.priceCoreMin    = priceCoreMin;
+	self.priceBandwidthMB  = priceBandwidthMB;
+	self.blockReadFrom      = block.number;
+
+	intervalNode storage selfReceiptList = self.receiptList;
+	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted */
+	selfReceiptList.tail           = 0;
+	selfReceiptList.coreNumber     = coreNumber;
+	selfReceiptList.deletedItemNum = 0;
+    }
+
+    function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public
+	returns (bool success)
+    {
+	bool     flag = false;
+	uint32   addr = self.tail;
+	uint32   addrTemp;
+	int32    carriedSum;
+	interval storage prevNode;
+	interval storage currentNode;
+	interval storage prevNodeTemp;
+
+	// +-------------------------------+
+	// | Begin: receiptCheck Algorithm |
+	// +-------------------------------+
+
+	if (endTime < self.list[addr].endpoint) {
+	    flag         = true;
+	    prevNode     = self.list[addr];
+	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
+
+	    do { /* Inside while loop carriedSum is updated */
+		//carriedSum += prevNode.core;
+		if (endTime > currentNode.endpoint) {
+		    addr = prevNode.next; /* "addr" points the index to push the node */
+		    break;
+		}
+		prevNode    = currentNode;
+		currentNode = self.list[currentNode.next];
+	    } while (true);
+	}
+
+	self.list.push(interval({endpoint: endTime, core: coreNum, next: addr})); /* Inserted while keeping sorted order */
+	carriedSum = coreNum; /* Carried sum variable is assigned with job's given core number */
+	
+	if (!flag) {
+	    addrTemp      = addr;	    
+	    prevNode      = self.list[self.tail = uint32(self.list.length-1)];
+	} else {
+	    addrTemp      = prevNode.next;
+	    prevNodeTemp  = prevNode;
+	    prevNode.next = uint32(self.list.length - 1); /* Node that pushed in-between the linked-list */
+	}
+
+	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */
+
+	do {
+	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
+		self.list.push(interval( {endpoint: startTime, core: -1*coreNum, next: prevNode.next}));
+		prevNode.next = uint32(self.list.length - 1);
+		return true;
+	    }
+	    carriedSum += currentNode.core;
+
+	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
+	    if (carriedSum > int32(self.coreNumber)) {
+		delete self.list[self.list.length-1];
+		if (!flag)
+		    self.tail = addrTemp;
+		else
+		    prevNodeTemp.next = addrTemp;
+
+		self.deletedItemNum += 1;
+		return false;
+	    }
+	    prevNode    = currentNode;
+	    currentNode = self.list[currentNode.next];
+	} while (true);
+
+	// +-----------------------------+
+	// | End: receiptCheck Algorithm |
+	// +-----------------------------+
+    }
+
+    /* Could be commented out, used for test */
+    function getReceiptListSize(intervalNode storage self) public view
+	returns (uint32)
+    {
+	return uint32(self.list.length-self.deletedItemNum);
+    }
+
+    /* Could be commented out, used for test */
+    function printIndex(intervalNode storage self, uint32 index) public view
+	returns (uint256, int32)
+    {
+	uint32 myIndex = self.tail;
+	for (uint i = 0; i < index; i++)
+	    myIndex = self.list[myIndex].next;
+
+	return (self.list[myIndex].endpoint, self.list[myIndex].core);
+    }
+}
+
 contract eBlocBroker {
+
     uint    deployedBlockNumber; /* The block number that was obtained when contract is deployed */
     address owner;
 
@@ -68,7 +231,7 @@ contract eBlocBroker {
     /* Following function is executed at initialization. It sets contract's deployed 
        block number and the owner of the contract. 
     */
-    function eBlocBroker() public //constructor() public
+    constructor() public //constructor() public
     {
 	deployedBlockNumber = block.number;
 	owner = msg.sender; /* Owner of the smart contract */
@@ -94,11 +257,11 @@ contract eBlocBroker {
 	    {
 		msg.sender.transfer(job.received);
 		job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
-		/*emit*/ LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
+		emit LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
 		return true;
 	    }
 	else if (job.status == uint8(jobStateCodes.RUNNING)){
-	    /*emit*/ LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
+	    emit LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
 	    return true;
 	}
 	else
@@ -129,7 +292,7 @@ contract eBlocBroker {
 	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
-	    /*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
+	    emit LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
 				resultIpfsHash, storageID, usedBandwidthMB);
 	    return false;
 	}
@@ -139,7 +302,7 @@ contract eBlocBroker {
 	msg.sender.transfer(amountToGain); /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
-	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain),
+	emit LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain),
 			    block.timestamp, resultIpfsHash, storageID, usedBandwidthMB);
 	return true;
     }
@@ -151,7 +314,7 @@ contract eBlocBroker {
     {
 	userContract[msg.sender].blockReadFrom = block.number;
 	userContract[msg.sender].orcID = orcID;
-	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName, whisperPublicKey);
+	emit LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName, whisperPublicKey);
 	return true;
     }
 
@@ -184,14 +347,13 @@ contract eBlocBroker {
 	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 
-	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
+	emit LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
 			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
     /* Locks the access to the Cluster. Only cluster owner could stop it */
-    function deregisterCluster() public
-	returns (bool success)
+    function deregisterCluster() public returns (bool success)
     {
 	delete clusterAddresses[clusterContract[msg.sender].clusterAddressesID];
 	clusterContract[msg.sender].isRunning = false; /* Cluster wont accept any more jobs */
@@ -210,7 +372,7 @@ contract eBlocBroker {
 
 	clusterContract[msg.sender].update(priceCoreMin, priceBandwidthMB, coreNumber);
 
-	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
+	emit LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
 			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
 	return true;
     }
@@ -218,21 +380,22 @@ contract eBlocBroker {
     /* Performs a job submission to eBlocBroker by a client. */
     function submitJob(address clusterAddress, string memory jobKey, uint32 core,
 		       string memory jobDesc, uint32 gasCoreMin, uint32 gasBandwidthMB,
-		       uint8 storageID, string memory sourceCodeHash)
+		       uint8 storageID, string memory folderHash)
 	check_gasCoreMin_storageID(gasCoreMin, storageID)  /*isZero(core)*/  public payable
 	returns (bool success)
     {	
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
-		
-	if (core == 0 || msg.value == 0 || !cluster.isRunning ||
-	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceBandwidthMB * gasBandwidthMB ||
-	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
-	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
-	    !isUserExist(msg.sender) ||
-	    verifyOrcID[userContract[msg.sender].orcID] == 0 ||	    
+
+	if (core == 0 || msg.value == 0                                       ||
+	    !cluster.isRunning                                                ||
+	    msg.value < cluster.priceCoreMin * gasCoreMin * core              ||
+	    bytes(jobKey).length > 255                                        || // Max length is 255 for the filename 
+	    (bytes(folderHash).length != 32 && bytes(folderHash).length != 0) ||
+	    !isUserExist(msg.sender)                                          ||
+	    verifyOrcID[userContract[msg.sender].orcID] == 0                  ||	    
 	    core > cluster.receiptList.coreNumber)
 	    revert();
-		
+
 	Lib.status [] storage jobStatus = cluster.jobStatus[jobKey];
 
 	jobStatus.push(Lib.status({
@@ -246,14 +409,13 @@ contract eBlocBroker {
 			startTime:      0
 			}
 		));	
-	/*emit*/ LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasBandwidthMB);
+	emit LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, folderHash);
 	return true;
     }
 
     /* Sets the job's state (stateID) which is obtained from Slurm. */
-    function setJobStatus(string memory jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime)
-	checkStateID(stateID) public
-	returns (bool success)
+    function setJobStatus(string memory jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime) public
+	checkStateID(stateID) returns (bool success)
     {
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index]; /* Used as a pointer to a storage */
 	if (job.status == uint8(jobStateCodes.COMPLETED) ||
@@ -264,7 +426,7 @@ contract eBlocBroker {
 	if (stateID == uint8(jobStateCodes.RUNNING))
 	    job.startTime = startTime;
 
-	/*emit*/ LogSetJob(msg.sender, jobKey, index, startTime);
+	emit LogSetJob(msg.sender, jobKey, index, startTime);
 	return true;
     }
 
@@ -388,6 +550,15 @@ contract eBlocBroker {
     }
 
     /* -----------------------------------------------------EVENTS---------------------------------------------------------*/    
+    /* Records the submitted jobs' information under submitJob() method call.*/
+    event LogJob(address indexed clusterAddress,
+		 string jobKey,
+		 uint index,
+		 uint8 storageID,
+		 string desc,
+		 string folderHash
+		 );
+
     /* Records the completed jobs' information under receiptCheck() method call.*/
     event LogReceipt(address clusterAddress,
 		     string jobKey,
@@ -401,23 +572,6 @@ contract eBlocBroker {
 		     uint usedBandwidthMB
 		     );
 
-    /* Records the updated jobs' information under setJobStatus() method call. */
-    event LogSetJob(address clusterAddress,
-		    string jobKey,
-		    uint32 index,
-		    uint startTime
-		    );
-    
-    /* Records the submitted jobs' information under submitJob() method call.*/
-    event LogJob(address indexed clusterAddress,
-		 string jobKey,
-		 uint index,
-		 uint8 storageID,
-		 string desc,
-		 string sourceCodeHash,
-		 uint32 gasBandwidthMB
-		 );
-    
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
     event LogCluster(address clusterAddress,
 		     uint32 coreNumber,
@@ -430,12 +584,6 @@ contract eBlocBroker {
 		     string whisperPublicKey
 		     );
 
-    /* Records the refunded jobs' information under refund() method call. */
-    event LogCancelRefund(address indexed clusterAddress,
-			  string jobKey,
-			  uint32 index
-			  );
-
     /* Records the registered users' registered information under registerUser method call.*/
     event LogUser(address userAddress,
 		  string userEmail,
@@ -446,4 +594,17 @@ contract eBlocBroker {
 		  string githubUserName,
 		  string whisperPublicKey
 		  );
+
+    /* Records the refunded jobs' information under refund() method call. */
+    event LogCancelRefund(address indexed clusterAddress,
+			  string jobKey,
+			  uint32 index
+			  );
+
+    /* Records the updated jobs' information under setJobStatus() method call. */
+    event LogSetJob(address clusterAddress,
+		    string jobKey,
+		    uint32 index,
+		    uint startTime
+		    );
 }

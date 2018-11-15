@@ -9,7 +9,7 @@ from imports import getWeb3
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID): #{
+def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, sourceCodeHash, accountID): #{
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
     # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW        
     blockReadFrom, coreNumber, priceCoreMin, priceBandwidthMB = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
@@ -40,8 +40,8 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
     jobPriceValue = coreNum * priceCoreMin * coreMinuteGas
     gasLimit = 4500000
     
-    if not len(folderHash):
-        return 'folderHash should be 32 characters.'    
+    if not len(sourceCodeHash):
+        return 'sourceCodeHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
        return "Error: jobKey's length does not match with its original length. Please check your jobKey."
     if coreNum > coreNumber:
@@ -56,7 +56,7 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
         return 'Error: coreMinuteGas provided as 0. Please give non-zero value'
         
     # print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
-    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, folderHash) 
+    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, sourceCodeHash) 
     return tx.hex()
 #}
 
@@ -73,7 +73,7 @@ if __name__ == '__main__': #{
         coreMinuteGas  = int(sys.argv[4])         
         jobDescription = str(sys.argv[5])         
         storageID      = int(sys.argv[6])
-        folderHash     = str(sys.argv[7]) 
+        sourceCodeHash     = str(sys.argv[7]) 
         accountID      = int(sys.argv[8])        
     elif len(sys.argv) == 11: 
         clusterAddress = str(sys.argv[1])
@@ -84,7 +84,7 @@ if __name__ == '__main__': #{
         coreGasMin     = int(sys.argv[6]) 
         jobDescription = str(sys.argv[7]) 
         storageID      = int(sys.argv[8])
-        folderHash     = str(sys.argv[9]) 
+        sourceCodeHash     = str(sys.argv[9]) 
         accountID      = int(sys.argv[10])
         coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
 
@@ -94,10 +94,10 @@ if __name__ == '__main__': #{
         storageID      = 0
         if test == 0: # IPFS
             jobKey         = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
-            # TODO: convert into ===>  folderHash     = ''
-            folderHash     = '00000000000000000000000000000000' # No need to provide any folderHash since it will store in the ipfs repository            
+            # TODO: convert into ===>  sourceCodeHash     = ''
+            sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository            
         else:
-            folderHash     = '00000000000000000000000000000000'
+            sourceCodeHash     = '00000000000000000000000000000000'
             #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
         coreNum        = 1 
@@ -114,7 +114,7 @@ if __name__ == '__main__': #{
         bandwidtheGas = bandwidthIn + bandwidthOut
         # =============================================================================
 
-    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, folderHash, accountID)   
+    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, sourceCodeHash, accountID)   
     print('Tx: ' + tx_hash)
 
     print('Waiting job to be deployed...')
