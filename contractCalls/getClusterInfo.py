@@ -19,15 +19,16 @@ def getClusterInfo(clusterAddress, eBlocBroker=None, web3=None):
 
     blockReadFrom, coreNumber, priceCoreMin, priceBandwidthMB = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
     my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock': int(blockReadFrom),'toBlock': int(blockReadFrom) + 1})
-           
-    return('{0: <17}'.format('blockReadFrom: ')    + str(blockReadFrom)  + '\n' +
-           '{0: <17}'.format('coreNumber: ')       + str(coreNumber) + '\n' +
-           '{0: <17}'.format('priceCoreMin: ')     + str(priceCoreMin)  + '\n' +
-           '{0: <17}'.format('priceBandwidthMB: ') + str(priceBandwidthMB)  + '\n' +           
-           '{0: <17}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'] + '\n' +
-           '{0: <17}'.format('miniLockID: ')       + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
-           '{0: <17}'.format('ipfsAddress: ')      + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
-           '{0: <17}'.format('fID: ')              + my_filter.get_all_entries()[0].args['fID']);
+
+    return('{0: <18}'.format('blockReadFrom: ')    + str(blockReadFrom)  + '\n' +
+           '{0: <18}'.format('coreNumber: ')       + str(coreNumber) + '\n' +
+           '{0: <18}'.format('priceCoreMin: ')     + str(priceCoreMin)  + '\n' +
+           '{0: <18}'.format('priceBandwidthMB: ') + str(priceBandwidthMB)  + '\n' +           
+           '{0: <18}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'] + '\n' +
+           '{0: <18}'.format('miniLockID: ')       + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
+           '{0: <18}'.format('ipfsAddress: ')      + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
+           '{0: <18}'.format('fID: ')              + my_filter.get_all_entries()[0].args['fID'] + '\n' +
+           '{0: <18}'.format('whisperPublicKey: ') + my_filter.get_all_entries()[0].args['whisperPublicKey']);
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
