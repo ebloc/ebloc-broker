@@ -3,12 +3,12 @@
 ## About
 *eBlocBroker* is a blockchain based autonomous computational resource broker.
 
-- **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr).
-- [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html).
+- **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr)
+- [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html)
 
 ## Build dependencies
 
-[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [IPFS](https://ipfs.io/docs/install/), [Slurm](https://github.com/SchedMD/slurm).
+[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [IPFS](https://ipfs.io/docs/install/), [Slurm](https://github.com/SchedMD/slurm)
 
 ## How to connect into Private Ethereum Blockchain (eBloc) 
 
@@ -19,7 +19,7 @@
 
 
 An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also available that contains
-`geth` setup to connect to our Ethereum based private proof-of-authority blockchain network (eBlocPOA).
+`geth` setup to connect to our Ethereum based private proof-of-authority blockchain network (*eBlocPOA*).
 
 ### Create an Ethereum Account
 
@@ -304,7 +304,7 @@ index     = 0;
 ./getJobInfo.py $clusterID $jobKey $index
 ```
 
-- status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING` or `COMPLETED`. 
+- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING` or `COMPLETED`. 
 
 -----------
 
