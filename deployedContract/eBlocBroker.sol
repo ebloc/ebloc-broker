@@ -1,3 +1,11 @@
+/*
+file:   eBlocBroker.sol
+author: Alper Alimoglu
+email:  alper.alimoglu AT gmail.com
+*/
+
+pragma solidity ^0.4.24; 
+
 /* Contract Address: 0xa962445e7ab37651f9ee4572a19fb122d471fb0f */
 /// @title eBlocBroker is a blockchain based autonomous computational resource
 ///        broker.
@@ -442,13 +450,6 @@ contract eBlocBroker {
 		  string whisperPublicKey
 		  );
 }
-/*
-file:   Lib.sol
-author: Alper Alimoglu
-email:  alper.alimoglu AT gmail.com
-*/
-
-pragma solidity ^0.4.24;
 
 library Lib {
     /* Submitted Job's information */
