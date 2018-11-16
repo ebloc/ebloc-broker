@@ -13,6 +13,15 @@ contract eBlocBroker {
     uint    deployedBlockNumber; /* The block number that was obtained when contract is deployed */
     address owner;
 
+    /* Following function is executed at initialization. It sets contract's deployed 
+       block number and the owner of the contract. 
+    */
+    function eBlocBroker() public //constructor() public
+    {
+	deployedBlockNumber = block.number;
+	owner = msg.sender; /* Owner of the smart contract */
+    }
+
     enum jobStateCodes {
 	NULL,      /* 0 */
 	COMPLETED, /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
@@ -29,9 +38,9 @@ contract eBlocBroker {
     address[] clusterAddresses; /* A dynamically-sized array of `address` structs */
     address[] userAddresses;    /* A dynamically-sized array of `address` structs */
 
-    mapping(address => Lib.clusterData) clusterContract;
-    mapping(address => Lib.userData)    userContract;
     mapping(string  => uint32)          verifyOrcID;
+    mapping(address => Lib.userData)    userContract;
+    mapping(address => Lib.clusterData) clusterContract;   
 
     modifier check_gasCoreMin_storageID(uint32 gasCoreMin, uint8 storageID) {
 	/* gasCoreMin is maximum 1 day */
@@ -49,12 +58,7 @@ contract eBlocBroker {
 	require(time <= block.timestamp);
 	_ ;
     }
-    /*
-    modifier isZero(uint32 input) {
-	require(input != 0);
-	_ ;
-    }
-    */
+    
     modifier checkStateID(uint8 stateID) {
 	require(stateID <= 15 && stateID > 2); /*stateID cannot be NULL, COMPLETED, REFUNDED on setJobStatus call.*/
 	_ ;
@@ -64,15 +68,14 @@ contract eBlocBroker {
 	require(addr == owner);
 	_ ;
     }
-
-    /* Following function is executed at initialization. It sets contract's deployed 
-       block number and the owner of the contract. 
-    */
-    function eBlocBroker() public //constructor() public
-    {
-	deployedBlockNumber = block.number;
-	owner = msg.sender; /* Owner of the smart contract */
+    
+    /*
+    modifier isZero(uint32 input) {
+	require(input != 0);
+	_ ;
     }
+    */
+
 
     /* Refund funds the complete amount to client if requested job is still in the pending state or
        is not completed one hour after its required time.
@@ -126,7 +129,7 @@ contract eBlocBroker {
 	    revert();
 
 	if (!clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) {
-	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
+	    job.status = uint8(jobStateCodes.REFUNDED); /* Important to check already refunded job or not */	    
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
 	    /*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
