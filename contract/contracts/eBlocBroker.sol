@@ -10,8 +10,8 @@ pragma solidity ^0.4.17; import "./Lib.sol";
 /// @title eBlocBroker is a blockchain based autonomous computational resource
 ///        broker.
 contract eBlocBroker {
-    uint    deployedBlockNumber; /* The block number that was obtained when contract is deployed */
-    address owner;
+    uint    public deployedBlockNumber; /* The block number that was obtained when contract is deployed */
+    address public owner;
 
     /* Following function is executed at initialization. It sets contract's deployed 
        block number and the owner of the contract. 
@@ -35,13 +35,19 @@ contract eBlocBroker {
     using Lib for Lib.userData;
     using Lib for Lib.status;
 
-    address[] clusterAddresses; /* A dynamically-sized array of `address` structs */
-    address[] userAddresses;    /* A dynamically-sized array of `address` structs */
+    address[] public clusterAddresses; /* A dynamically-sized array of `address` structs */
+    address[] public userAddresses;    /* A dynamically-sized array of `address` structs */
 
     mapping(string  => uint32)          verifyOrcID;
     mapping(address => Lib.userData)    userContract;
     mapping(address => Lib.clusterData) clusterContract;   
 
+    /*
+    modifier isZero(uint32 input) {
+	require(input != 0);
+	_ ;
+    }
+    */
     modifier check_gasCoreMin_storageID(uint32 gasCoreMin, uint8 storageID) {
 	/* gasCoreMin is maximum 1 day */
 	require(storageID < 5 && !(gasCoreMin == 0 || gasCoreMin > 1440)); 
@@ -69,14 +75,6 @@ contract eBlocBroker {
 	_ ;
     }
     
-    /*
-    modifier isZero(uint32 input) {
-	require(input != 0);
-	_ ;
-    }
-    */
-
-
     /* Refund funds the complete amount to client if requested job is still in the pending state or
        is not completed one hour after its required time.
        If the job is in the running state, it triggers LogCancelRefund event on the blockchain, 
