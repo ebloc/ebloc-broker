@@ -68,8 +68,8 @@ library Lib {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
 	self.clusterAddressesID = memLen;
-	self.priceCoreMin    = priceCoreMin;
-	self.priceBandwidthMB  = priceBandwidthMB;
+	self.priceCoreMin       = priceCoreMin;
+	self.priceBandwidthMB   = priceBandwidthMB;
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
