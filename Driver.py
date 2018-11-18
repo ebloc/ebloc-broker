@@ -13,10 +13,10 @@ from driverEudat import driverEudat
 from driverGdrive import driverGdrive
 
 sys.path.insert(0, './contractCalls')
+from contractCalls.getClusterReceivedAmount import getClusterReceivedAmount
 from contractCalls.getDeployedBlockNumber   import getDeployedBlockNumber
 from contractCalls.isContractExist          import isContractExist
 from contractCalls.isClusterExist           import isClusterExist
-from contractCalls.getClusterReceivedAmount import getClusterReceivedAmount
 from contractCalls.blockNumber              import blockNumber
 from contractCalls.getJobInfo               import getJobInfo
 from contractCalls.isUserExist              import isUserExist
@@ -28,7 +28,7 @@ import LogJob
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 oc = None
-driverCancelProcess = None
+driverCancelProcess   = None
 driverReceiverProcess = None
 
 # Dummy sudo command to get the password when session starts. 
@@ -115,7 +115,7 @@ def terminate():
 def shellCommand(args): 
    return subprocess.check_output(args).decode('utf-8').strip()
 
-def idleCoreNumber(printFlag=1): #{
+def idleCoreNumber(printFlag=1):
     coreInfo = shellCommand(['sinfo', '-h', '-o%C']).split("/")
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
@@ -125,7 +125,6 @@ def idleCoreNumber(printFlag=1): #{
        log("sinfo return emptry string.", 'red')
        idleCore = 0
     return idleCore
-#}   
 
 def slurmPendingJobCheck(): 
     idleCore  = idleCoreNumber()       
@@ -259,7 +258,7 @@ log('{0: <21}'.format('deployedBlockNumber:') +  str(deployedBlockNumber) + "| C
 subprocess.run(['rm', '-rf', lib.LOG_PATH + 'queuedJobs.txt']) 
 subprocess.run(['rm', '-f',  lib.JOBS_READ_FROM_FILE])
 
-while True: #{    
+while True:     
     if "Error" in blockReadFrom:
        log(blockReadFrom)
        terminate()
@@ -267,11 +266,11 @@ while True: #{
     clusterGainedAmount = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3) 
     squeueStatus        = shellCommand(['squeue'])    
 
-    if "squeue: error:" in str(squeueStatus): #{
+    if "squeue: error:" in str(squeueStatus):
        log("SLURM is not running on the background, please run \'sudo ./runSlurm.sh\'. \n")
        log(squeueStatus)
        terminate()
-    #}
+       
     idleCoreNumber()
     
     log("Current Slurm Running jobs status: \n" + squeueStatus)
@@ -384,7 +383,6 @@ while True: #{
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
                                       hashlib.md5(userID.encode('utf-8')).hexdigest(), sourceCodeHash, eBlocBroker, web3)
-    #}
 
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
@@ -398,4 +396,3 @@ while True: #{
        f_blockReadFrom.write(str(currentBlockNumber) + '\n')
        f_blockReadFrom.close()
        blockReadFrom = str(currentBlockNumber)
-#}
