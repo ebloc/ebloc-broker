@@ -10,7 +10,8 @@ pragma solidity ^0.4.17; import "./Lib.sol";
 /// @title eBlocBroker is a blockchain based autonomous computational resource
 ///        broker.
 contract eBlocBroker {
-    uint    public deployedBlockNumber; /* The block number that was obtained when contract is deployed */
+    /* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
+    uint    public deployedBlockNumber;    
     address public owner;
 
     /* Following function is executed at initialization. It sets contract's deployed 
@@ -19,7 +20,7 @@ contract eBlocBroker {
     function eBlocBroker() public //constructor() public
     {
 	deployedBlockNumber = block.number;
-	owner = msg.sender; /* Owner of the smart contract */
+	owner = msg.sender; /* msg.sender is owner of the smart contract */
     }
 
     enum jobStateCodes {
