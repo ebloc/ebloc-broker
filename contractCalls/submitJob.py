@@ -9,7 +9,7 @@ from imports import getWeb3
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, sourceCodeHash, accountID): #{
+def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasBandwidthMB, jobDescription, storageID, sourceCodeHash, accountID):
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
     # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW        
     blockReadFrom, coreNumber, priceCoreMin, priceBandwidthMB = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
@@ -28,16 +28,15 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
     if str(eBlocBroker.functions.isOrcIDVerified(orcid).call()) == '0':
        return 'User\'s orcid: ' + orcid + ' is not verified.'
 
-    if storageID == 0 or storageID == 2: #{
+    if storageID == 0 or storageID == 2:
        lib.isIpfsOn()
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'] 
        output = os.popen('ipfs swarm connect ' + strVal).read() 
        print("Trying to connect into: " + strVal) 
        if 'success' in output:
           print(output)
-    #}
-    
-    jobPriceValue = coreNum * priceCoreMin * coreMinuteGas
+             
+    jobPriceValue = coreNum * priceCoreMin * coreMinuteGas + priceBandwidthMB * gasBandwidthMB
     gasLimit = 4500000
     
     if not len(sourceCodeHash):
@@ -56,38 +55,41 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, st
         return 'Error: coreMinuteGas provided as 0. Please give non-zero value'
         
     # print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
-    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas, storageID, sourceCodeHash) 
+    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription,
+                                                                                                        coreMinuteGas, gasBandwidthMB, storageID, sourceCodeHash) 
     return tx.hex()
-#}
 
-if __name__ == '__main__': #{
+if __name__ == '__main__': 
     test = 0
     
-    if len(sys.argv) == 9:
+    if len(sys.argv) == 10:
         clusterAddress = str(sys.argv[1])
         clusterAddress = web3.toChecksumAddress(clusterAddress) 
         blockReadFrom, coreNumber, priceCoreMin, priceBandwidthMB = eBlocBroker.call().getClusterInfo(clusterAddress) 
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
         jobKey         = str(sys.argv[2]) 
         coreNum        = int(sys.argv[3]) 
-        coreMinuteGas  = int(sys.argv[4])         
-        jobDescription = str(sys.argv[5])         
-        storageID      = int(sys.argv[6])
-        sourceCodeHash     = str(sys.argv[7]) 
-        accountID      = int(sys.argv[8])        
-    elif len(sys.argv) == 11: 
-        clusterAddress = str(sys.argv[1])
-        jobKey         = str(sys.argv[2]) 
-        coreNum        = int(sys.argv[3]) 
-        coreGasDay     = int(sys.argv[4]) 
-        coreGasHour    = int(sys.argv[5]) 
-        coreGasMin     = int(sys.argv[6]) 
-        jobDescription = str(sys.argv[7]) 
-        storageID      = int(sys.argv[8])
-        sourceCodeHash     = str(sys.argv[9]) 
-        accountID      = int(sys.argv[10])
+        coreMinuteGas  = int(sys.argv[4])
+        gasBandwidthMB = int(sys.argv[5])        
+        jobDescription = str(sys.argv[6])         
+        storageID      = int(sys.argv[7])
+        sourceCodeHash = str(sys.argv[8]) 
+        accountID      = int(sys.argv[9])        
+    elif len(sys.argv) == 13: 
+        clusterAddress  = str(sys.argv[1])
+        jobKey          = str(sys.argv[2]) 
+        coreNum         = int(sys.argv[3]) 
+        coreGasDay      = int(sys.argv[4]) 
+        coreGasHour     = int(sys.argv[5]) 
+        coreGasMin      = int(sys.argv[6])
+        gasBandwidthIn  = int(sys.argv[7])
+        gasBandwidthOut = int(sys.argv[8])
+        jobDescription  = str(sys.argv[9]) 
+        storageID       = int(sys.argv[10])
+        sourceCodeHash  = str(sys.argv[11]) 
+        accountID       = int(sys.argv[12])
         coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
-
+        gasBandwidthMB  = gasBandwidthIn + gasBandwidthOut
     else:   
         # USER Inputs ================================================================
         clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'
@@ -100,21 +102,19 @@ if __name__ == '__main__': #{
             sourceCodeHash     = '00000000000000000000000000000000'
             #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
-        coreNum        = 1 
-        coreGasDay     = 0 
-        coreGasHour    = 0 
-        coreGasMin     = 1 
-        jobDescription = 'Science'        
-        accountID      = 0
-
+        coreNum         = 1 
+        coreGasDay      = 0 
+        coreGasHour     = 0 
+        coreGasMin      = 1 
+        jobDescription  = 'Science'        
+        accountID       = 0
         coreMinuteGas   = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
-
-        bandwidthIn  = 100 
-        bandwidthOut = 100        
-        bandwidtheGas = bandwidthIn + bandwidthOut
+        gasBandwidthIn  = 100 
+        gasBandwidthOut = 100        
+        gasBandwidthMB  = gasBandwidthIn + gasBandwidthOut
         # =============================================================================
 
-    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, jobDescription, storageID, sourceCodeHash, accountID)   
+    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasBandwidthMB, jobDescription, storageID, sourceCodeHash, accountID)   
     print('Tx: ' + tx_hash)
 
     print('Waiting job to be deployed...')
@@ -127,4 +127,3 @@ if __name__ == '__main__': #{
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             print('Job\'s index is ' + str(logs[0].args['index']))
             break
-#}
