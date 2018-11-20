@@ -32,7 +32,7 @@ driverCancelProcess   = None
 driverReceiverProcess = None
 
 # Dummy sudo command to get the password when session starts. 
-subprocess.run(['sudo', 'echo', '']) 
+subprocess.run(['sudo', 'printf', '']) 
 
 def runDriverCancel():
 	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
@@ -63,7 +63,6 @@ def runWhisperStateReceiver():
 			data = json.load(json_file)
 		kId = data['kId']
 		publicKey = data['publicKey']
-		print(web3.shh.hasKeyPair(kId))
 		if not web3.shh.hasKeyPair(kId):
 			log("Error: Whisper node's private key of a key pair did not match with the given ID", "red")
 			sys.exit()			
@@ -83,7 +82,7 @@ def runWhisperStateReceiver():
 	# ----------------------------------------------------------------
 	if int(out) == 0:
 		# Running driverCancel.py on the background
-		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '1']) #TODO: should be '0' to store log at file.
+		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
 		
 # Paths =================================================================
 jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
@@ -137,7 +136,7 @@ def slurmPendingJobCheck():
        idleCore = idleCoreNumber(0)
 
 # checks whether geth runs on the background
-def isGethOn(): #{  
+def isGethOn():
    # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
    #-----------
@@ -155,10 +154,9 @@ def isGethOn(): #{
    if int(out) == 0:
       log("Geth is not running on the background.", 'red')
       lib.terminate()      
-#}
 
 # checks: does Driver.py runs on the background
-def isDriverOn(): #{
+def isDriverOn(): 
    # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
    #-----------
@@ -175,7 +173,6 @@ def isDriverOn(): #{
    
    if int(out) > 1:
       log("Driver is already running.", 'green')
-#}
 
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
@@ -183,6 +180,7 @@ if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '':
    print(stylize('Once please run:  ./initialize.sh \n', fg('red')))
    terminate()
 
+log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
 # Start-up functions are called
 isDriverOn()
 lib.isSlurmOn()
@@ -192,11 +190,10 @@ runWhisperStateReceiver()
 # -----------------------------
 
 isContractExist = isContractExist(web3)
-if 'False' in isContractExist:
+if not isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red')
    terminate()
 
-log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
 log('isWeb3Connected: ' + str(isWeb3Connected(web3)))
 log('rootdir: ' + os.getcwd())
 with open('contractCalls/address.json', 'r') as content_file:
@@ -307,7 +304,7 @@ while True:
        sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " +
            loggedJobs[i].args['jobKey'] + " " + str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " +
-           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + loggedJobs[i].args['gasBandwidthMB'])
+           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + str(loggedJobs[i].args['gasBandwidthMB']))
 
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']

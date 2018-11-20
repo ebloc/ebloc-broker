@@ -3,5 +3,5 @@
 ## Linux
 
 ```
-sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ $HOME/oc
+sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /ocCluster
 ```
