@@ -169,14 +169,16 @@ Later, you can use `./submitJob.py` to submit your jobs.
 Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterAddress   = "0x4e4a0750350796164D8DefC442a712B7557BF282";  
-ipfsHash         = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5";
-coreNum          = 1; 
-coreGasDay       = 0;
-coreGasHour      = 0;
-coreGasMin       = 10;
-jobDescription   = "Science"
-storageType      = 0; # Please note that '0' stands for IPFS repository share. 
+clusterAddress  = "0x4e4a0750350796164D8DefC442a712B7557BF282"
+ipfsHash        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+coreNum         = 1;
+coreGasDay      = 0
+coreGasHour     = 0
+coreGasMin      = 10
+gasBandwidthIn  = 100
+gasBandwidthOut = 100
+jobDescription  = "Science"
+storageType     = 0 # Please note that '0' stands for IPFS repository share. 
 ```
 
 #### **2. How to submit a job using EUDAT**
@@ -184,14 +186,16 @@ storageType      = 0; # Please note that '0' stands for IPFS repository share.
 Before doing this you have to be sure that you have shared your folder with cluster's FID. Please [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be accepted. Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterAddress = "0x4e4a0750350796164D8DefC442a712B7557BF282";
-jobKey         = "folderName";
-coreNum        = 1;
-coreGasDay     = 0;
-coreGasHour    = 0;
-coreGasMin     = 10;
-jobDescription = "Science";
-storageType    = 1; # Please note that '1' stands for EUDAT repository share. 
+clusterAddress  = "0x4e4a0750350796164D8DefC442a712B7557BF282"
+jobKey          = "folderName"
+coreNum         = 1
+coreGasDay      = 0
+coreGasHour     = 0
+coreGasMin      = 10
+gasBandwidthIn  = 100
+gasBandwidthOut = 100
+jobDescription  = "Science"
+storageType     = 1 # Please note that '1' stands for EUDAT repository share. 
 ```
 
 #### **3. How to submit a job using IPFS+miniLock**
@@ -221,14 +225,16 @@ mlck decrypt -f fileName --passphrase="$(cat mlck_password.txt)" --output-file=.
 Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterID        = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID you would like to submit. 
-jobKey           = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-coreNum          = 1; 
-coreGasDay       = 0;
-coreGasHour      = 0;
-coreGasMin       = 10;
-jobDescription   = "Science"
-storageType      = 2; # Please note 2 stands for IPFS with miniLock repository share. 
+clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit. 
+jobKey          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+coreNum         = 1
+coreGasDay      = 0
+coreGasHour     = 0
+coreGasMin      = 10
+gasBandwidthIn  = 100
+gasBandwidthOut = 100
+jobDescription  = "Science"
+storageType     = 2 # Please note 2 stands for IPFS with miniLock repository share. 
 ```
 
 #### **4. How to submit a job using GitHub**
@@ -236,14 +242,16 @@ storageType      = 2; # Please note 2 stands for IPFS with miniLock repository s
 If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`. Please update following arguments inside `submitJob.py` file. 
 
 ```python
-clusterID        = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID you would like to submit.
-jobKey           = "avatar-lavventura=simpleSlurmJob" 
-coreNum          = 1; 
-coreGasDay       = 0;
-coreGasHour      = 0;
-coreGasMin       = 10;
-jobDescription   = "Science"
-storageType      = 3 ; # Please note that 3 stands for github repository share. 
+clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit.
+jobKey          = "avatar-lavventura=simpleSlurmJob" 
+coreNum         = 1
+coreGasDay      = 0
+coreGasHour     = 0
+coreGasMin      = 10
+gasBandwidthIn  = 100
+gasBandwidthOut = 100
+jobDescription  = "Science"
+storageType     = 3 # Please note that 3 stands for github repository share. 
 ```
 -------------------------
 
@@ -282,16 +290,17 @@ If your work is compressed under folder name such as folderPath/folderName/RUN.z
 Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterID        = "0xda1e61e853bb8d63b1426295f59cb45a34425b63"; # clusterID you would like to submit.
-jobKey           = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
-coreNum          = 1; 
-coreGasDay       = 0;
-coreGasHour      = 0;
-coreGasMin       = 10;
-jobDescription   = "Science"
-storageType      = 4; # Please note that 4 stands for gdrive repository share.
+clusterID       = "0xda1e61e853bb8d63b1426295f59cb45a34425b63" # clusterID you would like to submit.
+jobKey          = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
+coreNum         = 1
+coreGasDay      = 0
+coreGasHour     = 0
+coreGasMin      = 10
+gasBandwidthIn  = 100
+gasBandwidthOut = 100
+jobDescription  = "Science"
+storageType     = 4 # Please note that 4 stands for gdrive repository share.
 ```
-
 
 ### **How to obtain Submitted Job's Information:**
 

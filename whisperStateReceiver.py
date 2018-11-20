@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# To run:
+# ./whisperStateReceiver.py 0   #log into a file
+# ./whisperStateReceiver.py 1   #print into console
+
 # from web3.auto import w3
 import asyncio, lib
 from web3 import Web3, HTTPProvider

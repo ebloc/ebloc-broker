@@ -11,7 +11,7 @@ RPC_PORT   = os.getenv("RPC_PORT")
 POA_CHAIN  = os.getenv("POA_CHAIN")
 
 GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo" 
-OWN_CLOUD_PATH    = "/home/" + WHOAMI + "/ocCluster" 
+OWN_CLOUD_PATH    = "/ocCluster" 
 GDRIVE_METADATA   = "/home/" + WHOAMI + "/.gdrive" 
 IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs" 
 HOME              = "/home/" + WHOAMI

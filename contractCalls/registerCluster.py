@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
         tx_hash = eBlocBroker.transact({"from":account, "gas": 4500000}).registerCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPubKey) 
-        print('Tx-Hash: ' + tx_hash.hex()) 
+        print('Tx_hash: ' + tx_hash.hex()) 
 
     # os.environ['ipfs'] = ipfs 
     # ipfsID=os.popen('node bs58.js encode $ipfs').read().replace("\n", "") 
