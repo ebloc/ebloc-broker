@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import hashlib, getpass, sys, os, time, subprocess, lib
+import hashlib, getpass, sys, os, time, subprocess, lib, re
 from   subprocess import call
 import os.path
 from colored import stylize
@@ -17,6 +17,7 @@ storageIDGlobal  = None
 cacheTypeGlobal  = None
 shareTokenGlobal = '-1'
 folderType       = None
+bandwidthInMB    = 0 # if the requested file is already cached, it stays as 0 
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
@@ -82,7 +83,7 @@ def isTarExistsInZip(resultsFolderPrev):
         folderType = 'folder'
     log('folderType=' + folderType)
 
-def cache(userID, resultsFolderPrev): #{
+def cache(userID, resultsFolderPrev):
     global folderType
     if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
         globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
@@ -133,32 +134,45 @@ def cache(userID, resultsFolderPrev): #{
             ipfsHash = ipfsHash[int(len(ipfsHash) - 1)] # Last line of ipfs hash output is obtained which has the root folder's hash
         return True, ipfsHash.split()[1]
     return True, ''
-#}
 
 # Assume job is sent as .tar.gz file
-def eudatDownloadFolder(resultsFolderPrev, resultsFolder): #{
+def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
+    global bandwidthInMB
    # cmd: wget --continue -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
-   log('Downloading output.zip -> ' + resultsFolderPrev + '/output.zip')
-   ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
-                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
-   if "ERROR 404: Not Found" in ret:
-       log(ret, 'red') 
-       log('File not found The specified document has not been found on the server.', 'red') 
-       # TODO: since folder does not exist, do complete refund to the user.
-       return False
-      
-   log(ret) 
-   isTarExistsInZip(resultsFolderPrev)
+    log('Downloading output.zip -> ' + resultsFolderPrev + '/output.zip')
+    ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + shareTokenGlobal +
+                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')   
+    result = re.search('Length: (.*) \(', ret) # https://stackoverflow.com/a/6986163/2402577
+
+    if result is not None: # from wget output
+        bandwidthInMB = int(result.group(1)) * 0.000001 # Downloaded file size in MBs
+    else: # from downloaded files size in bytes
+        p1 = subprocess.Popen(['du', '-b', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
+        #-----------
+        p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()
+        #-----------
+        out = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes       
+        # print(out)
+        bandwidthInMB = int(out) * 0.000001 # Downloaded file size in MBs              
+    print(bandwidthInMB)
+    # sys.exit()
+    if "ERROR 404: Not Found" in ret:
+        log(ret, 'red') 
+        log('File not found The specified document has not been found on the server.', 'red') 
+        # TODO: since folder does not exist, do complete refund to the user.
+        return False      
+    log(ret) 
+    isTarExistsInZip(resultsFolderPrev)
    
-   time.sleep(0.25) 
-   if os.path.isfile(resultsFolderPrev + '/output.zip'):
-       if folderType == 'tar.gz':           
-           subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
-       else:
-           subprocess.run(['unzip', '-o', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
-       subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
-   return True
-#}
+    time.sleep(0.25) 
+    if os.path.isfile(resultsFolderPrev + '/output.zip'):
+        if folderType == 'tar.gz':           
+            subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
+        else:
+            subprocess.run(['unzip', '-o', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
+        subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
+    return True
 
 def eudatGetShareToken(fID):
    global cacheTypeGlobal
@@ -184,17 +198,17 @@ def eudatGetShareToken(fID):
       inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
       inputID          = shareList[i]['id']
       inputOwner       = shareList[i]['owner']
-
+      
       if inputFolderName == jobKeyGlobal and inputOwner == fID:
          shareTokenGlobal = str(shareList[i]['share_token'])
          eudatFolderName  = str(inputFolderName)
          acceptFlag = 1
          log("Found. InputId=" + inputID + " |ShareToken: " + shareTokenGlobal)
+
          if cacheTypeGlobal is 'ipfs': 
              val = globals()['oc'].accept_remote_share(int(inputID));
              log('Sleeping 3 seconds for accepted folder to emerger on mounted Eudat folder...')
              time.sleep(3)
-
              tryCount = 0
              while True:
                  if tryCount is 5:
@@ -217,7 +231,8 @@ def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, oc):
    global indexGlobal
    global storageIDGlobal
    global shareTokenGlobal
-   global cacheTypeGlobal  
+   global cacheTypeGlobal
+   global bandwidthInMB
 
    globals()['oc'] = oc
    jobKeyGlobal    = jobKey  
@@ -254,6 +269,7 @@ def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, oc):
            subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
            
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
 
-   
+   print(bandwidthInMB) #delete
+   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID,
+                  resultsFolder, bandwidthInMB, eBlocBroker,  web3)  
