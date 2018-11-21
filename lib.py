@@ -1,4 +1,4 @@
-import os, sys, subprocess, time
+import os, sys, subprocess, time, json
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -142,10 +142,11 @@ def isIpfsOn(): #{
       log("IPFS is already on.", 'green') 
 #}
 
-def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, eBlocBroker, web3): #{
+def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, bandwidthInMB,  eBlocBroker, web3): #{
    from contractCalls.getJobInfo import getJobInfo
    from datetime import datetime, timedelta
-   
+
+   # print(os.getcwd())
    # Give permission to user that will send jobs to Slurm.
    subprocess.run(['sudo', 'chown', '-R', userID, '.'])
 
@@ -169,8 +170,19 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, eBlo
    f = open('../timestamp.txt', 'w') 
    f.write(timestamp + '\n' )    
    f.close()
-   
-   time.sleep(0.25)    
+
+   if os.path.isfile('../bandwidthInMB.txt'):
+       with open('../bandwidthInMB.txt') as json_file:
+           data = json.load(json_file)
+           bandwidthInMB = data['bandwidthInMB']
+   else:
+       data = {}
+       data['bandwidthInMB'] = bandwidthInMB
+       with open('../bandwidthInMB.txt', 'w') as outfile:
+           json.dump(data, outfile)
+   # print(bandwidthInMB) 
+   time.sleep(0.25)
+         
    # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
    subprocess.run(['sudo', 'su', '-', userID, '-c',
                    'cp ' + resultsFolder + '/run.sh ' +
@@ -198,11 +210,10 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, eBlo
    except subprocess.CalledProcessError as e:
        log(e.output.decode('utf-8').strip())
       
-   if not jobID.isdigit(): #{
+   if not jobID.isdigit():
       # Detects an error on the SLURM side
       log("Error occured, jobID is not a digit.", 'red')
       return False
-   #}
 #}
 
 def isRunExistInTar(tarPath): #{   
