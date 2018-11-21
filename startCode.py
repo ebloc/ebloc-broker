@@ -43,10 +43,9 @@ def startCall(jobKey, index, jobID): #{
    txFile.close() 
 #}
 
-if __name__ == '__main__': #{
+if __name__ == '__main__':
    jobKey   = sys.argv[1] 
    index    = sys.argv[2] 
    jobID    = sys.argv[3] 
    
    startCall(jobKey, index, jobID) 
-#}
