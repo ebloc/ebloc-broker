@@ -10,11 +10,12 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-jobKeyGlobal    = None
-indexGlobal     = None
-storageIDGlobal = None
-cacheTypeGlobal = None
+jobKeyGlobal     = None
+indexGlobal      = None
+storageIDGlobal  = None
+cacheTypeGlobal  = None
 shareTokenGlobal = '-1'
+bandwidthInMB    = 0 # if the requested file is already cached, it stays as 0
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
@@ -135,14 +136,15 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
     #}
 
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-    lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
+    lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID,
+                   resultsFolder, bandwidthInMB, eBlocBroker,  web3)
 #}
 
 # To test driverFunc.py executed as script.
-if __name__ == '__main__': #{
+if __name__ == '__main__':
    var        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
    index      = "1"
    myType     = "0"
 
    driverIpfs(var, index, myType) 
-#}
+

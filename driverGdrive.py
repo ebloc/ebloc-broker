@@ -10,17 +10,18 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-jobKeyGlobal    = None
-indexGlobal     = None
-storageIDGlobal = None
-cacheTypeGlobal = None
+jobKeyGlobal     = None
+indexGlobal      = None
+storageIDGlobal  = None
+cacheTypeGlobal  = None
 shareTokenGlobal = '-1'
+bandwidthInMB    = 0 # if the requested file is already cached, it stays as 0
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
 
-def log(strIn, color=''): #{
+def log(strIn, color=''): 
    if color != '':
        print(stylize(strIn, fg(color))) 
    else:
@@ -34,7 +35,6 @@ def log(strIn, color=''): #{
    txFile = open(fname, 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
-#}
 
 def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderType): #{
     if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
@@ -150,7 +150,7 @@ def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType): #{
     return True
 #}
     
-def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, web3): #{
+def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, web3):
    global jobKeyGlobal
    global indexGlobal
    global storageIDGlobal
@@ -211,5 +211,5 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, 
          log('Reading from IPFS hash=' + ipfsHash)
          subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
    os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
-   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
-#}
+   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID,
+                  resultsFolder, bandwidthInMB, eBlocBroker,  web3)
