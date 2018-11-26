@@ -90,8 +90,8 @@ def web3Exception(check): #{
 #}
    
 # Checks whether Slurm runs on the background or not, if not runs slurm
-def isSlurmOn(): #{
-   while True: #{
+def isSlurmOn():
+   while True:
       subprocess.run(['bash', 'checkSinfo.sh'])
       with open(LOG_PATH + '/checkSinfoOut.txt', 'r') as content_file:
          check = content_file.read()
@@ -108,8 +108,6 @@ def isSlurmOn(): #{
       else:
          log('Slurm is on', 'green')
          break
-   #}
-#}
 
 def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
