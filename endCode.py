@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, time, lib, base64, glob, getpass, subprocess
+import sys, os, time, lib, base64, glob, getpass, subprocess, json
 from colored import stylize
 from colored import fg
 import hashlib
@@ -18,7 +18,7 @@ indexGlobal  = ""
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def log(strIn, color=''): #{
+def log(strIn, color=''):
    if color != '':
       print(stylize(strIn, fg(color))) 
    else:
@@ -27,9 +27,8 @@ def log(strIn, color=''): #{
    txFile = open(lib.LOG_PATH + '/endCodeAnalyse/' + jobKeyGlobal + "_" + indexGlobal + '.txt', 'a') 
    txFile.write(strIn + "\n")  
    txFile.close() 
-#}
 
-def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
+def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, usedBandwidthMB): #{
    # cmd: scontrol show job jobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
    #-----------
@@ -43,15 +42,15 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
    endTimeStamp = subprocess.check_output(["date", "-d", date, '+\'%s\'']).strip().decode('utf-8').replace("\'","")   
    log("endTimeStamp: " + endTimeStamp) 
      
-   txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, eBlocBroker, web3)
-   while txHash == "notconnected" or txHash == "": #{
+   txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp,
+                         usedBandwidthMB, eBlocBroker, web3)
+   while txHash == "notconnected" or txHash == "": 
       log("Error: Please run geth on the background.", 'red')
-
       log(jobKey + ' ' + index + ' ' + elapsedRawTime + ' ' + newHash + ' ' + storageID + ' ' + endTimeStamp) 
-      txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, eBlocBroker, web3)
-      time.sleep(5) 
-   #}
-   
+      txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp,
+                            usedBandwidthMB, eBlocBroker, web3)
+      time.sleep(5)
+      
    log("receiptCheck " + txHash)  
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
 
@@ -60,23 +59,23 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID): #{
 #}
 
 # Client's loaded files are removed, no need to re-upload them.
-def removeSourceCode(resultsFolderPrev): #{     
+def removeSourceCode(resultsFolderPrev):     
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
       filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt'], stderr=subprocess.STDOUT).decode('utf-8').strip()
       if filesToRemove is not '' or filesToRemove is not None:
-         log('\nFiles to be removed: \n' + filesToRemove + '\n')
-         
+         log('\nFiles to be removed: \n' + filesToRemove + '\n')         
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
       subprocess.run(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
-#}
 
 def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    global jobKeyGlobal
    global indexGlobal   
    jobKeyGlobal = jobKey  
    indexGlobal  = index 
-   
-   log('./endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID) 
+
+   log('To run again:')
+   log('~/eBlocBroker/endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID)
+   log('')
    log("jobID: " + jobID) 
 
    if jobKey == index:
@@ -94,15 +93,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          
    jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
    
-   # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" : #{
+   # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" :
    while not jobInfo:      
       log('jobInfo: ' + jobInfo) 
-
       log('getJobInfo.py ' + ' ' + lib.CLUSTER_ID + ' ' + jobKey + ' ' + index)
       log("Error: Please run geth on the background.", 'red')
       jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       time.sleep(5)
-   #}
 
    log("JOB_INFO: " + ",".join(map(str, jobInfo)))
    
@@ -110,9 +107,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    userIDAddr = hashlib.md5(userID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
    userInfo   = getUserInfo(userID, '1', eBlocBroker, web3)
 
-   resultsFolder     = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index + '/JOB_TO_RUN' 
    resultsFolderPrev = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index 
-
+   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
+                 
    subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/result-*tar.gz'))  
 
    log("\nwhoami: "          + getpass.getuser())  #whoami
@@ -125,28 +122,37 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    log("encodedShareToken: " + encodedShareToken)    
    log("folderName: "        + folderName) 
    log("clusterID: "         + lib.CLUSTER_ID) 
-   log("userIDAddr: "        + userIDAddr)    
+   log("userIDAddr: "        + userIDAddr)
+   log("received: "          + str(jobInfo['received']))
+   
+   bandwidthInMB = 0
+   if os.path.isfile(resultsFolderPrev + '/bandwidthInMB.txt'):
+       with open(resultsFolderPrev + '/bandwidthInMB.txt') as json_file:
+           data = json.load(json_file)
+           bandwidthInMB = data['bandwidthInMB']
+   else:
+       log('bandwidthInMB.txt does not exist...', 'red')
+   log('bandwidthIn: ' + str(bandwidthInMB) + ' MB  | Rounded: ' + str(int(bandwidthInMB)) + ' MB')
+   bandwidthInMB = int(bandwidthInMB) # round bandwidthInMB down to the nearest integer
 
-   if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'): #{
+   if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'):
       fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
       modifiedDate = fDate.read().rstrip('\n') 
       fDate.close() 
       log(modifiedDate) 
-   #}
 
    log("\njobOwner's Info: ")  
    log('{0: <13}'.format('userEmail: ')     + userInfo[1])
    log('{0: <13}'.format('miniLockID: ')    + userInfo[2])
    log('{0: <13}'.format('ipfsAddress: ')   + userInfo[3])
    log('{0: <13}'.format('fID: ')           + userInfo[4])
-   clientMiniLockID = userInfo[2] 
-      
+   clientMiniLockID = userInfo[2]       
    log("") 
    
-   if jobInfo['status'] == str(lib.job_state_code['COMPLETED']): #{
+   if jobInfo['status'] == str(lib.job_state_code['COMPLETED']):
       log('Job is already get paid.', 'red') 
       sys.exit() 
-   #}   
+
    clientTimeLimit = jobInfo['coreMinuteGas'] 
    log("clientGasMinuteLimit: " + str(clientTimeLimit))  # Clients minuteGas for the job
             
@@ -174,7 +180,32 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
    # cmd: scontrol show job $jobID > $resultsFolder/slurmJobInfo.out
    with open(resultsFolder + '/slurmJobInfo.out', 'w') as stdout:
       subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=stdout)
-   
+
+   #cmd: sacct -n -X -j $jobID --format="Elapsed"
+   elapsedTime = subprocess.check_output(['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed']).decode('utf-8').strip()   
+   log("ElapsedTime: " + elapsedTime) 
+
+   elapsedTime    = elapsedTime.split(':') 
+   elapsedDay     = "0" 
+   elapsedHour    = elapsedTime[0].replace(" ", "") 
+   elapsedMinute  = elapsedTime[1].rstrip() 
+   elapsedSeconds = elapsedTime[2].rstrip() 
+
+   if "-" in str(elapsedHour):
+      elapsedHour = elapsedHour.split('-') 
+      elapsedDay  = elapsedHour[0] 
+      elapsedHour = elapsedHour[1] 
+
+   elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1 
+   log("ElapsedRawTime: " + str(elapsedRawTime))
+
+   if elapsedRawTime > int(clientTimeLimit):
+      elapsedRawTime = clientTimeLimit 
+
+   log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
+   log("jobInfo: " + str(jobInfo)) 
+   sys.exit() # delete
+         
    # Here we know that job is already completed 
    if str(storageID) == '0' or str(storageID) == '3': #{ IPFS or GitHub
       # Uploaded as folder
@@ -211,7 +242,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       newHash = p3.communicate()[0].decode('utf-8').strip()
       log("newHash: " + newHash)        
    #}
-   if str(storageID) == '2': #{ IPFS & miniLock
+   
+   if str(storageID) == '2': # IPFS with miniLock
       os.chdir(resultsFolder) 
 
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
@@ -220,14 +252,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
       res = subprocess.check_output(['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', clientMiniLockID,
                                      '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
-      log(res)
-      
+      log(res)      
       removeSourceCode(resultsFolderPrev)
   
       newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
       newHash = newHash.split(' ')[1]
       countTry = 0 
-      while newHash == "": #{
+      while newHash == "":
          if countTry > 10:
             sys.exit()
          countTry += 1                   
@@ -235,41 +266,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
          newHash = newHash.split(' ')[1]
          time.sleep(5) 
-      #}      
-      log("newHash: " + newHash)       
-   #}
-   
-   #cmd: sacct -n -X -j $jobID --format="Elapsed"
-   elapsedTime = subprocess.check_output(['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed']).decode('utf-8').strip()   
-   log("ElapsedTime: " + elapsedTime) 
-
-   elapsedTime    = elapsedTime.split(':') 
-   elapsedDay     = "0" 
-   elapsedHour    = elapsedTime[0].replace(" ", "") 
-   elapsedMinute  = elapsedTime[1].rstrip() 
-   elapsedSeconds = elapsedTime[2].rstrip() 
-
-   if "-" in str(elapsedHour):
-      elapsedHour = elapsedHour.split('-') 
-      elapsedDay  = elapsedHour[0] 
-      elapsedHour = elapsedHour[1] 
-
-   elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1 
-   log("ElapsedRawTime: " + str(elapsedRawTime))
-
-   if elapsedRawTime > int(clientTimeLimit):
-      elapsedRawTime = clientTimeLimit 
-
-   log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
-   log("jobInfo: " + str(jobInfo)) 
-
-   if str(storageID) == '1': #{ #EUDAT
+      log("newHash: " + newHash)               
+   elif str(storageID) == '1': # EUDAT
       log('Entered into Eudat case')
       newHash = '0x00'
       # cmd: rm $resultsFolder/.node-xmlhttprequest*
       subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/.node-xmlhttprequest*'))
       os.chdir(resultsFolder) 
-
       removeSourceCode(resultsFolderPrev)      
       
       # cmd: tar -jcvf result-$clusterID-$index.tar.gz *
@@ -305,7 +308,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       if '<d:error' in output: 
          log('EUDAT repository did not successfully loaded.', 'red')
          sys.exit()       
-   #}   
    elif str(storageID) == '4': #{ #GDRIVE
       newHash = '0x00'
       # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
@@ -320,7 +322,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
       mimeType = p3.communicate()[0].decode('utf-8').strip()
       
       countTry=0 
-      while mimeType == "": #{
+      while mimeType == "": 
          if countTry > 10: # mimeType may just return empty string, lets try few more time...
             sys.exit()                        
          log('mimeType returns empty string. Try: ' + str(countTry), 'red')            
@@ -337,7 +339,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
 
          countTry += 1 
          time.sleep(15)          
-      #}      
       log('mimeType: ' + str(mimeType)) 
                
       os.chdir(resultsFolder) 
@@ -369,13 +370,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID): #{
          log('Files could not be uploaded', 'red')
          sys.exit()
    #}
-   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID)
-
+   usedBandwidthMB = bandwidthInMB
+   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, usedBandwidthMB)
+   log('DONE.')
    # Removed downloaded code from local since it is not needed anymore
    # subprocess.run(['rm', '-rf', programPath + '/' + jobKey + "_" + index])
 #}
 
-if __name__ == '__main__': #{
+if __name__ == '__main__':
    jobKey      = sys.argv[1] 
    index       = sys.argv[2] 
    storageID   = sys.argv[3] 
@@ -384,4 +386,3 @@ if __name__ == '__main__': #{
    jobID       = sys.argv[6] 
 
    endCall(jobKey, index, storageID, shareToken, folderName, jobID)
-#}

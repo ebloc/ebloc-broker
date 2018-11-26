@@ -107,7 +107,7 @@ def terminate():
 
 	''' Following line is added, in case ./killall.sh does not work due to sudo.
 	Send the kill signal to all the process groups '''
-	os.killpg(os.getpgid(driverCancelProcess.pid), signal.SIGTERM)
+	os.killpg(os.getpgid(driverCancelProcess.pid),   signal.SIGTERM)
 	os.killpg(os.getpgid(driverReceiverProcess.pid), signal.SIGTERM)	
 	sys.exit()
 
