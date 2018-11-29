@@ -12,7 +12,7 @@ from contractCalls.getJobInfo import getJobInfo
 globals()['cacheType']     = None
 globals()['folderType']    = None
 globals()['index']         = None
-globals()['bandwidthInMB'] = 0 # if the requested file is already cached, it stays as 0 
+globals()['dataTransferIn'] = 0 # if the requested file is already cached, it stays as 0 
 globals()['shareToken']    = '-1'
 
 # Paths===================================================
@@ -115,7 +115,7 @@ def cache(userID, resultsFolderPrev):
             else:
                 if not eudatDownloadFolder(globalCacheFolder, cachedFolder):
                     return False, ''
-    elif globals()['cacheType'] is 'ipfs':
+    elif globals()['cacheType'] == 'ipfs':
         log('Adding from owncloud mount point into IPFS...', 'blue')
         tarFile = lib.OWN_CLOUD_PATH + '/' + globals()['jobKey'] + '/' + globals()['jobKey'] + '.tar.gz'        
         if os.path.isfile(tarFile):            
@@ -136,8 +136,8 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
     ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + globals()['shareToken'] +
                                   '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')   
     result = re.search('Length: (.*) \(', ret) # https://stackoverflow.com/a/6986163/2402577
-    if result is not None: # from wget output
-        globals()['bandwidthInMB'] = int(result.group(1)) * 0.000001 # Downloaded file size in MBs
+    if result != None: # from wget output
+        globals()['dataTransferIn'] = int(result.group(1)) * 0.000001 # Downloaded file size in MBs
     else: # from downloaded files size in bytes
         # p1 = subprocess.Popen(['du', '-b', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
         p1 = subprocess.Popen(['ls', '-ln', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
@@ -148,17 +148,17 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
         #-----------
         out = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes       
         # print(out)
-        globals()['bandwidthInMB'] = int(out) * 0.000001 # Downloaded file size in MBs
-    log('bandwidthInMB=' + str(globals()['bandwidthInMB']) + ' MB', 'green')
+        globals()['dataTransferIn'] = int(out) * 0.000001 # Downloaded file size in MBs
+    log('dataTransferIn=' + str(globals()['dataTransferIn']) + ' MB', 'green')
    
     if "ERROR 404: Not Found" in ret:
         log(ret, 'red') 
         log('File not found The specified document has not been found on the server.', 'red') 
         # TODO: since folder does not exist, do complete refund to the user.
-        return False      
+        return False
+    
     log(ret) 
-    isTarExistsInZip(resultsFolderPrev)
-   
+    isTarExistsInZip(resultsFolderPrev)   
     time.sleep(0.25) 
     if os.path.isfile(resultsFolderPrev + '/output.zip'):
         if globals()['folderType'] == 'tar.gz':           
@@ -168,11 +168,10 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
         subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
     return True
 
-def eudatGetShareToken(fID):
-   # Checks already shared or not
+# Checks already shared or not
+def eudatGetShareToken(fID):   
    # TODO: store shareToken id with jobKey in some file, later do: globals()['oc'].decline_remote_share(int(<share_id>)) to cancel shared folder at endCode or after some time later
-
-   if globals()['cacheType'] is 'ipfs' and os.path.isdir(lib.OWN_CLOUD_PATH + '/' + globals()['jobKey']):
+   if globals()['cacheType'] == 'ipfs' and os.path.isdir(lib.OWN_CLOUD_PATH + '/' + globals()['jobKey']):
        log('Eudat shared folder is already accepted and exist on Eudat mounted folder...', 'green')              
        if os.path.isfile(lib.OWN_CLOUD_PATH + '/' + globals()['jobKey'] + '/' + globals()['jobKey'] + '.tar.gz'):
            globals()['folderType'] = 'tar.gz'
@@ -181,7 +180,6 @@ def eudatGetShareToken(fID):
        return True
 
    shareList = globals()['oc'].list_open_remote_share() 
-
    acceptFlag      = 0 
    eudatFolderName = "" 
    log("Finding share token...")
@@ -211,7 +209,8 @@ def eudatGetShareToken(fID):
                  tryCount += 1
                  log('Sleeping 10 seconds...')
                  time.sleep(10)
-         break 
+         break
+     
    if acceptFlag == 0:
       globals()['oc'].logout() 
       log("Couldn't find the shared file", 'red')
@@ -219,40 +218,40 @@ def eudatGetShareToken(fID):
    return True
 
 def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, oc):
-   globals()['jobKey']    = jobKey
-   globals()['oc']        = oc
-   globals()['cacheType'] = 'local'   
-   globals()['index']     = index 
-   storageID = '1'   
-   
-   log("jobKey=" + jobKey) 
-   log("index="  + index) 
+    storageID = '1'   
+    globals()['jobKey']    = jobKey
+    globals()['oc']        = oc
+    globals()['cacheType'] = 'local'   
+    globals()['index']     = index 
+       
+    log("jobKey=" + jobKey) 
+    log("index="  + index) 
 
-   resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
-   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
+    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
+    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
    
-   if not eudatGetShareToken(fID): return   
-   check, ipfsHash = cache(userID, resultsFolderPrev)   
-   if not check: return   
+    if not eudatGetShareToken(fID): return    
+    check, ipfsHash = cache(userID, resultsFolderPrev)   
+    if not check: return   
    
-   if not os.path.isdir(resultsFolderPrev): # If folder does not exist
-      os.makedirs(resultsFolderPrev)
-      os.makedirs(resultsFolder)
+    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
+        os.makedirs(resultsFolderPrev)
+        os.makedirs(resultsFolder)
 
-   if globals()['cacheType'] is 'local':
-       # Untar cached tar file into local directory
-       if globals()['folderType'] == 'tar.gz':
-           subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
-       elif globals()['folderType'] == 'folder':
-           subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '/', resultsFolder]) 
-   elif globals()['cacheType'] is 'ipfs':
-       log('Reading from IPFS hash=' + ipfsHash)
-       if globals()['folderType'] == 'tar.gz':
-           subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
-       elif eudatFolderType == 'folder':
-           # Copy from cached IPFS folder into user's path           
-           subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
+    if globals()['cacheType'] == 'local':
+        # Untar cached tar file into local directory
+        if globals()['folderType'] == 'tar.gz':
+            subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
+        elif globals()['folderType'] == 'folder':
+            subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '/', resultsFolder]) 
+    elif globals()['cacheType'] == 'ipfs':
+        log('Reading from IPFS hash=' + ipfsHash)
+        if globals()['folderType'] == 'tar.gz':
+            subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
+        elif eudatFolderType == 'folder':
+            # Copy from cached IPFS folder into user's path           
+            subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
            
-   os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
-                  resultsFolder, globals()['bandwidthInMB'], eBlocBroker,  web3)  
+    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
+    lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
+                   resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)  
