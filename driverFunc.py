@@ -15,13 +15,13 @@ indexGlobal      = None
 storageIDGlobal  = None
 cacheTypeGlobal  = None
 shareTokenGlobal = '-1'
-bandwidthInMB    = 0 # if the requested file is already cached, it stays as 0
+dataTransferIn    = 0 # if the requested file is already cached, it stays as 0
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
 
-def log(strIn, color=''): #{
+def log(strIn, color=''):
    if color != '':
        print(stylize(strIn, fg(color))) 
    else:
@@ -35,10 +35,8 @@ def log(strIn, color=''): #{
    txFile = open(fname, 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
-#}
 
-
-def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3): #{
+def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
    global jobKeyGlobal
    global indexGlobal
    global storageIDGlobal
@@ -60,27 +58,24 @@ def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3): #{
 
    # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
    subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
-
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
    lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
-#}
 
-def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
+def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
     global jobKeyGlobal
     global indexGlobal
     global storageIDGlobal
     global shareTokenGlobal
 
+    lib.isIpfsOn()
+    log("jobKey: " + jobKey)
+    
     jobKeyGlobal = jobKey  
     indexGlobal  = index
     storageIDGlobal = storageID
     
-    lib.isIpfsOn() 
-
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
-    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
-       
-    log("jobKey: " + jobKey) 
+    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'           
 
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
        os.makedirs(resultsFolderPrev, exist_ok=True) 
@@ -92,7 +87,7 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
        subprocess.run(['rm', '-f', jobKey])
 
     ipfsCallCounter = 0
-    while True: #{
+    while True:
         try:
             # cmd: timeout 300 ipfs object stat $jobKey
             # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
@@ -105,14 +100,13 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
                 return False
             ipfsCallCounter += 1
             time.sleep(10)
-    #}    
-    if "CumulativeSize" in isIPFSHashExist: #{
+    if "CumulativeSize" in isIPFSHashExist:
        # cmd: ipfs get $jobKey --output=$resultsFolder
        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
        res = subprocess.check_output(['ipfs', 'get', jobKey, '--output='+resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
        print(res)
               
-       if storageID == '2': #{ Case for the ipfsMiniLock
+       if storageID == '2': # Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
 
           # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
@@ -124,21 +118,16 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3): #{
           # cmd: tar -xf $resultsFolder/output.tar.gz
           subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
           # cmd: rm -f $resultsFolder/output.tar.gz
-          subprocess.run(['rm', '-f', resultsFolder + '/output.tar.gz'])
-       #}
-       
+          subprocess.run(['rm', '-f', resultsFolder + '/output.tar.gz'])             
        if not os.path.isfile('run.sh'): 
           log("run.sh does not exist", 'red') 
           return False 
     else:
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
        return False 
-    #}
-
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID,
-                   resultsFolder, bandwidthInMB, eBlocBroker,  web3)
-#}
+                   resultsFolder, dataTransferIn, eBlocBroker,  web3)
 
 # To test driverFunc.py executed as script.
 if __name__ == '__main__':

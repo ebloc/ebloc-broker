@@ -181,6 +181,7 @@ if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '':
    terminate()
 
 log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
+
 # Start-up functions are called
 isDriverOn()
 lib.isSlurmOn()
@@ -304,7 +305,7 @@ while True:
        sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " +
            loggedJobs[i].args['jobKey'] + " " + str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " +
-           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + str(loggedJobs[i].args['gasBandwidthMB']))
+           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + str(loggedJobs[i].args['gasDataTransfer']))
 
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -380,7 +381,6 @@ while True:
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
                                       hashlib.md5(userID.encode('utf-8')).hexdigest(), sourceCodeHash, eBlocBroker, web3)
-
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
        f_blockReadFrom.write(str(int(maxVal) + 1) + '\n')

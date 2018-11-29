@@ -3,14 +3,13 @@
 import sys
 
 def authenticateORCID(orcID, eBlocBroker=None, web3=None): #{
-    if eBlocBroker == None and web3 == None: #{
+    if eBlocBroker is None and web3 is None:
         import os;
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
         from imports import getWeb3
         web3        = getWeb3()
         eBlocBroker = connectEblocBroker(web3)
-    #}
     
     account = web3.eth.accounts[0]     
     if eBlocBroker.functions.isOrcIDVerified(orcID).call() == 0:
@@ -18,9 +17,8 @@ def authenticateORCID(orcID, eBlocBroker=None, web3=None): #{
         return('Tx: ' + tx.hex()) 
     else:
         return('OrcID: ' + orcID + ' is already authenticated.')    
-#}
     
-if __name__ == '__main__': #{
+if __name__ == '__main__': 
     # USER Inputs----------------------------------------------------------------
     if len(sys.argv) == 2:
         orcID = str(sys.argv[1]) 
@@ -28,4 +26,3 @@ if __name__ == '__main__': #{
         orcID = '0000-0001-7642-0552'
     # ----------------------------------------------------------------------------
     print(authenticateORCID(orcID))
-#}

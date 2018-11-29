@@ -12,7 +12,7 @@ web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
 def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddress, orcID, githubUserName, eBlocBroker=None, web3=None): 
-	if eBlocBroker == None and web3 == None: 
+	if eBlocBroker is None and web3 is None: 
 		sys.path.insert(1, os.path.join(sys.path[0], '..'))
 		from imports import connectEblocBroker
 		from imports import getWeb3

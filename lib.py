@@ -47,7 +47,7 @@ job_state_code['TIMEOUT']      = 16
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
-def log(strIn, color=''): #{
+def log(strIn, color=''):
    from colored import stylize
    from colored import fg
 
@@ -59,35 +59,29 @@ def log(strIn, color=''): #{
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
-#}
 
-def silentremove(filename): #{
+def silentremove(filename):
     try:
         os.remove(filename)
     except OSError as e: # This would be "except OSError, e:" before Python 2.6
        pass
-#}
 
-def removeFiles(filename): #{
+def removeFiles(filename): 
    if "*" in filename: 
        for fl in glob.glob(filename):
            print(fl)
            silentremove(fl) 
    else:
        silentremove(filename) 
-#}
 
-def web3Exception(check): #{
-   while check  is 'ConnectionRefusedError' or check is 'notconnected': #{
+def web3Exception(check): 
+   while check  == 'ConnectionRefusedError' or check == 'notconnected':
       log('Error(web3): ' +  check + '. Please run geth on the background.', 'red')
       check = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       time.sleep(5)
-   #}
-   if check is 'BadFunctionCallOutput': #{
+   if check == 'BadFunctionCallOutput':
       log('Error(web3): ' +  check + '.', 'red')
       # sys.exit()
-   #}
-#}
    
 # Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn():
@@ -113,7 +107,7 @@ def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     
 # Checks that does IPFS run on the background or not
-def isIpfsOn(): #{
+def isIpfsOn():
    # cmd: ps aux | grep '[i]pfs daemon' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
    #-----------
@@ -138,9 +132,8 @@ def isIpfsOn(): #{
          log(content_file.read(), 'blue') 
    else:
       log("IPFS is already on.", 'green') 
-#}
 
-def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, bandwidthInMB,  eBlocBroker, web3): #{
+def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, dataTransferIn,  eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
    from datetime import datetime, timedelta
 
@@ -169,18 +162,17 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, band
    f.write(timestamp + '\n' )    
    f.close()
 
-   if os.path.isfile('../bandwidthInMB.txt'):
-       with open('../bandwidthInMB.txt') as json_file:
+   if os.path.isfile('../dataTransferIn.txt'):
+       with open('../dataTransferIn.txt') as json_file:
            data = json.load(json_file)
-           bandwidthInMB = data['bandwidthInMB']
+           dataTransferIn = data['dataTransferIn']
    else:
        data = {}
-       data['bandwidthInMB'] = bandwidthInMB
-       with open('../bandwidthInMB.txt', 'w') as outfile:
+       data['dataTransferIn'] = dataTransferIn
+       with open('../dataTransferIn.txt', 'w') as outfile:
            json.dump(data, outfile)
-   # print(bandwidthInMB) 
-   time.sleep(0.25)
-         
+   # print(dataTransferIn) 
+   time.sleep(0.25)         
    # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
    subprocess.run(['sudo', 'su', '-', userID, '-c',
                    'cp ' + resultsFolder + '/run.sh ' +
@@ -212,9 +204,8 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, band
       # Detects an error on the SLURM side
       log("Error occured, jobID is not a digit.", 'red')
       return False
-#}
 
-def isRunExistInTar(tarPath): #{   
+def isRunExistInTar(tarPath):
     try:
         FNULL = open(os.devnull, 'w')
         res = subprocess.check_output(['tar', 'ztf', tarPath, '--wildcards', '*/run.sh'], stderr=FNULL).decode('utf-8').strip()
@@ -228,4 +219,3 @@ def isRunExistInTar(tarPath): #{
     except:
         log('run.sh does not exist under the parent folder', 'red')
         return False
-#}

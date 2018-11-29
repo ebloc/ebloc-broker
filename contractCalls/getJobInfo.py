@@ -4,18 +4,16 @@ import sys, os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 
-def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
-    if eBlocBroker == None and web3 == None: #{
+def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None):
+    if eBlocBroker is None and web3 is None: 
         import os 
         sys.path.insert(1, os.path.join(sys.path[0], '..')) 
         from imports import connectEblocBroker
-        from imports import getWeb3
-        
+        from imports import getWeb3        
         web3        = getWeb3()
         if web3 == 'notconnected':
             return 'notconnected'
         eBlocBroker = connectEblocBroker(web3)
-    #}
       
     clusterAddress = web3.toChecksumAddress(clusterAddress)
     job = None
@@ -26,9 +24,8 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None): #{
         return e.__class__.__name__
         # return 'Exception: web3.exceptions.BadFunctionCallOutput'
     return jobDict
-#}
 
-if __name__ == '__main__': #{
+if __name__ == '__main__': 
     if len(sys.argv) == 4:
         clusterAddress = str(sys.argv[1]) 
         jobKey         = str(sys.argv[2]) 
@@ -57,4 +54,3 @@ if __name__ == '__main__': #{
         print('{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])        
     else:
         print(jobInfo)
-#}
