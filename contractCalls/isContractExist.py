@@ -7,7 +7,7 @@ def isContractExist(web3=None):
     home     = expanduser("~")
     address = open(home + '/eBlocBroker/contractCalls/address.json', "r")
 
-    if web3 == None:
+    if web3 is None:
         import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import getWeb3

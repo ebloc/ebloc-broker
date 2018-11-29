@@ -15,7 +15,7 @@ indexGlobal      = None
 storageIDGlobal  = None
 cacheTypeGlobal  = None
 shareTokenGlobal = '-1'
-bandwidthInMB    = 0 # if the requested file is already cached, it stays as 0
+dataTransferIn    = 0 # if the requested file is already cached, it stays as 0
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
@@ -36,8 +36,8 @@ def log(strIn, color=''):
    txFile.write(strIn + "\n") 
    txFile.close() 
 
-def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderType): #{
-    if cacheTypeGlobal is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
+def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderType):
+    if cacheTypeGlobal == 'local': # Download into local directory at $HOME/.eBlocBroker/cache
         globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
         
         if not os.path.isdir(globalCacheFolder): # If folder does not exist
@@ -68,9 +68,8 @@ def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderT
                  #os.rename(cachedFolder + '/' + folderName, cachedFolder + '/' + jobKey)
            else:                 
               if not gdriveDownloadFolder(jobKey, cachedFolder, folderName, folderType): return False
-              # os.rename(cachedFolder + '/' + folderName, cachedFolder + '/' + jobKey)
-              
-    elif cacheTypeGlobal is 'ipfs':
+              # os.rename(cachedFolder + '/' + folderName, cachedFolder + '/' + jobKey)              
+    elif cacheTypeGlobal == 'ipfs':
         log('Adding from google drive mount point into IPFS...', 'blue')
         if folderType == 'gzip':
            tarFile = lib.GDRIVE_CLOUD_PATH + '/.shared/' + folderName           
@@ -89,9 +88,8 @@ def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderT
             ipfsHash = ipfsHash[int(len(ipfsHash) - 1)] # Last line of ipfs hash output is obtained which has the root folder's hash        
         return True, ipfsHash.split()[1]
     return True, ''
-#}
 
-def getMimeType(gdriveInfo): #{
+def getMimeType(gdriveInfo): 
    # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
    #-----------
@@ -101,10 +99,9 @@ def getMimeType(gdriveInfo): #{
    p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
    #-----------
-   return p3.communicate()[0].decode('utf-8').strip()
-#}    
+   return p3.communicate()[0].decode('utf-8').strip()    
 
-def getFolderName(gdriveInfo): #{
+def getFolderName(gdriveInfo): 
    # cmd: echo gdriveInfo | grep \'Name\' | awk \'{print $2}\'
    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
    #-----------
@@ -115,9 +112,8 @@ def getFolderName(gdriveInfo): #{
    p2.stdout.close()
    #-----------
    return p3.communicate()[0].decode('utf-8').strip()    
-#}
 
-def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType): #{
+def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType):
     if folderType == 'folder':  
         # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
         res= subprocess.check_output(['gdrive', 'download', '--recursive', jobKey, '--force', '--path', resultsFolderPrev]).decode('utf-8') #TODO: convert into try except
@@ -127,7 +123,7 @@ def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType): #{
     flag = 1
     tryCount = 0
     while ('googleapi: Error 403' in res) or ('googleapi: Error 403: Rate Limit Exceeded, rateLimitExceeded' in res) or ('googleapi' in res and 'error' in res):
-        if tryCount is 5:
+        if tryCount == 5:
             return False
         time.sleep(10)            
         # cmd: gdrive download --recursive $jobKey --force --path $resultsFolderPrev  # Gets the source 
@@ -136,7 +132,8 @@ def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType): #{
         flag = 0
         tryCount += 1        
 
-    if flag is 1: log(res)
+    if flag == 1:
+        log(res)
 
     if folderType == 'folder':
         if not os.path.isdir(resultsFolderPrev + '/' + folderName): # Check before move operation
@@ -148,7 +145,6 @@ def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType): #{
             log('File is not downloaded successfully.', 'red')
             return False
     return True
-#}
     
 def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, web3):
    global jobKeyGlobal
@@ -180,7 +176,7 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, 
    log('mimeType=' + mimeType)
    log('folderName=' + folderName)
 
-   if cacheTypeGlobal is 'local':
+   if cacheTypeGlobal == 'local':
       if 'folder' in mimeType: # Recieved job is in folder format
          check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
          if not check: return   
@@ -198,7 +194,7 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, 
          subprocess.run(['rm', '-rf', resultsFolderPrev + '/' + folderName])
       else:
          return False
-   elif cacheTypeGlobal is 'ipfs':
+   elif cacheTypeGlobal == 'ipfs':
       if 'folder' in mimeType:
          check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
          if not check: return   
@@ -212,4 +208,4 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, eBlocBroker, 
          subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
    os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
    lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID,
-                  resultsFolder, bandwidthInMB, eBlocBroker,  web3)
+                  resultsFolder, dataTransferIn, eBlocBroker,  web3)

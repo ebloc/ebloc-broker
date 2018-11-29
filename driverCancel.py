@@ -12,17 +12,16 @@ web3        = getWeb3()
 eBlocBroker = connectEblocBroker() 
 testFlag    = False
 
-def log(strIn, color=''): #{
-   if testFlag: #{
+def log(strIn, color=''): 
+   if testFlag: 
       if color != '':
          print(stylize(strIn, fg(color))) 
       else:
          print(strIn)
-   #}   
+
    txFile = open(lib.LOG_PATH + '/cancelledJobsLog.out', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close()    
-#}
 
 with open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'r') as content_file:
    cancelBlockReadFromLocal = content_file.read().strip()
