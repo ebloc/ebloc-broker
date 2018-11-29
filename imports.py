@@ -28,7 +28,7 @@ def getWeb3():
 	return web3 
 
 def connectEblocBroker(web3=None):
-	if web3 == None:
+	if web3 is None:
 		 web3 = getWeb3()
 		 if web3 == 'notconnected':			 
 			 return 'notconnected'

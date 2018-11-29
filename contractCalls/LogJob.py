@@ -7,7 +7,6 @@ asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#exampl
 import sys, asyncio, time
 from web3.auto import w3
 
-
 def getEbloBroker():
     import os 
     sys.path.insert(1, os.path.join(sys.path[0], '..')) 
@@ -62,7 +61,7 @@ def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None):
 
    if len(loggedJobs) > 0:
        for i in range(0, len(loggedJobs)):
-           if loggedJobs[i]['transactionHash'].hex() is transactionHash:
+           if loggedJobs[i]['transactionHash'].hex() == transactionHash:
                return loggedJobs[i]['index']
    else:
        return logReturn(myFilter, 2) 

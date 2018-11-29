@@ -13,20 +13,37 @@ oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 
 def eudatSubmitJob(tarHash=None): # fc33e7908fdf76f731900e9d8a382984
+    clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
+    
     # if not isOcMounted():
     #     sys.exit()
                
     if tarHash is None:
         folderToShare = 'exampleFolderToShare'    
         subprocess.run(['chmod', '-R', '777', folderToShare])
-        subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
+        # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
+        # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --no-recursion --null -T - -zcvf exampleexampleFolderToShare.tar.gz
+
+        p1 = subprocess.Popen(['find', folderToShare, '-print0'], stdout=subprocess.PIPE)
+        #-----------
+        p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
+        p1.stdout.close()
+        #-----------
+        p3 = subprocess.Popen(['tar', '--no-recursion', '--null', '-T', '-', '-zcvf', folderToShare + '.tar.gz'], stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
+        p2.stdout.close()
+        #-----------
+        p3.communicate()        
+        # subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
         tarHash = subprocess.check_output(['md5sum', folderToShare + '.tar.gz']).decode('utf-8').strip()
         tarHash = tarHash.split(' ', 1)[0]
         print('hash=' + tarHash)
         subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
 
-        res = oc.mkdir(tarHash)
-        print(res)
+        try:
+            res = oc.mkdir(tarHash)
+            print(res)
+        except:
+            print('Already created directory under oc')
 
         print('./' + tarHash + '/' + tarHash + '.tar.gz', tarHash + '.tar.gz')
         res = oc.put_file('./' + tarHash + '/' + tarHash + '.tar.gz', tarHash + '.tar.gz')
@@ -44,8 +61,7 @@ def eudatSubmitJob(tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     print(singleFolderShare(tarHash, oc))
     # subprocess.run(['python', 'singleFolderShare.py', tarHash])
 
-    print('\nSubmitting Job...')
-    clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
+    print('\nSubmitting Job...')    
     coreNum=1
     coreMinuteGas=5
 
