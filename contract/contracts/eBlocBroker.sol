@@ -111,7 +111,7 @@ contract eBlocBroker {
        by the cluster provider and paying of unused core usage cost back to the client
     */
     function receiptCheck(string memory jobKey, uint32 index, uint32 jobRunTimeMin, string memory resultIpfsHash,
-			  uint8 storageID, uint endTime, uint usedBandwidthMB)
+			  uint8 storageID, uint endTime, uint dataTransferSum)
 	isBehindBlockTimeStamp(endTime) public
 	returns (bool success) /* Payback to client and server */
     {
@@ -120,7 +120,7 @@ contract eBlocBroker {
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 
 	//uint netOwned     = job.received;
-	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMin + job.priceBandwidthMB * usedBandwidthMB;
+	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMin + job.priceDataTransfer * dataTransferSum;
 
 	if (amountToGain > job.received ||
 	    job.status == uint8(jobStateCodes.COMPLETED) ||
@@ -132,7 +132,7 @@ contract eBlocBroker {
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
 	    /*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
-				resultIpfsHash, storageID, usedBandwidthMB);
+				resultIpfsHash, storageID, dataTransferSum);
 	    return false;
 	}
 	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
@@ -142,7 +142,7 @@ contract eBlocBroker {
 	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
 	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain),
-			    block.timestamp, resultIpfsHash, storageID, usedBandwidthMB);
+			    block.timestamp, resultIpfsHash, storageID, dataTransferSum);
 	return true;
     }
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
@@ -166,11 +166,11 @@ contract eBlocBroker {
 
     /* Registers a provider's (msg.sender's) cluster to eBlocBroker. */
     function registerCluster(uint32 coreNumber, string memory clusterEmail, string memory fID,
-			     string memory miniLockID, uint priceCoreMin, uint priceBandwidthMB,
+			     string memory miniLockID, uint priceCoreMin, uint priceDataTransfer,
 			     string memory ipfsAddress, string memory whisperPublicKey) public
 	returns (bool success)
     {
-	if (coreNumber == 0 || priceCoreMin == 0 || priceBandwidthMB == 0)
+	if (coreNumber == 0 || priceCoreMin == 0 || priceDataTransfer == 0)
 	    revert();
 	
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
@@ -179,15 +179,15 @@ contract eBlocBroker {
 
 	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender;
-	    cluster.update(priceCoreMin, priceBandwidthMB, coreNumber);
+	    cluster.update(priceCoreMin, priceDataTransfer, coreNumber);
 	    cluster.isRunning = true;
 	} else {
-	    cluster.constructCluster(uint32(clusterAddresses.length), priceCoreMin, priceBandwidthMB, coreNumber);
+	    cluster.constructCluster(uint32(clusterAddresses.length), priceCoreMin, priceDataTransfer, coreNumber);
 	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceDataTransfer, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
@@ -202,7 +202,7 @@ contract eBlocBroker {
 
     /* All set operations are combined to save up some gas usage */
     function updateCluster(uint32 coreNumber, string memory clusterEmail, string memory fID,
-			   string memory miniLockID, uint priceCoreMin, uint priceBandwidthMB,
+			   string memory miniLockID, uint priceCoreMin, uint priceDataTransfer,
 			   string memory ipfsAddress, string memory whisperPublicKey)
 	public returns (bool success)
     {
@@ -210,16 +210,16 @@ contract eBlocBroker {
 	if (cluster.blockReadFrom == 0)
 	    revert();
 
-	clusterContract[msg.sender].update(priceCoreMin, priceBandwidthMB, coreNumber);
+	clusterContract[msg.sender].update(priceCoreMin, priceDataTransfer, coreNumber);
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceDataTransfer, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
     /* Performs a job submission to eBlocBroker by a client. */
     function submitJob(address clusterAddress, string memory jobKey, uint32 core,
-		       string memory jobDesc, uint32 gasCoreMin, uint32 gasBandwidthMB,
+		       string memory jobDesc, uint32 gasCoreMin, uint32 gasDataTransfer,
 		       uint8 storageID, string memory sourceCodeHash)
 	check_gasCoreMin_storageID(gasCoreMin, storageID)  /*isZero(core)*/  public payable
 	returns (bool success)
@@ -227,7 +227,7 @@ contract eBlocBroker {
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 		
 	if (core == 0 || msg.value == 0 || !cluster.isRunning ||
-	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceBandwidthMB * gasBandwidthMB ||
+	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceDataTransfer * gasDataTransfer ||
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
@@ -238,17 +238,17 @@ contract eBlocBroker {
 	Lib.status [] storage jobStatus = cluster.jobStatus[jobKey];
 
 	jobStatus.push(Lib.status({
-      		        status:         uint8(jobStateCodes.PENDING),
-			core:           core,                       /* Requested core value */
-			gasCoreMin:     gasCoreMin,                 //
-			jobOwner:       msg.sender,
-			received:       msg.value,
-			priceCoreMin:   cluster.priceCoreMin,       //
-			priceBandwidthMB: cluster.priceBandwidthMB, //
-			startTime:      0
+      		        status:            uint8(jobStateCodes.PENDING),
+			core:              core,                       /* Requested core value */
+			gasCoreMin:        gasCoreMin,                 //
+			jobOwner:          msg.sender,
+			received:          msg.value,
+			priceCoreMin:      cluster.priceCoreMin,       //
+			priceDataTransfer: cluster.priceDataTransfer, //
+			startTime:         0
 			}
 		));	
-	/*emit*/ LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasBandwidthMB);
+	/*emit*/ LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasDataTransfer);
 	return true;
     }
 
@@ -305,7 +305,7 @@ contract eBlocBroker {
 	    return (clusterContract[clusterAddress].blockReadFrom,
 		    clusterContract[clusterAddress].receiptList.coreNumber,
 		    clusterContract[clusterAddress].priceCoreMin,
-		    clusterContract[clusterAddress].priceBandwidthMB);
+		    clusterContract[clusterAddress].priceDataTransfer);
 	else
 	    return (0, 0, 0, 0);
     }
@@ -400,7 +400,7 @@ contract eBlocBroker {
 		     uint endTime,
 		     string resultIpfsHash,
 		     uint8 storageID,
-		     uint usedBandwidthMB
+		     uint dataTransferSum
 		     );
 
     /* Records the updated jobs' information under setJobStatus() method call. */
@@ -417,7 +417,7 @@ contract eBlocBroker {
 		 uint8 storageID,
 		 string desc,
 		 string sourceCodeHash,
-		 uint32 gasBandwidthMB
+		 uint32 gasDataTransfer
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
@@ -427,7 +427,7 @@ contract eBlocBroker {
 		     string fID,
 		     string miniLockID,
 		     uint priceCoreMin,
-		     uint priceBandwidthMB,
+		     uint priceDataTransfer,
 		     string ipfsAddress,
 		     string whisperPublicKey
 		     );

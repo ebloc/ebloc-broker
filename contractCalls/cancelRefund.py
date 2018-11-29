@@ -12,7 +12,7 @@ eBlocBroker = connectEblocBroker(web3)
 if __name__ == '__main__': 
     if len(sys.argv) == 10: 
         clusterAddress = web3.toChecksumAddress(str(sys.argv[1])) 
-        blockReadFrom, coreNumber, priceCoreMin, priceBandwidthMB = eBlocBroker.call().getClusterInfo(clusterAddress) 
+        blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.call().getClusterInfo(clusterAddress) 
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
         jobKey         = str(sys.argv[2]) 
         coreNum        = int(sys.argv[3]) 

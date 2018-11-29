@@ -3,7 +3,7 @@
 import sys
 
 def getClusterInfo(clusterAddress, eBlocBroker=None, web3=None): 
-    if eBlocBroker == None and web3 == None: 
+    if eBlocBroker is None and web3 is None: 
         import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
@@ -17,13 +17,13 @@ def getClusterInfo(clusterAddress, eBlocBroker=None, web3=None):
         print("Cluster is not registered. Please try again with registered Ethereum Address as cluster.")
         sys.exit() 
 
-    blockReadFrom, coreNumber, priceCoreMin, priceBandwidthMB = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
+    blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
     my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock': int(blockReadFrom),'toBlock': int(blockReadFrom) + 1})
 
     return('{0: <18}'.format('blockReadFrom: ')    + str(blockReadFrom)  + '\n' +
            '{0: <18}'.format('coreNumber: ')       + str(coreNumber) + '\n' +
            '{0: <18}'.format('priceCoreMin: ')     + str(priceCoreMin)  + '\n' +
-           '{0: <18}'.format('priceBandwidthMB: ') + str(priceBandwidthMB)  + '\n' +           
+           '{0: <18}'.format('priceDataTransfer: ') + str(priceDataTransfer)  + '\n' +    
            '{0: <18}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'] + '\n' +
            '{0: <18}'.format('miniLockID: ')       + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
            '{0: <18}'.format('ipfsAddress: ')      + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
