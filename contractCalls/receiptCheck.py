@@ -16,7 +16,7 @@ def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, end
     tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID),
                                "gas": 4500000}).receiptCheck(str(jobKey), int(index), int(jobRunTimeMinute),
                                                              str(resultIpfsHash), int(storageID), int(endTime), int(dataTransferSum)) 
-    return 'Tx: ' + tx.hex()
+    return 'Tx_hash: ' + tx.hex()
 
 if __name__ == '__main__': 
     if len(sys.argv) == 8:

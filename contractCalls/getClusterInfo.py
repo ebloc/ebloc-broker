@@ -20,15 +20,15 @@ def getClusterInfo(clusterAddress, eBlocBroker=None, web3=None):
     blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
     my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock': int(blockReadFrom),'toBlock': int(blockReadFrom) + 1})
 
-    return('{0: <18}'.format('blockReadFrom: ')    + str(blockReadFrom)  + '\n' +
-           '{0: <18}'.format('coreNumber: ')       + str(coreNumber) + '\n' +
-           '{0: <18}'.format('priceCoreMin: ')     + str(priceCoreMin)  + '\n' +
-           '{0: <18}'.format('priceDataTransfer: ') + str(priceDataTransfer)  + '\n' +    
-           '{0: <18}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'] + '\n' +
-           '{0: <18}'.format('miniLockID: ')       + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
-           '{0: <18}'.format('ipfsAddress: ')      + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
-           '{0: <18}'.format('fID: ')              + my_filter.get_all_entries()[0].args['fID'] + '\n' +
-           '{0: <18}'.format('whisperPublicKey: ') + my_filter.get_all_entries()[0].args['whisperPublicKey']);
+    return('{0: <19}'.format('blockReadFrom: ')    + str(blockReadFrom)  + '\n' +
+           '{0: <19}'.format('coreNumber: ')       + str(coreNumber) + '\n' +
+           '{0: <19}'.format('priceCoreMin: ')     + str(priceCoreMin)  + '\n' +
+           '{0: <19}'.format('priceDataTransfer: ') + str(priceDataTransfer)  + '\n' +    
+           '{0: <19}'.format('clusterEmail: ')     + my_filter.get_all_entries()[0].args['clusterEmail'] + '\n' +
+           '{0: <19}'.format('miniLockID: ')       + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
+           '{0: <19}'.format('ipfsAddress: ')      + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
+           '{0: <19}'.format('fID: ')              + my_filter.get_all_entries()[0].args['fID'] + '\n' +
+           '{0: <19}'.format('whisperPublicKey: ') + my_filter.get_all_entries()[0].args['whisperPublicKey']);
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:

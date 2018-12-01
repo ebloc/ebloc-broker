@@ -115,7 +115,7 @@ if __name__ == '__main__':
         # =============================================================================
 
     tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, jobDescription, storageID, sourceCodeHash, accountID)   
-    print('Tx: ' + tx_hash)
+    print('Tx_hash: ' + tx_hash)
 
     print('Waiting job to be deployed...')
     while True: 
