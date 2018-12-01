@@ -7,6 +7,7 @@
 ### Mac
 
 ```bash
+git fetch
 git checkout origin/master -- contract/contracts/eBlocBroker.sol
 git checkout origin/master -- contract/contracts/Lib.sol
 mkdir -p $HOME/myContract
@@ -29,6 +30,7 @@ echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" 
 ### Linux
 
 ```bash
+git fetch
 git checkout origin/master -- contract/contracts/eBlocBroker.sol
 git checkout origin/master -- contract/contracts/Lib.sol
 mkdir -p $HOME/myContract

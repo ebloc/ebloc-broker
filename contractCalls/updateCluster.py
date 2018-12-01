@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from imports import connectEblocBroker
 from imports import getWeb3
     
-def updateCluster(): #{
+def updateCluster():
     web3        = getWeb3() 
     eBlocBroker = connectEblocBroker(web3)
     # USER Inputs----------------------------------------------------------------
@@ -21,12 +21,9 @@ def updateCluster(): #{
     #ipfsID=os.popen('node bs58.js encode $ipfs').read().replace("\n", "") 
     #ipfsIDbytes = web3.toBytes(hexstr=ipfsID) 
 
-    if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45): #{
+    if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).updateCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, corePriceMinuteWei, ipfsAddress) 
-        print('Tx: ' + tx.hex()) 
-    #}
-#}
+        print('Tx_hash: ' + tx.hex()) 
 
-if __name__ == '__main__': #{
+if __name__ == '__main__':
     updateCluster()
-#}
