@@ -77,7 +77,7 @@ if __name__ == '__main__':
    loggedJobs = runLogJob(fromBlock, clusterAddress)
    for i in range(0, len(loggedJobs)):
            print(loggedJobs[i])
-           print('Tx: ' + loggedJobs[i]['transactionHash'].hex() )
+           print('Tx_hash: ' + loggedJobs[i]['transactionHash'].hex() )
            print('blockNumber: ' + str(loggedJobs[i]['blockNumber']))
            print('clusterAddress: ' + loggedJobs[i].args['clusterAddress'])
 

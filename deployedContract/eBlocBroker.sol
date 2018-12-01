@@ -6,12 +6,13 @@ email:  alper.alimoglu AT gmail.com
 
 pragma solidity ^0.4.24; 
 
-/* Contract Address: 0xa962445e7ab37651f9ee4572a19fb122d471fb0f */
+/* Contract Address: 0x */
 /// @title eBlocBroker is a blockchain based autonomous computational resource
 ///        broker.
 contract eBlocBroker {
-    uint    deployedBlockNumber; /* The block number that was obtained when contract is deployed */
-    address owner;
+    /* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
+    uint    public deployedBlockNumber;    
+    address public owner;
 
     /* Following function is executed at initialization. It sets contract's deployed 
        block number and the owner of the contract. 
@@ -19,7 +20,7 @@ contract eBlocBroker {
     constructor() public //constructor() public
     {
 	deployedBlockNumber = block.number;
-	owner = msg.sender; /* Owner of the smart contract */
+	owner = msg.sender; /* msg.sender is owner of the smart contract */
     }
 
     enum jobStateCodes {
@@ -35,13 +36,19 @@ contract eBlocBroker {
     using Lib for Lib.userData;
     using Lib for Lib.status;
 
-    address[] clusterAddresses; /* A dynamically-sized array of `address` structs */
-    address[] userAddresses;    /* A dynamically-sized array of `address` structs */
+    address[] public clusterAddresses; /* A dynamically-sized array of `address` structs */
+    address[] public userAddresses;    /* A dynamically-sized array of `address` structs */
 
     mapping(string  => uint32)          verifyOrcID;
     mapping(address => Lib.userData)    userContract;
     mapping(address => Lib.clusterData) clusterContract;   
 
+    /*
+    modifier isZero(uint32 input) {
+	require(input != 0);
+	_ ;
+    }
+    */
     modifier check_gasCoreMin_storageID(uint32 gasCoreMin, uint8 storageID) {
 	/* gasCoreMin is maximum 1 day */
 	require(storageID < 5 && !(gasCoreMin == 0 || gasCoreMin > 1440)); 
@@ -69,14 +76,6 @@ contract eBlocBroker {
 	_ ;
     }
     
-    /*
-    modifier isZero(uint32 input) {
-	require(input != 0);
-	_ ;
-    }
-    */
-
-
     /* Refund funds the complete amount to client if requested job is still in the pending state or
        is not completed one hour after its required time.
        If the job is in the running state, it triggers LogCancelRefund event on the blockchain, 
@@ -112,7 +111,7 @@ contract eBlocBroker {
        by the cluster provider and paying of unused core usage cost back to the client
     */
     function receiptCheck(string memory jobKey, uint32 index, uint32 jobRunTimeMin, string memory resultIpfsHash,
-			  uint8 storageID, uint endTime, uint usedBandwidthMB)
+			  uint8 storageID, uint endTime, uint dataTransferSum)
 	isBehindBlockTimeStamp(endTime) public
 	returns (bool success) /* Payback to client and server */
     {
@@ -121,7 +120,7 @@ contract eBlocBroker {
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];
 
 	//uint netOwned     = job.received;
-	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMin + job.priceBandwidthMB * usedBandwidthMB;
+	uint amountToGain = job.priceCoreMin * job.core * jobRunTimeMin + job.priceDataTransfer * dataTransferSum;
 
 	if (amountToGain > job.received ||
 	    job.status == uint8(jobStateCodes.COMPLETED) ||
@@ -133,7 +132,7 @@ contract eBlocBroker {
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
 	    emit LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
-				resultIpfsHash, storageID, usedBandwidthMB);
+				resultIpfsHash, storageID, dataTransferSum);
 	    return false;
 	}
 	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
@@ -143,7 +142,7 @@ contract eBlocBroker {
 	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
 	emit LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain),
-			    block.timestamp, resultIpfsHash, storageID, usedBandwidthMB);
+			    block.timestamp, resultIpfsHash, storageID, dataTransferSum);
 	return true;
     }
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData. */
@@ -167,11 +166,11 @@ contract eBlocBroker {
 
     /* Registers a provider's (msg.sender's) cluster to eBlocBroker. */
     function registerCluster(uint32 coreNumber, string memory clusterEmail, string memory fID,
-			     string memory miniLockID, uint priceCoreMin, uint priceBandwidthMB,
+			     string memory miniLockID, uint priceCoreMin, uint priceDataTransfer,
 			     string memory ipfsAddress, string memory whisperPublicKey) public
 	returns (bool success)
     {
-	if (coreNumber == 0 || priceCoreMin == 0 || priceBandwidthMB == 0)
+	if (coreNumber == 0 || priceCoreMin == 0 || priceDataTransfer == 0)
 	    revert();
 	
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
@@ -180,15 +179,15 @@ contract eBlocBroker {
 
 	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender;
-	    cluster.update(priceCoreMin, priceBandwidthMB, coreNumber);
+	    cluster.update(priceCoreMin, priceDataTransfer, coreNumber);
 	    cluster.isRunning = true;
 	} else {
-	    cluster.constructCluster(uint32(clusterAddresses.length), priceCoreMin, priceBandwidthMB, coreNumber);
+	    cluster.constructCluster(uint32(clusterAddresses.length), priceCoreMin, priceDataTransfer, coreNumber);
 	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 
 	emit LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceDataTransfer, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
@@ -203,7 +202,7 @@ contract eBlocBroker {
 
     /* All set operations are combined to save up some gas usage */
     function updateCluster(uint32 coreNumber, string memory clusterEmail, string memory fID,
-			   string memory miniLockID, uint priceCoreMin, uint priceBandwidthMB,
+			   string memory miniLockID, uint priceCoreMin, uint priceDataTransfer,
 			   string memory ipfsAddress, string memory whisperPublicKey)
 	public returns (bool success)
     {
@@ -211,16 +210,16 @@ contract eBlocBroker {
 	if (cluster.blockReadFrom == 0)
 	    revert();
 
-	clusterContract[msg.sender].update(priceCoreMin, priceBandwidthMB, coreNumber);
+	clusterContract[msg.sender].update(priceCoreMin, priceDataTransfer, coreNumber);
 
 	emit LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, priceBandwidthMB, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceDataTransfer, ipfsAddress, whisperPublicKey);
 	return true;
     }
 
     /* Performs a job submission to eBlocBroker by a client. */
     function submitJob(address clusterAddress, string memory jobKey, uint32 core,
-		       string memory jobDesc, uint32 gasCoreMin, uint32 gasBandwidthMB,
+		       string memory jobDesc, uint32 gasCoreMin, uint32 gasDataTransfer,
 		       uint8 storageID, string memory sourceCodeHash)
 	check_gasCoreMin_storageID(gasCoreMin, storageID)  /*isZero(core)*/  public payable
 	returns (bool success)
@@ -228,7 +227,7 @@ contract eBlocBroker {
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 		
 	if (core == 0 || msg.value == 0 || !cluster.isRunning ||
-	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceBandwidthMB * gasBandwidthMB ||
+	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceDataTransfer * gasDataTransfer ||
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
@@ -239,17 +238,17 @@ contract eBlocBroker {
 	Lib.status [] storage jobStatus = cluster.jobStatus[jobKey];
 
 	jobStatus.push(Lib.status({
-      		        status:         uint8(jobStateCodes.PENDING),
-			core:           core,                       /* Requested core value */
-			gasCoreMin:     gasCoreMin,                 //
-			jobOwner:       msg.sender,
-			received:       msg.value,
-			priceCoreMin:   cluster.priceCoreMin,       //
-			priceBandwidthMB: cluster.priceBandwidthMB, //
-			startTime:      0
+      		        status:            uint8(jobStateCodes.PENDING),
+			core:              core,                       /* Requested core value */
+			gasCoreMin:        gasCoreMin,                 //
+			jobOwner:          msg.sender,
+			received:          msg.value,
+			priceCoreMin:      cluster.priceCoreMin,       //
+			priceDataTransfer: cluster.priceDataTransfer, //
+			startTime:         0
 			}
 		));	
-	emit LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasBandwidthMB);
+	emit LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasDataTransfer);
 	return true;
     }
 
@@ -306,7 +305,7 @@ contract eBlocBroker {
 	    return (clusterContract[clusterAddress].blockReadFrom,
 		    clusterContract[clusterAddress].receiptList.coreNumber,
 		    clusterContract[clusterAddress].priceCoreMin,
-		    clusterContract[clusterAddress].priceBandwidthMB);
+		    clusterContract[clusterAddress].priceDataTransfer);
 	else
 	    return (0, 0, 0, 0);
     }
@@ -401,7 +400,7 @@ contract eBlocBroker {
 		     uint endTime,
 		     string resultIpfsHash,
 		     uint8 storageID,
-		     uint usedBandwidthMB
+		     uint dataTransferSum
 		     );
 
     /* Records the updated jobs' information under setJobStatus() method call. */
@@ -418,7 +417,7 @@ contract eBlocBroker {
 		 uint8 storageID,
 		 string desc,
 		 string sourceCodeHash,
-		 uint32 gasBandwidthMB
+		 uint32 gasDataTransfer
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
@@ -428,7 +427,7 @@ contract eBlocBroker {
 		     string fID,
 		     string miniLockID,
 		     uint priceCoreMin,
-		     uint priceBandwidthMB,
+		     uint priceDataTransfer,
 		     string ipfsAddress,
 		     string whisperPublicKey
 		     );
@@ -455,15 +454,15 @@ library Lib {
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
-	uint8          status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint        startTime; /* Submitted job's starting universal time on the server side */	
+	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint         startTime; /* Submitted job's starting universal time on the server side */	
 	/* Variables assigned by the client */	
-	uint         received; /* Paid amount by the client */
-	uint     priceCoreMin; /* Cluster's price for core/minute */
-	uint       gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
-	uint priceBandwidthMB;
-	uint32           core; /* Requested core by the client */
-	address      jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint          received; /* Paid amount by the client */
+	uint      priceCoreMin; /* Cluster's price for core/minute */
+	uint        gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint priceDataTransfer;
+	uint32            core; /* Requested core by the client */
+	address       jobOwner; /* Address of the client (msg.sender) has been stored */
     }
 
     /* Registered user's information */
@@ -477,7 +476,7 @@ library Lib {
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */
 	uint         priceCoreMin; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-	uint     priceBandwidthMB; /* Should be defined in wei. */
+	uint    priceDataTransfer; /* Should be defined in wei. */
 	uint       receivedAmount; /* Cluster's received wei price */
 	uint        blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
 
@@ -499,22 +498,22 @@ library Lib {
     }
 
     /* Invoked, when cluster calls updateCluster() function */
-    function update(clusterData storage self, uint priceCoreMin, uint priceBandwidthMB, uint32 coreNumber) public
+    function update(clusterData storage self, uint priceCoreMin, uint priceDataTransfer, uint32 coreNumber) public
     {
 	self.priceCoreMin           = priceCoreMin;
-	self.priceBandwidthMB       = priceBandwidthMB;
+	self.priceDataTransfer      = priceDataTransfer;
 	self.receiptList.coreNumber = coreNumber;
 	self.blockReadFrom          = block.number;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint32 memLen, uint priceCoreMin, uint priceBandwidthMB, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint32 memLen, uint priceCoreMin, uint priceDataTransfer, uint32 coreNumber) public
     {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
 	self.clusterAddressesID = memLen;
-	self.priceCoreMin    = priceCoreMin;
-	self.priceBandwidthMB  = priceBandwidthMB;
+	self.priceCoreMin       = priceCoreMin;
+	self.priceDataTransfer  = priceDataTransfer;
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;

@@ -14,7 +14,7 @@ def authenticateORCID(orcID, eBlocBroker=None, web3=None): #{
     account = web3.eth.accounts[0]     
     if eBlocBroker.functions.isOrcIDVerified(orcID).call() == 0:
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateOrcID(orcID) 
-        return('Tx: ' + tx.hex()) 
+        return('Tx_hash: ' + tx.hex()) 
     else:
         return('OrcID: ' + orcID + ' is already authenticated.')    
     
