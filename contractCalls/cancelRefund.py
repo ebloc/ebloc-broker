@@ -41,4 +41,4 @@ if __name__ == '__main__':
        sys.exit() 
       
     tx = eBlocBroker.transact({"from": web3.eth.accounts[accountID], "gas": 4500000}).cancelRefund(clusterAddress, jobKey, index) 
-    print('Tx: ' + tx.hex()) 
+    print('Tx_hash: ' + tx.hex()) 
