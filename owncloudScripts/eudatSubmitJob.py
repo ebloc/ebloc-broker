@@ -74,7 +74,7 @@ def eudatSubmitJob(tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     accountID = 0
     
     res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, gasBandwidthMB, str(jobDescription), storageID, str(tarHash), accountID)
-    print(res)
+    print('Tx_hash: ' + res)
 
 if __name__ == "__main__":
     if(len(sys.argv) == 2):

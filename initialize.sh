@@ -3,6 +3,9 @@
 preInstall=0;
 newRpcPort="8545"; # Please change it if you have different RPC_PORT number.
 
+# Update repository with the latest update
+# git fetch --all && git reset --hard origin/master
+
 # Pre-installation:-----------------------------------------
 if [ $preInstall -eq 1 ]; then
     ## Python3 setup, required for all clusters! ========================================================
@@ -145,8 +148,8 @@ elif [[ -z "$COINBASE" ]]; then
     read clusterID 
     echo 'export COINBASE="'$clusterID'"' >>~/.profile   
 else
-    echo "COINBASE is: \"$COINBASE\""
-    check=$(python contractCalls/isAddress.py $COINBASE);
+    echo "COINBASE is: $COINBASE"
+    check=$(contractCalls/isAddress.py $COINBASE);
     if [ "$check" != "True" ]; then
        echo "Ethereum address is not valid, please use a valid one.";
        exit
