@@ -47,6 +47,13 @@ job_state_code['TIMEOUT']      = 16
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
+
+storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
+cachType  = enum('local', 'ipfs')
+
 def log(strIn, color=''):
    from colored import stylize
    from colored import fg
