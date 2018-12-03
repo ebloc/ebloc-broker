@@ -2,6 +2,8 @@
 
 import os, sys,json
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from dotenv import load_dotenv
+load_dotenv()
 from imports import connectEblocBroker
 from imports import getWeb3
 from os.path import expanduser
@@ -9,10 +11,12 @@ home = expanduser("~")
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
+CLUSTER_ID  = os.getenv("CLUSTER_ID")
 
+sys.exit()
 if __name__ == '__main__':
     # USER Inputs----------------------------------------------------------------
-    account           = web3.eth.accounts[0]  # Cluster's Ethereum Address
+    account           = CLUSTER_ID # web3.eth.accounts[0]  # Cluster's Ethereum Address
     coreNumber        = 2 
     clusterEmail      = "alper.alimoglu@gmail.com" 
     federationCloudId = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
@@ -24,7 +28,7 @@ if __name__ == '__main__':
     # ----------------------------------------------------------------------------	
     if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
 		# First time running:
-        log('Please first run: python whisperInitialize.py')
+        print('Please first run: ../scripts/whisperInitialize.py')
         sys.exit()
     else:
         with open(home + '/.eBlocBroker/whisperInfo.txt') as json_file:

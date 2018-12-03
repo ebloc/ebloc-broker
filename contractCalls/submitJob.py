@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, sys, time
+import os, sys, time, enum
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 from imports import connectEblocBroker
@@ -47,12 +47,14 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, j
         return 'Error: Requested core number is greater than the cluster\'s core number.'
     if len(jobDescription) >= 128:
         return 'Error: Length of jobDescription is greater than 128, please provide lesser.'
-    if int(storageID) >= 5:
+    if int(storageID) > 4:
         return 'Error: Wrong storageID value is given. Please provide from 0 to 4.'
     if len(jobKey) >= 64:
         return 'Error: Length of jobDescription is greater than 64, please provide lesser.'
     if coreMinuteGas == 0: 
-        return 'Error: coreMinuteGas provided as 0. Please give non-zero value'
+        return 'Error: coreMinuteGas provided as 0. Please provide non-zero value'
+    if coreMinuteGas > 1440: 
+        return 'Error: coreMinuteGas provided greater than 1440. Please provide smaller value'
         
     # print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
     tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription,
@@ -67,14 +69,14 @@ if __name__ == '__main__':
         clusterAddress = web3.toChecksumAddress(clusterAddress) 
         blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.call().getClusterInfo(clusterAddress) 
         my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
-        jobKey         = str(sys.argv[2]) 
-        coreNum        = int(sys.argv[3]) 
-        coreMinuteGas  = int(sys.argv[4])
+        jobKey          = str(sys.argv[2]) 
+        coreNum         = int(sys.argv[3]) 
+        coreMinuteGas   = int(sys.argv[4])
         gasDataTransfer = int(sys.argv[5])        
-        jobDescription = str(sys.argv[6])         
-        storageID      = int(sys.argv[7])
-        sourceCodeHash = str(sys.argv[8]) 
-        accountID      = int(sys.argv[9])        
+        jobDescription  = str(sys.argv[6])         
+        storageID       = int(sys.argv[7])
+        sourceCodeHash  = str(sys.argv[8]) 
+        accountID       = int(sys.argv[9])        
     elif len(sys.argv) == 13: 
         clusterAddress  = str(sys.argv[1])
         jobKey          = str(sys.argv[2]) 
@@ -89,11 +91,11 @@ if __name__ == '__main__':
         sourceCodeHash  = str(sys.argv[11]) 
         accountID       = int(sys.argv[12])
         coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
-        gasDataTransfer  = dataTransferIn + dataTransferOut
+        gasDataTransfer = dataTransferIn + dataTransferOut
     else:   
         # USER Inputs ================================================================
         clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'
-        storageID      = 0
+        storageID      = lib.storageID.ipfs
         if test == 0: # IPFS
             jobKey         = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
             # TODO: convert into ===>  sourceCodeHash     = ''
@@ -111,7 +113,7 @@ if __name__ == '__main__':
         coreMinuteGas   = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         dataTransferIn  = 100 
         dataTransferOut = 100        
-        gasDataTransfer  = dataTransferIn + dataTransferOut
+        gasDataTransfer = dataTransferIn + dataTransferOut
         # =============================================================================
 
     tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, jobDescription, storageID, sourceCodeHash, accountID)   

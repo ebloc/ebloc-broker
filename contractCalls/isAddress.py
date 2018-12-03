@@ -2,7 +2,7 @@
 
 import sys
 
-def isAddress(clusterAddress, web3=None): #{
+def isAddress(clusterAddress, web3=None):
     if web3 is None:
         import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
