@@ -9,41 +9,42 @@ import lib
 home = expanduser("~")  
 
 def getWeb3():
-	if lib.POA_CHAIN == 0:
-		 # Note that you should create only one RPCProvider per process,
-		 # as it recycles underlying TCP/IP network connections between
-		 # your process and Ethereum node
-		web3 = Web3(HTTPProvider('http://localhost:' + str(lib.RPC_PORT)))
-		from web3.shh import Shh
-		Shh.attach(web3, "shh")
-	else:
-		web3 = Web3(IPCProvider(home + '/eblocPOA/private/geth.ipc')) 
-		from web3.middleware import geth_poa_middleware
-       # inject the poa compatibility middleware to the innermost layer
-		web3.middleware_stack.inject(geth_poa_middleware, layer=0)
-		from web3.shh import Shh
-		Shh.attach(web3, "shh")
-	if not web3.isConnected(): 
-		 return 'notconnected'
-	return web3 
+    if lib.POA_CHAIN == 0:
+		# Note that you should create only one RPCProvider per process,
+		# as it recycles underlying TCP/IP network connections between
+		# your process and Ethereum node
+        web3 = Web3(HTTPProvider('http://localhost:' + str(lib.RPC_PORT)))
+        from web3.shh import Shh
+        Shh.attach(web3, "shh")
+    else:
+        web3 = Web3(IPCProvider(home + '/eblocPOA/private/geth.ipc')) 
+        from web3.middleware import geth_poa_middleware
+        # inject the poa compatibility middleware to the innermost layer
+        web3.middleware_stack.inject(geth_poa_middleware, layer=0)
+        from web3.shh import Shh
+        Shh.attach(web3, "shh")
+    if not web3.isConnected():
+        # If notconnected may required to do following: sudo chown -R `whoami` ~/eblocPOA/private/geth.ipc
+        return 'notconnected'
+    return web3 
 
 def connectEblocBroker(web3=None):
-	if web3 is None:
-		 web3 = getWeb3()
-		 if web3 == 'notconnected':			 
-			 return 'notconnected'
-	fileAddr = open(home + '/eBlocBroker/contractCalls/address.json', "r")
-	contractAddress = fileAddr.read().replace("\n", "")
+    if web3 is None:
+        web3 = getWeb3()
+        if web3 == 'notconnected':			 
+            return 'notconnected'
+    fileAddr = open(home + '/eBlocBroker/contractCalls/address.json', "r")
+    contractAddress = fileAddr.read().replace("\n", "")
 
-	with open(home + '/eBlocBroker/contractCalls/abi.json', 'r') as abi_definition:
-		abi = json.load(abi_definition)
+    with open(home + '/eBlocBroker/contractCalls/abi.json', 'r') as abi_definition:
+        abi = json.load(abi_definition)
 
-	contractAddress = web3.toChecksumAddress(contractAddress) 
-	eBlocBroker     = web3.eth.contract(contractAddress, abi=abi)
-	return eBlocBroker 
+    contractAddress = web3.toChecksumAddress(contractAddress) 
+    eBlocBroker     = web3.eth.contract(contractAddress, abi=abi)
+    return eBlocBroker 
 
 if __name__ == '__main__': 
-   eBlocBroker = connectEblocBroker() 
+    eBlocBroker = connectEblocBroker() 
 
 # [Errno 111] Connection refused => web3 is not connected (class.name: ConnectionRefusedError)
 # Exception: web3.exceptions.BadFunctionCallOutput => wrong mapping input is give (class.name: BadFunctionCallOutput)

@@ -46,7 +46,7 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
       txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp,
                             dataTransferSum, eBlocBroker, web3)
       time.sleep(5)      
-   log("receiptCheck " + txHash)  
+   log("receiptCheck() " + txHash)  
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
    txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| receiptCheckTx\n") 
    txFile.close() 
@@ -78,8 +78,8 @@ def calculateDataTransferOut(outputFileName, pathType):
         dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes           
     
     dataTransferOut =  int(dataTransferOut) * 0.000001
-    log('dataTransferOut: ' + str(dataTransferOut) + ' MB  | Rounded: ' + str(int(dataTransferOut)) + ' MB', 'green')    
-    return int(dataTransferOut) # Round dataTransferIn down to the nearest integer
+    log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
+    return dataTransferOut # Round dataTransferIn down to the nearest integer
 
 def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    globals()['jobKey'] = jobKey
@@ -160,8 +160,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    else:
        log('dataTransferIn.txt does not exist...', 'red')
        
-   log('dataTransferIn: ' + str(dataTransferIn) + ' MB  | Rounded: ' + str(int(dataTransferIn)) + ' MB')
-   dataTransferIn = int(dataTransferIn) # round dataTransferIn down to the nearest integer
+   log('dataTransferIn=' + str(dataTransferIn) + ' MB  | Rounded=' + str(int(dataTransferIn)) + ' MB')
+   dataTransferIn = dataTransferIn # round dataTransferIn down to the nearest integer
    if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'):
       fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
       modifiedDate = fDate.read().rstrip('\n') 
@@ -392,9 +392,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          log('Files could not be uploaded', 'red')
          sys.exit()
          
-   dataTransferSum = dataTransferIn + dataTransferOut
-   print('dataTransferSum=' + str(dataTransferSum) + ' MB')
-   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferSum)
+   dataTransferSum = dataTransferIn + dataTransferOut   
+   log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
+   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, int(dataTransferSum))
    log('DONE.')
    # Removed downloaded code from local since it is not needed anymore
    # subprocess.run(['rm', '-rf', programPath + '/' + jobKey + "_" + index])
