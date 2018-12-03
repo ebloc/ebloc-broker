@@ -138,7 +138,7 @@ def test_receipt(web3, accounts, chain): #{
             print('jobPriceValue: ' + str(jobPriceValue))
             set_txn_hash = my_contract.transact({"from": accounts[8],
                                                  "value":web3.toWei(jobPriceValue, "wei"
-                                                 )}).submitJob(account, jobKey, coreNum, "Science", gasCoreMin, gasBandwidthMB, 1, folderHash)
+                                                 )}).submitJob(account, jobKey, coreNum, "Science", gasCoreMin, gasBandwidthMB, 4, folderHash, 0)
             contract_address = chain.wait.for_receipt(set_txn_hash)
             print("submitJob: " + str(contract_address["gasUsed"]))
 			# print("Contract Balance after: " + str(web3.eth.getBalance(accounts[0])))
