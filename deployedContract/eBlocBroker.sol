@@ -48,13 +48,14 @@ contract eBlocBroker {
 	require(input != 0);
 	_ ;
     }
-    */
+
     modifier check_gasCoreMin_storageID(uint32 gasCoreMin, uint8 storageID) {
-	/* gasCoreMin is maximum 1 day */
+	// gasCoreMin is maximum 1 day 
 	require(storageID < 5 && !(gasCoreMin == 0 || gasCoreMin > 1440)); 
 	_ ;
     }
-
+    */
+    
     modifier deregisterClusterCheck() {
 	require(clusterContract[msg.sender].blockReadFrom != 0 &&
 		clusterContract[msg.sender].isRunning);
@@ -220,13 +221,14 @@ contract eBlocBroker {
     /* Performs a job submission to eBlocBroker by a client. */
     function submitJob(address clusterAddress, string memory jobKey, uint32 core,
 		       string memory jobDesc, uint32 gasCoreMin, uint32 gasDataTransfer,
-		       uint8 storageID, string memory sourceCodeHash)
-	check_gasCoreMin_storageID(gasCoreMin, storageID)  /*isZero(core)*/  public payable
+		       uint8 storageID, string memory sourceCodeHash, uint8 cacheType)
+	/*check_gasCoreMin_storageID(gasCoreMin, storageID)*/ /*isZero(core)*/ public payable
 	returns (bool success)
     {	
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 		
-	if (core == 0 || msg.value == 0 || !cluster.isRunning ||
+	if (core == 0 || msg.value == 0 || !cluster.isRunning || storageID > 4 || gasCoreMin == 0 ||
+	    gasCoreMin > 1440 || // gasCoreMin is maximum 1 day
 	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceDataTransfer * gasDataTransfer ||
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
@@ -248,7 +250,7 @@ contract eBlocBroker {
 			startTime:         0
 			}
 		));	
-	emit LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasDataTransfer);
+	emit LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasDataTransfer, cacheType);
 	return true;
     }
 
@@ -417,7 +419,8 @@ contract eBlocBroker {
 		 uint8 storageID,
 		 string desc,
 		 string sourceCodeHash,
-		 uint32 gasDataTransfer
+		 uint32 gasDataTransfer,
+		 uint8 cacheType
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
