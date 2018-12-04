@@ -52,7 +52,7 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
-cachType  = enum('local', 'ipfs')
+cacheType = enum('local', 'ipfs')
 
 def log(strIn, color=''):
    from colored import stylize

@@ -9,21 +9,23 @@ from imports import getWeb3
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, jobDescription, storageID, sourceCodeHash, accountID):
+def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer,
+              jobDescription, storageID, sourceCodeHash, cacheType, accountID):
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
     # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW        
     blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
     my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
 
     if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): 
-       return "Requested cluster's Ethereum Address \"" + clusterAddress + "\" does not exist."
+       return "Error: Requested cluster's Ethereum Address \"" + clusterAddress + "\" does not exist."
     
     fromAccount = web3.eth.accounts[accountID] 
     fromAccount = web3.toChecksumAddress(fromAccount) 
 
     blockReadFrom, orcid = eBlocBroker.functions.getUserInfo(fromAccount).call() 
-    if not eBlocBroker.functions.isUserExist(fromAccount).call(): 
-       return "Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."
+
+    if not eBlocBroker.functions.isUserExist(fromAccount).call():
+       return "Error: Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."       
 
     if str(eBlocBroker.functions.isOrcIDVerified(orcid).call()) == '0':
        return 'User\'s orcid: ' + orcid + ' is not verified.'
@@ -37,7 +39,7 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, j
           print(output)
              
     jobPriceValue = coreNum * priceCoreMin * coreMinuteGas + priceDataTransfer * gasDataTransfer
-    gasLimit = 4500000
+    gasLimit      = 4500000
     
     if not len(sourceCodeHash):
         return 'sourceCodeHash should be 32 characters.'    
@@ -54,11 +56,13 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, j
     if coreMinuteGas == 0: 
         return 'Error: coreMinuteGas provided as 0. Please provide non-zero value'
     if coreMinuteGas > 1440: 
-        return 'Error: coreMinuteGas provided greater than 1440. Please provide smaller value'
+        return 'Error: coreMinuteGas provided greater than 1440. Please provide smaller value.'
+    if cacheType > 1:
+        return 'Error: cachType provided greater than 1. Please provide smaller value.'
         
     # print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
-    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription,
-                                                                                                        coreMinuteGas, gasDataTransfer, storageID, sourceCodeHash) 
+    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas,
+                                                                                                        gasDataTransfer, storageID, sourceCodeHash, cacheType) 
     return tx.hex()
 
 if __name__ == '__main__': 
@@ -94,14 +98,21 @@ if __name__ == '__main__':
         gasDataTransfer = dataTransferIn + dataTransferOut
     else:   
         # USER Inputs ================================================================
-        clusterAddress = '0x4e4a0750350796164D8DefC442a712B7557BF282'
-        storageID      = lib.storageID.ipfs
-        if test == 0: # IPFS
-            jobKey         = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
+        clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282')
+        storageID      = lib.storageID.eudat # lib.storageID.ipfs
+        cacheType      = lib.cacheType.local # default
+        
+        if storageID == lib.storageID.ipfs: # IPFS
+            jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
+            cacheType = lib.cacheType.ipfs # default
             # TODO: convert into ===>  sourceCodeHash     = ''
-            sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository            
-        else:
+            sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository: TODO: provide anyway
+        elif storageID == lib.storageID.eudat: # IPFS: TODO: update 
+            oc = owncloud.Client('https://b2drop.eudat.eu/')
+            oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
+
             sourceCodeHash     = '00000000000000000000000000000000'
+            
             #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
         coreNum         = 1 
@@ -113,12 +124,15 @@ if __name__ == '__main__':
         coreMinuteGas   = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         dataTransferIn  = 100 
         dataTransferOut = 100        
-        gasDataTransfer = dataTransferIn + dataTransferOut
+        gasDataTransfer = dataTransferIn + dataTransferOut        
         # =============================================================================
 
-    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, jobDescription, storageID, sourceCodeHash, accountID)   
-    print('Tx_hash: ' + tx_hash)
-
+    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, jobDescription, storageID, sourceCodeHash, cacheType, accountID)    
+    if 'Error' in tx_hash:
+        print(tx_hash)
+        sys.exit()
+    
+    print('Tx_hash: ' + tx_hash)    
     print('Waiting job to be deployed...')
     while True: 
         receipt = web3.eth.getTransactionReceipt(tx_hash)
