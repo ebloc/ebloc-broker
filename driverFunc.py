@@ -10,12 +10,9 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-jobKeyGlobal     = None
-indexGlobal      = None
-storageIDGlobal  = None
-cacheTypeGlobal  = None
-shareTokenGlobal = '-1'
-dataTransferIn    = 0 # if the requested file is already cached, it stays as 0
+globals()['shareToken'] = '-1'
+cacheTypeGlobal = None
+dataTransferIn  = 0 # if the requested file is already cached, it stays as 0
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
@@ -31,20 +28,16 @@ def log(strIn, color=''):
    txFile.write(strIn + "\n") 
    txFile.close() 
 
-   fname = lib.LOG_PATH + '/transactions/' + jobKeyGlobal + '_' + indexGlobal + '_driverOutput' + '.txt'
+   fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
    txFile = open(fname, 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
 
 def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
-   global jobKeyGlobal
-   global indexGlobal
-   global storageIDGlobal
-   global shareTokenGlobal
-
-   jobKeyGlobal    = jobKey  
-   indexGlobal     = index 
-   storageIDGlobal = storageID
+   globals()['jobKey']    = jobKey
+   globals()['index']     = index
+   globals()['storageID'] = storageID
+  
    jobKeyGit       = str(jobKey).replace("=", "/")
    
    log("key: "   + jobKey) 
@@ -59,21 +52,16 @@ def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
    # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
    subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID, resultsFolder, eBlocBroker,  web3)
+   lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, eBlocBroker,  web3)
 
 def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
-    global jobKeyGlobal
-    global indexGlobal
-    global storageIDGlobal
-    global shareTokenGlobal
-
-    lib.isIpfsOn()
+    globals()['jobKey'] = jobKey
+    globals()['index']  = index
+    globals()['storageID']  = storageID
+              
+    lib.isIpfsOn()  
     log("jobKey: " + jobKey)
-    
-    jobKeyGlobal = jobKey  
-    indexGlobal  = index
-    storageIDGlobal = storageID
-    
+             
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'           
 
@@ -103,7 +91,8 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
     if "CumulativeSize" in isIPFSHashExist:
        # cmd: ipfs get $jobKey --output=$resultsFolder
        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
-       res = subprocess.check_output(['ipfs', 'get', jobKey, '--output='+resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
+       # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor 
+       res = subprocess.check_output(['ipfs', 'get', jobKey, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
        print(res)
               
        if storageID == '2': # Case for the ipfsMiniLock
@@ -126,7 +115,7 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
        log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
        return False 
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-    lib.sbatchCall(jobKeyGlobal, indexGlobal, storageIDGlobal, shareTokenGlobal, userID,
+    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
                    resultsFolder, dataTransferIn, eBlocBroker,  web3)
 
 # To test driverFunc.py executed as script.

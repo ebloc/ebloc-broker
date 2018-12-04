@@ -7,6 +7,7 @@
 ### Mac
 
 ```bash
+cd ~/eBlocBroker
 git fetch
 git checkout origin/master -- contract/contracts/eBlocBroker.sol
 git checkout origin/master -- contract/contracts/Lib.sol
@@ -30,6 +31,7 @@ echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" 
 ### Linux
 
 ```bash
+cd ~/eBlocBroker
 git fetch
 git checkout origin/master -- contract/contracts/eBlocBroker.sol
 git checkout origin/master -- contract/contracts/Lib.sol
@@ -84,6 +86,6 @@ testOutput.contracts["e.sol:eBlocBroker"].abi
 
 ```
 cd $HOME/eBlocBroker/contractCalls/
-cp printed_ABI =========> contractCalls/abi.json
+nano abi.json   # cp printed_ABI =========> contractCalls/abi.json
 bash fixAbi.sh
 ```
