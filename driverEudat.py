@@ -169,7 +169,8 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
     return True
 
 # Checks already shared or not
-def eudatGetShareToken(fID):   
+def eudatGetShareToken(fID, userID):
+   saveShareToken = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '_shareToken.txt'
    # TODO: store shareToken id with jobKey in some file, later do: globals()['oc'].decline_remote_share(int(<share_id>)) to cancel shared folder at endCode or after some time later
    if globals()['cacheType'] == 'ipfs' and os.path.isdir(lib.OWN_CLOUD_PATH + '/' + globals()['jobKey']):
        log('Eudat shared folder is already accepted and exist on Eudat mounted folder...', 'green')              
@@ -177,11 +178,20 @@ def eudatGetShareToken(fID):
            globals()['folderType'] = 'tar.gz'
        else:
            globals()['folderType'] = 'folder'
+
+       if os.path.isfile(saveShareToken):
+           with open(saveShareToken, 'r') as content_file:
+               content = content_file.read()                  
+               if content:
+                   globals()['shareToken'] = content
+               else:
+                   content = None                     
+       log("ShareToken=" + globals()['shareToken'])           
        return True
 
    shareList = globals()['oc'].list_open_remote_share() 
    acceptFlag      = 0 
-   eudatFolderName = "" 
+   eudatFolderName = ""
    log("Finding share token...")
    for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
       inputFolderName  = shareList[i]['name']
@@ -192,10 +202,14 @@ def eudatGetShareToken(fID):
       if inputFolderName == globals()['jobKey'] and inputOwner == fID:
          globals()['shareToken'] = str(shareList[i]['share_token'])
          eudatFolderName  = str(inputFolderName)
-         acceptFlag = 1
-         log("Found. InputId=" + inputID + " |ShareToken: " + globals()['shareToken'])
+         acceptFlag       = 1
+         log("Found. InputId=" + inputID + " |ShareToken=" + globals()['shareToken'])                  
+         # print(saveShareToken)
+         with open(saveShareToken, 'w') as the_file:
+             the_file.write(globals()['shareToken'])                  
 
-         if globals()['cacheType'] is 'ipfs': 
+         if globals()['cacheType'] is 'ipfs':
+             # TODO: record shareToken 
              val = globals()['oc'].accept_remote_share(int(inputID));
              log('Sleeping 3 seconds for accepted folder to emerge on the mounted Eudat folder...')
              time.sleep(3)
@@ -231,7 +245,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
    
-    if not eudatGetShareToken(fID): return    
+    if not eudatGetShareToken(fID, userID): return 
     check, ipfsHash = cache(userID, resultsFolderPrev)   
     if not check: return   
    
