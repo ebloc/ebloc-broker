@@ -120,7 +120,7 @@ def cache(userID, resultsFolderPrev):
         tarFile = lib.OWN_CLOUD_PATH + '/' + globals()['jobKey'] + '/' + globals()['jobKey'] + '.tar.gz'        
         if os.path.isfile(tarFile):            
             globals()['folderType'] = 'tar.gz'
-            ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip()
+            ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip() #TODO: add try catch, try few times if error generated
         else:
             globals()['folderType'] = 'folder'
             ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', lib.OWN_CLOUD_PATH + '/' + globals()['jobKey']]).decode('utf-8').strip()            
@@ -197,7 +197,7 @@ def eudatGetShareToken(fID):
 
          if globals()['cacheType'] is 'ipfs': 
              val = globals()['oc'].accept_remote_share(int(inputID));
-             log('Sleeping 3 seconds for accepted folder to emerger on mounted Eudat folder...')
+             log('Sleeping 3 seconds for accepted folder to emerge on the mounted Eudat folder...')
              time.sleep(3)
              tryCount = 0
              while True:
@@ -217,16 +217,17 @@ def eudatGetShareToken(fID):
       return False
    return True
 
-def driverEudat(jobKey, index, fID, userID, eBlocBroker, web3, oc):
+def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
     storageID = '1'   
     globals()['jobKey']    = jobKey
-    globals()['oc']        = oc
-    globals()['cacheType'] = 'local'   
-    globals()['index']     = index 
-       
-    log("jobKey=" + jobKey) 
-    log("index="  + index) 
+    globals()['oc']        = oc    
+    globals()['index']     = index    
+    globals()['cacheType'] = lib.cacheType.reverse_mapping[cacheType]               
 
+    log("jobKey=" + jobKey) 
+    log("index="  + index)
+    log("cacheType="  + globals()['cacheType'])
+    
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
    

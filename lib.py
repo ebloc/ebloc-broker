@@ -16,7 +16,7 @@ GDRIVE_METADATA   = "/home/" + WHOAMI + "/.gdrive"
 IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs" 
 HOME              = "/home/" + WHOAMI
 
-IPFS_USE                    = 0
+IPFS_USE                    = 1 # Should be '1', if caching into IPFS is open
 PROGRAM_PATH                = '/var/eBlocBroker' 
 JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt" 
 CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + "/cancelledJobs.txt"
@@ -47,8 +47,11 @@ job_state_code['TIMEOUT']      = 16
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
+# enum: https://stackoverflow.com/a/1695250/2402577
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
+    reverse = dict((value, key) for key, value in enums.items())
+    enums['reverse_mapping'] = reverse
     return type('Enum', (), enums)
 
 storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
@@ -136,7 +139,11 @@ def isIpfsOn():
                           preexec_fn=os.setpgrp)      
       time.sleep(5)
       with open(LOG_PATH + '/ipfs.out', 'r') as content_file:
-         log(content_file.read(), 'blue') 
+         log(content_file.read(), 'blue')
+         
+      # IPFS mounted at: /ipfs //cmd: sudo ipfs mount -f /ipfs      
+      res = subprocess.check_output(['sudo', 'ipfs', 'mount', '-f', '/ipfs']).decode('utf-8').strip()
+      log(res)      
    else:
       log("IPFS is already on.", 'green') 
 
