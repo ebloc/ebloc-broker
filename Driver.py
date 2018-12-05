@@ -305,7 +305,8 @@ while True:
        sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + " " + loggedJobs[i].args['clusterAddress'] + " " +
            loggedJobs[i].args['jobKey'] + " " + str(loggedJobs[i].args['index']) + " " + str(loggedJobs[i].args['storageID']) + " " +
-           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + str(loggedJobs[i].args['gasDataTransfer']))
+           loggedJobs[i].args['desc'] + " " + sourceCodeHash + " " + str(loggedJobs[i].args['gasDataTransfer']) +
+           " " + str(loggedJobs[i].args['cacheType']))
 
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -363,7 +364,7 @@ while True:
 
           log("New job has been received. EUDAT call |" + time.ctime(), "green")
           driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
-                                     hashlib.md5(userID.encode('utf-8')).hexdigest(),
+                                     hashlib.md5(userID.encode('utf-8')).hexdigest(), loggedJobs[i].args['cacheType'],
                                      eBlocBroker, web3, oc)
           #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
