@@ -381,7 +381,7 @@ while True:
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
-                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), sourceCodeHash, eBlocBroker, web3)
+                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), sourceCodeHash, loggedJobs[i].args['cacheType'], eBlocBroker, web3)
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
        f_blockReadFrom.write(str(int(maxVal) + 1) + '\n')

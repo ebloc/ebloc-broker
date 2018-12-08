@@ -16,7 +16,7 @@ GDRIVE_METADATA   = "/home/" + WHOAMI + "/.gdrive"
 IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs" 
 HOME              = "/home/" + WHOAMI
 
-IPFS_USE                    = 1 # Should be '1', if caching into IPFS is open
+IPFS_USE                    = 0 # Should be '1', if caching into IPFS is open
 PROGRAM_PATH                = '/var/eBlocBroker' 
 JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt" 
 CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + "/cancelledJobs.txt"
@@ -55,7 +55,7 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
-cacheType = enum('local', 'ipfs')
+cacheType = enum('private', 'public', 'ipfs')
 
 def log(strIn, color=''):
    from colored import stylize

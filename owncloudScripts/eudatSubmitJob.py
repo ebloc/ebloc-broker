@@ -75,8 +75,8 @@ def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     storageID = 1
     accountID = 0
 
-    # cacheType = lib.cacheType.local
-    cacheType = lib.cacheType.ipfs
+    cacheType = lib.cacheType.private
+    # cacheType = lib.cacheType.public
     
     res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, gasBandwidthMB, str(jobDescription), storageID, str(tarHash), cacheType, accountID)
     print('Tx_hash: ' + res)
