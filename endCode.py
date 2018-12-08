@@ -70,7 +70,7 @@ def calculateDataTransferOut(outputFileName, pathType):
         #-----------
         dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
     elif pathType == 'd':
-        p1 = subprocess.Popen(['du', '-b', outputFileName], stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(['du', '-sb', outputFileName], stdout=subprocess.PIPE)
         #-----------
         p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
@@ -366,9 +366,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
       os.chdir(resultsFolder) 
       #if 'folder' in mimeType: # Received job is in folder format
       removeSourceCode(resultsFolderPrev)
-      
-      with open(f, resultsFolderPrev + '/modifiedDate.txt') as content_file:
-         date = content_file.read().strip()
+           
+      with open(resultsFolderPrev + '/modifiedDate.txt', 'r') as content_file:
+          date = content_file.read().rstrip()
       log(subprocess.check_output(['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))            
       time.sleep(0.25) 
       dataTransferOut = calculateDataTransferOut(outputFileName, 'f')

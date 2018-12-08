@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import subprocess, sys, os
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import lib
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 sys.path.insert(0, './contractCalls')
@@ -18,7 +20,7 @@ clusterToShare = 'alper.alimoglu@gmail.com' # 'alper01234alper@gmail.com'
 
 # subprocess.run(['sudo', 'chmod', '-R', '777', folderToShare])
 
-if folderType == 'folder': #{
+if folderType == 'folder': 
     tarHash = subprocess.check_output(['../scripts/generateMD5sum.sh', folderToShare]).decode('utf-8').strip()                        
     tarHash = tarHash.split(' ', 1)[0]
     print('hash=' + tarHash)
@@ -35,7 +37,6 @@ if folderType == 'folder': #{
         res = subprocess.check_output(['gdrive', 'upload', '--recursive', folderToShare]).decode('utf-8').strip()
         print(res)    
         res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
-#}
 elif folderType == 'tar':
     if len(sys.argv) == 3:
         tarHash = sys.argv[2]        
@@ -73,11 +74,18 @@ print('\nSubmitting Job...')
 clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
 coreNum=1
 coreMinuteGas=5
+
+gasBandwidthInMB  = 100
+gasBandwidthOutMB = 100
+gasBandwidthMB    = gasBandwidthInMB + gasBandwidthOutMB
+
 jobDescription='science'
 storageID=4
+cacheType = lib.cacheType.private
+# cacheType = lib.cacheType.public
 accountID=0
 
-res = submitJob(str(clusterID), str(jobKey), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
+res = submitJob(str(clusterID), str(jobKey), coreNum, coreMinuteGas, gasBandwidthMB, str(jobDescription), storageID, str(tarHash), cacheType, accountID)
 print(res)
 
 

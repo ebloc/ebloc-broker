@@ -9,9 +9,11 @@ import subprocess
 import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
-globals()['cacheType']     = None
-globals()['folderType']    = None
-globals()['index']         = None
+globals()['cacheType']         = None
+globals()['folderType']        = None
+globals()['index']             = None
+globals()['globalCacheFolder'] = None
+
 globals()['dataTransferIn'] = 0 # if the requested file is already cached, it stays as 0 
 globals()['shareToken']    = '-1'
 
@@ -79,14 +81,43 @@ def isTarExistsInZip(resultsFolderPrev):
     log('folderType=' + globals()['folderType'])
 
 def cache(userID, resultsFolderPrev):
-    if globals()['cacheType'] is 'local': # Download into local directory at $HOME/.eBlocBroker/cache
-        globalCacheFolder = lib.PROGRAM_PATH + '/' + userID + '/cache'
-        if not os.path.isdir(globalCacheFolder): # If folder does not exist
-            os.makedirs(globalCacheFolder)
-                   
-        cachedFolder  = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey']
-        cachedTarFile = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '.tar.gz'
+    if globals()['cacheType'] == 'private': # First checking does is already exist under public cache directory
+        globals()['globalCacheFolder'] = lib.PROGRAM_PATH +'/cache'
 
+        if not os.path.isdir(globals()['globalCacheFolder']): # If folder does not exist
+            os.makedirs(globals()['globalCacheFolder'])
+                   
+        cachedFolder  = globals()['globalCacheFolder'] + '/' + globals()['jobKey']
+        cachedTarFile = globals()['globalCacheFolder'] + '/' + globals()['jobKey'] + '.tar.gz'
+        
+        if not os.path.isfile(cachedTarFile):
+            if os.path.isfile(cachedFolder + '/run.sh'):
+                res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
+                if res == globals()['jobKey']: #Checking is already downloaded folder's hash matches with the given hash                    
+                    globals()['folderType'] = 'folder'
+                    log('Already cached under public directory...', 'green')
+                    globals()['cacheType'] = 'public'
+                    return True, ''
+        else:
+            globals()['folderType'] = 'tar.gz'
+            res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
+            if res == globals()['jobKey']: #Checking is already downloaded folder's hash matches with the given hash
+                log('Already cached under public directory...', 'green')
+                globals()['cacheType'] = 'public'
+                return True, ''
+    
+    if globals()['cacheType'] == 'private' or globals()['cacheType'] == 'public': # Download into private directory at $HOME/.eBlocBroker/cache
+        if globals()['cacheType'] is 'private':
+            globals()['globalCacheFolder'] = lib.PROGRAM_PATH + '/' + userID + '/cache'
+        elif globals()['cacheType'] is 'public':
+            globals()['globalCacheFolder'] = lib.PROGRAM_PATH +'/cache'
+        
+        if not os.path.isdir(globals()['globalCacheFolder']): # If folder does not exist
+            os.makedirs(globals()['globalCacheFolder'])
+                   
+        cachedFolder  = globals()['globalCacheFolder'] + '/' + globals()['jobKey']
+        cachedTarFile = globals()['globalCacheFolder'] + '/' + globals()['jobKey'] + '.tar.gz'
+        
         if not os.path.isfile(cachedTarFile):
             if os.path.isfile(cachedFolder + '/run.sh'):
                 res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
@@ -95,9 +126,9 @@ def cache(userID, resultsFolderPrev):
                     log('Already cached ...', 'green')
                     return True, ''
                 else:
-                    if not eudatDownloadFolder(globalCacheFolder, cachedFolder):
+                    if not eudatDownloadFolder(globals()['globalCacheFolder'], cachedFolder):
                         return False, ''                    
-            if not eudatDownloadFolder(globalCacheFolder, cachedFolder):
+            if not eudatDownloadFolder(globals()['globalCacheFolder'], cachedFolder):
                 return False, ''
             if globals()['folderType'] == 'tar.gz' and not isRunExistInTar(cachedTarFile):
                 subprocess.run(['rm', '-f', cachedTarFile])
@@ -113,7 +144,7 @@ def cache(userID, resultsFolderPrev):
                 log('Already cached ...', 'green')
                 return True, ''
             else:
-                if not eudatDownloadFolder(globalCacheFolder, cachedFolder):
+                if not eudatDownloadFolder(globals()['globalCacheFolder'], cachedFolder):
                     return False, ''
     elif globals()['cacheType'] == 'ipfs':
         log('Adding from owncloud mount point into IPFS...', 'blue')
@@ -204,12 +235,10 @@ def eudatGetShareToken(fID, userID):
          eudatFolderName  = str(inputFolderName)
          acceptFlag       = 1
          log("Found. InputId=" + inputID + " |ShareToken=" + globals()['shareToken'])                  
-         # print(saveShareToken)
          with open(saveShareToken, 'w') as the_file:
              the_file.write(globals()['shareToken'])                  
-
+         
          if globals()['cacheType'] is 'ipfs':
-             # TODO: record shareToken 
              val = globals()['oc'].accept_remote_share(int(inputID));
              log('Sleeping 3 seconds for accepted folder to emerge on the mounted Eudat folder...')
              time.sleep(3)
@@ -227,7 +256,7 @@ def eudatGetShareToken(fID, userID):
      
    if acceptFlag == 0:
       globals()['oc'].logout() 
-      log("Couldn't find the shared file", 'red')
+      log("Error: Couldn't find the shared file", 'red')
       return False
    return True
 
@@ -240,7 +269,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
 
     log("jobKey=" + jobKey) 
     log("index="  + index)
-    log("cacheType="  + globals()['cacheType'])
+    log("cacheType=" + globals()['cacheType'])
     
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
@@ -253,12 +282,18 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
         os.makedirs(resultsFolderPrev)
         os.makedirs(resultsFolder)
 
-    if globals()['cacheType'] == 'local':
-        # Untar cached tar file into local directory
+    if globals()['cacheType'] == 'private' or globals()['cacheType'] == 'public':
+        '''
+        if globals()['cacheType'] is 'private':
+            globals()['globalCacheFolder'] = lib.PROGRAM_PATH + '/' + userID + '/cache'
+        elif globals()['cacheType'] is 'public':
+            globals()['globalCacheFolder'] = lib.PROGRAM_PATH +'/cache'
+        '''
+        # Untar cached tar file into private directory
         if globals()['folderType'] == 'tar.gz':
-            subprocess.run(['tar', '-xf', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
+            subprocess.run(['tar', '-xf', globals()['globalCacheFolder'] + '/' + globals()['jobKey'] + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
         elif globals()['folderType'] == 'folder':
-            subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + globals()['jobKey'] + '/', resultsFolder]) 
+            subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', globals()['globalCacheFolder'] + '/' + globals()['jobKey'] + '/', resultsFolder])
     elif globals()['cacheType'] == 'ipfs':
         log('Reading from IPFS hash=' + ipfsHash)
         if globals()['folderType'] == 'tar.gz':
