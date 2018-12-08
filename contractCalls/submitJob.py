@@ -100,7 +100,7 @@ if __name__ == '__main__':
         # USER Inputs ================================================================
         clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282')
         storageID      = lib.storageID.eudat # lib.storageID.ipfs
-        cacheType      = lib.cacheType.local # default
+        cacheType      = lib.cacheType.private # default
         
         if storageID == lib.storageID.ipfs: # IPFS
             jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
