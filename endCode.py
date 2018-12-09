@@ -79,7 +79,7 @@ def calculateDataTransferOut(outputFileName, pathType):
     
     dataTransferOut =  int(dataTransferOut) * 0.000001
     log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
-    return dataTransferOut # Round dataTransferIn down to the nearest integer
+    return dataTransferOut
 
 def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    globals()['jobKey'] = jobKey
@@ -88,8 +88,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    log('To run again:')
    log('~/eBlocBroker/endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID)
    log('')
-   log("jobID: " + jobID)
-   
+   log("jobID: " + jobID)   
    if jobKey == index:
       log('JobKey and index are same.', 'red') 
       sys.exit() 
@@ -160,8 +159,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    else:
        log('dataTransferIn.txt does not exist...', 'red')
        
-   log('dataTransferIn=' + str(dataTransferIn) + ' MB  | Rounded=' + str(int(dataTransferIn)) + ' MB')
-   dataTransferIn = dataTransferIn # round dataTransferIn down to the nearest integer
+   log('dataTransferIn=' + str(dataTransferIn) + ' MB  | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')  
    if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'):
       fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
       modifiedDate = fDate.read().rstrip('\n') 
@@ -254,7 +252,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          log("Generated new hash return empty error. Trying again...", 'yellow')
          newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).strip().decode('utf-8')      
          time.sleep(5)
-      dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
+      # dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
       # cmd: echo newHash | tail -n1 | awk '{print $2}'
       p1 = subprocess.Popen(['echo', newHash], stdout=subprocess.PIPE)
       #-----------
@@ -265,7 +263,16 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
       p2.stdout.close()
       #-----------
       newHash = p3.communicate()[0].decode('utf-8').strip()
-      log("newHash: " + newHash)        
+      log("newHash: " + newHash)
+      res = subprocess.check_output(['ipfs', 'pin', 'add', newHash]).decode('utf-8').strip() # pin downloaded ipfs hash
+      print(res)                      
+      isIPFSHashExist = subprocess.check_output(['ipfs', 'object', 'stat', newHash]).decode('utf-8').strip()
+      for item in isIPFSHashExist.split("\n"):
+          if "CumulativeSize" in item:
+              dataTransferOut = item.strip().split()[1]
+              break
+      dataTransferOut = int(dataTransferOut) * 0.000001
+      log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')   
    if str(storageID) == '2': # IPFS with miniLock
       os.chdir(resultsFolder) 
 
@@ -287,10 +294,18 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          log("Generated new hash return empty error. Trying again.", 'yellow')
          newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
          newHash = newHash.split(' ')[1]
-         time.sleep(5)
-         
-      dataTransferOut = calculateDataTransferOut(resultsFolder + '/result.tar.gz.minilock', 'f')   
-      log("newHash: " + newHash)               
+         time.sleep(5)         
+      # dataTransferOut = calculateDataTransferOut(resultsFolder + '/result.tar.gz.minilock', 'f')   
+      log("newHash: " + newHash)
+      res = subprocess.check_output(['ipfs', 'pin', 'add', newHash]).decode('utf-8').strip() # pin downloaded ipfs hash
+      print(res)                      
+      isIPFSHashExist = subprocess.check_output(['ipfs', 'object', 'stat', newHash]).decode('utf-8').strip()
+      for item in isIPFSHashExist.split("\n"):
+          if "CumulativeSize" in item:
+              dataTransferOut = item.strip().split()[1]
+              break
+      dataTransferOut = int(dataTransferOut) * 0.000001
+      log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')         
    elif str(storageID) == '1': # EUDAT
       log('Entered into Eudat case')
       newHash = '0x00'
