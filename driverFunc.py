@@ -12,7 +12,6 @@ from contractCalls.getJobInfo import getJobInfo
 
 globals()['shareToken'] = '-1'
 cacheTypeGlobal = None
-dataTransferIn  = 0 # if the requested file is already cached, it stays as 0
 
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
@@ -55,13 +54,16 @@ def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, eBlocBroker,  web3)
 
 def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
-    globals()['jobKey'] = jobKey
-    globals()['index']  = index
-    globals()['storageID']  = storageID
+    globals()['jobKey']    = jobKey
+    globals()['index']     = index
+    globals()['storageID'] = storageID
               
     lib.isIpfsOn()  
-    log("jobKey: " + jobKey)
-             
+    log("jobKey=" + jobKey)
+    isHashCached=lib.isHashCached(jobKey)
+    log("isHashCached=" + str(isHashCached))    
+
+    dataTransferIn    = 0 # if the requested file is already cached, it stays as 0                
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'           
 
@@ -73,7 +75,6 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
     
     if os.path.isfile(jobKey):
        subprocess.run(['rm', '-f', jobKey])
-
     ipfsCallCounter = 0
     while True:
         try:
@@ -81,6 +82,12 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
             # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
             isIPFSHashExist = subprocess.check_output(['timeout', '300', 'ipfs', 'object', 'stat', jobKey]).decode('utf-8').strip() # Wait Max 5 minutes.
             log(isIPFSHashExist)
+
+            for item in isIPFSHashExist.split("\n"):
+                if "CumulativeSize" in item:
+                    cumulativeSize = item.strip().split()[1]
+                    break
+                    # log(cumulativeSize)
             break
         except subprocess.CalledProcessError as e: # Catches resource temporarily unavailable on ipfs
             log(e.output.decode('utf-8').strip(), 'red')
@@ -94,10 +101,14 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
        # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor 
        res = subprocess.check_output(['ipfs', 'get', jobKey, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
        print(res)
-              
+       if not isHashCached:
+           dataTransferIn = cumulativeSize
+           dataTransferIn =  int(dataTransferIn) * 0.000001
+           log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')   
+           res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
+           print(res)           
        if storageID == '2': # Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
-
           # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
           log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey +
                                        '--passphrase=' + passW,
@@ -112,7 +123,7 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
           log("run.sh does not exist", 'red') 
           return False 
     else:
-       log("!!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
+       log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
        return False 
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
@@ -120,9 +131,9 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
 
 # To test driverFunc.py executed as script.
 if __name__ == '__main__':
-   var        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-   index      = "1"
-   myType     = "0"
+   var       = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
+   index     = "1"
+   storageID = "0"
 
-   driverIpfs(var, index, myType) 
+   driverIpfs(var, index, storageID) 
 
