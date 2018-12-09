@@ -12,8 +12,7 @@ from singleFolderShare import singleFolderShare
 def eudatInitializeFolder(folderToShare):    
     subprocess.run(['chmod', '-R', '777', folderToShare])
     # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
-    # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --no-recursion --null -T - -zcvf exampleexampleFolderToShare.tar.gz
-
+    # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
     p1 = subprocess.Popen(['find', folderToShare, '-print0'], stdout=subprocess.PIPE)
     #-----------
     p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
