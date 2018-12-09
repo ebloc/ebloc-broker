@@ -379,17 +379,18 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          log(subprocess.check_output([lib.GDRIVE, 'upload', '--parent', jobKey,
                                       outputFileName, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       elif 'gzip' in mimeType: # Received job is in folder tar.gz
-         log('mimeType: tar.gz') 
+         log('mimeType: tar.gz')
+         # log(os.getcwd()) # delete
          # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
-         log(subprocess.check_output([lib.GDRIVE, 'upload', jobKey,
+         log(subprocess.check_output([lib.GDRIVE, 'update', jobKey,
                                       outputFileName, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       elif '/zip' in mimeType: # Received job is in zip format
          log('mimeType: zip')
          # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
-         log(subprocess.check_output([lib.GDRIVE, 'upload', jobKey,
+         log(subprocess.check_output([lib.GDRIVE, 'update', jobKey,
                                       outputFileName, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
       else:
-         log('Files could not be uploaded', 'red')
+         log('Error: Files could not be uploaded', 'red')
          sys.exit()
          
    dataTransferSum = dataTransferIn + dataTransferOut   
