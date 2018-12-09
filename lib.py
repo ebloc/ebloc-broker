@@ -92,7 +92,20 @@ def web3Exception(check):
    if check == 'BadFunctionCallOutput':
       log('Error(web3): ' +  check + '.', 'red')
       # sys.exit()
-   
+
+def isHashCached(ipfsHash):
+    # cmd: ipfs pin ls --type recursive | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
+    p1 = subprocess.Popen(['ipfs', 'pin', 'ls', '--type', 'recursive'], stdout=subprocess.PIPE)
+    #-----------
+    p2 = subprocess.Popen(['grep', '-c', ipfsHash], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    #-----------
+    out = p2.communicate()[0].decode('utf-8').strip()
+    if out == '1':    
+        return True
+    else:
+        return False
+      
 # Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn():
    while True:

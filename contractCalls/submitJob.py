@@ -99,20 +99,21 @@ if __name__ == '__main__':
     else:   
         # USER Inputs ================================================================
         clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282')
-        storageID      = lib.storageID.eudat # lib.storageID.ipfs
+        storageID      = lib.storageID.ipfs
         cacheType      = lib.cacheType.private # default
         
         if storageID == lib.storageID.ipfs: # IPFS
             jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
-            cacheType = lib.cacheType.ipfs # default
+            cacheType = lib.cacheType.public # default
             # TODO: convert into ===>  sourceCodeHash     = ''
             sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository: TODO: provide anyway
+        '''    
         elif storageID == lib.storageID.eudat: # IPFS: TODO: update 
             oc = owncloud.Client('https://b2drop.eudat.eu/')
             oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 
             sourceCodeHash     = '00000000000000000000000000000000'
-            
+        '''     
             #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
         coreNum         = 1 
