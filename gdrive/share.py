@@ -14,7 +14,6 @@ if len(sys.argv) < 2:
 from contractCalls.submitJob import submitJob
 
 folderType = sys.argv[1]
-
 folderToShare  = 'exampleFolderToShare'
 clusterToShare = 'alper.alimoglu@gmail.com' # 'alper01234alper@gmail.com'
 
@@ -40,16 +39,27 @@ if folderType == 'folder':
 elif folderType == 'tar':
     if len(sys.argv) == 3:
         tarHash = sys.argv[2]        
-    else:    
-        subprocess.run(['tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
+    else:
+        subprocess.run(['chmod', '-R', '777', folderToShare])
+        # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
+        # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
+        p1 = subprocess.Popen(['find', folderToShare, '-print0'], stdout=subprocess.PIPE)
+        #-----------
+        p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
+        p1.stdout.close()
+        #-----------
+        p3 = subprocess.Popen(['tar', '--no-recursion', '--null', '-T', '-', '-zcvf', folderToShare + '.tar.gz'], stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
+        p2.stdout.close()
+        #-----------
+        p3.communicate()        
+        # subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
         tarHash = subprocess.check_output(['md5sum', folderToShare + '.tar.gz']).decode('utf-8').strip()
-        tarHash = tarHash.split(' ', 1)[0]            
-        subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])    
+        tarHash = tarHash.split(' ', 1)[0]
+        print('hash=' + tarHash)
+        subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])                
         subprocess.run(['gdrive', 'upload', tarHash + '.tar.gz'])    
         subprocess.run(['rm', '-f', tarHash + '.tar.gz'])
-    print('hash=' + tarHash)
     res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()
-
 elif folderType == 'zip':
     if len(sys.argv) == 3:
         tarHash = sys.argv[2]        
@@ -87,6 +97,3 @@ accountID=0
 
 res = submitJob(str(clusterID), str(jobKey), coreNum, coreMinuteGas, gasBandwidthMB, str(jobDescription), storageID, str(tarHash), cacheType, accountID)
 print(res)
-
-
-
