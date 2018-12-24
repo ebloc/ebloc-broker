@@ -21,20 +21,6 @@ globals()['shareToken']    = '-1'
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
 
-def silentremove(filename):
-    try:
-        os.remove(filename)
-    except OSError as e: # This would be "except OSError, e:" before Python 2.6
-       pass
-
-def removeFiles(filename):
-   if "*" in filename: 
-       for fl in glob.glob(filename):
-           print(fl)
-           silentremove(fl) 
-   else:
-       silentremove(filename) 
-
 def log(strIn, color=''):
    if color != '':
        print(stylize(strIn, fg(color))) 
@@ -131,7 +117,7 @@ def cache(userID, resultsFolderPrev):
             if not eudatDownloadFolder(globals()['globalCacheFolder'], cachedFolder):
                 return False, ''
             if globals()['folderType'] == 'tar.gz' and not isRunExistInTar(cachedTarFile):
-                subprocess.run(['rm', '-f', cachedTarFile])
+                lib.silentremove(cachedTarFile)
                 return False, ''            
         else: # Here we already know that its tar.gz file
             globals()['folderType'] = 'tar.gz'
@@ -196,7 +182,7 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
             subprocess.run(['unzip', '-jo', resultsFolderPrev + '/output.zip', '-d', resultsFolderPrev, '-x', '*result-*.tar.gz'])
         else:
             subprocess.run(['unzip', '-o', resultsFolderPrev + '/output.zip', '-d', resultsFolder, '-x', '*result-*.tar.gz'])
-        subprocess.run(['rm', '-f', resultsFolderPrev + '/output.zip'])
+        lib.silentremove(resultsFolderPrev + '/output.zip')    
     return True
 
 # Checks already shared or not
@@ -274,8 +260,11 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
    
-    if not eudatGetShareToken(fID, userID): return 
-    check, ipfsHash = cache(userID, resultsFolderPrev)   
+    if not eudatGetShareToken(fID, userID): return
+    
+    if globals()['cacheType'] != 'none':
+        check, ipfsHash = cache(userID, resultsFolderPrev)
+        
     if not check: return   
    
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist

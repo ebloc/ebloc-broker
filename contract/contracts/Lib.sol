@@ -33,6 +33,7 @@ library Lib {
 	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */
 	uint         priceCoreMin; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
 	uint    priceDataTransfer; /* Should be defined in wei. */
+	uint         priceStorage; /* Should be defined in wei. */
 	uint       receivedAmount; /* Cluster's received wei price */
 	uint        blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
 
@@ -54,7 +55,8 @@ library Lib {
     }
 
     /* Invoked, when cluster calls updateCluster() function */
-    function update(clusterData storage self, uint priceCoreMin, uint priceDataTransfer, uint32 coreNumber) public
+    function update(clusterData storage self, uint priceCoreMin, uint priceDataTransfer,
+		    uint32 coreNumber) public
     {
 	self.priceCoreMin           = priceCoreMin;
 	self.priceDataTransfer      = priceDataTransfer;
@@ -63,11 +65,10 @@ library Lib {
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint32 memLen, uint priceCoreMin, uint priceDataTransfer, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint priceCoreMin, uint priceDataTransfer, uint32 coreNumber) public
     {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
-	self.clusterAddressesID = memLen;
 	self.priceCoreMin       = priceCoreMin;
 	self.priceDataTransfer  = priceDataTransfer;
 	self.blockReadFrom      = block.number;

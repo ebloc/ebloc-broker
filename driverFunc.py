@@ -74,7 +74,7 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     
     if os.path.isfile(jobKey):
-       subprocess.run(['rm', '-f', jobKey])
+       lib.silentremove(jobKey)       
     ipfsCallCounter = 0
     while True:
         try:
@@ -104,21 +104,20 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
        if not isHashCached:
            dataTransferIn = cumulativeSize
            dataTransferIn =  int(dataTransferIn) * 0.000001
-           log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')   
-           res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
-           print(res)           
+           log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
+           if globals()['cacheType'] != 'none':
+               res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
+               print(res)           
        if storageID == '2': # Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
           # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
           log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey +
                                        '--passphrase=' + passW,
                                        '--output-file=' + resultsFolder + '/output.tar.gz']).decode('utf-8'))          
-          # cmd: rm -f $resultsFolder/$jobKey
-          subprocess.run(['rm', '-f', resultsFolder + '/' + jobKey])         
+          lib.silentremove(resultsFolder + '/' + jobKey)          
           # cmd: tar -xf $resultsFolder/output.tar.gz
           subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
-          # cmd: rm -f $resultsFolder/output.tar.gz
-          subprocess.run(['rm', '-f', resultsFolder + '/output.tar.gz'])             
+          lib.silentremove(resultsFolder + '/output.tar.gz')
        if not os.path.isfile('run.sh'): 
           log("run.sh does not exist", 'red') 
           return False 
@@ -136,4 +135,3 @@ if __name__ == '__main__':
    storageID = "0"
 
    driverIpfs(var, index, storageID) 
-
