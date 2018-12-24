@@ -57,7 +57,7 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer,
         return 'Error: coreMinuteGas provided as 0. Please provide non-zero value'
     if coreMinuteGas > 1440: 
         return 'Error: coreMinuteGas provided greater than 1440. Please provide smaller value.'
-    if cacheType > 1:
+    if cacheType > 2: # 0: 'private', 1: 'public', 2: 'none'
         return 'Error: cachType provided greater than 1. Please provide smaller value.'
         
     # print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
@@ -66,8 +66,7 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer,
     return tx.hex()
 
 if __name__ == '__main__': 
-    test = 0
-    
+    test = 0    
     if len(sys.argv) == 10:
         clusterAddress = str(sys.argv[1])
         clusterAddress = web3.toChecksumAddress(clusterAddress) 
@@ -110,8 +109,9 @@ if __name__ == '__main__':
         '''    
         elif storageID == lib.storageID.eudat: # IPFS: TODO: update 
             oc = owncloud.Client('https://b2drop.eudat.eu/')
-            oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
-
+            with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
+                password = content_file.read().strip()
+            oc.login(lib.OC_USER_ID, password)
             sourceCodeHash     = '00000000000000000000000000000000'
         '''     
             #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        

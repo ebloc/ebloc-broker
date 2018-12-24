@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, time, lib, base64, glob, getpass, subprocess, json
+import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
 from colored import stylize
 from colored import fg
 import hashlib
@@ -93,9 +93,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
       log('JobKey and index are same.', 'red') 
       sys.exit() 
       
-   # Paths--------------------------------------
-   programPath           = lib.PROGRAM_PATH    
-   # -------------------------------------------   
    encodedShareToken = '' 
    if shareToken != '-1':      
       encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8')
@@ -105,7 +102,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    
    # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" :
    while not jobInfo:      
-      log('jobInfo: ' + jobInfo) 
+      log('jobInfo=' + jobInfo) 
       log('getJobInfo.py ' + ' ' + lib.CLUSTER_ID + ' ' + jobKey + ' ' + index)
       log("Error: Please run geth on the background.", 'red')
       jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
@@ -117,10 +114,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    userIDAddr = hashlib.md5(userID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
    userInfo   = getUserInfo(userID, '1', eBlocBroker, web3)
 
-   resultsFolderPrev = programPath + "/" + userIDAddr + "/" + jobKey + "_" + index 
-   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
-
-   subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/result-*tar.gz')) 
+   resultsFolderPrev = lib.PROGRAM_PATH + "/" + userIDAddr + "/" + jobKey + "_" + index 
+   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'
+   
+   lib.removeFiles(resultsFolder + '/result-*tar.gz')   
    # cmd: find ./ -size 0 -print0 | xargs -0 rm
    p1 = subprocess.Popen(['find', resultsFolder, '-size', '0', '-print0'], stdout=subprocess.PIPE)
    #-----------
@@ -247,7 +244,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          log(subprocess.check_output(['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))                     
          newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz']).strip().decode('utf-8')
          newHash = newHash.split(' ')[1]
-         subprocess.run(['rm', '-f', resultsFolder + '/result.tar.gz'])
+         lib.silentremove(resultsFolder + '/result.tar.gz')
          '''
          log("Generated new hash return empty error. Trying again...", 'yellow')
          newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).strip().decode('utf-8')      
@@ -309,8 +306,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    elif str(storageID) == '1': # EUDAT
       log('Entered into Eudat case')
       newHash = '0x00'
-      # cmd: rm -f $resultsFolder/.node-xmlhttprequest*
-      subprocess.run(['rm', '-f'] + glob.glob(resultsFolder + '/.node-xmlhttprequest*'))
+      lib.removeFiles(resultsFolder + '/.node-xmlhttprequest*')      
       os.chdir(resultsFolder) 
       removeSourceCode(resultsFolderPrev)      
       
@@ -377,7 +373,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          countTry += 1 
          time.sleep(15)
          
-      log('mimeType: ' + str(mimeType))                
+      log('mimeType=' + str(mimeType))                
       os.chdir(resultsFolder) 
       #if 'folder' in mimeType: # Received job is in folder format
       removeSourceCode(resultsFolderPrev)
@@ -412,9 +408,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
    receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, int(dataTransferSum))
    log('DONE.')
+   '''
    # Removed downloaded code from local since it is not needed anymore
-   # subprocess.run(['rm', '-rf', programPath + '/' + jobKey + "_" + index])
-
+   if os.path.isdir(resultsFolderPrev):
+       shutil.rmtree(resultsFolderPrev) # deletes a directory and all its contents.
+   '''
 if __name__ == '__main__':
    jobKey      = sys.argv[1] 
    index       = sys.argv[2] 

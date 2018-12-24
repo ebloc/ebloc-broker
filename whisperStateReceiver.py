@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 # To run:
-# ./whisperStateReceiver.py 0   #log into a file
-# ./whisperStateReceiver.py 1   #print into console
+# ./whisperStateReceiver.py 0 # Logs into a file
+# ./whisperStateReceiver.py 1 # Prints into console
 
 # from web3.auto import w3
 import asyncio, lib
@@ -28,18 +28,21 @@ def log(strIn):
 		txFile.close()
 		
 def post(message):
-	try:
-		web3.shh.post({
-			'powTarget': 2, # 2.5
-			'powTime': 5,   # 2
-			'ttl': 60,
-			'payload': web3.toHex(text='I am on.'),
-			'topic': topic,
-			'pubKey': message,
-		})
-	except:
-		post(message)
+    coreInfo = lib.shellCommand(['sinfo', '-h', '-o%C']).split("/")
+    if len(coreInfo) != 0:
+       idleCore = coreInfo[1]
 
+    try:
+        web3.shh.post({
+            'powTarget': 2, # 2.5
+            'powTime': 5,   # 2
+            'ttl': 60,
+            'payload': web3.toHex(text='online/' + idleCore),
+            'topic': topic,
+            'pubKey': message,
+        })
+    except:
+        post(message)
 
 def handle_event(event):
     #print(event)

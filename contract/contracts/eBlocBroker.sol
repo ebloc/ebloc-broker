@@ -5,11 +5,12 @@ email:  alper.alimoglu AT gmail.com
 */
 
 pragma solidity ^0.4.17; import "./Lib.sol";
+import "./eBlocBrokerInterface.sol";
 
 /* Contract Address: 0x */
 /// @title eBlocBroker is a blockchain based autonomous computational resource
 ///        broker.
-contract eBlocBroker {
+contract eBlocBroker is eBlocBrokerInterface {
     /* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
     uint    public deployedBlockNumber;    
     address public owner;
@@ -166,29 +167,40 @@ contract eBlocBroker {
     }
 
     /* Registers a provider's (msg.sender's) cluster to eBlocBroker. */
-    function registerCluster(uint32 coreNumber, string memory clusterEmail, string memory fID,
-			     string memory miniLockID, uint priceCoreMin, uint priceDataTransfer,
-			     string memory ipfsAddress, string memory whisperPublicKey) public
+    function registerCluster(uint32 coreNumber,
+			     string memory clusterEmail,
+			     string memory fID,
+			     string memory miniLockID,
+			     uint priceCoreMin,
+			     uint priceDataTransfer,
+			     uint priceStorage,
+			     string memory ipfsAddress,
+			     string memory whisperPublicKey) public
 	returns (bool success)
     {
 	if (coreNumber == 0 || priceCoreMin == 0 || priceDataTransfer == 0)
 	    revert();
 	
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
+	
 	if (cluster.blockReadFrom != 0 && cluster.isRunning)
 	    revert();
 
 	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender;
+	    cluster.priceStorage = priceStorage;
 	    cluster.update(priceCoreMin, priceDataTransfer, coreNumber);
 	    cluster.isRunning = true;
 	} else {
-	    cluster.constructCluster(uint32(clusterAddresses.length), priceCoreMin, priceDataTransfer, coreNumber);
+	    cluster.clusterAddressesID = uint32(clusterAddresses.length);
+	    cluster.priceStorage = priceStorage;
+	    cluster.constructCluster(priceCoreMin, priceDataTransfer, coreNumber);
 	    clusterAddresses.push(msg.sender); /* In order to obtain list of clusters */
 	}
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, priceDataTransfer, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceDataTransfer, priceStorage,
+			    ipfsAddress, whisperPublicKey);
 	return true;
     }
 
@@ -202,26 +214,34 @@ contract eBlocBroker {
     }
 
     /* All set operations are combined to save up some gas usage */
-    function updateCluster(uint32 coreNumber, string memory clusterEmail, string memory fID,
-			   string memory miniLockID, uint priceCoreMin, uint priceDataTransfer,
-			   string memory ipfsAddress, string memory whisperPublicKey)
+    function updateCluster(uint32 coreNumber,
+			   string memory clusterEmail,
+			   string memory fID,
+			   string memory miniLockID,
+			   uint priceCoreMin,
+			   uint priceDataTransfer,
+			   uint priceStorage,
+			   string memory ipfsAddress,
+			   string memory whisperPublicKey)
 	public returns (bool success)
     {
 	Lib.clusterData storage cluster = clusterContract[msg.sender];
 	if (cluster.blockReadFrom == 0)
 	    revert();
 
+	clusterContract[msg.sender].priceStorage = priceStorage;
 	clusterContract[msg.sender].update(priceCoreMin, priceDataTransfer, coreNumber);
 
 	/*emit*/ LogCluster(msg.sender, coreNumber, clusterEmail, fID, miniLockID,
-			    priceCoreMin, priceDataTransfer, ipfsAddress, whisperPublicKey);
+			    priceCoreMin, priceDataTransfer, priceStorage,
+			    ipfsAddress, whisperPublicKey);
 	return true;
     }
-
+    
     /* Performs a job submission to eBlocBroker by a client. */
     function submitJob(address clusterAddress, string memory jobKey, uint32 core,
-		       string memory jobDesc, uint32 gasCoreMin, uint32 gasDataTransfer,
-		       uint8 storageID, string memory sourceCodeHash, uint8 cacheType)
+		       uint32 gasCoreMin, uint32 gasDataTransferIn, uint32 gasDataTransferOut,
+		       uint8 storageID, string memory sourceCodeHash, uint8 cacheType, uint gasCacheMin)
 	/*check_gasCoreMin_storageID(gasCoreMin, storageID)*/ /*isZero(core)*/ public payable
 	returns (bool success)
     {	
@@ -229,28 +249,42 @@ contract eBlocBroker {
 		
 	if (core == 0 || msg.value == 0 || !cluster.isRunning || storageID > 4 || gasCoreMin == 0 ||
 	    gasCoreMin > 1440 || // gasCoreMin is maximum 1 day
-	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceDataTransfer * gasDataTransfer ||
+	    msg.value < cluster.priceCoreMin * gasCoreMin * core + cluster.priceDataTransfer * (gasDataTransferIn + gasDataTransferOut) +
+	                cluster.priceStorage * gasDataTransferIn * gasCacheMin ||
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
 	    verifyOrcID[userContract[msg.sender].orcID] == 0 ||	    
 	    core > cluster.receiptList.coreNumber)
-	    revert();
-		
-	Lib.status [] storage jobStatus = cluster.jobStatus[jobKey];
+	    revert();		
 
-	jobStatus.push(Lib.status({
+	cluster.jobStatus[jobKey].push(Lib.status({
       		        status:            uint8(jobStateCodes.PENDING),
 			core:              core,                       /* Requested core value */
-			gasCoreMin:        gasCoreMin,                 //
+			gasCoreMin:        gasCoreMin,                 
 			jobOwner:          msg.sender,
 			received:          msg.value,
-			priceCoreMin:      cluster.priceCoreMin,       //
-			priceDataTransfer: cluster.priceDataTransfer, //
+			priceCoreMin:      cluster.priceCoreMin,       
+			priceDataTransfer: cluster.priceDataTransfer, 
 			startTime:         0
 			}
 		));	
-	/*emit*/ LogJob(clusterAddress, jobKey, jobStatus.length - 1, storageID, jobDesc, sourceCodeHash, gasDataTransfer, cacheType);
+	/*emit*/ LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length - 1, storageID, sourceCodeHash, gasDataTransferIn, gasDataTransferOut, cacheType, gasCacheMin);
+	return true;
+    }
+    
+
+    /**
+     *@dev Sets requested job's description.
+     *@param clusterAddress The address of the cluster.
+     *@param jobKey The string of the jobKey.
+     *@param index The index of the job.
+     */
+    function setJobDescription(address clusterAddress, string memory jobKey, string memory jobDesc) public
+	returns (bool success)
+    {
+	if (msg.sender == clusterContract[clusterAddress].jobStatus[jobKey][0].jobOwner)
+	    LogJobDescription(clusterAddress, jobKey, jobDesc);
 	return true;
     }
 
@@ -292,7 +326,7 @@ contract eBlocBroker {
        It takes Ethereum address of the user (userAddress), which can be obtained by calling LogUser event.
     */
     function getUserInfo(address userAddress) public view
-	returns(uint, string memory )
+	returns(uint, string memory)
     {
 	if (userContract[userAddress].blockReadFrom != 0)
 	    return (userContract[userAddress].blockReadFrom, userContract[userAddress].orcID);
@@ -390,65 +424,4 @@ contract eBlocBroker {
     {
 	return clusterContract[clusterAddress].receiptList.printIndex(index);
     }
-
-    /* -----------------------------------------------------EVENTS---------------------------------------------------------*/    
-    /* Records the completed jobs' information under receiptCheck() method call.*/
-    event LogReceipt(address clusterAddress,
-		     string jobKey,
-		     uint index,
-		     address recipient,
-		     uint received,
-		     uint returned,
-		     uint endTime,
-		     string resultIpfsHash,
-		     uint8 storageID,
-		     uint dataTransferSum
-		     );
-
-    /* Records the updated jobs' information under setJobStatus() method call. */
-    event LogSetJob(address clusterAddress,
-		    string jobKey,
-		    uint32 index,
-		    uint startTime
-		    );
-    
-    /* Records the submitted jobs' information under submitJob() method call.*/
-    event LogJob(address indexed clusterAddress,
-		 string jobKey,
-		 uint index,
-		 uint8 storageID,
-		 string desc,
-		 string sourceCodeHash,
-		 uint32 gasDataTransfer,
-		 uint8 cacheType
-		 );
-    
-    /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
-    event LogCluster(address clusterAddress,
-		     uint32 coreNumber,
-		     string clusterEmail,
-		     string fID,
-		     string miniLockID,
-		     uint priceCoreMin,
-		     uint priceDataTransfer,
-		     string ipfsAddress,
-		     string whisperPublicKey
-		     );
-
-    /* Records the refunded jobs' information under refund() method call. */
-    event LogCancelRefund(address indexed clusterAddress,
-			  string jobKey,
-			  uint32 index
-			  );
-
-    /* Records the registered users' registered information under registerUser method call.*/
-    event LogUser(address userAddress,
-		  string userEmail,
-		  string fID,
-		  string miniLockID,
-		  string ipfsAddress,
-		  string orcID,
-		  string githubUserName,
-		  string whisperPublicKey
-		  );
 }
