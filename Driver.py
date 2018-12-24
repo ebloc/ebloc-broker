@@ -84,9 +84,6 @@ def runWhisperStateReceiver():
 		# Running driverCancel.py on the background
 		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
 		
-# Paths =================================================================
-jobsReadFromPath               = lib.JOBS_READ_FROM_FILE
-# =======================================================================
 # res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
 # rows = res[0] columns = res[1]
 columns = 100
@@ -96,7 +93,6 @@ def log(strIn, color=''):
         print(stylize(strIn, fg(color)))
     else:
         print(strIn)
-
     txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
     txFile.write(strIn + "\n")
     txFile.close()
@@ -104,22 +100,20 @@ def log(strIn, color=''):
 def terminate():
 	log('Terminated')
 	subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit
-
 	''' Following line is added, in case ./killall.sh does not work due to sudo.
 	Send the kill signal to all the process groups '''
 	os.killpg(os.getpgid(driverCancelProcess.pid),   signal.SIGTERM)
 	os.killpg(os.getpgid(driverReceiverProcess.pid), signal.SIGTERM)	
 	sys.exit()
 
-def shellCommand(args): 
-   return subprocess.check_output(args).decode('utf-8').strip()
-
 def idleCoreNumber(printFlag=1):
-    coreInfo = shellCommand(['sinfo', '-h', '-o%C']).split("/")
+    # cmd: sinfo -h -o%C
+    coreInfo = lib.shellCommand(['sinfo', '-h', '-o%C']).split("/")
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
        if printFlag == 1:
-          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] + '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue')
+          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] +
+              '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue')
     else:
        log("sinfo return emptry string.", 'red')
        idleCore = 0
@@ -174,22 +168,24 @@ def isDriverOn():
    if int(out) > 1:
       log("Driver is already running.", 'green')
 
+# Startup functions are called
+def startup():    
+    isDriverOn()
+    lib.isSlurmOn()
+    isGethOn()
+    runDriverCancel()
+    runWhisperStateReceiver()
+
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
 if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': 
    print(stylize('Once please run:  ./initialize.sh \n', fg('red')))
    terminate()
 
-log('=' * int(int(columns) / 2  - 12)   + ' cluster session starts ' + '=' * int(int(columns) / 2 - 12), "green")
+log('=' * int(int(columns) / 2 - 12) + ' cluster session starts ' +
+    '=' * int(int(columns) / 2 - 12), "green")
 
-# Start-up functions are called
-isDriverOn()
-lib.isSlurmOn()
-isGethOn()
-runDriverCancel()
-runWhisperStateReceiver()
-# -----------------------------
-
+startup()
 isContractExist = isContractExist(web3)
 if not isContractExist:
    log('Please check that you are using eBloc blockchain.', 'red')
@@ -250,11 +246,8 @@ else:
    blockReadFrom = blockReadFromLocal
 
 clusterGainedAmountInit = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3)
-log('{0: <21}'.format('deployedBlockNumber:') +  str(deployedBlockNumber) + "| Cluster's initial money: " + clusterGainedAmountInit)
-
-# Remove queuedJobs from previous test.
-subprocess.run(['rm', '-rf', lib.LOG_PATH + 'queuedJobs.txt']) 
-subprocess.run(['rm', '-f',  lib.JOBS_READ_FROM_FILE])
+log('{0: <21}'.format('deployedBlockNumber:') +  str(deployedBlockNumber) +
+    "| Cluster's initial money: " + clusterGainedAmountInit)
 
 while True:     
     if "Error" in blockReadFrom:
@@ -262,15 +255,13 @@ while True:
        terminate()
 
     clusterGainedAmount = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3) 
-    squeueStatus        = shellCommand(['squeue'])    
-
+    squeueStatus        = lib.shellCommand(['squeue'])    
     if "squeue: error:" in str(squeueStatus):
        log("SLURM is not running on the background, please run \'sudo ./runSlurm.sh\'. \n")
        log(squeueStatus)
        terminate()
        
-    idleCoreNumber()
-    
+    idleCoreNumber()    
     log("Current Slurm Running jobs status: \n" + squeueStatus)
     log('-' * int(columns), "green")
     if 'notconnected' != clusterGainedAmount:
@@ -314,7 +305,7 @@ while True:
        jobKey = loggedJobs[i].args['jobKey']
        index  = int(loggedJobs[i].args['index'])
 
-       strCheck = shellCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
+       strCheck = lib.shellCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
        jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
 
        userID   = ""
@@ -345,7 +336,7 @@ while True:
           else:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
           slurmPendingJobCheck()
-          print(shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
+          print(lib.shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
@@ -359,9 +350,9 @@ while True:
                 with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
                    password = content_file.read().strip()
                 oc = owncloud.Client('https://b2drop.eudat.eu/') 
-                oc.login('5f0db7e4-3078-4988-8fa5-f066984a8a97', password)  # Unlocks EUDAT account
-                password = None   
-
+                oc.login(lib.OC_USER_ID, password)  # Unlocks EUDAT account
+                password = None
+                
           log("New job has been received. EUDAT call |" + time.ctime(), "green")
           driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), loggedJobs[i].args['cacheType'],

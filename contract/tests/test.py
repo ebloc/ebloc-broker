@@ -50,9 +50,10 @@ def test_receipt(web3, accounts, chain): #{
     print(account)
     whisperPubKey = "0x04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
     priceCoreMin     = 1
-    priceBandwidthMB = 1    
+    priceBandwidthMB = 1
+    priceCache       = 1    
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster(1, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", whisperPubKey)
+    set_txn_hash     = my_contract.transact().registerCluster(1, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print("usedGas registerCluster: " + str(contract_address["gasUsed"]))
 
@@ -83,7 +84,7 @@ def test_receipt(web3, accounts, chain): #{
     print("Cluster's coreLimit:  " + str(coreLimit))
 
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().updateCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, "0x", whisperPubKey)   
+    set_txn_hash     = my_contract.transact().updateCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "0x", whisperPubKey)   
 
     blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  " + str(coreLimit))
@@ -96,7 +97,7 @@ def test_receipt(web3, accounts, chain): #{
     set_txn_hash     = my_contract.transact().authenticateOrcID('cluster@gmail.com')
         
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, "0x", whisperPubKey)
+    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "0x", whisperPubKey)
 
     initial_myGas = contract_address["gasUsed"]
     print("usedGas empty:23499: " + str(initial_myGas))
@@ -104,7 +105,7 @@ def test_receipt(web3, accounts, chain): #{
     #web3.coinbase = accounts[0]
     #web3.coinbase
     web3.eth.defaultAccount = accounts[2]
-    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, "0x", whisperPubKey)
+    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "0x", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     
     currBlk = web3.eth.blockNumber
@@ -122,7 +123,9 @@ def test_receipt(web3, accounts, chain): #{
             arguments = line.rstrip('\n').split(" ")
 
             gasCoreMin     = int(arguments[1]) - int(arguments[0])
-            gasBandwidthMB = 100
+            gasDataTransferIn  = 100
+            gasDataTransferOut = 100
+            minToCache         = 0
             coreNum = int(arguments[2])
 
             chain.wait.for_block(int(arguments[0]))
@@ -133,12 +136,15 @@ def test_receipt(web3, accounts, chain): #{
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
 			# print("Contract Balance before: " + str(web3.eth.getBalance(accounts[0])))
             # jobPriceValue = 60 * 10000000000000000 * coreNum
+
+            # execution cost + BW-100MB cost is paid
+            jobPriceValue = gasCoreMin * priceCoreMin * coreNum + priceBandwidthMB * (gasDataTransferIn + gasDataTransferOut) + priceCache * gasDataTransferIn * minToCache
             
-            jobPriceValue = gasCoreMin * priceCoreMin * coreNum + priceBandwidthMB * gasBandwidthMB # execution cost + BW-100MB cost is paid
+            
             print('jobPriceValue: ' + str(jobPriceValue))
             set_txn_hash = my_contract.transact({"from": accounts[8],
                                                  "value":web3.toWei(jobPriceValue, "wei"
-                                                 )}).submitJob(account, jobKey, coreNum, "Science", gasCoreMin, gasBandwidthMB, 4, folderHash, 0)
+                                                 )}).submitJob(account, jobKey, coreNum, gasCoreMin, gasDataTransferIn, gasDataTransferOut, 4, folderHash, 0, 0)
             contract_address = chain.wait.for_receipt(set_txn_hash)
             print("submitJob: " + str(contract_address["gasUsed"]))
 			# print("Contract Balance after: " + str(web3.eth.getBalance(accounts[0])))
