@@ -68,7 +68,7 @@ def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderT
            if not os.path.isfile(cachedTarFile):
               if not gdriveDownloadFolder(jobKey, globals()['globalCachePath'], folderName, folderType): return False
               if not lib.isRunExistInTar(cachedTarFile):
-                 subprocess.run(['rm', '-f', cachedTarFile])
+                 lib.silentremove(cachedTarFile)
                  return False, ''              
            else:
               res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
@@ -190,8 +190,8 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType, eB
    shareToken = -1
    globals()['cacheType'] = lib.cacheType.reverse_mapping[cacheType]
    
-   log("key: "   + jobKey) 
-   log("index: " + index) 
+   log("key="   + jobKey) 
+   log("index=" + index) 
 
    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'    
@@ -211,31 +211,35 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType, eB
 
    if globals()['cacheType'] == 'private' or globals()['cacheType'] == 'public':
       if 'folder' in mimeType: # Recieved job is in folder format
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
+         if globals()['cacheType'] != 'none': 
+             check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
          if not check: return   
          subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', globals()['globalCachePath'] + '/' + folderName + '/', resultsFolder])      
       elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'gzip')
+         if globals()['cacheType'] != 'none':
+             check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'gzip')
          if not check: return   
          subprocess.run(['tar', '-xf', globals()['globalCachePath'] + '/' + folderName, '--strip-components=1', '-C', resultsFolder])
       elif 'zip' in mimeType: # Recieved job is in zip format
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'zip')
+         if globals()['cacheType'] != 'none': 
+             check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'zip')
          if not check: return   
          # cmd: unzip -o $resultsFolderPrev/$folderName -d $resultsFolder
-         subprocess.run(['unzip', '-o', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])       
-         # cmd: rm -f $resultsFolderPrev/$folderName
-         subprocess.run(['rm', '-rf', resultsFolderPrev + '/' + folderName])
+         subprocess.run(['unzip', '-o', resultsFolderPrev + '/' + folderName, '-d', resultsFolder])             
+         lib.silentremove(resultsFolderPrev + '/' + folderName)
       else:
          return False
    elif globals()['cacheType'] == 'ipfs':
       if 'folder' in mimeType:
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
+         if globals()['cacheType'] != 'none':
+             check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'folder')
          if not check: return   
          log('Reading from IPFS hash=' + ipfsHash)
          # Copy from cached IPFS folder into user's path           
          subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
       elif 'gzip' in mimeType:
-         check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'gzip')
+         if globals()['cacheType'] != 'none':
+             check, ipfsHash = cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, 'gzip')
          if not check: return            
          log('Reading from IPFS hash=' + ipfsHash)
          subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
