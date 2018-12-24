@@ -1,4 +1,4 @@
-import os, sys, subprocess, time, json
+import os, sys, subprocess, time, json, errno, glob
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,6 +9,7 @@ CLUSTER_ID = os.getenv("CLUSTER_ID")
 GDRIVE     = os.getenv("GDRIVE")
 RPC_PORT   = os.getenv("RPC_PORT")
 POA_CHAIN  = os.getenv("POA_CHAIN")
+OC_USER_ID = os.getenv("OC_USER_ID")
 
 GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo" 
 OWN_CLOUD_PATH    = "/ocCluster" 
@@ -55,7 +56,10 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
-cacheType = enum('private', 'public', 'ipfs')
+cacheType = enum('private', 'public', 'none', 'ipfs')
+
+def shellCommand(args): 
+   return subprocess.check_output(args).decode('utf-8').strip()
 
 def log(strIn, color=''):
    from colored import stylize
@@ -70,16 +74,20 @@ def log(strIn, color=''):
    txFile.write(strIn + "\n") 
    txFile.close() 
 
+# https://stackoverflow.com/a/10840586/2402577   
 def silentremove(filename):
     try:
         os.remove(filename)
-    except OSError as e: # This would be "except OSError, e:" before Python 2.6
-       pass
+    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+        # if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+        log(str(e), 'red')
+        # raise # re-raise exception if a different error occurred
+        pass
 
-def removeFiles(filename): 
+def removeFiles(filename):
    if "*" in filename: 
        for fl in glob.glob(filename):
-           print(fl)
+           # print(fl)
            silentremove(fl) 
    else:
        silentremove(filename) 
@@ -94,8 +102,8 @@ def web3Exception(check):
       # sys.exit()
 
 def isHashCached(ipfsHash):
-    # cmd: ipfs pin ls --type recursive | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
-    p1 = subprocess.Popen(['ipfs', 'pin', 'ls', '--type', 'recursive'], stdout=subprocess.PIPE)
+    # cmd: ipfs refs local | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
+    p1 = subprocess.Popen(['ipfs', 'refs', 'local'], stdout=subprocess.PIPE)
     #-----------
     p2 = subprocess.Popen(['grep', '-c', ipfsHash], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
@@ -159,6 +167,21 @@ def isIpfsOn():
       log(res)      
    else:
       log("IPFS is already on.", 'green') 
+
+def isRunExistInTar(tarPath):
+    try:
+        FNULL = open(os.devnull, 'w')
+        res = subprocess.check_output(['tar', 'ztf', tarPath, '--wildcards', '*/run.sh'], stderr=FNULL).decode('utf-8').strip()
+        FNULL.close()
+        if res.count('/') == 1: # Main folder should contain the 'run.sh' file
+            log('./run.sh exists under the parent folder', 'green')
+            return True
+        else:
+            log('run.sh does not exist under the parent folder', 'red')
+            return False            
+    except:
+        log('run.sh does not exist under the parent folder', 'red')
+        return False
 
 def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, dataTransferIn,  eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
@@ -231,18 +254,3 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, data
       # Detects an error on the SLURM side
       log("Error occured, jobID is not a digit.", 'red')
       return False
-
-def isRunExistInTar(tarPath):
-    try:
-        FNULL = open(os.devnull, 'w')
-        res = subprocess.check_output(['tar', 'ztf', tarPath, '--wildcards', '*/run.sh'], stderr=FNULL).decode('utf-8').strip()
-        FNULL.close()
-        if res.count('/') == 1: # Main folder should contain the 'run.sh' file
-            log('./run.sh exists under the parent folder', 'green')
-            return True
-        else:
-            log('run.sh does not exist under the parent folder', 'red')
-            return False            
-    except:
-        log('run.sh does not exist under the parent folder', 'red')
-        return False
