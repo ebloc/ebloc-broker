@@ -25,20 +25,18 @@ def pushBlockInfo(contract_address):
     return
 
 def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun, usedBandwidthMB):
-    set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve",
-                                                           0, e, usedBandwidthMB)
+    set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve", 0, e, usedBandwidthMB)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     pushBlockInfo(contract_address)
 
-def test_receipt(web3, accounts, chain): #{
+def test_receipt(web3, accounts, chain):    
     global blkArrayIndex
     global runTime
 	
     web3._requestManager = web3.manager
     my_contract, _       = chain.provider.get_or_deploy_contract('eBlocBroker')
-
-    print('Contract\'s Owner: ' + str(my_contract.call().getOwner()))
-		
+    
+    print('Contract\'s Owner: ' + str(my_contract.call().getOwner()))		
     print(accounts)
 
     account = accounts[0]
@@ -50,12 +48,18 @@ def test_receipt(web3, accounts, chain): #{
     print(account)
     whisperPubKey = "0x04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
     priceCoreMin     = 1
-    priceBandwidthMB = 1
+    priceBandwidthMB = 1    
+    priceStorage     = 1    
     priceCache       = 1    
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster(1, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", whisperPubKey)
+    
+    set_txn_hash     = my_contract.transact().registerCluster( "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, priceCoreMin, priceBandwidthMB, priceStorage, priceCache, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print("usedGas registerCluster: " + str(contract_address["gasUsed"]))
+    
+    listOfBlockNum = my_contract.call().getClusterPricesBlockNumbers(web3.eth.defaultAccount)
+    print("List of blockNumbers")
+    print(listOfBlockNum)    
 
     web3.eth.defaultAccount = accounts[8]
     set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc', whisperPubKey)
@@ -80,14 +84,18 @@ def test_receipt(web3, accounts, chain): #{
     output = my_contract.call().isClusterExist(accounts[0])
     print("isExist: "+str(output))
 
-    blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB = my_contract.call().getClusterInfo(account)
+    blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB, priceStorage, priceCache = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  " + str(coreLimit))
 
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().updateCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "0x", whisperPubKey)   
+    set_txn_hash     = my_contract.transact().updateCluster("cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 128, priceCoreMin, priceBandwidthMB, priceCache, priceCache, "0x", whisperPubKey)   
 
-    blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB = my_contract.call().getClusterInfo(account)
+    blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB, priceStorage, priceCache = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  " + str(coreLimit))
+
+    listOfBlockNum = my_contract.call().getClusterPricesBlockNumbers(web3.eth.defaultAccount)
+    print("List of blockNumbers")
+    print(listOfBlockNum)    
 
     web3.eth.defaultAccount = accounts[0]
     set_txn_hash     = my_contract.transact().deregisterCluster()
@@ -97,7 +105,7 @@ def test_receipt(web3, accounts, chain): #{
     set_txn_hash     = my_contract.transact().authenticateOrcID('cluster@gmail.com')
         
     web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "0x", whisperPubKey)
+    set_txn_hash     = my_contract.transact().registerCluster("cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 128, priceCoreMin, priceBandwidthMB, priceStorage, priceCache, "0x", whisperPubKey)
 
     initial_myGas = contract_address["gasUsed"]
     print("usedGas empty:23499: " + str(initial_myGas))
@@ -105,14 +113,14 @@ def test_receipt(web3, accounts, chain): #{
     #web3.coinbase = accounts[0]
     #web3.coinbase
     web3.eth.defaultAccount = accounts[2]
-    set_txn_hash     = my_contract.transact().registerCluster(128, "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", priceCoreMin, priceBandwidthMB, priceCache, "0x", whisperPubKey)
+    set_txn_hash     = my_contract.transact().registerCluster("cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 128, priceCoreMin, priceBandwidthMB, priceStorage, priceCache, "0x", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     
     currBlk = web3.eth.blockNumber
     fname = cwd + '/test.txt'    
     f1    = open(cwd + '/receipt.txt', 'w+')
     account = accounts[2]
-    blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB  = my_contract.call().getClusterInfo(account)
+    blockReadFrom, coreLimit, priceCoreMin, priceBandwidthMB, priceStorage, priceCache  = my_contract.call().getClusterInfo(account)
     print("Cluster's coreLimit:  "    + str(coreLimit))
     print("Cluster's priceCoreMin:  " + str(priceCoreMin))
 
