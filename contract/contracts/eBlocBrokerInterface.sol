@@ -1,8 +1,9 @@
 pragma solidity ^0.4.17;
 
-interface eBlocBrokerInterface {    
+interface eBlocBrokerInterface {
+    
     /* Logged when the cluster calls receiptCheck function. Records the completed jobs' information under receiptCheck() method call.*/
-    event LogReceipt(address clusterAddress,
+    event LogReceipt(address indexed clusterAddress,
 		     string jobKey,
 		     uint index,
 		     address recipient,
@@ -15,7 +16,7 @@ interface eBlocBrokerInterface {
 		     );
 
     /* Records the updated jobs' information under setJobStatus() method call. */
-    event LogSetJob(address clusterAddress,
+    event LogSetJob(address indexed clusterAddress,
 		    string jobKey,
 		    uint32 index,
 		    uint startTime
@@ -23,8 +24,8 @@ interface eBlocBrokerInterface {
     
     /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
-		 string jobKey,
-		 uint index,
+		 string indexed jobKey,
+		 uint indexed index,
 		 uint8 storageID,
 		 //string desc,
 		 string sourceCodeHash,
@@ -35,7 +36,7 @@ interface eBlocBrokerInterface {
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
-    event LogCluster(address clusterAddress,
+    event LogCluster(address indexed clusterAddress,
 		     uint32 coreNumber,
 		     string clusterEmail,
 		     string fID,
@@ -43,6 +44,7 @@ interface eBlocBrokerInterface {
 		     uint priceCoreMin,
 		     uint priceDataTransfer,
 		     uint priceStorage,
+		     uint priceCache,
 		     string ipfsAddress,
 		     string whisperPublicKey
 		     );
@@ -69,11 +71,12 @@ interface eBlocBrokerInterface {
 			    string jobDesc
 			    );
 
-    /*
+
     function cancelRefund(address clusterAddress,
 			  string memory jobKey,
 			  uint32 index)
-	public returns (bool);    
+	public returns (bool);
+
     function receiptCheck(string memory jobKey,
 			  uint32 index,
 			  uint32 jobRunTimeMin,
@@ -81,7 +84,8 @@ interface eBlocBrokerInterface {
 			  uint8 storageID,
 			  uint endTime,
 			  uint dataTransferSum)
-	public returns (bool success);    
+	public returns (bool success);
+    
     function registerUser(string memory userEmail,
 			  string memory fID,
 			  string memory miniLockID,
@@ -89,28 +93,32 @@ interface eBlocBrokerInterface {
 			  string memory orcID,
                           string memory githubUserName,
 			  string memory whisperPublicKey)
-	public returns (bool success);    
-    function authenticateOrcID(string memory orcID) public returns (bool success);    
-    function registerCluster(uint32 coreNumber,
-                             string memory clusterEmail,
+	public returns (bool success);
+    
+    function authenticateOrcID(string memory orcID) public returns (bool success);
+    
+    function registerCluster(string memory clusterEmail,
                              string memory fID,
                              string memory miniLockID,
+			     uint32 coreNumber,
                              uint priceCoreMin,
                              uint priceDataTransfer,
                              uint priceStorage,
+			     uint priceCache,
                              string memory ipfsAddress,
                              string memory whisperPublicKey)
 	public returns (bool success);
     
     function deregisterCluster() public returns (bool success);
 
-    function updateCluster(uint32 coreNumber,
-			   string memory clusterEmail,
+    function updateCluster(string memory clusterEmail,
 			   string memory fID,
 			   string memory miniLockID,
+			   uint32 coreNumber,
 			   uint priceCoreMin,
 			   uint priceDataTransfer,
 			   uint priceStorage,
+			   uint priceCache,
 			   string memory ipfsAddress,
 			   string memory whisperPublicKey)
 	public returns (bool success);
@@ -126,7 +134,7 @@ interface eBlocBrokerInterface {
 		       uint8 cacheType,
 		       uint gasCacheMin)
 	public payable returns (bool success);
-	
+
     function setJobDescription(address clusterAddress,
 			       string memory jobKey,
 			       string memory jobDesc)
@@ -148,7 +156,7 @@ interface eBlocBrokerInterface {
 	returns(uint, string memory);
 
     function getClusterInfo(address clusterAddress) public view
-	returns(uint, uint, uint, uint);
+	returns(uint, uint, uint, uint, uint, uint);
 
     function getClusterReceivedAmount(address clusterAddress) public view
 	returns (uint);
@@ -157,8 +165,14 @@ interface eBlocBrokerInterface {
 	returns (uint);
 
     function getJobInfo(address clusterAddress, string memory jobKey, uint index) public view
-	returns (uint8, uint32, uint, uint, uint, uint, address);
+	returns (uint8, uint32, uint, uint, uint, address);
 
+    function getClusterPricesForJob(address clusterAddress, string memory jobKey, uint index) public view
+	returns (uint, uint, uint, uint);
+
+    function getClusterPricesBlockNumbers(address clusterAddress) public view
+	returns (uint[] memory);
+    
     function getDeployedBlockNumber() public view
 	returns (uint);
 
@@ -176,5 +190,4 @@ interface eBlocBrokerInterface {
 
     function getClusterReceiptNode(address clusterAddress, uint32 index) public view
 	returns (uint256, int32);
-    */
 }
