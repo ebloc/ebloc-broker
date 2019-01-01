@@ -13,10 +13,11 @@ library Lib {
 	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
 	uint         startTime; /* Submitted job's starting universal time on the server side */	
 	/* Variables assigned by the client */	
-	uint          received; /* Paid amount by the client */
-	uint      priceCoreMin; /* Cluster's price for core/minute */
+	uint          received; /* Paid amount (new owned) by the client */
+	uint       blockNumber;
+	//uint      priceCoreMin; /* Cluster's price for core/minute */
 	uint        gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
-	uint priceDataTransfer;
+	//uint priceDataTransfer;
 	uint32            core; /* Requested core by the client */
 	address       jobOwner; /* Address of the client (msg.sender) has been stored */
     }
@@ -27,18 +28,26 @@ library Lib {
 	string   orcID; /* User's orcID */
     }
 
+    struct clusterInfo {
+	uint32 availableCoreNum;
+	/* All price varaibles are defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */ 
+	uint   priceCoreMin;	
+	uint   priceDataTransfer; 
+	uint   priceStorage; 
+	uint   priceCache;
+    }
+    
     /* Registered cluster's information */
     struct clusterData {
+	mapping(uint => clusterInfo) info;
+	
 	bool            isRunning; /* Flag that checks is Cluster running or not */
-	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */
-	uint         priceCoreMin; /* Should be defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-	uint    priceDataTransfer; /* Should be defined in wei. */
-	uint         priceStorage; /* Should be defined in wei. */
+	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */	
 	uint       receivedAmount; /* Cluster's received wei price */
-	uint        blockReadFrom; /* Blockn number when cluster is registered in order the watch cluster's event activity */
+	uint        blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
 
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
-	intervalNode    receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
+	intervalNode receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
     }
 
     struct interval {
@@ -50,34 +59,30 @@ library Lib {
     struct intervalNode {
 	interval[] list; /* A dynamically-sized array of `interval` structs */
 	uint32 tail; /* Tail of the linked list */
-	uint32 coreNumber; /* Core number of the cluster */
+	uint32 availableCoreNum; /* Core number of the cluster */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
 
     /* Invoked, when cluster calls updateCluster() function */
-    function update(clusterData storage self, uint priceCoreMin, uint priceDataTransfer,
-		    uint32 coreNumber) public
+    function update(clusterData storage self, uint32 availableCoreNum) public
     {
-	self.priceCoreMin           = priceCoreMin;
-	self.priceDataTransfer      = priceDataTransfer;
-	self.receiptList.coreNumber = coreNumber;
-	self.blockReadFrom          = block.number;
+	self.blockReadFrom          = block.number;	
+	self.receiptList.availableCoreNum = availableCoreNum;
     }    
 
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint priceCoreMin, uint priceDataTransfer, uint32 coreNumber) public
+    function constructCluster(clusterData storage self, uint32 availableCoreNum) public
     {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
-	self.priceCoreMin       = priceCoreMin;
-	self.priceDataTransfer  = priceDataTransfer;
+	//self.priceDataTransfer  = priceDataTransfer;
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
-	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted */
-	selfReceiptList.tail           = 0;
-	selfReceiptList.coreNumber     = coreNumber;
+	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
+	selfReceiptList.tail           = 0;	
 	selfReceiptList.deletedItemNum = 0;
+	selfReceiptList.availableCoreNum     = availableCoreNum;
     }
 
     function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public
@@ -128,14 +133,14 @@ library Lib {
 
 	do {
 	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		self.list.push(interval( {endpoint: startTime, core: -1*coreNum, next: prevNode.next}));
+		self.list.push(interval( {endpoint: startTime, core: -1 * coreNum, next: prevNode.next}));
 		prevNode.next = uint32(self.list.length - 1);
 		return true;
 	    }
 	    carriedSum += currentNode.core;
 
 	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
-	    if (carriedSum > int32(self.coreNumber)) {
+	    if (carriedSum > int32(self.availableCoreNum)) {
 		delete self.list[self.list.length-1];
 		if (!flag)
 		    self.tail = addrTemp;
@@ -154,14 +159,14 @@ library Lib {
 	// +-----------------------------+
     }
 
-    /* Could be commented out, used for test */
+    /* Used for tests */
     function getReceiptListSize(intervalNode storage self) public view
 	returns (uint32)
     {
 	return uint32(self.list.length-self.deletedItemNum);
     }
 
-    /* Could be commented out, used for test */
+    /* Used for test */
     function printIndex(intervalNode storage self, uint32 index) public view
 	returns (uint256, int32)
     {
