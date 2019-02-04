@@ -5,33 +5,33 @@ email:  alper.alimoglu AT gmail.com
 */
 
 pragma solidity ^0.4.17;
+pragma experimental ABIEncoderV2;
 
 library Lib {
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
-	uint8           status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint         startTime; /* Submitted job's starting universal time on the server side */	
+	uint8     status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint   startTime; /* Submitted job's starting universal time on the server side */
+	
 	/* Variables assigned by the client */	
-	uint          received; /* Paid amount (new owned) by the client */
-	uint       blockNumber;
-	//uint      priceCoreMin; /* Cluster's price for core/minute */
-	uint        gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
-	//uint priceDataTransfer;
-	uint32            core; /* Requested core by the client */
-	address       jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint    received; /* Paid amount (new owned) by the client */
+	uint blockNumber;
+	uint  gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint32      core; /* Requested core by the client */
+	address jobOwner; /* Address of the client (msg.sender) has been stored */
     }
 
     /* Registered user's information */
     struct userData {
-	uint     blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
-	string   orcID; /* User's orcID */
+	uint   blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	string         orcID; /* User's orcID */
     }
 
     struct clusterInfo {
-	uint32 availableCoreNum;
+	uint32 availableCoreNum; /* Core number of the cluster */
 	/* All price varaibles are defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */ 
-	uint   priceCoreMin;	
+	uint   priceCoreMin; /* Cluster's price for core per minute */
 	uint   priceDataTransfer; 
 	uint   priceStorage; 
 	uint   priceCache;
@@ -39,15 +39,15 @@ library Lib {
     
     /* Registered cluster's information */
     struct clusterData {
-	mapping(uint => clusterInfo) info;
+	intervalNode receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
 	
+	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
+	mapping(uint => clusterInfo) info;
+		
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */	
 	uint       receivedAmount; /* Cluster's received wei price */
 	uint        blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
-
-	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
-	intervalNode receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
     }
 
     struct interval {
@@ -59,40 +59,30 @@ library Lib {
     struct intervalNode {
 	interval[] list; /* A dynamically-sized array of `interval` structs */
 	uint32 tail; /* Tail of the linked list */
-	uint32 availableCoreNum; /* Core number of the cluster */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
-
-    /* Invoked, when cluster calls updateCluster() function */
-    function update(clusterData storage self, uint32 availableCoreNum) public
-    {
-	self.blockReadFrom          = block.number;	
-	self.receiptList.availableCoreNum = availableCoreNum;
-    }    
-
+        
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self, uint32 availableCoreNum) public
+    function constructCluster(clusterData storage self) public
     {
 	self.isRunning          = true;
 	self.receivedAmount     = 0;
-	//self.priceDataTransfer  = priceDataTransfer;
 	self.blockReadFrom      = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
 	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
-	selfReceiptList.tail           = 0;	
-	selfReceiptList.deletedItemNum = 0;
-	selfReceiptList.availableCoreNum     = availableCoreNum;
+	selfReceiptList.tail             = 0;	
+	selfReceiptList.deletedItemNum   = 0;
     }
 
-    function receiptCheck(intervalNode storage self, uint startTime, uint endTime, int32 coreNum) public
+    function receiptCheck(intervalNode storage self, status storage job, uint endTime, uint availableCoreNum) public	
 	returns (bool success)
     {
-	bool     flag = false;
-	uint32   addr = self.tail;
-	uint32   addrTemp;
-	int32    carriedSum;
-	
+	bool   flag = false;
+	uint32 addr = self.tail;
+	uint32 addrTemp;
+	int32  carriedSum;
+
 	interval storage prevNode;     //= self.list[0];
 	interval storage currentNode;  //= self.list[0];
 	interval storage prevNodeTemp; //= self.list[0];
@@ -102,12 +92,11 @@ library Lib {
 	// +-------------------------------+
 
 	if (endTime < self.list[addr].endpoint) {
-	    flag         = true;
-	    prevNode     = self.list[addr];
-	    currentNode  = self.list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
+	    flag        = true;
+	    prevNode    = self.list[addr];
+	    currentNode = self.list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
 
-	    do { /* Inside while loop carriedSum is updated */
-		//carriedSum += prevNode.core;
+	    do { 
 		if (endTime > currentNode.endpoint) {
 		    addr = prevNode.next; /* "addr" points the index to push the node */
 		    break;
@@ -117,8 +106,8 @@ library Lib {
 	    } while (true);
 	}
 
-	self.list.push(interval({endpoint: endTime, core: coreNum, next: addr})); /* Inserted while keeping sorted order */
-	carriedSum = coreNum; /* Carried sum variable is assigned with job's given core number */
+	self.list.push(interval({endpoint: endTime, core: int32(job.core), next: addr})); /* Inserted while keeping sorted order */
+	carriedSum = int32(job.core); /* Carried sum variable is assigned with job's given core number */
 	
 	if (!flag) {
 	    addrTemp      = addr;	    
@@ -131,16 +120,16 @@ library Lib {
 
 	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */
 
-	do {
-	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		self.list.push(interval( {endpoint: startTime, core: -1 * coreNum, next: prevNode.next}));
+	do { /* Inside while loop carriedSum is updated */
+	    if (job.startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
+		self.list.push(interval( {endpoint: job.startTime, core: -1 * int32(job.core), next: prevNode.next}));
 		prevNode.next = uint32(self.list.length - 1);
 		return true;
 	    }
 	    carriedSum += currentNode.core;
 
 	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
-	    if (carriedSum > int32(self.availableCoreNum)) {
+	    if (carriedSum > int32(availableCoreNum)) {
 		delete self.list[self.list.length-1];
 		if (!flag)
 		    self.tail = addrTemp;
@@ -177,4 +166,3 @@ library Lib {
 	return (self.list[myIndex].endpoint, self.list[myIndex].core);
     }
 }
-
