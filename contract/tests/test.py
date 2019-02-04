@@ -8,7 +8,20 @@ blockNumber   = []
 runTime       = []
 blkArrayIndex = 0
 myGas         = 0
-            
+
+class cacheType:
+    private = 0
+    public = 1
+    none = 2
+    ipfs = 3
+
+class storageID:
+    ipfs = 0
+    eudat = 1
+    ipfs_miniLock = 2
+    github = 3
+    gdrive = 4
+
 def pushBlockInfo(contract_address):
     global blkArrayIndex
     global gasUsed
@@ -146,13 +159,20 @@ def test_receipt(web3, accounts, chain):
             # jobPriceValue = 60 * 10000000000000000 * coreNum
 
             # execution cost + BW-100MB cost is paid
-            jobPriceValue = gasCoreMin * priceCoreMin * coreNum + priceBandwidthMB * (gasDataTransferIn + gasDataTransferOut) + priceCache * gasDataTransferIn * minToCache
+
+            gasCacheMin = 0
+            computationalCost = gasCoreMin * priceCoreMin * coreNum
+            dataTransferSum   = priceBandwidthMB * (gasDataTransferIn + gasDataTransferOut)
+            storageCost       = priceStorage * gasDataTransferIn * minToCache
+            
+            jobPriceValue = computationalCost + dataTransferSum + storageCost
             
             
             print('jobPriceValue: ' + str(jobPriceValue))
             set_txn_hash = my_contract.transact({"from": accounts[8],
                                                  "value":web3.toWei(jobPriceValue, "wei"
-                                                 )}).submitJob(account, jobKey, coreNum, gasCoreMin, gasDataTransferIn, gasDataTransferOut, 4, folderHash, 0, 0)
+                                                 )}).submitJob(account, jobKey, coreNum, gasCoreMin, gasDataTransferIn, gasDataTransferOut, storageID.ipfs,
+                                                               folderHash, cacheType.private, gasCacheMin)
             contract_address = chain.wait.for_receipt(set_txn_hash)
             print("submitJob: " + str(contract_address["gasUsed"]))
 			# print("Contract Balance after: " + str(web3.eth.getBalance(accounts[0])))
