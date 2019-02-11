@@ -285,7 +285,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 		       uint gasCacheMin) /*check_gasCoreMin_storageID(gasCoreMin, storageID) isZero(core)*/ public payable
     //returns (bool success)
     {
-	uint[] clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
+	uint[] storage clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 	Lib.clusterInfo storage info = cluster.info[clusterInfo[clusterInfo.length-1]];
 		
@@ -380,7 +380,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns(uint, uint, uint, uint, uint, uint)
     {	
 	if (clusterContract[clusterAddress].blockReadFrom != 0) {
-	    uint[] clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
+	    uint[] storage clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
 	    
 	    return (clusterContract[clusterAddress].blockReadFrom,
 		    clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].availableCoreNum,
