@@ -51,9 +51,9 @@ library Lib {
     }
 
     struct interval {
-	uint   endpoint;
-	int32  core; /* Job's requested core number */
-	uint32 next; /* Points to next the node */
+	uint endpoint;
+	int32   core; /* Job's requested core number */
+	uint32  next; /* Points to next the node */
     }
 
     struct intervalNode {

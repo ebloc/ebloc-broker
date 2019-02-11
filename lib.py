@@ -123,7 +123,8 @@ def isSlurmOn():
 
       if not "PARTITION" in str(check):
          log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")
-         log('Error Message: \n' + check, "red")
+         log('Error Message: \n' + check, "red")         
+         log('Starting Slurm... \n', "green")
          subprocess.run(['sudo', 'bash', 'runSlurm.sh'])
       elif "sinfo: error" in str(check): 
          log("Error on munged: \n" + check)
