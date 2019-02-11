@@ -131,7 +131,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	   is not mapped to a job , this will throw automatically and revert all changes 
 	*/
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];	
-	Lib.clusterInfo storage info = clusterContract[msg.sender].info[job.blockNumber];
+	Lib.clusterInfo memory info = clusterContract[msg.sender].info[job.blockNumber];
 
 	uint amountToGain = info.priceCoreMin * job.core * jobRunTimeMin + info.priceDataTransfer * dataTransferSum;
 
@@ -211,7 +211,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 			});	
 	clusterUpdatedBlockNumber[msg.sender].push(block.number);
 
-	uint32 clusterInfo = cluster.info[block.number].availableCoreNum;
+	//uint32 clusterInfo = cluster.info[block.number].availableCoreNum;
 
 	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender;
@@ -380,7 +380,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns(uint, uint, uint, uint, uint, uint)
     {	
 	if (clusterContract[clusterAddress].blockReadFrom != 0) {
-	    uint[] storage clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
+	    uint[] memory clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
 	    
 	    return (clusterContract[clusterAddress].blockReadFrom,
 		    clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].availableCoreNum,
@@ -425,7 +425,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    return (0, 0, 0, 0, 0, address(0x0));
 	
 	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];
-	Lib.clusterInfo memory clusterInfo =  clusterContract[clusterAddress].info[job.blockNumber];
+	//Lib.clusterInfo memory clusterInfo =  clusterContract[clusterAddress].info[job.blockNumber];
 	    
 	return (job.status, job.core, job.startTime, job.received, job.gasCoreMin, job.jobOwner);
     }
