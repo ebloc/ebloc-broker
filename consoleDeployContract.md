@@ -40,18 +40,12 @@ mkdir -p $HOME/myContract
 cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
 sed -i 's/\/\*emit\*\//emit/g'            $HOME/myContract/eBlocBroker.sol
 sed -i 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
-
 head -9 $HOME/myContract/eBlocBroker.sol > $HOME/myContract/e.sol 
-
 tail -n+3 eBlocBrokerInterface.sol >> $HOME/myContract/e.sol
 echo "" >> $HOME/myContract/e.sol 
-
 tail -n+11 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol
 echo "" >> $HOME/myContract/e.sol 
-
-echo "" >> $HOME/myContract/e.sol 
 tail -n+9 $HOME/myContract/Lib.sol >> $HOME/myContract/e.sol
-
 sed -i 's/\^0.4.17/\^0.4.24/g' $HOME/myContract/e.sol
 sed -i 's/import \".\/Lib.sol\";//g' $HOME/myContract/e.sol
 sed -i 's/import \".\/eBlocBrokerInterface.sol\";//g' $HOME/myContract/e.sol
