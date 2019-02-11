@@ -87,7 +87,7 @@ def cache(userID, resultsFolderPrev):
         else:
             globals()['folderType'] = 'tar.gz'
             res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
-            if res == globals()['jobKey']: #Checking is already downloaded folder's hash matches with the given hash
+            if res == globals()['jobKey']: # Checking is already downloaded folder's hash matches with the given hash
                 log('Already cached under public directory...', 'green')
                 globals()['cacheType'] = 'public'
                 return True, ''
@@ -107,7 +107,7 @@ def cache(userID, resultsFolderPrev):
         if not os.path.isfile(cachedTarFile):
             if os.path.isfile(cachedFolder + '/run.sh'):
                 res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
-                if res == globals()['jobKey']: #Checking is already downloaded folder's hash matches with the given hash                    
+                if res == globals()['jobKey']: # Checking is already downloaded folder's hash matches with the given hash                    
                     globals()['folderType'] = 'folder'
                     log('Already cached ...', 'green')
                     return True, ''

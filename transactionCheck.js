@@ -8,10 +8,8 @@ var lineReader = require('readline').createInterface({
 max = 0;
 lineReader.on('line', function (line) {
     var line = line.split(" ");
-
     //console.log(line[0])
-    tx=line[0]
+    tx = line[0]
     max += console.log( '' + eBlocBroker.getTransactionGas(line[0]))  
 });
-
-console.log("max: " +  max);
+console.log("max=" +  max);

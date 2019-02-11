@@ -31,7 +31,7 @@ oc = None
 driverCancelProcess   = None
 driverReceiverProcess = None
 
-# Dummy sudo command to get the password when session starts. 
+# Dummy sudo command to get the password when session starts
 subprocess.run(['sudo', 'printf', '']) 
 
 def runDriverCancel():
@@ -129,7 +129,7 @@ def slurmPendingJobCheck():
        time.sleep(10)
        idleCore = idleCoreNumber(0)
 
-# checks whether geth runs on the background
+# Checks whether geth runs on the background
 def isGethOn():
    # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
@@ -149,7 +149,7 @@ def isGethOn():
       log("Geth is not running on the background.", 'red')
       lib.terminate()      
 
-# checks: does Driver.py runs on the background
+# Checks: does Driver.py runs on the background
 def isDriverOn(): 
    # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
@@ -265,9 +265,10 @@ while True:
     log("Current Slurm Running jobs status: \n" + squeueStatus)
     log('-' * int(columns), "green")
     if 'notconnected' != clusterGainedAmount:
-       log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' + str(int(clusterGainedAmount) - int(clusterGainedAmountInit)))
-    log("Waiting new job to come since block number: " + blockReadFrom)
-    
+       log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' +
+           str(int(clusterGainedAmount) - int(clusterGainedAmountInit)))
+       
+    log("Waiting new job to come since block number: " + blockReadFrom)    
     currentBlockNumber = blockNumber() 
     log("Waiting new block to increment by one.")
     log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom)
@@ -278,20 +279,18 @@ while True:
 
     log("Passed incremented block number... Continue to wait from block number: " + blockReadFrom)   
     blockReadFrom = str(blockReadFrom) # Starting reading event's location has been updated
-    # blockReadFrom = 1094262 # used for test purposes.
+    # blockReadFrom = 1094262 # used for test purposes
     slurmPendingJobCheck()    
     loggedJobs = LogJob.runLogJob(blockReadFrom, clusterAddress, eBlocBroker)       
     print('isWeb3Connected: ' + str(isWeb3Connected(web3)))
     maxVal               = 0
     isClusterReceivedJob = 0
-    counter              = 0
-        
+    counter              = 0        
     for i in range(0, len(loggedJobs)):
        runFlag = 0
        isClusterReceivedJob = 1
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
-
        print(loggedJobs[i].args['jobKey'])
        sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + ", " + loggedJobs[i].args['clusterAddress'] + ", " +
@@ -313,7 +312,7 @@ while True:
           log('Job does not exist', 'red')
           runFlag = 1
           sys.exit()
-       else: 
+       else:
           log('jobOwner/userID: ' + jobInfo['jobOwner'])
           userID    = jobInfo['jobOwner'].lower()
           userExist = isUserExist(userID, eBlocBroker, web3)          
@@ -335,6 +334,7 @@ while True:
              runFlag = 1
           else:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
+             
           slurmPendingJobCheck()
           print(lib.shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
        if runFlag == 1:
@@ -357,7 +357,8 @@ while True:
           driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), loggedJobs[i].args['cacheType'],
                                      eBlocBroker, web3, oc)
-          #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
+          
+       #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
           log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green")
           driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
