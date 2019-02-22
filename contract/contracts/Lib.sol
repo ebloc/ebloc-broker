@@ -8,6 +8,12 @@ pragma solidity ^0.4.17;
 pragma experimental ABIEncoderV2;
 
 library Lib {
+    
+    struct jobStorageTime {
+	uint receivedBlocNumber;
+	uint gasStorageBlockNum;
+    }
+    
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
@@ -15,11 +21,13 @@ library Lib {
 	uint   startTime; /* Submitted job's starting universal time on the server side */
 	
 	/* Variables assigned by the client */	
-	uint    received; /* Paid amount (new owned) by the client */
-	uint blockNumber;
 	uint  gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
 	uint32      core; /* Requested core by the client */
+	
+	/* Variables obtained from eBlocBoker */
+	uint    received; /* Paid amount (new owned) by the client */		
 	address jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint clusterUpdatedBlockNumber; /* When cluster is submitted cluster's most recent block number when its set or updated */
     }
 
     /* Registered user's information */
