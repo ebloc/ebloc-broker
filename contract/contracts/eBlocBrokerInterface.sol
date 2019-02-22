@@ -32,7 +32,7 @@ interface eBlocBrokerInterface {
 		 uint32 gasDataTransferIn,
 		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
-		 uint gasCacheMin
+		 uint gasStorageHour
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
@@ -123,7 +123,7 @@ interface eBlocBrokerInterface {
 			       string memory jobDesc)
 	public returns (bool success);
     
-    function setJobStatus(string memory jobKey,
+    function setJobStatus(string jobKey,
 			  uint32 index,
 			  uint8 stateID,
 			  uint startTime)
@@ -143,7 +143,7 @@ interface eBlocBrokerInterface {
 			  uint32 index)
 	public returns (bool);
        
-    function authenticateOrcID(string memory orcID) public returns (bool success);
+    function authenticateOrcID(address userAddress, string memory orcID) public returns (bool success);
     
     function getJobInfo(address clusterAddress, string memory jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, address);
@@ -189,5 +189,4 @@ interface eBlocBrokerInterface {
 
     function getClusterReceiptNode(address clusterAddress, uint32 index) public view
 	returns (uint256, int32);
-
 }
