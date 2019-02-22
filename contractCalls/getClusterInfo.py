@@ -18,8 +18,19 @@ def getClusterInfo(clusterAddress, eBlocBroker=None, web3=None):
         sys.exit() 
 
     blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
-    my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock': int(blockReadFrom),'toBlock': int(blockReadFrom) + 1})
-
+    my_filter = eBlocBroker.eventFilter('LogCluster',{ 'fromBlock': int(blockReadFrom),
+                                                      'toBlock': int(blockReadFrom) + 1})
+    '''
+    my_filter = eBlocBroker.events.LogCluster.createFilter(
+        fromBlock=int(blockReadFrom),       
+        toBlock=int(blockReadFrom) + 1,
+        argument_filters={'clusterAddress': str(clusterAddress)}
+    )    
+    loggedJobs = my_filter.get_all_entries()
+    print(loggedJobs[0])
+    '''
+    # print(my_filter.get_all_entries()[0])
+    
     return('{0: <19}'.format('blockReadFrom: ')    + str(blockReadFrom)  + '\n' +
            '{0: <19}'.format('coreNumber: ')       + str(coreNumber) + '\n' +
            '{0: <19}'.format('priceCoreMin: ')     + str(priceCoreMin)  + '\n' +
