@@ -144,7 +144,7 @@ def test_receipt(web3, accounts, chain):
             gasCoreMin     = int(arguments[1]) - int(arguments[0])
             dataTransferIn  = 100
             dataTransferOut = 100
-            gasStorageHour      = 0
+            gasStorageHour  = 1
             core = int(arguments[2])
 
             chain.wait.for_block(int(arguments[0]))
@@ -157,14 +157,21 @@ def test_receipt(web3, accounts, chain):
             # jobPriceValue = 60 * 10000000000000000 * core
 
             # execution cost + BW-100MB cost is paid
-
-            gasStorageHour = 0
+                       
             computationalCost = priceCoreMin * core * gasCoreMin
-            dataTransferSum   = dataTransferIn + dataTransferOut
-            dataTransferCost  = priceDataTransfer * dataTransferSum
-            storageCost       = priceStorage * dataTransferIn * gasStorageHour
             
-            jobPriceValue = computationalCost + dataTransferCost + storageCost            
+
+            jobReceivedBlocNumber, jobGasStorageHour = my_contract.call().getJobStorageTime(account, folderHash);
+            if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
+                dataTransferIn = 0; # storageCost and cacheCost will be equaled to 0
+                
+            storageCost = priceStorage * dataTransferIn * gasStorageHour
+            cacheCost   = priceCache * dataTransferIn
+            
+            dataTransferSum  = dataTransferIn + dataTransferOut
+            dataTransferCost = priceDataTransfer * dataTransferSum
+           
+            jobPriceValue = computationalCost + dataTransferCost + storageCost + cacheCost
             
             print('jobPriceValue: ' + str(jobPriceValue))
             set_txn_hash = my_contract.transact({"from": accounts[8],
@@ -172,6 +179,7 @@ def test_receipt(web3, accounts, chain):
                                                 )}).submitJob(account, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut, storageID.ipfs, folderHash, cacheType.private, gasStorageHour)
             contract_address = chain.wait.for_receipt(set_txn_hash)
             print("submitJob: " + str(contract_address["gasUsed"]))
+            
 			# print("Contract Balance after: " + str(web3.eth.getBalance(accounts[0])))
 			# print("Client Balance after: " + str(web3.eth.getBalance(accounts[8])))				
             sys.stdout.write('jobInfo: ')
@@ -203,6 +211,11 @@ def test_receipt(web3, accounts, chain):
             print('Cluster Receeived Amount: ' + str(receivedAmount - receivedAmount_temp))
             receivedAmount_temp = receivedAmount
             val += 1
+            
+    print('----------------------------------')
+    print('StorageTime for job: ' + folderHash + ':')
+    print(my_contract.call().getJobStorageTime(account, folderHash))
+    print('----------------------------------')
     
     # Prints finalize version of the linked list.
     size = my_contract.call().getClusterReceiptSize(account)

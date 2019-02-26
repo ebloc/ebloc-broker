@@ -34,6 +34,8 @@ library Lib {
     struct userData {
 	uint   blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
 	string         orcID; /* User's orcID */
+
+	mapping(string  => bool) isStoragePaid; /**/
     }
 
     struct clusterInfo {
@@ -42,7 +44,7 @@ library Lib {
 	uint   priceCoreMin; /* Cluster's price for core per minute */
 	uint   priceDataTransfer; 
 	uint   priceStorage; 
-	uint   priceCache;
+	uint   priceCache;	
     }
     
     /* Registered cluster's information */
@@ -51,7 +53,8 @@ library Lib {
 	
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	mapping(uint => clusterInfo) info;
-		
+	mapping(string  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
+	
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */	
 	uint       receivedAmount; /* Cluster's received wei price */
