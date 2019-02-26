@@ -48,7 +48,7 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
       time.sleep(5)      
    log("receiptCheck() " + txHash)  
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
-   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| receiptCheckTx\n") 
+   txFile.write(jobKey + "_" + index + "| Tx_hash: " + txHash + "| receiptCheckTxHash\n") 
    txFile.close() 
 
 # Client's loaded files are removed, no need to re-upload them.
