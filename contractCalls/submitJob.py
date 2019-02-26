@@ -9,11 +9,11 @@ from imports import getWeb3
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer,
+def submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer,
               jobDescription, storageID, sourceCodeHash, cacheType, accountID):
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
-    # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW        
-    blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
+    # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW
+    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
     my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})    
 
     if not eBlocBroker.functions.isClusterExist(clusterAddress).call(): 
@@ -34,18 +34,19 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer,
        lib.isIpfsOn()
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress'] 
        output = os.popen('ipfs swarm connect ' + strVal).read() 
-       print("Trying to connect into: " + strVal) 
+       print('Trying to connect into: ' + strVal) 
        if 'success' in output:
           print(output)
-             
-    jobPriceValue = coreNum * priceCoreMin * coreMinuteGas + priceDataTransfer * gasDataTransfer
+
+    computationalCost = gasCoreMin * priceCoreMin * core      
+    jobPriceValue =  computationalCost+ priceDataTransfer * gasDataTransfer
     gasLimit      = 4500000
     
     if not len(sourceCodeHash):
         return 'sourceCodeHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
        return "Error: jobKey's length does not match with its original length. Please check your jobKey."
-    if coreNum > coreNumber:
+    if core > availableCoreNum:
         return 'Error: Requested core number is greater than the cluster\'s core number.'
     if len(jobDescription) >= 128:
         return 'Error: Length of jobDescription is greater than 128, please provide lesser.'
@@ -53,28 +54,27 @@ def submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer,
         return 'Error: Wrong storageID value is given. Please provide from 0 to 4.'
     if len(jobKey) >= 64:
         return 'Error: Length of jobDescription is greater than 64, please provide lesser.'
-    if coreMinuteGas == 0: 
-        return 'Error: coreMinuteGas provided as 0. Please provide non-zero value'
-    if coreMinuteGas > 1440: 
-        return 'Error: coreMinuteGas provided greater than 1440. Please provide smaller value.'
+    if gasCoreMin == 0: 
+        return 'Error: gasCoreMin provided as 0. Please provide non-zero value'
+    if gasCoreMin > 1440: 
+        return 'Error: gasCoreMin provided greater than 1440. Please provide smaller value.'
     if cacheType > 2: # 0: 'private', 1: 'public', 2: 'none'
         return 'Error: cachType provided greater than 1. Please provide smaller value.'
         
-    # print(clusterAddress + " " + jobKey + " " + str(coreNum) + " " + jobDescription + " " + str(coreMinuteGas) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
-    tx = eBlocBroker.transact({"from": fromAccount, "value": jobPriceValue, "gas": gasLimit}).submitJob(clusterAddress, jobKey, coreNum, jobDescription, coreMinuteGas,
-                                                                                                        gasDataTransfer, storageID, sourceCodeHash, cacheType) 
+    # print(clusterAddress + " " + jobKey + " " + str(core) + " " + jobDescription + " " + str(gasCoreMin) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
+    tx = eBlocBroker.transact({"from": fromAccount,
+                               "value": jobPriceValue,
+                               "gas": gasLimit}).submitJob(clusterAddress, jobKey, core, jobDescription, gasCoreMin, gasDataTransfer, storageID, sourceCodeHash, cacheType) 
     return tx.hex()
 
 if __name__ == '__main__': 
     test = 0    
     if len(sys.argv) == 10:
         clusterAddress = str(sys.argv[1])
-        clusterAddress = web3.toChecksumAddress(clusterAddress) 
-        blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.call().getClusterInfo(clusterAddress) 
-        my_filter = eBlocBroker.eventFilter('LogCluster',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
+        clusterAddress = web3.toChecksumAddress(clusterAddress)                 
         jobKey          = str(sys.argv[2]) 
-        coreNum         = int(sys.argv[3]) 
-        coreMinuteGas   = int(sys.argv[4])
+        core            = int(sys.argv[3]) 
+        gasCoreMin      = int(sys.argv[4])
         gasDataTransfer = int(sys.argv[5])        
         jobDescription  = str(sys.argv[6])         
         storageID       = int(sys.argv[7])
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     elif len(sys.argv) == 13: 
         clusterAddress  = str(sys.argv[1])
         jobKey          = str(sys.argv[2]) 
-        coreNum         = int(sys.argv[3]) 
+        core            = int(sys.argv[3]) 
         coreGasDay      = int(sys.argv[4]) 
         coreGasHour     = int(sys.argv[5]) 
         coreGasMin      = int(sys.argv[6])
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         storageID       = int(sys.argv[10])
         sourceCodeHash  = str(sys.argv[11]) 
         accountID       = int(sys.argv[12])
-        coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
+        gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         gasDataTransfer = dataTransferIn + dataTransferOut
     else:   
         # USER Inputs ================================================================
@@ -114,21 +114,21 @@ if __name__ == '__main__':
             oc.login(lib.OC_USER_ID, password)
             sourceCodeHash     = '00000000000000000000000000000000'
         '''     
-            #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
+        #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
         #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
-        coreNum         = 1 
+        core            = 1 
         coreGasDay      = 0 
         coreGasHour     = 0 
         coreGasMin      = 1 
         jobDescription  = 'Science'        
         accountID       = 0
-        coreMinuteGas   = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
+        gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         dataTransferIn  = 100 
         dataTransferOut = 100        
         gasDataTransfer = dataTransferIn + dataTransferOut        
         # =============================================================================
 
-    tx_hash = submitJob(clusterAddress, jobKey, coreNum, coreMinuteGas, gasDataTransfer, jobDescription, storageID, sourceCodeHash, cacheType, accountID)    
+    tx_hash = submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer, jobDescription, storageID, sourceCodeHash, cacheType, accountID)    
     if 'Error' in tx_hash:
         print(tx_hash)
         sys.exit()

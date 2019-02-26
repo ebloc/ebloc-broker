@@ -19,12 +19,18 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None):
     job = None
     try:
         job = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
+        jobPrices = eBlocBroker.functions.getClusterPricesForJob(clusterAddress, jobKey, int(index)).call()        
+                
         jobDict = {'status':        job[0],
                    'core':          job[1],
                    'startTime':     job[2],
                    'received':      job[3],
                    'coreMinuteGas': job[4],
-                   'jobOwner':      job[5]}
+                   'jobOwner':      job[5],
+                   'priceCoreMin':  jobPrices[0],
+                   'priceDataTransfer': jobPrices[1],
+                   'priceStorage': jobPrices[2],
+                   'priceCache': jobPrices[3]}
     except Exception as e:
         return e.__class__.__name__
         # return 'Exception: web3.exceptions.BadFunctionCallOutput'
@@ -55,6 +61,10 @@ if __name__ == '__main__':
         print('{0: <16}'.format('startTime') + str(jobInfo['startTime']))
         print('{0: <16}'.format('received:') + str(jobInfo['received']))
         print('{0: <16}'.format('coreMinuteGas:') + str(jobInfo['coreMinuteGas']))
-        print('{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])
+        print('{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])        
+        print('{0: <16}'.format('priceCoreMin:') + jobInfo['priceCoreMin'])
+        print('{0: <16}'.format('priceDataTransfer:') + jobInfo['priceDataTransfer'])
+        print('{0: <16}'.format('priceStorage:') + jobInfo['priceStorage'])
+        print('{0: <16}'.format('priceCache:') + jobInfo['priceCache'])
     else:
         print(jobInfo)
