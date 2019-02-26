@@ -70,7 +70,7 @@ interface eBlocBrokerInterface {
 			    string jobKey,
 			    string jobDesc
 			    );
-
+    
     function registerUser(string memory userEmail,
 			  string memory fID,
 			  string memory miniLockID,
@@ -118,6 +118,9 @@ interface eBlocBrokerInterface {
 		       uint gasCacheMin)
 	public payable /*returns (bool success)*/;
 
+    function updateJobReceivedBlocNumber(string memory sourceCodeHash)
+	public returns (bool success);
+    
     function setJobDescription(address clusterAddress,
 			       string memory jobKey,
 			       string memory jobDesc)
@@ -182,7 +185,10 @@ interface eBlocBrokerInterface {
 	returns (bool);
       
     function isOrcIDVerified(string memory orcID) public view
-	returns (uint32);	  
+	returns (uint32);
+    
+    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
+	returns(uint, uint);
 
     function getClusterReceiptSize(address clusterAddress) public view
 	returns (uint32);
