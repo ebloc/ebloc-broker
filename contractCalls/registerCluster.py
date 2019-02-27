@@ -37,7 +37,8 @@ if __name__ == '__main__':
             kId = data['kId']
             whisperPubKey = data['publicKey']
         if not web3.shh.hasKeyPair(kId):
-            log("Whisper node's private key of a key pair did not match with the given ID")
+            print("Whisper node's private key of a key pair did not match with the given ID.")
+            print('Please re-run: ../scripts/whisperInitialize.py')
             sys.exit()
 
     if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):

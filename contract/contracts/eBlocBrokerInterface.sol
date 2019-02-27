@@ -184,7 +184,7 @@ interface eBlocBrokerInterface {
     function isUserExist(address userAddress) public view
 	returns (bool);
       
-    function isOrcIDVerified(string memory orcID) public view
+    function isUserOrcIDVerified(address userAddress) public view
 	returns (uint32);
     
     function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
