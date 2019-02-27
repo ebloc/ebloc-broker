@@ -47,7 +47,6 @@ def eudatInitializeFolder(folderToShare):
     subprocess.run(['rm', '-f', tarHash + '.tar.gz'])
     return tarHash
 
-
 def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
     
