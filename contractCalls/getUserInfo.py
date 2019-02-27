@@ -20,13 +20,13 @@ def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
     my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
     
     if printType == '0':
-        return('{0: <17}'.format('blockReadFrom: ') + str(blockReadFrom) + '\n' +
-               '{0: <17}'.format('userEmail: ')     + my_filter.get_all_entries()[0].args['userEmail'] + '\n' +
-               '{0: <17}'.format('miniLockID: ')    + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
-               '{0: <17}'.format('ipfsAddress: ')   + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
-               '{0: <17}'.format('fID: ')           + my_filter.get_all_entries()[0].args['fID'] + '\n' +
-               '{0: <17}'.format('orcid: ')         + orcid + '\n' +
-               '{0: <17}'.format('orcidVerify: ')   + str(eBlocBroker.functions.isOrcIDVerified(orcid).call()))
+        return('{0: <15}'.format('blockReadFrom: ') + str(blockReadFrom) + '\n' +
+               '{0: <15}'.format('userEmail: ')     + my_filter.get_all_entries()[0].args['userEmail'] + '\n' +
+               '{0: <15}'.format('miniLockID: ')    + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
+               '{0: <15}'.format('ipfsAddress: ')   + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
+               '{0: <15}'.format('fID: ')           + my_filter.get_all_entries()[0].args['fID'] + '\n' +
+               '{0: <15}'.format('orcid: ')         + orcid + '\n' +
+               '{0: <15}'.format('orcidVerify: ')   + str(eBlocBroker.functions.isOrcIDVerified(orcid).call()))
     else:
         return [str(blockReadFrom),
                 my_filter.get_all_entries()[0].args['userEmail'],
