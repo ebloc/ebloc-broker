@@ -511,11 +511,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return false;
     }
 
-    /* Checks whether or not the given ORCID iD is already authenticated in eBlocBroker */
-    function isOrcIDVerified(string memory orcID) public view
+    /* Checks whether or not the enrolled user's given ORCID iD is already authenticated in eBlocBroker */
+    function isUserOrcIDVerified(address userAddress) public view
 	returns (uint32)
     {
-	return verifyOrcID[orcID];
+	return verifyOrcID[userContract[userAddress].orcID];
     }
     
     /* Checks whether or not the given Ethereum address of the user (userAddress) 
