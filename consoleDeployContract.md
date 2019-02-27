@@ -41,7 +41,7 @@ cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
 sed -i 's/\/\*emit\*\//emit/g'            $HOME/myContract/eBlocBroker.sol
 sed -i 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
 head -7 $HOME/myContract/eBlocBroker.sol > $HOME/myContract/e.sol 
-tail -n+3 eBlocBrokerInterface.sol >> $HOME/myContract/e.sol
+tail -n+3 $HOME/myContract/eBlocBrokerInterface.sol >> $HOME/myContract/e.sol
 echo "" >> $HOME/myContract/e.sol 
 tail -n+11 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol
 echo "" >> $HOME/myContract/e.sol 
@@ -93,5 +93,5 @@ testOutput.contracts["e.sol:eBlocBroker"].abi
 cd $HOME/eBlocBroker/contractCalls/
 nano address.json # cp eBlocBroker mined! address =========> contractCalls/address.json
 nano abi.json     # cp printed_ABI                =========> contractCalls/abi.json
-bash fixAbi.sh
+./fixAbi.sh
 ```
