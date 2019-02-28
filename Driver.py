@@ -291,13 +291,13 @@ while True:
        isClusterReceivedJob = 1
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
-       print(loggedJobs[i].args['jobKey'])
+       
+       print(loggedJobs[i].args['cacheType'])
        sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
        log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + ", " + loggedJobs[i].args['clusterAddress'] + ", " +
            loggedJobs[i].args['jobKey'] + ", " + str(loggedJobs[i].args['index']) + ", " + str(loggedJobs[i].args['storageID']) + ", " +
-           loggedJobs[i].args['desc'] + ", " + sourceCodeHash + ", " + str(loggedJobs[i].args['gasDataTransfer']) +
-           ", " + str(loggedJobs[i].args['cacheType']))
-
+           sourceCodeHash + ", " + str(loggedJobs[i].args['gasDataTransfer']) + ", " + str(loggedJobs[i].args['cacheType']))
+       
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
 

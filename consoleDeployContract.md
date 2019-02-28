@@ -53,9 +53,14 @@ cp $HOME/myContract/e.sol $HOME/eBlocBroker/deployedContract/eBlocBroker.sol
 cd $HOME/myContract
 rm -f $HOME/myContract/e.js
 echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" > $HOME/myContract/e.js
+#Open geth-console
+cd $HOME/myContract
+bash $HOME/eblocPOA/client.sh
 ```
 
 ### Geth-Console
+
+# Open geth-console
 
 ```bash
 cd $HOME/myContract
