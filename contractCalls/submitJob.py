@@ -9,8 +9,8 @@ from imports import getWeb3
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer,
-              jobDescription, storageID, sourceCodeHash, cacheType, accountID):
+def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
+              jobDescription, storageID, sourceCodeHash, cacheType, gasStorageHour, accountID):
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
     # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW
     blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
@@ -27,7 +27,7 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer,
     if not eBlocBroker.functions.isUserExist(fromAccount).call():
        return "Error: Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."       
 
-    if str(eBlocBroker.functions.isOrcIDVerified(orcid).call()) == '0':
+    if str(eBlocBroker.functions.isUserOrcIDVerified(fromAccount).call()) == '0':
        return 'User\'s orcid: ' + orcid + ' is not verified.'
 
     if storageID == 0 or storageID == 2:
@@ -38,10 +38,20 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer,
        if 'success' in output:
           print(output)
 
-    computationalCost = gasCoreMin * priceCoreMin * core      
-    jobPriceValue =  computationalCost+ priceDataTransfer * gasDataTransfer
-    gasLimit      = 4500000
+    computationalCost = priceCoreMin * core * gasCoreMin
+    jobReceivedBlocNumber, jobGasStorageHour = eBlocBroker.functions.getJobStorageTime(fromAccount, sourceCodeHash).call();
+    if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
+        dataTransferIn = 0; # storageCost and cacheCost will be equaled to 0
+        
+    storageCost = priceStorage * dataTransferIn * gasStorageHour
+    cacheCost   = priceCache * dataTransferIn
+
+    dataTransferSum  = dataTransferIn + dataTransferOut
+    dataTransferCost = priceDataTransfer * dataTransferSum
     
+    jobPriceValue = computationalCost + dataTransferCost + storageCost + cacheCost
+    print("jobPriceValue: " + str(jobPriceValue))
+        
     if not len(sourceCodeHash):
         return 'sourceCodeHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
@@ -62,14 +72,16 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer,
         return 'Error: cachType provided greater than 1. Please provide smaller value.'
         
     # print(clusterAddress + " " + jobKey + " " + str(core) + " " + jobDescription + " " + str(gasCoreMin) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
-    tx = eBlocBroker.transact({"from": fromAccount,
+    gasLimit      = 4500000
+    tx_hash = eBlocBroker.transact({"from": fromAccount,
                                "value": jobPriceValue,
-                               "gas": gasLimit}).submitJob(clusterAddress, jobKey, core, jobDescription, gasCoreMin, gasDataTransfer, storageID, sourceCodeHash, cacheType) 
-    return tx.hex()
+                               "gas": gasLimit}).submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn,
+                                                           dataTransferOut, storageID, sourceCodeHash, cacheType, gasStorageHour) 
+    return tx_hash.hex()
 
 if __name__ == '__main__': 
     test = 0    
-    if len(sys.argv) == 10:
+    if len(sys.argv) == 11:
         clusterAddress = str(sys.argv[1])
         clusterAddress = web3.toChecksumAddress(clusterAddress)                 
         jobKey          = str(sys.argv[2]) 
@@ -78,9 +90,10 @@ if __name__ == '__main__':
         gasDataTransfer = int(sys.argv[5])        
         jobDescription  = str(sys.argv[6])         
         storageID       = int(sys.argv[7])
-        sourceCodeHash  = str(sys.argv[8]) 
-        accountID       = int(sys.argv[9])        
-    elif len(sys.argv) == 13: 
+        sourceCodeHash  = str(sys.argv[8])
+        gasStorageHour  = int(sys.argv[9])
+        accountID       = int(sys.argv[10])        
+    elif len(sys.argv) == 14: 
         clusterAddress  = str(sys.argv[1])
         jobKey          = str(sys.argv[2]) 
         core            = int(sys.argv[3]) 
@@ -92,9 +105,11 @@ if __name__ == '__main__':
         jobDescription  = str(sys.argv[9]) 
         storageID       = int(sys.argv[10])
         sourceCodeHash  = str(sys.argv[11]) 
-        accountID       = int(sys.argv[12])
+        gasStorageHour  = int(sys.argv[12])
+        accountID       = int(sys.argv[13])
         gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         gasDataTransfer = dataTransferIn + dataTransferOut
+
     else:   
         # USER Inputs ================================================================
         clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282')
@@ -124,11 +139,12 @@ if __name__ == '__main__':
         accountID       = 0
         gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         dataTransferIn  = 100 
-        dataTransferOut = 100        
-        gasDataTransfer = dataTransferIn + dataTransferOut        
+        dataTransferOut = 100
+        gasStorageHour  = 1
         # =============================================================================
 
-    tx_hash = submitJob(clusterAddress, jobKey, core, gasCoreMin, gasDataTransfer, jobDescription, storageID, sourceCodeHash, cacheType, accountID)    
+    tx_hash = submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
+                        jobDescription, storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)    
     if 'Error' in tx_hash:
         print(tx_hash)
         sys.exit()

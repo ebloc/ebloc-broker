@@ -26,7 +26,7 @@ def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
                '{0: <15}'.format('ipfsAddress: ')   + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
                '{0: <15}'.format('fID: ')           + my_filter.get_all_entries()[0].args['fID'] + '\n' +
                '{0: <15}'.format('orcid: ')         + orcid + '\n' +
-               '{0: <15}'.format('orcidVerify: ')   + str(eBlocBroker.functions.isOrcIDVerified(orcid).call()))
+               '{0: <15}'.format('orcidVerify: ')   + str(eBlocBroker.functions.isUserOrcIDVerified(userAddress).call()))
     else:
         return [str(blockReadFrom),
                 my_filter.get_all_entries()[0].args['userEmail'],
@@ -34,7 +34,7 @@ def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
                 my_filter.get_all_entries()[0].args['ipfsAddress'],
                 my_filter.get_all_entries()[0].args['fID'],
                 orcid,
-                str(eBlocBroker.functions.isOrcIDVerified(orcid).call())]         
+                str(eBlocBroker.functions.isUserOrcIDVerified(userAddress).call())]
 
 if __name__ == '__main__': 
     if len(sys.argv) == 3:

@@ -24,7 +24,7 @@ interface eBlocBrokerInterface {
     
     /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
-		 string indexed jobKey,
+		 string jobKey,
 		 uint indexed index,
 		 uint8 storageID,
 		 //string desc,
