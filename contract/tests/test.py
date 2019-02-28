@@ -150,7 +150,7 @@ def test_receipt(web3, accounts, chain):
             chain.wait.for_block(int(arguments[0]))
             jobKey     = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
             miniLockId = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
-            folderHash = "e3fbef873405145274256ee0ee2b580f"
+            sourceCodeHash = "e3fbef873405145274256ee0ee2b580f"
  
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
 			# print("Contract Balance before: " + str(web3.eth.getBalance(accounts[0])))
@@ -159,9 +159,8 @@ def test_receipt(web3, accounts, chain):
             # execution cost + BW-100MB cost is paid
                        
             computationalCost = priceCoreMin * core * gasCoreMin
-            
 
-            jobReceivedBlocNumber, jobGasStorageHour = my_contract.call().getJobStorageTime(account, folderHash);
+            jobReceivedBlocNumber, jobGasStorageHour = my_contract.call().getJobStorageTime(account, sourceCodeHash);
             if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
                 dataTransferIn = 0; # storageCost and cacheCost will be equaled to 0
                 
@@ -176,7 +175,7 @@ def test_receipt(web3, accounts, chain):
             print('jobPriceValue: ' + str(jobPriceValue))
             set_txn_hash = my_contract.transact({"from": accounts[8],
                                                  "value":web3.toWei(jobPriceValue, "wei"
-                                                )}).submitJob(account, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut, storageID.ipfs, folderHash, cacheType.private, gasStorageHour)
+                                                )}).submitJob(account, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut, storageID.ipfs, sourceCodeHash, cacheType.private, gasStorageHour)
             contract_address = chain.wait.for_receipt(set_txn_hash)
             print("submitJob: " + str(contract_address["gasUsed"]))
             
@@ -213,8 +212,8 @@ def test_receipt(web3, accounts, chain):
             val += 1
             
     print('----------------------------------')
-    print('StorageTime for job: ' + folderHash + ':')
-    print(my_contract.call().getJobStorageTime(account, folderHash))
+    print('StorageTime for job: ' + sourceCodeHash + ':')
+    print(my_contract.call().getJobStorageTime(account, sourceCodeHash))
     print('----------------------------------')
     
     # Prints finalize version of the linked list.
