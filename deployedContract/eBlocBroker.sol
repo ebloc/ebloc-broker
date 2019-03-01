@@ -4,9 +4,7 @@ author: Alper Alimoglu
 email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.4.24; 
-pragma experimental ABIEncoderV2;
-
+pragma solidity ^0.4.24;
 interface eBlocBrokerInterface {
     
     /* Logged when the cluster calls receiptCheck function. Records the completed jobs' information under receiptCheck() method call.*/
@@ -31,7 +29,7 @@ interface eBlocBrokerInterface {
     
     /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
-		 string indexed jobKey,
+		 string jobKey,
 		 uint indexed index,
 		 uint8 storageID,
 		 //string desc,
@@ -39,7 +37,7 @@ interface eBlocBrokerInterface {
 		 uint32 gasDataTransferIn,
 		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
-		 uint gasCacheMin
+		 uint gasStorageHour
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
@@ -77,7 +75,7 @@ interface eBlocBrokerInterface {
 			    string jobKey,
 			    string jobDesc
 			    );
-
+    
     function registerUser(string memory userEmail,
 			  string memory fID,
 			  string memory miniLockID,
@@ -125,12 +123,15 @@ interface eBlocBrokerInterface {
 		       uint gasCacheMin)
 	public payable /*returns (bool success)*/;
 
+    function updateJobReceivedBlocNumber(string memory sourceCodeHash)
+	public returns (bool success);
+    
     function setJobDescription(address clusterAddress,
 			       string memory jobKey,
 			       string memory jobDesc)
 	public returns (bool success);
     
-    function setJobStatus(string memory jobKey,
+    function setJobStatus(string jobKey,
 			  uint32 index,
 			  uint8 stateID,
 			  uint startTime)
@@ -150,7 +151,7 @@ interface eBlocBrokerInterface {
 			  uint32 index)
 	public returns (bool);
        
-    function authenticateOrcID(string memory orcID) public returns (bool success);
+    function authenticateOrcID(address userAddress, string memory orcID) public returns (bool success);
     
     function getJobInfo(address clusterAddress, string memory jobKey, uint index) public view
 	returns (uint8, uint32, uint, uint, uint, address);
@@ -188,16 +189,19 @@ interface eBlocBrokerInterface {
     function isUserExist(address userAddress) public view
 	returns (bool);
       
-    function isOrcIDVerified(string memory orcID) public view
-	returns (uint32);	  
+    function isUserOrcIDVerified(address userAddress) public view
+	returns (uint32);
+    
+    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
+	returns(uint, uint);
 
     function getClusterReceiptSize(address clusterAddress) public view
 	returns (uint32);
 
     function getClusterReceiptNode(address clusterAddress, uint32 index) public view
 	returns (uint256, int32);
-
 }
+
 
 /* Contract Address: 0x */
 /// @title eBlocBroker is a blockchain based autonomous computational resource
@@ -232,10 +236,11 @@ contract eBlocBroker is eBlocBrokerInterface {
     address[] public clusterAddresses; /* A dynamically-sized array of `address` structs */
     address[] public userAddresses;    /* A dynamically-sized array of `address` structs */
 
-    mapping(string  => uint32)          verifyOrcID;
-    mapping(address => Lib.userData)    userContract;
+    mapping(string  => Lib.jobStorageTime) jobSt; /*Stored information related to job's storage time*/
+    mapping(string  => uint32) verifyOrcID;
+    mapping(address => Lib.userData) userContract;
     mapping(address => Lib.clusterData) clusterContract;
-    mapping(address => uint[]) clusterUpdatedBlockNumber;   
+    mapping(address => uint[]) clusterUpdatedBlockNumber;
 
     /*
     modifier isZero(uint32 input) {
@@ -270,7 +275,12 @@ contract eBlocBroker is eBlocBrokerInterface {
 	require(addr == owner);
 	_ ;
     }
-    
+
+    modifier isOrcIDverified(string memory orcID) {
+	require(verifyOrcID[orcID] == 0);
+	_ ;
+    }
+
     /* Refund funds the complete amount to client if requested job is still in the pending state or
        is not completed one hour after its required time.
        If the job is in the running state, it triggers LogCancelRefund event on the blockchain, 
@@ -304,6 +314,14 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    revert();
     }
 
+    function authenticateOrcID(address userAddress, string memory orcID) isOwner(msg.sender) isOrcIDverified(orcID) public
+	returns (bool success)
+    {
+	if (sha3(userContract[userAddress].orcID) == sha3(orcID))
+	    verifyOrcID[orcID] = 1;
+	return true;
+    }
+
     /* Following function is a general-purpose mechanism for performing payment withdrawal
        by the cluster provider and paying of unused core usage cost back to the client
     */
@@ -322,9 +340,12 @@ contract eBlocBroker is eBlocBrokerInterface {
 	   is not mapped to a job , this will throw automatically and revert all changes 
 	*/
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];	
-	Lib.clusterInfo memory info = clusterContract[msg.sender].info[job.blockNumber];
-
-	uint amountToGain = info.priceCoreMin * job.core * jobRunTimeMin + info.priceDataTransfer * dataTransferSum;
+	Lib.clusterInfo memory info = clusterContract[msg.sender].info[job.clusterUpdatedBlockNumber];
+	
+          	            
+	uint amountToGain =
+	    info.priceCoreMin * job.core * jobRunTimeMin + // computationalCost       	    
+	    info.priceDataTransfer * dataTransferSum;      // dataTransferCost  
 
 	if (amountToGain > job.received ||
 	    job.status == uint8(jobStateCodes.COMPLETED) ||
@@ -362,13 +383,6 @@ contract eBlocBroker is eBlocBrokerInterface {
 	userContract[msg.sender].blockReadFrom = block.number;
 	userContract[msg.sender].orcID = orcID;
 	emit LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName, whisperPublicKey);
-	return true;
-    }
-
-    function authenticateOrcID(string memory orcID) isOwner(msg.sender) public
-	returns (bool success)
-    {
-	verifyOrcID[orcID] = 1;
 	return true;
     }
 
@@ -468,23 +482,33 @@ contract eBlocBroker is eBlocBrokerInterface {
 		       string memory jobKey,
 		       uint32 core,
 		       uint32 gasCoreMin,
-		       uint32 gasDataTransferIn,
-		       uint32 gasDataTransferOut,
+		       uint32 dataTransferIn,
+		       uint32 dataTransferOut,
 		       uint8 storageID,
 		       string memory sourceCodeHash,
 		       uint8 cacheType,
-		       uint gasCacheMin) /*check_gasCoreMin_storageID(gasCoreMin, storageID) isZero(core)*/ public payable
+		       uint gasStorageHour) /*check_gasCoreMin_storageID(gasCoreMin, storageID) isZero(core)*/ public payable
     //returns (bool success)
     {
 	uint[] storage clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 	Lib.clusterInfo storage info = cluster.info[clusterInfo[clusterInfo.length-1]];
-		
+
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum > block.number) {
+	    dataTransferOut = dataTransferOut;
+	    if (userContract[msg.sender].isStoragePaid[sourceCodeHash] == true)
+		dataTransferIn = 0;
+	}
+	else
+	    dataTransferOut = dataTransferIn + dataTransferOut;
+	
 	if (core == 0 || msg.value == 0 || !cluster.isRunning || storageID > 4 || gasCoreMin == 0 ||
 	    gasCoreMin > 1440 || // gasCoreMin is maximum 1 day
-	    msg.value < info.priceCoreMin * gasCoreMin * core +
-	                info.priceDataTransfer * (gasDataTransferIn + gasDataTransferOut) +
-	                info.priceStorage * gasDataTransferIn * gasCacheMin ||
+	    msg.value < info.priceCoreMin * core * gasCoreMin +                // computationalCost
+	                info.priceDataTransfer * (dataTransferOut) +           // dataTransferCost  
+	                info.priceStorage * dataTransferIn * gasStorageHour +  // storageCost
+	              	info.priceCache * dataTransferIn                       // cacheCost
+	    || 
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
@@ -498,15 +522,34 @@ contract eBlocBroker is eBlocBrokerInterface {
 			gasCoreMin:  gasCoreMin,                 
 			jobOwner:    msg.sender,
 			received:    msg.value,
-			blockNumber: clusterInfo[clusterInfo.length-1],
-			startTime:   0
+			startTime:   0,
+			clusterUpdatedBlockNumber: clusterInfo[clusterInfo.length-1]
 			}
-		));	
+		));
+
+	// User can only update the job's gasStorageHour if previously set storeage time is completed
+	if (gasStorageHour != 0 &&
+	    cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
+	    cluster.jobSt[sourceCodeHash].receivedBlocNumber = block.number;
+	    //Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum = gasStorageHour * 240;
+	    userContract[msg.sender].isStoragePaid[sourceCodeHash] = true;
+	}
+	
 	emit LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length - 1, storageID, sourceCodeHash,
-			gasDataTransferIn, gasDataTransferOut, cacheType, gasCacheMin);
+			dataTransferIn, dataTransferOut, cacheType, gasStorageHour);
 	return; //true
     }
-    
+
+    function updateJobReceivedBlocNumber(string memory sourceCodeHash) public
+	returns (bool success)
+    {
+	Lib.clusterData storage cluster = clusterContract[msg.sender]; //Only cluster can update receied job only to itself
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber != 0)
+ 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber = block.number; //Cluster only update the block.number	}
+	return true;
+    }
+    	
     /**
      *@dev Sets requested job's description.
      *@param clusterAddress The address of the cluster.
@@ -522,7 +565,8 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Sets the job's state (stateID) which is obtained from Slurm */
-    function setJobStatus(string memory jobKey, uint32 index, uint8 stateID, uint startTime) isBehindBlockTimeStamp(startTime)
+    function setJobStatus(string memory jobKey, uint32 index, uint8 stateID, uint startTime)
+	isBehindBlockTimeStamp(startTime)
 	checkStateID(stateID) public
 	returns (bool success)
     {
@@ -535,25 +579,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 	if (stateID == uint8(jobStateCodes.RUNNING))
 	    job.startTime = startTime;
 
+	//jobSt[sourceCodeHash].receivedBlocNumber = block.number;
+
 	emit LogSetJob(msg.sender, jobKey, index, startTime);
 	return true;
     }
 
     /* ------------------------------------------------------------GETTERS------------------------------------------------------------------------- */
-    /* Returns a list of registered cluster Ethereum addresses */
-    function getClusterAddresses() public view
-	returns (address[] memory)
-    {
-	return clusterAddresses;
-    }
-
-    /* Checks whether or not the given ORCID iD is already authenticated in eBlocBroker */
-    function isOrcIDVerified(string memory orcID) public view
-	returns (uint32)
-    {
-	return verifyOrcID[orcID];
-    }
-
     /* Returns the enrolled user's
        block number of the enrolled user, which points to the block that logs \textit{LogUser} event.
        It takes Ethereum address of the user (userAddress), which can be obtained by calling LogUser event.
@@ -584,24 +616,6 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    return (0, 0, 0, 0, 0, 0);
     }
 
-    /* Returns cluster provider's earned money amount in Wei.
-       It takes a cluster's Ethereum address (clusterAddress) as parameter. 
-    */
-    function getClusterReceivedAmount(address clusterAddress) public view
-	returns (uint)
-    {
-	return clusterContract[clusterAddress].receivedAmount;
-    }
-
-    function getJobSize(address clusterAddress, string memory jobKey) public view
-	returns (uint)
-
-    {
-	if (clusterContract[msg.sender].blockReadFrom == 0)
-	    revert();
-	return clusterContract[clusterAddress].jobStatus[jobKey].length;
-    }
-
     /* Returns various information about the submitted job such as the hash of output files generated by IPFS,
        UNIX timestamp on job's start time, received Wei value from the client etc. 
     */
@@ -616,7 +630,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    return (0, 0, 0, 0, 0, address(0x0));
 	
 	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];
-	//Lib.clusterInfo memory clusterInfo =  clusterContract[clusterAddress].info[job.blockNumber];
+	//Lib.clusterInfo memory clusterInfo =  clusterContract[clusterAddress].info[job.clusterUpdatedBlockNumber];
 	    
 	return (job.status, job.core, job.startTime, job.received, job.gasCoreMin, job.jobOwner);
     }
@@ -625,7 +639,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns (uint, uint, uint, uint)
     {
 	Lib.status memory job = clusterContract[clusterAddress].jobStatus[jobKey][index];
-	Lib.clusterInfo memory clusterInfo =  clusterContract[clusterAddress].info[job.blockNumber];
+	Lib.clusterInfo memory clusterInfo =  clusterContract[clusterAddress].info[job.clusterUpdatedBlockNumber];
 	    
 	return (clusterInfo.priceCoreMin,
 		clusterInfo.priceDataTransfer,
@@ -655,6 +669,31 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return owner;
     }
 
+    function getJobSize(address clusterAddress, string memory jobKey) public view
+	returns (uint)
+
+    {
+	if (clusterContract[msg.sender].blockReadFrom == 0)
+	    revert();
+	return clusterContract[clusterAddress].jobStatus[jobKey].length;
+    }
+
+    /* Returns cluster provider's earned money amount in Wei.
+       It takes a cluster's Ethereum address (clusterAddress) as parameter. 
+    */
+    function getClusterReceivedAmount(address clusterAddress) public view
+	returns (uint)
+    {
+	return clusterContract[clusterAddress].receivedAmount;
+    }
+	
+    /* Returns a list of registered cluster Ethereum addresses */
+    function getClusterAddresses() public view
+	returns (address[] memory)
+    {
+	return clusterAddresses;
+    }
+
     /* Checks whether or not the given Ethereum address of the provider (clusterAddress) 
        is already registered in eBlocBroker. 
     */
@@ -666,6 +705,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return false;
     }
 
+    /* Checks whether or not the enrolled user's given ORCID iD is already authenticated in eBlocBroker */
+    function isUserOrcIDVerified(address userAddress) public view
+	returns (uint32)
+    {
+	return verifyOrcID[userContract[userAddress].orcID];
+    }
+    
     /* Checks whether or not the given Ethereum address of the user (userAddress) 
        is already registered in eBlocBroker. 
     */
@@ -677,6 +723,15 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return false;
     }
 
+    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
+	returns(uint, uint)
+    {
+	Lib.clusterData storage cluster = clusterContract[clusterAddress];
+	return (cluster.jobSt[sourceCodeHash].receivedBlocNumber,
+		cluster.jobSt[sourceCodeHash].gasStorageBlockNum / 240);
+    }
+
+    //
     function getClusterReceiptSize(address clusterAddress) public view
 	returns (uint32)
     {
@@ -692,6 +747,12 @@ contract eBlocBroker is eBlocBrokerInterface {
 
 
 library Lib {
+    
+    struct jobStorageTime {
+	uint receivedBlocNumber;
+	uint gasStorageBlockNum;
+    }
+    
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
@@ -699,17 +760,21 @@ library Lib {
 	uint   startTime; /* Submitted job's starting universal time on the server side */
 	
 	/* Variables assigned by the client */	
-	uint    received; /* Paid amount (new owned) by the client */
-	uint blockNumber;
 	uint  gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
 	uint32      core; /* Requested core by the client */
+	
+	/* Variables obtained from eBlocBoker */
+	uint    received; /* Paid amount (new owned) by the client */		
 	address jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint clusterUpdatedBlockNumber; /* When cluster is submitted cluster's most recent block number when its set or updated */
     }
 
     /* Registered user's information */
     struct userData {
 	uint   blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
 	string         orcID; /* User's orcID */
+
+	mapping(string  => bool) isStoragePaid; /**/
     }
 
     struct clusterInfo {
@@ -718,7 +783,7 @@ library Lib {
 	uint   priceCoreMin; /* Cluster's price for core per minute */
 	uint   priceDataTransfer; 
 	uint   priceStorage; 
-	uint   priceCache;
+	uint   priceCache;	
     }
     
     /* Registered cluster's information */
@@ -727,7 +792,8 @@ library Lib {
 	
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	mapping(uint => clusterInfo) info;
-		
+	mapping(string  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
+	
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */	
 	uint       receivedAmount; /* Cluster's received wei price */

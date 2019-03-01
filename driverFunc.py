@@ -89,7 +89,8 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
                     break
                     # log(cumulativeSize)
             break
-        except subprocess.CalledProcessError as e: # Catches resource temporarily unavailable on ipfs
+        except subprocess.CalledProcessError as e:
+            # Catches resource temporarily unavailable on ipfs
             log(e.output.decode('utf-8').strip(), 'red')
             if ipfsCallCounter == 5:
                 return False
