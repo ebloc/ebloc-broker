@@ -14,7 +14,8 @@ Shh.attach(web3, "shh")
 import json,sys,os.path
 
 from os.path import expanduser
-home = expanduser("~")
+home   = expanduser("~")
+my_env = os.environ.copy()
 
 topic = '0x07678231'
 testFlag = True
@@ -28,7 +29,7 @@ def log(strIn):
 		txFile.close()
 		
 def post(message):
-    coreInfo = lib.shellCommand(['sinfo', '-h', '-o%C']).split("/")
+    coreInfo = lib.runCommand(['sinfo', '-h', '-o%C']).split("/")
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
 
