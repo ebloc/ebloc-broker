@@ -26,7 +26,7 @@ library Lib {
 	
 	/* Variables obtained from eBlocBoker */
 	uint    received; /* Paid amount (new owned) by the client */		
-	address jobOwner; /* Address of the client (msg.sender) has been stored */
+	address /*payable*/ jobOwner; /* Address of the client (msg.sender) has been stored */
 	uint clusterUpdatedBlockNumber; /* When cluster is submitted cluster's most recent block number when its set or updated */
     }
 
@@ -94,9 +94,9 @@ library Lib {
 	uint32 addrTemp;
 	int32  carriedSum;
 
-	interval storage prevNode;     //= self.list[0];
-	interval storage currentNode;  //= self.list[0];
-	interval storage prevNodeTemp; //= self.list[0];
+	interval storage prevNode     = self.list[0];
+	interval storage currentNode  = self.list[0];
+	interval storage prevNodeTemp = self.list[0];
 
 	// +-------------------------------+
 	// | Begin: receiptCheck Algorithm |

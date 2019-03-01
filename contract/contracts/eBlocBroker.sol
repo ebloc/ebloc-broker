@@ -124,6 +124,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns (bool success)
     {
 	if (sha3(userContract[userAddress].orcID) == sha3(orcID))
+        //if (keccak256(abi.encodePacked(userContract[userAddress].orcID)) == keccak256(abi.encodePacked(orcID)))
 	    verifyOrcID[orcID] = 1;
 	return true;
     }
@@ -234,7 +235,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    clusterAddresses.push(msg.sender); // In order to obtain list of clusters 
 	}
 
-	 LogCluster(msg.sender, availableCoreNum, clusterEmail, fID, miniLockID,
+	 /*emit*/ LogCluster(msg.sender, availableCoreNum, clusterEmail, fID, miniLockID,
 			    priceCoreMin, priceDataTransfer, priceStorage, priceCache,
 			    ipfsAddress, whisperPublicKey);
 
