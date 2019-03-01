@@ -48,19 +48,6 @@ job_state_code['TIMEOUT']      = 16
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
-# enum: https://stackoverflow.com/a/1695250/2402577
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    reverse = dict((value, key) for key, value in enums.items())
-    enums['reverse_mapping'] = reverse
-    return type('Enum', (), enums)
-
-storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
-cacheType = enum('private', 'public', 'none', 'ipfs')
-
-def shellCommand(args): 
-   return subprocess.check_output(args).decode('utf-8').strip()
-
 def log(strIn, color=''):
    from colored import stylize
    from colored import fg
@@ -73,6 +60,28 @@ def log(strIn, color=''):
    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
+
+# enum: https://stackoverflow.com/a/1695250/2402577
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    reverse = dict((value, key) for key, value in enums.items())
+    enums['reverse_mapping'] = reverse
+    return type('Enum', (), enums)
+
+storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
+cacheType = enum('private', 'public', 'none', 'ipfs')
+
+def runCommand(command, my_env=None):
+    if my_env is None:
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else :
+        p = subprocess.Popen(command, env=my_env,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = p.communicate()      
+    if p.returncode != 0:
+        err = err.decode('utf-8')
+        log(err, 'red')
+    return output.strip().decode('utf-8')
 
 # https://stackoverflow.com/a/10840586/2402577   
 def silentremove(filename):

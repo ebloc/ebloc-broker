@@ -117,7 +117,9 @@ if __name__ == '__main__':
         cacheType      = lib.cacheType.private # default
         
         if storageID == lib.storageID.ipfs: # IPFS
-            jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  #"1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG"
+            # jobKey    = '1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'           
+            # jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  # 2 minutes job
+            jobKey    = 'QmS5seSFGiPywJYkEAALCYHq3YgF4Pruq9eVz6Qmt4ZWms' # 20 seconds
             cacheType = lib.cacheType.public # default
             # TODO: convert into ===>  sourceCodeHash     = ''
             sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository: TODO: provide anyway
