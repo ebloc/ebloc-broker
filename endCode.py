@@ -6,7 +6,7 @@ from colored import fg
 import hashlib
 from imports import connectEblocBroker
 from imports import getWeb3
-
+from os.path import expanduser
 sys.path.insert(0, './contractCalls')
 from contractCalls.getJobInfo   import getJobInfo
 from contractCalls.getUserInfo  import getUserInfo
@@ -14,7 +14,8 @@ from contractCalls.receiptCheck import receiptCheck
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
-
+homeDir     = expanduser("~")
+   
 def log(strIn, color=''):
    if color != '':
       print(stylize(strIn, fg(color))) 
@@ -23,6 +24,18 @@ def log(strIn, color=''):
    txFile = open(lib.LOG_PATH + '/endCodeAnalyse/' + globals()['jobKey'] + "_" + globals()['index'] + '.txt', 'a') 
    txFile.write(strIn + "\n")  
    txFile.close() 
+
+def runCommand(command, my_env=None):
+    if my_env is None:
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else :
+        p = subprocess.Popen(command, env=my_env,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = p.communicate()      
+    if p.returncode != 0:
+        err = err.decode('utf-8')
+        log(err, 'red')
+    return output.strip().decode('utf-8')
 
 def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferSum):
    # cmd: scontrol show job jobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
@@ -33,9 +46,11 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
    #-----------
    p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=EndTime=).*(?= )'], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
-   date      = p3.communicate()[0].decode('utf-8').strip()
-   # cmd: date -d 2018-09-09T21:50:51 +"%s"
-   endTimeStamp = subprocess.check_output(["date", "-d", date, '+\'%s\'']).strip().decode('utf-8').replace("\'","")   
+   date = p3.communicate()[0].decode('utf-8').strip()
+
+
+   command = ["date", "-d", date, '+\'%s\''] # cmd: date -d 2018-09-09T21:50:51 +"%s"
+   endTimeStamp = runCommand(command).replace("\'","")   
    log("endTimeStamp: " + endTimeStamp) 
      
    txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp,
@@ -43,8 +58,8 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
    while txHash == "notconnected" or txHash == "": 
       log("Error: Please run geth on the background.", 'red')
       log(jobKey + ' ' + index + ' ' + elapsedRawTime + ' ' + newHash + ' ' + storageID + ' ' + endTimeStamp) 
-      txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp,
-                            dataTransferSum, eBlocBroker, web3)
+      txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferSum, eBlocBroker, web3)
+      txHash = ''
       time.sleep(5)      
    log("receiptCheck() " + txHash)  
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
@@ -52,9 +67,10 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
    txFile.close() 
 
 # Client's loaded files are removed, no need to re-upload them.
-def removeSourceCode(resultsFolderPrev):     
+def removeSourceCode(resultsFolderPrev):
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
-      filesToRemove = subprocess.check_output(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt'], stderr=subprocess.STDOUT).decode('utf-8').strip()
+      command = ['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
+      filesToRemove = runCommand(command)
       if filesToRemove != '' or filesToRemove != None:
          log('\nFiles to be removed: \n' + filesToRemove + '\n')         
       # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
@@ -85,6 +101,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    globals()['jobKey'] = jobKey
    globals()['index']  = index 
 
+   # https://stackoverflow.com/a/5971326/2402577 ... https://stackoverflow.com/a/4453495/2402577
+   # my_env = os.environ.copy(); my_env["IPFS_PATH"] = homeDir + "/.ipfs"; print(my_env)
+   os.environ["IPFS_PATH"] = homeDir + "/.ipfs"
+   
    log('To run again:')
    log('~/eBlocBroker/endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID)
    log('')
@@ -135,7 +155,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    #-----------
    p2.communicate() # Remove empty folders if exist      
 
-   log("\nwhoami: "          + getpass.getuser())  # whoami
+   log("\nwhoami: "          + getpass.getuser() + ' ' + str(os.getegid())) # whoami
+   log("homeDir: "           + homeDir)
    log("pwd: "               + os.getcwd())        # pwd
    log("resultsFolder: "     + resultsFolder) 
    log("jobKey: "            + jobKey) 
@@ -164,10 +185,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
       log(modifiedDate) 
 
    log("\njobOwner's Info: ")  
-   log('{0: <13}'.format('userEmail: ')     + userInfo[1])
-   log('{0: <13}'.format('miniLockID: ')    + userInfo[2])
-   log('{0: <13}'.format('ipfsAddress: ')   + userInfo[3])
-   log('{0: <13}'.format('fID: ')           + userInfo[4])
+   log('{0: <13}'.format('userEmail: ')   + userInfo[1])
+   log('{0: <13}'.format('miniLockID: ')  + userInfo[2])
+   log('{0: <13}'.format('ipfsAddress: ') + userInfo[3])
+   log('{0: <13}'.format('fID: ')         + userInfo[4])
    clientMiniLockID = userInfo[2]       
    log("") 
    
@@ -200,9 +221,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    # cmd: scontrol show job $jobID > $resultsFolder/slurmJobInfo.out
    with open(resultsFolder + '/slurmJobInfo.out', 'w') as stdout:
       subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=stdout)
+      log('Writing into slurmJobInfo.out is done.', 'green')
 
-   #cmd: sacct -n -X -j $jobID --format="Elapsed"
-   elapsedTime = subprocess.check_output(['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed']).decode('utf-8').strip()   
+   command = ['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed'] #cmd: sacct -n -X -j $jobID --format="Elapsed"
+   elapsedTime = runCommand(command)
    log("ElapsedTime: " + elapsedTime) 
 
    elapsedTime    = elapsedTime.split(':') 
@@ -228,9 +250,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    outputFileName = 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'
    
    # Here we know that job is already completed 
-   if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
-      # Uploaded as folder
-      newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).decode('utf-8').strip()
+   if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub       
+      command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
+      newHash = runCommand(command)
+           
       countTry = 0 
       while newHash == "": 
          if (countTry > 10):
@@ -241,13 +264,16 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          removeSourceCode(resultsFolderPrev)
          with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
-         log(subprocess.check_output(['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))                     
-         newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz']).strip().decode('utf-8')
+         command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
+         log(runCommand(command))                  
+         command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
+         newHash = runCommand(command)
          newHash = newHash.split(' ')[1]
          lib.silentremove(resultsFolder + '/result.tar.gz')
          '''
          log("Generated new hash return empty error. Trying again...", 'yellow')
-         newHash = subprocess.check_output(['ipfs', 'add', '-r', resultsFolder]).strip().decode('utf-8')      
+         command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
+         newHash = runCommand(command)
          time.sleep(5)
       # dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
       # cmd: echo newHash | tail -n1 | awk '{print $2}'
@@ -261,9 +287,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
       #-----------
       newHash = p3.communicate()[0].decode('utf-8').strip()
       log("newHash: " + newHash)
-      res = subprocess.check_output(['ipfs', 'pin', 'add', newHash]).decode('utf-8').strip() # pin downloaded ipfs hash
-      print(res)                      
-      isIPFSHashExist = subprocess.check_output(['ipfs', 'object', 'stat', newHash]).decode('utf-8').strip()
+
+      command = ['ipfs', 'pin', 'add', newHash]
+      res = runCommand(command) # pin downloaded ipfs hash
+      print(res)
+
+      command = ['ipfs', 'object', 'stat', newHash]
+      isIPFSHashExist = runCommand(command) # pin downloaded ipfs hash
+      
       for item in isIPFSHashExist.split("\n"):
           if "CumulativeSize" in item:
               dataTransferOut = item.strip().split()[1]
@@ -275,13 +306,16 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
 
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
-      log(subprocess.check_output(['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))            
+      command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")    
+      log(runCommand(command))            
       # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
-      res = subprocess.check_output(['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', clientMiniLockID,
-                                     '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
+      command = ['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', clientMiniLockID,
+                 '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']
+      res = runCommand(command)
       log(res)      
-      removeSourceCode(resultsFolderPrev)  
-      newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
+      removeSourceCode(resultsFolderPrev)
+      command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
+      newHash = runCommand(command)
       newHash = newHash.split(' ')[1]
       countTry = 0 
       while newHash == "":
@@ -289,14 +323,17 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             sys.exit()
          countTry += 1                   
          log("Generated new hash return empty error. Trying again.", 'yellow')
-         newHash = res = subprocess.check_output(['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']).strip().decode('utf-8')
+         command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
+         newHash = runCommand(command)
          newHash = newHash.split(' ')[1]
          time.sleep(5)         
       # dataTransferOut = calculateDataTransferOut(resultsFolder + '/result.tar.gz.minilock', 'f')   
       log("newHash: " + newHash)
-      res = subprocess.check_output(['ipfs', 'pin', 'add', newHash]).decode('utf-8').strip() # pin downloaded ipfs hash
-      print(res)                      
-      isIPFSHashExist = subprocess.check_output(['ipfs', 'object', 'stat', newHash]).decode('utf-8').strip()
+      command = ['ipfs', 'pin', 'add', newHash]
+      res = runCommand(command)     
+      print(res)
+      command = ['ipfs', 'object', 'stat', newHash]      
+      isIPFSHashExist = runCommand(command)
       for item in isIPFSHashExist.split("\n"):
           if "CumulativeSize" in item:
               dataTransferOut = item.strip().split()[1]
@@ -311,11 +348,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
       removeSourceCode(resultsFolderPrev)      
       
       # cmd: tar -jcvf result-$clusterID-$index.tar.gz *
-      # log(subprocess.check_output(['tar', '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))
+      # command = ['tar', '-jcvf', outputFileName] + glob.glob("*")      
+      # log(runCommand(command))
       with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
          date = content_file.read().strip()
-         
-      log('Files to be archived using tar: \n' + subprocess.check_output(['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))
+
+      command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")   
+      log('Files to be archived using tar: \n' + runCommand(command))
       dataTransferOut = calculateDataTransferOut(outputFileName, 'f')      
       
       ''' cmd: ( https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577 )
@@ -330,7 +369,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
                             'https://b2drop.eudat.eu/public.php/webdav/' + outputFileName],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       output, err = p.communicate()
-      output = output.decode('utf-8')
+      output = output.strip().decode('utf-8')
       err = err.decode('utf-8')
       # log('CURL output: ' + err)      
       
@@ -380,26 +419,27 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
            
       with open(resultsFolderPrev + '/modifiedDate.txt', 'r') as content_file:
           date = content_file.read().rstrip()
-      log(subprocess.check_output(['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")).decode('utf-8'))            
+      command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")    
+      log(runCommand(command))            
       time.sleep(0.25) 
       dataTransferOut = calculateDataTransferOut(outputFileName, 'f')
       
       if 'folder' in mimeType: # Received job is in folder format
          log('mimeType: folder')          
          # cmd: $GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
-         log(subprocess.check_output([lib.GDRIVE, 'upload', '--parent', jobKey,
-                                      outputFileName, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
+         command = [lib.GDRIVE, 'upload', '--parent', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]         
+         log(runCommand(command))         
       elif 'gzip' in mimeType: # Received job is in folder tar.gz
          log('mimeType: tar.gz')
          # log(os.getcwd()) # delete
          # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
-         log(subprocess.check_output([lib.GDRIVE, 'update', jobKey,
-                                      outputFileName, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
+         command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
+         log(runCommand(command))         
       elif '/zip' in mimeType: # Received job is in zip format
          log('mimeType: zip')
          # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
-         log(subprocess.check_output([lib.GDRIVE, 'update', jobKey,
-                                      outputFileName, '-c', lib.GDRIVE_METADATA]).decode('utf-8').strip())         
+         command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
+         log(runCommand(command))         
       else:
          log('Error: Files could not be uploaded', 'red')
          sys.exit()
@@ -407,7 +447,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    dataTransferSum = dataTransferIn + dataTransferOut   
    log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
    receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, int(dataTransferSum))
-   log('DONE.')
+   log('DONE.', 'green')
    '''
    # Removed downloaded code from local since it is not needed anymore
    if os.path.isdir(resultsFolderPrev):

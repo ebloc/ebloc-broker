@@ -30,6 +30,7 @@ eBlocBroker = connectEblocBroker(web3)
 oc = None
 driverCancelProcess   = None
 driverReceiverProcess = None
+my_env = os.environ.copy()
 
 # Dummy sudo command to get the password when session starts
 subprocess.run(['sudo', 'printf', '']) 
@@ -108,7 +109,7 @@ def terminate():
 
 def idleCoreNumber(printFlag=1):
     # cmd: sinfo -h -o%C
-    coreInfo = lib.shellCommand(['sinfo', '-h', '-o%C']).split("/")
+    coreInfo = lib.runCommand(['sinfo', '-h', '-o%C']).split("/")
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
        if printFlag == 1:
@@ -255,7 +256,7 @@ while True:
        terminate()
 
     clusterGainedAmount = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3) 
-    squeueStatus        = lib.shellCommand(['squeue'])    
+    squeueStatus        = lib.runCommand(['squeue'])    
     if "squeue: error:" in str(squeueStatus):
        log("SLURM is not running on the background, please run \'sudo ./runSlurm.sh\'. \n")
        log(squeueStatus)
@@ -292,11 +293,15 @@ while True:
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
        
-       print(loggedJobs[i].args['cacheType'])
-       sourceCodeHash = loggedJobs[i].args['sourceCodeHash']
-       log("BlockNum: " + str(loggedJobs[i]['blockNumber']) + ", " + loggedJobs[i].args['clusterAddress'] + ", " +
-           loggedJobs[i].args['jobKey'] + ", " + str(loggedJobs[i].args['index']) + ", " + str(loggedJobs[i].args['storageID']) + ", " +
-           sourceCodeHash + ", " + str(loggedJobs[i].args['gasDataTransfer']) + ", " + str(loggedJobs[i].args['cacheType']))
+       log('BlockNum: ' + str(loggedJobs[i]['blockNumber']) + "\n" +
+           'clusterAddress: ' + loggedJobs[i].args['clusterAddress'] + "\n" +
+           'jobKey: ' + loggedJobs[i].args['jobKey'] + "\n" +
+           'index: ' + str(loggedJobs[i].args['index']) + "\n" +
+           'storageID: ' + str(loggedJobs[i].args['storageID']) + "\n" +
+           'sourceCodeHash: ' + loggedJobs[i].args['sourceCodeHash'] + "\n" +
+           'gasDataTransferIn: ' + str(loggedJobs[i].args['gasDataTransferIn']) + "\n" +
+           'gasDataTransferOut: ' + str(loggedJobs[i].args['gasDataTransferOut']) + "\n" +
+           'cacheType: ' + str(loggedJobs[i].args['cacheType']))
        
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -304,7 +309,7 @@ while True:
        jobKey = loggedJobs[i].args['jobKey']
        index  = int(loggedJobs[i].args['index'])
 
-       strCheck = lib.shellCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
+       strCheck = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
        jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
 
        userID   = ""
@@ -336,7 +341,7 @@ while True:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
              
           slurmPendingJobCheck()
-          print(lib.shellCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
+          print(lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
@@ -373,7 +378,7 @@ while True:
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
-                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), sourceCodeHash, loggedJobs[i].args['cacheType'], eBlocBroker, web3)
+                                      hashlib.md5(userID.encode('utf-8')).hexdigest(), loggedJobs[i].args['sourceCodeHash'], loggedJobs[i].args['cacheType'], eBlocBroker, web3)
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
        f_blockReadFrom.write(str(int(maxVal) + 1) + '\n')
