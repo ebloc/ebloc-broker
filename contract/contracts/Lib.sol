@@ -5,7 +5,7 @@ email:  alper.alimoglu AT gmail.com
 */
 
 pragma solidity ^0.4.17;
-pragma experimental ABIEncoderV2;
+//pragma experimental ABIEncoderV2;
 
 library Lib {
     
@@ -17,13 +17,15 @@ library Lib {
     /* Submitted Job's information */
     struct status {
 	/* Variable assigned by the cluster */
-	uint8     status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint   startTime; /* Submitted job's starting universal time on the server side */
+	uint8        status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint      startTime; /* Submitted job's starting universal time on the server side */
 	
 	/* Variables assigned by the client */	
-	uint  gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
-	uint32      core; /* Requested core by the client */
-	
+	uint     gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint dataTransferIn;  /**/
+	uint dataTransferSum; /**/
+	uint32         core; /* Requested core by the client */
+	 
 	/* Variables obtained from eBlocBoker */
 	uint    received; /* Paid amount (new owned) by the client */		
 	address /*payable*/ jobOwner; /* Address of the client (msg.sender) has been stored */
@@ -35,7 +37,7 @@ library Lib {
 	uint   blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
 	string         orcID; /* User's orcID */
 
-	mapping(string  => bool) isStoragePaid; /**/
+	//mapping(address => mapping(string  => bool)) isStoragePaid; /**/
     }
 
     struct clusterInfo {
@@ -50,10 +52,11 @@ library Lib {
     /* Registered cluster's information */
     struct clusterData {
 	intervalNode receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
-	
+
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	mapping(uint => clusterInfo) info;
 	mapping(string  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
+	mapping(address => mapping(string  => uint)) receivedAmountForStorage; /**/
 	
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */	
@@ -76,9 +79,9 @@ library Lib {
     /* Invoked when cluster calls registerCluster() function */
     function constructCluster(clusterData storage self) public
     {
-	self.isRunning          = true;
-	self.receivedAmount     = 0;
-	self.blockReadFrom      = block.number;
+	self.isRunning      = true;
+	self.receivedAmount = 0;
+	self.blockReadFrom  = block.number;
 
 	intervalNode storage selfReceiptList = self.receiptList;
 	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */

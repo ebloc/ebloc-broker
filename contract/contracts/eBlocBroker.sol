@@ -5,7 +5,7 @@ email:  alper.alimoglu AT gmail.com
 */
 
 pragma solidity ^0.4.17;
-pragma experimental ABIEncoderV2;
+//pragma experimental ABIEncoderV2;
 import "./Lib.sol";
 import "./eBlocBrokerInterface.sol";
 
@@ -13,6 +13,7 @@ import "./eBlocBrokerInterface.sol";
 /// @title eBlocBroker is a blockchain based autonomous computational resource
 ///        broker.
 contract eBlocBroker is eBlocBrokerInterface {
+    
     /* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
     uint    public deployedBlockNumber;    
     address public owner;
@@ -61,6 +62,11 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
     */
 
+    modifier isClusterExists() {
+	require(clusterContract[msg.sender].blockReadFrom != 0);
+	_ ;
+    }
+
     modifier isBehindBlockTimeStamp(uint time) {
 	require(time <= block.timestamp);
 	_ ;
@@ -89,10 +95,10 @@ contract eBlocBroker is eBlocBrokerInterface {
 
     /* Refund funds the complete amount to client if requested job is still in the pending state or
        is not completed one hour after its required time.
-       If the job is in the running state, it triggers LogCancelRefund event on the blockchain, 
+       If the job is in the running state, it triggers LogRefund event on the blockchain, 
        which will be caught by the cluster in order to cancel the job. 
     */
-    function cancelRefund(address clusterAddress, string memory jobKey, uint32 index) public
+    function refund(address clusterAddress, string memory jobKey, uint32 index) public
 	returns (bool)
     {
 	/* If 'clusterAddress' is not mapped on 'clusterContract' array  or its 'jobKey' and 'index'
@@ -109,11 +115,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    {
 		msg.sender.transfer(job.received);
 		job.status = uint8(jobStateCodes.REFUNDED); /* Prevents double spending */
-		/*emit*/ LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
+		/*emit*/ LogRefund(clusterAddress, jobKey, index); /* scancel log */
 		return true;
 	    }
 	else if (job.status == uint8(jobStateCodes.RUNNING)){
-	    /*emit*/ LogCancelRefund(clusterAddress, jobKey, index); /* scancel log */
+	    /*emit*/ LogRefund(clusterAddress, jobKey, index); /* scancel log */
 	    return true;
 	}
 	else
@@ -124,7 +130,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns (bool success)
     {
 	if (sha3(userContract[userAddress].orcID) == sha3(orcID))
-        //if (keccak256(abi.encodePacked(userContract[userAddress].orcID)) == keccak256(abi.encodePacked(orcID)))
+	//if (keccak256(abi.encodePacked(userContract[userAddress].orcID)) == keccak256(abi.encodePacked(orcID)))	
 	    verifyOrcID[orcID] = 1;
 	return true;
     }
@@ -138,22 +144,30 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  string memory resultIpfsHash,
 			  uint8 storageID,
 			  uint endTime,
+			  uint dataTransferIn,
 			  uint dataTransferSum) /*isBehindBlockTimeStamp(endTime)*/ public
-    returns (bool success) /* Payback to client and server */
+    /*returns (bool success)*/ /* Payback to client and server */
     {
-	if (endTime > block.timestamp)
-	    revert();
+	require(endTime <= block.timestamp);
 	/* If "msg.sender" is not mapped on 'clusterContract' array  or its "jobKey" and "index"
-	   is not mapped to a job , this will throw automatically and revert all changes 
+	   is not mapped to a job, this will throw automatically and revert all changes 
 	*/
 	Lib.status storage job = clusterContract[msg.sender].jobStatus[jobKey][index];	
 	Lib.clusterInfo memory info = clusterContract[msg.sender].info[job.clusterUpdatedBlockNumber];
-	
-          	            
-	uint amountToGain =
-	    info.priceCoreMin * job.core * jobRunTimeMin + // computationalCost       	    
-	    info.priceDataTransfer * dataTransferSum;      // dataTransferCost  
 
+	require(jobRunTimeMin   <= job.gasCoreMin);      // Cluster cannot request more time of the job that is already requested
+	require(dataTransferSum <= job.dataTransferSum); // Cluster cannot request more job's given dataTransferSum amount
+	
+	uint amountToGain = 0;
+	if (job.dataTransferIn != 0) {
+	    require(dataTransferIn <= job.dataTransferIn); // Cluster cannot request more dataTransferIn that is already requested
+	    amountToGain += info.priceCache * dataTransferIn; //cacheCost   
+	}
+	
+	amountToGain +=
+	    info.priceCoreMin * job.core * jobRunTimeMin + // computationalCost       	    
+	    info.priceDataTransfer * (dataTransferSum);    // dataTransferCost	
+	
 	if (amountToGain > job.received ||
 	    job.status == uint8(jobStateCodes.COMPLETED) ||
 	    job.status == uint8(jobStateCodes.REFUNDED))
@@ -165,8 +179,8 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
 	    /*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, 0, job.received, block.timestamp,
-				resultIpfsHash, storageID, dataTransferSum);
-	    return false; 
+				resultIpfsHash, storageID, dataTransferIn, dataTransferSum);
+	    return;// false; 
 	}
 	job.status = uint8(jobStateCodes.COMPLETED); /* Prevents double spending */
 	clusterContract[msg.sender].receivedAmount += amountToGain;
@@ -174,9 +188,33 @@ contract eBlocBroker is eBlocBrokerInterface {
 	msg.sender.transfer(amountToGain); /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
-	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain), block.timestamp, resultIpfsHash, storageID, dataTransferSum);
-	return true; 
+	/*emit*/ LogReceipt(msg.sender, jobKey, index, job.jobOwner, job.received, (job.received - amountToGain), block.timestamp, resultIpfsHash, storageID, dataTransferIn, dataTransferSum);
+	return; // true; 
     }
+
+    function receiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public
+	returns (bool success) {	
+	Lib.clusterData storage cluster = clusterContract[msg.sender];	
+	
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
+	    msg.sender.transfer(cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]); //storagePayment
+	    LogStoragePayment(msg.sender, cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]);	    
+	    cluster.receivedAmountForStorage[jobOwner][sourceCodeHash] = 0;
+	}	    
+    }
+    
+    /*
+    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint gasStorageHour) public
+	returns (bool success) {
+	require(gasStorageHour != 0);
+	Lib.clusterData storage cluster = clusterContract[msg.sender];
+
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum >= block.number) {
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += gasStorageHour * 240;
+	}
+    }
+    */
+    
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData */
     function registerUser(string memory userEmail,
 			  string memory fID,
@@ -223,8 +261,6 @@ contract eBlocBroker is eBlocBrokerInterface {
 			});	
 	clusterUpdatedBlockNumber[msg.sender].push(block.number);
 
-	//uint32 clusterInfo = cluster.info[block.number].availableCoreNum;
-
 	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
 	    clusterAddresses[cluster.clusterAddressesID] = msg.sender;
 	    cluster.blockReadFrom = block.number;
@@ -232,10 +268,10 @@ contract eBlocBroker is eBlocBrokerInterface {
 	} else {
 	    cluster.clusterAddressesID = uint32(clusterAddresses.length);
 	    cluster.constructCluster();
-	    clusterAddresses.push(msg.sender); // In order to obtain list of clusters 
+	    clusterAddresses.push(msg.sender); // In order to obtain the list of clusters 
 	}
 
-	 /*emit*/ LogCluster(msg.sender, availableCoreNum, clusterEmail, fID, miniLockID,
+	/*emit*/ LogCluster(msg.sender, availableCoreNum, clusterEmail, fID, miniLockID,
 			    priceCoreMin, priceDataTransfer, priceStorage, priceCache,
 			    ipfsAddress, whisperPublicKey);
 
@@ -300,10 +336,9 @@ contract eBlocBroker is eBlocBrokerInterface {
 	uint[] storage clusterInfo = clusterUpdatedBlockNumber[clusterAddress];
  	Lib.clusterData storage cluster = clusterContract[clusterAddress];
 	Lib.clusterInfo storage info = cluster.info[clusterInfo[clusterInfo.length-1]];
-
-	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum > block.number) {
-	    dataTransferOut = dataTransferOut;
-	    if (userContract[msg.sender].isStoragePaid[sourceCodeHash] == true)
+	
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum > block.number){
+	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0)
 		dataTransferIn = 0;
 	}
 	else
@@ -324,12 +359,14 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    revert();		
 	
 	cluster.jobStatus[jobKey].push(Lib.status({
-      		        status:      uint8(jobStateCodes.PENDING),
-			core:        core, /* Requested core value */
-			gasCoreMin:  gasCoreMin,                 
-			jobOwner:    msg.sender,
-			received:    msg.value,
-			startTime:   0,
+      		        status:          uint8(jobStateCodes.PENDING),
+			core:            core, /* Requested core value */
+			gasCoreMin:      gasCoreMin,
+			dataTransferIn:  dataTransferIn,
+			dataTransferSum: dataTransferOut,
+			jobOwner:        msg.sender,
+			received:        msg.value,
+			startTime:       0,
 			clusterUpdatedBlockNumber: clusterInfo[clusterInfo.length-1]
 			}
 		));
@@ -337,10 +374,16 @@ contract eBlocBroker is eBlocBrokerInterface {
 	// User can only update the job's gasStorageHour if previously set storeage time is completed
 	if (gasStorageHour != 0 &&
 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
+
+	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0) {
+		clusterAddress.transfer(cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]); //storagePayment
+		LogStoragePayment(clusterAddress, cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]);	    
+	    }
+	    
 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber = block.number;
 	    //Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum = gasStorageHour * 240;
-	    userContract[msg.sender].isStoragePaid[sourceCodeHash] = true;
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum = gasStorageHour * 240;	   
+	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] = info.priceStorage * dataTransferIn * gasStorageHour;	    
 	}
 	
 	/*emit*/ LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length - 1, storageID, sourceCodeHash,
@@ -500,6 +543,14 @@ contract eBlocBroker is eBlocBrokerInterface {
     {
 	return clusterAddresses;
     }
+	
+    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
+	returns(uint, uint)
+    {
+	Lib.clusterData storage cluster = clusterContract[clusterAddress];
+	return (cluster.jobSt[sourceCodeHash].receivedBlocNumber,
+		cluster.jobSt[sourceCodeHash].gasStorageBlockNum / 240);
+    }
 
     /* Checks whether or not the given Ethereum address of the provider (clusterAddress) 
        is already registered in eBlocBroker. 
@@ -530,21 +581,20 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return false;
     }
 
-    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
-	returns(uint, uint)
-    {
-	Lib.clusterData storage cluster = clusterContract[clusterAddress];
-	return (cluster.jobSt[sourceCodeHash].receivedBlocNumber,
-		cluster.jobSt[sourceCodeHash].gasStorageBlockNum / 240);
+    /* Used for tests */
+    function getReceiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public
+	returns (uint getrReceiveStoragePayment) {
+	return clusterContract[msg.sender].receivedAmountForStorage[jobOwner][sourceCodeHash];
     }
 
-    //
+    /* Used for tests */
     function getClusterReceiptSize(address clusterAddress) public view
 	returns (uint32)
     {
 	return clusterContract[clusterAddress].receiptList.getReceiptListSize();
     }
 
+    /* Used for tests */
     function getClusterReceiptNode(address clusterAddress, uint32 index) public view
 	returns (uint256, int32)
     {
