@@ -74,8 +74,8 @@ library Lib {
 	interval[] list; /* A dynamically-sized array of `interval` structs */
 	uint32 tail; /* Tail of the linked list */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
-    }
-        
+    }    
+    
     /* Invoked when cluster calls registerCluster() function */
     function constructCluster(clusterData storage self) public
     {
