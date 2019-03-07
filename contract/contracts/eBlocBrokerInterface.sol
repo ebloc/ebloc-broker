@@ -12,7 +12,8 @@ interface eBlocBrokerInterface {
 		     uint endTime,
 		     string resultIpfsHash,
 		     uint8 storageID,
-		     uint dataTransferSum
+		     uint dataTransferIn,
+		     uint dataTransferOut
 		     );
 
     /* Records the updated jobs' information under setJobStatus() method call */
@@ -50,7 +51,7 @@ interface eBlocBrokerInterface {
 		     );
 
     /* Records the refunded jobs' information under refund() method call */
-    event LogCancelRefund(address indexed clusterAddress,
+    event LogRefund(address indexed clusterAddress,
 			  string jobKey,
 			  uint32 index
 			  );
@@ -71,128 +72,5 @@ interface eBlocBrokerInterface {
 			    string jobDesc
 			    );
     
-    function registerUser(string memory userEmail,
-			  string memory fID,
-			  string memory miniLockID,
-                          string memory ipfsAddress,
-			  string memory orcID,
-                          string memory githubUserName,
-			  string memory whisperPublicKey)
-	public returns (bool success);
-
-    function registerCluster(string memory clusterEmail,
-                             string memory fID,
-                             string memory miniLockID,
-			     uint32 coreNumber,
-                             uint priceCoreMin,
-                             uint priceDataTransfer,
-                             uint priceStorage,
-			     uint priceCache,
-                             string memory ipfsAddress,
-                             string memory whisperPublicKey)
-	public returns (bool success);
-
-    function updateCluster(string memory clusterEmail,
-			   string memory fID,
-			   string memory miniLockID,
-			   uint32 coreNumber,
-			   uint priceCoreMin,
-			   uint priceDataTransfer,
-			   uint priceStorage,
-			   uint priceCache,
-			   string memory ipfsAddress,
-			   string memory whisperPublicKey)
-	public returns (bool success);
-
-    function deregisterCluster() public returns (bool success);
-
-    function submitJob(address clusterAddress,
-		       string memory jobKey,
-		       uint32 core,
-		       uint32 gasCoreMin,
-		       uint32 gasDataTransferIn,
-		       uint32 gasDataTransferOut,
-		       uint8 storageID,
-		       string memory sourceCodeHash,
-		       uint8 cacheType,
-		       uint gasCacheMin)
-	public payable /*returns (bool success)*/;
-
-    function updateJobReceivedBlocNumber(string memory sourceCodeHash)
-	public returns (bool success);
-    
-    function setJobDescription(address clusterAddress,
-			       string memory jobKey,
-			       string memory jobDesc)
-	public returns (bool success);
-    
-    function setJobStatus(string jobKey,
-			  uint32 index,
-			  uint8 stateID,
-			  uint startTime)
-	public returns (bool success);
-    
-    function receiptCheck(string memory jobKey,
-                          uint32 index,
-                          uint32 jobRunTimeMin,
-                          string memory resultIpfsHash,
-                          uint8 storageID,
-                          uint endTime,
-                          uint dataTransferSum)
-	public returns (bool success);
-
-    function cancelRefund(address clusterAddress,
-			  string memory jobKey,
-			  uint32 index)
-	public returns (bool);
-       
-    function authenticateOrcID(address userAddress, string memory orcID) public returns (bool success);
-    
-    function getJobInfo(address clusterAddress, string memory jobKey, uint index) public view
-	returns (uint8, uint32, uint, uint, uint, address);
-    
-    function getClusterPricesForJob(address clusterAddress, string memory jobKey, uint index) public view
-	returns (uint, uint, uint, uint);
-
-    function getClusterPricesBlockNumbers(address clusterAddress) public view
-	returns (uint[] memory);
-
-    function getClusterInfo(address clusterAddress) public view
-	returns(uint, uint, uint, uint, uint, uint);
-
-    function getUserInfo(address userAddress) public view
-	returns(uint, string memory);
-
-    function getDeployedBlockNumber() public view
-	returns (uint);
-
-    function getOwner() public view
-	returns (address);
-
-    function getJobSize(address clusterAddress, string memory jobKey) public view
-	returns (uint);
-
-    function getClusterReceivedAmount(address clusterAddress) public view
-	returns (uint);
-      
-    function getClusterAddresses() public view
-	returns (address[] memory);
-
-    function isClusterExist(address clusterAddress) public view
-	returns (bool);
-
-    function isUserExist(address userAddress) public view
-	returns (bool);
-      
-    function isUserOrcIDVerified(address userAddress) public view
-	returns (uint32);
-    
-    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
-	returns(uint, uint);
-
-    function getClusterReceiptSize(address clusterAddress) public view
-	returns (uint32);
-
-    function getClusterReceiptNode(address clusterAddress, uint32 index) public view
-	returns (uint256, int32);
+    event LogStoragePayment(address indexed clusterAddress, uint received);
 }

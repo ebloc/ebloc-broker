@@ -206,3 +206,5 @@ whisper/work/
 bootnode\.key
 
 contract/contracts/\.pytest_cache/v/cache/nodeids
+
+contract/\.pytest_cache/
