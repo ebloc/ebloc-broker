@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import os, StringIO, pytest, sys
+import os, pytest, sys
 
 cwd           = os.getcwd()
 gasUsed       = []
@@ -37,8 +37,9 @@ def pushBlockInfo(contract_address):
     print("Receipt Used Gas: " + str(contract_address["gasUsed"]))
     return
 
-def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun, usedBandwidthMB):
-    set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve", 0, e, usedBandwidthMB)
+def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun, dataTransferIn, dataTransferOut):
+    set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve",
+                                                           0, e, dataTransferIn, dataTransferOut)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     pushBlockInfo(contract_address)
 
@@ -203,9 +204,10 @@ def test_receipt(web3, accounts, chain):
     with open(fname) as f: 
         for line in f: 
             arguments = line.rstrip('\n').split(" ")
-            usedBandwidthMB = 50
+            dataTransferIn  = 25
+            dataTransferOut = 25
             receiptCheck(my_contract, chain, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd",
-                         val, int(arguments[1]) - int(arguments[0]), usedBandwidthMB)
+                         val, int(arguments[1]) - int(arguments[0]), dataTransferIn, dataTransferOut)
             receivedAmount = my_contract.call().getClusterReceivedAmount(account)            
             print('Cluster Receeived Amount: ' + str(receivedAmount - receivedAmount_temp))
             receivedAmount_temp = receivedAmount
