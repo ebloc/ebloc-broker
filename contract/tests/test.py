@@ -38,8 +38,14 @@ def pushBlockInfo(contract_address):
     return
 
 def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun, dataTransferIn, dataTransferOut):
-    set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash, index, timeToRun, "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve",
-                                                           0, e, dataTransferIn, dataTransferOut)
+    set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash,
+                                                           index,
+                                                           timeToRun,
+                                                           "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve",
+                                                           0,
+                                                           e,
+                                                           dataTransferIn,
+                                                           dataTransferOut)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     pushBlockInfo(contract_address)
 
@@ -149,8 +155,8 @@ def test_receipt(web3, accounts, chain):
             core = int(arguments[2])
 
             chain.wait.for_block(int(arguments[0]))
-            jobKey     = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
-            miniLockId = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
+            jobKey         = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
+            miniLockId     = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
             sourceCodeHash = "e3fbef873405145274256ee0ee2b580f"
  
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
@@ -195,7 +201,7 @@ def test_receipt(web3, accounts, chain):
     with open(fname) as f: 
         for line in f: 
             arguments = line.rstrip('\n').split(" ")
-            set_txn_hash     = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, 4, int(arguments[0]))    
+            set_txn_hash = my_contract.transact().setJobStatus("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd", val, 4, int(arguments[0]))    
             val = val + 1
 
     print('----------------------------------')
@@ -204,8 +210,8 @@ def test_receipt(web3, accounts, chain):
     with open(fname) as f: 
         for line in f: 
             arguments = line.rstrip('\n').split(" ")
-            dataTransferIn  = 25
-            dataTransferOut = 25
+            dataTransferIn  = 0
+            dataTransferOut = 100
             receiptCheck(my_contract, chain, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd",
                          val, int(arguments[1]) - int(arguments[0]), dataTransferIn, dataTransferOut)
             receivedAmount = my_contract.call().getClusterReceivedAmount(account)            
@@ -216,6 +222,13 @@ def test_receipt(web3, accounts, chain):
     print('----------------------------------')
     print('StorageTime for job: ' + sourceCodeHash + ':')
     print(my_contract.call().getJobStorageTime(account, sourceCodeHash))
+    print('----------------------------------')
+    print(my_contract.call({"from": account}).getReceiveStoragePayment(accounts[8], sourceCodeHash))
+    
+    set_txn_hash = my_contract.transact({"from": account}).receiveStoragePayment(accounts[8], sourceCodeHash);
+    contract_address = chain.wait.for_receipt(set_txn_hash)
+    print("receiveStoragePayment: " + str(contract_address["gasUsed"]))
+    print(my_contract.call({"from": account}).getReceiveStoragePayment(accounts[8], sourceCodeHash))
     print('----------------------------------')
     
     # Prints finalize version of the linked list.
