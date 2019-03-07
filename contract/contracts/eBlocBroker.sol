@@ -192,15 +192,17 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return; // true; 
     }
 
-    function receiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public
-	returns (bool success) {	
+    function receiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public	
+	returns (bool success) {
 	Lib.clusterData storage cluster = clusterContract[msg.sender];	
 	
 	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
 	    msg.sender.transfer(cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]); //storagePayment
 	    LogStoragePayment(msg.sender, cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]);	    
 	    cluster.receivedAmountForStorage[jobOwner][sourceCodeHash] = 0;
-	}	    
+	    return true;
+	}
+	return false;
     }
     
     /*
@@ -321,7 +323,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
     
     /* Performs a job submission to eBlocBroker by a client */
-    function submitJob(address clusterAddress,
+    function submitJob(address /*payable*/ clusterAddress,
 		       string memory jobKey,
 		       uint32 core,
 		       uint32 gasCoreMin,
@@ -377,7 +379,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 
 	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0) {
 		clusterAddress.transfer(cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]); //storagePayment
-		LogStoragePayment(clusterAddress, cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]);	    
+		/*emit*/ LogStoragePayment(clusterAddress, cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]);	    
 	    }
 	    
 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber = block.number;
@@ -582,7 +584,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Used for tests */
-    function getReceiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public
+    function getReceiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public view
 	returns (uint getrReceiveStoragePayment) {
 	return clusterContract[msg.sender].receivedAmountForStorage[jobOwner][sourceCodeHash];
     }
