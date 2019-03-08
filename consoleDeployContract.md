@@ -40,6 +40,7 @@ mkdir -p $HOME/myContract
 cp $HOME/eBlocBroker/contract/contracts/* $HOME/myContract
 sed -i 's/\/\*emit\*\//emit/g'            $HOME/myContract/eBlocBroker.sol
 sed -i 's/\/\*payable\*\//payable/g'            $HOME/myContract/eBlocBroker.sol
+sed -i 's/\/\*payable\*\//payable/g'            $HOME/myContract/Lib.sol
 sed -i 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
 head -7    $HOME/myContract/eBlocBroker.sol > $HOME/myContract/e.sol 
 tail -n+3  $HOME/myContract/eBlocBrokerInterface.sol >> $HOME/myContract/e.sol
@@ -65,7 +66,7 @@ cd $HOME/myContract
 bash $HOME/eblocPOA/client.sh
 ```
 
-#### v0.5.x
+#### v0.5.x -----------------------------------------------------------------------------------------------
 
 ```bash
 loadScript("e.js")
@@ -93,8 +94,9 @@ var linkedListLib = myLinkedListLib.new({from: eth.accounts[0], data: "0x" + tes
   }
 );
 
+testOutput.contracts["e.sol:eBlocBroker"].abi
 
-#### v0.4.25
+#### v0.4.25 -----------------------------------------------------------------------------------------------
 
 ```bash
 loadScript("e.js")
