@@ -28,7 +28,7 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
        return "Error: Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."       
 
     if str(eBlocBroker.functions.isUserOrcIDVerified(fromAccount).call()) == '0':
-       return 'User\'s orcid: ' + orcid + ' is not verified.'
+       return 'Error: User\'s orcid: ' + orcid + ' is not verified.'
 
     if storageID == 0 or storageID == 2:
        lib.isIpfsOn()
