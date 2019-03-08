@@ -37,7 +37,7 @@ def runCommand(command, my_env=None):
         log(err, 'red')
     return output.strip().decode('utf-8')
 
-def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferSum):
+def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferIn, dataTransferSum):
    # cmd: scontrol show job jobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
    #-----------
@@ -53,12 +53,11 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
    endTimeStamp = runCommand(command).replace("\'","")   
    log("endTimeStamp: " + endTimeStamp) 
      
-   txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp,
-                         dataTransferSum, eBlocBroker, web3)
+   txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
    while txHash == "notconnected" or txHash == "": 
       log("Error: Please run geth on the background.", 'red')
       log(jobKey + ' ' + index + ' ' + elapsedRawTime + ' ' + newHash + ' ' + storageID + ' ' + endTimeStamp) 
-      txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferSum, eBlocBroker, web3)
+      txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
       txHash = ''
       time.sleep(5)      
    log("receiptCheck() " + txHash)  
@@ -446,7 +445,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
          
    dataTransferSum = dataTransferIn + dataTransferOut   
    log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
-   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, int(dataTransferSum))
+   receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferIn, dataTransferSum)
    log('DONE.', 'green')
    '''
    # Removed downloaded code from local since it is not needed anymore
