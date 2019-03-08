@@ -129,10 +129,12 @@ contract eBlocBroker is eBlocBrokerInterface {
     function authenticateOrcID(address userAddress, string memory orcID) isOwner(msg.sender) isOrcIDverified(orcID) public
 	returns (bool success)
     {
-	if (sha3(userContract[userAddress].orcID) == sha3(orcID))
+	if (sha3(userContract[userAddress].orcID) == sha3(orcID)) {
 	//if (keccak256(abi.encodePacked(userContract[userAddress].orcID)) == keccak256(abi.encodePacked(orcID)))	
 	    verifyOrcID[orcID] = 1;
-	return true;
+	    return true;
+	}
+	return false;
     }
 
     /* Following function is a general-purpose mechanism for performing payment withdrawal
@@ -198,7 +200,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	
 	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
 	    msg.sender.transfer(cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]); //storagePayment
-	    LogStoragePayment(msg.sender, cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]);	    
+	    /*emit*/ LogStoragePayment(msg.sender, cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]);	    
 	    cluster.receivedAmountForStorage[jobOwner][sourceCodeHash] = 0;
 	    return true;
 	}

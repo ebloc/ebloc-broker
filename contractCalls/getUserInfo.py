@@ -25,7 +25,7 @@ def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
                '{0: <15}'.format('miniLockID: ')    + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
                '{0: <15}'.format('ipfsAddress: ')   + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
                '{0: <15}'.format('fID: ')           + my_filter.get_all_entries()[0].args['fID'] + '\n' +
-               '{0: <15}'.format('orcid: ')         + orcid + '\n' +
+               '{0: <15}'.format('orcid: ')         + orcid + '.' + '\n' + 
                '{0: <15}'.format('orcidVerify: ')   + str(eBlocBroker.functions.isUserOrcIDVerified(userAddress).call()))
     else:
         return [str(blockReadFrom),
