@@ -1,15 +1,18 @@
 #!/usr/bin/python
 
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
+from os.path import expanduser
 from random import randint
 
-path = os.getcwd(); os.environ['path'] = path;
+path = os.getcwd();
+home = expanduser("~")
+os.environ['path'] = path;
 
-def contractCall( val ):
+def contractCall(val):
       return os.popen( val + "| node").read().replace("\n", "").replace(" ", "");
     
 counter = 0;
-itemsToScan = 150;
+itemsToScan = 1;
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 commentStr = "QmQANSjxQaziHPdMuj37LC53j65cVtXXwQYvu8GxJCPFJE"; # Dummy hash string
 
@@ -41,13 +44,13 @@ with open(path + "/nasa.txt") as test:
            #commentStr = ipfsHash[len(ipfsHash) - 2].split(" ")[1];
            #print( "HASH: " + commentStr ); # lineNumber -> hash olarak kaydet.
 
-           copyIntoSharePath = path + "/oc" + "/" + commentStr;
+           copyIntoSharePath = home + "/oc" + "/" + commentStr;
            os.environ['copyIntoSharePath'] = copyIntoSharePath;
 
            if not os.path.isdir(copyIntoSharePath):
               os.makedirs(copyIntoSharePath)
 
-           os.popen("cp -a /home/prc/multiple/eudat/ipfs/* $copyIntoSharePath")
+           os.popen("cp -a " + path +  "/ipfs/* $copyIntoSharePath")
 
            hashesFile.write(commentStr + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) +"\n"); ##
            if (counter == itemsToScan):
@@ -55,7 +58,6 @@ with open(path + "/nasa.txt") as test:
            print(counter)
            counter += 1;
 hashesFile.close();
-#}
 
-print('Sharing files now...')
-print(os.popen('python $path/shareOwnCloud.py').read());
+print('\nFolders are created. Sharing files now...')
+print(os.popen('python $path/shareOwnCloud.py').read())
