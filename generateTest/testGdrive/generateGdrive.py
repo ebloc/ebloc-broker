@@ -78,4 +78,3 @@ with open(path + "/nasa.txt") as test:
            counter += 1;
 hashesFile.close();
 sys.exit()
-#}
