@@ -208,3 +208,7 @@ bootnode\.key
 contract/contracts/\.pytest_cache/v/cache/nodeids
 
 contract/\.pytest_cache/
+
+generateTest/eudatNasa/hashOutput\.txt
+
+generateTest/nasEudat/hashOutput\.txt

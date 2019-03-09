@@ -5,7 +5,7 @@ from random import randint
 from os.path import expanduser
 home = expanduser("~")
 
-def singleFolderShare(folderName, oc=None): #{
+def singleFolderShare(folderName, oc=None): 
     # folderNames = os.listdir(home + "/oc")    
     if oc is None:
         # Password read from the file.
@@ -21,9 +21,8 @@ def singleFolderShare(folderName, oc=None): #{
         return 'Sharing is completed successfully.'
     else:
         return 'Already shared.'
-#}
 
-if __name__ == '__main__': #{
+if __name__ == '__main__': 
     if len(sys.argv) is not 2:
         print('Please provide folder name.')
         sys.exit()
@@ -31,4 +30,3 @@ if __name__ == '__main__': #{
 
     res = singleFolderShare(folderName)
     print(res)
-#}
