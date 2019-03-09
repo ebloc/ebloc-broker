@@ -81,13 +81,12 @@ while(True):
         time.sleep(1);
 hashesFile.close();
 
-with open(path + '/' + readTest) as f: #{
+with open(path + '/' + readTest) as f: 
    fileR = open(path + "/" + workloadTest, 'w'); # Put fixed file name.
    for line in f:      
       l = line.split(" ")
       fileR.write(str(int(l[1])) + " " + str(7200 + int(l[1])) + " " + str(int(l[2]))  + " 7200\n")
    fileR.close();
-#}
 
-print('Sharing files now...')
+print('\nFolders are created. Sharing files now...')
 print(os.popen('python $path/shareOwnCloud.py').read());

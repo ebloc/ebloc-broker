@@ -1,6 +1,9 @@
 import os, sys, subprocess, time, json, errno, glob
 from dotenv import load_dotenv
-load_dotenv()
+from os.path import expanduser
+home = expanduser("~")
+
+load_dotenv(os.path.join(home + '/eBlocBroker', '.env')) # Load .env from given path
 
 WHOAMI     = os.getenv("WHOAMI")
 EBLOCPATH  = os.getenv("EBLOCPATH")
@@ -28,7 +31,7 @@ CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + "/cancelledBlockReadFrom.txt"
 job_state_code = {} 
 
 # Add keys to the hashmap #https://slurm.schedmd.com/squeue.html
-                             # = 0 # dummy as NULL.
+#                              = 0 # dummy as NULL.
 job_state_code['COMPLETED']    = 1
 job_state_code['REFUNDED']     = 2
 job_state_code['PENDING']      = 3
@@ -262,5 +265,5 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, data
       
    if not jobID.isdigit():
       # Detects an error on the SLURM side
-      log("Error occured, jobID is not a digit.", 'red')
+      log("Error: jobID is not a digit.", 'red')
       return False
