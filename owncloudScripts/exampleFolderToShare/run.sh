@@ -7,5 +7,5 @@ g++ helloworld.cpp -o hello
 ./hello
 sleep 16
 
-echo completed 16 seconds run > output.txt
+echo completed 16 seconds run > output_.txt
 
