@@ -12,13 +12,14 @@ if [ $preInstall -eq 1 ]; then
     # sudo apt-get install python3.6-dev
     sudo apt-get install python3-dev
     sudo apt-get install python3-venv
+
     python3 -m venv venv
-    . venv/bin/activate
-    pip3 install -U web3 #pip install web3==4.4.1 # pip install --upgrade web3
+    source venv/bin/activate
+    
+    pip3 install -U web3 # pip install --upgrade web3 # pip install --pre --upgrade web3
     pip install colored
     pip install pyocclient==0.4 # owncloud_py
-    pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-    pip install --pre --upgrade web3
+    pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)    
     pip install -U python-dotenv
     pip install sphinx_rtd_theme
     pip install google
