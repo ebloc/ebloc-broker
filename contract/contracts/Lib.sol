@@ -9,6 +9,25 @@ pragma solidity ^0.4.17;
 
 library Lib {
     
+    enum jobStateCodes {
+	NULL,      /* 0 */
+	COMPLETED, /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
+	REFUNDED,  /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
+	PENDING,   /* 3 */
+	RUNNING    /* 4 */
+    }
+
+    struct Storage {
+	/* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
+	uint      deployedBlockNumber;    
+	address   owner;
+	address[] clusterAddresses; /* A dynamically-sized array of `address` structs */
+	mapping(address => uint[]) clusterUpdatedBlockNumber;
+	mapping(address => Lib.clusterData) clusterContract;
+	mapping(address => Lib.userData) userContract;
+	mapping(string  => uint32) verifyOrcID;
+    }
+    
     struct jobStorageTime {
 	uint receivedBlocNumber;
 	uint gasStorageBlockNum;

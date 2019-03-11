@@ -212,3 +212,7 @@ contract/\.pytest_cache/
 generateTest/eudatNasa/hashOutput\.txt
 
 generateTest/nasEudat/hashOutput\.txt
+
+owncloudScripts/exampleFolderToShare/example/hellohello
+
+owncloudScripts/\.tar\.gz
