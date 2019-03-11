@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3dataTransferIn
 
 import os, sys, time, enum
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -10,7 +10,7 @@ web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
 def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
-              jobDescription, storageID, sourceCodeHash, cacheType, gasStorageHour, accountID):
+              storageID, sourceCodeHash, cacheType, gasStorageHour, accountID):
     clusterAddress = web3.toChecksumAddress(clusterAddress)  #POA
     # clusterAddress = web3.toChecksumAddress("0x75a4c787c5c18c587b284a904165ff06a269b48c")  #POW
     blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call() 
@@ -58,20 +58,20 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
        return "Error: jobKey's length does not match with its original length. Please check your jobKey."
     if core > availableCoreNum:
         return 'Error: Requested core number is greater than the cluster\'s core number.'
-    if len(jobDescription) >= 128:
-        return 'Error: Length of jobDescription is greater than 128, please provide lesser.'
     if int(storageID) > 4:
         return 'Error: Wrong storageID value is given. Please provide from 0 to 4.'
     if len(jobKey) >= 64:
-        return 'Error: Length of jobDescription is greater than 64, please provide lesser.'
+        return 'Error: Length of jobKey is greater than 64, please provide lesser.'
     if gasCoreMin == 0: 
         return 'Error: gasCoreMin provided as 0. Please provide non-zero value'
     if gasCoreMin > 1440: 
         return 'Error: gasCoreMin provided greater than 1440. Please provide smaller value.'
     if cacheType > 2: # 0: 'private', 1: 'public', 2: 'none'
         return 'Error: cachType provided greater than 1. Please provide smaller value.'
+    #if len(jobDescription) >= 128:
+    #    return 'Error: Length of jobDescription is greater than 128, please provide lesser.'
         
-    # print(clusterAddress + " " + jobKey + " " + str(core) + " " + jobDescription + " " + str(gasCoreMin) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
+    # print(clusterAddress + " " + jobKey + " " + str(core) + " " + " " + str(gasCoreMin) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
     gasLimit      = 4500000
     tx_hash = eBlocBroker.transact({"from": fromAccount,
                                "value": jobPriceValue,
@@ -81,19 +81,18 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
 
 if __name__ == '__main__': 
     test = 0    
-    if len(sys.argv) == 11:
+    if len(sys.argv) == 10:
         clusterAddress = str(sys.argv[1])
         clusterAddress = web3.toChecksumAddress(clusterAddress)                 
         jobKey          = str(sys.argv[2]) 
         core            = int(sys.argv[3]) 
         gasCoreMin      = int(sys.argv[4])
         gasDataTransfer = int(sys.argv[5])        
-        jobDescription  = str(sys.argv[6])         
-        storageID       = int(sys.argv[7])
-        sourceCodeHash  = str(sys.argv[8])
-        gasStorageHour  = int(sys.argv[9])
-        accountID       = int(sys.argv[10])        
-    elif len(sys.argv) == 14: 
+        storageID       = int(sys.argv[6])
+        sourceCodeHash  = str(sys.argv[7])
+        gasStorageHour  = int(sys.argv[8])
+        accountID       = int(sys.argv[9])        
+    elif len(sys.argv) == 13: 
         clusterAddress  = str(sys.argv[1])
         jobKey          = str(sys.argv[2]) 
         core            = int(sys.argv[3]) 
@@ -102,11 +101,10 @@ if __name__ == '__main__':
         coreGasMin      = int(sys.argv[6])
         dataTransferIn  = int(sys.argv[7])
         dataTransferOut = int(sys.argv[8])
-        jobDescription  = str(sys.argv[9]) 
-        storageID       = int(sys.argv[10])
-        sourceCodeHash  = str(sys.argv[11]) 
-        gasStorageHour  = int(sys.argv[12])
-        accountID       = int(sys.argv[13])
+        storageID       = int(sys.argv[9])
+        sourceCodeHash  = str(sys.argv[10]) 
+        gasStorageHour  = int(sys.argv[11])
+        accountID       = int(sys.argv[12])
         gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         gasDataTransfer = dataTransferIn + dataTransferOut
 
@@ -137,7 +135,6 @@ if __name__ == '__main__':
         coreGasDay      = 0 
         coreGasHour     = 0 
         coreGasMin      = 1 
-        jobDescription  = 'Science'        
         accountID       = 0
         gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         dataTransferIn  = 100 
@@ -146,7 +143,7 @@ if __name__ == '__main__':
         # =============================================================================
 
     tx_hash = submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
-                        jobDescription, storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)    
+                        storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)    
     if 'Error' in tx_hash:
         print(tx_hash)
         sys.exit()
