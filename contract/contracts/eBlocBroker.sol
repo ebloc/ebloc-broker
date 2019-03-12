@@ -59,7 +59,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     modifier isOrcIDverified(address userAddress) {
-	require(s.verifyOrcID[s.userContract[userAddress].orcID] == 0);
+	require(bytes(s.userContract[userAddress].orcID).length == 0);
 	_ ;
     }
 
@@ -118,13 +118,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns (bool success)
     {
 	s.userContract[userAddress].orcID = orcID;
-	
-	//if (sha3(s.userContract[userAddress].orcID) == sha3(orcID)) {
-	//if (keccak256(abi.encodePacked(s.userContract[userAddress].orcID)) == keccak256(abi.encodePacked(orcID)))	
-	//    s.verifyOrcID[orcID] = 1;
-	//    return true;
-	//}
-	return false;
+	return true;
     }
 
     /* Following function is a general-purpose mechanism for performing payment withdrawal
@@ -554,9 +548,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 
     /* Checks whether or not the enrolled user's given ORCID iD is already authenticated in eBlocBroker */
     function isUserOrcIDVerified(address userAddress) public view
-	returns (uint32)
+	returns (bool)
     {
-	return s.verifyOrcID[s.userContract[userAddress].orcID];
+	if (bytes(s.userContract[userAddress].orcID).length != 0)
+	    return true;
+	return false;
     }
     
     /* Checks whether or not the given Ethereum address of the user (userAddress) 
