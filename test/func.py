@@ -88,7 +88,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID, cacheType):
                  str(accountID) + ')', path)
              tx = submitJob(clusterID, jobKey, coreNum, coreMinuteGas, dataTransferIn, dataTransferOut, storageID, jobKey,
                             cacheType, gasStorageHour, accountID)
-             log(tx, path)
+             log('Tx_hash:' + tx, path)
 
              txFile     = open(path + '/' + clusterID + '.txt', 'a')
              txFile.write(tx + " " + str(accountID) + "\n")
