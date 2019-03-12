@@ -71,8 +71,7 @@ def test_receipt(web3, accounts, chain):
     priceDataTransfer = 1    
     priceStorage      = 1    
     priceCache        = 1    
-    web3.eth.defaultAccount = accounts[0]
-    
+    web3.eth.defaultAccount = accounts[0]    
     set_txn_hash     = my_contract.transact().registerCluster( "cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 1, priceCoreMin, priceDataTransfer, priceStorage, priceCache, "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print("usedGas registerCluster: " + str(contract_address["gasUsed"]))
@@ -83,16 +82,15 @@ def test_receipt(web3, accounts, chain):
 
     web3.eth.defaultAccount = accounts[8]
     print('USER ADDRESS: ' + web3.eth.defaultAccount)
-    set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc', whisperPubKey)
+    set_txn_hash     = my_contract.transact({"from": accounts[7]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc', whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]))
 
     set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc', whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]))
-
-    web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().authenticateOrcID(accounts[8], '0000-0001-7642-0552') # ORCID should be registered.   
+    
+    set_txn_hash     = my_contract.transact({"from": accounts[0]}).authenticateOrcID(accounts[8], '0000-0001-7642-0552') # ORCID should be registered.   
         
     print("isUserExist: "           + str(my_contract.call().isUserExist(accounts[8])))
     blockReadFrom, b = my_contract.call().getUserInfo(accounts[8])
@@ -122,9 +120,6 @@ def test_receipt(web3, accounts, chain):
     set_txn_hash     = my_contract.transact().deregisterCluster()
     contract_address = chain.wait.for_receipt(set_txn_hash)
             
-    web3.eth.defaultAccount = accounts[0]
-    set_txn_hash     = my_contract.transact().registerCluster("cluster@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", 128, priceCoreMin, priceDataTransfer, priceStorage, priceCache, "0x", whisperPubKey)
-
     initial_myGas = contract_address["gasUsed"]
     print("usedGas empty:23499: " + str(initial_myGas))
     #print(initial_myGas)
