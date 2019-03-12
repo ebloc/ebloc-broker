@@ -78,7 +78,7 @@ library Lib {
 	mapping(address => mapping(string  => uint)) receivedAmountForStorage; /**/
 	
 	bool            isRunning; /* Flag that checks is Cluster running or not */
-	uint32 clusterAddressesID; /* Cluster's ethereum address is stored */	
+	uint32 clusterAddressesID; /* Index of cluster's ethereum address is stored in clusterAddresses */	
 	uint       receivedAmount; /* Cluster's received wei price */
 	uint        blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
     }

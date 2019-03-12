@@ -30,4 +30,4 @@ with open(home + '/.eBlocBroker/whisperInfo.txt', 'w') as outfile:
 	json.dump(data, outfile)
 
 print('Done.')
-print('You can access whisper info on ~/.eBlocBroker/whisperInfo.txt')
+print('You can access your whisper info from ~/.eBlocBroker/whisperInfo.txt')
