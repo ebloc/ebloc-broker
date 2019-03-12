@@ -58,8 +58,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 	_ ;
     }
 
-    modifier isOrcIDverified(string memory orcID) {
-	require(s.verifyOrcID[orcID] == 0);
+    modifier isOrcIDverified(address userAddress) {
+	require(s.verifyOrcID[s.userContract[userAddress].orcID] == 0);
+	_ ;
+    }
+
+    modifier isClusterRegistered() {
+	require(s.clusterContract[msg.sender].blockReadFrom == 0);
 	_ ;
     }
 
@@ -109,14 +114,16 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    revert();
     }
 
-    function authenticateOrcID(address userAddress, string memory orcID) isOwner(msg.sender) isOrcIDverified(orcID) public
+    function authenticateOrcID(address userAddress, string memory orcID) isOwner(msg.sender) isOrcIDverified(userAddress) public
 	returns (bool success)
     {
-	if (sha3(s.userContract[userAddress].orcID) == sha3(orcID)) {
+	s.userContract[userAddress].orcID = orcID;
+	
+	//if (sha3(s.userContract[userAddress].orcID) == sha3(orcID)) {
 	//if (keccak256(abi.encodePacked(s.userContract[userAddress].orcID)) == keccak256(abi.encodePacked(orcID)))	
-	    s.verifyOrcID[orcID] = 1;
-	    return true;
-	}
+	//    s.verifyOrcID[orcID] = 1;
+	//    return true;
+	//}
 	return false;
     }
 
@@ -209,11 +216,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  string memory ipfsAddress,
 			  string memory orcID,
 			  string memory githubUserName,
-			  string memory whisperPublicKey) public
+			  string memory whisperPublicKey) public 
 	returns (bool success)
     {
 	s.userContract[msg.sender].blockReadFrom = block.number;
-	s.userContract[msg.sender].orcID = orcID;
+	//s.userContract[msg.sender].orcID = orcID; //delete
 	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName, whisperPublicKey);
 	return true;
     }
@@ -228,17 +235,14 @@ contract eBlocBroker is eBlocBrokerInterface {
 			     uint priceStorage,
 			     uint priceCache,			     
 			     string memory ipfsAddress,
-			     string memory whisperPublicKey) public
+			     string memory whisperPublicKey) public isClusterRegistered()
 	returns (bool success)
     {
-	if (availableCoreNum == 0 || priceCoreMin == 0 || priceDataTransfer == 0)
-	    revert();
+	require(availableCoreNum != 0 && priceCoreMin != 0 && priceDataTransfer != 0);
 	
 	Lib.clusterData storage cluster = s.clusterContract[msg.sender];
 	
-	if (cluster.blockReadFrom != 0 && cluster.isRunning)	    
-	    revert();
-
+	require(!cluster.isRunning);
 	cluster.info[block.number] = Lib.clusterInfo({
                 	availableCoreNum:   availableCoreNum,
                         priceCoreMin:       priceCoreMin,
@@ -341,7 +345,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
-	    s.verifyOrcID[s.userContract[msg.sender].orcID] == 0 ||	    
+	    bytes(s.userContract[msg.sender].orcID).length == 0 ||
 	    core > info.availableCoreNum)
 	    revert();		
 	

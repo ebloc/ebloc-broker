@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
 import os, sys, json
+from os.path import expanduser
+home = expanduser("~")
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from imports import connectEblocBroker
 from imports import getWeb3
-from contractCalls.isUserExist import isUserExist
+
+sys.path.insert(0, home + '/eBlocBroker/contractCalls')
+from isUserExist import isUserExist
+
+#from contractCalls.isUserExist import isUserExist
 from os.path import expanduser
 home = expanduser("~")
 
@@ -21,7 +27,7 @@ def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddres
 
 	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
 		# First time running:
-		log('Please first run: python whisperInitialize.py')
+		print('Please first run: python eBlocBroker/scripts/whisperInitialize.py')
 		sys.exit()
 	else:
 		with open(home + '/.eBlocBroker/whisperInfo.txt') as json_file:
@@ -29,7 +35,7 @@ def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddres
 			kId = data['kId']
 			whisperPubKey = data['publicKey']
 		if not web3.shh.hasKeyPair(kId):
-			log("Whisper node's private key of a key pair did not match with the given ID")
+			print("Whisper node's private key of a key pair did not match with the given ID")
 			sys.exit()
 	account = web3.eth.accounts[int(accountID)]  # User's Ethereum Address
 
