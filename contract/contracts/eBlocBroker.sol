@@ -208,14 +208,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  string memory fID,
 			  string memory miniLockID,
 			  string memory ipfsAddress,
-			  string memory orcID,
 			  string memory githubUserName,
 			  string memory whisperPublicKey) public 
 	returns (bool success)
     {
 	s.userContract[msg.sender].blockReadFrom = block.number;
 	//s.userContract[msg.sender].orcID = orcID; //delete
-	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, orcID, githubUserName, whisperPublicKey);
+	/*emit*/ LogUser(msg.sender, userEmail, fID, miniLockID, ipfsAddress, githubUserName, whisperPublicKey);
 	return true;
     }
 

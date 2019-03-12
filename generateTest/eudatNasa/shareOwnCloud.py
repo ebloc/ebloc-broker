@@ -20,4 +20,3 @@ for i in range(0, len(folderNames)-1):
     print(name);
     if not oc.is_shared(name):
         oc.share_file_with_user(name, '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu', remote_user=True, perms=31);
-
