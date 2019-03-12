@@ -11,8 +11,8 @@ def authenticateORCID(userAddress, orcID, eBlocBroker=None, web3=None):
         web3        = getWeb3()
         eBlocBroker = connectEblocBroker(web3)
     
-    account = web3.eth.accounts[0]     
-    if eBlocBroker.functions.isUserOrcIDVerified(userAddress).call() == 0:
+    account = web3.eth.accounts[0]   
+    if eBlocBroker.functions.isUserOrcIDVerified(userAddress).call() == 0 and len(orcID) == 19 and orcID.replace("-", "").isdigit():
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateOrcID(userAddress, orcID) 
         return('Tx_hash: ' + tx.hex()) 
     else:

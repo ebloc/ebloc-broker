@@ -210,7 +210,7 @@ def eudatGetShareToken(fID, userID):
    acceptFlag      = 0 
    eudatFolderName = ""
    log("Finding share token...")
-   for i in range(len(shareList)-1, -1, -1): #{ Starts iterating from last item  to first one
+   for i in range(len(shareList)-1, -1, -1): # Starts iterating from last item  to first one
       inputFolderName  = shareList[i]['name']
       inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
       inputID          = shareList[i]['id']
@@ -238,8 +238,7 @@ def eudatGetShareToken(fID, userID):
                  tryCount += 1
                  log('Sleeping 10 seconds...')
                  time.sleep(10)
-         break
-     
+         break     
    if acceptFlag == 0:
       globals()['oc'].logout() 
       log("Error: Couldn't find the shared file", 'red')
@@ -255,6 +254,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
 
     log("jobKey=" + jobKey) 
     log("index="  + index)
+    log("fID="  + fID)
     log("cacheType=" + globals()['cacheType'])
     
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
