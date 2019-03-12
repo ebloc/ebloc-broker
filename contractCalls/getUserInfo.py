@@ -2,7 +2,7 @@
 
 import sys, os
 
-def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
+def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
@@ -20,7 +20,8 @@ def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None): #{
     my_filter = eBlocBroker.eventFilter('LogUser',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
     
     if printType == '0':
-        return('{0: <15}'.format('blockReadFrom: ') + str(blockReadFrom) + '\n' +
+        return('{0: <15}'.format('userAddress: ')   + userAddress + '\n' +
+               '{0: <15}'.format('blockReadFrom: ') + str(blockReadFrom) + '\n' +
                '{0: <15}'.format('userEmail: ')     + my_filter.get_all_entries()[0].args['userEmail'] + '\n' +
                '{0: <15}'.format('miniLockID: ')    + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
                '{0: <15}'.format('ipfsAddress: ')   + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +

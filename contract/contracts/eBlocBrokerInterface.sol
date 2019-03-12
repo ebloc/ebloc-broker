@@ -62,7 +62,6 @@ interface eBlocBrokerInterface {
 		  string fID,
 		  string miniLockID,
 		  string ipfsAddress,
-		  string orcID,
 		  string githubUserName,
 		  string whisperPublicKey
 		  );
