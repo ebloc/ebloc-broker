@@ -89,9 +89,11 @@ def test_receipt(web3, accounts, chain):
     set_txn_hash     = my_contract.transact({"from": accounts[8]}).registerUser("email@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf", '0000-0001-7642-0552', 'ebloc', whisperPubKey)
     contract_address = chain.wait.for_receipt(set_txn_hash)   
     print("usedGas registerUser: " + str(contract_address["gasUsed"]))
-    
-    set_txn_hash     = my_contract.transact({"from": accounts[0]}).authenticateOrcID(accounts[8], '0000-0001-7642-0552') # ORCID should be registered.   
-        
+
+    # ------------
+    set_txn_hash = my_contract.transact({"from": accounts[0]}).authenticateOrcID(accounts[8], '0000-0001-7642-0552') # ORCID should be registered.
+    assert my_contract.call().isUserOrcIDVerified(accounts[8]), "isUserOrcIDVerified is failed"   
+    # ------------
     print("isUserExist: "           + str(my_contract.call().isUserExist(accounts[8])))
     blockReadFrom, b = my_contract.call().getUserInfo(accounts[8])
     print("User's blockReadFrom:  " + str(blockReadFrom))

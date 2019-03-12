@@ -25,7 +25,6 @@ library Lib {
 	mapping(address => uint[]) clusterUpdatedBlockNumber;
 	mapping(address => Lib.clusterData) clusterContract;
 	mapping(address => Lib.userData) userContract;
-	mapping(string  => uint32) verifyOrcID;
     }
     
     struct jobStorageTime {
