@@ -269,7 +269,7 @@ while True:
        log("Current Time: " + time.ctime() + '| ClusterGainedAmount: ' +
            str(int(clusterGainedAmount) - int(clusterGainedAmountInit)))
        
-    log("Waiting new job to come since block number: " + blockReadFrom)    
+    log("Waiting new job to come since block number: " + blockReadFrom, 'green')    
     currentBlockNumber = blockNumber() 
     log("Waiting new block to increment by one.")
     log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom)

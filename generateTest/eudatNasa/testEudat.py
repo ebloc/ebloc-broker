@@ -16,7 +16,7 @@ path = os.getcwd()
 
 # Definitions =============================================
 clusterID    = "0x4e4a0750350796164d8defc442a712b7557bf282"
-testType     = 'eudat-nas'
+testType     = 'eudat-nasa'
 workloadTest = 'nasa.txt'
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.private
