@@ -77,7 +77,7 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
                                "value": jobPriceValue,
                                "gas": gasLimit}).submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn,
                                                            dataTransferOut, storageID, sourceCodeHash, cacheType, gasStorageHour) 
-    return tx_hash.hex()
+    return tx_hash.hex(), str(computationalCost), str(storageCost), str(cacheCost), str(dataTransferCost), str(jobPriceValue)
 
 if __name__ == '__main__': 
     test = 0    

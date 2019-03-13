@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import hashlib, getpass, sys, os, time, subprocess, lib, re
 from   subprocess import call
@@ -45,10 +45,10 @@ def isRunExistInTar(tarPath):
             log('./run.sh exists under the parent folder', 'green')
             return True
         else:
-            log('run.sh does not exist under the parent folder', 'red')
-            return False            
+            log('Error: run.sh does not exist under the parent folder', 'red')
+            return False        
     except:
-        log('run.sh does not exist under the parent folder', 'red')
+        log('Error_: run.sh does not exist under the parent folder', 'red')
         return False
 
 def isTarExistsInZip(resultsFolderPrev):
@@ -292,5 +292,12 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
             subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
            
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-    lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
-                   resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)  
+    
+    try:
+        lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
+                       resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)
+    except Exception as e:
+        log('Failed to sbatch call: '+ str(e), 'red')
+        sys.exit() #delete
+        return False
+    

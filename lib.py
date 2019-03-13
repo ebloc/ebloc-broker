@@ -251,12 +251,18 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, data
 
    # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
    # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+   
+   #try:
    jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
-                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
-                                    resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
-                                    '--mail-type=ALL']).decode('utf-8').strip()
+                                        'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
+                                        resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
+                                        '--mail-type=ALL']).decode('utf-8').strip()
    jobID = jobID.split()[3]
-   log('jobID=' + jobID) 
+   log('jobID=' + jobID)
+   #except subprocess.CalledProcessError as e:
+   #    log('Error: ' + e.output.decode('utf-8').strip(), 'red')
+   #    return False
+   
    try:
        # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
        subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
