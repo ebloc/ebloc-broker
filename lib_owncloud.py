@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import subprocess
+import subprocess, sys
 
 def singleFolderShare(folderName, oc):
     # folderNames = os.listdir(home + "/oc")    
@@ -10,6 +10,10 @@ def singleFolderShare(folderName, oc):
         return 'Already shared.'
 
 def eudatInitializeFolder(folderToShare, oc):
+    if "/" in folderToShare:
+        print('Please provide folder onyour current directory.')
+        sys.exit()
+
     subprocess.run(['chmod', '-R', '777', folderToShare])
     # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
     # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
@@ -26,6 +30,7 @@ def eudatInitializeFolder(folderToShare, oc):
     # subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
     tarHash = subprocess.check_output(['md5sum', folderToShare + '.tar.gz']).decode('utf-8').strip()
     tarHash = tarHash.split(' ', 1)[0]
+    
     print('hash=' + tarHash)
     subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
 
