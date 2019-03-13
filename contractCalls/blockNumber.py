@@ -5,9 +5,7 @@ def blockNumber(web3=None):
         import sys, os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import getWeb3
-
         web3 = getWeb3()
-        print(web3)
         return str(web3.eth.blockNumber).replace("\n", "")
     else:
         return str(web3.eth.blockNumber).replace("\n", "")

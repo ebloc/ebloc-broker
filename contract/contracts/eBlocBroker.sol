@@ -122,7 +122,8 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Following function is a general-purpose mechanism for performing payment withdrawal
-       by the cluster provider and paying of unused core usage cost back to the client
+       by the cluster provider and paying of unused core, cache, and dataTransfer usage cost 
+       back to the client
     */
     function receiptCheck(string memory jobKey,
 			  uint32 index,
@@ -132,7 +133,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  uint endTime,
 			  uint dataTransferIn,
 			  uint dataTransferSum) /*isBehindBlockTimeStamp(endTime)*/ public
-    /*returns (bool success)*/ /* Payback to client and server */
+    /*returns (bool success)*/
     {
 	require(endTime <= block.timestamp);
 	/* If "msg.sender" is not mapped on 'clusterContract' array  or its "jobKey" and "index"
