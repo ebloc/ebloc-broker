@@ -7,7 +7,7 @@ from random import randint
 path = os.getcwd()
 home = expanduser("~")
 
-sys.path.insert(0, home + '/eB')
+sys.path.insert(0, home + '/eBlocBroker')
 # sys.path.insert(0, home + '/eB/contractCalls')
 
 from lib_owncloud import singleFolderShare
@@ -30,34 +30,29 @@ hashesFile = open(path + '/hashOutput.txt', 'w+')
 
 with open(path + "/nasa.txt") as test:
     for line in test:
-        f = open(path + '/ipfs/run.sh', 'w+')
+        f = open('ipfs/run.sh', 'w+')
         lineIn = line.split(" ")
 
         if ((int(lineIn[1]) - int(lineIn[0])) > 60 ):
-           print( "Time to take in seconds: "  + str(int(lineIn[1]) - int(lineIn[0])) )
-           print( "CoreNum: "  + str(int(lineIn[2])) )
+           print("Time to take in seconds: "  + str(int(lineIn[1]) - int(lineIn[0])))
+           print("CoreNum: "  + str(int(lineIn[2])))
            print(line)
 
-           with open(path + "/ipfs/run_temp.sh") as ff:
+           with open("ipfs/run_temp.sh") as ff:
               for line in ff:
-                 f.write(line)                           
+                 f.write(line)                 
 
-           tarHash = eudatInitializeFolder(path +  '/ipfs', oc)
-           time.sleep(1)
-           print(singleFolderShare(tarHash, oc))
-
+           randomHash=str(random.getrandbits(128)) + str(random.getrandbits(128))
            f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-           f.write("#" + tarHash + "\n") # Add random line to create different hash
-           f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > " + tarHash + ".txt\n") #add random line to create different hash.
+           f.write("#" + randomHash + "\n") # Add random line to create different hash
            f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n" ) #add random line to create different hash.
            f.close()
 
-
-           #ipfsHash = os.popen( 'IPFS_PATH="/home/prc/.ipfs" export IPFS_PATH ipfs add -r /home/prc/testIpfs/ipfs' ).read()
-           #ipfsHash = ipfsHash.split("\n")
-           #tarHash = ipfsHash[len(ipfsHash) - 2].split(" ")[1]
-           #print( "HASH: " + tarHash ) # lineNumber -> hash olarak kaydet.
-                     
+           tarHash = eudatInitializeFolder('ipfs', oc) # Should give folder name
+           time.sleep(1)
+           # After run.sh is update share the ipfs through eudat
+           print(singleFolderShare(tarHash, oc))
+                               
            hashesFile.write(tarHash + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) +"\n") 
            if (counter == itemsToScan):
               break
@@ -67,3 +62,9 @@ hashesFile.close()
 
 print('\nFolders are created. Sharing files now...')
 print(os.popen('python $path/shareOwnCloud.py').read())
+
+# -------------------------------------
+#ipfsHash = os.popen( 'IPFS_PATH="/home/prc/.ipfs" export IPFS_PATH ipfs add -r /home/prc/testIpfs/ipfs' ).read()
+#ipfsHash = ipfsHash.split("\n")
+#tarHash = ipfsHash[len(ipfsHash) - 2].split(" ")[1]
+#print( "HASH: " + tarHash ) # lineNumber -> hash olarak kaydet.

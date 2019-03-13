@@ -10,7 +10,7 @@ from contractCalls.setJobStatus import setJobStatus
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-def startCall(jobKey, index, jobID): #{
+def startCall(jobKey, index, jobID): 
    statusID                = str(lib.job_state_code['RUNNING'])
    # cmd: scontrol show job jobID | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
@@ -30,18 +30,16 @@ def startCall(jobKey, index, jobID): #{
 
    countTry = 0    
    txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
-   while txHash == "notconnected" or txHash == "": #{
+   while txHash == "notconnected" or txHash == "":
       if countTry > 10:
          sys.exit() 
       txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + " " + txHash + '\n')
       txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
       countTry += 1 
       time.sleep(15)       
-   #}
 
    txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + startTime + "\n") 
    txFile.close() 
-#}
 
 if __name__ == '__main__':
    jobKey   = sys.argv[1] 

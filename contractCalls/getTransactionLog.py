@@ -20,11 +20,14 @@ if __name__ == '__main__':
         tx_hash = str(sys.argv[1])
         event   = 'LogJob' 
     else:
-        tx_hash = '0xdf9ead46baefd6774b230a7286d510bceec04fb33200c9ac9b6934e5cf46f6c7'
-        event   = 'LogJob' 
+        tx_hash = '0xe7f0bdc249458d36105120cf1a0fa5036a9368c5fd13aa37448dae5993d92a33'
+        event   = 'LogReceipt' 
 
     receipt = web3.eth.getTransactionReceipt(tx_hash)
-
     if event == 'LogJob':
         logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+        processLog(logs)
+        
+    if event == 'LogReceipt':
+        logs = eBlocBroker.events.LogReceipt().processReceipt(receipt)
         processLog(logs)    
