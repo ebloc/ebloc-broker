@@ -1,6 +1,7 @@
 #!/bin/bash
 
 killall python
+killall python3
 
 cd testIpfs
 bash cleanForNewTest.sh
