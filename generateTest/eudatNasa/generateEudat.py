@@ -24,7 +24,7 @@ oc.login('059ab6ba-4030-48bb-b81b-12115f531296', password)
 #---------------------------------------------------------------
 
 counter = 0 #150
-itemsToScan = 1
+itemsToScan = 10
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 # commentStr = "QmQANSjxQaziHPdMuj37LC53j65cVtXXwQYvu8GxJCPFJE" # Dummy hash string
 
@@ -33,7 +33,7 @@ with open(path + "/nasa.txt") as test:
         f = open('ipfs/run.sh', 'w+')
         lineIn = line.split(" ")
 
-        if ((int(lineIn[1]) - int(lineIn[0])) > 60 ):
+        if (int(lineIn[1]) - int(lineIn[0])) > 60 and int(lineIn[2]) != 0:
            print("Time to take in seconds: "  + str(int(lineIn[1]) - int(lineIn[0])))
            print("CoreNum: "  + str(int(lineIn[2])))
            print(line)
@@ -42,7 +42,7 @@ with open(path + "/nasa.txt") as test:
               for line in ff:
                  f.write(line)                 
 
-           randomHash=str(random.getrandbits(128)) + str(random.getrandbits(128))
+           randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
            f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
            f.write("#" + randomHash + "\n") # Add random line to create different hash
            f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n" ) #add random line to create different hash.

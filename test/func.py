@@ -43,7 +43,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID, cacheType):
           line2_splitted = line2.split(" ")
           jobKey = jobKeyNum[counter].split(" ")                            
           # Requested core shouldn't be 0.
-          if int(line2_splitted[3]) > 60 and str(jobKey[1]) != '0' and (line2_splitted[0] != line2_splitted[1]) and (int(jobKey[2]) != 0):              
+          if int(line2_splitted[3]) > 60 and (int(jobKey[2]) != 0):              
              if not line2:
                 break  # EOF
              line2_in = line2.split(" ")

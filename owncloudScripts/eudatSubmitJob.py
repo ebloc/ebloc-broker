@@ -31,10 +31,8 @@ def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
 
     dataTransferIn  = 100
     dataTransferOut = 100
-    gasBandwidthMB    = dataTransferIn + dataTransferOut
-    gasStorageHour  = 1
-    
-    jobDescription = 'Science'
+    gasBandwidthMB  = dataTransferIn + dataTransferOut
+    gasStorageHour  = 1   
     storageID = 1
     accountID = 0
 
@@ -43,7 +41,10 @@ def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     
     res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, dataTransferIn, dataTransferOut,
                     storageID, str(tarHash), cacheType, gasStorageHour, accountID)
-    print('Tx_hash: ' + res)
+    if 'Error' in res[0]:
+        print(res[0])
+    else:    
+        print('Tx_hash: ' + str(res[0]))
 
 if __name__ == "__main__":
     oc = owncloud.Client('https://b2drop.eudat.eu/')
