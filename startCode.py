@@ -26,18 +26,18 @@ def startCall(jobKey, index, jobID):
    
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a')        
    txFile.write(lib.EBLOCPATH + "/contractCalls/setJobStatus.py" + ' ' + jobKey + ' ' + index + ' ' + statusID + ' ' + startTime + '\n')    
-   time.sleep(0.25) 
-
-   countTry = 0    
-   txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
-   while txHash == "notconnected" or txHash == "":
-      if countTry > 10:
-         sys.exit() 
-      txFile.write(jobKey + "_" + index + "| Try: " + str(countTry) + " " + txHash + '\n')
-      txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
-      countTry += 1 
-      time.sleep(15)       
-
+   time.sleep(0.25)
+   
+   for attempt in range(10):
+       txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
+       if txHash == "notconnected" or txHash == "":
+           txFile.write(jobKey + "_" + index + "| Try: " + str(attempt) + " " + txHash + '\n')
+           time.sleep(15)
+       else: # success
+           break
+   else: # we failed all the attempts - abort
+       sys.exit()
+           
    txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + startTime + "\n") 
    txFile.close() 
 

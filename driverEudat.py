@@ -153,7 +153,7 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
     ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + globals()['shareToken'] +
                                   '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')   
     result = re.search('Length: (.*) \(', ret) # https://stackoverflow.com/a/6986163/2402577
-    if result != None: # from wget output
+    if result is not None: # from wget output
         globals()['dataTransferIn'] = int(result.group(1)) * 0.000001 # Downloaded file size in MBs
     else: # from downloaded files size in bytes
         # p1 = subprocess.Popen(['du', '-b', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
