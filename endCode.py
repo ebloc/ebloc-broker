@@ -86,7 +86,7 @@ def removeSourceCode(resultsFolderPrev):
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
     command = ['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
     filesToRemove = runCommand(command)
-    if filesToRemove != '' or filesToRemove != None:
+    if filesToRemove != '' or filesToRemove is not None:
         log('\nFiles to be removed: \n' + filesToRemove + '\n')         
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
     subprocess.run(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
@@ -260,32 +260,29 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
     outputFileName = 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'
    
     # Here we know that job is already completed 
-    if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub       
-        command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
-        newHash = runCommand(command)
-           
-        countTry = 0 
-        while newHash == "": 
-            if (countTry > 10):
-                sys.exit()            
-            countTry += 1
-            '''
-            # Approach to upload as .tar.gz. Currently not used.
-            removeSourceCode(resultsFolderPrev)
-            with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
-            date = content_file.read().strip()
-            command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
-            log(runCommand(command))                  
-            command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
-            newHash = runCommand(command)
-            newHash = newHash.split(' ')[1]
-            lib.silentremove(resultsFolder + '/result.tar.gz')
-            '''
-            log("Generated new hash return empty error. Trying again...", 'yellow')
+    if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
+        for attempt in range(10):
             command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
             newHash = runCommand(command)
-            time.sleep(5)
-            
+            if newHash=="":
+                ''' Approach to upload as .tar.gz. Currently not used.
+                removeSourceCode(resultsFolderPrev)
+                with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
+                date = content_file.read().strip()
+                command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
+                log(runCommand(command))
+                command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
+                newHash = runCommand(command)
+                newHash = newHash.split(' ')[1]
+                lib.silentremove(resultsFolder + '/result.tar.gz')
+                '''
+                log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
+                time.sleep(5) # wait 5 second for next step retry to up-try
+            else: # success
+	            break
+        else: # we failed all the attempts - abort
+            sys.exit()
+                
         # dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
         # cmd: echo newHash | tail -n1 | awk '{print $2}'
         p1 = subprocess.Popen(['echo', newHash], stdout=subprocess.PIPE)
@@ -326,20 +323,18 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         res = runCommand(command)
         log(res)      
         removeSourceCode(resultsFolderPrev)
-        command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
-        newHash = runCommand(command)
-        newHash = newHash.split(' ')[1]
-        countTry = 0 
-        while newHash == "":
-            if countTry > 10:
-                sys.exit()
-            countTry += 1                   
-            log("Generated new hash return empty error. Trying again.", 'yellow')
+        for attempt in range(10):
             command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
             newHash = runCommand(command)
             newHash = newHash.split(' ')[1]
-            time.sleep(5)
-            
+            if newHash == "":
+                log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
+                time.sleep(5) # wait 5 second for next step retry to up-try
+            else: # success
+                break
+        else: # we failed all the attempts - abort
+            sys.exit()
+                   
         # dataTransferOut = calculateDataTransferOut(resultsFolder + '/result.tar.gz.minilock', 'f')   
         log("newHash: " + newHash)
         command = ['ipfs', 'pin', 'add', newHash]
@@ -383,21 +378,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             sys.exit()         
     elif str(storageID) == '4': #GDRIVE
         newHash = '0x00'
-        # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
-        p1 = subprocess.Popen([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
-        #-----------
-        p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()
-        #-----------
-        p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-        p2.stdout.close()
-        #-----------
-        mimeType = p3.communicate()[0].decode('utf-8').strip()
-        countTry=0 
-        while mimeType == "": 
-            if countTry > 10: # mimeType may just return empty string, lets try few more time...
-                sys.exit()                        
-            log('mimeType returns empty string. Try: ' + str(countTry), 'red')            
+        for attempt in range(10):
             # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
             p1 = subprocess.Popen([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
             #-----------
@@ -408,9 +389,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             p2.stdout.close()
             #-----------
             mimeType = p3.communicate()[0].decode('utf-8').strip()
-            countTry += 1 
-            time.sleep(15)
-         
+            if mimeType=="": # mimeType may just return empty string, lets try few more time...
+	            log('mimeType returns empty string. Try: ' + str(attempt), 'red')
+	            time.sleep(15) # wait 15 second for next step retry to up-try
+            else: # success
+	            break
+        else: # we failed all the attempts - abort
+            sys.exit()            
         log('mimeType=' + str(mimeType))                
         os.chdir(resultsFolder) 
         #if 'folder' in mimeType: # Received job is in folder format
