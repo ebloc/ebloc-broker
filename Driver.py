@@ -55,35 +55,38 @@ def runDriverCancel():
 		driverCancelProcess = subprocess.Popen(['python3','driverCancel.py'])
 
 def runWhisperStateReceiver():
-	if not os.path.isfile(lib.HOME + '/.eBlocBroker/whisperInfo.txt'):
-		# First time running:
-		log('Please first run: python scripts/whisperInitialize.py')
-		sys.exit()
-	else:
-		with open(lib.HOME + '/.eBlocBroker/whisperInfo.txt') as json_file:
-			data = json.load(json_file)
-		kId = data['kId']
-		publicKey = data['publicKey']
-		if not web3.shh.hasKeyPair(kId):
-			log("Error: Whisper node's private key of a key pair did not match with the given ID", "red")
-			sys.exit()			
-	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
-	p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-	#-----------
-	p2 = subprocess.Popen(['grep', '[d]riverReceiver'], stdin=p1.stdout, stdout=subprocess.PIPE)
-	p1.stdout.close()
-	#-----------
-	p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
-	p2.stdout.close()
-	#-----------
-	p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
-	p3.stdout.close()
-	#-----------
-	out = p4.communicate()[0].decode('utf-8').strip()
-	# ----------------------------------------------------------------
-	if int(out) == 0:
-		# Running driverCancel.py on the background
-		driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
+    if not os.path.isfile(lib.HOME + '/.eBlocBroker/whisperInfo.txt'):
+        # First time running:
+        log('Please first run: python scripts/whisperInitialize.py')
+        terminate()
+    else:
+        with open(lib.HOME + '/.eBlocBroker/whisperInfo.txt') as json_file:
+            data = json.load(json_file)
+            
+        kId = data['kId']
+        publicKey = data['publicKey']
+        if not web3.shh.hasKeyPair(kId):
+            log("Error: Whisper node\'s private key of a key pair did not match with the given ID", 'red')
+            log('Please first run: python scripts/whisperInitialize.py', 'red')
+            terminate()            
+            
+    # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
+    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+    #-----------
+    p2 = subprocess.Popen(['grep', '[d]riverReceiver'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    #-----------
+    p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    #-----------
+    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
+    p3.stdout.close()
+    #-----------
+    out = p4.communicate()[0].decode('utf-8').strip()
+    # ----------------------------------------------------------------
+    if int(out) == 0:
+        # Running driverCancel.py on the background
+        driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
 		
 # res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
 # rows = res[0] columns = res[1]
@@ -174,7 +177,7 @@ def startup():
     isDriverOn()
     lib.isSlurmOn()
     isGethOn()
-    runDriverCancel()
+    # runDriverCancel()
     runWhisperStateReceiver()
 
 yes = set(['yes', 'y', 'ye'])
@@ -317,7 +320,7 @@ while True:
        if jobInfo['core'] == 0: 
           log('Job does not exist', 'red')
           runFlag = 1
-          sys.exit()
+          sys.exit() #delete i guess
        else:
           log('jobOwner/userID: ' + jobInfo['jobOwner'])
           userID    = jobInfo['jobOwner'].lower()
