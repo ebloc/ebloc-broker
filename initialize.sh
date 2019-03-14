@@ -1,7 +1,7 @@
 #!/bin/bash
 
-preInstall=0;
-newRpcPort="8545"; # Please change it if you have different RPC_PORT number.
+preInstall=1
+newRpcPort="8545" # Please change it if you have different RPC_PORT number.
 
 # Update repository with the latest update
 # git fetch --all && git reset --hard origin/master
@@ -67,10 +67,10 @@ fi
 # nc IP PORT
 # Should return: /multistream/1.0.0
 
-currentDir=$PWD;
+currentDir=$PWD
 # Folder Setup:========================================================
 if [ ! -d $HOME/.eBlocBroker ]; then
-    mkdir -p $HOME/.eBlocBroker;
+    mkdir -p $HOME/.eBlocBroker
 fi
 
 cd $HOME/.eBlocBroker
@@ -112,20 +112,20 @@ sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" .env
 rm .env.bak
 
 # User Name Setup:======================================================
-lineOld="whoami";
-lineNew=$(logname);
+lineOld="whoami"
+lineNew=$(logname)
 
 sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" .env
 rm -f .env.bak
 
 # RPC PORT Setup:======================================================
-lineOld="8545";
+lineOld="8545"
 
 sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" .env
 rm .env.bak
 
 # PATH Name Setup:===================================================
-lineOld="EBLOCBROKER_PATH";
+lineOld="EBLOCBROKER_PATH"
 lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
 sed -i.bak 's/'$lineOld'/'$lineNew'/' .env
@@ -134,13 +134,13 @@ sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh
 rm slurmScript.sh.bak
 
 # COINBASE Address Setup:==============================================
-lineOld='0xffffffffffffffffffffffffffffffffffffffff';
-lineNew=$(echo $COINBASE);
+lineOld='0xffffffffffffffffffffffffffffffffffffffff'
+lineNew=$(echo $COINBASE)
 
 sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" .env && rm .env.bak
 #======================================================================
 if [[ ! -v COINBASE ]]; then
-    echo "COINBASE is not set";
+    echo "COINBASE is not set"
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
     read clusterID 
     echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
@@ -151,9 +151,9 @@ elif [[ -z "$COINBASE" ]]; then
     echo 'export COINBASE="'$clusterID'"' >>~/.profile   
 else
     echo "COINBASE is: $COINBASE"
-    check=$(contractCalls/isAddress.py $COINBASE);
+    check=$(contractCalls/isAddress.py $COINBASE)
     if [ "$check" != "True" ]; then
-       echo "Ethereum address is not valid, please use a valid one.";
+       echo "Ethereum address is not valid, please use a valid one."
        exit
     fi
 fi
