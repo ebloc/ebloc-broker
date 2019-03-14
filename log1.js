@@ -1,18 +1,15 @@
 var nodePaths = require('./nodePaths');
 var eBlocBroker     = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
 
+console.log(nodePaths.EBLOCBROKER)
 if (process.argv.length == 4){
     readFrom  = parseInt(process.argv[2]);
-    clusterID = process.argv[3];   
-    
+    clusterID = process.argv[3];       
 }
 else{
-    readFrom  = 1810340; 
-    clusterID = "0xcc8de90b4ada1c67d68c1958617970308e4ee75e";   
+    readFrom  = 2150498; 
+    clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282";   
 }
 
-eBlocBroker.LogJobResults(readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt', clusterID); /* All jobs sent */
-
-
-
-
+/* All jobs are stored in queuedJobs.txt */
+eBlocBroker.LogJobResults(readFrom, nodePaths.LOG_PATH + '/queuedJobs.txt', clusterID); 

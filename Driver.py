@@ -311,7 +311,8 @@ while True:
 
        strCheck = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
        jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
-
+       log('core: ' + str(jobInfo['core']))
+       
        userID   = ""
        if jobInfo['core'] == 0: 
           log('Job does not exist', 'red')

@@ -48,7 +48,6 @@ def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None):
    else:
        return logReturn(myFilter, 2) 
 
-
 def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None): 
    if eBlocBroker is None: 
        eBlocBroker = getEbloBroker()
@@ -85,6 +84,5 @@ if __name__ == '__main__':
 
            print('jobKey: ' + loggedJobs[i].args['jobKey'])
            print('index: ' + str(loggedJobs[i].args['index']))
-           print('storageID: ' + str(loggedJobs[i].args['storageID']))
-           print('desc: ' + loggedJobs[i].args['desc'])
+           print('storageID: ' + str(loggedJobs[i].args['storageID']))           
            print('------------------------------------------------------------------------------------------------------------')
