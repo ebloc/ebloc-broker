@@ -6,9 +6,7 @@ from random import randint
 
 path = os.getcwd()
 home = expanduser("~")
-
 sys.path.insert(0, home + '/eBlocBroker')
-# sys.path.insert(0, home + '/eB/contractCalls')
 
 from lib_owncloud import singleFolderShare
 from lib_owncloud import eudatInitializeFolder
@@ -22,11 +20,10 @@ f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', password)
 #---------------------------------------------------------------
-
-counter = 0 #150
-itemsToScan = 10
+flag        = 0
+counter     = 0
+itemsToScan = 151
 hashesFile = open(path + '/hashOutput.txt', 'w+')
-# commentStr = "QmQANSjxQaziHPdMuj37LC53j65cVtXXwQYvu8GxJCPFJE" # Dummy hash string
 
 with open(path + "/nasa.txt") as test:
     for line in test:
@@ -40,7 +37,7 @@ with open(path + "/nasa.txt") as test:
 
            with open("ipfs/run_temp.sh") as ff:
               for line in ff:
-                 f.write(line)                 
+                 f.write(line)
 
            randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
            f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
@@ -52,12 +49,18 @@ with open(path + "/nasa.txt") as test:
            time.sleep(1)
            # After run.sh is update share the ipfs through eudat
            print(singleFolderShare(tarHash, oc))
-                               
-           hashesFile.write(tarHash + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) +"\n") 
-           if (counter == itemsToScan):
-              break
+
+           if flag == 1:
+               hashesFile.write(" " + str(int(lineIn[0])-startTimeTemp) + '\n')
+
+           startTimeTemp=int(lineIn[0])
+           flag = 1
            print(counter)
            counter += 1
+           if (counter == itemsToScan):
+              break
+           hashesFile.write(tarHash + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) + " " + str(int(lineIn[0])) + " " + str(int(lineIn[1])))
+
 hashesFile.close()
 
 print('\nFolders are created. Sharing files now...')
