@@ -28,7 +28,6 @@ interface eBlocBrokerInterface {
 		 string jobKey,
 		 uint indexed index,
 		 uint8 storageID,
-		 //string desc,
 		 string sourceCodeHash,
 		 uint32 gasDataTransferIn,
 		 uint32 gasDataTransferOut,
