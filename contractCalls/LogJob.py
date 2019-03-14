@@ -37,10 +37,9 @@ def runLogJob(fromBlock, clusterAddress, eBlocBroker=None):
 def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None): 
    if eBlocBroker is None: 
        eBlocBroker = getEbloBroker()
-   myFilter = eBlocBroker.events.LogCancelRefund.createFilter(
+   myFilter = eBlocBroker.events.LogRefund.createFilter(
        fromBlock=int(fromBlock),       
-       argument_filters={'clusterAddress': str(clusterAddress)}
-   )
+       argument_filters={'clusterAddress': str(clusterAddress)} )
    loggedJobs = myFilter.get_all_entries() 
 
    if len(loggedJobs) > 0:       

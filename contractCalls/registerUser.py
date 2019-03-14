@@ -23,7 +23,7 @@ def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddres
 
 	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
 		# First time running:
-		print('Please first run: python eBlocBroker/scripts/whisperInitialize.py')
+		print('Please first run: python scripts/whisperInitialize.py')
 		sys.exit()
 	else:
 		with open(home + '/.eBlocBroker/whisperInfo.txt') as json_file:
