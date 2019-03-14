@@ -1,6 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, lib, sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
 from imports import connectEblocBroker
 from imports import getWeb3
 
@@ -36,7 +38,7 @@ with open(fname, "r") as ins:
               '{0: <16}'.format('startTime"') + str(jobInfo['startTime']) + ' ' +
               '{0: <16}'.format('received:') + str(jobInfo['received']) + ' ' +
               '{0: <16}'.format('coreMinPrice:') + str(jobInfo['coreMinPrice']) + ' ' +
-				  '{0: <16}'.format('memoryMinPrice:') + str(jobInfo['memoryMinPrice']) + ' ' +
+			  '{0: <16}'.format('memoryMinPrice:') + str(jobInfo['memoryMinPrice']) + ' ' +
               '{0: <16}'.format('coreMinuteGas:') + str(jobInfo['coreMinuteGas']) + ' ' +
               '{0: <16}'.format('jobInfoOwner:') + jobInfo['jobOwner'])
         counter += 1

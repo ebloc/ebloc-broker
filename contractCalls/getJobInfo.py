@@ -42,7 +42,7 @@ if __name__ == '__main__':
         index          = int(sys.argv[3]) 
     else:
         clusterAddress = "0x4e4a0750350796164d8defc442a712b7557bf282" 
-        jobKey         = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg' # Long job which only sleeps
+        jobKey         = '6a6783e74a655aad01bf2d1202362685' # Long job which only sleeps
         # jobKey         = "153802737479941507912962421857730686964" 
         index          = 0
         
