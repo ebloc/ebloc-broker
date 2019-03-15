@@ -220,3 +220,5 @@ owncloudScripts/\.tar\.gz
 generateTest/eudatNasa/0x4e4a0750350796164d8defc442a712b7557bf282\.txt
 
 generateTest/eudatNasa/clientOutput\.txt
+
+scripts/dum\.txt
