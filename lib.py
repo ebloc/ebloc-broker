@@ -149,6 +149,17 @@ def isSlurmOn():
 
 def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+def isTransactionPassed(web3, tx):
+    receipt = web3.eth.getTransactionReceipt(tx)
+
+    if receipt is None:
+        return False
+    
+    if receipt['status'] == 1:
+        return True
+    else:
+        return False
     
 # Checks that does IPFS run on the background or not
 def isIpfsOn():
