@@ -5,7 +5,7 @@ import owncloud, hashlib, getpass
 # https://github.com/owncloud/pyocclient/issues/199#issuecomment-309497823
 
 oc = owncloud.Client('https://b2drop.eudat.eu/')
-oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
+oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'password')
 oc.share_file_with_user(name, 'ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu', remote_user=True, perms=31)
 
 
