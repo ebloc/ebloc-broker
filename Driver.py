@@ -192,7 +192,7 @@ def eudatLoginAndCheck():
     except subprocess.CalledProcessError as e:
         log(e.output.decode('utf-8').strip(), 'red')        
         sys.exit()
-    
+        
 # Startup functions are called
 def startup():    
     isDriverOn()
@@ -235,7 +235,7 @@ if "false" in isClusterExist.lower():
                  "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')))
    terminate()
 
-deployedBlockNumber = getDeployedBlockNumber(eBlocBroker)
+deployedBlockNumber   = getDeployedBlockNumber(eBlocBroker)
 blockReadFromContract = str(0)
 
 log('{0: <20}'.format('clusterAddress:') + "\"" + clusterAddress + "\"", "yellow")

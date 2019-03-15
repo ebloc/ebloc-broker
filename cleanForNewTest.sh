@@ -8,7 +8,6 @@ if [ "$EUID" -eq 0 ]
   exit
 fi
 
-sudo rm -rf /var/eBlocBroker/*
 sudo rm -rf $HOME/.eBlocBroker/*/*
 sudo rm -f  $HOME/.eBlocBroker/my-app.pid
 sudo rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
@@ -16,6 +15,8 @@ sudo rm -f  $HOME/.eBlocBroker/logJobs.txt
 sudo rm -f  $HOME/.eBlocBroker/queuedJobs.txt
 sudo rm -f  $HOME/.eBlocBroker/test.txt
 sudo rm -f  $HOME/.eBlocBroker/ipfs.out
+
+rm -rf /var/eBlocBroker/*
 
 cat /dev/null > $HOME/.eBlocBroker/clusterDriver.out
 
