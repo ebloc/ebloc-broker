@@ -367,21 +367,14 @@ while True:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
              
           slurmPendingJobCheck()
-          log('Adding user...', 'green')
+          log('Adding user...', 'green')                    
+          res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
+          log(res)
           userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
           # sacctmgr add account $USERNAME --immediate
           res, status = lib.runCommand(['sacctmgr', 'add', 'account', userIDmd5, '--immediate'])
           # sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
           res, status = lib.runCommand(['sacctmgr', 'create', 'user', userIDmd5, 'defaultaccount=' + userIDmd5, 'adminlevel=[None]', '--immediate'])
-                    
-          for attempt in range(10):
-              res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
-              if not status:
-                  log('Error: Something went wrong, user cannot be added')
-                  time.sleep(1)
-              else:
-                  log(res)
-                  break             
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
