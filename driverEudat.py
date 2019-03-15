@@ -150,8 +150,18 @@ def cache(userID, resultsFolderPrev):
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
    # cmd: wget --continue -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
     log('Downloading output.zip -> ' + resultsFolderPrev + '/output.zip')
-    ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + globals()['shareToken'] +
-                                  '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')   
+    for attempt in range(10):
+        try:
+            ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + globals()['shareToken'] +
+                                           '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
+        except Exception as e:
+            log('Failed to download eudat file: '+ str(e), 'red')
+            time.sleep(5)
+        else:
+            break;
+    else:
+        return
+    
     result = re.search('Length: (.*) \(', ret) # https://stackoverflow.com/a/6986163/2402577
     if result is not None: # from wget output
         globals()['dataTransferIn'] = int(result.group(1)) * 0.000001 # Downloaded file size in MBs
@@ -221,7 +231,7 @@ def eudatGetShareToken(fID, userID):
          eudatFolderName  = str(inputFolderName)
          acceptFlag       = 1
          log("Found. InputId=" + inputID + " |ShareToken=" + globals()['shareToken'])                  
-         with open(saveShareToken, 'w') as the_file:
+         with open(saveShareToken, 'w') as the_file:  # TODO check is file exist if not return
              the_file.write(globals()['shareToken'])                  
          
          if globals()['cacheType'] is 'ipfs':
@@ -298,6 +308,6 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
                        resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)
     except Exception as e:
         log('Failed to sbatch call: '+ str(e), 'red')
-        sys.exit() #delete
+        # sys.exit() #delete
         return False
     
