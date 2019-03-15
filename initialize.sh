@@ -1,6 +1,6 @@
 #!/bin/bash
 
-preInstall=1
+preInstall=0
 newRpcPort="8545" # Please change it if you have different RPC_PORT number.
 
 # Update repository with the latest update
@@ -134,21 +134,19 @@ sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh
 rm slurmScript.sh.bak
 
 # COINBASE Address Setup:==============================================
-lineOld='0xffffffffffffffffffffffffffffffffffffffff'
-lineNew=$(echo $COINBASE)
-
-sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$lineNew\"/" .env && rm .env.bak
-#======================================================================
+COINBASE=$(echo $COINBASE)
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set"
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID 
+    read clusterID
+    sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$clusterID\"/" .env && rm .env.bak
     echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
 elif [[ -z "$COINBASE" ]]; then
     echo "COINBASE is set to the empty string"
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID 
-    echo 'export COINBASE="'$clusterID'"' >>~/.profile   
+    read clusterID
+    sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$clusterID\"/" .env && rm .env.bak
+    echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
 else
     echo "COINBASE is: $COINBASE"
     check=$(contractCalls/isAddress.py $COINBASE)
@@ -157,6 +155,24 @@ else
        exit
     fi
 fi
+#======================================================================
+
+# OC_USER_ID Address Setup:==============================================
+OC_USER_ID=$(echo $OC_USER_ID)
+if [[ ! -v OC_USER_ID ]]; then
+    echo "OC_USER_ID is not set"
+    echo "Type your OC_USER_ID, followed by [ENTER]:"
+    read ocUserID
+    sed -i.bak "s/^\(OC_USER_ID=\).*/\1\"$ocUserID\"/" .env && rm .env.bak
+    echo 'export OC_USER_ID="'$OC_USER_ID'"' >> $HOME/.profile   
+elif [[ -z "$OC_USER_ID" ]]; then
+    echo "OC_USER_ID is set to the empty string"
+    echo "Type your OC_USER_ID, followed by [ENTER]:"
+    read ocUserID
+    sed -i.bak "s/^\(OC_USER_ID=\).*/\1\"$ocUserID\"/" .env && rm .env.bak
+    echo 'export OC_USER_ID="'$OC_USER_ID'"' >> $HOME/.profile   
+fi
+#======================================================================
 
 source $HOME/.profile
 
