@@ -414,7 +414,6 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             log(runCommand(command))         
         elif 'gzip' in mimeType: # Received job is in folder tar.gz
             log('mimeType: tar.gz')
-            # log(os.getcwd()) # delete
             # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             log(runCommand(command))         
