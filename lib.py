@@ -75,6 +75,7 @@ storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
 cacheType = enum('private', 'public', 'none', 'ipfs')
 
 def runCommand(command, my_env=None):
+    status=True
     if my_env is None:
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else :
@@ -82,9 +83,10 @@ def runCommand(command, my_env=None):
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = p.communicate()      
     if p.returncode != 0:
+        status=False
         err = err.decode('utf-8')
-        log(err, 'red')
-    return output.strip().decode('utf-8')
+        log('Error:' + err, 'red')
+    return output.strip().decode('utf-8'), status
 
 # https://stackoverflow.com/a/10840586/2402577   
 def silentremove(filename):
