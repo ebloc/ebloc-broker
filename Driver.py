@@ -345,7 +345,9 @@ while True:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
              
           slurmPendingJobCheck()
-          print(lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
+          log('Adding user...', 'green')
+
+          log(lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH]))       
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
