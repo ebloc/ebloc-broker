@@ -17,7 +17,7 @@ def getWeb3():
         from web3.shh import Shh
         Shh.attach(web3, "shh")
     else:
-        web3 = Web3(IPCProvider(home + '/eblocPOA/private/geth.ipc')) 
+        web3 = Web3(IPCProvider(home + '/eBlocPOA/private/geth.ipc')) 
         from web3.middleware import geth_poa_middleware
         # inject the poa compatibility middleware to the innermost layer
         web3.middleware_stack.inject(geth_poa_middleware, layer=0)

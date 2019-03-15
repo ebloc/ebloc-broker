@@ -69,12 +69,12 @@ def testFunc(path, readTest, workloadTest, testType, clusterID, cacheType):
                 coreMinuteGas   = 360 # 6 hours for nasEUDAT simulation test.
             accountID = randint(0, 9)
             res= web3.personal.unlockAccount(web3.eth.accounts[accountID], accountPassword) # unlocks the selected account
-            log("AccountID:" + str(accountID) + " is unlocked?=>" + str(res), path)
+            log("AccountID:" + str(accountID) + " (" + web3.eth.accounts[accountID] + ") is unlocked=>" + str(res), path)
             log("hash: " + jobKey[0] + "| TimeToRun: " + str(coreMinuteGas) + "| TimeToRunSeconds: " + str(math.ceil(float(jobKey[1]))) +
                 "| Core: " + str(coreNum) + "| accountID: " + str(accountID), path)
             # ===========
             log('submitJob(' + clusterID + ', ' + jobKey_ + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + str(dataTransferIn) + ', ' +
-                str(dataTransferOut) + ',' + str(storageID) + ', ' + jobKey_ + ', ' + str(gasStorageHour) + ', ' +
+                str(dataTransferOut) + ', ' + str(storageID) + ', ' + jobKey_ + ', ' + str(gasStorageHour) + ', ' +
                 str(accountID) + ')', path)
 
             ret = submitJob(clusterID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID,

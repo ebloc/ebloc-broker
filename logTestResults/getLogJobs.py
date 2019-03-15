@@ -76,7 +76,7 @@ def getLogJobs(clusterAddress, fromBlock):
         counter+=1
     # print('------------------------------------------------------------------------------------------------------------')
     print("TOTAL_GAINED: " + str(sum_))
-    print(str(completedCounter) + "/" + str(counter))
+    print(str(completedCounter) + "/" + str(counter-1))
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
@@ -84,6 +84,6 @@ if __name__ == '__main__':
         blockNumber    = int(sys.argv[2])
     else:
         clusterAddress=os.getenv("CLUSTER_ID")
-        fromBlock=2157259
+        fromBlock=2162467
 
     getLogJobs(clusterAddress, fromBlock)

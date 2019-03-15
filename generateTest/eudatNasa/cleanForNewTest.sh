@@ -1,6 +1,8 @@
 #!/bin/bash
 # sudo kill -9 $(ps aux | grep "[t]est"  | awk '{print $2}')
 
+killall python python3
+
 rm -f 0x*
 rm -f *.*~
 rm -f nohup.out
