@@ -80,16 +80,16 @@ def runCommand(command, my_env=None):
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else :
         p = subprocess.Popen(command, env=my_env,
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = p.communicate()      
     if p.returncode != 0:
         status=False
         err = err.decode('utf-8')
-        log('Error:' + err, 'red')
+        if err != '':
+            log(err, 'red')
     return output.strip().decode('utf-8'), status
 
-# https://stackoverflow.com/a/10840586/2402577   
-def silentremove(filename):
+def silentremove(filename): # https://stackoverflow.com/a/10840586/2402577   
     try:
         os.remove(filename)
     except OSError as e: # this would be "except OSError, e:" before Python 2.6
