@@ -29,7 +29,7 @@ def log(strIn):
 		txFile.close()
 		
 def post(message):
-    coreInfo = lib.runCommand(['sinfo', '-h', '-o%C']).split("/")
+    coreInfo, status = lib.runCommand(['sinfo', '-h', '-o%C']).split("/")
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
 
