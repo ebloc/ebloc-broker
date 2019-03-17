@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
 from os.path import expanduser

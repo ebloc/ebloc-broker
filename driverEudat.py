@@ -224,13 +224,18 @@ def eudatGetShareToken(fID, userID):
       inputFolderName  = shareList[i]['name']
       inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
       inputID          = shareList[i]['id']
-      inputOwner       = shareList[i]['owner']
-      
+      inputOwner       = shareList[i]['owner']      
       if inputFolderName == globals()['jobKey'] and inputOwner == fID:
          globals()['shareToken'] = str(shareList[i]['share_token'])
          eudatFolderName  = str(inputFolderName)
          acceptFlag       = 1
-         log("Found. InputId=" + inputID + " |ShareToken=" + globals()['shareToken'])                  
+         log("Found. InputId=" + inputID + " |ShareToken=" + globals()['shareToken'])
+
+         saveDirShareToken = lib.PROGRAM_PATH + '/' + userID + '/cache'
+         if not os.path.isdir(saveDirShareToken):
+             log(saveDirShareToken + ' does not exist', 'red')
+             return
+         
          with open(saveShareToken, 'w') as the_file:  # TODO check is file exist if not return
              the_file.write(globals()['shareToken'])                  
          
@@ -306,6 +311,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
     try:
         lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
                        resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)
+        time.sleep(1)
     except Exception as e:
         log('Failed to sbatch call: '+ str(e), 'red')
         # sys.exit() #delete
