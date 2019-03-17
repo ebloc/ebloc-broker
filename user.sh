@@ -10,12 +10,6 @@ BASEDIR=$2
 USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4) # Convert Ethereum User Address into 32-bits
 SLURMUSER='alper'
 
-# For test purposes:-------------------
-# sudo userdel $USERNAME
-# sudo rm -rf $BASEDIR/$USERNAME
-# sacctmgr remove user where user=$USERNAME --immediate
-# -------------------------------------
-
 # Force to add
 sacctmgr remove user where user=$USERNAME --immediate
 sacctmgr add account $USERNAME --immediate
@@ -55,3 +49,9 @@ else
 	echo $USER_ADDRESS / $USERNAME 'is already created.'
     fi
 fi
+
+# For test purposes:-------------------
+# sudo userdel $USERNAME
+# sudo rm -rf $BASEDIR/$USERNAME
+# sacctmgr remove user where user=$USERNAME --immediate
+# -------------------------------------
