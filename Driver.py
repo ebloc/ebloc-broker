@@ -113,8 +113,7 @@ def terminate():
 def idleCoreNumber(printFlag=1):
     # cmd: sinfo -h -o%C
     coreInfo, status = lib.runCommand(['sinfo', '-h', '-o%C'])
-    coreInfo = coreInfo.split("/")
-    
+    coreInfo = coreInfo.split("/")    
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
        if printFlag == 1:
@@ -123,6 +122,7 @@ def idleCoreNumber(printFlag=1):
     else:
        log("sinfo return emptry string.", 'red')
        idleCore = 0
+       
     return idleCore
 
 def slurmPendingJobCheck(): 
@@ -176,7 +176,7 @@ def isDriverOn():
 
 def eudatLoginAndCheck():
     global oc
-    if lib.OC_USER_ID is None:
+    if lib.OC_USER is None or lib.OC_USER == "":
         log('OC_USER_ID is not set in .env', 'red')
         sys.exit()
         
@@ -185,7 +185,7 @@ def eudatLoginAndCheck():
         password = content_file.read().strip()
         
     oc = owncloud.Client('https://b2drop.eudat.eu/') 
-    oc.login(lib.OC_USER_ID, password)  # Unlocks EUDAT account
+    oc.login(lib.OC_USER, password)  # Unlocks EUDAT account    
     password = None
     try:
         oc.list('.')
@@ -335,14 +335,24 @@ while True:
        index  = int(loggedJobs[i].args['index'])
 
        strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
-       jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
-       log('core: ' + str(jobInfo['core']))
+       jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3) #TODO: try catch @getJobInfo //None yada "" donuyor olabilir
+              
+       for attempt in range(10):
+           try:
+               log('core: ' + str(jobInfo['core']))
+           except Exception as e:
+               log("Error: jobInfo return empty", 'red')
+               log(jobInfo)
+           else:
+               break
+       else:
+           runFlag = 1
+           break       
        
        userID   = ""
-       if jobInfo['core'] == 0: 
+       if runFlag == 1 or jobInfo['core'] == 0: 
           log('Job does not exist', 'red')
           runFlag = 1
-          sys.exit() #delete i guess
        else:
           log('jobOwner/userID: ' + jobInfo['jobOwner'])
           userID    = jobInfo['jobOwner'].lower()
@@ -366,15 +376,16 @@ while True:
           else:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
              
-          slurmPendingJobCheck()
+          slurmPendingJobCheck() # TODO: if jobs are bombared idle core won't updated
           log('Adding user...', 'green')                    
           res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
           log(res)
-          userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
-          # sacctmgr add account $USERNAME --immediate
-          res, status = lib.runCommand(['sacctmgr', 'add', 'account', userIDmd5, '--immediate'])
-          # sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
-          res, status = lib.runCommand(['sacctmgr', 'create', 'user', userIDmd5, 'defaultaccount=' + userIDmd5, 'adminlevel=[None]', '--immediate'])
+          
+          #userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
+          ## sacctmgr add account $USERNAME --immediate
+          #res, status = lib.runCommand(['sacctmgr', 'add', 'account', userIDmd5, '--immediate'])
+          ## sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
+          #res, status = lib.runCommand(['sacctmgr', 'create', 'user', userIDmd5, 'defaultaccount=' + userIDmd5, 'adminlevel=[None]', '--immediate'])
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':

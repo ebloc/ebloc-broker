@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from os.path import expanduser
 home = expanduser("~")
 
-load_dotenv(os.path.join(home + '/eBlocBroker', '.env')) # Load .env from given path
+load_dotenv(os.path.join(home + '/eBlocBroker/', '.env')) # Load .env from given path
 
 WHOAMI     = os.getenv("WHOAMI")
 EBLOCPATH  = os.getenv("EBLOCPATH")
@@ -12,7 +12,7 @@ CLUSTER_ID = os.getenv("CLUSTER_ID")
 GDRIVE     = os.getenv("GDRIVE")
 RPC_PORT   = os.getenv("RPC_PORT")
 POA_CHAIN  = os.getenv("POA_CHAIN")
-OC_USER_ID = os.getenv("OC_USER_ID")
+OC_USER    = os.getenv("OC_USER")
 
 GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo" 
 OWN_CLOUD_PATH    = "/ocCluster" 
