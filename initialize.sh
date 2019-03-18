@@ -93,43 +93,45 @@ sudo chmod +x $currentDir/slurmScript.sh
 #======================================================================
 cd $currentDir
 
+cp .env $HOME/.eBlocBroker
+
 # LOG_PATH path setup
 lineNew=$HOME/.eBlocBroker
 var=$(echo $lineNew | sed 's/\//\\\//g')
-sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" .env
-rm -f .env.bak
+sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $HOME/.eBlocBroker/.env
+rm -f $HOME/.eBlocBroker/.env.bak
 
 # GDRIVE path setup
 sudo chown $(whoami) -R $HOME/.gdrive 
 lineNew=$(which gdrive | sed 's/\//\\\//g')
-sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" .env
-rm -f .env.bak
+sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" $HOME/.eBlocBroker/.env
+rm -f $HOME/.eBlocBroker/.env.bak
 
 # EBLOCPATH setup
 eBlocBrokerPath="$PWD"
 var=$(echo $eBlocBrokerPath | sed 's/\//\\\//g')
-sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" .env
-rm .env.bak
+sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" $HOME/.eBlocBroker/.env
+rm $HOME/.eBlocBroker/.env.bak
 
 # User Name Setup:======================================================
 lineOld="whoami"
 lineNew=$(logname)
 
-sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" .env
-rm -f .env.bak
+sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" $HOME/.eBlocBroker/.env
+rm -f $HOME/.eBlocBroker/.env.bak
 
 # RPC PORT Setup:======================================================
 lineOld="8545"
 
-sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" .env
-rm .env.bak
+sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" $HOME/.eBlocBroker/.env
+rm $HOME/.eBlocBroker/.env.bak
 
 # PATH Name Setup:===================================================
 lineOld="EBLOCBROKER_PATH"
 lineNew=$(echo $currentDir | sed 's/\//\\\//g')
 
-sed -i.bak 's/'$lineOld'/'$lineNew'/' .env
-rm .env.bak
+sed -i.bak 's/'$lineOld'/'$lineNew'/' $HOME/.eBlocBroker/.env
+rm $HOME/.eBlocBroker/.env.bak
 sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" slurmScript.sh
 rm slurmScript.sh.bak
 
@@ -138,15 +140,13 @@ COINBASE=$(echo $COINBASE)
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set"
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID
-    sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$clusterID\"/" .env && rm .env.bak
-    echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
+    read COINBASE
+    echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile   
 elif [[ -z "$COINBASE" ]]; then
     echo "COINBASE is set to the empty string"
     echo "Type your cluster Ethereum Address, followed by [ENTER]:"
-    read clusterID
-    sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$clusterID\"/" .env && rm .env.bak
-    echo 'export COINBASE="'$clusterID'"' >> $HOME/.profile   
+    read COINBASE
+    echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile   
 else
     echo "COINBASE is: $COINBASE"
     check=$(contractCalls/isAddress.py $COINBASE)
@@ -154,24 +154,25 @@ else
        echo "Ethereum address is not valid, please use a valid one."
        exit
     fi
+    sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$COINBASE\"/" $HOME/.eBlocBroker/.env
+    rm $HOME/.eBlocBroker/.env.bak    
 fi
 #======================================================================
 
-# OC_USER_ID Address Setup:==============================================
-OC_USER_ID=$(echo $OC_USER_ID)
-if [[ ! -v OC_USER_ID ]]; then
-    echo "OC_USER_ID is not set"
-    echo "Type your OC_USER_ID, followed by [ENTER]:"
-    read ocUserID
-    sed -i.bak "s/^\(OC_USER_ID=\).*/\1\"$ocUserID\"/" .env && rm .env.bak
-    echo 'export OC_USER_ID="'$OC_USER_ID'"' >> $HOME/.profile   
-elif [[ -z "$OC_USER_ID" ]]; then
-    echo "OC_USER_ID is set to the empty string"
-    echo "Type your OC_USER_ID, followed by [ENTER]:"
-    read ocUserID
-    sed -i.bak "s/^\(OC_USER_ID=\).*/\1\"$ocUserID\"/" .env && rm .env.bak
-    echo 'export OC_USER_ID="'$OC_USER_ID'"' >> $HOME/.profile   
+# OC_USER Address Setup:==============================================
+OC_USER=$(echo $OC_USER)
+if [[ ! -v OC_USER ]]; then
+    echo "OC_USER is not set"
+    echo "Type your OC_USER, followed by [ENTER]:"
+    read OC_USER
+elif [[ -z "$OC_USER" ]]; then
+    echo "OC_USER is set to the empty string"
+    echo "Type your OC_USER, followed by [ENTER]:"
+    read OC_USER
 fi
+sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $HOME/.eBlocBroker/.env
+rm $HOME/.eBlocBroker/.env.bak
+echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile   
 #======================================================================
 
 source $HOME/.profile

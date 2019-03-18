@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
+
 import os, sys, subprocess, time, json, errno, glob, pwd
 from shutil import copyfile
 from dotenv import load_dotenv
 from os.path import expanduser
 home = expanduser("~")
-
-load_dotenv(os.path.join(home + '/eBlocBroker/', '.env')) # Load .env from given path
+load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
 
 WHOAMI     = os.getenv("WHOAMI")
 EBLOCPATH  = os.getenv("EBLOCPATH")
@@ -16,10 +17,10 @@ POA_CHAIN  = os.getenv("POA_CHAIN")
 OC_USER    = os.getenv("OC_USER")
 
 GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo" 
-OWN_CLOUD_PATH    = "/ocCluster" 
 GDRIVE_METADATA   = "/home/" + WHOAMI + "/.gdrive" 
 IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs" 
 HOME              = "/home/" + WHOAMI
+OWN_CLOUD_PATH    = "/oc"
 
 IPFS_USE                    = 0 # Should be '1', if caching into IPFS is open
 PROGRAM_PATH                = '/var/eBlocBroker' 
