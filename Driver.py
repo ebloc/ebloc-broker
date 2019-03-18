@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
+import pwd, os, sys
 import owncloud, json
-from subprocess import call
-import sys, os, time, subprocess, string, driverFunc, lib, _thread
-from colored import stylize
-from colored import fg
+import time, subprocess, string, driverFunc, lib, _thread
 import hashlib
 import sys, signal
+
+from subprocess import call
+from colored import stylize
+from colored import fg
 from imports import connectEblocBroker
 from imports import getWeb3
 from driverEudat import driverEudat
@@ -97,6 +99,7 @@ def log(strIn, color=''):
         print(stylize(strIn, fg(color)))
     else:
         print(strIn)
+        
     txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
     txFile.write(strIn + "\n")
     txFile.close()
@@ -335,14 +338,14 @@ while True:
        index  = int(loggedJobs[i].args['index'])
 
        strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
-       jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3) #TODO: try catch @getJobInfo //None yada "" donuyor olabilir
-              
+                     
        for attempt in range(10):
            try:
-               log('core: ' + str(jobInfo['core']))
+               # jobInfo = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
+               jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3) # TODO: carry to a function
+               log('core: ' + str(jobInfo['core']))               
            except Exception as e:
-               log("Error: jobInfo return empty", 'red')
-               log(jobInfo)
+               log("Error: jobInfo returns as " + jobInfo, 'red')
            else:
                break
        else:
@@ -377,10 +380,11 @@ while True:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
              
           slurmPendingJobCheck() # TODO: if jobs are bombared idle core won't updated
-          log('Adding user...', 'green')                    
+          log('Adding user...', 'green')
           res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
+          # res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
           log(res)
-          
+                    
           #userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
           ## sacctmgr add account $USERNAME --immediate
           #res, status = lib.runCommand(['sacctmgr', 'add', 'account', userIDmd5, '--immediate'])

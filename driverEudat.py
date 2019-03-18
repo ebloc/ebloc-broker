@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import hashlib, getpass, sys, os, time, subprocess, lib, re
+import hashlib, getpass, sys, os, time, subprocess, lib, re, pwd
 from   subprocess import call
 import os.path
 from colored import stylize
@@ -150,7 +150,7 @@ def cache(userID, resultsFolderPrev):
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
    # cmd: wget --continue -4 -o /dev/stdout https://b2drop.eudat.eu/s/$shareToken/download --output-document=$resultsFolderPrev/output.zip
     log('Downloading output.zip -> ' + resultsFolderPrev + '/output.zip')
-    for attempt in range(10):
+    for attempt in range(5):
         try:
             ret = subprocess.check_output(['wget', '--continue', '-4', '-o', '/dev/stdout', 'https://b2drop.eudat.eu/s/' + globals()['shareToken'] +
                                            '/download', '--output-document=' + resultsFolderPrev + '/output.zip']).decode('utf-8')
@@ -266,7 +266,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
     globals()['oc']        = oc    
     globals()['index']     = index    
     globals()['cacheType'] = lib.cacheType.reverse_mapping[cacheType]               
-
+    
     log("jobKey=" + jobKey) 
     log("index="  + index)
     log("fID="  + fID)
@@ -281,7 +281,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
         check, ipfsHash = cache(userID, resultsFolderPrev)
         
     if not check: return   
-   
+    
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
         os.makedirs(resultsFolderPrev)
         os.makedirs(resultsFolder)
@@ -304,13 +304,11 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
             subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
         elif eudatFolderType == 'folder':
             # Copy from cached IPFS folder into user's path           
-            subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .
-           
-    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-    
+            subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .           
+    # os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there    TODO: delete
     try:
         lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
-                       resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)
+                       resultsFolder, resultsFolderPrev, globals()['dataTransferIn'], eBlocBroker,  web3)
         time.sleep(1)
     except Exception as e:
         log('Failed to sbatch call: '+ str(e), 'red')
