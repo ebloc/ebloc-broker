@@ -3,15 +3,16 @@
 import os, sys,json
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from dotenv import load_dotenv
-load_dotenv()
 from imports import connectEblocBroker
 from imports import getWeb3
 from os.path import expanduser
 home = expanduser("~")
 
+load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
+   
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
-CLUSTER_ID  = web3.toChecksumAddress(os.getenv("CLUSTER_ID"))  
+CLUSTER_ID  = web3.toChecksumAddress(os.getenv("CLUSTER_ID"))
 
 if __name__ == '__main__':
     # USER Inputs----------------------------------------------------------------
@@ -36,6 +37,7 @@ if __name__ == '__main__':
             data = json.load(json_file)
             kId = data['kId']
             whisperPubKey = data['publicKey']
+            
         if not web3.shh.hasKeyPair(kId):
             print("Whisper node's private key of a key pair did not match with the given ID.")
             print('Please re-run: ../scripts/whisperInitialize.py')
