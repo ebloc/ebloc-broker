@@ -107,7 +107,6 @@ if __name__ == '__main__':
         accountID       = int(sys.argv[12])
         gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         gasDataTransfer = dataTransferIn + dataTransferOut
-
     else:   
         # USER Inputs ================================================================
         clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282')

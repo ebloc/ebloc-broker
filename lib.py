@@ -56,7 +56,6 @@ inv_job_state_code = {v: k for k, v in job_state_code.items()}
 def log(strIn, color=''):
     from colored import stylize
     from colored import fg
-
     if color != '':
         print(stylize(strIn, fg(color))) 
     else:
@@ -83,12 +82,14 @@ def runCommand(command, my_env=None):
     else :
         p = subprocess.Popen(command, env=my_env,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
     output, err = p.communicate()      
     if p.returncode != 0:
         status=False
         err = err.decode('utf-8')
         if err != '':
             log(err, 'red')
+            
     return output.strip().decode('utf-8'), status
 
 def silentremove(filename): # https://stackoverflow.com/a/10840586/2402577   
@@ -110,9 +111,10 @@ def removeFiles(filename):
 
 def web3Exception(check): 
    while check  == 'ConnectionRefusedError' or check == 'notconnected':
-      log('Error(web3): ' +  check + '. Please run geth on the background.', 'red')
+      log('Error(web3)=' +  check + '. Please run geth on the background.', 'red')
       check = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
       time.sleep(5)
+      
    if check == 'BadFunctionCallOutput':
       log('Error(web3): ' +  check + '.', 'red')
       # sys.exit()
@@ -156,7 +158,6 @@ def preexec_function():
 
 def isTransactionPassed(web3, tx):
     receipt = web3.eth.getTransactionReceipt(tx)
-
     if receipt is None:
         return False
     
@@ -177,7 +178,6 @@ def isIpfsOn():
    p2.stdout.close()
    #-----------
    check = p3.communicate()[0].decode('utf-8').strip()
-
    if int(check) == 0:
       log("Error: IPFS does not work on the background.", 'red') 
       log('* Starting IPFS: nohup ipfs daemon --mount &', 'green')
@@ -185,7 +185,8 @@ def isIpfsOn():
          subprocess.Popen(['nohup', 'ipfs', 'daemon', '--mount'],
                           stdout=stdout,
                           stderr=stdout,
-                          preexec_fn=os.setpgrp)      
+                          preexec_fn=os.setpgrp)
+         
       time.sleep(5)
       with open(LOG_PATH + '/ipfs.out', 'r') as content_file:
          log(content_file.read(), 'blue')
@@ -213,16 +214,14 @@ def isRunExistInTar(tarPath):
 
 def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resultsFolderPrev, dataTransferIn,  eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
-   from datetime import datetime, timedelta
-   
+   from datetime import datetime, timedelta   
    # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
    date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
                                   env={'LANG': 'en_us_88591'}).decode('utf-8').strip()
    log('Date=' + date)
    f = open(resultsFolderPrev + '/modifiedDate.txt', 'w') 
    f.write(date + '\n' )    
-   f.close()
-   
+   f.close()   
    # cmd: echo date | date +%s
    p1 = subprocess.Popen(['echo', date], stdout=subprocess.PIPE)
    #-----------
@@ -231,11 +230,9 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
    #-----------
    timestamp = p2.communicate()[0].decode('utf-8').strip()
    log('Timestamp=' + timestamp)
-
    f = open(resultsFolderPrev + '/timestamp.txt', 'w') 
    f.write(timestamp + '\n' )    
    f.close()
-
    if os.path.isfile(resultsFolderPrev + '/dataTransferIn.txt'):
        with open(resultsFolderPrev + '/dataTransferIn.txt') as json_file:
            data = json.load(json_file)
@@ -245,6 +242,7 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
        data['dataTransferIn'] = dataTransferIn
        with open(resultsFolderPrev + '/dataTransferIn.txt', 'w') as outfile:
            json.dump(data, outfile)
+           
    # print(dataTransferIn) 
    time.sleep(0.25)
    copyfile(resultsFolder + '/run.sh', resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh')
