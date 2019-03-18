@@ -26,7 +26,7 @@ def log(strIn, path, printFlag=0):
     txFile.write( strIn + "\n" )
     txFile.close()
 
-def testFunc(path, readTest, workloadTest, testType, clusterID, cacheType):
+def testFunc(path, readTest, testType, clusterID, cacheType):
     jobKeyNum = {} #create a dictionary called jobKeyNum
     counter = 0
     with open(path + '/' + readTest) as test:
@@ -50,23 +50,25 @@ def testFunc(path, readTest, workloadTest, testType, clusterID, cacheType):
             gasStorageHour  = 0
 
             jobKey = line.rstrip().split(" ")
-            sleepTime = jobKey[5] # time to sleep in seconds
+            sourceCodeHash = jobKey[5] # time to sleep in seconds
+            sleepTime = jobKey[6] # time to sleep in seconds
             blockNumber_ = blockNumber()
             if counter != 0:
                 log("\n------------------------------------------", path)
+                
             log("Job: " + str(counter + 1) + "| Current Time: " + time.ctime() +"| BlockNumber: " + blockNumber_, path)
             log("Nasa Submit range: " + jobKey[3] + " " + jobKey[4], path)
             log("Sleep Time to submit next job: " + sleepTime, path)
-
+            log("Sourcecode Hash=" + sourceCodeHash)
             jobKey_  = str(jobKey[0])
             coreNum  = int(jobKey[2])
-
             if eudatFlag == 0:
                 coreMinuteGas = int(math.ceil(float(jobKey[1]) / 60))
                 log("RunTimeInMinutes: " + str(coreMinuteGas), path)
             else:
                 log("RunTimeInMinutes: " + '360', path)
                 coreMinuteGas   = 360 # 6 hours for nasEUDAT simulation test.
+                
             accountID = randint(0, 9)
             res= web3.personal.unlockAccount(web3.eth.accounts[accountID], accountPassword) # unlocks the selected account
             log("AccountID:" + str(accountID) + " (" + web3.eth.accounts[accountID] + ") is unlocked=>" + str(res), path)
@@ -78,7 +80,7 @@ def testFunc(path, readTest, workloadTest, testType, clusterID, cacheType):
                 str(accountID) + ')', path)
 
             ret = submitJob(clusterID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID,
-                            jobKey_, cacheType, gasStorageHour, accountID)
+                            sourceCodeHash, cacheType, gasStorageHour, accountID)
             tx_hash = ret[0]
             log('Tx_hash:'           + tx_hash, path, 0)
             log('computationalCost:' + ret[1], path, 0)

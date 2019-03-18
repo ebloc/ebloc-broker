@@ -12,8 +12,8 @@
 
 ## How to connect into Private Ethereum Blockchain (eBloc) 
 
-- Connect into [eBlocPOA](https://github.com/ebloc/eblocPOA)
-- Connect into [eBlocPOW](https://github.com/ebloc/eblocPOW)
+- Connect into [eBlocPOA](https://github.com/ebloc/eBlocPOA)
+- Connect into [eBlocPOW](https://github.com/ebloc/eBlocPOW)
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 
@@ -26,7 +26,7 @@ An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also avai
 **Creating an account:**
 
 ```bash
-$ cd eblocPOA
+$ cd eBlocPOA
 $ eblocPath="$PWD"
 $ geth --datadir="$eblocPath" account new
 Your new account is locked with a password. Please give a password. Do not forget this password.
@@ -40,7 +40,7 @@ Your new account is locked with a password. Please give a password. Do not forge
 You should see your `Keystore File (UTC / JSON)`under `keystore` directory. 
 
 ```bash
-[~/eblocPOA]$ ls keystore
+[~/eBlocPOA]$ ls keystore
 UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
 ```
 
@@ -60,7 +60,7 @@ Repeat passphrase:
 Now you should see your `Keystore File (UTC / JSON)`under `private/keystore` directory. 
 
 ```bash
-[~/eblocPOA]$ ls private/keystore
+[~/eBlocPOA]$ ls private/keystore
 UTC--2018-02-14T11-00-59.995395000Z--7d334606c71417f944ff8ba5c09e3672066244f8
 ```
 
