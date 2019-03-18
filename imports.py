@@ -24,7 +24,7 @@ def getWeb3():
         from web3.shh import Shh
         Shh.attach(web3, "shh")
     if not web3.isConnected():
-        # If notconnected may required to do following: sudo chown -R `whoami` ~/eblocPOA/private/geth.ipc
+        print("If notconnected please do following: sudo chown -R whoami $HOME/eBlocPOA/private/geth.ipc")
         return 'notconnected'
     return web3 
 
@@ -33,9 +33,9 @@ def connectEblocBroker(web3=None):
         web3 = getWeb3()
         if web3 == 'notconnected':			 
             return 'notconnected'
+        
     fileAddr = open(home + '/eBlocBroker/contractCalls/address.json', "r")
     contractAddress = fileAddr.read().replace("\n", "")
-
     with open(home + '/eBlocBroker/contractCalls/abi.json', 'r') as abi_definition:
         abi = json.load(abi_definition)
 
