@@ -63,7 +63,7 @@ echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" 
 
 ```bash
 cd $HOME/myContract
-bash $HOME/eblocPOA/client.sh
+bash $HOME/eBlocPOA/client.sh
 ```
 
 #### v0.5.x -----------------------------------------------------------------------------------------------

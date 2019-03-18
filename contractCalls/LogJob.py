@@ -28,7 +28,6 @@ def runLogJob(fromBlock, clusterAddress, eBlocBroker=None):
        argument_filters={'clusterAddress': str(clusterAddress)}
    )    
    loggedJobs = myFilter.get_all_entries() 
-
    if len(loggedJobs) > 0:       
        return loggedJobs 
    else:
@@ -41,7 +40,6 @@ def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None):
        fromBlock=int(fromBlock),       
        argument_filters={'clusterAddress': str(clusterAddress)} )
    loggedJobs = myFilter.get_all_entries() 
-
    if len(loggedJobs) > 0:       
        return loggedJobs 
    else:

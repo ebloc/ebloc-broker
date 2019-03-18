@@ -224,3 +224,13 @@ generateTest/eudatNasa/clientOutput\.txt
 scripts/dum\.txt
 
 gdrive/exampleFolderToShare/example/subFile
+
+generateTest/testIpfs/hashOutput\.txt
+
+generateTest/testIpfs/test_DAS2-fs1-2003-1\.swf
+
+generateTest/eudatNasa/ipfs/run\.sh
+
+generateTest/ipfs/run\.sh
+
+generateTest/test_DAS2-fs1-2003-1\.swf
