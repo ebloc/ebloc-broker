@@ -1,6 +1,6 @@
 import os, json, sys
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
 
 def addElement(data, key, elementToAdd):
     data[key] = elementToAdd    

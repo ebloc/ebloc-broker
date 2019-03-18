@@ -301,7 +301,6 @@ while True:
     currentBlockNumber = blockNumber() 
     log("Waiting new block to increment by one.")
     log("Current BlockNumber: " + currentBlockNumber  + "| sync from block number: " + blockReadFrom)
-
     while int(currentBlockNumber) < int(blockReadFrom):
        time.sleep(2)
        currentBlockNumber = blockNumber(web3)
@@ -382,7 +381,6 @@ while True:
           slurmPendingJobCheck() # TODO: if jobs are bombared idle core won't updated
           log('Adding user...', 'green')
           res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
-          # res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
           log(res)
                     
           #userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
