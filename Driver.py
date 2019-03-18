@@ -24,8 +24,7 @@ from contractCalls.getJobInfo               import getJobInfo
 from contractCalls.isUserExist              import isUserExist
 from contractCalls.getUserInfo              import getUserInfo
 from contractCalls.isWeb3Connected          import isWeb3Connected
-
-import LogJob
+from contractCalls.LogJob                   import runLogJob
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
@@ -59,7 +58,7 @@ def runDriverCancel():
 def runWhisperStateReceiver():
     if not os.path.isfile(lib.HOME + '/.eBlocBroker/whisperInfo.txt'):
         # First time running:
-        log('Please first run: python scripts/whisperInitialize.py')
+        log('Please first run: scripts/whisperInitialize.py')
         terminate()
     else:
         with open(lib.HOME + '/.eBlocBroker/whisperInfo.txt') as json_file:
@@ -309,7 +308,7 @@ while True:
     blockReadFrom = str(blockReadFrom) # Starting reading event's location has been updated
     # blockReadFrom = 1094262 # used for test purposes
     slurmPendingJobCheck()    
-    loggedJobs = LogJob.runLogJob(blockReadFrom, clusterAddress, eBlocBroker)       
+    loggedJobs = runLogJob(blockReadFrom, clusterAddress, eBlocBroker)       
     print('isWeb3Connected: ' + str(isWeb3Connected(web3)))
     maxVal               = 0
     isClusterReceivedJob = 0

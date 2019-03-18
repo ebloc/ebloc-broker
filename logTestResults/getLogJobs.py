@@ -84,6 +84,6 @@ if __name__ == '__main__':
         blockNumber    = int(sys.argv[2])
     else:
         clusterAddress=os.getenv("CLUSTER_ID")
-        fromBlock=2162467
+        fromBlock=2167486
 
     getLogJobs(clusterAddress, fromBlock)
