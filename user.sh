@@ -7,8 +7,8 @@ BASEDIR=$2
 #USER_ADDRESS="0x496aca2be0694a1137b05ce7ffdcd982bfb53fad"
 #BASEDIR="/var/eBlocBroker"
 
-USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4) # Convert Ethereum User Address into 32-bits
 SLURMUSER='alper'
+USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4) # Convert Ethereum User Address into 32-bits
 
 # Force to add
 sacctmgr remove user where user=$USERNAME --immediate

@@ -62,8 +62,8 @@ def isOcMounted():
     if not 'b2drop.eudat.eu/remote.php/webdav/' in res:
         print('Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n' \
               'Please do: \n' \
-              'mkdir -p $HOME/oc \n' \
-              'sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ ~/oc')
+              'mkdir -p /oc \n' \
+              'sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc')
         return False
     else:
         return True

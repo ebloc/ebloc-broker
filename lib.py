@@ -1,4 +1,5 @@
-import os, sys, subprocess, time, json, errno, glob
+import os, sys, subprocess, time, json, errno, glob, pwd
+from shutil import copyfile
 from dotenv import load_dotenv
 from os.path import expanduser
 home = expanduser("~")
@@ -52,17 +53,17 @@ job_state_code['TIMEOUT']      = 16
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 def log(strIn, color=''):
-   from colored import stylize
-   from colored import fg
+    from colored import stylize
+    from colored import fg
 
-   if color != '':
-      print(stylize(strIn, fg(color))) 
-   else:
-      print(strIn)
-
-   txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
-   txFile.write(strIn + "\n") 
-   txFile.close() 
+    if color != '':
+        print(stylize(strIn, fg(color))) 
+    else:
+        print(strIn)
+        
+    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
+    txFile.write(strIn + "\n") 
+    txFile.close() 
 
 # enum: https://stackoverflow.com/a/1695250/2402577
 def enum(*sequential, **named):
@@ -209,23 +210,19 @@ def isRunExistInTar(tarPath):
         log('run.sh does not exist under the parent folder', 'red')
         return False
 
-def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, dataTransferIn,  eBlocBroker, web3):
+def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resultsFolderPrev, dataTransferIn,  eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
    from datetime import datetime, timedelta
-
-   # print(os.getcwd())
-   # Give permission to user that will send jobs to Slurm.
-   subprocess.run(['sudo', 'chown', '-R', userID, '.'])
-
+   
    # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
    date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'],
                                   env={'LANG': 'en_us_88591'}).decode('utf-8').strip()
    log('Date=' + date)
-   f = open('../modifiedDate.txt', 'w') 
+   f = open(resultsFolderPrev + '/modifiedDate.txt', 'w') 
    f.write(date + '\n' )    
    f.close()
-
-   # echo date | date +%s
+   
+   # cmd: echo date | date +%s
    p1 = subprocess.Popen(['echo', date], stdout=subprocess.PIPE)
    #-----------
    p2 = subprocess.Popen(['date', '+%s'], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -234,48 +231,39 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, data
    timestamp = p2.communicate()[0].decode('utf-8').strip()
    log('Timestamp=' + timestamp)
 
-   f = open('../timestamp.txt', 'w') 
+   f = open(resultsFolderPrev + '/timestamp.txt', 'w') 
    f.write(timestamp + '\n' )    
    f.close()
 
-   if os.path.isfile('../dataTransferIn.txt'):
-       with open('../dataTransferIn.txt') as json_file:
+   if os.path.isfile(resultsFolderPrev + '/dataTransferIn.txt'):
+       with open(resultsFolderPrev + '/dataTransferIn.txt') as json_file:
            data = json.load(json_file)
            dataTransferIn = data['dataTransferIn']
    else:
        data = {}
        data['dataTransferIn'] = dataTransferIn
-       with open('../dataTransferIn.txt', 'w') as outfile:
+       with open(resultsFolderPrev + '/dataTransferIn.txt', 'w') as outfile:
            json.dump(data, outfile)
    # print(dataTransferIn) 
-   time.sleep(0.25)         
-   # cmd: sudo su - $userID -c "cp $resultsFolder/run.sh $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh
-   subprocess.run(['sudo', 'su', '-', userID, '-c',
-                   'cp ' + resultsFolder + '/run.sh ' +
-                   resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh']);
-                            
+   time.sleep(0.25)
+   copyfile(resultsFolder + '/run.sh', resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh')
    jobInfo       = getJobInfo(CLUSTER_ID, jobKey, int(index), eBlocBroker, web3)
    jobCoreNum    = str(jobInfo['core'])
    coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
    d             = datetime(1,1,1) + coreSecondGas 
    timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute) 
-
-   log("timeLimit: " + str(timeLimit) + "| RequestedCoreNum: " + jobCoreNum)  
-
-   # cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL
-   # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+   log("timeLimit=" + str(timeLimit) + "| RequestedCoreNum=" + jobCoreNum)
+   # Give permission to user that will send jobs to Slurm.
+   subprocess.check_output(['sudo', 'chown', '-R', userID, resultsFolder])
    
-   #try:
+   ## SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'   
+   ## cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL   
    jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
-                                        'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
-                                        resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
-                                        '--mail-type=ALL']).decode('utf-8').strip()
+                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
+                                    resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
+                                    '--mail-type=ALL']).decode('utf-8').strip()
    jobID = jobID.split()[3]
-   log('jobID=' + jobID)
-   #except subprocess.CalledProcessError as e:
-   #    log('Error: ' + e.output.decode('utf-8').strip(), 'red')
-   #    return False
-   
+   log('jobID=' + jobID)   
    try:
        # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
        subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)

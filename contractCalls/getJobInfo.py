@@ -47,7 +47,11 @@ if __name__ == '__main__':
         index          = 0
         
     jobInfo = getJobInfo(clusterAddress, jobKey, index)
-
+    
+    if jobInfo == "BadFunctionCallOutput":
+        print("Error: " + jobInfo)
+        sys.exit()
+        
     if str(jobInfo['core']) == '0':
         print('Out of index.')
         sys.exit()
