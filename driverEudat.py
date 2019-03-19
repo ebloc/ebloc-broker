@@ -14,12 +14,8 @@ globals()['folderType']        = None
 globals()['index']             = None
 globals()['globalCacheFolder'] = None
 
-globals()['dataTransferIn'] = 0 # if the requested file is already cached, it stays as 0 
+globals()['dataTransferIn'] = 0 # If the requested file is already cached, it stays as 0 
 globals()['shareToken']    = '-1'
-
-# Paths===================================================
-ipfsHashes       = lib.PROGRAM_PATH 
-# =========================================================
 
 def log(strIn, color=''):
    if color != '':
