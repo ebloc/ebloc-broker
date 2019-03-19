@@ -1,77 +1,76 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-import sys, os, subprocess, math
-from subprocess import call
-from os      import listdir
-from os.path import isfile, join
-import time
-import datetime
+import owncloud, hashlib, getpass, os, time, math, datetime, random, sys, subprocess
+from os.path import expanduser
 from random import randint
+home = expanduser("~")
+sys.path.insert(0, home + '/eBlocBroker')
+from lib_owncloud import singleFolderShare, eudatInitializeFolder
+path = os.getcwd()
+os.environ['path'] = path
 
-sys.path.insert(0, '/home/prc/eBlocBroker/test')
-from func import testFunc
-
-path               = os.getcwd();
-os.environ['path'] = path;
-
-def contractCall( val ):
-   return os.popen( val + "| node").read().replace("\n", "").replace(" ", "");
-
-def log(strIn):
-   print(strIn)
-   txFile     = open(path + '/clientOutput.txt', 'a'); 
-   txFile.write( strIn + "\n" ); 
-   txFile.close();
-
-header     = "var mylib = require('" + "/home/prc/eBlocBroker/eBlocBrokerHeader.js')";  os.environ['header']     = header;
-
-readTest    = 'hashOutput.txt';
-input('> Are you sure want to overwrite ' + readTest + '?');
-counter     = 0;
-itemsToScan = 80;
-hashesFile  = open(path + '/' + readTest, 'w+')
-commentStr  = "QmQANSjxQaziHPdMuj37LC53j65cVtXXwQYvu8GxJCPFJE"; #dummy hash string.
-
-os.environ['clusterMiniLockId'] = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn";
-with open(path + "/test_DAS2-fs1-2003-1.swf") as test: #{
+mlckPass="gene threatens achieving ireland stalkers spoiling preoccupying"
+os.environ['clusterMiniLockId'] = "EyJ6jk9GuZkYAqUZ5UsrZ3RsvQ7cLk2XEzLXeVegyEBSQ"
+flag        = 0
+counter     = 0
+itemsToScan = 84
+hashesFile = open(path + '/hashOutput.txt', 'w+')
+with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
     for line in test:
-        f = open(path + '../ipfs/run.sh', 'w+')
-        lineIn = line.split(" ");
+        f = open('../ipfs/run.sh', 'w+')
+        lineIn = line.split(" ")
+        if int(lineIn[1]) - int(lineIn[0]) > 60 and int(lineIn[2]) != 0:
+            print("Time to take in seconds: "  + str(int(lineIn[1]) - int(lineIn[0])))
+            print("CoreNum: "  + str(int(lineIn[2])))
+            print(line)
+            with open("../ipfs/run_temp.sh") as ff:
+                for line in ff:
+                    f.write(line)
 
-        if ((int(lineIn[1]) - int(lineIn[0])) > 60 ):
-           print( "----------------------------------------" )
-           print( "Scanned Item: " + str(counter) )
-           print( "Time to take in seconds: "  + str(int(lineIn[1]) - int(lineIn[0])) )
-           print( "CoreNum: "  + str(int(lineIn[2])) )
-           print(line)
-
-           with open(path + "../ipfs/run_temp.sh") as ff:
-              for line in ff:
-                 f.write(line);
-                 
-           f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n");
-           f.write("#" + commentStr + "\n"); #add random line to create different hash.
-           f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > " + commentStr + ".txt\n"); #add random line to create different hash.
-           f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n" ); #add random line to create different hash.
-           f.close();
-
-           encrypyFolderPath = path + "../ipfs";
-           os.chdir(encrypyFolderPath)
-           os.environ['encrypyFolderPath'] = encrypyFolderPath
-           os.popen('tar -P -cvzf $path/../ipfs.tar.gz .').read();
-           os.popen('mlck encrypt -f $path/../ipfs.tar.gz $clusterMiniLockId --passphrase="gene threatens achieving ireland stalkers spoiling preoccupying"').read();
-           ipfsHash = os.popen( 'ipfs add $path/../ipfs.tar.gz.minilock' ).read();
-           ipfsHash = ipfsHash.split(" ")[1];
-           print(ipfsHash)
-           commentStr = ipfsHash;
-           hashesFile.write(commentStr + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) +"\n");
-
-           if(counter == itemsToScan):
-              break;
-           counter += 1;
-#}
-
-hashesFile.close();
-sys.exit();
+            randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
+            f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
+            f.write("#" + randomHash + "\n") # Add random line to create different hash
+            f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n" )
+            f.close()
+            encrypyFolderPath = "/home/prc/eBlocBroker/generateTest/ipfs";
+            os.chdir(encrypyFolderPath)
 
 
+            p1 = subprocess.Popen(['find', '.', '-print0'], stdout=subprocess.PIPE)
+            #-----------
+            p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
+            p1.stdout.close()
+            #-----------
+            p3 = subprocess.Popen(['tar', '--absolute-names', '--no-recursion', '--null', '-T', '-', '-zcvf', '../ipfs.tar.gz'],
+                                  stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
+            p2.stdout.close()
+            #-----------
+            p3.communicate()
+
+            os.popen('mlck encrypt -f ../ipfs.tar.gz $clusterMiniLockId --passphrase="'+ mlckPass + '"').read()
+
+            fileTShare = "../ipfs.tar.gz.minilock"
+            os.environ['fileTShare'] = fileTShare
+            tarHash = os.popen('md5sum $fileTShare | awk \'{print $1}\'').read()
+            tarHash = os.popen('md5sum $fileTShare').read()
+            tarHash = tarHash.split(" ")[0];
+
+            print('SourecodeHash=' + tarHash)
+            ipfsHash = os.popen('ipfs add ../ipfs.tar.gz.minilock').read();
+            ipfsHash = ipfsHash.split(" ")[1];
+            print('ipfsHash=' + ipfsHash)
+            if flag == 1:
+                hashesFile.write(" " + str(int(lineIn[0])-startTimeTemp) + '\n')
+
+            flag = 1
+            startTimeTemp = int(lineIn[0])
+            print("Shared Job=" + str(counter))
+            counter += 1
+            if counter == itemsToScan:
+                break
+
+            hashesFile.write(ipfsHash + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) + " " +
+                             str(int(lineIn[0])) + " " + str(int(lineIn[1])) + " " + tarHash)
+
+hashesFile.close()
+print('\nDONE.')

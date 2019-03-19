@@ -179,7 +179,7 @@ def isDriverOn():
 def eudatLoginAndCheck():
     global oc
     if lib.OC_USER is None or lib.OC_USER == "":
-        log('OC_USER_ID is not set in .env', 'red')
+        log('OC_USER is not set in .env', 'red')
         sys.exit()
         
     log("Login into owncloud...")
@@ -202,7 +202,8 @@ def startup():
     isGethOn()
     # runDriverCancel()    
     runWhisperStateReceiver()
-    eudatLoginAndCheck()
+    if lib.EUDAT_USE:
+        eudatLoginAndCheck()
 
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
@@ -224,7 +225,7 @@ log('rootdir: ' + os.getcwd())
 with open('contractCalls/address.json', 'r') as content_file:
    log('{0: <20}'.format('contractAddress:') + "\"" + content_file.read().strip() + "\"", "yellow")
 
-if lib.IPFS_USE == 1:
+if lib.IPFS_USE:
    lib.isIpfsOn()
 
 clusterAddress = lib.CLUSTER_ID
@@ -237,7 +238,7 @@ if "false" in isClusterExist.lower():
                  "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')))
    terminate()
 
-deployedBlockNumber   = getDeployedBlockNumber(eBlocBroker)
+deployedBlockNumber   = str(getDeployedBlockNumber(eBlocBroker))
 blockReadFromContract = str(0)
 
 log('{0: <20}'.format('clusterAddress:') + "\"" + clusterAddress + "\"", "yellow")
@@ -274,7 +275,7 @@ else:
    blockReadFrom = blockReadFromLocal
 
 clusterGainedAmountInit = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3)
-log('{0: <21}'.format('deployedBlockNumber:') +  str(deployedBlockNumber) +
+log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber +
     "| Cluster's initial money: " + clusterGainedAmountInit)
 
 while True:     
