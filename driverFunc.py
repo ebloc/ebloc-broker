@@ -11,26 +11,25 @@ import glob, errno
 from contractCalls.getJobInfo import getJobInfo
 
 globals()['shareToken'] = '-1'
-cacheTypeGlobal = None
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
 
 def log(strIn, color=''):
-   if color != '':
-       print(stylize(strIn, fg(color))) 
-   else:
-       print(strIn)
+    if color != '':
+        print(stylize(strIn, fg(color))) 
+    else:
+        print(strIn)
        
-   txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
-   txFile.write(strIn + "\n") 
-   txFile.close() 
-   fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
-   txFile = open(fname, 'a') 
-   txFile.write(strIn + "\n") 
-   txFile.close() 
+    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
+    txFile.write(strIn + "\n") 
+    txFile.close() 
+    fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
+    txFile = open(fname, 'a') 
+    txFile.write(strIn + "\n") 
+    txFile.close() 
 
-def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
+def driverGithub(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
    globals()['jobKey']    = jobKey
    globals()['index']     = index
    globals()['storageID'] = storageID
@@ -49,7 +48,7 @@ def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, eBlocBroker,  web3)
 
-def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
+def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
     globals()['jobKey']    = jobKey
     globals()['index']     = index
     globals()['storageID'] = storageID
@@ -102,10 +101,12 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
            dataTransferIn = cumulativeSize
            dataTransferIn =  int(dataTransferIn) * 0.000001
            log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
-           if globals()['cacheType'] != 'none':
+           '''
+           if cacheType != 'none': # TODO: pin if storage is paid
                res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
                print(res)
-               
+           '''
+           
        if storageID == '2': # Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
           # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
@@ -122,7 +123,8 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
           return False 
     else:
        log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
-       return False 
+       return False
+   
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
                    resultsFolder, resultsFolderPrev, dataTransferIn, eBlocBroker,  web3)
