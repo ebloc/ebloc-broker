@@ -59,7 +59,7 @@ def testFunc(path, readTest, testType, clusterID, cacheType):
             log("Job: " + str(counter + 1) + "| Current Time: " + time.ctime() +"| BlockNumber: " + blockNumber_, path)
             log("Nasa Submit range: " + jobKey[3] + " " + jobKey[4], path)
             log("Sleep Time to submit next job: " + sleepTime, path)
-            log("Sourcecode Hash=" + sourceCodeHash)
+            log("Sourcecode Hash=" + sourceCodeHash, path)
             jobKey_  = str(jobKey[0])
             coreNum  = int(jobKey[2])
             if eudatFlag == 0:

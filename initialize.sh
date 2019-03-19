@@ -18,7 +18,7 @@ if [ $preInstall -eq 1 ]; then
     
     pip3 install -U web3 # pip install --upgrade web3 # pip install --pre --upgrade web3
     pip install colored
-    pip install pyocclient==0.4 # owncloud_py
+    pip install pyocclient     #==0.4 # owncloud_py
     pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)    
     pip install -U python-dotenv
     pip install sphinx_rtd_theme
@@ -32,6 +32,7 @@ if [ $preInstall -eq 1 ]; then
     npm install web3
     npm install web3_ipc
     npm install dotenv
+    npm install -g minilock-cli
     #==================================================================================================
     machineOS=$(bash $HOME/eBlocBroker/scripts/machine.sh)
     if [ "$machineOS" == "Mac" ]; then
@@ -45,7 +46,8 @@ if [ $preInstall -eq 1 ]; then
         sudo apt-get install -y nodejs
         sudo apt-get install munge
         sudo apt-get install bc
-        sudo apt-get install realpath        
+        sudo apt-get install realpath
+	sudo apt-get install acl
     fi
 
     ## Install google-drive:
@@ -69,6 +71,11 @@ fi
 
 currentDir=$PWD
 # Folder Setup:========================================================
+if [ ! -d /var/eBlocBroker ]; then
+    mkdir -p /var/eBlocBroker
+    sudo chown alper_alimoglu -R /var/eBlocBroker
+fi
+
 if [ ! -d $HOME/.eBlocBroker ]; then
     mkdir -p $HOME/.eBlocBroker
 fi
@@ -203,8 +210,8 @@ echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT acc
 echo -e "\nUpdate the following file 'miniLockPassword.txt' with your Minilock accounts password."
 echo -e "Please enter your miniLock password,"
 read -s PASSWORD
-echo $PASSWORD > miniLockPassword.txt
-chmod 700 miniLockPassword.txt
+echo $PASSWORD > $HOME/.eBlocBroker/miniLockPassword.txt
+chmod 700 $HOME/.eBlocBroker/miniLockPassword.txt
 
 sudo chmod 700 /home/*
 

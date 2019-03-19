@@ -12,7 +12,6 @@ from contractCalls.getJobInfo import getJobInfo
 
 globals()['shareToken'] = '-1'
 cacheTypeGlobal = None
-
 # Paths===================================================
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
@@ -26,7 +25,6 @@ def log(strIn, color=''):
    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
    txFile.write(strIn + "\n") 
    txFile.close() 
-
    fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
    txFile = open(fname, 'a') 
    txFile.write(strIn + "\n") 
@@ -41,11 +39,9 @@ def driverGithub(jobKey, index, storageID, userID, eBlocBroker, web3):
    
    log("key: "   + jobKey) 
    log("index: " + index)
-
-   # resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
-   resultsFolder     = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index + '/JOB_TO_RUN'
-   
-   if not os.path.isdir(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index): # If folder does not exist
+   resultsFolderPrev = lib.PROGRAM_PATH  + "/" + userID + "/" + jobKey + "_" + index
+   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'   
+   if not os.path.isdir(resultsFolderPrev): # If folder does not exist
       os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
 
    # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
@@ -108,17 +104,19 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
            log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
            if globals()['cacheType'] != 'none':
                res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
-               print(res)           
+               print(res)
+               
        if storageID == '2': # Case for the ipfsMiniLock
           passW = 'bright wind east is pen be lazy usual' 
           # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
-          log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey +
+          log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey,
                                        '--passphrase=' + passW,
                                        '--output-file=' + resultsFolder + '/output.tar.gz']).decode('utf-8'))          
           lib.silentremove(resultsFolder + '/' + jobKey)          
           # cmd: tar -xf $resultsFolder/output.tar.gz
           subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
           lib.silentremove(resultsFolder + '/output.tar.gz')
+          
        if not os.path.isfile('run.sh'): 
           log("run.sh does not exist", 'red') 
           return False 
@@ -127,7 +125,7 @@ def driverIpfs(jobKey, index, storageID, userID, eBlocBroker, web3):
        return False 
     os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
-                   resultsFolder, dataTransferIn, eBlocBroker,  web3)
+                   resultsFolder, resultsFolderPrev, dataTransferIn, eBlocBroker,  web3)
 
 # To test driverFunc.py executed as script.
 if __name__ == '__main__':

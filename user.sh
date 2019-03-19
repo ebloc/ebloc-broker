@@ -7,7 +7,7 @@ BASEDIR=$2
 #USER_ADDRESS="0x496aca2be0694a1137b05ce7ffdcd982bfb53fad"
 #BASEDIR="/var/eBlocBroker"
 
-SLURMUSER='alper'
+SLURMUSER="alper"
 USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4) # Convert Ethereum User Address into 32-bits
 
 # Force to add
@@ -21,7 +21,7 @@ if ! id -u $USERNAME > /dev/null 2>&1; then
     echo $USER_ADDRESS / $USERNAME 'is added as user.'
     
     sudo chmod 700 $BASEDIR/$USERNAME # Block others and people in the same group to do read/write/execute
-    sudo setfacl -R -m user:$MAINUSER:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
+    sudo setfacl -R -m user:$USERNAME:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
     sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME #Give read/write/execute access to USER2 on give folder.
     
     sacctmgr add account $USERNAME --immediate
@@ -36,7 +36,7 @@ else
 	sudo mkdir $BASEDIR/$USERNAME/cache
 
 	sudo chmod 700 $BASEDIR/$USERNAME # Block others and people in the same group to do read/write/execute
-	sudo setfacl -R -m user:$MAINUSER:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
+	sudo setfacl -R -m user:$USERNAME:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
 	sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME #Give read/write/execute access to USER2 on give folder.
 
 	echo $USER_ADDRESS / $USERNAME 'is created.'
