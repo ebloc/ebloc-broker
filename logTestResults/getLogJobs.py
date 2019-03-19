@@ -3,8 +3,8 @@
 import sys, asyncio, time, os
 from web3.auto import w3
 from dotenv import load_dotenv
-load_dotenv()
-
+from os.path import expanduser
+home = expanduser("~")
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 from imports import connectEblocBroker
@@ -83,6 +83,7 @@ if __name__ == '__main__':
         clusterAddress = str(sys.argv[1])
         blockNumber    = int(sys.argv[2])
     else:
+        load_dotenv(os.path.join(home + '/.eBlocBroker', '.env')) # Load .env from the given path
         clusterAddress=os.getenv("CLUSTER_ID")
         fromBlock=2167486
 

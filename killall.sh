@@ -40,6 +40,4 @@ do
     scancel $pids
 done
 
-killall ipfs
-
 echo 'Killall is done.'
