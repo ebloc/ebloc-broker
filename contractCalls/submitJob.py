@@ -66,14 +66,14 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
         return 'Error: gasCoreMin provided as 0. Please provide non-zero value'
     if gasCoreMin > 1440: 
         return 'Error: gasCoreMin provided greater than 1440. Please provide smaller value.'
-    if cacheType > 2: # 0: 'private', 1: 'public', 2: 'none'
+    if cacheType > 3: # 0: 'private', 1: 'public', 2: 'none', 3: 'ipfs'
         return 'Error: cachType provided greater than 1. Please provide smaller value.'
     #if len(jobDescription) >= 128:
     #    return 'Error: Length of jobDescription is greater than 128, please provide lesser.'
         
     # print(clusterAddress + " " + jobKey + " " + str(core) + " " + " " + str(gasCoreMin) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
-    gasLimit      = 4500000
-    tx_hash = eBlocBroker.transact({"from": fromAccount,
+    gasLimit = 4500000
+    tx_hash  = eBlocBroker.transact({"from": fromAccount,
                                "value": jobPriceValue,
                                "gas": gasLimit}).submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn,
                                                            dataTransferOut, storageID, sourceCodeHash, cacheType, gasStorageHour) 

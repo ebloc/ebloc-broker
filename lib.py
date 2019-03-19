@@ -22,7 +22,9 @@ IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs"
 HOME              = "/home/" + WHOAMI
 OWN_CLOUD_PATH    = "/oc"
 
-IPFS_USE                    = 0 # Should be '1', if caching into IPFS is open
+IPFS_USE                    = False # Should be '1', if caching into IPFS is open
+EUDAT_USE                   = True
+
 PROGRAM_PATH                = '/var/eBlocBroker' 
 JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt" 
 CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + "/cancelledJobs.txt"

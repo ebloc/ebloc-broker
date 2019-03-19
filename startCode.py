@@ -11,7 +11,7 @@ web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
 def startCall(jobKey, index, jobID): 
-   statusID                = str(lib.job_state_code['RUNNING'])
+   statusID = str(lib.job_state_code['RUNNING'])
    # cmd: scontrol show job jobID | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
    #-----------
@@ -26,8 +26,7 @@ def startCall(jobKey, index, jobID):
    
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a')        
    txFile.write(lib.EBLOCPATH + "/contractCalls/setJobStatus.py" + ' ' + jobKey + ' ' + index + ' ' + statusID + ' ' + startTime + '\n')    
-   time.sleep(0.25)
-   
+   time.sleep(0.25)   
    for attempt in range(10):
        txHash = setJobStatus(jobKey, index, statusID, startTime, eBlocBroker, web3)
        if txHash == "notconnected" or txHash == "":
@@ -46,4 +45,4 @@ if __name__ == '__main__':
    index    = sys.argv[2] 
    jobID    = sys.argv[3] 
    
-   startCall(jobKey, index, jobID) 
+   startCall(jobKey, index, jobID)
