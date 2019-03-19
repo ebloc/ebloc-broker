@@ -245,4 +245,4 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType, eB
          subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
    os.chdir(resultsFolder)       # 'cd' into the working path and call sbatch from there
    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], str(shareToken), userID,
-                  resultsFolder, globals()['dataTransferIn'], eBlocBroker,  web3)
+                  resultsFolder, resultsFolderPrev, globals()['dataTransferIn'], eBlocBroker,  web3)
