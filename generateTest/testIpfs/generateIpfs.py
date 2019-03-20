@@ -8,10 +8,9 @@ sys.path.insert(0, home + '/eBlocBroker')
 from lib_owncloud import singleFolderShare, eudatInitializeFolder
 path = os.getcwd()
 os.environ['path'] = path
-
 flag        = 0
 counter     = 0
-itemsToScan = 84
+itemsToScan = 100
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
     for line in test:

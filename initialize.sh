@@ -13,8 +13,8 @@ if [ $preInstall -eq 1 ]; then
     sudo apt-get install python3-dev
     sudo apt-get install python3-venv
 
-    python3 -m venv venv
-    source venv/bin/activate
+    python3 -m venv $HOME/venv
+    source $HOME/venv/bin/activate
     
     pip3 install -U web3 # pip install --upgrade web3 # pip install --pre --upgrade web3
     pip install colored
@@ -102,6 +102,12 @@ cd $currentDir
 
 cp .env $HOME/.eBlocBroker
 
+# EBLOCPATH setup
+venvPath=$HOME"/venv"
+var=$(echo $venvPath | sed 's/\//\\\//g')
+sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $HOME/eBlocBroker/slurmScript.sh
+rm $HOME/eBlocBroker/slurmScript.sh.bak
+
 # LOG_PATH path setup
 lineNew=$HOME/.eBlocBroker
 var=$(echo $lineNew | sed 's/\//\\\//g')
@@ -126,6 +132,9 @@ lineNew=$(logname)
 
 sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" $HOME/.eBlocBroker/.env
 rm -f $HOME/.eBlocBroker/.env.bak
+
+sed -i.bak "s/^\(SLURMUSER=\).*/\1\"$lineNew\"/" $HOME/eBlocBroker/user.sh
+rm -f $HOME/eBlocBroker/user.sh.bak
 
 # RPC PORT Setup:======================================================
 lineOld="8545"
