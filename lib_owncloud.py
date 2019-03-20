@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import subprocess, sys
 
 def singleFolderShare(folderName, oc):
@@ -29,11 +30,9 @@ def eudatInitializeFolder(folderToShare, oc):
     p3.communicate()
     # subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
     tarHash = subprocess.check_output(['md5sum', folderToShare + '.tar.gz']).decode('utf-8').strip()
-    tarHash = tarHash.split(' ', 1)[0]
-    
+    tarHash = tarHash.split(' ', 1)[0]    
     print('hash=' + tarHash)
     subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
-
     try:
         res = oc.mkdir(tarHash)
     except:
@@ -41,7 +40,6 @@ def eudatInitializeFolder(folderToShare, oc):
 
     print('./' + tarHash + '/' + tarHash + '.tar.gz', tarHash + '.tar.gz')
     res = oc.put_file('./' + tarHash + '/' + tarHash + '.tar.gz', tarHash + '.tar.gz')
-
     if not res:
         sys.exit()
 

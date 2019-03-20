@@ -13,7 +13,7 @@ mlckPass="gene threatens achieving ireland stalkers spoiling preoccupying"
 os.environ['clusterMiniLockId'] = "EyJ6jk9GuZkYAqUZ5UsrZ3RsvQ7cLk2XEzLXeVegyEBSQ"
 flag        = 0
 counter     = 0
-itemsToScan = 84
+itemsToScan = 100
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
     for line in test:
@@ -34,8 +34,6 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             f.close()
             encrypyFolderPath = "/home/prc/eBlocBroker/generateTest/ipfs";
             os.chdir(encrypyFolderPath)
-
-
             p1 = subprocess.Popen(['find', '.', '-print0'], stdout=subprocess.PIPE)
             #-----------
             p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
@@ -46,9 +44,8 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             p2.stdout.close()
             #-----------
             p3.communicate()
-
+            
             os.popen('mlck encrypt -f ../ipfs.tar.gz $clusterMiniLockId --passphrase="'+ mlckPass + '"').read()
-
             fileTShare = "../ipfs.tar.gz.minilock"
             os.environ['fileTShare'] = fileTShare
             tarHash = os.popen('md5sum $fileTShare | awk \'{print $1}\'').read()
