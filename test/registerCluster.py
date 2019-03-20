@@ -46,7 +46,7 @@ ipfsAddress        = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV4
 # Google-Drive Instance-1
 account            = web3.eth.accounts[0] # Cluster's Ethereum Address
 coreNumber         = 64
-clusterEmail       = "alper01234alper@gmail.com"
+clusterEmail       = ""
 federationCloudId  = ""
 miniLockId         = ""
 corePriceMinuteWei = 100
@@ -55,11 +55,13 @@ ipfsAddress        = "/ip4/34.73.108.63/tcp/4001/ipfs/QmXqUW6n57c2e4Y6461CiNkdSu
 # Google-Drive Instance-2
 account            = web3.eth.accounts[0] # Cluster's Ethereum Address
 coreNumber         = 64
-clusterEmail       = "alper01234alper@gmail.com"
+clusterEmail       = ""
 federationCloudId  = ""
 miniLockId         = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"
 corePriceMinuteWei = 100
 ipfsAddress        = ""
+
+
 
 
 
