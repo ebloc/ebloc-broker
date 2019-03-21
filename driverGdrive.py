@@ -24,8 +24,8 @@ def log(strIn, color=''):
        
    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
    txFile.write(strIn + "\n") 
-   txFile.close() 
-
+   txFile.close()
+   
    fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
    txFile = open(fname, 'a') 
    txFile.write(strIn + "\n") 
@@ -108,28 +108,22 @@ def cache(userID, jobKey, resultsFolderPrev, folderName, sourceCodeHash, folderT
     return True, ''
 
 def getMimeType(gdriveInfo): 
-   # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
-   p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   #-----------
-   return p3.communicate()[0].decode('utf-8').strip()    
+    # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
+    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    return p3.communicate()[0].decode('utf-8').strip()    
 
 def getFolderName(gdriveInfo): 
-   # cmd: echo gdriveInfo | grep \'Name\' | awk \'{print $2}\'
-   p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
-   #-----------
-   p2 = subprocess.Popen(['grep', 'Name'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   #-----------
-   p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   #-----------
-   return p3.communicate()[0].decode('utf-8').strip()    
+    # cmd: echo gdriveInfo | grep \'Name\' | awk \'{print $2}\'
+    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', 'Name'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    return p3.communicate()[0].decode('utf-8').strip()    
 
 def gdriveDownloadFolder(jobKey, resultsFolderPrev, folderName, folderType):
     if folderType == 'folder':  

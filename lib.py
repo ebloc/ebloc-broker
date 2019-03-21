@@ -22,7 +22,7 @@ IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs"
 HOME              = "/home/" + WHOAMI
 OWN_CLOUD_PATH    = "/oc"
 
-IPFS_USE                    = False # Should be '1', if caching into IPFS is open
+IPFS_USE                    = False # Should be "True", if caching into IPFS is open
 EUDAT_USE                   = True
 
 PROGRAM_PATH                = '/var/eBlocBroker' 
@@ -269,9 +269,9 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
        # cmd: scontrol update jobid=$jobID TimeLimit=$timeLimit
        subprocess.run(['scontrol', 'update', 'jobid=' + jobID, 'TimeLimit=' + timeLimit], stderr=subprocess.STDOUT)
    except subprocess.CalledProcessError as e:
-       log(e.output.decode('utf-8').strip())
+       log(e.output.decode('utf-8').strip(), "red")
       
    if not jobID.isdigit():
-      # Detects an error on the SLURM side
-      log("Error: jobID is not a digit.", 'red')
-      return False
+       # Detects an error on the SLURM side
+       log("Error: jobID is not a digit.", 'red')
+       return False

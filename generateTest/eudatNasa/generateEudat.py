@@ -7,7 +7,6 @@ home = expanduser("~")
 sys.path.insert(0, home + '/eBlocBroker')
 from lib_owncloud import singleFolderShare, eudatInitializeFolder
 path = os.getcwd()
-os.environ['path'] = path
 
 # Login to EUDAT account----------------------------------------
 f = open(home + '/TESTS/password.txt', 'r') # Password read from the file.

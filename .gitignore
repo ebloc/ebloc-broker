@@ -244,3 +244,5 @@ generateTest/testNasEudat/clientOutput\.txt
 generateTest/testIpfsMiniLock/hashOutput\.txt
 
 generateTest/testIpfsMiniLock/ipfs\.tar\.gz\.minilock
+
+generateTest/testGdrive/hashOutput\.txt
