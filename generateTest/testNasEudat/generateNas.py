@@ -35,16 +35,16 @@ while True:
     coreNum = 1 # randint(1, 2)
     if testId == 0:
         f.write("make bt CLASS=B\n")
-        f.write("mpirun -n " + str(coreNum) + " bin/bt.B.x inputbt.data")
+        f.write("bin/bt.B.x inputbt.data")
     elif testId == 1:
         f.write("make sp CLASS=B\n")
-        f.write("mpirun -n " + str(coreNum) + " bin/sp.B.x inputsp.data")
+        f.write("bin/sp.B.x inputsp.data")
     elif testId == 2:
         f.write("make ua CLASS=B\n")
-        f.write("mpirun -n " + str(coreNum) + " bin/ua.B.x inputua.data")
+        f.write("bin/ua.B.x inputua.data")
     elif testId == 3:
         f.write("make lu CLASS=B\n")
-        f.write("mpirun -n " + str(coreNum) + " bin/lu.B.x inputlu.data")
+        f.write("bin/lu.B.x inputlu.data")
 
     f.close()
     tarHash = eudatInitializeFolder('ipfs', oc)
@@ -56,3 +56,18 @@ while True:
                      str(startTime + coreLimit) + " " + tarHash + " " + str(sleepTime) + "\n")
     startTime += sleepTime
     counter   += 1
+
+'''
+    if testId == 0:
+        f.write("make bt CLASS=B\n")
+        f.write("mpirun -n " + str(coreNum) + " bin/bt.B.x inputbt.data")
+    elif testId == 1:
+        f.write("make sp CLASS=B\n")
+        f.write("mpirun -n " + str(coreNum) + " bin/sp.B.x inputsp.data")
+    elif testId == 2:
+        f.write("make ua CLASS=B\n")
+        f.write("mpirun -n " + str(coreNum) + " bin/ua.B.x inputua.data")
+    elif testId == 3:
+        f.write("make lu CLASS=B\n")
+        f.write("mpirun -n " + str(coreNum) + " bin/lu.B.x inputlu.data")
+'''    
