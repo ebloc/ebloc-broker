@@ -50,14 +50,15 @@ if [ $preInstall -eq 1 ]; then
 	sudo apt-get install acl
     fi
 
-    ## Install google-drive:
+    ## Install google-drive: ========================================
     go get github.com/prasmussen/gdrive
     gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
     echo 'export PATH=$PATH:'$(echo $gopath)'/bin' >> $HOME/.profile
     source $HOME/.profile
     gdrive about
     echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
-
+    # ===============================================================
+    
     ## gdfuse
     # shared_with_me=true to have read-only access to all your "Shared with me" files under ./.shared.
     sed -i.bak "s/^\(download_docs=\).*/\1false/" $HOME/.gdfuse/me/config

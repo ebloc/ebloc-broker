@@ -5,11 +5,11 @@ https://slurm.schedmd.com/faq.html#multi_slurmd
 ```
 git clone  https://github.com/SchedMD/slurm
 cd slurm
-sudo ./configure --enable-debug --enable-front-end
+./configure --enable-debug --enable-front-end
 sudo make install
 ```
 
-# Required files to be updated
+## Required files to be updated
 
 ```
 sudo emacs -nw /usr/local/etc/slurm.conf
