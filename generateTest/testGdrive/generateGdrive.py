@@ -1,3 +1,101 @@
+#!/usr/bin/env python3
+
+import owncloud, hashlib, getpass, os, time, math, datetime, random, sys, subprocess
+from os.path import expanduser
+from random import randint
+home = expanduser("~")
+sys.path.insert(0, home + '/eBlocBroker')
+from lib_owncloud import singleFolderShare, eudatInitializeFolder
+path = os.getcwd()
+os.environ['path'] = path
+
+clusterToShare = "alper.alimoglu@gmail.com"
+flag        = 0
+counter     = 0
+itemsToScan = 2#151
+hashesFile = open(path + '/hashOutput.txt', 'w+')
+with open(path + "/../nasa.txt") as test:
+    for line in test:
+        f = open("../ipfs/run.sh", 'w+')
+        lineIn = line.split(" ")
+        if int(lineIn[1]) - int(lineIn[0]) > 60 and int(lineIn[2]) != 0:
+            print("Time to take in seconds: "  + str(int(lineIn[1]) - int(lineIn[0])))
+            print("CoreNum: "  + str(int(lineIn[2])))
+            print(line)
+            with open("../ipfs/run_temp.sh") as ff:
+                for line in ff:
+                    f.write(line)
+
+            randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
+            f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
+            f.write("#" + randomHash + "\n") # Add random line to create different hash
+            f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
+            f.close()
+
+            folderToShare = "../ipfs"
+            tarHash = subprocess.check_output(['../../scripts/generateMD5sum.sh', folderToShare]).decode('utf-8').strip()
+            tarHash = tarHash.split(' ', 1)[0]
+            print('SourecodeHash=' + tarHash)
+            
+            os.environ['fileName']       = tarHash
+            os.environ['clusterToShare'] = 'alper01234alper@gmail.com';
+
+            subprocess.run(['cp', '-a', '../ipfs', '../' + tarHash])
+            
+            print('Uploading ...')
+            # rclone copy ipfs remote:ipfs
+            res = subprocess.check_output(['rclone', 'copy', '../ipfs', 'remote:' + tarHash]).decode('utf-8').strip()
+            print(res)
+
+            while True:
+                try:
+                    res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '\'', '--no-header']).decode('utf-8').strip()
+                    # print(res)
+                    jobKey = res.split(' ')[0]
+                    print(jobKey)
+                except Exception as e:
+                    time.sleep(1)
+                    print(e.output.decode('utf-8').strip())
+                else:
+                    break
+
+            while True:    
+                try:
+                    # jobKey = "1H9XSDzj15m_2IdNcblAzxk5VRWxF0CIP"
+                    res = subprocess.check_output(['gdrive', 'share', jobKey, '--role', 'writer', '--type', 'user', '--email',
+                                           clusterToShare]).decode('utf-8').strip()
+                    print(res)
+                except Exception as e:
+                    time.sleep(1)
+                    print(e.output.decode('utf-8').strip())
+                else:
+                    break
+
+                            
+            # print(os.popen('gdrive upload --recursive $fileName && jobKey=$(gdrive list | grep $fileName | awk \'{print $1}\') && echo $jobKey; gdrive share $jobKey  --role writer --type user --email $clusterToShare;').read())
+            sys.exit()
+
+            time.sleep(1)
+            # After run.sh is update share the ipfs through eudat
+            print(singleFolderShare(tarHash, oc))
+            if flag == 1:
+                hashesFile.write(" " + str(int(lineIn[0])-startTimeTemp) + '\n')
+
+            flag = 1
+            startTimeTemp = int(lineIn[0])
+            print("Shared Job#" + str(counter))
+            counter += 1
+            if counter == itemsToScan:
+                break
+
+            hashesFile.write(tarHash + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) + " " + str(int(lineIn[0])) + " " +
+                             str(int(lineIn[1])) + " " + tarHash)
+
+hashesFile.close()
+print('\nFolders are created. Sharing files now...')
+
+
+'''
 #!/usr/bin/python
 
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
@@ -78,3 +176,4 @@ with open(path + "/nasa.txt") as test:
            counter += 1;
 hashesFile.close();
 sys.exit()
+'''
