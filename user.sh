@@ -3,8 +3,8 @@
 USER_ADDRESS=$1
 BASEDIR=$2
 
-# For testing
-#USER_ADDRESS="0x496aca2be0694a1137b05ce7ffdcd982bfb53fad"
+## For testing
+#USER_ADDRESS="dummy"
 #BASEDIR="/var/eBlocBroker"
 
 SLURMUSER="alper"

@@ -5,4 +5,5 @@
 #SBATCH --mail-user=alper.alimoglu@gmail.com
 
 tar -xzvf NPB3.3-SER.tar.gz
-cd NPB3.3-SER/
+rm NPB3.3-SER.tar.gz
+cd NPB3.3-SER
