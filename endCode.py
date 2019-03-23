@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
 from colored import stylize
