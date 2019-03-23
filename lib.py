@@ -77,13 +77,25 @@ def enum(*sequential, **named):
 storageID = enum('ipfs', 'eudat', 'ipfs_miniLock', 'github', 'gdrive')
 cacheType = enum('private', 'public', 'none', 'ipfs')
 
+def subprocessCallAttempt(command, attemptCount, printFlag=0):    
+    for i in range(attemptCount):
+       try:
+           res = subprocess.check_output(command).decode('utf-8').strip()
+       except Exception as e:
+           time.sleep(0.1)
+           if i == 0 and printFlag == 0:
+               log(str(e), 'red')
+       else:
+           return res, True
+    else:
+       return "", False
+
 def runCommand(command, my_env=None):
     status=True
     if my_env is None:
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else :
-        p = subprocess.Popen(command, env=my_env,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(command, env=my_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
     output, err = p.communicate()      
     if p.returncode != 0:
@@ -110,6 +122,24 @@ def removeFiles(filename):
            silentremove(fl) 
    else:
        silentremove(filename) 
+
+def getMimeType(gdriveInfo): 
+    # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
+    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    return p3.communicate()[0].decode('utf-8').strip()    
+
+def getFolderName(gdriveInfo): 
+    # cmd: echo gdriveInfo | grep \'Name\' | awk \'{print $2}\'
+    p1 = subprocess.Popen(['echo', gdriveInfo], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', 'Name'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    return p3.communicate()[0].decode('utf-8').strip()    
 
 def web3Exception(check): 
    while check  == 'ConnectionRefusedError' or check == 'notconnected':
@@ -214,6 +244,24 @@ def isRunExistInTar(tarPath):
         log('run.sh does not exist under the parent folder', 'red')
         return False
 
+def compressFolder(folderToShare):
+    subprocess.run(['chmod', '-R', '777', folderToShare])
+    # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
+    # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
+    p1 = subprocess.Popen(['find', folderToShare, '-print0'], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
+    p1.stdout.close()
+    p3 = subprocess.Popen(['tar', '--absolute-names', '--no-recursion', '--null', '-T', '-', '-zcvf', folderToShare + '.tar.gz'],
+                          stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
+    p2.stdout.close()
+    p3.communicate()
+    # subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
+    tarHash = subprocess.check_output(['md5sum', folderToShare + '.tar.gz']).decode('utf-8').strip()
+    tarHash = tarHash.split(' ', 1)[0]    
+    print('hash=' + tarHash)
+    subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
+    return tarHash
+
 def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resultsFolderPrev, dataTransferIn,  eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
    from datetime import datetime, timedelta   
@@ -247,7 +295,14 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
            
    # print(dataTransferIn) 
    time.sleep(0.25)
+
+   if not os.path.isfile(resultsFolder + '/run.sh'):
+       log(resultsFolder + '/run.sh does not exist', 'red')
+       sys.exit() #delete
+       return False
+   
    copyfile(resultsFolder + '/run.sh', resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh')
+   
    jobInfo       = getJobInfo(CLUSTER_ID, jobKey, int(index), eBlocBroker, web3)
    jobCoreNum    = str(jobInfo['core'])
    coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.

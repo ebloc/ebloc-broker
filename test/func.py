@@ -81,13 +81,17 @@ def testFunc(path, readTest, testType, clusterID, cacheType):
 
             ret = submitJob(clusterID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID,
                             sourceCodeHash, cacheType, gasStorageHour, accountID)
-            tx_hash = ret[0]
-            log('Tx_hash:'           + tx_hash, path, 0)
-            log('computationalCost:' + ret[1], path, 0)
-            log('storageCost:'       + ret[2], path, 0)
-            log('cacheCost:'         + ret[3], path, 0)
-            log('dataTransferCost:'  + ret[4], path, 0)
-            log('jobPriceValue:'     + ret[5], path, 1)
+
+            if 'Error' in ret:
+                log(ret, path, 0)
+            else:
+                tx_hash = ret[0]
+                log('Tx_hash:'           + tx_hash, path, 0)
+                log('computationalCost:' + ret[1], path, 0)
+                log('storageCost:'       + ret[2], path, 0)
+                log('cacheCost:'         + ret[3], path, 0)
+                log('dataTransferCost:'  + ret[4], path, 0)
+                log('jobPriceValue:'     + ret[5], path, 1)
 
             txFile = open(path + '/' + clusterID + '.txt', 'a')
             txFile.write(ret[0] + " " + str(accountID) + "\n")
