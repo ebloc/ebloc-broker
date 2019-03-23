@@ -78,6 +78,7 @@ fi
 
 if [ ! -d $HOME/.eBlocBroker ]; then
     mkdir -p $HOME/.eBlocBroker
+    mkdir -p $HOME/.eBlocBroker/private
 fi
 
 cd $HOME/.eBlocBroker
@@ -218,8 +219,8 @@ echo -e "Note: Update the following file 'eudatPassword.txt' with your EUDAT acc
 echo -e "\nUpdate the following file 'miniLockPassword.txt' with your Minilock accounts password."
 echo -e "Please enter your miniLock password,"
 read -s PASSWORD
-echo $PASSWORD > $HOME/.eBlocBroker/miniLockPassword.txt
-chmod 700 $HOME/.eBlocBroker/miniLockPassword.txt
+echo $PASSWORD > $HOME/.eBlocBroker/private/miniLockPassword.txt
+sudo chmod 700 $HOME/.eBlocBroker/private/miniLockPassword.txt
 
 sudo chmod 700 /home/*
 

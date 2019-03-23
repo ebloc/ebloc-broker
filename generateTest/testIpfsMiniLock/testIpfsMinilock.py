@@ -12,7 +12,7 @@ from func import testFunc
 
 path = os.getcwd()
 # Definitions =============================================
-clusterID    = '0x398bd2a9a39637884b49b2b0930de7d83eb08a8e'
+clusterID    = '0x398bd2a9a39637884b49b2b0930de7d83eb08a8e' #googleInstance-1
 testType     = 'ipfsMiniLock';
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.ipfs
