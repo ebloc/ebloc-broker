@@ -382,26 +382,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         gdriveInfo, status = lib.subprocessCallAttempt([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
         if not status: return False
    
-        mimeType = lib.getMimeType(gdriveInfo)
-
-        '''
-        for attempt in range(100):
-            # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
-            p1 = subprocess.Popen([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
-            p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
-            p1.stdout.close()
-            p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-            p2.stdout.close()
-            mimeType = p3.communicate()[0].decode('utf-8').strip()
-            if mimeType=="": # mimeType may just return empty string, lets try few more time...
-	            log('mimeType returns empty string. Try: ' + str(attempt), 'red')
-	            time.sleep(0.25) # wait 15 second for next step retry to up-try
-            else: # success
-	            break
-        else: # we failed all the attempts - abort
-            sys.exit()
-        '''
-            
+        mimeType = lib.getMimeType(gdriveInfo)            
         log('mimeType=' + str(mimeType))                
         os.chdir(resultsFolder) 
         #if 'folder' in mimeType: # Received job is in folder format
