@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import subprocess, sys
+import subprocess, sys, lib
 
 def singleFolderShare(folderName, oc):
     # folderNames = os.listdir(home + "/oc")    
@@ -14,25 +14,8 @@ def eudatInitializeFolder(folderToShare, oc):
     if "/" in folderToShare:
         print('Please provide folder onyour current directory.')
         sys.exit()
-
-    subprocess.run(['chmod', '-R', '777', folderToShare])
-    # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
-    # find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
-    p1 = subprocess.Popen(['find', folderToShare, '-print0'], stdout=subprocess.PIPE)
-    #-----------
-    p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
-    p1.stdout.close()
-    #-----------
-    p3 = subprocess.Popen(['tar', '--absolute-names', '--no-recursion', '--null', '-T', '-', '-zcvf', folderToShare + '.tar.gz'],
-                          stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
-    p2.stdout.close()
-    #-----------
-    p3.communicate()
-    # subprocess.run(['sudo', 'tar', 'zcf', folderToShare + '.tar.gz', folderToShare])
-    tarHash = subprocess.check_output(['md5sum', folderToShare + '.tar.gz']).decode('utf-8').strip()
-    tarHash = tarHash.split(' ', 1)[0]    
-    print('hash=' + tarHash)
-    subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
+        
+    tarHash = lib.compressFolder(folderToShare)
     try:
         res = oc.mkdir(tarHash)
     except:

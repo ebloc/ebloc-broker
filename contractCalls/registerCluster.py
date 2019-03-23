@@ -17,8 +17,8 @@ CLUSTER_ID  = web3.toChecksumAddress(os.getenv("CLUSTER_ID"))
 if __name__ == '__main__':
     # USER Inputs----------------------------------------------------------------
     account           = CLUSTER_ID # web3.eth.accounts[0]  # Cluster's Ethereum Address
-    availableCoreNum  = 2 
-    clusterEmail      = "alper.alimoglu@gmail.com" 
+    availableCoreNum  = 128 
+    clusterEmail      = "alper01234alper@gmail.com" 
     federationCloudId = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
     miniLockId        = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
     priceCoreMin      = 100

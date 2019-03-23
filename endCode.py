@@ -378,24 +378,30 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             sys.exit()         
     elif str(storageID) == '4': #GDRIVE
         newHash = '0x00'
-        for attempt in range(10):
+        #cmd: gdrive info $jobKey -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost
+        gdriveInfo, status = lib.subprocessCallAttempt([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
+        if not status: return False
+   
+        mimeType = lib.getMimeType(gdriveInfo)
+
+        '''
+        for attempt in range(100):
             # cmd: $GDRIVE info $jobKey -c $GDRIVE_METADATA | grep \'Mime\' | awk \'{print $2}\'
             p1 = subprocess.Popen([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], stdout=subprocess.PIPE)
-            #-----------
             p2 = subprocess.Popen(['grep', 'Mime'], stdin=p1.stdout, stdout=subprocess.PIPE)
             p1.stdout.close()
-            #-----------
             p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
             p2.stdout.close()
-            #-----------
             mimeType = p3.communicate()[0].decode('utf-8').strip()
             if mimeType=="": # mimeType may just return empty string, lets try few more time...
 	            log('mimeType returns empty string. Try: ' + str(attempt), 'red')
-	            time.sleep(15) # wait 15 second for next step retry to up-try
+	            time.sleep(0.25) # wait 15 second for next step retry to up-try
             else: # success
 	            break
         else: # we failed all the attempts - abort
-            sys.exit()            
+            sys.exit()
+        '''
+            
         log('mimeType=' + str(mimeType))                
         os.chdir(resultsFolder) 
         #if 'folder' in mimeType: # Received job is in folder format
@@ -408,20 +414,23 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         time.sleep(0.25) 
         dataTransferOut = calculateDataTransferOut(outputFileName, 'f')
         if 'folder' in mimeType: # Received job is in folder format
-            log('mimeType: folder')          
+            log('mimeType: folder')                        
             # cmd: $GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
-            command = [lib.GDRIVE, 'upload', '--parent', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]         
-            log(runCommand(command))         
+            command = [lib.GDRIVE, 'upload', '--parent', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
+            res, status = lib.subprocessCallAttempt(command, 500)            
+            log(res)         
         elif 'gzip' in mimeType: # Received job is in folder tar.gz
             log('mimeType: tar.gz')
             # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
-            log(runCommand(command))         
+            res, status = lib.subprocessCallAttempt(command, 500)            
+            log(res)         
         elif '/zip' in mimeType: # Received job is in zip format
             log('mimeType: zip')
             # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
-            log(runCommand(command))         
+            res, status = lib.subprocessCallAttempt(command, 500)            
+            log(res)         
         else:
             log('Error: Files could not be uploaded', 'red')
             sys.exit()
