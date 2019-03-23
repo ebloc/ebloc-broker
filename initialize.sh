@@ -8,40 +8,40 @@ newRpcPort="8545" # Please change it if you have different RPC_PORT number.
 
 # Pre-installation:-----------------------------------------
 if [ $preInstall -eq 1 ]; then
-    ## Python3 setup, required for all clusters! ========================================================
+    ## Python3 setup, required for all clusters! ======================================================
     # sudo apt-get install python3.6-dev
     sudo apt-get install python3-dev
     sudo apt-get install python3-venv
 
     python3 -m venv $HOME/venv
     source $HOME/venv/bin/activate
+
+    pip install --upgrade pip
     
-    pip3 install -U web3 # pip install --upgrade web3 # pip install --pre --upgrade web3
+    pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
+    pip install pyocclient     # owncloud_py
+    pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
     pip install colored
-    pip install pyocclient     #==0.4 # owncloud_py
-    pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)    
     pip install -U python-dotenv
-    pip install sphinx_rtd_theme
-    pip install google
-    pip install google-cloud-storage
+    # pip install sphinx_rtd_theme
         
     ## npm
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
     sudo n latest
-    npm install web3
-    npm install web3_ipc
-    npm install dotenv
     npm install -g minilock-cli
+    # npm install web3
+    # npm install web3_ipc
+    # npm install dotenv    
     #==================================================================================================
     machineOS=$(bash $HOME/eBlocBroker/scripts/machine.sh)
     if [ "$machineOS" == "Mac" ]; then
         # Mac Packages
         brew install realpath
     else
-        echo 'alper'
         ## Linux Packages
-        sudo apt-get install davfs2 mailutils
+	sudo apt-get install mailutils
+        sudo apt-get install davfs2 
         sudo apt-get install python-psutil
         sudo apt-get install -y nodejs
         sudo apt-get install munge
@@ -57,8 +57,7 @@ if [ $preInstall -eq 1 ]; then
     source $HOME/.profile
     gdrive about
     echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
-    # ===============================================================
-    
+    # ===============================================================    
     ## gdfuse
     # shared_with_me=true to have read-only access to all your "Shared with me" files under ./.shared.
     sed -i.bak "s/^\(download_docs=\).*/\1false/" $HOME/.gdfuse/me/config
@@ -189,12 +188,11 @@ elif [[ -z "$OC_USER" ]]; then
 fi
 sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $HOME/.eBlocBroker/.env
 rm $HOME/.eBlocBroker/.env.bak
-echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile   
+echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
+source $HOME/.profile
 #======================================================================
 
-source $HOME/.profile
-
-# SLURM Setup:======================================================================
+# SLURM Setup:=========================================================
 sudo killall slurmctld slurmdbd slurmd
 var=$(echo $currentDir | sed 's/\//\\\//g')
 # With JobRequeue=0 or --no-requeue,
@@ -225,16 +223,5 @@ chmod 700 $HOME/.eBlocBroker/miniLockPassword.txt
 
 sudo chmod 700 /home/*
 
-
 # Setup
 # sudo ln -s /usr/bin/node /usr/local/bin/node
-# gdrive initialize
-# rm -rf $HOME/.gdrive/
-
-## pip install
-# sudo apt-get install python3-pip
-# sudo pip3 install virtualenv 
-# once:
-# $ virtualenv -p python3 ~/.venv-py3
-# each session:
-# $ source ~/.venv-py3/bin/activate
