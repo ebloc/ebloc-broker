@@ -381,19 +381,15 @@ while True:
           slurmPendingJobCheck() # TODO: if jobs are bombared idle core won't updated
           log('Adding user...', 'green')
           res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
-          log(res)
-                    
-          #userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
-          ## sacctmgr add account $USERNAME --immediate
-          #res, status = lib.runCommand(['sacctmgr', 'add', 'account', userIDmd5, '--immediate'])
-          ## sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
-          #res, status = lib.runCommand(['sacctmgr', 'create', 'user', userIDmd5, 'defaultaccount=' + userIDmd5, 'adminlevel=[None]', '--immediate'])
+          log(res)                    
+          userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
+          
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
           log("New job has been received. IPFS call |" + time.ctime(), "green")
           driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                    str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
+                                    str(loggedJobs[i].args['storageID']), userIDmd5,
                                     eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
           if oc is None: #TODO: carry to upper functon
@@ -407,25 +403,25 @@ while True:
                 
           log("New job has been received. EUDAT call |" + time.ctime(), "green")
           driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
-                      hashlib.md5(userID.encode('utf-8')).hexdigest(), loggedJobs[i].args['cacheType'],
+                      userIDmd5, loggedJobs[i].args['cacheType'],
                       eBlocBroker, web3, oc)
           
        #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
           log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green")
           driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
+                                str(loggedJobs[i].args['storageID']), userIDmd5,
                                 loggedJobs[i].args['cacheType'], eBlocBroker, web3)
           #thread.start_new_thread(driverFunc.driverIpfs, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
        elif str(loggedJobs[i].args['storageID']) == '3':
           log("New job has been received. GitHub call |" + time.ctime(), "green")
           driverFunc.driverGithub(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                  str(loggedJobs[i].args['storageID']), hashlib.md5(userID.encode('utf-8')).hexdigest(),
+                                  str(loggedJobs[i].args['storageID']), userIDmd5,
                                   loggedJobs[i].args['cacheType'], eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), "green")
           driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
-                       hashlib.md5(userID.encode('utf-8')).hexdigest(), loggedJobs[i].args['sourceCodeHash'],
+                       userIDmd5, loggedJobs[i].args['sourceCodeHash'],
                        loggedJobs[i].args['cacheType'], eBlocBroker, web3)
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number

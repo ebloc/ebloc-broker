@@ -12,7 +12,7 @@ path = os.getcwd()
 clusterToShare = "alper01234alper@gmail.com"
 flag        = 0
 counter     = 0
-itemsToScan = 2 #151
+itemsToScan = 5 #151
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 with open(path + "/../nasa.txt") as test:
     for line in test:
@@ -46,7 +46,7 @@ with open(path + "/../nasa.txt") as test:
             # rclone copy ipfs remote:ipfs
             res = subprocess.check_output(['rclone', 'copy', tarHash + '.tar.gz', 'remote:' + tarHash]).decode('utf-8').strip()
             print(res)
-            subprocess.run(['rm', '-f', tarHash + '.tar.gz'])
+            subprocess.run(['mv', tarHash + '.tar.gz', home + '/TESTS/GdriveSource'])
             
             while True:
                 try:
