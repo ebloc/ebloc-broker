@@ -12,7 +12,7 @@ path = os.getcwd()
 clusterToShare = "alper01234alper@gmail.com"
 flag        = 0
 counter     = 0
-itemsToScan = 5 #151
+itemsToScan = 150 +1
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 with open(path + "/../nasa.txt") as test:
     for line in test:

@@ -12,7 +12,7 @@ from func import testFunc
 
 path = os.getcwd()
 # Definitions =============================================
-clusterID    = "0x4e4a0750350796164d8defc442a712b7557bf282"
+clusterID    = "0x4e4a0750350796164d8defc442a712b7557bf282" # netlab
 testType     = 'eudat-nas'
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.private
