@@ -108,18 +108,22 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
                 res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
                 print(res)
             '''
-            
+
         if storageID == '2': # Case for the ipfsMiniLock
-            passW = 'bright wind east is pen be lazy usual' 
+            with open(lib.LOG_PATH + '/private/miniLockPassword.txt', 'r') as content_file:
+                passW = content_file.read().strip()
+
             # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
-            log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey,
+            res, status  = lib.runCommand(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey,
                                          '--passphrase=' + passW,
-                                         '--output-file=' + resultsFolder + '/output.tar.gz']).decode('utf-8'))          
-            lib.silentremove(resultsFolder + '/' + jobKey)          
-            # cmd: tar -xf $resultsFolder/output.tar.gz
-            subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
+                                         '--output-file=' + resultsFolder + '/output.tar.gz'])
+            log("mlck decrypt status=" + str(status))
+            passW = None
+            # cmd: tar -xvf $resultsFolder/output.tar.gz -C resultsFolder
+            subprocess.run(['tar', '-xvf', resultsFolder + '/output.tar.gz', '-C', resultsFolder])
+            lib.silentremove(resultsFolder + '/' + jobKey)
             lib.silentremove(resultsFolder + '/output.tar.gz')
-            
+                        
         if not os.path.isfile(resultsFolder + '/run.sh'): 
             log("run.sh does not exist", 'red') 
             return False 

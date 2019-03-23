@@ -35,14 +35,11 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             encrypyFolderPath = "/home/prc/eBlocBroker/generateTest/ipfs";
             os.chdir(encrypyFolderPath)
             p1 = subprocess.Popen(['find', '.', '-print0'], stdout=subprocess.PIPE)
-            #-----------
             p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
             p1.stdout.close()
-            #-----------
             p3 = subprocess.Popen(['tar', '--absolute-names', '--no-recursion', '--null', '-T', '-', '-zcvf', '../ipfs.tar.gz'],
                                   stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
             p2.stdout.close()
-            #-----------
             p3.communicate()
             
             os.popen('mlck encrypt -f ../ipfs.tar.gz $clusterMiniLockId --passphrase="'+ mlckPass + '"').read()
