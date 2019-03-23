@@ -295,10 +295,8 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
            
    # print(dataTransferIn) 
    time.sleep(0.25)
-
    if not os.path.isfile(resultsFolder + '/run.sh'):
        log(resultsFolder + '/run.sh does not exist', 'red')
-       sys.exit() #delete
        return False
    
    copyfile(resultsFolder + '/run.sh', resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh')
@@ -311,13 +309,29 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
    log("timeLimit=" + str(timeLimit) + "| RequestedCoreNum=" + jobCoreNum)
    # Give permission to user that will send jobs to Slurm.
    subprocess.check_output(['sudo', 'chown', '-R', userID, resultsFolder])
-   
-   ## SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'   
-   ## cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL   
-   jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
-                                    'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
-                                    resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
-                                    '--mail-type=ALL']).decode('utf-8').strip()
+
+   for attempt in range(10):
+       try:
+           ## SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'   
+           ## cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL   
+           jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
+                                            'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
+                                            resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
+                                            '--mail-type=ALL']).decode('utf-8').strip()
+       except subprocess.CalledProcessError as e:
+           log(e.output.decode('utf-8').strip(), 'red')
+           # sacctmgr remove user where user=$USERNAME --immediate
+           res, status = runCommand(['sacctmgr', 'remove', 'user', 'where', 'user=' + userID, '--immediate'])
+           ## sacctmgr add account $USERNAME --immediate
+           res, status = runCommand(['sacctmgr', 'add', 'account', userID, '--immediate'])
+           ## sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
+           res, status = runCommand(['sacctmgr', 'create', 'user', userID, 'defaultaccount=' + userID,
+                                     'adminlevel=[None]', '--immediate'])
+       else:
+           break
+   else:
+       sys.exit()
+           
    jobID = jobID.split()[3]
    log('jobID=' + jobID)   
    try:
