@@ -13,7 +13,7 @@ mlckPass="gene threatens achieving ireland stalkers spoiling preoccupying"
 os.environ['clusterMiniLockId'] = "EyJ6jk9GuZkYAqUZ5UsrZ3RsvQ7cLk2XEzLXeVegyEBSQ"
 flag        = 0
 counter     = 0
-itemsToScan = 100
+itemsToScan = 100 + 1
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
     for line in test:
