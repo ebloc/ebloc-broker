@@ -14,7 +14,7 @@ def updateCluster():
     # account            = web3.eth.accounts[0]  # Cluster's Ethereum Address
     CLUSTER_ID         = web3.toChecksumAddress(os.getenv("CLUSTER_ID"))  
     availableCoreNum   = 128 
-    clusterEmail       = "alper.alimoglu@gmail.com"
+    clusterEmail       = "alper01234alper@gmail.com"
     federationCloudId  = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
     miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
     priceCoreMin       = 100
