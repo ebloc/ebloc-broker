@@ -18,7 +18,7 @@ oc.login('059ab6ba-4030-48bb-b81b-12115f531296', password)
 #---------------------------------------------------------------
 startTime   = 1
 counter     = 0
-itemsToScan = 1 #150
+itemsToScan = 100 + 1
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 coreLimit   = 7200 #120*60 (2 hours money is paid)
 counter = 0

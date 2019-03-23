@@ -18,7 +18,7 @@ if [[ $c == *" Began, "* ]]; then
     echo "JOB STARTED: $name |$arg0 $arg1 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
-	. $VENV_PATH/bin/activate && python3 -uB $EBLOCBROKER_PATH/startCode.py $arg0 $arg1 $jobID
+	source $VENV_PATH/bin/activate && python3 -uB $EBLOCBROKER_PATH/startCode.py $arg0 $arg1 $jobID
     fi
 fi
 
@@ -32,7 +32,7 @@ if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
     echo "COMPLETED fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
-	. $VENV_PATH/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $jobID
+	source $VENV_PATH/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $jobID
     fi
 fi
 
@@ -46,7 +46,7 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     echo "TIMEOUT fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
-	. $VENV_PATH/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $jobID
+	source $VENV_PATH/bin/activate && python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $jobID
     fi
 fi
 
