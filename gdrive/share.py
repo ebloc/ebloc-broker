@@ -59,6 +59,7 @@ elif folderType == 'tar':
         subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])                
         subprocess.run(['gdrive', 'upload', tarHash + '.tar.gz'])    
         subprocess.run(['rm', '-f', tarHash + '.tar.gz'])
+        
     res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()
 elif folderType == 'zip':
     if len(sys.argv) == 3:

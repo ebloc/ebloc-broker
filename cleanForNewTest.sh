@@ -8,7 +8,8 @@ if [[ "$EUID" -eq 0 ]]; then
     exit
 fi
 
-sudo rm -rf /var/eBlocBroker/*
+rm -rf /var/eBlocBroker/*
+mkdir /var/eBlocBroker/cache
 
 sudo rm -rf $HOME/.eBlocBroker/*/*
 sudo rm -f  $HOME/.eBlocBroker/my-app.pid

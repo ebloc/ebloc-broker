@@ -301,7 +301,7 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
         elif eudatFolderType == 'folder':
             # Copy from cached IPFS folder into user's path           
             subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .           
-    # os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there    TODO: delete
+
     try:
         lib.sbatchCall(globals()['jobKey'], globals()['index'], storageID, globals()['shareToken'], userID,
                        resultsFolder, resultsFolderPrev, globals()['dataTransferIn'], eBlocBroker,  web3)

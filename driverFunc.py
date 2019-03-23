@@ -34,10 +34,11 @@ def driverGithub(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3)
    globals()['index']     = index
    globals()['storageID'] = storageID
   
-   jobKeyGit       = str(jobKey).replace("=", "/")
+   jobKeyGit = str(jobKey).replace("=", "/")
+   dataTransferIn = 0 # if the requested file is already cached, it stays as 0                
    
-   log("key: "   + jobKey) 
-   log("index: " + index)
+   log("key="   + jobKey) 
+   log("index=" + index)
    resultsFolderPrev = lib.PROGRAM_PATH  + "/" + userID + "/" + jobKey + "_" + index
    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'   
    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
@@ -45,8 +46,9 @@ def driverGithub(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3)
 
    # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
    subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
-   os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
-   lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, eBlocBroker,  web3)
+   # TODO: calculate dataTransferIn for the downloaded job.
+   lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, resultsFolderPrev,
+                  dataTransferIn, eBlocBroker,  web3)
 
 def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
     globals()['jobKey']    = jobKey
@@ -55,7 +57,7 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
               
     lib.isIpfsOn()  
     log("jobKey=" + jobKey)
-    isHashCached=lib.isHashCached(jobKey)
+    isHashCached = lib.isHashCached(jobKey)
     log("isHashCached=" + str(isHashCached))    
 
     dataTransferIn    = 0 # if the requested file is already cached, it stays as 0                
@@ -66,10 +68,11 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
        os.makedirs(resultsFolderPrev, exist_ok=True) 
        os.makedirs(resultsFolder,     exist_ok=True) 
 
-    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
+    # os.chdir(resultsFolder)  # 'cd' into the working path TODO: delete no need full path is used
     
-    if os.path.isfile(jobKey):
-       lib.silentremove(jobKey)       
+    if os.path.isfile(resultsFolder + '/' + jobKey):
+       lib.silentremove(resultsFolder + '/' + jobKey)
+       
     ipfsCallCounter = 0
     while True:
         try:
@@ -77,7 +80,6 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
             # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
             isIPFSHashExist = subprocess.check_output(['timeout', '300', 'ipfs', 'object', 'stat', jobKey]).decode('utf-8').strip() # Wait Max 5 minutes.
             log(isIPFSHashExist)
-
             for item in isIPFSHashExist.split("\n"):
                 if "CumulativeSize" in item:
                     cumulativeSize = item.strip().split()[1]
@@ -92,40 +94,39 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
             ipfsCallCounter += 1
             time.sleep(10)
     if "CumulativeSize" in isIPFSHashExist:
-       # cmd: ipfs get $jobKey --output=$resultsFolder
-       # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
-       # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor 
-       res = subprocess.check_output(['ipfs', 'get', jobKey, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
-       print(res)
-       if not isHashCached:
-           dataTransferIn = cumulativeSize
-           dataTransferIn =  int(dataTransferIn) * 0.000001
-           log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
-           '''
-           if cacheType != 'none': # TODO: pin if storage is paid
-               res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
-               print(res)
-           '''
-           
-       if storageID == '2': # Case for the ipfsMiniLock
-          passW = 'bright wind east is pen be lazy usual' 
-          # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
-          log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey,
-                                       '--passphrase=' + passW,
-                                       '--output-file=' + resultsFolder + '/output.tar.gz']).decode('utf-8'))          
-          lib.silentremove(resultsFolder + '/' + jobKey)          
-          # cmd: tar -xf $resultsFolder/output.tar.gz
-          subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
-          lib.silentremove(resultsFolder + '/output.tar.gz')
-          
-       if not os.path.isfile('run.sh'): 
-          log("run.sh does not exist", 'red') 
-          return False 
+        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
+        # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor
+        # cmd: ipfs get $jobKey --output=$resultsFolder
+        res = subprocess.check_output(['ipfs', 'get', jobKey, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
+        print(res)
+        if not isHashCached:
+            dataTransferIn = cumulativeSize
+            dataTransferIn =  int(dataTransferIn) * 0.000001
+            log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
+            '''
+            if cacheType != 'none': # TODO: pin if storage is paid
+                res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
+                print(res)
+            '''
+            
+        if storageID == '2': # Case for the ipfsMiniLock
+            passW = 'bright wind east is pen be lazy usual' 
+            # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
+            log(subprocess.check_output(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey,
+                                         '--passphrase=' + passW,
+                                         '--output-file=' + resultsFolder + '/output.tar.gz']).decode('utf-8'))          
+            lib.silentremove(resultsFolder + '/' + jobKey)          
+            # cmd: tar -xf $resultsFolder/output.tar.gz
+            subprocess.run(['tar', '-xf', resultsFolder + '/output.tar.gz'])          
+            lib.silentremove(resultsFolder + '/output.tar.gz')
+            
+        if not os.path.isfile(resultsFolder + '/run.sh'): 
+            log("run.sh does not exist", 'red') 
+            return False 
     else:
-       log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
-       return False
+        log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
+        return False
    
-    os.chdir(resultsFolder)  # 'cd' into the working path and call sbatch from there
     lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
                    resultsFolder, resultsFolderPrev, dataTransferIn, eBlocBroker,  web3)
 
