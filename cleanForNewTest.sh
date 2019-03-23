@@ -11,7 +11,7 @@ fi
 sudo rm -rf /var/eBlocBroker/*
 mkdir /var/eBlocBroker/cache
 
-sudo rm -rf $HOME/.eBlocBroker/*/*
+sudo find $HOME/.eBlocBroker/*/* -mindepth 1 ! -regex '^./private\(/.*\)?' -delete
 sudo rm -f  $HOME/.eBlocBroker/my-app.pid
 sudo rm -f  $HOME/.eBlocBroker/checkSinfoOut.txt
 sudo rm -f  $HOME/.eBlocBroker/logJobs.txt
