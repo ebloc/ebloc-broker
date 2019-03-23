@@ -254,3 +254,11 @@ generateTest/testGdrive/0x57b60037b82154ec7149142c606ba024fbb0f991\.txt
 generateTest/testGdrive/ipfs/run\.sh
 
 generateTest/testNasEudat/ipfs/run\.sh
+
+generateTest/testIpfsMiniLock/clientOutput\.txt
+
+generateTest/testIpfsMiniLock/0x398bd2a9a39637884b49b2b0930de7d83eb08a8e\.txt
+
+generateTest/ipfs\.tar\.gz\.minilock
+
+generateTest/ipfs\.tar\.gz
