@@ -12,7 +12,7 @@ from func import testFunc
 
 path = os.getcwd()
 # Definitions =============================================
-clusterID    = '0x398bd2a9a39637884b49b2b0930de7d83eb08a8e'
+clusterID    = '0x2fe8fb59f6e24703f8732fcd38f4ac9e8f56d8aa' #googleInstance-3
 testType     = 'ipfs';
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.ipfs
