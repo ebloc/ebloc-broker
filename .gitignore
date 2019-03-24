@@ -262,3 +262,7 @@ generateTest/testIpfsMiniLock/0x398bd2a9a39637884b49b2b0930de7d83eb08a8e\.txt
 generateTest/ipfs\.tar\.gz\.minilock
 
 generateTest/ipfs\.tar\.gz
+
+generateTest/testIpfs/clientOutput\.txt
+
+generateTest/testIpfs/0x2fe8fb59f6e24703f8732fcd38f4ac9e8f56d8aa\.txt

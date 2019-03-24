@@ -68,8 +68,6 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
        os.makedirs(resultsFolderPrev, exist_ok=True) 
        os.makedirs(resultsFolder,     exist_ok=True) 
 
-    # os.chdir(resultsFolder)  # 'cd' into the working path TODO: delete no need full path is used
-    
     if os.path.isfile(resultsFolder + '/' + jobKey):
        lib.silentremove(resultsFolder + '/' + jobKey)
        
