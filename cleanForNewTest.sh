@@ -19,6 +19,9 @@ sudo rm -f  $HOME/.eBlocBroker/queuedJobs.txt
 sudo rm -f  $HOME/.eBlocBroker/test.txt
 sudo rm -f  $HOME/.eBlocBroker/ipfs.out
 
+sudo rm -f  $HOME/.eBlocBroker/endCodeAnalyse/*
+sudo rm -f  $HOME/.eBlocBroker/transactions/*
+
 cat /dev/null > $HOME/.eBlocBroker/clusterDriver.out
 
 sudo ./killall.sh

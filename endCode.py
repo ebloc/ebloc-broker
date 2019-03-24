@@ -257,7 +257,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
 
     log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
     log("jobInfo: " + str(jobInfo))
-    outputFileName = 'result-' + lib.CLUSTER_ID + '-' + str(index) + '.tar.gz'
+    outputFileName = 'result-' + lib.CLUSTER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
    
     # Here we know that job is already completed 
     if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
@@ -395,13 +395,13 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         time.sleep(0.25) 
         dataTransferOut = calculateDataTransferOut(outputFileName, 'f')
         if 'folder' in mimeType: # Received job is in folder format
-            log('mimeType: folder')                        
+            log('mimeType=folder')                        
             # cmd: $GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'upload', '--parent', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             res, status = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         elif 'gzip' in mimeType: # Received job is in folder tar.gz
-            log('mimeType: tar.gz')
+            log('mimeType=tar.gz')
             # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             res, status = lib.subprocessCallAttempt(command, 500)            
