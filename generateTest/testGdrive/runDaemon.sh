@@ -4,5 +4,5 @@
 nohup python3 -Bu testGdrive.py & #>/dev/null 2>&1
 
 if [ "$1" == "" ]; then
-    sudo tail -f nohup.out
+    tail -f nohup.out
 fi

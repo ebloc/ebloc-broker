@@ -389,7 +389,7 @@ while True:
        elif str(loggedJobs[i].args['storageID']) == '0':
           log("New job has been received. IPFS call |" + time.ctime(), "green")
           driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                    str(loggedJobs[i].args['storageID']), userIDmd5,
+                                    str(loggedJobs[i].args['storageID']), userIDmd5, loggedJobs[i].args['cacheType'],
                                     eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
           if oc is None: #TODO: carry to upper functon
@@ -409,9 +409,12 @@ while True:
        #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
        elif str(loggedJobs[i].args['storageID']) == '2':
           log("New job has been received. IPFS with miniLock call |" + time.ctime(), "green")
-          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                str(loggedJobs[i].args['storageID']), userIDmd5,
-                                loggedJobs[i].args['cacheType'], eBlocBroker, web3)
+          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
+                                str(loggedJobs[i].args['index']),
+                                str(loggedJobs[i].args['storageID']),
+                                userIDmd5,
+                                loggedJobs[i].args['cacheType'],
+                                eBlocBroker, web3)
           #thread.start_new_thread(driverFunc.driverIpfs, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
        elif str(loggedJobs[i].args['storageID']) == '3':
           log("New job has been received. GitHub call |" + time.ctime(), "green")

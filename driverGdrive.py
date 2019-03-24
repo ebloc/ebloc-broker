@@ -126,7 +126,6 @@ def gdriveDownloadFolder(resultsFolderPrev, folderName, folderType):
             globals()['dataTransferIn'] =  int(globals()['dataTransferIn']) * 0.000001
             log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')    
     else:
-        print(resultsFolderPrev + '/' + folderName)
         if not os.path.isfile(resultsFolderPrev + '/' + folderName):
             log('File is not downloaded successfully.', 'red')
             return False
@@ -139,6 +138,7 @@ def gdriveDownloadFolder(resultsFolderPrev, folderName, folderType):
             globals()['dataTransferIn'] = p2.communicate()[0].decode('utf-8').strip() # Returns downloaded files size in bytes
             globals()['dataTransferIn'] =  int(globals()['dataTransferIn']) * 0.000001
             log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
+            
     return True
     
 def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType_, eBlocBroker, web3):        

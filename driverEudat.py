@@ -308,6 +308,4 @@ def driverEudat(jobKey, index, fID, userID, cacheType, eBlocBroker, web3, oc):
         time.sleep(1)
     except Exception as e:
         log('Failed to sbatch call: '+ str(e), 'red')
-        # sys.exit() #delete
-        return False
-    
+        return False    

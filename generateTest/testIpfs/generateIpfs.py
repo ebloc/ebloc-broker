@@ -10,7 +10,7 @@ path = os.getcwd()
 os.environ['path'] = path
 flag        = 0
 counter     = 0
-itemsToScan = 100
+itemsToScan = 100 + 1
 hashesFile = open(path + '/hashOutput.txt', 'w+')
 with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
     for line in test:
