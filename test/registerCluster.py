@@ -47,7 +47,7 @@ ipfsAddress        = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV4
 account            = web3.eth.accounts[0] # Cluster's Ethereum Address
 coreNumber         = 64
 clusterEmail       = ""
-federationCloudId  = ""
+federationCloudId  = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"
 miniLockId         = ""
 corePriceMinuteWei = 100
 ipfsAddress        = "/ip4/34.73.108.63/tcp/4001/ipfs/QmXqUW6n57c2e4Y6461CiNkdSuYEGtnNYrWHCVeNEcW3Td"
@@ -57,37 +57,6 @@ account            = web3.eth.accounts[0] # Cluster's Ethereum Address
 coreNumber         = 64
 clusterEmail       = ""
 federationCloudId  = ""
-miniLockId         = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"
-corePriceMinuteWei = 100
-ipfsAddress        = ""
-
-
-
-
-
-# =======================================================================================================
-# AWS-IPFS
-account            = web3.eth.accounts[0] # Cluster's Ethereum Address
-coreNumber         = 64
-clusterEmail       = ""
-federationCloudId  = ""
 miniLockId         = ""
 corePriceMinuteWei = 100
-ipfsAddress        = "/ip4/54.145.188.102/tcp/4001/ipfs/QmTkEBxqiX68P9ByBk5f4b58Dg2vyEFf9Cc6FPL8SskbJx"
-
-# AWS-IPFS_miniLock
-account            = web3.eth.accounts[0] # Cluster's Ethereum Address
-coreNumber         = 64
-clusterEmail       = ""
-federationCloudId  = ""
-miniLockId         = "yWfGR7GEdfw5kphyZYcs3smvx2MmBoQdBE6hAxTv5d3ZV"
-corePriceMinuteWei = 100
-ipfsAddress        = "/ip4/174.129.113.214/tcp/4001/ipfs/QmTDHH9n8qbaeuwjsDuBzUu2DySNay2TNL8v9WeiBtNjge"
-
-
-
-# ----------------------------------------------------------------------------
-
-if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
-    tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerCluster(coreNumber, clusterEmail, federationCloudId, miniLockId, corePriceMinuteWei, ipfsAddress)
-    print('Tx: ' + tx.hex())
+ipfsAddress        = "/ip4/35.243.200.173/tcp/4001/ipfs/QmYCXLnAw7XAQjbKacZZQer7wdBd8YpAMVxvA4U1KCmWC2"

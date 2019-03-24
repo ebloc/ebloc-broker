@@ -55,7 +55,7 @@ with open(path + "/../nasa.txt") as test:
                     jobKey = res.split(' ')[0]
                     print("jobKey=" + jobKey)
                 except Exception as e:
-                    time.sleep(0.25)
+                    # time.sleep(0.25)
                     print(e.output.decode('utf-8').strip())
                 else:
                     break
@@ -67,7 +67,7 @@ with open(path + "/../nasa.txt") as test:
                                            clusterToShare]).decode('utf-8').strip()
                     print(res)
                 except Exception as e:
-                    time.sleep(0.25)
+                    # time.sleep(0.25)
                     print(e.output.decode('utf-8').strip())
                 else:
                     break

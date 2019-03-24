@@ -6,7 +6,7 @@
 sudo printf ''
 
 if [[ "$EUID" -ne 0 ]]; then
-    . venv/bin/activate;
+    # source $HOME/venv/bin/activate
     nohup python3 -Bu Driver.py >> $HOME/.eBlocBroker/clusterDriver.out 2>&1 &
     tail -f $HOME/.eBlocBroker/clusterDriver.out
 else
