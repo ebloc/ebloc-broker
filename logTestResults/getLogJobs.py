@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, asyncio, time, os
+import sys, asyncio, time, os, subprocess
 from web3.auto import w3
 from dotenv import load_dotenv
 from os.path import expanduser
@@ -19,6 +19,8 @@ def getEbloBroker():
 
 web3        = getWeb3()
 eBlocBroker = getEbloBroker()
+
+ipfsFlag = 0
 
 def getLogJobs(clusterAddress, fromBlock):
     print('clusterAddress:' + clusterAddress + '\n')
@@ -72,7 +74,11 @@ def getLogJobs(clusterAddress, fromBlock):
         #   print('gained:0')
         
         print(str(counter) + ' | ' + loggedJobs[i].args['jobKey'] + ' ' + str(loggedJobs[i].args['index']) +
-          ' ' + lib.inv_job_state_code[int(jobInfo['status'])] + ' ' + str(jobInfo['received']) + ' ' + str(returned) + ' ' + str(gained))
+          ' ' + lib.inv_job_state_code[int(jobInfo['status'])] + ' ' + str(jobInfo['received']) + ' ' + str(returned) + ' ' + str(gained))       
+
+        if ipfsFlag == 1 and lib.inv_job_state_code[int(jobInfo['status'])] == "COMPLETED":
+            subprocess.run(['ipfs', 'get', loggedJobs[i].args['jobKey'],  '--output=ipfsHashes/' + loggedJobs[i].args['jobKey']])
+            
         counter+=1
     # print('------------------------------------------------------------------------------------------------------------')
     print("TOTAL_GAINED: " + str(sum_))
@@ -85,6 +91,6 @@ if __name__ == '__main__':
     else:
         load_dotenv(os.path.join(home + '/.eBlocBroker', '.env')) # Load .env from the given path
         clusterAddress=os.getenv("CLUSTER_ID")
-        fromBlock=2167486
+        fromBlock=2215127
 
     getLogJobs(clusterAddress, fromBlock)
