@@ -87,3 +87,5 @@ with open(path + "/../nasa.txt") as test:
 
 hashesFile.close()
 print('\nFolders are created and shared...')
+
+subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])

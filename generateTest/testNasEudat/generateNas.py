@@ -57,6 +57,8 @@ while True:
     startTime += sleepTime
     counter   += 1
 
+subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])
+    
 '''
     if testId == 0:
         f.write("make bt CLASS=B\n")

@@ -54,7 +54,7 @@ with open(path + "/../nasa.txt") as test:
 
 hashesFile.close()
 print('\nFolders are created. Sharing files now...')
-
+subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])
 
 # -------------------------------------
 # print(os.popen('python $path/shareOwnCloud.py').read())

@@ -53,3 +53,4 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
 
 hashesFile.close()
 print('\nDONE.')
+subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])
