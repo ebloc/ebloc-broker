@@ -252,7 +252,7 @@ def eudatGetShareToken(fID, userID):
              tryCount = 0
              while True:
                  if tryCount is 5:
-                     log('Mounted Eudat does not see shared folder\'s path.', 'red')
+                     log("Mounted Eudat does not see shared folder's path.", 'red')
                      return False              
                  if os.path.isdir(lib.OWN_CLOUD_PATH + '/' + jobKey): # Checking is shared file emerged on mounted owncloud
                      break
@@ -273,10 +273,10 @@ def driverEudat(jobKey_, index_, fID, userID, cacheType_, eBlocBroker, web3, oc_
     globals()['index']     = index_    
     globals()['cacheType'] = lib.cacheType.reverse_mapping[cacheType_]               
     
-    log("jobKey=" + jobKey) 
-    log("index="  + index)
-    log("fID="  + fID)
-    log("cacheType=" + cacheType)
+    log('jobKey=' + jobKey) 
+    log('index=' + index)
+    log('fID=' + fID)
+    log('cacheType=' + cacheType)
     
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 

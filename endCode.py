@@ -65,8 +65,8 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
     p2.stdout.close()
     date = p3.communicate()[0].decode('utf-8').strip()
 
-    command = ["date", "-d", date, '+\'%s\''] # cmd: date -d 2018-09-09T21:50:51 +"%s"
-    endTimeStamp = runCommand(command).replace("\'","")   
+    command = ["date", "-d", date, "+'%s'"] # cmd: date -d 2018-09-09T21:50:51 +"%s"
+    endTimeStamp = runCommand(command).replace("'","")   
     log("endTimeStamp: " + endTimeStamp) 
     
     txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
