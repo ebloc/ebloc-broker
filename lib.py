@@ -7,29 +7,34 @@ from os.path import expanduser
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
 
-WHOAMI     = os.getenv("WHOAMI")
-EBLOCPATH  = os.getenv("EBLOCPATH")
-LOG_PATH   = os.getenv("LOG_PATH") 
-CLUSTER_ID = os.getenv("CLUSTER_ID")
-GDRIVE     = os.getenv("GDRIVE")
-RPC_PORT   = os.getenv("RPC_PORT")
-POA_CHAIN  = os.getenv("POA_CHAIN")
-OC_USER    = os.getenv("OC_USER")
+WHOAMI     = os.getenv('WHOAMI')
+EBLOCPATH  = os.getenv('EBLOCPATH')
+LOG_PATH   = os.getenv('LOG_PATH') 
+CLUSTER_ID = os.getenv('CLUSTER_ID')
+GDRIVE     = os.getenv('GDRIVE')
+RPC_PORT   = os.getenv('RPC_PORT')
+POA_CHAIN  = os.getenv('POA_CHAIN')
+OC_USER    = os.getenv('OC_USER')
+IPFS_USE   = os.getenv('IPFS_USE') # Should be "True/1", if caching into IPFS is open
+EUDAT_USE  = os.getenv('EUDAT_USE')
 
-GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo" 
-GDRIVE_METADATA   = "/home/" + WHOAMI + "/.gdrive" 
-IPFS_REPO         = "/home/" + WHOAMI + "/.ipfs" 
-HOME              = "/home/" + WHOAMI
-OWN_CLOUD_PATH    = "/oc"
+if IPFS_USE == '0': IPFS_USE = False
+else:               IPFS_USE = True
 
-IPFS_USE                    = False # Should be "True", if caching into IPFS is open
-EUDAT_USE                   = True
+if EUDAT_USE == '0':EUDAT_USE = False
+else:               EUDAT_USE = True
+
+GDRIVE_CLOUD_PATH = '/home/' + WHOAMI + '/foo'
+GDRIVE_METADATA   = '/home/' + WHOAMI + '/.gdrive'
+IPFS_REPO         = '/home/' + WHOAMI + '/.ipfs'
+HOME              = '/home/' + WHOAMI
+OWN_CLOUD_PATH    = '/oc'
 
 PROGRAM_PATH                = '/var/eBlocBroker' 
-JOBS_READ_FROM_FILE         = LOG_PATH + "/test.txt" 
-CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + "/cancelledJobs.txt"
-BLOCK_READ_FROM_FILE        = LOG_PATH + "/blockReadFrom.txt" 
-CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + "/cancelledBlockReadFrom.txt" 
+JOBS_READ_FROM_FILE         = LOG_PATH + '/test.txt'
+CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + '/cancelledJobs.txt'
+BLOCK_READ_FROM_FILE        = LOG_PATH + '/blockReadFrom.txt' 
+CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + '/cancelledBlockReadFrom.txt'
 
 ## Creates the hashmap.
 job_state_code = {} 
@@ -64,7 +69,7 @@ def log(strIn, color=''):
         print(strIn)
         
     txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
-    txFile.write(strIn + "\n") 
+    txFile.write(strIn + '\n') 
     txFile.close() 
 
 # enum: https://stackoverflow.com/a/1695250/2402577
