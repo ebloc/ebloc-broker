@@ -22,7 +22,7 @@ def startCall(jobKey, index, jobID):
    p2.stdout.close()
    date      = p3.communicate()[0].decode('utf-8').strip()
    # cmd: date -d 2018-09-09T18:38:29 +"%s"
-   startTime = subprocess.check_output(["date", "-d", date, '+\'%s\'']).strip().decode('utf-8').replace("\'","")
+   startTime = subprocess.check_output(['date', '-d', date, "+'%s'"]).strip().decode('utf-8').replace("'","")
    
    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a')        
    txFile.write(lib.EBLOCPATH + "/contractCalls/setJobStatus.py" + ' ' + jobKey + ' ' + index + ' ' + statusID + ' ' + startTime + '\n')    
@@ -37,7 +37,7 @@ def startCall(jobKey, index, jobID):
    else: # we failed all the attempts - abort
        sys.exit()
            
-   txFile.write(jobKey + "_" + index + "| Tx: " + txHash + "| setJobStatus_started" +  " " + startTime + "\n") 
+   txFile.write(jobKey + '_' + index + '| Tx: ' + txHash + '| setJobStatus_started' +  ' ' + startTime + '\n') 
    txFile.close() 
 
 if __name__ == '__main__':
