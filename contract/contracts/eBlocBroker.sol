@@ -107,6 +107,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 		return true;
 	    }
 	else if (job.status == uint8(Lib.jobStateCodes.RUNNING)){
+	    job.status = uint8(Lib.jobStateCodes.CANCELLED);
 	    /*emit*/ LogRefund(clusterAddress, jobKey, index); /* scancel log */
 	    return true;
 	}
@@ -169,9 +170,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 				resultIpfsHash, storageID, dataTransferIn, dataTransferSum);
 	    return;// false; 
 	}
-	job.status = uint8(Lib.jobStateCodes.COMPLETED); /* Prevents double spending */
-	s.clusterContract[msg.sender].receivedAmount += amountToGain;
+
+	if (job.status == uint8(Lib.jobStateCodes.CANCELLED))
+	    job.status = uint8(Lib.jobStateCodes.REFUNDED); /* Prevents double spending */
+	else    
+	    job.status = uint8(Lib.jobStateCodes.COMPLETED); /* Prevents double spending */
 	
+	s.clusterContract[msg.sender].receivedAmount += amountToGain;	
 	msg.sender.transfer(amountToGain); /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 

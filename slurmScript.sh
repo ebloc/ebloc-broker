@@ -54,7 +54,18 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
 fi
 
 if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
-    :
+    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
+    arg0=$(echo $name | cut -d "*" -f 1)
+    arg1=$(echo $name | cut -d "*" -f 2)
+    arg2=$(echo $name | cut -d "*" -f 3)
+    arg3=$(echo $name | cut -d "*" -f 4)
+
+    echo "CANCELLED fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 jobID: $jobID" | mail -s "Message Subject" alper.alimoglu@gmail.com
+    
+    if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
+	source $VENV_PATH/bin/activate
+	python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $jobID
+    fi
 fi
 
 if [[ $event == *" Failed, "* ]]; then # Cancelled job won't catched here
