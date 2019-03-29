@@ -33,17 +33,18 @@ def runLogJob(fromBlock, clusterAddress, eBlocBroker=None):
    else:
        return logReturn(myFilter, 2) 
 
-def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None): 
-   if eBlocBroker is None: 
-       eBlocBroker = getEbloBroker()
-   myFilter = eBlocBroker.events.LogRefund.createFilter(
-       fromBlock=int(fromBlock),       
-       argument_filters={'clusterAddress': str(clusterAddress)} )
-   loggedJobs = myFilter.get_all_entries() 
-   if len(loggedJobs) > 0:       
-       return loggedJobs 
-   else:
-       return logReturn(myFilter, 2) 
+def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None):
+    if eBlocBroker is None: 
+        eBlocBroker = getEbloBroker()
+        
+    myFilter = eBlocBroker.events.LogRefund.createFilter(
+        fromBlock=int(fromBlock),       
+        argument_filters={'clusterAddress': str(clusterAddress)})
+    loggedCancelledJobs = myFilter.get_all_entries() 
+    if len(loggedCancelledJobs) > 0:       
+        return loggedCancelledJobs
+    else:
+        return logReturn(myFilter, 2) 
 
 def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None): 
    if eBlocBroker is None: 

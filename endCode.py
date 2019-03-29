@@ -95,17 +95,13 @@ def calculateDataTransferOut(outputFileName, pathType):
     dataTransferOut = 0
     if pathType == 'f':
         p1 = subprocess.Popen(['ls', '-ln', outputFileName], stdout=subprocess.PIPE)
-        #-----------
         p2 = subprocess.Popen(['awk', '{print $5}'], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
-        #-----------
         dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
     elif pathType == 'd':
         p1 = subprocess.Popen(['du', '-sb', outputFileName], stdout=subprocess.PIPE)
-        #-----------
         p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
-        #-----------
         dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes           
     
     dataTransferOut =  int(dataTransferOut) * 0.000001
@@ -119,7 +115,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
     # https://stackoverflow.com/a/5971326/2402577 ... https://stackoverflow.com/a/4453495/2402577
     # my_env = os.environ.copy(); my_env["IPFS_PATH"] = homeDir + "/.ipfs"; print(my_env)
     os.environ["IPFS_PATH"] = homeDir + "/.ipfs"
-   
+    
     log('To run again:')
     log('~/eBlocBroker/endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID)
     log('')

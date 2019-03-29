@@ -106,9 +106,9 @@ def runCommand(command, my_env=None):
     if p.returncode != 0:
         status=False
         err = err.decode('utf-8')
+
         if err != '':
             log(err, 'red')
-            
     return output.strip().decode('utf-8'), status
 
 def silentremove(filename): # https://stackoverflow.com/a/10840586/2402577   
