@@ -72,25 +72,24 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
        lib.silentremove(resultsFolder + '/' + jobKey)
        
     ipfsCallCounter = 0
-    while True:
-        try:
-            # cmd: timeout 300 ipfs object stat $jobKey
-            # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
-            isIPFSHashExist = subprocess.check_output(['timeout', '300', 'ipfs', 'object', 'stat', jobKey]).decode('utf-8').strip() # Wait Max 5 minutes.
+    for attempt in range(1):
+        log('Attempting to get IPFS file...', 'light_salmon_3b')
+        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
+        # cmd: timeout 300 ipfs object stat $jobKey
+        isIPFSHashExist, status = lib.runCommand(['timeout', '300', 'ipfs', 'object', 'stat', jobKey]) # Wait Max 5 minutes.
+        if not status:
+            log('Error: Failed to get IPFS file...', 'red')
+        else:
             log(isIPFSHashExist)
             for item in isIPFSHashExist.split("\n"):
                 if "CumulativeSize" in item:
                     cumulativeSize = item.strip().split()[1]
                     break
                     # log(cumulativeSize)
-            break
-        except subprocess.CalledProcessError as e:
-            # Catches resource temporarily unavailable on ipfs
-            log(e.output.decode('utf-8').strip(), 'red')
-            if ipfsCallCounter == 5:
-                return False
-            ipfsCallCounter += 1
-            time.sleep(10)
+            break # Success
+    else:
+        return False
+      
     if "CumulativeSize" in isIPFSHashExist:
         # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
         # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor

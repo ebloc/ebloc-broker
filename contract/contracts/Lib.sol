@@ -10,11 +10,12 @@ pragma solidity ^0.4.17;
 library Lib {
     
     enum jobStateCodes {
-	NULL,      /* 0 */
-	COMPLETED, /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
-	REFUNDED,  /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
-	PENDING,   /* 3 */
-	RUNNING    /* 4 */
+	NULL,        /* 0 */
+	COMPLETED,   /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
+	REFUNDED,    /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
+	PENDING,     /* 3 */
+	RUNNING,     /* 4 */
+	CANCELLED    /* 5 */
     }
 
     struct Storage {

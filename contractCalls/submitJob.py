@@ -32,9 +32,9 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
 
     if storageID == 0 or storageID == 2:
        lib.isIpfsOn()
-       strVal = my_filter.get_all_entries()[0].args['ipfsAddress'] 
+       strVal = my_filter.get_all_entries()[0].args['ipfsAddress']
+       print('Trying to connect into ' + strVal)
        output = os.popen('ipfs swarm connect ' + strVal).read() 
-       print('Trying to connect into: ' + strVal) 
        if 'success' in output:
           print(output)
 
@@ -109,14 +109,25 @@ if __name__ == '__main__':
         gasDataTransfer = dataTransferIn + dataTransferOut
     else:   
         # USER Inputs ================================================================
-        clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282')
+        # clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282') #ebloc
+        clusterAddress = web3.toChecksumAddress('0x57b60037b82154ec7149142c606ba024fbb0f991') #netlab                
         storageID      = lib.storageID.ipfs
         cacheType      = lib.cacheType.private # default
         
         if storageID == lib.storageID.ipfs: # IPFS
+            longJob = True
             # jobKey    = '1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'           
-            # jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  # 2 minutes job
-            jobKey    = 'QmS5seSFGiPywJYkEAALCYHq3YgF4Pruq9eVz6Qmt4ZWms' # 20 seconds
+            if longJob:
+                jobKey    = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U' # 20 seconds
+                coreGasDay      = 0 
+                coreGasHour     = 0 
+                coreGasMin      = 100
+            else:
+                jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  # 2 minutes job
+                coreGasDay      = 0 
+                coreGasHour     = 0 
+                coreGasMin      = 1
+                               
             cacheType = lib.cacheType.public # default
             # TODO: convert into ===>  sourceCodeHash     = ''
             sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository: TODO: provide anyway
@@ -127,13 +138,11 @@ if __name__ == '__main__':
                 password = content_file.read().strip()
             oc.login(lib.OC_USER_ID, password)
             sourceCodeHash     = '00000000000000000000000000000000'
-        '''     
-        #jobKey         = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR' # Long Sleep Job.                        
-        #jobKey         = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName" 
+        '''             
+        #coreGasDay      = 0 
+        #coreGasHour     = 0 
+        #coreGasMin      = 1
         core            = 1 
-        coreGasDay      = 0 
-        coreGasHour     = 0 
-        coreGasMin      = 1 
         accountID       = 0
         gasCoreMin      = coreGasMin + coreGasHour * 60 + coreGasDay * 1440
         dataTransferIn  = 100 
@@ -141,10 +150,18 @@ if __name__ == '__main__':
         gasStorageHour  = 1
         # =============================================================================
 
-    tx_hash = submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
-                        storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)    
+    ret = submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
+                        storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)
+    
+    tx_hash = ret[0]
+    print('computationalCost:' + ret[1])
+    print('storageCost:'       + ret[2])
+    print('cacheCost:'         + ret[3])
+    print('dataTransferCost:'  + ret[4])
+    print('jobPriceValue:'     + ret[5])
+    
     if 'Error' in tx_hash:
-        print(tx_hash)
+        print('Error: ' + tx_hash)
         sys.exit()
     
     print('Tx_hash: ' + tx_hash)    
