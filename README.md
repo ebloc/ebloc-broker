@@ -302,38 +302,27 @@ jobDescription  = "Science"
 storageType     = 4 # Please note that 4 stands for gdrive repository share.
 ```
 
-### **How to obtain Submitted Job's Information:**
+### **How to Obtain Submitted Job's Information:**
 
 You can use `./getJobInfo.py` to submit your jobs. 
 
 ```bash
-clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282"; # clusterID that you have submitted your job.
-jobKey    = "134633894220713919382117768988457393273"
-index     = 0;   
+clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID that you have submitted your job.
+jobKey    = "6a6783e74a655aad01bf2d1202362685"
+index     = 0
 ./getJobInfo.py $clusterID $jobKey $index
 ```
 
-- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING` or `COMPLETED`. 
+- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or `COMPLETED`. 
 
 -----------
 
 ### Events
 
-#### Keep track of the log of receipts
+#### Keep track of the log of received jobs and their status
 
 ```bash
-fromBlock = eBlocBroker.getDeployedBlockNumber(); 
-var event = eBlocBroker.LogReceipt({}, {fromBlock:fromBlock, toBlock:'latest'});
-event.watch(function(error, result) {
-  console.log(JSON.stringify(result));
-});
-```
-#### Keep track of the log of submitted jobs
-
-```bash
-fromBlock = eBlocBroker.getDeployedBlockNumber(); 
-var event = eBlocBroker.LogJob({}, {fromBlock:fromBlock, toBlock:'latest'});
-event.watch(function(error, result) {
-  console.log(JSON.stringify(result));
-});
+clusterAddress="0x57b60037b82154ec7149142c606ba024fbb0f991"
+fromBlock=1000000
+logTestResults/getLogJobs.py $clusterAddress $fromBlock
 ```

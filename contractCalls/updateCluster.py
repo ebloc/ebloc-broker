@@ -21,7 +21,7 @@ def updateCluster():
     priceDataTransfer  = 10
     priceStorage       = 10
     priceCache         = 10
-    ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
+    ipfsAddress        = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV47WttP9hAoPEXeCMKsh3Cap4"
     # ----------------------------------------------------------------------------
     #os.environ['ipfs'] = ipfs 
     #ipfsID=os.popen('node bs58.js encode $ipfs').read().replace("\n", "") 

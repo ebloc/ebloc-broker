@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, lib, _thread, time, hashlib, subprocess
 sys.path.insert(0, './contractCalls')
@@ -12,16 +12,16 @@ web3        = getWeb3()
 eBlocBroker = connectEblocBroker() 
 testFlag    = False
 
-def log(strIn, color=''): 
-   if testFlag: 
-      if color != '':
-         print(stylize(strIn, fg(color))) 
-      else:
-         print(strIn)
-
-   txFile = open(lib.LOG_PATH + '/cancelledJobsLog.out', 'a') 
-   txFile.write(strIn + "\n") 
-   txFile.close()    
+def log(strIn, color=''):
+    if testFlag:
+        if color != '':
+            print(stylize(strIn, fg(color))) 
+        else:
+            print(strIn)
+    
+    txFile = open(lib.LOG_PATH + '/cancelledJobsLog.out', 'a') 
+    txFile.write(strIn + "\n") 
+    txFile.close()    
 
 with open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'r') as content_file:
    cancelBlockReadFromLocal = content_file.read().strip()
@@ -30,16 +30,14 @@ if not cancelBlockReadFromLocal.isdigit():
     cancelBlockReadFromLocal = getDeployedBlockNumber(eBlocBroker)    
 
 log('Waiting cancelled jobs from :' + cancelBlockReadFromLocal)
-
 maxVal = 0
-while True: #{
-    if testFlag:
-       cancelBlockReadFromLocal = 1146520
+while True:
+    # cancelBlockReadFromLocal = 2000000 # For test purposes
        
     # Waits here until new job cancelled into the cluster
     loggedJobs = LogJob.runLogCancelRefund(cancelBlockReadFromLocal, lib.CLUSTER_ID, eBlocBroker)
-
-    for e in range(0, len(loggedJobs)): #{
+    
+    for e in range(0, len(loggedJobs)): 
         msg_sender = web3.eth.getTransactionReceipt(loggedJobs[e]['transactionHash'].hex())['from'].lower()
         userName   = hashlib.md5(msg_sender.encode('utf-8')).hexdigest();        
         #print(msg_sender)
@@ -79,8 +77,7 @@ while True: #{
                  log('Error: jobID=' + jobID + ' is not cancelled, something went wrong or already cancelled. ' + out)
         except IndexError:
            log('Something went wrong, jobID is returned as None.')
-        
-                    
+                            
     if int(maxVal) != 0:
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, 'w')  # Updates the latest read block number      
         f_blockReadFrom.write(str(int(maxVal) + 1) + '\n')  
@@ -94,6 +91,4 @@ while True: #{
         f_blockReadFrom.write(str(currentBlockNumber) + '\n')  
         f_blockReadFrom.close()
         log('---------------------------------------------')
-        log('Waiting cancelled jobs from :' + currentBlockNumber)
-    #}
-#}
+        log('Waiting cancelled jobs from: ' + currentBlockNumber)
