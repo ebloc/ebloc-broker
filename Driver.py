@@ -30,14 +30,14 @@ web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 driverCancelProcess   = None
 driverReceiverProcess = None
-oc = None
+oc                    = None
 my_env = os.environ.copy()
 
 # Dummy sudo command to get the password when session starts
 subprocess.run(['sudo', 'printf', '']) 
 
+"""Run DriverCancel daemon on the background."""
 def runDriverCancel():
-    """Run DriverCancel daemon."""
 	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
     p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['grep', '[d]riverCancel'], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -48,7 +48,7 @@ def runDriverCancel():
     p3.stdout.close()
     out = p4.communicate()[0].decode('utf-8').strip()
     if int(out) == 0:
-        # Running driverCancel.py on the background
+        # Running driverCancel.py on the background if it is not already
         driverCancelProcess = subprocess.Popen(['python3','driverCancel.py'])
 
 def runWhisperStateReceiver():
@@ -64,26 +64,22 @@ def runWhisperStateReceiver():
         publicKey = data['publicKey']
         if not web3.shh.hasKeyPair(kId):
             log("Error: Whisper node's private key of a key pair did not match with the given ID", 'red')
-            log("Please first run: python scripts/whisperInitialize.py", 'red')
+            log('Please first run: python scripts/whisperInitialize.py', 'red')
             terminate()            
             
     # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
     p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-    #-----------
     p2 = subprocess.Popen(['grep', '[d]riverReceiver'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    #-----------
     p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
     p2.stdout.close()
-    #-----------
     p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
     p3.stdout.close()
-    #-----------
     out = p4.communicate()[0].decode('utf-8').strip()
     # ----------------------------------------------------------------
     if int(out) == 0:
         # Running driverCancel.py on the background
-        driverReceiverProcess = subprocess.Popen(['python','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
+        driverReceiverProcess = subprocess.Popen(['python3','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
 		
 # res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
 # rows = res[0] columns = res[1]

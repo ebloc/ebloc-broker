@@ -87,10 +87,11 @@ def getLogJobs(clusterAddress, fromBlock):
 if __name__ == '__main__':
     if len(sys.argv) == 3:
         clusterAddress = str(sys.argv[1])
-        blockNumber    = int(sys.argv[2])
+        fromBlock      = int(sys.argv[2])
     else:
         load_dotenv(os.path.join(home + '/.eBlocBroker', '.env')) # Load .env from the given path
         clusterAddress=os.getenv("CLUSTER_ID")
         fromBlock=2215127
 
+    print(fromBlock)    
     getLogJobs(clusterAddress, fromBlock)
