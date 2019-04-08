@@ -160,7 +160,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    job.status == uint8(Lib.jobStateCodes.COMPLETED) ||
 	    job.status == uint8(Lib.jobStateCodes.REFUNDED))
 	    revert();
-
+	
 	if (!s.clusterContract[msg.sender].receiptList.receiptCheck(job, endTime, info.availableCoreNum)) {
 	//if (!s.clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) {
 	    job.status = uint8(Lib.jobStateCodes.REFUNDED); /* Important to check already refunded job or not */	    
@@ -342,11 +342,16 @@ contract eBlocBroker is eBlocBrokerInterface {
 	              	info.priceCache * dataTransferIn                       // cacheCost
 	    || 
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
-	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
 	    bytes(s.userContract[msg.sender].orcID).length == 0 ||
 	    core > info.availableCoreNum)
-	    revert();		
+	    revert();
+
+	if (storageID == uint8(Lib.storageID.IPFS) || storageID == uint8(Lib.storageID.IPFS_MINILOCK))
+	    sourceCodeHash = jobKey; // jobKey will be considered as sourceCodeHash since it will be stored in IPFS repository
+	else
+	    if (bytes(sourceCodeHash).length != 32)
+		revert();
 	
 	cluster.jobStatus[jobKey].push(Lib.status({
       		        status:          uint8(Lib.jobStateCodes.PENDING),
@@ -360,6 +365,9 @@ contract eBlocBroker is eBlocBrokerInterface {
 			clusterUpdatedBlockNumber: clusterInfo[clusterInfo.length-1]
 			}
 		));
+
+	if (storageID == uint8(Lib.storageID.IPFS) || storageID == uint8(Lib.storageID.IPFS_MINILOCK))
+	    sourceCodeHash = jobKey; // jobKey will be considered as sourceCodeHash since it will be stored in IPFS repository
 
 	// User can only update the job's gasStorageHour if previously set storeage time is completed
 	if (gasStorageHour != 0 &&
