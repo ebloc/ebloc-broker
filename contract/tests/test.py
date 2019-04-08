@@ -232,5 +232,5 @@ def test_receipt(web3, accounts, chain):
     size = my_contract.call().getClusterReceiptSize(account)
     for i in range(0, size):
         print(my_contract.call().getClusterReceiptNode(account, i))
-        
+                 
     print("END")

@@ -52,8 +52,8 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
     jobPriceValue = computationalCost + dataTransferCost + storageCost + cacheCost
     print("jobPriceValue: " + str(jobPriceValue))
         
-    if not len(sourceCodeHash):
-        return 'sourceCodeHash should be 32 characters.'    
+    if len(sourceCodeHash) != 32 and len(sourceCodeHash) != 0:
+        return 'Error: sourceCodeHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
        return "Error: jobKey's length does not match with its original length. Please check your jobKey."
     if core > availableCoreNum:
@@ -122,15 +122,17 @@ if __name__ == '__main__':
                 coreGasDay      = 0 
                 coreGasHour     = 0 
                 coreGasMin      = 100
+                sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"
             else:
                 jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  # 2 minutes job
                 coreGasDay      = 0 
                 coreGasHour     = 0 
                 coreGasMin      = 1
+                sourceCodeHash  = ""
                                
             cacheType = lib.cacheType.public # default
             # TODO: convert into ===>  sourceCodeHash     = ''
-            sourceCodeHash     = '00000000000000000000000000000000' # No need to provide any sourceCodeHash since it will store in the ipfs repository: TODO: provide anyway
+            
         '''    
         elif storageID == lib.storageID.eudat: # IPFS: TODO: update 
             oc = owncloud.Client('https://b2drop.eudat.eu/')
@@ -152,7 +154,8 @@ if __name__ == '__main__':
 
     ret = submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
                         storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)
-    
+
+    print(ret)
     tx_hash = ret[0]
     print('computationalCost:' + ret[1])
     print('storageCost:'       + ret[2])

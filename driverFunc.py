@@ -29,7 +29,7 @@ def log(strIn, color=''):
     txFile.write(strIn + "\n") 
     txFile.close() 
 
-def driverGithub(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
+def driverGithub(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
    globals()['jobKey']    = jobKey
    globals()['index']     = index
    globals()['storageID'] = storageID
@@ -48,9 +48,9 @@ def driverGithub(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3)
    subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
    # TODO: calculate dataTransferIn for the downloaded job.
    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, resultsFolderPrev,
-                  dataTransferIn, eBlocBroker,  web3)
+                  dataTransferIn, sourceCodeHash, eBlocBroker,  web3)
 
-def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
+def driverIpfs(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
     globals()['jobKey']    = jobKey
     globals()['index']     = index
     globals()['storageID'] = storageID
@@ -129,7 +129,7 @@ def driverIpfs(jobKey, index, storageID, userID, cacheType, eBlocBroker, web3):
         return False
    
     lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
-                   resultsFolder, resultsFolderPrev, dataTransferIn, eBlocBroker,  web3)
+                   resultsFolder, resultsFolderPrev, dataTransferIn, gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
 
 # To test driverFunc.py executed as script.
 if __name__ == '__main__':
