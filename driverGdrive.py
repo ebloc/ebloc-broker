@@ -141,7 +141,7 @@ def gdriveDownloadFolder(resultsFolderPrev, folderName, folderType):
             
     return True
     
-def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType_, eBlocBroker, web3):        
+def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType_, gasStorageHour, eBlocBroker, web3):        
    globals()['jobKey'] = jobKey
    globals()['index'] = index
    # globals()['storageID'] = storageID
@@ -205,4 +205,5 @@ def driverGdrive(jobKey, index, storageID, userID, sourceCodeHash, cacheType_, e
          subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
 
    lib.sbatchCall(jobKey, index, storageID, str(shareToken), userID,
-                  resultsFolder, resultsFolderPrev, dataTransferIn, eBlocBroker,  web3)
+                  resultsFolder, resultsFolderPrev, dataTransferIn,
+                  gasStorageHour, sourceCodeHash, eBlocBroker,  web3)

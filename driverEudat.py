@@ -265,8 +265,8 @@ def eudatGetShareToken(fID, userID):
       log("Error: Couldn't find the shared file", 'red')
       return False
    return True
-
-def driverEudat(jobKey_, index_, fID, userID, cacheType_, eBlocBroker, web3, oc_):
+                               
+def driverEudat(jobKey_, index_, fID, userID, sourceCodeHash, cacheType_, gasStorageHour, eBlocBroker, web3, oc_):
     storageID = '1'   
     globals()['jobKey']    = jobKey_
     globals()['oc']        = oc_    
@@ -314,7 +314,8 @@ def driverEudat(jobKey_, index_, fID, userID, cacheType_, eBlocBroker, web3, oc_
 
     try:
         lib.sbatchCall(jobKey, index, storageID, shareToken, userID,
-                       resultsFolder, resultsFolderPrev, dataTransferIn, eBlocBroker,  web3)
+                       resultsFolder, resultsFolderPrev, dataTransferIn,
+                       gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
         time.sleep(1)
     except Exception as e:
         log('Failed to sbatch call: '+ str(e), 'red')

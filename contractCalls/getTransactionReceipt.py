@@ -8,16 +8,15 @@ Returns the transaction receipt specified by transaction_hash.
 If the transaction has not yet been mined returns 'None'
 '''
 
-def getTransactionReceipt(tx, web3=None): #{
-    if web3 is None: #{
+def getTransactionReceipt(tx, web3=None):
+    if web3 is None: 
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import getWeb3
         web3 = getWeb3()
-    #}
-    return web3.eth.getTransactionReceipt(tx)
-#}
 
-if __name__ == '__main__': #{
+    return web3.eth.getTransactionReceipt(tx)
+
+if __name__ == '__main__':
     if len(sys.argv) == 2:
         tx = str(sys.argv[1])
     else:
@@ -25,4 +24,3 @@ if __name__ == '__main__': #{
 
     print(getTransactionReceipt(tx))
     #print(getTransactionReceipt(tx)['blockNumber'])    
-#}
