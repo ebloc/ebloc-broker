@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import os, sys, subprocess, time, json, errno, glob, pwd
-from shutil import copyfile
-from dotenv import load_dotenv
+from lib_mongodb import addItem
+from shutil  import copyfile
+from dotenv  import load_dotenv
 from os.path import expanduser
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
@@ -267,7 +268,8 @@ def compressFolder(folderToShare):
     subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
     return tarHash
 
-def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resultsFolderPrev, dataTransferIn,  eBlocBroker, web3):
+def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resultsFolderPrev, dataTransferIn,
+               gasStorageHour, sourceCodeHash, eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
    from datetime import datetime, timedelta   
    # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
@@ -279,15 +281,18 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
    f.close()   
    # cmd: echo date | date +%s
    p1 = subprocess.Popen(['echo', date], stdout=subprocess.PIPE)
-   #-----------
    p2 = subprocess.Popen(['date', '+%s'], stdin=p1.stdout, stdout=subprocess.PIPE)
    p1.stdout.close()
-   #-----------
    timestamp = p2.communicate()[0].decode('utf-8').strip()
    log('Timestamp=' + timestamp)
    f = open(resultsFolderPrev + '/timestamp.txt', 'w') 
-   f.write(timestamp + '\n' )    
+   f.write(timestamp + '\n')      
    f.close()
+
+   log('Adding recevied job into mongodb database.', 'green')
+   # Adding jobKey info along with its gasStorageHour into mongodb
+   addItem(jobKey, sourceCodeHash, userID, timestamp, gasStorageHour, storageID)
+   
    if os.path.isfile(resultsFolderPrev + '/dataTransferIn.txt'):
        with open(resultsFolderPrev + '/dataTransferIn.txt') as json_file:
            data = json.load(json_file)

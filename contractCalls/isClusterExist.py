@@ -2,7 +2,7 @@
 
 import sys
 
-def isClusterExist(clusterAddress, eBlocBroker=None, web3=None): #{
+def isClusterExist(clusterAddress, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
         import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
