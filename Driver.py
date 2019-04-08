@@ -320,7 +320,8 @@ while True:
            'sourceCodeHash: ' + loggedJobs[i].args['sourceCodeHash'] + '\n' +
            'gasDataTransferIn: ' + str(loggedJobs[i].args['gasDataTransferIn']) + '\n' +
            'gasDataTransferOut: ' + str(loggedJobs[i].args['gasDataTransferOut']) + '\n' +
-           'cacheType: ' + str(loggedJobs[i].args['cacheType']))
+           'cacheType: ' + str(loggedJobs[i].args['cacheType']) + '\n' + 
+           'gasStorageHour: ' + str(loggedJobs[i].args['gasStorageHour']), 'light_pink_3')
        
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
@@ -378,9 +379,13 @@ while True:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
           log("New job has been received. IPFS call |" + time.ctime(), "green")
-          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                    str(loggedJobs[i].args['storageID']), userIDmd5, loggedJobs[i].args['cacheType'],
-                                    eBlocBroker, web3)
+          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
+                                str(loggedJobs[i].args['index']),
+                                str(loggedJobs[i].args['storageID']),
+                                userIDmd5,
+                                loggedJobs[i].args['sourceCodeHash'],
+                                loggedJobs[i].args['cacheType'],
+                                loggedJobs[i].args['gasStorageHour'], eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
           if oc is None: #TODO: carry to upper functon
               log("Login into owncloud...")
@@ -392,8 +397,13 @@ while True:
               password = None
               
           log("New job has been received. EUDAT call |" + time.ctime(), "green")
-          driverEudat(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), userInfo[4],
-                      userIDmd5, loggedJobs[i].args['cacheType'],
+          driverEudat(loggedJobs[i].args['jobKey'],
+                      str(loggedJobs[i].args['index']),
+                      userInfo[4],
+                      userIDmd5,
+                      loggedJobs[i].args['sourceCodeHash'],
+                      loggedJobs[i].args['cacheType'],
+                      loggedJobs[i].args['gasStorageHour'],
                       eBlocBroker, web3, oc)
           
        #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
@@ -403,19 +413,31 @@ while True:
                                 str(loggedJobs[i].args['index']),
                                 str(loggedJobs[i].args['storageID']),
                                 userIDmd5,
+                                loggedJobs[i].args['sourceCodeHash'],
                                 loggedJobs[i].args['cacheType'],
+                                loggedJobs[i].args['gasStorageHour'],
                                 eBlocBroker, web3)
           #thread.start_new_thread(driverFunc.driverIpfs, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
        elif str(loggedJobs[i].args['storageID']) == '3':
           log('New job has been received. GitHub call |' + time.ctime(), 'green')
-          driverFunc.driverGithub(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']),
-                                  str(loggedJobs[i].args['storageID']), userIDmd5,
-                                  loggedJobs[i].args['cacheType'], eBlocBroker, web3)          
+          driverFunc.driverGithub(loggedJobs[i].args['jobKey'],
+                                  str(loggedJobs[i].args['index']),
+                                  str(loggedJobs[i].args['storageID']),
+                                  userIDmd5,
+                                  loggedJobs[i].args['sourceCodeHash'],
+                                  loggedJobs[i].args['cacheType'],
+                                  loggedJobs[i].args['gasStorageHour'],
+                                  eBlocBroker, web3)          
        elif str(loggedJobs[i].args['storageID']) == '4':
           log("New job has been received. Googe Drive call |" + time.ctime(), 'green')
-          driverGdrive(loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']),
-                       userIDmd5, loggedJobs[i].args['sourceCodeHash'],
-                       loggedJobs[i].args['cacheType'], eBlocBroker, web3)
+          driverGdrive(loggedJobs[i].args['jobKey'],
+                       str(loggedJobs[i].args['index']),
+                       str(loggedJobs[i].args['storageID']),
+                       userIDmd5,
+                       loggedJobs[i].args['sourceCodeHash'],
+                       loggedJobs[i].args['cacheType'],
+                       loggedJobs[i].args['gasStorageHour'],
+                       eBlocBroker, web3)
           
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number

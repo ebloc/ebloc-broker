@@ -8,6 +8,13 @@ pragma solidity ^0.4.17;
 //pragma experimental ABIEncoderV2;
 
 library Lib {
+    enum storageID {
+	IPFS,          /* 0 */
+	EUDAT,         /* 1 */
+	IPFS_MINILOCK, /* 2 */
+	GITHUB,        /* 3 */
+	GDRIVE         /* 4 */
+    }
     
     enum jobStateCodes {
 	NULL,        /* 0 */
@@ -15,7 +22,7 @@ library Lib {
 	REFUNDED,    /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
 	PENDING,     /* 3 */
 	RUNNING,     /* 4 */
-	CANCELLED    /* 5 */
+	CANCELLED    /* 5 */	
     }
 
     struct Storage {
@@ -90,8 +97,8 @@ library Lib {
     }
 
     struct intervalNode {
-	interval[] list; /* A dynamically-sized array of `interval` structs */
-	uint32 tail; /* Tail of the linked list */
+	interval[] list;       /* A dynamically-sized array of interval structs */
+	uint32 tail;           /* Tail of the linked list */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }    
     
@@ -109,13 +116,16 @@ library Lib {
     }
 
     function receiptCheck(intervalNode storage self, status storage job, uint endTime, uint availableCoreNum) public	
-	returns (bool success)
+	returns (bool flag)
     {
-	bool   flag = false;
+	flag = false;
+	
 	uint32 addr = self.tail;
 	uint32 addrTemp;
 	int32  carriedSum;
-
+	
+	uint startTime = job.startTime;
+	
 	interval storage prevNode     = self.list[0];
 	interval storage currentNode  = self.list[0];
 	interval storage prevNodeTemp = self.list[0];
@@ -131,7 +141,7 @@ library Lib {
 
 	    do { 
 		if (endTime > currentNode.endpoint) {
-		    addr = prevNode.next; /* "addr" points the index to push the node */
+		    addr = prevNode.next; /* "addr" points the index to the pushed the node */
 		    break;
 		}
 		prevNode    = currentNode;
@@ -153,14 +163,15 @@ library Lib {
 
 	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */
 
-	do { /* Inside while loop carriedSum is updated */
-	    if (job.startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		self.list.push(interval( {endpoint: job.startTime, core: -1 * int32(job.core), next: prevNode.next}));
+	do { /* Inside while loop carriedSum is updated */	    
+	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
+		self.list.push(interval({endpoint: startTime, core: -1 * int32(job.core), next: prevNode.next}));
 		prevNode.next = uint32(self.list.length - 1);
 		return true;
 	    }
-	    carriedSum += currentNode.core;
 
+	    carriedSum += currentNode.core;
+	    
 	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
 	    if (carriedSum > int32(availableCoreNum)) {
 		delete self.list[self.list.length-1];
@@ -172,6 +183,7 @@ library Lib {
 		self.deletedItemNum += 1;
 		return false;
 	    }
+
 	    prevNode    = currentNode;
 	    currentNode = self.list[currentNode.next];
 	} while (true);
