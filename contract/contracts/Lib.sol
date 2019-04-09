@@ -81,8 +81,8 @@ library Lib {
 
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	mapping(uint => clusterInfo) info;
-	mapping(string  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
-	mapping(address => mapping(string  => uint)) receivedAmountForStorage; /**/
+	mapping(bytes32  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
+	mapping(address => mapping(bytes32  => uint)) receivedAmountForStorage; /**/
 	
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Index of cluster's ethereum address is stored in clusterAddresses */	
