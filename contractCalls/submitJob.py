@@ -37,9 +37,10 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
        output = os.popen('ipfs swarm connect ' + strVal).read() 
        if 'success' in output:
           print(output)
-
+          
     computationalCost = priceCoreMin * core * gasCoreMin
     jobReceivedBlocNumber, jobGasStorageHour = eBlocBroker.functions.getJobStorageTime(fromAccount, sourceCodeHash).call();
+        
     if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
         dataTransferIn = 0; # storageCost and cacheCost will be equaled to 0
         
@@ -51,7 +52,7 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
     
     jobPriceValue = computationalCost + dataTransferCost + storageCost + cacheCost
     print("jobPriceValue: " + str(jobPriceValue))
-        
+
     if len(sourceCodeHash) != 32 and len(sourceCodeHash) != 0:
         return 'Error: sourceCodeHash should be 32 characters.'    
     if (storageID == 0 and len(jobKey) != 46) or (storageID == 2 and len(jobKey) != 46) or (storageID == 4 and len(jobKey) != 33): 
@@ -122,7 +123,10 @@ if __name__ == '__main__':
                 coreGasDay      = 0 
                 coreGasHour     = 0 
                 coreGasMin      = 100
-                sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"
+
+                hex_str = lib.convertIpfsBytes32(jobKey)
+                sourceCodeHash = web3.toBytes(hexstr= hex_str)
+                # sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"                
             else:
                 jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  # 2 minutes job
                 coreGasDay      = 0 

@@ -184,7 +184,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return; // true; 
     }
 
-    function receiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public	
+    function receiveStoragePayment(address jobOwner, bytes32 sourceCodeHash) isClusterExists() public	
 	returns (bool success) {
 	Lib.clusterData storage cluster = s.clusterContract[msg.sender];	
 	
@@ -318,7 +318,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 		       uint32 dataTransferIn,
 		       uint32 dataTransferOut,
 		       uint8 storageID,
-		       string memory sourceCodeHash,
+		       bytes32 sourceCodeHash,
 		       uint8 cacheType,
 		       uint gasStorageHour) /*check_gasCoreMin_storageID(gasCoreMin, storageID) isZero(core)*/ public payable
     //returns (bool success)
@@ -340,18 +340,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 	                info.priceDataTransfer * (dataTransferOut) +           // dataTransferCost  
 	                info.priceStorage * dataTransferIn * gasStorageHour +  // storageCost
 	              	info.priceCache * dataTransferIn                       // cacheCost
-	    || 
+	    ||
+	    sourceCodeHash.length != 32 ||
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename 
 	    !isUserExist(msg.sender) ||
 	    bytes(s.userContract[msg.sender].orcID).length == 0 ||
 	    core > info.availableCoreNum)
 	    revert();
-
-	if (storageID == uint8(Lib.storageID.IPFS) || storageID == uint8(Lib.storageID.IPFS_MINILOCK))
-	    sourceCodeHash = jobKey; // jobKey will be considered as sourceCodeHash since it will be stored in IPFS repository
-	else
-	    if (bytes(sourceCodeHash).length != 32)
-		revert();
 	
 	cluster.jobStatus[jobKey].push(Lib.status({
       		        status:          uint8(Lib.jobStateCodes.PENDING),
@@ -365,10 +360,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 			clusterUpdatedBlockNumber: clusterInfo[clusterInfo.length-1]
 			}
 		));
-
-	if (storageID == uint8(Lib.storageID.IPFS) || storageID == uint8(Lib.storageID.IPFS_MINILOCK))
-	    sourceCodeHash = jobKey; // jobKey will be considered as sourceCodeHash since it will be stored in IPFS repository
-
+	
 	// User can only update the job's gasStorageHour if previously set storeage time is completed
 	if (gasStorageHour != 0 &&
 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
@@ -389,7 +381,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return; //true
     }
 
-    function updateJobReceivedBlocNumber(string memory sourceCodeHash) public
+    function updateJobReceivedBlocNumber(bytes32 sourceCodeHash) public
 	returns (bool success)
     {
 	Lib.clusterData storage cluster = s.clusterContract[msg.sender]; //Only cluster can update receied job only to itself
@@ -540,7 +532,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return s.clusterAddresses;
     }
 	
-    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
+    function getJobStorageTime(address clusterAddress, bytes32 sourceCodeHash) public view
 	returns(uint, uint)
     {
 	Lib.clusterData storage cluster = s.clusterContract[clusterAddress];
@@ -580,7 +572,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Used for tests */
-    function getReceiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public view
+    function getReceiveStoragePayment(address jobOwner, bytes32 sourceCodeHash) isClusterExists() public view
 	returns (uint getrReceiveStoragePayment) {
 	return s.clusterContract[msg.sender].receivedAmountForStorage[jobOwner][sourceCodeHash];
     }

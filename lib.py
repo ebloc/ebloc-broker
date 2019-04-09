@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import os, sys, subprocess, time, json, errno, glob, pwd
+import binascii, base58
+
 from lib_mongodb import addItem
 from shutil  import copyfile
 from dotenv  import load_dotenv
@@ -60,6 +62,19 @@ job_state_code['SUSPENDED']    = 15
 job_state_code['TIMEOUT']      = 16
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
+
+Qm = b'\x12 '
+
+def convertBytes32Ipfs(bytes_array):
+    bytes_init = base58.b58decode("Qm")
+    merge = Qm + bytes_array
+    return base58.b58encode(merge).decode("utf-8")
+
+
+def convertIpfsBytes32(hash_string):
+    bytes_array = base58.b58decode(hash_string)
+    b = bytes_array[2:]
+    return binascii.hexlify(b).decode("utf-8")
 
 def log(strIn, color=''):
     from colored import stylize
