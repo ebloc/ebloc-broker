@@ -4,7 +4,7 @@ author: Alper Alimoglu
 email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.5.5;
+pragma solidity ^0.5.2;
 interface eBlocBrokerInterface {
 
     /* Logged when the cluster calls receiptCheck function. Records the completed jobs' information under receiptCheck() method call.*/
@@ -33,8 +33,7 @@ interface eBlocBrokerInterface {
 		 string jobKey,
 		 uint indexed index,
 		 uint8 storageID,
-		 //string desc,
-		 string sourceCodeHash,
+		 bytes32 sourceCodeHash,
 		 uint32 gasDataTransferIn,
 		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
@@ -165,6 +164,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 		return true;
 	    }
 	else if (job.status == uint8(Lib.jobStateCodes.RUNNING)){
+	    job.status = uint8(Lib.jobStateCodes.CANCELLED);
 	    emit LogRefund(clusterAddress, jobKey, index); /* scancel log */
 	    return true;
 	}
@@ -180,7 +180,8 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Following function is a general-purpose mechanism for performing payment withdrawal
-       by the cluster provider and paying of unused core usage cost back to the client
+       by the cluster provider and paying of unused core, cache, and dataTransfer usage cost
+       back to the client
     */
     function receiptCheck(string memory jobKey,
 			  uint32 index,
@@ -189,7 +190,8 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  uint8 storageID,
 			  uint endTime,
 			  uint dataTransferIn,
-			  uint dataTransferSum) public
+			  uint dataTransferSum) /*isBehindBlockTimeStamp(endTime)*/ public
+    /*returns (bool success)*/
     {
 	require(endTime <= block.timestamp);
 	/* If "msg.sender" is not mapped on 'clusterContract' array  or its "jobKey" and "index"
@@ -217,6 +219,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    revert();
 
 	if (!s.clusterContract[msg.sender].receiptList.receiptCheck(job, endTime, info.availableCoreNum)) {
+	//if (!s.clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) {
 	    job.status = uint8(Lib.jobStateCodes.REFUNDED); /* Important to check already refunded job or not */
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
@@ -224,9 +227,13 @@ contract eBlocBroker is eBlocBrokerInterface {
 				resultIpfsHash, storageID, dataTransferIn, dataTransferSum);
 	    return;// false;
 	}
-	job.status = uint8(Lib.jobStateCodes.COMPLETED); /* Prevents double spending */
-	s.clusterContract[msg.sender].receivedAmount += amountToGain;
 
+	if (job.status == uint8(Lib.jobStateCodes.CANCELLED))
+	    job.status = uint8(Lib.jobStateCodes.REFUNDED); /* Prevents double spending */
+	else
+	    job.status = uint8(Lib.jobStateCodes.COMPLETED); /* Prevents double spending */
+
+	s.clusterContract[msg.sender].receivedAmount += amountToGain;
 	msg.sender.transfer(amountToGain); /* Gained ether transferred to the cluster */
 	job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
@@ -234,7 +241,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return; // true;
     }
 
-    function receiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public
+    function receiveStoragePayment(address jobOwner, bytes32 sourceCodeHash) isClusterExists() public
 	returns (bool success) {
 	Lib.clusterData storage cluster = s.clusterContract[msg.sender];
 
@@ -356,9 +363,10 @@ contract eBlocBroker is eBlocBrokerInterface {
 		       uint32 dataTransferIn,
 		       uint32 dataTransferOut,
 		       uint8 storageID,
-		       string memory sourceCodeHash,
+		       bytes32 sourceCodeHash,
 		       uint8 cacheType,
-		       uint gasStorageHour) public payable
+		       uint gasStorageHour) /*check_gasCoreMin_storageID(gasCoreMin, storageID) isZero(core)*/ public payable
+    //returns (bool success)
     {
 	uint[] storage clusterInfo = s.clusterUpdatedBlockNumber[clusterAddress];
  	Lib.clusterData storage cluster = s.clusterContract[clusterAddress];
@@ -378,8 +386,8 @@ contract eBlocBroker is eBlocBrokerInterface {
 	                info.priceStorage * dataTransferIn * gasStorageHour +  // storageCost
 	              	info.priceCache * dataTransferIn                       // cacheCost
 	    ||
+	    sourceCodeHash.length != 32 ||
 	    bytes(jobKey).length > 255 || // Max length is 255 for the filename
-	    (bytes(sourceCodeHash).length != 32 && bytes(sourceCodeHash).length != 0) ||
 	    !isUserExist(msg.sender) ||
 	    bytes(s.userContract[msg.sender].orcID).length == 0 ||
 	    core > info.availableCoreNum)
@@ -415,10 +423,10 @@ contract eBlocBroker is eBlocBrokerInterface {
 
 	emit LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length - 1, storageID, sourceCodeHash,
 			dataTransferIn, dataTransferOut, cacheType, gasStorageHour);
-	return;
+	return; //true
     }
 
-    function updateJobReceivedBlocNumber(string memory sourceCodeHash) public
+    function updateJobReceivedBlocNumber(bytes32 sourceCodeHash) public
 	returns (bool success)
     {
 	Lib.clusterData storage cluster = s.clusterContract[msg.sender]; //Only cluster can update receied job only to itself
@@ -569,7 +577,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	return s.clusterAddresses;
     }
 
-    function getJobStorageTime(address clusterAddress, string memory sourceCodeHash) public view
+    function getJobStorageTime(address clusterAddress, bytes32 sourceCodeHash) public view
 	returns(uint, uint)
     {
 	Lib.clusterData storage cluster = s.clusterContract[clusterAddress];
@@ -609,7 +617,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Used for tests */
-    function getReceiveStoragePayment(address jobOwner, string memory sourceCodeHash) isClusterExists() public view
+    function getReceiveStoragePayment(address jobOwner, bytes32 sourceCodeHash) isClusterExists() public view
 	returns (uint getrReceiveStoragePayment) {
 	return s.clusterContract[msg.sender].receivedAmountForStorage[jobOwner][sourceCodeHash];
     }
@@ -631,13 +639,21 @@ contract eBlocBroker is eBlocBrokerInterface {
 
 
 library Lib {
+    enum storageID {
+	IPFS,          /* 0 */
+	EUDAT,         /* 1 */
+	IPFS_MINILOCK, /* 2 */
+	GITHUB,        /* 3 */
+	GDRIVE         /* 4 */
+    }
 
     enum jobStateCodes {
-	NULL,      /* 0 */
-	COMPLETED, /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
-	REFUNDED,  /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
-	PENDING,   /* 3 */
-	RUNNING    /* 4 */
+	NULL,        /* 0 */
+	COMPLETED,   /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
+	REFUNDED,    /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
+	PENDING,     /* 3 */
+	RUNNING,     /* 4 */
+	CANCELLED    /* 5 */
     }
 
     struct Storage {
@@ -696,8 +712,8 @@ library Lib {
 
 	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
 	mapping(uint => clusterInfo) info;
-	mapping(string  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
-	mapping(address => mapping(string  => uint)) receivedAmountForStorage; /**/
+	mapping(bytes32  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
+	mapping(address => mapping(bytes32  => uint)) receivedAmountForStorage; /**/
 
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Index of cluster's ethereum address is stored in clusterAddresses */
@@ -712,8 +728,8 @@ library Lib {
     }
 
     struct intervalNode {
-	interval[] list; /* A dynamically-sized array of `interval` structs */
-	uint32 tail; /* Tail of the linked list */
+	interval[] list;       /* A dynamically-sized array of interval structs */
+	uint32 tail;           /* Tail of the linked list */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }
 
@@ -731,12 +747,15 @@ library Lib {
     }
 
     function receiptCheck(intervalNode storage self, status storage job, uint endTime, uint availableCoreNum) public
-	returns (bool success)
+	returns (bool flag)
     {
-	bool   flag = false;
+	flag = false;
+
 	uint32 addr = self.tail;
 	uint32 addrTemp;
 	int32  carriedSum;
+
+	uint startTime = job.startTime;
 
 	interval storage prevNode     = self.list[0];
 	interval storage currentNode  = self.list[0];
@@ -753,7 +772,7 @@ library Lib {
 
 	    do {
 		if (endTime > currentNode.endpoint) {
-		    addr = prevNode.next; /* "addr" points the index to push the node */
+		    addr = prevNode.next; /* "addr" points the index to the pushed the node */
 		    break;
 		}
 		prevNode    = currentNode;
@@ -776,11 +795,12 @@ library Lib {
 	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */
 
 	do { /* Inside while loop carriedSum is updated */
-	    if (job.startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		self.list.push(interval( {endpoint: job.startTime, core: -1 * int32(job.core), next: prevNode.next}));
+	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
+		self.list.push(interval({endpoint: startTime, core: -1 * int32(job.core), next: prevNode.next}));
 		prevNode.next = uint32(self.list.length - 1);
 		return true;
 	    }
+
 	    carriedSum += currentNode.core;
 
 	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
@@ -794,6 +814,7 @@ library Lib {
 		self.deletedItemNum += 1;
 		return false;
 	    }
+
 	    prevNode    = currentNode;
 	    currentNode = self.list[currentNode.next];
 	} while (true);

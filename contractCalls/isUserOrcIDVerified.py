@@ -18,6 +18,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         userAddress = str(sys.argv[1]) 
     else:
-        userAddress = "0x4e4a0750350796164D8DefC442a712B7557BF282"
+        userAddress = "0x57b60037B82154eC7149142c606bA024fBb0f991"
         
     print(isUserOrcIDVerified(userAddress))

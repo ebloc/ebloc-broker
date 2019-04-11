@@ -40,7 +40,7 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
           
     computationalCost = priceCoreMin * core * gasCoreMin
     jobReceivedBlocNumber, jobGasStorageHour = eBlocBroker.functions.getJobStorageTime(fromAccount, sourceCodeHash).call();
-        
+    
     if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
         dataTransferIn = 0; # storageCost and cacheCost will be equaled to 0
         
@@ -74,6 +74,8 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
         
     # print(clusterAddress + " " + jobKey + " " + str(core) + " " + " " + str(gasCoreMin) + " " + str(storageID) + ' ' + 'Value: ' + str(jobPriceValue))
     gasLimit = 4500000
+
+    print(sourceCodeHash)
     tx_hash  = eBlocBroker.transact({"from": fromAccount,
                                "value": jobPriceValue,
                                "gas": gasLimit}).submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn,
@@ -112,14 +114,14 @@ if __name__ == '__main__':
         # USER Inputs ================================================================
         # clusterAddress = web3.toChecksumAddress('0x4e4a0750350796164D8DefC442a712B7557BF282') #ebloc
         clusterAddress = web3.toChecksumAddress('0x57b60037b82154ec7149142c606ba024fbb0f991') #netlab                
-        storageID      = lib.storageID.ipfs
+        storageID      = lib.storageID.github
         cacheType      = lib.cacheType.private # default
         
         if storageID == lib.storageID.ipfs: # IPFS
             longJob = True
             # jobKey    = '1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'           
             if longJob:
-                jobKey    = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U' # 20 seconds
+                jobKey    = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U' 
                 coreGasDay      = 0 
                 coreGasHour     = 0 
                 coreGasMin      = 100
@@ -132,10 +134,18 @@ if __name__ == '__main__':
                 coreGasDay      = 0 
                 coreGasHour     = 0 
                 coreGasMin      = 1
-                sourceCodeHash  = ""
+                sourceCodeHash = web3.toBytes(hexstr= hex_str)
                                
             cacheType = lib.cacheType.public # default
             # TODO: convert into ===>  sourceCodeHash     = ''
+        elif storageID == lib.storageID.github:
+            print('Submitting throguh GitHub')
+            jobKey = "avatar-lavventura=simpleSlurmJob"
+            coreGasDay      = 0 
+            coreGasHour     = 0 
+            coreGasMin      = 1
+            sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"    
+
             
         '''    
         elif storageID == lib.storageID.eudat: # IPFS: TODO: update 
