@@ -22,6 +22,7 @@ if [ $preInstall -eq 1 ]; then
     pip install pyocclient     # owncloud_py
     pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
     pip install colored
+    pip install pymongo
     pip install -U python-dotenv
     # pip install sphinx_rtd_theme
         
@@ -72,8 +73,8 @@ fi
 currentDir=$PWD
 # Folder Setup:========================================================
 if [ ! -d /var/eBlocBroker ]; then
-    mkdir -p /var/eBlocBroker
-    sudo chown alper_alimoglu -R /var/eBlocBroker
+    sudo mkdir -p /var/eBlocBroker
+    sudo chown $(whoami) -R /var/eBlocBroker
 fi
 
 if [ ! -d $HOME/.eBlocBroker ]; then

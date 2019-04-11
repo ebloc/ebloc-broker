@@ -15,6 +15,16 @@ globals()['shareToken'] = '-1'
 ipfsHashes       = lib.PROGRAM_PATH 
 # =========================================================
 
+def calculateDataTransferOut(outputFileName):    
+    p1 = subprocess.Popen(['du', '-sb', outputFileName], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    dataTransferIn = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
+
+    dataTransferIn =  int(dataTransferIn) * 0.000001
+    log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
+    return dataTransferIn
+
 def log(strIn, color=''):
     if color != '':
         print(stylize(strIn, fg(color))) 
@@ -30,25 +40,30 @@ def log(strIn, color=''):
     txFile.close() 
 
 def driverGithub(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
-   globals()['jobKey']    = jobKey
-   globals()['index']     = index
-   globals()['storageID'] = storageID
+    globals()['jobKey']    = jobKey
+    globals()['index']     = index
+    globals()['storageID'] = storageID
   
-   jobKeyGit = str(jobKey).replace("=", "/")
-   dataTransferIn = 0 # if the requested file is already cached, it stays as 0                
+    jobKeyGit = str(jobKey).replace("=", "/")
+    dataTransferIn = 0 # if the requested file is already cached, it stays as 0                
    
-   log("key="   + jobKey) 
-   log("index=" + index)
-   resultsFolderPrev = lib.PROGRAM_PATH  + "/" + userID + "/" + jobKey + "_" + index
-   resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'   
-   if not os.path.isdir(resultsFolderPrev): # If folder does not exist
-      os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
+    log("key="   + jobKey) 
+    log("index=" + index)
+    resultsFolderPrev = lib.PROGRAM_PATH  + "/" + userID + "/" + jobKey + "_" + index
+    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'   
+    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
+        os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
+  
+    if not os.path.exists(resultsFolder):  
+        # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
+        subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code
+    else:       
+        pass; # TODO: maybe add git pull
 
-   # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
-   subprocess.run(['git', 'clone', 'https://github.com/' + jobKeyGit + '.git', resultsFolder]) # Gets the source code   
-   # TODO: calculate dataTransferIn for the downloaded job.
-   lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, resultsFolderPrev,
-                  dataTransferIn, sourceCodeHash, eBlocBroker,  web3)
+    dataTransferIn = calculateDataTransferOut(resultsFolder)
+   
+    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, resultsFolderPrev,
+                   dataTransferIn, gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
 
 def driverIpfs(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
     globals()['jobKey']    = jobKey
