@@ -2,7 +2,7 @@
 
 import sys
 
-def getJobStorageTime(clusterAddress, sourceCodeHash, eBlocBroker=None, web3=None): 
+def getJobStorageTime(clusterAddress, sourceCodeHash, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
         import os
         sys.path.insert(1, os.path.join(sys.path[0], '..'))
