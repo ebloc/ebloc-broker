@@ -17,7 +17,7 @@ def authenticateORCID(userAddress, orcID, eBlocBroker=None, web3=None):
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateOrcID(userAddress, orcID) 
         return('Tx_hash: ' + tx.hex()) 
     else:
-        return('OrcID: ' + orcID + ' is already authenticated.')    
+        return('userAddress: ' + userAddress + 'and OrcID: ' + orcID + ' is already authenticated.')    
     
 if __name__ == '__main__': 
     # USER Inputs----------------------------------------------------------------

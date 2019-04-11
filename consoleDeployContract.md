@@ -32,6 +32,7 @@ echo "var testOutput=`solc --optimize --combined-json abi,bin,interface e.sol`" 
 
 ```bash
 cd $HOME/eBlocBroker
+rm .git/index.lock
 git fetch
 git checkout origin/master -- contract/contracts/eBlocBroker.sol
 git checkout origin/master -- contract/contracts/eBlocBrokerInterface.sol
@@ -82,7 +83,7 @@ var linkedListLib = myLinkedListLib.new({from: eth.accounts[0], data: "0x" + tes
 
 	     console.log('Submittin eBlocBroker...');
 		 arrayCode = "0x" + arrayCode;
-         var eBlocBroker = myArray.new({from: eth.accounts[0], data: arrayCode, gas: 6000000},
+         var eBlocBroker = myArray.new({from: eth.accounts[0], data: arrayCode, gas: 8100000},
            function (e, contract) {
               console.log(e, contract);
               if (typeof contract.address !== 'undefined') {

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, pytest, sys
+import os, pytest, sys, base58, binascii
 
 cwd           = os.getcwd()
 gasUsed       = []
@@ -21,6 +21,13 @@ class storageID:
     ipfs_miniLock = 2
     github = 3
     gdrive = 4
+    
+Qm = b'\x12 '
+
+def convertIpfsBytes32(hash_string):
+    bytes_array = base58.b58decode(hash_string)
+    b = bytes_array[2:]
+    return binascii.hexlify(b).decode("utf-8")
 
 def pushBlockInfo(contract_address):
     global blkArrayIndex
@@ -153,8 +160,12 @@ def test_receipt(web3, accounts, chain):
 
             chain.wait.for_block(int(arguments[0]))
             jobKey         = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
+
+            ipfsBytes32 = convertIpfsBytes32(jobKey)
+            sourceCodeHash = web3.toBytes(hexstr= ipfsBytes32)
+            print(sourceCodeHash)
+            # sourceCodeHash = "e3fbef873405145274256ee0ee2b580f"
             miniLockId     = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
-            sourceCodeHash = "e3fbef873405145274256ee0ee2b580f"
  
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
 			# print("Contract Balance before: " + str(web3.eth.getBalance(accounts[0])))
@@ -217,7 +228,8 @@ def test_receipt(web3, accounts, chain):
             val += 1
             
     print('----------------------------------')
-    print('StorageTime for job: ' + sourceCodeHash + ':')
+    print('StorageTime for job: ' + jobKey)
+    
     print(my_contract.call().getJobStorageTime(account, sourceCodeHash))
     print('----------------------------------')
     print(my_contract.call({"from": account}).getReceiveStoragePayment(accounts[8], sourceCodeHash))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pwd, os, sys
+import pwd, os, sys, binascii
 import owncloud, json
 import time, subprocess, string, driverFunc, lib, _thread
 import hashlib
@@ -311,24 +311,35 @@ while True:
        isClusterReceivedJob = 1
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
-       
+       # print(loggedJobs[i].args['sourceCodeHash'])
+       sourceCodeHash = binascii.hexlify(loggedJobs[i].args['sourceCodeHash']).decode("utf-8")[0:32]       
        log('BlockNum: ' + str(loggedJobs[i]['blockNumber']) + '\n' +
            'clusterAddress: ' + loggedJobs[i].args['clusterAddress'] + '\n' +
            'jobKey: ' + loggedJobs[i].args['jobKey'] + '\n' +
            'index: ' + str(loggedJobs[i].args['index']) + '\n' +
            'storageID: ' + str(loggedJobs[i].args['storageID']) + '\n' +
-           'sourceCodeHash: ' + loggedJobs[i].args['sourceCodeHash'] + '\n' +
+           'sourceCodeHash: ' + sourceCodeHash + '\n' +       
            'gasDataTransferIn: ' + str(loggedJobs[i].args['gasDataTransferIn']) + '\n' +
            'gasDataTransferOut: ' + str(loggedJobs[i].args['gasDataTransferOut']) + '\n' +
            'cacheType: ' + str(loggedJobs[i].args['cacheType']) + '\n' + 
            'gasStorageHour: ' + str(loggedJobs[i].args['gasStorageHour']), 'light_pink_3')
        
+       if loggedJobs[i].args['storageID'] == lib.storageID.ipfs or loggedJobs[i].args['storageID'] == lib.storageID.ipfs_miniLock:           
+           sourceCodeHash = lib.convertBytes32Ipfs(loggedJobs[i].args['sourceCodeHash'])
+           if sourceCodeHash != loggedJobs[i].args['jobKey']:
+               log('IPFS hash does not match with the given sourceCodeHash.', 'red')
+               runFlag = 1
+
        if loggedJobs[i]['blockNumber'] > int(maxVal): 
           maxVal = loggedJobs[i]['blockNumber']
 
        jobKey = loggedJobs[i].args['jobKey']
        index  = int(loggedJobs[i].args['index'])
-       strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
+
+       if loggedJobs[i].args['storageID'] == lib.storageID.github:
+           strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey.replace("=", "", 1)])           
+       else:
+           strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
                      
        for attempt in range(10):
            try:
