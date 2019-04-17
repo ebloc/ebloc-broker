@@ -29,7 +29,8 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
 
     if str(eBlocBroker.functions.isUserOrcIDVerified(fromAccount).call()) == '0':
        return 'Error: User\'s orcid: ' + orcid + ' is not verified.'
-
+   
+    '''
     if storageID == 0 or storageID == 2:
        lib.isIpfsOn()
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress']
@@ -37,7 +38,8 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
        output = os.popen('ipfs swarm connect ' + strVal).read() 
        if 'success' in output:
           print(output)
-          
+    '''
+    
     computationalCost = priceCoreMin * core * gasCoreMin
     jobReceivedBlocNumber, jobGasStorageHour = eBlocBroker.functions.getJobStorageTime(fromAccount, sourceCodeHash).call();
     
@@ -118,22 +120,22 @@ if __name__ == '__main__':
         cacheType      = lib.cacheType.private # default
         
         if storageID == lib.storageID.ipfs: # IPFS
-            longJob = True
+            longJob = False
             # jobKey    = '1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'           
             if longJob:
-                jobKey    = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U' 
-                coreGasDay      = 0 
-                coreGasHour     = 0 
-                coreGasMin      = 100
-
-                hex_str = lib.convertIpfsBytes32(jobKey)
+                jobKey         = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U' 
+                coreGasDay     = 0 
+                coreGasHour    = 0 
+                coreGasMin     = 100
+                hex_str        = lib.convertIpfsBytes32(jobKey)
                 sourceCodeHash = web3.toBytes(hexstr= hex_str)
                 # sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"                
             else:
-                jobKey    = 'QmWfcC6tWFq72LPoewTsXpH2kcjySenYQdiRhUERsmCYdg'  # 2 minutes job
-                coreGasDay      = 0 
-                coreGasHour     = 0 
-                coreGasMin      = 1
+                jobKey         = 'QmY6jUjufnyB2nZe38hRZvmyboxtzRcPkP388Yjfhuomoy'  # 3 minutes job
+                coreGasDay     = 0 
+                coreGasHour    = 0 
+                coreGasMin     = 3
+                hex_str        = lib.convertIpfsBytes32(jobKey)
                 sourceCodeHash = web3.toBytes(hexstr= hex_str)
                                
             cacheType = lib.cacheType.public # default
