@@ -128,7 +128,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     */
     function receiptCheck(string memory jobKey,
 			  uint32 index,
-			  uint32 jobRunTimeMin,
+			  uint32 jobExecutionTimeMin,
 			  string memory resultIpfsHash,
 			  uint8 storageID,
 			  uint endTime,
@@ -143,7 +143,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	Lib.status storage job = s.clusterContract[msg.sender].jobStatus[jobKey][index];	
 	Lib.clusterInfo memory info = s.clusterContract[msg.sender].info[job.clusterUpdatedBlockNumber];
 
-	require(jobRunTimeMin   <= job.gasCoreMin);      // Cluster cannot request more time of the job that is already requested
+	require(jobExecutionTimeMin   <= job.gasCoreMin);      // Cluster cannot request more time of the job that is already requested
 	require(dataTransferSum <= job.dataTransferSum); // Cluster cannot request more job's given dataTransferSum amount
 	
 	uint amountToGain = 0;
@@ -153,7 +153,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	}
 	
 	amountToGain +=
-	    info.priceCoreMin * job.core * jobRunTimeMin + // computationalCost       	    
+	    info.priceCoreMin * job.core * jobExecutionTimeMin + // computationalCost       	    
 	    info.priceDataTransfer * (dataTransferSum);    // dataTransferCost	
 	
 	if (amountToGain > job.received ||
@@ -377,7 +377,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	}
 	
 	/*emit*/ LogJob(clusterAddress, jobKey, cluster.jobStatus[jobKey].length - 1, storageID, sourceCodeHash,
-			dataTransferIn, dataTransferOut, cacheType, gasStorageHour);
+			dataTransferOut, cacheType, gasStorageHour);
 	return; //true
     }
 

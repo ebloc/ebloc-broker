@@ -7,6 +7,8 @@ from lib_mongodb import addItem
 from shutil  import copyfile
 from dotenv  import load_dotenv
 from os.path import expanduser
+from colored import stylize, fg
+
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
 
@@ -74,17 +76,25 @@ def convertIpfsBytes32(hash_string):
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
-def log(strIn, color=''):
-    from colored import stylize
-    from colored import fg
+def log(strIn, color='', newLine=True): 
     if color != '':
-        print(stylize(strIn, fg(color))) 
+        if newLine:
+            print(stylize(strIn, fg(color)))
+        else:
+            print(stylize(strIn, fg(color)), end='')
     else:
-        print(strIn)
+        if newLine:
+            print(strIn)
+        else:
+            print(strIn, end='')
+
+    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a')
+    if newLine:
+        txFile.write(strIn + '\n')
+    else:
+        txFile.write(strIn)
         
-    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a') 
-    txFile.write(strIn + '\n') 
-    txFile.close() 
+    txFile.close()
 
 # enum: https://stackoverflow.com/a/1695250/2402577
 def enum(*sequential, **named):
@@ -173,10 +183,8 @@ def web3Exception(check):
 def isHashCached(ipfsHash):
     # cmd: ipfs refs local | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
     p1 = subprocess.Popen(['ipfs', 'refs', 'local'], stdout=subprocess.PIPE)
-    #-----------
     p2 = subprocess.Popen(['grep', '-c', ipfsHash], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    #-----------
     out = p2.communicate()[0].decode('utf-8').strip()
     if out == '1':    
         return True
@@ -201,7 +209,7 @@ def isSlurmOn():
          log("sudo munged -f")
          log("/etc/init.d/munge start")
       else:
-         log('Slurm is on', 'green')
+         log('Slurm is on.', 'green')
          break
 
 def preexec_function():
@@ -221,13 +229,10 @@ def isTransactionPassed(web3, tx):
 def isIpfsOn():
    # cmd: ps aux | grep '[i]pfs daemon' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-   #-----------
    p2 = subprocess.Popen(['grep', '[i]pfs\ daemon'], stdin=p1.stdout, stdout=subprocess.PIPE)
    p1.stdout.close()
-   #-----------
    p3 = subprocess.Popen(['wc', '-l'], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
-   #-----------
    check = p3.communicate()[0].decode('utf-8').strip()
    if int(check) == 0:
       log("Error: IPFS does not work on the background.", 'red') 
@@ -341,6 +346,7 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
                                             'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
                                             resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
                                             '--mail-type=ALL']).decode('utf-8').strip()
+           time.sleep(1) # Wait 1 second for Slurm idle core to be updated. 
        except subprocess.CalledProcessError as e:
            log(e.output.decode('utf-8').strip(), 'red')
            # sacctmgr remove user where user=$USERNAME --immediate
