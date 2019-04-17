@@ -5,6 +5,6 @@
 
 g++ helloworld.cpp -o hello
 ./hello
-sleep 120
+sleep 180
 
-echo completed 120 > completed.txt
+echo completed 180 > completed.txt

@@ -319,7 +319,7 @@ index     = 0
 
 ### Events
 
-#### Keep track of the log of received jobs and their status
+#### Keep track of logged received jobs and their status
 
 ```bash
 clusterAddress="0x57b60037b82154ec7149142c606ba024fbb0f991"
