@@ -29,7 +29,6 @@ interface eBlocBrokerInterface {
 		 uint indexed index,
 		 uint8 storageID,
 		 bytes32 sourceCodeHash,
-		 uint32 gasDataTransferIn,
 		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
 		 uint gasStorageHour

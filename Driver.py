@@ -11,6 +11,7 @@ from colored import stylize
 from colored import fg
 from imports import connectEblocBroker
 from imports import getWeb3
+from lib import log
 from driverEudat import driverEudat
 from driverGdrive import driverGdrive
 
@@ -85,16 +86,6 @@ def runWhisperStateReceiver():
 # rows = res[0] columns = res[1]
 columns = 100
 
-def log(strIn, color=''): 
-    if color != '':
-        print(stylize(strIn, fg(color)))
-    else:
-        print(strIn)
-        
-    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a')
-    txFile.write(strIn + '\n')
-    txFile.close()
-
 def terminate():
 	log('Terminated')
 	subprocess.run(['sudo', 'bash', 'killall.sh']) # Kill all dependent processes and exit
@@ -111,21 +102,23 @@ def idleCoreNumber(printFlag=1):
     if len(coreInfo) != 0:
        idleCore = coreInfo[1]
        if printFlag == 1:
-          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: ' + coreInfo[1] +
-              '| OtherCores: ' + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue')
+          log('AllocatedCores: ' + coreInfo[0] + '| IdleCores: '          + coreInfo[1] +
+              '| OtherCores: '   + coreInfo[2] + '| TotalNumberOfCores: ' + coreInfo[3], 'blue')
     else:
        log('sinfo return emptry string.', 'red')
-       idleCore = 0
+       idleCore = '0'
        
     return idleCore
 
-def slurmPendingJobCheck(): 
+""" If there is no idle cores, waits for idle cores to be emerged. """
+def slurmPendingJobCheck():
     idleCore  = idleCoreNumber()       
     printFlag = 0    
     while idleCore == '0':
        if printFlag == 0:
           log('Waiting running jobs to be completed...', 'blue')
           printFlag = 1
+          
        time.sleep(10)
        idleCore = idleCoreNumber(0)
 
@@ -133,16 +126,12 @@ def slurmPendingJobCheck():
 def isGethOn():
    # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-   #-----------
    p2 = subprocess.Popen(['grep', '[g]eth'], stdin=p1.stdout, stdout=subprocess.PIPE)
    p1.stdout.close()
-   #-----------
    p3 = subprocess.Popen(['grep', str(lib.RPC_PORT)], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
-   #-----------
    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
    p3.stdout.close()
-   #-----------
    out = p4.communicate()[0].decode('utf-8').strip()
    
    if int(out) == 0:
@@ -153,28 +142,24 @@ def isGethOn():
 def isDriverOn(): 
    # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-   #-----------
    p2 = subprocess.Popen(['grep', '[D]river.py'], stdin=p1.stdout, stdout=subprocess.PIPE)
    p1.stdout.close()
-   #-----------
    p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
-   #-----------
    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
    p3.stdout.close()
-   #-----------
    out = p4.communicate()[0].decode('utf-8').strip()
    
    if int(out) > 1:
       log("Driver is already running.", 'green')
 
 def eudatLoginAndCheck():
+    log("Login into owncloud... ", 'blue', False)
     global oc
     if lib.OC_USER is None or lib.OC_USER == "":
         log("OC_USER is not set in .env", "red")
         sys.exit()
         
-    log("Login into owncloud...")
     with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
         password = content_file.read().strip()
         
@@ -183,8 +168,9 @@ def eudatLoginAndCheck():
     password = None
     try:
         oc.list('.')
+        log("SUCCESS", 'green')
     except subprocess.CalledProcessError as e:
-        log(e.output.decode('utf-8').strip(), 'red')        
+        log("FAILED. " + e.output.decode('utf-8').strip(), 'red')        
         sys.exit()
         
 # Startup functions are called
@@ -231,7 +217,7 @@ if "false" in isClusterExist.lower():
    terminate()
 
 deployedBlockNumber   = str(getDeployedBlockNumber(eBlocBroker))
-blockReadFromContract = str(0)
+blockReadFromContract = '0'
 
 log('{0: <20}'.format('clusterAddress:') + '"'+ clusterAddress + '"', 'yellow')
 if not os.path.isfile(lib.BLOCK_READ_FROM_FILE): 
@@ -282,7 +268,7 @@ while True:
        log(squeueStatus)
        terminate()
        
-    idleCoreNumber()    
+    idleCore = idleCoreNumber()    
     log("Current Slurm Running jobs status: \n" + squeueStatus)
     log('-' * int(columns), "green")
     if 'notconnected' != clusterGainedAmount:
@@ -311,7 +297,6 @@ while True:
        isClusterReceivedJob = 1
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
-       # print(loggedJobs[i].args['sourceCodeHash'])
        sourceCodeHash = binascii.hexlify(loggedJobs[i].args['sourceCodeHash']).decode("utf-8")[0:32]       
        log('BlockNum: ' + str(loggedJobs[i]['blockNumber']) + '\n' +
            'clusterAddress: ' + loggedJobs[i].args['clusterAddress'] + '\n' +
@@ -337,16 +322,16 @@ while True:
        index  = int(loggedJobs[i].args['index'])
 
        if loggedJobs[i].args['storageID'] == lib.storageID.github:
-           strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey.replace("=", "", 1)])           
+           strCheck,status = lib.runCommand(['bash', lib.EBLOCPATH + '/strCheck.sh', jobKey.replace('=', '', 1)])           
        else:
-           strCheck,status = lib.runCommand(["bash", lib.EBLOCPATH + "/strCheck.sh", jobKey])
+           strCheck,status = lib.runCommand(['bash', lib.EBLOCPATH + '/strCheck.sh', jobKey])
                      
        for attempt in range(10):
            try:
                jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
                log('core: ' + str(jobInfo['core']))               
            except Exception as e:
-               log("Error: jobInfo returns as " + jobInfo, 'red')
+               log('Error: jobInfo returns as ' + jobInfo, 'red')
            else:
                break
        else:
@@ -361,7 +346,6 @@ while True:
           log('jobOwner/userID: ' + jobInfo['jobOwner'])
           userID    = jobInfo['jobOwner'].lower()
           userExist = isUserExist(userID, eBlocBroker, web3)          
-
           if jobInfo['status'] == str(lib.job_state_code['COMPLETED']):
              log('Job is already completed.', 'red')
              runFlag = 1
@@ -369,7 +353,7 @@ while True:
              log("Job is refunded.", 'red')
              runFlag = 1
           if runFlag == 0 and not jobInfo['status'] == lib.job_state_code['PENDING']:
-             log("Job is already captured and in process or completed.", 'red')
+             log('Job is already captured and in process or completed.', 'red')
              runFlag = 1
           if 'False' in strCheck:
              log('Filename contains invalid character', 'red')
@@ -380,7 +364,6 @@ while True:
           else:
              userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
              
-          slurmPendingJobCheck() # TODO: if jobs are bombared idle core won't updated
           log('Adding user...', 'green')
           res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
           log(res)                    
@@ -389,66 +372,64 @@ while True:
        if runFlag == 1:
           pass
        elif str(loggedJobs[i].args['storageID']) == '0':
-          log("New job has been received. IPFS call |" + time.ctime(), "green")
-          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
-                                str(loggedJobs[i].args['index']),
-                                str(loggedJobs[i].args['storageID']),
-                                userIDmd5,
-                                loggedJobs[i].args['sourceCodeHash'],
-                                loggedJobs[i].args['cacheType'],
-                                loggedJobs[i].args['gasStorageHour'], eBlocBroker, web3)
+           slurmPendingJobCheck()
+           log('New job has been received. IPFS call |' + time.ctime(), 'green')
+           driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
+                                 str(loggedJobs[i].args['index']),
+                                 str(loggedJobs[i].args['storageID']),
+                                 userIDmd5,
+                                 loggedJobs[i].args['sourceCodeHash'],
+                                 loggedJobs[i].args['cacheType'],
+                                 loggedJobs[i].args['gasStorageHour'], eBlocBroker, web3)
        elif str(loggedJobs[i].args['storageID']) == '1':
-          if oc is None: #TODO: carry to upper functon
-              log("Login into owncloud...")
-              with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
-                  password = content_file.read().strip()
-                   
-              oc = owncloud.Client('https://b2drop.eudat.eu/') 
-              oc.login(lib.OC_USER_ID, password)  # Unlocks EUDAT account
-              password = None
-              
-          log("New job has been received. EUDAT call |" + time.ctime(), "green")
-          driverEudat(loggedJobs[i].args['jobKey'],
-                      str(loggedJobs[i].args['index']),
-                      userInfo[4],
-                      userIDmd5,
-                      loggedJobs[i].args['sourceCodeHash'],
-                      loggedJobs[i].args['cacheType'],
-                      loggedJobs[i].args['gasStorageHour'],
-                      eBlocBroker, web3, oc)
-          
-       #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
-       elif str(loggedJobs[i].args['storageID']) == '2':
-          log('New job has been received. IPFS with miniLock call |' + time.ctime(), 'green')
-          driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
-                                str(loggedJobs[i].args['index']),
-                                str(loggedJobs[i].args['storageID']),
-                                userIDmd5,
-                                loggedJobs[i].args['sourceCodeHash'],
-                                loggedJobs[i].args['cacheType'],
-                                loggedJobs[i].args['gasStorageHour'],
-                                eBlocBroker, web3)
-          #thread.start_new_thread(driverFunc.driverIpfs, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
-       elif str(loggedJobs[i].args['storageID']) == '3':
-          log('New job has been received. GitHub call |' + time.ctime(), 'green')
-          driverFunc.driverGithub(loggedJobs[i].args['jobKey'],
-                                  str(loggedJobs[i].args['index']),
-                                  str(loggedJobs[i].args['storageID']),
-                                  userIDmd5,
-                                  loggedJobs[i].args['sourceCodeHash'],
-                                  loggedJobs[i].args['cacheType'],
-                                  loggedJobs[i].args['gasStorageHour'],
-                                  eBlocBroker, web3)          
-       elif str(loggedJobs[i].args['storageID']) == '4':
-          log("New job has been received. Googe Drive call |" + time.ctime(), 'green')
-          driverGdrive(loggedJobs[i].args['jobKey'],
+           slurmPendingJobCheck()
+           if oc is None:
+               eudatLoginAndCheck()
+               
+           log('New job has been received. EUDAT call |' + time.ctime(), 'green')
+           driverEudat(loggedJobs[i].args['jobKey'],
                        str(loggedJobs[i].args['index']),
-                       str(loggedJobs[i].args['storageID']),
+                       userInfo[4],
                        userIDmd5,
                        loggedJobs[i].args['sourceCodeHash'],
                        loggedJobs[i].args['cacheType'],
                        loggedJobs[i].args['gasStorageHour'],
-                       eBlocBroker, web3)
+                       eBlocBroker, web3, oc)          
+           #thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']))) 
+       elif str(loggedJobs[i].args['storageID']) == '2':
+           slurmPendingJobCheck()
+           log('New job has been received. IPFS with miniLock call |' + time.ctime(), 'green')
+           driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
+                                 str(loggedJobs[i].args['index']),
+                                 str(loggedJobs[i].args['storageID']),
+                                 userIDmd5,
+                                 loggedJobs[i].args['sourceCodeHash'],
+                                 loggedJobs[i].args['cacheType'],
+                                 loggedJobs[i].args['gasStorageHour'],
+                                 eBlocBroker, web3)
+           #thread.start_new_thread(driverFunc.driverIpfs, (loggedJobs[i].args['jobKey'], str(loggedJobs[i].args['index']), str(loggedJobs[i].args['storageID']), submittedJob[5]))
+       elif str(loggedJobs[i].args['storageID']) == '3':
+           slurmPendingJobCheck()
+           log('New job has been received. GitHub call |' + time.ctime(), 'green')
+           driverFunc.driverGithub(loggedJobs[i].args['jobKey'],
+                                   str(loggedJobs[i].args['index']),
+                                   str(loggedJobs[i].args['storageID']),
+                                   userIDmd5,
+                                   loggedJobs[i].args['sourceCodeHash'],
+                                   loggedJobs[i].args['cacheType'],
+                                   loggedJobs[i].args['gasStorageHour'],
+                                   eBlocBroker, web3)          
+       elif str(loggedJobs[i].args['storageID']) == '4':
+           slurmPendingJobCheck()
+           log('New job has been received. Googe Drive call |' + time.ctime(), 'green')
+           driverGdrive(loggedJobs[i].args['jobKey'],
+                        str(loggedJobs[i].args['index']),
+                        str(loggedJobs[i].args['storageID']),
+                        userIDmd5,
+                        loggedJobs[i].args['sourceCodeHash'],
+                        loggedJobs[i].args['cacheType'],
+                        loggedJobs[i].args['gasStorageHour'],
+                        eBlocBroker, web3)
           
     if len(loggedJobs) > 0 and int(maxVal) != 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
