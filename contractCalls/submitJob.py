@@ -127,7 +127,7 @@ if __name__ == '__main__':
                 coreGasDay     = 0 
                 coreGasHour    = 0 
                 coreGasMin     = 100
-                hex_str        = lib.convertIpfsBytes32(jobKey)
+                hex_str        = lib.convertIpfsToBytes32(jobKey)
                 sourceCodeHash = web3.toBytes(hexstr= hex_str)
                 # sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"                
             else:
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                 coreGasDay     = 0 
                 coreGasHour    = 0 
                 coreGasMin     = 3
-                hex_str        = lib.convertIpfsBytes32(jobKey)
+                hex_str        = lib.convertIpfsToBytes32(jobKey)
                 sourceCodeHash = web3.toBytes(hexstr= hex_str)
                                
             cacheType = lib.cacheType.public # default
