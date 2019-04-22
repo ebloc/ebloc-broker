@@ -259,8 +259,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
     if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
         for attempt in range(10):
             command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
-            newHash = runCommand(command)
-            if newHash=="":
+            resultIpfsHash = runCommand(command)
+            if resultIpfsHash == "":
                 ''' Approach to upload as .tar.gz. Currently not used.
                 removeSourceCode(resultsFolderPrev)
                 with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
@@ -268,8 +268,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
                 command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
                 log(runCommand(command))
                 command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
-                newHash = runCommand(command)
-                newHash = newHash.split(' ')[1]
+                resultIpfsHash = runCommand(command)
+                resultIpfsHash = resultIpfsHash.split(' ')[1]
                 lib.silentremove(resultsFolder + '/result.tar.gz')
                 '''
                 log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
@@ -280,23 +280,20 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             sys.exit()
                 
         # dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
-        # cmd: echo newHash | tail -n1 | awk '{print $2}'
-        p1 = subprocess.Popen(['echo', newHash], stdout=subprocess.PIPE)
-        #-----------
+        # cmd: echo resultIpfsHash | tail -n1 | awk '{print $2}'
+        p1 = subprocess.Popen(['echo', newHash], stdout=subprocess.PIPE)        
         p2 = subprocess.Popen(['tail', '-n1'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()
-        #-----------
+        p1.stdout.close()        
         p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-        p2.stdout.close()
-        #-----------
-        newHash = p3.communicate()[0].decode('utf-8').strip()
-        log("newHash: " + newHash)
+        p2.stdout.close()        
+        resultIpfsHash = p3.communicate()[0].decode('utf-8').strip()
+        log("resultIpfsHash: " + resultIpfsHash)
 
-        command = ['ipfs', 'pin', 'add', newHash]
+        command = ['ipfs', 'pin', 'add', resultIpfsHash]
         res = runCommand(command) # pin downloaded ipfs hash
         print(res)
 
-        command = ['ipfs', 'object', 'stat', newHash]
+        command = ['ipfs', 'object', 'stat', resultIpfsHash]
         isIPFSHashExist = runCommand(command) # pin downloaded ipfs hash
         
         for item in isIPFSHashExist.split("\n"):
@@ -321,9 +318,9 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         removeSourceCode(resultsFolderPrev)
         for attempt in range(10):
             command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
-            newHash = runCommand(command)
-            newHash = newHash.split(' ')[1]
-            if newHash == "":
+            resultIpfsHash = runCommand(command)
+            resultIpfsHash = resultIpfsHash.split(' ')[1]
+            if resultIpfsHash == "":
                 log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
                 time.sleep(5) # wait 5 second for next step retry to up-try
             else: # success
@@ -332,11 +329,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             sys.exit()
                    
         # dataTransferOut = calculateDataTransferOut(resultsFolder + '/result.tar.gz.minilock', 'f')   
-        log("newHash: " + newHash)
-        command = ['ipfs', 'pin', 'add', newHash]
+        log("resultIpfsHash: " + resultIpfsHash)
+        command = ['ipfs', 'pin', 'add', resultIpfsHash]
         res = runCommand(command)     
         print(res)
-        command = ['ipfs', 'object', 'stat', newHash]      
+        command = ['ipfs', 'object', 'stat', resultIpfsHash]      
         isIPFSHashExist = runCommand(command)
         for item in isIPFSHashExist.split("\n"):
             if "CumulativeSize" in item:
@@ -347,7 +344,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')         
     elif str(storageID) == '1': # EUDAT
         log('Entered into Eudat case')
-        newHash = '0x00'
+        resultIpfsHash = ''
         lib.removeFiles(resultsFolder + '/.node-xmlhttprequest*')      
         os.chdir(resultsFolder) 
         removeSourceCode(resultsFolderPrev)      
@@ -373,7 +370,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         else: # we failed all the attempts - abort            
             sys.exit()         
     elif str(storageID) == '4': #GDRIVE
-        newHash = '0x00'
+        resultIpfsHash = ''
         #cmd: gdrive info $jobKey -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost
         gdriveInfo, status = lib.subprocessCallAttempt([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
         if not status: return False
@@ -411,10 +408,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         else:
             log('Error: Files could not be uploaded', 'red')
             sys.exit()
-         
+
+    if resultIpfsHash != '':
+        hex_str        = lib.convertIpfsToBytes32(resultIpfsHash)
+        resultIpfsHash = web3.toBytes(hexstr= hex_str) # resultIpfsHash is converted into byte32 format
+            
     dataTransferSum = dataTransferIn + dataTransferOut   
     log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
-    receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferIn, dataTransferSum)
+    receiptCheckTx(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, jobID, dataTransferIn, dataTransferSum)
     log('DONE.', 'green')
     '''
     # Removed downloaded code from local since it is not needed anymore

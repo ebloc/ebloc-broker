@@ -8,6 +8,7 @@ pragma solidity ^0.4.17;
 //pragma experimental ABIEncoderV2;
 
 library Lib {
+    
     enum storageID {
 	IPFS,          /* 0 */
 	EUDAT,         /* 1 */
@@ -101,7 +102,7 @@ library Lib {
 	uint32 tail;           /* Tail of the linked list */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }    
-    
+	
     /* Invoked when cluster calls registerCluster() function */
     function constructCluster(clusterData storage self) public
     {
