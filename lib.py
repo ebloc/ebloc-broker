@@ -67,11 +67,11 @@ inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 Qm = b'\x12 '
 
-def convertBytes32Ipfs(bytes_array):
+def convertBytes32ToIpfs(bytes_array):
     merge = Qm + bytes_array
     return base58.b58encode(merge).decode("utf-8")
 
-def convertIpfsBytes32(hash_string):
+def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
