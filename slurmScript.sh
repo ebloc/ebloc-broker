@@ -5,8 +5,8 @@ b=$(echo $1)
 c=$(echo $2)
 event=$(echo $c | awk '{print $8}')
 echo "Your message | $a | $b | $c //$event ." | mail -s "Message Subject" alper.alimoglu@gmail.com
-VENV_PATH="/home/alper/venv"
-EBLOCBROKER_PATH="/home/alper/eBlocBroker"
+VENV_PATH="/home/netlab/venv"
+EBLOCBROKER_PATH="/home/netlab/eBlocBroker"
 
 jobID=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
 

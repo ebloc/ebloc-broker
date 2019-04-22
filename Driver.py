@@ -310,7 +310,7 @@ while True:
            'gasStorageHour: ' + str(loggedJobs[i].args['gasStorageHour']), 'light_pink_3')
        
        if loggedJobs[i].args['storageID'] == lib.storageID.ipfs or loggedJobs[i].args['storageID'] == lib.storageID.ipfs_miniLock:           
-           sourceCodeHash = lib.convertBytes32Ipfs(loggedJobs[i].args['sourceCodeHash'])
+           sourceCodeHash = lib.convertBytes32ToIpfs(loggedJobs[i].args['sourceCodeHash'])
            if sourceCodeHash != loggedJobs[i].args['jobKey']:
                log('IPFS hash does not match with the given sourceCodeHash.', 'red')
                runFlag = 1

@@ -24,7 +24,7 @@ class storageID:
     
 Qm = b'\x12 '
 
-def convertIpfsBytes32(hash_string):
+def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
@@ -44,11 +44,14 @@ def pushBlockInfo(contract_address):
     print("Receipt Used Gas: " + str(contract_address["gasUsed"]))
     return
 
-def receiptCheck(my_contract, chain, e, ipfsHash, index, timeToRun, dataTransferIn, dataTransferOut):
+def receiptCheck(my_contract, chain, web3, e, ipfsHash, index, timeToRun, dataTransferIn, dataTransferOut):
+    ipfsBytes32    = convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
+
     set_txn_hash     = my_contract.transact().receiptCheck(ipfsHash,
                                                            index,
                                                            timeToRun,
-                                                           "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve",
+                                                           resultIpfsHash,
                                                            0,
                                                            e,
                                                            dataTransferIn,
@@ -99,7 +102,8 @@ def test_receipt(web3, accounts, chain):
 
     # ------------
     set_txn_hash = my_contract.transact({"from": accounts[0]}).authenticateOrcID(accounts[8], '0000-0001-7642-0552') # ORCID should be registered.
-    assert my_contract.call().isUserOrcIDVerified(accounts[8]), "isUserOrcIDVerified is failed"   
+    print("usedGas authenticateOrcID: " + str(chain.wait.for_receipt(set_txn_hash)["gasUsed"]))    
+    assert my_contract.call().isUserOrcIDVerified(accounts[8]), "isUserOrcIDVerified is failed"
     # ------------
     print("isUserExist: "           + str(my_contract.call().isUserExist(accounts[8])))
     blockReadFrom, b = my_contract.call().getUserInfo(accounts[8])
@@ -161,7 +165,7 @@ def test_receipt(web3, accounts, chain):
             chain.wait.for_block(int(arguments[0]))
             jobKey         = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
 
-            ipfsBytes32 = convertIpfsBytes32(jobKey)
+            ipfsBytes32 = convertIpfsToBytes32(jobKey)
             sourceCodeHash = web3.toBytes(hexstr= ipfsBytes32)
             print(sourceCodeHash)
             # sourceCodeHash = "e3fbef873405145274256ee0ee2b580f"
@@ -220,7 +224,7 @@ def test_receipt(web3, accounts, chain):
             arguments = line.rstrip('\n').split(" ")
             dataTransferIn  = 0
             dataTransferOut = 100
-            receiptCheck(my_contract, chain, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd",
+            receiptCheck(my_contract, chain, web3, int(arguments[1]), "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd",
                          val, int(arguments[1]) - int(arguments[0]), dataTransferIn, dataTransferOut)
             receivedAmount = my_contract.call().getClusterReceivedAmount(account)            
             print('Cluster Receeived Amount: ' + str(receivedAmount - receivedAmount_temp))
