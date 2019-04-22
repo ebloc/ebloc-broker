@@ -10,7 +10,7 @@ interface eBlocBrokerInterface {
 		     uint received,
 		     uint returned,
 		     uint endTime,
-		     string resultIpfsHash,
+		     bytes32 resultIpfsHash,
 		     uint8 storageID,
 		     uint dataTransferIn,
 		     uint dataTransferOut
