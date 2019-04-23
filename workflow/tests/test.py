@@ -26,13 +26,33 @@ def IPFS_chech(greeter, chain, web3):
     ipfsHashRet = convertBytes32Ipfs(ret)
     assert ipfsHash == ipfsHashRet   
 
+def combineUint128(variable1, variable2):
+    bits1='{0:0128b}'.format(variable1)
+    bits2='{0:0128b}'.format(variable2)
+    # print(bits1 + bits2)   
+    return int(bits1 + bits2, 2)    
+
 def test_custom_greeting(web3, chain):
     print('\n')
     greeter, _ = chain.provider.get_or_deploy_contract('Greeter')   
     # IPFS_chech(greeter, chain, web3)
-
     
     key = 'acfd2fd8a1e9ccf031db0a93a861f6eb'
     set_txn_hash = greeter.transact().mapWorkflow(key)        
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print('mapWorkflow_' + 'gasUsed=' + str(contract_address["gasUsed"]))
+
+
+    # ===
+    v1 = 340282366920938463463374607431768211455
+    resInt = combineUint128(v1, 10)
+    print(resInt)    
+    set_txn_hash = greeter.transact().setCharacter(resInt)
+
+    print(greeter.call().getVariables())
+
+    print(greeter.call().getDoo())
+    
+    
+
+    
