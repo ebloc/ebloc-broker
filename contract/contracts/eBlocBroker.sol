@@ -130,9 +130,8 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  uint32 index,
 			  uint32 jobExecutionTimeMin,
 			  bytes32 resultIpfsHash,
-			  //string memory resultIpfsHash,
 			  uint8 storageID,
-			  uint endTime,
+			  uint32 endTime,
 			  uint dataTransferIn,
 			  uint dataTransferSum) /*isBehindBlockTimeStamp(endTime)*/ public
     /*returns (bool success)*/
@@ -161,9 +160,8 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    job.status == uint8(Lib.jobStateCodes.COMPLETED) ||
 	    job.status == uint8(Lib.jobStateCodes.REFUNDED))
 	    revert();
-	
+
 	if (!store.clusterContract[msg.sender].receiptList.receiptCheck(job, endTime, info.availableCoreNum)) {
-	//if (!store.clusterContract[msg.sender].receiptList.receiptCheck(job.startTime, endTime, int32(job.core))) {
 	    job.status = uint8(Lib.jobStateCodes.REFUNDED); /* Important to check already refunded job or not */	    
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 
@@ -407,7 +405,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
 
     /* Sets the job's state (stateID) which is obtained from Slurm */
-    function setJobStatus(string memory jobKey, uint32 index, uint8 stateID, uint startTime)
+    function setJobStatus(string memory jobKey, uint32 index, uint8 stateID, uint32 startTime)
 	isBehindBlockTimeStamp(startTime)
 	checkStateID(stateID) public
 	returns (bool success)

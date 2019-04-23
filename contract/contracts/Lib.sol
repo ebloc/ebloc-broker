@@ -45,7 +45,7 @@ library Lib {
     struct status {
 	/* Variable assigned by the cluster */
 	uint8        status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint      startTime; /* Submitted job's starting universal time on the server side */
+	uint32    startTime; /* Submitted job's starting universal time on the server side */
 	
 	/* Variables assigned by the client */	
 	uint     gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
@@ -92,7 +92,7 @@ library Lib {
     }
 
     struct interval {
-	uint endpoint;
+	uint32 endpoint;
 	int32   core; /* Job's requested core number */
 	uint32  next; /* Points to next the node */
     }
@@ -116,7 +116,7 @@ library Lib {
 	selfReceiptList.deletedItemNum   = 0;
     }
 
-    function receiptCheck(intervalNode storage self, status storage job, uint endTime, uint availableCoreNum) public	
+    function receiptCheck(intervalNode storage self, status storage job, uint32 endTime, uint32 availableCoreNum) public	
 	returns (bool flag)
     {
 	flag = false;
@@ -125,7 +125,7 @@ library Lib {
 	uint32 addrTemp;
 	int32  carriedSum;
 	
-	uint startTime = job.startTime;
+	uint32 startTime = job.startTime;
 	
 	interval storage prevNode     = self.list[0];
 	interval storage currentNode  = self.list[0];
