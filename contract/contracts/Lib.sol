@@ -174,7 +174,7 @@ library Lib {
 		return true;
 	    }
 
-	    //carriedSum += currentNode.core;
+	    carriedSum += currentNode.core;
 	    
 	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
 	    if (carriedSum > int32(endTime_availableCoreNum)) {			    
