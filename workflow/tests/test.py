@@ -45,7 +45,7 @@ def test_custom_greeting(web3, chain):
 
     # ===
     v1 = 340282366920938463463374607431768211455
-    resInt = combineUint128(v1, 10)
+    resInt = combineUint128(v1, v1)
     print(resInt)    
     set_txn_hash = greeter.transact().setCharacter(resInt)
 
@@ -54,5 +54,10 @@ def test_custom_greeting(web3, chain):
     print(greeter.call().getDoo())
     
     
-
+    # ===
+    array = [0, 1, 2, 3, 4, 4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+    array =[0];
+    set_txn_hash = greeter.transact().array(array)
     
+
+    print(greeter.call().getMoo())
