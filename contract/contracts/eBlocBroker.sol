@@ -161,7 +161,10 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    job.status == uint8(Lib.jobStateCodes.REFUNDED))
 	    revert();
 
-	if (!store.clusterContract[msg.sender].receiptList.receiptCheck(job, endTime, info.availableCoreNum)) {
+
+	//uint32(endTime) + uint64(uint64(info.availableCoreNum) << 32);
+	    
+	if (!store.clusterContract[msg.sender].receiptList.receiptCheck(job, uint32(endTime) + uint64(uint64(info.availableCoreNum) << 32))) {
 	    job.status = uint8(Lib.jobStateCodes.REFUNDED); /* Important to check already refunded job or not */	    
 	    job.jobOwner.transfer(job.received); /* Pay back newOwned(job.received) to the client, full refund */
 

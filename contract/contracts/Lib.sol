@@ -116,9 +116,10 @@ library Lib {
 	selfReceiptList.deletedItemNum   = 0;
     }
 
-    function receiptCheck(intervalNode storage self, status storage job, uint32 endTime, uint32 availableCoreNum) public	
+    function receiptCheck(intervalNode storage self, status storage job, uint64 endTime_availableCoreNum) public	
 	returns (bool flag)
     {
+	interval[] storage list = self.list;
 	flag = false;
 	
 	uint32 addr = self.tail;
@@ -127,55 +128,57 @@ library Lib {
 	
 	uint32 startTime = job.startTime;
 	
-	interval storage prevNode     = self.list[0];
-	interval storage currentNode  = self.list[0];
-	interval storage prevNodeTemp = self.list[0];
+	interval storage prevNode     = list[0];
+	interval storage currentNode  = list[0];
+	interval storage prevNodeTemp = list[0];
 
 	// +-------------------------------+
 	// | Begin: receiptCheck Algorithm |
 	// +-------------------------------+
 
-	if (endTime < self.list[addr].endpoint) {
+	if (uint32(endTime_availableCoreNum) < list[addr].endpoint) {
 	    flag        = true;
-	    prevNode    = self.list[addr];
-	    currentNode = self.list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
+	    prevNode    = list[addr];
+	    currentNode = list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
 
 	    do { 
-		if (endTime > currentNode.endpoint) {
+		if (uint32(endTime_availableCoreNum) > currentNode.endpoint) {
 		    addr = prevNode.next; /* "addr" points the index to the pushed the node */
 		    break;
 		}
 		prevNode    = currentNode;
-		currentNode = self.list[currentNode.next];
+		currentNode = list[currentNode.next];
 	    } while (true);
 	}
 
-	self.list.push(interval({endpoint: endTime, core: int32(job.core), next: addr})); /* Inserted while keeping sorted order */
+	list.push(interval({endpoint: uint32(endTime_availableCoreNum), core: int32(job.core), next: addr})); /* Inserted while keeping sorted order */
 	carriedSum = int32(job.core); /* Carried sum variable is assigned with job's given core number */
 	
 	if (!flag) {
 	    addrTemp      = addr;	    
-	    prevNode      = self.list[self.tail = uint32(self.list.length-1)];
+	    prevNode      = list[self.tail = uint32(list.length-1)];
 	} else {
 	    addrTemp      = prevNode.next;
 	    prevNodeTemp  = prevNode;
-	    prevNode.next = uint32(self.list.length - 1); /* Node that pushed in-between the linked-list */
+	    prevNode.next = uint32(list.length - 1); /* Node that pushed in-between the linked-list */
 	}
 
-	currentNode = self.list[prevNode.next]; /* Current node points index before insert operation is done */
+	currentNode = list[prevNode.next]; /* Current node points index before insert operation is done */
 
+	endTime_availableCoreNum = uint32(endTime_availableCoreNum >> 32); // availableCoreNum is obtained and assigned
+	
 	do { /* Inside while loop carriedSum is updated */	    
 	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		self.list.push(interval({endpoint: startTime, core: -1 * int32(job.core), next: prevNode.next}));
-		prevNode.next = uint32(self.list.length - 1);
+		list.push(interval({endpoint: startTime, core: -1 * int32(job.core), next: prevNode.next}));
+		prevNode.next = uint32(list.length - 1);
 		return true;
 	    }
 
-	    carriedSum += currentNode.core;
+	    //carriedSum += currentNode.core;
 	    
 	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
-	    if (carriedSum > int32(availableCoreNum)) {
-		delete self.list[self.list.length-1];
+	    if (carriedSum > int32(endTime_availableCoreNum)) {			    
+		delete list[list.length-1];
 		if (!flag)
 		    self.tail = addrTemp;
 		else
@@ -186,7 +189,7 @@ library Lib {
 	    }
 
 	    prevNode    = currentNode;
-	    currentNode = self.list[currentNode.next];
+	    currentNode = list[currentNode.next];
 	} while (true);
 
 	// +-----------------------------+
@@ -198,7 +201,7 @@ library Lib {
     function getReceiptListSize(intervalNode storage self) public view
 	returns (uint32)
     {
-	return uint32(self.list.length-self.deletedItemNum);
+	return uint32(self.list.length - self.deletedItemNum);
     }
 
     /* Used for test */
