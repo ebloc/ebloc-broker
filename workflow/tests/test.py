@@ -35,7 +35,7 @@ def combineUint128(variable1, variable2):
 def test_custom_greeting(web3, chain):
     print('\n')
     greeter, _ = chain.provider.get_or_deploy_contract('Greeter')   
-    # IPFS_chech(greeter, chain, web3)
+    IPFS_chech(greeter, chain, web3)
     
     key = 'acfd2fd8a1e9ccf031db0a93a861f6eb'
     set_txn_hash = greeter.transact().mapWorkflow(key)        

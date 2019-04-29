@@ -4,7 +4,7 @@ author: Alper Alimoglu
 email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.4.17;
+pragma solidity ^0.5.7;
 //pragma experimental ABIEncoderV2;
 
 library Lib {
@@ -18,14 +18,14 @@ library Lib {
     }
     
     enum jobStateCodes {
-	NULL,        /* 0 */
+	SUBMITTED,   /* 0 */
 	COMPLETED,   /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
 	REFUNDED,    /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
 	PENDING,     /* 3 */
 	RUNNING,     /* 4 */
 	CANCELLED    /* 5 */	
     }
-
+    
     struct Storage {
 	/* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
 	uint      deployedBlockNumber;    
@@ -37,32 +37,37 @@ library Lib {
     }
     
     struct jobStorageTime {
-	uint receivedBlocNumber;
-	uint gasStorageBlockNum;
+	uint32 receivedBlocNumber;
+	uint32 gasStorageBlockNum;
+    }
+
+    struct job {
+	/* Variable assigned by the cluster */
+	uint32 startTime; /* Submitted job's starting universal time on the server side */
+	uint8      status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	
+	/* Variables assigned by the client */
+	uint16 core;      /* Requested core array by the client */
+	uint16 gasCoreMin;/* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
     }
     
     /* Submitted Job's information */
     struct status {
-	/* Variable assigned by the cluster */
-	uint8        status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
-	uint32    startTime; /* Submitted job's starting universal time on the server side */
-	
-	/* Variables assigned by the client */	
-	uint     gasCoreMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
-	uint dataTransferIn;  /**/
-	uint dataTransferSum; /**/
-	uint32         core; /* Requested core by the client */
+	mapping(uint => job) jobs;
+		
+	uint   dataTransferIn;  /**/
+	uint  dataTransferSum; /**/
 	 
 	/* Variables obtained from eBlocBoker */
-	uint    received; /* Paid amount (new owned) by the client */		
-	address /*payable*/ jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint                 received; /* Paid amount (new owned) by the client */		
+	address       payable jobOwner; /* Address of the client (msg.sender) has been stored */
 	uint clusterUpdatedBlockNumber; /* When cluster is submitted cluster's most recent block number when its set or updated */
     }
 
     /* Registered user's information */
     struct userData {
-	uint   blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
-	string         orcID; /* User's orcID */
+	uint blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	string       orcID; /* User's orcID */
 
 	//mapping(address => mapping(string  => bool)) isStoragePaid; /**/
     }
@@ -116,7 +121,7 @@ library Lib {
 	selfReceiptList.deletedItemNum   = 0;
     }
 
-    function receiptCheck(intervalNode storage self, status storage job, uint64 endTime_availableCoreNum) public	
+    function receiptCheck(intervalNode storage self, job storage job_, uint64 endTime_availableCoreNum) public	
 	returns (bool flag)
     {
 	interval[] storage list = self.list;
@@ -124,9 +129,8 @@ library Lib {
 	
 	uint32 addr = self.tail;
 	uint32 addrTemp;
-	int32  carriedSum;
-	
-	uint32 startTime = job.startTime;
+	uint32 startTime = job_.startTime;
+	int32  carriedSum;	
 	
 	interval storage prevNode     = list[0];
 	interval storage currentNode  = list[0];
@@ -151,8 +155,8 @@ library Lib {
 	    } while (true);
 	}
 
-	list.push(interval({endpoint: uint32(endTime_availableCoreNum), core: int32(job.core), next: addr})); /* Inserted while keeping sorted order */
-	carriedSum = int32(job.core); /* Carried sum variable is assigned with job's given core number */
+	list.push(interval({endpoint: uint32(endTime_availableCoreNum), core: int32(job_.core), next: addr})); /* Inserted while keeping sorted order */
+	carriedSum = int32(job_.core); /* Carried sum variable is assigned with job's given core number */
 	
 	if (!flag) {
 	    addrTemp      = addr;	    
@@ -169,7 +173,7 @@ library Lib {
 	
 	do { /* Inside while loop carriedSum is updated */	    
 	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		list.push(interval({endpoint: startTime, core: -1 * int32(job.core), next: prevNode.next}));
+		list.push(interval({endpoint: startTime, core: -1 * int32(job_.core), next: prevNode.next}));
 		prevNode.next = uint32(list.length - 1);
 		return true;
 	    }

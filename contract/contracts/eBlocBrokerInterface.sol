@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.5.7;
 
 interface eBlocBrokerInterface {
     
@@ -31,7 +31,7 @@ interface eBlocBrokerInterface {
 		 bytes32 sourceCodeHash,
 		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
-		 uint gasStorageHour
+		 uint32 gasStorageHour
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
