@@ -44,7 +44,7 @@ library Lib {
     struct job {
 	/* Variable assigned by the cluster */
 	uint32 startTime; /* Submitted job's starting universal time on the server side */
-	uint8      status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	uint8     status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
 	
 	/* Variables assigned by the client */
 	uint16 core;      /* Requested core array by the client */
@@ -53,10 +53,13 @@ library Lib {
     
     /* Submitted Job's information */
     struct status {
-	mapping(uint => job) jobs;
-		
+	mapping(uint => job)    jobs;
+	
+	//mapping(string => bool) costFlag;
+	//bool cacheFlag;
+	
 	uint   dataTransferIn;  /**/
-	uint  dataTransferSum; /**/
+	uint  dataTransferOut; /**/
 	 
 	/* Variables obtained from eBlocBoker */
 	uint                 received; /* Paid amount (new owned) by the client */		

@@ -15,7 +15,7 @@ def getOwner(skip=True):
     '''Get Owner'''
     assert eB.getOwner() == accounts[0]
     
-def registerCluster(printFlag=True):
+def registerCluster(skip=True, printFlag=True):
     '''Register Cluster'''
     priceCoreMin      = 1
     priceDataTransfer = 1
@@ -36,7 +36,7 @@ def registerCluster(printFlag=True):
     if printFlag:
         print(' => GasUsed:' + str(tx.__dict__['gas_used']))       
 
-def registerUser(printFlag=True):
+def registerUser(skip=True, printFlag=True):
     '''Register User'''
     tx     = eB.registerUser("email@gmail.com",
                              "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
@@ -54,6 +54,7 @@ def registerUser(printFlag=True):
     assert eB.isUserOrcIDVerified(accounts[1]), "isUserOrcIDVerified is failed"
     
 
+# def workFlow(skip=True):
 def workFlow():
     registerCluster(False)
     registerUser(False)                    
@@ -66,13 +67,13 @@ def workFlow():
 
     dataTransferIn  = 100
     dataTransferOut = 100
-    gasStorageHour  = 1
-    
-    coreArray       = [2, 4]
-    gasCoreMinArray = [10, 20]
-    workFlowJobID = 0
+    dataTransfer    = [dataTransferIn, dataTransferOut]
+    gasStorageHour  = 0    
+    coreArray       = [2,  4,   2]
+    gasCoreMinArray = [10, 15, 20]
+    workFlowJobID   = 0
     storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
-    dataTransfer = [dataTransferIn, dataTransferOut]
+
 
     jobPriceValue = scripts.lib.cost(coreArray, gasCoreMinArray, clusterAddress,
                                      eB, sourceCodeHash, web3,
@@ -89,7 +90,84 @@ def workFlow():
                       sourceCodeHash,
                       {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
     print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']))
+    print(eB.getJobInfo(clusterAddress, jobKey, 0, 0))
+    print('-----------')
+    # print(tx.events[0]['data'])
+    # print(tx.events[0]['data'][0]['value'])
+    # setJobStatus for the workflow: -------------
+    index = 0
+    jobID = 0
+    startTime = 10
+    tx = eB.setJobStatus(jobKey, index, jobID, 4, startTime, {"from": accounts[0]})
 
+    index = 0
+    jobID = 1
+    startTime = 20
+    tx = eB.setJobStatus(jobKey, index, jobID, 4, startTime, {"from": accounts[0]})
+
+    
+    # receiptCheck for the workflow: -------------
+    index = 0
+    jobID = 0
+    jobExecutionTimeMin = 10
+    dataTransfer = [100, 0]
+    endTime = 20
+    
+    ipfsBytes32    = scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
+
+    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer,
+                         {"from": accounts[0]})
+    print('receiptCheck => GasUsed:' + str(tx.__dict__['gas_used']))
+
+    print('------')
+    event_dict = dict()
+    for i in range(0, len(tx.events[0]['data'])):
+        event = tx.events[0]['data'][i]
+        event_dict[event['name']] = str(event['value'])        
+        print(event['name'] + ': ' + str(event['value']))
+    print('------')
+
+    # --------
+
+    index = 0
+    jobID = 1
+    jobExecutionTimeMin = 15
+    dataTransfer = [0, 0]
+    endTime = 39
+    
+    ipfsBytes32    = scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
+
+    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer,
+                         {"from": accounts[0]})
+    print('\nreceiptCheck => GasUsed:' + str(tx.__dict__['gas_used']))
+
+    for i in range(0, len(tx.events[0]['data'])):
+        event = tx.events[0]['data'][i]
+        print(event['name'] + ': ' + str(event['value']))
+    
+    # --------
+
+    index = 0
+    jobID = 2
+    jobExecutionTimeMin = 20
+    dataTransfer = [0, 100]
+    endTime = 39
+    
+    ipfsBytes32    = scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
+
+    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer,
+                         {"from": accounts[0]})
+    print('\nreceiptCheck => GasUsed:' + str(tx.__dict__['gas_used']))
+
+    for i in range(0, len(tx.events[0]['data'])):
+        event = tx.events[0]['data'][i]
+        print(event['name'] + ': ' + str(event['value']))
+     
+        
+    
 def submitJob():
 # def submitJob(skip=True):    
     registerCluster(False)
@@ -152,20 +230,20 @@ def submitJob():
 			# print("Client Balance after: " + str(web3.eth.getBalance(accounts[8])))				
             # sys.stdout.write('jobInfo: ')
             # sys.stdout.flush()
-
-            print(eB.getJobInfo(clusterAddress, jobKey, index))
+            jobID = 0
+            print(eB.getJobInfo(clusterAddress, jobKey, index, jobID))
             index += 1
 
-    print('----------------------------------')
-    print(blockReadFrom)
-    rpc.mine(100)
-    print(web3.eth.blockNumber)
+    # print(blockReadFrom)
+    # rpc.mine(100)
+    # print(web3.eth.blockNumber)
 
+    jobID = 0
     index = 0
     with open(fname) as f: 
         for line in f: 
             arguments = line.rstrip('\n').split(" ")
-            tx = eB.setJobStatus(jobKey, index, 4, int(arguments[0]), {"from": accounts[0]})
+            tx = eB.setJobStatus(jobKey, index, jobID, 4, int(arguments[0]), {"from": accounts[0]})
             index += 1
 
     print('----------------------------------')
@@ -177,22 +255,24 @@ def submitJob():
     with open(fname) as f: 
         for line in f: 
             arguments = line.rstrip('\n').split(" ")
-            dataTransferIn  = 0
+            if index == 0:
+                dataTransferIn  = 100
+            else:
+                dataTransferIn  = 0
             dataTransferOut = 100
 
-            dataTransfer = [0, 100]
-            workFlowJobID = 0
-            tx = eB.receiptCheck(jobKey, index,
-                            int(arguments[1]) - int(arguments[0]),
+            dataTransfer = [dataTransferIn, dataTransferOut]
+            jobID = 0
+            jobExecutionTimeMin = int(arguments[1]) - int(arguments[0])
+            tx = eB.receiptCheck(jobKey, index, jobID,
+                            jobExecutionTimeMin,
                             resultIpfsHash,
-                            0,
                             int(arguments[1]),
-                            workFlowJobID,
                             dataTransfer,
                             {"from": accounts[0]})
             print('receiptCheck => GasUsed:' + str(tx.__dict__['gas_used']))
             
-            receivedAmount = eB.getClusterReceivedAmount(clusterAddress)            
+            receivedAmount = eB.getClusterReceivedAmount(clusterAddress)
             print('Cluster Receeived Amount: ' + str(receivedAmount - receivedAmount_temp))
             receivedAmount_temp = receivedAmount
             index += 1
@@ -203,8 +283,7 @@ def submitJob():
         print(eB.getClusterReceiptNode(clusterAddress, i))
 
     print('----------------------------------')
-    print('StorageTime for job: ' + jobKey)
-    
+    print('StorageTime for job: ' + jobKey)    
     print(eB.getJobStorageTime(clusterAddress, sourceCodeHash))
     print('----------------------------------')
     print(eB.getReceiveStoragePayment(userAddress, sourceCodeHash, {"from": clusterAddress}))
@@ -213,7 +292,4 @@ def submitJob():
     print('receiveStoragePayment => GasUsed:' + str(tx.__dict__['gas_used']))
             
     print(eB.getReceiveStoragePayment(userAddress, sourceCodeHash, {"from": clusterAddress}))
-    print('----------------------------------')
-
-
-    
+    print('----------------------------------') 

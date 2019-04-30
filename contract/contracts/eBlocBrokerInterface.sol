@@ -11,7 +11,6 @@ interface eBlocBrokerInterface {
 		     uint returned,
 		     uint endTime,
 		     bytes32 resultIpfsHash,
-		     uint8 storageID,
 		     uint dataTransferIn,
 		     uint dataTransferOut
 		     );
@@ -31,7 +30,8 @@ interface eBlocBrokerInterface {
 		 bytes32 sourceCodeHash,
 		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
-		 uint32 gasStorageHour
+		 uint32 gasStorageHour,
+		 uint received
 		 );
     
     /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
