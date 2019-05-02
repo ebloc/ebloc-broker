@@ -33,7 +33,8 @@ def cost(coreArray, gasCoreMinArray, account, eB, sourceCodeHash, web3, dataTran
     jobReceivedBlocNumber, jobGasStorageHour = eB.getJobStorageTime(account, sourceCodeHash)
     if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
         dataTransferIn = 0 # storageCost and cacheCost will be equaled to 0
-                
+
+        
     storageCost      = priceStorage * dataTransferIn * gasStorageHour
     cacheCost        = priceCache * dataTransferIn            
     dataTransferSum  = dataTransferIn + dataTransferOut

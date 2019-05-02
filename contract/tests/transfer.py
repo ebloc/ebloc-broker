@@ -146,7 +146,7 @@ def workFlow():
     for i in range(0, len(tx.events[0]['data'])):
         event = tx.events[0]['data'][i]
         print(event['name'] + ': ' + str(event['value']))
-    
+
     # --------
 
     index = 0
@@ -168,8 +168,8 @@ def workFlow():
      
         
     
-def submitJob():
-# def submitJob(skip=True):    
+# def submitJob():
+def submitJob(skip=True):    
     registerCluster(False)
     registerUser(False)                    
     clusterAddress = accounts[0]

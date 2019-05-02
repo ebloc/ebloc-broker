@@ -1,4 +1,5 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.18;
+
 
 contract Greeter {
     string public greeting;
@@ -6,11 +7,13 @@ contract Greeter {
     
     mapping(bytes32 => bytes32)   workflowSingle;
     mapping(bytes32 => bytes32[]) workflowMultiple;
-    
+
+    /*
     function Greeter() public {
         greeting = 'Hello';
     }
 
+    
     function setGreeting(bytes32 val) public {
 	value = val;
     }
@@ -21,11 +24,12 @@ contract Greeter {
 	workflowMultiple[val].push(val);
     }
 
-    function greet() public constant returns (bytes32) {
+    function greet() public view returns (bytes32) {
         return value;
     }
-    
+    */    
     // --------
+    /*
     uint variable;
     uint doo;
     uint [] v;
@@ -77,4 +81,8 @@ contract Greeter {
         variable1 = uint64(variable);
         variable2 = uint128(variable>>128);
     }
+
+    */
+
+
 }
