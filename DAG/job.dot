@@ -1,0 +1,15 @@
+strict digraph  {
+job0;
+job1;
+job2;
+job3;
+job4;
+job5;
+job0 -> job1;
+job0 -> job2;
+job1 -> job3;
+job1 -> job4;
+job2 -> job3;
+job3 -> job5;
+job4 -> job5;
+}

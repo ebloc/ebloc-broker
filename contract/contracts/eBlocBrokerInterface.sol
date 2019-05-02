@@ -5,7 +5,8 @@ interface eBlocBrokerInterface {
     /* Logged when the cluster calls receiptCheck function. Records the completed jobs' information under receiptCheck() method call.*/
     event LogReceipt(address indexed clusterAddress,
 		     string jobKey,
-		     uint index,
+		     uint32 index,
+		     uint32 jobID,
 		     address recipient,
 		     uint received,
 		     uint returned,
@@ -19,13 +20,14 @@ interface eBlocBrokerInterface {
     event LogSetJob(address indexed clusterAddress,
 		    string jobKey,
 		    uint32 index,
+		    uint32 jobID,
 		    uint startTime
 		    );
     
     /* Records the submitted jobs' information under submitJob() method call.*/
     event LogJob(address indexed clusterAddress,
 		 string jobKey,
-		 uint indexed index,
+		 uint32 indexed index,
 		 uint8 storageID,
 		 bytes32 sourceCodeHash,
 		 uint32 gasDataTransferOut,
