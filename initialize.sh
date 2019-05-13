@@ -8,22 +8,41 @@ newRpcPort="8545" # Please change it if you have different RPC_PORT number.
 
 # Pre-installation:-----------------------------------------
 if [ $preInstall -eq 1 ]; then
-    ## Python3 setup, required for all clusters! ======================================================
-    # sudo apt-get install python3.6-dev
+    ## Upgrade geth on Ubuntu: ----------------------------
+    # sudo apt-get install software-properties-common
+    # sudo add-apt-repository -y ppa:ethereum/ethereum
+    # sudo add-apt-repository -y ppa:ethereum/ethereum-dev
+    # sudo apt-get upgrade ethereum
+    #------------------------------------------------------
+
+    ## Install Python3.6 on Ubuntu: -------------
+    # sudo add-apt-repository ppa:deadsnakes/ppa
+    # sudo apt-get update
+    # sudo apt-get install python3.6
+    #--------------------------------------------
+    
+    ## Python3.6 setup, required for all clusters!
+    sudo apt-get install python3.6-dev
     sudo apt-get install python3-dev
     sudo apt-get install python3-venv
 
-    python3 -m venv $HOME/venv
+    pip install wheel
+    python3.6 -m venv $HOME/venv
     source $HOME/venv/bin/activate
 
-    pip install --upgrade pip
+    # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
+    pip install --upgrade pip --user
+
+    pip install -r requirements.txt
     
     pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
-    pip install pyocclient     # owncloud_py
-    pip install typing==3.6.4  # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-    pip install colored
-    pip install pymongo
+    pip install -U pyocclient  # owncloud_py
+    pip install -U typing      # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
+    pip install -U colored
+    pip install -U pymongo
     pip install -U python-dotenv
+    pip install -U matplotlib
+    pip install -U pydot
     # pip install sphinx_rtd_theme
         
     ## npm
@@ -41,6 +60,7 @@ if [ $preInstall -eq 1 ]; then
         brew install realpath
     else
         ## Linux Packages
+	sudo apt-get install golang-go
 	sudo apt-get install mailutils
         sudo apt-get install davfs2 
         sudo apt-get install python-psutil
@@ -51,6 +71,13 @@ if [ $preInstall -eq 1 ]; then
 	sudo apt-get install acl
     fi
 
+    ## install go--------------------------------------------------
+    sudo add-apt-repository ppa:gophers/archive
+    sudo apt-get update
+    sudo apt-get install golang-1.11-go
+    echo "export PATH=$PATH:/usr/lib/go-1.11/bin" >> $HOME/.profile
+    # -------------------------------------------------------------
+    
     ## Install google-drive: ========================================
     go get github.com/prasmussen/gdrive
     gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
