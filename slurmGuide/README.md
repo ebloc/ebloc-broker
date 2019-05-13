@@ -22,8 +22,8 @@ sudo apt-get install default-libmysqlclient-dev
 git clone https://github.com/SchedMD/slurm
 cd slurm
 ./configure --enable-debug --enable-front-end
-make
-make install
+sudo make
+sudo make install
 ```
 
 sudo cp slurm.conf    /usr/local/etc/slurm.conf
@@ -46,14 +46,16 @@ flush privileges;
 
 8. 
 
+Should run `sudo slurmdbd` on the background in order to register the slurm-user.
 
 ```
-userName="slurm"
+userName=$(whoami)
 sacctmgr add cluster cluster
 sacctmgr add account $userName
 sacctmgr create user $userName defaultaccount=$userName adminlevel=[None]
+
 # Following line is required only to remove
-sacctmgr remove user where user=slurm
+sacctmgr remove user where user=userName
 ```
 
 ### Check registered cluster and users
@@ -72,3 +74,4 @@ mysql -u root -p   [ENTER]
 
 SELECT User FROM mysql.user;
 CREATE USER 'slurm'@'localhost' IDENTIFIED BY '12345';
+        'slurm'==$(whoami)

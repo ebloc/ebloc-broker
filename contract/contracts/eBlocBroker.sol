@@ -73,9 +73,9 @@ contract eBlocBroker is eBlocBrokerInterface {
 	_ ;
     }
 
-    modifier check_gasCoreMin_storageID(uint32 gasCoreMin, uint8 storageID) {
-	// gasCoreMin is maximum 1 day 
-	require(storageID < 5 && !(gasCoreMin == 0 || gasCoreMin > 1440)); 
+    modifier check_coreMin_storageID(uint32 coreMin, uint8 storageID) {
+	// coreMin is maximum 1 day 
+	require(storageID < 5 && !(coreMin == 0 || coreMin > 1440)); 
 	_ ;
     }
     */
@@ -100,7 +100,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    revert();
 
 	if (jobInfo.status == uint8(Lib.jobStateCodes.PENDING) || /* If job have not been started running*/
-	   (jobInfo.status == uint8(Lib.jobStateCodes.RUNNING) && (block.timestamp - job.jobs[0].startTime) > job.jobs[0].gasCoreMin * 60 + 3600)) /* Job status remain running after one hour that job should have completed */
+	   (jobInfo.status == uint8(Lib.jobStateCodes.RUNNING) && (block.timestamp - job.jobs[0].startTime) > job.jobs[0].coreMin * 60 + 3600)) /* Job status remain running after one hour that job should have completed */
 	    {
 		msg.sender.transfer(job.received);
 		jobInfo.status = uint8(Lib.jobStateCodes.REFUNDED); /* Prevents double spending */
@@ -127,8 +127,10 @@ contract eBlocBroker is eBlocBrokerInterface {
        by the cluster provider and paying of unused core, cache, and dataTransfer usage cost 
        back to the client
     */
-    function receiptCheck(string memory jobKey, uint32 index, uint32 jobID,
-			  uint32 jobExecutionTimeMin,
+    function receiptCheck(string memory jobKey,
+			  uint32 index,
+			  uint32 jobID,
+			  uint32 executionTimeMin,
 			  bytes32 resultIpfsHash,
 			  uint32 endTime,			  
 			  uint[] memory dataTransfer)  /*isBehindBlockTimeStamp(endTime)*/ public
@@ -141,7 +143,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	Lib.status      storage job  = store.clusterContract[msg.sender].jobStatus[jobKey][index];	
 	Lib.clusterInfo memory  info = store.clusterContract[msg.sender].info[job.clusterUpdatedBlockNumber];
 
-	require(jobExecutionTimeMin <= job.jobs[jobID].gasCoreMin);        // Cluster cannot request more time of the job that is already requested
+	require(executionTimeMin <= job.jobs[jobID].coreMin);        // Cluster cannot request more time of the job that is already requested
 	require(dataTransfer[0] + dataTransfer[1] <= (job.dataTransferIn + job.dataTransferOut)); // Cluster cannot request more than the job's given dataTransferOut amount
 	
 	uint amountToGain   = 0;
@@ -152,7 +154,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    delete job.dataTransferOut; // Prevents additional dataTransfer to be request for dataTransferOut
 	}
 	if (job.dataTransferIn != 0) {
-	    require(dataTransfer[0] <= job.dataTransferIn);    // Cluster cannot request more dataTransferIn that is already requested
+	    require(dataTransfer[0] <= job.dataTransferIn);     // Cluster cannot request more dataTransferIn that is already requested
 	    amountToGain   = info.priceCache * dataTransfer[0]; //cacheCost
 	    amountToRefund = info.priceCache * (job.dataTransferIn - dataTransfer[0]); //cacheCostRefund
 
@@ -163,11 +165,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 	}
 	    
 	amountToGain +=
-	    info.priceCoreMin * job.jobs[jobID].core * jobExecutionTimeMin + // computationalCost       	    
+	    info.priceCoreMin * job.jobs[jobID].core * executionTimeMin + // computationalCost       	    
 	    info.priceDataTransfer * (dataTransfer[0] + dataTransfer[1]);    // dataTransferCost	
 
 	//computationalCostRefund:
-	amountToRefund += info.priceCoreMin * job.jobs[jobID].core * (job.jobs[jobID].gasCoreMin - jobExecutionTimeMin);	
+	amountToRefund += info.priceCoreMin * job.jobs[jobID].core * (job.jobs[jobID].coreMin - executionTimeMin);	
 
 	if (amountToGain > job.received ||
 	    job.jobs[jobID].status == uint8(Lib.jobStateCodes.COMPLETED) ||
@@ -193,7 +195,6 @@ contract eBlocBroker is eBlocBrokerInterface {
 
 	job.received -= amountToRefund;
 	job.jobOwner.transfer(amountToRefund); /* Unused core and bandwidth is refundedn back to the client */
-	//job.jobOwner.transfer(job.received - amountToGain); /* Unused core and bandwidth is refundedn back to the client */
 
 	emit LogReceipt(msg.sender, jobKey, index, jobID, job.jobOwner, amountToGain, amountToRefund, block.timestamp, resultIpfsHash,
 			dataTransfer[0], dataTransfer[1]);
@@ -214,13 +215,13 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
     
     /*
-    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint gasStorageHour) public
+    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint storageHour) public
 	returns (bool success) {
-	require(gasStorageHour != 0);
+	require(storageHour != 0);
 	Lib.clusterData storage cluster = store.clusterContract[msg.sender];
 
 	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum >= block.number) {
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += gasStorageHour * 240;
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += storageHour * 240;
 	}
     }
     */
@@ -330,41 +331,44 @@ contract eBlocBroker is eBlocBrokerInterface {
     function submitJob(address payable clusterAddress,
 		       string   memory jobKey,
 		       uint16[] memory core,
-		       uint16[] memory gasCoreMin,
+		       uint16[] memory coreMin,
 		       uint32[] memory dataTransfer,		       
 		       uint8[]  memory storageID_cacheType,
-		       uint32 gasStorageHour,
-		       bytes32 sourceCodeHash) /*check_gasCoreMin_storageID(gasCoreMin, storageID) isZero(core)*/ public payable
+		       uint32 storageHour,
+		       bytes32 sourceCodeHash) /*check_coreMin_storageID(coreMin, storageID) isZero(core)*/ public payable
     {
  	Lib.clusterData storage cluster = store.clusterContract[clusterAddress];	
 	uint[] memory clusterInfo = store.clusterUpdatedBlockNumber[clusterAddress];
 	Lib.clusterInfo memory info = cluster.info[clusterInfo[clusterInfo.length-1]];
 		
-	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum > block.number){
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum > block.number) {
 	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0)
 		dataTransfer[0] = 0;
 	}
-	//else
-	//    dataTransfer[1] = dataTransfer[0] + dataTransfer[1];
 	
-	if(core.length != gasCoreMin.length)
+	if(core.length != coreMin.length)
 	    revert();
 
 	uint sum = 0;
-	for(uint32 i = 0; i < core.length; i++){
-	    uint computationalCost = info.priceCoreMin * core[i] * gasCoreMin[i];
+	uint coreMinSum = 0;
+	for (uint32 i = 0; i < core.length; i++){
+	    uint computationalCost = info.priceCoreMin * core[i] * coreMin[i];
 	    if (core[i] > info.availableCoreNum ||
 		computationalCost == 0 ||
-		gasCoreMin[i] > 1440) // gasCoreMin is maximum 1 day
-		revert();	    
-	    sum = sum + computationalCost; // computationalCost
+		coreMin[i] > 1440) // coreMin is maximum 1 day
+		revert();
+	    coreMinSum += coreMin[i];
+	    sum += computationalCost; // computationalCost
 	}
+
+	if (coreMinSum > 1440) // Total execution time of the workflow should be shorter than a day
+	    revert();
 	
 	if (msg.value <
 	    sum +
-	    info.priceDataTransfer * (dataTransfer[0] + dataTransfer[1]) +                   // dataTransferCost  
-	    info.priceStorage      * dataTransfer[0] * gasStorageHour +  // storageCost
-	    info.priceCache        * dataTransfer[0]                     // cacheCost
+	    info.priceDataTransfer * (dataTransfer[0] + dataTransfer[1]) + // dataTransferCost  
+	    info.priceStorage      * dataTransfer[0] * storageHour +    // storageCost
+	    info.priceCache        * dataTransfer[0]                       // cacheCost
 	    )
 	    revert();
 	
@@ -389,11 +393,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 	Lib.status storage status = cluster.jobStatus[jobKey][cluster.jobStatus[jobKey].length - 1];	
 	for(uint32 i = 0; i < core.length; i++) {
 	    status.jobs[i].core       = core[i];	/* Requested core value */
-	    status.jobs[i].gasCoreMin = gasCoreMin[i];	/* Requested core value */		
+	    status.jobs[i].coreMin = coreMin[i];	/* Requested core value */		
 	}
 	
-	// User can only update the job's gasStorageHour if previously set storeage time is completed
-	if (gasStorageHour != 0 &&
+	// User can only update the job's storageHour if previously set storeage time is completed
+	if (storageHour != 0 &&
 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
 
 	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0) {
@@ -403,12 +407,12 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    
 	    cluster.jobSt[sourceCodeHash].receivedBlocNumber = uint32(block.number);
 	    //Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum = gasStorageHour * 240;	   
-	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] = info.priceStorage * dataTransfer[0] * gasStorageHour;	    
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum = storageHour * 240;	   
+	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] = info.priceStorage * dataTransfer[0] * storageHour;	    
 	}
 	
 	emit LogJob(clusterAddress, jobKey, uint32(cluster.jobStatus[jobKey].length - 1), storageID_cacheType[0], sourceCodeHash,
-		    dataTransfer[1], storageID_cacheType[1], gasStorageHour, msg.value);
+		    dataTransfer[1], storageID_cacheType[1], storageHour, msg.value);
 	return; //true
     }
 
@@ -503,7 +507,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 		job.jobs[jobID].core,
 		job.jobs[jobID].startTime,
 		job.received,
-		job.jobs[jobID].gasCoreMin,
+		job.jobs[jobID].coreMin,
 		job.jobOwner,
 		job.dataTransferIn,
 		job.dataTransferOut);
