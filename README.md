@@ -177,7 +177,6 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-jobDescription  = "Science"
 storageType     = 0 # Please note that '0' stands for IPFS repository share. 
 ```
 
@@ -194,7 +193,6 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-jobDescription  = "Science"
 storageType     = 1 # Please note that '1' stands for EUDAT repository share. 
 ```
 
@@ -233,7 +231,6 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-jobDescription  = "Science"
 storageType     = 2 # Please note 2 stands for IPFS with miniLock repository share. 
 ```
 
@@ -250,7 +247,6 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-jobDescription  = "Science"
 storageType     = 3 # Please note that 3 stands for github repository share. 
 ```
 -------------------------
@@ -298,7 +294,6 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-jobDescription  = "Science"
 storageType     = 4 # Please note that 4 stands for gdrive repository share.
 ```
 
