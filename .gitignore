@@ -272,3 +272,9 @@ workflow/\.pytest_cache/
 contract/\.history
 
 contract/build/
+
+DAG/labels\.png
+
+DAG/job\.dot
+
+DAG/dot\.txt

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 import sys
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -5,19 +8,31 @@ import matplotlib.pyplot as plt
 g = nx.Graph()
 G = nx.DiGraph()
 
+'''
 # add 5 nodes, labeled 0-4:
-map(G.add_node, range(5))
+# map(G.add_node, range(5))
 # 1,2 depend on 0:
-G.add_edge('job0', 'job1')
-G.add_edge('job0', 'job2')
+G.add_edge('job0', 'job1', weight=10)
+G.add_edge('job0', 'job2', weight=10)
 # 3 depends on 1,2
-G.add_edge('job1', 'job3')
-G.add_edge('job2', 'job3')
+G.add_edge('job1', 'job3', weight=10)
+G.add_edge('job2', 'job3', weight=10)
 # 4 depends on 1
-G.add_edge('job1', 'job4')
+G.add_edge('job1', 'job4', weight=10)
 # 5 depends on 3 and 4
-G.add_edge('job3', 'job5')
-G.add_edge('job4', 'job5')
+G.add_edge('job3', 'job5', weight=10)
+G.add_edge('job4', 'job5', weight=10)
+'''
+
+G.add_edge('job0', 'job5', weight=10)
+G.add_edge('job1', 'job5', weight=10)
+G.add_edge('job2', 'job5', weight=10)
+G.add_edge('job3', 'job5', weight=10)
+G.add_edge('job4', 'job5', weight=10)
+G.add_edge('job6', 'job0', weight=10)
+G.add_edge('job7', 'job0', weight=10)
+G.add_edge('job8', 'job7', weight=10)
+G.add_edge('job9', 'job7', weight=10)
 
 
 nx.nx_pydot.write_dot(G, 'job.dot') # Saves DAG into job.dot file
@@ -26,13 +41,9 @@ listG = list(G.nodes)
 for i in list(G.nodes):
     print(i)
     print(set(G.predecessors(i)))
-    if len(set(G.predecessors(i))) == 0:
-        print('sbatch ' + i + '.sh')
-    print('-----------')
 
 nx.draw(G, with_labels = True)
 plt.savefig('labels.png')
-
   
 sys.exit()
 
@@ -43,9 +54,6 @@ print([a[0] for a in G.edges() if a[1] == 'job5'])
 print([a[1] for a in G.edges() if a[0] == 'job0'])
 print([a[0] for a in G.edges() if a[1] == 'job1'])
 print(G.edges())
-
-
-
 
 print(nx.ancestors(G, 'job5'))
 print(nx.descendants(G, 'job0'))
