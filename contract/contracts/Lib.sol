@@ -48,7 +48,7 @@ library Lib {
 	
 	/* Variables assigned by the client */
 	uint16 core;      /* Requested core array by the client */
-	uint16 gasCoreMin;/* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint16 coreMin;/* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
     }
     
     /* Submitted Job's information */
