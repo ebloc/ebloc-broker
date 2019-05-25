@@ -54,8 +54,8 @@ def registerUser(skip=True, printFlag=True):
     assert eB.isUserOrcIDVerified(accounts[1]), "isUserOrcIDVerified is failed"
     
 
-# def workFlow(skip=True):
-def workFlow():
+def workFlow(skip=True):
+# def workFlow():
     registerCluster(False)
     registerUser(False)                    
     clusterAddress = accounts[0]
@@ -68,25 +68,25 @@ def workFlow():
     dataTransferIn  = 100
     dataTransferOut = 100
     dataTransfer    = [dataTransferIn, dataTransferOut]
-    gasStorageHour  = 0    
+    storageHour  = 0    
     coreArray       = [2,  4,   2]
-    gasCoreMinArray = [10, 15, 20]
+    coreMinArray = [10, 15, 20]
     workFlowJobID   = 0
     storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
 
 
-    jobPriceValue = scripts.lib.cost(coreArray, gasCoreMinArray, clusterAddress,
+    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, clusterAddress,
                                      eB, sourceCodeHash, web3,
-                                     dataTransferIn, dataTransferOut, gasStorageHour)
+                                     dataTransferIn, dataTransferOut, storageHour)
     print('jobPriceValue: ' + str(jobPriceValue))
 
     tx = eB.submitJob(clusterAddress,
                       jobKey,
                       coreArray,
-                      gasCoreMinArray,
+                      coreMinArray,
                       dataTransfer,
                       storageID_cacheType,
-                      gasStorageHour,
+                      storageHour,
                       sourceCodeHash,
                       {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
     print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']))
@@ -168,8 +168,8 @@ def workFlow():
      
         
     
-# def submitJob():
-def submitJob(skip=True):    
+def submitJob():
+# def submitJob(skip=True):    
     registerCluster(False)
     registerUser(False)                    
     clusterAddress = accounts[0]
@@ -188,11 +188,9 @@ def submitJob(skip=True):
         for line in f:
             arguments = line.rstrip('\n').split(" ")
 
-            gasCoreMin     = int(arguments[1]) - int(arguments[0])
-            dataTransferIn  = 100
-            dataTransferOut = 100
-            gasStorageHour  = 1
-            core            = int(arguments[2])
+            coreMin      = int(arguments[1]) - int(arguments[0])
+            storageHour  = 1
+            core         = int(arguments[2])
 
             # time.sleep(1)
             # rpc.mine(int(arguments[0]))
@@ -207,10 +205,19 @@ def submitJob(skip=True):
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
 			# print("Contract Balance before: " + str(web3.eth.getBalance(accounts[0])))
 
-            coreArray       = [core]            
-            gasCoreMinArray = [gasCoreMin]
+            coreArray    = [core]            
+            coreMinArray = [coreMin]
 
-            jobPriceValue = scripts.lib.cost(coreArray, gasCoreMinArray, clusterAddress, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, gasStorageHour)
+            sourceCodeSize      = [100]
+            sourceCodeHashArray = [sourceCodeHash] # Hashed of the 
+            
+            dataTransferIn  = 100
+            dataTransferOut = 100
+
+            print(sourceCodeHashArray[0])
+            jobPriceValue, dataTransferIn = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
+                                                             dataTransferIn, dataTransferOut, storageHour, sourceCodeSize)
+            
             print('jobPriceValue: ' + str(jobPriceValue))
             storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
             dataTransfer = [dataTransferIn, dataTransferOut]
@@ -218,11 +225,11 @@ def submitJob(skip=True):
             tx = eB.submitJob(clusterAddress,
                               jobKey,
                               coreArray,
-                              gasCoreMinArray,
+                              coreMinArray,
                               dataTransfer,
                               storageID_cacheType,
-                              gasStorageHour,
-                              sourceCodeHash,
+                              storageHour,
+                              sourceCodeHashArray,
                               {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
             print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']))
     
