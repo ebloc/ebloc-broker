@@ -22,22 +22,27 @@ def convertIpfsToBytes32(hash_string):
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
-def cost(coreArray, gasCoreMinArray, account, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, gasStorageHour):
+def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, storageHour, sourceCodeSize):
+
     blockReadFrom, coreLimit, priceCoreMin, priceDataTransfer, priceStorage, priceCache  = eB.getClusterInfo(account)
-    assert len(coreArray) == len(gasCoreMinArray)
+    assert len(coreArray) == len(coreMinArray)
 
     computationalCost = 0
     for i in range(len(coreArray)):
-        computationalCost += priceCoreMin * coreArray[i] * gasCoreMinArray[i]                           
+        computationalCost += priceCoreMin * coreArray[i] * coreMinArray[i]                           
 
-    jobReceivedBlocNumber, jobGasStorageHour = eB.getJobStorageTime(account, sourceCodeHash)
-    if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
-        dataTransferIn = 0 # storageCost and cacheCost will be equaled to 0
+    # print(sourceCodeHash[0])
+    for i in range(len(sourceCodeHash)):    
+        jobReceivedBlocNumber, jobGasStorageHour = eB.getJobStorageTime(account, sourceCodeHash[i])
+        if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
+            dataTransferIn -= sourceCodeSize[i] # storageCost and cacheCost will be equaled to 0
 
+    if dataTransferIn < 0:
+        dataTransferIn = 0
         
-    storageCost      = priceStorage * dataTransferIn * gasStorageHour
+    storageCost      = priceStorage * dataTransferIn * storageHour
     cacheCost        = priceCache * dataTransferIn            
     dataTransferSum  = dataTransferIn + dataTransferOut
     dataTransferCost = priceDataTransfer * dataTransferSum           
     jobPriceValue     = computationalCost + dataTransferCost + storageCost + cacheCost
-    return jobPriceValue
+    return jobPriceValue, dataTransferIn
