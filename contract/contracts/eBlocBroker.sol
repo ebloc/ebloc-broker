@@ -215,13 +215,13 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
     
     /*
-    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint storageHour) public
+    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint cacheHour) public
 	returns (bool success) {
-	require(storageHour != 0);
+	require(cacheHour != 0);
 	Lib.clusterData storage cluster = store.clusterContract[msg.sender];
 
 	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum >= block.number) {
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += storageHour * 240;
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += cacheHour * 240;
 	}
     }
     */
@@ -334,19 +334,21 @@ contract eBlocBroker is eBlocBrokerInterface {
 		       uint16[] memory coreMin,
 		       uint32[] memory dataTransfer,		       
 		       uint8[]  memory storageID_cacheType,
-		       uint32 storageHour,
-		       bytes32 sourceCodeHash) /*check_coreMin_storageID(coreMin, storageID) isZero(core)*/ public payable
+		       uint32 cacheHour,
+		       bytes32[] memory sourceCodeHash) /*check_coreMin_storageID(coreMin, storageID) isZero(core)*/ public payable
     {
  	Lib.clusterData storage cluster = store.clusterContract[clusterAddress];	
 	uint[] memory clusterInfo = store.clusterUpdatedBlockNumber[clusterAddress];
 	Lib.clusterInfo memory info = cluster.info[clusterInfo[clusterInfo.length-1]];
-		
-	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum > block.number) {
-	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0)
+
+	/*
+	if (cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum > block.number) {
+	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] != 0)
 		dataTransfer[0] = 0;
 	}
+	*/
 	
-	if(core.length != coreMin.length)
+	if (core.length != coreMin.length)
 	    revert();
 
 	uint sum = 0;
@@ -367,7 +369,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	if (msg.value <
 	    sum +
 	    info.priceDataTransfer * (dataTransfer[0] + dataTransfer[1]) + // dataTransferCost  
-	    info.priceStorage      * dataTransfer[0] * storageHour +    // storageCost
+	    info.priceStorage      * dataTransfer[0] * cacheHour +    // storageCost
 	    info.priceCache        * dataTransfer[0]                       // cacheCost
 	    )
 	    revert();
@@ -375,7 +377,6 @@ contract eBlocBroker is eBlocBrokerInterface {
 	if (msg.value == 0              ||
 	    !cluster.isRunning          ||
 	    storageID_cacheType[0] > 4  ||
-	    sourceCodeHash.length != 32 ||
 	    bytes(jobKey).length > 255  || // Max length is 255 for the filename 
 	    !isUserExist(msg.sender)    ||
 	    bytes(store.userContract[msg.sender].orcID).length == 0)
@@ -396,23 +397,23 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    status.jobs[i].coreMin = coreMin[i];	/* Requested core value */		
 	}
 	
-	// User can only update the job's storageHour if previously set storeage time is completed
-	if (storageHour != 0 &&
-	    cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
+	// User can only update the job's cacheHour if previously set storeage time is completed
+	if (cacheHour != 0 &&
+	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum < block.number) {
 
-	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] != 0) {
-		clusterAddress.transfer(cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]); //storagePayment
-		emit LogStoragePayment(clusterAddress, cluster.receivedAmountForStorage[msg.sender][sourceCodeHash]);	    
+	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] != 0) {
+		clusterAddress.transfer(cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]]); //storagePayment
+		emit LogStoragePayment(clusterAddress, cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]]);	    
 	    }
 	    
-	    cluster.jobSt[sourceCodeHash].receivedBlocNumber = uint32(block.number);
+	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber = uint32(block.number);
 	    //Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum = storageHour * 240;	   
-	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash] = info.priceStorage * dataTransfer[0] * storageHour;	    
+	    cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum = cacheHour * 240;	   
+	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] = info.priceStorage * dataTransfer[0] * cacheHour;	    
 	}
 	
 	emit LogJob(clusterAddress, jobKey, uint32(cluster.jobStatus[jobKey].length - 1), storageID_cacheType[0], sourceCodeHash,
-		    dataTransfer[1], storageID_cacheType[1], storageHour, msg.value);
+		    dataTransfer[1], storageID_cacheType[1], cacheHour, msg.value);
 	return; //true
     }
 
