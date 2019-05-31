@@ -313,6 +313,7 @@ def driverEudat(jobKey_, index_, fID, userID, sourceCodeHash, cacheType_, gasSto
             subprocess.run(['ipfs', 'get', ipfsHash, '-o', resultsFolder]) # cmd: ipfs get <ipfs_hash> -o .           
 
     try:
+        log('dataTransferIn: ' + str(dataTransferIn))
         lib.sbatchCall(jobKey, index, storageID, shareToken, userID,
                        resultsFolder, resultsFolderPrev, dataTransferIn,
                        gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
