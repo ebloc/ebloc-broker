@@ -82,14 +82,14 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
     txFile.close() 
 
 # Client's loaded files are removed, no need to re-upload them.
-def removeSourceCode(resultsFolderPrev):
+def removeSourceCode(resultsFolderPrev, resultsFolder):
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
-    command = ['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
+    command = ['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
     filesToRemove = runCommand(command)
     if filesToRemove != '' or filesToRemove is not None:
         log('\nFiles to be removed: \n' + filesToRemove + '\n')         
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
-    subprocess.run(['find', '.', '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
+    subprocess.run(['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
 
 def calculateDataTransferOut(outputFileName, pathType):
     dataTransferOut = 0
@@ -257,6 +257,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
    
     # Here we know that job is already completed 
     if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
+        removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
             command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
             resultIpfsHash = runCommand(command)
@@ -315,7 +316,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
                    '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']
         res = runCommand(command)
         log(res)      
-        removeSourceCode(resultsFolderPrev)
+        removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
             command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
             resultIpfsHash = runCommand(command)
@@ -347,7 +348,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         resultIpfsHash = ''
         lib.removeFiles(resultsFolder + '/.node-xmlhttprequest*')      
         os.chdir(resultsFolder) 
-        removeSourceCode(resultsFolderPrev)      
+        removeSourceCode(resultsFolderPrev, resultsFolder)      
         # cmd: tar -jcvf result-$clusterID-$index.tar.gz *
         # command = ['tar', '-jcvf', outputFileName] + glob.glob("*")      
         # log(runCommand(command))
@@ -379,7 +380,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         log('mimeType=' + str(mimeType))                
         os.chdir(resultsFolder) 
         #if 'folder' in mimeType: # Received job is in folder format
-        removeSourceCode(resultsFolderPrev)
+        removeSourceCode(resultsFolderPrev, resultsFolder)
         with open(resultsFolderPrev + '/modifiedDate.txt', 'r') as content_file:
             date = content_file.read().rstrip()
             
