@@ -2,10 +2,11 @@
 
 import subprocess, sys, lib
 
-def singleFolderShare(folderName, oc):
-    # folderNames = os.listdir(home + "/oc")    
+def singleFolderShare(folderName, oc, fID):
+    # folderNames = os.listdir(home + "/oc")
+    # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
     if not oc.is_shared(folderName):
-        oc.share_file_with_user(folderName, '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu', remote_user=True, perms=31)
+        oc.share_file_with_user(folderName, fID, remote_user=True, perms=31)
         return 'Sharing is completed successfully.'
     else:
         return 'Already shared.'
@@ -14,7 +15,7 @@ def eudatInitializeFolder(folderToShare, oc):
     if "/" in folderToShare:
         print('Please provide folder onyour current directory.')
         sys.exit()
-        
+
     tarHash = lib.compressFolder(folderToShare)
     try:
         res = oc.mkdir(tarHash)
