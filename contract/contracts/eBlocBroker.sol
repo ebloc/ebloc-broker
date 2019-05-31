@@ -215,13 +215,13 @@ contract eBlocBroker is eBlocBrokerInterface {
     }
     
     /*
-    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint cacheHour) public
+    function extentStorageTime(address clusterAddress, string memory sourceCodeHash, uint cacheTime) public
 	returns (bool success) {
-	require(cacheHour != 0);
+	require(cacheTime != 0);
 	Lib.clusterData storage cluster = store.clusterContract[msg.sender];
 
 	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum >= block.number) {
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += cacheHour * 240;
+	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += cacheTime * 240;
 	}
     }
     */
@@ -334,7 +334,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 		       uint16[] memory coreMin,
 		       uint32[] memory dataTransfer,		       
 		       uint8[]  memory storageID_cacheType,
-		       uint32 cacheHour,
+		       uint32 cacheTime,
 		       bytes32[] memory sourceCodeHash) /*check_coreMin_storageID(coreMin, storageID) isZero(core)*/ public payable
     {
  	Lib.clusterData storage cluster = store.clusterContract[clusterAddress];	
@@ -369,7 +369,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	if (msg.value <
 	    sum +
 	    info.priceDataTransfer * (dataTransfer[0] + dataTransfer[1]) + // dataTransferCost  
-	    info.priceStorage      * dataTransfer[0] * cacheHour +    // storageCost
+	    info.priceStorage      * dataTransfer[0] * cacheTime +    // storageCost
 	    info.priceCache        * dataTransfer[0]                       // cacheCost
 	    )
 	    revert();
@@ -397,8 +397,8 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    status.jobs[i].coreMin = coreMin[i];	/* Requested core value */		
 	}
 	
-	// User can only update the job's cacheHour if previously set storeage time is completed
-	if (cacheHour != 0 &&
+	// User can only update the job's cacheTime if previously set storeage time is completed
+	if (cacheTime != 0 &&
 	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum < block.number) {
 
 	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] != 0) {
@@ -408,12 +408,12 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    
 	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber = uint32(block.number);
 	    //Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
-	    cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum = cacheHour * 240;	   
-	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] = info.priceStorage * dataTransfer[0] * cacheHour;	    
+	    cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum = cacheTime * 240;	   
+	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] = info.priceStorage * dataTransfer[0] * cacheTime;	    
 	}
 	
 	emit LogJob(clusterAddress, jobKey, uint32(cluster.jobStatus[jobKey].length - 1), storageID_cacheType[0], sourceCodeHash,
-		    dataTransfer[1], storageID_cacheType[1], cacheHour, msg.value);
+		    dataTransfer[1], storageID_cacheType[1], cacheTime, msg.value);
 	return; //true
     }
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # To run:
 # ./whisperStateReceiver.py 0 # Logs into a file
@@ -29,22 +29,24 @@ def log(strIn):
 		txFile.close()
 		
 def post(message):
-    coreInfo, status = lib.runCommand(['sinfo', '-h', '-o%C']).split("/")
-    if len(coreInfo) != 0:
-       idleCore = coreInfo[1]
-
+    # https://stackoverflow.com/a/50095154/2402577
+    ret = lib.runCommand(['sinfo', '-h', '-o%C'])
+    output = ret[0].split("/")
+    allocatedCore = output[0]
+    idleCore      = output[1]
+    
     try:
         web3.shh.post({
-            'powTarget': 2, # 2.5
-            'powTime': 5,   # 2
+            'powTarget': 2, # 2.5                                                                          
+            'powTime': 5,   # 2                                                                            
             'ttl': 60,
-            'payload': web3.toHex(text='online/' + idleCore),
+            'payload': web3.toHex(text='online/' + allocatedCore + '/' + idleCore),
             'topic': topic,
             'pubKey': message,
         })
     except:
         post(message)
-
+        
 def handle_event(event):
     #print(event)
 	message = event['payload'].decode("utf-8")
