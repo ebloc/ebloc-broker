@@ -3,6 +3,11 @@
 import os, owncloud, subprocess, sys, time
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
+from imports import connectEblocBroker
+from imports import getWeb3
+
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 sys.path.insert(0, './contractCalls')
 from contractCalls.submitJob import submitJob
@@ -12,39 +17,54 @@ from lib_owncloud import singleFolderShare
 from lib_owncloud import eudatInitializeFolder
 from lib_owncloud import isOcMounted
 
-def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984        
+def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     if not isOcMounted():
         sys.exit()
-        
-    clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
+
+    clusterID='0x57b60037b82154ec7149142c606ba024fbb0f991'
+    clusterAddress = web3.toChecksumAddress(clusterID)
+
+    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call()
+    my_filter = eBlocBroker.eventFilter('LogCluster',{ 'fromBlock': int(blockReadFrom),
+                                                      'toBlock': int(blockReadFrom) + 1})
+    fID = my_filter.get_all_entries()[0].args['fID']
+
     if tarHash is None:
         folderToShare = 'exampleFolderToShare' # Path of folder to share
         tarHash = eudatInitializeFolder(folderToShare, oc)
 
     time.sleep(1)
-    print(singleFolderShare(tarHash, oc))
+    print(singleFolderShare(tarHash, oc, fID))
     # subprocess.run(['python', 'singleFolderShare.py', tarHash])
 
-    print('\nSubmitting Job...')    
-    coreNum=1
-    coreMinuteGas=5
-
+    print('\nSubmitting Job...')
+    coreNum    = 1
+    coreMinute = 5
     dataTransferIn  = 100
     dataTransferOut = 100
     gasBandwidthMB  = dataTransferIn + dataTransferOut
-    gasStorageHour  = 1   
+    gasStorageHour  = 1
     storageID = 1
     accountID = 0
 
     cacheType = lib.cacheType.private
     # cacheType = lib.cacheType.public
-    
-    res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, dataTransferIn, dataTransferOut,
+
+    tx_hash = submitJob(str(clusterID), str(tarHash), coreNum, coreMinute, dataTransferIn, dataTransferOut,
                     storageID, str(tarHash), cacheType, gasStorageHour, accountID)
-    if 'Error' in res[0]:
-        print(res[0])
-    else:    
-        print('Tx_hash: ' + str(res[0]))
+
+    tx_hash = tx_hash[0]
+    print('Tx_hash: ' + tx_hash)
+    print('Waiting job to be deployed...')
+    while True:
+        receipt = web3.eth.getTransactionReceipt(tx_hash)
+        if receipt is None:
+            time.sleep(2)
+            receipt = web3.eth.getTransactionReceipt(tx_hash)
+        else:
+            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+            print('Job\'s index is ' + str(logs[0].args['index']))
+            break
 
 if __name__ == "__main__":
     oc = owncloud.Client('https://b2drop.eudat.eu/')
