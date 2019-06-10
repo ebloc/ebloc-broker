@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 
 def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, endTime, dataTransferIn, dataTransferSum,
@@ -13,7 +12,8 @@ def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, end
         from imports import connectEblocBroker
         from imports import getWeb3
         web3        = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)    
+        eBlocBroker = connectEblocBroker(web3)
+        
     tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID),
                                "gas": 4500000}).receiptCheck(str(jobKey), int(index), int(jobRunTimeMinute),
                                                              str(resultIpfsHash), int(storageID), int(endTime),

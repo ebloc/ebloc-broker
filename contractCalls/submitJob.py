@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import os, sys, time, enum
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
-from imports import connectEblocBroker
-from imports import getWeb3
+from imports import connectEblocBroker, getWeb3
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)

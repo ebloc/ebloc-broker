@@ -3,9 +3,8 @@
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys, subprocess
 from os.path import expanduser
 from random import randint
-home = expanduser("~")
-sys.path.insert(0, home + '/eBlocBroker')
 from lib_owncloud import singleFolderShare, eudatInitializeFolder
+home = expanduser("~")
 path = os.getcwd()
 os.environ['path'] = path
 

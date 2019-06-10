@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 
 import os, owncloud, subprocess, sys, time
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
-
-sys.path.insert(0, './contractCalls')
 from contractCalls.submitJob import submitJob
-from isOcMounted       import isOcMounted
-from singleFolderShare import singleFolderShare
+from lib_owncloud import isOcMounted
+from lib_owncloud import singleFolderShare
+from imports import connectEblocBroker, getWeb3
+
+web3        = getWeb3()
+eBlocBroker = connectEblocBroker(web3)
 
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 
-def eudatSubmitJob(tarHash=None):                
+def eudatSubmitJob(tarHash=None):
+    clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
+    clusterAddress = web3.toChecksumAddress(clusterID)
+    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call()
+    my_filter = eBlocBroker.eventFilter('LogCluster',{ 'fromBlock': int(blockReadFrom),
+                                                      'toBlock': int(blockReadFrom) + 1})
+    fID = my_filter.get_all_entries()[0].args['fID']
+    
     if tarHash is None:
         folderToShare = 'exampleFolderToShare'    
         subprocess.run(['sudo', 'chmod', '-R', '777', folderToShare])        
@@ -26,10 +34,9 @@ def eudatSubmitJob(tarHash=None):
             sys.exit()            
             
     time.sleep(1)
-    print(singleFolderShare(tarHash, oc))
+    print(singleFolderShare(tarHash, oc, fID))
     # subprocess.run(['python', 'singleFolderShare.py', tarHash])
     print('\nSubmitting Job...')
-    clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
     coreNum=1
     coreMinuteGas=5
     jobDescription='science'

@@ -76,23 +76,23 @@ def convertIpfsToBytes32(hash_string):
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
-def log(strIn, color='', newLine=True): 
+def log(str_in, color='', newLine=True): 
     if color != '':
         if newLine:
-            print(stylize(strIn, fg(color)))
+            print(stylize(str_in, fg(color)))
         else:
-            print(stylize(strIn, fg(color)), end='')
+            print(stylize(str_in, fg(color)), end='')
     else:
         if newLine:
-            print(strIn)
+            print(str_in)
         else:
-            print(strIn, end='')
+            print(str_in, end='')
 
     txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a')
     if newLine:
-        txFile.write(strIn + '\n')
+        txFile.write(str_in + '\n')
     else:
-        txFile.write(strIn)
+        txFile.write(str_in)
         
     txFile.close()
 

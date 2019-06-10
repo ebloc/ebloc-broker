@@ -5,7 +5,6 @@ import sys
 def getDeployedBlockNumber(eBlocBroker=None):
     if eBlocBroker is None: 
         import os 
-        sys.path.insert(1, os.path.join(sys.path[0], '..')) 
         from imports import connectEblocBroker        
         eBlocBroker = connectEblocBroker() 
 

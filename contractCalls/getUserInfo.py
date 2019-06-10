@@ -4,9 +4,7 @@ import sys, os
 
 def getUserInfo(userAddress, printType, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
-        sys.path.insert(1, os.path.join(sys.path[0], '..'))
-        from imports import connectEblocBroker
-        from imports import getWeb3
+        from imports import connectEblocBroker, getWeb3
         web3           = getWeb3()
         eBlocBroker    = connectEblocBroker(web3)
     

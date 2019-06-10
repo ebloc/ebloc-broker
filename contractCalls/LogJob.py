@@ -9,7 +9,6 @@ from web3.auto import w3
 
 def getEbloBroker():
     import os 
-    sys.path.insert(1, os.path.join(sys.path[0], '..')) 
     from imports import connectEblocBroker
     return connectEblocBroker()
 
