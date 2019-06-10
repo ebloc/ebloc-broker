@@ -3,7 +3,6 @@
 import os, json, sys, time
 from web3 import Web3
 from web3.providers.rpc import HTTPProvider
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 os.chdir(sys.path[0])
 
@@ -20,8 +19,6 @@ with open('abi.json', 'r') as abi_definition:
 
 contractAddress = web3.toChecksumAddress(contractAddress)    
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi)
-# USER Inputs----------------------------------------------------------------
-
 
 # eBloc-NAS
 account            = web3.eth.accounts[0] # Cluster's Ethereum Address

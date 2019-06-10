@@ -5,14 +5,11 @@ from random import randint
 from os.path import expanduser
 home = expanduser("~")
 
-sys.path.insert(0, home + '/eBlocBroker/')
-sys.path.insert(0, home + '/eBlocBroker/contractCalls')
-sys.path.insert(0, home + '/eBlocBroker/test')
-
 import lib
-from submitJob   import submitJob
-from blockNumber import blockNumber
 from imports import getWeb3
+from contractCalls.submitJob   import submitJob
+from contractCalls.blockNumber import blockNumber
+
 web3 = getWeb3()
 
 f = open(home + '/TESTS/accountPassword.txt', 'r') # Password read from the file.

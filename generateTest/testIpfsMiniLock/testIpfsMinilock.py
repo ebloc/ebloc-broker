@@ -3,13 +3,10 @@
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
 from random import randint
 from os.path import expanduser
-home = expanduser("~")
-
-sys.path.insert(0, home + '/eBlocBroker/')
-sys.path.insert(0, home + '/eBlocBroker/test')
 import lib
-from func import testFunc
+from test.func import testFunc
 
+home = expanduser("~")
 path = os.getcwd()
 # Definitions =============================================
 clusterID    = '0x398bd2a9a39637884b49b2b0930de7d83eb08a8e' #googleInstance-1

@@ -5,9 +5,7 @@ import sys
 def getJobStorageTime(clusterAddress, sourceCodeHash, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
         import os
-        sys.path.insert(1, os.path.join(sys.path[0], '..'))
-        from imports import connectEblocBroker
-        from imports import getWeb3
+        from imports import connectEblocBroker, getWeb3
         web3           = getWeb3()
         eBlocBroker    = connectEblocBroker(web3)
 

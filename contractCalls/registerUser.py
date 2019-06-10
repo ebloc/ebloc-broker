@@ -2,22 +2,12 @@
 
 import os, sys, json
 from os.path import expanduser
-home = expanduser("~")
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from imports import connectEblocBroker
-from imports import getWeb3
-
-sys.path.insert(0, home + '/eBlocBroker/contractCalls')
 from isUserExist import isUserExist
-
-web3        = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+home = expanduser("~")
 
 def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddress, githubUserName, eBlocBroker=None, web3=None): 
 	if eBlocBroker is None and web3 is None: 
-		sys.path.insert(1, os.path.join(sys.path[0], '..'))
-		from imports import connectEblocBroker
-		from imports import getWeb3
+		from imports import connectEblocBroker, getWeb3
 		web3           = getWeb3()
 		eBlocBroker    = connectEblocBroker(web3)
 

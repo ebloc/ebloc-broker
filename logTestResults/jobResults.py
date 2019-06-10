@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 
 import os, lib, sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
-from imports import connectEblocBroker
-from imports import getWeb3
-
-sys.path.insert(0, './contractCalls')
+from imports import connectEblocBroker, getWeb3
 from contractCalls.getJobInfo import getJobInfo
 
 web3        = getWeb3()

@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
 import os, owncloud, subprocess, sys, time
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
-from imports import connectEblocBroker
-from imports import getWeb3
+from imports import connectEblocBroker, getWeb3
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 
-sys.path.insert(0, './contractCalls')
 from contractCalls.submitJob import submitJob
 from isOcMounted             import isOcMounted
 
@@ -18,8 +15,7 @@ from lib_owncloud import eudatInitializeFolder
 from lib_owncloud import isOcMounted
 
 def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
-    if not isOcMounted():
-        sys.exit()
+    # if not isOcMounted(): sys.exit()
 
     clusterID='0x57b60037b82154ec7149142c606ba024fbb0f991'
     clusterAddress = web3.toChecksumAddress(clusterID)

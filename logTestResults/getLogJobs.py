@@ -4,14 +4,11 @@ import sys, asyncio, time, os, subprocess
 from web3.auto import w3
 from dotenv import load_dotenv
 from os.path import expanduser
-home = expanduser("~")
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
-from imports import connectEblocBroker
-from imports import getWeb3
-
-sys.path.insert(0, './contractCalls')
 from contractCalls.getJobInfo import getJobInfo
+from imports import connectEblocBroker, getWeb3
+
+home = expanduser("~")
 
 def getEbloBroker():
     from imports import connectEblocBroker
