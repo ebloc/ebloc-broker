@@ -4,11 +4,8 @@ import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
 from random import randint
 from os.path import expanduser
 home = expanduser("~")
-
-sys.path.insert(0, home + '/eBlocBroker/')
-sys.path.insert(0, home + '/eBlocBroker/test')
 import lib
-from func import testFunc
+from test.func import testFunc
 
 path = os.getcwd()
 # Definitions =============================================

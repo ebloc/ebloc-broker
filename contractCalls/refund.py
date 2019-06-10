@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import os, sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from dotenv  import load_dotenv
-from imports import connectEblocBroker
-from imports import getWeb3
-from contractCalls.isUserExist import isUserExist
+from imports import connectEblocBroker, getWeb3
+from isUserExist import isUserExist
 from os.path import expanduser
 home = expanduser("~")
 
@@ -23,11 +21,9 @@ if __name__ == '__main__':
         jobKey = str(sys.argv[2])
         index  = int(sys.argv[3])        
     else: 
-        # USER Inputs =======================================================================
         clusterAddress = web3.toChecksumAddress('0x57b60037B82154eC7149142c606bA024fBb0f991')
         jobKey         = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U'  # Long Sleep Job
         index          = 3
-        # ===================================================================================
 
     if not eBlocBroker.functions.isClusterExist(clusterAddress).call():
        print("Requested cluster's Ethereum Address (" + clusterAddress + ") does not exist.")

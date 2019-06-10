@@ -12,14 +12,13 @@ from colored import fg
 from imports import connectEblocBroker
 from imports import getWeb3
 from lib import log
-from driverEudat import driverEudat
+from driverEudat  import driverEudat
 from driverGdrive import driverGdrive
 
-sys.path.insert(0, './contractCalls')
 from contractCalls.getClusterReceivedAmount import getClusterReceivedAmount
 from contractCalls.getDeployedBlockNumber   import getDeployedBlockNumber
 from contractCalls.isContractExist          import isContractExist
-from contractCalls.isClusterExist           import isClusterExist
+from contractCalls.isClusterExists          import isClusterExists
 from contractCalls.blockNumber              import blockNumber
 from contractCalls.getJobInfo               import getJobInfo
 from contractCalls.isUserExist              import isUserExist
@@ -207,9 +206,9 @@ if lib.IPFS_USE:
    lib.isIpfsOn()
 
 clusterAddress = lib.CLUSTER_ID
-isClusterExist = isClusterExist(clusterAddress, eBlocBroker, web3)
+isClusterExists = isClusterExists(clusterAddress, eBlocBroker, web3)
 
-if "false" in isClusterExist.lower():
+if "false" in isClusterExists.lower():
    print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   

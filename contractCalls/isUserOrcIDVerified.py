@@ -5,7 +5,6 @@ import sys
 def isUserOrcIDVerified(userAddress, eBlocBroker=None):
     if eBlocBroker is None:
         import os
-        sys.path.insert(1, os.path.join(sys.path[0], '..'))
         from imports import connectEblocBroker
         eBlocBroker = connectEblocBroker()
 
@@ -18,6 +17,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         userAddress = str(sys.argv[1]) 
     else:
-        userAddress = "0x57b60037B82154eC7149142c606bA024fBb0f991"
+        userAddress = '0x57b60037B82154eC7149142c606bA024fBb0f991'
         
     print(isUserOrcIDVerified(userAddress))

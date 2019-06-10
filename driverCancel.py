@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import sys, os, lib, _thread, time, hashlib, subprocess
-sys.path.insert(0, './contractCalls')
-import LogJob
-from imports import connectEblocBroker
-from imports import getWeb3
-from contractCalls.blockNumber            import blockNumber
-from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
+
+from imports import connectEblocBroker, getWeb3
+from   contractCalls.blockNumber            import blockNumber
+from   contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
+import contractCalls.LogJob
 
 web3        = getWeb3() 
 eBlocBroker = connectEblocBroker() 
