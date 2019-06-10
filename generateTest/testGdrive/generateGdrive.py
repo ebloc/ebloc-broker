@@ -3,10 +3,9 @@
 import owncloud, hashlib, getpass, os, time, math, datetime, random, sys, subprocess
 from os.path import expanduser
 from random import randint
-home = expanduser("~")
-sys.path.insert(0, home + '/eBlocBroker')
 from lib          import compressFolder
 from lib_owncloud import singleFolderShare, eudatInitializeFolder
+home = expanduser("~")
 path = os.getcwd()
 
 clusterToShare = "alper01234alper@gmail.com"

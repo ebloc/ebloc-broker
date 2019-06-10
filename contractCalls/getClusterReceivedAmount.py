@@ -8,9 +8,7 @@ def getClusterReceivedAmount(clusterAddress, eBlocBroker=None, web3=None):
         return str(eBlocBroker.functions.getClusterReceivedAmount(clusterAddress).call()).rstrip('\n') 
     else:
         import os         
-        sys.path.insert(1, os.path.join(sys.path[0], '..')) 
-        from imports import connectEblocBroker
-        from imports import getWeb3
+        from imports import connectEblocBroker, getWeb3
         
         web3 = getWeb3() 
         clusterAddress = web3.toChecksumAddress(clusterAddress)                

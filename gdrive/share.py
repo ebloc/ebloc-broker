@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 
 import subprocess, sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
-
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-sys.path.insert(0, './contractCalls')
+from contractCalls.submitJob import submitJob
 
 if len(sys.argv) < 2:
     print('Please provide folder type: tar/folder')
     sys.exit()
-
-from contractCalls.submitJob import submitJob
 
 folderType = sys.argv[1]
 folderToShare  = 'exampleFolderToShare'

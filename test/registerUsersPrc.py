@@ -6,15 +6,11 @@ For experiment purposes reqisters 10 users from prc-95
 
 import os, sys
 from os.path import expanduser
-home = expanduser("~")
-
-sys.path.append(home + '/eBlocBroker')
 from imports import connectEblocBroker
 from imports import getWeb3
+from contractCalls.registerUser import registerUser
 
-sys.path.insert(0, home + '/eBlocBroker/contractCalls')
-from registerUser import registerUser
-
+home = expanduser("~")
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
 # -------------------------------------------------------

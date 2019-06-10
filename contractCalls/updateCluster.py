@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, os, json
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from imports import connectEblocBroker
-from imports import getWeb3
+from imports import connectEblocBroker, getWeb3
 from os.path import expanduser
 home = expanduser("~")
     

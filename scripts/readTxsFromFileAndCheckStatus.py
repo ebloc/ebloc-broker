@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 from imports import getWeb3
 web3 = getWeb3()

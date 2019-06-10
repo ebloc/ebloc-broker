@@ -9,7 +9,6 @@ def isWeb3Connected(web3=None):
         from web3 import Web3
         from web3.providers.rpc import HTTPProvider
         from web3 import Web3, IPCProvider
-        sys.path.insert(1, os.path.join(sys.path[0], '..'))
         import lib
         if lib.POA_CHAIN == 0:
             # Note that you should create only one RPCProvider per process,
