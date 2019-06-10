@@ -3,8 +3,6 @@
 import sys, lib, time, subprocess
 from imports import connectEblocBroker
 from imports import getWeb3
-
-sys.path.insert(0, './contractCalls')
 from contractCalls.setJobStatus import setJobStatus
 
 web3        = getWeb3()
@@ -14,10 +12,8 @@ def startCall(jobKey, index, jobID):
    statusID = str(lib.job_state_code['RUNNING'])
    # cmd: scontrol show job jobID | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
-   #-----------
    p2 = subprocess.Popen(['grep', 'StartTime'], stdin=p1.stdout, stdout=subprocess.PIPE)
    p1.stdout.close()
-   #-----------
    p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=StartTime=).*(?= E)'], stdin=p2.stdout,stdout=subprocess.PIPE)
    p2.stdout.close()
    date      = p3.communicate()[0].decode('utf-8').strip()

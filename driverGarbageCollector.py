@@ -3,13 +3,11 @@
 import sys, os, lib, _thread, time, hashlib, subprocess
 import lib_mongodb, lib
 
-sys.path.insert(0, './contractCalls')
 from pymongo import MongoClient
 cl = MongoClient()
 coll = cl['eBlocBroker']['cache']
 
-from imports import connectEblocBroker
-from imports import getWeb3
+from imports import connectEblocBroker, getWeb3
 from contractCalls.blockNumber       import blockNumber
 from contractCalls.getJobStorageTime import getJobStorageTime
 

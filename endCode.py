@@ -4,10 +4,8 @@ import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
 from colored import stylize
 from colored import fg
 import hashlib
-from imports import connectEblocBroker
-from imports import getWeb3
 from os.path import expanduser
-sys.path.insert(0, './contractCalls')
+from imports import connectEblocBroker, getWeb3
 from contractCalls.getJobInfo   import getJobInfo
 from contractCalls.getUserInfo  import getUserInfo
 from contractCalls.receiptCheck import receiptCheck

@@ -4,7 +4,6 @@ import sys, os
 
 def getClusterAddresses(eBlocBroker=None):
     if eBlocBroker is None: 
-        sys.path.insert(1, os.path.join(sys.path[0], '..')) 
         from imports import connectEblocBroker
         eBlocBroker = connectEblocBroker()
 

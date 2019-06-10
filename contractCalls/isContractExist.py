@@ -8,12 +8,11 @@ def isContractExist(web3=None):
     address = open(home + '/eBlocBroker/contractCalls/address.json', "r")
 
     if web3 is None:
-        import os
-        sys.path.insert(1, os.path.join(sys.path[0], '..'))
+        import os        
         from imports import getWeb3
         web3 = getWeb3()
-    contractAddress = web3.toChecksumAddress(address.read().replace("\n", ""))
-
+        
+    contractAddress = web3.toChecksumAddress(address.read().replace('\n', ''))   
     if web3.eth.getCode(contractAddress) == '0x' or web3.eth.getCode(contractAddress) == b'':
         return False
     else:
