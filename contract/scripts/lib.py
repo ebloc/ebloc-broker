@@ -22,7 +22,7 @@ def convertIpfsToBytes32(hash_string):
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
-def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, storageHour, sourceCodeSize):
+def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, cacheTime, sourceCodeSize):
 
     blockReadFrom, coreLimit, priceCoreMin, priceDataTransfer, priceStorage, priceCache  = eB.getClusterInfo(account)
     assert len(coreArray) == len(coreMinArray)
@@ -40,7 +40,7 @@ def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransfe
     if dataTransferIn < 0:
         dataTransferIn = 0
         
-    storageCost      = priceStorage * dataTransferIn * storageHour
+    storageCost      = priceStorage * dataTransferIn * cacheTime[0]
     cacheCost        = priceCache * dataTransferIn            
     dataTransferSum  = dataTransferIn + dataTransferOut
     dataTransferCost = priceDataTransfer * dataTransferSum           

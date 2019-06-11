@@ -1,13 +1,13 @@
 #!/bin/bash
 
-preInstall=0
-newRpcPort="8545" # Please change it if you have different RPC_PORT number.
+setup=0
+rpcPort="8545" # Please change it if you have different RPC_PORT number.
 
 # Update repository with the latest update
 # git fetch --all && git reset --hard origin/master
 
 # Pre-installation:-----------------------------------------
-if [ $preInstall -eq 1 ]; then
+if [ $setup -eq 1 ]; then
     ## Upgrade geth on Ubuntu: ----------------------------
     # sudo apt-get install software-properties-common
     # sudo add-apt-repository -y ppa:ethereum/ethereum
@@ -27,13 +27,13 @@ if [ $preInstall -eq 1 ]; then
     sudo apt-get install python3-venv
 
     pip install wheel
-    python3.6 -m venv $HOME/venv
+    python3.6 -m venv $HOME/venv # python3.6 -m venv --without-pip venv
     source $HOME/venv/bin/activate
 
     # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
     pip install --upgrade pip --user
 
-    pip install -r requirements.txt
+    pip insntall -r requirements.txt
     
     pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
     pip install -U pyocclient  # owncloud_py
@@ -43,6 +43,7 @@ if [ $preInstall -eq 1 ]; then
     pip install -U python-dotenv
     pip install -U matplotlib
     pip install -U pydot
+    pip install -e .
     # pip install sphinx_rtd_theme
         
     ## npm
@@ -53,11 +54,10 @@ if [ $preInstall -eq 1 ]; then
     # npm install web3
     # npm install web3_ipc
     # npm install dotenv    
-    #==================================================================================================
+
     machineOS=$(bash $HOME/eBlocBroker/scripts/machine.sh)
-    if [ "$machineOS" == "Mac" ]; then
-        # Mac Packages
-        brew install realpath
+    if [ "$machineOS" == "Mac" ]; then        
+        brew install realpath # Mac Packages
     else
         ## Linux Packages
 	sudo apt-get install golang-go
@@ -168,7 +168,7 @@ rm -f $HOME/eBlocBroker/user.sh.bak
 # RPC PORT Setup:======================================================
 lineOld="8545"
 
-sed -i.bak "s/^\(RPC_PORT=\).*/\1$newRpcPort/" $HOME/.eBlocBroker/.env
+sed -i.bak "s/^\(RPC_PORT=\).*/\1$rpcPort/" $HOME/.eBlocBroker/.env
 rm $HOME/.eBlocBroker/.env.bak
 
 # PATH Name Setup:===================================================

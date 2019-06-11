@@ -24,7 +24,7 @@ def getWeb3():
         from web3.shh import Shh
         Shh.attach(web3, "shh")
     if not web3.isConnected():
-        print("If not connected please do following: sudo chown -R $(whoami) $HOME/eBlocPOA/private/geth.ipc")
+        print("Error: If not connected please do following: sudo chown -R $(whoami) $HOME/eBlocPOA/private/geth.ipc")
         return 'notconnected'
     return web3 
 
