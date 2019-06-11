@@ -39,6 +39,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         userAddress = str(sys.argv[1])
         printType   = str(sys.argv[2])
+    elif len(sys.argv) == 2:
+        userAddress = str(sys.argv[1])
+        printType   = '0'        
     else:
         userAddress = "0x4e4a0750350796164D8DefC442a712B7557BF282"
         printType   = '0'

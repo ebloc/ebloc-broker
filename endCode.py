@@ -52,13 +52,11 @@ def runCommand(command, my_env=None):
         log(err, 'red')
     return output.strip().decode('utf-8')
 
-def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dataTransferIn, dataTransferSum):
+def receiptCheckTx(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, jobID, dataTransferIn, dataTransferSum):
     # cmd: scontrol show job jobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
     p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
-    #-----------
     p2 = subprocess.Popen(['grep', 'EndTime'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    #-----------
     p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=EndTime=).*(?= )'], stdin=p2.stdout,stdout=subprocess.PIPE)
     p2.stdout.close()
     date = p3.communicate()[0].decode('utf-8').strip()
@@ -67,11 +65,11 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, newHash, storageID, jobID, dat
     endTimeStamp = runCommand(command).replace("'","")   
     log("endTimeStamp: " + endTimeStamp) 
     
-    txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
+    txHash = receiptCheck(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
     while txHash == "notconnected" or txHash == "": 
         log("Error: Please run geth on the background.", 'red')
-        log(jobKey + ' ' + index + ' ' + elapsedRawTime + ' ' + newHash + ' ' + storageID + ' ' + endTimeStamp) 
-        txHash = receiptCheck(jobKey, index, elapsedRawTime, newHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
+        log(jobKey + ' ' + index + ' ' + elapsedRawTime + ' ' + resultIpfsHash + ' ' + storageID + ' ' + endTimeStamp) 
+        txHash = receiptCheck(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
         txHash = ''
         time.sleep(5)      
     log("receiptCheck() " + txHash)  
@@ -280,7 +278,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
                 
         # dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
         # cmd: echo resultIpfsHash | tail -n1 | awk '{print $2}'
-        p1 = subprocess.Popen(['echo', newHash], stdout=subprocess.PIPE)        
+        p1 = subprocess.Popen(['echo', resultIpfsHash], stdout=subprocess.PIPE)        
         p2 = subprocess.Popen(['tail', '-n1'], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()        
         p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)

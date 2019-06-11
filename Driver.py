@@ -327,7 +327,7 @@ while True:
                      
        for attempt in range(10):
            try:
-               jobInfo  = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+               jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
                log('core: ' + str(jobInfo['core']))               
            except Exception as e:
                log('Error: jobInfo returns as ' + jobInfo, 'red')
