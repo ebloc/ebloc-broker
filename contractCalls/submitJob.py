@@ -23,9 +23,9 @@ def submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTran
     blockReadFrom, orcid = eBlocBroker.functions.getUserInfo(fromAccount).call() 
 
     if not eBlocBroker.functions.isUserExist(fromAccount).call():
-       return "Error: Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."       
+       return "Error: Requested user's Ethereum Address \"" + fromAccount + "\" does not exist."
 
-    if str(eBlocBroker.functions.isUserOrcIDVerified(fromAccount).call()) == '0':
+    if eBlocBroker.functions.isUserOrcIDVerified(fromAccount).call() == False:
        return 'Error: User\'s orcid: ' + orcid + ' is not verified.'
    
     '''
@@ -139,13 +139,13 @@ if __name__ == '__main__':
             cacheType = lib.cacheType.public # default
             # TODO: convert into ===>  sourceCodeHash     = ''
         elif storageID == lib.storageID.github:
-            print('Submitting throguh GitHub')
+            print('Submitting through GitHub')
             jobKey = "avatar-lavventura=simpleSlurmJob"
             coreGasDay      = 0 
             coreGasHour     = 0 
             coreGasMin      = 1
-            sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"    
-
+            sourceCodeHash  = "acfd2fd8a1e9ccf031db0a93a861f6eb"
+            
             
         '''    
         elif storageID == lib.storageID.eudat: # IPFS: TODO: update 
@@ -168,8 +168,11 @@ if __name__ == '__main__':
 
     ret = submitJob(clusterAddress, jobKey, core, gasCoreMin, dataTransferIn, dataTransferOut,
                         storageID, sourceCodeHash, cacheType, gasStorageHour, accountID)
-
-    print(ret)
+    
+    print(ret)    
+    if 'Error' in ret:
+        sys.exit()
+            
     tx_hash = ret[0]
     print('computationalCost:' + ret[1])
     print('storageCost:'       + ret[2])
@@ -190,5 +193,9 @@ if __name__ == '__main__':
             receipt = web3.eth.getTransactionReceipt(tx_hash)
         else:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
-            print('Job\'s index is ' + str(logs[0].args['index']))
-            break
+            try:
+                print('Job\'s index=' + str(logs[0].args['index']))
+                break
+            except IndexError:
+                print('Transaction is reverted.')
+                break

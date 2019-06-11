@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os, sys, json
-from os.path import expanduser
+from os.path     import expanduser
 from isUserExist import isUserExist
 home = expanduser("~")
 
@@ -13,7 +13,7 @@ def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddres
 
 	if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
 		# First time running:
-		print('Please first run: python scripts/whisperInitialize.py')
+		print('Please first run: python ~/eBlocBroker/scripts/whisperInitialize.py')
 		sys.exit()
 	else:
 		with open(home + '/.eBlocBroker/whisperInfo.txt') as json_file:
@@ -29,10 +29,10 @@ def registerUser(accountID, userEmail, federationCloudID, miniLockID, ipfsAddres
 		return 'User (' + account  + ') is already registered.'
     
 	if len(federationCloudID) < 128 and len(userEmail) < 128: 
-		tx = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID,
+		tx_hash = eBlocBroker.transact({"from":account, "gas": 4500000}).registerUser(userEmail, federationCloudID,
                                                                                  miniLockID, ipfsAddress,
                                                                                  githubUserName, whisperPubKey) 
-		return  'Tx_hash: ' + tx.hex()
+		return  'Tx_hash: ' + tx_hash.hex()
 
 if __name__ == '__main__': 
     if len(sys.argv) == 7:
