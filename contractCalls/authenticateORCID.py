@@ -7,6 +7,9 @@ def authenticateORCID(userAddress, orcID, eBlocBroker=None, web3=None):
         import os;
         from imports import connectEblocBroker, getWeb3
         web3        = getWeb3()
+        if web3 == 'notconnected':
+            return
+        
         eBlocBroker = connectEblocBroker(web3)
     
     account     = web3.eth.accounts[0]
@@ -22,7 +25,8 @@ if __name__ == '__main__':
         userAddress = str(sys.argv[1]) 
         orcID = str(sys.argv[2]) 
     else:
-        userAddress = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab        
+        # userAddress = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
+        userAddress = '0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5' # prc        
         orcID       = '0000-0001-7642-0552'
 
     print(authenticateORCID(userAddress, orcID))

@@ -68,7 +68,7 @@ def workFlow(skip=True):
     dataTransferIn  = 100
     dataTransferOut = 100
     dataTransfer    = [dataTransferIn, dataTransferOut]
-    storageHour  = 0    
+    cacheTime  = 0    
     coreArray       = [2,  4,   2]
     coreMinArray = [10, 15, 20]
     workFlowJobID   = 0
@@ -77,7 +77,7 @@ def workFlow(skip=True):
 
     jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, clusterAddress,
                                      eB, sourceCodeHash, web3,
-                                     dataTransferIn, dataTransferOut, storageHour)
+                                     dataTransferIn, dataTransferOut, cacheTime)
     print('jobPriceValue: ' + str(jobPriceValue))
 
     tx = eB.submitJob(clusterAddress,
@@ -86,7 +86,7 @@ def workFlow(skip=True):
                       coreMinArray,
                       dataTransfer,
                       storageID_cacheType,
-                      storageHour,
+                      cacheTime,
                       sourceCodeHash,
                       {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
     print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']))
@@ -189,7 +189,7 @@ def submitJob():
             arguments = line.rstrip('\n').split(" ")
 
             coreMin      = int(arguments[1]) - int(arguments[0])
-            storageHour  = 1
+            cacheTime  = 1
             core         = int(arguments[2])
 
             # time.sleep(1)
@@ -210,13 +210,14 @@ def submitJob():
 
             sourceCodeSize      = [100]
             sourceCodeHashArray = [sourceCodeHash] # Hashed of the 
+            cacheTimeArray      = [cacheTime]
             
             dataTransferIn  = 100
             dataTransferOut = 100
 
             print(sourceCodeHashArray[0])
             jobPriceValue, dataTransferIn = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
-                                                             dataTransferIn, dataTransferOut, storageHour, sourceCodeSize)
+                                                             dataTransferIn, dataTransferOut, cacheTimeArray, sourceCodeSize)
             
             print('jobPriceValue: ' + str(jobPriceValue))
             storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
@@ -228,7 +229,7 @@ def submitJob():
                               coreMinArray,
                               dataTransfer,
                               storageID_cacheType,
-                              storageHour,
+                              cacheTimeArray,
                               sourceCodeHashArray,
                               {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
             print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']))
