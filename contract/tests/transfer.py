@@ -8,7 +8,7 @@ def setup():
     scripts.token.main()
     global eB, whisperPubKey, cwd
     eB = eBlocBroker[0]
-    whisperPubKey = "0x04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
+    whisperPubKey = "04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
     cwd           = os.getcwd()
             
 def getOwner(skip=True):
@@ -17,22 +17,27 @@ def getOwner(skip=True):
     
 def registerCluster(skip=True, printFlag=True):
     '''Register Cluster'''
+    clusterEmail      = "cluster@gmail.com"
+    federatedCloudID  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
+    miniLockID        = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
     priceCoreMin      = 1
     priceDataTransfer = 1
     priceStorage      = 1
     priceCache        = 1
+    ipfsAddress       = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
     web3.eth.defaultAccount = accounts[0]
-
-    tx = eB.registerCluster("cluster@gmail.com",
-                                "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
-                                "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ",
-                                128,
-                                priceCoreMin,
-                                priceDataTransfer,
-                                priceStorage,
-                                priceCache,
-                                "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf",
-                                whisperPubKey, {'from': accounts[0]})
+    
+    tx = eB.registerCluster(clusterEmail,
+                            federatedCloudID,
+                            miniLockID,
+                            128,
+                            priceCoreMin,
+                            priceDataTransfer,
+                            priceStorage,
+                            priceCache,
+                            100,
+                            ipfsAddress,
+                            whisperPubKey, {'from': accounts[0]})
     if printFlag:
         print(' => GasUsed:' + str(tx.__dict__['gas_used']))       
 
@@ -179,10 +184,19 @@ def submitJob():
     fname = cwd + '/files/test.txt'
     # fname = cwd + '/files/test_.txt'
     
-    blockReadFrom, coreLimit, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eB.getClusterInfo(accounts[0])
-    print("Cluster's coreLimit:  "    + str(coreLimit))
-    print("Cluster's priceCoreMin:  " + str(priceCoreMin))
-
+    clusterPriceInfo   = eB.getClusterInfo(accounts[0])    
+    blockReadFrom      = clusterPriceInfo[0]
+    availableCoreNum   = clusterPriceInfo[1]    
+    priceCoreMin       = clusterPriceInfo[2]
+    priceDataTransfer  = clusterPriceInfo[3]
+    priceStorage       = clusterPriceInfo[4]
+    priceCache         = clusterPriceInfo[5]
+    commitmentBlockNum = clusterPriceInfo[6]
+    
+    print("Cluster's availableCoreNum:  " + str(availableCoreNum))
+    print("Cluster's priceCoreMin:  "     + str(priceCoreMin))
+    print(clusterPriceInfo)
+    
     index = 0
     with open(fname) as f: 
         for line in f:
@@ -195,13 +209,10 @@ def submitJob():
             # time.sleep(1)
             # rpc.mine(int(arguments[0]))
             
-            jobKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
-            ipfsBytes32 = scripts.lib.convertIpfsToBytes32(jobKey)
+            jobKey         = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd" # Source Code's jobKey
+            ipfsBytes32    = scripts.lib.convertIpfsToBytes32(jobKey)
             sourceCodeHash = web3.toBytes(hexstr= ipfsBytes32)
-            # print(sourceCodeHash)
-            # sourceCodeHash = "e3fbef873405145274256ee0ee2b580f"
-            miniLockId     = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
- 
+            
 			# print("Client Balance before: " + str(web3.eth.getBalance(account)))
 			# print("Contract Balance before: " + str(web3.eth.getBalance(accounts[0])))
 
@@ -216,8 +227,8 @@ def submitJob():
             dataTransferOut = 100
 
             print(sourceCodeHashArray[0])
-            jobPriceValue, dataTransferIn = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
-                                                             dataTransferIn, dataTransferOut, cacheTimeArray, sourceCodeSize)
+            jobPriceValue, dataTransferIn = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB,
+                                                             sourceCodeHashArray, web3, dataTransferIn, dataTransferOut, cacheTimeArray, sourceCodeSize)
             
             print('jobPriceValue: ' + str(jobPriceValue))
             storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]

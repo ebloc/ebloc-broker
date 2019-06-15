@@ -38,7 +38,7 @@ library Lib {
     
     struct jobStorageTime {
 	uint32 receivedBlocNumber;
-	uint32 gasStorageBlockNum;
+	uint32 storageBlockNum;
     }
 
     struct job {
@@ -62,15 +62,15 @@ library Lib {
 	uint  dataTransferOut; /**/
 	 
 	/* Variables obtained from eBlocBoker */
-	uint                 received; /* Paid amount (new owned) by the client */		
-	address       payable jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint                  received; /* Paid amount (new owned) by the client */		
+	address payable       jobOwner; /* Address of the client (msg.sender) has been stored */
 	uint clusterUpdatedBlockNumber; /* When cluster is submitted cluster's most recent block number when its set or updated */
     }
 
     /* Registered user's information */
     struct userData {
-	uint blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
-	string       orcID; /* User's orcID */
+	uint32 blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	string         orcID; /* User's orcID */
 
 	//mapping(address => mapping(string  => bool)) isStoragePaid; /**/
     }
@@ -78,10 +78,11 @@ library Lib {
     struct clusterInfo {
 	uint32 availableCoreNum; /* Core number of the cluster */
 	/* All price varaibles are defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */ 
-	uint   priceCoreMin; /* Cluster's price for core per minute */
-	uint   priceDataTransfer; 
-	uint   priceStorage; 
-	uint   priceCache;	
+	uint32 priceCoreMin; /* Cluster's price for core per minute */
+	uint32 priceDataTransfer; 
+	uint32 priceStorage; 
+	uint32 priceCache;
+	uint32 commitmentBlockNum;
     }
     
     /* Registered cluster's information */
@@ -96,7 +97,7 @@ library Lib {
 	bool            isRunning; /* Flag that checks is Cluster running or not */
 	uint32 clusterAddressesID; /* Index of cluster's ethereum address is stored in clusterAddresses */	
 	uint       receivedAmount; /* Cluster's received wei price */
-	uint        blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	uint32      blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
     }
 
     struct interval {
@@ -116,7 +117,7 @@ library Lib {
     {
 	self.isRunning      = true;
 	self.receivedAmount = 0;
-	self.blockReadFrom  = block.number;
+	self.blockReadFrom  = uint32(block.number);
 
 	intervalNode storage selfReceiptList = self.receiptList;
 	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
