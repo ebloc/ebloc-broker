@@ -39,7 +39,7 @@ def getClusterInfo(clusterAddress, eBlocBroker=None, web3=None):
            '{0: <19}'.format('miniLockID: ')        + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
            '{0: <19}'.format('ipfsAddress: ')       + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
            '{0: <19}'.format('fID: ')               + my_filter.get_all_entries()[0].args['fID'] + '\n' +
-           '{0: <19}'.format('whisperPublicKey: ')  + my_filter.get_all_entries()[0].args['whisperPublicKey']);
+           '{0: <19}'.format('whisperPublicKey: ')  + '0x' + my_filter.get_all_entries()[0].args['whisperPublicKey']);
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:

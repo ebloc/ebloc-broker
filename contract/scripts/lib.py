@@ -15,7 +15,7 @@ class storageID:
     github = 3
     gdrive = 4
 
-Qm = b'\x12 '
+Qm = b'\x12'
 
 def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
@@ -23,8 +23,15 @@ def convertIpfsToBytes32(hash_string):
     return binascii.hexlify(b).decode("utf-8")
 
 def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, cacheTime, sourceCodeSize):
-
-    blockReadFrom, coreLimit, priceCoreMin, priceDataTransfer, priceStorage, priceCache  = eB.getClusterInfo(account)
+    clusterPriceInfo   = eB.getClusterInfo(account)
+    blockReadFrom      = clusterPriceInfo[0]
+    availableCoreNum   = clusterPriceInfo[1]
+    priceCoreMin       = clusterPriceInfo[2]
+    priceDataTransfer  = clusterPriceInfo[3]
+    priceStorage       = clusterPriceInfo[4]
+    priceCache         = clusterPriceInfo[5]
+    commitmentBlockNum = clusterPriceInfo[6]
+   
     assert len(coreArray) == len(coreMinArray)
 
     computationalCost = 0

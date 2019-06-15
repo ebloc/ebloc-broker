@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, owncloud, subprocess, sys, time
+# sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import lib
 from imports import connectEblocBroker, getWeb3
 
