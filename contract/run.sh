@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source $HOME/b/bin/activate
+
 rm contracts/.\#eBlocBroker.sol
 rm contracts/.\#Lib.sol
 
