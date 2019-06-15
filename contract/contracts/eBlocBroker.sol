@@ -205,7 +205,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	returns (bool success) {
 	Lib.clusterData storage cluster = store.clusterContract[msg.sender];	
 	
-	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum < block.number) {
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].storageBlockNum < block.number) {
 	    msg.sender.transfer(cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]); //storagePayment
 	    emit LogStoragePayment(msg.sender, cluster.receivedAmountForStorage[jobOwner][sourceCodeHash]);	    
 	    cluster.receivedAmountForStorage[jobOwner][sourceCodeHash] = 0;
@@ -220,55 +220,11 @@ contract eBlocBroker is eBlocBrokerInterface {
 	require(cacheTime != 0);
 	Lib.clusterData storage cluster = store.clusterContract[msg.sender];
 
-	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].gasStorageBlockNum >= block.number) {
-	    cluster.jobSt[sourceCodeHash].gasStorageBlockNum += cacheTime * 240;
+	if (cluster.jobSt[sourceCodeHash].receivedBlocNumber + cluster.jobSt[sourceCodeHash].storageBlockNum >= block.number) {
+	    cluster.jobSt[sourceCodeHash].storageBlockNum += cacheTime * 240;
 	}
     }
     */
-
-    /* Registers a provider's (msg.sender's) cluster to eBlocBroker */
-    function registerCluster(string memory clusterEmail,
-			     string memory federatedCloudID,
-			     string memory miniLockID,
-			     uint32 availableCoreNum,
-			     uint priceCoreMin,
-			     uint priceDataTransfer,
-			     uint priceStorage,
-			     uint priceCache,			     
-			     string memory ipfsAddress,
-			     string memory whisperPublicKey) public isClusterRegistered()
-	returns (bool success)
-    {
-	require(availableCoreNum != 0 && priceCoreMin != 0 && priceDataTransfer != 0);
-	
-	Lib.clusterData storage cluster = store.clusterContract[msg.sender];
-	
-	require(!cluster.isRunning);
-	cluster.info[block.number] = Lib.clusterInfo({
-                	availableCoreNum:   availableCoreNum,
-                        priceCoreMin:       priceCoreMin,
-                        priceDataTransfer:  priceDataTransfer,
-                        priceStorage:       priceStorage,
-                        priceCache:         priceCache			
-			});	
-	store.clusterUpdatedBlockNumber[msg.sender].push(block.number);
-
-	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
-	    store.clusterAddresses[cluster.clusterAddressesID] = msg.sender;
-	    cluster.blockReadFrom = block.number;
-	    cluster.isRunning = true;
-	} else {
-	    cluster.clusterAddressesID = uint32(store.clusterAddresses.length);
-	    cluster.constructCluster();
-	    store.clusterAddresses.push(msg.sender); // In order to obtain the list of clusters 
-	}
-
-	emit LogCluster(msg.sender, availableCoreNum, clusterEmail, federatedCloudID, miniLockID,
-			    priceCoreMin, priceDataTransfer, priceStorage, priceCache,
-			    ipfsAddress, whisperPublicKey);
-
-	return true;
-    }
 
     /* Registers a clients (msg.sender's) to eBlocBroker. It also updates userData */
     function registerUser(string memory userEmail,
@@ -279,9 +235,54 @@ contract eBlocBroker is eBlocBrokerInterface {
 			  string memory whisperPublicKey) public 
 	returns (bool success)
     {
-	store.userContract[msg.sender].blockReadFrom = block.number;
+	store.userContract[msg.sender].blockReadFrom = uint32(block.number);
 	//store.userContract[msg.sender].orcID = orcID; //delete
 	emit LogUser(msg.sender, userEmail, federatedCloudID, miniLockID, ipfsAddress, githubUserName, whisperPublicKey);
+	return true;
+    }
+
+    /* Registers a provider's (msg.sender's) cluster to eBlocBroker */
+    function registerCluster(string memory clusterEmail,
+			     string memory federatedCloudID,
+			     string memory miniLockID,
+			     uint32 availableCoreNum,
+			     uint32 priceCoreMin,
+			     uint32 priceDataTransfer,
+			     uint32 priceStorage,
+			     uint32 priceCache,
+			     uint32 commitmentBlockNum,
+			     string memory ipfsAddress,
+			     string memory whisperPublicKey) public isClusterRegistered()
+	returns (bool success)
+    {
+	require(availableCoreNum != 0 && priceCoreMin != 0 && priceDataTransfer != 0);
+	
+	Lib.clusterData storage cluster = store.clusterContract[msg.sender];
+	
+	require(!cluster.isRunning);
+	cluster.info[block.number] = Lib.clusterInfo({
+	    availableCoreNum:   availableCoreNum,
+		    priceCoreMin:       priceCoreMin,
+		    priceDataTransfer:  priceDataTransfer,
+		    priceStorage:       priceStorage,
+		    priceCache:         priceCache,
+ 		    commitmentBlockNum: commitmentBlockNum
+		    });	
+	store.clusterUpdatedBlockNumber[msg.sender].push(block.number);
+
+	if (cluster.blockReadFrom != 0 && !cluster.isRunning) {
+	    store.clusterAddresses[cluster.clusterAddressesID] = msg.sender;
+	    cluster.blockReadFrom = uint32(block.number);
+	    cluster.isRunning = true;
+	} else {
+	    cluster.clusterAddressesID = uint32(store.clusterAddresses.length);
+	    cluster.constructCluster();
+	    store.clusterAddresses.push(msg.sender); // In order to obtain the list of clusters 
+	}
+
+	emit LogCluster(msg.sender, availableCoreNum, clusterEmail, federatedCloudID, miniLockID,
+			    priceCoreMin, priceDataTransfer, priceStorage, priceCache,
+			    ipfsAddress, whisperPublicKey);
 	return true;
     }
 
@@ -299,10 +300,10 @@ contract eBlocBroker is eBlocBrokerInterface {
 			   string memory federatedCloudID,
 			   string memory miniLockID,
 			   uint32 availableCoreNum,
-			   uint priceCoreMin,
-			   uint priceDataTransfer,
-			   uint priceStorage,
-			   uint priceCache,			     
+			   uint32 priceCoreMin,
+			   uint32 priceDataTransfer,
+			   uint32 priceStorage,
+			   uint32 priceCache,			     
 			   string memory ipfsAddress,
 			   string memory whisperPublicKey)
 	public returns (bool success)
@@ -316,14 +317,15 @@ contract eBlocBroker is eBlocBrokerInterface {
                         priceCoreMin:       priceCoreMin,
                         priceDataTransfer:  priceDataTransfer,
                         priceStorage:       priceStorage,
-                        priceCache:         priceCache			
+        	        priceCache:         priceCache,
+		     	commitmentBlockNum: 0
 			});	
 	store.clusterUpdatedBlockNumber[msg.sender].push(block.number);
-	cluster.blockReadFrom = block.number;
+	cluster.blockReadFrom = uint32(block.number);
 
 	emit LogCluster(msg.sender, availableCoreNum, clusterEmail, federatedCloudID, miniLockID,
-			    priceCoreMin, priceDataTransfer, priceStorage, priceCache,
-			    ipfsAddress, whisperPublicKey);
+			priceCoreMin, priceDataTransfer, priceStorage, priceCache,
+			ipfsAddress, whisperPublicKey);
 	return true;
     }
     
@@ -342,7 +344,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	Lib.clusterInfo memory info = cluster.info[clusterInfo[clusterInfo.length-1]];
 
 	/*
-	if (cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum > block.number) {
+	if (cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].storageBlockNum > block.number) {
 	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] != 0)
 		dataTransfer[0] = 0;
 	}
@@ -399,7 +401,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	
 	// User can only update the job's cacheTime if previously set storeage time is completed
 	if (cacheTime[0] != 0 &&
-	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum < block.number) {
+	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber + cluster.jobSt[sourceCodeHash[0]].storageBlockNum < block.number) {
 
 	    if (cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] != 0) {
 		clusterAddress.transfer(cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]]); //storagePayment
@@ -408,7 +410,7 @@ contract eBlocBroker is eBlocBrokerInterface {
 	    
 	    cluster.jobSt[sourceCodeHash[0]].receivedBlocNumber = uint32(block.number);
 	    //Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
-	    cluster.jobSt[sourceCodeHash[0]].gasStorageBlockNum = cacheTime[0] * 240;	   
+	    cluster.jobSt[sourceCodeHash[0]].storageBlockNum = cacheTime[0] * 240;	   
 	    cluster.receivedAmountForStorage[msg.sender][sourceCodeHash[0]] = info.priceStorage * dataTransfer[0] * cacheTime[0];	    
 	}
 	
@@ -469,25 +471,29 @@ contract eBlocBroker is eBlocBrokerInterface {
 	if (store.userContract[userAddress].blockReadFrom != 0)
 	    return (store.userContract[userAddress].blockReadFrom, store.userContract[userAddress].orcID);
     }
-
+    
     /* Returns the registered cluster's information. It takes
-       Ethereum address of the cluster (clusterAddress), which can be obtained by calling getClusterAddresses */
-    function getClusterInfo(address clusterAddress) public view
-	returns(uint, uint, uint, uint, uint, uint)
-    {	
-	if (store.clusterContract[clusterAddress].blockReadFrom != 0) {
-	    uint[] memory clusterInfo = store.clusterUpdatedBlockNumber[clusterAddress];
+       Ethereum address of the cluster (clusterAddress), which can be obtained by calling getClusterAddresses
+    */    
+    function getClusterInfo(address clusterAddress) public view returns(uint32[7] memory){
+	uint[]    memory clusterInfo = store.clusterUpdatedBlockNumber[clusterAddress];
+	uint32[7] memory clusterPriceInfo;
+	uint index = clusterInfo.length - 1;
+
+	if (store.clusterContract[clusterAddress].blockReadFrom == 0)
+	    return clusterPriceInfo;
+
+	clusterPriceInfo[0] = store.clusterContract[clusterAddress].blockReadFrom;
+	clusterPriceInfo[1] = store.clusterContract[clusterAddress].info[clusterInfo[index]].availableCoreNum;
+	clusterPriceInfo[2] = store.clusterContract[clusterAddress].info[clusterInfo[index]].priceCoreMin;	
+	clusterPriceInfo[3] = store.clusterContract[clusterAddress].info[clusterInfo[index]].priceDataTransfer;
+	clusterPriceInfo[4] = store.clusterContract[clusterAddress].info[clusterInfo[index]].priceStorage;
+	clusterPriceInfo[5] = store.clusterContract[clusterAddress].info[clusterInfo[index]].priceCache;	
+	clusterPriceInfo[6] = store.clusterContract[clusterAddress].info[clusterInfo[index]].commitmentBlockNum;
 	    
-	    return (store.clusterContract[clusterAddress].blockReadFrom,
-		    store.clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].availableCoreNum,
-		    store.clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].priceCoreMin,
-		    store.clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].priceDataTransfer,
-		    store.clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].priceStorage,
-		    store.clusterContract[clusterAddress].info[clusterInfo[clusterInfo.length-1]].priceCache);
-	}
-	else
-	    return (0, 0, 0, 0, 0, 0);
+	return clusterPriceInfo;
     }
+    
 
     /* Returns various information about the submitted job such as the hash of output files generated by IPFS,
        UNIX timestamp on job's start time, received Wei value from the client etc. 
@@ -576,7 +582,7 @@ contract eBlocBroker is eBlocBrokerInterface {
     {
 	Lib.clusterData storage cluster = store.clusterContract[clusterAddress];
 	return (cluster.jobSt[sourceCodeHash].receivedBlocNumber,
-		cluster.jobSt[sourceCodeHash].gasStorageBlockNum / 240);
+		cluster.jobSt[sourceCodeHash].storageBlockNum / 240);
     }
 
     /* Checks whether or not the given Ethereum address of the provider (clusterAddress) 
