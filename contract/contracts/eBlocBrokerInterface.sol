@@ -13,48 +13,37 @@ interface eBlocBrokerInterface {
 		     uint endTime,
 		     bytes32 resultIpfsHash,
 		     uint dataTransferIn,
-		     uint dataTransferOut
-		     );
+		     uint dataTransferOut);
 
     /* Records the updated jobs' information under setJobStatus() method call */
     event LogSetJob(address indexed clusterAddress,
 		    string jobKey,
 		    uint32 index,
 		    uint32 jobID,
-		    uint startTime
-		    );
+		    uint startTime);
     
-    /* Records the submitted jobs' information under submitJob() method call.*/
+    /* Records the submitted jobs' information under submitJob() method call */
     event LogJob(address indexed clusterAddress,
 		 string jobKey,
 		 uint32 indexed index,
 		 uint8 storageID,
 		 bytes32[] sourceCodeHash,
-		 uint32 gasDataTransferOut,
 		 uint8 cacheType,
-		 uint32 gasStorageHour,
-		 uint received
-		 );
+		 uint received);
     
-    /* Eecords the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
-    event LogCluster(address indexed clusterAddress,
-		     uint32 coreNumber,
-		     string clusterEmail,
-		     string fID,
-		     string miniLockID,
-		     uint priceCoreMin,
-		     uint priceDataTransfer,
-		     uint priceStorage,
-		     uint priceCache,
-		     string ipfsAddress,
-		     string whisperPublicKey
-		     );
+    /* Records the registered clusters' registered information under registerCluster() method call.  (fID stands for federationCloudId) */
+    event LogClusterInfo(address indexed clusterAddress,
+			 string clusterEmail,
+			 string fID,
+			 string miniLockID,
+			 string ipfsAddress,
+			 string whisperPublicKey);
 
     /* Records the refunded jobs' information under refund() method call */
     event LogRefund(address indexed clusterAddress,
-			  string jobKey,
-			  uint32 index
-			  );
+		    string jobKey,
+		    uint32 index,
+		    uint32 jobID);
 
     /* Records the registered users' registered information under registerUser method call.*/
     event LogUser(address userAddress,
@@ -63,13 +52,11 @@ interface eBlocBrokerInterface {
 		  string miniLockID,
 		  string ipfsAddress,
 		  string githubUserName,
-		  string whisperPublicKey
-		  );
+		  string whisperPublicKey);
     
     event LogJobDescription(address indexed clusterAddress,
 			    string jobKey,
-			    string jobDesc
-			    );
+			    string jobDesc);
     
-    event LogStoragePayment(address indexed clusterAddress, uint received);
+    event LogStoragePayment(address indexed clusterAddress, uint received);    
 }

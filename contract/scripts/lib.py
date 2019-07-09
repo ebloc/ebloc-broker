@@ -34,22 +34,32 @@ def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransfe
    
     assert len(coreArray) == len(coreMinArray)
 
+    jobPriceValue     = 0
     computationalCost = 0
+    cacheCost         = 0
+    storageCost       = 0    
+    _dataTransferIn   = 0
+    
     for i in range(len(coreArray)):
         computationalCost += priceCoreMin * coreArray[i] * coreMinArray[i]                           
-
+        
     # print(sourceCodeHash[0])
     for i in range(len(sourceCodeHash)):    
         jobReceivedBlocNumber, jobGasStorageHour = eB.getJobStorageTime(account, sourceCodeHash[i])
-        if jobReceivedBlocNumber + jobGasStorageHour * 240 > web3.eth.blockNumber:
-            dataTransferIn -= sourceCodeSize[i] # storageCost and cacheCost will be equaled to 0
+        if jobReceivedBlocNumber + jobGasStorageHour * 240 < web3.eth.blockNumber:
+            _dataTransferIn += dataTransferIn[i]
+            if cacheTime[i] > 0:
+                storageCost += priceStorage * dataTransferIn[i] * cacheTime[i]
+            else:
+                cacheCost += priceCache * dataTransferIn[i]
+                
+    dataTransferCost = priceDataTransfer * (_dataTransferIn + dataTransferOut)
+    jobPriceValue = computationalCost + dataTransferCost + cacheCost + storageCost
+    
+    print('\njobPriceValue=' + str(jobPriceValue)       + ' | ' +
+          'cacheCost='         + str(cacheCost)         + ' | ' +
+          'storageCost='       + str(storageCost)       + ' | ' +
+          'dataTransferCost='  + str(dataTransferCost)  + ' | ' +
+          'computationalCost=' + str(computationalCost))          
 
-    if dataTransferIn < 0:
-        dataTransferIn = 0
-        
-    storageCost      = priceStorage * dataTransferIn * cacheTime[0]
-    cacheCost        = priceCache * dataTransferIn            
-    dataTransferSum  = dataTransferIn + dataTransferOut
-    dataTransferCost = priceDataTransfer * dataTransferSum           
-    jobPriceValue     = computationalCost + dataTransferCost + storageCost + cacheCost
-    return jobPriceValue, dataTransferIn
+    return jobPriceValue

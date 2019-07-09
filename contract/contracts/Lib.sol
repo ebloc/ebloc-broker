@@ -5,11 +5,9 @@ email:  alper.alimoglu AT gmail.com
 */
 
 pragma solidity ^0.5.7;
-//pragma experimental ABIEncoderV2;
 
-library Lib {
-    
-    enum storageID {
+library Lib { 
+    enum StorageID {
 	IPFS,          /* 0 */
 	EUDAT,         /* 1 */
 	IPFS_MINILOCK, /* 2 */
@@ -17,7 +15,7 @@ library Lib {
 	GDRIVE         /* 4 */
     }
     
-    enum jobStateCodes {
+    enum StateCodes {
 	SUBMITTED,   /* 0 */
 	COMPLETED,   /* 1 Prevents double spending, flag to store if receiptCheck successfully completed */
 	REFUNDED,    /* 2 Prevents double spending, flag to store if receiptCheck successfully refunded */
@@ -25,110 +23,103 @@ library Lib {
 	RUNNING,     /* 4 */
 	CANCELLED    /* 5 */	
     }
-    
-    struct Storage {
-	/* Uninitialized uint variable that will be set with the block number that will be obtained when contract is constructed */
-	uint      deployedBlockNumber;    
-	address   owner;
-	address[] clusterAddresses; /* A dynamically-sized array of `address` structs */
-	mapping(address => uint[]) clusterUpdatedBlockNumber;
-	mapping(address => Lib.clusterData) clusterContract;
-	mapping(address => Lib.userData) userContract;
-    }
-    
-    struct jobStorageTime {
-	uint32 receivedBlocNumber;
-	uint32 storageBlockNum;
+
+    struct DataInfo {
+	uint32 price;
+	bool isExist;
     }
 
-    struct job {
+    struct JobStorageTime {
+	uint32 receivedBlock;
+	uint32 cacheDuration;
+    }
+
+    struct Job {
 	/* Variable assigned by the cluster */
 	uint32 startTime; /* Submitted job's starting universal time on the server side */
-	uint8     status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	//uint8     status; /* Status of the submitted job {NULL, PENDING, COMPLETED, RUNNING} */
+	StateCodes status;
 	
 	/* Variables assigned by the client */
-	uint16 core;      /* Requested core array by the client */
-	uint16 coreMin;/* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
+	uint16 core;             /* Requested core array by the client */
+	uint16 executionTimeMin; /* Time to run job in minutes. ex: minute + hour * 60 + day * 1440; */
     }
     
     /* Submitted Job's information */
-    struct status {
-	mapping(uint => job)    jobs;
-	
-	//mapping(string => bool) costFlag;
-	//bool cacheFlag;
-	
-	uint   dataTransferIn;  /**/
-	uint  dataTransferOut; /**/
-	 
-	/* Variables obtained from eBlocBoker */
-	uint                  received; /* Paid amount (new owned) by the client */		
-	address payable       jobOwner; /* Address of the client (msg.sender) has been stored */
-	uint clusterUpdatedBlockNumber; /* When cluster is submitted cluster's most recent block number when its set or updated */
+    struct Status {
+	mapping(uint => Job) jobs;
+
+	uint32         cacheCost;
+	uint      dataTransferIn;
+	uint     dataTransferOut;
+	uint            received; /* Paid amount (new owned) by the client */		
+	address payable jobOwner; /* Address of the client (msg.sender) has been stored */
+	uint32 pricesSetBlockNum; /* When cluster is submitted cluster's most recent block number when its set or updated */
     }
 
     /* Registered user's information */
-    struct userData {
-	uint32 blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
-	string         orcID; /* User's orcID */
-
+    struct User {
+	uint32 committedBlock; /* Block number when cluster is registered in order the watch cluster's event activity */
+	string orcID; /* User's orcID */
 	//mapping(address => mapping(string  => bool)) isStoragePaid; /**/
     }
 
-    struct clusterInfo {
-	uint32 availableCoreNum; /* Core number of the cluster */
-	/* All price varaibles are defined in wei. Floating-point or fixed-point decimals have not yet been implemented in Solidity */ 
+    struct ClusterInfo {
+	uint32 availableCore; /* Core number of the cluster */
+	uint32 commitmentBlockDuration;
+	
+	/* All the price varaibles are defined in Wei. 
+	   Floating-point or fixed-point decimals have not yet been implemented in Solidity */ 
 	uint32 priceCoreMin; /* Cluster's price for core per minute */
 	uint32 priceDataTransfer; 
 	uint32 priceStorage; 
-	uint32 priceCache;
-	uint32 commitmentBlockNum;
+	uint32 priceCache;	
     }
     
     /* Registered cluster's information */
-    struct clusterData {
-	intervalNode receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
+    struct Cluster {
+	IntervalNode receiptList; /* receiptList will be use to check either job's start and end time overlapped or not */
 
-	mapping(string => status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
-	mapping(uint => clusterInfo) info;
-	mapping(bytes32  => jobStorageTime) jobSt; /*Stored information related to job's storage time*/
-	mapping(address => mapping(bytes32  => uint)) receivedAmountForStorage; /**/
+	mapping(string => Status[]) jobStatus; /* All submitted jobs into cluster 's Status is accessible */
+	mapping(uint => ClusterInfo) info;
+	mapping(bytes32  => JobStorageTime) jobSt; /* Stored information related to job's storage time */
+	mapping(address => mapping(bytes32  => uint)) receivedForStorage; /* Received payment for storage usage */
+	mapping(bytes32  => DataInfo) providedData; 
 	
-	bool            isRunning; /* Flag that checks is Cluster running or not */
-	uint32 clusterAddressesID; /* Index of cluster's ethereum address is stored in clusterAddresses */	
-	uint       receivedAmount; /* Cluster's received wei price */
-	uint32      blockReadFrom; /* Block number when cluster is registered in order the watch cluster's event activity */
+	bool        isRunning; /* Flag that checks is Cluster running or not */
+	uint         received; /* Cluster's received wei price */
+	uint32 committedBlock; /* Block number when cluster is registered in order the watch cluster's event activity */
     }
 
-    struct interval {
+    struct Interval {
 	uint32 endpoint;
 	int32   core; /* Job's requested core number */
 	uint32  next; /* Points to next the node */
     }
 
-    struct intervalNode {
-	interval[] list;       /* A dynamically-sized array of interval structs */
+    struct IntervalNode {
+	Interval[] list;       /* A dynamically-sized array of interval structs */
 	uint32 tail;           /* Tail of the linked list */
 	uint32 deletedItemNum; /* Keep track of deleted nodes */
     }    
 	
     /* Invoked when cluster calls registerCluster() function */
-    function constructCluster(clusterData storage self) public
+    function constructCluster(Cluster storage self) public
     {
-	self.isRunning      = true;
-	self.receivedAmount = 0;
-	self.blockReadFrom  = uint32(block.number);
+	self.isRunning = true;
+	self.received;
+	self.committedBlock = uint32(block.number);
 
-	intervalNode storage selfReceiptList = self.receiptList;
-	selfReceiptList.list.push(interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
-	selfReceiptList.tail             = 0;	
-	selfReceiptList.deletedItemNum   = 0;
+	IntervalNode storage selfReceiptList = self.receiptList;
+	selfReceiptList.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
+	selfReceiptList.tail;	
+	selfReceiptList.deletedItemNum;
     }
-
-    function receiptCheck(intervalNode storage self, job storage job_, uint64 endTime_availableCoreNum) public	
+			  
+    function receiptCheck(IntervalNode storage self, Job storage job_, uint64 endTime_availableCore) internal
 	returns (bool flag)
     {
-	interval[] storage list = self.list;
+	Interval[] storage list = self.list;
 	flag = false;
 	
 	uint32 addr = self.tail;
@@ -136,21 +127,21 @@ library Lib {
 	uint32 startTime = job_.startTime;
 	int32  carriedSum;	
 	
-	interval storage prevNode     = list[0];
-	interval storage currentNode  = list[0];
-	interval storage prevNodeTemp = list[0];
+	Interval storage prevNode     = list[0];
+	Interval storage currentNode  = list[0];
+	Interval storage prevNodeTemp = list[0];
 
 	// +-------------------------------+
 	// | Begin: receiptCheck Algorithm |
 	// +-------------------------------+
 
-	if (uint32(endTime_availableCoreNum) < list[addr].endpoint) {
+	if (uint32(endTime_availableCore) < list[addr].endpoint) {
 	    flag        = true;
 	    prevNode    = list[addr];
 	    currentNode = list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
 
 	    do { 
-		if (uint32(endTime_availableCoreNum) > currentNode.endpoint) {
+		if (uint32(endTime_availableCore) > currentNode.endpoint) {
 		    addr = prevNode.next; /* "addr" points the index to the pushed the node */
 		    break;
 		}
@@ -159,7 +150,7 @@ library Lib {
 	    } while (true);
 	}
 
-	list.push(interval({endpoint: uint32(endTime_availableCoreNum), core: int32(job_.core), next: addr})); /* Inserted while keeping sorted order */
+	list.push(Interval({endpoint: uint32(endTime_availableCore), core: int32(job_.core), next: addr})); /* Inserted while keeping sorted order */
 	carriedSum = int32(job_.core); /* Carried sum variable is assigned with job's given core number */
 	
 	if (!flag) {
@@ -173,19 +164,19 @@ library Lib {
 
 	currentNode = list[prevNode.next]; /* Current node points index before insert operation is done */
 
-	endTime_availableCoreNum = uint32(endTime_availableCoreNum >> 32); // availableCoreNum is obtained and assigned
+	endTime_availableCore = uint32(endTime_availableCore >> 32); // availableCore is obtained and assigned
 	
 	do { /* Inside while loop carriedSum is updated */	    
 	    if (startTime >= currentNode.endpoint) { /* Covers [val, val1) s = s-1 */
-		list.push(interval({endpoint: startTime, core: -1 * int32(job_.core), next: prevNode.next}));
+		list.push(Interval({endpoint: startTime, core: -1 * int32(job_.core), next: prevNode.next}));
 		prevNode.next = uint32(list.length - 1);
 		return true;
 	    }
 
 	    carriedSum += currentNode.core;
 	    
-	    /* If enters into if statement it means revert() is catch and all previous operations are reverted back */
-	    if (carriedSum > int32(endTime_availableCoreNum)) {			    
+	    /* If enters into if statement it means revert() is catched and all the previous operations are reverted back */
+	    if (carriedSum > int32(endTime_availableCore)) {			    
 		delete list[list.length-1];
 		if (!flag)
 		    self.tail = addrTemp;
@@ -206,14 +197,14 @@ library Lib {
     }
 
     /* Used for tests */
-    function getReceiptListSize(intervalNode storage self) public view
+    function getReceiptListSize(IntervalNode storage self) public view
 	returns (uint32)
     {
 	return uint32(self.list.length - self.deletedItemNum);
     }
 
     /* Used for test */
-    function printIndex(intervalNode storage self, uint32 index) public view
+    function printIndex(IntervalNode storage self, uint32 index) public view
 	returns (uint256, int32)
     {
 	uint32 myIndex = self.tail;
