@@ -13,7 +13,10 @@
         "ropsten": {
             "host": "https://ropsten.infura.io/",
             "persist": true
-        }
+        },
+        "eblocpoa": {
+	    "host": "http://127.0.0.1:8545"
+        }	
     },
     "test":{
         "always_transact": true,
