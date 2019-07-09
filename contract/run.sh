@@ -12,3 +12,5 @@ rm contracts/.\#Lib.sol
 
 brownie compile
 brownie test
+
+rmdir reports
