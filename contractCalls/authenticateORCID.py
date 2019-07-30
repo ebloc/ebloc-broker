@@ -7,7 +7,7 @@ def authenticateORCID(userAddress, orcID, eBlocBroker=None, web3=None):
         import os;
         from imports import connectEblocBroker, getWeb3
         web3        = getWeb3()
-        if web3 == 'notconnected':
+        if not web3:
             return
         
         eBlocBroker = connectEblocBroker(web3)
@@ -18,15 +18,15 @@ def authenticateORCID(userAddress, orcID, eBlocBroker=None, web3=None):
         tx = eBlocBroker.transact({"from":account, "gas": 4500000}).authenticateOrcID(userAddress, orcID) 
         return('Tx_hash: ' + tx.hex()) 
     else:
-        return('userAddress: ' + userAddress + 'and OrcID: ' + orcID + ' is already authenticated.')    
+        return('userAddress: ' + userAddress + 'that has OrcID: ' + orcID + ' is already authenticated.')    
     
 if __name__ == '__main__': 
     if len(sys.argv) == 3:
         userAddress = str(sys.argv[1]) 
-        orcID = str(sys.argv[2]) 
+        orcID       = str(sys.argv[2]) 
     else:
-        # userAddress = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
-        userAddress = '0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5' # prc        
+        userAddress = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
+        # userAddress = '0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5' # prc        
         orcID       = '0000-0001-7642-0552'
 
     print(authenticateORCID(userAddress, orcID))
