@@ -64,7 +64,7 @@ def runWhisperStateReceiver():
         publicKey = data['publicKey']
         if not web3.shh.hasKeyPair(kId):
             log("Error: Whisper node's private key of a key pair did not match with the given ID", 'red')
-            log('Please first run: python scripts/whisperInitialize.py', 'red')
+            log('Please first run: scripts/whisperInitialize.py', 'red')
             terminate()            
             
     # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
@@ -199,8 +199,9 @@ if not isContractExist:
 
 log('isWeb3Connected: ' + str(isWeb3Connected(web3)))
 log('rootdir: ' + os.getcwd())
-with open('contractCalls/address.json', 'r') as content_file:
-   log('{0: <20}'.format('contractAddress:') + '"' + content_file.read().strip() + '"', "yellow")
+contract = json.loads(open('contractCalls/contract.json').read())    
+contractAddress = contract['address']
+log('{0: <20}'.format('contractAddress:') + '"' + contractAddress + '"', "yellow")
 
 if lib.IPFS_USE:
    lib.isIpfsOn()
@@ -208,7 +209,7 @@ if lib.IPFS_USE:
 clusterAddress = lib.CLUSTER_ID
 isClusterExists = isClusterExists(clusterAddress, eBlocBroker, web3)
 
-if "false" in isClusterExists.lower():
+if not isClusterExists:
    print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
                  "does not match with any cluster in eBlocBroker. Please register your \n" 
                  "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   

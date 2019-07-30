@@ -7,8 +7,8 @@
     },
     "networks": {
         "development": {
-            "test-rpc": "ganache-cli",
-            "host": "http://127.0.0.1:8545"
+            "test-rpc": "ganache-cli --port 8546 --allowUnlimitedContractSize --gasLimit 8000000",
+            "host": "http://127.0.0.1:8546"
         },
         "ropsten": {
             "host": "https://ropsten.infura.io/",
@@ -20,7 +20,7 @@
     },
     "test":{
         "always_transact": true,
-        "gas_limit": 6721975,
+        "gas_limit": 8000000,
         "default_contract_owner": false
     },
     "solc":{
