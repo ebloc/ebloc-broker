@@ -4,7 +4,6 @@ import sys
 
 def isUserExist(userAddress,eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
-        import os 
         from imports import connectEblocBroker, getWeb3
         web3        = getWeb3() 
         eBlocBroker = connectEblocBroker(web3)
