@@ -44,24 +44,14 @@ CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + '/cancelledBlockReadFrom.txt'
 ## Creates the hashmap.
 job_state_code = {} 
 
-# Add keys to the hashmap #https://slurm.schedmd.com/squeue.html
-#                              = 0 # dummy as NULL.
-job_state_code['COMPLETED']    = 1
-job_state_code['REFUNDED']     = 2
-job_state_code['PENDING']      = 3
-job_state_code['RUNNING']      = 4
-job_state_code['BOOT_FAIL']    = 5
-job_state_code['CANCELLED']    = 6
-job_state_code['CONFIGURING']  = 7
-job_state_code['COMPLETING']   = 8
-job_state_code['FAILED']       = 9
-job_state_code['NODE_FAIL']    = 10
-job_state_code['PREEMPTED']    = 11
-job_state_code['REVOKED']      = 12
-job_state_code['SPECIAL_EXIT'] = 13
-job_state_code['STOPPED']      = 14
-job_state_code['SUSPENDED']    = 15
-job_state_code['TIMEOUT']      = 16
+# Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
+job_state_code['SUBMITTED']  = 0 # Initial state
+job_state_code['PENDING']    = 1 # Job is awaiting resource allocation.
+job_state_code['RUNNING']    = 2 # The job currently is allocated to a node and is running.
+job_state_code['COMPLETED']  = 3 # Job has terminated all processes on all nodes with an exit code of zero.
+job_state_code['REFUNDED']   = 4
+job_state_code['CANCELLED']  = 5 # Job was explicitly cancelled by the user or system administrator. The job may or may not have been initiated.
+job_state_code['TIMEOUT']    = 6 # Job terminated upon reaching its time limit.
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 

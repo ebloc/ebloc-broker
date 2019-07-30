@@ -2,15 +2,15 @@
 
 source $HOME/b/bin/activate
 
-rm contracts/.\#eBlocBroker.sol
-rm contracts/.\#Lib.sol
-
-# pid=$(sudo lsof -n -i :8545 | grep LISTEN| awk '{print $2}');
-# if [ -n "$pid" ]; then
-#   sudo kill -9 $pid 
-# fi
+rm -f contracts/.\#Lib.sol
+rm -f contracts/.\#Ownable.sol
+rm -f contracts/.\#eBlocBroker.sol
+rm -f contracts/.\#eBlocBrokerBase.sol
+rm -f contracts/.\#eBlocBrokerInterface.sol
+rm -f contracts/.\#eBlocBrokerInterface.sol
+rm -f contracts/math/.\#SafeMath.sol
 
 brownie compile
 brownie test
 
-rmdir reports
+rm -rf reports

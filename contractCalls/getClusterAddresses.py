@@ -9,6 +9,7 @@ def getClusterAddresses(eBlocBroker=None):
 
     if eBlocBroker == 'notconnected':
         return eBlocBroker
+        
     return eBlocBroker.functions.getClusterAddresses().call() 
 
 if __name__ == '__main__':
