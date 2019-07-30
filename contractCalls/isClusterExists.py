@@ -10,7 +10,7 @@ def isClusterExists(clusterAddress, eBlocBroker=None, web3=None):
         eBlocBroker    = connectEblocBroker(web3)
 
     clusterAddress = web3.toChecksumAddress(clusterAddress)        
-    return str(eBlocBroker.functions.isClusterExist(clusterAddress).call()).rstrip('\n')
+    return eBlocBroker.functions.isClusterExist(clusterAddress).call()
     
 if __name__ == '__main__':
     if len(sys.argv) == 2:
