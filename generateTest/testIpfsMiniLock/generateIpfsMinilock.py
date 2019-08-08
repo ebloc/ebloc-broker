@@ -9,7 +9,7 @@ path = os.getcwd()
 os.environ['path'] = path
 
 mlckPass="gene threatens achieving ireland stalkers spoiling preoccupying"
-os.environ['clusterMiniLockId'] = "EyJ6jk9GuZkYAqUZ5UsrZ3RsvQ7cLk2XEzLXeVegyEBSQ"
+os.environ['providerMiniLockId'] = "EyJ6jk9GuZkYAqUZ5UsrZ3RsvQ7cLk2XEzLXeVegyEBSQ"
 flag        = 0
 counter     = 0
 itemsToScan = 100 + 1
@@ -41,7 +41,7 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             p2.stdout.close()
             p3.communicate()
             
-            os.popen('mlck encrypt -f ../ipfs.tar.gz $clusterMiniLockId --passphrase="'+ mlckPass + '"').read()
+            os.popen('mlck encrypt -f ../ipfs.tar.gz $providerMiniLockId --passphrase="'+ mlckPass + '"').read()
             fileTShare = "../ipfs.tar.gz.minilock"
             os.environ['fileTShare'] = fileTShare
             tarHash = os.popen('md5sum $fileTShare | awk \'{print $1}\'').read()

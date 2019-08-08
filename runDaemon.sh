@@ -7,8 +7,8 @@ sudo printf ''
 
 if [[ "$EUID" -ne 0 ]]; then
     # source $HOME/venv/bin/activate
-    nohup python3 -Bu Driver.py >> $HOME/.eBlocBroker/clusterDriver.out 2>&1 &
-    tail -f $HOME/.eBlocBroker/clusterDriver.out
+    nohup python3 -Bu Driver.py >> $HOME/.eBlocBroker/providerDriver.out 2>&1 &
+    tail -f $HOME/.eBlocBroker/providerDriver.out
 else
     echo "This script must be run as non-root. Please run without 'sudo'." 
 fi

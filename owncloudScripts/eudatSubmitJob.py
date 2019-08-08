@@ -18,11 +18,11 @@ from lib_owncloud import isOcMounted
 def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     # if not isOcMounted(): sys.exit()
 
-    clusterID='0x57b60037b82154ec7149142c606ba024fbb0f991'
-    clusterAddress = web3.toChecksumAddress(clusterID)
+    providerID='0x57b60037b82154ec7149142c606ba024fbb0f991'
+    providerAddress = web3.toChecksumAddress(providerID)
 
-    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call()
-    my_filter = eBlocBroker.eventFilter('LogCluster',{ 'fromBlock': int(blockReadFrom),
+    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getProviderInfo(providerAddress).call()
+    my_filter = eBlocBroker.eventFilter('LogProvider',{ 'fromBlock': int(blockReadFrom),
                                                       'toBlock': int(blockReadFrom) + 1})
     fID = my_filter.get_all_entries()[0].args['fID']
 
@@ -47,7 +47,7 @@ def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
     cacheType = lib.cacheType.private
     # cacheType = lib.cacheType.public
 
-    tx_hash = submitJob(str(clusterID), str(tarHash), coreNum, coreMinute, dataTransferIn, dataTransferOut,
+    tx_hash = submitJob(str(providerID), str(tarHash), coreNum, coreMinute, dataTransferIn, dataTransferOut,
                     storageID, str(tarHash), cacheType, gasStorageHour, accountID)
 
     tx_hash = tx_hash[0]

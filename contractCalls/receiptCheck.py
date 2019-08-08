@@ -3,10 +3,9 @@
 import sys, os
 import lib
 
-def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, endTime, dataTransferIn, dataTransferSum,
-                 eBlocBroker=None, web3=None): 
+def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, endTime, dataTransferIn, dataTransferSum, eBlocBroker=None, web3=None): 
     if (storageID == 0 and len(resultIpfsHash) != 46) or (storageID == 2 and len(resultIpfsHash) != 46):
-        return "jobKey's length does not match with its original length. Please check your jobKey."
+        return False, "jobKey's length does not match with its original length. Please check your jobKey."
     
     if eBlocBroker is None and web3 is None:
         from imports import connectEblocBroker
@@ -14,11 +13,11 @@ def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, end
         web3        = getWeb3()
         eBlocBroker = connectEblocBroker(web3)
         
-    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.CLUSTER_ID),
+    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.PROVIDER_ID),
                                "gas": 4500000}).receiptCheck(str(jobKey), int(index), int(jobRunTimeMinute),
                                                              str(resultIpfsHash), int(storageID), int(endTime),
                                                              int(dataTransferIn), int(dataTransferSum)) 
-    return 'Tx_hash: ' + tx.hex()
+    return True, 'Tx_hash: ' + tx.hex()
 
 if __name__ == '__main__': 
     if len(sys.argv) == 8:

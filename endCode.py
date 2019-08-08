@@ -7,7 +7,7 @@ import hashlib
 from os.path import expanduser
 from imports import connectEblocBroker, getWeb3
 from contractCalls.getJobInfo   import getJobInfo
-from contractCalls.getUserInfo  import getUserInfo
+from contractCalls.getRequesterInfo  import getRequesterInfo
 from contractCalls.receiptCheck import receiptCheck
 
 web3        = getWeb3()
@@ -26,7 +26,7 @@ def log(strIn, color=''):
 def uploadResultToEudat(encodedShareToken, outputFileName):
     ''' cmd: ( https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577 )
     curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
-            --data-binary \'@result-\'$clusterID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$clusterID-$index.tar.gz
+            --data-binary \'@result-\'$providerID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$providerID-$index.tar.gz
 
     curl --fail -X PUT -H 'Content-Type: text/plain' -H 'Authorization: Basic 'SjQzd05XM2NNcFoybkFLOg'==' --data-binary
     '@0b2fe6dd7d8e080e84f1aa14ad4c9a0f_0.txt' https://b2drop.eudat.eu/public.php/webdav/result.txt
@@ -73,7 +73,7 @@ def receiptCheckTx(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, job
         txHash = ''
         time.sleep(5)      
     log("receiptCheck() " + txHash)  
-    txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a') 
+    txFile = open(lib.LOG_PATH + '/transactions/' + lib.PROVIDER_ID + '.txt', 'a') 
     txFile.write(jobKey + "_" + index + "| Tx_hash: " + txHash + "| receiptCheckTxHash\n") 
     txFile.close() 
 
@@ -125,21 +125,21 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8')
       
     log("encodedShareToken: " + encodedShareToken)          
-    jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
+    jobInfo = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
    
     # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" :
     while not jobInfo or 'BadFunctionCallOutput' in jobInfo:      
         log('jobInfo=' + jobInfo) 
-        log('getJobInfo.py ' + ' ' + lib.CLUSTER_ID + ' ' + jobKey + ' ' + index)
+        log('getJobInfo.py ' + ' ' + lib.PROVIDER_ID + ' ' + jobKey + ' ' + index)
         log("Error: Please run geth on the background.", 'red')
-        jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
+        jobInfo = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
         time.sleep(5)
        
-    userID     = jobInfo['jobOwner'].lower()
-    userIDAddr = hashlib.md5(userID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
-    userInfo   = getUserInfo(userID, '1', eBlocBroker, web3)
+    requesterID     = jobInfo['jobOwner'].lower()
+    requesterIDAddr = hashlib.md5(requesterID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
+    requesterInfo   = getRequesterInfo(requesterID, '1', eBlocBroker, web3)
 
-    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userIDAddr + "/" + jobKey + "_" + index 
+    resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterIDAddr + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'
    
     lib.removeFiles(resultsFolder + '/result-*tar.gz')   
@@ -170,8 +170,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
     log("shareToken: "        + shareToken) 
     log("encodedShareToken: " + encodedShareToken)    
     log("folderName: "        + folderName) 
-    log("clusterID: "         + lib.CLUSTER_ID) 
-    log("userIDAddr: "        + userIDAddr)
+    log("providerID: "         + lib.PROVIDER_ID) 
+    log("requesterIDAddr: "        + requesterIDAddr)
     log("received: "          + str(jobInfo['received']))
 
     dataTransferIn = 0
@@ -190,11 +190,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         log(modifiedDate) 
 
     log("\njobOwner's Info: ")  
-    log('{0: <13}'.format('userEmail: ')   + userInfo[1])
-    log('{0: <13}'.format('miniLockID: ')  + userInfo[2])
-    log('{0: <13}'.format('ipfsAddress: ') + userInfo[3])
-    log('{0: <13}'.format('fID: ')         + userInfo[4])
-    clientMiniLockID = userInfo[2]       
+    log('{0: <13}'.format('userEmail: ')   + requesterInfo[1])
+    log('{0: <13}'.format('miniLockID: ')  + requesterInfo[2])
+    log('{0: <13}'.format('ipfsAddress: ') + requesterInfo[3])
+    log('{0: <13}'.format('fID: ')         + requesterInfo[4])
+    clientMiniLockID = requesterInfo[2]       
     log("")    
     if jobInfo['status'] == str(lib.job_state_code['COMPLETED']):
         log('Job is already get paid.', 'red') 
@@ -216,7 +216,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             log("Error: Already completed job and its money is received.", 'red')  
             sys.exit()  # Detects an error on the SLURM side
 
-        jobInfo = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
+        jobInfo = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
         lib.web3Exception(jobInfo)      
         time.sleep(15) # Short sleep here so this loop is not keeping CPU busy
       
@@ -249,7 +249,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
 
     log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
     log("jobInfo: " + str(jobInfo))
-    outputFileName = 'result-' + lib.CLUSTER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
+    outputFileName = 'result-' + lib.PROVIDER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
    
     # Here we know that job is already completed 
     if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
@@ -345,7 +345,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         lib.removeFiles(resultsFolder + '/.node-xmlhttprequest*')      
         os.chdir(resultsFolder) 
         removeSourceCode(resultsFolderPrev, resultsFolder)      
-        # cmd: tar -jcvf result-$clusterID-$index.tar.gz *
+        # cmd: tar -jcvf result-$providerID-$index.tar.gz *
         # command = ['tar', '-jcvf', outputFileName] + glob.glob("*")      
         # log(runCommand(command))
         with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
@@ -386,19 +386,19 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         dataTransferOut = calculateDataTransferOut(outputFileName, 'f')
         if 'folder' in mimeType: # Received job is in folder format
             log('mimeType=folder')                        
-            # cmd: $GDRIVE upload --parent $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
+            # cmd: $GDRIVE upload --parent $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'upload', '--parent', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             res, status = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         elif 'gzip' in mimeType: # Received job is in folder tar.gz
             log('mimeType=tar.gz')
-            # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
+            # cmd: $GDRIVE update $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             res, status = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         elif '/zip' in mimeType: # Received job is in zip format
             log('mimeType: zip')
-            # cmd: $GDRIVE update $jobKey result-$clusterID-$index.tar.gz -c $GDRIVE_METADATA
+            # cmd: $GDRIVE update $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             res, status = lib.subprocessCallAttempt(command, 500)            
             log(res)         

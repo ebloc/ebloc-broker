@@ -20,12 +20,12 @@ shared_with_me=true
 
 ```
 folderName='ipfs'
-clusterToShare='aalimog1@binghamton.edu' //'alper01234alper@gmail.com'
+providerToShare='aalimog1@binghamton.edu' //'alper01234alper@gmail.com'
 
 gdrive upload --recursive $folderName
 jobKey=$(gdrive list | grep $folderName | awk '{print $1}')
 echo jobKey=$jobKey 
-gdrive share $jobKey  --role writer --type user --email $clusterToShare
+gdrive share $jobKey  --role writer --type user --email $providerToShare
 ```
 
 ---------------

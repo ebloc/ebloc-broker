@@ -20,7 +20,7 @@ def startCall(jobKey, index, jobID):
    # cmd: date -d 2018-09-09T18:38:29 +"%s"
    startTime = subprocess.check_output(['date', '-d', date, "+'%s'"]).strip().decode('utf-8').replace("'","")
    
-   txFile = open(lib.LOG_PATH + '/transactions/' + lib.CLUSTER_ID + '.txt', 'a')        
+   txFile = open(lib.LOG_PATH + '/transactions/' + lib.PROVIDER_ID + '.txt', 'a')        
    txFile.write(lib.EBLOCPATH + "/contractCalls/setJobStatus.py" + ' ' + jobKey + ' ' + index + ' ' + statusID + ' ' + startTime + '\n')    
    time.sleep(0.25)   
    for attempt in range(10):

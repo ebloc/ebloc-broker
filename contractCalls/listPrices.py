@@ -2,30 +2,30 @@
 
 import sys, os
 
-def getClusterAddresses(eBlocBroker=None):
+def getProviders(eBlocBroker=None):
     if eBlocBroker is None: 
         from imports import connectEblocBroker
         eBlocBroker = connectEblocBroker()
 
     if eBlocBroker == 'notconnected':
         return eBlocBroker
-    return eBlocBroker.functions.getClusterAddresses().call(), eBlocBroker
+    return eBlocBroker.functions.getProviders().call(), eBlocBroker
 
-def getClusterPriceInfo(clusterAddress, requestedCore, coreMinuteGas, gasDataTransfer):
-    blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getClusterInfo(clusterAddress).call()
+def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):
+    blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getProviderInfo(providerAddress).call()
         
     print('{0: <19}'.format('coreNumber: ')        + str(coreNumber))
     print('{0: <19}'.format('priceCoreMin: ')      + str(priceCoreMin))
     print('{0: <19}'.format('priceDataTransfer: ') + str(priceDataTransfer))
     if requestedCore > coreNumber:
-        print('{0: <19}'.format('price: ') + 'Requested core is greater than cluster\'s core')
+        print('{0: <19}'.format('price: ') + 'Requested core is greater than provider\'s core')
     else:
         print('{0: <19}'.format('price: ') + str(requestedCore * coreMinuteGas * priceCoreMin + gasDataTransfer * priceDataTransfer))
 
 if __name__ == '__main__':
-    clusterList, eBlocBroker = getClusterAddresses()
-    if clusterList == 'notconnected':
-        print(clusterList)
+    providerList, eBlocBroker = getProviders()
+    if providerList == 'notconnected':
+        print(providerList)
         sys.exit()
         
     requestedCore   = 2
@@ -37,9 +37,9 @@ if __name__ == '__main__':
     dataTransferOut = 100
     gasDataTransfer  = dataTransferIn + dataTransferOut
         
-    for i in range(0, len(clusterList)):
-        print(clusterList[i])
-        getClusterPriceInfo(clusterList[i], requestedCore, coreMinuteGas, gasDataTransfer)
+    for i in range(0, len(providerList)):
+        print(providerList[i])
+        getProviderPriceInfo(providerList[i], requestedCore, coreMinuteGas, gasDataTransfer)
               
-        if i != len(clusterList) -1:
+        if i != len(providerList) -1:
             print('')

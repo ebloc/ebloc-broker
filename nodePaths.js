@@ -4,7 +4,7 @@ module.exports = Object.freeze({
     WHOAMI:      process.env.WHOAMI,
     EBLOCBROKER: process.env.EBLOCPATH,
     LOG_PATH:    process.env.LOG_PATH,
-    CLUSTER_ID:  process.env.CLUSTER_ID,
+    PROVIDER_ID:  process.env.PROVIDER_ID,
     RPC_PORT:    process.env.RPC_PORT
 });
 

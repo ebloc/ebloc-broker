@@ -1,6 +1,6 @@
 import subprocess, os
 
-# ex: contractCalls('isUserExist.py', [userID])
+# ex: contractCalls('isRequesterExists.py', [requesterID])
 def contractCalls_check_output(call, args): 
    return subprocess.check_output([contractCallPath + '/' + call] + args).decode('utf-8').strip()    
    # subprocess.Popen([contractCallPath + '/' + call] + args,
@@ -14,5 +14,5 @@ def contractCalls(call, a1, a2, a3):
                             stdout=subprocess.PIPE,
                             universal_newlines=True).communicate()[0].strip() 
 
-userInfo = contractCalls('getUserInfo.py', '0x4e4a0750350796164d8defc442a712b7557bf282', 1, 2).replace(" ", "")
-print(userInfo)
+requesterInfo = contractCalls('getRequesterInfo.py', '0x4e4a0750350796164d8defc442a712b7557bf282', 1, 2).replace(" ", "")
+print(requesterInfo)
