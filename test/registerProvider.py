@@ -21,9 +21,9 @@ contractAddress = web3.toChecksumAddress(contractAddress)
 eBlocBroker = web3.eth.contract(contractAddress, abi=abi)
 
 # eBloc-NAS
-account            = web3.eth.accounts[0] # Cluster's Ethereum Address
+account            = web3.eth.accounts[0] # Provider's Ethereum Address
 coreNumber         = 2
-clusterEmail       = "alper.alimoglu@gmail.com"
+providerEmail       = "alper.alimoglu@gmail.com"
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100
@@ -31,9 +31,9 @@ ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 
 
 # TETAM
-account            = web3.eth.accounts[0] # Cluster's Ethereum Address
+account            = web3.eth.accounts[0] # Provider's Ethereum Address
 coreNumber         = 128
-clusterEmail       = "alper01234alper@gmail.com"
+providerEmail       = "alper01234alper@gmail.com"
 federationCloudId  = ""
 miniLockId         = ""
 corePriceMinuteWei = 100
@@ -41,18 +41,18 @@ ipfsAddress        = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV4
 
 
 # Google-Drive Instance-1
-account            = web3.eth.accounts[0] # Cluster's Ethereum Address
+account            = web3.eth.accounts[0] # Provider's Ethereum Address
 coreNumber         = 64
-clusterEmail       = ""
+providerEmail       = ""
 federationCloudId  = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"
 miniLockId         = ""
 corePriceMinuteWei = 100
 ipfsAddress        = "/ip4/34.73.108.63/tcp/4001/ipfs/QmXqUW6n57c2e4Y6461CiNkdSuYEGtnNYrWHCVeNEcW3Td"
 
 # Google-Drive Instance-2
-account            = web3.eth.accounts[0] # Cluster's Ethereum Address
+account            = web3.eth.accounts[0] # Provider's Ethereum Address
 coreNumber         = 64
-clusterEmail       = ""
+providerEmail       = ""
 federationCloudId  = ""
 miniLockId         = ""
 corePriceMinuteWei = 100

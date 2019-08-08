@@ -23,7 +23,7 @@ def log(strIn, path, printFlag=0):
     txFile.write( strIn + "\n" )
     txFile.close()
 
-def testFunc(path, readTest, testType, clusterID, cacheType):
+def testFunc(path, readTest, testType, providerID, cacheType):
     jobKeyNum = {} #create a dictionary called jobKeyNum
     counter = 0
     with open(path + '/' + readTest) as test:
@@ -72,11 +72,11 @@ def testFunc(path, readTest, testType, clusterID, cacheType):
             log("hash: " + jobKey[0] + "| TimeToRun: " + str(coreMinuteGas) + "| TimeToRunSeconds: " + str(math.ceil(float(jobKey[1]))) +
                 "| Core: " + str(coreNum) + "| accountID: " + str(accountID), path)
             # ===========
-            log('submitJob(' + clusterID + ', ' + jobKey_ + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + str(dataTransferIn) + ', ' +
+            log('submitJob(' + providerID + ', ' + jobKey_ + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + str(dataTransferIn) + ', ' +
                 str(dataTransferOut) + ', ' + str(storageID) + ', ' + jobKey_ + ', ' + str(gasStorageHour) + ', ' +
                 str(accountID) + ')', path)
 
-            ret = submitJob(clusterID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID,
+            ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID,
                             sourceCodeHash, cacheType, gasStorageHour, accountID)
 
             if 'Error' in ret:
@@ -90,7 +90,7 @@ def testFunc(path, readTest, testType, clusterID, cacheType):
                 log('dataTransferCost:'  + ret[4], path, 0)
                 log('jobPriceValue:'     + ret[5], path, 1)
 
-            txFile = open(path + '/' + clusterID + '.txt', 'a')
+            txFile = open(path + '/' + providerID + '.txt', 'a')
             txFile.write(ret[0] + " " + str(accountID) + "\n")
             txFile.close()
             sleepSeconds = int(sleepTime)

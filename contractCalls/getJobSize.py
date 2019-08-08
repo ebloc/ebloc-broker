@@ -2,22 +2,22 @@
 
 import sys
 
-def getJobSize(clusterAddress, eBlocBroker=None, web3=None):
+def getJobSize(provider, key, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
         import os
         from imports import connectEblocBroker, getWeb3
         web3           = getWeb3()
         eBlocBroker    = connectEblocBroker(web3)
 
-    clusterAddress = web3.toChecksumAddress(clusterAddress) 
-    return eBlocBroker.call().getJobSize(clusterAddress, jobKey)
+    provider = web3.toChecksumAddress(provider) 
+    return eBlocBroker.call().getJobSize(provider, key)
     
 if __name__ == '__main__':
     if len(sys.argv) == 3:
-        clusterAddress = str(sys.argv[1]) 
-        jobKey         = str(sys.argv[2]) 
+        provider = str(sys.argv[1]) 
+        key      = str(sys.argv[2]) 
     else:
-        clusterAddress = "0x4e4a0750350796164d8defc442a712b7557bf282" 
-        jobKey         = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR" 
+        provider = "0x4e4a0750350796164d8defc442a712b7557bf282" 
+        key      = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR" 
 
-    print(getJobSize(clusterAddress))
+    print(getJobSize(providerAddress, key))

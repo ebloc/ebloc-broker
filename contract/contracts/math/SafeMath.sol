@@ -123,10 +123,10 @@ library SafeMath32 {
 		return c;
 	}
 
-	/*
+
 	function mul(uint32 _a, uint32 _b) internal pure returns (uint32) {
 		if (_a == 0) {
-			return 0;
+		    return 0;
 		}
 
 		uint32 c = _a * _b;
@@ -134,7 +134,7 @@ library SafeMath32 {
 
 		return c;
 	}
-
+	/*
 	function div(uint32 _a, uint32 _b) internal pure returns (uint32) {
 		require(_b > 0); // Solidity only automatically asserts when dividing by 0
 		uint32 c = _a / _b;

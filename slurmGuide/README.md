@@ -50,7 +50,7 @@ Should run `sudo slurmdbd` on the background in order to register the slurm-user
 
 ```
 userName=$(whoami)
-sacctmgr add cluster cluster
+sacctmgr add provider provider
 sacctmgr add account $userName
 sacctmgr create user $userName defaultaccount=$userName adminlevel=[None]
 
@@ -58,12 +58,12 @@ sacctmgr create user $userName defaultaccount=$userName adminlevel=[None]
 sacctmgr remove user where user=userName
 ```
 
-### Check registered cluster and users
+### Check registered provider and users
 
 ```
 sacctmgr show assoc format=account
 sacctmgr show assoc format=account,user,partition where user=<userName>
-sacctmgr list cluster
+sacctmgr list provider
 ```
 
 -----------

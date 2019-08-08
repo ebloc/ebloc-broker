@@ -12,16 +12,16 @@ from colored import stylize, fg
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
 
-WHOAMI     = os.getenv('WHOAMI')
-EBLOCPATH  = os.getenv('EBLOCPATH')
-LOG_PATH   = os.getenv('LOG_PATH') 
-CLUSTER_ID = os.getenv('CLUSTER_ID')
-GDRIVE     = os.getenv('GDRIVE')
-RPC_PORT   = os.getenv('RPC_PORT')
-POA_CHAIN  = os.getenv('POA_CHAIN')
-OC_USER    = os.getenv('OC_USER')
-IPFS_USE   = os.getenv('IPFS_USE') # Should be "True/1", if caching into IPFS is open
-EUDAT_USE  = os.getenv('EUDAT_USE')
+WHOAMI      = os.getenv('WHOAMI')
+EBLOCPATH   = os.getenv('EBLOCPATH')
+LOG_PATH    = os.getenv('LOG_PATH') 
+PROVIDER_ID = os.getenv('PROVIDER_ID')
+GDRIVE      = os.getenv('GDRIVE')
+RPC_PORT    = os.getenv('RPC_PORT')
+POA_CHAIN   = os.getenv('POA_CHAIN')
+OC_USER     = os.getenv('OC_USER')
+IPFS_USE    = os.getenv('IPFS_USE') # Should be "True/1", if caching into IPFS is open
+EUDAT_USE   = os.getenv('EUDAT_USE')
 
 if IPFS_USE == '0': IPFS_USE = False
 else:               IPFS_USE = True
@@ -78,7 +78,7 @@ def log(str_in, color='', newLine=True):
         else:
             print(str_in, end='')
 
-    txFile = open(LOG_PATH + '/transactions/clusterOut.txt', 'a')
+    txFile = open(LOG_PATH + '/transactions/providerOut.txt', 'a')
     if newLine:
         txFile.write(str_in + '\n')
     else:
@@ -163,7 +163,7 @@ def getFolderName(gdriveInfo):
 def web3Exception(check): 
    while check  == 'ConnectionRefusedError' or check == 'notconnected':
       log('Error(web3)=' +  check + '. Please run geth on the background.', 'red')
-      check = getJobInfo(lib.CLUSTER_ID, jobKey, index, eBlocBroker, web3)
+      check = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
       time.sleep(5)
       
    if check == 'BadFunctionCallOutput':
@@ -276,7 +276,7 @@ def compressFolder(folderToShare):
     subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])
     return tarHash
 
-def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resultsFolderPrev, dataTransferIn,
+def sbatchCall(jobKey, index, storageID, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn,
                gasStorageHour, sourceCodeHash, eBlocBroker, web3):
    from contractCalls.getJobInfo import getJobInfo
    from datetime import datetime, timedelta   
@@ -299,7 +299,7 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
 
    log('Adding recevied job into mongodb database.', 'green')
    # Adding jobKey info along with its gasStorageHour into mongodb
-   addItem(jobKey, sourceCodeHash, userID, timestamp, gasStorageHour, storageID)
+   addItem(jobKey, sourceCodeHash, requesterID, timestamp, gasStorageHour, storageID)
    
    if os.path.isfile(resultsFolderPrev + '/dataTransferIn.txt'):
        with open(resultsFolderPrev + '/dataTransferIn.txt') as json_file:
@@ -319,20 +319,20 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
    
    copyfile(resultsFolder + '/run.sh', resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh')
    
-   jobInfo       = getJobInfo(CLUSTER_ID, jobKey, int(index), eBlocBroker, web3)
+   jobInfo       = getJobInfo(PROVIDER_ID, jobKey, int(index), eBlocBroker, web3)
    jobCoreNum    = str(jobInfo['core'])
    coreSecondGas = timedelta(seconds=int((jobInfo['coreMinuteGas'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
    d             = datetime(1,1,1) + coreSecondGas 
    timeLimit     = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute) 
    log("timeLimit=" + str(timeLimit) + "| RequestedCoreNum=" + jobCoreNum)
    # Give permission to user that will send jobs to Slurm.
-   subprocess.check_output(['sudo', 'chown', '-R', userID, resultsFolder])
+   subprocess.check_output(['sudo', 'chown', '-R', requesterID, resultsFolder])
 
    for attempt in range(10):
        try:
            ## SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'   
-           ## cmd: sudo su - $userID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL   
-           jobID = subprocess.check_output(['sudo', 'su', '-', userID, '-c',
+           ## cmd: sudo su - $requesterID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${storageID}*$shareToken.sh --mail-type=ALL   
+           jobID = subprocess.check_output(['sudo', 'su', '-', requesterID, '-c',
                                             'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + 
                                             resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(storageID) + '*' + shareToken + '.sh' + ' ' + 
                                             '--mail-type=ALL']).decode('utf-8').strip()
@@ -340,11 +340,11 @@ def sbatchCall(jobKey, index, storageID, shareToken, userID, resultsFolder, resu
        except subprocess.CalledProcessError as e:
            log(e.output.decode('utf-8').strip(), 'red')
            # sacctmgr remove user where user=$USERNAME --immediate
-           res, status = runCommand(['sacctmgr', 'remove', 'user', 'where', 'user=' + userID, '--immediate'])
+           res, status = runCommand(['sacctmgr', 'remove', 'user', 'where', 'user=' + requesterID, '--immediate'])
            ## sacctmgr add account $USERNAME --immediate
-           res, status = runCommand(['sacctmgr', 'add', 'account', userID, '--immediate'])
+           res, status = runCommand(['sacctmgr', 'add', 'account', requesterID, '--immediate'])
            ## sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
-           res, status = runCommand(['sacctmgr', 'create', 'user', userID, 'defaultaccount=' + userID,
+           res, status = runCommand(['sacctmgr', 'create', 'user', requesterID, 'defaultaccount=' + requesterID,
                                      'adminlevel=[None]', '--immediate'])
        else:
            break

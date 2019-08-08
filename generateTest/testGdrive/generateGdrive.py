@@ -8,7 +8,7 @@ from lib_owncloud import singleFolderShare, eudatInitializeFolder
 home = expanduser("~")
 path = os.getcwd()
 
-clusterToShare = "alper01234alper@gmail.com"
+providerToShare = "alper01234alper@gmail.com"
 flag        = 0
 counter     = 0
 itemsToScan = 150 +1
@@ -37,7 +37,7 @@ with open(path + "/../nasa.txt") as test:
             print('SourecodeHash=' + tarHash)
 
             os.environ['fileName']       = tarHash
-            os.environ['clusterToShare'] = 'alper01234alper@gmail.com';
+            os.environ['providerToShare'] = 'alper01234alper@gmail.com';
 
             tarHash = compressFolder(folderToShare)
             # subprocess.run(['cp', '-a', '../ipfs', '../' + tarHash])
@@ -63,7 +63,7 @@ with open(path + "/../nasa.txt") as test:
                 try:
                     # jobKey = "1H9XSDzj15m_2IdNcblAzxk5VRWxF0CIP"
                     res = subprocess.check_output(['gdrive', 'share', jobKey, '--role', 'writer', '--type', 'user', '--email',
-                                           clusterToShare]).decode('utf-8').strip()
+                                           providerToShare]).decode('utf-8').strip()
                     print(res)
                 except Exception as e:
                     # time.sleep(0.25)
