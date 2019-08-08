@@ -23,14 +23,14 @@ def convertIpfsToBytes32(hash_string):
     return binascii.hexlify(b).decode("utf-8")
 
 def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransferIn, dataTransferOut, cacheTime):
-    clusterPriceInfo   = eB.getClusterInfo(account)
-    blockReadFrom      = clusterPriceInfo[0]
-    availableCoreNum   = clusterPriceInfo[1]
-    priceCoreMin       = clusterPriceInfo[2]
-    priceDataTransfer  = clusterPriceInfo[3]
-    priceStorage       = clusterPriceInfo[4]
-    priceCache         = clusterPriceInfo[5]
-    commitmentBlockNum = clusterPriceInfo[6]
+    providerPriceInfo   = eB.getProviderInfo(account)
+    blockReadFrom       = providerPriceInfo[0]
+    availableCoreNum    = providerPriceInfo[1]
+    priceCoreMin        = providerPriceInfo[2]
+    priceDataTransfer   = providerPriceInfo[3]
+    priceStorage        = providerPriceInfo[4]
+    priceCache          = providerPriceInfo[5]
+    commitmentBlockNum  = providerPriceInfo[6]
    
     assert len(coreArray) == len(coreMinArray)
 
@@ -55,10 +55,11 @@ def cost(coreArray, coreMinArray, account, eB, sourceCodeHash, web3, dataTransfe
     dataTransferCost = priceDataTransfer * (_dataTransferIn + dataTransferOut)
     jobPriceValue = computationalCost + dataTransferCost + cacheCost + storageCost
     
-    print('\njobPriceValue=' + str(jobPriceValue)       + ' == ' +
-          'cacheCost='         + str(cacheCost)         + ' | ' +
-          'storageCost='       + str(storageCost)       + ' | ' +
-          'dataTransferCost='  + str(dataTransferCost)  + ' | ' +
-          'computationalCost=' + str(computationalCost))          
+    print('\njobPriceValue='   + str(jobPriceValue)       + ' == ' +
+          'cacheCost='         + str(cacheCost)           + ' | ' +
+          'storageCost='       + str(storageCost)         + ' | ' +
+          'dataTransferCost='  + str(dataTransferCost)    + ' | ' +
+          'computationalCost=' + str(computationalCost)
+    )          
 
     return jobPriceValue

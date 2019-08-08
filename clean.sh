@@ -22,4 +22,4 @@ rm -rf docs/_build_html/
 rm -rf __pycache__/
 rm -rf docs/_build/
 
-echo 'Cleaning is done.'
+echo 'Cleaning successfully completed.'

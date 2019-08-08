@@ -72,7 +72,7 @@ montage-workflow-v2: https://github.com/pegasus-isi/montage-workflow-v2
 $ pegasus-run  /home/alper/pegasus/montage-workflow-v2/work/1540532824
 Submitting to condor montage-0.dag.condor.sub
 Submitting job(s).
-1 job(s) submitted to cluster 1.
+1 job(s) submitted to provider 1.
 
 Your workflow has been started and is running in the base directory:
 

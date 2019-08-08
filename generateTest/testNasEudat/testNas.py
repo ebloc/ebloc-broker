@@ -9,7 +9,7 @@ from test.func import testFunc
 
 path = os.getcwd()
 # Definitions =============================================
-clusterID    = "0x4e4a0750350796164d8defc442a712b7557bf282" # netlab
+providerID    = "0x4e4a0750350796164d8defc442a712b7557bf282" # netlab
 testType     = 'eudat-nas'
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.private
@@ -27,4 +27,4 @@ f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', password)
 #---------------------------------------------------------------
-testFunc(path, readTest, testType, clusterID, cacheType)
+testFunc(path, readTest, testType, providerID, cacheType)

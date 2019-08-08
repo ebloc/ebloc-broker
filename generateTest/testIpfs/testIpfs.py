@@ -9,7 +9,7 @@ from test.func import testFunc
 home = expanduser("~")
 path = os.getcwd()
 # Definitions =============================================
-clusterID    = '0x2fe8fb59f6e24703f8732fcd38f4ac9e8f56d8aa' #googleInstance-3
+providerID    = '0x2fe8fb59f6e24703f8732fcd38f4ac9e8f56d8aa' #googleInstance-3
 testType     = 'ipfs';
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.ipfs
@@ -20,4 +20,4 @@ def log(strIn):
    txFile.write( strIn + "\n" )
    txFile.close()
    
-testFunc(path, readTest, testType, clusterID, cacheType)
+testFunc(path, readTest, testType, providerID, cacheType)

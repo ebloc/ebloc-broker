@@ -21,7 +21,7 @@ print(str(blockNum))
 cursor = coll.find({})
 for document in cursor:
     # print(document)
-    receivedBlockNum, storageTime = getJobStorageTime(lib.CLUSTER_ID, document['sourceCodeHash'])
+    receivedBlockNum, storageTime = getJobStorageTime(lib.PROVIDER_ID, document['sourceCodeHash'])
     endBlockTime = receivedBlockNum + storageTime *240
     storageID = document['storageID']
     if endBlockTime < blockNum and receivedBlockNum != 0:        
@@ -33,7 +33,7 @@ for document in cursor:
             res = lib.runCommand(['ipfs', 'repo', 'gc'])
             print(res)
         else:
-            cachedFileName = lib.PROGRAM_PATH + '/' + document['userID'] + '/cache/' + document['sourceCodeHash'] + 'tar.gz'            
+            cachedFileName = lib.PROGRAM_PATH + '/' + document['requesterID'] + '/cache/' + document['sourceCodeHash'] + 'tar.gz'            
             print(cachedFileName)
             lib.silentremove(cachedFileName)
             cachedFileName = lib.PROGRAM_PATH + '/cache/' + document['sourceCodeHash'] + 'tar.gz'
