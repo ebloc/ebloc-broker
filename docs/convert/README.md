@@ -73,7 +73,7 @@ export EBLOCBROKER=/home/netlab/contract
 Additinoal changes have to make on: since SLURM script functon won't able to access .profile file.
 startCode.py endCode.py slurmScript.sh
 
-### Start Running Cluster using eBlocBroker
+### Start Running Provider using eBlocBroker
 
 If you want to provide `IPFS` service please do following:
 
@@ -114,7 +114,7 @@ Submitted batch job 1
 ipfs daemon &
 nohup eblocpserver &
 cd $EBLOCBROKER
-nohup python py_clusterDriver.py &
+nohup python py_providerDriver.py &
 ```
 
 ----
@@ -123,25 +123,25 @@ nohup python py_clusterDriver.py &
 
 ```bash
 address="0x8cb1d24ddb3d0d410ec60074a86cf695fc4ab3e6";
-abi=[{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTimeStamp","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"ipfsHash","type":"string"},{"name":"index","type":"uint32"}],"name":"refundMe","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"clusterName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"updateCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getClusterAddresses","outputs":[{"name":"","type":"address[]"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"}],"name":"getClusterInfo","outputs":[{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"deregisterCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"testCallStack","outputs":[{"name":"","type":"int256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"clusterName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"registerCluster","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"clusterAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTimeStamp","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"cluster","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"}]
+abi=[{"constant":true,"inputs":[{"name":"providerAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"providerAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"providerAddr","type":"address"}],"name":"getProviderReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTimeStamp","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"providerAddr","type":"address"},{"name":"ipfsHash","type":"string"},{"name":"index","type":"uint32"}],"name":"refundMe","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"providerName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"updateProvider","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getProviders","outputs":[{"name":"","type":"address[]"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"providerAddr","type":"address"}],"name":"getProviderInfo","outputs":[{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"deregisterProvider","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"testCallStack","outputs":[{"name":"","type":"int256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"providerName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"registerProvider","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"providerAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTimeStamp","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"provider","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"provider","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"}]
 var eBlocBroker = web3.eth.contract(abi).at(address);
 ```
 
-### Cluster Owner: How to create a cluster:
+### Provider Owner: How to create a provider:
 
 Please note that: if you don't have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`.
 
 ```bash
 coreNumber         = 128;
-clusterName        = "eBlocCluster";
+providerName        = "eBlocProvider";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-clusterMiniLockId  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+providerMiniLockId  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 1000000000000000; //For experimental you could also give 1.
 ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieved from "ipfs id"
-eBlocBroker.createCluster(coreNumber, clusterName, federationCloudId, clusterMiniLockId, corePriceMinuteWei, ipfsID; 
+eBlocBroker.createProvider(coreNumber, providerName, federationCloudId, providerMiniLockId, corePriceMinuteWei, ipfsID; 
 ```
 
-**Trigger code on start and end of the submitted job:** Cluster should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
+**Trigger code on start and end of the submitted job:** Provider should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
 
 ```bash
 sudo chmod 755 ~/.eBlocBroker/*
@@ -152,7 +152,7 @@ sudo chmod 755 ~/.eBlocBroker/*
 
 ### Client Side: How to submit a Job with IPFS Hash:
 
-Is is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, cluster is not able to get the IPFS object from the client's node.
+Is is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is not running, provider is not able to get the IPFS object from the client's node.
 
 If IPFS is successfully running on the background you should see something like this:
 
@@ -179,7 +179,7 @@ int main () {
 }
 ```
 
-Client should put his SLURM script inside a file called `run.sh`. Please note that you do not have to identify `-n` and `-t` parameters, since they will be overritten with arguments provided by the client on the cluster side.
+Client should put his SLURM script inside a file called `run.sh`. Please note that you do not have to identify `-n` and `-t` parameters, since they will be overritten with arguments provided by the client on the provider side.
 
 **For example:** 
 
@@ -210,16 +210,16 @@ Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r58
 **How To Submit a Job:** 
 
 ```bash
-eBlocBroker.getClusterAddresses(); //returns all available Clusters Addresses.
+eBlocBroker.getProviders(); //returns all available Providers Addresses.
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
 ###**Submit a Job using IPFS:**
 
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
-clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
-clusterCoreLimit = clusterInfo[3]
-pricePerMin      = clusterInfo[4]
+providerID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //providerID you would like to submit.
+providerInfo      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705")
+providerCoreLimit = providerInfo[3]
+pricePerMin      = providerInfo[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = ""
 coreNum          = 1; 
@@ -230,9 +230,9 @@ jobDescription   = "Science"
 coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType       = 0 ; // Please note that 0 stands for IPFS , 1 stands for eudat.
 
-if (coreNum <= clusterCoreLimit ) {//Before assigning coreNum checks the coreLimit of the cluster.
+if (coreNum <= providerCoreLimit ) {//Before assigning coreNum checks the coreLimit of the provider.
 	//Following line submits the Job:
-	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
@@ -268,20 +268,20 @@ Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 
 ```bash
 myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
-clusterMiniLockId="9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
+providerMiniLockId="9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
 encrypyFolderPath="./ipfsCode"
 tar -cvzf $encrypyFolderPath.tar.gz $encrypyFolderPath
 
-mlck encrypt -f $encrypyFolderPath.tar.gz $clusterMiniLockId --passphrase="$(cat mlck_password.txt)"
+mlck encrypt -f $encrypyFolderPath.tar.gz $providerMiniLockId --passphrase="$(cat mlck_password.txt)"
 ipfs add $ncrypyFolderPath.minilock
 added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 ```
 
 ```bash
-clusterID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
-clusterInfo      = eBlocBroker.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705")
-clusterCoreLimit = clusterInfo[3]
-pricePerMin      = clusterInfo[4]
+providerID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //providerID you would like to submit.
+providerInfo      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705")
+providerCoreLimit = providerInfo[3]
+pricePerMin      = providerInfo[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
 coreNum          = 1; 
@@ -292,15 +292,15 @@ jobDescription   = "Science"
 coreMinuteGas    = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType       = 2; // Please note that 0 stands for IPFS , 1 stands for eudat. 2 stands for IPFS with miniLock
 
-if (coreNum <= clusterCoreLimit ) {//Before assigning coreNum checks the coreLimit of the cluster.
+if (coreNum <= providerCoreLimit ) {//Before assigning coreNum checks the coreLimit of the provider.
 	//Following line submits the Job:
-	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
 ###**Submit a Job using EUDAT**
 
-Before doing this you have to be sure that you have shared your folder with cluster's FId. Please follow ...<github issue>. Otherwise your job will not accepted.
+Before doing this you have to be sure that you have shared your folder with provider's FId. Please follow ...<github issue>. Otherwise your job will not accepted.
 
 
 Now `jobHash` should be your `FederationCloudId` followed by the name of the folder your are sharing having equal symbol in between.
@@ -310,11 +310,11 @@ Example:
 
 
 ```bash
-clusterID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID you would like to submit.
-pricePerMin    = eBlocBroker.getClusterCoreMinutePrice(clusterID);
+providerID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //providerID you would like to submit.
+pricePerMin    = eBlocBroker.getProviderCoreMinutePrice(providerID);
 myMiniLockId   = ""
 jobHash        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"
-coreNum        = 1; //Before assigning this value please check the coreLimit of the cluster.
+coreNum        = 1; //Before assigning this value please check the coreLimit of the provider.
 coreGasDay     = 0;
 coreGasHour    = 0;
 coreGasMin     = 10;
@@ -322,10 +322,10 @@ jobDescription = "Science"
 coreMinuteGas  = coreGasMin + coreGasHour * 60 + coreGasDay * 1440;
 storageType     = 1 ; // Please note that 0 stands for IPFS , 1 stands for eudat.
 
-clusterCoreLimit = eBlocBroker.getClusterCoreLimit(clusterID);
-if (coreNum <= clusterCoreLimit ) {
+providerCoreLimit = eBlocBroker.getProviderCoreLimit(providerID);
+if (coreNum <= providerCoreLimit ) {
 	//Following line submits the Job:
-	eBlocBroker.insertJob(clusterID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
@@ -340,10 +340,10 @@ This will return:
 ...
 
 ```bash
-clusterID="0x6af0204187a93710317542d383a1b547fa42e705"; //clusterID that you have submitted your job.
+providerID="0x6af0204187a93710317542d383a1b547fa42e705"; //providerID that you have submitted your job.
 index   = 0;      
 jobHash = "QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B"
-eBlocBroker.getJobInfo(clusterID, jobHash, 0);
+eBlocBroker.getJobInfo(providerID, jobHash, 0);
 ```
 
 **Events: In order to keep track of the log of receipts**

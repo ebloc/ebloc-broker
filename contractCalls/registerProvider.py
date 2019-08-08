@@ -3,18 +3,18 @@
 import os, sys,json
 from dotenv  import load_dotenv
 from imports import connectEblocBroker, getWeb3
-from contractCalls.isClusterExists import isClusterExists
+from contractCalls.isProviderExists import isProviderExists
 from os.path import expanduser
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
    
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
-CLUSTER_ID  = web3.toChecksumAddress(os.getenv('CLUSTER_ID'))
+PROVIDER_ID  = web3.toChecksumAddress(os.getenv('PROVIDER_ID'))
 
-def registerCluster(availableCoreNum, clusterEmail, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage,
+def registerProvider(availableCoreNum, email, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage,
                     priceCache, ipfsAddress, commitmentBlockNum):
-    account = CLUSTER_ID # The Ethereum Address that cluster want to register
+    account = PROVIDER_ID # The Ethereum Address that provider want to register
     if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
         print('Please first run: ../scripts/whisperInitialize.py')
         sys.exit()
@@ -29,12 +29,12 @@ def registerCluster(availableCoreNum, clusterEmail, federationCloudId, miniLockI
             print('Please re-run: ../scripts/whisperInitialize.py')
             sys.exit()
     
-    if isClusterExists(account):
-        print('Cluster is already registered. Please call the updateCluster() function.')
+    if isProviderExists(account):
+        print('Provider is already registered. Please call the updateProvider() function.')
         sys.exit()
     
-    if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
-        tx_hash = eBlocBroker.transact({"from":account, "gas": 4500000}).registerCluster(clusterEmail, federationCloudId,
+    if len(federationCloudId) < 128 and len(email) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
+        tx_hash = eBlocBroker.transact({"from":account, "gas": 4500000}).registerProvider(email, federationCloudId,
                                                                                          miniLockId,
                                                                                          availableCoreNum,
                                                                                          priceCoreMin,
@@ -48,7 +48,7 @@ def registerCluster(availableCoreNum, clusterEmail, federationCloudId, miniLockI
 
 if __name__ == '__main__':
     availableCoreNum   = 128 
-    clusterEmail       = "alper01234alper@gmail.com" 
+    email              = "alper01234alper@gmail.com" 
     federationCloudId  = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
     miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
     priceCoreMin       = 100
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     commitmentBlockNum = 10
     ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 
-    registerCluster(availableCoreNum, clusterEmail, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage, priceCache, ipfsAddress, commitmentBlockNum)
+    registerProvider(availableCoreNum, email, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage, priceCache, ipfsAddress, commitmentBlockNum)
     
 
     # os.environ['ipfs'] = ipfs 

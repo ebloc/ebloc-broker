@@ -21,7 +21,7 @@ if [ $setup -eq 1 ]; then
     # sudo apt-get install python3.6
     #--------------------------------------------
     
-    ## Python3.6 setup, required for all clusters!
+    ## Python3.6 setup, required for all providers!
     sudo apt-get install python3.6-dev
     sudo apt-get install python3-dev
     sudo apt-get install python3-venv
@@ -123,7 +123,7 @@ if [ ! -d cache ]; then
     mkdir -p cache
 fi
 
-touch $HOME/.eBlocBroker/transactions/clusterOut.txt
+touch $HOME/.eBlocBroker/transactions/providerOut.txt
 
 sudo chmod +x $currentDir/slurmScript.sh
 #======================================================================
@@ -184,12 +184,12 @@ rm slurmScript.sh.bak
 COINBASE=$(echo $COINBASE)
 if [[ ! -v COINBASE ]]; then
     echo "COINBASE is not set"
-    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
+    echo "Type your provider Ethereum Address, followed by [ENTER]:"
     read COINBASE
     echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile   
 elif [[ -z "$COINBASE" ]]; then
     echo "COINBASE is set to the empty string"
-    echo "Type your cluster Ethereum Address, followed by [ENTER]:"
+    echo "Type your provider Ethereum Address, followed by [ENTER]:"
     read COINBASE
     echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile   
 else
@@ -199,7 +199,7 @@ else
        echo "Ethereum address is not valid, please use a valid one."
        exit
     fi
-    sed -i.bak "s/^\(CLUSTER_ID=\).*/\1\"$COINBASE\"/" $HOME/.eBlocBroker/.env
+    sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $HOME/.eBlocBroker/.env
     rm $HOME/.eBlocBroker/.env.bak    
 fi
 #======================================================================

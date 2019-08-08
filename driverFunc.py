@@ -31,7 +31,7 @@ def log(strIn, color=''):
     else:
         print(strIn)
        
-    txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
+    txFile = open(lib.LOG_PATH + '/transactions/providerOut.txt', 'a') 
     txFile.write(strIn + "\n") 
     txFile.close() 
     fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
@@ -39,7 +39,7 @@ def log(strIn, color=''):
     txFile.write(strIn + "\n") 
     txFile.close() 
 
-def driverGithub(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
+def driverGithub(jobKey, index, storageID, requesterID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
     globals()['jobKey']    = jobKey
     globals()['index']     = index
     globals()['storageID'] = storageID
@@ -49,10 +49,10 @@ def driverGithub(jobKey, index, storageID, userID, sourceCodeHash, cacheType, ga
    
     log("key="   + jobKey) 
     log("index=" + index)
-    resultsFolderPrev = lib.PROGRAM_PATH  + "/" + userID + "/" + jobKey + "_" + index
+    resultsFolderPrev = lib.PROGRAM_PATH  + "/" + requesterID + "/" + jobKey + "_" + index
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'   
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
-        os.makedirs(lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index)
+        os.makedirs(lib.PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + index)
   
     if not os.path.exists(resultsFolder):  
         # cmd: git clone https://github.com/$jobKeyGit.git $resultsFolder
@@ -62,10 +62,10 @@ def driverGithub(jobKey, index, storageID, userID, sourceCodeHash, cacheType, ga
 
     dataTransferIn = calculateDataTransferOut(resultsFolder)
    
-    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID, resultsFolder, resultsFolderPrev,
+    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], requesterID, resultsFolder, resultsFolderPrev,
                    dataTransferIn, gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
 
-def driverIpfs(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
+def driverIpfs(jobKey, index, storageID, requesterID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
     globals()['jobKey']    = jobKey
     globals()['index']     = index
     globals()['storageID'] = storageID
@@ -76,7 +76,7 @@ def driverIpfs(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasS
     log("isHashCached=" + str(isHashCached))    
 
     dataTransferIn    = 0 # if the requested file is already cached, it stays as 0                
-    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index
+    resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + index
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'           
 
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
@@ -143,7 +143,7 @@ def driverIpfs(jobKey, index, storageID, userID, sourceCodeHash, cacheType, gasS
         log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
         return False
    
-    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], userID,
+    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], requesterID,
                    resultsFolder, resultsFolderPrev, dataTransferIn, gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
 
 # To test driverFunc.py executed as script.

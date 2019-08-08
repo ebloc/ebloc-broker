@@ -11,8 +11,8 @@ if(!web3.isConnected()){
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
 fromBlock = myContractInstance.getDeployedBlockNumber();
 
-var array = myContractInstance.getClusterInfo("0x6af0204187a93710317542d383a1b547fa42e705");
-var eBlocBrokerEvent = myContractInstance.LogCluster({}, {fromBlock: array[0], toBlock: 'latest'});
+var array = myContractInstance.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705");
+var eBlocBrokerEvent = myContractInstance.LogProvider({}, {fromBlock: array[0], toBlock: 'latest'});
 
 
 
@@ -25,19 +25,19 @@ eBlocBrokerEvent.watch( function (error, result) {
         eBlocBrokerEvent.stopWatching()
     }
 
-    var cluster = result.args.cluster;
-    var clusterName;
+    var provider = result.args.provider;
+    var providerName;
     var fID;
     var miniLockId; 
     var ipfsAddress;
     
-    if (cluster == "0x6af0204187a93710317542d383a1b547fa42e705") {
-	clusterName = result.args.clusterName;
+    if (provider == "0x6af0204187a93710317542d383a1b547fa42e705") {
+	providerName = result.args.providerName;
 	fID         = result.args.fID;
 	miniLockId  = result.args.miniLockId;
 	ipfsAddress = result.args.ipfsAddress;	
     }
-    console.log("clusterName: "        + clusterName);
+    console.log("providerName: "        + providerName);
     console.log("fID: "                + fID);
     console.log("miniLockId: "         + miniLockId);
     console.log("ipfsAddress: "        + ipfsAddress);

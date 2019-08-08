@@ -9,7 +9,7 @@ from test.func import testFunc
 home = expanduser("~")
 path = os.getcwd()
 # Definitions =============================================
-clusterID    = '0x57b60037b82154ec7149142c606ba024fbb0f991'
+providerID    = '0x57b60037b82154ec7149142c606ba024fbb0f991'
 testType     = 'gdrive';
 readTest     = 'hashOutput.txt'
 cacheType    = lib.cacheType.private
@@ -20,4 +20,4 @@ def log(strIn):
    txFile.write( strIn + "\n" )
    txFile.close()
 
-testFunc(path, readTest, testType, clusterID, cacheType)
+testFunc(path, readTest, testType, providerID, cacheType)

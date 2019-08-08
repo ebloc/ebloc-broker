@@ -9,7 +9,7 @@ if(!web3.eth.net.isListening().then(console.log)){ //web3@1.0.0-beta.34
     process.exit();
 }
 
-web3.eth.defaultAccount = nodePaths.CLUSTER_ID; //Should be the address of the cluster.
+web3.eth.defaultAccount = nodePaths.PROVIDER_ID; //Should be the address of the provider.
 
 var whoami              = web3.eth.defaultAccount;
 var myContractInstance  = new web3.eth.Contract(eBlocBroker.abi, eBlocBroker.address);
@@ -63,7 +63,7 @@ exports.LogJob = function(var1, myPath) {
     var check = '[]';
     while (check == '[]') {
         myContractInstance.getPastEvents('LogJob', {        
-            filter: {clusterAddress: [web3.eth.defaultAccount]},
+            filter: {providerAddress: [web3.eth.defaultAccount]},
             fromBlock: 1899162,
             toBlock: 'latest'
         }, function(error, event){
@@ -98,9 +98,9 @@ exports.LogJob = function(var1, myPath) {
 	    var jobKey = result.args.jobKey;   
 
 	    if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
-		if (result.args.clusterAddress == web3.eth.defaultAccount){
+		if (result.args.providerAddress == web3.eth.defaultAccount){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
-				  result.args.clusterAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
+				  result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
 				      process.exit();
 				   }); 	
 		}
@@ -118,7 +118,7 @@ exports.LogCancelRefund = function(var1, myPath) {
     	fs.unlinkSync(myPath);
 
     myContractInstance.events.LogCancelRefund({
-        filter: {clusterAddress: [web3.eth.defaultAccount]},
+        filter: {providerAddress: [web3.eth.defaultAccount]},
         fromBlock: var1
     }, function(error, event){
         flag = 0;
@@ -138,9 +138,9 @@ exports.LogCancelRefund = function(var1, myPath) {
 
 	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
-	    if (result.args.clusterAddress == web3.eth.defaultAccount) {
+	    if (result.args.providerAddress == web3.eth.defaultAccount) {
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
-				  result.args.clusterAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
+				  result.args.providerAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
 				      process.exit();
 				  }); 	
 	    }
@@ -150,7 +150,7 @@ exports.LogCancelRefund = function(var1, myPath) {
 };
 
 
-exports.LogReceipt = function(var1, myPath, clusterID) {    
+exports.LogReceipt = function(var1, myPath, providerID) {    
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -178,9 +178,9 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 	if(flag == 0){
 	    var jobKey = result.args.jobKey;   
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
-		if(result.args.clusterAddress == clusterID){
+		if(result.args.providerAddress == providerID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
-				  result.args.clusterAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
+				  result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
 				  result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
 					  process.exit();
 				  }); 	
@@ -191,7 +191,7 @@ exports.LogReceipt = function(var1, myPath, clusterID) {
 };
 
 /*
-exports.LogJobResults = function(var1, myPath, clusterID) {
+exports.LogJobResults = function(var1, myPath, providerID) {
     var gain = [];
     var fs    = require('fs');
 
@@ -230,18 +230,18 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 	    var jobKey = result.args.jobKey;   
 
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
-		if (result.args.clusterAddress == clusterID){
+		if (result.args.providerAddress == providerID){
 		    if (result.args.myMiniLockID == "")
 			result.args.myMiniLockID = "-1"
 		    
 		    myStr='';
-		    if(typeof gain[result.args.clusterAddress +  '_' + jobKey + '_' + result.args.index] == 'undefined')
+		    if(typeof gain[result.args.providerAddress +  '_' + jobKey + '_' + result.args.index] == 'undefined')
 			myStr='';
 		    else
-			myStr=gain[result.args.clusterAddress + '_' + jobKey + '_' + result.args.index].toString();
+			myStr=gain[result.args.providerAddress + '_' + jobKey + '_' + result.args.index].toString();
 		    
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.clusterAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
+				   result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
 				   result.args.miniLockId + " " + myStr + ' ?\n', function(err) { // '?' end of line identifier.
 					   process.exit();
 				   }); 	
@@ -252,7 +252,7 @@ exports.LogJobResults = function(var1, myPath, clusterID) {
 };
 */
 
-exports.saveReceipts = function(var1, myPath, clusterID) {
+exports.saveReceipts = function(var1, myPath, providerID) {
     var path  = require('path');     
     var fs    = require('fs');
 
@@ -280,10 +280,10 @@ exports.saveReceipts = function(var1, myPath, clusterID) {
 
 	if(flag == 0) {
 	    var jobKey = result.args.jobKey;   
-	    if(result.args.clusterAddress == clusterID){		    		    
+	    if(result.args.providerAddress == providerID){		    		    
 		gainedStr=(parseInt(result.args.received) - parseInt(result.args.returned)).toString();
 
-		fs.appendFile(myPath, result.args.clusterAddress + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { 
+		fs.appendFile(myPath, result.args.providerAddress + '_' + jobKey + '_' + result.args.index + ' ' + gainedStr + '\n' , function(err) { 
 		    eBlocBrokerEvent.stopWatching();
                     process.exit();
                 });
@@ -306,17 +306,17 @@ exports.getDeployedBlockNumber = function() {
     return myContractInstance.getDeployedBlockNumber();
 };
 
-exports.getClusterIpfsId = function(var1) {
-    return myContractInstance.getClusterIpfsId(var1);
+exports.getProviderIpfsId = function(var1) {
+    return myContractInstance.getProviderIpfsId(var1);
 };
 
-exports.getClusterInfo = function(var1) {
-    return myContractInstance.getClusterInfo(var1);
+exports.getProviderInfo = function(var1) {
+    return myContractInstance.getProviderInfo(var1);
 };
 
-exports.getUserInfo = function(myPath, userAddress) {
+exports.getRequesterInfo = function(myPath, requesterAddress) {
     var fs    = require('fs');
-    fromBlock            = myContractInstance.getUserInfo(userAddress);
+    fromBlock            = myContractInstance.getRequesterInfo(requesterAddress);
     var eBlocBrokerEvent = myContractInstance.LogUser({}, {fromBlock: fromBlock, toBlock: fromBlock});
     var v = '';
     eBlocBrokerEvent.watch( function (error, result) {
@@ -357,9 +357,9 @@ exports.getUserInfo = function(myPath, userAddress) {
 	if (flag == 0) {
 	    var jobKey = result.args.jobKey;   
 	    //if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
-	    if (result.args.clusterAddress == web3.eth.defaultAccount) {
+	    if (result.args.providerAddress == web3.eth.defaultAccount) {
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
-				  result.args.clusterAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
+				  result.args.providerAddress + " " + jobKey + " " + result.args.index + '\n', function(err) {
 				      process.exit();
 				  }); 	
 	        }

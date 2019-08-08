@@ -3,7 +3,7 @@
 import sys, os
 import lib
 
-def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None):
+def getJobInfo(providerAddress, jobKey, index, eBlocBroker=None, web3=None):
     if eBlocBroker is None and web3 is None:
         import os
         from imports import connectEblocBroker, getWeb3
@@ -12,11 +12,11 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None):
             return 'notconnected'
         eBlocBroker = connectEblocBroker(web3)
 
-    clusterAddress = web3.toChecksumAddress(clusterAddress)
+    providerAddress = web3.toChecksumAddress(providerAddress)
     job = None
     try:
-        job = eBlocBroker.functions.getJobInfo(clusterAddress, jobKey, int(index)).call()
-        jobPrices = eBlocBroker.functions.getClusterPricesForJob(clusterAddress, jobKey, int(index)).call()
+        job = eBlocBroker.functions.getJobInfo(providerAddress, jobKey, int(index)).call()
+        jobPrices = eBlocBroker.functions.getProviderPricesForJob(providerAddress, jobKey, int(index)).call()
         jobDict = {'status':            job[0],
                    'core':              job[1],
                    'startTime':         job[2],
@@ -41,7 +41,7 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None):
     resultIpfsHash = ""
     myFilter = eBlocBroker.events.LogReceipt.createFilter(
         fromBlock=int(2587300),
-        argument_filters={'clusterAddress': str(clusterAddress)})
+        argument_filters={'providerAddress': str(providerAddress)})
     loggedJobs = myFilter.get_all_entries()
     for i in range(0, len(loggedJobs)):
         if loggedJobs[i].args['jobKey'] == jobKey and loggedJobs[i].args['index'] == index:
@@ -56,14 +56,14 @@ def getJobInfo(clusterAddress, jobKey, index, eBlocBroker=None, web3=None):
     return jobDict
 if __name__ == '__main__':
     if len(sys.argv) == 4:
-        clusterAddress = str(sys.argv[1])
+        providerAddress = str(sys.argv[1])
         jobKey         = str(sys.argv[2])
         index          = int(sys.argv[3])
     else:
         print('Please probide jobKey and index as an argument')
         sys.exit()
 
-    jobInfo  = getJobInfo(clusterAddress, jobKey, index)
+    jobInfo  = getJobInfo(providerAddress, jobKey, index)
 
     if jobInfo == "BadFunctionCallOutput":
         print("Error: " + jobInfo)

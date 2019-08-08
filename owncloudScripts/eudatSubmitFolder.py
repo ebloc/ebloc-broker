@@ -14,10 +14,10 @@ oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 
 def eudatSubmitJob(tarHash=None):
-    clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
-    clusterAddress = web3.toChecksumAddress(clusterID)
-    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getClusterInfo(clusterAddress).call()
-    my_filter = eBlocBroker.eventFilter('LogCluster',{ 'fromBlock': int(blockReadFrom),
+    providerID='0x4e4a0750350796164D8DefC442a712B7557BF282'
+    providerAddress = web3.toChecksumAddress(providerID)
+    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getProviderInfo(providerAddress).call()
+    my_filter = eBlocBroker.eventFilter('LogProvider',{ 'fromBlock': int(blockReadFrom),
                                                       'toBlock': int(blockReadFrom) + 1})
     fID = my_filter.get_all_entries()[0].args['fID']
     
@@ -43,7 +43,7 @@ def eudatSubmitJob(tarHash=None):
     storageID=1
     accountID=0
 
-    res = submitJob(str(clusterID), str(tarHash), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
+    res = submitJob(str(providerID), str(tarHash), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
     print(res)
 
 if __name__ == "__main__":

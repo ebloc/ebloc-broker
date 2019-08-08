@@ -19,42 +19,42 @@ eBlocBroker = getEbloBroker()
 
 ipfsFlag = 0
 
-def getLogJobs(clusterAddress, fromBlock):
-    print('clusterAddress:' + clusterAddress + '\n')
+def getLogJobs(providerAddress, fromBlock):
+    print('providerAddress:' + providerAddress + '\n')
     myFilter = eBlocBroker.events.LogReceipt.createFilter(
         fromBlock=int(fromBlock),
-        argument_filters={'clusterAddress': str(clusterAddress)})
+        argument_filters={'providerAddress': str(providerAddress)})
     loggedJobs = myFilter.get_all_entries()
 
 
     receiptReturned = {}
 
     for i in range(0, len(loggedJobs)):
-        clusterAddress = loggedJobs[i].args['clusterAddress']
+        providerAddress = loggedJobs[i].args['providerAddress']
         jobKey         = loggedJobs[i].args['jobKey']
         index          = loggedJobs[i].args['index']
         returned       = loggedJobs[i].args['returned']
-        receiptReturned[str(clusterAddress) + str(jobKey) + str(index)] = returned
+        receiptReturned[str(providerAddress) + str(jobKey) + str(index)] = returned
 
     # ---------------------------------------------------------------------
     myFilter = eBlocBroker.events.LogJob.createFilter(
         fromBlock=int(fromBlock),
-        argument_filters={'clusterAddress': str(clusterAddress)})
+        argument_filters={'providerAddress': str(providerAddress)})
     loggedJobs = myFilter.get_all_entries()
     sum_    = 0
     counter = 1
     completedCounter = 0
 
     for i in range(0, len(loggedJobs)):
-        clusterAddress = loggedJobs[i].args['clusterAddress']
+        providerAddress = loggedJobs[i].args['providerAddress']
         jobKey         = loggedJobs[i].args['jobKey']
         index          = loggedJobs[i].args['index']
         # print(loggedJobs[i])
         # print(loggedJobs[i].args['jobKey'])
-        jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+        jobInfo = getJobInfo(providerAddress, jobKey, index, eBlocBroker, web3)
         # print('received: ' +  )
         returned=0
-        key=str(clusterAddress) + str(jobKey) + str(index)
+        key=str(providerAddress) + str(jobKey) + str(index)
         if key in receiptReturned:
             returned=receiptReturned[key]
             #print('returned:' + str(receiptReturned[key]))
@@ -83,12 +83,12 @@ def getLogJobs(clusterAddress, fromBlock):
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
-        clusterAddress = str(sys.argv[1])
+        providerAddress = str(sys.argv[1])
         fromBlock      = int(sys.argv[2])
     else:
         load_dotenv(os.path.join(home + '/.eBlocBroker', '.env')) # Load .env from the given path
-        clusterAddress=os.getenv("CLUSTER_ID")
+        providerAddress=os.getenv("PROVIDER_ID")
         fromBlock=2215127
 
     print(fromBlock)    
-    getLogJobs(clusterAddress, fromBlock)
+    getLogJobs(providerAddress, fromBlock)

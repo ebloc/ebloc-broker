@@ -2,19 +2,19 @@
 
 from brownie import *
 import os, time
-import scripts.token, scripts.lib, sys
-    
+import scripts.eBlocBroker, scripts.lib, sys
+
 def blockTimestamp(skip=True): return web3.eth.getBlock(web3.eth.blockNumber).timestamp;
 
 def setup():
-    scripts.token.main()
-    global eB, whisperPubKey, cwd, clusterEmail, federatedCloudID, miniLockID, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache, commitmentBlockNum, ipfsAddress, prices
+    scripts.eBlocBroker.main()
+    global eB, whisperPubKey, cwd, providerEmail, federatedCloudID, miniLockID, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache, commitmentBlockNum, ipfsAddress, prices, zeroAddress
     
     eB = eBlocBroker[0]
     whisperPubKey = "04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
     cwd           = os.getcwd()
     
-    clusterEmail       = "cluster@gmail.com"    
+    providerEmail       = "provider@gmail.com"    
     federatedCloudID   = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
     miniLockID         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
     availableCoreNum   = 128
@@ -22,89 +22,95 @@ def setup():
     priceDataTransfer  = 1
     priceStorage       = 1
     priceCache         = 1
-    prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
+    prices             = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
     commitmentBlockNum = 10
     ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
+    zeroAddress        = '0x0000000000000000000000000000000000000000'
        
 def getOwner(skip=False):
     '''Get Owner'''
     assert eB.getOwner() == accounts[0]
+    try:
+        eB.transferOwnership(zeroAddress, {"from": accounts[0]})
+    except:
+        print('revert detected.')
+        
     eB.transferOwnership(accounts[1], {"from": accounts[0]})
     assert eB.getOwner() == accounts[1]
     
-def updateCluster(skip=False, printFlag=True):
+def updateProvider(skip=False, printFlag=True):
     rpc.mine(5)
-    registerCluster(False, True)
-    # print(tx.events['LogClusterInfo'])
+    registerProvider(False, True)
+    # print(tx.events['LogProviderInfo'])
         
     federatedCloudID  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    tx = eB.updateClusterInfo(clusterEmail,
+    tx = eB.updateProviderInfo(providerEmail,
                               federatedCloudID,
                               miniLockID,
                               ipfsAddress,
                               whisperPubKey, {'from': accounts[0]})
     if printFlag:
-        print('updateClusterInfo => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
+        print('updateProviderInfo => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
 
     # rpc.mine(int(arguments[0]))
     availableCoreNum  = 64
-    tx = eB.updateClusterPrices(availableCoreNum, commitmentBlockNum, prices, {'from': accounts[0]})
+    tx = eB.updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, {'from': accounts[0]})
     if printFlag:
-        print('updateClusterPrices => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
+        print('updateProviderPrices => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
 
     availableCoreNum  = 16
-    tx = eB.updateClusterPrices(availableCoreNum, commitmentBlockNum, prices, {'from': accounts[0]})
+    tx = eB.updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, {'from': accounts[0]})
     if printFlag:
-        print('updateClusterPrices => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
+        print('updateProviderPrices => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
 
     rpc.mine(16)
     availableCoreNum  = 32
-    tx = eB.updateClusterPrices(availableCoreNum, commitmentBlockNum, prices, {'from': accounts[0]})
+    tx = eB.updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, {'from': accounts[0]})
     if printFlag:
-        print('updateClusterPrices => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
+        print('updateProviderPrices => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
 
-    clusterPriceInfo   = eB.getClusterInfo(accounts[0])
-    blockReadFrom      = clusterPriceInfo[0]
+    providerPriceInfo   = eB.getProviderInfo(accounts[0])
+    blockReadFrom      = providerPriceInfo[0]
     print(blockReadFrom)
     # assert blockReadFrom == 20
-    print(eB.getClusterSetBlockNumbers(accounts[0]))
+    print(eB.getProviderSetBlockNumbers(accounts[0]))
     
-    # eB.pauseCluster({'from': accounts[4]})
+    # eB.pauseProvider({'from': accounts[4]})
     
-def registerCluster(skip=True, printFlag=True):
-    '''Register Cluster'''
+def registerProvider(skip=True, printFlag=True):
+    '''Register Provider'''
     rpc.mine(1)
     web3.eth.defaultAccount = accounts[0]
 
-    tx = eB.registerCluster(clusterEmail, federatedCloudID, miniLockID, availableCoreNum, priceCoreMin, priceDataTransfer,
+    tx = eB.registerProvider(providerEmail, federatedCloudID, miniLockID, availableCoreNum, priceCoreMin, priceDataTransfer,
                             priceStorage, priceCache, commitmentBlockNum, ipfsAddress, whisperPubKey, {'from': accounts[0]})
     if printFlag:
-        print('\nregisterCluster => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
+        print('\nregisterProvider => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))       
 
 
-def registerUser(skip=True, printFlag=True):
-    '''Register User'''
-    tx     = eB.registerUser("email@gmail.com",
+def registerRequester(skip=True, printFlag=True):
+    '''Register Requester'''
+    tx     = eB.registerRequester("email@gmail.com",
                              "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
                              "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ",
                              "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf",
                              'ebloc',
                              whisperPubKey, {'from': accounts[1]})
     if printFlag:
-        print('registerUser => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
+        print('registerRequester => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
 
-    assert eB.isUserExists(accounts[1]), True
-    blockReadFrom, b = eB.getUserInfo(accounts[1])
+    assert eB.isRequesterExists(accounts[1]), True
+    blockReadFrom, b = eB.getRequesterInfo(accounts[1])
 
     tx = eB.authenticateOrcID(accounts[1], '0000-0001-7642-0552', {'from': accounts[0]}) # ORCID should be registered.
     print('authenticateOrcID => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))    
-    assert eB.isUserOrcIDVerified(accounts[1]), "isUserOrcIDVerified is failed"
+    assert eB.isRequesterOrcIDVerified(accounts[1]), "isRequesterOrcIDVerified is failed"
 
 def multipleData(skip=False):
-    registerCluster(False)
-    registerUser(False)                    
-    clusterAddress = accounts[0]
-    userAddress    = accounts[1]    
+    registerProvider(False)
+    registerRequester(False)                    
+    _provider = accounts[0]
+    _requester = accounts[1]    
 
     jobKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
     ipfsBytes32 = scripts.lib.convertIpfsToBytes32(jobKey)
@@ -130,26 +136,26 @@ def multipleData(skip=False):
     
     storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
 
-    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
+    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, _provider, eB, sourceCodeHashArray, web3,
                                      dataTransferInArray, dataTransferOut, cacheHourArray)
-    
-    tx = eB.submitJob(clusterAddress, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
+
+    tx = eB.submitJob(_provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
                       storageID_cacheType, cacheHourArray, sourceCodeHashArray,
-                      {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
+                      {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
     print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))            
     print('jobIndex=' + str(tx.events['LogJob']['index']))
 
     # ---
-    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
+    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, _provider, eB, sourceCodeHashArray, web3,
                                      dataTransferInArray, dataTransferOut, cacheHourArray)
         
-    tx = eB.submitJob(clusterAddress, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
+    tx = eB.submitJob(_provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
                       storageID_cacheType, cacheHourArray, sourceCodeHashArray,
-                      {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
+                      {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
     print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))          
     print('jobIndex=' + str(tx.events['LogJob']['index']))
 
-    # Cluster Side:
+    # Provider Side:
     index = 0
     jobID = 0
     startTime = blockTimestamp()
@@ -161,13 +167,13 @@ def multipleData(skip=False):
     rpc.mine(1)
     endTime = startTime + 15 * 4 * jobExecutionTimeMin
 
-    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
+    tx = eB.receiptCheck(jobKey, [index, jobID], jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
                          {"from": accounts[0]})
     print('receiptCheck => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     # print(tx.events['LogReceipt'])
-    receivedSum = tx.events['LogReceipt']['received']
-    returnedSum = tx.events['LogReceipt']['returned']
-    print(str(receivedSum) + ' ' + str(returnedSum))
+    receivedSum = tx.events['LogReceipt']['receivedWei']
+    refundedSum = tx.events['LogReceipt']['refundedWei']
+    print(str(receivedSum) + ' ' + str(refundedSum))
     # --
     dataTransferIn  = 0 # already requested on index==0
     dataTransferOut = 100
@@ -184,19 +190,19 @@ def multipleData(skip=False):
     rpc.mine(1)
     endTime = startTime + 15 * 4 * jobExecutionTimeMin
 
-    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
+    tx = eB.receiptCheck(jobKey, [index, jobID], jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
                          {"from": accounts[0]})
     print('receiptCheck => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     # print(tx.events['LogReceipt'])
-    receivedSum = tx.events['LogReceipt']['received']
-    returnedSum = tx.events['LogReceipt']['returned']
-    print(str(receivedSum) + ' ' + str(returnedSum))
+    receivedSum = tx.events['LogReceipt']['receivedWei']
+    refundedSum = tx.events['LogReceipt']['refundedWei']
+    print(str(receivedSum) + ' ' + str(refundedSum))
 
 def workFlow(skip=False):
-    registerCluster(False)
-    registerUser(False)                    
-    clusterAddress = accounts[0]
-    userAddress    = accounts[1]    
+    registerProvider(False)
+    registerRequester(False)                    
+    _provider = accounts[0]
+    _requester    = accounts[1]    
 
     jobKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
     ipfsBytes32 = scripts.lib.convertIpfsToBytes32(jobKey)
@@ -218,14 +224,14 @@ def workFlow(skip=False):
     
     storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
 
-    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
+    jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, _provider, eB, sourceCodeHashArray, web3,
                                      dataTransferInArray, dataTransferOut, cacheHourArray)
                 
-    tx = eB.submitJob(clusterAddress, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
+    tx = eB.submitJob(_provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
                       storageID_cacheType, cacheHourArray, sourceCodeHashArray,
-                      {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
+                      {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
     print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))          
-    print(eB.getJobInfo(clusterAddress, jobKey, 0, 0))
+    print(eB.getJobInfo(_provider, jobKey, 0, 0))
     print('-----------')
     
     # setJobStatus for the workflow: -------------
@@ -241,7 +247,7 @@ def workFlow(skip=False):
 
 
     receivedSum = 0
-    returnedSum = 0
+    refundedSum = 0
     # receiptCheck for the workflow: -------------
     index = 0
     jobID = 0
@@ -252,12 +258,12 @@ def workFlow(skip=False):
     ipfsBytes32    = scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
     resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
 
-    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
+    tx = eB.receiptCheck(jobKey, [index, jobID], jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
                          {"from": accounts[0]})
     print('receiptCheck => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     # print(tx.events['LogReceipt'])
-    receivedSum += tx.events['LogReceipt']['received']
-    returnedSum += tx.events['LogReceipt']['returned']
+    receivedSum += tx.events['LogReceipt']['receivedWei']
+    refundedSum += tx.events['LogReceipt']['refundedWei']
     # --------
     index = 0
     jobID = 1
@@ -268,12 +274,12 @@ def workFlow(skip=False):
     ipfsBytes32    = scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
     resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
 
-    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
+    tx = eB.receiptCheck(jobKey, [index, jobID], jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
                          {"from": accounts[0]})
     print('\nreceiptCheck => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     # print(tx.events['LogReceipt'])
-    receivedSum += tx.events['LogReceipt']['received']
-    returnedSum += tx.events['LogReceipt']['returned']
+    receivedSum += tx.events['LogReceipt']['receivedWei']
+    refundedSum += tx.events['LogReceipt']['refundedWei']
 
     # --------
 
@@ -286,45 +292,45 @@ def workFlow(skip=False):
     ipfsBytes32    = scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
     resultIpfsHash = web3.toBytes(hexstr= ipfsBytes32)
 
-    tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
+    tx = eB.receiptCheck(jobKey, [index, jobID], jobExecutionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray,
                          {"from": accounts[0]})
     print('\nreceiptCheck => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     # print(tx.events['LogReceipt'])
-    receivedSum += tx.events['LogReceipt']['received']
-    returnedSum += tx.events['LogReceipt']['returned']
+    receivedSum += tx.events['LogReceipt']['receivedWei']
+    refundedSum += tx.events['LogReceipt']['refundedWei']
 
-    print('receivedSum=' + str(receivedSum) + ' | ' + 'returnedSum=' + str(returnedSum) + ' | ' + 'jobPriceValue=' + str(jobPriceValue))
+    print('receivedSum=' + str(receivedSum) + ' | ' + 'refundedSum=' + str(refundedSum) + ' | ' + 'jobPriceValue=' + str(jobPriceValue))
     
-    assert(jobPriceValue == receivedSum + returnedSum)
+    assert(jobPriceValue == receivedSum + refundedSum)
 
     eB.updateDataReceivedBlock(resultIpfsHash, {"from": accounts[4]})
     
 def submitJob(skip=False):
     # def submitJob(skip=True):    
-    registerCluster(False)
-    registerUser(False)                    
-    clusterAddress = accounts[0]
-    userAddress = accounts[1]    
+    registerProvider(False)
+    registerRequester(False)                    
+    _provider = accounts[0]
+    _requester = accounts[1]    
     
     print(cwd)
     fname = cwd + '/files/test.txt'
     # fname = cwd + '/files/test_.txt'
 
-    print('Registered cluster addresses:')
-    print(eB.getClusterAddresses())
+    print('Registered provider addresses:')
+    print(eB.getProviders())
     
-    clusterPriceInfo   = eB.getClusterInfo(accounts[0])    
-    blockReadFrom      = clusterPriceInfo[0]
-    availableCoreNum   = clusterPriceInfo[1]    
-    priceCoreMin       = clusterPriceInfo[2]
-    priceDataTransfer  = clusterPriceInfo[3]
-    priceStorage       = clusterPriceInfo[4]
-    priceCache         = clusterPriceInfo[5]
-    commitmentBlockNum = clusterPriceInfo[6]
+    providerPriceInfo   = eB.getProviderInfo(accounts[0])    
+    blockReadFrom      = providerPriceInfo[0]
+    availableCoreNum   = providerPriceInfo[1]    
+    priceCoreMin       = providerPriceInfo[2]
+    priceDataTransfer  = providerPriceInfo[3]
+    priceStorage       = providerPriceInfo[4]
+    priceCache         = providerPriceInfo[5]
+    commitmentBlockNum = providerPriceInfo[6]
     
-    print("Cluster's availableCoreNum:  " + str(availableCoreNum))
-    print("Cluster's priceCoreMin:  "     + str(priceCoreMin))
-    print(clusterPriceInfo)
+    print("Provider's availableCoreNum:  " + str(availableCoreNum))
+    print("Provider's priceCoreMin:  "     + str(priceCoreMin))
+    print(providerPriceInfo)
 
     jobPriceValueSum = 0
     jobID = 0    
@@ -359,15 +365,15 @@ def submitJob(skip=False):
             dataTransferInArray = [dataTransferIn]
             
             print(sourceCodeHashArray[0])
-            jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, clusterAddress, eB, sourceCodeHashArray, web3,
+            jobPriceValue = scripts.lib.cost(coreArray, coreMinArray, _provider, eB, sourceCodeHashArray, web3,
                                              dataTransferInArray, dataTransferOut, cacheHourArray)
             jobPriceValueSum   += jobPriceValue
             storageID_cacheType = [scripts.lib.storageID.ipfs, scripts.lib.cacheType.private]
             dataTransferInArray = [dataTransferIn]
             
-            tx = eB.submitJob(clusterAddress, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
+            tx = eB.submitJob(_provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,
                               storageID_cacheType, cacheHourArray, sourceCodeHashArray,
-                              {"from": userAddress, "value": web3.toWei(jobPriceValue, "wei")})
+                              {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
             print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))            
             print('jobIndex=' + str(tx.events['LogJob']['index']))
                         
@@ -375,7 +381,7 @@ def submitJob(skip=False):
 			# print("Client Balance after: " + str(web3.eth.getBalance(accounts[8])))				
             # sys.stdout.write('jobInfo: ')
             # sys.stdout.flush()
-            print(eB.getJobInfo(clusterAddress, jobKey, index, jobID))
+            print(eB.getJobInfo(_provider, jobKey, index, jobID))
             index += 1
 
     print('TotalPaid=' + str(jobPriceValueSum))
@@ -402,7 +408,7 @@ def submitJob(skip=False):
         for line in f: 
             arguments = line.rstrip('\n').split(" ")
             if index == 0:
-                dataTransferIn  = 100
+                dataTransferIn  = 90
                 dataTransferOut = 100
             else:
                 dataTransferIn  = 0
@@ -412,33 +418,33 @@ def submitJob(skip=False):
             dataTransfer = [dataTransferIn, dataTransferOut]
             jobID = 0
             jobExecutionTimeMin = int(arguments[1]) - int(arguments[0])            
-            tx = eB.receiptCheck(jobKey, index, jobID, jobExecutionTimeMin, resultIpfsHash, int(arguments[1]), dataTransfer, sourceCodeHashArray,
+            tx = eB.receiptCheck(jobKey, [index, jobID], jobExecutionTimeMin, resultIpfsHash, int(arguments[1]), dataTransfer, sourceCodeHashArray,
                                  {"from": accounts[0]})
             print('receiptCheck => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
 
-            received = tx.events['LogReceipt']['received']
-            returned = tx.events['LogReceipt']['returned']
-            print('received=' + str(received) + '| returned=' + str(returned))           
+            received = tx.events['LogReceipt']['receivedWei']
+            refunded = tx.events['LogReceipt']['refundedWei']
+            print('received=' + str(received) + '| refunded=' + str(refunded))           
             index += 1
 
     print('\nContractBalance=' + str(eB.getContractBalance()))                
     # Prints finalize version of the linked list.
-    size = eB.getClusterReceiptSize(clusterAddress)
+    size = eB.getProviderReceiptSize(_provider)
     for i in range(0, size):
-        print(eB.getClusterReceiptNode(clusterAddress, i))
+        print(eB.getProviderReceiptNode(_provider, i))
 
     print('----------------------------------')
     print('StorageTime for job: ' + jobKey)
-    ret = eB.getJobStorageTime(clusterAddress, sourceCodeHash)
+    ret = eB.getJobStorageTime(_provider, sourceCodeHash)
     print('ReceivedBlockNumber=' + str(ret[0]) + ' | ' + 'cacheDuration=' + str(ret[1] * 240))
     print('----------------------------------')          
-    print(eB.getReceiveStoragePayment(userAddress, sourceCodeHash, {"from": clusterAddress}))
+    print(eB.getReceiveStoragePayment(_requester, sourceCodeHash, {"from": _provider}))
     
     '''
     rpc.mine(240)
-    tx = eB.receiveStoragePayment(userAddress, sourceCodeHash, {"from": clusterAddress});
+    tx = eB.receiveStoragePayment(_requester, sourceCodeHash, {"from": _provider});
     print('receiveStoragePayment => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
-    print(eB.getReceiveStoragePayment(userAddress, sourceCodeHash, {"from": clusterAddress}))
+    print(eB.getReceiveStoragePayment(_requester, sourceCodeHash, {"from": _provider}))
     print('----------------------------------') 
     '''
     
