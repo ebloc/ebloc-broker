@@ -1,4 +1,4 @@
-# Cluster
+# Provider
 
 Version of slurmctld should be same between frontend node and compute nodes.
 

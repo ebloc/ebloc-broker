@@ -15,16 +15,16 @@ from lib import log
 from driverEudat  import driverEudat
 from driverGdrive import driverGdrive
 
-from contractCalls.getClusterReceivedAmount import getClusterReceivedAmount
-from contractCalls.getDeployedBlockNumber   import getDeployedBlockNumber
-from contractCalls.isContractExist          import isContractExist
-from contractCalls.isClusterExists          import isClusterExists
-from contractCalls.blockNumber              import blockNumber
-from contractCalls.getJobInfo               import getJobInfo
-from contractCalls.isUserExist              import isUserExist
-from contractCalls.getUserInfo              import getUserInfo
-from contractCalls.isWeb3Connected          import isWeb3Connected
-from contractCalls.LogJob                   import runLogJob
+from contractCalls.getProviderReceivedAmount import getProviderReceivedAmount
+from contractCalls.getDeployedBlockNumber    import getDeployedBlockNumber
+from contractCalls.isContractExists          import isContractExists
+from contractCalls.isProviderExists          import isProviderExists
+from contractCalls.blockNumber               import blockNumber
+from contractCalls.getJobInfo                import getJobInfo
+from contractCalls.isRequesterExists         import isRequesterExists
+from contractCalls.getRequesterInfo          import getRequesterInfo
+from contractCalls.isWeb3Connected           import isWeb3Connected
+from contractCalls.LogJob                    import runLogJob
 
 web3        = getWeb3()
 eBlocBroker = connectEblocBroker(web3)
@@ -184,16 +184,16 @@ def startup():
 
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
-if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.CLUSTER_ID == '': 
-   print(stylize('Once please run:  ./initialize.sh \n', fg('red')))
+if lib.WHOAMI == '' or lib.EBLOCPATH == '' or lib.PROVIDER_ID == '': 
+   print(stylize('Please run:  ./initialize.sh \n', fg('red')))
    terminate()
 
-log('=' * int(int(columns) / 2 - 12) + ' cluster session starts ' +
+log('=' * int(int(columns) / 2 - 12) + ' provider session starts ' +
     '=' * int(int(columns) / 2 - 12), 'green')
 
 startup()
-isContractExist = isContractExist(web3)
-if not isContractExist:
+isContractExists = isContractExists(web3)
+if not isContractExists:
    log("Please check that you are using eBloc blockchain.", 'red')
    terminate()
 
@@ -203,23 +203,23 @@ contract = json.loads(open('contractCalls/contract.json').read())
 contractAddress = contract['address']
 log('{0: <20}'.format('contractAddress:') + '"' + contractAddress + '"', "yellow")
 
-if lib.IPFS_USE:
-   lib.isIpfsOn()
+if lib.IPFS_USE: lib.isIpfsOn()
 
-clusterAddress = lib.CLUSTER_ID
-isClusterExists = isClusterExists(clusterAddress, eBlocBroker, web3)
+providerAddress = lib.PROVIDER_ID
+isProviderExists = isProviderExists(providerAddress, eBlocBroker, web3)
 
-if not isClusterExists:
-   print(stylize("Error: Your Ethereum address '" + clusterAddress + "' \n"
-                 "does not match with any cluster in eBlocBroker. Please register your \n" 
-                 "cluster using your Ethereum Address in to the eBlocBroker. You can \n"   
-                 "use 'contractCalls/registerCluster.py' script to register your cluster.", fg('red')))
+if not isProviderExists:
+   print(stylize("Error: Your Ethereum address '" + providerAddress + "' \n"
+                 "does not match with any provider in eBlocBroker. Please register your \n" 
+                 "provider using your Ethereum Address in to the eBlocBroker. You can \n"   
+                 "use 'contractCalls/registerProvider.py' script to register your provider.",
+                 fg('red')))
    terminate()
 
 deployedBlockNumber   = str(getDeployedBlockNumber(eBlocBroker))
 blockReadFromContract = '0'
 
-log('{0: <20}'.format('clusterAddress:') + '"'+ clusterAddress + '"', 'yellow')
+log('{0: <20}'.format('providerAddress:') + '"'+ providerAddress + '"', 'yellow')
 if not os.path.isfile(lib.BLOCK_READ_FROM_FILE): 
    f = open(lib.BLOCK_READ_FROM_FILE, 'w')
    f.write(deployedBlockNumber + "\n")
@@ -252,16 +252,15 @@ if int(blockReadFromLocal) < int(blockReadFromContract):
 else:
    blockReadFrom = blockReadFromLocal
 
-clusterGainedAmountInit = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3)
-log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber +
-    "| Cluster's initial money: " + clusterGainedAmountInit)
+providerGainedAmountInit = getProviderReceivedAmount(providerAddress, eBlocBroker, web3)
+log('{0: <21}'.format('deployedBlockNumber:') +  deployedBlockNumber + "| providerGainedWei: " + providerGainedAmountInit)
 
 while True:     
     if "Error" in blockReadFrom:
        log(blockReadFrom)
        terminate()
 
-    clusterGainedAmount = getClusterReceivedAmount(clusterAddress, eBlocBroker, web3) 
+    providerGainedAmount = getProviderReceivedAmount(providerAddress, eBlocBroker, web3) 
     squeueStatus,status = lib.runCommand(['squeue'])    
     if "squeue: error:" in str(squeueStatus):
        log("SLURM is not running on the background, please run: sudo ./runSlurm.sh. \n")
@@ -271,9 +270,9 @@ while True:
     idleCore = idleCoreNumber()    
     log("Current Slurm Running jobs status: \n" + squeueStatus)
     log('-' * int(columns), "green")
-    if 'notconnected' != clusterGainedAmount:
-       log("Current Time: " + time.ctime() + "| ClusterGainedAmount: " +
-           str(int(clusterGainedAmount) - int(clusterGainedAmountInit)))
+    if 'notconnected' != providerGainedAmount:
+       log("Current Time: " + time.ctime() + " | providerGainedWei :" +
+           str(int(providerGainedAmount) - int(providerGainedAmountInit)))
        
     log("Waiting new job to come since block number: " + blockReadFrom, 'green')    
     currentBlockNumber = blockNumber() 
@@ -287,27 +286,27 @@ while True:
     blockReadFrom = str(blockReadFrom) # Starting reading event's location has been updated
     # blockReadFrom = 1094262 # used for test purposes
     slurmPendingJobCheck()    
-    loggedJobs = runLogJob(blockReadFrom, clusterAddress, eBlocBroker)       
+    loggedJobs = runLogJob(blockReadFrom, providerAddress, eBlocBroker)       
     print('isWeb3Connected: ' + str(isWeb3Connected(web3)))
-    maxVal               = 0
-    isClusterReceivedJob = 0
-    counter              = 0        
+    maxVal                = 0
+    isProviderReceivedJob = 0
+    counter               = 0        
     for i in range(0, len(loggedJobs)):
        runFlag = 0
-       isClusterReceivedJob = 1
+       isProviderReceivedJob = 1
        log(str(counter) + ' ' + '-' * (int(columns) - 2), "green")
        counter += 1
        sourceCodeHash = binascii.hexlify(loggedJobs[i].args['sourceCodeHash']).decode("utf-8")[0:32]       
-       log('BlockNum: ' + str(loggedJobs[i]['blockNumber']) + '\n' +
-           'clusterAddress: ' + loggedJobs[i].args['clusterAddress'] + '\n' +
-           'jobKey: ' + loggedJobs[i].args['jobKey'] + '\n' +
-           'index: ' + str(loggedJobs[i].args['index']) + '\n' +
-           'storageID: ' + str(loggedJobs[i].args['storageID']) + '\n' +
-           'sourceCodeHash: ' + sourceCodeHash + '\n' +       
-           'gasDataTransferIn: ' + str(loggedJobs[i].args['gasDataTransferIn']) + '\n' +
+       log('BlockNum: '           + str(loggedJobs[i]['blockNumber']) + '\n' +
+           'provider: '           + loggedJobs[i].args['providerAddress'] + '\n' +
+           'jobKey: '             + loggedJobs[i].args['jobKey'] + '\n' +
+           'index: '              + str(loggedJobs[i].args['index']) + '\n' +
+           'storageID: '          + str(loggedJobs[i].args['storageID']) + '\n' +
+           'sourceCodeHash: '     + sourceCodeHash + '\n' +       
+           'gasDataTransferIn: '  + str(loggedJobs[i].args['gasDataTransferIn']) + '\n' +
            'gasDataTransferOut: ' + str(loggedJobs[i].args['gasDataTransferOut']) + '\n' +
-           'cacheType: ' + str(loggedJobs[i].args['cacheType']) + '\n' + 
-           'gasStorageHour: ' + str(loggedJobs[i].args['gasStorageHour']), 'light_pink_3')
+           'cacheType: '          + str(loggedJobs[i].args['cacheType']) + '\n' + 
+           'gasStorageHour: '     + str(loggedJobs[i].args['gasStorageHour']), 'light_pink_3')
        
        if loggedJobs[i].args['storageID'] == lib.storageID.ipfs or loggedJobs[i].args['storageID'] == lib.storageID.ipfs_miniLock:           
            sourceCodeHash = lib.convertBytes32ToIpfs(loggedJobs[i].args['sourceCodeHash'])
@@ -328,7 +327,7 @@ while True:
                      
        for attempt in range(10):
            try:
-               jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+               jobInfo = getJobInfo(providerAddress, jobKey, index, eBlocBroker, web3)
                log('core: ' + str(jobInfo['core']))               
            except Exception as e:
                log('Error: jobInfo returns as ' + jobInfo, 'red')
@@ -338,14 +337,14 @@ while True:
            runFlag = 1
            break       
        
-       userID   = ""
+       requesterID   = ""
        if runFlag == 1 or jobInfo['core'] == 0: 
           log('Job does not exist', 'red')
           runFlag = 1
        else:
-          log('jobOwner/userID: ' + jobInfo['jobOwner'])
-          userID    = jobInfo['jobOwner'].lower()
-          userExist = isUserExist(userID, eBlocBroker, web3)          
+          log('jobOwner/requesterID: ' + jobInfo['jobOwner'])
+          requesterID    = jobInfo['jobOwner'].lower()
+          requesterExist = isRequesterExists(requesterID, eBlocBroker, web3)          
           if jobInfo['status'] == str(lib.job_state_code['COMPLETED']):
              log('Job is already completed.', 'red')
              runFlag = 1
@@ -358,16 +357,16 @@ while True:
           if 'False' in strCheck:
              log('Filename contains invalid character', 'red')
              runFlag = 1
-          if not userExist: 
+          if not requesterExist: 
              log('jobOwner is not registered', 'red')
              runFlag = 1
           else:
-             userInfo = getUserInfo(userID, '1', eBlocBroker, web3)
+             requesterInfo = getRequesterInfo(requesterID, '1', eBlocBroker, web3)
              
           log('Adding user...', 'green')
-          res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', userID, lib.PROGRAM_PATH])
+          res, status = lib.runCommand(['sudo', 'bash', lib.EBLOCPATH + '/user.sh', requesterID, lib.PROGRAM_PATH])
           log(res)                    
-          userIDmd5 = hashlib.md5(userID.encode('utf-8')).hexdigest()
+          requesterIDmd5 = hashlib.md5(requesterID.encode('utf-8')).hexdigest()
           
        if runFlag == 1:
           pass
@@ -377,7 +376,7 @@ while True:
            driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
                                  str(loggedJobs[i].args['index']),
                                  str(loggedJobs[i].args['storageID']),
-                                 userIDmd5,
+                                 requesterIDmd5,
                                  loggedJobs[i].args['sourceCodeHash'],
                                  loggedJobs[i].args['cacheType'],
                                  loggedJobs[i].args['gasStorageHour'], eBlocBroker, web3)
@@ -389,8 +388,8 @@ while True:
            log('New job has been received. EUDAT call |' + time.ctime(), 'green')
            driverEudat(loggedJobs[i].args['jobKey'],
                        str(loggedJobs[i].args['index']),
-                       userInfo[4],
-                       userIDmd5,
+                       requesterInfo[4],
+                       requesterIDmd5,
                        loggedJobs[i].args['sourceCodeHash'],
                        loggedJobs[i].args['cacheType'],
                        loggedJobs[i].args['gasStorageHour'],
@@ -402,7 +401,7 @@ while True:
            driverFunc.driverIpfs(loggedJobs[i].args['jobKey'],
                                  str(loggedJobs[i].args['index']),
                                  str(loggedJobs[i].args['storageID']),
-                                 userIDmd5,
+                                 requesterIDmd5,
                                  loggedJobs[i].args['sourceCodeHash'],
                                  loggedJobs[i].args['cacheType'],
                                  loggedJobs[i].args['gasStorageHour'],
@@ -414,7 +413,7 @@ while True:
            driverFunc.driverGithub(loggedJobs[i].args['jobKey'],
                                    str(loggedJobs[i].args['index']),
                                    str(loggedJobs[i].args['storageID']),
-                                   userIDmd5,
+                                   requesterIDmd5,
                                    loggedJobs[i].args['sourceCodeHash'],
                                    loggedJobs[i].args['cacheType'],
                                    loggedJobs[i].args['gasStorageHour'],
@@ -425,7 +424,7 @@ while True:
            driverGdrive(loggedJobs[i].args['jobKey'],
                         str(loggedJobs[i].args['index']),
                         str(loggedJobs[i].args['storageID']),
-                        userIDmd5,
+                        requesterIDmd5,
                         loggedJobs[i].args['sourceCodeHash'],
                         loggedJobs[i].args['cacheType'],
                         loggedJobs[i].args['gasStorageHour'],
@@ -437,8 +436,8 @@ while True:
        f_blockReadFrom.close()
        blockReadFrom = str(int(maxVal) + 1)
 
-    # If there is no submitted job for the cluster, block start to read from current block number
-    if isClusterReceivedJob == 0:
+    # If there is no submitted job for the provider, block start to read from current block number
+    if isProviderReceivedJob == 0:
        f_blockReadFrom = open(lib.BLOCK_READ_FROM_FILE, 'w') # Updates the latest read block number
        f_blockReadFrom.write(str(currentBlockNumber) + '\n')
        f_blockReadFrom.close()

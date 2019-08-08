@@ -33,8 +33,8 @@ maxVal = 0
 while True:
     # cancelBlockReadFromLocal = 2000000 # For test purposes
        
-    # Waits here until new job cancelled into the cluster
-    loggedJobs = LogJob.runLogCancelRefund(cancelBlockReadFromLocal, lib.CLUSTER_ID, eBlocBroker)
+    # Waits here until new job cancelled into the provider
+    loggedJobs = LogJob.runLogCancelRefund(cancelBlockReadFromLocal, lib.PROVIDER_ID, eBlocBroker)
     
     for e in range(0, len(loggedJobs)): 
         msg_sender = web3.eth.getTransactionReceipt(loggedJobs[e]['transactionHash'].hex())['from'].lower()

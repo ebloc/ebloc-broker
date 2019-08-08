@@ -20,12 +20,12 @@ library Lib {
     enum JobStateCodes {
 	/* Following states {0, 1, 2} will allow to request refund */
 	SUBMITTED,   /* 0 Initial state */
-	PENDING,     /* 1 Indicates when a request is receieved by the cluster. The job is waiting for resource allocation. It will eventually run. */
+	PENDING,     /* 1 Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run. */
 	RUNNING,     /* 2 The job currently is allocated to a node and is running. */	
 	/* Following states {3, 4, 5} used to prevent double spending */
 	COMPLETED,   /* 3 The job has completed successfully. */
 	REFUNDED,    /* 4 Indicates if job is refunded */
-	CANCELLED,   /* 5 Job was explicitly cancelled by the user or system administrator. The job may or may not have been initiated. */
+	CANCELLED,   /* 5 Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. */
 	TIMEOUT      /* 6 Job terminated upon reaching its time limit. */
     }
 						    
@@ -34,13 +34,11 @@ library Lib {
 	uint32 cacheDuration;
     }
 
-    struct Job {
-	
-	uint32 startTime; // Submitted job's starting universal time on the server side. Assigned by the cluster
-	JobStateCodes jobStateCode; // Assigned by the cluster
+    struct Job {	
+	uint32 startTime; // Submitted job's starting universal time on the server side. Assigned by the provider
+	JobStateCodes jobStateCode; // Assigned by the provider
 	uint16 core;                // Requested core array by the client 
-	uint16 executionTimeMin;    // Time to run job in minutes. ex: minute + hour * 60 + day * 1440; assigned by the client
-	
+	uint16 executionTimeMin;    // Time to run job in minutes. ex: minute + hour * 60 + day * 1440; assigned by the client	
     }
 
     // Submitted Job's information
@@ -50,24 +48,24 @@ library Lib {
         uint32   dataTransferOut;
         uint            received; // Paid amount (new owned) by the client
         address payable jobOwner; // Address of the client (msg.sender) has been stored
-        uint32 pricesSetBlockNum; // When cluster is submitted cluster's most recent block number when its set or updated
+        uint32 pricesSetBlockNum; // When provider is submitted provider's most recent block number when its set or updated
         bytes32   sourceCodeHash; // keccak256 of the list of sourceCodeHash list
 
         mapping(uint => Job) jobs;
     }
        
-    struct User {
-	uint32 committedBlock; // Block number when cluster is registered in order the watch cluster's event activity 
-	string orcID; // User's orcID 
+    struct Requester {
+	uint32 committedBlock; // Block number when provider is registered in order the watch provider's event activity 
+	string orcID; // Requester's orcID 
     }
 
-    struct ClusterInfo {
-	uint32 availableCore; // Registered core number of the cluster 
+    struct ProviderInfo {
+	uint32 availableCore; // Registered core number of the provider 
 	uint32 commitmentBlockDuration;
 	
 	/* All the price varaibles are defined in Wei. 
 	   Floating-point or fixed-point decimals have not yet been implemented in Solidity */ 
-	uint32 priceCoreMin; // Cluster's price for core per minute
+	uint32 priceCoreMin; // Provider's price for core per minute
 	uint32 priceDataTransfer; 
 	uint32 priceStorage; 
 	uint32 priceCache;	
@@ -78,13 +76,13 @@ library Lib {
 	bool      isUsed; // Received payment for storage usage
     } 
     
-    struct Cluster {
-	uint         received; // Cluster's received wei price
-	uint32 committedBlock; // Block number when cluster is registered in order the watch cluster's event activity
-	bool        isRunning; // Flag that checks is Cluster running or not 
+    struct Provider {
+	uint         received; // Provider's received wei // Address where funds are collected
+	uint32 committedBlock; // Block number when  is registered in order the watch provider's event activity
+	bool        isRunning; // Flag that checks is Provider running or not 
 
-	mapping(string  => Status[])   jobStatus; // All submitted jobs into cluster 's Status is accessible
-	mapping(uint256 => ClusterInfo)     info;
+	mapping(string  => Status[])   jobStatus; // All submitted jobs into provider 's Status is accessible
+	mapping(uint256 => ProviderInfo)     info;
 	mapping(bytes32 => JobStorageTime) jobSt; // Stored information related to job's storage time 
 	mapping(bytes32 => uint256) registeredData;
 	mapping(address => mapping(bytes32  => Storage)) storagedData; 
@@ -105,11 +103,11 @@ library Lib {
     }    
 	
     /**
-     *@dev Invoked when registerCluster() function is called 
-     *@param self | Cluster struct
+     *@dev Invoked when registerProvider() function is called 
+     *@param self | Provider struct
      */	
 
-    function constructCluster(Cluster storage self) internal
+    function constructProvider(Provider storage self) internal
     {
 	self.isRunning = true;
 	self.received;
@@ -121,7 +119,7 @@ library Lib {
 	selfReceiptList.deletedItemNum;
     }
     
-    function receiptCheck(IntervalNode storage self, Job storage _job, uint32 endTime, int32 availableCore) internal
+    function receiptCheck(IntervalNode storage self, Job memory _job, uint32 endTime, int32 availableCore) internal
 	returns (bool flag)
     {
 	Interval[] storage list = self.list;
@@ -198,20 +196,20 @@ library Lib {
     }
 
     /* Used for tests */
-    function getReceiptListSize(IntervalNode storage self) public view
+    function getReceiptListSize(IntervalNode storage self) external view
 	returns (uint32)
     {
 	return uint32(self.list.length - self.deletedItemNum);
     }
 
     /* Used for test */
-    function printIndex(IntervalNode storage self, uint32 index) public view
+    function printIndex(IntervalNode storage self, uint32 index) external view
 	returns (uint256, int32)
     {
-	uint32 myIndex = self.tail;
+	uint32 _index = self.tail;
 	for (uint i = 0; i < index; i++)
-	    myIndex = self.list[myIndex].next;
+	    _index = self.list[_index].next;
 
-	return (self.list[myIndex].endpoint, self.list[myIndex].core);
+	return (self.list[_index].endpoint, self.list[_index].core);
     }
 }

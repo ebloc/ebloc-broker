@@ -5,14 +5,14 @@ from imports import connectEblocBroker, getWeb3
 from os.path import expanduser
 home = expanduser("~")
     
-def updateCluster():
+def updateProvider():
     web3        = getWeb3() 
     eBlocBroker = connectEblocBroker(web3)
     # USER Inputs----------------------------------------------------------------
-    # account            = web3.eth.accounts[0]  # Cluster's Ethereum Address
-    CLUSTER_ID         = web3.toChecksumAddress(os.getenv("CLUSTER_ID"))  
+    # account            = web3.eth.accounts[0]  # Provider's Ethereum Address
+    PROVIDER_ID         = web3.toChecksumAddress(os.getenv("PROVIDER_ID"))  
     availableCoreNum   = 128 
-    clusterEmail       = "alper01234alper@gmail.com"
+    email              = "alper01234alper@gmail.com"
     federationCloudId  = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
     miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
     priceCoreMin       = 100
@@ -38,9 +38,9 @@ def updateCluster():
             print('Please re-run: ../scripts/whisperInitialize.py')
             sys.exit()
 
-    if len(federationCloudId) < 128 and len(clusterEmail) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
-        tx_hash = eBlocBroker.transact({"from": CLUSTER_ID,
-                                        "gas": 4500000}).updateCluster(clusterEmail,
+    if len(federationCloudId) < 128 and len(email) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
+        tx_hash = eBlocBroker.transact({"from": PROVIDER_ID,
+                                        "gas": 4500000}).updateProvider(email,
                                                                          federationCloudId,
                                                                          miniLockId,
                                                                          availableCoreNum,
@@ -53,4 +53,4 @@ def updateCluster():
         print('Tx_hash: ' + tx_hash.hex()) 
         
 if __name__ == '__main__':
-    updateCluster()
+    updateProvider()

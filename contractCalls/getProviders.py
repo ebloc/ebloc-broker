@@ -2,7 +2,7 @@
 
 import sys, os
 
-def getClusterAddresses(eBlocBroker=None):
+def getProviders(eBlocBroker=None):
     if eBlocBroker is None: 
         from imports import connectEblocBroker
         eBlocBroker = connectEblocBroker()
@@ -10,13 +10,13 @@ def getClusterAddresses(eBlocBroker=None):
     if eBlocBroker == 'notconnected':
         return eBlocBroker
         
-    return eBlocBroker.functions.getClusterAddresses().call() 
+    return eBlocBroker.functions.getProviders().call() 
 
 if __name__ == '__main__':
-    clusterList = getClusterAddresses()
-    if clusterList == 'notconnected':
-        print(clusterList)
+    providerList = getProviders()
+    if providerList == 'notconnected':
+        print(providerList)
         sys.exit()
     
-    for i in range(0, len(clusterList)):
-        print(clusterList[i])
+    for i in range(0, len(providerList)):
+        print(providerList[i])

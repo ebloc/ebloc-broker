@@ -20,12 +20,12 @@ with open(fname, "r") as ins:
 
         res=line.split(' ')
 
-        clusterAddress = res[1]
+        providerAddress = res[1]
         jobKey         = res[2] 
         index          = res[3] 
 
         sum1 += int(res[7]) - int(res[8])
-        jobInfo = getJobInfo(clusterAddress, jobKey, index, eBlocBroker, web3)
+        jobInfo = getJobInfo(providerAddress, jobKey, index, eBlocBroker, web3)
 
         print(str(counter) + ' ' + res[1] + ' ' + res[2] + ' ' + res[3] + '|' +
               '{0: <16}'.format('status:') + lib.job_state_code[str(jobInfo['status'])] + ' ' +

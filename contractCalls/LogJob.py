@@ -19,12 +19,12 @@ def logReturn(event_filter, poll_interval):
             return loggedJobs         
         time.sleep(poll_interval)              
 
-def runLogJob(fromBlock, clusterAddress, eBlocBroker=None): 
+def runLogJob(fromBlock, providerAddress, eBlocBroker=None): 
    if eBlocBroker is None: 
        eBlocBroker = getEbloBroker()
    myFilter = eBlocBroker.events.LogJob.createFilter(
        fromBlock=int(fromBlock),       
-       argument_filters={'clusterAddress': str(clusterAddress)}
+       argument_filters={'provider': str(providerAddress)}
    )    
    loggedJobs = myFilter.get_all_entries() 
    if len(loggedJobs) > 0:       
@@ -32,13 +32,13 @@ def runLogJob(fromBlock, clusterAddress, eBlocBroker=None):
    else:
        return logReturn(myFilter, 2) 
 
-def runLogCancelRefund(fromBlock, clusterAddress, eBlocBroker=None):
+def runLogCancelRefund(fromBlock, providerAddress, eBlocBroker=None):
     if eBlocBroker is None: 
         eBlocBroker = getEbloBroker()
         
     myFilter = eBlocBroker.events.LogRefund.createFilter(
         fromBlock=int(fromBlock),       
-        argument_filters={'clusterAddress': str(clusterAddress)})
+        argument_filters={'provider': str(providerAddress)})
     loggedCancelledJobs = myFilter.get_all_entries() 
     if len(loggedCancelledJobs) > 0:       
         return loggedCancelledJobs
@@ -64,18 +64,18 @@ def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None):
 
 if __name__ == '__main__': 
    if len(sys.argv) == 2: 
-        fromBlock      = int(sys.argv[1]) 
-        clusterAddress = str(sys.argv[2]) # Only obtains jobs that are submitted to the cluster.
+        fromBlock       = int(sys.argv[1]) 
+        providerAddress = str(sys.argv[2]) # Only obtains jobs that are submitted to the provider.
    else:
-       fromBlock      = 954795 
-       clusterAddress = '0x4e4a0750350796164d8defc442a712b7557bf282'
+       fromBlock       = 954795 
+       providerAddress = '0x4e4a0750350796164d8defc442a712b7557bf282'
 
-   loggedJobs = runLogJob(fromBlock, clusterAddress)
+   loggedJobs = runLogJob(fromBlock, providerAddress)
    for i in range(0, len(loggedJobs)):
            print(loggedJobs[i])
            print('Tx_hash: ' + loggedJobs[i]['transactionHash'].hex() )
            print('blockNumber: ' + str(loggedJobs[i]['blockNumber']))
-           print('clusterAddress: ' + loggedJobs[i].args['clusterAddress'])
+           print('providerAddress: ' + loggedJobs[i].args['provider'])
 
            print(loggedJobs[i].args['jobKey'])           
 

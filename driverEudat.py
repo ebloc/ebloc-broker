@@ -24,7 +24,7 @@ def log(str_in, color=''):
    else:
        print(str_in)
        
-   txFile = open(lib.LOG_PATH + '/transactions/clusterOut.txt', 'a') 
+   txFile = open(lib.LOG_PATH + '/transactions/providerOut.txt', 'a') 
    txFile.write(str_in + "\n") 
    txFile.close() 
 
@@ -62,7 +62,7 @@ def isTarExistsInZip(resultsFolderPrev):
         globals()['folderType'] = 'folder'
     lib.log('folderType=' + globals()['folderType'])
 
-def cache(userID, resultsFolderPrev):
+def cache(requesterID, resultsFolderPrev):
     if cacheType == 'private': # First checking does is already exist under public cache directory
         globals()['globalCacheFolder'] = lib.PROGRAM_PATH +'/cache'
 
@@ -90,7 +90,7 @@ def cache(userID, resultsFolderPrev):
     
     if cacheType == 'private' or cacheType == 'public': # Download into private directory at $HOME/.eBlocBroker/cache
         if cacheType == 'private':
-            globals()['globalCacheFolder'] = lib.PROGRAM_PATH + '/' + userID + '/cache'
+            globals()['globalCacheFolder'] = lib.PROGRAM_PATH + '/' + requesterID + '/cache'
         elif cacheType == 'public':
             globals()['globalCacheFolder'] = lib.PROGRAM_PATH +'/cache'
         
@@ -192,8 +192,8 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder):
     return True
 
 # Checks already shared or not
-def eudatGetShareToken(fID, userID):
-   saveShareToken = lib.PROGRAM_PATH + '/' + userID + '/cache' + '/' + jobKey + '_shareToken.txt'
+def eudatGetShareToken(fID, requesterID):
+   saveShareToken = lib.PROGRAM_PATH + '/' + requesterID + '/cache' + '/' + jobKey + '_shareToken.txt'
    # TODO: store shareToken id with jobKey in some file, later do: oc.decline_remote_share(int(<share_id>)) to cancel shared folder at endCode or after some time later
    if cacheType == 'ipfs' and os.path.isdir(lib.OWN_CLOUD_PATH + '/' + jobKey):
        lib.log('Eudat shared folder is already accepted and exist on Eudat mounted folder...', 'green')              
@@ -237,7 +237,7 @@ def eudatGetShareToken(fID, userID):
          acceptFlag       = 1
          lib.log("Found. InputId=" + inputID + " |ShareToken=" + shareToken)
 
-         saveDirShareToken = lib.PROGRAM_PATH + '/' + userID + '/cache'
+         saveDirShareToken = lib.PROGRAM_PATH + '/' + requesterID + '/cache'
          if not os.path.isdir(saveDirShareToken):
              lib.log(saveDirShareToken + ' does not exist', 'red')
              return
@@ -266,7 +266,7 @@ def eudatGetShareToken(fID, userID):
       return False
    return True
                                
-def driverEudat(jobKey_, index_, fID, userID, sourceCodeHash, cacheType_, gasStorageHour, eBlocBroker, web3, oc_):
+def driverEudat(jobKey_, index_, fID, requesterID, sourceCodeHash, cacheType_, gasStorageHour, eBlocBroker, web3, oc_):
     storageID = '1'   
     globals()['jobKey']    = jobKey_
     globals()['oc']        = oc_    
@@ -278,13 +278,13 @@ def driverEudat(jobKey_, index_, fID, userID, sourceCodeHash, cacheType_, gasSto
     lib.log('fID=' + fID)
     lib.log('cacheType=' + cacheType)
     
-    resultsFolderPrev = lib.PROGRAM_PATH + "/" + userID + "/" + jobKey + "_" + index 
+    resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
    
-    if not eudatGetShareToken(fID, userID): return
+    if not eudatGetShareToken(fID, requesterID): return
     
     if cacheType != 'none':
-        check, ipfsHash = cache(userID, resultsFolderPrev)
+        check, ipfsHash = cache(requesterID, resultsFolderPrev)
         
     if not check: return   
     
@@ -295,7 +295,7 @@ def driverEudat(jobKey_, index_, fID, userID, sourceCodeHash, cacheType_, gasSto
     if cacheType == 'private' or cacheType == 'public':
         '''
         if cacheType == 'private':
-            globals()['globalCacheFolder'] = lib.PROGRAM_PATH + '/' + userID + '/cache'
+            globals()['globalCacheFolder'] = lib.PROGRAM_PATH + '/' + requesterID + '/cache'
         elif cacheType == 'public':
             globals()['globalCacheFolder'] = lib.PROGRAM_PATH +'/cache'
         '''
@@ -314,7 +314,7 @@ def driverEudat(jobKey_, index_, fID, userID, sourceCodeHash, cacheType_, gasSto
 
     try:
         lib.log('dataTransferIn: ' + str(dataTransferIn))
-        lib.sbatchCall(jobKey, index, storageID, shareToken, userID,
+        lib.sbatchCall(jobKey, index, storageID, shareToken, requesterID,
                        resultsFolder, resultsFolderPrev, dataTransferIn,
                        gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
         time.sleep(1)

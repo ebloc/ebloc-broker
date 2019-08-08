@@ -10,47 +10,46 @@ import "./Lib.sol";
 contract eBlocBrokerBase {
     
     address public owner;   
-    address[] clusterAddresses; // A dynamically-sized array of `address` structs 
+    address[] providers; // A dynamically-sized array of 'address' structs 
     
     mapping(address => uint32[]) pricesSetBlockNum;
-    mapping(address => Lib.User) user;   
-    mapping(address => Lib.Cluster) cluster;
+    mapping(address => Lib.Requester) requester; // Mapped address where the requester's gained Wei are collected
+    mapping(address => Lib.Provider)   provider;
     
     /**
-     * @notice Modifier to make a function callable only when called by any account other than the owner.
+     * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner {
-	require(msg.sender == owner); // sender must be owner
+	require(msg.sender == owner); // dev: Sender must be owner
 	_ ;
     }
 
     /**
-     * @notice Modifier to make a function callable only when given key is not zero
+     * @dev Modifier to make a function callable only when given key is not zero
      */
-    modifier validKey(string memory _key) {
-		
+    modifier validKey(string memory _key) {		
         require(bytes(_key).length > 0); // dev: Bad key
         _;
     }
     
     /**
-     * @notice Modifier to make a function callable only when cluster is registered.
+     * @dev Modifier to make a function callable only when caller is registered as provider.
      */
-    modifier whenClusterRegistered {
-	require(cluster[msg.sender].committedBlock > 0);  // dev: Not registered
+    modifier whenProviderRegistered {
+	require(provider[msg.sender].committedBlock > 0);  // dev: Not registered
 	_ ;
     }
 
     /**
-     * @notice Modifier to make a function callable only when the cluster is not registered.
+     * @dev Modifier to make a function callable only when the provider is not registered.
      */
-    modifier whenClusterNotRegistered {
-	require(cluster[msg.sender].committedBlock == 0);  // dev: Registered
+    modifier whenProviderNotRegistered {
+	require(provider[msg.sender].committedBlock == 0);  // dev: Registered
 	_ ;
     }
 
     /**
-     * @notice Modifier to make a function callable only when given timestamp is smaller than the block.timestamp(now)
+     * @dev Modifier to make a function callable only when given timestamp is smaller than the block.timestamp(now)
      */
     modifier whenBehindNow(uint256 timestamp) {
 	require(timestamp <= now);  // dev: Ahead now
@@ -58,23 +57,23 @@ contract eBlocBrokerBase {
     }
 
     /**
-     * @notice Modifier to make a function callable only when the cluster in running.
+     * @dev Modifier to make a function callable only when the provider in running.
      */
-    modifier whenClusterRunning {
-	require(cluster[msg.sender].isRunning); // dev: Cluster is not running
+    modifier whenProviderRunning {
+	require(provider[msg.sender].isRunning); // dev: Provider is not running
 	_ ;
     }
     
     /**
-     * @notice Modifier to make a function callable only when the cluster is paused.
+     * @dev Modifier to make a function callable only when the provider is paused.
      */
-    modifier whenClusterPaused {
-        require(!cluster[msg.sender].isRunning); // dev: Cluster is not paused
+    modifier whenProviderPaused {
+        require(!provider[msg.sender].isRunning); // dev: Provider is not paused
         _;
     }
 
     /**
-     * @notice Modifier to make a function callable only when stateID is valid
+     * @dev Modifier to make a function callable only when stateID is valid
      */
     modifier validJobStateCode(Lib.JobStateCodes jobStateCode) {
 	/*stateID cannot be NULL, COMPLETED, REFUNDED on setJobStatus call */
@@ -83,11 +82,11 @@ contract eBlocBrokerBase {
     }
 
     /**
-     * @notice Modifier to make a function callable only when orcID is verified
+     * @dev Modifier to make a function callable only when orcID is verified
      */
-    modifier whenOrcidNotVerified(address _addr) {
-	require(bytes(user[_addr].orcID).length == 0); // dev: OrcID is already verified
+    modifier whenOrcidNotVerified(address _requester) {
+	require(bytes(requester[_requester].orcID).length == 0); // dev: OrcID is already verified
 	_ ;
     }
-        
+           
 }

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-mkdir -p clusterResults
-sudo tar czvf clusterResults/varEbloc.tar.gz /var/eBlocBroker
-sudo chown alper clusterResults/varEbloc.tar.gz
+mkdir -p providerResults
+sudo tar czvf providerResults/varEbloc.tar.gz /var/eBlocBroker
+sudo chown alper providerResults/varEbloc.tar.gz
 
-cp -a ~/.eBlocBroker/endCodeAnalyse/   clusterResults/endCodeAnalyse
-cp -a ~/.eBlocBroker/transactions/     clusterResults/transactions
-cp    ~/.eBlocBroker/clusterDriver.out clusterResults/clusterDriver.out
+cp -a ~/.eBlocBroker/endCodeAnalyse/   providerResults/endCodeAnalyse
+cp -a ~/.eBlocBroker/transactions/     providerResults/transactions
+cp    ~/.eBlocBroker/providerDriver.out providerResults/providerDriver.out

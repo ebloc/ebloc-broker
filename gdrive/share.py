@@ -10,7 +10,7 @@ if len(sys.argv) < 2:
 
 folderType = sys.argv[1]
 folderToShare  = 'exampleFolderToShare'
-clusterToShare = 'alper.alimoglu@gmail.com' # 'alper01234alper@gmail.com'
+providerToShare = 'alper.alimoglu@gmail.com' # 'alper01234alper@gmail.com'
 
 # subprocess.run(['sudo', 'chmod', '-R', '777', folderToShare])
 
@@ -72,12 +72,12 @@ elif folderType == 'zip':
 
 jobKey = res.split(' ')[0]
 print('jobKey=' + jobKey)
-#cmd: gdrive share $jobKey --role writer --type user --email $clusterToShare
-res = subprocess.check_output(['gdrive', 'share', jobKey, '--role', 'writer', '--type', 'user', '--email', clusterToShare]).decode('utf-8').strip()
+#cmd: gdrive share $jobKey --role writer --type user --email $providerToShare
+res = subprocess.check_output(['gdrive', 'share', jobKey, '--role', 'writer', '--type', 'user', '--email', providerToShare]).decode('utf-8').strip()
 print('share_output=' + res)
 
 print('\nSubmitting Job...')
-clusterID='0x4e4a0750350796164D8DefC442a712B7557BF282'
+providerID='0x4e4a0750350796164D8DefC442a712B7557BF282'
 coreNum=1
 coreMinuteGas=5
 
@@ -91,5 +91,5 @@ cacheType = lib.cacheType.private
 # cacheType = lib.cacheType.public
 accountID=0
 
-res = submitJob(str(clusterID), str(jobKey), coreNum, coreMinuteGas, gasBandwidthMB, str(jobDescription), storageID, str(tarHash), cacheType, accountID)
+res = submitJob(str(providerID), str(jobKey), coreNum, coreMinuteGas, gasBandwidthMB, str(jobDescription), storageID, str(tarHash), cacheType, accountID)
 print(res)

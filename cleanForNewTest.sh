@@ -22,7 +22,7 @@ sudo rm -f  $HOME/.eBlocBroker/ipfs.out
 sudo rm -f  $HOME/.eBlocBroker/endCodeAnalyse/*
 sudo rm -f  $HOME/.eBlocBroker/transactions/*
 
-cat /dev/null > $HOME/.eBlocBroker/clusterDriver.out
+cat /dev/null > $HOME/.eBlocBroker/providerDriver.out
 
 sudo ./killall.sh
 sudo ./clean.sh
