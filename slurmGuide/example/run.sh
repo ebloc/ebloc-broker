@@ -3,8 +3,10 @@
 #SBATCH -e slurm.err        # STDERR
 #SBATCH --mail-type=ALL
 
+# data.txt => QmNeyjS4CBqR87ZuzvCwYaUSUzNkm82nXnNkr96Z1RYDV1
 g++ helloworld.cpp -o hello
 ./hello
-sleep 180
+sleep 30
 
-echo completed 180 > completed.txt
+cat  data.txt      > completed.txt
+echo completed 30 >> completed.txt

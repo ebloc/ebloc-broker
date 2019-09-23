@@ -5,7 +5,7 @@
 */
 
 pragma solidity ^0.5.7;
-//pragma experimental ABIEncoderV2;
+pragma experimental ABIEncoderV2;
 
 import "./Lib.sol";
 import "./math/SafeMath.sol";
@@ -18,7 +18,7 @@ import "./eBlocBrokerBase.sol";
  * computational resource broker.
  */
 contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
-    
+
     using SafeMath32 for uint32;
     using SafeMath   for uint256;
  
@@ -28,6 +28,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     using Lib for Lib.Status; 
     using Lib for Lib.JobStateCodes;
     using Lib for Lib.ProviderInfo;
+    using Lib for Lib.JobArgument;
+    using Lib for Lib.JobIndexes;
 
     /**
      * @notice eBlocBroker constructor
@@ -48,22 +50,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	emit OwnershipTransferred(owner, newOwner);
 	owner = newOwner;
     }
-
-    
-    /*
-      function extentStorageTime(address provider, string memory sourceCodeHash, uint cacheTime) public
-      returns (bool) {
-      require(cacheTime > 0);
-      Lib.Provider storage provider = provider[msg.sender];
-
-      if (provider.jobSt[sourceCodeHash].receivedBlock + provider.jobSt[sourceCodeHash].cacheDuration >= block.number) {
-      provider.jobSt[sourceCodeHash].cacheDuration += cacheTime * 240;
-      }
-      }
-    */
-    
+       
     /** 
-     *	@notice 
+     * @notice 
      * Refund funds the complete amount to client if requested job is still in the pending state or
      * is not completed one hour after its required time.
      * If the job is in the running state, it triggers LogRefund event on the blockchain, 
@@ -106,7 +95,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	    }
 	else if (job.jobStateCode == Lib.JobStateCodes.RUNNING) {
 	    job.jobStateCode = Lib.JobStateCodes.CANCELLED;
-	    for (uint256 i = 0; i < sourceCodeHash.length; i++)
+	    for (uint i = 0; i < sourceCodeHash.length; i++)
 		provider.storagedData[jobInfo.jobOwner][sourceCodeHash[i]].isUsed = true;
 	}
 	else
@@ -115,20 +104,20 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	emit LogRefundRequest(_provider, _key, index, jobID, payment); /* scancel log */
 	return true;
     }
-
+	
     /**
        @notice        
        * Following function is a general-purpose mechanism for performing payment withdrawal
        * by the provider provider and paying of unused core, cache, and dataTransfer usage cost 
        * back to the client
        * @param _key  | Uniqu ID for the given job.
-       * @param index_jobID | The index of the job and ID of the job to identify for workflow.
+       * @param args | The index of the job and ID of the job to identify for workflow {index, jobID}.
        * @param executionTimeMin | Execution time in minutes of the completed job.
        * @param resultIpfsHash | Ipfs hash of the generated output files.
        * @param endTime | // End time of the executed job.
-       * @param dataTransfer | dataTransfer[0] == dataTransferIn , dataTransfer[1] == dataTransferOut
+       * @param dataTransfer | dataTransfer[0] == dataTransferIn , dataTransfer[1] == dataTransferOut.
        */	
-    function receiptCheck(string memory _key, uint32[2] memory index_jobID, uint32 executionTimeMin, bytes32 resultIpfsHash, uint32 endTime, uint32[] memory dataTransfer, bytes32[] memory sourceCodeHash) public whenProviderRunning
+    function receiptCheck(string memory _key, Lib.JobIndexes memory args, uint32 executionTimeMin, bytes32 resultIpfsHash, uint32 endTime, uint32[] memory dataTransfer, bytes32[] memory sourceCodeHash) public whenProviderRunning
     {
 	require(endTime <= now, "Ahead now");
 
@@ -136,8 +125,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	   is not mapped to a job, this will throw automatically and revert all changes 
 	*/
 	Lib.Provider storage provider = provider[msg.sender];
-	Lib.Status   storage jobInfo  = provider.jobStatus[_key][index_jobID[0]];	
-	Lib.Job      storage job      = jobInfo.jobs[index_jobID[1]]; /* Used as a pointer to a storage */			
+	Lib.Status   storage jobInfo  = provider.jobStatus[_key][args.index];	
+	Lib.Job      storage job      = jobInfo.jobs[args.jobID]; /* Used as a pointer to a storage */			
 	
 	require(job.jobStateCode != Lib.JobStateCodes.COMPLETED &&
 		job.jobStateCode != Lib.JobStateCodes.REFUNDED  &&
@@ -147,7 +136,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 		);
 	
 	Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
-		
+	
 	uint amountToGain;
 	uint amountToRefund;
 	
@@ -172,7 +161,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	amountToGain = amountToGain.add(info.priceCoreMin.mul(uint32(job.core).mul(executionTimeMin)).add(info.priceDataTransfer.mul((dataTransfer[0].add(dataTransfer[1]))))); 
 	
 	// computationalCostRefund 
-	amountToRefund = amountToRefund.add(uint256(info.priceCoreMin).mul(uint256(job.core).mul((uint256(job.executionTimeMin).sub(uint256(executionTimeMin))))));
+	amountToRefund = amountToRefund.add(uint(info.priceCoreMin).mul(uint(job.core).mul((uint(job.executionTimeMin).sub(uint(executionTimeMin))))));
 	
 	if (jobInfo.dataTransferIn > 0) {
 	    amountToRefund = amountToRefund.add(info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(dataTransfer[0])))); // dataTransferRefund
@@ -184,7 +173,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	if (!provider.receiptList.receiptCheck(job, uint32(endTime), int32(info.availableCore))) {
 	    job.jobStateCode = Lib.JobStateCodes.REFUNDED; // Important to check already refunded job or not, prevents double spending
 	    jobInfo.jobOwner.transfer(jobInfo.received); // Pay back newOwned(jobInfo.received) to the client, full refund
-	    _logReceipt(_key, index_jobID, jobInfo.jobOwner, 0, jobInfo.received, resultIpfsHash, dataTransfer);
+	    _logReceipt(_key, args, jobInfo.jobOwner, 0, jobInfo.received, resultIpfsHash, dataTransfer);
 	    delete jobInfo.received;
 	    return;
 	}
@@ -199,10 +188,10 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	jobInfo.jobOwner.transfer(amountToRefund); // Unused core and bandwidth is refundedn back to the client 
 	jobInfo.received = jobInfo.received.sub(amountToRefund.add(amountToGain));
 	
-	for (uint256 i = 0; i < sourceCodeHash.length; i++)
+	for (uint i = 0; i < sourceCodeHash.length; i++)
 	    provider.storagedData[jobInfo.jobOwner][sourceCodeHash[i]].isUsed = true;
 	
-	_logReceipt(_key, index_jobID, jobInfo.jobOwner, amountToGain, amountToRefund, resultIpfsHash, dataTransfer);
+	_logReceipt(_key, args, jobInfo.jobOwner, amountToGain, amountToRefund, resultIpfsHash, dataTransfer);
 	return;
     }
 
@@ -354,36 +343,39 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
        * @param executionTimeMin | Array of minute to execute for the given jobs
        * @param dataTransferIn  | Array of the sizes of the give data files
        * @param dataTransferOut  | Size of the data to retrive from the generated outputs
-       * @param storageID_cacheType | StorageID and cacheTupe
+       * @param args | Array of storageID, cacheTupe, and prices set block number
        * @param cacheTime | Array of times to cache the data files
        * @param sourceCodeHash | Array of source code hashes
        */
-    function submitJob(address payable _provider, string memory _key, uint16[] memory core, uint16[] memory executionTimeMin, uint32[] memory dataTransferIn, uint32 dataTransferOut, uint8[] memory storageID_cacheType, uint32[] memory cacheTime, bytes32[] memory sourceCodeHash) public payable
+    function submitJob(address payable _provider, string memory _key, uint16[] memory core, uint16[] memory executionTimeMin, uint32[] memory dataTransferIn, uint32 dataTransferOut, Lib.JobArgument memory args, uint32[] memory cacheTime, bytes32[] memory sourceCodeHash) public payable
     {
-	// require(_provider != address(0), "Invalid address");
-
  	Lib.Provider storage provider = provider[_provider];
-
+	
 	require(provider.isRunning                             && // Provider must be running
 		sourceCodeHash.length > 0                      &&
 		cacheTime.length == sourceCodeHash.length      &&
 		sourceCodeHash.length == dataTransferIn.length &&
+		dataTransferIn.length == args.storageID.length &&
 		core.length == executionTimeMin.length &&		
-		storageID_cacheType[0] <= 4   &&
 		bytes(_key).length <= 255     && // Maximum _key length is 255 that will be used as folder name
-		isRequesterExists(msg.sender)      &&
+		isRequesterExists(msg.sender) &&
 		bytes(requester[msg.sender].orcID).length > 0 
 		);
 
+	for(uint i = 0; i < args.storageID.length; i++) 
+	    require(args.storageID[i] <= 4);
+
 	uint32[] memory providerInfo = pricesSetBlockNum[_provider];
 	
-	uint priceBlockKey;
+	uint priceBlockIndex;
 	if (providerInfo[providerInfo.length - 1] > block.number) // If the provider's price is updated on the future block
-	    priceBlockKey = providerInfo[providerInfo.length-2];
+	    priceBlockIndex = providerInfo[providerInfo.length-2];
 	else
-	    priceBlockKey = providerInfo[providerInfo.length-1];
+	    priceBlockIndex = providerInfo[providerInfo.length-1];
 
-	Lib.ProviderInfo memory info = provider.info[priceBlockKey];
+	require(args.priceBlockIndex == priceBlockIndex);
+	
+	Lib.ProviderInfo memory info = provider.info[priceBlockIndex];
 	
 	uint sum;	
 	uint storageCost;
@@ -394,11 +386,11 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
 	require(msg.value >= sum);
 
-	// Here returned "priceBlockKey" used as temp variable to hold pushed index value of the jobStatus struct
-	priceBlockKey = _registerJob(provider, _key, sourceCodeHash, storageCost, dataTransferIn[0], dataTransferOut, uint32(priceBlockKey), cacheTime[0]);
+	// Here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
+	priceBlockIndex = _registerJob(provider, _key, sourceCodeHash, storageCost, dataTransferIn[0], dataTransferOut, uint32(priceBlockIndex), cacheTime[0]);
 	
-	_saveCoreAndCoreMin(provider, _key, core, executionTimeMin, priceBlockKey);
-	_logJobEvent(_provider, _key, uint32(priceBlockKey), sourceCodeHash, storageID_cacheType);	
+	_saveCoreAndCoreMin(provider, _key, core, executionTimeMin, priceBlockIndex);
+	_logJobEvent(_provider, _key, uint32(priceBlockIndex), sourceCodeHash, args);	
 	return;
     }
     
@@ -418,16 +410,16 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     	
     /**
      * @dev Sets requested job's description.
-     * @param _provider | The address of the provider
-     * @param _key | The string of the _key
-     * @param jobDesc Description of the job
+     * @param _provider | The address of the provider.
+     * @param _key      | The string of the _key.
+     * @param desc      | The string of the description of the job.
      */
-    function setJobDescription(address _provider, string memory _key, string memory jobDesc) public
+    function setJobDescription(address _provider, string memory _key, string memory desc) public
 	returns (bool)
     {
 	require(msg.sender == provider[_provider].jobStatus[_key][0].jobOwner);
 	
-	emit LogJobDescription(_provider, _key, jobDesc);	
+	emit LogJobDescription(_provider, _key, desc);
 	return true;
     }
 
@@ -482,8 +474,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     function _saveCoreAndCoreMin(Lib.Provider storage provider, string memory _key, uint16[] memory core, uint16[] memory executionTimeMin, uint index) internal
     {
 	Lib.Status storage status = provider.jobStatus[_key][index];	
-	for(uint256 i = 0; i < core.length; i++) {
-	    status.jobs[i].core = core[i];    /* Requested core value for each job on the workflow*/
+	for(uint i = 0; i < core.length; i++) {
+	    status.jobs[i].core = core[i]; //Requested core value for each job on the workflow
 	    status.jobs[i].executionTimeMin = executionTimeMin[i]; 
 	}
     }
@@ -491,9 +483,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     function _calculateComputationalCost(Lib.ProviderInfo memory info, uint16[] memory  core, uint16[]  memory  executionTimeMin) internal
     	returns (uint sum)
     {
-	uint256 executionTimeMinSum;
-	for (uint256 i = 0; i < core.length; i++) {
-	    uint computationalCost = info.priceCoreMin * core[i] * executionTimeMin[i];
+	uint executionTimeMinSum;
+	for (uint i = 0; i < core.length; i++) {
+	    uint computationalCost = uint(info.priceCoreMin).mul(uint(core[i]).mul(uint(executionTimeMin[i])));
 	    executionTimeMinSum = executionTimeMinSum.add(executionTimeMin[i]);
 	    
 	    require(core[i] <= info.availableCore &&
@@ -509,7 +501,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     function _calculateCacheCost(address payable _provider, Lib.Provider storage provider, bytes32[] memory sourceCodeHash, uint32[] memory dataTransferIn, uint32 dataTransferOut, uint32[] memory cacheTime, Lib.ProviderInfo memory info) internal
 	returns (uint sum, uint32 _dataTransferIn, uint _storageCost, uint32 _cacheCost)
     {
-	for (uint256 i = 0; i < sourceCodeHash.length; i++) {
+	for (uint i = 0; i < sourceCodeHash.length; i++) {
 	    Lib.JobStorageTime storage jobSt = provider.jobSt[sourceCodeHash[i]];
 	    uint _receivedForStorage = provider.storagedData[msg.sender][sourceCodeHash[i]].received;
 
@@ -535,7 +527,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 		    _cacheCost = _cacheCost.add(info.priceCache.mul(dataTransferIn[i])); // cacheCost
 	    }
 	    else { //Data is provided by the provider with its own price
-	        uint256 _dataPrice = provider.registeredData[sourceCodeHash[i]];
+	        uint _dataPrice = provider.registeredData[sourceCodeHash[i]];
 		if (_dataPrice > 1) 
 		    _storageCost =_storageCost.add( _dataPrice);
 	    }
@@ -545,15 +537,15 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	return (sum, uint32(_dataTransferIn), uint32(_storageCost), uint32(_cacheCost));
     }    
     
-    function _logReceipt(string memory _key, uint32[2] memory index_jobID, address recipient, uint receivedWei, uint refundedWei, bytes32 resultIpfsHash, uint32[] memory dataTransfer) internal
+    function _logReceipt(string memory _key, Lib.JobIndexes memory args, address recipient, uint receivedWei, uint refundedWei, bytes32 resultIpfsHash, uint32[] memory dataTransfer) internal
 	
     {
-	emit LogReceipt(msg.sender, _key, index_jobID[0], index_jobID[1], recipient, receivedWei, refundedWei, now, resultIpfsHash, dataTransfer[0], dataTransfer[1]);
+	emit LogReceipt(msg.sender, _key, args.index, args.jobID, recipient, receivedWei, refundedWei, now, resultIpfsHash, dataTransfer[0], dataTransfer[1]);
     }
     
-    function _logJobEvent(address _provider, string memory _key, uint32 index, bytes32[] memory sourceCodeHash, uint8[] memory storageID_cacheType) internal
+    function _logJobEvent(address _provider, string memory _key, uint32 index, bytes32[] memory sourceCodeHash, Lib.JobArgument memory args) internal
     {
-	emit LogJob(_provider, _key, index, storageID_cacheType[0], sourceCodeHash, storageID_cacheType[1], msg.value);
+	emit LogJob(_provider, _key, index, args.storageID, sourceCodeHash, args.cacheType, msg.value);
     }
 
     /* --------------------------------------------GETTERS-------------------------------------------- */
@@ -615,33 +607,25 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	return providerPriceInfo;
     }
     
-
     /* Returns various information about the submitted job such as the hash of output files generated by IPFS,
        UNIX timestamp on job's start time, received Wei value from the client etc. 
     */
     function getJobInfo(address _provider, string memory _key, uint32 index, uint jobID) public view
-	returns (Lib.JobStateCodes, uint32, uint val, uint, uint, address, uint, uint)
+	returns (Lib.JobStateCodes, uint32, uint, uint, uint, address, uint, uint)
     {
-	val = provider[_provider].jobStatus[_key].length;
-        if (val == 0 || val <= index)
-	    return (Lib.JobStateCodes.SUBMITTED, 0, 0, 0, 0, address(0x0), 0, 0);
-		
 	Lib.Status storage jobInfo = provider[_provider].jobStatus[_key][index];
-		
-	return (jobInfo.jobs[jobID].jobStateCode,
-		jobInfo.jobs[jobID].core,
-		jobInfo.jobs[jobID].startTime,
-		jobInfo.received,
-		jobInfo.jobs[jobID].executionTimeMin,
-		jobInfo.jobOwner,
-		jobInfo.dataTransferIn,
-		jobInfo.dataTransferOut);
+	Lib.Job    storage job     = jobInfo.jobs[jobID];
+
+	if (job.core == 0)
+	    return (Lib.JobStateCodes.SUBMITTED, 0, 0, 0, 0, address(0x0), 0, 0);
+			
+	return (job.jobStateCode, job.core, job.startTime, jobInfo.received, job.executionTimeMin, jobInfo.jobOwner, jobInfo.dataTransferIn, jobInfo.dataTransferOut);
     }
     
     function getProviderPricesForJob(address _provider, string memory _key, uint index) public view
 	returns (uint, uint, uint, uint)
     {
-	Lib.Status      memory jobInfo     = provider[_provider].jobStatus[_key][index];
+	Lib.Status       memory jobInfo      = provider[_provider].jobStatus[_key][index];
 	Lib.ProviderInfo memory providerInfo = provider[_provider].info[jobInfo.pricesSetBlockNum];
 	    
 	return (providerInfo.priceCoreMin, providerInfo.priceDataTransfer, providerInfo.priceStorage, providerInfo.priceCache);
@@ -683,8 +667,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     {	    
 	Lib.Provider storage provider = provider[_provider];
 	
-	return (provider.jobSt[sourceCodeHash].receivedBlock,
-		uint256(provider.jobSt[sourceCodeHash].cacheDuration).div(240));
+	return (provider.jobSt[sourceCodeHash].receivedBlock, uint(provider.jobSt[sourceCodeHash].cacheDuration).div(240));
     }
 
     /* Checks whether or not the given Ethereum address of the provider 
@@ -717,7 +700,11 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	return provider[msg.sender].storagedData[jobOwner][sourceCodeHash].received;
     }
 
-    // Used for tests
+    /**
+       @notice 
+       * Returns block numbers where provider's prices are set
+       * @param _provider | The address of the provider
+       */
     function getProviderSetBlockNumbers(address _provider) external view
 	returns (uint32[] memory)
     {
@@ -733,7 +720,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
     // Used for tests 
     function getProviderReceiptNode(address _provider, uint32 index) external view
-	returns (uint256, int32)
+	returns (uint, int32)
     {
 	return provider[_provider].receiptList.printIndex(index);
     }

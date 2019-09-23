@@ -8,27 +8,40 @@ pragma solidity ^0.5.7;
 
 library Lib {
     
-    enum StorageID {
-	IPFS,          /* 0 */
-	EUDAT,         /* 1 */
-	IPFS_MINILOCK, /* 2 */
-	GITHUB,        /* 3 */
-	GDRIVE         /* 4 */
+    enum StorageID
+    {
+     IPFS,          /* 0 */
+     EUDAT,         /* 1 */
+     IPFS_MINILOCK, /* 2 */
+     GITHUB,        /* 3 */
+     GDRIVE         /* 4 */
     }
     
     /* Status of the submitted job */
-    enum JobStateCodes {
-	/* Following states {0, 1, 2} will allow to request refund */
-	SUBMITTED,   /* 0 Initial state */
-	PENDING,     /* 1 Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run. */
-	RUNNING,     /* 2 The job currently is allocated to a node and is running. */	
-	/* Following states {3, 4, 5} used to prevent double spending */
-	COMPLETED,   /* 3 The job has completed successfully. */
-	REFUNDED,    /* 4 Indicates if job is refunded */
-	CANCELLED,   /* 5 Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. */
-	TIMEOUT      /* 6 Job terminated upon reaching its time limit. */
+    enum JobStateCodes
+    {
+     /* Following states {0, 1, 2} will allow to request refund */
+     SUBMITTED,   /* 0 Initial state */
+     PENDING,     /* 1 Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run. */
+     RUNNING,     /* 2 The job currently is allocated to a node and is running. */	
+     /* Following states {3, 4, 5} used to prevent double spending */
+     COMPLETED,   /* 3 The job has completed successfully. */
+     REFUNDED,    /* 4 Indicates if job is refunded */
+     CANCELLED,   /* 5 Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. */
+     TIMEOUT      /* 6 Job terminated upon reaching its time limit. */
     }
-						    
+
+    struct JobArgument {
+	uint8[] storageID;
+	uint8   cacheType;
+	uint32  priceBlockIndex;
+    }
+
+    struct JobIndexes {
+	uint32 index;
+	uint32 jobID;
+    }
+
     struct JobStorageTime {
 	uint32 receivedBlock;
 	uint32 cacheDuration;
@@ -82,7 +95,7 @@ library Lib {
 	bool        isRunning; // Flag that checks is Provider running or not 
 
 	mapping(string  => Status[])   jobStatus; // All submitted jobs into provider 's Status is accessible
-	mapping(uint256 => ProviderInfo)     info;
+	mapping(uint256 => ProviderInfo)    info;
 	mapping(bytes32 => JobStorageTime) jobSt; // Stored information related to job's storage time 
 	mapping(bytes32 => uint256) registeredData;
 	mapping(address => mapping(bytes32  => Storage)) storagedData; 

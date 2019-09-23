@@ -1,23 +1,31 @@
 #!/usr/bin/env python3
 
-import sys, os
+import sys, os, lib
+from imports   import connect
 from isAddress import isAddress
 
-def transferOwnership(newOwner, eBlocBroker=None, web3=None):
-    if eBlocBroker is None and web3 is None:
-        from imports import connectEblocBroker, getWeb3
-        web3           = getWeb3()
-        eBlocBroker    = connectEblocBroker(web3)
+def transferOwnership(newOwner, eBlocBroker=None, w3=None):
+    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    _from = w3.toChecksumAddress(lib.PROVIDER_ID)
+    newOwner = w3.toChecksumAddress(newOwner)
 
-    import lib
+    if eBlocBroker is None or w3 is None:
+        return False, 'web3 is notconnected.'
+
     if newOwner == '0x0000000000000000000000000000000000000000':
         return False, 'Provided address is zero.'
 
-    if not web3.isAddress(newOwner):
+    if not w3.isAddress(newOwner):
         return False, 'Provided address is not valid.'
 
-    newOwner = web3.toChecksumAddress(newOwner)
-    tx = eBlocBroker.transact({"from": web3.toChecksumAddress(lib.PROVIDER_ID), "gas": 4500000}).transferOwnership(newOwner)
+    if eBlocBroker.functions.getOwner().call() == newOwner:
+        return False, 'newOwner is already the owner'
+    
+    try:
+        tx = eBlocBroker.functions.transferOwnership(newOwner).transact({"from": _from, "gas": 4500000})
+    except Exception:
+        return False, traceback.format_exc()
+    
     return True, tx.hex()
 
 if __name__ == '__main__':
@@ -25,8 +33,8 @@ if __name__ == '__main__':
         newOwner  = str(sys.argv[1])
         status, result = transferOwnership(newOwner)
         if status:
-            print('Tx_hash: ' + result)
+            print('tx_hash: ' + result)
         else:
             print(result)
     else:
-        print('Please provide the newOwner address as argument.')             
+        print('Please provide the newOwner address as argument.')
