@@ -10,21 +10,21 @@ from imports import getWeb3
 from contractCalls.submitJob   import submitJob
 from contractCalls.blockNumber import blockNumber
 
-web3 = getWeb3()
+w3 = getWeb3()
 
 f = open(home + '/TESTS/accountPassword.txt', 'r') # Password read from the file.
 accountPassword = f.read().replace("\n", "").replace(" ", "")
 f.close()
 
-def log(strIn, path, printFlag=0):
+def log(my_string, path, printFlag=0):
     if printFlag == 0:
-        print(strIn)
-    txFile = open(path + '/clientOutput.txt', 'a')
-    txFile.write( strIn + "\n" )
-    txFile.close()
+        print(my_string)
+        
+    f = open(path + '/clientOutput.txt', 'a')
+    f.write( my_string + "\n" )
+    f.close()
 
 def testFunc(path, readTest, testType, providerID, cacheType):
-    jobKeyNum = {} #create a dictionary called jobKeyNum
     counter = 0
     with open(path + '/' + readTest) as test:
         for line in test:
@@ -67,19 +67,20 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 coreMinuteGas   = 360 # 6 hours for nasEUDAT simulation test.
                 
             accountID = randint(0, 9)
-            res= web3.personal.unlockAccount(web3.eth.accounts[accountID], accountPassword) # unlocks the selected account
-            log("AccountID:" + str(accountID) + " (" + web3.eth.accounts[accountID] + ") is unlocked=>" + str(res), path)
-            log("hash: " + jobKey[0] + "| TimeToRun: " + str(coreMinuteGas) + "| TimeToRunSeconds: " + str(math.ceil(float(jobKey[1]))) +
-                "| Core: " + str(coreNum) + "| accountID: " + str(accountID), path)
+            res= w3.personal.unlockAccount(w3.eth.accounts[accountID], accountPassword) # unlocks the selected account in case if unlocks over time
+            log("AccountID:" + str(accountID) + " (" + w3.eth.accounts[accountID] + ") is unlocked=>" + str(res), path)
+            log("hash=" + jobKey[0] + "| TimeToRun=" + str(coreMinuteGas) + "| TimeToRunSeconds=" + str(math.ceil(float(jobKey[1]))) + "| Core=" + str(coreNum) + "| accountID=" + str(accountID), path)
             # ===========
             log('submitJob(' + providerID + ', ' + jobKey_ + ', ' + str(coreNum) + ', ' + str(coreMinuteGas) + ', ' + str(dataTransferIn) + ', ' +
                 str(dataTransferOut) + ', ' + str(storageID) + ', ' + jobKey_ + ', ' + str(gasStorageHour) + ', ' +
                 str(accountID) + ')', path)
 
-            ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID,
-                            sourceCodeHash, cacheType, gasStorageHour, accountID)
+            status, ret = submitJob(provider, jobKey, core_list, coreMin_list, dataTransferIn, dataTransferOut, storageID, sourceCodeHash_list,
+cacheType, cacheHour_list, accountID, jobPriceValue, eBlocBroker, w3)
+                
+            # ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, storageID, sourceCodeHash, cacheType, gasStorageHour, accountID) # delete
 
-            if 'Error' in ret:
+            if not status:
                 log(ret, path, 0)
             else:
                 tx_hash = ret[0]
@@ -101,9 +102,9 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 sys.stdout.flush()
                 time.sleep(1)
             sys.stdout.write("\rSleeping is done!\n")
-            receipt = web3.eth.getTransactionReceipt(tx_hash)
+            receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt is not None:
-                res = lib.isTransactionPassed(web3, tx_hash)
+                res = lib.isTransactionPassed(w3, tx_hash)
                 log('Tx status:' + str(res), path)
             else:
                 log('Tx is not deployed yet', path)
