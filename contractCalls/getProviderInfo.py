@@ -1,58 +1,63 @@
 #!/usr/bin/env python3
 
 import sys
+from imports import connectEblocBroker, getWeb3
 
-def getProviderInfo(providerAddress, eBlocBroker=None, web3=None): 
-    if eBlocBroker is None and web3 is None: 
-        import os
-        from imports import connectEblocBroker, getWeb3
-        web3        = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)
+def getProviderInfo(provider, eBlocBroker=None, w3=None):
+    if w3 is None:
+        w3 = getWeb3()
+        if not w3:
+            return
+       
+    if eBlocBroker is None :
+        eBlocBroker = connectEblocBroker(w3)
 
-    providerAddress = web3.toChecksumAddress(providerAddress) 
+    provider = w3.toChecksumAddress(provider) 
     
-    if str(eBlocBroker.functions.isProviderExists(providerAddress).call()) == "False":
-        print("Provider(" + providerAddress + ") is not registered. Please try again with registered Ethereum Address as provider.")
+    if str(eBlocBroker.functions.isProviderExists(provider).call()) == "False":
+        print("Provider(" + provider + ") is not registered. Please try again with registered Ethereum Address as provider.")
         sys.exit() 
 
-    providerPriceInfo  = eBlocBroker.functions.getProviderInfo(providerAddress).call()
-    blockReadFrom      = providerPriceInfo[0]
-    availableCoreNum   = providerPriceInfo[1]    
-    priceCoreMin       = providerPriceInfo[2]
-    priceDataTransfer  = providerPriceInfo[3]
-    priceStorage       = providerPriceInfo[4]
-    priceCache         = providerPriceInfo[5]
-    commitmentBlockNum = providerPriceInfo[6]
-
-    my_filter = eBlocBroker.eventFilter('LogProviderInfo', {'fromBlock': int(blockReadFrom) - 100, 'toBlock': int(blockReadFrom) + 1})
-    '''
-    my_filter = eBlocBroker.events.LogProvider.createFilter(
-        fromBlock=int(blockReadFrom),       
-        toBlock=int(blockReadFrom) + 1,
-        argument_filters={'providerAddress': str(providerAddress)}
-    )    
-    loggedJobs = my_filter.get_all_entries()
-    print(loggedJobs[0])
-    sp'''
-    # print(my_filter.get_all_entries()[0])
+    providerPriceInfo = eBlocBroker.functions.getProviderInfo(provider).call()    
+    blockReadFrom     = providerPriceInfo[0]    
+    event_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={'provider': str(provider)})
     
-    return('{0: <20}'.format('blockReadFrom: ')      + str(blockReadFrom)  + '\n' +
-           '{0: <20}'.format('availableCoreNum: ')   + str(availableCoreNum) + '\n' +
-           '{0: <20}'.format('priceCoreMin: ')       + str(priceCoreMin)  + '\n' +
-           '{0: <20}'.format('priceDataTransfer: ')  + str(priceDataTransfer)  + '\n' +
-           '{0: <20}'.format('priceStorage: ')       + str(priceStorage)  + '\n' +
-           '{0: <20}'.format('priceCache: ')         + str(priceCache)  + '\n' +
-           '{0: <20}'.format('commitmentBlockNum: ') + str(commitmentBlockNum) + '\n' +
-           '{0: <20}'.format('email: ')              + my_filter.get_all_entries()[0].args['email'] + '\n' +
-           '{0: <20}'.format('miniLockID: ')         + my_filter.get_all_entries()[0].args['miniLockID'] + '\n' +
-           '{0: <20}'.format('ipfsAddress: ')        + my_filter.get_all_entries()[0].args['ipfsAddress'] + '\n' +
-           '{0: <20}'.format('fID: ')                + my_filter.get_all_entries()[0].args['fID'] + '\n' +
-           '{0: <20}'.format('whisperPublicKey: ')   + '0x' + my_filter.get_all_entries()[0].args['whisperPublicKey']);
+    providerInfo = {'blockReadFrom':      blockReadFrom,
+                    'availableCoreNum':   providerPriceInfo[1],
+                    'priceCoreMin':       providerPriceInfo[2],
+                    'priceDataTransfer':  providerPriceInfo[3],
+                    'priceStorage':       providerPriceInfo[4],
+                    'priceCache':         providerPriceInfo[5],
+                    'commitmentBlockNum': providerPriceInfo[6],
+                    'email':              event_filter.get_all_entries()[-1].args['email'],
+                    'miniLockID':         event_filter.get_all_entries()[-1].args['miniLockID'],
+                    'ipfsAddress':        event_filter.get_all_entries()[-1].args['ipfsAddress'],
+                    'fID':                event_filter.get_all_entries()[-1].args['fID'],
+                    'whisperPublicKey':   '0x' + event_filter.get_all_entries()[-1].args['whisperPublicKey']                    
+    }
+
+    return True, providerInfo
+
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
-        providerAddress = str(sys.argv[1]) 
+        provider = str(sys.argv[1]) 
     else:        
-        providerAddress = "0x57b60037b82154ec7149142c606ba024fbb0f991"
+        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 
-    print(getProviderInfo(providerAddress))
+    status, providerInfo = getProviderInfo(provider)
+    
+    if status:
+        print('{0: <20}'.format('blockReadFrom: ')      + str(providerInfo['blockReadFrom'])      + '\n' +
+              '{0: <20}'.format('availableCoreNum: ')   + str(providerInfo['availableCoreNum'])   + '\n' +
+              '{0: <20}'.format('priceCoreMin: ')       + str(providerInfo['priceCoreMin'])       + '\n' +
+              '{0: <20}'.format('priceDataTransfer: ')  + str(providerInfo['priceDataTransfer'])  + '\n' +
+              '{0: <20}'.format('priceStorage: ')       + str(providerInfo['priceStorage'])       + '\n' +
+              '{0: <20}'.format('priceCache: ')         + str(providerInfo['priceCache'])         + '\n' +               
+              '{0: <20}'.format('commitmentBlockNum: ') + str(providerInfo['commitmentBlockNum']) + '\n' +              
+              '{0: <20}'.format('email: ')              + providerInfo['email']                   + '\n' +  
+              '{0: <20}'.format('miniLockID: ')         + providerInfo['miniLockID']              + '\n' +
+              '{0: <20}'.format('ipfsAddress: ')        + providerInfo['ipfsAddress']             + '\n' +
+              '{0: <20}'.format('fID: ')                + providerInfo['fID']                     + '\n' +
+              '{0: <20}'.format('whisperPublicKey: ')   + providerInfo['whisperPublicKey']
+        )

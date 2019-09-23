@@ -1,19 +1,11 @@
 #!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, re
-from datetime import datetime, timedelta
-from   subprocess import call
-import os.path
-from colored import stylize
-from colored import fg
-import subprocess
-import glob, errno
-from contractCalls.getJobInfo import getJobInfo
-
-globals()['shareToken'] = '-1'
-# Paths===================================================
-ipfsHashes       = lib.PROGRAM_PATH 
-# =========================================================
+import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, re, glob, errno
+from lib        import log
+from datetime   import datetime, timedelta
+from subprocess import call
+from colored    import stylize
+from colored    import fg
 
 def calculateDataTransferOut(outputFileName):    
     p1 = subprocess.Popen(['du', '-sb', outputFileName], stdout=subprocess.PIPE)
@@ -22,33 +14,22 @@ def calculateDataTransferOut(outputFileName):
     dataTransferIn = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
 
     dataTransferIn =  int(dataTransferIn) * 0.000001
-    log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
+    log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green', True, log_fname)
     return dataTransferIn
 
-def log(strIn, color=''):
-    if color != '':
-        print(stylize(strIn, fg(color))) 
-    else:
-        print(strIn)
-       
-    txFile = open(lib.LOG_PATH + '/transactions/providerOut.txt', 'a') 
-    txFile.write(strIn + "\n") 
-    txFile.close() 
-    fname = lib.LOG_PATH + '/transactions/' + globals()['jobKey'] + '_' + globals()['index'] + '_driverOutput' + '.txt'
-    txFile = open(fname, 'a') 
-    txFile.write(strIn + "\n") 
-    txFile.close() 
+def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
+    import Driver
+    eBlocBroker = Driver.eBlocBroker # global usage
+    w3 = Driver.w3 # global usage
 
-def driverGithub(jobKey, index, storageID, requesterID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
-    globals()['jobKey']    = jobKey
-    globals()['index']     = index
-    globals()['storageID'] = storageID
-  
+    globals()['jobKey']    = loggedJob.args['jobKey']
+    globals()['index']     = loggedJob.args['index']
+    globals()['storageID'] = loggedJob.args['storageID']
+    
+    shareToken = '-1'
     jobKeyGit = str(jobKey).replace("=", "/")
     dataTransferIn = 0 # if the requested file is already cached, it stays as 0                
    
-    log("key="   + jobKey) 
-    log("index=" + index)
     resultsFolderPrev = lib.PROGRAM_PATH  + "/" + requesterID + "/" + jobKey + "_" + index
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'   
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
@@ -61,22 +42,29 @@ def driverGithub(jobKey, index, storageID, requesterID, sourceCodeHash, cacheTyp
         pass; # TODO: maybe add git pull
 
     dataTransferIn = calculateDataTransferOut(resultsFolder)
-   
-    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], requesterID, resultsFolder, resultsFolderPrev,
-                   dataTransferIn, gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
+    lib.sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker,  w3)    
 
-def driverIpfs(jobKey, index, storageID, requesterID, sourceCodeHash, cacheType, gasStorageHour, eBlocBroker, web3):
-    globals()['jobKey']    = jobKey
-    globals()['index']     = index
-    globals()['storageID'] = storageID
-              
+def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
+    import Driver
+    eBlocBroker = Driver.eBlocBroker # global usage
+    w3 = Driver.w3 # global usage
+
+    globals()['jobKey']    = loggedJob.args['jobKey']
+    globals()['index']     = loggedJob.args['index']
+    globals()['storageID'] = loggedJob.args['storageID']
+    globals()['cacheType'] = loggedJob.args['cacheType']
+    globals()['sourceCodeHashes'] = loggedJob.args['sourceCodeHash']
+    globals()['log_fname'] = lib.LOG_PATH + '/transactions/' + jobKey + '_' + str(index) + '_driverOutput' + '.txt'
+    
+    shareToken = '-1'
+        
     lib.isIpfsOn()  
-    log("jobKey=" + jobKey)
-    isHashCached = lib.isHashCached(jobKey)
-    log("isHashCached=" + str(isHashCached))    
+    log("jobKey=" + jobKey, '', True, log_fname)
+    isIpfsHashCached = lib.isIpfsHashCached(jobKey)
+    log("isIpfsHashCached=" + str(isIpfsHashCached), '', True, log_fname)   
 
     dataTransferIn    = 0 # if the requested file is already cached, it stays as 0                
-    resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + index
+    resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + str(index)
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'           
 
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
@@ -85,71 +73,67 @@ def driverIpfs(jobKey, index, storageID, requesterID, sourceCodeHash, cacheType,
 
     if os.path.isfile(resultsFolder + '/' + jobKey):
        lib.silentremove(resultsFolder + '/' + jobKey)
-       
-    ipfsCallCounter = 0
-    for attempt in range(1):
-        log('Attempting to get IPFS file...', 'light_salmon_3b')
-        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
-        # cmd: timeout 300 ipfs object stat $jobKey
-        isIPFSHashExist, status = lib.runCommand(['timeout', '300', 'ipfs', 'object', 'stat', jobKey]) # Wait Max 5 minutes.
-        if not status:
-            log('Error: Failed to get IPFS file...', 'red')
-        else:
-            log(isIPFSHashExist)
-            for item in isIPFSHashExist.split("\n"):
-                if "CumulativeSize" in item:
-                    cumulativeSize = item.strip().split()[1]
-                    break
-                    # log(cumulativeSize)
-            break # Success
-    else:
-        return False
-      
-    if "CumulativeSize" in isIPFSHashExist:
-        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
-        # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor
-        # cmd: ipfs get $jobKey --output=$resultsFolder
-        res = subprocess.check_output(['ipfs', 'get', jobKey, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
-        print(res)
-        if not isHashCached:
-            dataTransferIn = cumulativeSize
-            dataTransferIn =  int(dataTransferIn) * 0.000001
-            log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
-            '''
-            if cacheType != 'none': # TODO: pin if storage is paid
-                res = subprocess.check_output(['ipfs', 'pin', 'add', jobKey]).decode('utf-8').strip() # pin downloaded ipfs hash
-                print(res)
-            '''
 
-        if storageID == '2': # Case for the ipfsMiniLock
+    cumulativeSize_list = []
+    sourceCodeHash_list = []
+    ipfsHash_list       = []
+    
+    ipfsStat, status, cumulativeSize = lib.isIpfsHashExists(jobKey, attemptCount=1)
+    ipfsHash_list.append(jobKey)
+    cumulativeSize_list.append(cumulativeSize)
+
+    if not status or not "CumulativeSize" in ipfsStat:
+        # IPFS file could not be retrieved
+        log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! Timeout for the IPFS object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red', True, log_fname)        
+        return False
+            
+    for i in range(0, len(globals()['sourceCodeHashes'])):
+        sourceCodeHash = globals()['sourceCodeHashes'][i]
+        sourceCodeHash_list.append(sourceCodeHash)        
+        sourceCodeIpfsHash = lib.convertBytes32ToIpfs(sourceCodeHash)       
+        if sourceCodeIpfsHash not in ipfsHash_list: # jobKey as data hash already may added to the list
+            ipfsStat, status, cumulativeSize = lib.isIpfsHashExists(sourceCodeIpfsHash, 1)
+            cumulativeSize_list.append(cumulativeSize)
+            ipfsHash_list.append(sourceCodeIpfsHash)
+            if not status:
+                return False
+            
+    dataTransferIn = 0
+    initialSize = lib.calculateFolderSize(resultsFolder, 'd')
+    print(initialSize)    
+    for i in range(0, len(ipfsHash_list)): # Here scripts knows that provided IPFS hashes exists
+        ipfsHash = ipfsHash_list[i]
+        log('Attempting to get IPFS file "' + ipfsHash + '"', 'light_sea_green', True, log_fname)
+        print(ipfsHash_list[i])      
+        hashedFlag = False
+        if lib.isIpfsHashCached(ipfsHash):
+            hashedFlag = True
+            log('IPFS file "' + ipfsHash + '" is already cached.', 'green', True, log_fname)
+            
+        lib.getIpfsHash(ipfsHash, resultsFolder, cacheType)               
+        if storageID == lib.StorageID.IPFS_MINILOCK.value: # Case for the ipfsMiniLock
             with open(lib.LOG_PATH + '/private/miniLockPassword.txt', 'r') as content_file:
                 passW = content_file.read().strip()
-
-            # cmd: mlck decrypt -f $resultsFolder/$jobKey --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
-            res, status  = lib.runCommand(['mlck', 'decrypt', '-f', resultsFolder + '/' + jobKey,
-                                         '--passphrase=' + passW,
-                                         '--output-file=' + resultsFolder + '/output.tar.gz'])
-            log("mlck decrypt status=" + str(status))
+                
+            # cmd: mlck decrypt -f $resultsFolder/$ipfsHash --passphrase="$passW" --output-file=$resultsFolder/output.tar.gz
+            command = ['mlck', 'decrypt', '-f', resultsFolder + '/' + ipfsHash, '--passphrase=' + passW, '--output-file=' + resultsFolder + '/output.tar.gz']
             passW = None
+            status, res = lib.executeShellCommand(command)
+            log("mlck decrypt status=" + str(status), '', True, log_fname)            
             # cmd: tar -xvf $resultsFolder/output.tar.gz -C resultsFolder
             subprocess.run(['tar', '-xvf', resultsFolder + '/output.tar.gz', '-C', resultsFolder])
-            lib.silentremove(resultsFolder + '/' + jobKey)
+            lib.silentremove(resultsFolder + '/' + ipfsHash)
             lib.silentremove(resultsFolder + '/output.tar.gz')
-                        
+
+        if not hashedFlag:
+            _folderSize = lib.calculateFolderSize(resultsFolder, 'd')
+            dataTransferIn += _folderSize - initialSize
+            initialSize = _folderSize            
+            # dataTransferIn += int(cumulativeSize) * 0.000001 # 1 MB == 10^6 Bytes
+                            
         if not os.path.isfile(resultsFolder + '/run.sh'): 
-            log("run.sh does not exist", 'red') 
-            return False 
-    else:
-        log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! timeout for ipfs object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red')  # IPFS file could not be accessed
-        return False
-   
-    lib.sbatchCall(globals()['jobKey'], globals()['index'], globals()['storageID'], globals()['shareToken'], requesterID,
-                   resultsFolder, resultsFolderPrev, dataTransferIn, gasStorageHour, sourceCodeHash, eBlocBroker,  web3)
+            log("run.sh does not exist", 'red', True, log_fname) 
+            return False
 
-# To test driverFunc.py executed as script.
-if __name__ == '__main__':
-   var       = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-   index     = "1"
-   storageID = "0"
-
-   driverIpfs(var, index, storageID) 
+    log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green', True, log_fname)
+    lib.sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker,  w3)

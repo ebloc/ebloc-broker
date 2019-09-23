@@ -5,21 +5,26 @@ import lib
 from contractCalls.submitJob import submitJob
 from lib_owncloud import isOcMounted
 from lib_owncloud import singleFolderShare
-from imports import connectEblocBroker, getWeb3
-
-web3        = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+from imports import connect
 
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
 
-def eudatSubmitJob(tarHash=None):
-    providerID='0x4e4a0750350796164D8DefC442a712B7557BF282'
-    providerAddress = web3.toChecksumAddress(providerID)
+def eudatSubmitJob(tarHash=None, eBlocBroker=None, w3=None):
+    eBlocBroker, w3 = connect(eBlocBroker, w3)        
+    if eBlocBroker is None or w3 is None:        
+        return False, 'web3 is not connected'
+    
+    provider='0x4e4a0750350796164D8DefC442a712B7557BF282'
+    providerAddress = w3.toChecksumAddress(provider)
+
+
+    
     blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getProviderInfo(providerAddress).call()
-    my_filter = eBlocBroker.eventFilter('LogProvider',{ 'fromBlock': int(blockReadFrom),
-                                                      'toBlock': int(blockReadFrom) + 1})
+    my_filter = eBlocBroker.eventFilter('LogProvider',{ 'fromBlock': int(blockReadFrom), 'toBlock': int(blockReadFrom) + 1})
     fID = my_filter.get_all_entries()[0].args['fID']
+
+
     
     if tarHash is None:
         folderToShare = 'exampleFolderToShare'    
@@ -43,12 +48,12 @@ def eudatSubmitJob(tarHash=None):
     storageID=1
     accountID=0
 
-    res = submitJob(str(providerID), str(tarHash), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
+    res = submitJob(str(provider), str(tarHash), coreNum, coreMinuteGas, str(jobDescription), storageID, str(tarHash), accountID)
     print(res)
 
 if __name__ == "__main__":
     if(len(sys.argv) == 2):
         print('Provided hash=' + sys.argv[1]) # tarHash = '656e8fca04058356f180ae4ff26c33a8'
-        eudatSubmitJob(sys.argv[1])
+        status, result = eudatSubmitJob(sys.argv[1])
     else:
-        eudatSubmitJob()
+        status, result = eudatSubmitJob()

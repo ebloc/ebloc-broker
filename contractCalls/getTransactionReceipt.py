@@ -8,12 +8,12 @@ Returns the transaction receipt specified by transaction_hash.
 If the transaction has not yet been mined returns 'None'
 '''
 
-def getTransactionReceipt(tx, web3=None):
-    if web3 is None: 
+def getTransactionReceipt(tx, w3=None):
+    if w3 is None: 
         from imports import getWeb3
-        web3 = getWeb3()
+        w3 = getWeb3()
 
-    return web3.eth.getTransactionReceipt(tx)
+    return True, w3.eth.getTransactionReceipt(tx)
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
@@ -21,5 +21,6 @@ if __name__ == '__main__':
     else:
         tx = '0xfa65c8516e81f972d1bdf801e0524aad1b2a9c54bb8e746613fb7316034f3e3e'
 
-    print(getTransactionReceipt(tx))
+    status, result = getTransactionReceipt(tx)
+    print(result)
     #print(getTransactionReceipt(tx)['blockNumber'])    

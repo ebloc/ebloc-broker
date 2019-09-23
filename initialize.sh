@@ -43,6 +43,7 @@ if [ $setup -eq 1 ]; then
     pip install -U python-dotenv
     pip install -U matplotlib
     pip install -U pydot
+    pip install -U google-colab
     pip install -e .
     # pip install sphinx_rtd_theme
         
@@ -87,6 +88,8 @@ if [ $setup -eq 1 ]; then
     echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
     # ===============================================================    
     ## gdfuse
+    # https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization
+    
     # shared_with_me=true to have read-only access to all your "Shared with me" files under ./.shared.
     sed -i.bak "s/^\(download_docs=\).*/\1false/" $HOME/.gdfuse/me/config
     # https://github.com/astrada/google-drive-ocamlfuse/issues/499#issuecomment-430269233

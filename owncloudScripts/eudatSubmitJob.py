@@ -1,74 +1,98 @@
 #!/usr/bin/env python3
 
-import os, owncloud, subprocess, sys, time
-# sys.path.insert(1, os.path.join(sys.path[0], '..'))
-import lib
-from imports import connectEblocBroker, getWeb3
+import os, owncloud, subprocess, sys, time, lib, pprint
 
-web3        = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+from contractCalls.submitJob       import submitJob
+from contractCalls.getProviderInfo import getProviderInfo
+from contract.scripts.lib          import cost
 
-from contractCalls.submitJob import submitJob
-from isOcMounted             import isOcMounted
-
+from imports      import connect, connectEblocBroker, getWeb3
+from isOcMounted  import isOcMounted
 from lib_owncloud import singleFolderShare
 from lib_owncloud import eudatInitializeFolder
 from lib_owncloud import isOcMounted
 
-def eudatSubmitJob(oc, tarHash=None): # fc33e7908fdf76f731900e9d8a382984
-    # if not isOcMounted(): sys.exit()
+def eudatSubmitJob(provider, oc, eBlocBroker=None, w3=None): # fc33e7908fdf76f731900e9d8a382984
+    eBlocBroker, w3 = connect(eBlocBroker, w3)        
+    if eBlocBroker is None or w3 is None:        
+        return False, 'web3 is not connected'
 
-    providerID='0x57b60037b82154ec7149142c606ba024fbb0f991'
-    providerAddress = web3.toChecksumAddress(providerID)
+    # if not isOcMounted():
+    #     return False, 'owncloud is not connected'
+    
+    provider =  w3.toChecksumAddress(provider) # netlab
+    status, providerInfo = getProviderInfo(provider, eBlocBroker, w3)    
+    folderToShare_list  = [] # Path of folder to share
+    sourceCodeHash_list = []
+    cacheHour_list      = []
+    coreMin_list        = []
 
-    blockReadFrom, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache = eBlocBroker.functions.getProviderInfo(providerAddress).call()
-    my_filter = eBlocBroker.eventFilter('LogProvider',{ 'fromBlock': int(blockReadFrom),
-                                                      'toBlock': int(blockReadFrom) + 1})
-    fID = my_filter.get_all_entries()[0].args['fID']
+    # Full path of the sourceCodeFolders is given
+    folderToShare_list.append('/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/sourceCode')
+    folderToShare_list.append('/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/data1')
+    
+    for i in range(0, len(folderToShare_list)):                
+        folderHash = eudatInitializeFolder(folderToShare_list[i], oc)
+        if i == 0:
+            jobKey = folderHash
 
-    if tarHash is None:
-        folderToShare = 'exampleFolderToShare' # Path of folder to share
-        tarHash = eudatInitializeFolder(folderToShare, oc)
-
-    time.sleep(1)
-    print(singleFolderShare(tarHash, oc, fID))
-    # subprocess.run(['python', 'singleFolderShare.py', tarHash])
-
+        sourceCodeHash = w3.toBytes(text=folderHash) # required to send string as bytes
+        sourceCodeHash_list.append(sourceCodeHash)
+        time.sleep(1)
+        result = singleFolderShare(folderHash, oc, providerInfo['fID'])
+        print(result)
+        
     print('\nSubmitting Job...')
-    coreNum    = 1
-    coreMinute = 5
-    dataTransferIn  = 100
-    dataTransferOut = 100
-    gasBandwidthMB  = dataTransferIn + dataTransferOut
-    gasStorageHour  = 1
-    storageID = 1
-    accountID = 0
 
-    cacheType = lib.cacheType.private
-    # cacheType = lib.cacheType.public
+    coreMin_list.append(5)    
+    coreNum         = 1
+    core_list       = [1]        
+    dataTransferIn  = [1, 1]
+    dataTransferOut = 1        
+    dataTransfer   = [dataTransferIn, dataTransferOut]                
+    storageID = lib.StorageID.EUDAT.value
 
-    tx_hash = submitJob(str(providerID), str(tarHash), coreNum, coreMinute, dataTransferIn, dataTransferOut,
-                    storageID, str(tarHash), cacheType, gasStorageHour, accountID)
+    cacheType = lib.CacheType.PUBLIC.value
+   
+    cacheHour_list = [1, 1]
 
-    tx_hash = tx_hash[0]
-    print('Tx_hash: ' + tx_hash)
-    print('Waiting job to be deployed...')
-    while True:
-        receipt = web3.eth.getTransactionReceipt(tx_hash)
-        if receipt is None:
-            time.sleep(2)
-            receipt = web3.eth.getTransactionReceipt(tx_hash)
-        else:
-            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
-            print('Job\'s index is ' + str(logs[0].args['index']))
-            break
+    jobPriceValue, _cost = cost(core_list, coreMin_list, provider, sourceCodeHash_list, dataTransferIn, dataTransferOut, cacheHour_list, eBlocBroker, w3, False)
+
+    print(sourceCodeHash_list)
+    accountID = 0    
+    status, result = submitJob(provider, jobKey, core_list, coreMin_list, dataTransferIn, dataTransferOut, storageID, sourceCodeHash_list, cacheType, cacheHour_list, accountID, jobPriceValue, eBlocBroker, w3)
+    return status, result
+
 
 if __name__ == "__main__":
+    w3          = getWeb3()
+    eBlocBroker = connectEblocBroker(w3)
+
     oc = owncloud.Client('https://b2drop.eudat.eu/')
     oc.login('059ab6ba-4030-48bb-b81b-12115f531296', 'qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9')
-
-    if(len(sys.argv) == 2):
-        print('Provided hash=' + sys.argv[1]) # tarHash = '656e8fca04058356f180ae4ff26c33a8'
-        eudatSubmitJob(oc, sys.argv[1])
+    
+    if(len(sys.argv) == 3):
+        provider = str(sys.argv[1])
+        tarHash  = sys.argv[2]
+        print('Provided hash=' + tarHash)         
     else:
-        eudatSubmitJob(oc)
+        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991" # netlab
+        
+    status, result = eudatSubmitJob(provider, oc, eBlocBroker, w3)
+    
+    if not status:
+        print(result)
+        sys.exit()
+    else:    
+        print('tx_hash: ' + result)
+        receipt = w3.eth.waitForTransactionReceipt(result)
+        print("Transaction receipt mined: \n")
+        pprint.pprint(dict(receipt))
+        print("Was transaction successful?")
+        pprint.pprint(receipt['status'])
+        if receipt['status'] == 1:
+            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+            try:
+                print("Job's index=" + str(logs[0].args['index']))
+            except IndexError:
+                print('Transaction is reverted.')

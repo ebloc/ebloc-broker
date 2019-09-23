@@ -30,9 +30,9 @@ interface eBlocBrokerInterface {
     
     // Records the submitted jobs' information under submitJob() method call 
     event LogJob(address indexed provider,
-		 string  indexed jobKey,
-		 uint32  indexed index,
-		 uint8 storageID,
+		 string  jobKey,
+		 uint32  index,
+		 uint8[] storageID,
 		 bytes32[] sourceCodeHash,
 		 uint8 cacheType,
 		 uint received);
@@ -46,7 +46,7 @@ interface eBlocBrokerInterface {
 			 string whisperPublicKey);
 
     // Records the registered requesters' registered information under registerRequester() method call.
-    event LogRequester(address requester,
+    event LogRequester(address indexed requester,
 		       string  email,
 		       string  fID,
 		       string  miniLockID,
