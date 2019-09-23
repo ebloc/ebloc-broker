@@ -2,13 +2,14 @@ from pymongo import MongoClient
 cl = MongoClient()
 coll = cl['eBlocBroker']['cache']
 
-def addItem(jobKey, sourceCodeHash, requesterID, timestamp, storageTime, storageID):
+def addItem(jobKey, sourceCodeHash_list, requesterID, timestamp, storageID, jobInfo):       
     newItem = {'jobKey'        : jobKey,
-               'sourceCodeHash': sourceCodeHash,
-               'requesterID'        : requesterID,
-               'timestamp'     : timestamp,
-               'storageTime'   : storageTime,
-               'storageID'     : storageID
+               'sourceCodeHash': sourceCodeHash_list,
+               'requesterID'   : requesterID,
+               'timestamp'     : timestamp,               
+               'storageID'     : storageID,
+               'receivedBlock' : jobInfo[0]['receivedBlock'],
+               'cacheDuration' : jobInfo[0]['cacheDuration']
     }
     x = coll.update({'jobKey':newItem['jobKey']}, newItem, True)
 

@@ -28,9 +28,9 @@ for document in cursor:
         if storageID == lib.storageID.ipfs or storageID == lib.storageID.ipfs_miniLock:
             ipfsHash = document['jobKey']
             command = ['ipfs', 'pin', 'rm', ipfsHash]
-            res = lib.runCommand(command)     
+            status, res = lib.executeShellCommand(command)     
             print(res)
-            res = lib.runCommand(['ipfs', 'repo', 'gc'])
+            status, res = lib.executeShellCommand(['ipfs', 'repo', 'gc'])
             print(res)
         else:
             cachedFileName = lib.PROGRAM_PATH + '/' + document['requesterID'] + '/cache/' + document['sourceCodeHash'] + 'tar.gz'            

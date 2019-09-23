@@ -1,42 +1,50 @@
 #!/usr/bin/env python3
 
-import sys, os
-import lib
+import sys, os, lib, traceback
+from imports import connect
 
-def receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, endTime, dataTransferIn, dataTransferSum, eBlocBroker=None, web3=None): 
-    if (storageID == 0 and len(resultIpfsHash) != 46) or (storageID == 2 and len(resultIpfsHash) != 46):
-        return False, "jobKey's length does not match with its original length. Please check your jobKey."
+# tx = eB.receiptCheck(jobKey, [index, jobID], executionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray, {"from": accounts[0]})
+
+def receiptCheck(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storageID, endTime, dataTransfer, sourceCodeHashArray, eBlocBroker=None, w3=None):    
+    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    _from = w3.toChecksumAddress(lib.PROVIDER_ID)
+
+    if len(resultIpfsHash) != 46 and (lib.StorageID.IPFS.value == storageID or lib.StorageID.IPFS_MINILOCK.value == storageID):
+        return False, "jobKey's length does not match with its original length. Please check your jobKey"
     
-    if eBlocBroker is None and web3 is None:
-        from imports import connectEblocBroker
-        from imports import getWeb3
-        web3        = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)
+    try:
+        resultIpfsHash = w3.toBytes(hexstr=lib.convertIpfsToBytes32(resultIpfsHash)) # resultIpfsHash is converted into byte32 format
         
-    tx = eBlocBroker.transact({"from":web3.toChecksumAddress(lib.PROVIDER_ID),
-                               "gas": 4500000}).receiptCheck(str(jobKey), int(index), int(jobRunTimeMinute),
-                                                             str(resultIpfsHash), int(storageID), int(endTime),
-                                                             int(dataTransferIn), int(dataTransferSum)) 
-    return True, 'Tx_hash: ' + tx.hex()
+        tx = eBlocBroker.functions.receiptCheck(jobKey, [int(index), int(jobID)], int(executionTimeMin), resultIpfsHash, int(endTime), dataTransfer, sourceCodeHashArray).transact({"from": _from, "gas": 4500000})
+    except Exception:
+        return False, traceback.format_exc()
+    
+    return True, tx.hex()
 
 if __name__ == '__main__': 
-    if len(sys.argv) == 8:
+    if len(sys.argv) == 10:
         jobKey           = str(sys.argv[1]) 
-        index            = int(sys.argv[2]) 
-        jobRunTimeMinute = int(sys.argv[3]) 
-        resultIpfsHash   = str(sys.argv[4]) 
-        storageID        = int(sys.argv[5]) 
-        endTime          = int(sys.argv[6])
-        dataTransferIn   = int(sys.argv[7])
-        dataTransferSum  = int(sys.argv[8])
+        index            = int(sys.argv[2])
+        jobID            = int(sys.argv[3])
+        executionTimeMin = int(sys.argv[4]) 
+        resultIpfsHash   = str(sys.argv[5]) 
+        storageID        = int(sys.argv[6]) 
+        endTime          = int(sys.argv[7])
+        dataTransfer     = [int(sys.argv[8]), int(sys.argv[9])]
+        sourceCodeHashArray = []
     else: # Dummy call        
-        jobKey           = '231037324805864425899587012070500513653' 
-        index            = 0
-        jobRunTimeMinute = 1
-        resultIpfsHash   = 'QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR'
+        jobKey           = 'QmY6jUjufnyB2nZe38hRZvmyboxtzRcPkP388Yjfhuomoy' 
+        index            = 4
+        jobID            = 0
+        executionTimeMin = 1
+        resultIpfsHash   = '0x'
         storageID        = 0
         endTime          = 1128590
-        dataTransferIn   = 50
-        dataTransferSum  = 100
-    
-    print(receiptCheck(jobKey, index, jobRunTimeMinute, resultIpfsHash, storageID, endTime, dataTransferIn, dataTransferSum))
+        dataTransfer     = [0, 0]
+        sourceCodeHashArray = [b'\x93\xa52\x1f\x93\xad\\\x9d\x83\xb5,\xcc\xcb\xba\xa59~\xc3\x11\xe6%\xd3\x8d\xfc+"\x185\x03\x90j\xd4'] # should pull from the job event
+
+    status, result = receiptCheck(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storageID, endTime, dataTransfer, sourceCodeHashArray)
+    if status:
+        print('tx_hash: ' + result)        
+    else:
+        print(result)
