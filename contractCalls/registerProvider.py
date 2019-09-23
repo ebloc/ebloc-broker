@@ -8,43 +8,32 @@ from os.path import expanduser
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
    
-web3        = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
-PROVIDER_ID  = web3.toChecksumAddress(os.getenv('PROVIDER_ID'))
+w3           = getWeb3()
+eBlocBroker  = connectEblocBroker(w3)
+PROVIDER_ID  = w3.toChecksumAddress(os.getenv('PROVIDER_ID'))
 
-def registerProvider(availableCoreNum, email, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage,
-                    priceCache, ipfsAddress, commitmentBlockNum):
-    account = PROVIDER_ID # The Ethereum Address that provider want to register
+def registerProvider(availableCoreNum, email, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage, priceCache, ipfsAddress, commitmentBlockNum):
     if not os.path.isfile(home + '/.eBlocBroker/whisperInfo.txt'):
-        print('Please first run: ../scripts/whisperInitialize.py')
-        sys.exit()
+        return False, 'Please first run: ../scripts/whisperInitialize.py'
     else:
         with open(home + '/.eBlocBroker/whisperInfo.txt') as json_file:
             data = json.load(json_file)
             kId = data['kId']
             whisperPubKey = data['publicKey']
             
-        if not web3.shh.hasKeyPair(kId):
-            print("Whisper node's private key of a key pair did not match with the given ID.")
-            print('Please re-run: ../scripts/whisperInitialize.py')
-            sys.exit()
+        if not w3.geth.shh.hasKeyPair(kId):
+            return False, "Whisper node's private key of a key pair did not match with the given ID.\nPlease re-run: ../scripts/whisperInitialize.py"
     
-    if isProviderExists(account):
-        print('Provider is already registered. Please call the updateProvider() function.')
-        sys.exit()
+    if isProviderExists(PROVIDER_ID):
+        return False, 'Provider is already registered. Please call the updateProvider() function.'
     
     if len(federationCloudId) < 128 and len(email) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
-        tx_hash = eBlocBroker.transact({"from":account, "gas": 4500000}).registerProvider(email, federationCloudId,
-                                                                                         miniLockId,
-                                                                                         availableCoreNum,
-                                                                                         priceCoreMin,
-                                                                                         priceDataTransfer,
-                                                                                         priceStorage,
-                                                                                         priceCache,
-                                                                                         commitmentBlockNum,
-                                                                                         ipfsAddress,
-                                                                                         whisperPubKey) 
-        print('Tx_hash: ' + tx_hash.hex()) 
+        try:
+            tx = eBlocBroker.functions.registerProvider(email, federationCloudId, miniLockId, availableCoreNum, priceCoreMin, priceDataTransfer, priceStorage, priceCache, commitmentBlockNum, ipfsAddress, whisperPubKey).transact({"from":PROVIDER_ID, "gas": 4500000})
+        except Exception:
+            return False, traceback.format_exc()
+        
+        return True, tx.hex()
 
 if __name__ == '__main__':
     availableCoreNum   = 128 
@@ -52,15 +41,19 @@ if __name__ == '__main__':
     federationCloudId  = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu" 
     miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ" 
     priceCoreMin       = 100
-    priceDataTransfer  = 10
-    priceStorage       = 10
-    priceCache         = 10
+    priceDataTransfer  = 1
+    priceStorage       = 1
+    priceCache         = 1
     commitmentBlockNum = 10
     ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 
-    registerProvider(availableCoreNum, email, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage, priceCache, ipfsAddress, commitmentBlockNum)
-    
-
-    # os.environ['ipfs'] = ipfs 
-    # ipfsID=os.popen('node bs58.js encode $ipfs').read().replace("\n", "") 
-    # ipfsIDbytes = web3.toBytes(hexstr=ipfsID)     
+    status, result = registerProvider(availableCoreNum, email, federationCloudId, miniLockId, priceCoreMin, priceDataTransfer, priceStorage, priceCache, ipfsAddress, commitmentBlockNum)    
+    if status:
+        print('tx_hash: ' + result)        
+        receipt = w3.eth.waitForTransactionReceipt(result)
+        print("Transaction receipt mined: \n")
+        pprint.pprint(dict(receipt))
+        print("Was transaction successful?")
+        pprint.pprint(receipt['status'])        
+    else:
+        print(result)

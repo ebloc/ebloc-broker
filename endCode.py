@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
 
 import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
+import hashlib
 from colored import stylize
 from colored import fg
-import hashlib
 from os.path import expanduser
 from imports import connectEblocBroker, getWeb3
-from contractCalls.getJobInfo   import getJobInfo
-from contractCalls.getRequesterInfo  import getRequesterInfo
-from contractCalls.receiptCheck import receiptCheck
+from contractCalls.getJobInfo       import getJobSourceCodeHash
+from contractCalls.getJobInfo       import getJobInfo
+from contractCalls.getRequesterInfo import getRequesterInfo
+from contractCalls.receiptCheck     import receiptCheck
 
-web3        = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+w3          = getWeb3()
+eBlocBroker = connectEblocBroker(w3)
 homeDir     = expanduser("~")
-   
+
 def log(strIn, color=''):
     if color != '':
         print(stylize(strIn, fg(color))) 
     else:
        print(strIn)
-       txFile = open(lib.LOG_PATH + '/endCodeAnalyse/' + globals()['jobKey'] + "_" + globals()['index'] + '.txt', 'a') 
+       logFileName = lib.LOG_PATH + '/endCodeAnalyse/' + globals()['jobKey'] + "_" + globals()['index'] + '.txt'
+       txFile = open(logFileName, 'a') 
        txFile.write(strIn + "\n")  
        txFile.close() 
 
@@ -31,137 +33,106 @@ def uploadResultToEudat(encodedShareToken, outputFileName):
     curl --fail -X PUT -H 'Content-Type: text/plain' -H 'Authorization: Basic 'SjQzd05XM2NNcFoybkFLOg'==' --data-binary
     '@0b2fe6dd7d8e080e84f1aa14ad4c9a0f_0.txt' https://b2drop.eudat.eu/public.php/webdav/result.txt
     '''
-    p = subprocess.Popen(['curl', '--fail', '-X', 'PUT', '-H', 'Content-Type: text/plain', '-H',
-                          'Authorization: Basic ' +  encodedShareToken,
-                          '--data-binary',  '@' + outputFileName,
-                          'https://b2drop.eudat.eu/public.php/webdav/' + outputFileName],
+    p = subprocess.Popen(['curl', '--fail', '-X', 'PUT', '-H', 'Content-Type: text/plain', '-H', 'Authorization: Basic ' +  encodedShareToken,
+                          '--data-binary',  '@' + outputFileName, 'https://b2drop.eudat.eu/public.php/webdav/' + outputFileName],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, err =  p.communicate()
+    output, err = p.communicate()
     return p, output, err
-                  
-def runCommand(command, my_env=None):
-    if my_env is None:
-        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    else :
-        p = subprocess.Popen(command, env=my_env,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
-    output, err = p.communicate()      
-    if p.returncode != 0:
-        err = err.decode('utf-8')
-        log(err, 'red')
-    return output.strip().decode('utf-8')
 
-def receiptCheckTx(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, jobID, dataTransferIn, dataTransferSum):
-    # cmd: scontrol show job jobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
-    p1 = subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=subprocess.PIPE)
+def receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, dataTransfer, sourceCodeHashArray):
+    # cmd: scontrol show job slurmJobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
+    status, output = lib.executeShellCommand(['scontrol', 'show', 'job', slurmJobID], None, True)        
+    p1 = subprocess.Popen(['echo', output], stdout=subprocess.PIPE)   
     p2 = subprocess.Popen(['grep', 'EndTime'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=EndTime=).*(?= )'], stdin=p2.stdout,stdout=subprocess.PIPE)
-    p2.stdout.close()
+    p2.stdout.close()    
     date = p3.communicate()[0].decode('utf-8').strip()
-
+        
     command = ["date", "-d", date, "+'%s'"] # cmd: date -d 2018-09-09T21:50:51 +"%s"
-    endTimeStamp = runCommand(command).replace("'","")   
-    log("endTimeStamp: " + endTimeStamp) 
+    status, endTimeStamp = lib.executeShellCommand(command, None, True)
+    endTimeStamp = endTimeStamp.replace("'","")
+    log("endTimeStamp=" + endTimeStamp) 
+
+    log('~/eBlocBroker/contractCalls/receiptCheck.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + str(storageID) + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
+    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: receiptCheck(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
+    if not status:
+        sys.exit()        
     
-    txHash = receiptCheck(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
-    while txHash == "notconnected" or txHash == "": 
-        log("Error: Please run geth on the background.", 'red')
-        log(jobKey + ' ' + index + ' ' + elapsedRawTime + ' ' + resultIpfsHash + ' ' + storageID + ' ' + endTimeStamp) 
-        txHash = receiptCheck(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransferIn, dataTransferSum, eBlocBroker, web3)
-        txHash = ''
-        time.sleep(5)      
-    log("receiptCheck() " + txHash)  
+    log("receiptCheck()_tx_hash: " + tx_hash)  
     txFile = open(lib.LOG_PATH + '/transactions/' + lib.PROVIDER_ID + '.txt', 'a') 
-    txFile.write(jobKey + "_" + index + "| Tx_hash: " + txHash + "| receiptCheckTxHash\n") 
+    txFile.write(jobKey + "_" + index + "| Tx_hash: " + tx_hash + "| receiptCheckTxHash\n") 
     txFile.close() 
 
 # Client's loaded files are removed, no need to re-upload them.
 def removeSourceCode(resultsFolderPrev, resultsFolder):
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
     command = ['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
-    filesToRemove = runCommand(command)
+    status, filesToRemove = lib.executeShellCommand(command, None, True)
     if filesToRemove != '' or filesToRemove is not None:
         log('\nFiles to be removed: \n' + filesToRemove + '\n')         
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
     subprocess.run(['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
 
-def calculateDataTransferOut(outputFileName, pathType):
-    dataTransferOut = 0
-    if pathType == 'f':
-        p1 = subprocess.Popen(['ls', '-ln', outputFileName], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(['awk', '{print $5}'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()
-        dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
-    elif pathType == 'd':
-        p1 = subprocess.Popen(['du', '-sb', outputFileName], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()
-        dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes           
-    
-    dataTransferOut =  int(dataTransferOut) * 0.000001
-    log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
-    return dataTransferOut
-
-def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
+def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     globals()['jobKey'] = jobKey
-    globals()['index']  = index 
+    globals()['index']  = index
+    jobID  = 0 # TODO: should be mapped slurmJobID
 
     # https://stackoverflow.com/a/5971326/2402577 ... https://stackoverflow.com/a/4453495/2402577
-    # my_env = os.environ.copy(); my_env["IPFS_PATH"] = homeDir + "/.ipfs"; print(my_env)
+    # my_env = os.environ.copy();
+    # my_env["IPFS_PATH"] = homeDir + "/.ipfs"
+    # print(my_env)
     os.environ["IPFS_PATH"] = homeDir + "/.ipfs"
     
     log('To run again:')
-    log('~/eBlocBroker/endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + jobID)
-    log('')
-    log("jobID: " + jobID)   
+    log('~/eBlocBroker/endCode.py ' + jobKey + ' ' + index + ' ' + storageID + ' ' + shareToken + ' ' + folderName + ' ' + slurmJobID + '\n')
+    log("slurmJobID=" + slurmJobID)   
     if jobKey == index:
         log('JobKey and index are same.', 'red') 
         sys.exit() 
-      
+
     encodedShareToken = '' 
     if shareToken != '-1':      
         encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8')
       
     log("encodedShareToken: " + encodedShareToken)          
-    jobInfo = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
-   
-    # while jobInfo == "Connection refused" or jobInfo == "" or jobInfo == "Errno" :
-    while not jobInfo or 'BadFunctionCallOutput' in jobInfo:      
-        log('jobInfo=' + jobInfo) 
-        log('getJobInfo.py ' + ' ' + lib.PROVIDER_ID + ' ' + jobKey + ' ' + index)
-        log("Error: Please run geth on the background.", 'red')
-        jobInfo = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
-        time.sleep(5)
-       
+    log('./getJobInfo.py ' + ' ' + lib.PROVIDER_ID + ' ' + jobKey + ' ' + index + ' ' + str(jobID))
+
+    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(lib.PROVIDER_ID, jobKey, index, jobID, eBlocBroker, w3), 10)
+    if not status:
+        sys.exit()        
+    
     requesterID     = jobInfo['jobOwner'].lower()
     requesterIDAddr = hashlib.md5(requesterID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
-    requesterInfo   = getRequesterInfo(requesterID, '1', eBlocBroker, web3)
+    status, requesterInfo   = getRequesterInfo(requesterID, eBlocBroker, w3)
 
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterIDAddr + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'
-   
+
+    file_name = 'receivedBlockNumber.txt'
+    if os.path.isfile(resultsFolderPrev + '/' + file_name):
+        _file = open(resultsFolderPrev + '/' + file_name, 'r')
+        receivedBlockNumber = _file.read().rstrip('\n') 
+        _file.close() 
+        log('receivedBlockNumber=' + receivedBlockNumber)
+
     lib.removeFiles(resultsFolder + '/result-*tar.gz')   
     # cmd: find ./ -size 0 -print0 | xargs -0 rm
     p1 = subprocess.Popen(['find', resultsFolder, '-size', '0', '-print0'], stdout=subprocess.PIPE)
-    #-----------
     p2 = subprocess.Popen(['xargs', '-0', '-r', 'rm'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    #-----------
     p2.communicate() # Remove empty files if exist
     
     # cmd: find ./ -type d -empty -delete | xargs -0 rmdir 
     subprocess.run(['find', resultsFolder, '-type', 'd', '-empty', '-delete'])    
     p1 = subprocess.Popen(['find', resultsFolder, '-type', 'd', '-empty', '-print0'], stdout=subprocess.PIPE)
-    #-----------
     p2 = subprocess.Popen(['xargs', '-0', '-r', 'rmdir'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    #-----------
     p2.communicate() # Remove empty folders if exist      
 
     log("\nwhoami: "          + getpass.getuser() + ' ' + str(os.getegid())) # whoami
-    log("homeDir: "           + homeDir)
+    log("homeDir: "           + homeDir) # $HOME
     log("pwd: "               + os.getcwd()) # pwd
     log("resultsFolder: "     + resultsFolder) 
     log("jobKey: "            + jobKey) 
@@ -170,8 +141,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
     log("shareToken: "        + shareToken) 
     log("encodedShareToken: " + encodedShareToken)    
     log("folderName: "        + folderName) 
-    log("providerID: "         + lib.PROVIDER_ID) 
-    log("requesterIDAddr: "        + requesterIDAddr)
+    log("providerID: "        + lib.PROVIDER_ID) 
+    log("requesterIDAddr: "   + requesterIDAddr)
     log("received: "          + str(jobInfo['received']))
 
     dataTransferIn = 0
@@ -182,52 +153,62 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
     else:
         log('dataTransferIn.txt does not exist...', 'red')
        
-    log('dataTransferIn=' + str(dataTransferIn) + ' MB  | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')  
-    if os.path.isfile(resultsFolderPrev + '/modifiedDate.txt'):
-        fDate = open(resultsFolderPrev + '/modifiedDate.txt', 'r')
-        modifiedDate = fDate.read().rstrip('\n') 
-        fDate.close() 
-        log(modifiedDate) 
-
+    log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')
+    file_name = 'modifiedDate.txt'
+    if os.path.isfile(resultsFolderPrev + '/' + file_name):
+        _file = open(resultsFolderPrev + '/' + file_name, 'r')
+        modifiedDate = _file.read().rstrip('\n') 
+        _file.close() 
+        log('modifiedDate=' + modifiedDate)
+        
+    miniLockID = requesterInfo['miniLockID']                   
     log("\njobOwner's Info: ")  
-    log('{0: <13}'.format('userEmail: ')   + requesterInfo[1])
-    log('{0: <13}'.format('miniLockID: ')  + requesterInfo[2])
-    log('{0: <13}'.format('ipfsAddress: ') + requesterInfo[3])
-    log('{0: <13}'.format('fID: ')         + requesterInfo[4])
-    clientMiniLockID = requesterInfo[2]       
+    log('{0: <13}'.format('email: ')       + requesterInfo['email'])
+    log('{0: <13}'.format('miniLockID: ')  + miniLockID)
+    log('{0: <13}'.format('ipfsAddress: ') + requesterInfo['ipfsAddress'])
+    log('{0: <13}'.format('fID: ')         + requesterInfo['fID'])
     log("")    
-    if jobInfo['status'] == str(lib.job_state_code['COMPLETED']):
-        log('Job is already get paid.', 'red') 
+
+    if jobInfo['stateCode'] == str(lib.job_state_code['COMPLETED']):
+        log('Job is completed and already get paid.', 'red') 
         sys.exit() 
 
-    clientTimeLimit = jobInfo['coreMinuteGas'] 
-    log("clientGasMinuteLimit: " + str(clientTimeLimit))  # Clients minuteGas for the job            
-    countTry = 0 
+    executionTimeMin = jobInfo['executionTimeMin'] 
+    log("requesterExecutionTime: " + str(executionTimeMin) + ' minutes')  # Clients minuteGas for the job    
+    count = 0 
     while True: 
-        #if countTry > 200: # setJobStatus may deploy late.
-        #   sys.exit()
-        countTry += 1                  
-        log("Waiting for " + str(countTry * 15) + ' seconds to pass...', 'yellow')  
-        if jobInfo['status'] == lib.job_state_code['RUNNING']: # It will come here eventually, when setJob() is deployed.
+        if count > 10: 
+           sys.exit()
+           
+        count += 1                          
+        if jobInfo['stateCode'] == lib.job_state_code['RUNNING']: # It will come here eventually, when setJob() is deployed.
             log("Job has been started.", 'green')  
             break  # Wait until does values updated on the blockchain
       
-        if jobInfo['status'] == lib.job_state_code['COMPLETED']: 
-            log("Error: Already completed job and its money is received.", 'red')  
+        if jobInfo['stateCode'] == lib.job_state_code['COMPLETED']: 
+            log("Error: Job is already completed job and its money is received.", 'red')  
             sys.exit()  # Detects an error on the SLURM side
 
-        jobInfo = getJobInfo(lib.PROVIDER_ID, jobKey, index, eBlocBroker, web3)
-        lib.web3Exception(jobInfo)      
-        time.sleep(15) # Short sleep here so this loop is not keeping CPU busy
-      
-    log("jobName: " + str(folderName))    
-    # cmd: scontrol show job $jobID > $resultsFolder/slurmJobInfo.out
-    with open(resultsFolder + '/slurmJobInfo.out', 'w') as stdout:
-        subprocess.Popen(['scontrol', 'show', 'job', jobID], stdout=stdout)
-        log('Writing into slurmJobInfo.out is done.', 'green')
+        status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(lib.PROVIDER_ID, jobKey, index, jobID, eBlocBroker, w3), 10)
+        if not status:
+            sys.exit()
+            
+        log("Waiting for " + str(count * 15) + ' seconds to pass...', 'yellow')  
+        time.sleep(15) # Short sleep here so this loop is not keeping CPU busy //setJobStatus may deploy late.
 
-    command = ['sacct', '-n', '-X', '-j', jobID, '--format=Elapsed'] # cmd: sacct -n -X -j $jobID --format="Elapsed"
-    elapsedTime = runCommand(command)
+    # sourceCodeHashes of the completed job is obtained from its logged event    
+    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobSourceCodeHash(jobInfo, lib.PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
+    if not status:
+        sys.exit()        
+
+    log("jobName: " + str(folderName))        
+    with open(resultsFolder + '/slurmJobInfo.out', 'w') as stdout:        
+        command = ['scontrol', 'show', 'job', slurmJobID] # cmd: scontrol show job $slurmJobID > $resultsFolder/slurmJobInfo.out
+        subprocess.Popen(command, stdout=stdout)
+        log('Writing into slurmJobInfo.out file is completed', 'green')
+
+    command = ['sacct', '-n', '-X', '-j', slurmJobID, '--format=Elapsed'] # cmd: sacct -n -X -j $slurmJobID --format="Elapsed"
+    status, elapsedTime = lib.executeShellCommand(command, None, True)
     log("ElapsedTime: " + elapsedTime) 
 
     elapsedTime    = elapsedTime.split(':') 
@@ -242,30 +223,30 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         elapsedHour = elapsedHour[1] 
 
     elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1 
-    log("ElapsedRawTime: " + str(elapsedRawTime))
+    log("ElapsedRawTime=" + str(elapsedRawTime))
 
-    if elapsedRawTime > int(clientTimeLimit):
-        elapsedRawTime = clientTimeLimit 
+    if elapsedRawTime > int(executionTimeMin):
+        elapsedRawTime = executionTimeMin 
 
     log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
     log("jobInfo: " + str(jobInfo))
     outputFileName = 'result-' + lib.PROVIDER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
-   
+
     # Here we know that job is already completed 
-    if str(storageID) == '0' or str(storageID) == '3': # IPFS or GitHub
+    if storageID == str(lib.StorageID.IPFS.value) or storageID == str(lib.StorageID.GITHUB.value):
         removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
             command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
-            resultIpfsHash = runCommand(command)
+            status, resultIpfsHash = lib.executeShellCommand(command, None, True)
             if resultIpfsHash == "":
                 ''' Approach to upload as .tar.gz. Currently not used.
                 removeSourceCode(resultsFolderPrev)
                 with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
                 date = content_file.read().strip()
                 command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
-                log(runCommand(command))
+                log(lib.executeShellCommand(command, None, True))
                 command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
-                resultIpfsHash = runCommand(command)
+                status, resultIpfsHash = lib.executeShellCommand(command)
                 resultIpfsHash = resultIpfsHash.split(' ')[1]
                 lib.silentremove(resultsFolder + '/result.tar.gz')
                 '''
@@ -276,7 +257,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         else: # we failed all the attempts - abort
             sys.exit()
                 
-        # dataTransferOut = calculateDataTransferOut(resultsFolder, 'd')   
+        # dataTransferOut = lib.calculateFolderSize(resultsFolder, 'd')
+        # log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
         # cmd: echo resultIpfsHash | tail -n1 | awk '{print $2}'
         p1 = subprocess.Popen(['echo', resultIpfsHash], stdout=subprocess.PIPE)        
         p2 = subprocess.Popen(['tail', '-n1'], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -287,12 +269,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         log("resultIpfsHash: " + resultIpfsHash)
 
         command = ['ipfs', 'pin', 'add', resultIpfsHash]
-        res = runCommand(command) # pin downloaded ipfs hash
+        status, res = lib.executeShellCommand(command, None, True) # pin downloaded ipfs hash
         print(res)
 
         command = ['ipfs', 'object', 'stat', resultIpfsHash]
-        isIPFSHashExist = runCommand(command) # pin downloaded ipfs hash
-        
+        status, isIPFSHashExist = lib.executeShellCommand(command, None, True) # pin downloaded ipfs hash        
         for item in isIPFSHashExist.split("\n"):
             if "CumulativeSize" in item:
                 dataTransferOut = item.strip().split()[1]
@@ -300,22 +281,23 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             
         dataTransferOut = int(dataTransferOut) * 0.000001
         log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')   
-    if str(storageID) == '2': # IPFS with miniLock
+    if storageID == str(lib.StorageID.IPFS_MINILOCK.value):
         os.chdir(resultsFolder) 
         with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
             
-        command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")    
-        log(runCommand(command))            
-        # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $clientMiniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
-        command = ['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', clientMiniLockID,
-                   '--anonymous', '--output-file=' + resultsFolder + '/result.tar.gz.minilock']
-        res = runCommand(command)
+        command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
+        status, result = lib.executeShellCommand(command, None, True)
+        log(result)            
+        # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $miniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
+        command = ['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', miniLockID, '--anonymous',
+                   '--output-file=' + resultsFolder + '/result.tar.gz.minilock']
+        status, res = lib.executeShellCommand(command, None, True)
         log(res)      
         removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
             command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
-            resultIpfsHash = runCommand(command)
+            status, resultIpfsHash = lib.executeShellCommand(command, None, True)
             resultIpfsHash = resultIpfsHash.split(' ')[1]
             if resultIpfsHash == "":
                 log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
@@ -325,13 +307,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         else: # we failed all the attempts - abort
             sys.exit()
                    
-        # dataTransferOut = calculateDataTransferOut(resultsFolder + '/result.tar.gz.minilock', 'f')   
+        # dataTransferOut = lib.calculateFolderSize(resultsFolder + '/result.tar.gz.minilock', 'f')
+        # log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
         log("resultIpfsHash: " + resultIpfsHash)
         command = ['ipfs', 'pin', 'add', resultIpfsHash]
-        res = runCommand(command)     
+        status, res = lib.executeShellCommand(command, None, True)     
         print(res)
         command = ['ipfs', 'object', 'stat', resultIpfsHash]      
-        isIPFSHashExist = runCommand(command)
+        status, isIPFSHashExist = lib.executeShellCommand(command, None, True)
         for item in isIPFSHashExist.split("\n"):
             if "CumulativeSize" in item:
                 dataTransferOut = item.strip().split()[1]
@@ -339,7 +322,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
             
         dataTransferOut = int(dataTransferOut) * 0.000001
         log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')         
-    elif str(storageID) == '1': # EUDAT
+    elif storageID == str(lib.StorageID.EUDAT.value):
         log('Entered into Eudat case')
         resultIpfsHash = ''
         lib.removeFiles(resultsFolder + '/.node-xmlhttprequest*')      
@@ -347,13 +330,15 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         removeSourceCode(resultsFolderPrev, resultsFolder)      
         # cmd: tar -jcvf result-$providerID-$index.tar.gz *
         # command = ['tar', '-jcvf', outputFileName] + glob.glob("*")      
-        # log(runCommand(command))
+        # log(lib.executeShellCommand(command))
         with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
 
-        command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")   
-        log('Files to be archived using tar: \n' + runCommand(command))
-        dataTransferOut = calculateDataTransferOut(outputFileName, 'f')      
+        command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
+        status, result = lib.executeShellCommand(command, None, True)
+        log('Files to be archived using tar: \n' + result)
+        dataTransferOut = lib.calculateFolderSize(outputFileName, 'f')
+        log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
         for attempt in range(5):
             p, output, err = uploadResultToEudat(encodedShareToken, outputFileName)
             output = output.strip().decode('utf-8')
@@ -366,11 +351,12 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
                 break    
         else: # we failed all the attempts - abort            
             sys.exit()         
-    elif str(storageID) == '4': #GDRIVE
+    elif storageID == str(lib.StorageID.GDRIVE.value):
         resultIpfsHash = ''
         #cmd: gdrive info $jobKey -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost
-        gdriveInfo, status = lib.subprocessCallAttempt([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
-        if not status: return False
+        status, gdriveInfo = lib.subprocessCallAttempt([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
+        if not status:
+            return False
    
         mimeType = lib.getMimeType(gdriveInfo)            
         log('mimeType=' + str(mimeType))                
@@ -380,40 +366,40 @@ def endCall(jobKey, index, storageID, shareToken, folderName, jobID):
         with open(resultsFolderPrev + '/modifiedDate.txt', 'r') as content_file:
             date = content_file.read().rstrip()
             
-        command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")    
-        log(runCommand(command))            
+        command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
+        status, result = lib.executeShellCommand(command, None, True)
+        log(result)            
         time.sleep(0.25) 
-        dataTransferOut = calculateDataTransferOut(outputFileName, 'f')
+        dataTransferOut = lib.calculateFolderSize(outputFileName, 'f')
+        log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
         if 'folder' in mimeType: # Received job is in folder format
             log('mimeType=folder')                        
             # cmd: $GDRIVE upload --parent $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'upload', '--parent', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
-            res, status = lib.subprocessCallAttempt(command, 500)            
+            status, res = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         elif 'gzip' in mimeType: # Received job is in folder tar.gz
             log('mimeType=tar.gz')
             # cmd: $GDRIVE update $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
-            res, status = lib.subprocessCallAttempt(command, 500)            
+            status, res = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         elif '/zip' in mimeType: # Received job is in zip format
             log('mimeType: zip')
             # cmd: $GDRIVE update $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
-            res, status = lib.subprocessCallAttempt(command, 500)            
+            status, res = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         else:
             log('Error: Files could not be uploaded', 'red')
             sys.exit()
-
-    if resultIpfsHash != '':
-        hex_str        = lib.convertIpfsToBytes32(resultIpfsHash)
-        resultIpfsHash = web3.toBytes(hexstr= hex_str) # resultIpfsHash is converted into byte32 format
             
-    dataTransferSum = dataTransferIn + dataTransferOut   
-    log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
-    receiptCheckTx(jobKey, index, elapsedRawTime, resultIpfsHash, storageID, jobID, dataTransferIn, dataTransferSum)
-    log('DONE.', 'green')
+    dataTransferSum = dataTransferIn + dataTransferOut
+    log('dataTransferIn='  + str(dataTransferIn)  + ' MB | Rounded=' + str(int(dataTransferIn))  + ' MB', 'green')
+    log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
+    log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferSum)) + ' MB', 'green')
+    receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, [int(dataTransferIn), int(dataTransferOut)], jobInfo['sourceCodeHash'])
+    log('===COMPLETED===', 'green')
     '''
     # Removed downloaded code from local since it is not needed anymore
     if os.path.isdir(resultsFolderPrev):
@@ -425,6 +411,6 @@ if __name__ == '__main__':
     storageID   = sys.argv[3] 
     shareToken  = sys.argv[4] 
     folderName  = sys.argv[5] 
-    jobID       = sys.argv[6] 
+    slurmJobID  = sys.argv[6] 
 
-    endCall(jobKey, index, storageID, shareToken, folderName, jobID)
+    endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID)

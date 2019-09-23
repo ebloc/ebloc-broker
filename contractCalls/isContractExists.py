@@ -3,21 +3,21 @@
 import sys, json
 from os.path import expanduser
 
-def isContractExists(web3=None):
+def isContractExists(w3=None):
     home     = expanduser("~")
     contract = json.loads(open(home + '/eBlocBroker/contractCalls/contract.json').read())    
     contractAddress = contract['address']
 
-    if web3 is None:
+    if w3 is None:
         import os        
         from imports import getWeb3
-        web3 = getWeb3()
+        w3 = getWeb3()
         
-    contractAddress = web3.toChecksumAddress(contractAddress)   
-    if web3.eth.getCode(contractAddress) == '0x' or web3.eth.getCode(contractAddress) == b'':
+    contractAddress = w3.toChecksumAddress(contractAddress)   
+    if w3.eth.getCode(contractAddress) == '0x' or w3.eth.getCode(contractAddress) == b'':
         return False
 
     return True
 
 if __name__ == '__main__':
-    print(isContractExists())
+    print('isContractExists=' + str(isContractExists()))
