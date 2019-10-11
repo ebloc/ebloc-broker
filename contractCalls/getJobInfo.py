@@ -41,7 +41,7 @@ def getJobInfo(provider, jobKey, index, jobID, eBlocBroker=None, w3=None, receiv
                    'priceCoreMin':        jobPrices[0],
                    'priceDataTransfer':   jobPrices[1],
                    'priceStorage':        jobPrices[2],
-                   'priceCache':           jobPrices[3],
+                   'priceCache':          jobPrices[3],
                    'resultIpfsHash':       "",
                    'endTime':              None,
                    'refundedWei':          None,
@@ -56,7 +56,7 @@ def getJobInfo(provider, jobKey, index, jobID, eBlocBroker=None, w3=None, receiv
         event_filter = eBlocBroker.events.LogReceipt.createFilter(fromBlock=int(receivedBlockNumber), toBlock="latest", argument_filters={'provider': str(provider)})
         loggedReceipts = event_filter.get_all_entries()    
         for i in range(0, len(loggedReceipts)):
-            if loggedReceipts[i].args['jobKey'] == jobKey and loggedReceipts[i].args['index'] == int(index):
+            if loggedReceipts[i].args['jobKey'] == jobKey and loggedReceipts[i].args['index'] == int(index):                
                 jobInfo.update( {'resultIpfsHash'       : loggedReceipts[i].args['resultIpfsHash']} )
                 jobInfo.update( {'endTime'              : loggedReceipts[i].args['endTime']} )
                 jobInfo.update( {'receivedWei'          : loggedReceipts[i].args['receivedWei']} )

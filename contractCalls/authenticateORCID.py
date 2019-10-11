@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import sys, traceback
+import sys, traceback, pprint
 from isRequesterExists import isRequesterExists
-from imports import connect, getWeb3
+from imports  import connect, connectEblocBroker, getWeb3
 from getOwner import getOwner
 from isOwner  import isOwner
 
@@ -37,18 +37,24 @@ def authenticateORCID(requester, orcID, eBlocBroker=None, w3=None):
 
         return True, tx.hex()
     else:
-        return False, 'requesterAddress: ' + requester + 'that has OrcID: ' + orcID + ' is already authenticated.'
+        return False, 'requesterAddress: ' + requester + ' that has OrcID: ' + orcID + ' is already authenticated.'
     
-if __name__ == '__main__': 
+if __name__ == '__main__':
+    w3          = getWeb3()
+    eBlocBroker = connectEblocBroker(w3)
+    
     if len(sys.argv) == 3:
         requester = str(sys.argv[1]) 
-        orcID = str(sys.argv[2]) 
+        orcID     = str(sys.argv[2]) 
     else:
-        requester = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
+        print('Please provide the requester address and its orcID as argument.')
+        sys.exit()
+        # ./authenticateORCID.py 0x57b60037b82154ec7149142c606ba024fbb0f991 0000-0001-7642-0552
+        # requester = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
         # requester = '0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5' # prc        
-        orcID       = '0000-0001-7642-0552'
+        # orcID       = '0000-0001-7642-0552'
 
-    status, result = authenticateORCID(requester, orcID)
+    status, result = authenticateORCID(requester, orcID, eBlocBroker, w3)
     if status:
         print('tx_hash: ' + result)        
         receipt = w3.eth.waitForTransactionReceipt(result)

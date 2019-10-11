@@ -73,10 +73,10 @@ if [ $setup -eq 1 ]; then
     fi
 
     ## install go--------------------------------------------------
-    sudo add-apt-repository ppa:gophers/archive
+    sudo add-apt-repository ppa:hnakamur/golang-1.13
     sudo apt-get update
-    sudo apt-get install golang-1.11-go
-    echo "export PATH=$PATH:/usr/lib/go-1.11/bin" >> $HOME/.profile
+    sudo apt-get install golang-1.12-go
+    echo "export PATH=$PATH:/usr/lib/go-1.12/bin" >> $HOME/.profile
     # -------------------------------------------------------------
     
     ## Install google-drive: ========================================
