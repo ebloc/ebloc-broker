@@ -116,8 +116,8 @@ def test_multipleData(eB, rpc, web3):
     coreMinArray    = [10]
 
     providerPriceBlockNumber = eB.getProviderSetBlockNumbers(accounts[0])[-1]
-    storageID_list = [scripts.lib.storageID.ipfs, scripts.lib.storageID.ipfs]
-    storageID_cacheType = [storageID_list, scripts.lib.cacheType.private, providerPriceBlockNumber]
+    storageID_list = [scripts.lib.storageID.IPFS, scripts.lib.storageID.IPFS]
+    storageID_cacheType = [storageID_list, scripts.lib.cacheType.PRIVATE, providerPriceBlockNumber]
     
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, eB, web3)
 
@@ -208,8 +208,8 @@ def test_workFlow(eB, rpc, web3):
     coreArray       = [2,   4,  2]    
     coreMinArray    = [10, 15, 20]
 
-    storageID_list = [scripts.lib.storageID.ipfs]
-    storageID_cacheType = [storageID_list, scripts.lib.cacheType.private, eB.getProviderSetBlockNumbers(accounts[0])[-1]]
+    storageID_list = [scripts.lib.storageID.IPFS]
+    storageID_cacheType = [storageID_list, scripts.lib.cacheType.PRIVATE, eB.getProviderSetBlockNumbers(accounts[0])[-1]]
 
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, eB, web3)
     
@@ -347,13 +347,13 @@ def test_submitJob(eB, rpc, web3):
             dataTransferOut = 100            
 
             dataTransferInArray = [dataTransferIn]
-            storageID_list = [scripts.lib.storageID.ipfs]
+            storageID_list = [scripts.lib.storageID.IPFS]
             
             # print(sourceCodeHashArray[0])
             jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, eB, web3)
             
             jobPriceValueSum   += jobPriceValue            
-            storageID_cacheType = [storageID_list, scripts.lib.cacheType.private, eB.getProviderSetBlockNumbers(accounts[0])[-1]]
+            storageID_cacheType = [storageID_list, scripts.lib.cacheType.PRIVATE, eB.getProviderSetBlockNumbers(accounts[0])[-1]]
             dataTransferInArray = [dataTransferIn]
             
             tx = eB.submitJob(_provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut,

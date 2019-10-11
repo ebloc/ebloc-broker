@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-import subprocess, sys, os, lib, pprint, json, shutil
+import subprocess, sys, os, pprint, json, shutil
+
+from jsondiff import diff
+from lib import compressFolder, log, StorageID, CacheType, printc
 from contractCalls.submitJob       import submitJob
 from contractCalls.getProviderInfo import getProviderInfo
 from contract.scripts.lib          import cost
 from imports import connect, connectEblocBroker, getWeb3
 
-globals()['folderName_hash'] = {}
+globals()['folderName_tarHash'] = {}
 
 def gdriveUpload(folderToShare, jobKeyFlag=False):
     alreadyUploaded = False
@@ -30,20 +33,23 @@ def gdriveUpload(folderToShare, jobKeyFlag=False):
             res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
             key = res.split(' ')[0]
     '''
-    if jobKeyFlag: # tar.gz inside a folder 
-        dir_path = os.path.dirname(folderToShare)
-        tarHash = lib.compressFolder(folderToShare)
+    if jobKeyFlag: # tar.gz inside a folder
+        # TODO: icine dataFiles 'i gom
+        dir_path = os.path.dirname(folderToShare)          
+        ipfsHash, tarHash = compressFolder(folderToShare)
         if not os.path.exists(dir_path + '/' + tarHash):
             os.mkdir(dir_path + '/' + tarHash)
             
-        shutil.move(dir_path + '/' + tarHash + '.tar.gz', dir_path + '/' + tarHash + '/' + tarHash + '.tar.gz')        
+        shutil.move(dir_path + '/' + tarHash + '.tar.gz', dir_path + '/' + tarHash + '/' + tarHash + '.tar.gz')
+        shutil.copyfile(folderToShare + '/dataFiles.json', dir_path + '/' + tarHash + '/dataFiles.json')       
+        
         res = subprocess.check_output(['gdrive', 'list', '--query', 'name=' + '\'' + tarHash + '\'', '--no-header']).decode('utf-8').strip()
         if res == '':        
             res = subprocess.check_output(['gdrive', 'upload', '--recursive', dir_path + '/' + tarHash]).decode('utf-8').strip()                        
             res = subprocess.check_output(['gdrive', 'list', '--query', 'name=' + '\'' + tarHash + '\'', '--no-header']).decode('utf-8').strip()
             key = res.split(' ')[0]
         else:
-            lib.log('Requested folder ' + tarHash + ' is already uploaded', 'green')
+            printc('Requested folder ' + tarHash + ' is already uploaded', 'green')
             # print(res)
             key = res.partition('\n')[0].split()[0]
             alreadyUploaded = True
@@ -51,10 +57,10 @@ def gdriveUpload(folderToShare, jobKeyFlag=False):
         shutil.rmtree(dir_path + '/' + tarHash) # created .tar.gz files are removed
     elif folderType == 'tar':
         dir_path = os.path.dirname(folderToShare)
-        tarHash = lib.compressFolder(folderToShare)
+        ipfsHash, tarHash = compressFolder(folderToShare)
         res = subprocess.check_output(['gdrive', 'list', '--query', 'name=' + '\'' + tarHash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()      
         # res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()
-        if res == '':        
+        if res == '':
             # subprocess.run(['mv', folderToShare + '.tar.gz', tarHash + '.tar.gz'])                
             subprocess.run(['gdrive', 'upload', dir_path + '/' + tarHash + '.tar.gz'])    
             subprocess.run(['rm', '-f', dir_path + '/' + tarHash + '.tar.gz'])
@@ -62,10 +68,11 @@ def gdriveUpload(folderToShare, jobKeyFlag=False):
             # res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()
             key = res.split(' ')[0]
         else:
-            lib.log('Requested file ' + tarHash + '.tar.gz' + ' is already uploaded', 'green')
+            printc('Requested file ' + tarHash + '.tar.gz' + ' is already uploaded', 'green')
             key = res.partition('\n')[0].split()[0]
             subprocess.run(['rm', '-f', dir_path + '/' + tarHash + '.tar.gz']) # created .tar.gz files are removed
             alreadyUploaded = True
+    '''
     elif folderType == 'zip':
         # zip -r myfiles.zip mydir
         subprocess.run(['zip', '-r', folderToShare + '.zip', folderToShare])
@@ -81,21 +88,22 @@ def gdriveUpload(folderToShare, jobKeyFlag=False):
         print('hash=' + tarHash)
         res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '.zip' + '\'', '--no-header']).decode('utf-8').strip()
         key = res.split(' ')[0]
-
-    globals()['folderName_hash'][folderToShare] = tarHash    
+    '''
+    
+    globals()['folderName_tarHash'][folderToShare] = {'ipfsHash': ipfsHash, 'tarHash': tarHash}
+    # globals()['folderName_hash'][folderToShare] = tarHash    
     return key, alreadyUploaded
 
 def shareFolder(folderToShare, providerToShare, jobKeyFlag=False):
     print('folderToShare=' + folderToShare)
     jobKey, alreadyUploaded = gdriveUpload(folderToShare, jobKeyFlag)
-    globals()['jobKey_dict'][folderName_hash[folderToShare]] = jobKey    
+    _tarHash = folderName_tarHash[folderToShare]['tarHash']
+    globals()['jobKey_dict'][_tarHash] = jobKey
     print('jobKey=' + jobKey)
     #cmd: gdrive share $jobKey --role writer --type user --email $providerToShare
     if not alreadyUploaded:
         res = subprocess.check_output(['gdrive', 'share', jobKey, '--role', 'writer', '--type', 'user', '--email', providerToShare]).decode('utf-8').strip()
-        print('share_output=' + res)
-        
-    print('')                
+        print('share_output=' + res)        
     
 def gdriveSubmitJob(provider, eBlocBroker, w3):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
@@ -124,19 +132,24 @@ def gdriveSubmitJob(provider, eBlocBroker, w3):
         if len(folderToShare_list) > 1:
             for i in range(1, len(folderToShare_list)):        
                 folderToShare = folderToShare_list[i]
-                shareFolder(folderToShare, providerToShare)
-            
-            dataFileJson_path = folderToShare_list[0] + '/.dataFiles.json'
-            if os.path.isfile(dataFileJson_path) and str(jobKey_dict).replace("'", "\"") == ' '.join(open(dataFileJson_path).read().split('\n')):                
-                print('dataFile.json file already exists')
-            else:
-                with open(sourceCodePath + '/.dataFiles.json', 'w') as f:
+                shareFolder(folderToShare, providerToShare) # Attempting to share the data folder
+
+            dataFileJson_path = folderToShare_list[0] + '/dataFiles.json'
+            if os.path.isfile(dataFileJson_path):            
+                with open(dataFileJson_path) as json_file:
+                    data_j = json.load(json_file)
+
+            if os.path.isfile(dataFileJson_path) and jobKey_dict == data_j:
+                printc('dataFile.json file already exists', 'green')
+            else:                
+                with open(sourceCodePath + '/dataFiles.json', 'w') as f:
                     json.dump(jobKey_dict, f)
-            
+                printc('dataFile.json file is updated on the sourceCode folder', 'blue')
+
         folderToShare = folderToShare_list[0] # sourceCode
         shareFolder(folderToShare, providerToShare, True)
     except Exception as e:
-        print(e)
+        print('E: ' + e)
         sys.exit()                         
 
     print('\nSubmitting Job...')
@@ -146,20 +159,21 @@ def gdriveSubmitJob(provider, eBlocBroker, w3):
     dataTransferIn  = [1, 1]
     dataTransferOut = 1
     dataTransfer    = [dataTransferIn, dataTransferOut]
-    storageID       = lib.StorageID.GDRIVE.value   
-    # cacheType       = lib.CacheType.PRIVATE.value # Works
-    # cacheType       = lib.CacheType.PUBLIC.value
-    cacheType       = lib.CacheType.IPFS.value
+    storageID       = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
+    # cacheType     = CacheType.PRIVATE.value # Works
+    # cacheType     = CacheType.PUBLIC.value
+    cacheType       = CacheType.IPFS.value
     cacheHour_list  = [1, 1]
 
     for i in range(0, len(folderToShare_list)):
-        tarHash = folderName_hash[folderToShare_list[i]]
-        sourceCodeHash = w3.toBytes(text=tarHash) # required to send string as bytes
+        _tarHash = folderName_tarHash[folderToShare_list[i]]['tarHash']
+        sourceCodeHash = w3.toBytes(text=_tarHash) # required to send string as bytes == str_data.encode('utf-8')
         sourceCodeHash_list.append(sourceCodeHash)
 
-    jobKey = jobKey_dict[folderName_hash[folderToShare_list[0]]]
+    _tarHash  = folderName_tarHash[folderToShare_list[0]]['tarHash']
+    jobKey = jobKey_dict[_tarHash]
     print('jobKey=' + jobKey)
-    jobPriceValue, _cost = cost(core_list, coreMin_list, provider, sourceCodeHash_list, dataTransferIn, dataTransferOut, cacheHour_list, eBlocBroker, w3, False)
+    jobPriceValue, _cost = cost(core_list, coreMin_list, provider, sourceCodeHash_list, dataTransferIn, dataTransferOut, cacheHour_list, storageID, eBlocBroker, w3, False)
 
     accountID = 0
     status, result = submitJob(provider, jobKey, core_list, coreMin_list, dataTransferIn, dataTransferOut, storageID, sourceCodeHash_list, cacheType, cacheHour_list, accountID, jobPriceValue, eBlocBroker, w3)

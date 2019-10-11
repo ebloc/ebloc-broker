@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, sys, json
+import os, sys, json, pprint
 from os.path import expanduser
 from isRequesterExists import isRequesterExists
 from imports import connect, getWeb3
