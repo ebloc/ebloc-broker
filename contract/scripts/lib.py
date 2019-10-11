@@ -5,17 +5,17 @@ import base58, binascii
 Qm = b'\x12'
 
 class cacheType:
-    private = 0
-    public  = 1
-    none    = 2
-    ipfs    = 3
+    PUBLIC  = 0
+    PRIVATE = 1
+    NONE    = 2
+    IPFS    = 3
 
 class storageID:
-    ipfs  = 0
-    eudat = 1
-    ipfs_miniLock = 2
-    github = 3
-    gdrive = 4
+    IPFS          = 0
+    EUDAT         = 1
+    IPFS_MINILOCK = 2
+    GITHUB        = 3
+    GDRIVE        = 4
 
 def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)

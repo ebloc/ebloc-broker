@@ -13,7 +13,7 @@ def calculateDataTransferOut(outputFileName):
     p1.stdout.close()
     dataTransferIn = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
 
-    dataTransferIn =  int(dataTransferIn) * 0.000001
+    dataTransferIn =  lib.convertByteToMB(dataTransferIn)
     log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green', True, log_fname)
     return dataTransferIn
 
@@ -78,7 +78,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     sourceCodeHash_list = []
     ipfsHash_list       = []
     
-    ipfsStat, status, cumulativeSize = lib.isIpfsHashExists(jobKey, attemptCount=1)
+    status, ipfsStat, cumulativeSize = lib.isIpfsHashExists(jobKey, attemptCount=1)
     ipfsHash_list.append(jobKey)
     cumulativeSize_list.append(cumulativeSize)
 
@@ -92,7 +92,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
         sourceCodeHash_list.append(sourceCodeHash)        
         sourceCodeIpfsHash = lib.convertBytes32ToIpfs(sourceCodeHash)       
         if sourceCodeIpfsHash not in ipfsHash_list: # jobKey as data hash already may added to the list
-            ipfsStat, status, cumulativeSize = lib.isIpfsHashExists(sourceCodeIpfsHash, 1)
+            status, ipfsStat, cumulativeSize = lib.isIpfsHashExists(sourceCodeIpfsHash, attemptCount=1)
             cumulativeSize_list.append(cumulativeSize)
             ipfsHash_list.append(sourceCodeIpfsHash)
             if not status:
@@ -129,7 +129,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
             _folderSize = lib.calculateFolderSize(resultsFolder, 'd')
             dataTransferIn += _folderSize - initialSize
             initialSize = _folderSize            
-            # dataTransferIn += int(cumulativeSize) * 0.000001 # 1 MB == 10^6 Bytes
+            # dataTransferIn += lib.convertByteToMB(cumulativeSize)
                             
         if not os.path.isfile(resultsFolder + '/run.sh'): 
             log("run.sh does not exist", 'red', True, log_fname) 

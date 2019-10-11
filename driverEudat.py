@@ -159,7 +159,7 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder, folderName):
     
     result = re.search('Length: (.*) \(', ret) # https://stackoverflow.com/a/6986163/2402577 , re.search() == Regular expression operations
     if result is not None: # from wget output
-        globals()['dataTransferIn'] = int(result.group(1)) * 0.000001 # Downloaded file size in MBs
+        globals()['dataTransferIn'] = lib.convertByteToMB(result.group(1)) # Downloaded file size in MBs
     else: # from downloaded files size in bytes
         # p1 = subprocess.Popen(['du', '-b', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
         p1 = subprocess.Popen(['ls', '-ln', resultsFolderPrev + '/output.zip'], stdout=subprocess.PIPE)
@@ -167,7 +167,7 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder, folderName):
         p2 = subprocess.Popen(['awk', '{print $5}'], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
         out = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes       
-        globals()['dataTransferIn'] = int(out) * 0.000001 # Downloaded file size in MBs
+        globals()['dataTransferIn'] = lib.convertByteToMB(out)  # Downloaded file size in MBs
 
     lib.log('dataTransferIn=' + str(dataTransferIn) + ' MB', 'green')           
     isTarExistsInZip(resultsFolderPrev, folderName)   

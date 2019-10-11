@@ -290,3 +290,7 @@ contractCalls/\.submitJob\.py\.swp
 whisper/data.txt
 
 gdrive/exampleFolderToShare/sourceCode/.dataFiles.json
+
+gdrive/dataFiles.json
+
+gdrive/exampleFolderToShare/dataFiles.json
