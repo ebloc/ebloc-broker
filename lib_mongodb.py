@@ -8,8 +8,8 @@ def addItem(jobKey, sourceCodeHash_list, requesterID, timestamp, storageID, jobI
                'requesterID'   : requesterID,
                'timestamp'     : timestamp,               
                'storageID'     : storageID,
-               'receivedBlock' : jobInfo[0]['receivedBlock'],
-               'cacheDuration' : jobInfo[0]['cacheDuration']
+               'receivedBlock' : jobInfo['receivedBlock'],
+               'cacheDuration' : jobInfo['cacheDuration']
     }
     x = coll.update({'jobKey':newItem['jobKey']}, newItem, True)
 

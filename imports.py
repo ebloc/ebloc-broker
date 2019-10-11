@@ -17,7 +17,7 @@ class Network(object):
         self.w3 = None
         self.oc = None
         
-def connect(eBlocBroker, w3):
+def connect(eBlocBroker=None, w3=None):
     if eBlocBroker is not None and w3 is not None:
         return eBlocBroker, w3
     
@@ -58,7 +58,7 @@ def getWeb3():
         # from web3.shh import Shh
         # Shh.attach(web3, 'shh')
     if not w3.isConnected():
-        lib.log('Error: If web3 is not connected please run the following: sudo chown -R $(whoami) /private/geth.ipc', 'red')
+        lib.log("Error: If web3 is not connected please run the following: 'sudo chown $(whoami) /private/geth.ipc'", 'red')
         return False
     
     return w3 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import os, sys, time, enum, pprint
-import lib
+import os, sys, time, enum, pprint, traceback, lib
 
 from imports import connect, connectEblocBroker, getWeb3
 from contract.scripts.lib import cost
@@ -69,8 +68,9 @@ def submitJob(provider, jobKey, core, coreMin, dataTransferIn_list, dataTransfer
         if coreMin[i] == 0: 
             return False, 'E: coreMin[' + str(i) +'] is provided as 0. Please provide non-zero value'
 
-    if int(storageID) > 4:
-        return False, 'E: Wrong storageID value is given. Please provide from 0 to 4'
+    for i in range(len(storageID)):
+        if storageID[i] > 4:            
+            return False, 'E: Wrong storageID value is given. Please provide from 0 to 4'
     
     if len(jobKey) >= 64:
         return False, 'E: Length of jobKey is greater than 64, please provide lesser'

@@ -27,6 +27,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     using Lib for Lib.Requester;
     using Lib for Lib.Status; 
     using Lib for Lib.JobStateCodes;
+    using Lib for Lib.StorageID;    
     using Lib for Lib.ProviderInfo;
     using Lib for Lib.JobArgument;
     using Lib for Lib.JobIndexes;
@@ -356,14 +357,16 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 		cacheTime.length == sourceCodeHash.length      &&
 		sourceCodeHash.length == dataTransferIn.length &&
 		dataTransferIn.length == args.storageID.length &&
+		args.storageID[0] <= 4                         &&
 		core.length == executionTimeMin.length &&		
 		bytes(_key).length <= 255     && // Maximum _key length is 255 that will be used as folder name
 		isRequesterExists(msg.sender) &&
 		bytes(requester[msg.sender].orcID).length > 0 
 		);
 
-	for(uint i = 0; i < args.storageID.length; i++) 
-	    require(args.storageID[i] <= 4);
+	if (args.storageID.length > 0) 
+	    for(uint i = 1; i < args.storageID.length; i++) 
+		require(args.storageID[i] == args.storageID[0] || args.storageID[i] == uint8(Lib.StorageID.IPFS));
 
 	uint32[] memory providerInfo = pricesSetBlockNum[_provider];
 	
@@ -380,7 +383,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	uint sum;	
 	uint storageCost;
 
-	// Here "cacheTime[0]" used to store the calcualted cacheCost
+	// Here "cacheTime[0]"      now stores the calcualted cacheCost
+	// Here "dataTransferIn[0]" now stores the overall dataTransferIn value, decreased if there is caching for specific block
 	(sum, dataTransferIn[0], storageCost, cacheTime[0]) = _calculateCacheCost(_provider, provider, sourceCodeHash, dataTransferIn, dataTransferOut, cacheTime, info);	
 	sum = sum.add(_calculateComputationalCost(info, core, executionTimeMin));	
 
@@ -403,7 +407,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     {
 	Lib.Provider storage provider = provider[msg.sender]; //Only provider can update receied job only to itself
 	if (provider.jobSt[sourceCodeHash].receivedBlock > 0)
- 	    provider.jobSt[sourceCodeHash].receivedBlock = uint32(block.number); //Provider only update the block.number
+ 	    provider.jobSt[sourceCodeHash].receivedBlock = uint32(block.number) - 1; //Provider can only update the block.number
 	
 	return true;
     }
@@ -521,9 +525,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
 		    uint _storageCostTemp = info.priceStorage.mul(dataTransferIn[i].mul(cacheTime[i]));
 		    provider.storagedData[msg.sender][sourceCodeHash[i]].received = uint248(_storageCostTemp);		    
-		    _storageCost = _storageCost.add(_storageCostTemp);
+		    _storageCost = _storageCost.add(_storageCostTemp); // storageCost
 		}
-		else // Data is not cached, communication cost should be applied
+		else // Data is not cached, cache and communication cost should be applied
 		    _cacheCost = _cacheCost.add(info.priceCache.mul(dataTransferIn[i])); // cacheCost
 	    }
 	    else { //Data is provided by the provider with its own price
