@@ -2,6 +2,9 @@
 
 import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
 import hashlib
+
+from lib import executeShellCommand
+
 from colored import stylize
 from colored import fg
 from os.path import expanduser
@@ -41,7 +44,7 @@ def uploadResultToEudat(encodedShareToken, outputFileName):
 
 def receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, dataTransfer, sourceCodeHashArray):
     # cmd: scontrol show job slurmJobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
-    status, output = lib.executeShellCommand(['scontrol', 'show', 'job', slurmJobID], None, True)        
+    status, output = executeShellCommand(['scontrol', 'show', 'job', slurmJobID], None, True)        
     p1 = subprocess.Popen(['echo', output], stdout=subprocess.PIPE)   
     p2 = subprocess.Popen(['grep', 'EndTime'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
@@ -50,11 +53,11 @@ def receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storage
     date = p3.communicate()[0].decode('utf-8').strip()
         
     command = ["date", "-d", date, "+'%s'"] # cmd: date -d 2018-09-09T21:50:51 +"%s"
-    status, endTimeStamp = lib.executeShellCommand(command, None, True)
+    status, endTimeStamp = executeShellCommand(command, None, True)
     endTimeStamp = endTimeStamp.replace("'","")
     log("endTimeStamp=" + endTimeStamp) 
 
-    log('~/eBlocBroker/contractCalls/receiptCheck.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + str(storageID) + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
+    log('~/eBlocBroker/contractCalls/receiptCheck.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + storageID + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
     status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: receiptCheck(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
     if not status:
         sys.exit()        
@@ -68,12 +71,13 @@ def receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storage
 def removeSourceCode(resultsFolderPrev, resultsFolder):
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
     command = ['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
-    status, filesToRemove = lib.executeShellCommand(command, None, True)
+    status, filesToRemove = executeShellCommand(command, None, True)
     if filesToRemove != '' or filesToRemove is not None:
         log('\nFiles to be removed: \n' + filesToRemove + '\n')         
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
     subprocess.run(['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
 
+# storageID: string
 def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     globals()['jobKey'] = jobKey
     globals()['index']  = index
@@ -208,7 +212,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         log('Writing into slurmJobInfo.out file is completed', 'green')
 
     command = ['sacct', '-n', '-X', '-j', slurmJobID, '--format=Elapsed'] # cmd: sacct -n -X -j $slurmJobID --format="Elapsed"
-    status, elapsedTime = lib.executeShellCommand(command, None, True)
+    status, elapsedTime = executeShellCommand(command, None, True)
     log("ElapsedTime: " + elapsedTime) 
 
     elapsedTime    = elapsedTime.split(':') 
@@ -237,16 +241,16 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
             command = ['ipfs', 'add', '-r', resultsFolder] # Uploaded as folder
-            status, resultIpfsHash = lib.executeShellCommand(command, None, True)
-            if resultIpfsHash == "":
+            status, resultIpfsHash = executeShellCommand(command, None, True)
+            if not status or resultIpfsHash == "":
                 ''' Approach to upload as .tar.gz. Currently not used.
                 removeSourceCode(resultsFolderPrev)
                 with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
                 date = content_file.read().strip()
                 command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
-                log(lib.executeShellCommand(command, None, True))
+                log(executeShellCommand(command, None, True))
                 command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
-                status, resultIpfsHash = lib.executeShellCommand(command)
+                status, resultIpfsHash = executeShellCommand(command)
                 resultIpfsHash = resultIpfsHash.split(' ')[1]
                 lib.silentremove(resultsFolder + '/result.tar.gz')
                 '''
@@ -258,28 +262,20 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
             sys.exit()
                 
         # dataTransferOut = lib.calculateFolderSize(resultsFolder, 'd')
-        # log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
-        # cmd: echo resultIpfsHash | tail -n1 | awk '{print $2}'
-        p1 = subprocess.Popen(['echo', resultIpfsHash], stdout=subprocess.PIPE)        
-        p2 = subprocess.Popen(['tail', '-n1'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()        
-        p3 = subprocess.Popen(['awk', '{print $2}'], stdin=p2.stdout,stdout=subprocess.PIPE)
-        p2.stdout.close()        
-        resultIpfsHash = p3.communicate()[0].decode('utf-8').strip()
-        log("resultIpfsHash: " + resultIpfsHash)
-
+        # log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
+        resultIpfsHash = lib.getIpfsParentHash(resultIpfsHash)               
         command = ['ipfs', 'pin', 'add', resultIpfsHash]
-        status, res = lib.executeShellCommand(command, None, True) # pin downloaded ipfs hash
+        status, res = executeShellCommand(command, None, True) # pin downloaded ipfs hash
         print(res)
 
         command = ['ipfs', 'object', 'stat', resultIpfsHash]
-        status, isIPFSHashExist = lib.executeShellCommand(command, None, True) # pin downloaded ipfs hash        
+        status, isIPFSHashExist = executeShellCommand(command, None, True) # pin downloaded ipfs hash        
         for item in isIPFSHashExist.split("\n"):
             if "CumulativeSize" in item:
                 dataTransferOut = item.strip().split()[1]
                 break
             
-        dataTransferOut = int(dataTransferOut) * 0.000001
+        dataTransferOut = lib.convertByteToMB(dataTransferOut) 
         log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')   
     if storageID == str(lib.StorageID.IPFS_MINILOCK.value):
         os.chdir(resultsFolder) 
@@ -287,17 +283,17 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
             date = content_file.read().strip()
             
         command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
-        status, result = lib.executeShellCommand(command, None, True)
+        status, result = executeShellCommand(command, None, True)
         log(result)            
         # cmd: mlck encrypt -f $resultsFolder/result.tar.gz $miniLockID --anonymous --output-file=$resultsFolder/result.tar.gz.minilock
         command = ['mlck', 'encrypt' , '-f', resultsFolder + '/result.tar.gz', miniLockID, '--anonymous',
                    '--output-file=' + resultsFolder + '/result.tar.gz.minilock']
-        status, res = lib.executeShellCommand(command, None, True)
+        status, res = executeShellCommand(command, None, True)
         log(res)      
         removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
             command = ['ipfs', 'add', resultsFolder + '/result.tar.gz.minilock']
-            status, resultIpfsHash = lib.executeShellCommand(command, None, True)
+            status, resultIpfsHash = executeShellCommand(command, None, True)
             resultIpfsHash = resultIpfsHash.split(' ')[1]
             if resultIpfsHash == "":
                 log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
@@ -311,16 +307,16 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         # log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
         log("resultIpfsHash: " + resultIpfsHash)
         command = ['ipfs', 'pin', 'add', resultIpfsHash]
-        status, res = lib.executeShellCommand(command, None, True)     
+        status, res = executeShellCommand(command, None, True)     
         print(res)
         command = ['ipfs', 'object', 'stat', resultIpfsHash]      
-        status, isIPFSHashExist = lib.executeShellCommand(command, None, True)
+        status, isIPFSHashExist = executeShellCommand(command, None, True)
         for item in isIPFSHashExist.split("\n"):
             if "CumulativeSize" in item:
                 dataTransferOut = item.strip().split()[1]
                 break
             
-        dataTransferOut = int(dataTransferOut) * 0.000001
+        dataTransferOut = lib.convertByteToMB(dataTransferOut)
         log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')         
     elif storageID == str(lib.StorageID.EUDAT.value):
         log('Entered into Eudat case')
@@ -330,12 +326,12 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         removeSourceCode(resultsFolderPrev, resultsFolder)      
         # cmd: tar -jcvf result-$providerID-$index.tar.gz *
         # command = ['tar', '-jcvf', outputFileName] + glob.glob("*")      
-        # log(lib.executeShellCommand(command))
+        # log(executeShellCommand(command))
         with open(resultsFolderPrev + '/modifiedDate.txt') as content_file:
             date = content_file.read().strip()
 
         command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
-        status, result = lib.executeShellCommand(command, None, True)
+        status, result = executeShellCommand(command, None, True)
         log('Files to be archived using tar: \n' + result)
         dataTransferOut = lib.calculateFolderSize(outputFileName, 'f')
         log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')    
@@ -354,11 +350,11 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     elif storageID == str(lib.StorageID.GDRIVE.value):
         resultIpfsHash = ''
         #cmd: gdrive info $jobKey -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost
-        status, gdriveInfo = lib.subprocessCallAttempt([lib.GDRIVE, 'info', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
+        status, gdriveInfo = lib.subprocessCallAttempt([lib.GDRIVE, 'info', '--bytes', jobKey, '-c', lib.GDRIVE_METADATA], 500, 1)
         if not status:
             return False
    
-        mimeType = lib.getMimeType(gdriveInfo)            
+        mimeType = lib.getGdriveFileInfo(gdriveInfo, 'Mime')            
         log('mimeType=' + str(mimeType))                
         os.chdir(resultsFolder) 
         #if 'folder' in mimeType: # Received job is in folder format
@@ -367,7 +363,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
             date = content_file.read().rstrip()
             
         command = ['tar', '-N', date, '-jcvf', outputFileName] + glob.glob("*")
-        status, result = lib.executeShellCommand(command, None, True)
+        status, result = executeShellCommandn(command, None, True)
         log(result)            
         time.sleep(0.25) 
         dataTransferOut = lib.calculateFolderSize(outputFileName, 'f')
