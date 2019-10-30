@@ -99,8 +99,7 @@ if __name__ == '__main__':
     eBlocBroker = connectEblocBroker(w3)
 
     if len(sys.argv) == 10:
-        provider        = str(sys.argv[1])
-        provider        = w3.toChecksumAddress(provider)                 
+        provider        = w3.toChecksumAddress(str(sys.argv[1]))
         jobKey          = str(sys.argv[2]) 
         core            = int(sys.argv[3]) 
         coreMin         = int(sys.argv[4])
@@ -135,6 +134,7 @@ if __name__ == '__main__':
         coreMin_list        = []
         
         if storageID == lib.StorageID.IPFS.value: # IPFS
+            print('Submitting through IPFS...')
             jobKey      = 'QmbL46fEH7iaccEayKpS9FZnkPV5uss4SFmhDDvbmkABUJ'  # 30 seconds job                
             coreGasDay  = 0 
             coreGasHour = 0 
@@ -152,13 +152,14 @@ if __name__ == '__main__':
             cacheHour_list.append(1)                
             cacheType = lib.CacheType.PUBLIC.value # default
         elif storageID == lib.StorageID.EUDAT.value:
+            print('Submitting through EUDAT...')
             oc = owncloud.Client('https://b2drop.eudat.eu/')
             with open(lib.EBLOCPATH + '/eudatPassword.txt', 'r') as content_file:
                 password = content_file.read().strip()
             oc.login(lib.OC_USER_ID, password)
             sourceCodeHash     = '00000000000000000000000000000000'
         elif storageID == lib.StorageID.GITHUB.value:
-            print('Submitting through GitHub')
+            print('Submitting through GitHub...')
             jobKey = "avatar-lavventura=simpleSlurmJob"
             coreGasDay      = 0 
             coreGasHour     = 0 
@@ -178,7 +179,7 @@ if __name__ == '__main__':
         print(result)
         sys.exit()
     else:    
-        print('tx_hash: ' + result)
+        print('tx_hash=' + result)
         receipt = w3.eth.waitForTransactionReceipt(result)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))

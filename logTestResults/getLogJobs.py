@@ -47,11 +47,12 @@ def getLogJobs(providerAddress, fromBlock):
 
     for i in range(0, len(loggedJobs)):
         providerAddress = loggedJobs[i].args['providerAddress']
-        jobKey         = loggedJobs[i].args['jobKey']
-        index          = loggedJobs[i].args['index']
+        jobKey          = loggedJobs[i].args['jobKey']
+        index           = loggedJobs[i].args['index']
+        _blockNumber    = loggedJobs[i]['blockNumber']
         # print(loggedJobs[i])
         # print(loggedJobs[i].args['jobKey'])
-        jobInfo = getJobInfo(providerAddress, jobKey, index, eBlocBroker, web3)
+        jobInfo = getJobInfo(providerAddress, jobKey, index, _blockNumber, eBlocBroker, web3)
         # print('received: ' +  )
         returned=0
         key=str(providerAddress) + str(jobKey) + str(index)

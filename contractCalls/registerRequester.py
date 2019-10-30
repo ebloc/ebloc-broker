@@ -54,7 +54,7 @@ if __name__ == '__main__':
     w3 = getWeb3()
     status, result = registerRequester(account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername, None, w3)
     if status:
-        print('tx_hash: ' + result)        
+        print('tx_hash=' + result)        
         receipt = w3.eth.waitForTransactionReceipt(result)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))

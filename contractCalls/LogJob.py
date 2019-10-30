@@ -76,15 +76,15 @@ if __name__ == '__main__':
         else:
             jobKey = loggedJobs[i].args['jobKey']
         '''
-                         
-        print('tx_hash: ' + loggedJobs[i]['transactionHash'].hex() )
+        
+        print('transactionHash=' + loggedJobs[i]['transactionHash'].hex() + ' | logIndex=' + str(loggedJobs[i]['logIndex']))
         print('blockNumber: ' + str(loggedJobs[i]['blockNumber']))
-        print('provider: '  + loggedJobs[i].args['provider'])              
-        print('jobKey: '    + loggedJobs[i].args['jobKey'])
-        print('index: '     + str(loggedJobs[i].args['index']))
-        print('storageID: ' + str(lib.StorageID(storageID).name))       
-        print('cacheType: ' + str(lib.CacheType(loggedJobs[i].args['cacheType']).name))
-        print('received: ' + str(loggedJobs[i].args['received']))
+        print('provider: '    + loggedJobs[i].args['provider'])              
+        print('jobKey: '      + loggedJobs[i].args['jobKey'])
+        print('index: '       + str(loggedJobs[i].args['index']))
+        print('storageID: '   + str(lib.StorageID(storageID).name))       
+        print('cacheType: '   + str(lib.CacheType(loggedJobs[i].args['cacheType']).name))
+        print('received: '    + str(loggedJobs[i].args['received']))
         for i in range(0, len(loggedJobs[i].args['sourceCodeHash'])):
             sourceCodeHash = loggedJobs[i].args['sourceCodeHash'][i]
             print('sourceCodeHash[' + str(i) + ']: ' +  lib.convertBytes32ToIpfs(sourceCodeHash))

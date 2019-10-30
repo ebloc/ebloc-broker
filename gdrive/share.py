@@ -13,28 +13,7 @@ globals()['folderName_tarHash'] = {}
 
 def gdriveUpload(folderToShare, jobKeyFlag=False):
     alreadyUploaded = False
-    '''
-    if folderType == 'folder': 
-        tarHash = subprocess.check_output(['../scripts/generateMD5sum.sh', folderToShare]).decode('utf-8').strip()
-        tarHash = tarHash.split(' ', 1)[0]
-        print('hash=' + tarHash)
-
-        if not os.path.isdir(tarHash):
-            subprocess.run(['cp', '-a', folderToShare, tarHash])
-        
-        folderToShare = tarHash
-        #cmd: gdrive list --query "name contains 'exampleFolderToShare'" --no-header
-        res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
-        if res is '':
-            print('Uploading ...')
-            #cmd: gdrive upload --recursive $folderToShare
-            res = subprocess.check_output(['gdrive', 'upload', '--recursive', folderToShare]).decode('utf-8').strip()
-            print(res)    
-            res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
-            key = res.split(' ')[0]
-    '''
     if jobKeyFlag: # tar.gz inside a folder
-        # TODO: icine dataFiles 'i gom
         dir_path = os.path.dirname(folderToShare)          
         ipfsHash, tarHash = compressFolder(folderToShare)
         if not os.path.exists(dir_path + '/' + tarHash):
@@ -72,7 +51,25 @@ def gdriveUpload(folderToShare, jobKeyFlag=False):
             key = res.partition('\n')[0].split()[0]
             subprocess.run(['rm', '-f', dir_path + '/' + tarHash + '.tar.gz']) # created .tar.gz files are removed
             alreadyUploaded = True
-    '''
+    ''' delete
+    if folderType == 'folder': 
+        tarHash = subprocess.check_output(['../scripts/generateMD5sum.sh', folderToShare]).decode('utf-8').strip()
+        tarHash = tarHash.split(' ', 1)[0]
+        print('hash=' + tarHash)
+
+        if not os.path.isdir(tarHash):
+            subprocess.run(['cp', '-a', folderToShare, tarHash])
+        
+        folderToShare = tarHashn
+        #cmd: gdrive list --query "name contains 'exampleFolderToShare'" --no-header
+        res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
+        if res is '':
+            print('Uploading ...')
+            #cmd: gdrive upload --recursive $folderToShare
+            res = subprocess.check_output(['gdrive', 'upload', '--recursive', folderToShare]).decode('utf-8').strip()
+            print(res)    
+            res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + folderToShare + '\'', '--no-header']).decode('utf-8').strip()
+            key = res.split(' ')[0]
     elif folderType == 'zip':
         # zip -r myfiles.zip mydir
         subprocess.run(['zip', '-r', folderToShare + '.zip', folderToShare])
@@ -110,6 +107,7 @@ def gdriveSubmitJob(provider, eBlocBroker, w3):
     if eBlocBroker is None or w3 is None:
         return False, 'web3 is not connected'
 
+    accountID = 0
     provider =  w3.toChecksumAddress(provider) # netlab
     providerToShare = 'alper.alimoglu@gmail.com' # 'alper01234alper@gmail.com'
     status, providerInfo = getProviderInfo(provider, eBlocBroker, w3)
@@ -161,8 +159,7 @@ def gdriveSubmitJob(provider, eBlocBroker, w3):
     dataTransfer    = [dataTransferIn, dataTransferOut]
     storageID       = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
     # cacheType     = CacheType.PRIVATE.value # Works
-    # cacheType     = CacheType.PUBLIC.value
-    cacheType       = CacheType.IPFS.value
+    cacheType       = CacheType.PUBLIC.value
     cacheHour_list  = [1, 1]
 
     for i in range(0, len(folderToShare_list)):
@@ -175,7 +172,6 @@ def gdriveSubmitJob(provider, eBlocBroker, w3):
     print('jobKey=' + jobKey)
     jobPriceValue, _cost = cost(core_list, coreMin_list, provider, sourceCodeHash_list, dataTransferIn, dataTransferOut, cacheHour_list, storageID, eBlocBroker, w3, False)
 
-    accountID = 0
     status, result = submitJob(provider, jobKey, core_list, coreMin_list, dataTransferIn, dataTransferOut, storageID, sourceCodeHash_list, cacheType, cacheHour_list, accountID, jobPriceValue, eBlocBroker, w3)
     return status, result
 
@@ -190,7 +186,7 @@ if __name__ == "__main__":
         print(result)
         sys.exit()
     else:
-        print('tx_hash: ' + result)
+        print('tx_hash=' + result)
         receipt = w3.eth.waitForTransactionReceipt(result)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))

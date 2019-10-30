@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import sys, os, lib, traceback
+from lib import PROVIDER_ID
 from imports import connect
 
-# tx = eB.receiptCheck(jobKey, [index, jobID], executionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray, {"from": accounts[0]})
+# tx = eB.receiveDeposit(jobKey, [index, jobID], executionTimeMin, resultIpfsHash, endTime, dataTransfer, sourceCodeHashArray, {"from": accounts[0]})
 
-def receiptCheck(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storageID, endTime, dataTransfer, sourceCodeHashArray, eBlocBroker=None, w3=None):    
+def receiveDeposit(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storageID, endTime, dataTransfer, sourceCodeHashArray, eBlocBroker=None, w3=None):    
     eBlocBroker, w3 = connect(eBlocBroker, w3)
-    _from = w3.toChecksumAddress(lib.PROVIDER_ID)
+    _from = w3.toChecksumAddress(PROVIDER_ID)
 
     if len(resultIpfsHash) != 46 and (lib.StorageID.IPFS.value == storageID or lib.StorageID.IPFS_MINILOCK.value == storageID):
         return False, "jobKey's length does not match with its original length. Please check your jobKey"
@@ -15,7 +16,7 @@ def receiptCheck(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storage
     try:
         resultIpfsHash = w3.toBytes(hexstr=lib.convertIpfsToBytes32(resultIpfsHash)) # resultIpfsHash is converted into byte32 format
         
-        tx = eBlocBroker.functions.receiptCheck(jobKey, [int(index), int(jobID)], int(executionTimeMin), resultIpfsHash, int(endTime), dataTransfer, sourceCodeHashArray).transact({"from": _from, "gas": 4500000})
+        tx = eBlocBroker.functions.receiveDeposit(jobKey, [int(index), int(jobID)], int(executionTimeMin), resultIpfsHash, int(endTime), dataTransfer, sourceCodeHashArray).transact({"from": _from, "gas": 4500000})
     except Exception:
         return False, traceback.format_exc()
     
@@ -43,8 +44,8 @@ if __name__ == '__main__':
         dataTransfer     = [0, 0]
         sourceCodeHashArray = [b'\x93\xa52\x1f\x93\xad\\\x9d\x83\xb5,\xcc\xcb\xba\xa59~\xc3\x11\xe6%\xd3\x8d\xfc+"\x185\x03\x90j\xd4'] # should pull from the job event
 
-    status, result = receiptCheck(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storageID, endTime, dataTransfer, sourceCodeHashArray)
+    status, result = receiveDeposit(jobKey, index, jobID, executionTimeMin, resultIpfsHash, storageID, endTime, dataTransfer, sourceCodeHashArray)
     if status:
-        print('tx_hash: ' + result)        
+        print('tx_hash=' + result)        
     else:
         print(result)

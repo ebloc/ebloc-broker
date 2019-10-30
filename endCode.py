@@ -3,7 +3,7 @@
 import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
 import hashlib
 
-from lib import executeShellCommand
+from lib import executeShellCommand, silentremove, PROVIDER_ID
 
 from colored import stylize
 from colored import fg
@@ -12,7 +12,7 @@ from imports import connectEblocBroker, getWeb3
 from contractCalls.getJobInfo       import getJobSourceCodeHash
 from contractCalls.getJobInfo       import getJobInfo
 from contractCalls.getRequesterInfo import getRequesterInfo
-from contractCalls.receiptCheck     import receiptCheck
+from contractCalls.receiveDeposit     import receiveDeposit
 
 w3          = getWeb3()
 eBlocBroker = connectEblocBroker(w3)
@@ -42,7 +42,7 @@ def uploadResultToEudat(encodedShareToken, outputFileName):
     output, err = p.communicate()
     return p, output, err
 
-def receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, dataTransfer, sourceCodeHashArray):
+def receiveDepositTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, dataTransfer, sourceCodeHashArray):
     # cmd: scontrol show job slurmJobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
     status, output = executeShellCommand(['scontrol', 'show', 'job', slurmJobID], None, True)        
     p1 = subprocess.Popen(['echo', output], stdout=subprocess.PIPE)   
@@ -57,14 +57,14 @@ def receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storage
     endTimeStamp = endTimeStamp.replace("'","")
     log("endTimeStamp=" + endTimeStamp) 
 
-    log('~/eBlocBroker/contractCalls/receiptCheck.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + storageID + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
-    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: receiptCheck(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
+    log('~/eBlocBroker/contractCalls/receiveDeposit.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + storageID + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
+    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: receiveDeposit(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
     if not status:
         sys.exit()        
     
-    log("receiptCheck()_tx_hash: " + tx_hash)  
-    txFile = open(lib.LOG_PATH + '/transactions/' + lib.PROVIDER_ID + '.txt', 'a') 
-    txFile.write(jobKey + "_" + index + "| Tx_hash: " + tx_hash + "| receiptCheckTxHash\n") 
+    log("receiveDeposit()_tx_hash=" + tx_hash)  
+    txFile = open(lib.LOG_PATH + '/transactions/' + PROVIDER_ID + '.txt', 'a') 
+    txFile.write(jobKey + "_" + index + "| Tx_hash: " + tx_hash + "| receiveDepositTxHash\n") 
     txFile.close() 
 
 # Client's loaded files are removed, no need to re-upload them.
@@ -101,15 +101,19 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8')
       
     log("encodedShareToken: " + encodedShareToken)          
-    log('./getJobInfo.py ' + ' ' + lib.PROVIDER_ID + ' ' + jobKey + ' ' + index + ' ' + str(jobID))
+    log('./getJobInfo.py ' + ' ' + PROVIDER_ID + ' ' + jobKey + ' ' + index + ' ' + str(jobID))
 
-    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(lib.PROVIDER_ID, jobKey, index, jobID, eBlocBroker, w3), 10)
-    if not status:
-        sys.exit()        
-    
-    requesterID     = jobInfo['jobOwner'].lower()
+    try:       
+        job = eBlocBroker.functions.getJobInfo(w3.toChecksumAddress(PROVIDER_ID), jobKey, int(index), int(jobID)).call()
+        jobOwner = job[5]
+    except Exception:
+        import traceback
+        log(traceback.format_exc(), 'red')
+        sys.exit()
+        
+    requesterID     = jobOwner.lower()
     requesterIDAddr = hashlib.md5(requesterID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
-    status, requesterInfo   = getRequesterInfo(requesterID, eBlocBroker, w3)
+    status, requesterInfo = getRequesterInfo(requesterID, eBlocBroker, w3)
 
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterIDAddr + "/" + jobKey + "_" + index 
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'
@@ -121,7 +125,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         _file.close() 
         log('receivedBlockNumber=' + receivedBlockNumber)
 
-    lib.removeFiles(resultsFolder + '/result-*tar.gz')   
+    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
+    if not status:
+        sys.exit()        
+
     # cmd: find ./ -size 0 -print0 | xargs -0 rm
     p1 = subprocess.Popen(['find', resultsFolder, '-size', '0', '-print0'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['xargs', '-0', '-r', 'rm'], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -136,7 +143,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     p2.communicate() # Remove empty folders if exist      
 
     log("\nwhoami: "          + getpass.getuser() + ' ' + str(os.getegid())) # whoami
-    log("homeDir: "           + homeDir) # $HOME
+    log("homeDir: "           + homeDir)     # $HOME
     log("pwd: "               + os.getcwd()) # pwd
     log("resultsFolder: "     + resultsFolder) 
     log("jobKey: "            + jobKey) 
@@ -145,7 +152,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     log("shareToken: "        + shareToken) 
     log("encodedShareToken: " + encodedShareToken)    
     log("folderName: "        + folderName) 
-    log("providerID: "        + lib.PROVIDER_ID) 
+    log("providerID: "        + PROVIDER_ID) 
     log("requesterIDAddr: "   + requesterIDAddr)
     log("received: "          + str(jobInfo['received']))
 
@@ -190,10 +197,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
             break  # Wait until does values updated on the blockchain
       
         if jobInfo['stateCode'] == lib.job_state_code['COMPLETED']: 
-            log("Error: Job is already completed job and its money is received.", 'red')  
+            log("E: Job is already completed job and its money is received.", 'red')  
             sys.exit()  # Detects an error on the SLURM side
 
-        status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(lib.PROVIDER_ID, jobKey, index, jobID, eBlocBroker, w3), 10)
+        status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
         if not status:
             sys.exit()
             
@@ -201,7 +208,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         time.sleep(15) # Short sleep here so this loop is not keeping CPU busy //setJobStatus may deploy late.
 
     # sourceCodeHashes of the completed job is obtained from its logged event    
-    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobSourceCodeHash(jobInfo, lib.PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
+    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobSourceCodeHash(jobInfo, PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
     if not status:
         sys.exit()        
 
@@ -217,7 +224,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
 
     elapsedTime    = elapsedTime.split(':') 
     elapsedDay     = "0" 
-    elapsedHour    = elapsedTime[0].replace(" ", "") 
+    elapsedHour    = elapsedTime[0].replace(' ', '') 
     elapsedMinute  = elapsedTime[1].rstrip() 
     elapsedSeconds = elapsedTime[2].rstrip() 
 
@@ -234,7 +241,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
 
     log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
     log("jobInfo: " + str(jobInfo))
-    outputFileName = 'result-' + lib.PROVIDER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
+    outputFileName = 'result-' + PROVIDER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
 
     # Here we know that job is already completed 
     if storageID == str(lib.StorageID.IPFS.value) or storageID == str(lib.StorageID.GITHUB.value):
@@ -252,7 +259,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
                 command = ['ipfs', 'add', resultsFolder + '/result.tar.gz']
                 status, resultIpfsHash = executeShellCommand(command)
                 resultIpfsHash = resultIpfsHash.split(' ')[1]
-                lib.silentremove(resultsFolder + '/result.tar.gz')
+                silentremove(resultsFolder + '/result.tar.gz')
                 '''
                 log("Generated new hash return empty error. Trying again... Try count: " + str(attempt), 'yellow')
                 time.sleep(5) # wait 5 second for next step retry to up-try
@@ -340,7 +347,7 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
             output = output.strip().decode('utf-8')
             err = err.decode('utf-8')      
             if p.returncode != 0 or '<d:error' in output:
-                log('Error: EUDAT repository did not successfully loaded.', 'red')
+                log('E: EUDAT repository did not successfully loaded.', 'red')
                 log("curl failed %d %s . %s" % (p.returncode, err.decode('utf-8'), output))
                 time.sleep(1) # wait 1 second for next step retry to upload                
             else: # success on upload                
@@ -381,20 +388,20 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
             status, res = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         elif '/zip' in mimeType: # Received job is in zip format
-            log('mimeType: zip')
+            log('mimeType=zip')
             # cmd: $GDRIVE update $jobKey result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
             command = [lib.GDRIVE, 'update', jobKey, outputFileName, '-c', lib.GDRIVE_METADATA]
             status, res = lib.subprocessCallAttempt(command, 500)            
             log(res)         
         else:
-            log('Error: Files could not be uploaded', 'red')
+            log('E: Files could not be uploaded', 'red')
             sys.exit()
             
     dataTransferSum = dataTransferIn + dataTransferOut
     log('dataTransferIn='  + str(dataTransferIn)  + ' MB | Rounded=' + str(int(dataTransferIn))  + ' MB', 'green')
     log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
     log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferSum)) + ' MB', 'green')
-    receiptCheckTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, [int(dataTransferIn), int(dataTransferOut)], jobInfo['sourceCodeHash'])
+    receiveDepositTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, [int(dataTransferIn), int(dataTransferOut)], jobInfo['sourceCodeHash'])
     log('===COMPLETED===', 'green')
     '''
     # Removed downloaded code from local since it is not needed anymore
