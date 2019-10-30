@@ -12,9 +12,11 @@ contract eBlocBrokerBase {
     address public owner;   
     address[] providers; // A dynamically-sized array of 'address' structs 
     
-    mapping(address => uint32[]) pricesSetBlockNum;
     mapping(address => Lib.Requester) requester; // Mapped address where the requester's gained Wei are collected
     mapping(address => Lib.Provider)   provider;
+    mapping(address => uint32[]) pricesSetBlockNum;
+
+    uint32 constant ONE_HOUR_BLOCK_DURATION = 240; // ~1 hour
     
     /**
      * @dev Throws if called by any account other than the owner.

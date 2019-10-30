@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import sys, os, lib, _thread, time, hashlib, subprocess
-import lib_mongodb, lib
+import sys, os, lib, _thread, time, hashlib, subprocess, lib_mongodb, lib
 
+from lib import silentremove
 from pymongo import MongoClient
 cl = MongoClient()
 coll = cl['eBlocBroker']['cache']
@@ -35,10 +35,10 @@ for document in cursor:
         else:
             cachedFileName = lib.PROGRAM_PATH + '/' + document['requesterID'] + '/cache/' + document['sourceCodeHash'] + 'tar.gz'            
             print(cachedFileName)
-            lib.silentremove(cachedFileName)
+            silentremove(cachedFileName)
             cachedFileName = lib.PROGRAM_PATH + '/cache/' + document['sourceCodeHash'] + 'tar.gz'
             print(cachedFileName)
-            lib.silentremove(cachedFileName)
+            silentremove(cachedFileName)
                        
         print(receivedBlockNum)        
         result = coll.delete_one({'jobKey':ipfsHash})       
