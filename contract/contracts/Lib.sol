@@ -7,7 +7,13 @@
 pragma solidity ^0.5.7;
 
 library Lib {
-    
+
+    enum CacheType
+    {
+     PUBLIC,       /* 0 */
+     PRIVATE       /* 1 */
+    }
+
     enum StorageID
     {
      IPFS,          /* 0 */
@@ -16,8 +22,8 @@ library Lib {
      GITHUB,        /* 3 */
      GDRIVE         /* 4 */
     }
-    
-    /* Status of the submitted job */
+
+    /* Status of the submitted job Enum */
     enum JobStateCodes
     {
      /* Following states {0, 1, 2} will allow to request refund */
@@ -25,9 +31,9 @@ library Lib {
      PENDING,     /* 1 Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run. */
      RUNNING,     /* 2 The job currently is allocated to a node and is running. */	
      /* Following states {3, 4, 5} used to prevent double spending */
-     COMPLETED,   /* 3 The job has completed successfully. */
-     REFUNDED,    /* 4 Indicates if job is refunded */
-     CANCELLED,   /* 5 Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. */
+     REFUNDED,    /* 3 Indicates if job is refunded */
+     CANCELLED,   /* 4 Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. Set by the requester*/
+     COMPLETED,   /* 5 The job has completed successfully. */
      TIMEOUT      /* 6 Job terminated upon reaching its time limit. */
     }
 
@@ -46,6 +52,18 @@ library Lib {
 	uint32 receivedBlock;
 	uint32 cacheDuration;
     }
+
+    struct RegisteredData {
+	uint32[] committedBlock; // Block number when data is registered
+	uint32 commitmentBlockDuration;
+	mapping(uint => uint32) price;
+    }
+
+	
+    struct Storage {
+	uint248 received; // Received payment for storage usage
+	bool      isUsed; // True if the requester used the given sourceCodeHash
+    } 
 
     struct Job {	
 	uint32 startTime; // Submitted job's starting universal time on the server side. Assigned by the provider
@@ -83,12 +101,7 @@ library Lib {
 	uint32 priceStorage; 
 	uint32 priceCache;	
     }
-
-    struct Storage {
-	uint248 received;
-	bool      isUsed; // Received payment for storage usage
-    } 
-    
+	
     struct Provider {
 	uint         received; // Provider's received wei // Address where funds are collected
 	uint32 committedBlock; // Block number when  is registered in order the watch provider's event activity
@@ -97,8 +110,8 @@ library Lib {
 	mapping(string  => Status[])   jobStatus; // All submitted jobs into provider 's Status is accessible
 	mapping(uint256 => ProviderInfo)    info;
 	mapping(bytes32 => JobStorageTime) jobSt; // Stored information related to job's storage time 
-	mapping(bytes32 => uint256) registeredData;
-	mapping(address => mapping(bytes32  => Storage)) storagedData; 
+	mapping(bytes32 => RegisteredData) registeredData;
+	mapping(address => mapping(bytes32 => Storage)) storageInfo; 
 	
 	IntervalNode receiptList; // receiptList will be use to check either job's start and end time overlapped or not
     }
@@ -137,8 +150,8 @@ library Lib {
     {
 	Interval[] storage list = self.list;
 	
-	uint32 addr = self.tail;
-	uint32 addrTemp;
+	uint32 addrTemp;	
+	uint32 addr      = self.tail;
 	uint32 startTime = _job.startTime;
 	int32  carriedSum;	
 	

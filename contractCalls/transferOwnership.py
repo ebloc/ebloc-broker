@@ -33,7 +33,7 @@ if __name__ == '__main__':
         newOwner  = str(sys.argv[1])
         status, result = transferOwnership(newOwner)
         if status:
-            print('tx_hash: ' + result)
+            print('tx_hash=' + result)
         else:
             print(result)
     else:

@@ -4,8 +4,8 @@ import os, lib, sys
 from imports import connectEblocBroker, getWeb3
 from contractCalls.getJobInfo import getJobInfo
 
-web3        = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+w3          = getWeb3()
+eBlocBroker = connectEblocBroker(w3)
 # Paths----------------------------------
 eblocPath = lib.EBLOCPATH 
 fname = lib.LOG_PATH + '/queuedJobs.txt' 
@@ -25,7 +25,7 @@ with open(fname, "r") as ins:
         index          = res[3] 
 
         sum1 += int(res[7]) - int(res[8])
-        jobInfo = getJobInfo(providerAddress, jobKey, index, eBlocBroker, web3)
+        jobInfo = getJobInfo(providerAddress, jobKey, index, None, eBlocBroker, w3)
 
         print(str(counter) + ' ' + res[1] + ' ' + res[2] + ' ' + res[3] + '|' +
               '{0: <16}'.format('status:') + lib.job_state_code[str(jobInfo['status'])] + ' ' +

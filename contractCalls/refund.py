@@ -1,57 +1,62 @@
 #!/usr/bin/env python3
 
-import os, sys, traceback
+import os, sys, traceback, pprint
+
+from imports import connect
+from lib     import PROVIDER_ID
 from dotenv  import load_dotenv
 from imports import connectEblocBroker, getWeb3
-from isRequesterExist import isRequesterExist
+
+from contractCalls.isRequesterExists import isRequesterExists
+from contractCalls.getProviderInfo   import getProviderInfo
+
 from os.path import expanduser
 home = expanduser("~")
 
-load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
+def refund(provider, _from, _key, index, jobID, sourceCodeHashArray, eBlocBroker=None, w3=None):
+    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    provider = w3.toChecksumAddress(provider)
+    _from    = w3.toChecksumAddress(_from)    
+    
+    if not eBlocBroker.functions.isProviderExists(provider).call():        
+       return False, "E: Requested provider's Ethereum Address (" + provider + ") does not exist."
 
-w3          = getWeb3()
-eBlocBroker = connectEblocBroker(w3)
-PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID")) # TODO: should be requester_id
-
-def refund(provider, _key, index):
-    if not eBlocBroker.functions.isProviderExists(provider).call():
-       print("Requested provider's Ethereum Address (" + provider + ") does not exist.")
-       sys.exit() 
-          
-    fromAccount = PROVIDER_ID
-    fromAccnount = w3.toChecksumAddress(fromAccount)    
-    if not eBlocBroker.functions.isRequesterExists(fromAccount).call(): 
-       print("Requested requester's Ethereum Address (" + fromAccount + ") does not exist.")
-       sys.exit()
-       
+    if provider != _from and not eBlocBroker.functions.isRequesterExists(_from).call():         
+       return False, "E: Requested requester's Ethereum Address (" + _from + ") does not exist."       
     try:
         gasLimit = 4500000
-        tx = eBlocBroker.transact({"from": fromAccount, "gas": gasLimit}).refund(provider, _key, index)
+        tx = eBlocBroker.functions.refund(provider, _key, index, jobID, sourceCodeHashArray).transact({"from": _from, "gas": gasLimit})
     except Exception:
         return False, traceback.format_exc()
     
     return True, tx.hex()
     
-if __name__ == '__main__': 
-    if len(sys.argv) == 4: 
-        provider = w3.toChecksumAddress(str(sys.argv[1])) 
-        blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.call().getProviderInfo(provider) 
-        my_filter = eBlocBroker.eventFilter('LogProvider',{'fromBlock':int(blockReadFrom),'toBlock':int(blockReadFrom) + 1})
-        _key  = str(sys.argv[2])
-        index = int(sys.argv[3])        
-    else: 
-        provider = w3.toChecksumAddress('0x57b60037B82154eC7149142c606bA024fBb0f991')
-        _key     = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U'  # Long Sleep Job
-        index    = 3
+if __name__ == '__main__':
+    w3          = getWeb3()
+    eBlocBroker = connectEblocBroker(w3)
 
-    status, result = refund(provider, _key, index)
-    
+    if len(sys.argv) == 7: 
+        provider = w3.toChecksumAddress(str(sys.argv[1]))
+        _from    = w3.toChecksumAddress(str(sys.argv[2]))            
+        _key  = str(sys.argv[3])
+        index = int(sys.argv[4])
+        jobID = int(sys.argv[5])
+        sourceCodeHashArray = sys.argv[6]
+    else: 
+        provider = w3.toChecksumAddress(PROVIDER_ID)
+        _from    = w3.toChecksumAddress(PROVIDER_ID)            
+        _key     = 'QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U'
+        index    = 0
+        jobID    = 0
+        sourceCodeHashArray = [b'\x93\xa52\x1f\x93\xad\\\x9d\x83\xb5,\xcc\xcb\xba\xa59~\xc3\x11\xe6%\xd3\x8d\xfc+"\x185\x03\x90j\xd4'] # should pull from the event
+
+    status, tx_hash = refund(provider, _from, _key, index, jobID, sourceCodeHashArray, eBlocBroker, w3)    
     if not status:
-        print(result)
+        print(tx_hash)
         sys.exit()
     else:    
-        print('tx_hash: ' + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
+        print('tx_hash=' + tx_hash)
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))
         print("Was transaction successful?")

@@ -8,7 +8,7 @@ pragma solidity ^0.5.7;
 
 interface eBlocBrokerInterface {
     
-    // Logged when the provider calls receiptCheck function. Records the completed jobs' information under receiptCheck() method call.
+    // Logged when the provider calls the receiveDeposit() method. Records the completed jobs' information under receiveDeposit() method call.
     event LogReceipt(address indexed provider,
 		     string jobKey,
 		     uint32 index,
@@ -26,7 +26,7 @@ interface eBlocBrokerInterface {
 		    string jobKey,
 		    uint32 index,
 		    uint32 jobID,
-		    uint startTime);
+		    uint8  jobStateCodes);
     
     // Records the submitted jobs' information under submitJob() method call 
     event LogJob(address indexed provider,
@@ -47,16 +47,16 @@ interface eBlocBrokerInterface {
 
     // Records the registered requesters' registered information under registerRequester() method call.
     event LogRequester(address indexed requester,
-		       string  email,
-		       string  fID,
-		       string  miniLockID,
-		       string  ipfsAddress,
-		       string  githubUsername,
-		       string  whisperPublicKey);
+		       string email,
+		       string fID,
+		       string miniLockID,
+		       string ipfsAddress,
+		       string githubUsername,
+		       string whisperPublicKey);
     
     // Records the refunded jobs' information under refund() method call
     event LogRefundRequest(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint refundedWei);    
-    event LogJobDescription(address indexed provider, string jobKey, string jobDesc);    
-    event LogStoragePayment(address indexed provider, uint received);   
+    event LogJobDescription(address indexed provider, address requester, string jobKey, string jobDesc);    
+    event LogStoragePayment(address indexed paidAddress, uint payment);   
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 }

@@ -6,14 +6,10 @@ import hashlib
 import sys, signal
 
 from subprocess import call
-from colored import stylize
-from colored import fg
-
-
+from colored import stylize, fg
 from imports import connect
-
 from lib import isSlurmOn, log, terminate, executeShellCommand
-from lib import WHOAMI, EBLOCPATH, PROVIDER_ID, RPC_PORT, HOME, EUDAT_USE, IPFS_USE, BLOCK_READ_FROM_FILE, CacheType, StorageID, job_state_code, PROGRAM_PATH
+from lib import LOG_PATH, OC_USER, WHOAMI, EBLOCPATH, PROVIDER_ID, RPC_PORT, HOME, EUDAT_USE, IPFS_USE, BLOCK_READ_FROM_FILE, CacheType, StorageID, job_state_code, PROGRAM_PATH
 
 from driverEudat  import driverEudat
 from driverGdrive import driverGdrive
@@ -29,20 +25,20 @@ from contractCalls.getRequesterInfo          import getRequesterInfo
 from contractCalls.isWeb3Connected           import isWeb3Connected
 from contractCalls.LogJob                    import runLogJob
 
-eBlocBroker, w3 = connect()
-if eBlocBroker is None or w3 is None:
-    sys.exit()
-
-driverCancelProcess   = None
-driverReceiverProcess = None
-oc                    = None
-my_env = os.environ.copy()
-
 # Dummy sudo command to get the password when session starts
 subprocess.run(['sudo', 'printf', '']) 
 
-"""Runs driverCancel daemon on the background."""
+eBlocBroker, w3 = connect()
+if eBlocBroker is None or w3 is None:
+    terminate()
+
+oc = owncloud.Client('https://b2drop.eudat.eu/') 
+driverCancelProcess   = None
+driverReceiverProcess = None
+my_env = os.environ.copy()
+
 def runDriverCancel():
+    """Runs driverCancel daemon on the background."""
 	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
     p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['grep', '[d]riverCancel'], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -56,8 +52,8 @@ def runDriverCancel():
         # Running driverCancel.py on the background if it is not already
         driverCancelProcess = subprocess.Popen(['python3','driverCancel.py'])
 
-"""Runs driverReceiver daemon on the background."""
 def runWhisperStateReceiver():
+    """Runs driverReceiver daemon on the background."""
     if not os.path.isfile(HOME + '/.eBlocBroker/whisperInfo.txt'):
         # First time running:
         log('Please first run: scripts/whisperInitialize.py')
@@ -82,7 +78,6 @@ def runWhisperStateReceiver():
     p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
     p3.stdout.close()
     out = p4.communicate()[0].decode('utf-8').strip()
-    # ----------------------------------------------------------------
     if int(out) == 0:
         # Running driverCancel.py on the background
         driverReceiverProcess = subprocess.Popen(['python3','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
@@ -105,8 +100,8 @@ def idleCoreNumber(printFlag=1):
        
     return idleCore
 
-""" If there is no idle cores, waits for idle cores to be emerged. """
 def slurmPendingJobCheck():
+    """ If there is no idle cores, waits for idle cores to be emerged. """
     idleCore  = idleCoreNumber()       
     printFlag = 0    
     while idleCore is None:
@@ -117,59 +112,71 @@ def slurmPendingJobCheck():
        time.sleep(10)
        idleCore = idleCoreNumber(0)
 
-# Checks whether geth runs on the background
 def isGethOn():
-   # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
-   p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-   p2 = subprocess.Popen(['grep', '[g]eth'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   p3 = subprocess.Popen(['grep', str(RPC_PORT)], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
-   p3.stdout.close()
-   out = p4.communicate()[0].decode('utf-8').strip()
+    """ Checks whether geth runs on the background."""
+    # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
+    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', '[g]eth'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['grep', str(RPC_PORT)], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
+    p3.stdout.close()
+    out = p4.communicate()[0].decode('utf-8').strip()
    
-   if int(out) == 0:
-      log("Geth is not running on the background.", 'red')
-      terminate()      
+    if int(out) == 0:
+        log("Geth is not running on the background.", 'red')
+        terminate()      
 
-# Checks: does Driver.py runs on the background
-def isDriverOn(): 
-   # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
-   p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-   p2 = subprocess.Popen(['grep', '[D]river.py'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
-   p3.stdout.close()
-   out = p4.communicate()[0].decode('utf-8').strip()
-   
-   if int(out) > 1:
-      log("Driver is already running.", 'green')
+def isDriverOn():
+    """Checks wheather the Driver.py runs on the background."""
+    # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
+    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', '[D]river.py'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['grep', 'python'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
+    p3.stdout.close()
+    out = p4.communicate()[0].decode('utf-8').strip()
+    if int(out) > 1:
+        log("Driver is already running.", 'green')
 
 def eudatLoginAndCheck():
-    log("Login into owncloud... ", 'blue', False)
-    global oc
+    log("Login into owncloud... ", 'blue', False)    
     if OC_USER is None or OC_USER == "":
         log("OC_USER is not set in .env", "red")
-        sys.exit()
+        terminate()              
         
     with open(LOG_PATH + '/eudatPassword.txt', 'r') as content_file:
         password = content_file.read().strip()
-        
-    oc = owncloud.Client('https://b2drop.eudat.eu/') 
-    oc.login(OC_USER, password)  # Unlocks EUDAT account    
-    password = None
+
+    for attempt in range(5):
+        try:
+            oc.login(OC_USER, password)  # Unlocks the EUDAT account    
+            password = None
+        except Exception:
+            _traceback = traceback.format_exc()
+            log(_traceback, 'red')
+            if '[Errno 110] Connection timed out' in _traceback:
+                log('Sleeping for 15 seconds to overcome the max retries that exceeded.')
+                time.sleep(15)
+            else:
+                terminate()
+        else:
+            break
+    else:
+        terminate()                
+            
     try:
         oc.list('.')
-        log("SUCCESS", 'green')
+        log('Success', 'green')
     except subprocess.CalledProcessError as e:
-        log("FAILED. " + e.output.decode('utf-8').strip(), 'red')        
-        sys.exit()
+        log("FAILED. " + e.output.decode('utf-8').strip(), 'red')
+        terminate()
         
-# Startup functions are called
-def startup():    
+def startup():
+    """ Startup functions are called."""
     isDriverOn()
     isSlurmOn()
     isGethOn()
@@ -181,11 +188,10 @@ def startup():
 def checkPrograms():
     status, result = executeShellCommand(['gdrive', 'version'])
     if not status:
-        log('Please install gdrive or check its path', 'red')
-        sys.exit()
+        log('Please install gDrive or check its path', 'red')
+        terminate()
 
 checkPrograms()
-
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
 if WHOAMI == '' or EBLOCPATH == '' or PROVIDER_ID == '': 
@@ -303,14 +309,16 @@ while True:
        jobKey      = loggedJobs[i].args['jobKey']
        index       = int(loggedJobs[i].args['index'])
        storageID   = loggedJobs[i].args['storageID']
-       blockNumber = loggedJobs[i]['blockNumber']
+       _blockNumber = loggedJobs[i]['blockNumber']
        
-       log('blockNumber=' + str(blockNumber)  + '\n' +
-           'provider='    + loggedJobs[i].args['provider']     + '\n' +
-           'jobKey='      + jobKey     + '\n' +
-           'index='       + str(index) + '\n' +
-           'cacheType='   + CacheType(loggedJobs[i].args['cacheType']).name + '\n' +
-           'received='    + str(loggedJobs[i].args['received']))
+       log('receivedBlockNumber=' + str(_blockNumber) + '\n' +
+           'transactionHash='     + loggedJobs[i]['transactionHash'].hex() + ' | ' +
+           'logIndex='            + str(loggedJobs[i]['logIndex']) + '\n' +
+           'provider='            + loggedJobs[i].args['provider'] + '\n' +
+           'jobKey='              + jobKey     + '\n' +
+           'index='               + str(index) + '\n' +
+           'cacheType='           + CacheType(loggedJobs[i].args['cacheType']).name + '\n' +
+           'received='            + str(loggedJobs[i].args['received']))
                      
        receivedBlock = []
        cacheDuration = []       
@@ -323,23 +331,25 @@ while True:
                sourceCodeHash_bytes = loggedJobs[i].args['sourceCodeHash'][j]
                sourceCodeHash = w3.toText(sourceCodeHash_bytes)
 
+           # _cacheDuration is received as hour should be converted into blocknumber as multiplying with 240 
            _receivedBlock, _cacheDuration = eBlocBroker.functions.getJobStorageTime(w3.toChecksumAddress(provider), sourceCodeHash_bytes).call()
            receivedBlock.append(_receivedBlock)
            cacheDuration.append(_cacheDuration)
-
-           if _receivedBlock + _cacheDuration < blockNumber: # // Remaining time to cache is 0               
-               shouldAlreadyCached[sourceCodeHash] = False
-           else: # Cache is requested for the sourceCodeHash
-               if _receivedBlock < blockNumber:                   
+           
+           if _receivedBlock + _cacheDuration * 240 >= _blockNumber: # // Remaining time to cache is 0
+           # Cache is requested for the sourceCodeHash
+               if _receivedBlock < _blockNumber:
                    shouldAlreadyCached[sourceCodeHash] = True
-               elif _receivedBlock == blockNumber:                   
-                   if (blockNumber, sourceCodeHash) in shouldAlreadyCached:
+               elif _receivedBlock == _blockNumber:
+                   if sourceCodeHash in shouldAlreadyCached:
                        shouldAlreadyCached[sourceCodeHash] = True
                    else:
                        shouldAlreadyCached[sourceCodeHash] = False # For the first job should be False since it is requested for cache for the first time
-                       
+           else:
+               shouldAlreadyCached[sourceCodeHash] = False
+               
            log('sourceCodeHash[' + str(j) + ']=' + sourceCodeHash + ' | receivedBlock=' + str(_receivedBlock) + ' | cacheDuration(Hour)=' + str(_cacheDuration) + '| storageID[' + str(j) + ']=' + StorageID(storageID[j]).name + '| shouldAlreadyCached=' + str(shouldAlreadyCached[sourceCodeHash]))
-           
+
        if loggedJobs[i].args['storageID'] == StorageID.IPFS or loggedJobs[i].args['storageID'] == StorageID.IPFS_MINILOCK: 
            sourceCodeHash = convertBytes32ToIpfs(loggedJobs[i].args['sourceCodeHash'])
            if sourceCodeHash != loggedJobs[i].args['jobKey']:
@@ -353,11 +363,11 @@ while True:
            status, strCheck = executeShellCommand(['bash', EBLOCPATH + '/strCheck.sh', jobKey.replace('=', '', 1)])           
        else:
            status, strCheck = executeShellCommand(['bash', EBLOCPATH + '/strCheck.sh', jobKey])
-           
+
        jobInfo = []
        jobID = 0
        for attempt in range(10):           
-           status, _jobInfo = getJobInfo(provider, jobKey, index, jobID, eBlocBroker, w3)
+           status, _jobInfo = getJobInfo(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
            _jobInfo.update( {'receivedBlock' : receivedBlock} )
            _jobInfo.update( {'cacheDuration' : cacheDuration} )               
            pprint.pprint(_jobInfo)
@@ -369,19 +379,19 @@ while True:
                time.sleep(1)
        else:
            passFlag = True
-           break       
-       
+           break             
+            
        jobID = 1
-       while not passFlag:
+       while not passFlag: # Retrieves all jobInfo for each job in the workflow
            _jobInfo = eBlocBroker.functions.getJobInfo(w3.toChecksumAddress(provider), jobKey, int(index), int(jobID)).call()
            if _jobInfo[1] == 0: # compares job core value 
                break
            else:
-               _jobInfo = getJobInfo(provider, jobKey, index, jobID, eBlocBroker, w3)               
+               _jobInfo = getJobInfo(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)               
                if _jobInfo != None:
                    jobInfo.append(_jobInfo) # Adding jobs if workflow exist
                    jobID += 1
-        
+
        requesterID   = ""
        if passFlag or jobInfo[0]['core'] == 0: 
            log('Requested job does not exist', 'red')
@@ -423,7 +433,7 @@ while True:
                if oc is None:
                    eudatLoginAndCheck()
 
-               driverEudat(loggedJobs[i], jobInfo, requesterIDmd5, eBlocBroker, w3, oc)
+               driverEudat(loggedJobs[i], jobInfo, requesterIDmd5, shouldAlreadyCached, eBlocBroker, w3, oc)
                # thread.start_new_thread(driverFunc.driverEudat, (loggedJobs[i], jobInfo, requesterIDmd5))
            elif _storageID == StorageID.IPFS_MINILOCK.value:
                log('New job has been received. IPFS with miniLock call |' + time.ctime(), 'green')
