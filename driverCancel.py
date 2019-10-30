@@ -73,7 +73,7 @@ while True:
               if 'JobState=CANCELLED' in out:
                  log('JobID=' + jobID + ' is successfully cancelled.')
               else:
-                 log('Error: jobID=' + jobID + ' is not cancelled, something went wrong or already cancelled. ' + out)
+                 log('E: jobID=' + jobID + ' is not cancelled, something went wrong or already cancelled. ' + out)
         except IndexError:
            log('Something went wrong, jobID is returned as None.')
                             

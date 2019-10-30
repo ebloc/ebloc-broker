@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
         status, result = setJobStatus(_key, index, jobID, jobStateCode, startTime)
         if status:
-            print('tx_hash: ' + result)
+            print('tx_hash=' + result)
         else:
             print(result)
     else:

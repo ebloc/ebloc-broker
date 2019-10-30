@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, re, glob, errno
-from lib        import log
+from lib        import log, silentremove
 from datetime   import datetime, timedelta
 from subprocess import call
 from colored    import stylize
@@ -12,8 +12,7 @@ def calculateDataTransferOut(outputFileName):
     p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     dataTransferIn = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
-
-    dataTransferIn =  lib.convertByteToMB(dataTransferIn)
+    dataTransferIn = lib.convertByteToMB(dataTransferIn)
     log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green', True, log_fname)
     return dataTransferIn
 
@@ -47,14 +46,14 @@ def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
 def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     import Driver
     eBlocBroker = Driver.eBlocBroker # global usage
-    w3 = Driver.w3 # global usage
-
+    w3 = Driver.w3 # global usage    
+        
     globals()['jobKey']    = loggedJob.args['jobKey']
     globals()['index']     = loggedJob.args['index']
     globals()['storageID'] = loggedJob.args['storageID']
-    globals()['cacheType'] = loggedJob.args['cacheType']
     globals()['sourceCodeHashes'] = loggedJob.args['sourceCodeHash']
     globals()['log_fname'] = lib.LOG_PATH + '/transactions/' + jobKey + '_' + str(index) + '_driverOutput' + '.txt'
+    # cacheType is should be public on IPFS
     
     shareToken = '-1'
         
@@ -72,7 +71,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
        os.makedirs(resultsFolder,     exist_ok=True) 
 
     if os.path.isfile(resultsFolder + '/' + jobKey):
-       lib.silentremove(resultsFolder + '/' + jobKey)
+       silentremove(resultsFolder + '/' + jobKey)
 
     cumulativeSize_list = []
     sourceCodeHash_list = []
@@ -110,7 +109,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
             hashedFlag = True
             log('IPFS file "' + ipfsHash + '" is already cached.', 'green', True, log_fname)
             
-        lib.getIpfsHash(ipfsHash, resultsFolder, cacheType)               
+        lib.getIpfsHash(ipfsHash, resultsFolder, false)               
         if storageID == lib.StorageID.IPFS_MINILOCK.value: # Case for the ipfsMiniLock
             with open(lib.LOG_PATH + '/private/miniLockPassword.txt', 'r') as content_file:
                 passW = content_file.read().strip()
@@ -122,8 +121,8 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
             log("mlck decrypt status=" + str(status), '', True, log_fname)            
             # cmd: tar -xvf $resultsFolder/output.tar.gz -C resultsFolder
             subprocess.run(['tar', '-xvf', resultsFolder + '/output.tar.gz', '-C', resultsFolder])
-            lib.silentremove(resultsFolder + '/' + ipfsHash)
-            lib.silentremove(resultsFolder + '/output.tar.gz')
+            silentremove(resultsFolder + '/' + ipfsHash)
+            silentremove(resultsFolder + '/output.tar.gz')
 
         if not hashedFlag:
             _folderSize = lib.calculateFolderSize(resultsFolder, 'd')
