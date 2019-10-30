@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, re, glob, errno, json
+
+from lib import convertByteToMB, silentremove
 from datetime   import datetime, timedelta
 from subprocess import call
 from colored    import stylize
@@ -24,13 +26,7 @@ def log(my_string, color=''):
     f.write(my_string + "\n") 
     f.close() 
     
-def cache(requester, resultsFolderPrev, folderName, sourceCodeHash, folderType, key, jobKeyFlag):
-    '''
-    if jobKeyFlag:
-        if not os.path.isfile(globalCachePath + '/' + folderName + '/run.sh'):
-            return False, None
-    '''
-    
+def cache(requester, resultsFolderPrev, folderName, sourceCodeHash, folderType, key, jobKeyFlag):    
     if cacheType == lib.CacheType.PRIVATE.value: # First checking does is already exist under public cache directory
         globals()['globalCachePath'] = lib.PROGRAM_PATH + '/' + requester + '/cache'
         if not os.path.isdir(globalCachePath): # If folder does not exist
@@ -42,7 +38,7 @@ def cache(requester, resultsFolderPrev, folderName, sourceCodeHash, folderType, 
               res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
 
               if res != md5sum_dict[key]:
-                  log("File's md5sum does not match with its orignal md5sum value", 'red')
+                  log("E: File's md5sum does not match with its orignal md5sum value", 'red')
                   return False, None
               
               if res == sourceCodeHash: #Checking is already downloaded folder's hash matches with the given hash
@@ -61,7 +57,6 @@ def cache(requester, resultsFolderPrev, folderName, sourceCodeHash, folderType, 
                globals()['cacheType'] = lib.CacheType.PRIVATE.value
                return True, None
              
-    # if cacheType == lib.CacheType.PRIVATE.value  or
     if cacheType == lib.CacheType.PUBLIC.value:
         globals()['globalCachePath'] = lib.PROGRAM_PATH + '/cache'        
         if not os.path.isdir(globalCachePath): # If folder does not exist
@@ -74,7 +69,7 @@ def cache(requester, resultsFolderPrev, folderName, sourceCodeHash, folderType, 
                   return False, None
               
               if jobKeyFlag and not lib.isRunExistInTar(cachedTarFile):
-                 lib.silentremove(cachedTarFile)
+                 silentremove(cachedTarFile)
                  return False, None
            else:
               res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
@@ -103,13 +98,13 @@ def cache(requester, resultsFolderPrev, folderName, sourceCodeHash, folderType, 
            tarFile = lib.GDRIVE_CLOUD_PATH + '/.shared/' + folderName           
            if not os.path.isfile(tarFile):
               # TODO: It takes 3-5 minutes for shared folder/file to show up on the .shared folder
-              log('Requested file does not exit on mounted folder. PATH=' + tarFile, 'red')
+              log('E: Requested file does not exit on mounted folder. PATH=' + tarFile, 'red')
               return False, None
            ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip()              
         elif folderType == 'folder':
             folderPath = lib.GDRIVE_CLOUD_PATH + '/.shared/' + folderName
             if not os.path.isdir(folderPath):
-               log('Requested folder does not exit on mounted folder. PATH=' + folderPath, 'red')
+               log('E: Requested folder does not exit on mounted folder. PATH=' + folderPath, 'red')
                return False, None
            
             ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', folderPath]).decode('utf-8').strip()            
@@ -127,15 +122,14 @@ def gdriveDownloadFolder(resultsFolderPrev, folderName, folderType, key) -> bool
             return False
         
         if not os.path.isdir(resultsFolderPrev + '/' + folderName): # Check before move operation
-            log('Folder is not downloaded successfully.', 'red')
+            log('E: Folder is not downloaded successfully.', 'red')
             return False
         else:
             p1 = subprocess.Popen(['du', '-sb', resultsFolderPrev + '/' + folderName], stdout=subprocess.PIPE)
             p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
             p1.stdout.close()
-
-            globals()['dataTransferIn'] = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
-            globals()['dataTransferIn'] = lib.convertByteToMB(globals()['dataTransferIn'])
+            _dataTransferIn = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
+            globals()['dataTransferIn'] = convertByteToMB(_dataTransferIn)
             log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green')    
     else:
         # cmd: gdrive download $key --force --path $resultsFolderPrev
@@ -144,7 +138,7 @@ def gdriveDownloadFolder(resultsFolderPrev, folderName, folderType, key) -> bool
             return False
 
         if not os.path.isfile(resultsFolderPrev + '/' + folderName):
-            log('File is not downloaded successfully.', 'red')
+            log('E: File is not downloaded successfully.', 'red')
             return False
         else:
             p1 = subprocess.Popen(['ls', '-ln', resultsFolderPrev + '/' + folderName], stdout=subprocess.PIPE)
@@ -165,24 +159,27 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
     mimeType       = lib.getGdriveFileInfo(gdriveInfo, 'Mime')    
     folderName     = lib.getGdriveFileInfo(gdriveInfo, 'Name')    
     log('mimeType='   + mimeType)
-    log('folderName=' + folderName)
 
     if jobKeyFlag:
         # key for the sourceCode tar.gz file is obtained
-        status, _size, globals()['jobKey_list'], key = lib.gdriveSize(key, mimeType, folderName, gdriveInfo, resultsFolderPrev, sourceCodeHash_list, shouldAlreadyCached)
+        status, used_dataTransferIn, globals()['jobKey_list'], key = lib.gdriveSize(key, mimeType, folderName, gdriveInfo, resultsFolderPrev, sourceCodeHash_list, shouldAlreadyCached)
         if not status:
             return False        
         
-        log('size=' + str(_size) + ' MB')
+        if used_dataTransferIn > dataTransferIn:
+            log('E: requested size to download the sourceCode and datafiles is greater that the given amount.')
+            # TODO: full refund
+            return False
+        
         status, gdriveInfo = lib.subprocessCallAttempt(['gdrive', 'info', '--bytes', key, '-c', lib.GDRIVE_METADATA], 10)
         if not status: return False
         mimeType       = lib.getGdriveFileInfo(gdriveInfo, 'Mime')    
         folderName     = lib.getGdriveFileInfo(gdriveInfo, 'Name')
-        # TODO: sizes compare if exceeds retrun False
 
     sourceCodeHash = folderName.replace('.tar.gz','') # folder is already stored by its sourceCodeHash
-    log('mimeType='   + mimeType)
+    log('')
     log('folderName=' + folderName)
+    log('mimeType='   + mimeType)    
 
     if 'gzip' in mimeType:
         sourceCodeHash = lib.getMd5sum(gdriveInfo) # if it is gzip obtained from the {gdrive info key}
@@ -190,7 +187,20 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
         log('Md5sum=' + md5sum_dict[key])
                     
     if cacheType == lib.CacheType.PRIVATE.value or cacheType == lib.CacheType.PUBLIC.value:
-        if 'folder' in mimeType: # Recieved job is in folder format
+        if 'gzip' in mimeType: # Recieved job is in folder tar.gz
+            if cacheType != lib.CacheType.NONE.value:
+                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'gzip', key, jobKeyFlag)             
+            if not status:
+                return False
+
+            command = ['tar', '-xf', globalCachePath + '/' + folderName, '--strip-components=1', '-C', resultsFolder]
+            status, result = lib.executeShellCommand(command, None, True)
+            '''
+            if jobKeyFlag:
+            if not os.path.isfile(globalCachePath + '/' + folderName + '/run.sh'):
+                return False, None
+            '''            
+        elif 'folder' in mimeType: # Recieved job is in folder format
             if cacheType != lib.CacheType.NONE.value: 
                 status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'folder', key, jobKeyFlag)                
             if not status:
@@ -201,15 +211,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
             if os.path.isfile(resultsFolder + '/' + folderName + '.tar.gz'):
                 command = ['tar', '-xf', resultsFolder + '/' + folderName + '.tar.gz', '--strip-components=1', '-C', resultsFolder]
                 status, result = lib.executeShellCommand(command, None, True)
-                lib.silentremove(resultsFolder + '/' + folderName + '.tar.gz')            
-        elif 'gzip' in mimeType: # Recieved job is in folder tar.gz
-            if cacheType != lib.CacheType.NONE.value:
-                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'gzip', key, jobKeyFlag)             
-            if not status:
-                return False
-
-            command = ['tar', '-xf', globalCachePath + '/' + folderName, '--strip-components=1', '-C', resultsFolder]
-            status, result = lib.executeShellCommand(command, None, True)
+                silentremove(resultsFolder + '/' + folderName + '.tar.gz')            
         else:
             return False
         '''    
@@ -222,7 +224,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
             # cmd: unzip -o $resultsFolderPrev/$folderName -d $resultsFolder
             command = ['unzip', '-o', resultsFolderPrev + '/' + folderName, '-d', resultsFolder]
             status, result = lib.executeShellCommand(command, None, True)
-            lib.silentremove(resultsFolderPrev + '/' + folderName)
+            silentremove(resultsFolderPrev + '/' + folderName)
         '''
     ''' Gdrive => IPFS no need.
     elif cacheType == lib.CacheType.IPFS.value:
@@ -251,25 +253,13 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
             command = ['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder]
             status, result = lib.executeShellCommand(command, None, True)
     '''
-    ''' delete
-    data = None
-    if jobKeyFlag:
-        file_path = resultsFolder + '/' + 'dataFiles.json'
-        if os.path.exists(file_path):
-            with open(file_path) as f:
-                data = json.load(f)
-                for (k, v) in data.items():
-                    globals()['jobKey_list'].append(str(v))
-                
-    return data
-    '''
     
 def driverGdrive(loggedJob, jobInfo, requester, shouldAlreadyCached, eBlocBroker, w3) -> bool:
     status, providerInfo = getProviderInfo(loggedJob.args['provider'])
-    globals()['fID']            = providerInfo['fID']    
-    globals()['jobKey']         = loggedJob.args['jobKey']
-    globals()['index']          = loggedJob.args['index']
-    globals()['storageID']      = loggedJob.args['storageID']
+    globals()['fID']       = providerInfo['fID']    
+    globals()['jobKey']    = loggedJob.args['jobKey']
+    globals()['index']     = loggedJob.args['index']
+    globals()['storageID'] = loggedJob.args['storageID']
     globals()['cacheType'] = loggedJob.args['cacheType']
     
     globals()['shouldAlreadyCached'] = shouldAlreadyCached    
@@ -278,8 +268,8 @@ def driverGdrive(loggedJob, jobInfo, requester, shouldAlreadyCached, eBlocBroker
     globals()['sourceCodeHashText_list'] = []
     globals()['jobKey_list'] = []
     globals()['md5sum_dict'] = {}        
-    globals()['dataTransferIn'] = 0 # if the requested file is already cached, it stays as 0
-       
+    # globals()['dataTransferIn'] = 0 # if the requested file is already cached, it stays as 0  
+
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + requester + "/" + jobKey + "_" + str(index)
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'    
     
@@ -287,11 +277,13 @@ def driverGdrive(loggedJob, jobInfo, requester, shouldAlreadyCached, eBlocBroker
         os.makedirs(resultsFolderPrev)
         os.makedirs(resultsFolder)
 
+    if not os.path.isdir(resultsFolder):
+        os.makedirs(resultsFolder)
+
     getData(jobKey, requester, resultsFolderPrev, resultsFolder, True)
     for i in range(0, len(jobKey_list)):
         key = jobKey_list[i]
         getData(key, requester, resultsFolderPrev, resultsFolder)
 
-    sys.exit() # TODO: delete
-    shareToken = "-1" # fixed value for gdrive
+    shareToken = "-1" # constant value for gdrive
     status = lib.sbatchCall(loggedJob, shareToken, requester, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker,  w3)

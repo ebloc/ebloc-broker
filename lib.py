@@ -63,8 +63,8 @@ class StorageID(Enum):
 class CacheType(Enum):
     PUBLIC  = 0
     PRIVATE = 1
-    NONE    = 2
-    IPFS    = 3
+#   NONE    = 2
+#   IPFS    = 3
    
 ## Creates the hashmap.
 job_state_code = {} 
@@ -117,8 +117,7 @@ def tryExcept(f, exitFlag=False):
     """
     try:
         return f()
-    except Exception as e:
-        log(str(e) + '\n', 'red')
+    except Exception:
         log(traceback.format_exc(), 'red')
         return False, None
 
@@ -163,13 +162,14 @@ def getOnlyIpfsHash(path):
 
     return True, resultIpfsHash
 
-def getIpfsHash(ipfsHash, resultsFolder, cacheType):
+def getIpfsHash(ipfsHash, resultsFolder):
     # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor
     # cmd: ipfs get $ipfsHash --output=$resultsFolder
     res = subprocess.check_output(['ipfs', 'get', ipfsHash, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
     print(res)
 
-    if cacheType == CacheType.NONE.value: # TODO: pin if storage is paid
+    # TODO: pin if storage is paid
+    if storagePaid:
         res = subprocess.check_output(['ipfs', 'pin', 'add', ipfsHash]).decode('utf-8').strip() # pin downloaded ipfs hash
         log(res)
 
@@ -181,7 +181,7 @@ def isIpfsHashExists(ipfsHash, attemptCount):
         # cmd: timeout 300 ipfs object stat $jobKey
         status, ipfsStat = executeShellCommand(['timeout', '300', 'ipfs', 'object', 'stat', ipfsHash]) # Wait Max 5 minutes.
         if not status:
-            log('Error: Failed to find IPFS file "' + ipfsHash + '"', 'red')
+            log('E: Failed to find IPFS file "' + ipfsHash + '"', 'red')
         else:
             log(ipfsStat)
             for item in ipfsStat.split("\n"):
@@ -193,20 +193,16 @@ def isIpfsHashExists(ipfsHash, attemptCount):
 
 def calculateFolderSize(path, pathType):
     """Return the size of the given path in MB."""
-    dataTransferOut = 0
+    byte_size = 0
     if pathType == 'f':
-        p1 = subprocess.Popen(['ls', '-ln', path], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(['awk', '{print $5}'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()
-        dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
+        byte_size = os.path.getsize(path) # Returns downloaded files size in bytes                
     elif pathType == 'd':
         p1 = subprocess.Popen(['du', '-sb', path], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
-        dataTransferOut = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes           
+        byte_size = p2.communicate()[0].decode('utf-8').strip() # Returns downloaded files size in bytes    
     
-    dataTransferOut =  convertByteToMB(dataTransferOut)
-    return dataTransferOut
+    return convertByteToMB(byte_size)
 
 def convertStringToBytes32(hash_string):
     print(hash_string)
@@ -253,10 +249,10 @@ def subprocessCallAttempt(command, attemptCount, printFlag=0):
     for i in range(attemptCount):
        try:
            result = subprocess.check_output(command).decode('utf-8').strip()
-       except Exception as e:
+       except Exception:
            time.sleep(0.1)
            if i == 0 and printFlag == 0:
-               log(str(e), 'red')
+               log(traceback.format_exc(), 'red')
        else:
            return True, result
     else:
@@ -268,8 +264,7 @@ def executeShellCommand(command, my_env=None, exitFlag=False):
             result = subprocess.check_output(command).decode('utf-8').strip()
         else:
             result = subprocess.check_output(command, env=my_env).decode('utf-8').strip()
-    except Exception as e:        
-        log(str(e) + '\n', 'red')
+    except Exception:        
         log(traceback.format_exc(), 'red')
         if exitFlag:
             sys.exit()
@@ -277,22 +272,26 @@ def executeShellCommand(command, my_env=None, exitFlag=False):
 
     return True, result
 
-def silentremove(filename): # https://stackoverflow.com/a/10840586/2402577   
+def silentremove(filename) -> bool: # https://stackoverflow.com/a/10840586/2402577   
     try:
         os.remove(filename)
-    except OSError as e: # this would be "except OSError, e:" before Python 2.6
-        # if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
-        log(str(e), 'red')
-        # raise # re-raise exception if a different error occurred
-
+        return True
+    except Exception:
+        log(traceback.format_exc(), 'red')
+        return False
+    
 def removeFiles(filename):
-   if "*" in filename: 
-       for f in glob.glob(filename):
-           # print(f)
-           silentremove(f) 
-   else:
-       silentremove(filename) 
+    if "*" in filename: 
+        for f in glob.glob(filename):
+            # print(f)
+            if not silentremove(f):
+                return False
+    else:
+        if not silentremove(filename):
+            return False
        
+    return True
+
 def convertByteToMB(byte_size):
     return int(byte_size) * 0.000001
 
@@ -359,7 +358,7 @@ def gdriveSize(key, mimeType, folderName, gdriveInfo, resultsFolderPrev, sourceC
             counter += 1
 
         ret_size = int(convertByteToMB(size_to_download))
-        log('Total_size=' + str(byte_size) + ' bytes | Size to download=' + str(size_to_download) + ' bytes')
+        log('Total_size=' + str(byte_size) + ' bytes | Size to download=' + str(size_to_download) + ' bytes == ' + str(ret_size) + ' MB')
         return True, ret_size, jobKey_list, sourceCode_key
     else:
         return False, 0, [], sourceCode_key
@@ -414,7 +413,7 @@ def isSlurmOn():
 
         if "PARTITION" not in str(check):
             log('')
-            log("Error: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")
+            log("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")
             log('Error Message: \n' + check, "red")         
             log('Starting Slurm... \n', "green")
             subprocess.run(['sudo', 'bash', 'runSlurm.sh'])
@@ -449,7 +448,7 @@ def isIpfsOn():
    p2.stdout.close()
    check = p3.communicate()[0].decode('utf-8').strip()
    if int(check) == 0:
-      log("Error: IPFS does not work on the background.", 'red') 
+      log("E: IPFS does not work on the background.", 'red') 
       log('* Starting IPFS: nohup ipfs daemon --mount &', 'green')
       with open(LOG_PATH + '/ipfs.out', 'w') as stdout:
          subprocess.Popen(['nohup', 'ipfs', 'daemon', '--mount'],
@@ -517,8 +516,8 @@ def compressFolder(folderToShare):
 def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker, w3):
     jobKey    = loggedJob.args['jobKey']
     index     = loggedJob.args['index']
-    storageID = loggedJob.args['storageID']
-    jobInfo   = jobInfo[0] # TODO:
+    storageID = loggedJob.args['storageID'][0] # storageID for the sourceCode
+    jobInfo   = jobInfo[0] # TODO:    
     
     from contractCalls.getJobInfo import getJobInfo
     from datetime import datetime, timedelta   
@@ -546,7 +545,8 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
     log('Adding recevied job into mongodb database.', 'green')
     # Adding jobKey info along with its cacheTime into mongodb
     addItem(jobKey, sourceCodeHash_list, requesterID, timestamp, storageID, jobInfo)
-   
+
+    # TODO: update as used_dataTransferIn value
     if os.path.isfile(resultsFolderPrev + '/dataTransferIn.txt'):
         with open(resultsFolderPrev + '/dataTransferIn.txt') as json_file:
             data = json.load(json_file)
@@ -597,7 +597,7 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
     else:
         sys.exit()
            
-    slurmJonbID = jobID.split()[3]
+    slurmJobID = jobID.split()[3]
     log('slurmJobID=' + slurmJobID)
     try:
         # cmd: scontrol update jobid=$slurmJobID TimeLimit=$timeLimit
@@ -607,7 +607,7 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
       
     if not slurmJobID.isdigit():
         # Detects an error on the SLURM side
-        log("Error: slurm_jobID is not a digit.", 'red')
+        log("E: slurm_jobID is not a digit.", 'red')
         return False
 
     return True

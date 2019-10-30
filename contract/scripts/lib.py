@@ -7,8 +7,8 @@ Qm = b'\x12'
 class cacheType:
     PUBLIC  = 0
     PRIVATE = 1
-    NONE    = 2
-    IPFS    = 3
+#    NONE    = 2
+#    IPFS    = 3
 
 class storageID:
     IPFS          = 0
@@ -17,16 +17,25 @@ class storageID:
     GITHUB        = 3
     GDRIVE        = 4
 
+class jobStateCodes:
+    SUBMITTED  = 0
+    PENDING    = 1
+    RUNNING    = 2
+    REFUNDED   = 3
+    CANCELLED  = 4
+    COMPLETED  = 5
+    TIMEOUT    = 6
+
 def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
-def cost(coreArray, coreMinArray, account, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, eB, w3, brownie=True):
+def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, eB, w3, brownie=True):
     if brownie:
-        providerPriceInfo   = eB.getProviderInfo(account)
+        providerPriceInfo   = eB.getProviderInfo(provider)
     else:
-        providerPriceInfo   = eB.functions.getProviderInfo(account).call()
+        providerPriceInfo   = eB.functions.getProviderInfo(provider).call()
 
     blockReadFrom       = providerPriceInfo[0]
     availableCoreNum    = providerPriceInfo[1]
@@ -54,9 +63,9 @@ def cost(coreArray, coreMinArray, account, sourceCodeHash, dataTransferIn, dataT
 
     for i in range(len(sourceCodeHash)):
         if brownie:
-            jobReceivedBlocNumber, jobGasStorageHour = eB.getJobStorageTime(account, sourceCodeHash[i])
+            jobReceivedBlocNumber, jobGasStorageHour, isUsed = eB.getJobStorageTime(provider, requester, sourceCodeHash[i])
         else:
-            jobReceivedBlocNumber, jobGasStorageHour = eB.functions.getJobStorageTime(account, sourceCodeHash[i]).call()
+            jobReceivedBlocNumber, jobGasStorageHour, isUsed = eB.functions.getJobStorageTime(provider, requester, sourceCodeHash[i]).call()
 
         if jobReceivedBlocNumber + jobGasStorageHour * 240 < w3.eth.blockNumber:
             _dataTransferIn += dataTransferIn[i]
