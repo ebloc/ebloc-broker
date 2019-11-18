@@ -1,31 +1,37 @@
 #!/usr/bin/env python3
 
-import pwd, os, sys, binascii, pprint, owncloud, json
-import time, subprocess, string, driverFunc, _thread
+import os
+import sys
+import pprint
+import owncloud
+import json
+import time
+import subprocess
 import hashlib
-import sys, signal
+import traceback
 
-from subprocess import call
-from colored import stylize, fg
 from imports import connect
+from colored import stylize, fg
 from lib import isSlurmOn, log, terminate, executeShellCommand
-from lib import LOG_PATH, OC_USER, WHOAMI, EBLOCPATH, PROVIDER_ID, RPC_PORT, HOME, EUDAT_USE, IPFS_USE, BLOCK_READ_FROM_FILE, CacheType, StorageID, job_state_code, PROGRAM_PATH
+from lib import (LOG_PATH, OC_USER, WHOAMI, EBLOCPATH, PROVIDER_ID, RPC_PORT, HOME, EUDAT_USE, IPFS_USE, BLOCK_READ_FROM_FILE, CacheType, StorageID,
+                 job_state_code, PROGRAM_PATH)
 
-from driverEudat  import driverEudat
+import driverFunc
+from driverEudat import driverEudat
 from driverGdrive import driverGdrive
 
 from contractCalls.getProviderReceivedAmount import getProviderReceivedAmount
-from contractCalls.getDeployedBlockNumber    import getDeployedBlockNumber
-from contractCalls.isContractExists          import isContractExists
-from contractCalls.isProviderExists          import isProviderExists
-from contractCalls.blockNumber               import blockNumber
-from contractCalls.getJobInfo                import getJobInfo
-from contractCalls.isRequesterExists         import isRequesterExists
-from contractCalls.getRequesterInfo          import getRequesterInfo
-from contractCalls.isWeb3Connected           import isWeb3Connected
-from contractCalls.LogJob                    import runLogJob
+from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
+from contractCalls.isContractExists import isContractExists
+from contractCalls.isProviderExists import isProviderExists
+from contractCalls.blockNumber import blockNumber
+from contractCalls.getJobInfo import getJobInfo
+from contractCalls.isRequesterExists import isRequesterExists
+from contractCalls.getRequesterInfo import getRequesterInfo
+from contractCalls.isWeb3Connected import isWeb3Connected
+from contractCalls.LogJob import runLogJob
 
-# Dummy sudo command to get the password when session starts
+# Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
 subprocess.run(['sudo', 'printf', '']) 
 
 eBlocBroker, w3 = connect()
@@ -33,27 +39,33 @@ if eBlocBroker is None or w3 is None:
     terminate()
 
 oc = owncloud.Client('https://b2drop.eudat.eu/') 
-driverCancelProcess   = None
+driverCancelProcess = None
 driverReceiverProcess = None
 my_env = os.environ.copy()
 
-def runDriverCancel():
-    """Runs driverCancel daemon on the background."""
-	# cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l 
+
+def run_driver_cancel():
+    """
+    Runs driverCancel daemon on the background.
+    commad: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l
+    """
     p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['grep', '[d]riverCancel'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(['grep', 'python3'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(['grep', 'python3'], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
-    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout,stdout=subprocess.PIPE)
+    p4 = subprocess.Popen(['wc', '-l'], stdin=p3.stdout, stdout=subprocess.PIPE)
     p3.stdout.close()
     out = p4.communicate()[0].decode('utf-8').strip()
     if int(out) == 0:
         # Running driverCancel.py on the background if it is not already
-        driverCancelProcess = subprocess.Popen(['python3','driverCancel.py'])
+        driverCancelProcess = subprocess.Popen(['python3', 'driverCancel.py'])
 
-def runWhisperStateReceiver():
-    """Runs driverReceiver daemon on the background."""
+        
+def run_whisper_state_receiver():
+    """
+    Runs driverReceiver daemon on the background.
+    """
     if not os.path.isfile(HOME + '/.eBlocBroker/whisperInfo.txt'):
         # First time running:
         log('Please first run: scripts/whisperInitialize.py')
@@ -81,22 +93,18 @@ def runWhisperStateReceiver():
     if int(out) == 0:
         # Running driverCancel.py on the background
         driverReceiverProcess = subprocess.Popen(['python3','whisperStateReceiver.py', '0']) #TODO: should be '0' to store log at a file and not print output
-		
-# res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
-# rows = res[0] columns = res[1]
-columns = 100
 
+		
 def idleCoreNumber(printFlag=1):    
     status, coreInfo = executeShellCommand(['sinfo', '-h', '-o%C']) # cmd: sinfo -h -o%C
     coreInfo = coreInfo.split('/')    
     if len(coreInfo) != 0:
-       idleCore = coreInfo[1]
-       if printFlag == 1:
-          log('AllocatedCores=' + coreInfo[0] + '| IdleCores='          + coreInfo[1] +
-              '| OtherCores='   + coreInfo[2] + '| TotalNumberOfCores=' + coreInfo[3], 'blue')
+        idleCore = coreInfo[1]
+        if printFlag == 1:
+            log('AllocatedCores=%s| IdleCores=%s| OtherCores=%s| TotalNumberOfCores=%s' % (coreInfo[0], coreInfo[1], coreInfo[2], coreInfo[3]), 'blue')                    
     else:
-       log('sinfo return emptry string.', 'red')
-       idleCore = None
+        log('sinfo return emptry string.', 'red')
+        idleCore = None
        
     return idleCore
 
@@ -112,6 +120,7 @@ def slurmPendingJobCheck():
        time.sleep(10)
        idleCore = idleCoreNumber(0)
 
+       
 def isGethOn():
     """ Checks whether geth runs on the background."""
     # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
@@ -128,6 +137,7 @@ def isGethOn():
         log("Geth is not running on the background.", 'red')
         terminate()      
 
+        
 def isDriverOn():
     """Checks wheather the Driver.py runs on the background."""
     # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
@@ -142,6 +152,7 @@ def isDriverOn():
     if int(out) > 1:
         log("Driver is already running.", 'green')
 
+        
 def eudatLoginAndCheck():
     log("Login into owncloud... ", 'blue', False)    
     if OC_USER is None or OC_USER == "":
@@ -153,7 +164,7 @@ def eudatLoginAndCheck():
 
     for attempt in range(5):
         try:
-            oc.login(OC_USER, password)  # Unlocks the EUDAT account    
+            oc.login(OC_USER, password)  # Unlocks the EUDAT account
             password = None
         except Exception:
             _traceback = traceback.format_exc()
@@ -174,24 +185,30 @@ def eudatLoginAndCheck():
     except subprocess.CalledProcessError as e:
         log("FAILED. " + e.output.decode('utf-8').strip(), 'red')
         terminate()
+
         
 def startup():
     """ Startup functions are called."""
     isDriverOn()
     isSlurmOn()
     isGethOn()
-    # runDriverCancel()    
-    runWhisperStateReceiver()
+    # run_driver_cancel()    
+    run_whisper_state_receiver()
     if EUDAT_USE:
         eudatLoginAndCheck()
 
-def checkPrograms():
+        
+def check_programs():
     status, result = executeShellCommand(['gdrive', 'version'])
     if not status:
         log('Please install gDrive or check its path', 'red')
         terminate()
 
-checkPrograms()
+        
+# res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
+# rows = res[0] columns = res[1]
+columns = 100        
+check_programs()
 yes = set(['yes', 'y', 'ye'])
 no  = set(['no' , 'n'])
 if WHOAMI == '' or EBLOCPATH == '' or PROVIDER_ID == '': 
@@ -218,47 +235,46 @@ if IPFS_USE:
 provider = PROVIDER_ID
 isProviderExists = isProviderExists(provider, eBlocBroker, w3)
 if not isProviderExists:
-   print(stylize("Error: Your Ethereum address '" + provider + "' \n"
-                 "does not match with any provider in eBlocBroker. Please register your \n" 
-                 "provider using your Ethereum Address in to the eBlocBroker. You can \n"   
-                 "use 'contractCalls/registerProvider.py' script to register your provider.",
-                 fg('red')))
-   terminate()
+    print(stylize("Error: Your Ethereum address '" + provider + "' \n"
+                  "does not match with any provider in eBlocBroker. Please register your \n" 
+                  "provider using your Ethereum Address in to the eBlocBroker. You can \n"   
+                  "use 'contractCalls/registerProvider.py' script to register your provider.", fg('red')))
+    terminate()
 
-deployedBlockNumber   = str(getDeployedBlockNumber(eBlocBroker))
+deployedBlockNumber = str(getDeployedBlockNumber(eBlocBroker))
 blockReadFromContract = '0'
 log('{0: <20}'.format('providerAddress:') + '"'+ provider + '"', 'yellow')
 if not os.path.isfile(BLOCK_READ_FROM_FILE): 
-   f = open(BLOCK_READ_FROM_FILE, 'w')
-   f.write(deployedBlockNumber + "\n")
-   f.close()
+    f = open(BLOCK_READ_FROM_FILE, 'w')
+    f.write(deployedBlockNumber + "\n")
+    f.close()
 
 f = open(BLOCK_READ_FROM_FILE, 'r')
 blockReadFromLocal = f.read().rstrip('\n')
 f.close()
 
 if not blockReadFromLocal.isdigit(): 
-   log("Error: BLOCK_READ_FROM_FILE is empty or contains and invalid value")
-   log("#> Would you like to read from contract's deployed block number? y/n")   
-   while True: 
-      choice = input().lower()
-      if choice in yes:
-         blockReadFromLocal = deployedBlockNumber
-         f = open(BLOCK_READ_FROM_FILE, 'w')
-         f.write(deployedBlockNumber + "\n")
-         f.close()
-         log("\n")
-         break
-      elif choice in no:
-         terminate()
-      else:
-         sys.stdout.write("Please respond with 'yes' or 'no'")
+    log("Error: BLOCK_READ_FROM_FILE is empty or contains and invalid value")
+    log("#> Would you like to read from contract's deployed block number? y/n")   
+    while True: 
+        choice = input().lower()
+        if choice in yes:
+            blockReadFromLocal = deployedBlockNumber
+            f = open(BLOCK_READ_FROM_FILE, 'w')
+            f.write(deployedBlockNumber + "\n")
+            f.close()
+            log("\n")
+            break
+        elif choice in no:
+            terminate()
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no'")
 
 blockReadFrom = 0
 if int(blockReadFromLocal) < int(blockReadFromContract):
-   blockReadFrom = blockReadFromContract
+    blockReadFrom = blockReadFromContract
 else:
-   blockReadFrom = blockReadFromLocal
+    blockReadFrom = blockReadFromLocal
 
 providerGainedAmountInit = getProviderReceivedAmount(provider, eBlocBroker, w3)
 log('{0: <20}'.format('deployedBlockNumber=') + deployedBlockNumber + " | providerGainedWei=" + providerGainedAmountInit)
@@ -284,7 +300,7 @@ while True:
     log("Waiting new job to come since block number=" + blockReadFrom, 'green')    
     currentBlockNumber = blockNumber() 
     log("Waiting for new block to increment by one.")
-    log("Current BlockNumber=" + currentBlockNumber  + "| sync from block number=" + blockReadFrom)
+    log("Current BlockNumber=%s | sync from block number=%s" %(currentBlockNumber, blockReadFrom))
     print('isWeb3Connected=' + str(isWeb3Connected(w3)))
     while int(currentBlockNumber) < int(blockReadFrom):
        time.sleep(1)

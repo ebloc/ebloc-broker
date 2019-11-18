@@ -12,9 +12,10 @@ contract eBlocBrokerBase {
     address public owner;   
     address[] providers; // A dynamically-sized array of 'address' structs 
     
-    mapping(address => Lib.Requester) requester; // Mapped address where the requester's gained Wei are collected
-    mapping(address => Lib.Provider)   provider;
+    mapping(address => uint32) requesterCommittedBlock; // Block number when provider is registered in order the watch provider's event activity    
+    mapping(address => Lib.Provider)      provider;
     mapping(address => uint32[]) pricesSetBlockNum;
+    mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID 
 
     uint32 constant ONE_HOUR_BLOCK_DURATION = 240; // ~1 hour
     
@@ -86,8 +87,8 @@ contract eBlocBrokerBase {
     /**
      * @dev Modifier to make a function callable only when orcID is verified
      */
-    modifier whenOrcidNotVerified(address _requester) {
-	require(bytes(requester[_requester].orcID).length == 0); // dev: OrcID is already verified
+    modifier whenOrcidNotVerified(address _user) {
+	require(orcID[_user] == 0); // dev: OrcID is already verified
 	_ ;
     }
            

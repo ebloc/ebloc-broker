@@ -22,7 +22,7 @@ cursor = coll.find({})
 for document in cursor:
     # print(document)
     receivedBlockNum, storageTime = getJobStorageTime(lib.PROVIDER_ID, document['sourceCodeHash'])
-    endBlockTime = receivedBlockNum + storageTime *240
+    endBlockTime = receivedBlockNum + storageTime * 240
     storageID = document['storageID']
     if endBlockTime < blockNum and receivedBlockNum != 0:        
         if storageID == lib.storageID.ipfs or storageID == lib.storageID.ipfs_miniLock:
@@ -40,5 +40,11 @@ for document in cursor:
             print(cachedFileName)
             silentremove(cachedFileName)
                        
-        print(receivedBlockNum)        
-        result = coll.delete_one({'jobKey':ipfsHash})       
+        print(receivedBlockNum)
+        result = coll.delete_one({'jobKey':ipfsHash})
+        
+
+        
+        
+
+

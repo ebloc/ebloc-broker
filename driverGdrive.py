@@ -188,8 +188,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
                     
     if cacheType == lib.CacheType.PRIVATE.value or cacheType == lib.CacheType.PUBLIC.value:
         if 'gzip' in mimeType: # Recieved job is in folder tar.gz
-            if cacheType != lib.CacheType.NONE.value:
-                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'gzip', key, jobKeyFlag)             
+            status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'gzip', key, jobKeyFlag)             
             if not status:
                 return False
 
@@ -201,8 +200,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
                 return False, None
             '''            
         elif 'folder' in mimeType: # Recieved job is in folder format
-            if cacheType != lib.CacheType.NONE.value: 
-                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'folder', key, jobKeyFlag)                
+            status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'folder', key, jobKeyFlag)                
             if not status:
                 return False
 
@@ -216,8 +214,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
             return False
         '''    
         elif 'zip' in mimeType: # Recieved job is in zip format
-            if cacheType != lib.CacheType.NONE.value: 
-                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'zip', key, jobKeyFlag)             
+            status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'zip', key, jobKeyFlag)             
             if not status:
                 return False
          
@@ -229,8 +226,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
     ''' Gdrive => IPFS no need.
     elif cacheType == lib.CacheType.IPFS.value:
         if 'folder' in mimeType:
-            if cacheType != lib.CacheType.NONE.value:
-                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'folder', key, jobKeyFlag)
+            status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'folder', key, jobKeyFlag)
             if not status:
                 return False
 
@@ -244,8 +240,7 @@ def getData(key, requester, resultsFolderPrev, resultsFolder, jobKeyFlag=False):
             command = ['ipfs', 'get', ipfsHash, '-o', resultsFolder]
             status, result = lib.executeShellCommand(command, None, True)
         elif 'gzip' in mimeType:
-            if cacheType != lib.CacheType.NONE.value:
-                status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'gzip', key, jobKeyFlag)
+            status, ipfsHash = cache(requester, resultsFolderPrev, folderName, sourceCodeHash, 'gzip', key, jobKeyFlag)
             if not status:
                 return False
          

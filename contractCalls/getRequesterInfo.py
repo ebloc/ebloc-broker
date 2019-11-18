@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import sys, os, traceback
-from imports import connect, getWeb3
+import sys, traceback
+from imports import connect
 
 def getRequesterInfo(_requester, eBlocBroker=None, w3=None):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
