@@ -2,22 +2,21 @@
 
 import base58, binascii
 
+ONE_HOUR_BLOCK_DURATION = 240
 Qm = b'\x12'
 
-class cacheType:
+class CacheType:
     PUBLIC  = 0
     PRIVATE = 1
-#    NONE    = 2
-#    IPFS    = 3
 
-class storageID:
+class StorageID:
     IPFS          = 0
     EUDAT         = 1
     IPFS_MINILOCK = 2
     GITHUB        = 3
     GDRIVE        = 4
 
-class jobStateCodes:
+class JobStateCodes:
     SUBMITTED  = 0
     PENDING    = 1
     RUNNING    = 2
@@ -31,7 +30,7 @@ def convertIpfsToBytes32(hash_string):
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
-def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, eB, w3, brownie=True):
+def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType, eB, w3, brownie=True):
     if brownie:
         providerPriceInfo   = eB.getProviderInfo(provider)
     else:
@@ -45,19 +44,22 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
     priceCache          = providerPriceInfo[5]
     commitmentBlockNum  = providerPriceInfo[6]
 
-    assert len(coreArray) == len(coreMinArray)
+    assert len(coreArray)      == len(coreMinArray)
     assert len(sourceCodeHash) == len(cacheHour)
-    assert len(cacheHour) == len(storageID)
-
+    assert len(cacheHour)      == len(storageID)
+    assert len(cacheType)      == len(storageID)
+    
     for i in range(len(storageID)):
-        assert(storageID[i] <= 4)
+        assert storageID[i] <= 4
+        if storageID[i] == StorageID.IPFS:
+            assert cacheType[i] == CacheType.PUBLIC
 
     jobPriceValue     = 0
     computationalCost = 0
     cacheCost         = 0
     storageCost       = 0
     _dataTransferIn   = 0
-
+    
     for i in range(len(coreArray)):
         computationalCost += priceCoreMin * coreArray[i] * coreMinArray[i]
 
@@ -67,7 +69,7 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
         else:
             jobReceivedBlocNumber, jobGasStorageHour, isUsed = eB.functions.getJobStorageTime(provider, requester, sourceCodeHash[i]).call()
 
-        if jobReceivedBlocNumber + jobGasStorageHour * 240 < w3.eth.blockNumber:
+        if jobReceivedBlocNumber + jobGasStorageHour * ONE_HOUR_BLOCK_DURATION  < w3.eth.blockNumber:
             _dataTransferIn += dataTransferIn[i]
             if cacheHour[i] > 0:
                 storageCost += priceStorage * dataTransferIn[i] * cacheHour[i]
@@ -81,8 +83,7 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
           'cacheCost='         + str(cacheCost)           + ' | ' +
           'storageCost='       + str(storageCost)         + ' | ' +
           'dataTransferCost='  + str(dataTransferCost)    + ' | ' +
-          'computationalCost=' + str(computationalCost)
-    )
+          'computationalCost=' + str(computationalCost))
 
     cost = dict();
     cost['computationalCost'] = computationalCost

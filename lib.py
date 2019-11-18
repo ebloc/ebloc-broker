@@ -10,12 +10,14 @@ from os.path import expanduser
 from colored import stylize, fg
 from enum    import Enum
 
+
 # enum: https://stackoverflow.com/a/1695250/2402577
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     reverse = dict((value, key) for key, value in enums.items())
     enums['reverse_mapping'] = reverse
     return type('Enum', (), enums)
+
 
 home = expanduser("~")
 load_dotenv(os.path.join(home + '/.eBlocBroker/', '.env')) # Load .env from the given path
@@ -53,12 +55,14 @@ CANCEL_JOBS_READ_FROM_FILE  = LOG_PATH + '/cancelledJobs.txt'
 BLOCK_READ_FROM_FILE        = LOG_PATH + '/blockReadFrom.txt' 
 CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + '/cancelledBlockReadFrom.txt'
 
+
 class StorageID(Enum):
     IPFS          = 0
     EUDAT         = 1
     IPFS_MINILOCK = 2
     GITHUB        = 3
     GDRIVE        = 4
+
     
 class CacheType(Enum):
     PUBLIC  = 0
@@ -82,6 +86,7 @@ inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 Qm = b'\x12 '
 
+
 def checkSizeOfFileToDownload(fileType, key=None):
     if int(fileType) == StorageID.IPFS.value or int(fileType) == StorageID.IPFS_MINILOCK.value:
         if key is None: # key refers to ipfs_hash
@@ -92,10 +97,12 @@ def checkSizeOfFileToDownload(fileType, key=None):
     elif int(fileType) == StorageID.GDRIVE.value:
         pass
     
-    return True        
+    return True
+
 
 def commitFolder():
     pass
+
 
 def terminate():
     log('Terminated')
@@ -106,6 +113,7 @@ def terminate():
     os.killpg(os.getpgid(driverReceiverProcess.pid), signal.SIGTERM)
     # raise SystemExit("Program Exited")
     sys.exit()
+
 
 def tryExcept(f, exitFlag=False):
     """Calls given function inside try/except
@@ -120,6 +128,7 @@ def tryExcept(f, exitFlag=False):
     except Exception:
         log(traceback.format_exc(), 'red')
         return False, None
+
 
 def getIpfsParentHash(resultIpfsHash):
     """Parses output of 'ipfs add -r path --only-hash' command and obtain its parent folder's hash.
@@ -138,6 +147,7 @@ def getIpfsParentHash(resultIpfsHash):
     resultIpfsHash = p3.communicate()[0].decode('utf-8').strip()
     log("resultIpfsHash=" + resultIpfsHash)
     return True, resultIpfsHash
+
 
 def getOnlyIpfsHash(path):
     """Gets oynly chunk and hash of a given path- do not write to disk.
@@ -162,7 +172,8 @@ def getOnlyIpfsHash(path):
 
     return True, resultIpfsHash
 
-def getIpfsHash(ipfsHash, resultsFolder):
+
+def getIpfsHash(ipfsHash, resultsFolder, storagePaid):
     # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor
     # cmd: ipfs get $ipfsHash --output=$resultsFolder
     res = subprocess.check_output(['ipfs', 'get', ipfsHash, '--output=' + resultsFolder]).decode('utf-8').strip() # Wait Max 5 minutes.
@@ -173,6 +184,7 @@ def getIpfsHash(ipfsHash, resultsFolder):
         res = subprocess.check_output(['ipfs', 'pin', 'add', ipfsHash]).decode('utf-8').strip() # pin downloaded ipfs hash
         log(res)
 
+        
 def isIpfsHashExists(ipfsHash, attemptCount):
     ipfsCallCounter = 0
     for attempt in range(attemptCount):
@@ -191,6 +203,7 @@ def isIpfsHashExists(ipfsHash, attemptCount):
     else:
         return False, None, None
 
+    
 def calculateFolderSize(path, pathType):
     """Return the size of the given path in MB."""
     byte_size = 0
@@ -204,27 +217,33 @@ def calculateFolderSize(path, pathType):
     
     return convertByteToMB(byte_size)
 
+
 def convertStringToBytes32(hash_string):
     print(hash_string)
     bytes_array = base58.b58decode(hash_string)
     return binascii.hexlify(bytes_array).decode("utf-8")
 
+
 def convertBytes32ToString(bytes_array):
     return base58.b58encode(bytes_array).decode("utf-8")
+
 
 def convertBytes32ToIpfs(bytes_array):
     """Convert bytes_array into IPFS hash format."""
     merge = Qm + bytes_array
     return base58.b58encode(merge).decode("utf-8")
 
+
 def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
 
+
 def printc(my_string, color=''):
     print(stylize(my_string, fg(color)))
 
+    
 def log(my_string, color='', newLine=True, file_name=LOG_PATH + '/transactions/providerOut.txt'): 
     if color != '':
         if newLine:
@@ -245,19 +264,21 @@ def log(my_string, color='', newLine=True, file_name=LOG_PATH + '/transactions/p
         
     f.close()
 
-def subprocessCallAttempt(command, attemptCount, printFlag=0):    
+    
+def subprocessCallAttempt(command, attemptCount, printFlag=0):
     for i in range(attemptCount):
-       try:
-           result = subprocess.check_output(command).decode('utf-8').strip()
-       except Exception:
-           time.sleep(0.1)
-           if i == 0 and printFlag == 0:
-               log(traceback.format_exc(), 'red')
-       else:
-           return True, result
+        try:
+            result = subprocess.check_output(command).decode('utf-8').strip()
+        except Exception:
+            time.sleep(0.1)
+            if i == 0 and printFlag == 0:
+                log(traceback.format_exc(), 'red')
+        else:
+            return True, result
     else:
-       return False, ""
+        return False, ""
 
+   
 def executeShellCommand(command, my_env=None, exitFlag=False):
     try:
         if my_env is None:
@@ -272,6 +293,7 @@ def executeShellCommand(command, my_env=None, exitFlag=False):
 
     return True, result
 
+
 def silentremove(filename) -> bool: # https://stackoverflow.com/a/10840586/2402577   
     try:
         os.remove(filename)
@@ -279,6 +301,7 @@ def silentremove(filename) -> bool: # https://stackoverflow.com/a/10840586/24025
     except Exception:
         log(traceback.format_exc(), 'red')
         return False
+
     
 def removeFiles(filename):
     if "*" in filename: 
@@ -292,8 +315,10 @@ def removeFiles(filename):
        
     return True
 
+
 def convertByteToMB(byte_size):
     return int(byte_size) * 0.000001
+
 
 def echoGrepAwk(str_data, grep_str, awkColumn):
     p1 = subprocess.Popen(['echo', str_data], stdout=subprocess.PIPE)
@@ -302,6 +327,7 @@ def echoGrepAwk(str_data, grep_str, awkColumn):
     p3 = subprocess.Popen(['awk', '{print $' + awkColumn + '}'], stdin=p2.stdout,stdout=subprocess.PIPE)
     p2.stdout.close()
     return p3.communicate()[0].decode('utf-8').strip()
+
 
 def gdriveSize(key, mimeType, folderName, gdriveInfo, resultsFolderPrev, sourceCodeHash_list, shouldAlreadyCached):
     sourceCode_key = None
@@ -373,10 +399,12 @@ def gdriveSize(key, mimeType, folderName, gdriveInfo, resultsFolderPrev, sourceC
 def getMd5sum(gdriveInfo): 
     # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
     return echoGrepAwk(gdriveInfo, 'Md5sum', '2')
-    
+
+
 def getGdriveFileInfo(gdriveInfo, _type): 
     # cmd: echo gdriveInfo | grep _type | awk \'{print $2}\'
     return echoGrepAwk(gdriveInfo, _type, '2')    
+
 
 def eBlocBrokerFunctionCall(f, _attempt):
     for attempt in range(_attempt):
@@ -392,6 +420,7 @@ def eBlocBrokerFunctionCall(f, _attempt):
     else:
         return False, result
 
+    
 def isIpfsHashCached(ipfsHash):
     # cmd: ipfs refs local | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
     p1 = subprocess.Popen(['ipfs', 'refs', 'local'], stdout=subprocess.PIPE)
@@ -402,7 +431,8 @@ def isIpfsHashCached(ipfsHash):
         return True
     else:
         return False
-      
+
+    
 # Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn():
     log('Checking Slurm... ', '', False)  
@@ -427,45 +457,49 @@ def isSlurmOn():
             log('Done')
             break
 
+        
 def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
+    
 def isTransactionPassed(w3, tx_hash):
     receipt = w3.eth.getTransactionReceipt(tx_hash)
     if receipt is not None:
         if receipt['status'] == 1:
             return True
         
-    return False  
-    
+    return False
+
+
 # Checks that does IPFS run on the background or not
 def isIpfsOn():
-   # cmd: ps aux | grep '[i]pfs daemon' | wc -l
-   p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
-   p2 = subprocess.Popen(['grep', '[i]pfs\ daemon'], stdin=p1.stdout, stdout=subprocess.PIPE)
-   p1.stdout.close()
-   p3 = subprocess.Popen(['wc', '-l'], stdin=p2.stdout,stdout=subprocess.PIPE)
-   p2.stdout.close()
-   check = p3.communicate()[0].decode('utf-8').strip()
-   if int(check) == 0:
-      log("E: IPFS does not work on the background.", 'red') 
-      log('* Starting IPFS: nohup ipfs daemon --mount &', 'green')
-      with open(LOG_PATH + '/ipfs.out', 'w') as stdout:
-         subprocess.Popen(['nohup', 'ipfs', 'daemon', '--mount'],
-                          stdout=stdout,
-                          stderr=stdout,
-                          preexec_fn=os.setpgrp)
+    # cmd: ps aux | grep '[i]pfs daemon' | wc -l
+    p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(['grep', '[i]pfs\ daemon'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(['wc', '-l'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p2.stdout.close()
+    check = p3.communicate()[0].decode('utf-8').strip()
+    if int(check) == 0:
+        log("E: IPFS does not work on the background.", 'red') 
+        log('* Starting IPFS: nohup ipfs daemon --mount &', 'green')
+        with open(LOG_PATH + '/ipfs.out', 'w') as stdout:
+            subprocess.Popen(['nohup', 'ipfs', 'daemon', '--mount'],
+                             stdout=stdout,
+                             stderr=stdout,
+                             preexec_fn=os.setpgrp)
          
-      time.sleep(5)
-      with open(LOG_PATH + '/ipfs.out', 'r') as content_file:
-         log(content_file.read(), 'blue')
+        time.sleep(5)
+        with open(LOG_PATH + '/ipfs.out', 'r') as content_file:
+            log(content_file.read(), 'blue')
          
-      # IPFS mounted at: /ipfs //cmd: sudo ipfs mount -f /ipfs      
-      res = subprocess.check_output(['sudo', 'ipfs', 'mount', '-f', '/ipfs']).decode('utf-8').strip()
-      log(res)      
-   else:
-      log("IPFS is already on.", 'green') 
+        # IPFS mounted at: /ipfs //cmd: sudo ipfs mount -f /ipfs
+        res = subprocess.check_output(['sudo', 'ipfs', 'mount', '-f', '/ipfs']).decode('utf-8').strip()
+        log(res)      
+    else:
+        log("IPFS is already on.", 'green')
 
+        
 def isRunExistInTar(tarPath):
     try:
         FNULL = open(os.devnull, 'w')
@@ -478,17 +512,18 @@ def isRunExistInTar(tarPath):
         else:
             log('run.sh does not exist under the parent folder', 'red')
             sys.exit() # TODO: delete
-            return False            
+            return False
     except:
         log('run.sh does not exist under the parent folder', 'red')
         sys.exit() # TODO: delete
         return False
 
+    
 def compressFolder(folderToShare):
     current_path = os.getcwd()
 
     base_name = os.path.basename(folderToShare)
-    dir_path   = os.path.dirname(folderToShare)
+    dir_path  = os.path.dirname(folderToShare)
     os.chdir(dir_path)        
     subprocess.run(['chmod', '-R', '777', base_name])
     # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
@@ -512,6 +547,7 @@ def compressFolder(folderToShare):
     shutil.move(base_name + '.tar.gz', tarHash + '.tar.gz')
     os.chdir(current_path)
     return ipfsHash, tarHash
+
 
 def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker, w3):
     jobKey    = loggedJob.args['jobKey']

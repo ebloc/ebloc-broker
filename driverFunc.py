@@ -16,6 +16,7 @@ def calculateDataTransferOut(outputFileName):
     log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green', True, log_fname)
     return dataTransferIn
 
+'''
 def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     import Driver
     eBlocBroker = Driver.eBlocBroker # global usage
@@ -42,6 +43,7 @@ def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
 
     dataTransferIn = calculateDataTransferOut(resultsFolder)
     lib.sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker,  w3)    
+'''
 
 def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     import Driver
@@ -82,7 +84,6 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     cumulativeSize_list.append(cumulativeSize)
 
     if not status or not "CumulativeSize" in ipfsStat:
-        # IPFS file could not be retrieved
         log("Error: !!!!!!!!!!!!!!!!!!!!!!! Markle not found! Timeout for the IPFS object stat retrieve !!!!!!!!!!!!!!!!!!!!!!!", 'red', True, log_fname)        
         return False
             
