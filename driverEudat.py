@@ -106,24 +106,9 @@ def cache(resultsFolderPrev, folderName, _id):
             else:
                  if not eudatDownloadFolder(globalCacheFolder, cachedFolder, folderName):
                     return False
-    '''
-    elif cacheType == lib.CacheType.IPFS.value:
-        log('Adding from owncloud mount point into IPFS...', 'blue')
-        tarFile = lib.OWN_CLOUD_PATH + '/' + folderName + '/' + folderName + '.tar.gz'        
-        if os.path.isfile(tarFile):            
-            globals()['folderType_dict'][folderName] = 'tar.gz'
-            ipfsHash = subprocess.check_output(['ipfs', 'add', tarFile]).decode('utf-8').strip() #TODO: add try catch, try few times if error generated
-        else:
-            globals()['folderType_dict'][folderName] = 'folder'
-            ipfsHash = subprocess.check_output(['ipfs', 'add', '-r', lib.OWN_CLOUD_PATH + '/' + folderName]).decode('utf-8').strip()            
-            ipfsHash = ipfsHash.splitlines()
-            ipfsHash = ipfsHash[int(len(ipfsHash) - 1)] # Last line of ipfs hash output is obtained which has the root folder's hash
-            globals()['ipfsHash_dict'][folderName] = ipfsHash.split()[1]
-        return True
-    '''
     return True
 
-# Assume job is sent as .tar.gz file
+# Assumes job is sent as .tar.gz file
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder, folderName) -> bool:    
     log('Downloading output.zip for ' + folderName + ' -> ' + resultsFolderPrev + '/' + folderName + '.tar.gz' + '  ... ', 'blue', False)
     for attempt in range(5):
@@ -142,8 +127,13 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder, folderName) -> bool:
         else:
             break
     else:
-        # TODO: since folder does not exist, do complete refund to the user.
-        return False
+        status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, sourceCodeHash_list) # Complete refund backte requester
+        if not status:
+            log(result, 'red')
+        else:
+            log('refund()_tx_hash=' + result)
+        return False # Should return back to Driver
+
     return True
     
 def eudatGetShareToken():
@@ -201,7 +191,7 @@ def eudatGetShareToken():
             log("Searching shareTokens for the related source code folder...")
             for i in range(len(shareList)-1, -1, -1): # Starts iterating from last item to the first one
                 inputFolderName  = shareList[i]['name']
-                inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning
+                inputFolderName  = inputFolderName[1:] # Removes '/' on the beginning of the string
                 _shareID         = shareList[i]['id']
                 inputOwner       = shareList[i]['owner']
                 inputUser        = shareList[i]['user'] + '@b2drop.eudat.eu'
@@ -214,23 +204,6 @@ def eudatGetShareToken():
                     log('shareID is accepted.', 'green')
                     acceptFlag += 1
                     break        
-                    '''
-		                if cacheType == lib.CacheType.IPFS.value:
-		                    val = oc.accept_remote_share(int(_shareID))
-		                    tryCount = 0
-		                    while True:
-		                        sleepDuration = 5
-		                        log('Sleeping ' + str(sleepDuration) + ' seconds for accepted folder to emerge on the mounted Eudat folder...')
-		                        time.sleep(sleepDuration)
-		                        if tryCount == 5:
-		                            log("Mounted Eudat does not see shared folder's path.", 'red')
-		                            return False
-		                 
-		                        if os.path.isdir(lib.OWN_CLOUD_PATH + '/' + folderName): # Checking is shared file emerged on mounted owncloud directory
-		                            break
-		                      
-		                        tryCount += 1
-                    '''
         if acceptFlag is len(sourceCodeHash_list):
             break
     else:
@@ -267,21 +240,24 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
     globals()['publicDir']  = PROGRAM_PATH +'/cache'
     globals()['privateDir'] = PROGRAM_PATH + '/' + requesterID + '/cache'
     jobID = 0
-    
+
+    # ----------
+    # TODO: delete 
     status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, sourceCodeHash_list)
     if not status:
         log(tx_hash, 'red')
         return False
     else:
-        log('refund_tx_hash=' + result)
+        log('refund()_tx_hash=' + result)
         return True
-            
+    sys.exit()
+    # ----------
+    
     resultsFolderPrev = PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + str(index)
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
 
     for i in range(0, len(sourceCodeHash_list)):
-        sourceCodeHash = w3.toText(sourceCodeHash_list[i])
-        sourceCodeHashText_list.append(sourceCodeHash)
+        sourceCodeHashText_list.append(w3.toText(sourceCodeHash_list[i]))
 
     status, used_dataTransferIn = eudatGetShareToken()
     if not status:
@@ -289,12 +265,15 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
 
     if used_dataTransferIn > dataTransferIn:
         log('E: requested size to download the sourceCode and datafiles is greater that the given amount.')
-        # TODO: full refund
-        return False
-
-    if cacheType != lib.CacheType.NONE.value:
-        status = cache_wrapper(resultsFolderPrev)
-        
+        status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, sourceCodeHash_list) # Full refund
+        if not status:
+            log(tx_hash, 'red')
+            return False
+        else:
+            log('refund()_tx_hash=' + result)
+            return True
+    
+    status = cache_wrapper(resultsFolderPrev)        
     if not status:
         return False
     
@@ -310,31 +289,6 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
         if folderType_dict[folderName] == 'tar.gz':
             # Untar cached tar file into private directory
             subprocess.run(['tar', '-xf', globalCacheFolder + '/' + folderName + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
-
-        '''
-        if folderType_dict[folderName] == 'tar.gz':
-            subprocess.run(['tar', '-xf', globalCacheFolder + '/' + folderName + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
-
-       if cacheType == lib.CacheType.PRIVATE.value or cacheType == lib.CacheType.PUBLIC.value:
-            
-            if cacheType == lib.CacheType.PRIVATE.value:
-                globals()['globalCacheFolder'] = PROGRAM_PATH + '/' + requesterID + '/cache'
-            elif cacheType == lib.CacheType.PUBLIC.value:
-                globals()['globalCacheFolder'] = PROGRAM_PATH +'/cache'
-            elif folderType_dict[folderName] == 'folder':
-                subprocess.run(['rsync', '-avq', '--partial-dir', '--omit-dir-times', globalCacheFolder + '/' + folderName + '/', resultsFolder])
-                subprocess.run(['tar', '-xf', resultsFolder + '/' + folderName + '.tar.gz', '--strip-components=1', '-C', resultsFolder])
-
-        elif cacheType == lib.CacheType.IPFS.value:
-            ipfsHash = globals()['ipfsHash_dict'][folderName]
-            log('Reading from IPFS hash=' + ipfsHash)
-            if folderType_dict[folderName] == 'tar.gz':
-                subprocess.run(['tar', '-xf', '/ipfs/' + ipfsHash, '--strip-components=1', '-C', resultsFolder])
-            elif eudatFolderType == 'folder':
-                # Copy from cached IPFS folder into user's path
-                command = ['ipfs', 'get', ipfsHash, '-o', resultsFolder] # cmd: ipfs get <ipfs_hash> -o <resultsFolder>
-                subprocess.run(command)
-        '''
     try:        
         log('dataTransferIn=' + str(dataTransferIn))
         shareToken = shareID[jobKey]['shareToken']
