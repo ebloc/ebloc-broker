@@ -2,6 +2,7 @@
 
 import sys, os
 
+
 def getProviders(eBlocBroker=None):
     if eBlocBroker is None: 
         from imports import connectEblocBroker
@@ -10,6 +11,7 @@ def getProviders(eBlocBroker=None):
     if eBlocBroker == 'notconnected':
         return eBlocBroker
     return eBlocBroker.functions.getProviders().call(), eBlocBroker
+
 
 def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):
     blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getProviderInfo(providerAddress).call()
@@ -22,20 +24,21 @@ def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataT
     else:
         print('{0: <19}'.format('price: ') + str(requestedCore * coreMinuteGas * priceCoreMin + gasDataTransfer * priceDataTransfer))
 
+        
 if __name__ == '__main__':
     providerList, eBlocBroker = getProviders()
     if providerList == 'notconnected':
         print(providerList)
         sys.exit()
         
-    requestedCore   = 2
-    coreGasDay      = 0
-    coreGasHour     = 0
-    coreGasMin      = 1
-    coreMinuteGas   = coreGasMin + coreGasHour * 60 + coreGasDay * 1440   
-    dataTransferIn  = 100
+    requestedCore = 2
+    coreGasDay = 0
+    coreGasHour = 0
+    coreGasMin = 1
+    coreMinuteGas = coreGasMin + coreGasHour * 60 + coreGasDay * 1440   
+    dataTransferIn = 100
     dataTransferOut = 100
-    gasDataTransfer  = dataTransferIn + dataTransferOut
+    gasDataTransfer = dataTransferIn + dataTransferOut
         
     for i in range(0, len(providerList)):
         print(providerList[i])

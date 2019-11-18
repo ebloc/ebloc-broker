@@ -1,14 +1,14 @@
 #!/bin/bash
 
-USER_ADDRESS=$1
+USERADDRESS=$1
 BASEDIR=$2
 
-## For testing
-#USER_ADDRESS="dummy"
-#BASEDIR="/var/eBlocBroker"
+# For testing
+## USERADDRESS="dummy"
+## BASEDIR="/var/eBlocBroker"
 
 SLURMUSER="netlab"
-USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4) # Convert Ethereum User Address into 32-bits
+USERNAME=$(echo -n $USERADDRESS | md5sum | head -c-4) # Convert Ethereum User Address into 32-bits
 
 ## Force to add
 #sacctmgr remove user where user=$USERNAME --immediate
@@ -17,13 +17,14 @@ USERNAME=$(echo -n $USER_ADDRESS | md5sum | head -c-4) # Convert Ethereum User A
 
 if ! id -u $USERNAME > /dev/null 2>&1; then
     sudo useradd -d $BASEDIR/$USERNAME -m $USERNAME
-    sudo mkdir $BASEDIR/$USERNAME/cache
-    echo $USER_ADDRESS / $USERNAME 'is added as user.'
+    sudo mkdir -p $BASEDIR/$USERNAME/cache
+    echo $USERADDRESS / $USERNAME 'is added as user.'
     
     sudo chmod 700 $BASEDIR/$USERNAME # Block others and people in the same group to do read/write/execute
-    sudo setfacl -R -m user:$USERNAME:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
-    sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME #Give read/write/execute access to USER2 on give folder.
+    sudo setfacl -R -m user:$USERNAME:rwx  $BASEDIR/$USERNAME #Give Read/Write/Execute access to USER on the give folder.
+    sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME #Give Read/Write/Execute access to root user on the give folder.
 
+    # Add user to Slurm
     sacctmgr remove user where user=$USERNAME --immediate
     sacctmgr add account $USERNAME --immediate
     sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate    
@@ -34,20 +35,20 @@ else
 	
 	sudo userdel $USERNAME
 	sudo useradd -d $BASEDIR/$USERNAME -m $USERNAME
-	sudo mkdir $BASEDIR/$USERNAME/cache
+	sudo mkdir -p $BASEDIR/$USERNAME/cache
 
 	sudo chmod 700 $BASEDIR/$USERNAME # Block others and people in the same group to do read/write/execute
-	sudo setfacl -R -m user:$USERNAME:rwx  $BASEDIR/$USERNAME #Give read/write/execute access to USER1 on give folder.
-	sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME #Give read/write/execute access to USER2 on give folder.
+	sudo setfacl -R -m user:$USERNAME:rwx  $BASEDIR/$USERNAME # Give Read/Write/Execute access to USER on the give folder.
+	sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$USERNAME # Give Read/Write/Execute access to root user on the give folder.
 
-	echo $USER_ADDRESS / $USERNAME 'is created.'
+	echo $USERADDRESS / $USERNAME 'is created.'
 
-	## Force to add
+	## Force to add user to Slurm
 	sacctmgr remove user where user=$USERNAME --immediate
 	sacctmgr add account $USERNAME --immediate
 	sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate    
     else
-	echo $USER_ADDRESS / $USERNAME 'is already created.'
+	echo $USERADDRESS / $USERNAME 'has already been created.'
     fi
 fi
 
