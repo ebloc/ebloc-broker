@@ -1,33 +1,42 @@
 #!/usr/bin/env python3
 
-import sys, os, time, lib, base64, glob, getpass, subprocess, json, shutil
+import sys
+import os
+import time
+import lib
+import base64
+import glob
+import getpass
+import subprocess
+import json
 import hashlib
-
-from lib import executeShellCommand, silentremove, PROVIDER_ID
 
 from colored import stylize
 from colored import fg
 from os.path import expanduser
-from imports import connectEblocBroker, getWeb3
-from contractCalls.getJobInfo       import getJobSourceCodeHash
-from contractCalls.getJobInfo       import getJobInfo
-from contractCalls.getRequesterInfo import getRequesterInfo
-from contractCalls.receiveDeposit     import receiveDeposit
 
-w3          = getWeb3()
+from lib import executeShellCommand, PROVIDER_ID
+from imports import connectEblocBroker, getWeb3
+from contractCalls.getJobInfo import getJobSourceCodeHash, getJobInfo
+from contractCalls.getRequesterInfo import getRequesterInfo
+from contractCalls.processPayment import processPayment
+
+w3 = getWeb3()
 eBlocBroker = connectEblocBroker(w3)
-homeDir     = expanduser("~")
+homeDir = expanduser("~")
+
 
 def log(strIn, color=''):
     if color != '':
         print(stylize(strIn, fg(color))) 
     else:
-       print(strIn)
-       logFileName = lib.LOG_PATH + '/endCodeAnalyse/' + globals()['jobKey'] + "_" + globals()['index'] + '.txt'
-       txFile = open(logFileName, 'a') 
-       txFile.write(strIn + "\n")  
-       txFile.close() 
+        print(strIn)
+        logFileName = lib.LOG_PATH + '/endCodeAnalyse/' + globals()['jobKey'] + "_" + globals()['index'] + '.txt'
+        txFile = open(logFileName, 'a') 
+        txFile.write(strIn + "\n")  
+        txFile.close() 
 
+        
 def uploadResultToEudat(encodedShareToken, outputFileName):
     ''' cmd: ( https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577 )
     curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
@@ -42,13 +51,14 @@ def uploadResultToEudat(encodedShareToken, outputFileName):
     output, err = p.communicate()
     return p, output, err
 
-def receiveDepositTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, dataTransfer, sourceCodeHashArray):
+
+def processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, dataTransfer, sourceCodeHashArray):
     # cmd: scontrol show job slurmJobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
     status, output = executeShellCommand(['scontrol', 'show', 'job', slurmJobID], None, True)        
     p1 = subprocess.Popen(['echo', output], stdout=subprocess.PIPE)   
     p2 = subprocess.Popen(['grep', 'EndTime'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=EndTime=).*(?= )'], stdin=p2.stdout,stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(['grep', '-o', '-P', '(?<=EndTime=).*(?= )'], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()    
     date = p3.communicate()[0].decode('utf-8').strip()
         
@@ -57,17 +67,18 @@ def receiveDepositTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, stora
     endTimeStamp = endTimeStamp.replace("'","")
     log("endTimeStamp=" + endTimeStamp) 
 
-    log('~/eBlocBroker/contractCalls/receiveDeposit.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + storageID + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
-    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: receiveDeposit(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
+    log('~/eBlocBroker/contractCalls/processPayment.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + storageID + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
+    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: processPayment(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
     if not status:
         sys.exit()        
     
-    log("receiveDeposit()_tx_hash=" + tx_hash)  
+    log("processPayment()_tx_hash=" + tx_hash)  
     txFile = open(lib.LOG_PATH + '/transactions/' + PROVIDER_ID + '.txt', 'a') 
-    txFile.write(jobKey + "_" + index + "| Tx_hash: " + tx_hash + "| receiveDepositTxHash\n") 
+    txFile.write(jobKey + "_" + index + "| Tx_hash: " + tx_hash + "| processPaymentTxHash\n") 
     txFile.close() 
 
-# Client's loaded files are removed, no need to re-upload them.
+
+    # Client's loaded files are removed, no need to re-upload them.
 def removeSourceCode(resultsFolderPrev, resultsFolder):
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
     command = ['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt']
@@ -77,11 +88,12 @@ def removeSourceCode(resultsFolderPrev, resultsFolder):
     # cmd: find . -type f ! -newer $resultsFolder/timestamp.txt -delete
     subprocess.run(['find', resultsFolder, '-type', 'f', '!', '-newer', resultsFolderPrev + '/timestamp.txt', '-delete'])
 
+    
 # storageID: string
 def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     globals()['jobKey'] = jobKey
     globals()['index']  = index
-    jobID  = 0 # TODO: should be mapped slurmJobID
+    jobID = 0 # TODO: should be mapped slurmJobID
 
     # https://stackoverflow.com/a/5971326/2402577 ... https://stackoverflow.com/a/4453495/2402577
     # my_env = os.environ.copy();
@@ -96,10 +108,10 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         log('JobKey and index are same.', 'red') 
         sys.exit() 
 
-    encodedShareToken = '' 
-    if shareToken != '-1':      
+    encodedShareToken = ''
+    if shareToken != '-1':
         encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8')
-      
+     
     log("encodedShareToken: " + encodedShareToken)          
     log('./getJobInfo.py ' + ' ' + PROVIDER_ID + ' ' + jobKey + ' ' + index + ' ' + str(jobID))
 
@@ -110,8 +122,8 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
         import traceback
         log(traceback.format_exc(), 'red')
         sys.exit()
-        
-    requesterID     = jobOwner.lower()
+       
+    requesterID = jobOwner.lower()
     requesterIDAddr = hashlib.md5(requesterID.encode('utf-8')).hexdigest()  # Convert Ethereum User Address into 32-bits
     status, requesterInfo = getRequesterInfo(requesterID, eBlocBroker, w3)
 
@@ -135,12 +147,12 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     p1.stdout.close()
     p2.communicate() # Remove empty files if exist
     
-    # cmd: find ./ -type d -empty -delete | xargs -0 rmdir 
+    # cmd: find ./ -type d -empty -delete | xargs -0 rmdir
     subprocess.run(['find', resultsFolder, '-type', 'd', '-empty', '-delete'])    
     p1 = subprocess.Popen(['find', resultsFolder, '-type', 'd', '-empty', '-print0'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['xargs', '-0', '-r', 'rmdir'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p2.communicate() # Remove empty folders if exist      
+    p2.communicate() # Remove empty folders if exist
 
     log("\nwhoami: "          + getpass.getuser() + ' ' + str(os.getegid())) # whoami
     log("homeDir: "           + homeDir)     # $HOME
@@ -222,28 +234,27 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     status, elapsedTime = executeShellCommand(command, None, True)
     log("ElapsedTime: " + elapsedTime) 
 
-    elapsedTime    = elapsedTime.split(':') 
-    elapsedDay     = "0" 
-    elapsedHour    = elapsedTime[0].replace(' ', '') 
-    elapsedMinute  = elapsedTime[1].rstrip() 
-    elapsedSeconds = elapsedTime[2].rstrip() 
+    elapsedTime = elapsedTime.split(':') 
+    elapsedDay = "0" 
+    elapsedHour = elapsedTime[0].replace(' ', '')
+    elapsedMinute = elapsedTime[1].rstrip()
 
     if "-" in str(elapsedHour):
-        elapsedHour = elapsedHour.split('-') 
-        elapsedDay  = elapsedHour[0] 
+        elapsedHour = elapsedHour.split('-')
+        elapsedDay = elapsedHour[0] 
         elapsedHour = elapsedHour[1] 
 
     elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1 
     log("ElapsedRawTime=" + str(elapsedRawTime))
 
     if elapsedRawTime > int(executionTimeMin):
-        elapsedRawTime = executionTimeMin 
+        elapsedRawTime = executionTimeMin
 
     log("finalizedElapsedRawTime: " + str(elapsedRawTime)) 
     log("jobInfo: " + str(jobInfo))
     outputFileName = 'result-' + PROVIDER_ID + '-' + jobKey + '-' + str(index) + '.tar.gz'
 
-    # Here we know that job is already completed 
+    # Here we know that job is already completed
     if storageID == str(lib.StorageID.IPFS.value) or storageID == str(lib.StorageID.GITHUB.value):
         removeSourceCode(resultsFolderPrev, resultsFolder)
         for attempt in range(10):
@@ -401,13 +412,14 @@ def endCall(jobKey, index, storageID, shareToken, folderName, slurmJobID):
     log('dataTransferIn='  + str(dataTransferIn)  + ' MB | Rounded=' + str(int(dataTransferIn))  + ' MB', 'green')
     log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
     log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferSum)) + ' MB', 'green')
-    receiveDepositTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, [int(dataTransferIn), int(dataTransferOut)], jobInfo['sourceCodeHash'])
+    processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, storageID, slurmJobID, [int(dataTransferIn), int(dataTransferOut)], jobInfo['sourceCodeHash'])
     log('===COMPLETED===', 'green')
     '''
     # Removed downloaded code from local since it is not needed anymore
     if os.path.isdir(resultsFolderPrev):
     shutil.rmtree(resultsFolderPrev) # deletes a directory and all its contents.
     '''
+    
 if __name__ == '__main__':
     jobKey      = sys.argv[1] 
     index       = sys.argv[2] 

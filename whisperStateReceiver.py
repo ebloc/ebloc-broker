@@ -84,9 +84,9 @@ def receiver(kId, filter_id, myFilter):
 	finally:
 		loop.close()
 
-def main(testFlag=False):
+def main(_testFlag=False):
     global testFlag, publicKey
-    if flag :
+    if _testFlag:
         testFlag = False
     else:
         testFlag = True
