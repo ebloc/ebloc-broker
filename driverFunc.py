@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, sys, os, time, subprocess, lib, re, glob, errno
-from lib        import log, silentremove
-from datetime   import datetime, timedelta
-from subprocess import call
-from colored    import stylize
-from colored    import fg
+import os
+import subprocess
+import lib
+
+from lib import log, silentremove
+
 
 def calculateDataTransferOut(outputFileName):    
     p1 = subprocess.Popen(['du', '-sb', outputFileName], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['awk', '{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    dataTransferIn = p2.communicate()[0].decode('utf-8').strip() # Retunrs downloaded files size in bytes
+    dataTransferIn = p2.communicate()[0].decode('utf-8').strip()  # Retunrs downloaded files size in bytes
     dataTransferIn = lib.convertByteToMB(dataTransferIn)
     log('dataTransferIn=' + str(dataTransferIn) + ' MB | Rounded=' + str(int(dataTransferIn)) + ' MB', 'green', True, log_fname)
     return dataTransferIn
@@ -45,10 +45,12 @@ def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     lib.sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker,  w3)    
 '''
 
+
 def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     import Driver
-    eBlocBroker = Driver.eBlocBroker # global usage
-    w3 = Driver.w3 # global usage    
+    
+    eBlocBroker = Driver.eBlocBroker  # global usage
+    w3 = Driver.w3  # global usage
         
     globals()['jobKey']    = loggedJob.args['jobKey']
     globals()['index']     = loggedJob.args['index']
@@ -64,13 +66,13 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
     isIpfsHashCached = lib.isIpfsHashCached(jobKey)
     log("isIpfsHashCached=" + str(isIpfsHashCached), '', True, log_fname)   
 
-    dataTransferIn    = 0 # if the requested file is already cached, it stays as 0                
+    dataTransferIn = 0  # if the requested file is already cached, it stays as 0
     resultsFolderPrev = lib.PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + str(index)
     resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN'           
 
     if not os.path.isdir(resultsFolderPrev): # If folder does not exist
-       os.makedirs(resultsFolderPrev, exist_ok=True) 
-       os.makedirs(resultsFolder,     exist_ok=True) 
+        os.makedirs(resultsFolderPrev, exist_ok=True) 
+        os.makedirs(resultsFolder,     exist_ok=True) 
 
     if os.path.isfile(resultsFolder + '/' + jobKey):
        silentremove(resultsFolder + '/' + jobKey)
