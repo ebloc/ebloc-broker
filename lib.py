@@ -472,7 +472,7 @@ def isTransactionPassed(w3, tx_hash):
 
 
 # Checks that does IPFS run on the background or not
-def isIpfsOn():
+def is_ipfs_on():
     # cmd: ps aux | grep '[i]pfs daemon' | wc -l
     p1 = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(['grep', '[i]pfs\ daemon'], stdin=p1.stdout, stdout=subprocess.PIPE)

@@ -9,6 +9,7 @@ class CacheType:
     PUBLIC  = 0
     PRIVATE = 1
 
+    
 class StorageID:
     IPFS          = 0
     EUDAT         = 1
@@ -16,6 +17,7 @@ class StorageID:
     GITHUB        = 3
     GDRIVE        = 4
 
+    
 class JobStateCodes:
     SUBMITTED  = 0
     PENDING    = 1
@@ -25,10 +27,12 @@ class JobStateCodes:
     COMPLETED  = 5
     TIMEOUT    = 6
 
+    
 def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
+
 
 def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType, eB, w3, brownie=True):
     if brownie:

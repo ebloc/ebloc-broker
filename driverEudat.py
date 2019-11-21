@@ -15,6 +15,7 @@ globals()['globalCacheFolder'] = None
 globals()['folderType_dict'] = {}
 globals()['shareID']         = {}
 
+
 def isRunExistInTar(tarPath):
     try:
         FNULL = open(os.devnull, 'w')
