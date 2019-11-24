@@ -12,17 +12,17 @@ spaces = ''.join(['-'] * (int(columns)-1))
 whisperPubKey = "04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
 cwd           = os.getcwd()
 
-provider_email       = "provider@gmail.com"
-federatedCloudID   = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-miniLockID         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
-available_core_num   = 128
-priceCoreMin       = 1
-priceDataTransfer  = 1
-priceStorage       = 1
-priceCache         = 1
-prices             = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
+provider_email = "provider@gmail.com"
+federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
+miniLockID = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+available_core_num = 128
+priceCoreMin = 1
+priceDataTransfer = 1
+priceStorage = 1
+priceCache = 1
+prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
 commitmentBlockNum = 10
-ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
+ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 zeroAddress = '0x0000000000000000000000000000000000000000'
 
 
@@ -75,7 +75,8 @@ def test_storage_refund(eB, rpc, web3):
     dataTransferIn_1 = 100
     dataTransferIn_2 = 100
     dataTransferOut = 100
-    dataTransferInArray = [dataTransferIn_1, dataTransferIn_2]    
+    dataTransferInArray = [dataTransferIn_1, dataTransferIn_2]
+    data_prices_set_blocknumber_array = [0, 0]
     dataTransfer = [(dataTransferIn_1 + dataTransferIn_2), dataTransferOut]
     
     coreArray = [2]    
@@ -84,7 +85,7 @@ def test_storage_refund(eB, rpc, web3):
     providerPriceBlockNumber = eB.getProviderSetBlockNumbers(accounts[0])[-1]
     storageID_list = [scripts.lib.StorageID.EUDAT, scripts.lib.StorageID.IPFS]
     cacheType_list = [scripts.lib.CacheType.PRIVATE, scripts.lib.CacheType.PUBLIC]
-    storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber]
+    storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
     
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, eB, web3)
 
@@ -179,7 +180,7 @@ def register_provider(eB, rpc, web3):
     web3.eth.defaultAccount = accounts[0]
     prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
 
-    tx = eB.registerProvider(provider_email, federatedCloudID, miniLockID, available_core_num, prices, commitmentBlockNum, ipfsAddress, whisperPubKey, {'from': accounts[0]})
+    tx = eB.registerProvider(provider_email, federatedCloudID, miniLockID, available_core_num, prices, commitmentBlockNum, ipfs_address, whisperPubKey, {'from': accounts[0]})
 
     orcID = '0000-0001-7642-0442'
     orcID_as_bytes = str.encode(orcID)
@@ -224,8 +225,8 @@ def test_updateProvider(eB, rpc, web3):
     register_provider(eB, rpc, web3)
 
     federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    tx = eB.updateProviderInfo(provider_email, federatedCloudID, miniLockID, ipfsAddress, whisperPubKey, {'from': accounts[0]})
-
+    tx = eB.updateProviderInfo(provider_email, federatedCloudID, miniLockID, ipfs_address, whisperPubKey, {'from': accounts[0]})
+    
     available_core_num = 64
     tx = eB.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {'from': accounts[0]})
     available_core_num = 16
@@ -235,12 +236,12 @@ def test_updateProvider(eB, rpc, web3):
     available_core_num = 32
     tx = eB.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {'from': accounts[0]})
 
-    providerPriceInfo = eB.getProviderInfo(accounts[0])
+    providerPriceInfo = eB.getProviderInfo(accounts[0], 0)
     blockReadFrom = providerPriceInfo[0]
     print(blockReadFrom)
     # assert blockReadFrom == 20
     print(eB.getProviderSetBlockNumbers(accounts[0]))
-
+        
     
 def test_multipleData(eB, rpc, web3):
     new_test()
@@ -266,7 +267,8 @@ def test_multipleData(eB, rpc, web3):
     dataTransferIn_1 = 100
     dataTransferIn_2 = 100
     dataTransferOut = 100
-    dataTransferInArray = [dataTransferIn_1, dataTransferIn_2]    
+    dataTransferInArray = [dataTransferIn_1, dataTransferIn_2]
+    data_prices_set_blocknumber_array = [0, 0]
     dataTransfer = [(dataTransferIn_1 + dataTransferIn_2), dataTransferOut]
 
     coreArray = [2]    
@@ -275,7 +277,7 @@ def test_multipleData(eB, rpc, web3):
     providerPriceBlockNumber = eB.getProviderSetBlockNumbers(accounts[0])[-1]
     storageID_list = [scripts.lib.StorageID.EUDAT, scripts.lib.StorageID.IPFS]
     cacheType_list = [scripts.lib.CacheType.PRIVATE, scripts.lib.CacheType.PUBLIC]
-    storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber]
+    storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
     
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, eB, web3)
 
@@ -367,13 +369,16 @@ def test_workflow(eB, rpc, web3):
 
     print("getRegisteredDataBlockNumbers=" + str(eB.getRegisteredDataBlockNumbers(_provider, sourceCodeHash1)))
     get_block_number(web3)
-    res = eB.getRegisteredDataPrice(_provider, sourceCodeHash1)
+    res = eB.getRegisteredDataPrice(_provider, sourceCodeHash1, 0)
     print("registerDataPrice=" + str(res))
     assert res[0] == 20
+
+    res = eB.getRegisteredDataPrice(_provider, sourceCodeHash1, 23)
+    assert res[0] == 25
     
     rpc.mine(1)
     get_block_number(web3)
-    res = eB.getRegisteredDataPrice(_provider, sourceCodeHash1)
+    res = eB.getRegisteredDataPrice(_provider, sourceCodeHash1, 0)
     print("registerDataPrice=" + str(res))
     assert res[0] == 25
         
@@ -383,7 +388,8 @@ def test_workflow(eB, rpc, web3):
     
     dataTransferIn = 100
     dataTransferOut = 100
-    dataTransferInArray = [dataTransferIn]    
+    dataTransferInArray = [dataTransferIn]
+    data_prices_set_blocknumber_array = [0]
     dataTransfer = [dataTransferIn, dataTransferOut]
 
     coreArray = [2,   4,  2]    
@@ -391,7 +397,7 @@ def test_workflow(eB, rpc, web3):
 
     storageID_list = [scripts.lib.StorageID.IPFS]
     cacheType_list = [scripts.lib.CacheType.PUBLIC]
-    storageID_cacheType = [storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1]]
+    storageID_cacheType = [storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1], data_prices_set_blocknumber_array]
 
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, eB, web3)
     
@@ -483,13 +489,13 @@ def test_submitJob(eB, rpc, web3):
     print('Registered provider addresses:')
     print(eB.getProviders())
     
-    providerPriceInfo   = eB.getProviderInfo(accounts[0])    
-    blockReadFrom      = providerPriceInfo[0]
-    available_core_num   = providerPriceInfo[1]    
-    priceCoreMin       = providerPriceInfo[2]
-    priceDataTransfer  = providerPriceInfo[3]
-    priceStorage       = providerPriceInfo[4]
-    priceCache         = providerPriceInfo[5]
+    providerPriceInfo = eB.getProviderInfo(accounts[0], 0)
+    blockReadFrom = providerPriceInfo[0]
+    available_core_num = providerPriceInfo[1]    
+    priceCoreMin = providerPriceInfo[2]
+    priceDataTransfer = providerPriceInfo[3]
+    priceStorage = providerPriceInfo[4]
+    priceCache = providerPriceInfo[5]
     commitmentBlockNum = providerPriceInfo[6]
     
     print("Provider's available_core_num:  " + str(available_core_num))
@@ -529,14 +535,16 @@ def test_submitJob(eB, rpc, web3):
             dataTransferOut = 100
 
             dataTransferInArray = [dataTransferIn]
+            data_prices_set_blocknumber_array = [0]
             storageID_list = [scripts.lib.StorageID.IPFS]
             cacheType_list = [scripts.lib.CacheType.PUBLIC]
-            
+
+            storageID_cacheType = [storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1], data_prices_set_blocknumber_array]
+
             # print(sourceCodeHashArray[0])
             jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, _provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, eB, web3)
             
             jobPriceValueSum   += jobPriceValue
-            storageID_cacheType = [storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1]]
             dataTransferInArray = [dataTransferIn]
             
             tx = eB.submitJob(_provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})

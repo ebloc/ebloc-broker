@@ -34,7 +34,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     /**
      * @notice eBlocBroker constructor
      * @dev The eBlocBroker constructor sets the original `owner` of the contract to the msg.sender.
-     */
+     */    
     constructor() public {
 	owner = msg.sender;	
     }
@@ -44,13 +44,12 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
      * Can only be called by the current owner.
      * @param newOwner The address to transfer ownership to.
      */
-    function transferOwnership(address newOwner) public onlyOwner
-    {
+    function transferOwnership(address newOwner) public onlyOwner {
 	require(newOwner != address(0), "New owner is the zero address");
 	emit OwnershipTransferred(owner, newOwner);
 	owner = newOwner;
     }
-       
+
     /** 
      * @notice 
      * Refund funds the complete amount to client if requested job is still in the pending state or
@@ -63,7 +62,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
      * @param jobID | ID of the job to identify under workflow.
      * @return bool 
      */    
-    function refund(address _provider, string memory key, uint32 index, uint32 jobID) public
+    function refund(address _provider, string memory key, uint32 index, uint32 jobID)
+	public
 	returns (bool)
     {
 	Lib.Provider storage provider = provider[_provider];
@@ -100,7 +100,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	emit LogRefundRequest(_provider, key, index, jobID, payment); /* scancel log */
 	return true;
     }
-	
+
     /**
        @notice        
        * Following function is a general-purpose mechanism for performing payment withdrawal
@@ -113,16 +113,25 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
        * @param endTime | // End time of the executed job.
        * @param dataTransfer | dataTransfer[0] == dataTransferIn , dataTransfer[1] == dataTransferOut.
        */	
-    function processPayment(string memory key, Lib.JobIndexes memory args, uint32 executionTimeMin, bytes32 resultIpfsHash, uint32 endTime, uint32[] memory dataTransfer) public whenProviderRunning
-    {
+    function processPayment(
+        string memory key,
+	Lib.JobIndexes memory args,
+	uint32 executionTimeMin,
+	bytes32 resultIpfsHash,
+	uint32 endTime,
+	uint32[] memory dataTransfer
+    )
+	public
+	whenProviderRunning
+    {	    
 	require(endTime <= now, "Ahead now");
-
+	    
 	/* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
 	   is not mapped to a job, this will throw automatically and revert all changes */
 	Lib.Provider storage provider = provider[msg.sender];
 	Lib.Status   storage jobInfo  = provider.jobStatus[key][args.index];	
 	Lib.Job      storage job      = jobInfo.jobs[args.jobID]; /* Used as a pointer to a storage */			
-	
+
 	require(job.jobStateCode != Lib.JobStateCodes.COMPLETED &&
 		job.jobStateCode != Lib.JobStateCodes.REFUNDED  &&
 		executionTimeMin <= job.executionTimeMin        && // Provider cannot request more execution time of the job that is already requested
@@ -186,7 +195,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	return;
     }
 
-    function refundStorageDeposit(address _provider, address payable _requester, bytes32 sourceCodeHash) public
+    function refundStorageDeposit(address _provider, address payable _requester, bytes32 sourceCodeHash)
+	public
 	returns (bool)
     {
 	Lib.Provider storage provider    = provider[_provider];	
@@ -204,7 +214,8 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	return true;
     }
     
-    function receiveStorageDeposit(address dataOwner, bytes32 sourceCodeHash) whenProviderRunning public	
+    function receiveStorageDeposit(address dataOwner, bytes32 sourceCodeHash) whenProviderRunning
+	public	
 	returns (bool)
     {
 	Lib.Provider       storage provider     = provider[msg.sender];
@@ -219,7 +230,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	provider.received.add(payment);
 	msg.sender.transfer(payment);
 	emit LogStorageDeposit(msg.sender, payment);
-
+	    
 	return true;
     }
 
@@ -247,7 +258,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 		commitmentBlockDuration > 8 //1440 // Commitment duration should be one minimum day
 		);
 	     
-	setProviderPrices(provider, block.number, availableCore, prices, commitmentBlockDuration);		
+	_setProviderPrices(provider, block.number, availableCore, prices, commitmentBlockDuration);		
 	pricesSetBlockNum[msg.sender].push(uint32(block.number));	    
 	provider.constructProvider();
 	providers.push(msg.sender); 
@@ -296,20 +307,20 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	Lib.Provider storage provider = provider[msg.sender];
 
 	uint32[] memory providerInfo = pricesSetBlockNum[msg.sender];
-	uint32 _pricesSetBlockNum = providerInfo[providerInfo.length-1];
+	uint32 _pricesSetBlockNum = providerInfo[providerInfo.length - 1];
 	if (_pricesSetBlockNum > block.number) // Enters if already updated futher away of the committed block on the same block
-	    setProviderPrices(provider, _pricesSetBlockNum, availableCore, prices, commitmentBlockDuration);
-	else {
-	    uint _commitmentBlockDuration = provider.info[provider.committedBlock].commitmentBlockDuration;	    
-	    uint committedBlock = _pricesSetBlockNum + _commitmentBlockDuration; //future block number
+	    _setProviderPrices(provider, _pricesSetBlockNum, availableCore, prices, commitmentBlockDuration);
+	else {	    
+	    uint _commitmentBlockDuration = provider.info[_pricesSetBlockNum].commitmentBlockDuration;	    
+	    uint _committedBlock = _pricesSetBlockNum + _commitmentBlockDuration; //future block number
 
-	    if (committedBlock <= block.number) {
-		committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;		
-		committedBlock = _pricesSetBlockNum + committedBlock * _commitmentBlockDuration; // Next price cycle to be considered
+	    if (_committedBlock <= block.number) {
+		_committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;		
+		_committedBlock = _pricesSetBlockNum + _committedBlock * _commitmentBlockDuration; // Next price cycle to be considered
 	    }
 	    
-	    setProviderPrices(provider, committedBlock, availableCore, prices, commitmentBlockDuration);
-	    pricesSetBlockNum[msg.sender].push(uint32(committedBlock));
+	    _setProviderPrices(provider, _committedBlock, availableCore, prices, commitmentBlockDuration);
+	    pricesSetBlockNum[msg.sender].push(uint32(_committedBlock));
 	}
 	
 	return true;
@@ -325,8 +336,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     function registerData(bytes32 sourceCodeHash, uint32 price, uint32 commitmentBlockDuration) public whenProviderRegistered
     {
 	Lib.RegisteredData storage registeredData = provider[msg.sender].registeredData[sourceCodeHash];
-	require(registeredData.commitmentBlockDuration == 0 && // In order to register, is shouldn't be already registered
-		commitmentBlockDuration > 8 // TODO: 1440 // Commitment duration should be one day
+	    
+	require(registeredData.committedBlock.length == 0 && // In order to register, is shouldn't be already registered
+		commitmentBlockDuration > 8 // TODO: ONE_HOUR_BLOCK_DURATION
 		);
 		
 	/* Always increment price of the data by 1 before storing it. By default if price == 0, data does not exist.
@@ -334,8 +346,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	if (price == 0)
 	    price = price + 1;
 	    
-	registeredData.price[block.number] = price;
-	registeredData.commitmentBlockDuration = commitmentBlockDuration;
+	registeredData.dataInfo[block.number].price = price;
+	registeredData.dataInfo[block.number].commitmentBlockDuration = commitmentBlockDuration;
+	
 	registeredData.committedBlock.push(uint32(block.number));
     }
     
@@ -359,27 +372,29 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     function updataDataPrice(bytes32 sourceCodeHash, uint32 price, uint32 commitmentBlockDuration) public whenProviderRegistered
     {
 	Lib.RegisteredData storage registeredData = provider[msg.sender].registeredData[sourceCodeHash];	
-	require(registeredData.commitmentBlockDuration > 0);
+	require(registeredData.committedBlock.length > 0);
+	if (price == 0)
+	    price = price + 1;
 
 	uint32[] memory committedBlockList = registeredData.committedBlock;	
 	uint32 _pricesSetBlockNum = committedBlockList[committedBlockList.length - 1];
 
-	if (price == 0)
-	    price = price + 1;
-
 	if (_pricesSetBlockNum > block.number) { // Enters if already updated futher away of the committed block on the same block
-	    registeredData.price[block.number] = price;
-	    registeredData.commitmentBlockDuration = commitmentBlockDuration;
+	    registeredData.dataInfo[block.number].price = price;
+	    registeredData.dataInfo[block.number].commitmentBlockDuration = commitmentBlockDuration;
 	}
 	else {
-	    uint _commitmentBlockDuration = registeredData.commitmentBlockDuration;
-	    uint committedBlock = _pricesSetBlockNum + _commitmentBlockDuration; //future block number
+	    uint _commitmentBlockDuration = registeredData.dataInfo[_pricesSetBlockNum].commitmentBlockDuration;	  
+	    uint _committedBlock = _pricesSetBlockNum + _commitmentBlockDuration; //future block number
 	    
-	    if (committedBlock <= block.number) {
-		committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;		
-		committedBlock = _pricesSetBlockNum + committedBlock * _commitmentBlockDuration;
+	    if (_committedBlock <= block.number) {
+		_committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;		
+		_committedBlock = _pricesSetBlockNum + _committedBlock * _commitmentBlockDuration;
 	    }
-	    registeredData.committedBlock.push(uint32(block.number));
+	    
+	    registeredData.dataInfo[_committedBlock].price = price;
+	    registeredData.dataInfo[_committedBlock].commitmentBlockDuration = commitmentBlockDuration;	    
+	    registeredData.committedBlock.push(uint32(_committedBlock));
 	}	
     }
     
@@ -407,6 +422,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 		sourceCodeHash.length == dataTransferIn.length  &&
 		dataTransferIn.length == args.storageID.length  &&
 		args.cacheType.length == dataTransferIn.length  &&
+		args.dataPricesSetBlockNum.length == dataTransferIn.length  &&
 		args.storageID[0] <= 4                          &&
 		core.length == executionTimeMin.length          &&		
 		isRequesterExists(msg.sender)                   &&
@@ -421,42 +437,40 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
 	uint32[] memory providerInfo = pricesSetBlockNum[_provider];
 	
-	uint priceBlockIndex;
-	if (providerInfo[providerInfo.length - 1] > block.number) // If the provider's price is updated on the future block
-	    priceBlockIndex = providerInfo[providerInfo.length-2];
-	else
-	    priceBlockIndex = providerInfo[providerInfo.length-1];
+	uint _providerPriceBlockIndex = providerInfo[providerInfo.length - 1];
+	if (_providerPriceBlockIndex > block.number) // If the provider's price is updated on the future block
+	    _providerPriceBlockIndex = providerInfo[providerInfo.length - 2];
 
-	require(args.priceBlockIndex == priceBlockIndex);
+	require(args.providerPriceBlockIndex == _providerPriceBlockIndex);
 	
-	Lib.ProviderInfo memory info = provider.info[priceBlockIndex];
+	Lib.ProviderInfo memory info = provider.info[_providerPriceBlockIndex];
 	
 	uint sum;
 	uint storageCost;	
 
 	// Here "cacheTime[0]"      => now stores the calcualted cacheCost
 	// Here "dataTransferIn[0]" => now stores the overall dataTransferIn value, decreased if there is caching for specific block
-	(sum, dataTransferIn[0], storageCost, cacheTime[0]) = _calculateCacheCost(_provider, provider, args.cacheType, sourceCodeHash, dataTransferIn, dataTransferOut, cacheTime, info);	
+	(sum, dataTransferIn[0], storageCost, cacheTime[0]) = _calculateCacheCost(_provider, provider, args, sourceCodeHash, dataTransferIn, dataTransferOut, cacheTime, info);	
 	sum = sum.add(_calculateComputationalCost(info, core, executionTimeMin));	
 
 	require(msg.value >= sum);
 
-	// Here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
-	priceBlockIndex = provider.jobStatus[key].push(Lib.Status({
-		dataTransferIn:    dataTransferIn[0],
+	// Here returned "_providerPriceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
+	_providerPriceBlockIndex = provider.jobStatus[key].push(Lib.Status({
+		        dataTransferIn:    dataTransferIn[0],
 			dataTransferOut:   dataTransferOut,
 			jobOwner:          tx.origin,
 			received:          msg.value - storageCost,
-			pricesSetBlockNum: uint32(priceBlockIndex),
+			pricesSetBlockNum: uint32(_providerPriceBlockIndex),
 			cacheCost:         cacheTime[0], //== cacheCost
 			sourceCodeHash:    keccak256(abi.encodePacked(sourceCodeHash, args.cacheType))
 			}
 		)) - 1;
 	
 	
-	// priceBlockIndex = _registerJob(provider, key, storageCost, dataTransferIn[0], dataTransferOut, uint32(priceBlockIndex), cacheTime[0], keccak256(abi.encodePacked(sourceCodeHash, args.cacheType)));	
-	_saveCoreAndCoreMin(provider, key, core, executionTimeMin, priceBlockIndex);
-	_logJobEvent(_provider, key, uint32(priceBlockIndex), sourceCodeHash, args);	
+	// __providerPriceBlockIndex = _registerJob(provider, key, storageCost, dataTransferIn[0], dataTransferOut, uint32(__providerPriceBlockIndex), cacheTime[0], keccak256(abi.encodePacked(sourceCodeHash, args.cacheType)));	
+	_saveCoreAndCoreMin(provider, key, core, executionTimeMin, _providerPriceBlockIndex);
+	_logJobEvent(_provider, key, uint32(_providerPriceBlockIndex), sourceCodeHash, args);	
 	return;
     }
         	
@@ -529,18 +543,25 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     }
 
     /* --------------------------------------------INTERNAL_FUNCTIONS-------------------------------------------- */
-    function setProviderPrices(Lib.Provider storage provider, uint mapBlock, uint32 availableCore, uint32[] memory prices, uint32 commitmentBlockDuration)
-	internal returns (bool)
+    //    function _get(args, index)
+    //internal returns (uint)
+    //{
+	
+    //}
+	    
+    function _setProviderPrices(Lib.Provider storage provider, uint mapBlock, uint32 availableCore, uint32[] memory prices, uint32 commitmentBlockDuration)
+	internal
+	returns (bool)
     {
 	provider.info[mapBlock] = Lib.ProviderInfo({
-	           availableCore:            availableCore,
+ 	            availableCore:           availableCore,
 		    priceCoreMin:            prices[0],
 		    priceDataTransfer:       prices[1],
 		    priceStorage:            prices[2],
 		    priceCache:              prices[3],
 		    commitmentBlockDuration: commitmentBlockDuration
 		    });
-	
+
 	return true;
     }
 
@@ -577,7 +598,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	}
     }
 
-    function _calculateComputationalCost(Lib.ProviderInfo memory info, uint16[] memory  core, uint16[]  memory  executionTimeMin) internal
+    function _calculateComputationalCost(Lib.ProviderInfo memory info, uint16[] memory  core, uint16[] memory executionTimeMin) pure internal
     	returns (uint sum)
     {
 	uint executionTimeMinSum;
@@ -593,9 +614,30 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	}
 	return sum;
     }
-	
-    function _calculateCacheCost(address payable _provider, Lib.Provider storage provider, uint8[] memory cacheType, bytes32[] memory sourceCodeHash, uint32[] memory dataTransferIn, uint32 dataTransferOut, uint32[] memory cacheTime, Lib.ProviderInfo memory info) internal
-	returns (uint sum, uint32 _dataTransferIn, uint _storageCost, uint32 _cacheCost)
+
+    function _doo(uint32 dataPricesSetBlockNum, Lib.RegisteredData storage registeredData, uint storageCost) internal
+	returns (uint, uint)
+    {
+	if (dataPricesSetBlockNum > 0) { // If true, then used cluster's registered data if exists
+	    if (registeredData.committedBlock.length > 0) {
+		uint32[] memory dataCommittedBlocks = registeredData.committedBlock;
+		uint32 _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 1];
+		if (_dataPriceSetBlockNum > block.number)
+		    _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 2]; // Obtain the committed prices before the block number
+			
+		require(_dataPriceSetBlockNum == _dataPriceSetBlockNum);
+		uint _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price; // Data is provided by the provider with its own price
+		if (_dataPrice > 1) 
+		    storageCost = storageCost.add(_dataPrice);
+
+		return (1, storageCost);
+	    }
+	}
+	return (0, storageCost);
+    }
+    
+    function _calculateCacheCost(address payable _provider, Lib.Provider storage provider, Lib.JobArgument memory args, bytes32[] memory sourceCodeHash, uint32[] memory dataTransferIn, uint32 dataTransferOut, uint32[] memory cacheTime, Lib.ProviderInfo memory info) internal
+	returns (uint sum, uint32 _dataTransferIn, uint storageCost, uint32 _cacheCost)
     {
 	uint _temp;
 	for (uint i = 0; i < sourceCodeHash.length; i++) {
@@ -610,32 +652,47 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 		
 		emit LogStorageDeposit(_provider, _temp);
 	    }						    		    
-	   
+
 	    if (storageInfo.received > 0 || jobSt.receivedBlock + jobSt.cacheDuration >= block.number && !jobSt.isPrivate && storageInfo.isVerified_Used)
 		break;
 	    else {
 		Lib.RegisteredData storage registeredData = provider.registeredData[sourceCodeHash[i]];
-		if (registeredData.commitmentBlockDuration > 0) {		    
-		    uint32[] memory dataCommittedBlocks = registeredData.committedBlock;		
-		    uint32 _pricesSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 1];
-		    if (_pricesSetBlockNum > block.number)
-			_pricesSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 2]; // Obtain the committed prices before the block number
-		    uint _dataPrice = registeredData.price[_pricesSetBlockNum]; // Data is provided by the provider with its own price
-		    if (_dataPrice > 1) 
-			_storageCost =_storageCost.add(_dataPrice);
+
+		// _temp used for returned bool value True or False
+		(_temp, storageCost) = _doo(args.dataPricesSetBlockNum[i], registeredData, storageCost);
+		if (_temp == 1) {
 		}
+		// internal call return (args.dataPricesSetBlockNum[i]) //
+		/*
+		if (args.dataPricesSetBlockNum[i] > 0) { // If true, then used cluster's registered data if exists
+		    if (registeredData.committedBlock.length > 0) {		    
+			uint32[] memory dataCommittedBlocks = registeredData.committedBlock;		
+			uint32 _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 1];
+			if (_dataPriceSetBlockNum > block.number)
+			    _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 2]; // Obtain the committed prices before the block number
+			
+			// args;
+			// require(_dataPriceSetBlockNum == args.dataPricesSetBlockNum[i]); // TODO:
+		    
+			uint _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price; // Data is provided by the provider with its own price
+			if (_dataPrice > 1) 
+			    storageCost =storageCost.add(_dataPrice);
+		    }
+		}
+		*/
+		//
 		else if (jobSt.receivedBlock + jobSt.cacheDuration < block.number) {		    		    
 		    if (cacheTime[i] > 0) {
-			jobSt.receivedBlock   = uint32(block.number);			
+			jobSt.receivedBlock = uint32(block.number);			
 			//Hour is converted into block time, 15 seconds of block time is fixed and set only one time till the storage time expires
 			jobSt.cacheDuration = cacheTime[i].mul(ONE_HOUR_BLOCK_DURATION);
 
-			// _temp used for _storageCostTemp variable
+			// _temp used for storageCostTemp variable
 			_temp = info.priceStorage.mul(dataTransferIn[i].mul(cacheTime[i]));
 			storageInfo.received = uint248(_temp);
-			_storageCost = _storageCost.add(_temp); //storageCost
+			storageCost = storageCost.add(_temp); //storageCost
 		
-			if (cacheType[i] == uint8(Lib.CacheType.PRIVATE))
+			if (args.cacheType[i] == uint8(Lib.CacheType.PRIVATE))
 			    jobSt.isPrivate = true; // Set by the data owner
 		    }
 		    else
@@ -646,12 +703,11 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
 		_dataTransferIn = _dataTransferIn.add(dataTransferIn[i]); //communication cost should be applied		    
 	    }	
-	    // useRegisterData()	    
 	}
 	
 	sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(dataTransferOut))); // priceDataTransfer * (dataTransferIn + dataTransferOut)
-	sum = sum.add(_storageCost).add(_cacheCost); // storageCost + cacheCost
-	return (sum, _dataTransferIn, uint32(_storageCost), uint32(_cacheCost));    
+	sum = sum.add(storageCost).add(_cacheCost); // storageCost + cacheCost
+	return (sum, _dataTransferIn, uint32(storageCost), uint32(_cacheCost));    
     }    
 
     /**
@@ -701,9 +757,24 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     function getRegisteredDataBlockNumbers(address _provider, bytes32 sourceCodeHash) external view
 	returns (uint32[] memory)
     {
-	return provider[msg.sender].registeredData[sourceCodeHash].committedBlock;
+	return provider[_provider].registeredData[sourceCodeHash].committedBlock;
     }
 
+    // If _pricesSetBlockNum is 0, it will return the current price at the current block-number that is called
+    // If mappings does not valid, then it will return (0, 0)
+    function getRegisteredDataPrice(address _provider, bytes32 sourceCodeHash, uint32 _pricesSetBlockNum) public view
+	returns(uint32, uint32)
+    {
+	Lib.RegisteredData storage registeredData = provider[_provider].registeredData[sourceCodeHash];
+	if (_pricesSetBlockNum == 0) {
+	    uint32[] memory _dataPrices = registeredData.committedBlock;
+	    _pricesSetBlockNum = _dataPrices[_dataPrices.length - 1];
+	    if (_pricesSetBlockNum > block.number)
+		_pricesSetBlockNum = _dataPrices[_dataPrices.length - 2]; // Obtain the committed data price before the block.number
+	}
+	
+	return (registeredData.dataInfo[_pricesSetBlockNum].price, registeredData.dataInfo[_pricesSetBlockNum].commitmentBlockDuration);
+    }
     
     /* Returns the enrolled requester's
        block number of the enrolled requester, which points to the block that logs \textit{LogRequester} event.
@@ -717,16 +788,20 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     
     /* Returns the registered provider's information. It takes
        Ethereum address of the provider, which can be obtained by calling getProviderAddresses
+
+       If the _pricesSetBlockNum is 0, then it will return the current price at the current block-number that is called
     */    
-    function getProviderInfo(address _provider) external view
+    function getProviderInfo(address _provider, uint32 _pricesSetBlockNum) public view
 	returns(uint32[7] memory)
     {	
 	uint32[]  memory providerInfo = pricesSetBlockNum[_provider];
 	uint32[7] memory providerPriceInfo;
-	    
-	uint32 _pricesSetBlockNum = providerInfo[providerInfo.length - 1];
-        if (_pricesSetBlockNum > block.number)
-            _pricesSetBlockNum = providerInfo[providerInfo.length - 2]; // Obtain the committed prices before the block number
+
+	if (_pricesSetBlockNum == 0) {
+	    _pricesSetBlockNum = providerInfo[providerInfo.length - 1];
+	    if (_pricesSetBlockNum > block.number)
+		_pricesSetBlockNum = providerInfo[providerInfo.length - 2]; // Obtain the committed prices before the block number
+	}
 	
 	Lib.ProviderInfo memory _providerPrices = provider[_provider].info[_pricesSetBlockNum];
 	
@@ -740,7 +815,6 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 	providerPriceInfo[4] = _providerPrices.priceStorage;
 	providerPriceInfo[5] = _providerPrices.priceCache;	
 	providerPriceInfo[6] = _providerPrices.commitmentBlockDuration;
-	// TODO: return next cycle for price chance 
 	return providerPriceInfo;
     }
     
@@ -758,7 +832,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 			
 	return (job.jobStateCode, job.core, job.startTime, jobInfo.received, job.executionTimeMin, jobInfo.jobOwner, jobInfo.dataTransferIn, jobInfo.dataTransferOut);
     }
-    
+	
     function getProviderPricesForJob(address _provider, string memory key, uint index) public view
 	returns (uint, uint, uint, uint)
     {
@@ -852,7 +926,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     {
 	return provider[_provider].receiptList.getReceiptListSize();
     }
-
+	
     // Used for tests 
     function getProviderReceiptNode(address _provider, uint32 index) external view
 	returns (uint, int32)
@@ -861,20 +935,3 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     }
 
 }
-
-    /*
-    function _registerJob(Lib.Status storage Status, string memory key, uint storageCost, uint32 dataTransferIn, uint32 dataTransferOut, uint32 jobIndex, uint32 cacheCost, bytes32 hashSourceCodeHashesCacheTypes) internal
-	returns (uint)
-    {	
-	return provider.jobStatus[key].push(Lib.Status({
-		dataTransferIn:    dataTransferIn,
-			dataTransferOut:   dataTransferOut,
-			jobOwner:          tx.origin,
-			received:          msg.value - storageCost,
-			pricesSetBlockNum: jobIndex,
-			cacheCost:         cacheCost,
-			sourceCodeHash:    hashSourceCodeHashesCacheTypes
-			}
-		)) - 1;
-    }
-    */
