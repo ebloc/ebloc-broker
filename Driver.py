@@ -12,9 +12,9 @@ import traceback
 
 from imports import connect
 from colored import stylize, fg
-from lib import isSlurmOn, log, terminate, executeShellCommand, is_ipfs_on
-from lib import (LOG_PATH, OC_USER, WHOAMI, EBLOCPATH, PROVIDER_ID, RPC_PORT, HOME, EUDAT_USE, IPFS_USE, BLOCK_READ_FROM_FILE, CacheType,
-                 StorageID, job_state_code, PROGRAM_PATH)
+from lib import (isSlurmOn, log, terminate, executeShellCommand, is_ipfs_on, convertBytes32ToIpfs,
+                 LOG_PATH, OC_USER, WHOAMI, EBLOCPATH, PROVIDER_ID, RPC_PORT, HOME, EUDAT_USE, IPFS_USE,
+                 BLOCK_READ_FROM_FILE, CacheType, StorageID, job_state_code, PROGRAM_PATH)
 
 import driverFunc
 from driverEudat import driverEudat
@@ -111,15 +111,15 @@ def idleCoreNumber(printFlag=1):
 
 def slurmPendingJobCheck():
     """ If there is no idle cores, waits for idle cores to be emerged. """
-    idleCore  = idleCoreNumber()       
+    idleCore = idleCoreNumber()
     printFlag = 0    
     while idleCore is None:
-       if printFlag == 0:
-          log('Waiting running jobs to be completed...', 'blue')
-          printFlag = 1
+        if printFlag == 0:
+           log('Waiting running jobs to be completed...', 'blue')
+           printFlag = 1
           
-       time.sleep(10)
-       idleCore = idleCoreNumber(0)
+        time.sleep(10)
+        idleCore = idleCoreNumber(0)
 
        
 def isGethOn():
@@ -353,15 +353,14 @@ while True:
             receivedBlock.append(_receivedBlock)
             cacheDuration.append(_cacheDuration)
            
-            if _receivedBlock + _cacheDuration * 240 >= _blockNumber: # // Remaining time to cache is 0
-            # Cache is requested for the sourceCodeHash
+            if _receivedBlock + _cacheDuration * 240 >= _blockNumber:  # Remaining time to cache is 0. If true,then Cache is requested for the sourceCodeHash
                 if _receivedBlock < _blockNumber:
                     shouldAlreadyCached[sourceCodeHash] = True
                 elif _receivedBlock == _blockNumber:
                     if sourceCodeHash in shouldAlreadyCached:
                         shouldAlreadyCached[sourceCodeHash] = True
                     else:
-                        shouldAlreadyCached[sourceCodeHash] = False # For the first job should be False since it is requested for cache for the first time
+                        shouldAlreadyCached[sourceCodeHash] = False  # For the first job should be False since it is requested for cache for the first time
             else:
                 shouldAlreadyCached[sourceCodeHash] = False
                
@@ -396,7 +395,7 @@ while True:
                 time.sleep(1)
         else:
             passFlag = True
-            break             
+            break
             
         jobID = 1
         while not passFlag: # Retrieves all jobInfo for each job in the workflow
@@ -415,7 +414,7 @@ while True:
             passFlag = True
         else:
             log('jobOwner/requesterID: ' + jobInfo[0]['jobOwner'])
-            requesterID    = jobInfo[0]['jobOwner'].lower()
+            requesterID = jobInfo[0]['jobOwner'].lower()
             requesterExist = isRequesterExists(requesterID, eBlocBroker, w3)          
             if jobInfo[0]['stateCode'] == str(job_state_code['COMPLETED']):
                 log('Job is already completed.', 'red')

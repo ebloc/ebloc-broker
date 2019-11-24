@@ -5,27 +5,28 @@ import base58, binascii
 ONE_HOUR_BLOCK_DURATION = 240
 Qm = b'\x12'
 
+
 class CacheType:
-    PUBLIC  = 0
+    PUBLIC = 0
     PRIVATE = 1
 
     
 class StorageID:
-    IPFS          = 0
-    EUDAT         = 1
+    IPFS = 0
+    EUDAT = 1
     IPFS_MINILOCK = 2
-    GITHUB        = 3
-    GDRIVE        = 4
+    GITHUB = 3
+    GDRIVE = 4
 
     
 class JobStateCodes:
-    SUBMITTED  = 0
-    PENDING    = 1
-    RUNNING    = 2
-    REFUNDED   = 3
-    CANCELLED  = 4
-    COMPLETED  = 5
-    TIMEOUT    = 6
+    SUBMITTED = 0
+    PENDING = 1
+    RUNNING = 2
+    REFUNDED = 3
+    CANCELLED = 4
+    COMPLETED = 5
+    TIMEOUT = 6
 
     
 def convertIpfsToBytes32(hash_string):
@@ -36,17 +37,17 @@ def convertIpfsToBytes32(hash_string):
 
 def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType, eB, w3, brownie=True):
     if brownie:
-        providerPriceInfo   = eB.getProviderInfo(provider)
+        providerPriceInfo = eB.getProviderInfo(provider, 0)
     else:
-        providerPriceInfo   = eB.functions.getProviderInfo(provider).call()
+        providerPriceInfo = eB.functions.getProviderInfo(provider, 0).call()
 
-    blockReadFrom       = providerPriceInfo[0]
-    availableCoreNum    = providerPriceInfo[1]
-    priceCoreMin        = providerPriceInfo[2]
-    priceDataTransfer   = providerPriceInfo[3]
-    priceStorage        = providerPriceInfo[4]
-    priceCache          = providerPriceInfo[5]
-    commitmentBlockNum  = providerPriceInfo[6]
+    blockReadFrom = providerPriceInfo[0]
+    availableCoreNum = providerPriceInfo[1]
+    priceCoreMin = providerPriceInfo[2]
+    priceDataTransfer = providerPriceInfo[3]
+    priceStorage = providerPriceInfo[4]
+    priceCache = providerPriceInfo[5]
+    commitmentBlockNum = providerPriceInfo[6]
 
     assert len(coreArray)      == len(coreMinArray)
     assert len(sourceCodeHash) == len(cacheHour)
@@ -58,11 +59,11 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
         if storageID[i] == StorageID.IPFS:
             assert cacheType[i] == CacheType.PUBLIC
 
-    jobPriceValue     = 0
+    jobPriceValue = 0
     computationalCost = 0
-    cacheCost         = 0
-    storageCost       = 0
-    _dataTransferIn   = 0
+    cacheCost = 0
+    storageCost = 0
+    _dataTransferIn = 0
     
     for i in range(len(coreArray)):
         computationalCost += priceCoreMin * coreArray[i] * coreMinArray[i]

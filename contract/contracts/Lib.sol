@@ -40,12 +40,18 @@ library Lib {
     struct JobArgument {
 	uint8[] storageID;
 	uint8[] cacheType;
-	uint32  priceBlockIndex;
+	uint32 providerPriceBlockIndex;
+	uint32[] dataPricesSetBlockNum;
     }
 
     struct JobIndexes {
 	uint32 index;
 	uint32 jobID;
+    }
+
+    struct DataInfo {
+	uint32 price;
+	uint32 commitmentBlockDuration;
     }
 
     struct Storage {
@@ -63,8 +69,7 @@ library Lib {
 
     struct RegisteredData {
 	uint32[] committedBlock; // Block number when data is registered
-	uint32 commitmentBlockDuration;
-	mapping(uint => uint32) price;
+	mapping(uint => DataInfo) dataInfo;
     }
 
     struct Job {	
@@ -86,11 +91,7 @@ library Lib {
 
         mapping(uint => Job) jobs;
     }
-    /*       
-    struct Requester {
-	uint32 committedBlock; // Block number when provider is registered in order the watch provider's event activity 
-    }
-    */
+
     struct ProviderInfo {
 	uint32 availableCore; // Registered core number of the provider 
 	uint32 commitmentBlockDuration;
