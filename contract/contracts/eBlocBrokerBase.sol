@@ -18,7 +18,6 @@ contract eBlocBrokerBase {
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID 
 
     uint32 constant ONE_HOUR_BLOCK_DURATION = 240; // ~1 hour
-    
     /**
      * @dev Throws if called by any account other than the owner.
      */
