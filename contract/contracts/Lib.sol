@@ -20,7 +20,8 @@ library Lib {
      EUDAT,         /* 1 */
      IPFS_MINILOCK, /* 2 */
      GITHUB,        /* 3 */
-     GDRIVE         /* 4 */
+     GDRIVE,        /* 4 */
+     NONE           /* 5 Requested to use from registered data */
     }
      
     /* Status of the submitted job Enum */
@@ -63,8 +64,7 @@ library Lib {
 	uint32 receivedBlock;
 	uint32 cacheDuration;
 	bool       isPrivate;
-	//address        owner; //Cloud be multiple owners
-	
+	//address      owner; //Cloud be multiple owners	
     }
 
     struct RegisteredData {
@@ -135,7 +135,8 @@ library Lib {
      *@param self | Provider struct
      */	
 
-    function constructProvider(Provider storage self) internal
+    function constructProvider(Provider storage self)
+	internal
     {
 	self.isRunning = true;
 	self.received;
@@ -147,7 +148,8 @@ library Lib {
 	selfReceiptList.deletedItemNum;
     }
     
-    function isOverlap(IntervalNode storage self, Job memory _job, uint32 endTime, int32 availableCore) internal
+    function isOverlap(IntervalNode storage self, Job memory _job, uint32 endTime, int32 availableCore)
+	internal
 	returns (bool flag)
     {
 	Interval[] storage list = self.list;
@@ -224,14 +226,18 @@ library Lib {
     }
 
     /* Used for tests */
-    function getReceiptListSize(IntervalNode storage self) external view
+    function getReceiptListSize(IntervalNode storage self)
+	external
+	view
 	returns (uint32)
     {
 	return uint32(self.list.length - self.deletedItemNum);
     }
 
     /* Used for test */
-    function printIndex(IntervalNode storage self, uint32 index) external view
+    function printIndex(IntervalNode storage self, uint32 index)
+	external
+	view
 	returns (uint256, int32)
     {
 	uint32 _index = self.tail;

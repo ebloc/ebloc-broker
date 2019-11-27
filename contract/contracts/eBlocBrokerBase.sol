@@ -16,7 +16,8 @@ contract eBlocBrokerBase {
     mapping(address => Lib.Provider)      provider;
     mapping(address => uint32[]) pricesSetBlockNum;
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID 
-
+    // mapping(string => mapping(uint32 => uint => Job) jobs;
+ 
     uint32 constant ONE_HOUR_BLOCK_DURATION = 240; // ~1 hour
     /**
      * @dev Throws if called by any account other than the owner.

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-import hashlib, getpass, sys, os, time, subprocess, lib, re, pwd, glob, errno, json, glob, traceback
+import sys
+import os
+import time
+import subprocess
+import lib
+import json
+import traceback
 
 from lib import convertByteToMB, sbatchCall, log, silentremove, PROGRAM_PATH, PROVIDER_ID
 from colored import stylize, fg
@@ -26,10 +32,11 @@ def isRunExistInTar(tarPath):
             return True
         else:
             log('E: run.sh does not exist under the parent folder', 'red')
-            return False        
+            return False
     except:
         log('E: run.sh does not exist under the parent folder', 'red')
         return False
+
     
 def cache_wrapper(resultsFolderPrev):    
     for i in range(0, len(sourceCodeHashText_list)):
@@ -38,19 +45,20 @@ def cache_wrapper(resultsFolderPrev):
         if not status:
             return False
     return True
-        
+
+
 def cache(resultsFolderPrev, folderName, _id):
     if cacheType == lib.CacheType.PRIVATE.value: # First checking does is already exist under public cache directory
         globals()['globalCacheFolder'] = publicDir
         if not os.path.isdir(globalCacheFolder): # If folder does not exist
             os.makedirs(globalCacheFolder)
                    
-        cachedFolder  = globalCacheFolder + '/' + folderName
+        cachedFolder = globalCacheFolder + '/' + folderName
         cachedTarFile = globalCacheFolder + '/' + folderName + '.tar.gz'        
         if not os.path.isfile(cachedTarFile):
             if os.path.isfile(cachedFolder + '/run.sh'):
                 res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
-                if res == folderName: #Checking is already downloaded folder's hash matches with the given hash
+                if res == folderName:  # Checking is already downloaded folder's hash matches with the given hash
                     globals()['folderType_dict'][folderName] = 'folder'                    
                     globals()['cacheType'] = lib.CacheType.PUBLIC.value
                     log('Already cached under the public directory...', 'green')                    
@@ -73,7 +81,7 @@ def cache(resultsFolderPrev, folderName, _id):
         if not os.path.isdir(globalCacheFolder): # If folder does not exist
             os.makedirs(globalCacheFolder)
                    
-        cachedFolder  = globalCacheFolder + '/' + folderName
+        cachedFolder = globalCacheFolder + '/' + folderName
         cachedTarFile = cachedFolder + '.tar.gz'
         if not os.path.isfile(cachedTarFile):
             # if os.path.isfile(cachedFolder + '/run.sh'):
@@ -101,13 +109,14 @@ def cache(resultsFolderPrev, folderName, _id):
             #    res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedTarFile]).decode('utf-8').strip()
             # elif folderType_dict[folderName] == 'folder':
             #    res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cachedFolder]).decode('utf-8').strip()
-            if res == folderName: #Checking is already downloaded folder's hash matches with the given hash
+            if res == folderName:  # Checking is already downloaded folder's hash matches with the given hash
                 log(folderName + '.tar.gz is already cached.', 'green')
                 return True
             else:
-                 if not eudatDownloadFolder(globalCacheFolder, cachedFolder, folderName):
+                if not eudatDownloadFolder(globalCacheFolder, cachedFolder, folderName):
                     return False
     return True
+
 
 # Assumes job is sent as .tar.gz file
 def eudatDownloadFolder(resultsFolderPrev, resultsFolder, folderName) -> bool:    
@@ -136,7 +145,8 @@ def eudatDownloadFolder(resultsFolderPrev, resultsFolder, folderName) -> bool:
         return False # Should return back to Driver
 
     return True
-    
+
+
 def eudatGetShareToken():
     """Checks already shared or not."""
     folderTokenFlag = {}        
@@ -223,16 +233,17 @@ def eudatGetShareToken():
             
     log('Total size to download=' + str(size_to_download))
     return True, int(convertByteToMB(size_to_download))
-                               
+
+
 def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroker, w3, oc) -> bool:
     status, providerInfo = getProviderInfo(loggedJob.args['provider'])
-    globals()['fID']       = providerInfo['fID']    
-    globals()['jobKey']    = loggedJob.args['jobKey']
-    globals()['index']     = loggedJob.args['index']
+    globals()['fID'] = providerInfo['fID']    
+    globals()['jobKey'] = loggedJob.args['jobKey']
+    globals()['index'] = loggedJob.args['index']
     globals()['storageID'] = loggedJob.args['storageID']
     globals()['cacheType'] = loggedJob.args['cacheType']
     
-    globals()['dataTransferIn']      = jobInfo[0]['dataTransferIn']
+    globals()['dataTransferIn'] = jobInfo[0]['dataTransferIn']
     globals()['sourceCodeHash_list'] = loggedJob.args['sourceCodeHash']
     globals()['shouldAlreadyCached'] = shouldAlreadyCached
     globals()['sourceCodeHashText_list'] = []
@@ -246,7 +257,7 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
     # TODO: delete 
     status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, sourceCodeHash_list)
     if not status:
-        log(tx_hash, 'red')
+        log(result, 'red')
         return False
     else:
         log('refund()_tx_hash=' + result)
@@ -255,7 +266,7 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
     # ----------
     
     resultsFolderPrev = PROGRAM_PATH + "/" + requesterID + "/" + jobKey + "_" + str(index)
-    resultsFolder     = resultsFolderPrev + '/JOB_TO_RUN' 
+    resultsFolder = resultsFolderPrev + '/JOB_TO_RUN' 
 
     for i in range(0, len(sourceCodeHash_list)):
         sourceCodeHashText_list.append(w3.toText(sourceCodeHash_list[i]))
@@ -266,7 +277,7 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
 
     if used_dataTransferIn > dataTransferIn:
         log('E: requested size to download the sourceCode and datafiles is greater that the given amount.')
-        status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, sourceCodeHash_list) # Full refund
+        status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, sourceCodeHash_list)  # Full refund
         if not status:
             log(tx_hash, 'red')
             return False
@@ -278,7 +289,7 @@ def driverEudat(loggedJob, jobInfo, requesterID, shouldAlreadyCached, eBlocBroke
     if not status:
         return False
     
-    if not os.path.isdir(resultsFolderPrev): # If folder does not exist
+    if not os.path.isdir(resultsFolderPrev):  # If folder does not exist
         os.makedirs(resultsFolderPrev)
         os.makedirs(resultsFolder)
 
