@@ -31,6 +31,20 @@ class JobStateCodes:
     TIMEOUT = 6
 
 
+def getJobStorageTime(eB, provider, requester, source_code_hash, brownie=False):
+    if brownie:
+        ret = eB.getJobStorageTime(provider, requester, source_code_hash)
+    else:
+        ret = eB.functions.getJobStorageTime(provider, requester, source_code_hash).call()
+
+    ret = eB.getJobStorageTime(provider, requester, source_code_hash)
+    receivedBlock = ret[0]
+    cacheDuration = ret[1]
+    is_private = ret[2]
+    isVerified_Used = ret[3]   
+    return receivedBlock, cacheDuration, is_private, isVerified_Used
+
+
 def convertIpfsToBytes32(hash_string):
     bytes_array = base58.b58decode(hash_string)
     b = bytes_array[2:]
@@ -39,6 +53,9 @@ def convertIpfsToBytes32(hash_string):
 
 def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType,
          data_prices_set_blocknumber_array, eB, w3, brownie=True):
+    print('\nEntered into cost calculation...')
+    block_number =  w3.eth.blockNumber
+    
     if brownie:
         providerPriceInfo = eB.getProviderInfo(provider, 0)
     else:
@@ -53,10 +70,10 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
     priceStorage = _providerPriceInfo[4]
     priceCache = _providerPriceInfo[5]
 
-    assert len(coreArray)      == len(coreMinArray)
+    assert len(coreArray) == len(coreMinArray)
     assert len(sourceCodeHash) == len(cacheHour)
-    assert len(cacheHour)      == len(storageID)
-    assert len(cacheType)      == len(storageID)
+    assert len(cacheHour) == len(storageID)
+    assert len(cacheType) == len(storageID)
 
     for i in range(len(storageID)):
         assert storageID[i] <= 4
@@ -69,37 +86,38 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
     storageCost = 0
     dataTransferIn_sum = 0
 
+    # Calculating the computational cost
     for i in range(len(coreArray)):
         computationalCost += priceCoreMin * coreArray[i] * coreMinArray[i]
 
+    # Calculating the cache cost
     for i in range(len(sourceCodeHash)):
-        if brownie:
-            ret = eB.getJobStorageTime(provider, requester, sourceCodeHash[i])
-            
-            jobSt, isUsed = eB.getJobStorageTime(provider, requester, sourceCodeHash[i])            
-            jobReceivedBlocNumber = jobSt[0]
-            jobGasStorageHour = jobSt[1]
-        else:
-            jobSt, isUsed = eB.functions.getJobStorageTime(provider, requester, sourceCodeHash[i]).call()
-            jobReceivedBlocNumber = jobSt[0]
-            jobGasStorageHour = jobSt[1]
+        source_code_hash = sourceCodeHash[i]
+        print(source_code_hash)
 
-        if data_prices_set_blocknumber_array[i] > 0:  # If true, registered data's price should be considered for storage
-            res = eB.getRegisteredDataPrice(provider, sourceCodeHash[i], data_prices_set_blocknumber_array[i])
-            dataPrice = res[0]
-            storageCost += dataPrice
-            break
-    
-        if jobReceivedBlocNumber + jobGasStorageHour * ONE_HOUR_BLOCK_DURATION < w3.eth.blockNumber:
-            dataTransferIn_sum += dataTransferIn[i]
-        if cacheHour[i] > 0:
-            storageCost += priceStorage * dataTransferIn[i] * cacheHour[i]
+        receivedBlock, cacheDuration, is_private, isVerified_Used = getJobStorageTime(eB, provider, requester, source_code_hash, True)
+        received_storage_deposit = eB.getReceivedStorageDeposit(provider, requester, source_code_hash)
+        
+        print(not is_private)
+        print(receivedBlock + cacheDuration >= block_number)
+        if received_storage_deposit > 0 or (receivedBlock + cacheDuration >= block_number and not is_private and isVerified_Used):
+            pass
         else:
-            cacheCost += priceCache * dataTransferIn[i]
+            if data_prices_set_blocknumber_array[i] > 0:  # If true, registered data's price should be considered for storage
+                res = eB.getRegisteredDataPrice(provider, source_code_hash, data_prices_set_blocknumber_array[i])
+                dataPrice = res[0]
+                storageCost += dataPrice
+                break
+    
+            if receivedBlock + cacheDuration * ONE_HOUR_BLOCK_DURATION < w3.eth.blockNumber:
+                dataTransferIn_sum += dataTransferIn[i]
+            if cacheHour[i] > 0:
+                storageCost += priceStorage * dataTransferIn[i] * cacheHour[i]
+            else:
+                cacheCost += priceCache * dataTransferIn[i]
 
     dataTransferCost = priceDataTransfer * (dataTransferIn_sum + dataTransferOut)
     jobPriceValue = computationalCost + dataTransferCost + cacheCost + storageCost
-
     print('\njobPriceValue='   + str(jobPriceValue)       + ' == ' +
           'cacheCost='         + str(cacheCost)           + ' | ' +
           'storageCost='       + str(storageCost)         + ' | ' +

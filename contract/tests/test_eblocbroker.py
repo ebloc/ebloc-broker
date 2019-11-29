@@ -3,7 +3,7 @@
 import pytest
 import os
 
-import scripts.lib
+import scripts.lib    
 from brownie import accounts
 
 rows, columns = os.popen('stty size', 'r').read().split()
@@ -26,9 +26,9 @@ ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3U
 zeroAddress = '0x0000000000000000000000000000000000000000'
 
 
-def get_block_number(web3):
-    print('blockNumber=' + str(web3.eth.blockNumber)  + ' | ' + 'blockNumber on contractTx=' +  str(web3.eth.blockNumber + 1))
-    return web3.eth.blockNumber
+def get_block_number(w3):
+    print('blockNumber=' + str(w3.eth.blockNumber)  + ' | ' + 'blockNumber on contractTx=' +  str(w3.eth.blockNumber + 1))
+    return w3.eth.blockNumber
 
 
 def get_block_timestamp(web3):
@@ -248,10 +248,12 @@ def test_updateProvider(eB, rpc, web3):
 def test_multipleData(eB, rpc, web3):
     new_test()
     provider = accounts[0]
-    _requester = accounts[1]    
+    requester = accounts[1]
+    requester1 = accounts[2]
 
     register_provider(eB, rpc, web3)
-    register_requester(eB, rpc, web3, _requester)                        
+    register_requester(eB, rpc, web3, requester)
+    register_requester(eB, rpc, web3, requester1)                       
     
     cacheHourArray = []
     sourceCodeHashArray = []
@@ -281,33 +283,52 @@ def test_multipleData(eB, rpc, web3):
     cacheType_list = [scripts.lib.CacheType.PRIVATE, scripts.lib.CacheType.PUBLIC]
     storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
     
-    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
                                            cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
 
+    # First time job is submitted with the data files
     tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray,
-                      sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
+                      sourceCodeHashArray, {"from": requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print('jobIndex=' + str(tx.events['LogJob']['index']))
     print(tx.events['LogJob']['jobKey'])    
-
-    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
-                                           cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
-
     assert cost['storageCost'] == 200, "Since it is not verified yet storageCost should be 200"
+
+    # Second time job is wanted to send by the same user  with the same data files    
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
+    assert cost['storageCost'] == 0, "Since storageCost is already paid by the user it should be 0"
+
+    # Second time job is wanted to send by the differnt user  with the same data files    
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester1, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)   
+    assert cost['storageCost'] == 200, "Since it is not verified yet storageCost should be 200"
+        
+    # => Cluster verifies the gvien data files for the related job
+    index = 0
+    isVerifiedArray = [True, True]
+    tx = eB.sourceCodeHashReceived(jobKey, index, sourceCodeHashArray, cacheType_list, isVerifiedArray, {"from": provider})
+
+    # Second time job is wanted to send by the differnt user  with the same data files    
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)   
+    assert cost['storageCost'] == 0, "Since it is verified torageCost should be 0"
+
     
-    # => VERIFY DATA FIRST
-    # ---
-    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
+    # Second time job is wanted to send by the differnt user  with the same data files    
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester1, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)   
+    assert cost['storageCost'] == 100, "Since data1 is verified and publis, its  storageCost should be 0"
+
+    
+    assert cost['storageCost'] == 9999, "Since it is verified torageCost should be 0"
+    
+    receivedBlock, cacheDuration, is_private, isVerified_Used = scripts.lib.getJobStorageTime(eB, provider, requester, sourceCodeHashArray[1])
+    
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
                                            cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
 
-    assert cost['storageCost'] == 0, "Since it is paid on first job submittion it should be 0"
-
-
-    
+    assert cost['storageCost'] == 0, "Since it is paid on first job submittion it should be 0"    
     assert cost['dataTransferCost'] == dataTransferOut, "dataTransferCost should cover only dataTransferOut"
     
     tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray,
-                      sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
+                      sourceCodeHashArray, {"from": requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print('jobIndex=' + str(tx.events['LogJob']['index']))
 
@@ -628,17 +649,11 @@ def test_submitJob(eB, rpc, web3):
 
     print('----------------------------------')
     print('StorageTime for job: ' + jobKey)
-    ret = eB.getJobStorageTime(provider, _requester, sourceCodeHash)
-    jobStorageTime = ret[0]
-    isVerified_Used = ret[1]
-    
-    receivedBlock = jobStorageTime[0]
-    cacheDuration = jobStorageTime[1]
-    isPrivate = jobStorageTime[2]
+    receivedBlock, cacheDuration, is_private, isVerified_Used = scripts.lib.getJobStorageTime(eB, provider, _requester, sourceCodeHash)
     
     print('receivedBlockNumber=' + str(receivedBlock) + ' | ' +
           'cacheDuration=' + str(cacheDuration * 240) + ' | ' +
-          'isPrivate=' + str(isPrivate)               + ' | ' +
+          'isPrivate=' + str(is_private)              + ' | ' +
           'isVerified_Used=' + str(isVerified_Used))
     
     print('----------------------------------')
