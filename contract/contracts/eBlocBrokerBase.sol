@@ -10,10 +10,10 @@ import "./Lib.sol";
 contract eBlocBrokerBase {
     
     address public owner;   
-    address[] providers; // A dynamically-sized array of 'address' structs 
+    address[] registeredProviders; // A dynamically-sized array of 'address' structs 
     
     mapping(address => uint32) requesterCommittedBlock; // Block number when provider is registered in order the watch provider's event activity    
-    mapping(address => Lib.Provider)      provider;
+    mapping(address => Lib.Provider) provider;
     mapping(address => uint32[]) pricesSetBlockNum;
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID 
     // mapping(string => mapping(uint32 => uint => Job) jobs;
