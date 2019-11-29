@@ -56,14 +56,14 @@ library Lib {
     }
 
     struct Storage {
-	uint248     received; // Received payment for storage usage
-	bool isVerified_Used; // True if the requester used the given sourceCodeHash
+	uint248     received; // Received payment for storage usage	
     } 
 
     struct JobStorageTime { // JobStorageInfo
 	uint32 receivedBlock;
 	uint32 cacheDuration;
 	bool       isPrivate;
+	bool isVerified_Used; // Set to True if the requester is used and verified the given sourceCodeHash
 	//address      owner; //Cloud be multiple owners	
     }
 
