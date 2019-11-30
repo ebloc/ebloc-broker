@@ -72,6 +72,11 @@ interface eBlocBrokerInterface {
 	uint32 jobID,
 	uint refundedWei
     );
+
+    event LogRegisteredDataRequest(
+        address indexed provider,
+	bytes32 registeredDataHash
+    );
     
     event LogJobDescription(
         address indexed provider,
