@@ -39,6 +39,7 @@ library Lib {
     }
 
     struct JobArgument {
+	address payable provider;
 	uint8[] storageID;
 	uint8[] cacheType;
 	uint32 providerPriceBlockIndex;
