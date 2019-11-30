@@ -85,13 +85,12 @@ def test_storage_refund(eB, rpc, web3):
     providerPriceBlockNumber = eB.getProviderSetBlockNumbers(accounts[0])[-1]
     storageID_list = [scripts.lib.StorageID.EUDAT, scripts.lib.StorageID.IPFS]
     cacheType_list = [scripts.lib.CacheType.PRIVATE, scripts.lib.CacheType.PUBLIC]
-    storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
+    args = [provider, storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
 
     data_prices_set_blocknumber_array = [0, 0]  # Provider's registered data won't be used
-    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray,
-                                           storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
 
-    tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
+    tx = eB.submitJob(jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, args, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print('jobIndex=' + str(tx.events['LogJob']['index']))
     print(tx.events['LogJob']['jobKey'])
@@ -103,6 +102,9 @@ def test_storage_refund(eB, rpc, web3):
     refundedWei = tx.events['LogRefundRequest']['refundedWei']
     print('refundedWei=' + str(refundedWei))
 
+    with pytest.reverts(): # VM Exception while processing transaction: invalid opcode
+        call = eB.getJobInfo(provider, jobKey, 5, jobID)
+    
     storageCostSum = 0
     for i in range(len(sourceCodeHashArray)):
         _hash = sourceCodeHashArray[i]
@@ -135,7 +137,7 @@ def test_storage_refund(eB, rpc, web3):
     # ---------------------------------------------------------------
     print('----Same Job submitted after full refund -----')
 
-    tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
+    tx = eB.submitJob(jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, args, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print('jobIndex=' + str(tx.events['LogJob']['index']))
     print(tx.events['LogJob']['jobKey'])
@@ -159,7 +161,7 @@ def test_storage_refund(eB, rpc, web3):
     # Called by the cluster
     eB.sourceCodeHashReceived(jobKey, index, sourceCodeHashArray, cacheType_list, isVerified, {"from": provider, "gas": 4500000})
     for i in range(len(sourceCodeHashArray)):
-        print(eB.getJobStorageTime(provider, _requester, sourceCodeHashArray[i]))      
+        print(eB.getJobStorageTime(provider, _requester, sourceCodeHashArray[i]))
 
     with pytest.reverts(): # refundStorageDeposit should revert, because it is already used by the provider
         for i in range(len(sourceCodeHashArray)):
@@ -281,13 +283,12 @@ def test_multipleData(eB, rpc, web3):
     providerPriceBlockNumber = eB.getProviderSetBlockNumbers(accounts[0])[-1]
     storageID_list = [scripts.lib.StorageID.EUDAT, scripts.lib.StorageID.IPFS]
     cacheType_list = [scripts.lib.CacheType.PRIVATE, scripts.lib.CacheType.PUBLIC]
-    storageID_cacheType = [storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
+    args = [provider, storageID_list, cacheType_list, providerPriceBlockNumber, data_prices_set_blocknumber_array]
     
-    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
-                                           cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
+    jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
 
     # First time job is submitted with the data files
-    tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray,
+    tx = eB.submitJob(jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, args, cacheHourArray,
                       sourceCodeHashArray, {"from": requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print('jobIndex=' + str(tx.events['LogJob']['index']))
@@ -314,12 +315,9 @@ def test_multipleData(eB, rpc, web3):
     
     # Second time job is wanted to send by the differnt user  with the same data files    
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester1, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)   
-    assert cost['storageCost'] == 100, "Since data1 is verified and publis, its  storageCost should be 0"
-
+    assert cost['storageCost'] == 100, "Since data1 is verified and publis, its  storageCost should be 0"    
     
-    assert cost['storageCost'] == 9999, "Since it is verified torageCost should be 0"
-    
-    receivedBlock, cacheDuration, is_private, isVerified_Used = scripts.lib.getJobStorageTime(eB, provider, requester, sourceCodeHashArray[1])
+    receivedBlock, cacheDuration, is_private, isVerified_Used = scripts.lib.getJobStorageTime(eB, provider, requester, sourceCodeHashArray[1], True)
     
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
                                            cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
@@ -327,7 +325,7 @@ def test_multipleData(eB, rpc, web3):
     assert cost['storageCost'] == 0, "Since it is paid on first job submittion it should be 0"    
     assert cost['dataTransferCost'] == dataTransferOut, "dataTransferCost should cover only dataTransferOut"
     
-    tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray,
+    tx = eB.submitJob(jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, args, cacheHourArray,
                       sourceCodeHashArray, {"from": requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print('jobIndex=' + str(tx.events['LogJob']['index']))
@@ -389,11 +387,13 @@ def test_workflow(eB, rpc, web3):
     
     with pytest.reverts():  # getJobInfo should revert
         eB.updataDataPrice(sourceCodeHash, 20, 100, {"from": provider})
-   
+        
     eB.registerData(sourceCodeHash, 20, 100, {"from": provider})
-    eB.removeRegisteredData(sourceCodeHash, {"from": provider}) #  Should submitJob fail if it is not removed
+    eB.removeRegisteredData(sourceCodeHash, {"from": provider})  # Should submitJob fail if it is not removed
     
-    sourceCodeHash1 = web3.toBytes(hexstr= scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve"))    
+    sourceCodeHash1 = "0x68b8d8218e730fc2957bcb12119cb204" 
+    
+    # "web3.toBytes(hexstr=scripts.lib.convertIpfsToBytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve"))    
     eB.registerData(sourceCodeHash1, 20, 10, {"from": provider})
     rpc.mine(6)
     
@@ -433,17 +433,20 @@ def test_workflow(eB, rpc, web3):
 
     storageID_list = [scripts.lib.StorageID.IPFS, scripts.lib.StorageID.IPFS]
     cacheType_list = [scripts.lib.CacheType.PUBLIC, scripts.lib.CacheType.PUBLIC]
-    storageID_cacheType = [storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1], data_prices_set_blocknumber_array]
+    args = [provider, storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1], data_prices_set_blocknumber_array]
 
     jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut,
                                            cacheHourArray, storageID_list, cacheType_list, data_prices_set_blocknumber_array, eB, web3)
     
-    tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
+    tx = eB.submitJob(jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, args, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
 
     print(eB.getJobInfo(provider, jobKey, 0, 0))
     print(eB.getJobInfo(provider, jobKey, 0, 1))
     print(eB.getJobInfo(provider, jobKey, 0, 2))
 
+    print('-------------------')
+    assert tx.events['LogRegisteredDataRequest'][0]['registeredDataHash'] == "0x0000000000000000000000000000000068b8d8218e730fc2957bcb12119cb204", "Registered Data should be used"
+    
     with pytest.reverts(): # getJobInfo should revert
         print(eB.getJobInfo(provider, jobKey, 1, 2))
         print(eB.getJobInfo(provider, jobKey, 0, 3))
@@ -548,9 +551,9 @@ def test_submitJob(eB, rpc, web3):
         for line in f:
             arguments = line.rstrip('\n').split(" ")
 
-            coreMin      = int(arguments[1]) - int(arguments[0])
-            cacheHour    = 1
-            core         = int(arguments[2])
+            coreMin = int(arguments[1]) - int(arguments[0])
+            cacheHour = 1
+            core = int(arguments[2])
 
             # time.sleep(1)
             # rpc.mine(int(arguments[0]))
@@ -578,15 +581,16 @@ def test_submitJob(eB, rpc, web3):
             storageID_list = [scripts.lib.StorageID.IPFS]
             cacheType_list = [scripts.lib.CacheType.PUBLIC]
 
-            storageID_cacheType = [storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1], data_prices_set_blocknumber_array]
+            args = [provider, storageID_list, cacheType_list, eB.getProviderSetBlockNumbers(accounts[0])[-1], data_prices_set_blocknumber_array]
 
             # print(sourceCodeHashArray[0])
-            jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list, eB, web3)
+            jobPriceValue, cost = scripts.lib.cost(coreArray, coreMinArray, provider, _requester, sourceCodeHashArray, dataTransferInArray, dataTransferOut, cacheHourArray, storageID_list, cacheType_list,
+                                                   data_prices_set_blocknumber_array, eB, web3)
             
             jobPriceValueSum   += jobPriceValue
             dataTransferInArray = [dataTransferIn]
             
-            tx = eB.submitJob(provider, jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, storageID_cacheType, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
+            tx = eB.submitJob(jobKey, coreArray, coreMinArray, dataTransferInArray, dataTransferOut, args, cacheHourArray, sourceCodeHashArray, {"from": _requester, "value": web3.toWei(jobPriceValue, "wei")})
             # print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))            
             print('jobIndex=' + str(tx.events['LogJob']['index']))
             
@@ -649,7 +653,7 @@ def test_submitJob(eB, rpc, web3):
 
     print('----------------------------------')
     print('StorageTime for job: ' + jobKey)
-    receivedBlock, cacheDuration, is_private, isVerified_Used = scripts.lib.getJobStorageTime(eB, provider, _requester, sourceCodeHash)
+    receivedBlock, cacheDuration, is_private, isVerified_Used = scripts.lib.getJobStorageTime(eB, provider, _requester, sourceCodeHash, True)
     
     print('receivedBlockNumber=' + str(receivedBlock) + ' | ' +
           'cacheDuration=' + str(cacheDuration * 240) + ' | ' +
@@ -666,5 +670,4 @@ def test_submitJob(eB, rpc, web3):
     print('receiveStorageDeposit => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     print(eB.getReceivedStorageDeposit(_requester, sourceCodeHash, {"from": }))
     print('----------------------------------') 
-    '''    
-    
+    '''     
