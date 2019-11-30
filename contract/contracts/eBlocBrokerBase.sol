@@ -13,7 +13,7 @@ contract eBlocBrokerBase {
     address[] registeredProviders; // A dynamically-sized array of 'address' structs 
     
     mapping(address => uint32) requesterCommittedBlock; // Block number when provider is registered in order the watch provider's event activity    
-    mapping(address => Lib.Provider) provider;
+    mapping(address => Lib.Provider) providers;
     mapping(address => uint32[]) pricesSetBlockNum;
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID 
     // mapping(string => mapping(uint32 => uint => Job) jobs;
@@ -39,7 +39,7 @@ contract eBlocBrokerBase {
      * @dev Modifier to make a function callable only when caller is registered as provider.
      */
     modifier whenProviderRegistered {
-	require(provider[msg.sender].committedBlock > 0);  // dev: Not registered
+	require(providers[msg.sender].committedBlock > 0);  // dev: Not registered
 	_ ;
     }
 
@@ -47,7 +47,7 @@ contract eBlocBrokerBase {
      * @dev Modifier to make a function callable only when the provider is not registered.
      */
     modifier whenProviderNotRegistered {
-	require(provider[msg.sender].committedBlock == 0);  // dev: Registered
+	require(providers[msg.sender].committedBlock == 0);  // dev: Registered
 	_ ;
     }
 
@@ -63,7 +63,7 @@ contract eBlocBrokerBase {
      * @dev Modifier to make a function callable only when the provider in running.
      */
     modifier whenProviderRunning {
-	require(provider[msg.sender].isRunning); // dev: Provider is not running
+	require(providers[msg.sender].isRunning); // dev: Provider is not running
 	_ ;
     }
     
@@ -71,7 +71,7 @@ contract eBlocBrokerBase {
      * @dev Modifier to make a function callable only when the provider is paused.
      */
     modifier whenProviderPaused {
-        require(!provider[msg.sender].isRunning); // dev: Provider is not paused
+        require(!providers[msg.sender].isRunning); // dev: Provider is not paused
         _;
     }
 
