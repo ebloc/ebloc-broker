@@ -37,7 +37,7 @@ pytest:
     revert_traceback: false
 compiler:
     solc:
-        version: null
+        version: 0.5.13
         evm_version: null
         optimize: true
         runs: 200
