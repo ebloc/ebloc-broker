@@ -21,10 +21,10 @@ def log(strIn):
    txFile.close()
 
 # Login to EUDAT account----------------------------------------
-f = open(home + '/TESTS/password.txt', 'r') # Password read from the file.
+f = open(home + '/TESTS/password.txt', 'r')  # Password read from the file.
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
 oc.login('059ab6ba-4030-48bb-b81b-12115f531296', password)
 #---------------------------------------------------------------
-testFunc(path, readTest, testType, providerID, cacheType)                  
+testFunc(path, readTest, testType, providerID, cacheType)

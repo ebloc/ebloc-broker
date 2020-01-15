@@ -15,7 +15,7 @@ def getProviderReceiptNode(providerAddress, index, eBlocBroker=None, web3=None):
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         providerAddress = str(sys.argv[1])
-        print(isProviderExists(providerAddress))
+        print(doesProviderExist(providerAddress))
     else:
         providerAddress = '0x4e4a0750350796164d8defc442a712b7557bf282'
         index = 0;

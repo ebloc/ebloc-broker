@@ -17,10 +17,10 @@ def refund(provider, _from, key, index, jobID, sourceCodeHashArray, eBlocBroker=
     provider = w3.toChecksumAddress(provider)
     _from = w3.toChecksumAddress(_from)    
     
-    if not eBlocBroker.functions.isProviderExists(provider).call():        
+    if not eBlocBroker.functions.doesProviderExist(provider).call():        
         return False, "E: Requested provider's Ethereum Address (" + provider + ") does not exist."
 
-    if provider != _from and not eBlocBroker.functions.isRequesterExists(_from).call():         
+    if provider != _from and not eBlocBroker.functions.doesRequesterExist(_from).call():         
         return False, "E: Requested requester's Ethereum Address (" + _from + ") does not exist."       
     try:
         gasLimit = 4500000

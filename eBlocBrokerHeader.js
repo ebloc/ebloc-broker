@@ -100,7 +100,7 @@ exports.LogJob = function(var1, myPath) {
 	    if (jobKey.indexOf("?") == -1 || jobKey.indexOf(" ") == -1) { 
 		if (result.args.providerAddress == web3.eth.defaultAccount){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber ) + " " +
-				  result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + '\n', function(err) {
+				  result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.cloudStorageID + '\n', function(err) {
 				      process.exit();
 				   }); 	
 		}
@@ -180,7 +180,7 @@ exports.LogReceipt = function(var1, myPath, providerID) {
 	    if (jobKey.indexOf("?") == -1  || jobKey.indexOf(" ") == -1) { 
 		if(result.args.providerAddress == providerID){
 		    fs.appendFile(myPath, JSON.stringify(result.blockNumber) + " " +
-				  result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " + result.args.endTime + " " +
+				  result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.cloudStorageID + " " + result.args.endTime + " " +
 				  result.args.ipfsHashOut + " " + result.args.recieved +  " " + result.args.returned + ' ?\n', function(err) { // '?' end of line identifier.
 					  process.exit();
 				  }); 	
@@ -241,7 +241,7 @@ exports.LogJobResults = function(var1, myPath, providerID) {
 			myStr=gain[result.args.providerAddress + '_' + jobKey + '_' + result.args.index].toString();
 		    
 		    fs.appendFile( myPath, JSON.stringify(result.blockNumber ) + " " +
-				   result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.storageID + " " +
+				   result.args.providerAddress + " " +  jobKey + " " + result.args.index + " " + result.args.cloudStorageID + " " +
 				   result.args.miniLockId + " " + myStr + ' ?\n', function(err) { // '?' end of line identifier.
 					   process.exit();
 				   }); 	
@@ -310,13 +310,13 @@ exports.getProviderIpfsId = function(var1) {
     return myContractInstance.getProviderIpfsId(var1);
 };
 
-exports.getProviderInfo = function(var1) {
-    return myContractInstance.getProviderInfo(var1);
+exports.get_provider_info = function(var1) {
+    return myContractInstance.get_provider_info(var1);
 };
 
-exports.getRequesterInfo = function(myPath, requesterAddress) {
+exports.get_requester_info = function(myPath, requesterAddress) {
     var fs    = require('fs');
-    fromBlock            = myContractInstance.getRequesterInfo(requesterAddress);
+    fromBlock            = myContractInstance.get_requester_info(requesterAddress);
     var eBlocBrokerEvent = myContractInstance.LogUser({}, {fromBlock: fromBlock, toBlock: fromBlock});
     var v = '';
     eBlocBrokerEvent.watch( function (error, result) {
