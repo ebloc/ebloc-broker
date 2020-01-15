@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-import os, json, sys, time
+import json
 import logging
-from web3 import Web3
-from web3.providers.rpc import HTTPProvider
 from web3 import Web3, IPCProvider
+from web3.providers.rpc import HTTPProvider
 from os.path import expanduser
 import lib
 home = expanduser("~")  
 logger = logging.Logger('catch_all')
+
 
 class Network(object):
     def __init__(self):
@@ -16,11 +16,12 @@ class Network(object):
         self.eBlocBroker = None
         self.w3 = None
         self.oc = None
-        
+
+
 def connect(eBlocBroker=None, w3=None):
     if eBlocBroker is not None and w3 is not None:
         return eBlocBroker, w3
-    
+
     if w3 is None:
         try:
             w3 = getWeb3()
@@ -31,25 +32,26 @@ def connect(eBlocBroker=None, w3=None):
         if not w3:
             return None, None
 
-    if eBlocBroker is None :
+    if eBlocBroker is None:
         try:
             eBlocBroker = connectEblocBroker(w3)
         except Exception as e:
             logger.error('Failed to connect eBlocBroker: ' + str(e))
             return None, None
-        
+
     return eBlocBroker, w3
+
 
 def getWeb3():
     if lib.POA_CHAIN == 0:
         '''
-		* Note that you should create only one RPC Provider per process,
-		* as it recycles underlying TCP/IP network connections between
-		*  your process and Ethereum node
+        * Note that you should create only one RPC Provider per process,
+        * as it recycles underlying TCP/IP network connections between
+        *  your process and Ethereum node
         '''
         w3 = Web3(HTTPProvider('http://localhost:' + str(lib.RPC_PORT)))
         from web3.shh import Shh
-        Shh.attach(web3, "shh")
+        Shh.attach(w3, "shh")
     else:
         w3 = Web3(IPCProvider('/private/geth.ipc')) 
         from web3.middleware import geth_poa_middleware
@@ -58,10 +60,11 @@ def getWeb3():
         # from web3.shh import Shh
         # Shh.attach(web3, 'shh')
     if not w3.isConnected():
-        lib.log("Error: If web3 is not connected please run the following: 'sudo chown $(whoami) /private/geth.ipc'", 'red')
+        lib.log("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc", 'red')
         return False
     
-    return w3 
+    return w3
+
 
 def connectEblocBroker(w3=None):
     if w3 is None:
@@ -76,8 +79,9 @@ def connectEblocBroker(w3=None):
         abi = json.load(abi_definition)
 
     contractAddress = w3.toChecksumAddress(contractAddress) 
-    eBlocBroker     = w3.eth.contract(contractAddress, abi=abi)
-    return eBlocBroker 
+    eBlocBroker = w3.eth.contract(contractAddress, abi=abi)
+    return eBlocBroker
+
 
 if __name__ == '__main__': 
     eBlocBroker = connectEblocBroker() 

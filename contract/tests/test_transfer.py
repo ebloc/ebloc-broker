@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+
+
 '''
 def test_transfer(token, accounts):
     assert token.totalSupply() == "1000 ether"

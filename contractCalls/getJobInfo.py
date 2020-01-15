@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
-import sys, os, lib, logging, traceback
+import sys
+import lib
+import logging
+import traceback
+
 from imports import connect
 logger = logging.Logger('catch_all')
+
 
 def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
@@ -10,7 +15,7 @@ def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockN
         return False, 'notconnected'
 
     if receivedBlockNumber is None:
-        receivedBlockNumber = 3082590 # Point where the eBlocBroker contract deployed
+        receivedBlockNumber = 3082590  # Point where the eBlocBroker contract deployed
         _toBlock = "latest"
     else:
         _toBlock = int(receivedBlockNumber)
@@ -26,34 +31,36 @@ def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockN
         # logger.error('Failed to getJobInfo: ' + str(e))
         return False, 'Failed to getJobSourceCodeHash: ' + str(e)
 
-def getJobInfo(provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
-    if receivedBlockNumber is None:
-        receivedBlockNumber = 3082590 # Point where the eBlocBroker contract deployed
-        _toBlock = "latest"
-    else:
-        _toBlock = int(receivedBlockNumber)
     
+def getJobInfo(provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):    
+    if receivedBlockNumber is None:
+        receivedBlockNumber = 3082590  # Point where the eBlocBroker contract deployed
+        # _toBlock = "latest"
+    # else:
+    #    _toBlock = int(receivedBlockNumber)
+        
     eBlocBroker, w3 = connect(eBlocBroker, w3)
     if eBlocBroker is None or w3 is None:
         return False, 'notconnected'
     try:
         provider = w3.toChecksumAddress(provider)
-
-        job = eBlocBroker.functions.getJobInfo(provider, jobKey, int(index), int(jobID)).call()
+        job, received, jobOwner, dataTransferIn, dataTransferOut = eBlocBroker.functions.getJobInfo(provider, jobKey, int(index), int(jobID)).call()        
         jobPrices = eBlocBroker.functions.getProviderPricesForJob(provider, jobKey, int(index)).call()
-        print(job)
-        jobInfo = {'stateCode':           job[0],
-                   'core':                job[1],
-                   'startTime':           job[2],
-                   'received':            job[3],
-                   'executionTimeMin':    job[4],
-                   'jobOwner':            job[5],
-                   'dataTransferIn':      job[6],
-                   'dataTransferOut':     job[7],                   
-                   'priceCoreMin':        jobPrices[0],
-                   'priceDataTransfer':   jobPrices[1],
-                   'priceStorage':        jobPrices[2],
-                   'priceCache':          jobPrices[3],
+
+        jobInfo = {'startTime':           job[0],
+                   'jobStateCode':        job[1],
+                   'core':                job[2],
+                   'executionDuration':   job[3],
+                   'received':            received,
+                   'jobOwner':            jobOwner,
+                   'dataTransferIn':      dataTransferIn,
+                   'dataTransferOut':     dataTransferOut,
+                   'availableCore':       jobPrices[0],
+                   'commitmentBlockDuration': jobPrices[1],                   
+                   'priceCoreMin':        jobPrices[2],
+                   'priceDataTransfer':   jobPrices[3],
+                   'priceStorage':        jobPrices[4],
+                   'priceCache':          jobPrices[5],
                    'resultIpfsHash':       "",
                    'endTime':              None,
                    'refundedWei':          None,
@@ -65,8 +72,8 @@ def getJobInfo(provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBr
                    'dataTransferOut_used': None
                    }
 
-        resultIpfsHash = ""
-        event_filter = eBlocBroker.events.LogReceipt.createFilter(fromBlock=int(receivedBlockNumber), toBlock='latest', argument_filters={'provider': str(provider)})
+        # resultIpfsHash = ""
+        event_filter = eBlocBroker.events.LogProcessPayment.createFilter(fromBlock=int(receivedBlockNumber), toBlock='latest', argument_filters={'provider': str(provider)})
     
         loggedReceipts = event_filter.get_all_entries()
         for i in range(0, len(loggedReceipts)):
@@ -88,12 +95,13 @@ def getJobInfo(provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBr
 
     return True, jobInfo
 
+
 if __name__ == '__main__':
     if len(sys.argv) == 5 or len(sys.argv) == 6:
         provider = str(sys.argv[1])
-        jobKey   = str(sys.argv[2])
-        index    = int(sys.argv[3])
-        jobID    = int(sys.argv[4])
+        jobKey = str(sys.argv[2])
+        index = int(sys.argv[3])
+        jobID = int(sys.argv[4])
         if len(sys.argv) == 6:
             receivedBlockNumber = int(sys.argv[5])
         else:
@@ -109,20 +117,30 @@ if __name__ == '__main__':
         print(jobInfo)
         sys.exit()
 
-    if jobInfo['resultIpfsHash'] != "":
-        _resultIpfsHash = lib.convertBytes32ToIpfs(jobInfo['resultIpfsHash'])
+    if jobInfo['resultIpfsHash'] == lib.empty_bytes32:
+        _resultIpfsHash = ""        
     else:
-        _resultIpfsHash = ""                                                      
-    
+        if jobInfo['resultIpfsHash'] != "":
+            _resultIpfsHash = lib.convertBytes32ToIpfs(jobInfo['resultIpfsHash'])
+        else:
+            _resultIpfsHash = ""                                                      
+
+    realExecutionTime = 0        
+    if jobInfo['endTime'] is not None:
+        realExecutionTime = int(jobInfo['endTime']) - int(jobInfo['startTime'])
+        
     if type(jobInfo) is dict:
-        print('{0: <22}'.format('stateCode:')           + lib.inv_job_state_code[jobInfo['stateCode']] + ' (' + str(jobInfo['stateCode']) + ')'  )
+        print('{0: <22}'.format('stateCode:')            + lib.inv_job_state_code[jobInfo['jobStateCode']] + ' (' + str(jobInfo['jobStateCode']) + ')' )
         print('{0: <22}'.format('core')                  + str(jobInfo['core']))
         print('{0: <22}'.format('startTime')             + str(jobInfo['startTime']))
-        print('{0: <22}'.format('endTime:')              + str(jobInfo['endTime']))
+        print('{0: <22}'.format('endTime:')              + str(jobInfo['endTime']))        
+        print('{0: <22}'.format('realExecutionTime:')    + str(realExecutionTime) + ' Seconds')
         print('{0: <22}'.format('receivedWei:')          + str(jobInfo['receivedWei']))
         print('{0: <22}'.format('refundedWei:')          + str(jobInfo['refundedWei']))
-        print('{0: <22}'.format('executionTimeMin:')     + str(jobInfo['executionTimeMin']))
+        print('{0: <22}'.format('Expected executionDuration:')    + str(jobInfo['executionDuration']))
         print('{0: <22}'.format('jobInfoOwner:')         + str(jobInfo['jobOwner']))
+        print('{0: <22}'.format('availableCore:')         + str(jobInfo['availableCore']))
+        print('{0: <22}'.format('priceCommitmentBlockDuration:')         + str(jobInfo['commitmentBlockDuration']))        
         print('{0: <22}'.format('priceCoreMin:')         + str(jobInfo['priceCoreMin']))
         print('{0: <22}'.format('priceDataTransfer:')    + str(jobInfo['priceDataTransfer']))
         print('{0: <22}'.format('priceStorage:')         + str(jobInfo['priceStorage']))
@@ -132,9 +150,8 @@ if __name__ == '__main__':
         print('{0: <22}'.format('dataTransferOut:')      + str(jobInfo['dataTransferOut']))
         print('{0: <22}'.format('dataTransferIn_used:')  + str(jobInfo['dataTransferIn_used']))
         print('{0: <22}'.format('dataTransferOut_used:') + str(jobInfo['dataTransferOut_used']))                
-        print('{0: <22}'.format('sourceCodeHashArray:')  + str(jobInfo['dataTransferOut']))
         
         status, jobInfo = getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber)
-        print('{0: <22}'.format('sourceCodeHash:')      + str(jobInfo['sourceCodeHash']))        
+        print('{0: <22}'.format('sourceCodeHash:') + str(jobInfo['sourceCodeHash']))        
     else:
         print(jobInfo)

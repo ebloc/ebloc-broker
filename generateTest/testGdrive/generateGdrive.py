@@ -27,7 +27,7 @@ with open(path + "/../nasa.txt") as test:
 
             randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
             f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-            f.write("#" + randomHash + "\n") # Add random line to create different hash
+            f.write("#" + randomHash + "\n")  # Add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
             f.close()
 
@@ -46,7 +46,7 @@ with open(path + "/../nasa.txt") as test:
             res = subprocess.check_output(['rclone', 'copy', tarHash + '.tar.gz', 'remote:' + tarHash]).decode('utf-8').strip()
             print(res)
             subprocess.run(['mv', tarHash + '.tar.gz', home + '/TESTS/GdriveSource'])
-            
+
             while True:
                 try:
                     res = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tarHash + '.tar.gz' +  '\'', '--no-header']).decode('utf-8').strip()
