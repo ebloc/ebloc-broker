@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import sys, os, lib
-from imports   import connect
-from isAddress import isAddress
+import sys
+import lib
+import traceback
+from imports import connect
+
 
 def transferOwnership(newOwner, eBlocBroker=None, w3=None):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
@@ -28,9 +30,10 @@ def transferOwnership(newOwner, eBlocBroker=None, w3=None):
     
     return True, tx.hex()
 
+
 if __name__ == '__main__':
     if len(sys.argv) == 2:
-        newOwner  = str(sys.argv[1])
+        newOwner = str(sys.argv[1])
         status, result = transferOwnership(newOwner)
         if status:
             print('tx_hash=' + result)

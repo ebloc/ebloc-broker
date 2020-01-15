@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 def blockNumber(w3=None):
     if w3 is None:
         import sys, os
@@ -9,5 +10,6 @@ def blockNumber(w3=None):
     else:
         return str(w3.eth.blockNumber).replace("\n", "")
 
+    
 if __name__ == '__main__':
     print(blockNumber())

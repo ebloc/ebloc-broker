@@ -35,7 +35,7 @@ G.add_edge('job8', 'job7', weight=10)
 G.add_edge('job9', 'job7', weight=10)
 
 
-nx.nx_pydot.write_dot(G, 'job.dot') # Saves DAG into job.dot file
+nx.nx_pydot.write_dot(G, 'job.dot')  # Saves DAG into job.dot file
 
 listG = list(G.nodes)
 for i in list(G.nodes):
@@ -44,7 +44,7 @@ for i in list(G.nodes):
 
 nx.draw(G, with_labels = True)
 plt.savefig('labels.png')
-  
+
 sys.exit()
 
 print(set(G.predecessors('job5')))
@@ -116,7 +116,7 @@ G = nx.DiGraph()
 #
 
 G.add_edges_from([('a', 'b'),('b', 'c'),('c', 'd'), ('b', 'e'), ('e', 'f')])
-T = nx.dfs_tree(G.reverse(), source='f').reverse()     
+T = nx.dfs_tree(G.reverse(), source='f').reverse()
 
 # T is: a-->b-->e-->f
 
@@ -124,4 +124,3 @@ pos = nx.nx_pydot.pydot_layout(T, prog='dot')
 nx.draw_networkx(T, pos=pos, arrows= True, with_labels=True)
 plt.show()
 '''
-

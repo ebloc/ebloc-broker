@@ -9,5 +9,5 @@ g++ helloworld.cpp -o hello
 sleep 15
 
 cat  data.txt     >  completed.txt
-echo completed 15 >> completed.txt
+echo completed 15... >> completed.txt
 

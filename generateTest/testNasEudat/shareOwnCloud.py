@@ -8,7 +8,7 @@ from random import randint
 path = os.getcwd()
 home = expanduser("~")
 
-f = open(path + "/password.txt", 'r') # Password read from the file.
+f = open(path + "/password.txt", 'r')  # Password read from the file.
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
