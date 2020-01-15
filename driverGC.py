@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-import sys, os, lib, _thread, time, hashlib, subprocess, lib_mongodb, lib
+import sys
+import os
+import time
+import hashlib
+import subprocess
+import lib
+import lib_mongodb
 
 from lib import silentremove
 from pymongo import MongoClient
@@ -23,9 +29,9 @@ for document in cursor:
     # print(document)
     receivedBlockNum, storageTime = getJobStorageTime(lib.PROVIDER_ID, document['sourceCodeHash'])
     endBlockTime = receivedBlockNum + storageTime * 240
-    storageID = document['storageID']
+    cloudStorageID = document['cloudStorageID']
     if endBlockTime < blockNum and receivedBlockNum != 0:        
-        if storageID == lib.storageID.ipfs or storageID == lib.storageID.ipfs_miniLock:
+        if cloudStorageID == lib.cloudStorageID.ipfs or cloudStorageID == lib.cloudStorageID.ipfs_miniLock:
             ipfsHash = document['jobKey']
             command = ['ipfs', 'pin', 'rm', ipfsHash]
             status, res = lib.executeShellCommand(command)     
@@ -39,12 +45,6 @@ for document in cursor:
             cachedFileName = lib.PROGRAM_PATH + '/cache/' + document['sourceCodeHash'] + 'tar.gz'
             print(cachedFileName)
             silentremove(cachedFileName)
-                       
+                      
         print(receivedBlockNum)
         result = coll.delete_one({'jobKey':ipfsHash})
-        
-
-        
-        
-
-

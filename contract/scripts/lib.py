@@ -31,17 +31,16 @@ class JobStateCodes:
     TIMEOUT = 6
 
 
-def getJobStorageTime(eB, provider, requester, source_code_hash, brownie=False):
+def getJobStorageTime(eB, provider, source_code_hash, brownie=False):
     if brownie:
-        ret = eB.getJobStorageTime(provider, requester, source_code_hash)
+        ret = eB.getJobStorageTime(provider,  source_code_hash)
     else:
-        ret = eB.functions.getJobStorageTime(provider, requester, source_code_hash).call()
+        ret = eB.functions.getJobStorageTime(provider,  source_code_hash).call()
 
-    ret = eB.getJobStorageTime(provider, requester, source_code_hash)
     receivedBlock = ret[0]
     cacheDuration = ret[1]
     is_private = ret[2]
-    isVerified_Used = ret[3]   
+    isVerified_Used = ret[3]
     return receivedBlock, cacheDuration, is_private, isVerified_Used
 
 
@@ -51,20 +50,19 @@ def convertIpfsToBytes32(hash_string):
     return binascii.hexlify(b).decode("utf-8")
 
 
-def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType,
-         data_prices_set_blocknumber_array, eB, w3, brownie=True):
+def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType, data_prices_set_blocknumber_array, eB, w3, brownie=True):
     print('\nEntered into cost calculation...')
     block_number =  w3.eth.blockNumber
-    
+
     if brownie:
         providerPriceInfo = eB.getProviderInfo(provider, 0)
     else:
         providerPriceInfo = eB.functions.getProviderInfo(provider, 0).call()
 
-    blockReadFrom = providerPriceInfo[0]
+    # blockReadFrom = providerPriceInfo[0]
     _providerPriceInfo = providerPriceInfo[1]
-    availableCoreNum = _providerPriceInfo[0]
-    commitmentBlockDuration = _providerPriceInfo[1]
+    # availableCoreNum = _providerPriceInfo[0]
+    # commitmentBlockDuration = _providerPriceInfo[1]
     priceCoreMin = _providerPriceInfo[2]
     priceDataTransfer = _providerPriceInfo[3]
     priceStorage = _providerPriceInfo[4]
@@ -95,9 +93,12 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
         source_code_hash = sourceCodeHash[i]
         print(source_code_hash)
 
-        receivedBlock, cacheDuration, is_private, isVerified_Used = getJobStorageTime(eB, provider, requester, source_code_hash, True)
-        received_storage_deposit = eB.getReceivedStorageDeposit(provider, requester, source_code_hash)
-        
+        receivedBlock, cacheDuration, is_private, isVerified_Used = getJobStorageTime(eB, provider, source_code_hash, brownie)
+        if brownie:
+            received_storage_deposit = eB.getReceivedStorageDeposit(provider, requester, source_code_hash)
+        else:
+            received_storage_deposit = eB.functions.getReceivedStorageDeposit(provider, requester, source_code_hash).call() # TODO: prc de hata veriyor
+
         print(not is_private)
         print(receivedBlock + cacheDuration >= block_number)
         if received_storage_deposit > 0 or (receivedBlock + cacheDuration >= block_number and not is_private and isVerified_Used):
@@ -108,7 +109,7 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
                 dataPrice = res[0]
                 storageCost += dataPrice
                 break
-    
+
             if receivedBlock + cacheDuration * ONE_HOUR_BLOCK_DURATION < w3.eth.blockNumber:
                 dataTransferIn_sum += dataTransferIn[i]
             if cacheHour[i] > 0:

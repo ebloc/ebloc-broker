@@ -10,7 +10,7 @@ path = os.getcwd()
 os.environ['path'] = path
 
 # Login to EUDAT account----------------------------------------
-f = open(home + '/TESTS/password.txt', 'r') # Password read from the file.
+f = open(home + '/TESTS/password.txt', 'r')  # Password read from the file.
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
@@ -58,7 +58,7 @@ while True:
     counter   += 1
 
 subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])
-    
+
 '''
     if testId == 0:
         f.write("make bt CLASS=B\n")
@@ -72,4 +72,4 @@ subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])
     elif testId == 3:
         f.write("make lu CLASS=B\n")
         f.write("mpirun -n " + str(coreNum) + " bin/lu.B.x inputlu.data")
-'''    
+'''

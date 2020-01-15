@@ -8,7 +8,7 @@ from lib_owncloud import singleFolderShare, eudatInitializeFolder
 path = os.getcwd()
 
 # Login to EUDAT account----------------------------------------
-f = open(home + '/TESTS/password.txt', 'r') # Password read from the file.
+f = open(home + '/TESTS/password.txt', 'r')  # Password read from the file.
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client('https://b2drop.eudat.eu/')
@@ -32,10 +32,10 @@ with open(path + "/../nasa.txt") as test:
 
             randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
             f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-            f.write("#" + randomHash + "\n") # Add random line to create different hash
+            f.write("#" + randomHash + "\n")  # Add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
             f.close()
-            tarHash = eudatInitializeFolder('ipfs', oc) # Should give folder name
+            tarHash = eudatInitializeFolder('ipfs', oc)  # Should give folder name
             time.sleep(1)
             # After run.sh is update share the ipfs through eudat
             print(singleFolderShare(tarHash, oc))
@@ -43,12 +43,12 @@ with open(path + "/../nasa.txt") as test:
                 hashesFile.write(" " + str(int(lineIn[0])-startTimeTemp) + '\n')
 
             flag = 1
-            startTimeTemp = int(lineIn[0])           
+            startTimeTemp = int(lineIn[0])
             print("Shared Job#" + str(counter))
             counter += 1
             if counter == itemsToScan:
                 break
-          
+
             hashesFile.write(tarHash + " " + str(int(lineIn[1]) - int(lineIn[0])) + " " + str(int(lineIn[2])) + " " + str(int(lineIn[0])) + " " + str(int(lineIn[1])) + " " + tarHash)
 
 hashesFile.close()
@@ -60,4 +60,4 @@ subprocess.run(['cp', path + '/hashOutput.txt', path + '/hashOutput_temp.txt'])
 #ipfsHash = os.popen( 'IPFS_PATH="/home/prc/.ipfs" export IPFS_PATH ipfs add -r /home/prc/testIpfs/ipfs' ).read()
 #ipfsHash = ipfsHash.split("\n")
 #tarHash = ipfsHash[len(ipfsHash) - 2].split(" ")[1]
-#print( "HASH: " + tarHash ) # lineNumber -> hash olarak kaydet.
+#print( "HASH: " + tarHash )  # lineNumber -> hash olarak kaydet.

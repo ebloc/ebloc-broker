@@ -15,7 +15,7 @@ else
 
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
 
-fromBlock            = myContractInstance.getRequesterInfo(requesterAddress);
+fromBlock            = myContractInstance.get_requester_info(requesterAddress);
 var eBlocBrokerEvent = myContractInstance.LogRequester({}, {fromBlock: fromBlock, toBlock: fromBlock});
 
 var fs    = require('fs');

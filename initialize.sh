@@ -27,13 +27,13 @@ if [ $setup -eq 1 ]; then
     sudo apt-get install python3-venv
 
     pip install wheel
-    python3.6 -m venv $HOME/venv # python3.6 -m venv --without-pip venv
+    python3 -m venv $HOME/venv # python3.6 -m venv --without-pip venv
     source $HOME/venv/bin/activate
 
     # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
     pip install --upgrade pip --user
 
-    pip insntall -r requirements.txt
+    pip install -r requirements.txt
     
     pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
     pip install -U pyocclient  # owncloud_py
@@ -44,7 +44,7 @@ if [ $setup -eq 1 ]; then
     pip install -U matplotlib
     pip install -U pydot
     pip install -U google-colab
-    pip install -e .
+    pip install -e .  # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
     # pip install sphinx_rtd_theme
         
     ## npm

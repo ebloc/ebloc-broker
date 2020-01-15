@@ -70,13 +70,13 @@ def getLogJobs(providerAddress, fromBlock):
             completedCounter+=1
         #else:
         #   print('gained:0')
-        
+
         print(str(counter) + ' | ' + loggedJobs[i].args['jobKey'] + ' ' + str(loggedJobs[i].args['index']) +
-          ' ' + lib.inv_job_state_code[int(jobInfo['status'])] + ' ' + str(jobInfo['received']) + ' ' + str(returned) + ' ' + str(gained))       
+          ' ' + lib.inv_job_state_code[int(jobInfo['status'])] + ' ' + str(jobInfo['received']) + ' ' + str(returned) + ' ' + str(gained))
 
         if ipfsFlag == 1 and lib.inv_job_state_code[int(jobInfo['status'])] == "COMPLETED":
             subprocess.run(['ipfs', 'get', loggedJobs[i].args['jobKey'],  '--output=ipfsHashes/' + loggedJobs[i].args['jobKey']])
-            
+
         counter+=1
     # print('------------------------------------------------------------------------------------------------------------')
     print("TOTAL_GAINED: " + str(sum_))
@@ -87,9 +87,9 @@ if __name__ == '__main__':
         providerAddress = str(sys.argv[1])
         fromBlock      = int(sys.argv[2])
     else:
-        load_dotenv(os.path.join(home + '/.eBlocBroker', '.env')) # Load .env from the given path
+        load_dotenv(os.path.join(home + '/.eBlocBroker', '.env'))  # Load .env from the given path
         providerAddress=os.getenv("PROVIDER_ID")
         fromBlock=2215127
 
-    print(fromBlock)    
+    print(fromBlock)
     getLogJobs(providerAddress, fromBlock)
