@@ -28,7 +28,7 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
 
             randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
             f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-            f.write("#" + randomHash + "\n") # Add random line to create different hash
+            f.write("#" + randomHash + "\n")  # Add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n" )
             f.close()
             encrypyFolderPath = "/home/prc/eBlocBroker/generateTest/ipfs";
@@ -37,10 +37,10 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             p2 = subprocess.Popen(['sort', '-z'], stdin=p1.stdout, stdout=subprocess.PIPE, env={'LC_ALL': 'C'})
             p1.stdout.close()
             p3 = subprocess.Popen(['tar', '--absolute-names', '--no-recursion', '--null', '-T', '-', '-zcvf', '../ipfs.tar.gz'],
-                                  stdin=p2.stdout,stdout=subprocess.PIPE, env={'GZIP': '-n'})
+                                  stdin=p2.stdout, stdout=subprocess.PIPE, env={'GZIP': '-n'})
             p2.stdout.close()
             p3.communicate()
-            
+
             os.popen('mlck encrypt -f ../ipfs.tar.gz $providerMiniLockId --passphrase="'+ mlckPass + '"').read()
             fileTShare = "../ipfs.tar.gz.minilock"
             os.environ['fileTShare'] = fileTShare

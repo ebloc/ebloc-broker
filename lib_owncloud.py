@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-import subprocess, sys, lib, os, traceback
+import subprocess
+import sys
+import lib
+import os
+import traceback
+
 
 def singleFolderShare(folderName, oc, fID) -> bool:
     try:
@@ -17,9 +22,10 @@ def singleFolderShare(folderName, oc, fID) -> bool:
         print(traceback.format_exc())
         return False
 
+    
 def eudatInitializeFolder(folderToShare, oc):    
     dir_path = os.path.dirname(folderToShare)    
-    ipfsHash, tarHash = lib.compressFolder(folderToShare)
+    tarHash = lib.compressFolder(folderToShare)
     try:
         res = oc.mkdir(tarHash)
     except Exception:
@@ -39,8 +45,10 @@ def eudatInitializeFolder(folderToShare, oc):
 
     return tarHash
 
+
 def getSize(oc, f_name) -> int:
     return int(oc.file_info(f_name).attributes['{DAV:}getcontentlength'])
+
 
 def isOcMounted() -> bool:
     dir_name = '/oc'
@@ -52,7 +60,7 @@ def isOcMounted() -> bool:
         print('E:' + str(e))
         return False
         
-    if not 'b2drop.eudat.eu/remote.php/webdav/' in res:
+    if not ('b2drop.eudat.eu/remote.php/webdav/' in res):
         print('Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n' \
               'Please do: \n' \
               'mkdir -p /oc \n' \
