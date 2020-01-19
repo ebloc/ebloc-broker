@@ -55,7 +55,7 @@ library Lib {
         uint32 jobID;
         uint32 endTime;
 
-      uint32 dataTransferIn;
+        uint32 dataTransferIn;
         uint32 dataTransferOut;
 
         uint[] core;
@@ -66,7 +66,6 @@ library Lib {
         uint32 price;
         uint32 commitmentBlockDuration;
     }
-
 
     struct Storage {
         uint received; // Received payment for storage usage
@@ -102,7 +101,7 @@ library Lib {
         uint            received; // Paid amount (new owned) by the client
         address payable jobOwner; // Address of the client (msg.sender) has been stored
 
-        bytes32   sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
+        bytes32 sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
         bytes32 jobInfo;
 
         mapping(uint => Job) jobs;
@@ -124,9 +123,9 @@ library Lib {
         uint32 committedBlock; // Block number when  is registered in order the watch provider's event activity
         bool        isRunning; // Flag that checks is Provider running or not
 
-        mapping(string  => Status[])            jobStatus; // All submitted jobs into provider 's Status is accessible
-        mapping(uint256 => ProviderInfo)             info;
-        mapping(bytes32 => JobStorageTime)          jobSt; // Stored information related to job's storage time
+        mapping(string  => Status[]) jobStatus; // All submitted jobs into provider 's Status is accessible
+        mapping(uint256 => ProviderInfo) info;
+        mapping(bytes32 => JobStorageTime) jobSt; // Stored information related to job's storage time
         mapping(bytes32 => RegisteredData) registeredData;
         mapping(address => mapping(bytes32 => Storage)) storageInfo;
 
@@ -135,8 +134,8 @@ library Lib {
 
     struct Interval {
         uint32 endpoint;
-        int32      core; // Job's requested core number
-        uint32     next; // Points to next the node
+        int32 core; // Job's requested core number
+        uint32 next; // Points to next the node
     }
 
     struct IntervalNode {

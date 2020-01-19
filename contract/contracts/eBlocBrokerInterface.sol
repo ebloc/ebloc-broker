@@ -78,7 +78,13 @@ interface eBlocBrokerInterface {
         uint refundedWei
     );
 
-    event LogRegisteredDataRequest(
+    // Logs source code of the registed data files
+    event LogRegisterData(
+        address indexed provider,
+        bytes32 registeredDataHash
+    );
+
+    event LogRegisteredDataRequestToUse(
         address indexed provider,
         bytes32 registeredDataHash
     );
