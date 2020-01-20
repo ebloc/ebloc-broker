@@ -18,7 +18,7 @@ from datetime   import datetime, timedelta
 from subprocess import call
 from colored    import stylize
 from colored    import fg
-from contractCalls.getJobInfo      import getJobInfo
+from contractCalls.get_job_info      import get_job_info
 from contractCalls.get_provider_info import get_provider_info
 
 

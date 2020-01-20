@@ -12,8 +12,8 @@ def get_requester_info(requester, eBlocBroker=None, w3=None):
 
     requester = w3.toChecksumAddress(requester)
     if not eBlocBroker.functions.doesRequesterExist(requester).call():
-        return False, "Requester is not registered. Please try again with registered Ethereum Address as requester. \nYou can register your requester using: registerRequester.py script."
-   
+        return False, "Requester is not registered. Please try again with registered Ethereum Address as requester. \nYou can register your requester using: register_requester.py script."
+
     try:
         blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(requester).call()
         event_filter = eBlocBroker.events.LogRequester.createFilter(fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1)
@@ -30,17 +30,17 @@ def get_requester_info(requester, eBlocBroker=None, w3=None):
         return False, traceback.format_exc()
 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     if len(sys.argv) == 3:
         requester = str(sys.argv[1])
         printType = str(sys.argv[2])
     elif len(sys.argv) == 2:
         requester = str(sys.argv[1])
-        printType = '0'        
+        printType = '0'
     else:
         requester = '0x57b60037b82154ec7149142c606ba024fbb0f991'
         printType = '0'
-        
+
     status, requesterInfo = get_requester_info(requester)
 
     if status:
