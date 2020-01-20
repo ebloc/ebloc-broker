@@ -44,12 +44,12 @@ e427c111f968fe4ff6593a37454fdd9abf07c490
 - Inside `.profile` change `COINBASE` variable with the account owner of the mined block reward. For example, you could but your newly created account: `"0xe427c111f968fe4ff6593a37454fdd9abf07c490"` into `COINBASE`. Do not forget to put `0x` at the beginning of the account.
 
 
-- Update following file `/home/ubuntu/EBloc/password.txt` with your account's password, that is stored under `COINBASE`: 
+- Update following file `/home/ubuntu/EBloc/password.txt` with your account's password, that is stored under `COINBASE`:
 Best to make sure the file is not readable or even listable for anyone but you. You achieve this with: `chmod 700 /home/ubuntu/EBloc/password.txt`
 
 - Open following file: `/home/ubuntu/eBlocBroker/eBlocBrokerHeader.js` and change following line with the account you defined under `COINBASE`: `web3.eth.defaultAccount = "0xe427c111f968fe4ff6593a37454fdd9abf07c490";`
 
-Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach ~/.local/share/io.parity.ethereum/jsonrpc.ipc`. Its alias is: `eblocpclient`. 
+Connect into eBloc private chain using Parity: `eblocpserver`. You could also run it via `nohup eblocpserver &` on the background. On another console to attach Geth console to Parity, (on Linux) please do: `geth attach ~/.local/share/io.parity.ethereum/jsonrpc.ipc`. Its alias is: `eblocpclient`.
 
 Please note that first you have to run `eblocpserver` and than `eblocpclient`.
 
@@ -77,8 +77,8 @@ startCode.py endCode.py slurmScript.sh
 
 If you want to provide `IPFS` service please do following:
 
-```bash 
-ipfs uses a repository in the local file system. By default, the repo is located at ~/.ipfs. 
+```bash
+ipfs uses a repository in the local file system. By default, the repo is located at ~/.ipfs.
 To change the repo location, set the $IPFS_PATH environment variable:
 > export IPFS_PATH=/path/to/ipfsrepo
 > ipfs init
@@ -88,11 +88,11 @@ peer identity: QmXudqoQUyHjmS2s8j59tY6GKCz3KR2qPXS6uMskbFV8mH
 to get started, enter:
 
 	ipfs cat /ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme
-```	
+```
 
 #### First SLURM have to work on the background SLURM Setup:
 
-```bash 
+```bash
 sudo slurmd
 sudo munged -f
 /etc/init.d/munge start #Do to Amazon AWS, you may need to create new user with a password.
@@ -122,8 +122,9 @@ nohup python py_providerDriver.py &
 ## Connect to eBlocBroker Contract
 
 ```bash
-address="0x8cb1d24ddb3d0d410ec60074a86cf695fc4ab3e6";
-abi=[{"constant":true,"inputs":[{"name":"providerAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"index","type":"uint256"}],"name":"getJobInfo","outputs":[{"name":"","type":"uint8"},{"name":"","type":"uint32"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"providerAddr","type":"address"},{"name":"jobKey","type":"string"},{"name":"core","type":"uint32"},{"name":"jobDesc","type":"string"},{"name":"coreMinuteGas","type":"uint32"},{"name":"storageType","type":"uint8"},{"name":"miniLockId","type":"string"}],"name":"submitJob","outputs":[{"name":"success","type":"bool"}],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"providerAddr","type":"address"}],"name":"getProviderReceivedAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"jobRunTimeMinute","type":"uint32"},{"name":"ipfsHashOut","type":"string"},{"name":"storageType","type":"uint8"},{"name":"endTimeStamp","type":"uint256"}],"name":"receiptCheck","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"providerAddr","type":"address"},{"name":"ipfsHash","type":"string"},{"name":"index","type":"uint32"}],"name":"refundMe","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"providerName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"updateProvider","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getProviders","outputs":[{"name":"","type":"address[]"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getDeployedBlockNumber","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"providerAddr","type":"address"}],"name":"getProviderInfo","outputs":[{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"bytes"},{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"deregisterProvider","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"testCallStack","outputs":[{"name":"","type":"int256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"coreLimit","type":"uint32"},{"name":"providerName","type":"bytes"},{"name":"fID","type":"bytes"},{"name":"miniLockId","type":"bytes"},{"name":"price","type":"uint256"},{"name":"ipfsId","type":"bytes32"}],"name":"registerProvider","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"providerAddr","type":"address"},{"name":"jobKey","type":"string"}],"name":"getJobSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"jobKey","type":"string"},{"name":"index","type":"uint32"},{"name":"stateId","type":"uint8"},{"name":"startTimeStamp","type":"uint256"}],"name":"setJobStatus","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"provider","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"storageType","type":"uint8"},{"indexed":false,"name":"miniLockId","type":"string"},{"indexed":false,"name":"desc","type":"string"}],"name":"LogJob","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"provider","type":"address"},{"indexed":false,"name":"jobKey","type":"string"},{"indexed":false,"name":"index","type":"uint256"},{"indexed":false,"name":"recipient","type":"address"},{"indexed":false,"name":"recieved","type":"uint256"},{"indexed":false,"name":"returned","type":"uint256"},{"indexed":false,"name":"endTime","type":"uint256"},{"indexed":false,"name":"ipfsHashOut","type":"string"},{"indexed":false,"name":"storageType","type":"uint8"}],"name":"LogReceipt","type":"event"}]
+address="";
+abi=[]
+
 var eBlocBroker = web3.eth.contract(abi).at(address);
 ```
 
@@ -138,7 +139,7 @@ federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 providerMiniLockId  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 1000000000000000; //For experimental you could also give 1.
 ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieved from "ipfs id"
-eBlocBroker.createProvider(coreNumber, providerName, federationCloudId, providerMiniLockId, corePriceMinuteWei, ipfsID; 
+eBlocBroker.createProvider(coreNumber, providerName, federationCloudId, providerMiniLockId, corePriceMinuteWei, ipfsID;
 ```
 
 **Trigger code on start and end of the submitted job:** Provider should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
@@ -181,7 +182,7 @@ int main () {
 
 Client should put his SLURM script inside a file called `run.sh`. Please note that you do not have to identify `-n` and `-t` parameters, since they will be overritten with arguments provided by the client on the provider side.
 
-**For example:** 
+**For example:**
 
 Create `run.sh`:
 
@@ -190,7 +191,7 @@ Create `run.sh`:
 #SBATCH -o slurm.out        # STDOUT
 #SBATCH -e slurm.err        # STDERR
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=alper.alimoglu@gmail.com 
+#SBATCH --mail-user=alper.alimoglu@gmail.com
 #SBATCH --requeue
 
 g++ helloworld.cpp -o hello
@@ -207,7 +208,7 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B ipfs_code
 ```
 Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd`) would be used as key to the submitted job to the `eBlocBroker` by the client.
 
-**How To Submit a Job:** 
+**How To Submit a Job:**
 
 ```bash
 eBlocBroker.getProviders(); //returns all available Providers Addresses.
@@ -222,7 +223,7 @@ providerCoreLimit = providerInfo[3]
 pricePerMin      = providerInfo[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = ""
-coreNum          = 1; 
+coreNum          = 1;
 coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
@@ -254,8 +255,8 @@ First, you need a miniLock ID.
 ```bash
 $ mlck id alice@example.com --save
 period dry million besides usually wild everybody
- 
-Passphrase (leave blank to quit): 
+
+Passphrase (leave blank to quit):
 ```
 You can look up your miniLock ID any time.
 
@@ -284,7 +285,7 @@ providerCoreLimit = providerInfo[3]
 pricePerMin      = providerInfo[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
-coreNum          = 1; 
+coreNum          = 1;
 coreGasDay       = 0;
 coreGasHour      = 0;
 coreGasMin       = 10;
@@ -335,13 +336,13 @@ if (coreNum <= providerCoreLimit ) {
 
 This will return:
 
-- status  == `"QUEUED"` or `"RUNNING"` or `"COMPLETED"` 
+- status  == `"QUEUED"` or `"RUNNING"` or `"COMPLETED"`
 - ipfsOut == Completed Job's resulted folder. This exists if the job is completed.
 ...
 
 ```bash
 providerID="0x6af0204187a93710317542d383a1b547fa42e705"; //providerID that you have submitted your job.
-index   = 0;      
+index   = 0;
 jobHash = "QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B"
 eBlocBroker.getJobInfo(providerID, jobHash, 0);
 ```

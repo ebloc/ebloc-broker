@@ -92,13 +92,12 @@ def submitJob(provider, key, core, coreMin, dataTransferIn_list, dataTransferOut
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
-    args = [provider, providerPriceBlockNumber, storageID_list, cacheType_list, data_prices_set_blocknumber_list]
+    args = [provider, providerPriceBlockNumber, storageID_list, cacheType_list, data_prices_set_blocknumber_list, core, coreMin]
 
     try:
         gasLimit = 4500000
         print(sourceCodeHash_list)
-        tx = eBlocBroker.functions.submitJob(key, core, coreMin, dataTransferIn_list, dataTransferOut, args, storageHour_list,
-                                             sourceCodeHash_list).transact({"from": _from, "value": jobPriceValue, "gas": gasLimit})
+        tx = eBlocBroker.functions.submitJob(key, dataTransferIn_list, dataTransferOut, args, storageHour_list, sourceCodeHash_list).transact({"from": _from, "value": jobPriceValue, "gas": gasLimit})
     except Exception:
         return False, traceback.format_exc()
 

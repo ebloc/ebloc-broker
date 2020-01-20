@@ -252,7 +252,7 @@ arguments inside ``submitJob.py`` file.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 miniLock Setup
-              
+
 
 Please check following
 `tutorial <https://www.npmjs.com/package/minilock-cli>`__. Do following
@@ -270,7 +270,7 @@ You can look up your miniLock ID any time.
     Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 
 How to decript your folder using miniLock
-                                         
+
 
 .. code:: bash
 
@@ -368,14 +368,14 @@ Please update following arguments inside ``submitJob.py`` file.
 **How to Obtain Submitted Job's Information:**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use ``./getJobInfo.py`` to submit your jobs.
+You can use ``./get_job_info.py`` to submit your jobs.
 
 .. code:: bash
 
     clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID that you have submitted your job.
     jobKey    = "6a6783e74a655aad01bf2d1202362685"
     index     = 0
-    ./getJobInfo.py $clusterID $jobKey $index
+    ./get_job_info.py $clusterID $jobKey $index
 
 -  Status of the job could be ``QUEUED``, ``REFUNDED``, ``RUNNING``,
    ``PENDING``, or ``COMPLETED``.
