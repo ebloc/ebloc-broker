@@ -26,7 +26,7 @@ from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
 from contractCalls.isContractExists import isContractExists
 from contractCalls.doesProviderExist import doesProviderExist
 from contractCalls.blockNumber import blockNumber
-from contractCalls.getJobInfo import getJobInfo
+from contractCalls.get_job_info import get_job_info
 from contractCalls.doesRequesterExist import doesRequesterExist
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.isWeb3Connected import isWeb3Connected
@@ -387,9 +387,12 @@ while True:
         jobInfo = []
         jobID = 0
         for attempt in range(10):
-            status, _jobInfo = getJobInfo(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
-            _jobInfo.update( {'receivedBlock' : receivedBlock} )
-            _jobInfo.update( {'storageDuration' : storageDuration} )
+            status, _jobInfo = get_job_info(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
+            if not status:
+                print(_jobInfo)
+
+            _jobInfo.update( {'receivedBlock': _receivedBlock} )
+            _jobInfo.update( {'storageDuration': storageDuration} )
             pprint.pprint(_jobInfo)
             jobInfo.append(_jobInfo)
             if status:
@@ -407,7 +410,7 @@ while True:
             if _jobInfo[0][2] == 0: # compares job core value
                 break
             else:
-                _jobInfo = getJobInfo(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
+                _jobInfo = get_job_info(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
                 if _jobInfo != None:
                     jobInfo.append(_jobInfo)  # Adding jobs if workflow exist
                     jobID += 1

@@ -5,7 +5,7 @@ from web3.auto import w3
 from dotenv import load_dotenv
 from os.path import expanduser
 import lib
-from contractCalls.getJobInfo import getJobInfo
+from contractCalls.get_job_info import get_job_info
 from imports import connectEblocBroker, getWeb3
 
 home = expanduser("~")
@@ -52,7 +52,7 @@ def getLogJobs(providerAddress, fromBlock):
         _blockNumber    = loggedJobs[i]['blockNumber']
         # print(loggedJobs[i])
         # print(loggedJobs[i].args['jobKey'])
-        jobInfo = getJobInfo(providerAddress, jobKey, index, _blockNumber, eBlocBroker, web3)
+        jobInfo = get_job_info(providerAddress, jobKey, index, _blockNumber, eBlocBroker, web3)
         # print('received: ' +  )
         returned=0
         key=str(providerAddress) + str(jobKey) + str(index)

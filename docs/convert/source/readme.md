@@ -299,13 +299,13 @@ storageType     = 4 # Please note that 4 stands for gdrive repository share.
 
 ### **How to Obtain Submitted Job's Information:**
 
-You can use `./getJobInfo.py` to submit your jobs.
+You can use `./get_job_info.py` to submit your jobs.
 
 ```bash
 clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID that you have submitted your job.
 jobKey    = "6a6783e74a655aad01bf2d1202362685"
 index     = 0
-./getJobInfo.py $clusterID $jobKey $index
+./get_job_info.py $clusterID $jobKey $index
 ```
 
 - Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or `COMPLETED`.

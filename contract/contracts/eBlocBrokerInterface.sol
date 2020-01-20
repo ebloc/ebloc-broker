@@ -40,10 +40,8 @@ interface eBlocBrokerInterface {
         uint8[] cloudStorageID,
         bytes32[] sourceCodeHash,
         uint8[] cacheType,
-
         uint16[] core,
         uint16[] executionDuration,
-
         uint received,
         uint refunded
     );
