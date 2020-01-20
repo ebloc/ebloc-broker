@@ -17,7 +17,7 @@ from os.path import expanduser
 
 from lib import executeShellCommand, PROVIDER_ID
 from imports import connectEblocBroker, getWeb3
-from contractCalls.getJobInfo import getJobSourceCodeHash, getJobInfo
+from contractCalls.get_job_info import getJobSourceCodeHash, get_job_info
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 
@@ -113,7 +113,7 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
         encodedShareToken = base64.b64encode((str(shareToken) + ':').encode('utf-8')).decode('utf-8')
 
     log("encodedShareToken: " + encodedShareToken)
-    log('./getJobInfo.py ' + ' ' + PROVIDER_ID + ' ' + jobKey + ' ' + index + ' ' + str(jobID))
+    log('./get_job_info.py ' + ' ' + PROVIDER_ID + ' ' + jobKey + ' ' + index + ' ' + str(jobID))
 
     try:
         job, received, jobOwner, dataTransferIn, dataTransferOut = eBlocBroker.functions.getJobInfo(w3.toChecksumAddress(PROVIDER_ID), jobKey, int(index), int(jobID)).call()
@@ -136,7 +136,7 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
         _file.close()
         log('receivedBlockNumber=' + receivedBlockNumber)
 
-    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
+    status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: get_job_info(PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
     if not status:
         sys.exit()
 
@@ -211,7 +211,7 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
             log("E: Job is already completed job and its money is received.", 'red')
             sys.exit()  # Detects an error on the SLURM side
 
-        status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: getJobInfo(PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
+        status, jobInfo = lib.eBlocBrokerFunctionCall(lambda: get_job_info(PROVIDER_ID, jobKey, index, jobID, receivedBlockNumber, eBlocBroker, w3), 10)
         if not status:
             sys.exit()
 

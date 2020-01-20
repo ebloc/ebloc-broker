@@ -4,10 +4,10 @@ var nodePaths = require('./nodePaths');
 var eBlocBroker = require(nodePaths.EBLOCBROKER + '/eBlocBrokerHeader.js');
 
 if (process.argv.length == 3){
-    providerID = process.argv[2];       
+    providerID = process.argv[2];
 }
 else{
-    providerID = "0x4e4a0750350796164D8DefC442a712B7557BF282";   
+    providerID = "0x4e4a0750350796164D8DefC442a712B7557BF282";
 }
 
 console.log(process.argv.length)
@@ -41,7 +41,7 @@ for (i in array) {
 	//LogReceipt
 	if (str[0] == '1')
 	    sum += parseInt(arr[6])
-	
+
 	totalPaid += parseInt(arr1[3]);
 
 	//break;
