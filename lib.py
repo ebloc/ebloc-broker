@@ -567,7 +567,7 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
     cloudStorageID = loggedJob.args['cloudStorageID'][0] # cloudStorageID for the sourceCode
     jobInfo = jobInfo[0]
 
-    # from contractCalls.getJobInfo import getJobInfo
+    # from contractCalls.get_job_info import get_job_info
     from datetime import datetime, timedelta
     # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
     date = subprocess.check_output(['date', '--date=' + '1 seconds', '+%b %d %k:%M:%S %Y'], env={'LANG': 'en_us_88591'}).decode('utf-8').strip()
@@ -615,7 +615,7 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
     copyfile(resultsFolder + '/run.sh', resultsFolder + '/' + jobKey + '*' + str(index) + '*' + str(cloudStorageID) + '*' + shareToken + '.sh')
 
     # jobID = 0 # Base jobID
-    # status, jobInfo = getJobInfo(PROVIDER_ID, jobKey, int(index), jobID, eBlocBroker, w3)
+    # status, jobInfo = get_job_info(PROVIDER_ID, jobKey, int(index), jobID, eBlocBroker, w3)
     jobCoreNum = str(jobInfo['core'])
     executionTimeSecond = timedelta(seconds=int((jobInfo['executionDuration'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
     d = datetime(1, 1, 1) + executionTimeSecond
