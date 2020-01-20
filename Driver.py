@@ -240,7 +240,7 @@ if not doesProviderExist:
     print(stylize("E: Your Ethereum address '" + provider + "' \n"
                   "does not match with any provider in eBlocBroker. Please register your \n"
                   "provider using your Ethereum Address in to the eBlocBroker. You can \n"
-                  "use 'contractCalls/registerProvider.py' script to register your provider.", fg('red')))
+                  "use 'contractCalls/register_provider.py' script to register your provider.", fg('red')))
     terminate()
 
 deployedBlockNumber = str(getDeployedBlockNumber(eBlocBroker))

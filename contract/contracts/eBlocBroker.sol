@@ -618,7 +618,6 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         ));
 
         _providerPriceBlockIndex = provider.jobStatus[key].length - 1;
-        // _saveCoreAndCoreMin(provider, key, core, executionDuration, _providerPriceBlockIndex); //delete
 
         uint refunded;
         if (msg.value != totalCost) {
@@ -766,25 +765,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         jobSt.receivedBlock = uint32(block.number) - 1; //Provider can only update the block.number
         return true;
     }
-    /* delete
-    function _saveCoreAndCoreMin(
-        Lib.Provider storage provider,
-        string memory key,
-        uint16[] memory core,
-        uint16[] memory executionDuration,
-        uint index
-    )
-        internal
-    {
-        Lib.Status storage status = provider.jobStatus[key][index];
-        for(uint256 i = 0; i < core.length; i++) {
-            status.hash = keccak256(abi.encodePacked(core, executionDuration));
 
-            status.jobs[i].core = core[i]; //Requested core value for each job on the workflow
-            status.jobs[i].executionDuration = executionDuration[i];
-        }
-    }
-    */
     function _calculateComputationalCost(
         Lib.ProviderInfo memory info,
         uint16[] memory core,
@@ -936,7 +917,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         emit LogProcessPayment(msg.sender, key, args.index, args.jobID, recipient, receivedWei, refundedWei, args.endTime, resultIpfsHash, args.dataTransferIn, args.dataTransferOut);
     }
 
-    function logJobEvent(string memory key, uint32 index, bytes32[] memory sourceCodeHash, Lib.JobArgument memory args, uint refunded)
+    function _logJobEvent(string memory key, uint32 index, bytes32[] memory sourceCodeHash, Lib.JobArgument memory args, uint refunded)
         internal
     {
         emit LogJob(args.provider, key, index, args.cloudStorageID, sourceCodeHash, args.cacheType, args.core, args.executionDuration, msg.value, refunded);
