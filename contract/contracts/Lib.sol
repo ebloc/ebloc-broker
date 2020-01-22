@@ -54,12 +54,11 @@ library Lib {
         uint32 index;
         uint32 jobID;
         uint32 endTime;
-
         uint32 dataTransferIn;
         uint32 dataTransferOut;
-
         uint[] core;
         uint[] executionDuration;
+        bool endJob;
     }
 
     struct DataInfo {

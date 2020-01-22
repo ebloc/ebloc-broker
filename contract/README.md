@@ -20,7 +20,7 @@ Paste following to get abi into console:
 
 ```
 import json
-with open('abi.json','w') as fp:
+with open('../contractCalls/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 ```
 # // , indent=2
