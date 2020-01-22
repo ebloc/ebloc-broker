@@ -8,7 +8,7 @@ from doesRequesterExist import doesRequesterExist
 from doesProviderExist import doesProviderExist
 
 from imports import connect, connectEblocBroker, getWeb3
-from isOwner import isOwner
+from is_owner import is_owner
 
 
 def authenticateORCID(address, orcID, eBlocBroker=None, w3=None):
@@ -18,22 +18,22 @@ def authenticateORCID(address, orcID, eBlocBroker=None, w3=None):
 
     account = w3.eth.accounts[0]
     address = w3.toChecksumAddress(address)
-        
+
     if not w3.isAddress(account):
         return False, 'Account: ' + account + ' is not a valid address.'
-    
-    if not isOwner(account):
+
+    if not is_owner(account):
         return False, 'Account: ' + account + ' that will call the transaction is not the owner of the contract.'
-    
+
     if not doesRequesterExist(address) and not doesProviderExist(address):
         return False, 'address: ' + address + ' is not registered.'
 
     if len(orcID) != 19:
         return False, 'orcID length is not 19.'
-   
+
     if not orcID.replace("-", "").isdigit():
         return False, 'orcID contains characters.'
-    
+
     if eBlocBroker.functions.isOrcIDVerified(address).call() == 0:
         try:
             tx = eBlocBroker.functions.authenticateOrcID(address, str.encode(orcID)).transact({"from": account, "gas": 4500000})
@@ -44,14 +44,14 @@ def authenticateORCID(address, orcID, eBlocBroker=None, w3=None):
     else:
         return False, 'address: ' + address + ' that has OrcID: ' + orcID + ' is already authenticated.'
 
-    
+
 if __name__ == '__main__':
     w3 = getWeb3()
     eBlocBroker = connectEblocBroker(w3)
-    
+
     if len(sys.argv) == 3:
-        address = str(sys.argv[1]) 
-        orcID = str(sys.argv[2])         
+        address = str(sys.argv[1])
+        orcID = str(sys.argv[2])
     else:
         print('Please provide the address and its orcID as argument.')
         sys.exit()
@@ -62,11 +62,11 @@ if __name__ == '__main__':
 
     status, result = authenticateORCID(address, orcID, eBlocBroker, w3)
     if status:
-        print('tx_hash=' + result)        
+        print('tx_hash=' + result)
         receipt = w3.eth.waitForTransactionReceipt(result)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))
         print("Was transaction successful?")
-        pprint.pprint(receipt['status'])        
+        pprint.pprint(receipt['status'])
     else:
         print(result)

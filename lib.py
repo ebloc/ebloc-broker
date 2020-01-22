@@ -566,6 +566,7 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
     index = loggedJob.args['index']
     cloudStorageID = loggedJob.args['cloudStorageID'][0] # cloudStorageID for the sourceCode
     jobInfo = jobInfo[0]
+    jobID = 0 # workFlowID
 
     # from contractCalls.get_job_info import get_job_info
     from datetime import datetime, timedelta
@@ -616,8 +617,8 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
 
     # jobID = 0 # Base jobID
     # status, jobInfo = get_job_info(PROVIDER_ID, jobKey, int(index), jobID, eBlocBroker, w3)
-    jobCoreNum = str(jobInfo['core'])
-    executionTimeSecond = timedelta(seconds=int((jobInfo['executionDuration'] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
+    jobCoreNum = str(jobInfo['core'][jobID])
+    executionTimeSecond = timedelta(seconds=int((jobInfo['executionDuration'][jobID] + 1) * 60))  # Client's requested seconds to run his/her job, 1 minute additional given.
     d = datetime(1, 1, 1) + executionTimeSecond
     timeLimit = str(int(d.day)-1) + '-' + str(d.hour) + ':' + str(d.minute)
     log("timeLimit=" + str(timeLimit) + "| RequestedCoreNum=" + jobCoreNum)
@@ -626,8 +627,8 @@ def sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderP
 
     for attempt in range(10):
         try:
-            ## SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-            ## cmd: sudo su - $requesterID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${cloudStorageID}*$shareToken.sh --mail-type=ALL
+            # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+            # cmd: sudo su - $requesterID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${cloudStorageID}*$shareToken.sh --mail-type=ALL
             jobID = subprocess.check_output(['sudo', 'su', '-', requesterID, '-c',
                                              'cd' + ' ' + resultsFolder + ' && ' + 'sbatch -N' + jobCoreNum + ' ' + resultsFolder + '/' + jobKey + '*'
                                              + str(index) + '*' + str(cloudStorageID) + '*' + shareToken + '.sh' + ' ' +

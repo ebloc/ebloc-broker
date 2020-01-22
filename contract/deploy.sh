@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source $HOME/v/bin/activate
+source $HOME/venv/bin/activate
 brownie compile
 brownie run eBlocBroker --network private

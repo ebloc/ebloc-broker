@@ -50,7 +50,7 @@ if __name__ == '__main__':
         ipfsAddress = str(sys.argv[5])
         githubUsername = str(sys.argv[6])
     else:
-        account = 0  # Requster's Ethereum Address
+        account = 1  # Requster's Ethereum Address
         email = "alper01234alper@gmail.com" # "alper.alimoglu@gmail.com"
         federationCloudID = "059ab6ba-4030-48bb-b81b-12115f531296"
         miniLockID = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"

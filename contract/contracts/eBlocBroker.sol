@@ -8,7 +8,7 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "./Lib.sol";
-import "./math/SafeMath.sol";
+import "./SafeMath.sol";
 import "./eBlocBrokerInterface.sol";
 import "./eBlocBrokerBase.sol";
 
@@ -54,7 +54,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
-
+    /**
+     * @notice
+     */
     function withdraw() public { // Using the withdrawal pattern
         uint256 amount = balances[msg.sender];
         // Set zero the balance before sending to prevent reentrancy attacks
@@ -193,19 +195,19 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
                 delete jobInfo.cacheCost; // Prevents additional cacheCost to be requested, can request cache cost only one time
             }
 
-            if (jobInfo.dataTransferIn > 0) { // Checking data transferring cost
+            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) { // Checking data transferring cost
                 amountToRefund = amountToRefund.add(info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))); // dataTransferRefund
                 delete jobInfo.dataTransferIn; // Prevents additional cacheCost to be requested
             }
         }
 
-        if (args.dataTransferOut > 0 && jobInfo.dataTransferOut > 0) {
+        if (jobInfo.dataTransferOut > 0 && args.endJob == true && args.dataTransferOut != jobInfo.dataTransferOut) {
             amountToRefund = amountToRefund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
             delete jobInfo.dataTransferOut; // Prevents additional dataTransfer to be request for dataTransferOut
         }
 
                                         //computationalCost_____________________________________      //dataTransferCost_______________________________________________________
-        amountToGain = amountToGain.add(uint(info.priceCoreMin).mul(core.mul(_executionDuration)).add(info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut)))));
+        amountToGain = amountToGain.add(uint(info.priceCoreMin).mul(core.mul(executionDuration)).add(info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut)))));
 
         // computationalCostRefund
         amountToRefund = amountToRefund.add(uint(info.priceCoreMin).mul(core.mul((_executionDuration.sub(uint(executionDuration))))));
