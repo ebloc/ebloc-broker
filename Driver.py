@@ -279,7 +279,7 @@ else:
     blockReadFrom = blockReadFromLocal
 
 balance_temp = get_balance(provider, eBlocBroker, w3)
-log('{0: <20}'.format('deployedBlockNumber=') + deployedBlockNumber + ' ' + '{0: <20}'.format('balance=') + balance_temp)
+log('{0: <20}'.format('deployedBlockNumber=') + deployedBlockNumber + ' | ' + 'balance=' + balance_temp)
 
 while True:
     if "Error" in blockReadFrom:
@@ -391,8 +391,8 @@ while True:
             if not status:
                 print(_jobInfo)
 
-            _jobInfo.update( {'receivedBlock': _receivedBlock} )
-            _jobInfo.update( {'storageDuration': storageDuration} )
+            _jobInfo.update({'receivedBlock': receivedBlock})
+            _jobInfo.update({'storageDuration': storageDuration})
             pprint.pprint(_jobInfo)
             jobInfo.append(_jobInfo)
             if status:
@@ -404,19 +404,13 @@ while True:
             passFlag = True
             break
 
-        jobID = 1
-        while not passFlag: # Retrieves all jobInfo for each job in the workflow
-            _jobInfo = eBlocBroker.functions.getJobInfo(w3.toChecksumAddress(provider), jobKey, int(index), int(jobID)).call()
-            if _jobInfo[0][2] == 0: # compares job core value
-                break
-            else:
-                _jobInfo = get_job_info(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
-                if _jobInfo != None:
-                    jobInfo.append(_jobInfo)  # Adding jobs if workflow exist
-                    jobID += 1
+        for jobID in range(1, len(jobInfo[0]['core'])):
+            _jobInfo = get_job_info(provider, jobKey, index, jobID, _blockNumber, eBlocBroker, w3)
+            if _jobInfo is not None:
+                jobInfo.append(_jobInfo)  # Adding jobs if workflow exist
 
         requesterID = ""
-        if passFlag or jobInfo[0]['core'] == 0:
+        if passFlag or len(jobInfo[0]['core']) == 0 or len(jobInfo[0]['executionDuration']) == 0:
             log('Requested job does not exist', 'red')
             passFlag = True
         else:

@@ -52,7 +52,7 @@ def uploadResultToEudat(encodedShareToken, outputFileName):
     return p, output, err
 
 
-def processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloudStorageID, slurmJobID, dataTransfer, sourceCodeHashArray):
+def processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloudStorageID, slurmJobID, dataTransfer, sourceCodeHashArray, jobInfo):
     # cmd: scontrol show job slurmJobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
     status, output = executeShellCommand(['scontrol', 'show', 'job', slurmJobID], None, True)
     p1 = subprocess.Popen(['echo', output], stdout=subprocess.PIPE)
@@ -64,11 +64,10 @@ def processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloud
 
     command = ["date", "-d", date, "+'%s'"] # cmd: date -d 2018-09-09T21:50:51 +"%s"
     status, endTimeStamp = executeShellCommand(command, None, True)
-    endTimeStamp = endTimeStamp.replace("'","")
+    endTimeStamp = endTimeStamp.replace("'", "")
     log("endTimeStamp=" + endTimeStamp)
 
-    log('~/eBlocBroker/contractCalls/processPayment.py ' + jobKey + ' ' + str(index) + ' ' + str(jobID) + ' ' + str(elapsedRawTime) + ' ' + str(resultIpfsHash) + ' ' + cloudStorageID + ' ' + str(endTimeStamp) + ' ' + str(dataTransfer) + ' ' + str(sourceCodeHashArray) + '\n')
-    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: processPayment(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloudStorageID, endTimeStamp, dataTransfer, sourceCodeHashArray, eBlocBroker, w3), 10)
+    status, tx_hash = lib.eBlocBrokerFunctionCall(lambda: processPayment(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloudStorageID, endTimeStamp, dataTransfer, sourceCodeHashArray, jobInfo['core'], jobInfo['executionDuration'], eBlocBroker, w3), 10)
     if not status:
         sys.exit()
 
@@ -153,19 +152,19 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
     p1.stdout.close()
     p2.communicate()  # Remove empty folders if exist
 
-    log("\nwhoami: "          + getpass.getuser() + ' ' + str(os.getegid()))  # whoami
-    log("homeDir: "           + homeDir)     # $HOME
-    log("pwd: "               + os.getcwd())  # pwd
-    log("resultsFolder: "     + resultsFolder)
-    log("jobKey: "            + jobKey)
-    log("index: "             + index)
-    log("cloudStorageID: "         + cloudStorageID)
-    log("shareToken: "        + shareToken)
+    log("\nwhoami: " + getpass.getuser() + ' ' + str(os.getegid()))  # whoami
+    log("homeDir: " + homeDir)     # $HOME
+    log("pwd: " + os.getcwd())  # pwd
+    log("resultsFolder: " + resultsFolder)
+    log("jobKey: " + jobKey)
+    log("index: " + index)
+    log("cloudStorageID: " + cloudStorageID)
+    log("shareToken: " + shareToken)
     log("encodedShareToken: " + encodedShareToken)
-    log("folderName: "        + folderName)
-    log("providerID: "        + PROVIDER_ID)
-    log("requesterIDAddr: "   + requesterIDAddr)
-    log("received: "          + str(jobInfo['received']))
+    log("folderName: " + folderName)
+    log("providerID: " + PROVIDER_ID)
+    log("requesterIDAddr: " + requesterIDAddr)
+    log("received: " + str(jobInfo['received']))
 
     dataTransferIn = 0
     if os.path.isfile(resultsFolderPrev + '/dataTransferIn.txt'):
@@ -185,10 +184,10 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
 
     miniLockID = requesterInfo['miniLockID']
     log("\njobOwner's Info: ")
-    log('{0: <13}'.format('email: ') + requesterInfo['email'])
-    log('{0: <13}'.format('miniLockID: ') + miniLockID)
-    log('{0: <13}'.format('ipfsID: ') + requesterInfo['ipfsID'])
-    log('{0: <13}'.format('fID: ') + requesterInfo['fID'])
+    log('{0: <12}'.format('email:') + requesterInfo['email'])
+    log('{0: <12}'.format('miniLockID:') + miniLockID)
+    log('{0: <12}'.format('ipfsID:') + requesterInfo['ipfsID'])
+    log('{0: <12}'.format('fID:') + requesterInfo['fID'])
     log("")
 
     if jobInfo['jobStateCode'] == str(lib.job_state_code['COMPLETED']):
@@ -196,7 +195,7 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
         sys.exit()
 
     executionDuration = jobInfo['executionDuration']
-    log("requesterExecutionTime: " + str(executionDuration) + ' minutes')  # Clients minuteGas for the job
+    log("requesterExecutionTime: " + str(executionDuration[jobID]) + ' minutes')  # Clients minuteGas for the job
     count = 0
     while True:
         if count > 10:
@@ -223,7 +222,7 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
     if not status:
         sys.exit()
 
-    log("jobName: " + str(folderName))
+    log("jobName=" + str(folderName))
     with open(resultsFolder + '/slurmJobInfo.out', 'w') as stdout:
         command = ['scontrol', 'show', 'job', slurmJobID] # cmd: scontrol show job $slurmJobID > $resultsFolder/slurmJobInfo.out
         subprocess.Popen(command, stdout=stdout)
@@ -231,7 +230,7 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
 
     command = ['sacct', '-n', '-X', '-j', slurmJobID, '--format=Elapsed'] # cmd: sacct -n -X -j $slurmJobID --format="Elapsed"
     status, elapsedTime = executeShellCommand(command, None, True)
-    log("ElapsedTime: " + elapsedTime)
+    log("ElapsedTime=" + elapsedTime)
 
     elapsedTime = elapsedTime.split(':')
     elapsedDay = "0"
@@ -243,11 +242,11 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
         elapsedDay = elapsedHour[0]
         elapsedHour = elapsedHour[1]
 
-    elapsedRawTime = int(elapsedDay)* 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1
+    elapsedRawTime = int(elapsedDay) * 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1
     log("ElapsedRawTime=" + str(elapsedRawTime))
 
-    if elapsedRawTime > int(executionDuration):
-        elapsedRawTime = executionDuration
+    if elapsedRawTime > int(executionDuration[jobID]):
+        elapsedRawTime = executionDuration[jobID]
 
     log("finalizedElapsedRawTime: " + str(elapsedRawTime))
     log("jobInfo: " + str(jobInfo))
@@ -411,10 +410,9 @@ def endCall(jobKey, index, cloudStorageID, shareToken, folderName, slurmJobID):
     log('dataTransferIn='  + str(dataTransferIn)  + ' MB | Rounded=' + str(int(dataTransferIn))  + ' MB', 'green')
     log('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB', 'green')
     log('dataTransferSum=' + str(dataTransferSum) + ' MB | Rounded=' + str(int(dataTransferSum)) + ' MB', 'green')
-    processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloudStorageID, slurmJobID, int(dataTransferIn), int(dataTransferOut))
+    processPaymentTx(jobKey, index, jobID, elapsedRawTime, resultIpfsHash, cloudStorageID, slurmJobID, int(dataTransferIn), int(dataTransferOut), jobInfo)
 
-    # jobInfo['sourceCodeHash']
-    log('===COMPLETED===', 'green')
+    log('=====COMPLETED=====', 'green')
     '''
     # Removed downloaded code from local since it is not needed anymore
     if os.path.isdir(resultsFolderPrev):
@@ -429,5 +427,4 @@ if __name__ == '__main__':
     shareToken = sys.argv[4]
     folderName = sys.argv[5]
     slurmJobID = sys.argv[6]
-
     endCall(key, index, cloudStorageID, shareToken, folderName, slurmJobID)
