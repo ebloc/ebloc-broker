@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $HOME/v/bin/activate
+source $HOME/venv/bin/activate
 brownie compile
 
 pytest tests -s -x --capture=no
