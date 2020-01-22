@@ -1,6 +1,9 @@
 #!/bin/bash
 
+source $HOME/venv/bin/activate
+
 cd $HOME/eBlocBroker
+rm -rf $HOME/eBlocBroker/token
 brownie bake token
 rm $HOME/eBlocBroker/token/contracts/*
 rm $HOME/eBlocBroker/token/tests/*

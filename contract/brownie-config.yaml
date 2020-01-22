@@ -11,6 +11,7 @@ network:
         private:
             host: http://127.0.0.1:8545/
             persist: true
+            gas_price: false
         # any settings given here will replace the defaults
         development:
             host: http://127.0.0.1
