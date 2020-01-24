@@ -13,9 +13,9 @@ def is_owner(addr) -> bool:
     return addr.lower() == get_owner().lower()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) == 2:
         addr = str(sys.argv[1])
         print(is_owner(addr))
     else:
-        print('Please provide an Ethereum address as an argument.')
+        print("Please provide an Ethereum address as an argument.")
