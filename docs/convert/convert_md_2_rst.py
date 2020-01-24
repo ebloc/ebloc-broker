@@ -14,35 +14,38 @@ sys.path.insert(0, os.path.abspath('.'))
 import os
 import pypandoc
 
+
 def setup(app):
-    print( "hello" )
-    path = os.path.abspath('.') + '/source'
-    for dir,subdir,files in os.walk(path):
+    print("hello")
+    path = os.path.abspath(".") + "/source"
+    for dir, subdir, files in os.walk(path):
         for file in files:
             filename = os.path.join(dir, file)
             filename_parts = os.path.splitext(filename)
             if len(filename_parts) > 1:
                 filename_ext = filename_parts[1]
-                if filename_ext == '.md':
+                if filename_ext == ".md":
                     convert_md_2_rst_process(filename_parts[0])
+
 
 def convert_md_2_rst_process(filename_root):
     filename_source = filename_root + ".md"
     filename_target = filename_root + ".rst"
-    print ('Converting', os.path.basename(filename_source), 'to', os.path.basename(filename_target))
+    print("Converting", os.path.basename(filename_source), "to", os.path.basename(filename_target))
     file_source = open(filename_source)
     lines = file_source.readlines()
 
     for i in range(0, len(lines)):
-        lines[i] = lines[i].rstrip('\n')
-    
+        lines[i] = lines[i].rstrip("\n")
+
     file_source.close()
-    data = '\n'.join(lines)
+    data = "\n".join(lines)
     data = data.encode("utf-8")
-    data = pypandoc.convert(data, 'rst', format='markdown')
+    data = pypandoc.convert(data, "rst", format="markdown")
     file_target = open(filename_target, "w")
     file_target.write(data)
     file_target.flush()
     file_target.close()
+
 
 setup("/Users/alper/eBlocBroker/docs/convert")

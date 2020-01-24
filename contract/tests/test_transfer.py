@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 
-'''
+"""
 def test_transfer(token, accounts):
     assert token.totalSupply() == "1000 ether"
     token.transfer(accounts[1], "0.1 ether", {'from': accounts[0]})
@@ -10,4 +10,4 @@ def test_transfer(token, accounts):
 
     user = ["hello", 10];
     token.addUser(user, {'from': accounts[0]});
-'''
+"""

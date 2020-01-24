@@ -568,18 +568,18 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         Lib.Provider storage provider = providers[args.provider];
 
         require(
-            provider.isRunning                                   && // Provider must be running
-            sourceCodeHash.length > 0                            &&
+            provider.isRunning && // Provider must be running
+            sourceCodeHash.length > 0 &&
             storageDuration.length == args.dataPricesSetBlockNum.length &&
-            storageDuration.length == sourceCodeHash.length      &&
-            storageDuration.length == dataTransferIn.length      &&
+            storageDuration.length == sourceCodeHash.length &&
+            storageDuration.length == dataTransferIn.length &&
             storageDuration.length == args.cloudStorageID.length &&
-            storageDuration.length == args.cacheType.length      &&
-            args.cloudStorageID[0] <= 4             &&
+            storageDuration.length == args.cacheType.length &&
+            args.cloudStorageID[0] <= 4 &&
             args.core.length == args.executionDuration.length &&
-            doesRequesterExist(msg.sender)          &&
-            bytes(key).length <= 255                && // Maximum key length is 255 that will be used as folder name
-            orcID[msg.sender].length > 0            &&
+            doesRequesterExist(msg.sender) &&
+            bytes(key).length <= 255 && // Maximum key length is 255 that will be used as folder name
+            orcID[msg.sender].length > 0 &&
             orcID[args.provider].length  > 0
         );
 

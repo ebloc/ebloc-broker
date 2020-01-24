@@ -4,6 +4,7 @@
 def get_owner(eBlocBroker=None):
     if eBlocBroker is None:
         from imports import connectEblocBroker
+
         eBlocBroker = connectEblocBroker()
         if not eBlocBroker:
             return False
@@ -11,5 +12,5 @@ def get_owner(eBlocBroker=None):
     return eBlocBroker.functions.getOwner().call()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(get_owner())

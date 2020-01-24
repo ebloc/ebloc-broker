@@ -20,32 +20,34 @@ def authenticateORCID(address, orcID, eBlocBroker=None, w3=None):
     address = w3.toChecksumAddress(address)
 
     if not w3.isAddress(account):
-        return False, 'Account: ' + account + ' is not a valid address.'
+        return False, "Account: " + account + " is not a valid address."
 
     if not is_owner(account):
-        return False, 'Account: ' + account + ' that will call the transaction is not the owner of the contract.'
+        return (False, "Account: " + account + " that will call the transaction is not the owner of the contract.")
 
     if not doesRequesterExist(address) and not doesProviderExist(address):
-        return False, 'address: ' + address + ' is not registered.'
+        return False, "address: " + address + " is not registered."
 
     if len(orcID) != 19:
-        return False, 'orcID length is not 19.'
+        return False, "orcID length is not 19."
 
     if not orcID.replace("-", "").isdigit():
-        return False, 'orcID contains characters.'
+        return False, "orcID contains characters."
 
     if eBlocBroker.functions.isOrcIDVerified(address).call() == 0:
         try:
-            tx = eBlocBroker.functions.authenticateOrcID(address, str.encode(orcID)).transact({"from": account, "gas": 4500000})
+            tx = eBlocBroker.functions.authenticateOrcID(address, str.encode(orcID)).transact(
+                {"from": account, "gas": 4500000}
+            )
         except Exception:
             return False, traceback.format_exc()
 
         return True, tx.hex()
     else:
-        return False, 'address: ' + address + ' that has OrcID: ' + orcID + ' is already authenticated.'
+        return (False, "address: " + address + " that has OrcID: " + orcID + " is already authenticated.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     w3 = getWeb3()
     eBlocBroker = connectEblocBroker(w3)
 
@@ -53,7 +55,7 @@ if __name__ == '__main__':
         address = str(sys.argv[1])
         orcID = str(sys.argv[2])
     else:
-        print('Please provide the address and its orcID as argument.')
+        print("Please provide the address and its orcID as argument.")
         sys.exit()
         # ./authenticateORCID.py 0x57b60037b82154ec7149142c606ba024fbb0f991 0000-0001-7642-0552
         # address = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
@@ -62,11 +64,11 @@ if __name__ == '__main__':
 
     status, result = authenticateORCID(address, orcID, eBlocBroker, w3)
     if status:
-        print('tx_hash=' + result)
+        print("tx_hash=" + result)
         receipt = w3.eth.waitForTransactionReceipt(result)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))
         print("Was transaction successful?")
-        pprint.pprint(receipt['status'])
+        pprint.pprint(receipt["status"])
     else:
         print(result)
