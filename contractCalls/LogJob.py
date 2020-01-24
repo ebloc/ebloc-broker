@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Guide asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-events
-'''
+"""
 
 import sys, asyncio, time, lib
 from web3.auto import w3
-from imports   import connect, connectEblocBroker, getWeb3
+from imports import connect, connectEblocBroker, getWeb3
 import binascii, base58
 
 
@@ -17,12 +17,15 @@ def logReturn(event_filter, poll_interval):
             return loggedJobs
         time.sleep(poll_interval)
 
+
 def runLogJob(fromBlock, provider, eBlocBroker=None, w3=None):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
     if eBlocBroker is None or w3 is None:
         return
 
-    event_filter = eBlocBroker.events.LogJob.createFilter(fromBlock=int(fromBlock), toBlock="latest", argument_filters={'provider': str(provider)})
+    event_filter = eBlocBroker.events.LogJob.createFilter(
+        fromBlock=int(fromBlock), toBlock="latest", argument_filters={"provider": str(provider)}
+    )
     loggedJobs = event_filter.get_all_entries()
 
     if len(loggedJobs) > 0:
@@ -30,66 +33,80 @@ def runLogJob(fromBlock, provider, eBlocBroker=None, w3=None):
     else:
         return logReturn(event_filter, 2)
 
+
 def runLogCancelRefund(fromBlock, provider, eBlocBroker=None, w3=None):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
     if eBlocBroker is None or w3 is None:
         return
 
-    event_filter = eBlocBroker.events.LogRefund.createFilter(fromBlock=int(fromBlock), argument_filters={'provider': str(provider)})
+    event_filter = eBlocBroker.events.LogRefund.createFilter(
+        fromBlock=int(fromBlock), argument_filters={"provider": str(provider)}
+    )
     loggedCancelledJobs = event_filter.get_all_entries()
     if len(loggedCancelledJobs) > 0:
         return loggedCancelledJobs
     else:
         return logReturn(event_filter, 2)
 
+
 def runSingleLogJob(fromBlock, jobKey, transactionHash, eBlocBroker=None, w3=None):
     eBlocBroker, w3 = connect(eBlocBroker, w3)
     if eBlocBroker is None or w3 is None:
         return
 
-    event_filter = eBlocBroker.events.LogJob.createFilter(fromBlock=int(fromBlock), argument_filters={'provider': str(provider)})
+    event_filter = eBlocBroker.events.LogJob.createFilter(
+        fromBlock=int(fromBlock), argument_filters={"provider": str(provider)}
+    )
     loggedJobs = event_filter.get_all_entries()
 
     if len(loggedJobs) > 0:
         for i in range(0, len(loggedJobs)):
-            if loggedJobs[i]['transactionHash'].hex() == transactionHash:
-                return loggedJobs[i]['index']
+            if loggedJobs[i]["transactionHash"].hex() == transactionHash:
+                return loggedJobs[i]["index"]
     else:
         return logReturn(event_filter, 2)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if len(sys.argv) == 3:
         fromBlock = int(sys.argv[1])
-        provider  = str(sys.argv[2])  # Only obtains jobs that are submitted to the provider.
+        provider = str(sys.argv[2])  # Only obtains jobs that are submitted to the provider.
     else:
         fromBlock = 3070724
-        provider  = '0x57b60037b82154ec7149142c606ba024fbb0f991'
-        print('here')
+        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
+        print("here")
 
     loggedJobs = runLogJob(fromBlock, provider)
     for i in range(0, len(loggedJobs)):
         # print(loggedJobs[i])
-        cloudStorageID = loggedJobs[i].args['cloudStorageID']
-        '''
+        cloudStorageID = loggedJobs[i].args["cloudStorageID"]
+        """
         if lib.StorageID.IPFS.value == cloudStorageID or lib.cloudStorageID.IPFS_MINILOCK.value == cloudStorageID:
             jobKey = lib.convertBytes32ToIpfs(loggedJobs[i].args['jobKey'])
         else:
             jobKey = loggedJobs[i].args['jobKey']
-        '''
+        """
 
-        print('transactionHash=' + loggedJobs[i]['transactionHash'].hex() + ' | logIndex=' + str(loggedJobs[i]['logIndex']))
-        print('blockNumber: ' + str(loggedJobs[i]['blockNumber']))
-        print('provider: '    + loggedJobs[i].args['provider'])
-        print('jobKey: '      + loggedJobs[i].args['jobKey'])
-        print('index: '       + str(loggedJobs[i].args['index']))
-        print('cloudStorageID: '   + str(lib.StorageID(cloudStorageID).name))
-        print('cacheType: '   + str(lib.CacheType(loggedJobs[i].args['cacheType']).name))
-        print('received: '    + str(loggedJobs[i].args['received']))
-        for i in range(0, len(loggedJobs[i].args['sourceCodeHash'])):
-            sourceCodeHash = loggedJobs[i].args['sourceCodeHash'][i]
-            print('sourceCodeHash[' + str(i) + ']: ' +  lib.convertBytes32ToIpfs(sourceCodeHash))
+        print(
+            "transactionHash="
+            + loggedJobs[i]["transactionHash"].hex()
+            + " | logIndex="
+            + str(loggedJobs[i]["logIndex"])
+        )
+        print("blockNumber: " + str(loggedJobs[i]["blockNumber"]))
+        print("provider: " + loggedJobs[i].args["provider"])
+        print("jobKey: " + loggedJobs[i].args["jobKey"])
+        print("index: " + str(loggedJobs[i].args["index"]))
+        print("cloudStorageID: " + str(lib.StorageID(cloudStorageID).name))
+        print("cacheType: " + str(lib.CacheType(loggedJobs[i].args["cacheType"]).name))
+        print("received: " + str(loggedJobs[i].args["received"]))
+        for i in range(0, len(loggedJobs[i].args["sourceCodeHash"])):
+            sourceCodeHash = loggedJobs[i].args["sourceCodeHash"][i]
+            print("sourceCodeHash[" + str(i) + "]: " + lib.convertBytes32ToIpfs(sourceCodeHash))
 
-        print('------------------------------------------------------------------------------------------------------------')
+        print(
+            "------------------------------------------------------------------------------------------------------------"
+        )
 
 # bytes32[] sourceCodeHash,
 # uint8 cacheType,

@@ -4,9 +4,8 @@ import pytest
 
 
 @pytest.fixture(scope="function", autouse=True)
-
 def isolate(fn_isolation):
-# def isolate(module_isolation):
+    # def isolate(module_isolation):
     pass
 
 

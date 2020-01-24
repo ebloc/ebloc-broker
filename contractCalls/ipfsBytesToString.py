@@ -10,11 +10,11 @@ os.chdir(sys.path[0])
 
 
 def ipfsBytesToString(ipfsID):
-    val = web3.fromAscii(ipfsID) 
-    os.environ['val'] = '1220' + val[2:] 
-    return os.popen('node bs58.js decode $val').read().replace("\n", "") 
+    val = web3.fromAscii(ipfsID)
+    os.environ["val"] = "1220" + val[2:]
+    return os.popen("node bs58.js decode $val").read().replace("\n", "")
 
 
-web3 = Web3(HTTPProvider('http://localhost:8545'))
+web3 = Web3(HTTPProvider("http://localhost:8545"))
 
 print(web3.personal)
