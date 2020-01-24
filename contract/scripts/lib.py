@@ -4,7 +4,7 @@ import base58
 import binascii
 
 ONE_HOUR_BLOCK_DURATION = 240
-Qm = b'\x12'
+Qm = b"\x12"
 
 
 class CacheType:
@@ -33,9 +33,9 @@ class JobStateCodes:
 
 def getJobStorageTime(eB, provider, source_code_hash, brownie=False):
     if brownie:
-        ret = eB.getJobStorageTime(provider,  source_code_hash)
+        ret = eB.getJobStorageTime(provider, source_code_hash)
     else:
-        ret = eB.functions.getJobStorageTime(provider,  source_code_hash).call()
+        ret = eB.functions.getJobStorageTime(provider, source_code_hash).call()
 
     receivedBlock = ret[0]
     cacheDuration = ret[1]
@@ -50,9 +50,24 @@ def convertIpfsToBytes32(hash_string):
     return binascii.hexlify(b).decode("utf-8")
 
 
-def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTransferIn, dataTransferOut, cacheHour, storageID, cacheType, data_prices_set_blocknumber_array, eB, w3, brownie=True):
-    print('\nEntered into cost calculation...')
-    block_number =  w3.eth.blockNumber
+def cost(
+    coreArray,
+    coreMinArray,
+    provider,
+    requester,
+    sourceCodeHash,
+    dataTransferIn,
+    dataTransferOut,
+    cacheHour,
+    storageID,
+    cacheType,
+    data_prices_set_blocknumber_array,
+    eB,
+    w3,
+    brownie=True,
+):
+    print("\nEntered into cost calculation...")
+    block_number = w3.eth.blockNumber
 
     if brownie:
         providerPriceInfo = eB.getProviderInfo(provider, 0)
@@ -93,19 +108,31 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
         source_code_hash = sourceCodeHash[i]
         print(source_code_hash)
 
-        receivedBlock, cacheDuration, is_private, isVerified_Used = getJobStorageTime(eB, provider, source_code_hash, brownie)
+        receivedBlock, cacheDuration, is_private, isVerified_Used = getJobStorageTime(
+            eB, provider, source_code_hash, brownie
+        )
         if brownie:
-            received_storage_deposit = eB.getReceivedStorageDeposit(provider, requester, source_code_hash)
+            received_storage_deposit = eB.getReceivedStorageDeposit(
+                provider, requester, source_code_hash
+            )
         else:
-            received_storage_deposit = eB.functions.getReceivedStorageDeposit(provider, requester, source_code_hash).call() # TODO: prc de hata veriyor
+            received_storage_deposit = eB.functions.getReceivedStorageDeposit(
+                provider, requester, source_code_hash
+            ).call()  # TODO: prc de hata veriyor
 
         print(not is_private)
         print(receivedBlock + cacheDuration >= block_number)
-        if received_storage_deposit > 0 or (receivedBlock + cacheDuration >= block_number and not is_private and isVerified_Used):
+        if received_storage_deposit > 0 or (
+            receivedBlock + cacheDuration >= block_number and not is_private and isVerified_Used
+        ):
             pass
         else:
-            if data_prices_set_blocknumber_array[i] > 0:  # If true, registered data's price should be considered for storage
-                res = eB.getRegisteredDataPrice(provider, source_code_hash, data_prices_set_blocknumber_array[i])
+            if (
+                data_prices_set_blocknumber_array[i] > 0
+            ):  # If true, registered data's price should be considered for storage
+                res = eB.getRegisteredDataPrice(
+                    provider, source_code_hash, data_prices_set_blocknumber_array[i]
+                )
                 dataPrice = res[0]
                 storageCost += dataPrice
                 break
@@ -119,16 +146,27 @@ def cost(coreArray, coreMinArray, provider, requester, sourceCodeHash, dataTrans
 
     dataTransferCost = priceDataTransfer * (dataTransferIn_sum + dataTransferOut)
     jobPriceValue = computationalCost + dataTransferCost + cacheCost + storageCost
-    print('\njobPriceValue='   + str(jobPriceValue)       + ' == ' +
-          'cacheCost='         + str(cacheCost)           + ' | ' +
-          'storageCost='       + str(storageCost)         + ' | ' +
-          'dataTransferCost='  + str(dataTransferCost)    + ' | ' +
-          'computationalCost=' + str(computationalCost))
+    print(
+        "\njobPriceValue="
+        + str(jobPriceValue)
+        + " == "
+        + "cacheCost="
+        + str(cacheCost)
+        + " | "
+        + "storageCost="
+        + str(storageCost)
+        + " | "
+        + "dataTransferCost="
+        + str(dataTransferCost)
+        + " | "
+        + "computationalCost="
+        + str(computationalCost)
+    )
 
-    cost = dict();
-    cost['computationalCost'] = computationalCost
-    cost['dataTransferCost'] = dataTransferCost
-    cost['cacheCost'] = cacheCost
-    cost['storageCost'] = storageCost
+    cost = dict()
+    cost["computationalCost"] = computationalCost
+    cost["dataTransferCost"] = dataTransferCost
+    cost["cacheCost"] = cacheCost
+    cost["storageCost"] = storageCost
 
     return jobPriceValue, cost

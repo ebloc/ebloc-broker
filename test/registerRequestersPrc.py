@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-'''
+"""
 For experiment purposes reqisters 10 users from prc-95
-'''
+"""
 
 from os.path import expanduser
 from imports import connectEblocBroker
@@ -23,12 +23,14 @@ accoutLength = 10
 for i in range(0, accoutLength):
     accountID = str(i)
     account = web3.eth.accounts[i]
-    tx = register_requester(accountID, email, federationCloudID, miniLockID, ipfsAddress, githubUsername, eBlocBroker, web3)
-    print(account + ' | ' + str(i) + ' | ' +  tx)
-print('')
-print('[', end='')
+    tx = register_requester(
+        accountID, email, federationCloudID, miniLockID, ipfsAddress, githubUsername, eBlocBroker, web3
+    )
+    print(account + " | " + str(i) + " | " + tx)
+print("")
+print("[", end="")
 for i in range(0, accoutLength):
-    print("\"" + web3.eth.accounts[i] + "\"", end='')
+    print('"' + web3.eth.accounts[i] + '"', end="")
     if i != accoutLength - 1:
-        print(', ', end='')
-print(']')
+        print(", ", end="")
+print("]")

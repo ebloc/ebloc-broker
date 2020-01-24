@@ -12,19 +12,21 @@ def register_data(sourceCodeHash, price, commitmentBlockDuration, eBlocBroker=No
         return
 
     try:
-        tx = eBlocBroker.functions.registerData(sourceCodeHash, price, commitmentBlockDuration).transact({"from": w3.toChecksumAddress(PROVIDER_ID), "gas": 100000})
-        
+        tx = eBlocBroker.functions.registerData(sourceCodeHash, price, commitmentBlockDuration).transact(
+            {"from": w3.toChecksumAddress(PROVIDER_ID), "gas": 100000}
+        )
+
     except Exception:
         return False, traceback.format_exc()
 
     return True, tx.hex()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sourceCodeHash = "0x68b8d8218e730fc2957bcb12119cb204"
     status, result = register_data(sourceCodeHash, 20, 240)
-    
+
     if status:
-        print('tx_hash=' + result)        
+        print("tx_hash=" + result)
     else:
-        print(result)       
+        print(result)
