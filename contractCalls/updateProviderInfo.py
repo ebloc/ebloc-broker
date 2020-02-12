@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 
-import sys, os, json, pprint
-from imports import connect, getWeb3
+import json
+import os
+import pprint
+import sys
 from os.path import expanduser
+
+from imports import connect, connect_to_web3
 
 home = expanduser("~")
 
 
 def updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
 
@@ -43,7 +47,7 @@ if __name__ == "__main__":
     miniLockId = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
     ipfsAddress = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV47WttP9hAoPEXeCMKsh3Cap4"
 
-    w3 = getWeb3()
+    w3 = connect_to_web3()
     status, result = updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress, None, w3)
     if status:
         print("tx_hash=" + result)

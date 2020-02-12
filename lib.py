@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-import subprocess
-import time
-import json
-import glob
-import shutil
 import binascii
-import base58
-import traceback
+import glob
+import json
+import os
+import shutil
 import signal
-
-from lib_mongodb import addItem
-from shutil import copyfile
-from dotenv import load_dotenv
-from os.path import expanduser
-from colored import stylize, fg
+import subprocess
+import sys
+import time
+import traceback
 from enum import Enum
+from os.path import expanduser
+from shutil import copyfile
+from typing import Tuple
+
+import base58
+from colored import fg, stylize
+from dotenv import load_dotenv
+from termcolor import colored
+
+import config
+from config import load_log
+from lib_mongodb import add_item
 
 
 # enum: https://stackoverflow.com/a/1695250/2402577
@@ -29,7 +34,7 @@ def enum(*sequential, **named):
 
 
 home = expanduser("~")
-load_dotenv(os.path.join(home + "/.eBlocBroker/", ".env"))  # Load .env from the given path
+load_dotenv(os.path.join(f"{home}/.eBlocBroker/", ".env"))  # Load .env from the given path
 
 WHOAMI = os.getenv("WHOAMI")
 EBLOCPATH = os.getenv("EBLOCPATH")
@@ -37,41 +42,33 @@ LOG_PATH = os.getenv("LOG_PATH")
 PROVIDER_ID = os.getenv("PROVIDER_ID")
 GDRIVE = os.getenv("GDRIVE")
 RPC_PORT = os.getenv("RPC_PORT")
-POA_CHAIN = os.getenv("POA_CHAIN")
 OC_USER = os.getenv("OC_USER")
-IPFS_USE = os.getenv("IPFS_USE")  # Should be "True/1", if caching into IPFS is open
-EUDAT_USE = os.getenv("EUDAT_USE")
+POA_CHAIN = str(os.getenv("POA_CHAIN")).lower() in ("yes", "true", "t", "1")
+IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
+EUDAT_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1")
 
-if IPFS_USE == "0":
-    IPFS_USE = False
-else:
-    IPFS_USE = True
-
-if EUDAT_USE == "0":
-    EUDAT_USE = False
-else:
-    EUDAT_USE = True
-
-GDRIVE_CLOUD_PATH = "/home/" + WHOAMI + "/foo"
-GDRIVE_METADATA = "/home/" + WHOAMI + "/.gdrive"
-IPFS_REPO = "/home/" + WHOAMI + "/.ipfs"
-HOME = "/home/" + WHOAMI
+GDRIVE_CLOUD_PATH = f"/home/{WHOAMI}/foo"
+GDRIVE_METADATA = f"/home/{WHOAMI}/.gdrive"
+IPFS_REPO = f"/home/{WHOAMI}/.ipfs"
+HOME = f"/home/{WHOAMI}"
 OWN_CLOUD_PATH = "/oc"
 
 PROGRAM_PATH = "/var/eBlocBroker"
-JOBS_READ_FROM_FILE = LOG_PATH + "/test.txt"
-CANCEL_JOBS_READ_FROM_FILE = LOG_PATH + "/cancelledJobs.txt"
-BLOCK_READ_FROM_FILE = LOG_PATH + "/blockReadFrom.txt"
-CANCEL_BLOCK_READ_FROM_FILE = LOG_PATH + "/cancelledBlockReadFrom.txt"
+JOBS_READ_FROM_FILE = f"{LOG_PATH}/test.txt"
+CANCEL_JOBS_READ_FROM_FILE = f"{LOG_PATH}/cancelledJobs.txt"
+BLOCK_READ_FROM_FILE = f"{LOG_PATH}/blockReadFrom.txt"
+CANCEL_BLOCK_READ_FROM_FILE = f"{LOG_PATH}/cancelledBlockReadFrom.txt"
+
+logging = load_log()  # After LOG_PATH is set
 
 
 class CacheType(Enum):
     PUBLIC = 0
     PRIVATE = 1
-
-
-#   NONE    = 2
-#   IPFS    = 3
+    """ delete
+    NONE    = 2
+    IPFS    = 3
+    """
 
 
 class StorageID(Enum):
@@ -87,25 +84,20 @@ class StorageID(Enum):
 job_state_code = {}
 
 # Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
-job_state_code["SUBMITTED"] = 0  # Initial state
-job_state_code[
-    "PENDING"
-] = (
-    1
-)  # Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run.
-job_state_code[
-    "RUNNING"
-] = (
-    2
-)  # The job currently is allocated to a node and is running. Corresponding data files are downloaded and verified.*/
-job_state_code["REFUNDED"] = 3  # Indicates if job is refunded */
-job_state_code[
-    "CANCELLED"
-] = (
-    4
-)  # Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. Set by the requester
-job_state_code["COMPLETED"] = 5  # The job has completed successfully and deposit is paid to the provider
-job_state_code["TIMEOUT"] = 6  # Job terminated upon reaching its time limit.
+# Initial state
+job_state_code["SUBMITTED"] = 0
+# Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run.
+job_state_code["PENDING"] = 1
+# The job currently is allocated to a node and is running. Corresponding data files are downloaded and verified.*/
+job_state_code["RUNNING"] = 2
+# Indicates if job is refunded */
+job_state_code["REFUNDED"] = 3
+# Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. Set by the requester
+job_state_code["CANCELLED"] = 4
+# The job has completed successfully and deposit is paid to the provider
+job_state_code["COMPLETED"] = 5
+# Job terminated upon reaching its time limit.
+job_state_code["TIMEOUT"] = 6
 job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
@@ -114,14 +106,14 @@ Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
-def checkSizeOfFileToDownload(fileType, key=None):
-    if int(fileType) == StorageID.IPFS.value or int(fileType) == StorageID.IPFS_MINILOCK.value:
+def checkSizeOfFileToDownload(file_type, key=None):
+    if int(file_type) == StorageID.IPFS.value or int(file_type) == StorageID.IPFS_MINILOCK.value:
         if key is None:  # key refers to ipfs_hash
             return False
         pass
-    elif int(fileType) == StorageID.EUDAT.value:
+    elif int(file_type) == StorageID.EUDAT.value:
         pass
-    elif int(fileType) == StorageID.GDRIVE.value:
+    elif int(file_type) == StorageID.GDRIVE.value:
         pass
 
     return True
@@ -132,17 +124,23 @@ def commitFolder():
 
 
 def terminate():
-    log("Terminated")
+    # Following line is added, in case ./killall.sh does not work due to sudo.
+    # Send the kill signal to all the process groups.
+    if config.driver_cancel_process is not None:
+        os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)  # obtained from global variable
+
+    if config.whisper_state_receiver_process is not None:
+        os.killpg(
+            os.getpgid(config.whisper_state_receiver_process.pid), signal.SIGTERM
+        )  # obtained from global variable
+        # raise SystemExit("Program Exited")
+
+    logging.info("Terminated")
     subprocess.run(["sudo", "bash", "killall.sh"])  # Kill all dependent processes and exit
-    """ Following line is added, in case ./killall.sh does not work due to sudo.
-    Send the kill signal to all the process groups. """
-    os.killpg(os.getpgid(driverCancelProcess.pid), signal.SIGTERM)
-    os.killpg(os.getpgid(driverReceiverProcess.pid), signal.SIGTERM)
-    # raise SystemExit("Program Exited")
     sys.exit()
 
 
-def tryExcept(f, exitFlag=False):
+def try_except(f, is_exit_flag=False):
     """Calls given function inside try/except
 
     Args:
@@ -153,27 +151,48 @@ def tryExcept(f, exitFlag=False):
     try:
         return f()
     except Exception:
-        log(traceback.format_exc(), "red")
+        logging.error(traceback.format_exc())
         return False, None
 
 
-def getIpfsParentHash(resultIpfsHash):
+def get_idle_cores(print_flag=True):
+    # cmd: sinfo -h -o%C
+    status, core_info = execute_shell_command(["sinfo", "-h", "-o%C"])
+    core_info = core_info.split("/")
+    if len(core_info) != 0:
+        allocated_cores = core_info[0]
+        idle_cores = core_info[1]
+        other_cores = core_info[2]
+        total_number_of_cores = core_info[3]
+        if print_flag:
+            logging.info(
+                f"AllocatedCores={allocated_cores} |IdleCores={idle_cores} |OtherCores={other_cores}| TotalNumberOfCores={total_number_of_cores}"
+            )
+
+    else:
+        logging.error("sinfo is emptry string.")
+        idle_cores = None
+
+    return idle_cores
+
+
+def getIpfsParentHash(result_ipfs_hash):
     """Parses output of 'ipfs add -r path --only-hash' command and obtain its parent folder's hash.
 
     Args:
-        resultIpfsHash: String generated by the 'ipfs add -r path --only-hash'
+        result_ipfs_hash: String generated by the 'ipfs add -r path --only-hash'
 
     Returns IPFS hash of the parent directory.
     """
-    # cmd: echo resultIpfsHash | tail -n1 | awk '{print $2}'
-    p1 = subprocess.Popen(["echo", resultIpfsHash], stdout=subprocess.PIPE)
+    # cmd: echo result_ipfs_hash | tail -n1 | awk '{print $2}'
+    p1 = subprocess.Popen(["echo", result_ipfs_hash], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["tail", "-n1"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     p3 = subprocess.Popen(["awk", "{print $2}"], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
-    resultIpfsHash = p3.communicate()[0].decode("utf-8").strip()
-    log("resultIpfsHash=" + resultIpfsHash)
-    return True, resultIpfsHash
+    result_ipfs_hash = p3.communicate()[0].decode("utf-8").strip()
+    logging.info(f"result_ipfs_hash={result_ipfs_hash}")
+    return True, result_ipfs_hash
 
 
 def getOnlyIpfsHash(path):
@@ -189,15 +208,15 @@ def getOnlyIpfsHash(path):
     elif os.path.isfile(path):
         command = ["ipfs", "add", path, "--only-hash"]
     else:
-        log("E: Requested path does not exist.")
+        logging.error("E: Requested path does not exist.")
         return False, None
 
-    status, result = executeShellCommand(command, None, exitFlag=True)
-    status, resultIpfsHash = tryExcept(lambda: getIpfsParentHash(result), exitFlag=True)
+    status, result = execute_shell_command(command, None, is_exit_flag=True)
+    status, result_ipfs_hash = try_except(lambda: getIpfsParentHash(result), is_exit_flag=True)
     if not status:
         return False, None
 
-    return True, resultIpfsHash
+    return True, result_ipfs_hash
 
 
 def getIpfsHash(ipfsHash, resultsFolder, storagePaid):
@@ -213,25 +232,25 @@ def getIpfsHash(ipfsHash, resultsFolder, storagePaid):
         res = (
             subprocess.check_output(["ipfs", "pin", "add", ipfsHash]).decode("utf-8").strip()
         )  # pin downloaded ipfs hash
-        log(res)
+        logging.info(res)
 
 
 def isIpfsHashExists(ipfsHash, attemptCount):
     for attempt in range(attemptCount):
-        log('Attempting to check IPFS file "' + ipfsHash + '"', "light_salmon_3b")
+        logging.info(f"Attempting to check IPFS file {ipfsHash}")
         # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
         # cmd: timeout 300 ipfs object stat $jobKey
-        status, ipfsStat = executeShellCommand(
+        status, ipfs_stat = execute_shell_command(
             ["timeout", "300", "ipfs", "object", "stat", ipfsHash]
         )  # Wait Max 5 minutes.
         if not status:
-            log('E: Failed to find IPFS file "' + ipfsHash + '"', "red")
+            logging.error(f"E: Failed to find IPFS file: {ipfsHash}")
         else:
-            log(ipfsStat)
-            for item in ipfsStat.split("\n"):
+            logging.info(ipfs_stat)
+            for item in ipfs_stat.split("\n"):
                 if "CumulativeSize" in item:
                     cumulativeSize = item.strip().split()[1]
-            return True, ipfsStat, cumulativeSize  # Success
+            return True, ipfs_stat, cumulativeSize
     else:
         return False, None, None
 
@@ -247,7 +266,7 @@ def calculateFolderSize(path, pathType):
         p1.stdout.close()
         byte_size = p2.communicate()[0].decode("utf-8").strip()  # Returns downloaded files size in bytes
 
-    return convertByteToMB(byte_size)
+    return convert_byte_to_mb(byte_size)
 
 
 def convertStringToBytes32(hash_string):
@@ -276,12 +295,12 @@ def printc(my_string, color=""):
     print(stylize(my_string, fg(color)))
 
 
-def log(my_string, color="", newLine=True, file_name=LOG_PATH + "/transactions/providerOut.txt"):
+def log(my_string, color="", newLine=True, file_name=f"{LOG_PATH}/transactions/providerOut.txt"):
     if color != "":
         if newLine:
-            print(stylize(my_string, fg(color)))
+            print(colored(my_string, color))
         else:
-            print(stylize(my_string, fg(color)), end="")
+            print(colored(my_string, color), end="")
     else:
         if newLine:
             print(my_string)
@@ -304,41 +323,42 @@ def subprocessCallAttempt(command, attemptCount, printFlag=0):
         except Exception:
             time.sleep(0.1)
             if i == 0 and printFlag == 0:
-                log(traceback.format_exc(), "red")
+                logging.error(traceback.format_exc())
         else:
             return True, result
     else:
         return False, ""
 
 
-def executeShellCommand(command, my_env=None, exitFlag=False):
+def execute_shell_command(command, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
+    result = ""
     try:
         if my_env is None:
             result = subprocess.check_output(command).decode("utf-8").strip()
         else:
             result = subprocess.check_output(command, env=my_env).decode("utf-8").strip()
     except Exception:
-        log(traceback.format_exc(), "red")
-        if exitFlag:
-            sys.exit()
-        return False, ""
+        logging.error(traceback.format_exc())
+        if is_exit_flag:
+            terminate()
+        return False, result
 
     return True, result
 
 
-def silentremove(filename) -> bool:  # https://stackoverflow.com/a/10840586/2402577
+def silentremove(filename) -> bool:
+    # Link: https://stackoverflow.com/a/10840586/2402577
     try:
         os.remove(filename)
         return True
     except Exception:
-        log(traceback.format_exc(), "red")
+        logging.error(traceback.format_exc())
         return False
 
 
 def removeFiles(filename):
     if "*" in filename:
         for f in glob.glob(filename):
-            # print(f)
             if not silentremove(f):
                 return False
     else:
@@ -348,11 +368,11 @@ def removeFiles(filename):
     return True
 
 
-def convertByteToMB(byte_size):
+def convert_byte_to_mb(byte_size):
     return int(byte_size) * 0.000001
 
 
-def echoGrepAwk(str_data, grep_str, awkColumn):
+def echo_grep_awk(str_data, grep_str, awkColumn):
     p1 = subprocess.Popen(["echo", str_data], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", grep_str], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
@@ -361,95 +381,85 @@ def echoGrepAwk(str_data, grep_str, awkColumn):
     return p3.communicate()[0].decode("utf-8").strip()
 
 
-def gdriveSize(key, mimeType, folderName, gdriveInfo, resultsFolderPrev, sourceCodeHash_list, shouldAlreadyCached):
+def gdrive_size(
+    key, mimeType, folderName, gdrive_info, results_folder_prev, source_code_hash_list, shouldAlreadyCached
+):
     sourceCode_key = None
     if "folder" in mimeType:
-        jobKey_list = []
+        job_key_list = []
         # rounded_size = 0
         size_to_download = 0
         command = ["gdrive", "list", "--query", "'" + key + "'" + " in parents"]
-        status, result = executeShellCommand(command, None, True)
+        status, result = execute_shell_command(command, None, True)
 
-        dataFiles_json_id = echoGrepAwk(result, "dataFiles.json", "1")
+        dataFiles_json_id = echo_grep_awk(result, "dataFiles.json", "1")
         status, res = subprocessCallAttempt(
-            ["gdrive", "download", "--recursive", dataFiles_json_id, "--force", "--path", resultsFolderPrev], 10
+            ["gdrive", "download", "--recursive", dataFiles_json_id, "--force", "--path", results_folder_prev], 10
         )
         if not status:
             return False
 
-        with open(resultsFolderPrev + "/dataFiles.json") as json_file:
-            dataFiles = json.load(json_file)
-
-        key = echoGrepAwk(
-            result, folderName + ".tar.gz", "1"
-        )  # key for the sourceCode elimination result*.tar.gz files
+        # key for the sourceCode elimination result*.tar.gz files
+        key = echo_grep_awk(result, folderName + ".tar.gz", "1")
         sourceCode_key = key
-        status, gdriveInfo = subprocessCallAttempt(["gdrive", "info", "--bytes", key, "-c", GDRIVE_METADATA], 10)
+        status, gdrive_info = subprocessCallAttempt(["gdrive", "info", "--bytes", key, "-c", GDRIVE_METADATA], 10)
         if not status:
             return False
 
-        md5sum = getGdriveFileInfo(gdriveInfo, "Md5sum")
-        if md5sum != sourceCodeHash_list[0].decode("utf-8"):  # checks md5sum obtained from gdrive and given by the user
-            log("E: md5sum does not match with the provided data[0]")
+        md5sum = getGdriveFileInfo(gdrive_info, "Md5sum")
+        if md5sum != source_code_hash_list[0].decode("utf-8"):
+            # Checks md5sum obtained from gdrive and given by the user
+            logging.info("E: md5sum does not match with the provided data[0]")
             return False, 0, [], sourceCode_key
 
-        byte_size = int(getGdriveFileInfo(gdriveInfo, "Size"))
-        log("sourceCodeHash[0]_size=" + str(byte_size) + " bytes")
-        if not shouldAlreadyCached[sourceCodeHash_list[0].decode("utf-8")]:
+        byte_size = int(getGdriveFileInfo(gdrive_info, "Size"))
+        logging.info(f"sourceCodeHash[0]_size={byte_size} bytes")
+        if not shouldAlreadyCached[source_code_hash_list[0].decode("utf-8")]:
             size_to_download = byte_size
 
-        counter = 1
-        for (k, v) in dataFiles.items():
-            jobKey_list.append(str(v))
+        with open(f"{results_folder_prev}/dataFiles.json") as json_file:
+            dataFiles = json.load(json_file)
+
+        for idx, (k, v) in enumerate(dataFiles.items(), start=1):
+            job_key_list.append(str(v))
             _key = str(v)
-            status, gdriveInfo = subprocessCallAttempt(["gdrive", "info", "--bytes", _key, "-c", GDRIVE_METADATA], 10)
+            status, gdrive_info = subprocessCallAttempt(["gdrive", "info", "--bytes", _key, "-c", GDRIVE_METADATA], 10)
             if not status:
                 return False
 
-            md5sum = getGdriveFileInfo(gdriveInfo, "Md5sum")
-            if md5sum != sourceCodeHash_list[counter].decode(
-                "utf-8"
-            ):  # checks md5sum obtained from gdrive and given by the user
-                log("E: md5sum does not match with the provided data[" + counter + "]")
+            md5sum = getGdriveFileInfo(gdrive_info, "Md5sum")
+            if md5sum != source_code_hash_list[idx].decode("utf-8"):
+                # Checks md5sum obtained from gdrive and given by the user
+                logging.error(f"E: md5sum does not match with the provided data[{idx}]")
                 return False, 0, [], sourceCode_key
 
-            _size = int(getGdriveFileInfo(gdriveInfo, "Size"))
-            log("sourceCodeHash[" + str(counter) + "]_size=" + str(_size) + " bytes")
+            _size = int(getGdriveFileInfo(gdrive_info, "Size"))
+            logging.info(f"sourceCodeHash[{idx}]_size={_size} bytes")
             byte_size += _size
-            if not shouldAlreadyCached[sourceCodeHash_list[counter].decode("utf-8")]:
+            if not shouldAlreadyCached[source_code_hash_list[idx].decode("utf-8")]:
                 size_to_download += _size
 
-            counter += 1
-
-        ret_size = int(convertByteToMB(size_to_download))
-        log(
-            "Total_size="
-            + str(byte_size)
-            + " bytes | Size to download="
-            + str(size_to_download)
-            + " bytes == "
-            + str(ret_size)
-            + " MB"
-        )
-        return True, ret_size, jobKey_list, sourceCode_key
+        ret_size = int(convert_byte_to_mb(size_to_download))
+        logging.info(f"Total_size={byte_size} bytes | Size to download={size_to_download} bytes ==> {ret_size} MB")
+        return True, ret_size, job_key_list, sourceCode_key
     else:
         return False, 0, [], sourceCode_key
 
     """
     elif 'gzip' in mimeType:
-        byte_size = lib.getGdriveFileInfo(gdriveInfo, 'Size')
-        rounded_size = int(convertByteToMB(byte_size))
+        byte_size = lib.getGdriveFileInfo(gdrive_info, 'Size')
+        rounded_size = int(convert_byte_to_mb(byte_size))
     """
 
 
-def getMd5sum(gdriveInfo):
-    # cmd: echo gdriveInfo | grep \'Mime\' | awk \'{print $2}\'
-    return echoGrepAwk(gdriveInfo, "Md5sum", "2")
+def getMd5sum(gdrive_info):
+    # cmd: echo gdrive_info | grep \'Mime\' | awk \'{print $2}\'
+    return echo_grep_awk(gdrive_info, "Md5sum", "2")
 
 
-def getGdriveFileInfo(gdriveInfo, _type):
-    # cmd: echo gdriveInfo | grep _type | awk \'{print $2}\'
-    return echoGrepAwk(gdriveInfo, _type, "2")
+def getGdriveFileInfo(gdrive_info, _type):
+    # cmd: echo gdrive_info | grep _type | awk \'{print $2}\'
+    return echo_grep_awk(gdrive_info, _type, "2")
 
 
 def eBlocBrokerFunctionCall(f, _attempt):
@@ -458,7 +468,7 @@ def eBlocBrokerFunctionCall(f, _attempt):
         if status:
             return True, result
         else:
-            log("E: " + result, "red")
+            logging.error(f"E: {result}")
             if result == "notconnected":
                 time.sleep(1)
             else:
@@ -479,28 +489,28 @@ def isIpfsHashCached(ipfsHash):
         return False
 
 
-# Checks whether Slurm runs on the background or not, if not runs slurm
 def isSlurmOn():
-    log("Checking Slurm... ", "", False)
+    """
+    Checks whether Slurm runs on the background or not, if not runs slurm
+    """
+    logging.info("Checking Slurm... ")
     while True:
         subprocess.run(["bash", "checkSinfo.sh"])
-        with open(LOG_PATH + "/checkSinfoOut.txt", "r") as content_file:
+        with open(f"{LOG_PATH}/checkSinfoOut.txt", "r") as content_file:
             check = content_file.read()
 
         if "PARTITION" not in str(check):
-            log("")
-            log("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n", "red")
-            log("Error Message: \n" + check, "red")
-            log("Starting Slurm... \n", "green")
+            logging.error("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n")
+            logging.error(f"E: {check}")
+            logging.info("Starting Slurm... \n")
             subprocess.run(["sudo", "bash", "runSlurm.sh"])
         elif "sinfo: error" in str(check):
-            log("")
-            log("Error on munged: \n" + check)
-            log("Please Do:\n")
-            log("sudo munged -f")
-            log("/etc/init.d/munge start")
+            logging.error(f"Error on munged: \n{check}")
+            logging.error("Please Do:\n")
+            logging.error("sudo munged -f")
+            logging.error("/etc/init.d/munge start")
         else:
-            log("Done", "green")
+            logging.info("Done")
             break
 
 
@@ -508,8 +518,8 @@ def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def isTransactionPassed(w3, tx_hash):
-    receipt = w3.eth.getTransactionReceipt(tx_hash)
+def is_transaction_passed(tx_hash):
+    receipt = config.w3.eth.getTransactionReceipt(tx_hash)
     if receipt is not None:
         if receipt["status"] == 1:
             return True
@@ -527,48 +537,46 @@ def is_ipfs_on():
     p2.stdout.close()
     check = p3.communicate()[0].decode("utf-8").strip()
     if int(check) == 0:
-        log("E: IPFS does not work on the background.", "red")
-        log("* Starting IPFS: nohup ipfs daemon --mount &", "green")
-        with open(LOG_PATH + "/ipfs.out", "w") as stdout:
+        logging.error("E: IPFS does not work on the background.")
+        logging.info("* Starting IPFS: nohup ipfs daemon --mount &")
+        with open(f"{LOG_PATH}/ipfs.out", "w") as stdout:
             subprocess.Popen(
                 ["nohup", "ipfs", "daemon", "--mount"], stdout=stdout, stderr=stdout, preexec_fn=os.setpgrp
             )
 
         time.sleep(5)
-        with open(LOG_PATH + "/ipfs.out", "r") as content_file:
-            log(content_file.read(), "blue")
+        with open(f"{LOG_PATH}/ipfs.out", "r") as content_file:
+            logging.info(content_file.read())
 
         # IPFS mounted at: /ipfs //cmd: sudo ipfs mount -f /ipfs
         res = subprocess.check_output(["sudo", "ipfs", "mount", "-f", "/ipfs"]).decode("utf-8").strip()
-        log(res)
+        logging.info(res)
     else:
-        log("IPFS is already on.", "green")
+        logging.info("IPFS is already on.")
 
 
-def isRunExistInTar(tarPath):
+def isRunExistInTar(tar_path):
     try:
         FNULL = open(os.devnull, "w")
-        print(tarPath)
+        print(tar_path)
         res = (
-            subprocess.check_output(["tar", "ztf", tarPath, "--wildcards", "*/run.sh"], stderr=FNULL)
+            subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL)
             .decode("utf-8")
             .strip()
         )
         FNULL.close()
         if res.count("/") == 1:  # Main folder should contain the 'run.sh' file
-            log("./run.sh exists under the parent folder", "green")
+            logging.info("./run.sh exists under the parent folder")
             return True
         else:
-            log("run.sh does not exist under the parent folder", "red")
-            sys.exit()  # TODO: delete
+            logging.error("run.sh does not exist under the parent folder")
             return False
     except:
-        log("run.sh does not exist under the parent folder", "red")
-        sys.exit()  # TODO: delete
+        logging.error("run.sh does not exist under the parent folder")
         return False
 
 
-def compressFolder(folderToShare):
+def compress_folder(folderToShare):
     current_path = os.getcwd()
 
     base_name = os.path.basename(folderToShare)
@@ -581,7 +589,7 @@ def compressFolder(folderToShare):
     p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
     p1.stdout.close()
     p3 = subprocess.Popen(
-        ["tar", "--absolute-names", "--no-recursion", "--null", "-T", "-", "-zcvf", base_name + ".tar.gz"],
+        ["tar", "--absolute-names", "--no-recursion", "--null", "-T", "-", "-zcvf", f"{base_name}.tar.gz"],
         stdin=p2.stdout,
         stdout=subprocess.PIPE,
         env={"GZIP": "-n"},
@@ -593,13 +601,11 @@ def compressFolder(folderToShare):
     # print('ipfsHash=' + ipfsHash)
 
     # subprocess.run(['sudo', 'tar', 'zcf', base_name + '.tar.gz', base_name])
-    tarHash = subprocess.check_output(["md5sum", base_name + ".tar.gz"]).decode("utf-8").strip()
-    tarHash = tarHash.split(" ", 1)[0]
-    print("hash=" + tarHash)
-
-    shutil.move(base_name + ".tar.gz", tarHash + ".tar.gz")
+    tar_hash = subprocess.check_output(["md5sum", f"{base_name}.tar.gz"]).decode("utf-8").strip()
+    tar_hash = tar_hash.split(" ", 1)[0]
+    shutil.move(f"{base_name}.tar.gz", f"{tar_hash}.tar.gz")
     os.chdir(current_path)
-    return tarHash
+    return tar_hash
 
 
 def sbatchCall(
@@ -607,12 +613,10 @@ def sbatchCall(
     shareToken,
     requesterID,
     resultsFolder,
-    resultsFolderPrev,
+    results_folder_prev,
     dataTransferIn,
-    sourceCodeHash_list,
+    source_code_hash_list,
     jobInfo,
-    eBlocBroker,
-    w3,
 ):
     jobKey = loggedJob.args["jobKey"]
     index = loggedJob.args["index"]
@@ -629,68 +633,64 @@ def sbatchCall(
         .decode("utf-8")
         .strip()
     )
-    log("Date=" + date)
-    f = open(resultsFolderPrev + "/modifiedDate.txt", "w")
-    f.write(date + "\n")
+    logging.info(f"Date={date}")
+    f = open(f"{results_folder_prev}/modifiedDate.txt", "w")
+    f.write(f"{date}\n")
     f.close()
     # cmd: echo date | date +%s
     p1 = subprocess.Popen(["echo", date], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["date", "+%s"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     timestamp = p2.communicate()[0].decode("utf-8").strip()
-    log("Timestamp=" + timestamp)
-    f = open(resultsFolderPrev + "/timestamp.txt", "w")
-    f.write(timestamp + "\n")
+    logging.info(f"Timestamp={timestamp}")
+    f = open(f"{results_folder_prev}/timestamp.txt", "w")
+    f.write(f"{timestamp}")
     f.close()
 
-    log("job_receivedBlockNumber=" + str(loggedJob.blockNumber))
-    f = open(resultsFolderPrev + "/receivedBlockNumber.txt", "w")
-    f.write(str(loggedJob.blockNumber) + "\n")
+    logging.info(f"job_received_block_number={loggedJob.blockNumber}")
+    f = open(f"{results_folder_prev}/receivedBlockNumber.txt", "w")
+    f.write(f"{loggedJob.blockNumber}")
     f.close()
 
-    log("Adding recevied job into mongodb database.", "green")
+    logging.info("Adding recevied job into mongodb database.")
     # Adding jobKey info along with its cacheDuration into mongodb
-    addItem(jobKey, sourceCodeHash_list, requesterID, timestamp, cloudStorageID, jobInfo)
+    add_item(jobKey, source_code_hash_list, requesterID, timestamp, cloudStorageID, jobInfo)
 
     # TODO: update as used_dataTransferIn value
-    if os.path.isfile(resultsFolderPrev + "/dataTransferIn.txt"):
-        with open(resultsFolderPrev + "/dataTransferIn.txt") as json_file:
+    if os.path.isfile(f"{results_folder_prev}/dataTransferIn.txt"):
+        with open(results_folder_prev + "/dataTransferIn.txt") as json_file:
             data = json.load(json_file)
             dataTransferIn = data["dataTransferIn"]
     else:
         data = {}
         data["dataTransferIn"] = dataTransferIn
-        with open(resultsFolderPrev + "/dataTransferIn.txt", "w") as outfile:
+        with open(f"{results_folder_prev}/dataTransferIn.txt", "w") as outfile:
             json.dump(data, outfile)
 
     # print(dataTransferIn)
     time.sleep(0.25)
     """ TODO: delete check is done one the upper level
     if not os.path.isfile(resultsFolder + '/run.sh'):
-        log(resultsFolder + '/run.sh does not exist', 'red')
+        logging.error(resultsFolder + '/run.sh does not exist')
         return False
     """
-    copyfile(
-        resultsFolder + "/run.sh",
-        resultsFolder + "/" + jobKey + "*" + str(index) + "*" + str(cloudStorageID) + "*" + shareToken + ".sh",
-    )
+    sbatch_file_path = f"{resultsFolder}/{jobKey}*{index}*{cloudStorageID}*{shareToken}*{loggedJob.blockNumber}.sh"
+    copyfile(f"{resultsFolder}/run.sh", sbatch_file_path)
 
     # jobID = 0 # Base jobID
-    # status, jobInfo = get_job_info(PROVIDER_ID, jobKey, int(index), jobID, eBlocBroker, w3)
-    jobCoreNum = str(jobInfo["core"][jobID])
-    executionTimeSecond = timedelta(
-        seconds=int((jobInfo["executionDuration"][jobID] + 1) * 60)
-    )  # Client's requested seconds to run his/her job, 1 minute additional given.
+    job_core_num = str(jobInfo["core"][jobID])
+    # Client's requested seconds to run his/her job, 1 minute additional given.
+    executionTimeSecond = timedelta(seconds=int((jobInfo["executionDuration"][jobID] + 1) * 60))
     d = datetime(1, 1, 1) + executionTimeSecond
-    timeLimit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-    log("timeLimit=" + str(timeLimit) + "| RequestedCoreNum=" + jobCoreNum)
+    time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
+    logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")
     # Give permission to user that will send jobs to Slurm.
     subprocess.check_output(["sudo", "chown", "-R", requesterID, resultsFolder])
 
     for attempt in range(10):
         try:
             # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-            # cmd: sudo su - $requesterID -c "cd $resultsFolder && sbatch -c$jobCoreNum $resultsFolder/${jobKey}*${index}*${cloudStorageID}*$shareToken.sh --mail-type=ALL
+            # cmd: sudo su - $requesterID -c "cd $resultsFolder && sbatch -c$job_core_num $resultsFolder/${jobKey}*${index}*${cloudStorageID}*$shareToken.sh --mail-type=ALL
             jobID = (
                 subprocess.check_output(
                     [
@@ -699,25 +699,7 @@ def sbatchCall(
                         "-",
                         requesterID,
                         "-c",
-                        "cd"
-                        + " "
-                        + resultsFolder
-                        + " && "
-                        + "sbatch -N"
-                        + jobCoreNum
-                        + " "
-                        + resultsFolder
-                        + "/"
-                        + jobKey
-                        + "*"
-                        + str(index)
-                        + "*"
-                        + str(cloudStorageID)
-                        + "*"
-                        + shareToken
-                        + ".sh"
-                        + " "
-                        + "--mail-type=ALL",
+                        f"cd {resultsFolder} && sbatch -N {job_core_num} {sbatch_file_path} --mail-type=ALL",
                     ]
                 )
                 .decode("utf-8")
@@ -725,21 +707,21 @@ def sbatchCall(
             )
             time.sleep(1)  # Wait 1 second for Slurm idle core to be updated.
         except subprocess.CalledProcessError as e:
-            log(e.output.decode("utf-8").strip(), "red")
+            logging.error(e.output.decode("utf-8").strip())
             # sacctmgr remove user where user=$USERNAME --immediate
-            status, res = executeShellCommand(
-                ["sacctmgr", "remove", "user", "where", "user=" + requesterID, "--immediate"]
+            status, res = execute_shell_command(
+                ["sacctmgr", "remove", "user", "where", f"user={requesterID}", "--immediate"]
             )
             # sacctmgr add account $USERNAME --immediate
-            status, res = executeShellCommand(["sacctmgr", "add", "account", requesterID, "--immediate"])
+            status, res = execute_shell_command(["sacctmgr", "add", "account", requesterID, "--immediate"])
             # sacctmgr create user $USERNAME defaultaccount=$USERNAME adminlevel=[None] --immediate
-            status, res = executeShellCommand(
+            status, res = execute_shell_command(
                 [
                     "sacctmgr",
                     "create",
                     "user",
                     requesterID,
-                    "defaultaccount=" + requesterID,
+                    f"defaultaccount={requesterID}",
                     "adminlevel=[None]",
                     "--immediate",
                 ]
@@ -750,18 +732,18 @@ def sbatchCall(
         sys.exit()
 
     slurmJobID = jobID.split()[3]
-    log("slurmJobID=" + slurmJobID)
+    logging.info(f"slurmJobID={slurmJobID}")
     try:
-        # cmd: scontrol update jobid=$slurmJobID TimeLimit=$timeLimit
+        # cmd: scontrol update jobid=$slurmJobID TimeLimit=$time_limit
         subprocess.run(
-            ["scontrol", "update", "jobid=" + slurmJobID, "TimeLimit=" + timeLimit], stderr=subprocess.STDOUT
+            ["scontrol", "update", f"jobid={slurmJobID}", f"TimeLimit={time_limit}"], stderr=subprocess.STDOUT
         )
     except subprocess.CalledProcessError as e:
-        log(e.output.decode("utf-8").strip(), "red")
+        logging.error(e.output.decode("utf-8").strip())
 
     if not slurmJobID.isdigit():
         # Detects an error on the SLURM side
-        log("E: slurm_jobID is not a digit.", "red")
+        logging.error("E: slurm_jobID is not a digit.")
         return False
 
     return True

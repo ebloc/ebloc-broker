@@ -1,5 +1,6 @@
-import subprocess
 import os
+import subprocess
+
 
 # ex: contractCalls('doesRequesterExist.py', [requesterID])
 def contractCalls_check_output(call, args):

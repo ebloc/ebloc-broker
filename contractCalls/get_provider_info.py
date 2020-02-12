@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
+
 from imports import connect
 
 
 def get_provider_info(_provider, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
 

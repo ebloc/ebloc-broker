@@ -2,8 +2,9 @@
 
 import os
 import subprocess
-import lib
 
+import lib
+from imports import connect
 from lib import log, silentremove
 
 
@@ -12,7 +13,7 @@ def calculateDataTransferOut(outputFileName):
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     dataTransferIn = p2.communicate()[0].decode("utf-8").strip()  # Retunrs downloaded files size in bytes
-    dataTransferIn = lib.convertByteToMB(dataTransferIn)
+    dataTransferIn = lib.convert_byte_to_mb(dataTransferIn)
     log(
         "dataTransferIn=" + str(dataTransferIn) + " MB | Rounded=" + str(int(dataTransferIn)) + " MB",
         "green",
@@ -23,7 +24,7 @@ def calculateDataTransferOut(outputFileName):
 
 
 """
-def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
+def driverGithub(loggedJob, jobInfo, requesterID):
     import Driver
     eBlocBroker = Driver.eBlocBroker # global usage
     w3 = Driver.w3 # global usage
@@ -48,15 +49,14 @@ def driverGithub(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
         pass; # TODO: maybe add git pull
 
     dataTransferIn = calculateDataTransferOut(resultsFolder)
-    lib.sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo, eBlocBroker,  w3)
+    lib.sbatchCall(loggedJob, shareToken, requesterID, resultsFolder, resultsFolderPrev, dataTransferIn, sourceCodeHash_list, jobInfo)
 """
 
 
-def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
+def driverIpfs(loggedJob, jobInfo, requesterID):
     import Driver
 
-    eBlocBroker = Driver.eBlocBroker  # global usage
-    w3 = Driver.w3  # global usage
+    eBlocBroker, w3 = connect()
 
     globals()["jobKey"] = loggedJob.args["jobKey"]
     globals()["index"] = loggedJob.args["index"]
@@ -133,7 +133,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
                 "--output-file=" + resultsFolder + "/output.tar.gz",
             ]
             passW = None
-            status, res = lib.executeShellCommand(command)
+            status, res = lib.execute_shell_command(command)
             log("mlck decrypt status=" + str(status), "", True, log_fname)
             # cmd: tar -xvf $resultsFolder/output.tar.gz -C resultsFolder
             subprocess.run(["tar", "-xvf", resultsFolder + "/output.tar.gz", "-C", resultsFolder])
@@ -144,7 +144,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
             folderSize = lib.calculateFolderSize(resultsFolder, "d")
             dataTransferIn += folderSize - initialSize
             initialSize = folderSize
-            # dataTransferIn += lib.convertByteToMB(cumulativeSize)
+            # dataTransferIn += lib.convert_byte_to_mb(cumulativeSize)
 
         if not os.path.isfile(resultsFolder + "/run.sh"):
             log("run.sh does not exist", "red", True, log_fname)
@@ -165,6 +165,4 @@ def driverIpfs(loggedJob, jobInfo, requesterID, eBlocBroker, w3):
         dataTransferIn,
         sourceCodeHash_list,
         jobInfo,
-        eBlocBroker,
-        w3,
     )

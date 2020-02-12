@@ -1,25 +1,25 @@
 from pymongo import MongoClient
 
-cl = MongoClient()
-coll = cl["eBlocBroker"]["cache"]
+mc = MongoClient()
+coll = mc["eBlocBroker"]["cache"]
 
 
-def addItem(jobKey, sourceCodeHash_list, requesterID, timestamp, cloudStorageID, jobInfo):
-    newItem = {
-        "jobKey": jobKey,
-        "sourceCodeHash": sourceCodeHash_list,
+def add_item(job_key, source_code_hash_list, requesterID, timestamp, cloudStorageID, job_info):
+    new_item = {
+        "job_key": job_key,
+        "source_code_hash": source_code_hash_list,
         "requesterID": requesterID,
         "timestamp": timestamp,
         "cloudStorageID": cloudStorageID,
-        "receivedBlock": jobInfo["receivedBlock"],
-        "cacheDuration": jobInfo["cacheDuration"],
+        "receivedBlock": job_info["receivedBlock"],
+        "cacheDuration": job_info["cacheDuration"],
     }
-    x = coll.update({"jobKey": newItem["jobKey"]}, newItem, True)
+    result = coll.update({"job_key": new_item["job_key"]}, new_item, True)
 
 
-def deleteAll():
+def delete_all():
     coll.delete_many({})
 
 
-def deleteOne(jobKey):
-    result = coll.delete_one({"jobKey": jobKey})
+def delete_one(job_key):
+    result = coll.delete_one({"job_key": job_key})

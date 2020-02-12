@@ -3,9 +3,9 @@
 
 def get_owner(eBlocBroker=None):
     if eBlocBroker is None:
-        from imports import connectEblocBroker
+        from imports import connect_to_eblocbroker
 
-        eBlocBroker = connectEblocBroker()
+        eBlocBroker = connect_to_eblocbroker()
         if not eBlocBroker:
             return False
 

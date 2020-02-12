@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
-import json, sys, os.path, asyncio
-from web3.auto import w3
-from web3 import Web3, HTTPProvider
+import asyncio
+import json
+import os.path
+import sys
 from os.path import expanduser
+
+from web3 import HTTPProvider, Web3
+from web3.auto import w3
 
 home = expanduser("~")
 

@@ -2,21 +2,18 @@
 
 import sys
 
+from imports import connect
 
-def doesProviderExist(providerAddress, eBlocBroker=None, web3=None):
-    if eBlocBroker is None and web3 is None:
-        from imports import connectEblocBroker, getWeb3
 
-        web3 = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)
-
-    providerAddress = web3.toChecksumAddress(providerAddress)
-    return eBlocBroker.functions.doesProviderExist(providerAddress).call()
+def doesProviderExist(address):
+    eBlocBroker, w3 = connect()
+    address = w3.toChecksumAddress(address)
+    return True, eBlocBroker.functions.doesProviderExist(address).call()
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        providerAddress = str(sys.argv[1])
-        print(doesProviderExist(providerAddress))
+        provider_address = str(sys.argv[1])
+        print(doesProviderExist(provider_address))
     else:
         print("Please provide provider address as argument.")

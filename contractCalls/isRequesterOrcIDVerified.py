@@ -6,9 +6,9 @@ import sys
 def isOrcIDVerified(requesterAddress, eBlocBroker=None):
     if eBlocBroker is None:
         import os
-        from imports import connectEblocBroker
+        from imports import connect_to_eblocbroker
 
-        eBlocBroker = connectEblocBroker()
+        eBlocBroker = connect_to_eblocbroker()
 
     if eBlocBroker.functions.isOrcIDVerified(requesterAddress).call() == 0:
         return "False"

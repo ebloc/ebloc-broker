@@ -5,9 +5,9 @@ import sys
 
 def isAddress(addr, web3=None):
     if web3 is None:
-        from imports import getWeb3
+        from imports import connect_to_web3
 
-        web3 = getWeb3()
+        web3 = connect_to_web3()
 
     if web3 == "notconnected":
         return web3

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import os, time, math, random, sys
-from random import randint
+import math
+import sys
+import time
 from os.path import expanduser
-
-home = expanduser("~")
+from random import randint
 
 import lib
-from imports import getWeb3
-from contractCalls.submitJob import submitJob
 from contractCalls.blockNumber import blockNumber
+from contractCalls.submitJob import submitJob
+from imports import connect_to_web3
 
-w3 = getWeb3()
+home = expanduser("~")
+w3 = connect_to_web3()
 
 f = open(home + "/TESTS/accountPassword.txt", "r")  # Password read from the file.
 accountPassword = f.read().replace("\n", "").replace(" ", "")
@@ -22,15 +23,17 @@ def log(my_string, path, printFlag=0):
     if printFlag == 0:
         print(my_string)
 
-    f = open(path + "/clientOutput.txt", "a")
+    f = open(f"{path}/clientOutput.txt", "a")
     f.write(my_string + "\n")
     f.close()
 
 
 def testFunc(path, readTest, testType, providerID, cacheType):
-    counter = 0
     with open(path + "/" + readTest) as test:
-        for line in test:
+        for idx, line in enumerate(test):
+            if idx != 0:
+                log("\n------------------------------------------", path)
+
             eudatFlag = 0
             if testType == "eudat-nasa":
                 cloudStorageID = 1
@@ -53,10 +56,8 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             sourceCodeHash = jobKey[5]  # time to sleep in seconds
             sleepTime = jobKey[6]  # time to sleep in seconds
             blockNumber_ = blockNumber()
-            if counter != 0:
-                log("\n------------------------------------------", path)
 
-            log("Job: " + str(counter + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + blockNumber_, path)
+            log("Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + blockNumber_, path)
             log("Nasa Submit range: " + jobKey[3] + " " + jobKey[4], path)
             log("Sleep Time to submit next job: " + sleepTime, path)
             log("Sourcecode Hash=" + sourceCodeHash, path)
@@ -126,8 +127,6 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 cacheHour_list,
                 accountID,
                 jobPriceValue,
-                eBlocBroker,
-                w3,
             )
 
             # ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, accountID)  # delete
@@ -156,12 +155,11 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             sys.stdout.write("\rSleeping is done!\n")
             receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt is not None:
-                res = lib.isTransactionPassed(w3, tx_hash)
-                log("Tx status:" + str(res), path)
+                res = lib.is_transaction_passed(w3, tx_hash)
+                log(f"Tx status:{res}", path)
             else:
                 log("Tx is not deployed yet", path)
-            # ===========
-            counter += 1
+
     log("END", path)
     log(".", path)
     f.close()

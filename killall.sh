@@ -1,4 +1,4 @@
-#!/bin/bash                    
+#!/bin/bash
 #                              |
 # To Run:  sudo bash killall.sh|
 #-------------------------------
@@ -15,6 +15,7 @@ ps aux | grep "[e]ndCode"      | awk '{print $2}' | xargs kill -9 $1 2> /dev/nul
 ps aux | grep "[s]tartCode"    | awk '{print $2}' | xargs kill -9 $1 2> /dev/null
 ps aux | grep "[d]riverCancel" | awk '{print $2}' | xargs kill -9 $1 2> /dev/null
 ps aux | grep "[D]river.py"    | awk '{print $2}' | xargs kill -9 $1 2> /dev/null
+killall python3
 
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel $1 2> /dev/null
 
