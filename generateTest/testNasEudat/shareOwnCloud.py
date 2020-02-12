@@ -1,9 +1,17 @@
 #!/usr/bin/python
 
-import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
+import datetime
+import getpass
+import hashlib
+import math
+import os
+import random
+import sys
+import time
 from os.path import expanduser
-
 from random import randint
+
+import owncloud
 
 path = os.getcwd()
 home = expanduser("~")

@@ -1,25 +1,18 @@
 #!/usr/bin/env python3
 
-import sys, asyncio, time, os, subprocess
-from web3.auto import w3
-from dotenv import load_dotenv
+import os
+import subprocess
+import sys
 from os.path import expanduser
+
+from dotenv import load_dotenv
+
 import lib
 from contractCalls.get_job_info import get_job_info
-from imports import connectEblocBroker, getWeb3
+from imports import connect
 
 home = expanduser("~")
-
-
-def getEbloBroker():
-    from imports import connectEblocBroker
-
-    return connectEblocBroker()
-
-
-web3 = getWeb3()
-eBlocBroker = getEbloBroker()
-
+eBlocBroker, w3 = connect()
 ipfsFlag = 0
 
 
@@ -37,28 +30,25 @@ def getLogJobs(providerAddress, fromBlock):
         jobKey = loggedJobs[i].args["jobKey"]
         index = loggedJobs[i].args["index"]
         returned = loggedJobs[i].args["returned"]
-        receiptReturned[str(providerAddress) + str(jobKey) + str(index)] = returned
+        receiptReturned[f"{providerAddress}_{jobKey}_{index}"] = returned
 
-    # ---------------------------------------------------------------------
     myFilter = eBlocBroker.events.LogJob.createFilter(
         fromBlock=int(fromBlock), argument_filters={"providerAddress": str(providerAddress)}
     )
     loggedJobs = myFilter.get_all_entries()
     sum_ = 0
-    counter = 1
     completedCounter = 0
-
-    for i in range(0, len(loggedJobs)):
-        providerAddress = loggedJobs[i].args["providerAddress"]
-        jobKey = loggedJobs[i].args["jobKey"]
-        index = loggedJobs[i].args["index"]
-        _blockNumber = loggedJobs[i]["blockNumber"]
+    for idx, logged_job in enumerate(loggedJobs, start=1):
+        providerAddress = logged_job.args["providerAddress"]
+        jobKey = logged_job.args["jobKey"]
+        index = logged_job.args["index"]
+        _blockNumber = logged_job["blockNumber"]
         # print(loggedJobs[i])
         # print(loggedJobs[i].args['jobKey'])
-        jobInfo = get_job_info(providerAddress, jobKey, index, _blockNumber, eBlocBroker, web3)
+        jobInfo = get_job_info(providerAddress, jobKey, index, _blockNumber)
         # print('received: ' +  )
         returned = 0
-        key = str(providerAddress) + str(jobKey) + str(index)
+        key = f"{providerAddress}_{jobKey}_{index}"
         if key in receiptReturned:
             returned = receiptReturned[key]
             # print('returned:' + str(receiptReturned[key]))
@@ -75,7 +65,7 @@ def getLogJobs(providerAddress, fromBlock):
         #   print('gained:0')
 
         print(
-            str(counter)
+            str(idx)
             + " | "
             + loggedJobs[i].args["jobKey"]
             + " "
@@ -95,10 +85,8 @@ def getLogJobs(providerAddress, fromBlock):
                 ["ipfs", "get", loggedJobs[i].args["jobKey"], "--output=ipfsHashes/" + loggedJobs[i].args["jobKey"]]
             )
 
-        counter += 1
-    # print('------------------------------------------------------------------------------------------------------------')
     print("TOTAL_GAINED: " + str(sum_))
-    print(str(completedCounter) + "/" + str(counter - 1))
+    print(str(completedCounter) + "/" + str(idx - 1))
 
 
 if __name__ == "__main__":

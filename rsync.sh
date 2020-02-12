@@ -18,5 +18,5 @@ done
 if [ -z "$(ls -A $sourceFolder)" ]; then
     echo "Please do: sshfs alper@ebloc.cmpe.boun.edu.tr:/home/alper/eBlocBroker $sourceFolder"
 else
-    rsync -av --progress $sourceFolder/ $toFolder --exclude venv --exclude 'nohup.out' --exclude node_modules --exclude='.git' --exclude /README.md --exclude contract --exclude workflow --exclude webapp --exclude .gitignore --exclude owncloudScripts/oc --exclude rsync.sh --exclude owncloudScripts/password.txt --exclude contractCalls/contract.json --exclude contractCalls/abi.json --filter="dir-merge,- .gitignore" --delete
+    rsync -av --progress $sourceFolder/ $toFolder --exclude .mypy_cache --exclude venv --exclude 'nohup.out' --exclude node_modules --exclude='.git' --exclude /README.md --exclude contract --exclude workflow --exclude webapp --exclude .gitignore --exclude owncloudScripts/oc --exclude rsync.sh --exclude owncloudScripts/password.txt --exclude contractCalls/contract.json --exclude contractCalls/abi.json --filter="dir-merge,- .gitignore" --delete
 fi

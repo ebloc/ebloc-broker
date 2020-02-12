@@ -1,14 +1,12 @@
 #!/usr/bin/python3
 
-import pytest
+import inspect
 import os
-import brownie
 
-import scripts.lib
+import brownie
 from brownie import accounts
 
-rows, columns = os.popen("stty size", "r").read().split()
-spaces = "".join(["-"] * (int(columns) - 1))
+import scripts.lib
 
 whisperPubKey = "04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
 cwd = os.getcwd()
@@ -52,8 +50,8 @@ def get_block_timestamp(web3):
     return web3.eth.getBlock(get_block_number(web3)).timestamp
 
 
-def new_test():
-    print(spaces, end="")
+def new_test(name=""):
+    print('\x1b[6;30;42m' + name + "============================================================" + '\x1b[0m')
 
 
 def register_provider(eB, rpc, web3, priceCoreMin=1):
@@ -139,7 +137,7 @@ def test_initial_balances(eB):
 
 
 def test_computational_refund(eB, rpc, web3):
-    new_test()
+    new_test(inspect.stack()[0][3])
     provider = accounts[0]
     requester = accounts[1]
 
@@ -218,7 +216,7 @@ def test_computational_refund(eB, rpc, web3):
 
 
 def test_storage_refund(eB, rpc, web3):
-    new_test()
+    new_test(inspect.stack()[0][3])
     provider = accounts[0]
     _requester = accounts[1]
 
@@ -414,7 +412,7 @@ def test_storage_refund(eB, rpc, web3):
 
 
 def test_updateProvider(eB, rpc, web3):
-    new_test()
+    new_test(inspect.stack()[0][3])
     rpc.mine(5)
     register_provider(eB, rpc, web3)
     federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
@@ -738,7 +736,7 @@ def test_multipleData(eB, rpc, web3):
 
 
 def test_workflow(eB, rpc, web3):
-    new_test()
+    new_test(inspect.stack()[0][3])
     provider = accounts[0]
     requester = accounts[1]
 
@@ -1018,7 +1016,7 @@ def test_workflow(eB, rpc, web3):
 
 
 def test_submitJob(eB, rpc, web3):
-    new_test()
+    new_test(inspect.stack()[0][3])
     provider = accounts[0]
     requester = accounts[1]
 

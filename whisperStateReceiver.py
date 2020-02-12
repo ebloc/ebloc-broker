@@ -6,13 +6,14 @@
 
 # from web3.auto import w3
 import asyncio
-import lib
 import json
-import sys
 import os.path
-
+import sys
 from os.path import expanduser
-from web3 import Web3, HTTPProvider
+
+from web3 import HTTPProvider, Web3
+
+import lib
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 
@@ -20,12 +21,12 @@ home = expanduser("~")
 my_env = os.environ.copy()
 
 topic = "0x07678231"
-testFlag = True
+test_flag = True
 publicKey = None
 
 
 def log(strIn):
-    if testFlag:
+    if test_flag:
         print(strIn)
     else:
         txFile = open(lib.LOG_PATH + "/whisperStateReceiverLog.out", "a")
@@ -35,10 +36,10 @@ def log(strIn):
 
 def post(recipientPublicKey):
     # https://stackoverflow.com/a/50095154/2402577
-    status, res = lib.executeShellCommand(["sinfo", "-h", "-o%C"])
+    status, res = lib.execute_shell_command(["sinfo", "-h", "-o%C"])
     output = res[0].split("/")
-    allocatedCore = output[0]
-    idleCore = output[1]
+    allocated_core = output[0]
+    idle_core = output[1]
 
     if publicKey != recipientPublicKey:
         try:
@@ -47,7 +48,7 @@ def post(recipientPublicKey):
                     "powTarget": 2,  # 2.5
                     "powTime": 5,  # 2
                     "ttl": 60,
-                    "payload": w3.toHex(text="online/" + allocatedCore + "/" + idleCore),
+                    "payload": w3.toHex(text=f"online/{allocated_core}/{idle_core}"),
                     "topic": topic,
                     "pubKey": recipientPublicKey,
                 }
@@ -66,7 +67,8 @@ def handle_event(event):
 async def log_loop(filter_id, poll_interval):
     while True:
         for event in w3.geth.shh.getMessages(filter_id):  # event_filter.get_new_entries():
-            handle_event(event)  # TODO: add try catch
+            # TODO: add try catch
+            handle_event(event)
         await asyncio.sleep(poll_interval)
 
 
@@ -78,13 +80,13 @@ def receiver(kId, filter_id, myFilter):
     log('FilterID: ' + filter_id)
     log('receiverPrivateK: ' + w3.geth.shh.getPrivateKey(kId));
     log(w3.geth.shh.hasKeyPair(kId))
-	log('PubKey: ' + w3.geth.shh.getPublicKey(kId))
-	"""
+    log('PubKey: ' + w3.geth.shh.getPublicKey(kId))
+    """
     # retreived_messages = w3.geth.shh.getMessages('13723641127bc212ab379100a5d9e05e09b8c34fe1357f51e54cf17b568918cc')
     log("Received Messages:\n")
-    for i in range(0, len(retreived_messages)):
-        # log(retreived_messages[i])
-        log(retreived_messages[i]["payload"].decode("utf-8"))
+    for message in retreived_messages:
+        # log(message)
+        log(message["payload"].decode("utf-8"))
         log("---------------------------------")
     loop = asyncio.get_event_loop()
     try:
@@ -93,12 +95,14 @@ def receiver(kId, filter_id, myFilter):
         loop.close()
 
 
-def main(_testFlag=False):
-    global testFlag, publicKey
-    if _testFlag:
-        testFlag = False
+def main(_test_flag=False):
+    global test_flag, publicKey
+
+    test_flag = _test_flag
+    if test_flag == "True":
+        test_flag = True
     else:
-        testFlag = True
+        test_flag = False
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
         # First time running:
@@ -126,10 +130,7 @@ def main(_testFlag=False):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        main("1")
-    elif len(sys.argv) == 2:
+    if len(sys.argv) == 2:
         main(sys.argv[1])
     else:
-        print("Please enter correct number of arguments")
-        sys.exit()
+        main()

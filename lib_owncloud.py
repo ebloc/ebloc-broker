@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+import os
 import subprocess
 import sys
-import lib
-import os
 import traceback
+
+import lib
 
 
 def singleFolderShare(folderName, oc, fID) -> bool:
@@ -23,27 +24,28 @@ def singleFolderShare(folderName, oc, fID) -> bool:
         return False
 
 
-def eudatInitializeFolder(folderToShare, oc):
+def eudat_initialize_folder(folderToShare, oc):
     dir_path = os.path.dirname(folderToShare)
-    tarHash = lib.compressFolder(folderToShare)
+    tar_hash = lib.compressFolder(folderToShare)
     try:
-        res = oc.mkdir(tarHash)
+        res = oc.mkdir(tar_hash)
+        print(res)
     except Exception:
         print("Folder is already created.")
         # print(traceback.format_exc())
 
-    print("./" + tarHash + "/" + tarHash + ".tar.gz", tarHash + ".tar.gz")
+    print("./" + tar_hash + "/" + tar_hash + ".tar.gz", tar_hash + ".tar.gz")
     try:
-        status = oc.put_file("./" + tarHash + "/" + tarHash + ".tar.gz", dir_path + "/" + tarHash + ".tar.gz")
+        status = oc.put_file("./" + tar_hash + "/" + tar_hash + ".tar.gz", dir_path + "/" + tar_hash + ".tar.gz")
         if not status:
             sys.exit()
 
-        os.remove(dir_path + "/" + tarHash + ".tar.gz")
+        os.remove(dir_path + "/" + tar_hash + ".tar.gz")
     except Exception:
         print(traceback.format_exc())
         sys.exit()
 
-    return tarHash
+    return tar_hash
 
 
 def getSize(oc, f_name) -> int:

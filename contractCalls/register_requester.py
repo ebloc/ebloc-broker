@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 import json
+import os
 import pprint
+import sys
 import traceback
-
 from os.path import expanduser
+
 from doesRequesterExist import doesRequesterExist
-from imports import connect, getWeb3
+from imports import connect, connect_to_web3
 
 home = expanduser("~")
 
 
-def register_requester(
-    accountID, email, federationCloudID, miniLockID, ipfsAddress, githubUsername, eBlocBroker=None, w3=None
-):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+def register_requester(accountID, email, federationCloudID, miniLockID, ipfsAddress, githubUsername):
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
 
@@ -32,7 +30,7 @@ def register_requester(
             return (False, "Whisper node's private key of a key pair did not match with the given ID")
 
     account = w3.eth.accounts[int(accountID)]  # Requester's Ethereum Address
-    if doesRequesterExist(account, eBlocBroker, w3):
+    if doesRequesterExist(account):
         return False, 'Requester "' + account + '" is already registered.'
 
     if len(federationCloudID) < 128 and len(email) < 128:
@@ -62,7 +60,7 @@ if __name__ == "__main__":
         ipfsAddress = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
         githubUsername = "eBloc"
 
-    w3 = getWeb3()
+    w3 = connect_to_web3()
     status, result = register_requester(
         account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername, None, w3
     )
@@ -74,4 +72,4 @@ if __name__ == "__main__":
         print("Was transaction successful?")
         pprint.pprint(receipt["status"])
     else:
-        print("E: " + result)
+        print(f"E: {result}")

@@ -1,43 +1,39 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import time
-import hashlib
-import subprocess
+from pymongo import MongoClient
+
 import lib
 import lib_mongodb
-
+from contractCalls.blockNumber import blockNumber
+from contractCalls.getJobStorageTime import getJobStorageTime
+from imports import connect_to_eblocbroker, connect_to_web3
 from lib import silentremove
-from pymongo import MongoClient
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
-from imports import connectEblocBroker, getWeb3
-from contractCalls.blockNumber import blockNumber
-from contractCalls.getJobStorageTime import getJobStorageTime
 
-web3 = getWeb3()
-eBlocBroker = connectEblocBroker()
+web3 = connect_to_web3()
+eBlocBroker = connect_to_eblocbroker()
 
 """find_all"""
 blockNum = int(blockNumber())
 print(str(blockNum))
 
+storageID = None
 cursor = coll.find({})
 for document in cursor:
     # print(document)
     receivedBlockNum, storageTime = getJobStorageTime(lib.PROVIDER_ID, document["sourceCodeHash"])
     endBlockTime = receivedBlockNum + storageTime * 240
-    cloudStorageID = document["cloudStorageID"]
+    storageID = document["storageID"]
     if endBlockTime < blockNum and receivedBlockNum != 0:
-        if cloudStorageID == lib.cloudStorageID.ipfs or cloudStorageID == lib.cloudStorageID.ipfs_miniLock:
+        if storageID == lib.StorageID.IPFS or storageID == lib.StorageID.IPFS_MINILOCK:
             ipfsHash = document["jobKey"]
             command = ["ipfs", "pin", "rm", ipfsHash]
-            status, res = lib.executeShellCommand(command)
+            status, res = lib.execute_shell_command(command)
             print(res)
-            status, res = lib.executeShellCommand(["ipfs", "repo", "gc"])
+            status, res = lib.execute_shell_command(["ipfs", "repo", "gc"])
             print(res)
         else:
             cachedFileName = (

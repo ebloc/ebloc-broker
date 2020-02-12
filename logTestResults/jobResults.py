@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
-import os, lib, sys
-from imports import connectEblocBroker, getWeb3
+import lib
 from contractCalls.get_job_info import get_job_info
+from imports import connect_to_eblocbroker, connect_to_web3
 
-w3 = getWeb3()
-eBlocBroker = connectEblocBroker(w3)
-# Paths----------------------------------
+w3 = connect_to_web3()
+eBlocBroker = connect_to_eblocbroker(w3)
+
 eblocPath = lib.EBLOCPATH
 fname = lib.LOG_PATH + "/queuedJobs.txt"
-# ---------------------------------------
+
 sum1 = 0
-counter = 1
 with open(fname, "r") as ins:
     array = []
-    for line in ins:
+    for idx, line in enumerate(ins, start=1):
         # print(line.rstrip('\n'))
         # array.append(line)
 
@@ -25,10 +24,10 @@ with open(fname, "r") as ins:
         index = res[3]
 
         sum1 += int(res[7]) - int(res[8])
-        jobInfo = get_job_info(providerAddress, jobKey, index, None, eBlocBroker, w3)
+        jobInfo = get_job_info(providerAddress, jobKey, index, None)
 
         print(
-            str(counter)
+            str(idx)
             + " "
             + res[1]
             + " "
@@ -60,7 +59,6 @@ with open(fname, "r") as ins:
             + "{0: <16}".format("jobInfoOwner:")
             + jobInfo["jobOwner"]
         )
-        counter += 1
 
-print(counter)
+print(idx)
 print("GAINED: " + str(sum1))

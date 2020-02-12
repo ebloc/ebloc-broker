@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import sys, os
+import os
+import sys
 
 
 def getProviders(eBlocBroker=None):
     if eBlocBroker is None:
-        from imports import connectEblocBroker
+        from imports import connect_to_eblocbroker
 
-        eBlocBroker = connectEblocBroker()
+        eBlocBroker = connect_to_eblocbroker()
 
     if eBlocBroker == "notconnected":
         return eBlocBroker

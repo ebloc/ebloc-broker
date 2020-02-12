@@ -2,16 +2,12 @@
 
 import sys
 
+from imports import connect
 
-def getProviderReceiptSize(providerAddress, eBlocBroker=None, web3=None):
-    if eBlocBroker is None and web3 is None:
-        import os
-        from imports import connectEblocBroker, getWeb3
 
-        web3 = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)
-
-    providerAddress = web3.toChecksumAddress(providerAddress)
+def getProviderReceiptSize(providerAddress):
+    eBlocBroker, w3 = connect()
+    providerAddress = w3.toChecksumAddress(providerAddress)
     return eBlocBroker.functions.getProviderReceiptSize(providerAddress).call()
 
 
