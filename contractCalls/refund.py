@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
 
+import pprint
 import sys
 import traceback
-import pprint
-
-from imports import connect
-from imports import connectEblocBroker, getWeb3
-from lib import PROVIDER_ID
-
 from os.path import expanduser
+
+from imports import connect, connect_to_eblocbroker, connect_to_web3
+from lib import PROVIDER_ID
 
 home = expanduser("~")
 
 
-def refund(provider, _from, key, index, jobID, sourceCodeHashArray, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+def refund(provider, _from, key, index, jobID, sourceCodeHashArray):
+    eBlocBroker, w3 = connect()
     provider = w3.toChecksumAddress(provider)
     _from = w3.toChecksumAddress(_from)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        return (False, "E: Requested provider's Ethereum Address (" + provider + ") does not exist.")
+        return (False, f"E: Requested provider's Ethereum Address {provider} does not exist.")
 
     if provider != _from and not eBlocBroker.functions.doesRequesterExist(_from).call():
-        return (False, "E: Requested requester's Ethereum Address (" + _from + ") does not exist.")
+        return (False, f"E: Requested requester's Ethereum Address {_from} does not exist.")
     try:
         gasLimit = 4500000
         tx = eBlocBroker.functions.refund(provider, key, index, jobID, sourceCodeHashArray).transact(
@@ -35,8 +33,8 @@ def refund(provider, _from, key, index, jobID, sourceCodeHashArray, eBlocBroker=
 
 
 if __name__ == "__main__":
-    w3 = getWeb3()
-    eBlocBroker = connectEblocBroker(w3)
+    w3 = connect_to_web3()
+    eBlocBroker = connect_to_eblocbroker(w3)
 
     if len(sys.argv) == 7:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
@@ -55,7 +53,7 @@ if __name__ == "__main__":
             b'\x93\xa52\x1f\x93\xad\\\x9d\x83\xb5,\xcc\xcb\xba\xa59~\xc3\x11\xe6%\xd3\x8d\xfc+"\x185\x03\x90j\xd4'
         ]  # should pull from the event
 
-    status, tx_hash = refund(provider, _from, key, index, jobID, sourceCodeHashArray, eBlocBroker, w3)
+    status, tx_hash = refund(provider, _from, key, index, jobID, sourceCodeHashArray)
     if not status:
         print(tx_hash)
         sys.exit()

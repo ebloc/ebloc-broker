@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-from web3 import Web3, HTTPProvider
+import sys
+import time
+
+from hexbytes import HexBytes
+from web3 import HTTPProvider, Web3
+from web3.shh import Shh
 
 web3 = Web3(HTTPProvider("http://localhost:8545"))
-from web3.shh import Shh
 
 Shh.attach(web3, "shh")
 
-import time, sys
-
-from hexbytes import HexBytes
 
 loadFlag = 0
 

@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, os, time, math, datetime, random, sys, subprocess
+import os
+import random
+import subprocess
 from os.path import expanduser
-from random import randint
+
 from lib import compressFolder
-from lib_owncloud import singleFolderShare, eudatInitializeFolder
 
 home = expanduser("~")
 path = os.getcwd()
 
 providerToShare = "alper01234alper@gmail.com"
 flag = 0
-counter = 0
 itemsToScan = 150 + 1
 hashesFile = open(path + "/hashOutput.txt", "w+")
 with open(path + "/../nasa.txt") as test:
-    for line in test:
+    for idx, line in enumerate(test):
         f = open("ipfs/run.sh", "w+")
         lineIn = line.split(" ")
         if int(lineIn[1]) - int(lineIn[0]) > 60 and int(lineIn[2]) != 0:
@@ -104,9 +104,8 @@ with open(path + "/../nasa.txt") as test:
 
             flag = 1
             startTimeTemp = int(lineIn[0])
-            print("Shared Job#" + str(counter))
-            counter += 1
-            if counter == itemsToScan:
+            print(f"Shared Job={idx}")
+            if idx == itemsToScan - 1:
                 break
 
             hashesFile.write(

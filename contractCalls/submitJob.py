@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
 import pprint
+import sys
 import traceback
-import lib
+
 import owncloud
 
-from imports import connect, connectEblocBroker, getWeb3
-from contract.scripts.lib import cost
-from contract.scripts.lib import convertIpfsToBytes32
+import lib
+from contract.scripts.lib import convertIpfsToBytes32, cost
 from contractCalls.get_provider_info import get_provider_info
+from imports import connect, connect_to_eblocbroker, connect_to_web3
 
 
 def submitJob(
@@ -26,27 +26,23 @@ def submitJob(
     accountID,
     jobPriceValue,
     data_prices_set_blocknumber_list,
-    eBlocBroker=None,
-    w3=None,
 ):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "E: web3 is not connected"
 
     provider = w3.toChecksumAddress(provider)
     _from = w3.toChecksumAddress(w3.eth.accounts[accountID])
 
-    status, providerInfo = get_provider_info(provider, eBlocBroker, w3)
+    status, provider_info = get_provider_info(provider)
 
     providerPriceBlockNumber = eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
-
-    print("Provider's availableCoreNum: " + str(providerInfo["availableCoreNum"]))
-    print("Provider's priceCoreMin: " + str(providerInfo["priceCoreMin"]))
-
-    # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=providerInfo['blockReadFrom'], toBlock=providerInfo['blockReadFrom'] + 1)
+    print(f"Provider's availableCoreNum:{provider_info['availableCoreNum']}")
+    print(f"Provider's priceCoreMin:{provider_info['priceCoreMin']}")
+    # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=provider_info['blockReadFrom'], toBlock=provider_info['blockReadFrom'] + 1)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        return (False, "E: Requested provider's Ethereum Address \"" + provider + '" does not registered.')
+        return (False, f"E: Requested provider's Ethereum Address {provider} does not registered.")
 
     blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(_from).call()
 
@@ -91,7 +87,7 @@ def submitJob(
         )
 
     for i in range(len(core)):
-        if core[i] > providerInfo["availableCoreNum"]:
+        if core[i] > provider_info["availableCoreNum"]:
             return (
                 False,
                 "E: Requested core["
@@ -117,8 +113,8 @@ def submitJob(
     print(cacheType_list)
 
     for i in range(len(cacheType_list)):
-        if cacheType_list[i] > 3:  # {0:'private', 1:'public', 2:'none', 3:'ipfs'}
-            return (False, "E: cachType provided greater than 1. Please provide smaller value")
+        if cacheType_list[i] > 3:  # {0: private, 1: public}
+            return (False, f"E: cachType ({cacheType_list[i]}) provided greater than 1. Please provide smaller value")
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
@@ -145,8 +141,8 @@ def submitJob(
 
 
 if __name__ == "__main__":
-    w3 = getWeb3()
-    eBlocBroker = connectEblocBroker(w3)
+    w3 = connect_to_web3()
+    eBlocBroker = connect_to_eblocbroker(w3)
 
     if len(sys.argv) == 10:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
@@ -250,8 +246,6 @@ if __name__ == "__main__":
         storageHour_list,
         accountID,
         jobPriceValue,
-        eBlocBroker,
-        w3,
     )
 
     if not status:

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
 import pprint
-from imports import connect, connectEblocBroker, getWeb3
+import sys
+import traceback
+
+from imports import connect, connect_to_eblocbroker, connect_to_web3
 
 
-def withdraw(account, eBlocBroker=None, web3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, web3)
-    if eBlocBroker is None or w3 is None:
-        return
-    account = web3.toChecksumAddress(account)
+def withdraw(account):
+    eBlocBroker, w3 = connect()
+    account = w3.toChecksumAddress(account)
     try:
         tx = eBlocBroker.functions.withdraw().transact({"from": account, "gas": 50000})
     except Exception:
@@ -19,8 +19,8 @@ def withdraw(account, eBlocBroker=None, web3=None):
 
 
 if __name__ == "__main__":
-    w3 = getWeb3()
-    eBlocBroker = connectEblocBroker(w3)
+    w3 = connect_to_web3()
+    eBlocBroker = connect_to_eblocbroker(w3)
 
     if len(sys.argv) == 2:
         account = str(sys.argv[1])
@@ -28,9 +28,9 @@ if __name__ == "__main__":
         print("Please provide an Ethereum account as an argument.")
         sys.exit()
 
-    status, result = withdraw(account, eBlocBroker, w3)
+    status, result = withdraw(account)
     if status:
-        print("tx_hash=" + result)
+        print(f"tx_hash={result}")
         receipt = w3.eth.waitForTransactionReceipt(result)
         print("Transaction receipt mined: \n")
         pprint.pprint(dict(receipt))

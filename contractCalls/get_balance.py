@@ -2,18 +2,13 @@
 
 import sys
 
+from imports import connect
 
-def get_balance(address, eBlocBroker=None, web3=None):
-    if eBlocBroker is not None and web3 is not None:
-        address = web3.toChecksumAddress(address)
-        return str(eBlocBroker.functions.balanceOf(address).call()).rstrip("\n")
-    else:
-        from imports import connectEblocBroker, getWeb3
 
-        web3 = getWeb3()
-        address = web3.toChecksumAddress(address)
-        eBlocBroker = connectEblocBroker(web3)
-        return str(eBlocBroker.functions.balanceOf(address).call()).rstrip("\n")
+def get_balance(address):
+    eBlocBroker, w3 = connect()
+    address = w3.toChecksumAddress(address)
+    return str(eBlocBroker.functions.balanceOf(address).call()).rstrip("\n")
 
 
 if __name__ == "__main__":

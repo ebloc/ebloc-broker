@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-import owncloud, os
+import os
+
+import owncloud
 
 from lib_owncloud import getSize
 

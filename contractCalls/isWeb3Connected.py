@@ -3,17 +3,16 @@
 
 def isWeb3Connected(web3=None):
     if web3 is None:
-        import os, sys
         from os.path import expanduser
 
         home = expanduser("~")
 
         from web3 import Web3
         from web3.providers.rpc import HTTPProvider
-        from web3 import Web3, IPCProvider
+        from web3 import IPCProvider
         import lib
 
-        if lib.POA_CHAIN == 0:
+        if not lib.POA_CHAIN:
             # Note that you should create only one RPCProvider per process,
             # as it recycles underlying TCP/IP network connections between
             # your process and Ethereum node

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, os, time, math, datetime, random, sys, subprocess
+import os
+import random
+import subprocess
 from os.path import expanduser
-from random import randint
-from lib_owncloud import singleFolderShare, eudatInitializeFolder
 
 home = expanduser("~")
 path = os.getcwd()
@@ -12,11 +12,10 @@ os.environ["path"] = path
 mlckPass = "gene threatens achieving ireland stalkers spoiling preoccupying"
 os.environ["providerMiniLockId"] = "EyJ6jk9GuZkYAqUZ5UsrZ3RsvQ7cLk2XEzLXeVegyEBSQ"
 flag = 0
-counter = 0
 itemsToScan = 100 + 1
 hashesFile = open(path + "/hashOutput.txt", "w+")
 with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
-    for line in test:
+    for idx, line in enumerate(test):
         f = open("../ipfs/run.sh", "w+")
         lineIn = line.split(" ")
         if int(lineIn[1]) - int(lineIn[0]) > 60 and int(lineIn[2]) != 0:
@@ -62,9 +61,8 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
 
             flag = 1
             startTimeTemp = int(lineIn[0])
-            print("Shared Job=" + str(counter))
-            counter += 1
-            if counter == itemsToScan:
+            print("Shared Job=" + str(idx))
+            if idx == itemsToScan - 1:
                 break
 
             hashesFile.write(
