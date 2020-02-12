@@ -7,4 +7,3 @@ module.exports = Object.freeze({
     PROVIDER_ID:  process.env.PROVIDER_ID,
     RPC_PORT:    process.env.RPC_PORT
 });
-

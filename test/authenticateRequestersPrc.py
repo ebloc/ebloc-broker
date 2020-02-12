@@ -4,15 +4,15 @@
 For experiment purposes reqisters 10 users from prc-95
 """
 
-import os, sys
 from os.path import expanduser
 
-home = expanduser("~")
-from imports import connectEblocBroker, getWeb3
 from contractCalls.authenticateORCID import authenticateORCID
+from imports import connect
 
-web3 = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+home = expanduser("~")
+
+eBlocBroker, w3 = connect()
+
 # -------------------------------------------------------
 orcID = "0000-0001-7642-0552"
 

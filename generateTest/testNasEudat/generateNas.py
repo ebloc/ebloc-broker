@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
+import itertools
+import os
+import subprocess
+import time
 from os.path import expanduser
 from random import randint
 
+import owncloud
+
+from lib_owncloud import eudat_initialize_folder, singleFolderShare
+
 home = expanduser("~")
 
-from lib_owncloud import singleFolderShare, eudatInitializeFolder
 
 path = os.getcwd()
 os.environ["path"] = path
@@ -19,13 +25,13 @@ oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", password)
 # ---------------------------------------------------------------
 startTime = 1
-counter = 0
+
 itemsToScan = 100 + 1
 hashesFile = open(path + "/hashOutput.txt", "w+")
 coreLimit = 7200  # 120*60 (2 hours money is paid)
-counter = 0
-while True:
-    if counter > itemsToScan:
+
+for idx in itertools.count(0):
+    if idx > itemsToScan:
         break
 
     f = open("ipfs/run.sh", "w+")
@@ -49,10 +55,10 @@ while True:
         f.write("bin/lu.B.x inputlu.data")
 
     f.close()
-    tarHash = eudatInitializeFolder("ipfs", oc)
+    tarHash = eudat_initialize_folder("ipfs", oc)
     time.sleep(1)
     print(singleFolderShare(tarHash, oc))
-    print("Shared Job#" + str(counter))
+    print(f"Shared Job#{idx}")
     sleepTime = randint(300, 600)
     hashesFile.write(
         tarHash
@@ -71,7 +77,6 @@ while True:
         + "\n"
     )
     startTime += sleepTime
-    counter += 1
 
 subprocess.run(["cp", path + "/hashOutput.txt", path + "/hashOutput_temp.txt"])
 

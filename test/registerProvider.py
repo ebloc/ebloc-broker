@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
-import os, json, sys, time
+import json
+import os
+import sys
+import time
+
 from web3 import Web3
 from web3.providers.rpc import HTTPProvider
+
 import lib
 
 os.chdir(sys.path[0])

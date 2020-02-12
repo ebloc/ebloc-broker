@@ -2,15 +2,11 @@
 
 import sys
 
+from imports import connect_to_eblocbroker
 
-def getJobSize(provider, key, eBlocBroker=None, web3=None):
-    if eBlocBroker is None and web3 is None:
-        from imports import connectEblocBroker, getWeb3
 
-        web3 = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)
-
-    provider = web3.toChecksumAddress(provider)
+def getJobSize(provider, key):
+    eBlocBroker = connect_to_eblocbroker()
     return eBlocBroker.call().getJobSize(provider, key)
 
 

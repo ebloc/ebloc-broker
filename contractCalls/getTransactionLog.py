@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import sys, time, os
-import lib
-from imports import getWeb3, connectEblocBroker
+import sys
 
-web3 = getWeb3()
-eBlocBroker = connectEblocBroker(web3)
+from imports import connect
+
+eBlocBroker, w3 = connect()
 
 
 def processLog(log):
@@ -22,7 +21,7 @@ if __name__ == "__main__":
         tx_hash = "0xe7f0bdc249458d36105120cf1a0fa5036a9368c5fd13aa37448dae5993d92a33"
         event = "LogReceipt"
 
-    receipt = web3.eth.getTransactionReceipt(tx_hash)
+    receipt = w3.eth.getTransactionReceipt(tx_hash)
     if event == "LogJob":
         logs = eBlocBroker.events.LogJob().processReceipt(receipt)
         processLog(logs)

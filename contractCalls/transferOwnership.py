@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import sys
-import lib
 import traceback
+
+import lib
 from imports import connect
 
 
 def transferOwnership(newOwner, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     _from = w3.toChecksumAddress(lib.PROVIDER_ID)
     newOwner = w3.toChecksumAddress(newOwner)
 

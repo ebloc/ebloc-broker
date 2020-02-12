@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 
-import sys, os, json, pprint
-from imports import connectEblocBroker, getWeb3
+import json
+import os
+import pprint
+import sys
 from os.path import expanduser
+
+from imports import connect_to_eblocbroker, connect_to_web3
 
 home = expanduser("~")
 
 
 def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, eBlocBroker=None, w3=None):
     if w3 is None:
-        w3 = getWeb3()
+        w3 = connect_to_web3()
         if not w3:
             return
 
     if eBlocBroker is None:
-        eBlocBroker = connectEblocBroker(w3)
+        eBlocBroker = connect_to_eblocbroker(w3)
 
     PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
@@ -35,7 +39,7 @@ def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, eBlocBrok
 
 
 if __name__ == "__main__":
-    w3 = getWeb3()
+    w3 = connect_to_web3()
     availableCoreNum = 128
     commitmentBlockNum = 10
     priceCoreMin = 100

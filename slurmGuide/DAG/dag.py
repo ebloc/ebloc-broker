@@ -1,5 +1,6 @@
-import networkx as nx
 from random import randint
+
+import networkx as nx
 
 G = nx.DiGraph()
 

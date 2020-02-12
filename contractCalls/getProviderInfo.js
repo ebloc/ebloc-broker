@@ -14,7 +14,7 @@ else
     providerAddress = "0x75a4c787c5c18c587b284a904165ff06a269b48c"
 
 var myContractInstance  = web3.eth.contract(eBlocBroker.abi).at(eBlocBroker.address);
-fromBlock = myContractInstance.getDeployedBlockNumber();
+fromBlock = myContractInstance.get_deployed_block_number();
 
 var array = myContractInstance.getProviderInfo(providerAddress);
 var eBlocBrokerEvent = myContractInstance.LogProvider({}, {fromBlock: array[0], toBlock: 'latest'});
@@ -30,21 +30,20 @@ eBlocBrokerEvent.watch( function (error, result) {
     var provider = result.args.provider;
     var providerName;
     var fID;
-    var miniLockId; 
+    var miniLockId;
     var ipfsAddress;
-    
+
     if (provider == providerAddress) {
 	providerName = result.args.providerName;
 	fID         = result.args.fID;
 	miniLockId  = result.args.miniLockId;
-	ipfsAddress = result.args.ipfsAddress;	
+	ipfsAddress = result.args.ipfsAddress;
     }
     console.log("providerName: "        + providerName);
     console.log("fID: "                + fID);
     console.log("miniLockId: "         + miniLockId);
     console.log("ipfsAddress: "        + ipfsAddress);
     console.log("coreNumber: "         + array[1]);
-    console.log("corePriceMinuteWei: " + array[2]);   
-    process.exit();	    
+    console.log("corePriceMinuteWei: " + array[2]);
+    process.exit();
 });
-

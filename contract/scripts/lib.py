@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import base58
 import binascii
+
+import base58
 
 ONE_HOUR_BLOCK_DURATION = 240
 Qm = b"\x12"
@@ -120,8 +121,8 @@ def cost(
                 provider, requester, source_code_hash
             ).call()  # TODO: prc de hata veriyor
 
-        print(not is_private)
-        print(receivedBlock + cacheDuration >= block_number)
+        print(f"is_private:{is_private}")
+        # print(receivedBlock + cacheDuration >= block_number)
         if received_storage_deposit > 0 or (
             receivedBlock + cacheDuration >= block_number and not is_private and isVerified_Used
         ):

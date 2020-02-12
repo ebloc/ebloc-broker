@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-import lib
 import traceback
 
-from lib import PROVIDER_ID
+import lib
 from imports import connect
+from lib import PROVIDER_ID
 
 # tx = eB.processPayment(jobKey, [index, jobID], execution_time_min, result_ipfs_hash, end_time, dataTransfer, sourceCodeHashArray, {"from": accounts[0]})
 
@@ -25,7 +25,7 @@ def processPayment(
     eBlocBroker=None,
     w3=None,
 ):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     _from = w3.toChecksumAddress(PROVIDER_ID)
 
     if len(result_ipfs_hash) != 46 and (

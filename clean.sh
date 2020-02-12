@@ -1,4 +1,4 @@
-#!/bin/bash                  
+#!/bin/bash
 #                            |
 # To Run:  sudo bash clean.sh|
 #-----------------------------
@@ -22,4 +22,4 @@ rm -rf docs/_build_html/
 rm -rf __pycache__/
 rm -rf docs/_build/
 
-echo 'Cleaning successfully completed.'
+echo 'Cleaning is completed!'

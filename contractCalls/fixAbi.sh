@@ -3,7 +3,7 @@
 firstChar=$(head -c 1 abi.json)
 if  [ "$firstChar" = "[" ]; then
     echo "Already fixed."
-    exit;                      
+    exit;
 fi
 
 

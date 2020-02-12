@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
+import config
+from imports import connect_to_web3
 
 
-def blockNumber(w3=None):
-    if w3 is None:
-        from imports import getWeb3
+def blockNumber():
+    if config.w3 is None:
+        connect_to_web3()
 
-        w3 = getWeb3()
-        return str(w3.eth.blockNumber).replace("\n", "")
-    else:
-        return str(w3.eth.blockNumber).replace("\n", "")
+    return str(config.w3.eth.blockNumber).replace("\n", "")
 
 
 if __name__ == "__main__":

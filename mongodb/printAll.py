@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
-import sys, os
+import os
+import sys
+
 from pymongo import MongoClient
+
 import lib_mongodb
 
 cl = MongoClient()

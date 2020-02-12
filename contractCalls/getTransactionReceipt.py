@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 
-import os, sys
+import os
+import sys
+
 
 """
 doc: https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
-Returns the transaction receipt specified by transaction_hash. 
+Returns the transaction receipt specified by transaction_hash.
 If the transaction has not yet been mined returns 'None'
 """
 
 
 def getTransactionReceipt(tx, w3=None):
     if w3 is None:
-        from imports import getWeb3
+        from imports import connect_to_web3
 
-        w3 = getWeb3()
+        w3 = connect_to_web3()
 
     return True, w3.eth.getTransactionReceipt(tx)
 

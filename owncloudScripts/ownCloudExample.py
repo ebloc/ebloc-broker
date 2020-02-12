@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-import owncloud, hashlib, getpass
+import getpass
+import hashlib
+
+import owncloud
 
 # https://github.com/owncloud/pyocclient/blob/master/owncloud/owncloud.py
 # https://github.com/owncloud/pyocclient/issues/199#issuecomment-309497823
