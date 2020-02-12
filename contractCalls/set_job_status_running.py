@@ -2,12 +2,13 @@
 
 import sys
 import traceback
+
 import lib
 from imports import connect
 
 
 def set_job_status_running(_key, index, jobID, startTime, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
 

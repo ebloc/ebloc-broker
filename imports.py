@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 import json
-import logging
-from web3 import Web3, IPCProvider
-from web3.providers.rpc import HTTPProvider
 from os.path import expanduser
+
+from web3 import IPCProvider, Web3
+from web3.providers.rpc import HTTPProvider
+
+import config
 import lib
+from config import logging
 
 home = expanduser("~")
-logger = logging.Logger("catch_all")
 
 
 class Network(object):
@@ -19,60 +21,60 @@ class Network(object):
         self.oc = None
 
 
-def connect(eBlocBroker=None, w3=None):
-    if eBlocBroker is not None and w3 is not None:
-        return eBlocBroker, w3
+def connect():
+    if config.eBlocBroker is not None and config.w3 is not None:
+        return config.eBlocBroker, config.w3
 
-    if w3 is None:
+    if config.w3 is None:
         try:
-            w3 = getWeb3()
+            config.w3 = connect_to_web3()
         except Exception as e:
-            logger.error("Failed to connect web3: " + str(e))
+            logging.error(f"E: Failed to connect web3: {e}")
             return None, None
 
-        if not w3:
+        if not config.w3:
             return None, None
 
-    if eBlocBroker is None:
+    if config.eBlocBroker is None:
         try:
-            eBlocBroker = connectEblocBroker(w3)
+            config.eBlocBroker = connect_to_eblocbroker()
         except Exception as e:
-            logger.error("Failed to connect eBlocBroker: " + str(e))
+            logging.error(f"E: Failed to connect to eBlocBroker: {e}")
             return None, None
 
-    return eBlocBroker, w3
+    return config.eBlocBroker, config.w3
 
 
-def getWeb3():
-    if lib.POA_CHAIN == 0:
+def connect_to_web3():
+    if not lib.POA_CHAIN:
+        print("doo")
         """
         * Note that you should create only one RPC Provider per process,
         * as it recycles underlying TCP/IP network connections between
         *  your process and Ethereum node
         """
-        w3 = Web3(HTTPProvider("http://localhost:" + str(lib.RPC_PORT)))
+        config.w3 = Web3(HTTPProvider("http://localhost:" + str(lib.RPC_PORT)))
         from web3.shh import Shh
 
-        Shh.attach(w3, "shh")
+        Shh.attach(config.w3, "shh")
     else:
-        w3 = Web3(IPCProvider("/private/geth.ipc"))
+        config.w3 = Web3(IPCProvider("/private/geth.ipc"))
         from web3.middleware import geth_poa_middleware
 
         # inject the poa compatibility middleware to the innermost layer
-        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
         # from web3.shh import Shh
         # Shh.attach(web3, 'shh')
-    if not w3.isConnected():
-        lib.log("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc", "red")
-        return False
+    if not config.w3.isConnected():
+        logging.error("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc")
 
-    return w3
+    return config.w3
 
 
-def connectEblocBroker(w3=None):
-    if w3 is None:
-        w3 = getWeb3()
-        if not w3:
+def connect_to_eblocbroker():
+    if config.w3 is None:
+        config.w3 = connect_to_web3()
+        if not config.w3:
             return False
 
     contract = json.loads(open(home + "/eBlocBroker/contractCalls/contract.json").read())
@@ -81,13 +83,13 @@ def connectEblocBroker(w3=None):
     with open(home + "/eBlocBroker/contractCalls/abi.json", "r") as abi_definition:
         abi = json.load(abi_definition)
 
-    contractAddress = w3.toChecksumAddress(contractAddress)
-    eBlocBroker = w3.eth.contract(contractAddress, abi=abi)
-    return eBlocBroker
+    contractAddress = config.w3.toChecksumAddress(contractAddress)
+    config.eBlocBroker = config.w3.eth.contract(contractAddress, abi=abi)
+    return config.eBlocBroker
 
 
 if __name__ == "__main__":
-    eBlocBroker = connectEblocBroker()
+    eBlocBroker = connect_to_eblocbroker()
 
 # [Errno 111] Connection refused => w3 is not connected (class.name: ConnectionRefusedError)
 # Exception: w3.exceptions.BadFunctionCallOutput => wrong mapping input is give (class.name: BadFunctionCallOutput)

@@ -2,12 +2,12 @@
 
 import traceback
 
-from lib import PROVIDER_ID
 from imports import connect
+from lib import PROVIDER_ID
 
 
 def register_data(sourceCodeHash, price, commitmentBlockDuration, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
 

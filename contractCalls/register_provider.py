@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
-import os
 import json
+import os
 import pprint
 import traceback
-
-from lib import EBLOCPATH
-from dotenv import load_dotenv
-from imports import connectEblocBroker, getWeb3
 from os.path import expanduser
+
+from dotenv import load_dotenv
+
 from contractCalls.doesProviderExist import doesProviderExist
+from imports import connect_to_eblocbroker, connect_to_web3
+from lib import EBLOCPATH
 
 home = expanduser("~")
 load_dotenv(os.path.join(home + "/.eBlocBroker/", ".env"))  # Load .env from the given path
 
-w3 = getWeb3()
-eBlocBroker = connectEblocBroker(w3)
+w3 = connect_to_web3()
+eBlocBroker = connect_to_eblocbroker(w3)
 PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
 

@@ -2,16 +2,13 @@
 
 import sys
 
+from imports import connect
 
-def doesRequesterExist(requester, eBlocBroker=None, web3=None):
-    if eBlocBroker is None and web3 is None:
-        from imports import connectEblocBroker, getWeb3
 
-        web3 = getWeb3()
-        eBlocBroker = connectEblocBroker(web3)
-
-    requester = web3.toChecksumAddress(requester)
-    return eBlocBroker.functions.doesRequesterExist(requester).call()
+def doesRequesterExist(address):
+    eBlocBroker, w3 = connect()
+    address = w3.toChecksumAddress(address)
+    return eBlocBroker.functions.doesRequesterExist(address).call()
 
 
 if __name__ == "__main__":

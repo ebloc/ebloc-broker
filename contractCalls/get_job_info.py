@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
+
 import sys
-import lib
-import logging
 import traceback
 
+import lib
 from imports import connect
-
-logger = logging.Logger("catch_all")
 
 
 def getJobCores(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
 
@@ -32,12 +30,11 @@ def getJobCores(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=Non
                 jobInfo.update({"executionDuration": loggedJobs[i].args["executionDuration"]})
                 return True, jobInfo
     except Exception as e:
-        # logger.error('Failed to getJobInfo: ' + str(e))
         return False, "Failed to getJobCores: " + str(e)
 
 
 def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
 
@@ -57,8 +54,7 @@ def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockN
                 jobInfo.update({"sourceCodeHash": loggedJobs[i].args["sourceCodeHash"]})
                 return True, jobInfo
     except Exception as e:
-        # logger.error('Failed to getJobInfo: ' + str(e))
-        return False, "Failed to getJobSourceCodeHash: " + str(e)
+        return False, f"Failed to get_Job_source_code_hash: {e}"
 
 
 def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
@@ -68,7 +64,7 @@ def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None, eBloc
     # else:
     #    _toBlock = int(receivedBlockNumber)
 
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
     try:
@@ -93,6 +89,7 @@ def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None, eBloc
             "priceDataTransfer": jobPrices[3],
             "priceStorage": jobPrices[4],
             "priceCache": jobPrices[5],
+            "cacheType": None,
             "resultIpfsHash": "",
             "endTime": None,
             "refundedWei": None,
@@ -103,9 +100,7 @@ def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None, eBloc
             "dataTransferIn_used": None,
             "dataTransferOut_used": None,
         }
-
         status, jobCores = getJobCores(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber)
-
         # resultIpfsHash = ""
         event_filter = eBlocBroker.events.LogProcessPayment.createFilter(
             fromBlock=int(receivedBlockNumber), toBlock="latest", argument_filters={"provider": str(provider)}
@@ -123,8 +118,7 @@ def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None, eBloc
                 break
 
     except Exception:
-        # logger.error('Failed to getJobInfo: ' + str(e))
-        return False, "E: Failed to getJobInfo: " + traceback.format_exc()
+        return False, f"E: Failed to getJobInfo: {traceback.format_exc()}"
 
     if str(jobInfo["core"]) == "0":
         return False, "E: Failed to getJobInfo: Out of index"

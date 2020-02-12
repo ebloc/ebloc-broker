@@ -1,10 +1,13 @@
-import subprocess, shutil, os
-from lib import executeShellCommand, getIpfsParentHash
+import os
+import shutil
+import subprocess
+
+from lib import execute_shell_command, getIpfsParentHash
 
 
 def addToIPFS(resultsFolder):
     command = ["ipfs", "add", "-r", resultsFolder]  # Uploaded as folder
-    status, result = executeShellCommand(command, None, True)
+    status, result = execute_shell_command(command, None, True)
     resultIpfsHash = lib.getIpfsParentHash(result)
 
     if os.path.isdir(resultsFolder):

@@ -1,8 +1,18 @@
 #!/usr/bin/python
 
-import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
-from random import randint
+import datetime
+import getpass
+import hashlib
+import math
+import os
+import random
+import sys
+import time
 from os.path import expanduser
+from random import randint
+
+import owncloud
+
 home = expanduser("~")
 
 # Password read from the file.

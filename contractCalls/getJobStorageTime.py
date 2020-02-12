@@ -6,10 +6,10 @@ import sys
 def getJobStorageTime(providerAddress, sourceCodeHash, eBlocBroker=None, w3=None):
     if eBlocBroker is None and w3 is None:
         import os
-        from imports import connectEblocBroker, getWeb3
+        from imports import connect_to_eblocbroker, connect_to_web3
 
-        w3 = getWeb3()
-        eBlocBroker = connectEblocBroker(w3)
+        w3 = connect_to_web3()
+        eBlocBroker = connect_to_eblocbroker(w3)
 
     providerAddress = w3.toChecksumAddress(providerAddress)
     ret = eBlocBroker.call().getJobStorageTime(providerAddress, sourceCodeHash)

@@ -1,14 +1,16 @@
-import sys, os
-from flask import Flask, request, render_template
+import os
+import sys
+
+from flask import Flask, render_template, request
 from solc import compile_source
-from web3 import Web3, HTTPProvider
+from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
-from contractCalls.getOwner import getOwner
 from contractCalls.getClusterAddresses import getClusterAddresses
+from contractCalls.getOwner import getOwner
 
-from flask import Flask
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
 
 app = Flask(__name__)
 

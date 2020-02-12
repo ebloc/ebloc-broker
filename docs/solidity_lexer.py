@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import re
 import copy
+import re
 
-from pygments.lexer import RegexLexer, ExtendedRegexLexer, bygroups, using, include, this
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, Number, Other, Punctuation, Literal
+from pygments.lexer import ExtendedRegexLexer, RegexLexer, bygroups, include, this, using
+from pygments.token import (Comment, Keyword, Literal, Name, Number, Operator, Other, Punctuation,
+                            String, Text)
 
 __all__ = ["SolidityLexer"]
 

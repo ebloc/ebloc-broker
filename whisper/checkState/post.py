@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-from web3 import Web3, HTTPProvider
+import asyncio
+import itertools
+import json
+import os
 
-web3 = Web3(HTTPProvider("http://localhost:8545"))
+from web3 import HTTPProvider, Web3
 from web3.shh import Shh
 
+web3 = Web3(HTTPProvider("http://localhost:8545"))
+
 Shh.attach(web3, "shh")
-
-import time, sys, os, json, asyncio
-
-from hexbytes import HexBytes
 
 
 def handle_event(event):
@@ -20,16 +21,13 @@ def handle_event(event):
 
 
 async def log_loop(event_filter, poll_interval):
-    counter = 0
-    while True:
-        # print(counter)
-        if counter == 5:
+    for idx in itertools.count(0):
+        if idx == 5:
             break
         for event in event_filter.get_new_entries():
             if handle_event(event):
                 return
         await asyncio.sleep(poll_interval)
-        counter += 1
 
 
 def main():

@@ -1,6 +1,7 @@
 import sys
-import networkx as nx
+
 import matplotlib.pyplot as plt
+import networkx as nx
 
 g = nx.Graph()
 G = nx.DiGraph()

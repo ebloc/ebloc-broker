@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
 
-import owncloud
+import pprint
 import sys
 import time
-import pprint
 
-from lib import StorageID, CacheType
-from contractCalls.submitJob import submitJob
-from contractCalls.get_provider_info import get_provider_info
+import owncloud
+
 from contract.scripts.lib import cost
-
+from contractCalls.get_provider_info import get_provider_info
+from contractCalls.submitJob import submitJob
 from imports import connect
-from lib_owncloud import singleFolderShare
-from lib_owncloud import eudatInitializeFolder
+from lib import CacheType, StorageID
+from lib_owncloud import eudat_initialize_folder, singleFolderShare
 
 # from lib_owncloud import isOcMounted
 
 
-def eudatSubmitJob(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f731900e9d8a382984
+def eudat_submit_job(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f731900e9d8a382984
     accountID = 1  # Different account than provider
-    eBlocBroker, w3 = connect(eBlocBroker, w3)
+    eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "web3 is not connected"
 
@@ -27,25 +26,25 @@ def eudatSubmitJob(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f7
     #     return False, 'owncloud is not connected'
 
     provider = w3.toChecksumAddress(provider)  # netlab
-    status, providerInfo = get_provider_info(provider, eBlocBroker, w3)
+    status, provider_info = get_provider_info(provider)
 
-    folderToShare_list = []  # Path of folder to share
-    sourceCodeHash_list = []
+    folder_to_share_list = []  # Path of folder to share
+    source_code_hash_list = []
     storageHour_list = []
     coreMin_list = []
 
     # Full path of the sourceCodeFolders is given
-    folderToShare_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/sourceCode")
-    folderToShare_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/data1")
+    folder_to_share_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/sourceCode")
+    folder_to_share_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/data1")
 
-    for i in range(0, len(folderToShare_list)):
-        folderHash = eudatInitializeFolder(folderToShare_list[i], oc)
+    for i in range(0, len(folder_to_share_list)):
+        folderHash = eudat_initialize_folder(folder_to_share_list[i], oc)
         if i == 0:
             jobKey = folderHash
 
         sourceCodeHash = w3.toBytes(text=folderHash)  # required to send string as bytes
-        sourceCodeHash_list.append(sourceCodeHash)
-        if not singleFolderShare(folderHash, oc, providerInfo["fID"]):
+        source_code_hash_list.append(sourceCodeHash)
+        if not singleFolderShare(folderHash, oc, provider_info["fID"]):
             sys.exit()
         time.sleep(1)
 
@@ -59,7 +58,7 @@ def eudatSubmitJob(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f7
     cacheType_list = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     storageHour_list = [0, 0]
     data_prices_set_blocknumber_list = [0, 0]
-    print(sourceCodeHash_list)
+    print(source_code_hash_list)
 
     requester = w3.toChecksumAddress(w3.eth.accounts[accountID])
     jobPriceValue, _cost = cost(
@@ -67,7 +66,7 @@ def eudatSubmitJob(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f7
         coreMin_list,
         provider,
         requester,
-        sourceCodeHash_list,
+        source_code_hash_list,
         dataTransferIn_list,
         dataTransferOut,
         storageHour_list,
@@ -87,14 +86,12 @@ def eudatSubmitJob(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f7
         dataTransferIn_list,
         dataTransferOut,
         storageID_list,
-        sourceCodeHash_list,
-        storageID_list,
+        source_code_hash_list,
+        cacheType_list,
         storageHour_list,
         accountID,
         jobPriceValue,
         data_prices_set_blocknumber_list,
-        eBlocBroker,
-        w3,
     )
     return status, result
 
@@ -114,7 +111,7 @@ if __name__ == "__main__":
     else:
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
 
-    status, result = eudatSubmitJob(provider, oc, eBlocBroker, w3)
+    status, result = eudat_submit_job(provider, oc)
     if not status:
         print(result)
         sys.exit()

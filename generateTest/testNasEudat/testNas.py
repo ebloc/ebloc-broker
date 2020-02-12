@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 
-import owncloud, hashlib, getpass, os, time, math, datetime, random, sys
-from random import randint
+import datetime
+import getpass
+import hashlib
+import math
+import os
+import random
+import sys
+import time
 from os.path import expanduser
+from random import randint
+from test.func import testFunc
+
+import owncloud
+
+import lib
 
 home = expanduser("~")
-import lib
-from test.func import testFunc
 
 path = os.getcwd()
 # Definitions =============================================

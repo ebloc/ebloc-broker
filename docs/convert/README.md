@@ -71,7 +71,7 @@ parity --chain /home/ubuntu/EBloc/parity.json --network-id 23422 --reserved-peer
 export EBLOCBROKER=/home/netlab/contract
 
 Additinoal changes have to make on: since SLURM script functon won't able to access .profile file.
-startCode.py endCode.py slurmScript.sh
+start_code.py endCode.py slurmScript.sh
 
 ### Start Running Provider using eBlocBroker
 
@@ -218,9 +218,9 @@ eBlocBroker.getProviders(); //returns all available Providers Addresses.
 
 ```bash
 providerID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //providerID you would like to submit.
-providerInfo      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705")
-providerCoreLimit = providerInfo[3]
-pricePerMin      = providerInfo[4]
+provider_info      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705")
+providerCoreLimit = provider_info[3]
+pricePerMin      = provider_info[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = ""
 coreNum          = 1;
@@ -280,9 +280,9 @@ added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 
 ```bash
 providerID        = "0x6af0204187a93710317542d383a1b547fa42e705"; //providerID you would like to submit.
-providerInfo      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705")
-providerCoreLimit = providerInfo[3]
-pricePerMin      = providerInfo[4]
+provider_info      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1b547fa42e705")
+providerCoreLimit = provider_info[3]
+pricePerMin      = provider_info[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
 coreNum          = 1;

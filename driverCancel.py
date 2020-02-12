@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import lib
-import _thread
-import time
 import hashlib
 import subprocess
+import time
 
-from imports import connectEblocBroker, getWeb3
-from contractCalls.blockNumber import blockNumber
-from contractCalls.getDeployedBlockNumber import getDeployedBlockNumber
-import contractCalls.LogJob
+from colored import fg, stylize
 
-web3 = getWeb3()
-eBlocBroker = connectEblocBroker()
+import lib
+from contractCalls.get_deployed_block_number import get_deployed_block_number
+from contractCalls.LogJob import LogJob
+from imports import connect_to_web3
+
+w3 = connect_to_web3()
 testFlag = False
 
 
@@ -25,39 +22,39 @@ def log(strIn, color=""):
         else:
             print(strIn)
 
-    txFile = open(lib.LOG_PATH + "/cancelledJobsLog.out", "a")
-    txFile.write(strIn + "\n")
+    txFile = open(f"{lib.LOG_PATH}/cancelledJobsLog.out", "a")
+    txFile.write(f"{strIn}")
     txFile.close()
 
 
 with open(lib.CANCEL_BLOCK_READ_FROM_FILE, "r") as content_file:
-    cancelBlockReadFromLocal = content_file.read().strip()
+    cancel_block_read_from_local = content_file.read().strip()
 
-if not cancelBlockReadFromLocal.isdigit():
-    cancelBlockReadFromLocal = getDeployedBlockNumber(eBlocBroker)
+if not cancel_block_read_from_local.isdigit():
+    cancel_block_read_from_local = get_deployed_block_number()
 
-log("Waiting cancelled jobs from :" + cancelBlockReadFromLocal)
-maxVal = 0
+log(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
+max_val = 0
 while True:
-    # cancelBlockReadFromLocal = 2000000 # For test purposes
+    # cancel_block_read_from_local = 2000000 # For test purposes
 
     # Waits here until new job cancelled into the provider
-    loggedJobs = LogJob.runLogCancelRefund(cancelBlockReadFromLocal, lib.PROVIDER_ID, eBlocBroker)
+    logged_jobs_to_process = LogJob.run_log_cancel_refund(cancel_block_read_from_local, lib.PROVIDER_ID)
 
-    for e in range(0, len(loggedJobs)):
-        msg_sender = web3.eth.getTransactionReceipt(loggedJobs[e]["transactionHash"].hex())["from"].lower()
+    for logged_job in logged_jobs_to_process:
+        msg_sender = w3.eth.getTransactionReceipt(logged_job["transactionHash"].hex())["from"].lower()
         user_name = hashlib.md5(msg_sender.encode("utf-8")).hexdigest()
         # print(msg_sender)
-        # print(loggedJobs[e])
+        # print(logged_job)
         # print(user_name)
 
-        blockNumber = loggedJobs[e]["blockNumber"]
-        jobKey = loggedJobs[e].args["jobKey"]
-        index = loggedJobs[e].args["index"]
-        log("blockNumber=" + str(blockNumber) + " jobKey=" + jobKey + " index=" + str(index))
+        block_number = logged_job["blockNumber"]
+        jobKey = logged_job.args["jobKey"]
+        index = logged_job.args["index"]
+        log(f"block_number={block_number} job_key={jobKey} index={index}")
 
-        if blockNumber > maxVal:
-            maxVal = blockNumber
+        if block_number > max_val:
+            max_val = block_number
 
         """
         cmd: sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c 'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | xargs -n 1 basename); sacct -n -X --format jobid --name $jobName'
@@ -71,16 +68,9 @@ while True:
                     "-",
                     user_name,
                     "-c",
-                    "jobName=$(echo "
-                    + jobKey
-                    + "_"
-                    + str(index)
-                    + "/JOB_TO_RUN/"
-                    + jobKey
-                    + "*"
-                    + str(index)
-                    + "*sh | xargs -n 1 basename);"
-                    + "sacct -n -X --format jobid --name $jobName",
+                    f"job_name=$(echo {jobKey}_{index}/JOB_TO_RUN/{jobKey}*{index}*sh"
+                    f"| xargs -n 1 basename);"
+                    f"sacct -n -X --format jobid --name $job_name",
                 ]
             )
             .decode("utf-8")
@@ -88,33 +78,33 @@ while True:
         )
         try:
             jobID = res[0]
-            print("jobID=" + jobID)
+            print(f"jobID={jobID}")
             if jobID.isdigit():
                 subprocess.run(["scancel", jobID])
                 time.sleep(2)  # wait few seconds to cancel the requested job.
                 p1 = subprocess.Popen(["scontrol", "show", "job", jobID], stdout=subprocess.PIPE)
                 p2 = subprocess.Popen(["grep", "JobState="], stdin=p1.stdout, stdout=subprocess.PIPE)
                 p1.stdout.close()
-
                 out = p2.communicate()[0].decode("utf-8").strip()
                 if "JobState=CANCELLED" in out:
-                    log("JobID=" + jobID + " is successfully cancelled.")
+                    log(f"jobID={jobID} is successfully cancelled.")
                 else:
-                    log("E: jobID=" + jobID + " is not cancelled, something went wrong or already cancelled. " + out)
+                    log(f"E: jobID={jobID} is not cancelled, something went wrong or already cancelled. {out}")
         except IndexError:
             log("Something went wrong, jobID is returned as None.")
 
-    if int(maxVal) != 0:
+    if int(max_val) != 0:
+        value = max_val + 1
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
-        f_blockReadFrom.write(str(int(maxVal) + 1) + "\n")
+        f_blockReadFrom.write(f"{value}")
         f_blockReadFrom.close()
-        cancelBlockReadFromLocal = str(int(maxVal) + 1)
+        cancel_block_read_from_local = str(value)
         log("---------------------------------------------")
-        log("Waiting cancelled jobs from :" + cancelBlockReadFromLocal)
+        log(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
     else:
-        currentBlockNumber = blockNumber(web3)
+        currentBlockNumber = block_number(w3)
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
-        f_blockReadFrom.write(str(currentBlockNumber) + "\n")
+        f_blockReadFrom.write(f"{currentBlockNumber}")
         f_blockReadFrom.close()
         log("---------------------------------------------")
-        log("Waiting cancelled jobs from: " + currentBlockNumber)
+        log(f"Waiting cancelled jobs from: {currentBlockNumber}")

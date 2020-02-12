@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import networkx as nx
+import random
+import sys
+
 import matplotlib.pyplot as plt
-import random, sys
+import networkx as nx
 
 jobIDs = {}
 
