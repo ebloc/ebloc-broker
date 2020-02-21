@@ -3,13 +3,13 @@
 import sys
 import traceback
 
-import lib
 from imports import connect
+from lib import PROVIDER_ID, get_tx_status
 
 
-def transferOwnership(newOwner, eBlocBroker=None, w3=None):
+def transferOwnership(newOwner):
     eBlocBroker, w3 = connect()
-    _from = w3.toChecksumAddress(lib.PROVIDER_ID)
+    _from = w3.toChecksumAddress(PROVIDER_ID)
     newOwner = w3.toChecksumAddress(newOwner)
 
     if eBlocBroker is None or w3 is None:
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         newOwner = str(sys.argv[1])
         status, result = transferOwnership(newOwner)
         if status:
-            print("tx_hash=" + result)
+            receipt = get_tx_status(status, result)
         else:
             print(result)
     else:

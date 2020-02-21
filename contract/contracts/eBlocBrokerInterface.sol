@@ -87,6 +87,12 @@ interface eBlocBrokerInterface {
         bytes32 registeredDataHash
     );
 
+    event LogDataStorageRequest(
+        address indexed provider,
+        address owner,
+        bytes32 requestedHash
+    );
+
     event LogJobDescription(
         address indexed provider,
         address requester,

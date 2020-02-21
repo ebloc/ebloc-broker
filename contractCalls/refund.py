@@ -33,8 +33,7 @@ def refund(provider, _from, key, index, jobID, sourceCodeHashArray):
 
 
 if __name__ == "__main__":
-    w3 = connect_to_web3()
-    eBlocBroker = connect_to_eblocbroker(w3)
+    eBlocBroker, w3 = connect()
 
     if len(sys.argv) == 7:
         provider = w3.toChecksumAddress(str(sys.argv[1]))

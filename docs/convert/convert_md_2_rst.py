@@ -37,7 +37,7 @@ def convert_md_2_rst_process(filename_root):
     lines = file_source.readlines()
 
     for i in range(0, len(lines)):
-        lines[i] = lines[i].rstrip("\n")
+        lines[i] = lines[i].rstrip()
 
     file_source.close()
     data = "\n".join(lines)

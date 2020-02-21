@@ -1,25 +1,17 @@
 #!/usr/bin/env python3
 
-import json
 import os
-import pprint
-import sys
+import traceback
 from os.path import expanduser
 
-from imports import connect_to_eblocbroker, connect_to_web3
+from imports import connect
+from lib import get_tx_status
 
 home = expanduser("~")
 
 
-def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, eBlocBroker=None, w3=None):
-    if w3 is None:
-        w3 = connect_to_web3()
-        if not w3:
-            return
-
-    if eBlocBroker is None:
-        eBlocBroker = connect_to_eblocbroker(w3)
-
+def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
+    eBlocBroker, w3 = connect()
     PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
     if availableCoreNum == 0:
@@ -39,7 +31,6 @@ def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, eBlocBrok
 
 
 if __name__ == "__main__":
-    w3 = connect_to_web3()
     availableCoreNum = 128
     commitmentBlockNum = 10
     priceCoreMin = 100
@@ -48,13 +39,8 @@ if __name__ == "__main__":
     priceCache = 1
     prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
 
-    status, result = updateProviderPrices(availableCoreNum, commitmentBlockNum, prices, None, w3)
+    status, result = updateProviderPrices(availableCoreNum, commitmentBlockNum, prices)
     if status:
-        print("Tx_hash: " + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(status, result)
     else:
         print(result)
