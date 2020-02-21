@@ -8,7 +8,7 @@ import lib
 from imports import connect
 
 
-def getJobCores(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
+def getJobCores(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
@@ -30,10 +30,10 @@ def getJobCores(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=Non
                 jobInfo.update({"executionDuration": loggedJobs[i].args["executionDuration"]})
                 return True, jobInfo
     except Exception as e:
-        return False, "Failed to getJobCores: " + str(e)
+        return False, f"Failed to getJobCores: {e}"
 
 
-def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
+def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockNumber=None):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
@@ -57,7 +57,7 @@ def getJobSourceCodeHash(jobInfo, provider, jobKey, index, jobID, receivedBlockN
         return False, f"Failed to get_Job_source_code_hash: {e}"
 
 
-def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None, eBlocBroker=None, w3=None):
+def get_job_info(provider, jobKey, index, jobID, receivedBlockNumber=None):
     if receivedBlockNumber is None:
         receivedBlockNumber = 3082590  # Point where the eBlocBroker is contract deployed
         # _toBlock = "latest"
@@ -162,10 +162,7 @@ if __name__ == "__main__":
     if type(jobInfo) is dict:
         print(
             "{0: <22}".format("stateCode:")
-            + lib.inv_job_state_code[jobInfo["jobStateCode"]]
-            + " ("
-            + str(jobInfo["jobStateCode"])
-            + ")"
+            + f"{lib.inv_job_state_code[jobInfo['jobStateCode']]} ({jobInfo['jobStateCode']})"
         )
         print("{0: <22}".format("core") + str(jobInfo["core"]))
         print("{0: <22}".format("startTime") + str(jobInfo["startTime"]))

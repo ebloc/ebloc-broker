@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-import pprint
 import sys
 import traceback
 
 from doesProviderExist import doesProviderExist
 from doesRequesterExist import doesRequesterExist
-from imports import connect, connect_to_eblocbroker, connect_to_web3
+from imports import connect
 from is_owner import is_owner
+from lib import get_tx_status
 
 
 def authenticateORCID(address, orc_id):
@@ -24,7 +24,7 @@ def authenticateORCID(address, orc_id):
     if not is_owner(account):
         return (False, f"Account: {account} that will call the transaction is not the owner of the contract.")
 
-    status, result = doesProviderExist(address)
+    result = doesProviderExist(address)
     if not doesRequesterExist(address) and not result:
         return False, f"address: {address} is not registered."
 
@@ -48,14 +48,11 @@ def authenticateORCID(address, orc_id):
 
 
 if __name__ == "__main__":
-    w3 = connect_to_web3()
-    eBlocBroker = connect_to_eblocbroker(w3)
-
     if len(sys.argv) == 3:
         address = str(sys.argv[1])
         orc_id = str(sys.argv[2])
     else:
-        print("Please provide the address and its orc_id as argument.")
+        print("E: Please provide the address and its orc_id as argument.")
         sys.exit()
         # ./authenticateORCID.py 0x57b60037b82154ec7149142c606ba024fbb0f991 0000-0001-7642-0552
         # address = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
@@ -64,11 +61,6 @@ if __name__ == "__main__":
 
     status, result = authenticateORCID(address, orc_id)
     if status:
-        print("tx_hash=" + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(status, result)
     else:
         print(result)

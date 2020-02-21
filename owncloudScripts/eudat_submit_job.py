@@ -16,7 +16,7 @@ from lib_owncloud import eudat_initialize_folder, singleFolderShare
 # from lib_owncloud import isOcMounted
 
 
-def eudat_submit_job(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76f731900e9d8a382984
+def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
     accountID = 1  # Different account than provider
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
@@ -37,14 +37,14 @@ def eudat_submit_job(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76
     folder_to_share_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/sourceCode")
     folder_to_share_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/data1")
 
-    for i in range(0, len(folder_to_share_list)):
-        folderHash = eudat_initialize_folder(folder_to_share_list[i], oc)
-        if i == 0:
-            jobKey = folderHash
+    for idx, folder in enumerate(folder_to_share_list):
+        folder_hash = eudat_initialize_folder(folder, oc)
+        if idx == 0:
+            jobKey = folder_hash
 
-        sourceCodeHash = w3.toBytes(text=folderHash)  # required to send string as bytes
+        sourceCodeHash = w3.toBytes(text=folder_hash)  # required to send string as bytes
         source_code_hash_list.append(sourceCodeHash)
-        if not singleFolderShare(folderHash, oc, provider_info["fID"]):
+        if not singleFolderShare(folder_hash, oc, provider_info["fID"]):
             sys.exit()
         time.sleep(1)
 
@@ -97,10 +97,7 @@ def eudat_submit_job(provider, oc, eBlocBroker=None, w3=None):  # fc33e7908fdf76
 
 
 if __name__ == "__main__":
-    eBlocBroker, w3 = connect(None, None)
-    if eBlocBroker is None or w3 is None:
-        sys.exit()
-
+    eBlocBroker, w3 = connect()
     oc = owncloud.Client("https://b2drop.eudat.eu/")
     oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
 

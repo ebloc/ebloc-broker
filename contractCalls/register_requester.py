@@ -2,15 +2,13 @@
 
 import json
 import os
-import pprint
 import sys
 import traceback
 from os.path import expanduser
 
 from doesRequesterExist import doesRequesterExist
 from imports import connect, connect_to_web3
-
-home = expanduser("~")
+from lib import get_tx_status, printc
 
 
 def register_requester(accountID, email, federationCloudID, miniLockID, ipfsAddress, githubUsername):
@@ -18,10 +16,11 @@ def register_requester(accountID, email, federationCloudID, miniLockID, ipfsAddr
     if eBlocBroker is None or w3 is None:
         return
 
-    if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
+    home = expanduser("~")
+    if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
         return (False, "Please first run: python ~/eBlocBroker/scripts/whisperInitialize.py")
     else:
-        with open(home + "/.eBlocBroker/whisperInfo.txt") as jsonFile:
+        with open(f"{home}/.eBlocBroker/whisperInfo.txt") as jsonFile:
             data = json.load(jsonFile)
             kId = data["kId"]
             whisperPubKey = data["publicKey"]
@@ -31,7 +30,7 @@ def register_requester(accountID, email, federationCloudID, miniLockID, ipfsAddr
 
     account = w3.eth.accounts[int(accountID)]  # Requester's Ethereum Address
     if doesRequesterExist(account):
-        return False, 'Requester "' + account + '" is already registered.'
+        return False, f"Requester {account} is already registered."
 
     if len(federationCloudID) < 128 and len(email) < 128:
         try:
@@ -61,15 +60,8 @@ if __name__ == "__main__":
         githubUsername = "eBloc"
 
     w3 = connect_to_web3()
-    status, result = register_requester(
-        account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername, None, w3
-    )
+    status, result = register_requester(account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
     if status:
-        print("tx_hash=" + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(status, result)
     else:
-        print(f"E: {result}")
+        printc(f"E: {result}", "red")

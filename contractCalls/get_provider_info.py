@@ -5,7 +5,7 @@ import sys
 from imports import connect
 
 
-def get_provider_info(_provider, eBlocBroker=None, w3=None):
+def get_provider_info(_provider):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -13,11 +13,7 @@ def get_provider_info(_provider, eBlocBroker=None, w3=None):
     provider = w3.toChecksumAddress(_provider)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        print(
-            "Provider("
-            + provider
-            + ") is not registered. Please try again with registered Ethereum Address as provider."
-        )
+        print(f"Provider {provider} is not registered. Please try again with registered Ethereum Address as provider.")
         sys.exit()
 
     blockReadFrom, providerPriceInfo = eBlocBroker.functions.getProviderInfo(provider, 0).call()

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import pprint
 import sys
 import traceback
 
-from imports import connect, connect_to_eblocbroker, connect_to_web3
+from imports import connect
+from lib import get_tx_status
 
 
 def withdraw(account):
@@ -19,9 +19,6 @@ def withdraw(account):
 
 
 if __name__ == "__main__":
-    w3 = connect_to_web3()
-    eBlocBroker = connect_to_eblocbroker(w3)
-
     if len(sys.argv) == 2:
         account = str(sys.argv[1])
     else:
@@ -30,11 +27,6 @@ if __name__ == "__main__":
 
     status, result = withdraw(account)
     if status:
-        print(f"tx_hash={result}")
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(status, result)
     else:
         print(result)

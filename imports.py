@@ -47,7 +47,6 @@ def connect():
 
 def connect_to_web3():
     if not lib.POA_CHAIN:
-        print("doo")
         """
         * Note that you should create only one RPC Provider per process,
         * as it recycles underlying TCP/IP network connections between
@@ -67,6 +66,7 @@ def connect_to_web3():
         # Shh.attach(web3, 'shh')
     if not config.w3.isConnected():
         logging.error("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc")
+        return False
 
     return config.w3
 

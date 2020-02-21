@@ -5,7 +5,7 @@ import subprocess
 
 import lib
 from imports import connect
-from lib import log, silentremove
+from lib import log, silent_remove
 
 
 def calculateDataTransferOut(outputFileName):
@@ -81,7 +81,7 @@ def driverIpfs(loggedJob, jobInfo, requesterID):
         os.makedirs(resultsFolder, exist_ok=True)
 
     if os.path.isfile(resultsFolder + "/" + jobKey):
-        silentremove(resultsFolder + "/" + jobKey)
+        silent_remove(resultsFolder + "/" + jobKey)
 
     cumulativeSize_list = []
     sourceCodeHash_list = []
@@ -137,8 +137,8 @@ def driverIpfs(loggedJob, jobInfo, requesterID):
             log("mlck decrypt status=" + str(status), "", True, log_fname)
             # cmd: tar -xvf $resultsFolder/output.tar.gz -C resultsFolder
             subprocess.run(["tar", "-xvf", resultsFolder + "/output.tar.gz", "-C", resultsFolder])
-            silentremove(resultsFolder + "/" + ipfsHash)
-            silentremove(resultsFolder + "/output.tar.gz")
+            silent_remove(resultsFolder + "/" + ipfsHash)
+            silent_remove(resultsFolder + "/output.tar.gz")
 
         if not hashedFlag:
             folderSize = lib.calculateFolderSize(resultsFolder, "d")

@@ -19,7 +19,7 @@ def logReturn(event_filter, poll_interval):
         time.sleep(poll_interval)
 
 
-def run_log_job(fromBlock, provider, eBlocBroker=None, w3=None):
+def run_log_job(fromBlock, provider):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -35,7 +35,7 @@ def run_log_job(fromBlock, provider, eBlocBroker=None, w3=None):
         return logReturn(event_filter, 2)
 
 
-def run_log_cancel_refund(fromBlock, provider, eBlocBroker=None, w3=None):
+def run_log_cancel_refund(fromBlock, provider):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -50,7 +50,7 @@ def run_log_cancel_refund(fromBlock, provider, eBlocBroker=None, w3=None):
         return logReturn(event_filter, 2)
 
 
-def run_single_log_job(fromBlock, jobKey, transactionHash, eBlocBroker=None, w3=None):
+def run_single_log_job(fromBlock, jobKey, transactionHash):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -75,7 +75,6 @@ if __name__ == "__main__":
     else:
         fromBlock = 3070724
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
-        print("here")
 
     logged_jobs = run_log_job(fromBlock, provider)
 

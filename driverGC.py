@@ -6,15 +6,13 @@ import lib
 import lib_mongodb
 from contractCalls.blockNumber import blockNumber
 from contractCalls.getJobStorageTime import getJobStorageTime
-from imports import connect_to_eblocbroker, connect_to_web3
-from lib import silentremove
+from imports import connect
+from lib import silent_remove
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
-
-web3 = connect_to_web3()
-eBlocBroker = connect_to_eblocbroker()
+eBlocBroker, w3 = connect()
 
 """find_all"""
 blockNum = int(blockNumber())
@@ -40,10 +38,10 @@ for document in cursor:
                 lib.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
             )
             print(cachedFileName)
-            silentremove(cachedFileName)
+            silent_remove(cachedFileName)
             cachedFileName = lib.PROGRAM_PATH + "/cache/" + document["sourceCodeHash"] + "tar.gz"
             print(cachedFileName)
-            silentremove(cachedFileName)
+            silent_remove(cachedFileName)
 
         print(receivedBlockNum)
         result = coll.delete_one({"jobKey": ipfsHash})
