@@ -30,11 +30,11 @@ if [[ $event == *"COMPLETED"* ]]; then # Completed slurm jobs are catched here
     arg3=$(echo $name | cut -d "*" -f 4)  # shareToken
     arg4=$(echo $name | cut -d "*" -f 5)  # received_block_number
 
-    echo "COMPLETED fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 slurmJobID: $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
+    echo "COMPLETED fileName:$name | $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID
     fi
 fi
 
@@ -50,7 +50,7 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
     fi
 fi
 
@@ -66,7 +66,7 @@ if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/endCode.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
     fi
 fi
 

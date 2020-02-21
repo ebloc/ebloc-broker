@@ -2,29 +2,27 @@
 
 import json
 import os
-import pprint
 import traceback
 from os.path import expanduser
 
 from dotenv import load_dotenv
 
 from contractCalls.doesProviderExist import doesProviderExist
-from imports import connect_to_eblocbroker, connect_to_web3
-from lib import EBLOCPATH
+from imports import connect
+from lib import EBLOCPATH, get_tx_status
 
 home = expanduser("~")
-load_dotenv(os.path.join(home + "/.eBlocBroker/", ".env"))  # Load .env from the given path
+load_dotenv(os.path.join(f"{home}/.eBlocBroker/", ".env"))  # Load .env from the given path
 
-w3 = connect_to_web3()
-eBlocBroker = connect_to_eblocbroker(w3)
+eBlocBroker, w3 = connect()
 PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
 
 def register_provider(availableCoreNum, email, federationCloudId, miniLockId, prices, ipfsAddress, commitmentBlockNum):
-    if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
+    if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
         return False, "Please first run: ../scripts/whisperInitialize.py"
     else:
-        with open(home + "/.eBlocBroker/whisperInfo.txt") as json_file:
+        with open(f"{home}/.eBlocBroker/whisperInfo.txt") as json_file:
             data = json.load(json_file)
             kId = data["kId"]
             whisperPubKey = data["publicKey"]
@@ -32,13 +30,15 @@ def register_provider(availableCoreNum, email, federationCloudId, miniLockId, pr
         if not w3.geth.shh.hasKeyPair(kId):
             return (
                 False,
-                "Whisper node's private key of a key pair did not match with the given ID.\nPlease run: "
-                + EBLOCPATH
-                + "/scripts/whisperInitialize.py",
+                f"Whisper node's private key of a key pair did not match with the given ID.\n"
+                f"Please run: {EBLOCPATH}/scripts/whisperInitialize.py",
             )
 
     if doesProviderExist(PROVIDER_ID):
-        return (False, "Provider is already registered. Please call the updateProvider() function for an update.")
+        return (
+            False,
+            f"Provider {PROVIDER_ID} is already registered. Please call the updateProvider() function for an update.",
+        )
 
     if commitmentBlockNum < 240:
         return False, "Commitment block number should be greater than 240"
@@ -80,11 +80,6 @@ if __name__ == "__main__":
         availableCoreNum, email, federationCloudId, miniLockId, prices, ipfsAddress, commitmentBlockNum
     )
     if status:
-        print("tx_hash=" + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(status, result)
     else:
-        print("E: " + result)
+        print(f"E: {result}")

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import pprint
 import sys
 import traceback
 
@@ -9,7 +8,7 @@ import owncloud
 import lib
 from contract.scripts.lib import convertIpfsToBytes32, cost
 from contractCalls.get_provider_info import get_provider_info
-from imports import connect, connect_to_eblocbroker, connect_to_web3
+from imports import connect
 
 
 def submitJob(
@@ -20,7 +19,7 @@ def submitJob(
     dataTransferIn_list,
     dataTransferOut,
     storageID_list,
-    sourceCodeHash_list,
+    source_code_hashes,
     cacheType_list,
     storageHour_list,
     accountID,
@@ -36,7 +35,6 @@ def submitJob(
 
     status, provider_info = get_provider_info(provider)
 
-    providerPriceBlockNumber = eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
     print(f"Provider's availableCoreNum:{provider_info['availableCoreNum']}")
     print(f"Provider's priceCoreMin:{provider_info['priceCoreMin']}")
     # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=provider_info['blockReadFrom'], toBlock=provider_info['blockReadFrom'] + 1)
@@ -47,10 +45,10 @@ def submitJob(
     blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(_from).call()
 
     if not eBlocBroker.functions.doesRequesterExist(_from).call():
-        return (False, "E: Requester's Ethereum Address \"" + _from + '" does not exist.')
+        return (False, f"E: Requester's Ethereum Address {_from} does not exist.")
 
     if not eBlocBroker.functions.isOrcIDVerified(_from).call():
-        return (False, "E: Requester's orcid: \"" + orcid.decode("UTF") + '" is not verified.')
+        return (False, f"E: Requester's orcid: {orcid.decode('UTF')} is not verified.")
 
     """
     if lib.storageID_list.IPFS == storageID_list or lib.storageID_list.IPFS_MINILOCK == storageID_list:
@@ -63,13 +61,13 @@ def submitJob(
     """
 
     """
-    print(sourceCodeHash_list[0].encode('utf-8'))
-    for i in range(len(sourceCodeHash_list)):
-        sourceCodeHash_list[i] = sourceCodeHash_list[i]
-        if len(sourceCodeHash_list[i]) != 32 and len(sourceCodeHash_list[i]) != 0:
-            return False, 'sourceCodeHash_list should be 32 characters.'
+    print(source_code_hashes[0].encode('utf-8'))
+    for i in range(len(source_code_hashes)):
+        source_code_hashes[i] = source_code_hashes[i]
+        if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
+            return False, 'source_code_hashes should be 32 characters.'
     """
-    if not sourceCodeHash_list:
+    if not source_code_hashes:
         return False, "E: sourceCodeHash list is empty."
 
     if len(key) != 46 and (
@@ -88,14 +86,7 @@ def submitJob(
 
     for i in range(len(core)):
         if core[i] > provider_info["availableCoreNum"]:
-            return (
-                False,
-                "E: Requested core["
-                + str(i)
-                + "], which is "
-                + str(core[i])
-                + ", is greater than the provider's core number",
-            )
+            return (False, f"E: Requested core[{i}], which is {core[i]}, is greater than the provider's core number")
         if coreMin[i] == 0:
             return (False, "E: coreMin[" + str(i) + "] is provided as 0. Please provide non-zero value")
 
@@ -118,21 +109,23 @@ def submitJob(
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
+    provider_price_block_number = eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
     args = [
         provider,
-        providerPriceBlockNumber,
+        provider_price_block_number,
         storageID_list,
         cacheType_list,
         data_prices_set_blocknumber_list,
         core,
         coreMin,
+        dataTransferOut,
     ]
 
     try:
         gasLimit = 4500000
-        print(sourceCodeHash_list)
+        print(source_code_hashes)
         tx = eBlocBroker.functions.submitJob(
-            key, dataTransferIn_list, dataTransferOut, args, storageHour_list, sourceCodeHash_list
+            key, dataTransferIn_list, args, storageHour_list, source_code_hashes
         ).transact({"from": _from, "value": jobPriceValue, "gas": gasLimit})
     except Exception:
         return False, traceback.format_exc()
@@ -141,8 +134,7 @@ def submitJob(
 
 
 if __name__ == "__main__":
-    w3 = connect_to_web3()
-    eBlocBroker = connect_to_eblocbroker(w3)
+    eBlocBroker, w3 = connect()
 
     if len(sys.argv) == 10:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
@@ -175,7 +167,7 @@ if __name__ == "__main__":
         _provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
         cacheType_list = lib.CacheType.PRIVATE.value  # default
         storageHour_list = []
-        sourceCodeHash_list = []
+        source_code_hashes = []
         coreMin_list = []
 
         if storageID_list == lib.StorageID.IPFS.value:  # IPFS
@@ -189,11 +181,11 @@ if __name__ == "__main__":
 
             # DataSourceCodes:
             ipfsBytes32 = convertIpfsToBytes32(key)
-            sourceCodeHash_list.append(w3.toBytes(hexstr=ipfsBytes32))
+            source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
             storageHour_list.append(1)
 
             ipfsBytes32 = convertIpfsToBytes32("QmSYzLDW5B36jwGSkU8nyfHJ9xh9HLjMsjj7Ciadft9y65")  # data1/data.txt
-            sourceCodeHash_list.append(w3.toBytes(hexstr=ipfsBytes32))
+            source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
             storageHour_list.append(1)
             cacheType_list = lib.CacheType.PUBLIC.value  # default
         elif storageID_list == lib.StorageID.EUDAT.value:
@@ -224,10 +216,12 @@ if __name__ == "__main__":
         coreMin_list,
         _provider,
         requester,
-        sourceCodeHash_list,
+        source_code_hashes,
         dataTransferIn_list,
         dataTransferOut,
+        storage_hour_list,
         storageHour_list,
+        data_prices_set_blocknumber_list,
         eBlocBroker,
         w3,
         False,
@@ -241,7 +235,7 @@ if __name__ == "__main__":
         dataTransferIn_list,
         dataTransferOut,
         storageID_list,
-        sourceCodeHash_list,
+        source_code_hashes,
         cacheType_list,
         storageHour_list,
         accountID,
@@ -252,12 +246,7 @@ if __name__ == "__main__":
         print(result)
         sys.exit()
     else:
-        print("tx_hash=" + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = lib.get_tx_status(status, result)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:

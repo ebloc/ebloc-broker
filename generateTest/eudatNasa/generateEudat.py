@@ -11,16 +11,17 @@ import owncloud
 from lib_owncloud import eudat_initialize_folder, singleFolderShare
 
 home = expanduser("~")
-
 path = os.getcwd()
 
+# TODO: carry it into a function
 # Login to EUDAT account----------------------------------------
-f = open(home + "/TESTS/password.txt", "r")  # Password read from the file.
-password = f.read().replace("\n", "").replace(" ", "")
+f = open(f"{home}/TESTS/password.txt", "r")  # Password read from the file.
+password = f.read().strip()
 f.close()
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", password)
 # ---------------------------------------------------------------
+
 flag = 0
 itemsToScan = 151
 hashesFile = open(path + "/hashOutput.txt", "w+")

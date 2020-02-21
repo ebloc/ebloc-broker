@@ -8,7 +8,7 @@ from imports import connect
 def doesProviderExist(address):
     eBlocBroker, w3 = connect()
     address = w3.toChecksumAddress(address)
-    return True, eBlocBroker.functions.doesProviderExist(address).call()
+    return eBlocBroker.functions.doesProviderExist(address).call()
 
 
 if __name__ == "__main__":
@@ -16,4 +16,4 @@ if __name__ == "__main__":
         provider_address = str(sys.argv[1])
         print(doesProviderExist(provider_address))
     else:
-        print("Please provide provider address as argument.")
+        print("E: Please provide provider address as argument.")

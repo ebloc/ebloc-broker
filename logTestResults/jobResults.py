@@ -2,13 +2,12 @@
 
 import lib
 from contractCalls.get_job_info import get_job_info
-from imports import connect_to_eblocbroker, connect_to_web3
+from imports import connect
 
-w3 = connect_to_web3()
-eBlocBroker = connect_to_eblocbroker(w3)
+eBlocBroker, w3 = connect()
 
 eblocPath = lib.EBLOCPATH
-fname = lib.LOG_PATH + "/queuedJobs.txt"
+fname = f"{lib.LOG_PATH}/queuedJobs.txt"
 
 sum1 = 0
 with open(fname, "r") as ins:

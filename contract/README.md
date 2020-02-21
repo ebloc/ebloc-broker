@@ -12,7 +12,7 @@ brew install solidity
 pip install eth-brownie -U
 
 
-source $HOME/v/bin/activate
+source $HOME/venv/bin/activate
 brownie console --network private
 > web3.eth.blockNumber
 

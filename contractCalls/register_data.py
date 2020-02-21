@@ -3,10 +3,10 @@
 import traceback
 
 from imports import connect
-from lib import PROVIDER_ID
+from lib import PROVIDER_ID, get_tx_status
 
 
-def register_data(sourceCodeHash, price, commitmentBlockDuration, eBlocBroker=None, w3=None):
+def register_data(sourceCodeHash, price, commitmentBlockDuration):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -27,6 +27,6 @@ if __name__ == "__main__":
     status, result = register_data(sourceCodeHash, 20, 240)
 
     if status:
-        print("tx_hash=" + result)
+        receipt = get_tx_status(status, result)
     else:
         print(result)

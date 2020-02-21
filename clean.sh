@@ -15,7 +15,7 @@ rm -f checkSinfoOut.txt
 rm -f .node-xmlhttprequest*
 rm -f ./docs/solidity_lexer.pyc
 rm -f ipfs.out
-rm -f modifiedDate.txt
+rm -f modified_date.txt
 rm -f package-lock.json
 
 rm -rf docs/_build_html/

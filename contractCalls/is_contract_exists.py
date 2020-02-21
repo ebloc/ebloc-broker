@@ -3,19 +3,17 @@
 import json
 from os.path import expanduser
 
+from imports import connect_to_web3
 
-def is_contract_exists(w3=None):
+
+def is_contract_exists():
     home = expanduser("~")
     contract = json.loads(open(home + "/eBlocBroker/contractCalls/contract.json").read())
-    contractAddress = contract["address"]
+    contract_address = contract["address"]
 
-    if w3 is None:
-        from imports import connect_to_web3
-
-        w3 = connect_to_web3()
-
-    contractAddress = w3.toChecksumAddress(contractAddress)
-    if w3.eth.getCode(contractAddress) == "0x" or w3.eth.getCode(contractAddress) == b"":
+    w3 = connect_to_web3()
+    contract_address = w3.toChecksumAddress(contract_address)
+    if w3.eth.getCode(contract_address) == "0x" or w3.eth.getCode(contract_address) == b"":
         return False
 
     return True
