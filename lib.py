@@ -4,6 +4,7 @@ import binascii
 import glob
 import json
 import os
+import pprint
 import shutil
 import signal
 import subprocess
@@ -106,6 +107,16 @@ Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
+def get_tx_status(status, result):
+    print("tx_hash=" + result)
+    receipt = config.w3.eth.waitForTransactionReceipt(result)
+    print("Transaction receipt mined: \n")
+    pprint.pprint(dict(receipt))
+    print("Was transaction successful?")
+    pprint.pprint(receipt["status"])
+    return receipt
+
+
 def checkSizeOfFileToDownload(file_type, key=None):
     if int(file_type) == StorageID.IPFS.value or int(file_type) == StorageID.IPFS_MINILOCK.value:
         if key is None:  # key refers to ipfs_hash
@@ -124,6 +135,9 @@ def commitFolder():
 
 
 def terminate():
+    """ Terminates Driver and all the dependent driver python programs
+    """
+    logging.error("E: terminate() function is called.")
     # Following line is added, in case ./killall.sh does not work due to sudo.
     # Send the kill signal to all the process groups.
     if config.driver_cancel_process is not None:
@@ -135,7 +149,6 @@ def terminate():
         )  # obtained from global variable
         # raise SystemExit("Program Exited")
 
-    logging.info("Terminated")
     subprocess.run(["sudo", "bash", "killall.sh"])  # Kill all dependent processes and exit
     sys.exit()
 
@@ -316,13 +329,13 @@ def log(my_string, color="", newLine=True, file_name=f"{LOG_PATH}/transactions/p
     f.close()
 
 
-def subprocessCallAttempt(command, attemptCount, printFlag=0):
-    for i in range(attemptCount):
+def subprocess_call_attempt(command, attempt_count, print_flag=0):
+    for count in range(attempt_count):
         try:
             result = subprocess.check_output(command).decode("utf-8").strip()
         except Exception:
             time.sleep(0.1)
-            if i == 0 and printFlag == 0:
+            if count == 0 and print_flag == 0:
                 logging.error(traceback.format_exc())
         else:
             return True, result
@@ -346,10 +359,17 @@ def execute_shell_command(command, my_env=None, is_exit_flag=False) -> Tuple[boo
     return True, result
 
 
-def silentremove(filename) -> bool:
+def silent_remove(path) -> bool:
     # Link: https://stackoverflow.com/a/10840586/2402577
     try:
-        os.remove(filename)
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            return False
+
+        logging.info(f"{path} is removed")
         return True
     except Exception:
         logging.error(traceback.format_exc())
@@ -359,10 +379,10 @@ def silentremove(filename) -> bool:
 def removeFiles(filename):
     if "*" in filename:
         for f in glob.glob(filename):
-            if not silentremove(f):
+            if not silent_remove(f):
                 return False
     else:
-        if not silentremove(filename):
+        if not silent_remove(filename):
             return False
 
     return True
@@ -392,48 +412,55 @@ def gdrive_size(
         command = ["gdrive", "list", "--query", "'" + key + "'" + " in parents"]
         status, result = execute_shell_command(command, None, True)
 
-        dataFiles_json_id = echo_grep_awk(result, "dataFiles.json", "1")
-        status, res = subprocessCallAttempt(
+        dataFiles_json_id = echo_grep_awk(result, "meta_data.json", "1")
+        status, res = subprocess_call_attempt(
             ["gdrive", "download", "--recursive", dataFiles_json_id, "--force", "--path", results_folder_prev], 10
         )
         if not status:
             return False
 
         # key for the sourceCode elimination result*.tar.gz files
-        key = echo_grep_awk(result, folderName + ".tar.gz", "1")
+        key = echo_grep_awk(result, f"{folderName}.tar.gz", "1")
         sourceCode_key = key
-        status, gdrive_info = subprocessCallAttempt(["gdrive", "info", "--bytes", key, "-c", GDRIVE_METADATA], 10)
+        status, gdrive_info = subprocess_call_attempt(["gdrive", "info", "--bytes", key, "-c", GDRIVE_METADATA], 10)
         if not status:
             return False
 
-        md5sum = getGdriveFileInfo(gdrive_info, "Md5sum")
+        md5sum = get_gdrive_file_info(gdrive_info, "Md5sum")
         if md5sum != source_code_hash_list[0].decode("utf-8"):
             # Checks md5sum obtained from gdrive and given by the user
             logging.info("E: md5sum does not match with the provided data[0]")
             return False, 0, [], sourceCode_key
 
-        byte_size = int(getGdriveFileInfo(gdrive_info, "Size"))
+        byte_size = int(get_gdrive_file_info(gdrive_info, "Size"))
         logging.info(f"sourceCodeHash[0]_size={byte_size} bytes")
         if not shouldAlreadyCached[source_code_hash_list[0].decode("utf-8")]:
             size_to_download = byte_size
 
-        with open(f"{results_folder_prev}/dataFiles.json") as json_file:
-            dataFiles = json.load(json_file)
+        logging.info(f"meta_data_path={results_folder_prev}/meta_data.json")
+        with open(f"{results_folder_prev}/meta_data.json") as json_file:
+            meta_data = json.load(json_file)
 
-        for idx, (k, v) in enumerate(dataFiles.items(), start=1):
+        for idx, (k, v) in enumerate(meta_data.items(), start=1):
             job_key_list.append(str(v))
             _key = str(v)
-            status, gdrive_info = subprocessCallAttempt(["gdrive", "info", "--bytes", _key, "-c", GDRIVE_METADATA], 10)
+            status, gdrive_info = subprocess_call_attempt(
+                ["gdrive", "info", "--bytes", _key, "-c", GDRIVE_METADATA], 10
+            )
             if not status:
                 return False
 
-            md5sum = getGdriveFileInfo(gdrive_info, "Md5sum")
+            md5sum = get_gdrive_file_info(gdrive_info, "Md5sum")
             if md5sum != source_code_hash_list[idx].decode("utf-8"):
                 # Checks md5sum obtained from gdrive and given by the user
-                logging.error(f"E: md5sum does not match with the provided data[{idx}]")
+                print(idx)
+                logging.error(
+                    f"md5sum={md5sum} | given={source_code_hash_list[idx].decode('utf-8')} \n"
+                    f"E: md5sum does not match with the provided data[{idx}]"
+                )
                 return False, 0, [], sourceCode_key
 
-            _size = int(getGdriveFileInfo(gdrive_info, "Size"))
+            _size = int(get_gdrive_file_info(gdrive_info, "Size"))
             logging.info(f"sourceCodeHash[{idx}]_size={_size} bytes")
             byte_size += _size
             if not shouldAlreadyCached[source_code_hash_list[idx].decode("utf-8")]:
@@ -447,7 +474,7 @@ def gdrive_size(
 
     """
     elif 'gzip' in mimeType:
-        byte_size = lib.getGdriveFileInfo(gdrive_info, 'Size')
+        byte_size = lib.get_gdrive_file_info(gdrive_info, 'Size')
         rounded_size = int(convert_byte_to_mb(byte_size))
     """
 
@@ -457,12 +484,12 @@ def getMd5sum(gdrive_info):
     return echo_grep_awk(gdrive_info, "Md5sum", "2")
 
 
-def getGdriveFileInfo(gdrive_info, _type):
+def get_gdrive_file_info(gdrive_info, _type):
     # cmd: echo gdrive_info | grep _type | awk \'{print $2}\'
     return echo_grep_awk(gdrive_info, _type, "2")
 
 
-def eBlocBrokerFunctionCall(f, _attempt):
+def eblocbroker_function_call(f, _attempt):
     for attempt in range(_attempt):
         status, result = f()
         if status:
@@ -634,7 +661,7 @@ def sbatchCall(
         .strip()
     )
     logging.info(f"Date={date}")
-    f = open(f"{results_folder_prev}/modifiedDate.txt", "w")
+    f = open(f"{results_folder_prev}/modified_date.txt", "w")
     f.write(f"{date}\n")
     f.close()
     # cmd: echo date | date +%s

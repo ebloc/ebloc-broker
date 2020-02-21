@@ -48,6 +48,7 @@ library Lib {
         uint32[] dataPricesSetBlockNum; /* An array of uint32 values that denote whether the provider’s registered data will be used or not. */
         uint16[] core;
         uint16[] executionDuration;
+        uint32 dataTransferOut;
     }
 
     struct JobIndexes {
@@ -73,8 +74,8 @@ library Lib {
     struct JobStorageTime { // JobStorageInfo
         uint32 receivedBlock;
         uint32 storageDuration;
-        bool       isPrivate;
-        bool isVerified_Used; // Set to True if the requester is used and verified the given sourceCodeHash
+        bool isPrivate;
+        bool isVerifiedUsed; // Set to True if the requester is used and verified the given sourceCodeHash
         //address      owner; //Cloud be multiple owners
     }
 

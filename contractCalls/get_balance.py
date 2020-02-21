@@ -8,7 +8,7 @@ from imports import connect
 def get_balance(address):
     eBlocBroker, w3 = connect()
     address = w3.toChecksumAddress(address)
-    return str(eBlocBroker.functions.balanceOf(address).call()).rstrip("\n")
+    return str(eBlocBroker.functions.balanceOf(address).call()).rstrip()
 
 
 if __name__ == "__main__":

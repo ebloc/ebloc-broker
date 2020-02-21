@@ -14,8 +14,8 @@ from imports import connect_to_web3
 home = expanduser("~")
 w3 = connect_to_web3()
 
-f = open(home + "/TESTS/accountPassword.txt", "r")  # Password read from the file.
-accountPassword = f.read().replace("\n", "").replace(" ", "")
+f = open(f"{home}/TESTS/accountPassword.txt", "r")  # Password read from the file.
+accountPassword = f.read().strip()
 f.close()
 
 

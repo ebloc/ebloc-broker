@@ -107,7 +107,7 @@ venv/bin/python3
 
 venv/lib64
 
-modifiedDate\.txt
+modified_date\.txt
 
 \.node-xmlhttprequest-sync-27351
 
@@ -308,3 +308,7 @@ contract/abi.json
 .mypy_cache/
 
 doo.py
+
+gdrive/output.log
+
+gdrive/exampleFolderToShare/meta_data.json

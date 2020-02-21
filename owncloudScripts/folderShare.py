@@ -1,27 +1,13 @@
 #!/usr/bin/python
 
-import datetime
-import getpass
-import hashlib
-import math
 import os
-import random
-import sys
-import time
 from os.path import expanduser
-from random import randint
 
-import owncloud
+from lib_owncloud import eudat_login
 
 home = expanduser("~")
 
-# Password read from the file.
-f = open("/home/alper/.eBlocBroker/password_owncloud.txt", "r")
-password = f.read().replace("\n", "").replace(" ", "")
-f.close()
-oc = owncloud.Client("https://b2drop.eudat.eu/")
-oc.login("aalimog1@@boun.edu.tr", password)  # User
-
+oc = eudat_login("aalimog1@@boun.edu.tr", "/home/alper/.eBlocBroker/password_owncloud.txt")
 folderNames = os.listdir(home + "/oc")
 
 for i in range(0, len(folderNames) - 1):

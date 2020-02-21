@@ -20,7 +20,7 @@ def gdrive_list(tar_hash, is_folder=False):
     return result
 
 
-def _gdrive_upload(dir_path, tar_hash, is_folder=False):
+def gdrive_upload_internal(dir_path, tar_hash, is_folder=False):
     if is_folder:
         subprocess.run(["gdrive", "upload", "--recursive", f"{dir_path}/{tar_hash}"])
 
