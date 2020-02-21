@@ -15,10 +15,10 @@ os.chdir(sys.path[0])
 # Note that you should create only one RPCProvider per process,
 # as it recycles underlying TCP/IP network connections between
 # your process and Ethereum node
-web3 = Web3(HTTPProvider("http://localhost:" + str(constants.RPC_PORT)))
+web3 = Web3(HTTPProvider(f"http://localhost:{lib.RPC_PORT}"))
 
 fileAddr = open("address.json", "r")
-contractAddress = fileAddr.read().replace("\n", "")
+contractAddress = fileAddr.read().rstrip()
 
 with open("abi.json", "r") as abi_definition:
     abi = json.load(abi_definition)

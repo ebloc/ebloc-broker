@@ -1,15 +1,8 @@
 #!/usr/bin/python
 
-import datetime
-import getpass
-import hashlib
-import math
+
 import os
-import random
-import sys
-import time
 from os.path import expanduser
-from random import randint
 
 import owncloud
 
@@ -17,11 +10,14 @@ path = os.getcwd()
 home = expanduser("~")
 
 # Login to EUDAT account----------------------------------------
+
 f = open(home + "/TESTS/password.txt", "r")  # Password read from the file.
-password = f.read().replace("\n", "").replace(" ", "")
+password = f.read().strip()
 f.close()
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", password)
+password = None
+
 # ---------------------------------------------------------------
 folderNames = os.listdir(home + "/oc")
 for i in range(0, len(folderNames) - 1):

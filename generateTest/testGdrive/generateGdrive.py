@@ -5,7 +5,7 @@ import random
 import subprocess
 from os.path import expanduser
 
-from lib import compressFolder
+from lib import compress_folder
 
 home = expanduser("~")
 path = os.getcwd()
@@ -13,7 +13,7 @@ path = os.getcwd()
 providerToShare = "alper01234alper@gmail.com"
 flag = 0
 itemsToScan = 150 + 1
-hashesFile = open(path + "/hashOutput.txt", "w+")
+hashesFile = open(f"{path}/hashOutput.txt", "w+")
 with open(path + "/../nasa.txt") as test:
     for idx, line in enumerate(test):
         f = open("ipfs/run.sh", "w+")
@@ -33,32 +33,32 @@ with open(path + "/../nasa.txt") as test:
             f.close()
 
             folderToShare = "ipfs"
-            tarHash = (
+            tar_hash = (
                 subprocess.check_output(["../../scripts/generateMD5sum.sh", folderToShare]).decode("utf-8").strip()
             )
-            tarHash = tarHash.split(" ", 1)[0]
-            print("SourecodeHash=" + tarHash)
+            tar_hash = tar_hash.split(" ", 1)[0]
+            print("SourecodeHash=" + tar_hash)
 
-            os.environ["fileName"] = tarHash
+            os.environ["fileName"] = tar_hash
             os.environ["providerToShare"] = "alper01234alper@gmail.com"
 
-            tarHash = compressFolder(folderToShare)
-            # subprocess.run(['cp', '-a', '../ipfs', '../' + tarHash])
+            tar_hash = compress_folder(folderToShare)
+            # subprocess.run(['cp', '-a', '../ipfs', '../' + tar_hash])
             print("Uploading ...")
             # rclone copy ipfs remote:ipfs
             res = (
-                subprocess.check_output(["rclone", "copy", tarHash + ".tar.gz", "remote:" + tarHash])
+                subprocess.check_output(["rclone", "copy", tar_hash + ".tar.gz", "remote:" + tar_hash])
                 .decode("utf-8")
                 .strip()
             )
             print(res)
-            subprocess.run(["mv", tarHash + ".tar.gz", home + "/TESTS/GdriveSource"])
+            subprocess.run(["mv", tar_hash + ".tar.gz", home + "/TESTS/GdriveSource"])
 
             while True:
                 try:
                     res = (
                         subprocess.check_output(
-                            ["gdrive", "list", "--query", "name contains '" + tarHash + ".tar.gz" + "'", "--no-header"]
+                            ["gdrive", "list", "--query", "name contains '" + tar_hash + ".tar.gz" + "'", "--no-header"]
                         )
                         .decode("utf-8")
                         .strip()
@@ -119,7 +119,7 @@ with open(path + "/../nasa.txt") as test:
                 + " "
                 + str(int(lineIn[1]))
                 + " "
-                + tarHash
+                + tar_hash
             )
 
 hashesFile.close()

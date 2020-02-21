@@ -7,9 +7,7 @@ import pprint
 import subprocess
 import sys
 import time
-import traceback
-
-import owncloud
+from pdb import set_trace as bp
 
 import config
 import driverFunc
@@ -22,7 +20,7 @@ from contractCalls.get_deployed_block_number import get_deployed_block_number
 from contractCalls.get_job_info import get_job_info
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.is_contract_exists import is_contract_exists
-from contractCalls.isWeb3Connected import isWeb3Connected
+from contractCalls.is_web3_connected import is_web3_connected
 from contractCalls.LogJob import run_log_job
 from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
@@ -31,6 +29,7 @@ from lib import (BLOCK_READ_FROM_FILE, EBLOCPATH, EUDAT_USE, HOME, IPFS_USE, LOG
                  PROGRAM_PATH, PROVIDER_ID, RPC_PORT, WHOAMI, CacheType, StorageID,
                  convertBytes32ToIpfs, execute_shell_command, get_idle_cores, is_ipfs_on, isSlurmOn,
                  job_state_code, log, terminate)
+from lib_owncloud import eudat_login
 
 # Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
 subprocess.run(["sudo", "printf", ""])
@@ -40,7 +39,7 @@ config.eBlocBroker, config.w3 = connect()
 if config.eBlocBroker is None or config.w3 is None:
     terminate()
 
-oc = owncloud.Client("https://b2drop.eudat.eu/")
+oc = None
 driver_cancel_process = None
 whisper_state_receiver_process = None
 my_env = os.environ.copy()
@@ -48,7 +47,7 @@ my_env = os.environ.copy()
 
 def run_driver_cancel():
     """
-    Runs driverCancel daemon on the background.
+    Runs driver_cancel daemon on the background.
     commad: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l
     """
     p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
@@ -60,8 +59,8 @@ def run_driver_cancel():
     p3.stdout.close()
     out = p4.communicate()[0].decode("utf-8").strip()
     if int(out) == 0:
-        # Running driverCancel.py on the background if it is not already
-        config.driver_cancel_process = subprocess.Popen(["python3", "driverCancel.py"])
+        # Running driver_cancel.py on the background if it is not already
+        config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
 def run_whisper_state_receiver():
@@ -93,7 +92,7 @@ def run_whisper_state_receiver():
     p3.stdout.close()
     out = p4.communicate()[0].decode("utf-8").strip()
     if int(out) == 0:
-        # Running driverCancel.py on the background
+        # Running driver_cancel.py on the background
         # TODO: should be '0' to store log at a file and not print output
         config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
 
@@ -143,52 +142,22 @@ def isDriverOn():
         logging.warning("Driver is already running.")
 
 
-def eudat_login():
-    # logging.info("Login into owncloud... ", "blue", False)
-    logging.info("Login into owncloud... ")
-    if OC_USER is None or OC_USER == "":
-        logging.error(f"OC_USER is not set in {EBLOCPATH}/.env")
-        terminate()
-
-    with open(f"{LOG_PATH}/eudatPassword.txt", "r") as content_file:
-        password = content_file.read().strip()
-
-    for attempt in range(5):
-        try:
-            oc.login(OC_USER, password)  # Unlocks the EUDAT account
-            password = None
-        except Exception:
-            _traceback = traceback.format_exc()
-            logging.error(_traceback)
-            if "[Errno 110] Connection timed out" in _traceback:
-                logging.warning("Sleeping for 15 seconds to overcome the max retries that exceeded.")
-                time.sleep(15)
-            else:
-                logging.error(f"OC_USER is not set in {EBLOCPATH}/.env")
-                terminate()
-        else:
-            break
-    else:
-        logging.error(f"OC_USER is not set in {EBLOCPATH}/.env")
-        terminate()
-
-    try:
-        oc.list(".")
-        logging.info("Success")
-    except subprocess.CalledProcessError as e:
-        logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
-        terminate()
-
-
 def startup():
     """ Startup functions are called."""
+    oc = None
     isDriverOn()
     isSlurmOn()
     isGethOn()
     # run_driver_cancel()
     run_whisper_state_receiver()
     if EUDAT_USE:
-        eudat_login()
+        if OC_USER is None or OC_USER == "":
+            logging.error(f"OC_USER is not set in {EBLOCPATH}/.env")
+            terminate()
+
+        oc = eudat_login(OC_USER, f"{LOG_PATH}/eudatPassword.txt")
+
+    return oc
 
 
 def check_programs():
@@ -210,13 +179,13 @@ if WHOAMI == "" or EBLOCPATH == "" or PROVIDER_ID == "":
 
 log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "blue")
 
-startup()
-is_contract_exists = is_contract_exists(config.w3)
+oc = startup()
+is_contract_exists = is_contract_exists()
 if not is_contract_exists:
     logging.error("Please check that you are using eBlocPOA blockchain")
     terminate()
 
-logging.info(f"isWeb3Connected={isWeb3Connected(config.w3)}")
+logging.info(f"is_web3_connected={is_web3_connected()}")
 logging.info(f"rootdir: {os.getcwd()}")
 contract = json.loads(open("contractCalls/contract.json").read())
 contractAddress = contract["address"]
@@ -225,7 +194,7 @@ logging.info("{0: <18}".format("contract_address:") + contractAddress)
 if IPFS_USE:
     is_ipfs_on()
 
-provider = str(PROVIDER_ID)
+provider = config.w3.toChecksumAddress(PROVIDER_ID)
 
 if not doesProviderExist(provider):
     logging.error(
@@ -236,6 +205,10 @@ if not doesProviderExist(provider):
     )
     terminate()
 
+if not config.eBlocBroker.functions.isOrcIDVerified(provider).call():
+    logging.error("E: Provider's orcid is not verified.")
+    terminate()
+
 deployed_block_number = get_deployed_block_number()
 logging.info("{0: <18}".format("provider_address:") + provider)
 if not os.path.isfile(BLOCK_READ_FROM_FILE):
@@ -244,7 +217,7 @@ if not os.path.isfile(BLOCK_READ_FROM_FILE):
     f.close()
 
 f = open(BLOCK_READ_FROM_FILE, "r")
-block_read_from_local = f.read().rstrip("\n")
+block_read_from_local = f.read().strip()
 f.close()
 
 if not block_read_from_local.isdigit():
@@ -268,7 +241,7 @@ balance_temp = get_balance(provider)
 logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
 
 while True:
-    if "Error" in block_read_from:
+    if not str(block_read_from).isdigit():
         logging.error(f"block_read_from={block_read_from}")
         terminate()
 
@@ -280,7 +253,7 @@ while True:
         terminate()
 
     idle_cores = get_idle_cores()
-    logging.info(f"Current Slurm Running jobs status: {squeue_status}")
+    log(f"Current Slurm Running jobs status:\n {squeue_status}")
     log("-" * int(columns), "green")
     if "notconnected" != balance:
         log(f"Current Time: {time.ctime()} | providerGainedWei={int(balance) - int(balance_temp)}")
@@ -289,16 +262,16 @@ while True:
     current_block_number = blockNumber()
     logging.info("Waiting for new block to increment by one.")
     logging.info(f"Current block number={current_block_number} | sync from block number={block_read_from}")
-    print(f"isWeb3Connected={isWeb3Connected(config.w3)}")
+    logging.info(f"is_web3_connected={is_web3_connected()}")
     while int(current_block_number) < int(block_read_from):
         time.sleep(1)
-        current_block_number = blockNumber(config.w3)
+        current_block_number = blockNumber()
 
     logging.info(f"Passed incremented block number... Continue to wait from block number={block_read_from}")
     block_read_from = str(block_read_from)  # Starting reading event's location has been updated
     # block_read_from = '3082590' # used for test purposes
     slurmPendingJobCheck()
-    logged_jobs_to_process = run_log_job(block_read_from, provider, config.eBlocBroker)
+    logged_jobs_to_process = run_log_job(block_read_from, provider)
     max_val = 0
     is_provider_received_job = False
     is_already_cached = {}
@@ -434,7 +407,7 @@ while True:
                 is_pass = True
 
             if not is_requester_exist:
-                logging.error("job owner is not registered")
+                logging.error("Job owner is not registered")
                 is_pass = True
             else:
                 status, requesterInfo = get_requester_info(requesterID)
@@ -445,28 +418,28 @@ while True:
             logging.info(res)
             requesterIDmd5 = hashlib.md5(requesterID.encode("utf-8")).hexdigest()
             slurmPendingJobCheck()
-            _cloudStorageID = logged_job.args["cloudStorageID"][0]
-            if _cloudStorageID == StorageID.IPFS.value:
+            main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
+            if main_cloud_storage_id == StorageID.IPFS.value:
                 log(f"New job has been received. IPFS call |{time.ctime()}", "blue")
                 driverFunc.driverIpfs(logged_job, job_info, requesterIDmd5)
-            elif _cloudStorageID == StorageID.EUDAT.value:
+            elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
                     eudat_login()
 
                 eudat = EudatClass(logged_job, job_info, requesterIDmd5, is_already_cached, oc)
                 eudat.run()
                 # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requesterIDmd5))
-            elif _cloudStorageID == StorageID.IPFS_MINILOCK.value:
-                log(f"New job has been received. IPFS with miniLock call |{time.ctime()}", "blue")
+            elif main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
+                log(f"New job has been received. IPFS with miniLock call | {time.ctime()}", "blue")
                 driverFunc.driverIpfs(logged_job, job_info, requesterIDmd5)
-            elif _cloudStorageID == StorageID.GDRIVE.value:
+            elif main_cloud_storage_id == StorageID.GDRIVE.value:
                 gdrive = GdriveClass(logged_job, job_info, requesterIDmd5, is_already_cached)
                 gdrive.run()
 
     time.sleep(1)
     if len(logged_jobs_to_process) > 0 and int(max_val) != 0:
         f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
-        block_read_from = str(int(max_val) + 1)
+        block_read_from = int(max_val) + 1
         f_block_read_from.write(f"{block_read_from}")
         f_block_read_from.close()
 

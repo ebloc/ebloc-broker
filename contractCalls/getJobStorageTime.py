@@ -2,14 +2,11 @@
 
 import sys
 
+from imports import connect
 
-def getJobStorageTime(providerAddress, sourceCodeHash, eBlocBroker=None, w3=None):
-    if eBlocBroker is None and w3 is None:
-        import os
-        from imports import connect_to_eblocbroker, connect_to_web3
 
-        w3 = connect_to_web3()
-        eBlocBroker = connect_to_eblocbroker(w3)
+def getJobStorageTime(providerAddress, sourceCodeHash):
+    eBlocBroker, w3 = connect()
 
     providerAddress = w3.toChecksumAddress(providerAddress)
     ret = eBlocBroker.call().getJobStorageTime(providerAddress, sourceCodeHash)
@@ -26,12 +23,5 @@ if __name__ == "__main__":
 
     receivedBlockNum, storageTime = getJobStorageTime(providerAddress, sourceCodeHash)
     print(
-        "receivedBlockNum="
-        + str(receivedBlockNum)
-        + "; "
-        + "storageTime="
-        + str(storageTime)
-        + "; "
-        + "endBlockTime="
-        + str(receivedBlockNum + storageTime * 240)
+        f"receivedBlockNum={receivedBlockNum}; storageTime={storageTime}; endBlockTime={receivedBlockNum + storageTime * 240}"
     )

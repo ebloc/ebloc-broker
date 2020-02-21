@@ -7,7 +7,7 @@ import lib
 from imports import connect
 
 
-def set_job_status_running(_key, index, jobID, startTime, eBlocBroker=None, w3=None):
+def set_job_status_running(_key, index, jobID, startTime):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
         status, result = set_job_status_running(key, index, jobID, startTime)
         if status:
-            print("tx_hash=" + result)
+            print(f"tx_hash={result}")
         else:
             print(result)
     else:

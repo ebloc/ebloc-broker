@@ -2,16 +2,16 @@
 
 import json
 import os
-import pprint
-import sys
+import traceback
 from os.path import expanduser
 
 from imports import connect, connect_to_web3
+from lib import get_tx_status
 
 home = expanduser("~")
 
 
-def updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress, eBlocBroker=None, w3=None):
+def updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return
@@ -38,7 +38,7 @@ def updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress, eBlocB
         except Exception:
             return False, traceback.format_exc()
 
-        return True, txh.hex()
+        return True, tx.hex()
 
 
 if __name__ == "__main__":
@@ -48,13 +48,8 @@ if __name__ == "__main__":
     ipfsAddress = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV47WttP9hAoPEXeCMKsh3Cap4"
 
     w3 = connect_to_web3()
-    status, result = updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress, None, w3)
+    status, result = updateProviderInfo(email, federationCloudId, miniLockId, ipfsAddress)
     if status:
-        print("tx_hash=" + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(status, result)
     else:
         print(result)

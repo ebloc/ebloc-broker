@@ -4,27 +4,15 @@ import hashlib
 import subprocess
 import time
 
-from colored import fg, stylize
-
 import lib
+from config import load_log
 from contractCalls.get_deployed_block_number import get_deployed_block_number
 from contractCalls.LogJob import LogJob
 from imports import connect_to_web3
 
 w3 = connect_to_web3()
 testFlag = False
-
-
-def log(strIn, color=""):
-    if testFlag:
-        if color != "":
-            print(stylize(strIn, fg(color)))
-        else:
-            print(strIn)
-
-    txFile = open(f"{lib.LOG_PATH}/cancelledJobsLog.out", "a")
-    txFile.write(f"{strIn}")
-    txFile.close()
+log_dc = load_log(f"{lib.LOG_PATH}/cancelledJobsLog.out")
 
 
 with open(lib.CANCEL_BLOCK_READ_FROM_FILE, "r") as content_file:
@@ -33,7 +21,7 @@ with open(lib.CANCEL_BLOCK_READ_FROM_FILE, "r") as content_file:
 if not cancel_block_read_from_local.isdigit():
     cancel_block_read_from_local = get_deployed_block_number()
 
-log(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
+log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
 max_val = 0
 while True:
     # cancel_block_read_from_local = 2000000 # For test purposes
@@ -51,7 +39,7 @@ while True:
         block_number = logged_job["blockNumber"]
         jobKey = logged_job.args["jobKey"]
         index = logged_job.args["index"]
-        log(f"block_number={block_number} job_key={jobKey} index={index}")
+        log_dc(f"block_number={block_number} job_key={jobKey} index={index}")
 
         if block_number > max_val:
             max_val = block_number
@@ -87,11 +75,11 @@ while True:
                 p1.stdout.close()
                 out = p2.communicate()[0].decode("utf-8").strip()
                 if "JobState=CANCELLED" in out:
-                    log(f"jobID={jobID} is successfully cancelled.")
+                    log_dc(f"jobID={jobID} is successfully cancelled.")
                 else:
-                    log(f"E: jobID={jobID} is not cancelled, something went wrong or already cancelled. {out}")
+                    log_dc(f"E: jobID={jobID} is not cancelled, something went wrong or already cancelled. {out}")
         except IndexError:
-            log("Something went wrong, jobID is returned as None.")
+            log_dc("Something went wrong, jobID is returned as None.")
 
     if int(max_val) != 0:
         value = max_val + 1
@@ -99,12 +87,12 @@ while True:
         f_blockReadFrom.write(f"{value}")
         f_blockReadFrom.close()
         cancel_block_read_from_local = str(value)
-        log("---------------------------------------------")
-        log(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
+        log_dc("---------------------------------------------")
+        log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
     else:
-        currentBlockNumber = block_number(w3)
+        currentBlockNumber = block_number()
         f_blockReadFrom = open(lib.CANCEL_BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
         f_blockReadFrom.write(f"{currentBlockNumber}")
         f_blockReadFrom.close()
-        log("---------------------------------------------")
-        log(f"Waiting cancelled jobs from: {currentBlockNumber}")
+        log_dc("---------------------------------------------")
+        log_dc(f"Waiting cancelled jobs from: {currentBlockNumber}")
