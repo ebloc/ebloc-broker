@@ -55,8 +55,8 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
     dataTransferOut = 1
 
     storageID_list = [StorageID.EUDAT.value, StorageID.EUDAT.value]
-    cacheType_list = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
-    storageHour_list = [0, 0]
+    cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
+    storageHour_list = [1, 1]
     data_prices_set_blocknumber_list = [0, 0]
     print(source_code_hash_list)
 

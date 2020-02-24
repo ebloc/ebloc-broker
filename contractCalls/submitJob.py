@@ -52,7 +52,7 @@ def submitJob(
 
     """
     if lib.storageID_list.IPFS == storageID_list or lib.storageID_list.IPFS_MINILOCK == storageID_list:
-       lib.isIpfsOn()
+       lib.is_ipfs_running()
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress']nnn
        print('Trying to connect into ' + strVal)
        output = os.popen('ipfs swarm connect ' + strVal).read()
