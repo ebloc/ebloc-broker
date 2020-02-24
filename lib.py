@@ -34,6 +34,15 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
+def WHERE(back=0):
+    try:
+        frame = sys._getframe(back + 1)
+    except:
+        frame = sys._getframe(1)
+
+    return "%s/%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name)
+
+
 home = expanduser("~")
 load_dotenv(os.path.join(f"{home}/.eBlocBroker/", ".env"))  # Load .env from the given path
 
@@ -164,7 +173,7 @@ def try_except(f, is_exit_flag=False):
     try:
         return f()
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
         return False, None
 
 
@@ -232,24 +241,24 @@ def getOnlyIpfsHash(path):
     return True, result_ipfs_hash
 
 
-def getIpfsHash(ipfsHash, resultsFolder, storagePaid):
+def get_ipfs_hash(ipfsHash, path, is_storage_paid):
     # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor
-    # cmd: ipfs get $ipfsHash --output=$resultsFolder
+    # cmd: ipfs get $ipfsHash --output=$path
     res = (
-        subprocess.check_output(["ipfs", "get", ipfsHash, "--output=" + resultsFolder]).decode("utf-8").strip()
+        subprocess.check_output(["ipfs", "get", ipfsHash, f"--output={path}"]).decode("utf-8").strip()
     )  # Wait Max 5 minutes.
     print(res)
 
     # TODO: pin if storage is paid
-    if storagePaid:
-        res = (
+    if is_storage_paid:
+        result = (
             subprocess.check_output(["ipfs", "pin", "add", ipfsHash]).decode("utf-8").strip()
         )  # pin downloaded ipfs hash
-        logging.info(res)
+        logging.info(result)
 
 
-def isIpfsHashExists(ipfsHash, attemptCount):
-    for attempt in range(attemptCount):
+def is_ipfs_hash_exists(ipfsHash, attempt_count):
+    for attempt in range(attempt_count):
         logging.info(f"Attempting to check IPFS file {ipfsHash}")
         # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
         # cmd: timeout 300 ipfs object stat $jobKey
@@ -268,7 +277,7 @@ def isIpfsHashExists(ipfsHash, attemptCount):
         return False, None, None
 
 
-def calculateFolderSize(path, pathType):
+def calculate_folder_size(path, pathType):
     """Return the size of the given path in MB."""
     byte_size = 0
     if pathType == "f":
@@ -351,7 +360,7 @@ def execute_shell_command(command, my_env=None, is_exit_flag=False) -> Tuple[boo
         else:
             result = subprocess.check_output(command, env=my_env).decode("utf-8").strip()
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
         if is_exit_flag:
             terminate()
         return False, result
@@ -372,7 +381,7 @@ def silent_remove(path) -> bool:
         logging.info(f"{path} is removed")
         return True
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
         return False
 
 
@@ -504,7 +513,7 @@ def eblocbroker_function_call(f, _attempt):
         return False, result
 
 
-def isIpfsHashCached(ipfsHash):
+def is_ipfs_hash_cached(ipfsHash):
     # cmd: ipfs refs local | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
     p1 = subprocess.Popen(["ipfs", "refs", "local"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", "-c", ipfsHash], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -555,7 +564,7 @@ def is_transaction_passed(tx_hash):
 
 
 # Checks that does IPFS run on the background or not
-def is_ipfs_on():
+def is_ipfs_running():
     # cmd: ps aux | grep '[i]pfs daemon' | wc -l
     p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", "[i]pfs\ daemon"], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -580,6 +589,7 @@ def is_ipfs_on():
         logging.info(res)
     else:
         logging.info("IPFS is already on.")
+        return True
 
 
 def isRunExistInTar(tar_path):
