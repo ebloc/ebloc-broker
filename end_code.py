@@ -314,7 +314,7 @@ def end_code(job_key, index, cloudStorageID, shareToken, received_block_number, 
         else:  # we failed all the attempts - abort
             sys.exit()
 
-        # dataTransferOut = lib.calculateFolderSize(results_folder, 'd')
+        # dataTransferOut = lib.calculate_folder_size(results_folder, 'd')
         # log.write('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB')
         result_ipfs_hash = lib.getIpfsParentHash(result_ipfs_hash)
         command = ["ipfs", "pin", "add", result_ipfs_hash]
@@ -363,7 +363,7 @@ def end_code(job_key, index, cloudStorageID, shareToken, received_block_number, 
         else:  # we failed all the attempts - abort
             sys.exit()
 
-        # dataTransferOut = lib.calculateFolderSize(results_folder + '/result.tar.gz.minilock', 'f')
+        # dataTransferOut = lib.calculate_folder_size(results_folder + '/result.tar.gz.minilock', 'f')
         # log.write('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB')
         log_ec.info(f"result_ipfs_hash={result_ipfs_hash}")
         command = ["ipfs", "pin", "add", result_ipfs_hash]
@@ -393,7 +393,7 @@ def end_code(job_key, index, cloudStorageID, shareToken, received_block_number, 
         command = ["tar", "-N", date, "-jcvf", output_file_name] + glob.glob("*")
         is_status, result = execute_shell_command(command, None, True)
         log_ec.info(f"Files to be archived using tar: \n {result}")
-        dataTransferOut = lib.calculateFolderSize(output_file_name, "f")
+        dataTransferOut = lib.calculate_folder_size(output_file_name, "f")
         log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
         for attempt in range(5):
             p, output, err = upload_results_to_eudat(encodedShareToken, output_file_name)
@@ -428,7 +428,7 @@ def end_code(job_key, index, cloudStorageID, shareToken, received_block_number, 
         is_status, result = execute_shell_command(command, None, True)
         log_ec.info(result)
         time.sleep(0.25)
-        dataTransferOut = lib.calculateFolderSize(output_file_name, "f")
+        dataTransferOut = lib.calculate_folder_size(output_file_name, "f")
         log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
         if "folder" in mimeType:  # Received job is in folder format
             log_ec.info("mimeType=folder")
