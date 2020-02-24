@@ -10,7 +10,6 @@ import time
 from pdb import set_trace as bp
 
 import config
-import driverFunc
 from config import logging
 from contractCalls.blockNumber import blockNumber
 from contractCalls.doesProviderExist import doesProviderExist
@@ -24,10 +23,11 @@ from contractCalls.is_web3_connected import is_web3_connected
 from contractCalls.LogJob import run_log_job
 from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
+from driver_ipfs import IpfsClass
 from imports import connect
 from lib import (BLOCK_READ_FROM_FILE, EBLOCPATH, EUDAT_USE, HOME, IPFS_USE, LOG_PATH, OC_USER,
                  PROGRAM_PATH, PROVIDER_ID, RPC_PORT, WHOAMI, CacheType, StorageID,
-                 convertBytes32ToIpfs, execute_shell_command, get_idle_cores, is_ipfs_on, isSlurmOn,
+                 convertBytes32ToIpfs, execute_shell_command, get_idle_cores, is_ipfs_running, isSlurmOn,
                  job_state_code, log, terminate)
 from lib_owncloud import eudat_login
 
@@ -192,7 +192,7 @@ contractAddress = contract["address"]
 logging.info("{0: <18}".format("contract_address:") + contractAddress)
 
 if IPFS_USE:
-    is_ipfs_on()
+    is_ipfs_running()
 
 provider = config.w3.toChecksumAddress(PROVIDER_ID)
 
@@ -419,9 +419,9 @@ while True:
             requesterIDmd5 = hashlib.md5(requesterID.encode("utf-8")).hexdigest()
             slurmPendingJobCheck()
             main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
-            if main_cloud_storage_id == StorageID.IPFS.value:
-                log(f"New job has been received. IPFS call |{time.ctime()}", "blue")
-                driverFunc.driverIpfs(logged_job, job_info, requesterIDmd5)
+            if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
+                ipfs = IpfsClass(logged_job, job_info, requesterIDmd5, is_already_cached)
+                ipfs.run()
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
                     eudat_login()
@@ -429,9 +429,6 @@ while True:
                 eudat = EudatClass(logged_job, job_info, requesterIDmd5, is_already_cached, oc)
                 eudat.run()
                 # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requesterIDmd5))
-            elif main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-                log(f"New job has been received. IPFS with miniLock call | {time.ctime()}", "blue")
-                driverFunc.driverIpfs(logged_job, job_info, requesterIDmd5)
             elif main_cloud_storage_id == StorageID.GDRIVE.value:
                 gdrive = GdriveClass(logged_job, job_info, requesterIDmd5, is_already_cached)
                 gdrive.run()

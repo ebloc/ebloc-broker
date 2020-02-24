@@ -26,12 +26,12 @@ class GdriveClass:
         self.dataTransferIn = 0
         self.dataTransferIn = jobInfo[0]["dataTransferIn"]
         self.is_already_cached = is_already_cached
-        self.results_folder_prev = ""
-        self.results_folder = ""
         self.source_code_hash_list = loggedJob.args["sourceCodeHash"]
         self.job_key_list = []
         self.md5sum_dict = {}
         self.folder_path_to_download = {}
+        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.job_key}_{self.index}"
+        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
         self.private_cache_folder = ""
 
     def assign_folder_path_to_download(self, _id, source_code_hash, path):
@@ -344,9 +344,7 @@ class GdriveClass:
             return False
 
     def run(self) -> bool:
-        log(f"=> New job has been received. Googe Drive call |{time.ctime()}", "blue")
-        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.job_key}_{self.index}"
-        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        log(f"=> New job has been received. Googe Drive call | {time.ctime()}", "blue")
         self.private_cache_folder = f"{PROGRAM_PATH}/{self.requesterID}/cache"
 
         is_status, provider_info = get_provider_info(self.loggedJob.args["provider"])

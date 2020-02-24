@@ -33,16 +33,17 @@ class EudatClass:
         self.private_dir = f"{PROGRAM_PATH}/{requesterID}/cache"
         self.public_dir = f"{PROGRAM_PATH}/cache"
         self.cache_type = loggedJob.args["cacheType"]
-        self.source_code_hash_list = loggedJob.args["sourceCodeHash"]
+        self.source_code_hashes = loggedJob.args["sourceCodeHash"]
         self.dataTransferIn = jobInfo[0]["dataTransferIn"]
         self.already_cached = already_cached
         self.oc = oc
         self.shareID = {}
         self.folder_type_dict = {}
+        self.tar_downloaded_path = {}
         self.glob_cache_folder = ""
         self.source_code_hashes_to_process: List[str] = []
-        self.results_folder_prev = ""
-        self.results_folder = ""
+        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.jobKey}_{self.index}"
+        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
 
     def is_run_exist_in_tar(self, tarPath):
         try:
@@ -115,8 +116,9 @@ class EudatClass:
 
             cached_folder = f"{self.glob_cache_folder}/{folder_name}"
             cached_tar_file = f"{cached_folder}.tar.gz"
+
             if not os.path.isfile(cached_tar_file):
-                # if os.path.isfile(cached_folder + '/run.sh'):
+                # if os.path.isfile(cached_foldernnn + '/run.sh'):
                 if os.path.isdir(cached_folder):
                     res = (
                         subprocess.check_output(
@@ -160,7 +162,8 @@ class EudatClass:
                 # elif folder_type_dict[folder_name] == 'folder':
                 #    res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cached_folder]).decode('utf-8').strip()
                 if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
-                    logging.info(f"{folder_name}.tar.gz is already cached.")
+                    logging.info(f"{cached_tar_file} is already cached.")
+                    self.tar_downloaded_path[folder_name] = cached_tar_file
                     return True
                 else:
                     if not self.eudat_download_folder(self.glob_cache_folder, cached_folder, folder_name):
@@ -169,11 +172,13 @@ class EudatClass:
 
     def eudat_download_folder(self, results_folder_prev, results_folder, folder_name) -> bool:
         # Assumes job is sent as .tar.gz file
-        logging.info(f"Downloading output.zip for {folder_name} -> {results_folder_prev} / {folder_name}.tar.gz ...")
+        logging.info(f"Downloading output.zip for {folder_name} -> {results_folder_prev}/{folder_name}.tar.gz ...")
         for attempt in range(5):
             try:
                 f_name = f"/{folder_name}/{folder_name}.tar.gz"
-                status = self.oc.get_file(f_name, f"{results_folder_prev}/{folder_name}.tar.gz")  # type: ignore
+                cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
+                status = self.oc.get_file(f_name, cached_tar_file)
+                self.tar_downloaded_path[folder_name] = cached_tar_file
                 if status:
                     logging.info("Done")
                 else:
@@ -185,7 +190,7 @@ class EudatClass:
                 break
         else:
             status, result = refund(
-                PROVIDER_ID, PROVIDER_ID, self.jobKey, self.index, self.jobID, self.source_code_hash_list
+                PROVIDER_ID, PROVIDER_ID, self.jobKey, self.index, self.jobID, self.source_code_hashes
             )  # Complete refund backte requester
             if not status:
                 logging.error(result)
@@ -269,7 +274,6 @@ class EudatClass:
                         if status:
                             logging.info("Successfull added into mongodb")
                         else:
-                            bp()
                             logging.error("E: Something is wrong, Not added into mongodb")
                         # eudatFolderName = str(input_folder_name)
                         logging.info(f"Found. Name={folder_name} | ShareID={_shareID} | share_token={share_token}")
@@ -277,10 +281,10 @@ class EudatClass:
                         logging.info("shareID is accepted.")
                         accept_flag += 1
                         break
-            if accept_flag is len(self.source_code_hash_list):
+            if accept_flag is len(self.source_code_hashes):
                 break
         else:
-            if mongodb_accept_flag is len(self.source_code_hash_list):
+            if mongodb_accept_flag is len(self.source_code_hashes):
                 logging.info("Already exists on mongodb")
             else:
                 logging.error(f"E: Couldn't find a shared file. Found ones are: {self.shareID}")
@@ -307,7 +311,7 @@ class EudatClass:
         """
         # ----------
         # TODO: delete // refund check
-        status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, source_code_hash_list)
+        status, result = refund(PROVIDER_ID, PROVIDER_ID, jobKey, index, jobID, source_code_hashes)
         if not status:
             logging.error(result)
             return False
@@ -317,12 +321,11 @@ class EudatClass:
         sys.exit()
         # ----------
         """
-        log(f"New job has been received. EUDAT call |{time.ctime()}", "blue")
-        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.jobKey}_{self.index}"
-        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        log(f"New job has been received. EUDAT call | {time.ctime()}", "blue")
 
-        for i in range(0, len(self.source_code_hash_list)):
-            self.source_code_hashes_to_process.append(config.w3.toText(self.source_code_hash_list[i]))
+        for source_code_hash in self.source_code_hashes:
+            self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
+
         status, provider_info = get_provider_info(self.loggedJob.args["provider"])
         status, used_dataTransferIn = self.eudat_get_share_token(provider_info["fID"])
         if not status:
@@ -331,10 +334,10 @@ class EudatClass:
         if used_dataTransferIn > self.dataTransferIn:
             # Full refund
             logging.error(
-                "E: requested size to download the sourceCode and datafiles is greater that the given amount."
+                "E: requested size to download the source code and data files is greater that the given amount."
             )
             status, result = refund(
-                PROVIDER_ID, PROVIDER_ID, self.jobKey, self.index, self.jobID, self.source_code_hash_list
+                PROVIDER_ID, PROVIDER_ID, self.jobKey, self.index, self.jobID, self.source_code_hashes
             )
             if not status:
                 logging.error(result)
@@ -354,11 +357,12 @@ class EudatClass:
             folder_name = source_code_hash_text
             if self.folder_type_dict[folder_name] == "tar.gz":
                 # Untar cached tar file into private directory
+                tar_to_extract = self.tar_downloaded_path[folder_name]  # f"{self.glob_cache_folder}/{folder_name}.tar.gz"
                 status, result = lib.execute_shell_command(
                     [
                         "tar",
                         "-xf",
-                        f"{self.glob_cache_folder}/{folder_name}.tar.gz",
+                        tar_to_extract,
                         "--strip-components=1",
                         "-C",
                         self.results_folder,
@@ -390,11 +394,10 @@ class EudatClass:
                 self.results_folder,
                 self.results_folder_prev,
                 self.dataTransferIn,
-                self.source_code_hash_list,
+                self.source_code_hashes,
                 self.jobInfo,
             )
         except Exception:
-            lib.terminate()  # TODO: delete
             logging.error(f"E: Failed to call sbatchCall() function. {traceback.format_exc()}")
             return False
 
