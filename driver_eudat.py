@@ -15,41 +15,28 @@ import lib
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.refund import refund
-from lib import (PROGRAM_PATH, PROVIDER_ID, CacheType, convert_byte_to_mb, log, sbatchCall,
-                 silent_remove)
+from lib import (PROGRAM_PATH, PROVIDER_ID, WHERE, CacheType, convert_byte_to_mb, generate_md5_sum,
+                 log, sbatchCall, silent_remove)
 from lib_mongodb import add_item_shareid, find_key
+from storage_class import Storage
 
 mc = MongoClient()
 
 
-class EudatClass:
-    def __init__(self, loggedJob, jobInfo, requesterID, already_cached, oc):
-        self.requesterID = requesterID
-        self.jobInfo = jobInfo
-        self.loggedJob = loggedJob
-        self.jobKey = self.loggedJob.args["jobKey"]
-        self.index = self.loggedJob.args["index"]
-        self.jobID = 0
-        self.private_dir = f"{PROGRAM_PATH}/{requesterID}/cache"
-        self.public_dir = f"{PROGRAM_PATH}/cache"
-        self.cache_type = loggedJob.args["cacheType"]
-        self.source_code_hashes = loggedJob.args["sourceCodeHash"]
-        self.dataTransferIn = jobInfo[0]["dataTransferIn"]
-        self.already_cached = already_cached
-        self.oc = oc
+class EudatClass(Storage):
+    def __init__(self, loggedJob, jobInfo, requesterID, is_already_cached, oc):
+        super(self.__class__, self).__init__(loggedJob, jobInfo, requesterID, is_already_cached, oc)
         self.shareID = {}
-        self.folder_type_dict = {}
         self.tar_downloaded_path = {}
-        self.glob_cache_folder = ""
         self.source_code_hashes_to_process: List[str] = []
-        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.jobKey}_{self.index}"
-        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        for source_code_hash in self.source_code_hashes:
+            self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
 
-    def is_run_exist_in_tar(self, tarPath):
+    def is_run_exist_in_tar(self, tar_path):
         try:
             FNULL = open(os.devnull, "w")
             res = (
-                subprocess.check_output(["tar", "ztf", tarPath, "--wildcards", "*/run.sh"], stderr=FNULL)
+                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL)
                 .decode("utf-8")
                 .strip()
             )
@@ -72,116 +59,78 @@ class EudatClass:
         return True
 
     def cache(self, folder_name, _id):
-        if self.cache_type[_id] == CacheType.PRIVATE.value:
-            # First checking does is already exist under public cache directory
-            self.glob_cache_folder = self.public_dir
-            if not os.path.isdir(self.glob_cache_folder):  # If folder does not exist
-                os.makedirs(self.glob_cache_folder)
+        self.is_cached(folder_name, _id)
 
-            cached_folder = f"{self.glob_cache_folder}/{folder_name}"
-            cached_tar_file = f"{self.glob_cache_folder}/{folder_name}.tar.gz"
-            if not os.path.isfile(cached_tar_file):
-                if os.path.isfile(f"{cached_folder}/run.sh"):
-                    res = (
-                        subprocess.check_output(["bash", f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh", cached_folder])
-                        .decode("utf-8")
-                        .strip()
+        if self.cache_type[_id] == CacheType.PRIVATE.value:
+            # Download into private directory at $HOME/.eBlocBroker/cache
+            cached_folder = self.private_dir
+            log("=> Privately cached", "blue")
+        elif self.cache_type[_id] == CacheType.PUBLIC.value:
+            cached_folder = self.public_dir
+            log("=> Publicly cached", "blue")
+
+        cached_folder = f"{cached_folder}"
+        cached_tar_file = f"{cached_folder}/{folder_name}.tar.gz"
+
+        if not os.path.isfile(cached_tar_file):
+            # if os.path.isfile(cached_foldernnn + '/run.sh'):
+            if os.path.isdir(cached_folder):
+                res = (
+                    subprocess.check_output(
+                        ["bash", f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh", f"{cached_folder}/{folder_name}.tar.gz"]
                     )
-                    if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
-                        self.folder_type_dict[folder_name] = "folder"
-                        self.cache_type[_id] = CacheType.PUBLIC.value
-                        logging.info("Already cached under the public directory...")
-                        return True
+                    .decode("utf-8")
+                    .strip()
+                )
+                if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
+                    self.folder_type_dict[folder_name] = "folder"
+                    log(f"=> {folder_name} is already cached under the public directory.", "blue")
+                    return True
+                else:
+                    self.folder_type_dict[folder_name] = "tar.gz"
+                    if not self.eudat_download_folder(cached_folder, cached_folder, folder_name):
+                        return False
             else:
                 self.folder_type_dict[folder_name] = "tar.gz"
-                res = (
-                    subprocess.check_output(["bash", f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh", cached_tar_file])
-                    .decode("utf-8")
-                    .strip()
-                )
-                if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
-                    self.cache_type[_id] = CacheType.PUBLIC.value
-                    logging.info("Already cached under the public directory.")
-                    return True
-
-        if self.cache_type[_id] == CacheType.PRIVATE.value or self.cache_type[_id] == CacheType.PUBLIC.value:
-            if self.cache_type[_id] == CacheType.PRIVATE.value:
-                # Download into private directory at $HOME/.eBlocBroker/cache
-                self.glob_cache_folder = self.private_dir
-            elif self.cache_type[_id] == CacheType.PUBLIC.value:
-                self.glob_cache_folder = self.public_dir
-
-            if not os.path.isdir(self.glob_cache_folder):  # If folder does not exist
-                os.makedirs(self.glob_cache_folder)
-
-            cached_folder = f"{self.glob_cache_folder}/{folder_name}"
-            cached_tar_file = f"{cached_folder}.tar.gz"
-
-            if not os.path.isfile(cached_tar_file):
-                # if os.path.isfile(cached_foldernnn + '/run.sh'):
-                if os.path.isdir(cached_folder):
-                    res = (
-                        subprocess.check_output(
-                            [
-                                "bash",
-                                f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh",
-                                f"{cached_folder}/{folder_name}.tar.gz",
-                            ]
-                        )
-                        .decode("utf-8")
-                        .strip()
-                    )
-                    if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
-                        self.folder_type_dict[folder_name] = "folder"
-                        logging.info(f"{folder_name} is already cached under the public directory.")
-                        return True
-                    else:
-                        if not self.eudat_download_folder(self.glob_cache_folder, cached_folder, folder_name):
-                            return False
-                else:
-                    if not self.eudat_download_folder(self.glob_cache_folder, cached_folder, folder_name):
-                        return False
-                    self.folder_type_dict[folder_name] = "tar.gz"
-
-                if (
-                    _id == 0
-                    and self.folder_type_dict[folder_name] == "tar.gz"
-                    and not self.is_run_exist_in_tar(cached_tar_file)
-                ):
-                    silent_remove(cached_tar_file)
+                if not self.eudat_download_folder(cached_folder, cached_folder, folder_name):
                     return False
-            else:  # Here we already know that its tar.gz file
-                self.folder_type_dict[folder_name] = "tar.gz"
-                res = (
-                    subprocess.check_output(["bash", f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh", cached_tar_file])
-                    .decode("utf-8")
-                    .strip()
-                )
-                # if folder_type_dict[folder_name] == 'tar.gz':
-                #    res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cached_tar_file]).decode('utf-8').strip()
-                # elif folder_type_dict[folder_name] == 'folder':
-                #    res = subprocess.check_output(['bash', lib.EBLOCPATH + '/scripts/generateMD5sum.sh', cached_folder]).decode('utf-8').strip()
-                if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
-                    logging.info(f"{cached_tar_file} is already cached.")
-                    self.tar_downloaded_path[folder_name] = cached_tar_file
-                    return True
-                else:
-                    if not self.eudat_download_folder(self.glob_cache_folder, cached_folder, folder_name):
-                        return False
+
+            if (
+                _id == 0
+                and self.folder_type_dict[folder_name] == "tar.gz"
+                and not self.is_run_exist_in_tar(cached_tar_file)
+            ):
+                silent_remove(cached_tar_file)
+                return False
+        else:  # Here we already know that its tar.gz file
+            self.folder_type_dict[folder_name] = "tar.gz"
+            res = (
+                subprocess.check_output(["bash", f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh", cached_tar_file])
+                .decode("utf-8")
+                .strip()
+            )
+            if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
+                log(f"=> {cached_tar_file} is already cached.", "blue")
+                self.tar_downloaded_path[folder_name] = cached_tar_file
+                return True
+            else:
+                if not self.eudat_download_folder(cached_folder, cached_folder, folder_name):
+                    return False
         return True
 
     def eudat_download_folder(self, results_folder_prev, results_folder, folder_name) -> bool:
         # Assumes job is sent as .tar.gz file
-        logging.info(f"Downloading output.zip for {folder_name} -> {results_folder_prev}/{folder_name}.tar.gz ...")
+        cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
+        logging.info(f"[ {WHERE(1)} ] - Downloading output.zip for {folder_name} -> {cached_tar_file}")
         for attempt in range(5):
             try:
                 f_name = f"/{folder_name}/{folder_name}.tar.gz"
-                cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
                 status = self.oc.get_file(f_name, cached_tar_file)
                 self.tar_downloaded_path[folder_name] = cached_tar_file
                 if status:
                     logging.info("Done")
                 else:
+                    logging.error("Something is wrong")
                     return False
             except Exception:
                 logging.error(f"E: Failed to download eudat file.\n{traceback.format_exc()}")
@@ -190,7 +139,7 @@ class EudatClass:
                 break
         else:
             status, result = refund(
-                PROVIDER_ID, PROVIDER_ID, self.jobKey, self.index, self.jobID, self.source_code_hashes
+                PROVIDER_ID, PROVIDER_ID, self.job_key, self.index, self.jobID, self.source_code_hashes
             )  # Complete refund backte requester
             if not status:
                 logging.error(result)
@@ -207,7 +156,7 @@ class EudatClass:
             logging.error(f"{self.private_dir} does not exist")
             return False
 
-        shareID_file = f"{self.private_dir}/{self.jobKey}_shareID.json"
+        shareID_file = f"{self.private_dir}/{self.job_key}_shareID.json"
         accept_flag = 0
         for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
             folder_name = source_code_hash_text
@@ -300,7 +249,7 @@ class EudatClass:
         size_to_download = 0
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
-            if not self.already_cached[folder_name]:
+            if not self.is_already_cached[folder_name]:
                 info = self.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
                 size_to_download += int(info.attributes["{DAV:}getcontentlength"])
 
@@ -323,9 +272,6 @@ class EudatClass:
         """
         log(f"New job has been received. EUDAT call | {time.ctime()}", "blue")
 
-        for source_code_hash in self.source_code_hashes:
-            self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
-
         status, provider_info = get_provider_info(self.loggedJob.args["provider"])
         status, used_dataTransferIn = self.eudat_get_share_token(provider_info["fID"])
         if not status:
@@ -337,7 +283,7 @@ class EudatClass:
                 "E: requested size to download the source code and data files is greater that the given amount."
             )
             status, result = refund(
-                PROVIDER_ID, PROVIDER_ID, self.jobKey, self.index, self.jobID, self.source_code_hashes
+                PROVIDER_ID, PROVIDER_ID, self.job_key, self.index, self.jobID, self.source_code_hashes
             )
             if not status:
                 logging.error(result)
@@ -350,23 +296,13 @@ class EudatClass:
         if not status:
             return False
 
-        if not os.path.isdir(self.results_folder):
-            os.makedirs(self.results_folder)
-
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
             if self.folder_type_dict[folder_name] == "tar.gz":
                 # Untar cached tar file into private directory
-                tar_to_extract = self.tar_downloaded_path[folder_name]  # f"{self.glob_cache_folder}/{folder_name}.tar.gz"
+                tar_to_extract = self.tar_downloaded_path[folder_name]
                 status, result = lib.execute_shell_command(
-                    [
-                        "tar",
-                        "-xf",
-                        tar_to_extract,
-                        "--strip-components=1",
-                        "-C",
-                        self.results_folder,
-                    ]
+                    ["tar", "-xf", tar_to_extract, "--strip-components=1", "-C", self.results_folder]
                 )
                 if result != "":
                     print(result)
@@ -378,12 +314,12 @@ class EudatClass:
         try:
             logging.info(f"dataTransferIn={self.dataTransferIn}")
             try:
-                share_token = self.shareID[self.jobKey]["share_token"]
+                share_token = self.shareID[self.job_key]["share_token"]
             except KeyError:
-                status, share_token = find_key(mc["eBlocBroker"]["shareID"], self.jobKey)
+                status, share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
                 if not status:
                     logging.error(
-                        f"E: Failed to call sbatchCall() function. shareID cannot detect key for {self.jobKey}"
+                        f"E: Failed to call sbatchCall() function. shareID cannot detect key for {self.job_key}"
                     )
                     return False
 

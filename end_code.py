@@ -18,6 +18,7 @@ from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
 from lib import PROVIDER_ID, execute_shell_command
+from lib_gdrive import get_gdrive_file_info
 
 eBlocBroker, w3 = connect()
 home_dir = expanduser("~")
@@ -416,7 +417,7 @@ def end_code(job_key, index, cloudStorageID, shareToken, received_block_number, 
         if not is_status:
             return False
 
-        mimeType = lib.get_gdrive_file_info(gdriveInfo, "Mime")
+        mimeType = get_gdrive_file_info(gdriveInfo, "Mime")
         log_ec.info(f"mime_type={mimeType}")
         os.chdir(results_folder)
         # if 'folder' in mimeType:  # Received job is in folder format
