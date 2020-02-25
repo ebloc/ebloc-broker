@@ -8,24 +8,16 @@ import config
 import lib
 from config import logging
 from lib import PROGRAM_PATH, is_ipfs_running, log, silent_remove
+from storage_class import Storage
 
 
-class IpfsClass:
-    def __init__(self, loggedJob, jobInfo, requesterID, already_cached, oc):
+class IpfsClass(Storage):
+    def __init__(self, loggedJob, jobInfo, requesterID, is_already_cached, oc=None):
+        super(self.__class__, self).__init__(loggedJob, jobInfo, requesterID, is_already_cached, oc)
         # cacheType is should be public on IPFS
-        self.requesterID = requesterID
-        self.jobInfo = jobInfo
-        self.loggedJob = loggedJob
-        self.requesterID = requesterID
-        self.jobKey = self.loggedJob.args["jobKey"]
-        self.index = self.loggedJob.args["index"]
-        self.source_code_hasheses = loggedJob.args["sourceCodeHash"]
-        self.cloudStorageID = loggedJob.args["cloudStorageID"]
-        self.shareToken = "-1"
         # if the requested file is already cached, it stays as 0
         self.dataTransferIn = 0
-        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.jobKey}_{self.index}"
-        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        self.share_token = "-1"  # Constant value for Gdrive
 
     def run(self):
         log(f"=> New job has been received. IPFS call | {time.ctime()}", "blue")

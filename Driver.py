@@ -27,8 +27,8 @@ from driver_ipfs import IpfsClass
 from imports import connect
 from lib import (BLOCK_READ_FROM_FILE, EBLOCPATH, EUDAT_USE, HOME, IPFS_USE, LOG_PATH, OC_USER,
                  PROGRAM_PATH, PROVIDER_ID, RPC_PORT, WHOAMI, CacheType, StorageID,
-                 convertBytes32ToIpfs, execute_shell_command, get_idle_cores, is_ipfs_running, isSlurmOn,
-                 job_state_code, log, terminate)
+                 convertBytes32ToIpfs, execute_shell_command, get_idle_cores, is_ipfs_running,
+                 isSlurmOn, job_state_code, log, terminate)
 from lib_owncloud import eudat_login
 
 # Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
