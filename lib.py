@@ -116,6 +116,11 @@ Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
+def generate_md5_sum(path):
+    result = subprocess.check_output(["bash", f"{EBLOCPATH}/scripts/generateMD5sum.sh", path]).decode("utf-8").strip()
+    return result
+
+
 def get_tx_status(status, result):
     print("tx_hash=" + result)
     receipt = config.w3.eth.waitForTransactionReceipt(result)
@@ -317,23 +322,23 @@ def printc(my_string, color=""):
     print(stylize(my_string, fg(color)))
 
 
-def log(my_string, color="", newLine=True, file_name=f"{LOG_PATH}/transactions/providerOut.txt"):
+def log(text, color="", is_new_line=True, file_name=f"{LOG_PATH}/transactions/providerOut.txt"):
     if color != "":
-        if newLine:
-            print(colored(my_string, color))
+        if is_new_line:
+            print(colored(f"\033[1m{text}\033[0m", color))
         else:
-            print(colored(my_string, color), end="")
+            print(colored(f"\033[1m{text}\033[0m", color), end="")
     else:
-        if newLine:
-            print(my_string)
+        if is_new_line:
+            print(text)
         else:
-            print(my_string, end="")
+            print(text, end="")
 
     f = open(file_name, "a")
-    if newLine:
-        f.write(my_string + "\n")
+    if is_new_line:
+        f.write(f"{text}\n")
     else:
-        f.write(my_string)
+        f.write(text)
 
     f.close()
 
@@ -345,7 +350,7 @@ def subprocess_call_attempt(command, attempt_count, print_flag=0):
         except Exception:
             time.sleep(0.1)
             if count == 0 and print_flag == 0:
-                logging.error(traceback.format_exc())
+                logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
         else:
             return True, result
     else:
@@ -378,7 +383,7 @@ def silent_remove(path) -> bool:
         else:
             return False
 
-        logging.info(f"{path} is removed")
+        logging.info(f"{WHERE(1)} - {path} is removed")
         return True
     except Exception:
         logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
@@ -408,94 +413,6 @@ def echo_grep_awk(str_data, grep_str, awkColumn):
     p3 = subprocess.Popen(["awk", "{print $" + awkColumn + "}"], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
     return p3.communicate()[0].decode("utf-8").strip()
-
-
-def gdrive_size(
-    key, mimeType, folderName, gdrive_info, results_folder_prev, source_code_hash_list, shouldAlreadyCached
-):
-    sourceCode_key = None
-    if "folder" in mimeType:
-        job_key_list = []
-        # rounded_size = 0
-        size_to_download = 0
-        command = ["gdrive", "list", "--query", "'" + key + "'" + " in parents"]
-        status, result = execute_shell_command(command, None, True)
-
-        dataFiles_json_id = echo_grep_awk(result, "meta_data.json", "1")
-        status, res = subprocess_call_attempt(
-            ["gdrive", "download", "--recursive", dataFiles_json_id, "--force", "--path", results_folder_prev], 10
-        )
-        if not status:
-            return False
-
-        # key for the sourceCode elimination result*.tar.gz files
-        key = echo_grep_awk(result, f"{folderName}.tar.gz", "1")
-        sourceCode_key = key
-        status, gdrive_info = subprocess_call_attempt(["gdrive", "info", "--bytes", key, "-c", GDRIVE_METADATA], 10)
-        if not status:
-            return False
-
-        md5sum = get_gdrive_file_info(gdrive_info, "Md5sum")
-        if md5sum != source_code_hash_list[0].decode("utf-8"):
-            # Checks md5sum obtained from gdrive and given by the user
-            logging.info("E: md5sum does not match with the provided data[0]")
-            return False, 0, [], sourceCode_key
-
-        byte_size = int(get_gdrive_file_info(gdrive_info, "Size"))
-        logging.info(f"sourceCodeHash[0]_size={byte_size} bytes")
-        if not shouldAlreadyCached[source_code_hash_list[0].decode("utf-8")]:
-            size_to_download = byte_size
-
-        logging.info(f"meta_data_path={results_folder_prev}/meta_data.json")
-        with open(f"{results_folder_prev}/meta_data.json") as json_file:
-            meta_data = json.load(json_file)
-
-        for idx, (k, v) in enumerate(meta_data.items(), start=1):
-            job_key_list.append(str(v))
-            _key = str(v)
-            status, gdrive_info = subprocess_call_attempt(
-                ["gdrive", "info", "--bytes", _key, "-c", GDRIVE_METADATA], 10
-            )
-            if not status:
-                return False
-
-            md5sum = get_gdrive_file_info(gdrive_info, "Md5sum")
-            if md5sum != source_code_hash_list[idx].decode("utf-8"):
-                # Checks md5sum obtained from gdrive and given by the user
-                print(idx)
-                logging.error(
-                    f"md5sum={md5sum} | given={source_code_hash_list[idx].decode('utf-8')} \n"
-                    f"E: md5sum does not match with the provided data[{idx}]"
-                )
-                return False, 0, [], sourceCode_key
-
-            _size = int(get_gdrive_file_info(gdrive_info, "Size"))
-            logging.info(f"sourceCodeHash[{idx}]_size={_size} bytes")
-            byte_size += _size
-            if not shouldAlreadyCached[source_code_hash_list[idx].decode("utf-8")]:
-                size_to_download += _size
-
-        ret_size = int(convert_byte_to_mb(size_to_download))
-        logging.info(f"Total_size={byte_size} bytes | Size to download={size_to_download} bytes ==> {ret_size} MB")
-        return True, ret_size, job_key_list, sourceCode_key
-    else:
-        return False, 0, [], sourceCode_key
-
-    """
-    elif 'gzip' in mimeType:
-        byte_size = lib.get_gdrive_file_info(gdrive_info, 'Size')
-        rounded_size = int(convert_byte_to_mb(byte_size))
-    """
-
-
-def getMd5sum(gdrive_info):
-    # cmd: echo gdrive_info | grep \'Mime\' | awk \'{print $2}\'
-    return echo_grep_awk(gdrive_info, "Md5sum", "2")
-
-
-def get_gdrive_file_info(gdrive_info, _type):
-    # cmd: echo gdrive_info | grep _type | awk \'{print $2}\'
-    return echo_grep_awk(gdrive_info, _type, "2")
 
 
 def eblocbroker_function_call(f, _attempt):
