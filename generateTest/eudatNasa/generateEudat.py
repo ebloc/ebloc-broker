@@ -8,7 +8,7 @@ from os.path import expanduser
 
 import owncloud
 
-from lib_owncloud import eudat_initialize_folder, singleFolderShare
+from lib_owncloud import eudat_initialize_folder, share_single_folder
 
 home = expanduser("~")
 path = os.getcwd()
@@ -45,7 +45,7 @@ with open(path + "/../nasa.txt") as test:
             tarHash = eudat_initialize_folder("ipfs", oc)  # Should give folder name
             time.sleep(1)
             # After run.sh is update share the ipfs through eudat
-            print(singleFolderShare(tarHash, oc))
+            print(share_single_folder(tarHash, oc))
             if flag == 1:
                 hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
 

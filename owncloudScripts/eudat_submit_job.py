@@ -11,9 +11,9 @@ from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import CacheType, StorageID
-from lib_owncloud import eudat_initialize_folder, singleFolderShare
+from lib_owncloud import eudat_initialize_folder, share_single_folder
 
-# from lib_owncloud import isOcMounted
+# from lib_owncloud import is_oc_mounted
 
 
 def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
@@ -22,7 +22,7 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
     if eBlocBroker is None or w3 is None:
         return False, "web3 is not connected"
 
-    # if not isOcMounted():
+    # if not is_oc_mounted():
     #     return False, 'owncloud is not connected'
 
     provider = w3.toChecksumAddress(provider)  # netlab
@@ -44,7 +44,7 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
 
         sourceCodeHash = w3.toBytes(text=folder_hash)  # required to send string as bytes
         source_code_hash_list.append(sourceCodeHash)
-        if not singleFolderShare(folder_hash, oc, provider_info["fID"]):
+        if not share_single_folder(folder_hash, oc, provider_info["fID"]):
             sys.exit()
         time.sleep(1)
 
