@@ -5,10 +5,8 @@ import subprocess
 import sys
 import time
 import traceback
-
 import owncloud
-
-import lib
+from lib import terminate, compress_folder
 from config import logging
 
 
@@ -19,7 +17,7 @@ def eudat_login(user, password_path):
 
     if user is None or user == "":
         logging.error(f"User is none")
-        lib.terminate()
+        terminate()
 
     with open(password_path, "r") as content_file:
         password_path = content_file.read().strip()
@@ -36,24 +34,24 @@ def eudat_login(user, password_path):
                 time.sleep(15)
             else:
                 logging.error(f"User is none")
-                lib.terminate()
+                terminate()
         else:
             break
     else:
         logging.error(f"User is none")
-        lib.terminate()
+        terminate()
 
     try:
         oc.list(".")
         logging.info("Success")
     except subprocess.CalledProcessError as e:
         logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
-        lib.terminate()
+        terminate()
 
     return oc
 
 
-def singleFolderShare(folder_name, oc, fID) -> bool:
+def share_single_folder(folder_name, oc, fID) -> bool:
     try:
         # folder_names = os.listdir('/oc')
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
@@ -69,46 +67,45 @@ def singleFolderShare(folder_name, oc, fID) -> bool:
         return False
 
 
-def eudat_initialize_folder(folderToShare, oc):
+def eudat_initialize_folder(folderToShare, oc) -> bool:
     dir_path = os.path.dirname(folderToShare)
-    tar_hash = lib.compress_folder(folderToShare)
+    tar_hash = compress_folder(folderToShare)
     try:
         res = oc.mkdir(tar_hash)
         print(res)
     except Exception:
         print("Folder is already created.")
-        # print(traceback.format_exc())
+        print(traceback.format_exc())
 
     try:
         tar_file = f"./{tar_hash}/{tar_hash}.tar.gz"
         print(tar_file)
         status = oc.put_file(tar_file, f"{dir_path}/{tar_hash}.tar.gz")
         if not status:
-            sys.exit()
+            return False
 
         os.remove(f"{dir_path}/{tar_hash}.tar.gz")
     except Exception:
         print(traceback.format_exc())
-        sys.exit()
+        return False
 
     return tar_hash
 
 
-def getSize(oc, f_name) -> int:
+def get_size(oc, f_name) -> int:
     return int(oc.file_info(f_name).attributes["{DAV:}getcontentlength"])
 
 
-def isOcMounted() -> bool:
+def is_oc_mounted() -> bool:
     dir_name = "/oc"
-    res = None
+    result = None
     try:
-        # cmd: findmnt --noheadings -lo source /oc
-        res = subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", dir_name]).decode("utf-8").strip()
+        result = subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", dir_name]).decode("utf-8").strip()
     except subprocess.CalledProcessError as e:
         print(f"E: {e}")
         return False
 
-    if not ("b2drop.eudat.eu/remote.php/webdav/" in res):
+    if not ("b2drop.eudat.eu/remote.php/webdav/" in result):
         print(
             "Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n"
             "Please do: \n"

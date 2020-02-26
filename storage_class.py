@@ -1,9 +1,15 @@
 import os
+import subprocess
+from config import logging
+from lib import PROGRAM_PATH, CacheType, generate_md5_sum, log, sbatchCall
+import traceback
 
-from lib import PROGRAM_PATH, CacheType, generate_md5_sum, log
+class BaseClass(object):
+    def whoami(self):
+        return type(self).__name__
 
 
-class Storage(object):
+class Storage(BaseClass):
     def __init__(self, loggedJob, jobInfo, requesterID, is_already_cached, oc=None):
         self.requesterID = requesterID
         self.jobInfo = jobInfo
@@ -25,6 +31,7 @@ class Storage(object):
         self.private_dir = f"{PROGRAM_PATH}/{requesterID}/cache"
         self.public_dir = f"{PROGRAM_PATH}/cache"
         self.folder_type_dict = {}
+        self.share_token = None
 
         if not os.path.isdir(self.private_dir):
             os.makedirs(self.private_dir)
@@ -35,10 +42,7 @@ class Storage(object):
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
-    def whoami(self):
-        return type(self).__name__
-
-    def is_md5sum_matches(self, path, name, id, folder_type, cache_type):
+    def is_md5sum_matches(self, path, name, id, folder_type, cache_type) -> bool:
         res = generate_md5_sum(path)
         if res == name:
             # Checking is already downloaded folder's hash matches with the given hash
@@ -49,10 +53,10 @@ class Storage(object):
 
             if cache_type == CacheType.PUBLIC.value:
                 self.folder_path_to_download[name] = self.public_dir
-                log(f"{name} is already cached under the public directory...", "blue")
+                log(f"=> {name} is already cached under the public directory...", "blue")
             elif cache_type == CacheType.PRIVATE.value:
                 self.folder_path_to_download[name] = self.private_dir
-                log(f"{name} is already cached under the private directory...", "blue")
+                log(f"=> {name} is already cached under the private directory...", "blue")
 
             return True
 
@@ -88,3 +92,41 @@ class Storage(object):
                 status = self.is_md5sum_matches(cached_tar_file, name, id, "", CacheType.PRIVATE.value)
 
         return status
+
+    def is_run_exists_in_tar(self, tar_path):
+        try:
+            FNULL = open(os.devnull, "w")
+            res = (
+                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL)
+                .decode("utf-8")
+                .strip()
+            )
+            FNULL.close()
+            if res.count("/") == 1:
+                # Main folder should contain the 'run.sh' file
+                logging.info("./run.sh exists under the parent folder")
+                return True
+            else:
+                logging.error("E: run.sh does not exist under the parent folder")
+                return False
+        except:
+            logging.error("E: run.sh does not exist under the parent folder")
+            return False
+
+    def sbatch_call(self) -> bool:
+        try:
+            sbatchCall(
+                self.loggedJob,
+                self.share_token,
+                self.requesterID,
+                self.results_folder,
+                self.results_folder_prev,
+                self.dataTransferIn,
+                self.source_code_hashes,
+                self.jobInfo,
+            )
+        except Exception:
+            logging.error(f"E: Failed to call sbatchCall() function. {traceback.format_exc()}")
+            return False
+
+        return True
