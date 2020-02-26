@@ -148,7 +148,7 @@ def gdrive_submit_job(provider):
     dataTransferOut = 1
 
     storageID_list = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    cacheType_list = [CacheType.PUBLIC.value, CacheType.PRIVATE.value]  # Covers public and private folders
+    cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]  # Covers public and private folders
     storage_hour_list = [1, 1]
     data_prices_set_blocknumber_list = [0, 0]
 

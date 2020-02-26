@@ -14,13 +14,13 @@ from imports import connect
 def submitJob(
     provider,
     key,
-    core,
-    coreMin,
+    core_list,
+    core_min_list,
     dataTransferIn_list,
     dataTransferOut,
     storageID_list,
     source_code_hashes,
-    cacheType_list,
+    cache_types_list,
     storageHour_list,
     accountID,
     jobPriceValue,
@@ -84,11 +84,11 @@ def submitJob(
             "E: key's length does not match with its original length, it should be 33. Please check your key length",
         )
 
-    for i in range(len(core)):
-        if core[i] > provider_info["availableCoreNum"]:
-            return (False, f"E: Requested core[{i}], which is {core[i]}, is greater than the provider's core number")
-        if coreMin[i] == 0:
-            return (False, "E: coreMin[" + str(i) + "] is provided as 0. Please provide non-zero value")
+    for idx, core in enumerate(core_list):
+        if core > provider_info["availableCoreNum"]:
+            return (False, f"E: Requested {core}, which is {core}, is greater than the provider's core number")
+        if core_min_list[idx] == 0:
+            return (False, "E: core_min_list[" + str(idx) + "] is provided as 0. Please provide non-zero value")
 
     for i in range(len(storageID_list)):
         if storageID_list[i] > 4:
@@ -97,15 +97,16 @@ def submitJob(
     if len(key) >= 64:
         return (False, "E: Length of key is greater than 64, please provide lesser")
 
-    for i in range(len(coreMin)):
-        if coreMin[i] > 1440:
-            return (False, "E: coreMin provided greater than 1440. Please provide smaller value")
+    for core_min in core_min_list:
+        if core_min > 1440:
+            return (False, "E: core_min_list provided greater than 1440. Please provide smaller value")
 
-    print(cacheType_list)
+    print(cache_types_list)
 
-    for i in range(len(cacheType_list)):
-        if cacheType_list[i] > 3:  # {0: private, 1: public}
-            return (False, f"E: cachType ({cacheType_list[i]}) provided greater than 1. Please provide smaller value")
+    for cache_type in cache_types_list:
+        if cache_type > 1:
+            # cache_type = {0: private, 1: public}
+            return (False, f"E: cachType ({cache_types_list[i]}) provided greater than 1. Please provide smaller value")
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
@@ -114,10 +115,10 @@ def submitJob(
         provider,
         provider_price_block_number,
         storageID_list,
-        cacheType_list,
+        cache_types_list,
         data_prices_set_blocknumber_list,
-        core,
-        coreMin,
+        core_list,
+        core_min_list,
         dataTransferOut,
     ]
 
@@ -139,8 +140,8 @@ if __name__ == "__main__":
     if len(sys.argv) == 10:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
         key = str(sys.argv[2])
-        core = int(sys.argv[3])
-        coreMin = int(sys.argv[4])
+        core_list = int(sys.argv[3])
+        core_min_list = int(sys.argv[4])
         dataTransfer = int(sys.argv[5])
         storageID_list = int(sys.argv[6])
         sourceCodeHash = str(sys.argv[7])
@@ -149,35 +150,35 @@ if __name__ == "__main__":
     elif len(sys.argv) == 13:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
         key = str(sys.argv[2])
-        core = int(sys.argv[3])
+        core_list = int(sys.argv[3])
         coreDayDuration = int(sys.argv[4])
         coreHour = int(sys.argv[5])
-        coreMin = int(sys.argv[6])
+        core_min_list = int(sys.argv[6])
         dataTransferIn = int(sys.argv[7])
         dataTransferOut = int(sys.argv[8])
         storageID_list = int(sys.argv[9])
         sourceCodeHash = str(sys.argv[10])
         storageHour_list = int(sys.argv[11])
         accountID = int(sys.argv[12])
-        coreMin = coreMin + coreHour * 60 + coreDayDuration * 1440
+        core_min_list = core_min_list + coreHour * 60 + coreDayDuration * 1440
         dataTransfer = dataTransferIn + dataTransferOut
     else:
         # ================================================ REQUESTER Inputs for testing ================================================
         storageID_list = lib.StorageID.IPFS.value
-        _provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
-        cacheType_list = lib.CacheType.PRIVATE.value  # default
+        provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
+        cache_types_list = lib.CacheType.PRIVATE.value  # default
         storageHour_list = []
         source_code_hashes = []
-        coreMin_list = []
+        core_min_list_list = []
 
         if storageID_list == lib.StorageID.IPFS.value:  # IPFS
             print("Submitting through IPFS...")
             key = "QmbL46fEH7iaccEayKpS9FZnkPV5uss4SFmhDDvbmkABUJ"  # 30 seconds job
             coreDayDuration = 0
             coreHour = 0
-            coreMin = 1
-            coreMin = coreMin + coreHour * 60 + coreDayDuration * 1440
-            coreMin_list.append(coreMin)
+            core_min_list = 1
+            core_min_list = core_min_list + coreHour * 60 + coreDayDuration * 1440
+            core_min_list_list.append(core_min_list)
 
             # DataSourceCodes:
             ipfsBytes32 = convertIpfsToBytes32(key)
@@ -187,9 +188,9 @@ if __name__ == "__main__":
             ipfsBytes32 = convertIpfsToBytes32("QmSYzLDW5B36jwGSkU8nyfHJ9xh9HLjMsjj7Ciadft9y65")  # data1/data.txt
             source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
             storageHour_list.append(1)
-            cacheType_list = lib.CacheType.PUBLIC.value  # default
+            cache_types_list = lib.CacheType.PUBLIC.value  # default
         elif storageID_list == lib.StorageID.EUDAT.value:
-            print("Submitting through EUDAT...")
+            print("Submitting through EUDAT")
             oc = owncloud.Client("https://b2drop.eudat.eu/")
             with open(lib.EBLOCPATH + "/eudatPassword.txt", "r") as content_file:
                 password = content_file.read().strip()
@@ -201,7 +202,7 @@ if __name__ == "__main__":
             key = "avatar-lavventura=simpleSlurmJob"
             coreDayDuration = 0
             coreHour = 0
-            coreMin = 1
+            core_min_list = 1
             sourceCodeHash = "acfd2fd8a1e9ccf031db0a93a861f6eb"
 
         core_list = [1]
@@ -213,8 +214,8 @@ if __name__ == "__main__":
     requester = w3.toChecksumAddress(w3.eth.accounts[accountID])
     jobPriceValue, cost = cost(
         core_list,
-        coreMin_list,
-        _provider,
+        core_min_list_list,
+        provider,
         requester,
         source_code_hashes,
         dataTransferIn_list,
@@ -228,15 +229,15 @@ if __name__ == "__main__":
     )
 
     status, result = submitJob(
-        _provider,
+        provider,
         key,
         core_list,
-        coreMin_list,
+        core_min_list_list,
         dataTransferIn_list,
         dataTransferOut,
         storageID_list,
         source_code_hashes,
-        cacheType_list,
+        cache_types_list,
         storageHour_list,
         accountID,
         jobPriceValue,
