@@ -83,7 +83,7 @@ if __name__ == "__main__":
         cloudStorageID = logged_job.args["cloudStorageID"]
         """
         if lib.StorageID.IPFS.value == cloudStorageID or lib.cloudStorageID.IPFS_MINILOCK.value == cloudStorageID:
-            jobKey = lib.convertBytes32ToIpfs(logged_jobs[i].args['jobKey'])
+            jobKey = lib.convert_bytes32_to_ipfs(logged_jobs[i].args['jobKey'])
         else:
             jobKey = logged_jobs[i].args['jobKey']
         """
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
         for value in range(0, len(logged_job.args["sourceCodeHash"])):
             sourceCodeHash = logged_job.args["sourceCodeHash"][value]
-            print("sourceCodeHash[" + str(value) + "]: " + lib.convertBytes32ToIpfs(sourceCodeHash))
+            print("sourceCodeHash[" + str(value) + "]: " + lib.convert_bytes32_to_ipfs(sourceCodeHash))
 
         print(
             "------------------------------------------------------------------------------------------------------------"

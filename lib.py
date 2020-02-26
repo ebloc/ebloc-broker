@@ -306,7 +306,7 @@ def convertBytes32ToString(bytes_array):
     return base58.b58encode(bytes_array).decode("utf-8")
 
 
-def convertBytes32ToIpfs(bytes_array):
+def convert_bytes32_to_ipfs(bytes_array):
     """Convert bytes_array into IPFS hash format."""
     merge = Qm + bytes_array
     return base58.b58encode(merge).decode("utf-8")

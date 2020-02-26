@@ -46,7 +46,7 @@ class GdriveClass(Storage):
 
                     if res == source_code_hash:
                         # Checking is already downloaded folder's hash matches with the given hash
-                        log(f"=> {name} is already cached within private cache directory...", "blue")
+                        log(f"=> {name} is already cached within private cache directory.", "blue")
                         self.cache_type[_id] = CacheType.PRIVATE.value
                         return True, None
                 else:
@@ -65,7 +65,7 @@ class GdriveClass(Storage):
 
                 if res == source_code_hash:
                     # Checking is already downloaded folder's hash matches with the given hash
-                    log(f"=> {name} is already cached within the private cache directory...", "blue")
+                    log(f"=> {name} is already cached within the private cache directory.", "blue")
                     self.cache_type[_id] = CacheType.PRIVATE.value
                     return True, None
                 else:
@@ -87,7 +87,7 @@ class GdriveClass(Storage):
                     if res == source_code_hash:
                         # Checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[source_code_hash] = self.public_dir
-                        log(f"=> {name} is already cached within public cache directory...", "blue")
+                        log(f"=> {name} is already cached within public cache directory.", "blue")
                     else:
                         if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                             return False, None
@@ -98,7 +98,7 @@ class GdriveClass(Storage):
                     if res == source_code_hash:
                         # Checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[source_code_hash] = self.public_dir
-                        log(f"=> {name} is already cached within public cache directory...", "blue")
+                        log(f"=> {name} is already cached within public cache directory.", "blue")
                     else:
                         if not self.gdrive_download_folder(
                             name, key, source_code_hash, _id, f"{self.public_dir}/{name}"
@@ -268,11 +268,6 @@ class GdriveClass(Storage):
             is_status, result = execute_shell_command(command, None, True)
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}")
 
-            """
-            if job_key_flag:
-            if not os.path.isfile(cache_folder + '/' + name + '/run.sh'):
-                return False, None
-            """
         elif "folder" in mime_type:
             # Recieved job is in folder format
             self.folder_type_dict[source_code_hash] = "folder"
@@ -316,22 +311,14 @@ class GdriveClass(Storage):
             self.get_data_init(0, self.job_key, True)
             self.get_data(self.job_key, 0, True)
 
+        if not os.path.isfile(f"{self.results_folder}/run.sh"):
+            logging.error(f"{self.results_folder}/run.sh does not exist")
+            return False
+
         for idx, _key in enumerate(self.job_key_list):
             self.get_data(_key, idx + 1)
 
-        try:
-            sbatchCall(
-                self.loggedJob,
-                self.share_token,
-                self.requesterID,
-                self.results_folder,
-                self.results_folder_prev,
-                self.dataTransferIn,
-                self.source_code_hashes,
-                self.jobInfo,
-            )
-        except Exception:
-            logging.error(f"E: Failed to call sbatchCall() function.\n{traceback.format_exc()}")
+        if not self.sbatch_call():
             return False
 
         return True
