@@ -7,16 +7,13 @@ import time
 import traceback
 from pdb import set_trace as bp
 from typing import List
-
 from pymongo import MongoClient
-
 import config
 import lib
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.refund import refund
-from lib import (PROGRAM_PATH, PROVIDER_ID, WHERE, CacheType, convert_byte_to_mb, generate_md5_sum,
-                 log, sbatchCall, silent_remove)
+from lib import (PROVIDER_ID, WHERE, CacheType, convert_byte_to_mb, log, silent_remove)
 from lib_mongodb import add_item_shareid, find_key
 from storage_class import Storage
 
@@ -32,25 +29,6 @@ class EudatClass(Storage):
         for source_code_hash in self.source_code_hashes:
             self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
 
-    def is_run_exist_in_tar(self, tar_path):
-        try:
-            FNULL = open(os.devnull, "w")
-            res = (
-                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL)
-                .decode("utf-8")
-                .strip()
-            )
-            FNULL.close()
-            if res.count("/") == 1:  # Main folder should contain the 'run.sh' file
-                logging.info("./run.sh exists under the parent folder")
-                return True
-            else:
-                logging.error("E: run.sh does not exist under the parent folder")
-                return False
-        except:
-            logging.error("E: run.sh does not exist under the parent folder")
-            return False
-
     def cache_wrapper(self):
         for idx, folder_name in enumerate(self.source_code_hashes_to_process):
             status = self.cache(folder_name, idx)
@@ -58,19 +36,22 @@ class EudatClass(Storage):
                 return False
         return True
 
-    def cache(self, folder_name, _id):
-        self.is_cached(folder_name, _id)
+    def cache(self, folder_name, _id) -> bool:
+        status = self.is_cached(folder_name, _id)
 
         if self.cache_type[_id] == CacheType.PRIVATE.value:
             # Download into private directory at $HOME/.eBlocBroker/cache
             cached_folder = self.private_dir
-            log("=> Privately cached", "blue")
         elif self.cache_type[_id] == CacheType.PUBLIC.value:
             cached_folder = self.public_dir
-            log("=> Publicly cached", "blue")
 
         cached_folder = f"{cached_folder}"
         cached_tar_file = f"{cached_folder}/{folder_name}.tar.gz"
+
+        if status:
+            self.folder_type_dict[folder_name] = "tar.gz"
+            self.tar_downloaded_path[folder_name] = cached_tar_file
+            return True
 
         if not os.path.isfile(cached_tar_file):
             # if os.path.isfile(cached_foldernnn + '/run.sh'):
@@ -98,20 +79,23 @@ class EudatClass(Storage):
             if (
                 _id == 0
                 and self.folder_type_dict[folder_name] == "tar.gz"
-                and not self.is_run_exist_in_tar(cached_tar_file)
+                and not self.is_run_exists_in_tar(cached_tar_file)
             ):
                 silent_remove(cached_tar_file)
                 return False
-        else:  # Here we already know that its tar.gz file
+        else:
+            # Here we already know that its tar.gz file
             self.folder_type_dict[folder_name] = "tar.gz"
             res = (
                 subprocess.check_output(["bash", f"{lib.EBLOCPATH}/scripts/generateMD5sum.sh", cached_tar_file])
                 .decode("utf-8")
                 .strip()
             )
-            if res == folder_name:  # Checking is already downloaded folder's hash matches with the given hash
+            if res == folder_name:
+                # Checking is already downloaded folder's hash matches with the given hash
                 log(f"=> {cached_tar_file} is already cached.", "blue")
                 self.tar_downloaded_path[folder_name] = cached_tar_file
+                self.folder_type_dict[folder_name] = "tar.gz"
                 return True
             else:
                 if not self.eudat_download_folder(cached_folder, cached_folder, folder_name):
@@ -147,11 +131,12 @@ class EudatClass(Storage):
                 logging.info(f"refund()_tx_hash={result}")
             return False  # Should return back to Driver
 
+        # TODO: check hash of the downloaded file is correct or not
         return True
 
     def eudat_get_share_token(self, fID):
         """Checks already shared or not."""
-        folderTokenFlag = {}
+        folder_token_flag = {}
         if not os.path.isdir(self.private_dir):
             logging.error(f"{self.private_dir} does not exist")
             return False
@@ -164,7 +149,7 @@ class EudatClass(Storage):
             self.folder_type_dict[folder_name] = None  # Initialization
             if os.path.isdir(f"{lib.OWN_CLOUD_PATH}/{folder_name}"):
                 logging.info(
-                    f"Eudat shared folder({folder_name}) is already accepted and exists on the Eudat mounted folder..."
+                    f"Eudat shared folder({folder_name}) is already accepted and exists on the Eudat mounted folder."
                 )
                 if os.path.isfile(f"{lib.OWN_CLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
                     self.folder_type_dict[folder_name] = "tar.gz"
@@ -173,11 +158,11 @@ class EudatClass(Storage):
             try:
                 info = self.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
                 size = info.attributes["{DAV:}getcontentlength"]
-                folderTokenFlag[folder_name] = True
+                folder_token_flag[folder_name] = True
                 logging.info(f"index={idx} size of /{folder_name}/{folder_name}.tar.gz => {size} bytes")
                 accept_flag += 1
             except Exception:
-                folderTokenFlag[folder_name] = False
+                folder_token_flag[folder_name] = False
 
         if os.path.isfile(shareID_file) and os.path.getsize(shareID_file) > 0:
             with open(shareID_file) as json_file:
@@ -204,11 +189,11 @@ class EudatClass(Storage):
                 self.shareID[folder_name] = {"shareID": result["shareID"], "share_token": result["share_token"]}
                 mongodb_accept_flag += 1
 
-            if status or (folderTokenFlag[folder_name] and bool(self.shareID)):
+            if status or (folder_token_flag[folder_name] and bool(self.shareID)):
                 accept_flag += 1
             else:
                 # eudatFolderName = ""
-                logging.info("Searching share tokens for the related source code folder...")
+                logging.info("Searching share tokens for the related source code folder.")
                 for idx in range(len(share_list) - 1, -1, -1):  # Starts iterating from last item to the first one
                     input_folder_name = share_list[idx]["name"]
                     input_folder_name = input_folder_name[1:]  # Removes '/' on the beginning of the string
@@ -216,16 +201,16 @@ class EudatClass(Storage):
                     # inputOwner = share_list[i]['owner']
                     inputUser = f"{share_list[idx]['user']}@b2drop.eudat.eu"
                     if input_folder_name == folder_name and inputUser == fID:
-                        share_token = str(share_list[idx]["share_token"])
-                        self.shareID[folder_name] = {"shareID": int(_shareID), "share_token": share_token}
+                        self.share_token = str(share_list[idx]["share_token"])
+                        self.shareID[folder_name] = {"shareID": int(_shareID), "share_token": self.share_token}
                         # Adding into mongodb for future usage
-                        status = add_item_shareid(folder_name, _shareID, share_token)
+                        status = add_item_shareid(folder_name, _shareID, self.share_token)
                         if status:
                             logging.info("Successfull added into mongodb")
                         else:
                             logging.error("E: Something is wrong, Not added into mongodb")
                         # eudatFolderName = str(input_folder_name)
-                        logging.info(f"Found. Name={folder_name} | ShareID={_shareID} | share_token={share_token}")
+                        logging.info(f"Found. Name={folder_name} | ShareID={_shareID} | share_token={self.share_token}")
                         self.oc.accept_remote_share(int(_shareID))
                         logging.info("shareID is accepted.")
                         accept_flag += 1
@@ -311,30 +296,16 @@ class EudatClass(Storage):
             logging.error(f"{self.results_folder}/run.sh does not exist")
             return False
 
+        logging.info(f"dataTransferIn={self.dataTransferIn}")
         try:
-            logging.info(f"dataTransferIn={self.dataTransferIn}")
-            try:
-                share_token = self.shareID[self.job_key]["share_token"]
-            except KeyError:
-                status, share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
-                if not status:
-                    logging.error(
-                        f"E: Failed to call sbatchCall() function. shareID cannot detect key for {self.job_key}"
-                    )
-                    return False
+            self.share_token = self.shareID[self.job_key]["share_token"]
+        except KeyError:
+            status, self.share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
+            if not status:
+                logging.error(f"E: shareID cannot detected from key: {self.job_key}")
+            return False
 
-            sbatchCall(
-                self.loggedJob,
-                share_token,
-                self.requesterID,
-                self.results_folder,
-                self.results_folder_prev,
-                self.dataTransferIn,
-                self.source_code_hashes,
-                self.jobInfo,
-            )
-        except Exception:
-            logging.error(f"E: Failed to call sbatchCall() function. {traceback.format_exc()}")
+        if not self.sbatch_call():
             return False
 
         return True

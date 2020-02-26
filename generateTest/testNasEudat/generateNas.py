@@ -9,7 +9,7 @@ from random import randint
 
 import owncloud
 
-from lib_owncloud import eudat_initialize_folder, singleFolderShare
+from lib_owncloud import eudat_initialize_folder, share_single_folder
 
 home = expanduser("~")
 
@@ -57,7 +57,7 @@ for idx in itertools.count(0):
     f.close()
     tarHash = eudat_initialize_folder("ipfs", oc)
     time.sleep(1)
-    print(singleFolderShare(tarHash, oc))
+    print(share_single_folder(tarHash, oc))
     print(f"Shared Job#{idx}")
     sleepTime = randint(300, 600)
     hashesFile.write(

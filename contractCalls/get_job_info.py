@@ -151,7 +151,7 @@ if __name__ == "__main__":
         _resultIpfsHash = ""
     else:
         if jobInfo["resultIpfsHash"] != "":
-            _resultIpfsHash = lib.convertBytes32ToIpfs(jobInfo["resultIpfsHash"])
+            _resultIpfsHash = lib.convert_bytes32_to_ipfs(jobInfo["resultIpfsHash"])
         else:
             _resultIpfsHash = ""
 

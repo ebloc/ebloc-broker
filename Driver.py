@@ -27,7 +27,7 @@ from driver_ipfs import IpfsClass
 from imports import connect
 from lib import (BLOCK_READ_FROM_FILE, EBLOCPATH, EUDAT_USE, HOME, IPFS_USE, LOG_PATH, OC_USER,
                  PROGRAM_PATH, PROVIDER_ID, RPC_PORT, WHOAMI, CacheType, StorageID,
-                 convertBytes32ToIpfs, execute_shell_command, get_idle_cores, is_ipfs_running,
+                 convert_bytes32_to_ipfs, execute_shell_command, get_idle_cores, is_ipfs_running,
                  isSlurmOn, job_state_code, log, terminate)
 from lib_owncloud import eudat_login
 
@@ -177,7 +177,7 @@ if WHOAMI == "" or EBLOCPATH == "" or PROVIDER_ID == "":
     logging.warning("Please run:  ./initialize.sh")
     terminate()
 
-log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "blue")
+log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan")
 
 oc = startup()
 is_contract_exists = is_contract_exists()
@@ -301,7 +301,7 @@ while True:
 
         for idx, source_code_hash_bytes in enumerate(logged_job.args["sourceCodeHash"]):
             if cloudStorageID == StorageID.IPFS.value or cloudStorageID == StorageID.IPFS_MINILOCK.value:
-                sourceCodeHash = convertBytes32ToIpfs(source_code_hash_bytes)
+                sourceCodeHash = convert_bytes32_to_ipfs(source_code_hash_bytes)
             else:
                 sourceCodeHash = config.w3.toText(source_code_hash_bytes)
 
@@ -343,7 +343,7 @@ while True:
             logged_job.args["cloudStorageID"] == StorageID.IPFS
             or logged_job.args["cloudStorageID"] == StorageID.IPFS_MINILOCK
         ):
-            sourceCodeHash = convertBytes32ToIpfs(logged_job.args["sourceCodeHash"])
+            sourceCodeHash = convert_bytes32_to_ipfs(logged_job.args["sourceCodeHash"])
             if sourceCodeHash != logged_job.args["jobKey"]:
                 logging.error("IPFS hash does not match with the given sourceCodeHash.")
                 is_pass = True
