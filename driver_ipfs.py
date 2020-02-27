@@ -4,7 +4,9 @@ import os
 import subprocess
 import time
 from config import logging
-from lib import is_ipfs_running, log, silent_remove, get_ipfs_hash, is_ipfs_hash_cached, is_ipfs_hash_exists, convert_bytes32_to_ipfs, calculate_folder_size, StorageID, LOG_PATH, execute_shell_command
+from lib import (LOG_PATH, StorageID, calculate_folder_size, convert_bytes32_to_ipfs,
+                 execute_shell_command, get_ipfs_hash, is_ipfs_hash_cached, is_ipfs_hash_exists,
+                 is_ipfs_running, log, silent_remove)
 from storage_class import Storage
 
 
@@ -67,7 +69,7 @@ class IpfsClass(Storage):
                 if not status:
                     return False
 
-        initial_size = calculate_folder_size(self.results_folder, "d")
+        initial_size = calculate_folder_size(self.results_folder)
         print(initial_size)
 
         for ipfs_hash in ipfs_hash_list:  # Here scripts knows that provided IPFS hashes exists
@@ -82,7 +84,7 @@ class IpfsClass(Storage):
                 self.decrypt_using_minilock(ipfs_hash)
 
             if not is_hashed:
-                folder_size = calculate_folder_size(self.results_folder, "d")
+                folder_size = calculate_folder_size(self.results_folder)
                 self.dataTransferIn += folder_size - initial_size
                 initial_size = folder_size
                 # dataTransferIn += convert_byte_to_mb(cumulative_size)
