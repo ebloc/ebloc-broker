@@ -1,8 +1,10 @@
 import os
 import subprocess
+import traceback
+
 from config import logging
 from lib import PROGRAM_PATH, CacheType, generate_md5_sum, log, sbatchCall
-import traceback
+
 
 class BaseClass(object):
     def whoami(self):

@@ -5,9 +5,11 @@ import subprocess
 import sys
 import time
 import traceback
+
 import owncloud
-from lib import terminate, compress_folder
+
 from config import logging
+from lib import compress_folder, terminate
 
 
 def eudat_login(user, password_path):
