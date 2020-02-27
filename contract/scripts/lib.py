@@ -57,12 +57,12 @@ def cost(
     coreMinArray,
     provider,
     requester,
-    source_code_hashes_to_process,
+    source_code_hashes,
     dataTransferIn,
     dataTransferOut,
     storage_hours,
     storageID_to_process,
-    cacheType,
+    cache_types,
     data_prices_set_blocknumber_array,
     eB,
     w3,
@@ -72,28 +72,28 @@ def cost(
     block_number = w3.eth.blockNumber
 
     if brownie:
-        providerPriceInfo = eB.getProviderInfo(provider, 0)
+        provider_price_info = eB.getProviderInfo(provider, 0)
     else:
-        providerPriceInfo = eB.functions.getProviderInfo(provider, 0).call()
+        provider_price_info = eB.functions.getProviderInfo(provider, 0).call()
 
-    # blockReadFrom = providerPriceInfo[0]
-    _providerPriceInfo = providerPriceInfo[1]
-    # availableCoreNum = _providerPriceInfo[0]
-    # commitmentBlockDuration = _providerPriceInfo[1]
-    priceCoreMin = _providerPriceInfo[2]
-    priceDataTransfer = _providerPriceInfo[3]
-    priceStorage = _providerPriceInfo[4]
-    priceCache = _providerPriceInfo[5]
+    # blockReadFrom = provider_price_info[0]
+    _provider_price_info = provider_price_info[1]
+    # availableCoreNum = _provider_price_info[0]
+    # commitmentBlockDuration = _provider_price_info[1]
+    priceCoreMin = _provider_price_info[2]
+    priceDataTransfer = _provider_price_info[3]
+    priceStorage = _provider_price_info[4]
+    priceCache = _provider_price_info[5]
 
     assert len(coreArray) == len(coreMinArray)
-    assert len(source_code_hashes_to_process) == len(storage_hours)
+    assert len(source_code_hashes) == len(storage_hours)
     assert len(storage_hours) == len(storageID_to_process)
-    assert len(cacheType) == len(storageID_to_process)
+    assert len(cache_types) == len(storageID_to_process)
 
     for idx, storageID in enumerate(storageID_to_process):
         assert storageID <= 4
         if storageID == StorageID.IPFS:
-            assert cacheType[idx] == CacheType.PUBLIC
+            assert cache_types[idx] == CacheType.PUBLIC
 
     job_price_value = 0
     computationalCost = 0
@@ -106,7 +106,7 @@ def cost(
         computationalCost += priceCoreMin * core * coreMinArray[idx]
 
     # Calculating the cache cost
-    for idx, source_code_hash in enumerate(source_code_hashes_to_process):
+    for idx, source_code_hash in enumerate(source_code_hashes):
         print(source_code_hash)
         receivedBlock, cacheDuration, is_private, is_verified_used = getJobStorageTime(
             eB, provider, source_code_hash, brownie
