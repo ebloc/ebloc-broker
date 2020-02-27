@@ -11,17 +11,15 @@ import subprocess
 import sys
 import time
 import traceback
+import base58
+import config
 from enum import Enum
 from os.path import expanduser
 from shutil import copyfile
 from typing import Tuple
-
-import base58
 from colored import fg, stylize
 from dotenv import load_dotenv
 from termcolor import colored
-
-import config
 from config import load_log
 from lib_mongodb import add_item
 
@@ -246,32 +244,32 @@ def getOnlyIpfsHash(path):
     return True, result_ipfs_hash
 
 
-def get_ipfs_hash(ipfsHash, path, is_storage_paid):
+def get_ipfs_hash(ipfs_hash, path, is_storage_paid):
     # TODO try -- catch yap code run olursa ayni dosya'ya get ile dosyayi cekemiyor
-    # cmd: ipfs get $ipfsHash --output=$path
+    # cmd: ipfs get $ipfs_hash --output=$path
     res = (
-        subprocess.check_output(["ipfs", "get", ipfsHash, f"--output={path}"]).decode("utf-8").strip()
+        subprocess.check_output(["ipfs", "get", ipfs_hash, f"--output={path}"]).decode("utf-8").strip()
     )  # Wait Max 5 minutes.
     print(res)
 
     # TODO: pin if storage is paid
     if is_storage_paid:
         result = (
-            subprocess.check_output(["ipfs", "pin", "add", ipfsHash]).decode("utf-8").strip()
+            subprocess.check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").strip()
         )  # pin downloaded ipfs hash
         logging.info(result)
 
 
-def is_ipfs_hash_exists(ipfsHash, attempt_count):
+def is_ipfs_hash_exists(ipfs_hash, attempt_count):
     for attempt in range(attempt_count):
-        logging.info(f"Attempting to check IPFS file {ipfsHash}")
+        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
         # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
         # cmd: timeout 300 ipfs object stat $jobKey
         status, ipfs_stat = execute_shell_command(
-            ["timeout", "300", "ipfs", "object", "stat", ipfsHash]
+            ["timeout", "300", "ipfs", "object", "stat", ipfs_hash]
         )  # Wait Max 5 minutes.
         if not status:
-            logging.error(f"E: Failed to find IPFS file: {ipfsHash}")
+            logging.error(f"E: Failed to find IPFS file: {ipfs_hash}")
         else:
             logging.info(ipfs_stat)
             for item in ipfs_stat.split("\n"):
@@ -282,16 +280,18 @@ def is_ipfs_hash_exists(ipfsHash, attempt_count):
         return False, None, None
 
 
-def calculate_folder_size(path, pathType):
+def calculate_folder_size(path):
     """Return the size of the given path in MB."""
     byte_size = 0
-    if pathType == "f":
-        byte_size = os.path.getsize(path)  # Returns downloaded files size in bytes
-    elif pathType == "d":
+    if os.path.isdir(path):
         p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
-        byte_size = p2.communicate()[0].decode("utf-8").strip()  # Returns downloaded files size in bytes
+        # Returns downloaded files size in bytes
+        byte_size = p2.communicate()[0].decode("utf-8").strip()
+    else:
+        # Returns downloaded file size in bytes
+        byte_size = os.path.getsize(path)
 
     return convert_byte_to_mb(byte_size)
 
@@ -430,10 +430,10 @@ def eblocbroker_function_call(f, _attempt):
         return False, result
 
 
-def is_ipfs_hash_cached(ipfsHash):
+def is_ipfs_hash_cached(ipfs_hash):
     # cmd: ipfs refs local | grep -c 'Qmc2yZrduQapeK47vkNeT5pCYSXjsZ3x6yzK8an7JLiMq2'
     p1 = subprocess.Popen(["ipfs", "refs", "local"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "-c", ipfsHash], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(["grep", "-c", ipfs_hash], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     out = p2.communicate()[0].decode("utf-8").strip()
     if out == "1":
@@ -551,8 +551,8 @@ def compress_folder(folderToShare):
     p2.stdout.close()
     p3.communicate()
 
-    # status, ipfsHash = getOnlyIpfsHash(base_name + '.tar.gz')
-    # print('ipfsHash=' + ipfsHash)
+    # status, ipfs_hash = getOnlyIpfsHash(base_name + '.tar.gz')
+    # print('ipfs_hash=' + ipfs_hash)
 
     # subprocess.run(['sudo', 'tar', 'zcf', base_name + '.tar.gz', base_name])
     tar_hash = subprocess.check_output(["md5sum", f"{base_name}.tar.gz"]).decode("utf-8").strip()
