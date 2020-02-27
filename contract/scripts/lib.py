@@ -95,7 +95,7 @@ def cost(
         if storageID == StorageID.IPFS:
             assert cacheType[idx] == CacheType.PUBLIC
 
-    jobPriceValue = 0
+    job_price_value = 0
     computationalCost = 0
     cacheCost = 0
     storageCost = 0
@@ -151,9 +151,9 @@ def cost(
                     cacheCost += priceCache * dataTransferIn[idx]
 
     dataTransferCost = priceDataTransfer * (dataTransferIn_sum + dataTransferOut)
-    jobPriceValue = computationalCost + dataTransferCost + cacheCost + storageCost
+    job_price_value = computationalCost + dataTransferCost + cacheCost + storageCost
     print(
-        f"\njobPriceValue={jobPriceValue} <=> "
+        f"\njob_price_value={job_price_value} <=> "
         f"cacheCost={cacheCost} | storageCost={storageCost} | dataTransferCost={dataTransferCost} | computationalCost={computationalCost}"
     )
 
@@ -163,4 +163,4 @@ def cost(
     cost["cacheCost"] = cacheCost
     cost["storageCost"] = storageCost
 
-    return jobPriceValue, cost
+    return job_price_value, cost
