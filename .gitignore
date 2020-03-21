@@ -1,3 +1,7 @@
+*.swo
+
+*.swp
+
 owncloudScripts/base/data/*.tar.gz
 
 owncloudScripts/p.txt
