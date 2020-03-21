@@ -359,7 +359,7 @@ def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
     except Exception:
         cmd_str = " ".join(cmd)
         print(output)
-        logging.error(f"{WHERE(1)} \n {traceback.format_exc()} command: {cmd_str}")
+        logging.error(f"{WHERE(1)} \n {traceback.format_exc()} command:\n {cmd_str}")
         if is_exit_flag:
             terminate()
         return False, output

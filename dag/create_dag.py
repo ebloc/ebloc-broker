@@ -35,10 +35,11 @@ G.add_edge("job7", "job0", weight=10)
 G.add_edge("job8", "job7", weight=10)
 G.add_edge("job9", "job7", weight=10)
 
-
-nx.nx_pydot.write_dot(G, "job.dot")  # Saves DAG into job.dot file
+# Saves DAG into job.dot file
+nx.nx_pydot.write_dot(G, "job.dot")
 
 listG = list(G.nodes)
+
 for i in list(G.nodes):
     print(i)
     print(set(G.predecessors(i)))
@@ -46,7 +47,7 @@ for i in list(G.nodes):
 nx.draw(G, with_labels=True)
 plt.savefig("labels.png")
 
-sys.exit()
+sys.exit(0)
 
 print(set(G.predecessors("job5")))
 
