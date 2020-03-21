@@ -1,22 +1,11 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-
-
-def getProviders(eBlocBroker=None):
-    if eBlocBroker is None:
-        from imports import connect_to_eblocbroker
-
-        eBlocBroker = connect_to_eblocbroker()
-
-    if eBlocBroker == "notconnected":
-        return eBlocBroker
-    return eBlocBroker.functions.getProviders().call(), eBlocBroker
+from get_providers import get_providers
+import config
 
 
 def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):
-    blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer = eBlocBroker.functions.getProviderInfo(
+    (blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer,) = config.eBlocBroker.functions.getProviderInfo(
         providerAddress
     ).call()
 
@@ -33,10 +22,7 @@ def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataT
 
 
 if __name__ == "__main__":
-    providerList, eBlocBroker = getProviders()
-    if providerList == "notconnected":
-        print(providerList)
-        sys.exit()
+    providers = get_providers
 
     requestedCore = 2
     coreGasDay = 0
@@ -47,9 +33,6 @@ if __name__ == "__main__":
     dataTransferOut = 100
     gasDataTransfer = dataTransferIn + dataTransferOut
 
-    for i in range(0, len(providerList)):
-        print(providerList[i])
-        getProviderPriceInfo(providerList[i], requestedCore, coreMinuteGas, gasDataTransfer)
-
-        if i != len(providerList) - 1:
-            print("")
+    for provider in providers:
+        print(provider)
+        getProviderPriceInfo(provider, requestedCore, coreMinuteGas, gasDataTransfer)

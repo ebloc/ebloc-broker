@@ -6,18 +6,18 @@ import sys
 import matplotlib.pyplot as plt
 import networkx as nx
 
-jobIDs = {}
+job_ids = {}
 
 
 def dependencyJob(i):
     if len(set(G.predecessors(i))) == 0:
-        jobID = notDependentSubmitJob(i)
-        jobIDs[i] = jobID
-        print("jobID: " + str(jobID))
+        job_id = notDependentSubmitJob(i)
+        job_ids[i] = job_id
+        print("job_id: " + str(job_id))
     else:
-        jobID = dependentSubmitJob(i, list(G.predecessors(i)))
-        jobIDs[i] = jobID
-        print("jobID: " + str(jobID))
+        job_id = dependentSubmitJob(i, list(G.predecessors(i)))
+        job_ids[i] = job_id
+        print("job_id: " + str(job_id))
         print(list(G.predecessors(i)))
         # sys.exit()
 
@@ -29,23 +29,23 @@ def notDependentSubmitJob(i):
 
 def dependentSubmitJob(i, predecessors):
     if len(predecessors) == 1:
-        if not predecessors[0] in jobIDs:  # If the required job is not submitted to Slurm, recursive call
+        if not predecessors[0] in job_ids:  # If the required job is not submitted to Slurm, recursive call
             dependencyJob(predecessors[0])
 
-        print("sbatch --dependency=afterok:" + str(jobIDs[predecessors[0]]) + " " + i + ".sh")
+        print("sbatch --dependency=afterok:" + str(job_ids[predecessors[0]]) + " " + i + ".sh")
         return random.randint(1, 101)
     else:
-        jobID_str = ""
+        job_id_str = ""
 
         for j in predecessors:
-            if not j in jobIDs:  # If the required job is not submitted to Slurm, recursive call
+            if not j in job_ids:  # If the required job is not submitted to Slurm, recursive call
                 dependencyJob(j)
 
-            jobID_str += str(jobIDs[j]) + ":"
+            job_id_str += str(job_ids[j]) + ":"
 
-        jobID_str = jobID_str[:-1]
-        # print(jobID_str)
-        print("sbatch --dependency=afterok:" + jobID_str + " " + i + ".sh")
+        job_id_str = job_id_str[:-1]
+        # print(job_id_str)
+        print("sbatch --dependency=afterok:" + job_id_str + " " + i + ".sh")
         return random.randint(1, 101)
 
 
@@ -57,11 +57,11 @@ print(list(G.nodes))
 for i in list(G.nodes):
     # print(i)
     # print(len(set(G.successors(i))))
-    if not i in jobIDs:
+    if not i in job_ids:
         dependencyJob(i)
 
 
 for i in list(G.nodes):
-    print(i + " " + str(jobIDs[i]))
+    print(i + " " + str(job_ids[i]))
 
 # jid4=$(sbatch  --dependency=afterany:$jid2:$jid3 job4.sh

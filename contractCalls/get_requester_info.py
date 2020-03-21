@@ -49,9 +49,9 @@ if __name__ == "__main__":
         requester = "0x57b60037b82154ec7149142c606ba024fbb0f991"
         printType = "0"
 
-    status, requesterInfo = get_requester_info(requester)
+    success, requesterInfo = get_requester_info(requester)
 
-    if status:
+    if success:
         print(
             "{0: <15}".format("requester: ")
             + requesterInfo["requester"]

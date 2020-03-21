@@ -7,8 +7,8 @@
 pragma solidity ^0.6.0;
 import "./Lib.sol";
 
-contract eBlocBrokerBase {
 
+contract eBlocBrokerBase {
     address public owner;
     address[] registeredProviders; // A dynamically-sized array of 'address' structs
 
@@ -24,7 +24,7 @@ contract eBlocBrokerBase {
      */
     modifier onlyOwner {
         require(msg.sender == owner); // dev: Sender must be owner
-        _ ;
+        _;
     }
 
     /**
@@ -39,24 +39,24 @@ contract eBlocBrokerBase {
      * @dev Modifier to make a function callable only when caller is registered as provider.
      */
     modifier whenProviderRegistered {
-        require(providers[msg.sender].committedBlock > 0);  // dev: Not registered
-        _ ;
+        require(providers[msg.sender].committedBlock > 0); // dev: Not registered
+        _;
     }
 
     /**
      * @dev Modifier to make a function callable only when the provider is not registered.
      */
     modifier whenProviderNotRegistered {
-        require(providers[msg.sender].committedBlock == 0);  // dev: Registered
-        _ ;
+        require(providers[msg.sender].committedBlock == 0); // dev: Registered
+        _;
     }
 
     /**
      * @dev Modifier to make a function callable only when given timestamp is smaller than the block.timestamp(now)
      */
     modifier whenBehindNow(uint256 timestamp) {
-        require(timestamp <= now);  // dev: Ahead now
-        _ ;
+        require(timestamp <= now); // dev: Ahead now
+        _;
     }
 
     /**
@@ -64,7 +64,7 @@ contract eBlocBrokerBase {
      */
     modifier whenProviderRunning {
         require(providers[msg.sender].isRunning); // dev: Provider is not running
-        _ ;
+        _;
     }
 
     /**
@@ -81,7 +81,7 @@ contract eBlocBrokerBase {
     modifier validJobStateCode(Lib.JobStateCodes jobStateCode) {
         /*stateID cannot be NULL, COMPLETED, REFUNDED on setJobStatus call */
         require(uint8(jobStateCode) > 1 && uint8(jobStateCode) < 7);
-        _ ;
+        _;
     }
 
     /**
@@ -89,7 +89,6 @@ contract eBlocBrokerBase {
      */
     modifier whenOrcidNotVerified(address _user) {
         require(orcID[_user] == 0); // dev: OrcID is already verified
-        _ ;
+        _;
     }
-
 }

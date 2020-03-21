@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 
-import hashlib
-import json
 import os
 import pprint
 import subprocess
 import sys
 import time
-from pdb import set_trace as bp
 
 import config
-from config import logging
-from contractCalls.blockNumber import blockNumber
+from config import EBLOCPATH, load_log
+from contract.scripts.lib import DataStorage
 from contractCalls.doesProviderExist import doesProviderExist
 from contractCalls.doesRequesterExist import doesRequesterExist
 from contractCalls.get_balance import get_balance
+from contractCalls.get_block_number import get_block_number
 from contractCalls.get_deployed_block_number import get_deployed_block_number
 from contractCalls.get_job_info import get_job_info
 from contractCalls.get_requester_info import get_requester_info
@@ -25,14 +23,19 @@ from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
 from driver_ipfs import IpfsClass
 from imports import connect
-from lib import (BLOCK_READ_FROM_FILE, EBLOCPATH, EUDAT_USE, HOME, IPFS_USE, LOG_PATH, OC_USER,
-                 PROGRAM_PATH, PROVIDER_ID, RPC_PORT, WHOAMI, CacheType, StorageID,
-                 convert_bytes32_to_ipfs, execute_shell_command, get_idle_cores, is_ipfs_running,
-                 isSlurmOn, job_state_code, log, terminate)
+from lib import (BLOCK_READ_FROM_FILE, EUDAT_USE, HOME, IPFS_USE, LOG_PATH,
+                 OC_USER, PROGRAM_PATH, PROVIDER_ID, WHOAMI, CacheType,
+                 StorageID, is_driver_on, is_geth_on, is_ipfs_running,
+                 is_process_on, job_state_code, log, printc, run_command,
+                 terminate)
 from lib_owncloud import eudat_login
+from lib_slurm import get_idle_cores, is_slurm_on, slurm_pending_jobs_check
+from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
 
 # Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
 subprocess.run(["sudo", "printf", ""])
+
+logging = load_log(f"{LOG_PATH}/transactions/providerOut.txt")
 
 config.eBlocBroker, config.w3 = connect()
 
@@ -44,110 +47,55 @@ driver_cancel_process = None
 whisper_state_receiver_process = None
 my_env = os.environ.copy()
 
+if not PROVIDER_ID:
+    logging.error("PROVIDER_ID is None")
+    terminate()
+
 
 def run_driver_cancel():
-    """
-    Runs driver_cancel daemon on the background.
-    commad: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l
-    """
-    p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "[d]riverCancel"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "python3"], stdin=p2.stdout, stdout=subprocess.PIPE)
-    p2.stdout.close()
-    p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, stdout=subprocess.PIPE)
-    p3.stdout.close()
-    out = p4.communicate()[0].decode("utf-8").strip()
-    if int(out) == 0:
+    """Runs driver_cancel daemon on the background."""
+    if not is_process_on("python.*[d]riverCancel", "driverCancel"):
         # Running driver_cancel.py on the background if it is not already
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
 def run_whisper_state_receiver():
-    """
-    Runs driverReceiver daemon on the background.
-    """
+    """Runs driverReceiver daemon on the background."""
     if not os.path.isfile(f"{HOME}/.eBlocBroker/whisperInfo.txt"):
         # First time running:
-        logging.info("Please first run: scripts/whisperInitialize.py")
+        logging.info(f"run: {EBLOCPATH}/scripts/whisperInitialize.py")
         terminate()
     else:
-        with open(f"{HOME}/.eBlocBroker/whisperInfo.txt") as json_file:
-            data = json.load(json_file)
+        success, data = read_json(f"{HOME}/.eBlocBroker/whisperInfo.txt")
+        kId = {}
+        if success:
+            kId = data["kId"]
 
-        kId = data["kId"]
-        # publicKey = data["publicKey"]
-        if not config.w3.geth.shh.hasKeyPair(kId):
+        if not success or not config.w3.geth.shh.hasKeyPair(kId):
             logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
             logging.warning("Please first run: scripts/whisperInitialize.py")
             terminate()
 
-    # cmd: ps aux | grep \'[d]riverCancel\' | grep \'python3\' | wc -l
-    p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "[d]riverReceiver"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, stdout=subprocess.PIPE)
-    p2.stdout.close()
-    p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, stdout=subprocess.PIPE)
-    p3.stdout.close()
-    out = p4.communicate()[0].decode("utf-8").strip()
-    if int(out) == 0:
+    if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
         # Running driver_cancel.py on the background
         # TODO: should be '0' to store log at a file and not print output
         config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
 
 
-def slurmPendingJobCheck():
-    """ If there is no idle cores, waits for idle cores to be emerged. """
-    idle_cores = get_idle_cores()
-    print_flag = 0
-    while idle_cores is None:
-        if print_flag == 0:
-            logging.info("Waiting running jobs to be completed...")
-            print_flag = 1
-
-        time.sleep(10)
-        idle_cores = get_idle_cores(False)
-
-
-def isGethOn():
-    """ Checks whether geth runs on the background."""
-    # cmd: ps aux | grep [g]eth | grep '8545' | wc -l
-    p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "[g]eth"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["grep", str(RPC_PORT)], stdin=p2.stdout, stdout=subprocess.PIPE)
-    p2.stdout.close()
-    p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, stdout=subprocess.PIPE)
-    p3.stdout.close()
-    out = p4.communicate()[0].decode("utf-8").strip()
-
-    if int(out) == 0:
-        logging.error("Geth is not running on the background.")
-        terminate()
-
-
-def isDriverOn():
-    """Checks wheather the Driver.py runs on the background."""
-    # cmd: ps aux | grep \'[D]river.py\' | grep \'python\' | wc -l
-    p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "[D]river.py"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "python"], stdin=p2.stdout, stdout=subprocess.PIPE)
-    p2.stdout.close()
-    p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, stdout=subprocess.PIPE)
-    p3.stdout.close()
-    out = p4.communicate()[0].decode("utf-8").strip()
-    if int(out) > 1:
-        logging.warning("Driver is already running.")
-
-
 def startup():
     """ Startup functions are called."""
     oc = None
-    isDriverOn()
-    isSlurmOn()
-    isGethOn()
+    if is_driver_on():
+        printc("Track output: tail -f ~/.eBlocBroker/transactions/providerOut.txt", "blue")
+        sys.exit(1)
+
+    if not is_geth_on():
+        sys.exit(1)  # TODO: check to call terminate()
+
+    success = is_slurm_on()
+    if not success:
+        sys.exit(1)
+
     # run_driver_cancel()
     run_whisper_state_receiver()
     if EUDAT_USE:
@@ -155,29 +103,34 @@ def startup():
             logging.error(f"OC_USER is not set in {EBLOCPATH}/.env")
             terminate()
 
-        oc = eudat_login(OC_USER, f"{LOG_PATH}/eudatPassword.txt")
+        oc = eudat_login(OC_USER, f"{LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
     return oc
 
 
 def check_programs():
-    status, result = execute_shell_command(["gdrive", "version"])
-    if not status:
-        logging.warning("Please install gDrive or check its path")
+    success, output = run_command(["gdrive", "version"])
+    if not success:
+        logging.warning("Please install gdrive or check its path")
         terminate()
 
+    if IPFS_USE:
+        is_ipfs_running()
 
-# res = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
-# rows = res[0] columns = res[1]
+
+# output = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
+# rows = output[0] columns = output[1]
 columns = 100
 check_programs()
 yes = set(["yes", "y", "ye"])
 no = set(["no", "n"])
 if WHOAMI == "" or EBLOCPATH == "" or PROVIDER_ID == "":
-    logging.warning("Please run:  ./initialize.sh")
+    logging.warning("Please run: ./folder_setup.sh")
     terminate()
 
-log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan")
+log(
+    "=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan",
+)
 
 oc = startup()
 is_contract_exists = is_contract_exists()
@@ -187,30 +140,28 @@ if not is_contract_exists:
 
 logging.info(f"is_web3_connected={is_web3_connected()}")
 logging.info(f"rootdir: {os.getcwd()}")
-contract = json.loads(open("contractCalls/contract.json").read())
+
+success, contract = read_json("contractCalls/contract.json")
+if not success:
+    terminate()
 contractAddress = contract["address"]
 logging.info("{0: <18}".format("contract_address:") + contractAddress)
 
-if IPFS_USE:
-    is_ipfs_running()
-
-provider = config.w3.toChecksumAddress(PROVIDER_ID)
-
-if not doesProviderExist(provider):
+if not doesProviderExist(PROVIDER_ID):
     logging.error(
-        f"E: Your Ethereum address {provider}"
+        f"E: Your Ethereum address {PROVIDER_ID}"
         "does not match with any provider in eBlocBroker. Please register your \n"
         "provider using your Ethereum Address in to the eBlocBroker. You can \n"
         "use 'contractCalls/register_provider.py' script to register your provider."
     )
     terminate()
 
-if not config.eBlocBroker.functions.isOrcIDVerified(provider).call():
+if not config.eBlocBroker.functions.isOrcIDVerified(PROVIDER_ID).call():
     logging.error("E: Provider's orcid is not verified.")
     terminate()
 
 deployed_block_number = get_deployed_block_number()
-logging.info("{0: <18}".format("provider_address:") + provider)
+logging.info("{0: <18}".format("provider_address:") + PROVIDER_ID)
 if not os.path.isfile(BLOCK_READ_FROM_FILE):
     f = open(BLOCK_READ_FROM_FILE, "w")
     f.write(f"{deployed_block_number}")
@@ -228,7 +179,7 @@ if not block_read_from_local.isdigit():
         if choice in yes:
             block_read_from_local = deployed_block_number
             f = open(BLOCK_READ_FROM_FILE, "w")
-            f.write(f"{deployed_block_number}")
+            f.write(deployed_block_number)
             f.close()
             break
         elif choice in no:
@@ -237,7 +188,7 @@ if not block_read_from_local.isdigit():
             sys.stdout.warning("Please respond with 'yes' or 'no'")
 
 block_read_from = str(block_read_from_local)
-balance_temp = get_balance(provider)
+balance_temp = get_balance(PROVIDER_ID)
 logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
 
 while True:
@@ -245,33 +196,33 @@ while True:
         logging.error(f"block_read_from={block_read_from}")
         terminate()
 
-    balance = get_balance(provider)
-    status, squeue_status = execute_shell_command(["squeue"])
-    if "squeue: error:" in str(squeue_status):
+    balance = get_balance(PROVIDER_ID)
+    success, squeue_output = run_command(["squeue"])
+    if "squeue: error:" in str(squeue_output):
         logging.error(f"SLURM is not running on the background, please run: sudo ./runSlurm.sh.")
-        logging.error(squeue_status)
+        logging.error(squeue_output)
         terminate()
 
     idle_cores = get_idle_cores()
-    log(f"Current Slurm Running jobs status:\n {squeue_status}")
+    log(f"Current Slurm Running jobs success:\n {squeue_output}")
     log("-" * int(columns), "green")
     if "notconnected" != balance:
-        log(f"Current Time: {time.ctime()} | providerGainedWei={int(balance) - int(balance_temp)}")
+        log(f"Current Time: {time.ctime()} | provider_gained_wei={int(balance) - int(balance_temp)}")
 
     log(f"Waiting new job to come since block number={block_read_from}", "green")
-    current_block_number = blockNumber()
+    current_block_number = get_block_number()
     logging.info("Waiting for new block to increment by one.")
     logging.info(f"Current block number={current_block_number} | sync from block number={block_read_from}")
     logging.info(f"is_web3_connected={is_web3_connected()}")
-    while int(current_block_number) < int(block_read_from):
+    while current_block_number < int(block_read_from):
         time.sleep(1)
-        current_block_number = blockNumber()
+        current_block_number = get_block_number()
 
     logging.info(f"Passed incremented block number... Continue to wait from block number={block_read_from}")
     block_read_from = str(block_read_from)  # Starting reading event's location has been updated
     # block_read_from = '3082590' # used for test purposes
-    slurmPendingJobCheck()
-    logged_jobs_to_process = run_log_job(block_read_from, provider)
+    slurm_pending_jobs_check()
+    logged_jobs_to_process = run_log_job(block_read_from, PROVIDER_ID)
     max_val = 0
     is_provider_received_job = False
     is_already_cached = {}
@@ -280,70 +231,61 @@ while True:
         is_pass = False
         is_provider_received_job = True
 
-        log("-" * int(int(columns) / 2 - 12) + f" {idx} " + "-" * int(int(columns) / 2 - 12), "blue")
+        log(
+            "-" * int(int(columns) / 2 - 12) + f" {idx} " + "-" * int(int(columns) / 2 - 12), "blue",
+        )
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
-        jobKey = logged_job.args["jobKey"]
+        job_key = logged_job.args["jobKey"]
         index = logged_job.args["index"]
         cloudStorageID = logged_job.args["cloudStorageID"]
-        _blockNumber = logged_job["blockNumber"]
-
+        block_number = logged_job["blockNumber"]
         log(
-            f"receivedBlockNumber={_blockNumber} \n"
+            f"received_block_number={block_number} \n"
             f"transactionHash={logged_job['transactionHash'].hex()} | log_index={logged_job['logIndex']} \n"
             f"provider={logged_job.args['provider']} \n"
-            f"job_key={jobKey} \n"
+            f"job_key={job_key} \n"
             f"index={index} \n"
             f"received={logged_job.args['received']} \n",
             "yellow",
         )
-        receivedBlock = []
+        received_block = []
         storageDuration = []
-
-        for idx, source_code_hash_bytes in enumerate(logged_job.args["sourceCodeHash"]):
-            if cloudStorageID == StorageID.IPFS.value or cloudStorageID == StorageID.IPFS_MINILOCK.value:
-                sourceCodeHash = convert_bytes32_to_ipfs(source_code_hash_bytes)
+        for idx, source_code_hash_byte in enumerate(logged_job.args["sourceCodeHash"]):
+            if cloudStorageID[idx] == StorageID.IPFS.value or cloudStorageID[idx] == StorageID.IPFS_MINILOCK.value:
+                source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
             else:
-                sourceCodeHash = config.w3.toText(source_code_hash_bytes)
+                source_code_hash = config.w3.toText(source_code_hash_byte)
 
-            # _storageDuration is received as hour should be converted into blocknumber as multiplying with 240
-            job_storage_time = config.eBlocBroker.functions.getJobStorageTime(
-                config.w3.toChecksumAddress(provider), source_code_hash_bytes
-            ).call()
-            _received_block = job_storage_time[0]
-            _storageDuration = job_storage_time[1]
-            _isPrivate = job_storage_time[2]
-            _isVerified_Used = job_storage_time[3]
+            ds = DataStorage(config.eBlocBroker, config.w3, PROVIDER_ID, source_code_hash_byte)
+            received_block.append(ds.received_block)
+            storageDuration.append(ds.storage_duration)
 
-            receivedBlock.append(_received_block)
-            storageDuration.append(_storageDuration)
-
+            is_already_cached[source_code_hash] = False  # TODO: double check
             # If remaining time to cache is 0, then caching is requested for the related sourceCodeHash
-            if _received_block + _storageDuration * 240 >= _blockNumber:
-                if _received_block < _blockNumber:
-                    is_already_cached[sourceCodeHash] = True
-                elif _received_block == _blockNumber:
-                    if sourceCodeHash in is_already_cached:
-                        is_already_cached[sourceCodeHash] = True
+            if ds.received_block + ds.storage_duration >= block_number:
+                if ds.received_block < block_number:
+                    is_already_cached[source_code_hash] = True
+                elif ds.received_block == block_number:
+                    if source_code_hash in is_already_cached:
+                        is_already_cached[source_code_hash] = True
                     else:
                         # For the first job should be False since it is requested for cache for the first time
-                        is_already_cached[sourceCodeHash] = False
-            else:
-                is_already_cached[sourceCodeHash] = False
+                        is_already_cached[source_code_hash] = False
 
             log(
-                f"sourceCodeHash[{idx}]={sourceCodeHash} \n"
-                f"receivedBlock={_received_block} \n"
-                f"storageDuration(Hour)={_storageDuration} \n"
+                f"sourceCodeHash[{idx}]={source_code_hash} \n"
+                f"received_block={ds.received_block} \n"
+                f"storageDuration(block_number)={ds.storage_duration} \n"
                 f"cloudStorageID[{idx}]={StorageID(cloudStorageID[idx]).name} \n"
                 f"cached_type={CacheType(logged_job.args['cacheType'][idx]).name} \n"
-                f"is_already_cached={is_already_cached[sourceCodeHash]} \n"
+                f"is_already_cached={is_already_cached[source_code_hash]} \n"
             )
 
         if (
             logged_job.args["cloudStorageID"] == StorageID.IPFS
             or logged_job.args["cloudStorageID"] == StorageID.IPFS_MINILOCK
         ):
-            sourceCodeHash = convert_bytes32_to_ipfs(logged_job.args["sourceCodeHash"])
+            sourceCodeHash = bytes32_to_ipfs(logged_job.args["sourceCodeHash"])
             if sourceCodeHash != logged_job.args["jobKey"]:
                 logging.error("IPFS hash does not match with the given sourceCodeHash.")
                 is_pass = True
@@ -352,53 +294,57 @@ while True:
             max_val = logged_job["blockNumber"]
 
         if logged_job.args["cloudStorageID"] == StorageID.GITHUB.value:
-            status, str_check = execute_shell_command(["bash", f"{EBLOCPATH}/str_check.sh", jobKey.replace("=", "", 1)])
+            success, str_check = run_command(["bash", f"{EBLOCPATH}/str_check.sh", job_key.replace("=", "", 1)])
         else:
-            status, str_check = execute_shell_command(["bash", f"{EBLOCPATH}/str_check.sh", jobKey])
+            success, str_check = run_command(["bash", f"{EBLOCPATH}/str_check.sh", job_key])
 
-        job_info = []
-        jobID = 0
+        job_infos_to_process = []
+        job_id = 0
         for attempt in range(10):
-            status, _jobInfo = get_job_info(provider, jobKey, index, jobID, _blockNumber)
-            if not status:
-                print(_jobInfo)
+            success, job_info = get_job_info(PROVIDER_ID, job_key, index, job_id, block_number)
+            if not success:
+                print(job_info)
 
-            _jobInfo.update({"receivedBlock": receivedBlock})
-            _jobInfo.update({"storageDuration": storageDuration})
-            _jobInfo.update({"cacheType": logged_job.args["cacheType"]})
-            pprint.pprint(_jobInfo)
-            job_info.append(_jobInfo)
-            if status:
+            job_info.update({"received_block": received_block})
+            job_info.update({"storageDuration": storageDuration})
+            job_info.update({"cacheType": logged_job.args["cacheType"]})
+            pprint.pprint(job_info)
+            job_infos_to_process.append(job_info)
+            if success:
                 break
             else:
-                logging.error(f"E: {job_info}")
+                logging.error(f"E: {job_infos_to_process}")
                 time.sleep(1)
         else:
             is_pass = True
             break
 
-        for job in range(1, len(job_info[0]["core"])):
-            _jobInfo = get_job_info(provider, jobKey, index, job, _blockNumber)
-            if _jobInfo is not None:
-                job_info.append(_jobInfo)  # Adding jobs if workflow exist
+        for job in range(1, len(job_infos_to_process[0]["core"])):
+            job_info = get_job_info(PROVIDER_ID, job_key, index, job, block_number)
+            if job_info is not None:
+                job_infos_to_process.append(job_info)  # Adding jobs if workflow exist
 
-        requesterID = ""
-        if is_pass or len(job_info[0]["core"]) == 0 or len(job_info[0]["executionDuration"]) == 0:
+        requester_id = ""
+        if (
+            is_pass
+            or len(job_infos_to_process[0]["core"]) == 0
+            or len(job_infos_to_process[0]["executionDuration"]) == 0
+        ):
             logging.error("Requested job does not exist")
             is_pass = True
         else:
-            logging.info(f"jobOwner/requesterID: {job_info[0]['jobOwner']}")
-            requesterID = job_info[0]["jobOwner"].lower()
-            is_requester_exist = doesRequesterExist(requesterID)
-            if job_info[0]["jobStateCode"] == job_state_code["COMPLETED"]:
+            logging.info(f"jobOwner/requester_id: {job_infos_to_process[0]['jobOwner']}")
+            requester_id = job_infos_to_process[0]["jobOwner"].lower()
+            is_requester_exist = doesRequesterExist(requester_id)
+            if job_infos_to_process[0]["jobStateCode"] == job_state_code["COMPLETED"]:
                 logging.info("Job is already completed.")
                 is_pass = True
 
-            if job_info[0]["jobStateCode"] == job_state_code["REFUNDED"]:
+            if job_infos_to_process[0]["jobStateCode"] == job_state_code["REFUNDED"]:
                 logging.info("Job is refunded.")
                 is_pass = True
 
-            if not is_pass and not job_info[0]["jobStateCode"] == job_state_code["SUBMITTED"]:
+            if not is_pass and not job_infos_to_process[0]["jobStateCode"] == job_state_code["SUBMITTED"]:
                 logging.info("Job is already captured. It is in process or completed.")
                 is_pass = True
 
@@ -410,27 +356,27 @@ while True:
                 logging.error("Job owner is not registered")
                 is_pass = True
             else:
-                status, requesterInfo = get_requester_info(requesterID)
+                success, requesterInfo = get_requester_info(requester_id)
 
         if not is_pass:
             logging.info("Adding user...")
-            status, res = execute_shell_command(["sudo", "bash", f"{EBLOCPATH}/user.sh", requesterID, PROGRAM_PATH])
-            logging.info(res)
-            requesterIDmd5 = hashlib.md5(requesterID.encode("utf-8")).hexdigest()
-            slurmPendingJobCheck()
+            success, output = run_command(["sudo", "bash", f"{EBLOCPATH}/user.sh", requester_id, PROGRAM_PATH])
+            logging.info(output)
+            requester_md5_id = eth_address_to_md5(requester_id)
+            slurm_pending_jobs_check()
             main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
             if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-                ipfs = IpfsClass(logged_job, job_info, requesterIDmd5, is_already_cached)
+                ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
                 ipfs.run()
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
-                    eudat_login()
+                    eudat_login(OC_USER, f"{LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
-                eudat = EudatClass(logged_job, job_info, requesterIDmd5, is_already_cached, oc)
+                eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc,)
                 eudat.run()
-                # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requesterIDmd5))
+                # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
             elif main_cloud_storage_id == StorageID.GDRIVE.value:
-                gdrive = GdriveClass(logged_job, job_info, requesterIDmd5, is_already_cached)
+                gdrive = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
                 gdrive.run()
 
     time.sleep(1)
@@ -442,7 +388,8 @@ while True:
 
     # If there is no submitted job for the provider, block start to read from current block number
     if not is_provider_received_job:
-        f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
+        # Updates the latest read block number on the file
+        f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")
         f_block_read_from.write(f"{current_block_number}")
         f_block_read_from.close()
         block_read_from = str(current_block_number)
