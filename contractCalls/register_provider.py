@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import os
 import traceback
 from os.path import expanduser
@@ -9,23 +8,24 @@ from dotenv import load_dotenv
 
 from contractCalls.doesProviderExist import doesProviderExist
 from imports import connect
-from lib import EBLOCPATH, get_tx_status
+from lib import EBLOCPATH, PROVIDER_ID, get_tx_status
+from utils import read_json
 
 home = expanduser("~")
 load_dotenv(os.path.join(f"{home}/.eBlocBroker/", ".env"))  # Load .env from the given path
 
 eBlocBroker, w3 = connect()
-PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
 
-def register_provider(availableCoreNum, email, federationCloudId, miniLockId, prices, ipfsAddress, commitmentBlockNum):
+def register_provider(
+    availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
+):
     if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
         return False, "Please first run: ../scripts/whisperInitialize.py"
     else:
-        with open(f"{home}/.eBlocBroker/whisperInfo.txt") as json_file:
-            data = json.load(json_file)
-            kId = data["kId"]
-            whisperPubKey = data["publicKey"]
+        success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
+        kId = data["kId"]
+        whisperPubKey = data["publicKey"]
 
         if not w3.geth.shh.hasKeyPair(kId):
             return (
@@ -40,18 +40,18 @@ def register_provider(availableCoreNum, email, federationCloudId, miniLockId, pr
             f"Provider {PROVIDER_ID} is already registered. Please call the updateProvider() function for an update.",
         )
 
-    if commitmentBlockNum < 240:
+    if commitment_block_num < 240:
         return False, "Commitment block number should be greater than 240"
 
-    if len(federationCloudId) < 128 and len(email) < 128 and (len(miniLockId) == 0 or len(miniLockId) == 45):
+    if len(federation_cloud_id) < 128 and len(email) < 128 and (len(minilock_id) == 0 or len(minilock_id) == 45):
         try:
             tx = eBlocBroker.functions.registerProvider(
                 email,
-                federationCloudId,
-                miniLockId,
+                federation_cloud_id,
+                minilock_id,
                 availableCoreNum,
                 prices,
-                commitmentBlockNum,
+                commitment_block_num,
                 ipfsAddress,
                 whisperPubKey,
             ).transact({"from": PROVIDER_ID, "gas": 4500000})
@@ -64,8 +64,8 @@ def register_provider(availableCoreNum, email, federationCloudId, miniLockId, pr
 if __name__ == "__main__":
     availableCoreNum = 128
     email = "alper01234alper@gmail.com"
-    federationCloudId = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
-    miniLockId = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+    federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
+    minilock_id = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
     ipfsAddress = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 
     priceCoreMin = 100
@@ -74,12 +74,12 @@ if __name__ == "__main__":
     priceCache = 1
     prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
 
-    commitmentBlockNum = 240
+    commitment_block_num = 240
 
-    status, result = register_provider(
-        availableCoreNum, email, federationCloudId, miniLockId, prices, ipfsAddress, commitmentBlockNum
+    success, output = register_provider(
+        availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
     )
-    if status:
-        receipt = get_tx_status(status, result)
+    if success:
+        receipt = get_tx_status(success, output)
     else:
-        print(f"E: {result}")
+        print(f"E: {output}")

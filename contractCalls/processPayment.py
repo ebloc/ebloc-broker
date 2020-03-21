@@ -3,20 +3,18 @@
 import sys
 import traceback
 
-import lib
 from imports import connect
-from lib import PROVIDER_ID
-
-# tx = eB.processPayment(jobKey, [index, jobID], execution_time_min, result_ipfs_hash, end_time, dataTransfer, sourceCodeHashArray, {"from": accounts[0]})
+from lib import PROVIDER_ID, StorageID, logging
+from utils import ipfs_to_bytes32
 
 
 def processPayment(
-    jobKey,
+    job_key,
     index,
-    jobID,
+    job_id,
     execution_time_min,
     result_ipfs_hash,
-    cloudStorageID,
+    cloud_storage_id,
     end_time,
     dataTransferIn,
     dataTransferOut,
@@ -29,36 +27,38 @@ def processPayment(
     _from = w3.toChecksumAddress(PROVIDER_ID)
 
     if len(result_ipfs_hash) != 46 and (
-        lib.StorageID.IPFS.value == cloudStorageID or lib.StorageID.IPFS_MINILOCK.value == cloudStorageID
+        StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
     ):
-        return (False, "E: jobKey's length does not match with its original length. Please check your jobKey")
+        return (
+            False,
+            "E: job_key's length does not match with its original length. Please check your job_key",
+        )
 
     try:
-        result_ipfs_hash = w3.toBytes(
-            hexstr=lib.convertIpfsToBytes32(result_ipfs_hash)
-        )  # result_ipfs_hash is converted into byte32 format
-        endJob = True  # True only for the final job
+        # result_ipfs_hash is converted into byte32 format
+        result_ipfs_hash = w3.toBytes(hexstr=ipfs_to_bytes32(result_ipfs_hash))
+        if result_ipfs_hash == b"":
+            _result_ipfs_hash = "''"
+        else:
+            _result_ipfs_hash = result_ipfs_hash.decode("utf-8")
+
+        logging.info(
+            f"~/eBlocBroker/contractCalls/processPayment.py {job_key} {index} {job_id} {execution_time_min} {_result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
+        )
+
+        final_job = True  # True only for the final job
         args = [
             int(index),
-            int(jobID),
+            int(job_id),
             int(end_time),
             int(dataTransferIn),
             int(dataTransferOut),
             core,
             executionDuration,
-            endJob,
+            final_job,
         ]
 
-        lib.log(
-            "~/eBlocBroker/contractCalls/processPayment.py "
-            + jobKey
-            + " "
-            + str(args)
-            + str(int(execution_time_min))
-            + str(int(execution_time_min))
-            + "\n"
-        )
-        tx = eBlocBroker.functions.processPayment(jobKey, args, int(execution_time_min), result_ipfs_hash).transact(
+        tx = eBlocBroker.functions.processPayment(job_key, args, int(execution_time_min), result_ipfs_hash).transact(
             {"from": _from, "gas": 4500000}
         )
     except Exception:
@@ -68,39 +68,55 @@ def processPayment(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 10:
-        jobKey = str(sys.argv[1])
-        index = int(sys.argv[2])
-        jobID = int(sys.argv[3])
-        execution_time_min = int(sys.argv[4])
-        result_ipfs_hash = str(sys.argv[5])
-        cloudStorageID = int(sys.argv[6])
-        end_time = int(sys.argv[7])
-        dataTransferIn = (int(sys.argv[8]),)
-        dataTransferOut = int(sys.argv[9])
-    else:  # Dummy call
-        jobKey = "QmY6jUjufnyB2nZe38hRZvmyboxtzRcPkP388Yjfhuomoy"
-        index = 4
-        jobID = 0
-        execution_time_min = 1
-        result_ipfs_hash = "0x"
-        cloudStorageID = 0
-        end_time = 1128590
-        dataTransferIn = 0
-        dataTransferOut = 0
+    if len(sys.argv) == 12:
+        args = sys.argv[1:]
+        my_args = []
+        for arg in args:
+            if arg.startswith("[") and arg.endswith("]"):
+                arg = arg.replace("[", "").replace("]", "")
+                my_args.append(arg.split(","))
+            else:
+                my_args.append(arg)
 
-    status, result = processPayment(
-        jobKey,
+        print(args)
+        job_key = str(my_args[0])
+        index = int(my_args[1])
+        job_id = int(my_args[2])
+        execution_time_min = int(my_args[3])
+        result_ipfs_hash = str(my_args[4])
+        cloud_storage_id = int(my_args[5])
+        end_time = int(my_args[6])
+        dataTransferIn = float(my_args[7])
+        dataTransferOut = float(my_args[8])
+        core = my_args[9]
+        executionDuration = my_args[10]
+    else:  # Dummy call
+        job_key = "cdd786fca7ab7aa0c55bc039c6c68137"
+        index = 0
+        job_id = 0
+        execution_time_min = 1
+        result_ipfs_hash = b""
+        cloud_storage_id = 1
+        end_time = 1584375940
+        dataTransferIn = 0.029152870178222656
+        dataTransferOut = 0.0
+        core = [1]
+        executionDuration = [5]
+
+    success, output = processPayment(
+        job_key,
         index,
-        jobID,
+        job_id,
         execution_time_min,
         result_ipfs_hash,
-        cloudStorageID,
+        cloud_storage_id,
         end_time,
         dataTransferIn,
         dataTransferOut,
+        core,
+        executionDuration,
     )
-    if status:
-        print("tx_hash=" + result)
+    if success:
+        print(f"tx_hash={output}")
     else:
-        print(result)
+        print(output)

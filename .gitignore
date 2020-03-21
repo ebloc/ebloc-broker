@@ -1,3 +1,8 @@
+owncloudScripts/base/data/*.tar.gz
+
+owncloudScripts/p.txt
+
+base/data_link/*
 
 *.txt~
 
@@ -45,7 +50,7 @@ contract/populus\.ini
 
 contract/migrations/__init__\.py
 
-eudatPassword\.txt
+eudat_password\.txt
 
 contracts/populus\.ini
 
@@ -312,3 +317,10 @@ doo.py
 gdrive/output.log
 
 gdrive/exampleFolderToShare/meta_data.json
+
+end_code_flymake.py
+
+owncloudScripts/exampleFolderToShare/data1/output.file
+
+owncloudScripts/base/data_link/
+.oc.pckl

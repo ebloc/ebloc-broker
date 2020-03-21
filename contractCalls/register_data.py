@@ -24,9 +24,9 @@ def register_data(sourceCodeHash, price, commitmentBlockDuration):
 
 if __name__ == "__main__":
     sourceCodeHash = "0x68b8d8218e730fc2957bcb12119cb204"
-    status, result = register_data(sourceCodeHash, 20, 240)
+    success, output = register_data(sourceCodeHash, 20, 240)
 
-    if status:
-        receipt = get_tx_status(status, result)
+    if success:
+        receipt = get_tx_status(success, output)
     else:
-        print(result)
+        print(output)

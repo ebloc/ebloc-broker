@@ -14,11 +14,11 @@ def get_provider_info(_provider):
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
         print(f"Provider {provider} is not registered. Please try again with registered Ethereum Address as provider.")
-        sys.exit()
+        sys.exit(1)
 
     blockReadFrom, providerPriceInfo = eBlocBroker.functions.getProviderInfo(provider, 0).call()
     event_filter = eBlocBroker.events.LogProviderInfo.createFilter(
-        fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)}
+        fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)},
     )
 
     provider_info = {
@@ -45,9 +45,9 @@ if __name__ == "__main__":
     else:
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 
-    status, provider_info = get_provider_info(provider)
+    success, provider_info = get_provider_info(provider)
 
-    if status:
+    if success:
         print(
             "{0: <20}".format("blockReadFrom: ")
             + str(provider_info["blockReadFrom"])

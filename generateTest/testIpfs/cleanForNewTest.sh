@@ -3,4 +3,4 @@ rm -f *.*~
 rm -f nohup.out
 rm -f clientOutput.txt
 
-# sudo kill -9 $(ps aux | grep "[t]est"  | awk '{print $2}')
+# sudo kill -9 $(ps aux | grep -E "python.*[t]est"  | awk '{print $2}')

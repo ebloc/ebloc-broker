@@ -1,5 +1,6 @@
 pragma solidity ^0.6.0;
 
+
 // Taken from https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol
 
 /**
@@ -108,33 +109,33 @@ library SafeMath {
     }
 }
 
+
 library SafeMath32 {
-        function add(uint32 _a, uint32 _b) internal pure returns (uint32) {
-                uint32 c = _a + _b;
-                require(c >= _a);
+    function add(uint32 _a, uint32 _b) internal pure returns (uint32) {
+        uint32 c = _a + _b;
+        require(c >= _a);
 
-                return c;
+        return c;
+    }
+
+    function sub(uint32 _a, uint32 _b) internal pure returns (uint32) {
+        require(_b <= _a);
+        uint32 c = _a - _b;
+
+        return c;
+    }
+
+    function mul(uint32 _a, uint32 _b) internal pure returns (uint32) {
+        if (_a == 0) {
+            return 0;
         }
 
-        function sub(uint32 _a, uint32 _b) internal pure returns (uint32) {
-                require(_b <= _a);
-                uint32 c = _a - _b;
+        uint32 c = _a * _b;
+        require(c / _a == _b);
 
-                return c;
-        }
-
-
-        function mul(uint32 _a, uint32 _b) internal pure returns (uint32) {
-                if (_a == 0) {
-                    return 0;
-                }
-
-                uint32 c = _a * _b;
-                require(c / _a == _b);
-
-                return c;
-        }
-        /*
+        return c;
+    }
+    /*
         function div(uint32 _a, uint32 _b) internal pure returns (uint32) {
                 require(_b > 0); // Solidity only automatically asserts when dividing by 0
                 uint32 c = _a / _b;

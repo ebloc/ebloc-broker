@@ -5,6 +5,8 @@ import random
 import subprocess
 from os.path import expanduser
 
+from utils import generate_md5sum
+
 home = expanduser("~")
 
 path = os.getcwd()
@@ -34,11 +36,9 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             ipfsHash = ipfsHash[len(ipfsHash) - 2].split(" ")[1]
 
             folderToShare = "../ipfs"
-            tarHash = (
-                subprocess.check_output(["../../scripts/generateMD5sum.sh", folderToShare]).decode("utf-8").strip()
-            )
-            tarHash = tarHash.split(" ", 1)[0]
-            print("SourecodeHash=" + tarHash)
+            tar_hash = generate_md5sum(folderToShare)
+            tar_hash = tar_hash.split(" ", 1)[0]
+            print("SourecodeHash=" + tar_hash)
             print("ipfsHash=" + ipfsHash)
             if flag == 1:
                 hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
@@ -60,7 +60,7 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
                 + " "
                 + str(int(lineIn[1]))
                 + " "
-                + tarHash
+                + tar_hash
             )
 
 hashesFile.close()

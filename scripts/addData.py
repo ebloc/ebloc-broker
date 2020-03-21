@@ -1,23 +1,21 @@
 import os
-import shutil
-import subprocess
 
-from lib import execute_shell_command, getIpfsParentHash
+from lib import execute_shell_cmd, get_ipfs_parent_hash
 
 
-def addToIPFS(resultsFolder):
-    command = ["ipfs", "add", "-r", resultsFolder]  # Uploaded as folder
-    status, result = execute_shell_command(command, None, True)
-    resultIpfsHash = lib.getIpfsParentHash(result)
+def addToIPFS(results_folder):
+    cmd = ["ipfs", "add", "-r", results_folder]  # Uploaded as folder
+    success, output = execute_shell_cmd(cmd, None, True)
+    success, result_ipfs_hash = get_ipfs_parent_hash(output)
 
-    if os.path.isdir(resultsFolder):
-        basename = os.path.basename(os.path.normpath(resultsFolder))
-        filepath = os.path.dirname(resultsFolder)
+    if os.path.isdir(results_folder):
+        basename = os.path.basename(os.path.normpath(results_folder))
+        filepath = os.path.dirname(results_folder)
 
     print(filepath)
     print(basename)
-    # shutil.move(resultsFolder, filepath + '/' + resultIpfsHash)
+    # shutil.move(results_folder, filepath + '/' + resultIpfsHash)
 
 
-resultsFolder = "/home/netlab/eBlocBroker/DAG"
-addToIPFS(resultsFolder)
+results_folder = "/home/netlab/eBlocBroker/DAG"
+addToIPFS(results_folder)

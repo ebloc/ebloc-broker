@@ -9,6 +9,8 @@ from os.path import expanduser
 from web3 import HTTPProvider, Web3
 from web3.auto import w3
 
+from utils import read_json
+
 home = expanduser("~")
 
 
@@ -25,7 +27,7 @@ async def log_loop(filter_id, poll_interval):
         await asyncio.sleep(poll_interval)
 
 
-def main():
+if __name__ == "__main__":
     topic = "0x07678231"
 
     web3 = Web3(HTTPProvider("http://localhost:8545"))
@@ -34,16 +36,14 @@ def main():
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
         # First time running:
         log("Please first run: python whisperInitialize.py")
-        sys.exit()
+        sys.exit(1)
     else:
-        with open(home + "/.eBlocBroker/whisperInfo.txt") as json_file:
-            data = json.load(json_file)
-
+        success, data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
         publicKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):
             log("Whisper node's private key of a key pair did not match with the given ID")
-            sys.exit()
+            sys.exit(1)
 
         filter_id = data["filter_id"]
         print("filter_id=" + filter_id)
@@ -52,8 +52,8 @@ def main():
 
     print("publicKeyK: " + publicKey)
     """
-	print('FilterID: ' + filter_id)	
-	print('receiverPrivateK: ' + web3.geth.shh.getPrivateKey(kId));		
+	print('FilterID: ' + filter_id)
+	print('receiverPrivateK: ' + web3.geth.shh.getPrivateKey(kId));
 	print(web3.geth.shh.hasKeyPair(kId))
 	print('PubKey: ' + web3.geth.shh.getPublicKey(kId))
     """
@@ -69,7 +69,3 @@ def main():
         loop.run_until_complete(asyncio.gather(log_loop(filter_id, 2)))
     finally:
         loop.close()
-
-
-if __name__ == "__main__":
-    main()
