@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-import json
-from os.path import expanduser
-
 from imports import connect_to_web3
+from lib import EBLOCPATH
+from utils import read_json
 
 
 def is_contract_exists():
-    home = expanduser("~")
-    contract = json.loads(open(home + "/eBlocBroker/contractCalls/contract.json").read())
+    success, contract = read_json(f"{EBLOCPATH}/contractCalls/contract.json")
+    if not success:
+        return False
+
     contract_address = contract["address"]
 
     w3 = connect_to_web3()

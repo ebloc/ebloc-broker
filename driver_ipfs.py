@@ -3,26 +3,29 @@
 import os
 import subprocess
 import time
-from config import logging
-from lib import (LOG_PATH, StorageID, calculate_folder_size, convert_bytes32_to_ipfs,
-                 execute_shell_command, get_ipfs_hash, is_ipfs_hash_cached, is_ipfs_hash_exists,
-                 is_ipfs_running, log, silent_remove)
+
+from config import bp, logging
+from lib import (LOG_PATH, CacheType, StorageID, calculate_folder_size,
+                 get_ipfs_hash, is_ipfs_hash_cached, is_ipfs_hash_exists,
+                 is_ipfs_running, log, run_command, silent_remove)
 from storage_class import Storage
+from utils import byte_to_mb, bytes32_to_ipfs
 
 
 class IpfsClass(Storage):
-    def __init__(self, loggedJob, jobInfo, requesterID, is_already_cached, oc=None):
-        super(self.__class__, self).__init__(loggedJob, jobInfo, requesterID, is_already_cached, oc)
-        # cacheType is should be public on IPFS
-        # if the requested file is already cached, it stays as 0
-        self.dataTransferIn = 0
+    def __init__(self, logged_job, jobInfo, requesterID, is_already_cached, oc=None):
+        super(self.__class__, self).__init__(logged_job, jobInfo, requesterID, is_already_cached, oc)
+        # cache_type is should be public on IPFS
+        self.cache_type = CacheType.PUBLIC.value
         self.share_token = "-1"  # Constant value for ipfs
+        self.ipfs_hashes = []
+        self.cumulative_sizes = {}
 
     def decrypt_using_minilock(self, ipfs_hash):
         with open(f"{LOG_PATH}/private/miniLockPassword.txt", "r") as content_file:
             passW = content_file.read().strip()
 
-        command = [
+        cmd = [
             "mlck",
             "decrypt",
             "-f",
@@ -31,19 +34,32 @@ class IpfsClass(Storage):
             f"--output-file={self.results_folder}/output.tar.gz",
         ]
         passW = None
-        status, res = execute_shell_command(command)
-        command = None
-        logging.info(f"mlck decrypt status={status}")
+        success, output = run_command(cmd)
+        cmd = None
+        logging.info(f"mlck decrypt success={success}")
         tar_file = f"{self.results_folder}/output.tar.gz"
         subprocess.run(["tar", "-xvf", tar_file, "-C", self.results_folder])
         silent_remove(f"{self.results_folder}/{ipfs_hash}")
         silent_remove(f"{self.results_folder}/output.tar.gz")
 
+    def check_ipfs_ipfs(self, ipfs_hash) -> bool:
+        success, ipfs_stat, cumulative_size = is_ipfs_hash_exists(ipfs_hash, attempt_count=1)
+        self.ipfs_hashes.append(ipfs_hash)
+        self.cumulative_sizes[self.job_key] = cumulative_size
+        data_size_mb = byte_to_mb(cumulative_size)
+        logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
+
+        # config.bp()
+        if not success or not ("CumulativeSize" in ipfs_stat):
+            logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve.")
+            return False
+        return True
+
     def run(self):
         log(f"=> New job has been received. IPFS call | {time.ctime()}", "blue")
-        is_ipfs_running()
-        cumulative_size_list = []
-        ipfs_hash_list = []
+        success = is_ipfs_running()
+        if not success:
+            return False
 
         logging.info(f"is_ipfs_hash_cached={is_ipfs_hash_cached(self.job_key)}")
 
@@ -51,51 +67,45 @@ class IpfsClass(Storage):
             os.makedirs(self.results_folder)
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
-        status, ipfs_stat, cumulative_size = is_ipfs_hash_exists(self.job_key, attempt_count=1)
-        ipfs_hash_list.append(self.job_key)
-        cumulative_size_list.append(cumulative_size)
-
-        if not status or not ("CumulativeSize" in ipfs_stat):
-            logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
+        success = self.check_ipfs_ipfs(self.job_key)
+        # config.bp()
+        if not success:
             return False
 
         for source_code_hash in self.source_code_hashes:
-            source_code_ipfs_hash = convert_bytes32_to_ipfs(source_code_hash)
-            if source_code_ipfs_hash not in ipfs_hash_list:
+            ipfs_hash = bytes32_to_ipfs(source_code_hash)
+            if ipfs_hash not in self.ipfs_hashes:
                 # job_key as data hash already may added to the list
-                status, ipfs_stat, cumulative_size = is_ipfs_hash_exists(source_code_ipfs_hash, attempt_count=1)
-                cumulative_size_list.append(cumulative_size)
-                ipfs_hash_list.append(source_code_ipfs_hash)
-                if not status:
+                success = self.check_ipfs_ipfs(ipfs_hash)
+                if not success:
                     return False
 
-        initial_size = calculate_folder_size(self.results_folder)
-        print(initial_size)
+        initial_folder_size = calculate_folder_size(self.results_folder)
 
-        for ipfs_hash in ipfs_hash_list:  # Here scripts knows that provided IPFS hashes exists
+        for ipfs_hash in self.ipfs_hashes:
+            # Here scripts knows that provided IPFS hashes exists
             logging.info(f"Attempting to get IPFS file {ipfs_hash}")
             is_hashed = False
             if is_ipfs_hash_cached(ipfs_hash):
                 is_hashed = True
-                logging.info(f"=> IPFS file {ipfs_hash} is already cached.")
+                log(f"=> IPFS file {ipfs_hash} is already cached.", "blue")
 
             get_ipfs_hash(ipfs_hash, self.results_folder, False)
-            if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:  # Case for the ipfsMiniLock
+
+            if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:
+                # Case for the ipfsMiniLock
                 self.decrypt_using_minilock(ipfs_hash)
 
             if not is_hashed:
                 folder_size = calculate_folder_size(self.results_folder)
-                self.dataTransferIn += folder_size - initial_size
-                initial_size = folder_size
-                # dataTransferIn += convert_byte_to_mb(cumulative_size)
+                self.dataTransferIn_used += folder_size - initial_folder_size
+                initial_folder_size = folder_size
+                # self.dataTransferIn_used += byte_to_mb(cumulative_size)
 
             if not os.path.isfile(f"{self.results_folder}/run.sh"):
                 logging.error("run.sh file does not exist")
                 return False
 
-        logging.info(f"dataTransferIn={self.dataTransferIn} MB | Rounded={int(self.dataTransferIn)} MB")
+        logging.info(f"dataTransferIn={self.dataTransferIn_used} MB | Rounded={int(self.dataTransferIn_used)} MB")
 
-        if not self.sbatch_call():
-            return False
-
-        return True
+        return self.sbatch_call()

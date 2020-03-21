@@ -1,490 +1,459 @@
 #!/usr/bin/env python3
 
 import base64
+import datetime
 import getpass
 import glob
-import hashlib
-import json
 import os
 import subprocess
 import sys
 import time
-from os.path import expanduser
+from typing import List
 
 import lib
-from config import load_log
-from contractCalls.get_job_info import get_job_info, getJobSourceCodeHash
+from config import bp, load_log  # noqa: F401
+from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
-from lib import PROVIDER_ID, execute_shell_command
+from lib import (HOME, PROVIDER_ID, StorageID, eblocbroker_function_call,
+                 ipfs_add, remove_empty_files_and_folders, run_command,
+                 run_command_stdout_to_file)
 from lib_gdrive import get_gdrive_file_info
+from lib_git import git_diff_patch
+from lib_owncloud import upload_results_to_eudat
+from utils import byte_to_mb, eth_address_to_md5, read_json
 
 eBlocBroker, w3 = connect()
-home_dir = expanduser("~")
-log_ec = None
 
 
-def upload_results_to_eudat(encodedShareToken, output_file_name):
-    """ cmd: ( https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577 )
-    curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encodedShareToken\'==\' \
-            --data-binary \'@result-\'$providerID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$providerID-$index.tar.gz
+class ENDCODE:
+    def __init__(
+        self, _job_key, _index, _cloud_storage_id, _share_token, _received_block_number, _folder_name, _slurm_job_id,
+    ) -> None:
+        global logging
+        self.job_key = _job_key
+        self.index = _index
+        self.cloud_storage_id = _cloud_storage_id
+        self.share_token = _share_token
+        self.received_block_number = _received_block_number
+        self.folder_name = _folder_name
+        self.slurm_job_id = _slurm_job_id
+        self.encoded_share_token = ""
+        self.dataTransferIn = 0
+        self.dataTransferOut = 0
+        self.result_ipfs_hash = ""
+        self.source_code_hashes_to_process: List[str] = []
+        # https://stackoverflow.com/a/5971326/2402577 , https://stackoverflow.com/a/4453495/2402577
+        # my_env = os.environ.copy();
+        # my_env["IPFS_PATH"] = HOME + "/.ipfs"
+        # print(my_env)
+        os.environ["IPFS_PATH"] = f"{HOME}/.ipfs"
 
-    curl --fail -X PUT -H 'Content-Type: text/plain' -H 'Authorization: Basic 'SjQzd05XM2NNcFoybk.Write'==' --data-binary
-    '@0b2fe6dd7d8e080e84f1aa14ad4c9a0f_0.txt' https://b2drop.eudat.eu/public.php/webdav/result.txt
-    """
-    p = subprocess.Popen(
-        [
-            "curl",
-            "--fail",
-            "-X",
-            "PUT",
-            "-H",
-            "Content-Type: text/plain",
-            "-H",
-            f"Authorization: Basic {encodedShareToken}",
-            "--data-binary",
-            f"@{output_file_name}",
-            f"https://b2drop.eudat.eu/public.php/webdav/{output_file_name}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    output, err = p.communicate()
-    return p, output, err
-
-
-def process_payment_tx(
-    job_key,
-    index,
-    jobID,
-    elapsedRawTime,
-    result_ipfs_hash,
-    cloudStorageID,
-    slurmJobID,
-    dataTransferIn,
-    dataTransferOut,
-    jobInfo,
-):
-    # cmd: scontrol show job slurmJobID | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
-    is_status, output = execute_shell_command(["scontrol", "show", "job", slurmJobID], None, True)
-    p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE)
-    p2.stdout.close()
-    date = p3.communicate()[0].decode("utf-8").strip()
-
-    command = ["date", "-d", date, "+'%s'"]  # cmd: date -d 2018-09-09T21:50:51 +"%s"
-    is_status, end_time_stamp = execute_shell_command(command, None, True)
-    end_time_stamp = end_time_stamp.rstrip().replace("'", "")
-    log_ec.info(f"end_time_stamp={end_time_stamp}")
-
-    is_status, tx_hash = lib.eblocbroker_function_call(
-        lambda: processPayment(
-            job_key,
-            index,
-            jobID,
-            elapsedRawTime,
-            result_ipfs_hash,
-            cloudStorageID,
-            end_time_stamp,
-            dataTransferIn,
-            dataTransferOut,
-            jobInfo["core"],
-            jobInfo["executionDuration"],
-        ),
-        10,
-    )
-    if not is_status:
-        sys.exit()
-
-    log_ec.info(f"processPayment()_tx_hash={tx_hash}")
-    txFile = open(f"{lib.LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
-    txFile.write(f"{job_key}_{index} | Tx_hash: {tx_hash} | processPayment_tx_hash")
-    txFile.close()
-
-
-# Client's loaded files are removed, no need to re-upload them.
-def removeSourceCode(results_folder_prev, results_folder):
-    # cmd: find . -type f ! -newer $results_folder/timestamp.txt  # Client's loaded files are removed, no need to re-upload them.
-    command = ["find", results_folder, "-type", "f", "!", "-newer", f"{results_folder_prev}/timestamp.txt"]
-    is_status, files_to_remove = execute_shell_command(command, None, True)
-    if files_to_remove != "" or files_to_remove is not None:
-        log_ec.info(f"\nFiles to be removed: \n{files_to_remove}\n")
-    # cmd: find . -type f ! -newer $results_folder/timestamp.txt -delete
-
-    subprocess.run(
-        ["find", results_folder, "-type", "f", "!", "-newer", f"{results_folder_prev}/timestamp.txt", "-delete"]
-    )
-
-
-def end_code(job_key, index, cloudStorageID, shareToken, received_block_number, folder_name, slurmJobID):
-    global log_ec
-    log_ec = load_log(f"{lib.LOG_PATH}/endCodeAnalyse/{job_key}_{index}.log")
-
-    log_ec.info("START:------------------------------------")
-    jobID = 0  # TODO: should be mapped slurmJobID
-
-    # https://stackoverflow.com/a/5971326/2402577 ... https://stackoverflow.com/a/4453495/2402577
-    # my_env = os.environ.copy();
-    # my_env["IPFS_PATH"] = home_dir + "/.ipfs"
-    # print(my_env)
-    os.environ["IPFS_PATH"] = f"{home_dir}/.ipfs"
-
-    log_ec.info(
-        f"~/eBlocBroker/end_code.py {job_key} {index} {cloudStorageID} {shareToken} {received_block_number} {folder_name} {slurmJobID}"
-    )
-    log_ec.info(f"slurmJobID={slurmJobID}")
-    if job_key == index:
-        log_ec.error("job_key and index are same.")
-        sys.exit()
-
-    encodedShareToken = ""
-    if shareToken != "-1":
-        _share_token = f"{shareToken}:"
-        encodedShareToken = base64.b64encode((_share_token).encode("utf-8")).decode("utf-8")
-
-    log_ec.info(f"encodedShareToken: {encodedShareToken}")
-    log_ec.info(f"./get_job_info.py {PROVIDER_ID} {job_key} {index} {jobID}")
-    is_status, jobInfo = lib.eblocbroker_function_call(
-        lambda: get_job_info(PROVIDER_ID, job_key, index, jobID, received_block_number), 10
-    )
-
-    if not is_status:
-        sys.exit()
-
-    requesterID = jobInfo["jobOwner"].lower()
-    requesterIDAddr = hashlib.md5(requesterID.encode("utf-8")).hexdigest()  # Convert Ethereum User Address into 32-bits
-    is_status, requesterInfo = get_requester_info(requesterID)
-    results_folder_prev = f"{lib.PROGRAM_PATH}/{requesterIDAddr}/{job_key}_{index}"
-    results_folder = f"{results_folder_prev}/JOB_TO_RUN"
-
-    # cmd: find ./ -size 0 -print0 | xargs -0 rm
-    p1 = subprocess.Popen(["find", results_folder, "-size", "0", "-print0"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["xargs", "-0", "-r", "rm"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p2.communicate()  # Remove empty files if exist
-
-    # cmd: find ./ -type d -empty -delete | xargs -0 rmdir
-    subprocess.run(["find", results_folder, "-type", "d", "-empty", "-delete"])
-    p1 = subprocess.Popen(["find", results_folder, "-type", "d", "-empty", "-print0"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["xargs", "-0", "-r", "rmdir"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p2.communicate()  # Remove empty folders if exist
-
-    log_ec.info(f"whoami: {getpass.getuser()} os.getegid()")
-    log_ec.info(f"home_dir: {home_dir}")
-    log_ec.info(f"pwd: {os.getcwd()}")
-    log_ec.info(f"results_folder: {results_folder}")
-    log_ec.info(f"job_key: {job_key}")
-    log_ec.info(f"index: {index}")
-    log_ec.info(f"cloudStorageID: {cloudStorageID}")
-    log_ec.info(f"shareToken: {shareToken}")
-    log_ec.info(f"encodedShareToken: {encodedShareToken}")
-    log_ec.info(f"folder_name: {folder_name}")
-    log_ec.info(f"providerID: {PROVIDER_ID}")
-    log_ec.info(f"requesterIDAddr: {requesterIDAddr}")
-    log_ec.info(f"received: {jobInfo['received']}")
-
-    dataTransferIn = 0
-    if os.path.isfile(f"{results_folder_prev}/dataTransferIn.txt"):
-        with open(f"{results_folder_prev}/dataTransferIn.txt") as json_file:
-            data = json.load(json_file)
-            dataTransferIn = data["dataTransferIn"]
-    else:
-        log_ec.error("dataTransferIn.txt does not exist...")
-
-    log_ec.info(f"dataTransferIn={dataTransferIn} MB | Rounded={int(dataTransferIn)} MB")
-    file_name = "modified_date.txt"
-    if os.path.isfile(f"{results_folder_prev}/{file_name}"):
-        f = open(f"{results_folder_prev}/{file_name}", "r")
-        modified_date = f.read().rstrip()
-        f.close()
-        log_ec.info(f"modified_date={modified_date}")
-
-    miniLockID = requesterInfo["miniLockID"]
-    log_ec.info("jobOwner's Info: ")
-    log_ec.info("{0: <12}".format("email:") + requesterInfo["email"])
-    log_ec.info("{0: <12}".format("miniLockID:") + miniLockID)
-    log_ec.info("{0: <12}".format("ipfsID:") + requesterInfo["ipfsID"])
-    log_ec.info("{0: <12}".format("fID:") + requesterInfo["fID"])
-    log_ec.info("")
-
-    if jobInfo["jobStateCode"] == str(lib.job_state_code["COMPLETED"]):
-        log_ec.error("Job is completed and already get paid.")
-        sys.exit()
-
-    executionDuration = jobInfo["executionDuration"]
-    log_ec.info(f"requesterExecutionTime={executionDuration[jobID]} minutes")
-    count = 0
-    while True:
-        if count > 10:
-            sys.exit()
-
-        count += 1
-        if jobInfo["jobStateCode"] == lib.job_state_code["RUNNING"]:
-            # It will come here eventually, when setJob() is deployed.
-            log_ec.info("Job has been started.")
-            break  # Wait until does values updated on the blockchain
-
-        if jobInfo["jobStateCode"] == lib.job_state_code["COMPLETED"]:
-            log_ec.error("E: Job is already completed job and its money is received.")
-            sys.exit()  # Detects an error on the SLURM side
-
-        is_status, jobInfo = lib.eblocbroker_function_call(
-            lambda: get_job_info(PROVIDER_ID, job_key, index, jobID, received_block_number), 10
+        logging = load_log(f"{lib.LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
+        logging.info(f"START: {datetime.datetime.now()}")
+        self.job_id = 0  # TODO: should be mapped slurm_job_id
+        logging.info(
+            f"~/eBlocBroker/end_code.py {self.job_key} {self.index} {self.cloud_storage_id} {self.share_token} {self.received_block_number} {self.folder_name} {self.slurm_job_id}"
         )
-        if not is_status:
-            sys.exit()
+        logging.info(f"slurm_job_id={self.slurm_job_id}")
+        if self.job_key == self.index:
+            logging.error("job_key and index are same.")
+            sys.exit(1)
 
-        log_ec.info(f"Waiting for {count * 15} seconds to pass...")
-        time.sleep(15)  # Short sleep here so this loop is not keeping CPU busy //setJobIs_Status may deploy late.
+        if self.share_token != "-1":
+            self.encoded_share_token = base64.b64encode((f"{self.share_token}:").encode("utf-8")).decode("utf-8")
 
-    # sourceCodeHashes of the completed job is obtained from its.writeged event
-    is_status, jobInfo = lib.eblocbroker_function_call(
-        lambda: getJobSourceCodeHash(jobInfo, PROVIDER_ID, job_key, index, jobID, received_block_number), 10
-    )
-    if not is_status:
-        sys.exit()
+        logging.info(f"encoded_share_token: {self.encoded_share_token}")
+        success, self.job_info = eblocbroker_function_call(
+            lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,), 10,
+        )
+        if not success:
+            sys.exit(1)
 
-    log_ec.info(f"jobName={folder_name}")
-    with open(f"{results_folder}/slurmJobInfo.out", "w") as stdout:
-        command = [
-            "scontrol",
-            "show",
-            "job",
-            slurmJobID,
-        ]  # cmd: scontrol show job $slurmJobID > $results_folder/slurmJobInfo.out
-        subprocess.Popen(command, stdout=stdout)
-        log_ec.info("Writing into slurmJobInfo.out file is completed")
+        requester_id = self.job_info["jobOwner"].lower()
+        requester_id_address = eth_address_to_md5(requester_id)
+        success, self.requester_info = get_requester_info(requester_id)
+        self.results_folder_prev = f"{lib.PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
+        self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        self.results_data_link = f"{self.results_folder_prev}/data_link"
+        self.results_data_folder = f"{self.results_folder_prev}/data"
 
-    command = [
-        "sacct",
-        "-n",
-        "-X",
-        "-j",
-        slurmJobID,
-        "--format=Elapsed",
-    ]  # cmd: sacct -n -X -j $slurmJobID --format="Elapsed"
-    is_status, elapsedTime = execute_shell_command(command, None, True)
-    log_ec.info(f"ElapsedTime={elapsedTime}")
+        remove_empty_files_and_folders(self.results_folder)
 
-    elapsedTime = elapsedTime.split(":")
-    elapsedDay = "0"
-    elapsedHour = elapsedTime[0].strip()
-    elapsedMinute = elapsedTime[1].rstrip()
+        logging.info(f"whoami: {getpass.getuser()} - {os.getegid()}")
+        logging.info(f"home: {HOME}")
+        logging.info(f"pwd: {os.getcwd()}")
+        logging.info(f"results_folder: {self.results_folder}")
+        logging.info(f"job_key: {self.job_key}")
+        logging.info(f"index: {self.index}")
+        logging.info(f"cloud_storage_id: {self.cloud_storage_id}")
+        logging.info(f"share_token: {self.share_token}")
+        logging.info(f"encoded_share_token: {self.encoded_share_token}")
+        logging.info(f"folder_name: {self.folder_name}")
+        logging.info(f"providerID: {PROVIDER_ID}")
+        logging.info(f"requester_id_address: {requester_id_address}")
+        logging.info(f"received: {self.job_info['received']}")
 
-    if "-" in str(elapsedHour):
-        elapsedHour = elapsedHour.split("-")
-        elapsedDay = elapsedHour[0]
-        elapsedHour = elapsedHour[1]
+    def process_payment_tx(self):
+        # cmd: scontrol show job slurm_job_id | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
+        success, output = run_command(["scontrol", "show", "job", self.slurm_job_id], None, True)
+        p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()
+        p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE,)
+        p2.stdout.close()
+        date = p3.communicate()[0].decode("utf-8").strip()
 
-    elapsedRawTime = int(elapsedDay) * 1440 + int(elapsedHour) * 60 + int(elapsedMinute) + 1
-    log_ec.info(f"ElapsedRawTime={elapsedRawTime}")
+        cmd = ["date", "-d", date, "+'%s'"]  # cmd: date -d 2018-09-09T21:50:51 +"%s"
+        success, end_time_stamp = run_command(cmd, None, True)
+        end_time_stamp = end_time_stamp.rstrip().replace("'", "")
+        logging.info(f"end_time_stamp={end_time_stamp}")
 
-    if elapsedRawTime > int(executionDuration[jobID]):
-        elapsedRawTime = executionDuration[jobID]
+        success, tx_hash = eblocbroker_function_call(
+            lambda: processPayment(
+                self.job_key,
+                self.index,
+                self.job_id,
+                self.elapsed_raw_time,
+                self.result_ipfs_hash,
+                self.cloud_storage_id,
+                end_time_stamp,
+                self.dataTransferIn,
+                self.dataTransferOut,
+                self.job_info["core"],
+                self.job_info["executionDuration"],
+            ),
+            10,
+        )
+        if not success:
+            sys.exit(1)
 
-    log_ec.info(f"finalizedElapsedRawTime={elapsedRawTime}")
-    log_ec.info(f"jobInfo={jobInfo}")
-    output_file_name = f"result-{PROVIDER_ID}-{job_key}-{index}.tar.gz"
+        logging.info(f"processPayment()_tx_hash={tx_hash}")
+        f = open(f"{lib.LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
+        f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
+        f.close()
 
-    # Here we know that job is already completed
-    if cloudStorageID == str(lib.StorageID.IPFS.value) or cloudStorageID == str(lib.StorageID.GITHUB.value):
-        removeSourceCode(results_folder_prev, results_folder)
-        for attempt in range(10):
-            command = ["ipfs", "add", "-r", results_folder]  # Uploaded as folder
-            is_status, result_ipfs_hash = execute_shell_command(command, None, True)
-            if not is_status or result_ipfs_hash == "":
-                """ Approach to upload as .tar.gz. Currently not used.
-                removeSourceCode(results_folder_prev)
-                with open(f"{results_folder_prev}/modified_date.txt') as content_file:
-                date = content_file.read().strip()
-                command = ['tar', '-N', date, '-jcvf', output_file_name] + glob.glob("*")
-                log.write(execute_shell_command(command, None, True))
-                command = ['ipfs', 'add', results_folder + '/result.tar.gz']
-                is_status, result_ipfs_hash = execute_shell_command(command)
-                result_ipfs_hash = result_ipfs_hash.split(' ')[1]
-                silent_remove(results_folder + '/result.tar.gz')
-                """
-                log_ec.error(f"E: Generated new hash return empty. Trying again... Try count: {attempt}")
-                time.sleep(5)  # wait 5 second for next step retry to up-try
-            else:  # success
-                break
-        else:  # we failed all the attempts - abort
-            sys.exit()
+    def remove_source_code(self):
+        """Client's initial downloaded files are removed."""
+        timestamp_file = f"{self.results_folder_prev}/timestamp.txt"
+        cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file]
+        success, files_to_remove = run_command(cmd, None, True)
+        if not files_to_remove or files_to_remove is not None:
+            logging.info(f"Files to be removed: \n{files_to_remove}\n")
 
-        # dataTransferOut = lib.calculate_folder_size(results_folder)
-        # log.write('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB')
-        result_ipfs_hash = lib.getIpfsParentHash(result_ipfs_hash)
-        command = ["ipfs", "pin", "add", result_ipfs_hash]
-        is_status, res = execute_shell_command(command, None, True)  # pin downloaded ipfs hash
-        print(res)
+        subprocess.run(
+            ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete",]
+        )
 
-        command = ["ipfs", "object", "stat", result_ipfs_hash]
-        is_status, is_ipfs_hash_exist = execute_shell_command(command, None, True)  # pin downloaded ipfs hash
+    def ipfs_upload(self):
+        # TODO:
+        git_diff_patch()
+        success, self.result_ipfs_hash = ipfs_add(self.results_folder)
+
+        # self.dataTransferOut = lib.calculate_folder_size(results_folder)
+        # log.write('dataTransferOut=' + str(self.dataTransferOut) + ' MB => rounded=' + str(int(self.dataTransferOut)) + ' MB')
+        success, self.result_ipfs_hash = lib.get_ipfs_parent_hash(self.result_ipfs_hash)
+        cmd = ["ipfs", "pin", "add", self.result_ipfs_hash]
+        success, output = run_command(cmd, None, True)  # pin downloaded ipfs hash
+        print(output)
+
+        cmd = ["ipfs", "object", "stat", self.result_ipfs_hash]
+        success, is_ipfs_hash_exist = run_command(cmd, None, True)  # pin downloaded ipfs hash
         for item in is_ipfs_hash_exist.split("\n"):
             if "CumulativeSize" in item:
-                dataTransferOut = item.strip().split()[1]
+                self.dataTransferOut = item.strip().split()[1]
                 break
 
-        dataTransferOut = lib.convert_byte_to_mb(dataTransferOut)
-        log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
-    if cloudStorageID == str(lib.StorageID.IPFS_MINILOCK.value):
-        os.chdir(results_folder)
-        with open(f"{results_folder_prev}/modified_date.txt") as content_file:
-            date = content_file.read().strip()
+        self.dataTransferOut = byte_to_mb(self.dataTransferOut)
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
 
-        command = ["tar", "-N", date, "-jcvf", output_file_name] + glob.glob("*")
-        is_status, result = execute_shell_command(command, None, True)
-        log_ec.info(result)
-        # cmd: mlck encrypt -f $results_folder/result.tar.gz $miniLockID --anonymous --output-file=$results_folder/result.tar.gz.minilock
-        command = [
+    def ipfs_minilock_upload(self):
+        os.chdir(self.results_folder)
+        cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name,] + glob.glob("*")
+        success, output = run_command(cmd, None, True)
+        logging.info(output)
+
+        cmd = [
             "mlck",
             "encrypt",
             "-f",
-            f"{results_folder}/result.tar.gz",
-            miniLockID,
+            f"{self.results_folder}/result.tar.gz",
+            self.minilock_id,
             "--anonymous",
-            f"--output-file={results_folder}/result.tar.gz.minilock",
+            f"--output-file={self.results_folder}/result.tar.gz.minilock",
         ]
-        is_status, res = execute_shell_command(command, None, True)
-        log_ec.info(res)
-        removeSourceCode(results_folder_prev, results_folder)
-        for attempt in range(10):
-            command = ["ipfs", "add", f"{results_folder}/result.tar.gz.minilock"]
-            is_status, result_ipfs_hash = execute_shell_command(command, None, True)
-            result_ipfs_hash = result_ipfs_hash.split(" ")[1]
-            if result_ipfs_hash == "":
-                log_ec.error(f"E: Generated new hash returned empty. Trying again... Try count: {attempt}")
-                time.sleep(5)  # wait 5 second for next step retry to up-try
-            else:  # success
-                break
-        else:  # we failed all the attempts - abort
-            sys.exit()
+        success, output = run_command(cmd, None, True)
+        logging.info(output)
 
-        # dataTransferOut = lib.calculate_folder_size(results_folder + '/result.tar.gz.minilock')
-        # log.write('dataTransferOut=' + str(dataTransferOut) + ' MB | Rounded=' + str(int(dataTransferOut)) + ' MB')
-        log_ec.info(f"result_ipfs_hash={result_ipfs_hash}")
-        command = ["ipfs", "pin", "add", result_ipfs_hash]
-        is_status, res = execute_shell_command(command, None, True)
-        print(res)
-        command = ["ipfs", "object", "stat", result_ipfs_hash]
-        is_status, is_ipfs_hash_exist = execute_shell_command(command, None, True)
+        # TODO:
+        git_diff_patch()
+
+        success, self.result_ipfs_hash = ipfs_add(f"{self.results_folder}/result.tar.gz.minilock")
+        logging.info(f"result_ipfs_hash={self.result_ipfs_hash}")
+
+        # self.dataTransferOut = lib.calculate_folder_size(results_folder + '/result.tar.gz.minilock')
+        # log.write('dataTransferOut=' + str(self.dataTransferOut) + ' MB => rounded=' + str(int(self.dataTransferOut)) + ' MB')
+        cmd = ["ipfs", "pin", "add", self.result_ipfs_hash]
+        success, output = run_command(cmd, None, True)
+        print(output)
+        cmd = ["ipfs", "object", "stat", self.result_ipfs_hash]
+        success, is_ipfs_hash_exist = run_command(cmd, None, True)
         for item in is_ipfs_hash_exist.split("\n"):
             if "CumulativeSize" in item:
-                dataTransferOut = item.strip().split()[1]
+                self.dataTransferOut = item.strip().split()[1]
                 break
 
-        dataTransferOut = lib.convert_byte_to_mb(dataTransferOut)
-        log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
-    elif cloudStorageID == str(lib.StorageID.EUDAT.value):
-        log_ec.info("Entered into Eudat case")
-        result_ipfs_hash = ""
-        lib.removeFiles(f"{results_folder}/.node-xmlhttprequest*")
-        os.chdir(results_folder)
-        removeSourceCode(results_folder_prev, results_folder)
-        # cmd: tar -jcvf result-$providerID-$index.tar.gz *
-        # command = ['tar', '-jcvf', output_file_name] + glob.glob("*")
-        # log.write(execute_shell_command(command))
-        with open(f"{results_folder_prev}/modified_date.txt") as content_file:
-            date = content_file.read().strip()
+        self.dataTransferOut = byte_to_mb(self.dataTransferOut)
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
 
-        command = ["tar", "-N", date, "-jcvf", output_file_name] + glob.glob("*")
-        is_status, result = execute_shell_command(command, None, True)
-        log_ec.info(f"Files to be archived using tar: \n {result}")
-        dataTransferOut = lib.calculate_folder_size(output_file_name)
-        log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
-        for attempt in range(5):
-            p, output, err = upload_results_to_eudat(encodedShareToken, output_file_name)
-            output = output.strip().decode("utf-8")
-            err = err.decode("utf-8")
-            if p.returncode != 0 or "<d:error" in output:
-                log_ec.error("E: EUDAT repository did not successfully loaded.")
-                log_ec.error(f"curl failed {p.returncode} {err.decode('utf-8')}. {output}")
-                time.sleep(1)  # wait 1 second for next step retry to upload
-            else:  # success on upload
-                break
-        else:  # we failed all the attempts - abort
-            sys.exit()
-    elif cloudStorageID == str(lib.StorageID.GDRIVE.value):
-        result_ipfs_hash = ""
-        # cmd: gdrive info $job_key -c $GDRIVE_METADATA # stored for both pipes otherwise its read and lost
-        is_status, gdriveInfo = lib.subprocess_call_attempt(
-            [lib.GDRIVE, "info", "--bytes", job_key, "-c", lib.GDRIVE_METADATA], 500, 1
-        )
-        if not is_status:
+    def _eudat_upload(self, path, source_code_hash) -> bool:
+        print(path)
+        os.chdir(path)
+        success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
+        patch_name = f"patch_{git_head_hash}_{source_code_hash}_{self.index}.diff"
+        logging.info(f"patch_name={patch_name}")
+        patch_file = f"{self.results_folder_prev}/{patch_name}"  # File to be uploaded
+        success = git_diff_patch(path, patch_file)
+        # TODO: maybe tar the patch file
+        time.sleep(0.1)
+        _dataTransferOut = lib.calculate_folder_size(patch_file)
+        logging.info(f"[{source_code_hash}]'s dataTransferOut => {_dataTransferOut} MB")
+        self.dataTransferOut += _dataTransferOut
+        success = upload_results_to_eudat(self.encoded_share_token, patch_name, self.results_folder_prev, 5)
+        if not success:
             return False
 
-        mimeType = get_gdrive_file_info(gdriveInfo, "Mime")
-        log_ec.info(f"mime_type={mimeType}")
-        os.chdir(results_folder)
-        # if 'folder' in mimeType:  # Received job is in folder format
-        removeSourceCode(results_folder_prev, results_folder)
-        with open(f"{results_folder_prev}/modified_date.txt", "r") as content_file:
-            date = content_file.read().rstrip()
+        return True
 
-        command = ["tar", "-N", date, "-jcvf", output_file_name] + glob.glob("*")
-        is_status, result = execute_shell_command(command, None, True)
-        log_ec.info(result)
-        time.sleep(0.25)
-        dataTransferOut = lib.calculate_folder_size(output_file_name)
-        log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
-        if "folder" in mimeType:  # Received job is in folder format
-            log_ec.info("mimeType=folder")
-            # cmd: $GDRIVE upload --parent $job_key result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
-            command = [lib.GDRIVE, "upload", "--parent", job_key, output_file_name, "-c", lib.GDRIVE_METADATA]
-            is_status, res = lib.subprocess_call_attempt(command, 500)
-            log_ec.info(res)
-        elif "gzip" in mimeType:  # Received job is in folder tar.gz
-            log_ec.info("mimeType=tar.gz")
-            # cmd: $GDRIVE update $job_key result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
-            command = [lib.GDRIVE, "update", job_key, output_file_name, "-c", lib.GDRIVE_METADATA]
-            is_status, res = lib.subprocess_call_attempt(command, 500)
-            log_ec.info(res)
-        elif "/zip" in mimeType:  # Received job is in zip format
-            log_ec.info("mimeType=zip")
-            # cmd: $GDRIVE update $job_key result-$providerID-$index.tar.gz -c $GDRIVE_METADATA
-            command = [lib.GDRIVE, "update", job_key, output_file_name, "-c", lib.GDRIVE_METADATA]
-            is_status, res = lib.subprocess_call_attempt(command, 500)
-            log_ec.info(res)
+    def eudat_upload(self) -> bool:
+        logging.info("Entered into Eudat case")
+        lib.remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
+        success = self._eudat_upload(self.results_folder, self.source_code_hashes_to_process[0])
+        if not success:
+            return False
+
+        for data_name in self.source_code_hashes_to_process[1:]:
+            # starting from 1st index for data files
+            logging.info(f"=> Patch for data {data_name}")
+            data_path = f"{self.results_data_folder}/{data_name}"
+            success = self._eudat_upload(data_path, data_name)
+            if not success:
+                return False
+        return True
+
+    def gdrive_upload(self):
+        # stored for both pipes otherwise its read and lost
+        success, gdrive_info = lib.subprocess_call_attempt(
+            [lib.GDRIVE, "info", "--bytes", self.job_key, "-c", lib.GDRIVE_METADATA], 500, 1,
+        )
+        if not success:
+            return False
+
+        mime_type = get_gdrive_file_info(gdrive_info, "Mime")
+        logging.info(f"mime_type={mime_type}")
+        os.chdir(self.results_folder)
+        # if 'folder' in mime_type:  # Received job is in folder format
+        # TODO:
+        git_diff_patch()
+
+        cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
+        success, output = run_command(cmd, None, True)
+        logging.info(output)
+        time.sleep(0.1)
+        self.dataTransferOut = lib.calculate_folder_size(self.output_file_name)
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
+        if "folder" in mime_type:  # Received job is in folder format
+            logging.info("mime_type=folder")
+            cmd = [
+                lib.GDRIVE,
+                "upload",
+                "--parent",
+                self.job_key,
+                self.output_file_name,
+                "-c",
+                lib.GDRIVE_METADATA,
+            ]
+            success, output = lib.subprocess_call_attempt(cmd, 500)
+            logging.info(output)
+        elif "gzip" in mime_type:  # Received job is in folder tar.gz
+            logging.info("mime_type=tar.gz")
+            cmd = [
+                lib.GDRIVE,
+                "update",
+                self.job_key,
+                self.output_file_name,
+                "-c",
+                lib.GDRIVE_METADATA,
+            ]
+            success, output = lib.subprocess_call_attempt(cmd, 500)
+            logging.info(output)
+        elif "/zip" in mime_type:  # Received job is in zip format
+            logging.info("mime_type=zip")
+            cmd = [
+                lib.GDRIVE,
+                "update",
+                self.job_key,
+                self.output_file_name,
+                "-c",
+                lib.GDRIVE_METADATA,
+            ]
+            success, output = lib.subprocess_call_attempt(cmd, 500)
+            logging.info(output)
         else:
-            log_ec.error("E: Files could not be uploaded")
-            sys.exit()
+            logging.error("E: Files could not be uploaded")
+            sys.exit(1)
 
-    dataTransferSum = dataTransferIn + dataTransferOut
-    log_ec.info(f"dataTransferIn={dataTransferIn} MB | Rounded={int(dataTransferIn)} MB")
-    log_ec.info(f"dataTransferOut={dataTransferOut} MB | Rounded={int(dataTransferOut)} MB")
-    log_ec.info(f"dataTransferSum={dataTransferSum} MB | Rounded={int(dataTransferSum)} MB")
-    process_payment_tx(
-        job_key,
-        index,
-        jobID,
-        elapsedRawTime,
-        result_ipfs_hash,
-        cloudStorageID,
-        slurmJobID,
-        int(dataTransferIn),
-        int(dataTransferOut),
-        jobInfo,
-    )
+    def run(self):
+        f = f"{self.results_folder_prev}/dataTransferIn.json"
+        success, data = read_json(f)
+        if success:
+            self.dataTransferIn = data["dataTransferIn"]
+        else:
+            logging.error("dataTransferIn.json does not exist...")
 
-    log_ec.info("=====COMPLETED=====")
-    """
-    # Removed downloaded code from local since it is not needed anymore
-    if os.path.isdir(results_folder_prev):
-    shutil.rmtree(results_folder_prev)  # deletes a directory and all its contents.
-    """
+        logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
+
+        f = f"{self.results_folder_prev}/modified_date.txt"
+        if os.path.isfile(f):
+            f = open(f, "r")
+            self.modified_date = f.read().rstrip()
+            f.close()
+            logging.info(f"modified_date={self.modified_date}")
+
+        self.minilock_id = self.requester_info["miniLockID"]
+        logging.info("jobOwner's Info: ")
+        logging.info("{0: <12}".format("email:") + self.requester_info["email"])
+        logging.info("{0: <12}".format("miniLockID:") + self.minilock_id)
+        logging.info("{0: <12}".format("ipfsID:") + self.requester_info["ipfsID"])
+        logging.info("{0: <12}".format("fID:") + self.requester_info["fID"])
+        logging.info("")
+
+        if self.job_info["jobStateCode"] == str(lib.job_state_code["COMPLETED"]):
+            logging.error("Job is completed and already get paid.")
+            sys.exit(1)
+
+        executionDuration = self.job_info["executionDuration"]
+        logging.info(f"requested_execution_duration={executionDuration[self.job_id]} minutes")
+
+        for attempt in range(10):
+            if self.job_info["jobStateCode"] == lib.job_state_code["RUNNING"]:
+                # It will come here eventually, when setJob() is deployed.
+                logging.info("Job has been started.")
+                break  # Wait until does values updated on the blockchain
+
+            if self.job_info["jobStateCode"] == lib.job_state_code["COMPLETED"]:
+                # Detects an error on the SLURM side
+                logging.warning("E: Job is already completed job and its money is received.")
+                sys.exit(1)
+
+            success, self.job_info = eblocbroker_function_call(
+                lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,),
+                10,
+            )
+            if not success:
+                sys.exit(1)
+
+            logging.info(f"Waiting for {attempt * 15} seconds to pass...")
+            # Short sleep here so this loop is not keeping CPU busy //setJobSuccess may deploy late.
+            time.sleep(15)
+        else:
+            # Failed all the attempts - abort
+            sys.exit(1)
+
+        success, self.job_info = eblocbroker_function_call(
+            # sourceCodeHashes of the completed job is obtained from its event
+            lambda: get_job_source_code_hashes(
+                self.job_info, PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+            ),
+            10,
+        )
+        if not success:
+            sys.exit(1)
+
+        self.source_code_hashes = self.job_info["sourceCodeHash"]
+        for source_code_hash in self.source_code_hashes:
+            self.source_code_hashes_to_process.append(w3.toText(source_code_hash))
+
+        logging.info(f"job_name={self.folder_name}")
+        cmd = ["scontrol", "show", "job", self.slurm_job_id]
+        success = run_command_stdout_to_file(cmd, f"{self.results_folder}/slurmJobInfo.out")
+        # cmd: sacct -n -X -j $slurm_job_id --format="Elapsed"
+        cmd = ["sacct", "-n", "-X", "-j", self.slurm_job_id, "--format=Elapsed"]
+        success, elapsed_time = run_command(cmd, None, True)
+        logging.info(f"ElapsedTime={elapsed_time}")
+        elapsed_time = elapsed_time.split(":")
+        elapsed_day = "0"
+        elapsed_hour = elapsed_time[0].strip()
+        elapsed_minute = elapsed_time[1].rstrip()
+
+        if "-" in str(elapsed_hour):
+            elapsed_hour = elapsed_hour.split("-")
+            elapsed_day = elapsed_hour[0]
+            elapsed_hour = elapsed_hour[1]
+
+        self.elapsed_raw_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
+        logging.info(f"ElapsedRawTime={self.elapsed_raw_time}")
+
+        if self.elapsed_raw_time > int(executionDuration[self.job_id]):
+            self.elapsed_raw_time = executionDuration[self.job_id]
+
+        logging.info(f"finalized_elapsed_raw_time={self.elapsed_raw_time}")
+        logging.info(f"job_info={self.job_info}")
+        self.output_file_name = f"result-{PROVIDER_ID}-{self.job_key}-{self.index}.tar.gz"
+
+        # TODO: cloud_storage_id is list should be iterated over
+        # Here we know that job is already completed
+        if self.cloud_storage_id == StorageID.IPFS.value:
+            self.ipfs_upload()
+        if self.cloud_storage_id == StorageID.IPFS_MINILOCK.value:
+            self.ipfs_minilock_upload()
+        elif self.cloud_storage_id == StorageID.EUDAT.value:
+            success = self.eudat_upload()
+        elif self.cloud_storage_id == StorageID.GDRIVE.value:
+            self.gdrive_upload()
+
+        if not success:
+            return False
+
+        dataTransferSum = self.dataTransferIn + self.dataTransferOut
+        logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
+        logging.info(f"dataTransferSum={dataTransferSum} MB => rounded={int(dataTransferSum)} MB")
+        # bp()
+        self.process_payment_tx()
+        logging.info("COMPLETED")
+        # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
 
 
 if __name__ == "__main__":
-    job_key = sys.argv[1]
-    index = sys.argv[2]
-    cloudStorageID = sys.argv[3]
-    shareToken = sys.argv[4]
-    received_block_number = sys.argv[5]
-    folder_name = sys.argv[6]
-    slurmJobID = sys.argv[7]
+    _job_key = sys.argv[1]
+    _index = sys.argv[2]
+    _cloud_storage_id = int(sys.argv[3])
+    _share_token = sys.argv[4]
+    _received_block_number = sys.argv[5]
+    _folder_name = sys.argv[6]
+    _slurm_job_id = sys.argv[7]
 
-    end_code(job_key, index, cloudStorageID, shareToken, received_block_number, folder_name, slurmJobID)
+    e = ENDCODE(_job_key, _index, _cloud_storage_id, _share_token, _received_block_number, _folder_name, _slurm_job_id,)
+    e.run()
+
+""" Approach to upload as .tar.gz. Currently not used.
+                remove_source_code()
+                with open(f"{results_folder_prev}/modified_date.txt') as content_file:
+                date = content_file.read().strip()
+                cmd = ['tar', '-N', date, '-jcvf', self.output_file_name] + glob.glob("*")
+                log.write(run_command(cmd, None, True))
+                cmd = ['ipfs', 'add', results_folder + '/result.tar.gz']
+                success, self.result_ipfs_hash = run_command(cmd)
+                self.result_ipfs_hash = self.result_ipfs_hash.split(' ')[1]
+                silent_remove(results_folder + '/result.tar.gz')
+"""
+
+# self.remove_source_code()
+# cmd: tar -jcvf result-$providerID-$index.tar.gz *
+# cmd = ['tar', '-jcvf', self.output_file_name] + glob.glob("*")
+# log.write(run_command(cmd))
+# cmd = ["tar", "-N", self.modified_date, "-czfj", self.output_file_name] + glob.glob("*")
+# success, output = run_command(cmd, None, True)
+# logging.info(f"Files to be archived using tar: \n {output}")

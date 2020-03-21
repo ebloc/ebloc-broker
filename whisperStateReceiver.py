@@ -6,7 +6,6 @@
 
 # from web3.auto import w3
 import asyncio
-import json
 import os.path
 import sys
 from os.path import expanduser
@@ -14,6 +13,7 @@ from os.path import expanduser
 from web3 import HTTPProvider, Web3
 
 import lib
+from utils import read_json
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 
@@ -36,8 +36,9 @@ def log(strIn):
 
 def post(recipientPublicKey):
     # https://stackoverflow.com/a/50095154/2402577
-    status, res = lib.execute_shell_command(["sinfo", "-h", "-o%C"])
-    output = res[0].split("/")
+    cmd = ["sinfo", "-h", "-o%C"]
+    success, output = lib.run_command(cmd)
+    output = output[0].split("/")
     allocated_core = output[0]
     idle_core = output[1]
 
@@ -107,16 +108,14 @@ def main(_test_flag=False):
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
         # First time running:
         log("Please first run: python whisperInitialize.py")
-        sys.exit()
+        sys.exit(1)
     else:
-        with open(home + "/.eBlocBroker/whisperInfo.txt") as json_file:
-            data = json.load(json_file)
-
+        success, data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
         publicKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):
             log("Whisper node's private key of a key pair did not match with the given ID")
-            sys.exit()
+            sys.exit(1)
 
         # myFilter = w3.geth.shh.newMessageFilter({'topic': topic, 'privateKeyID': kId, 'recipientPublicKey': publicKey})
         # myFilter.poll_interval = 600; # Make it equal with the live-time of the message

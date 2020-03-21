@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 
 
-"""
-doc: https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
-Returns the transaction receipt specified by transaction_hash.
-If the transaction has not yet been mined returns 'None'
-"""
-
-
 def getTransactionReceipt(tx, w3=None):
+    """
+    doc: https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
+    Returns the transaction receipt specified by transactionHash.
+    If the transaction has not yet been mined returns 'None'
+    """
+
     if w3 is None:
         from imports import connect_to_web3
 
@@ -26,6 +24,6 @@ if __name__ == "__main__":
     else:
         tx = "0xfa65c8516e81f972d1bdf801e0524aad1b2a9c54bb8e746613fb7316034f3e3e"
 
-    status, result = getTransactionReceipt(tx)
-    print(result)
+    success, output = getTransactionReceipt(tx)
+    print(output)
     # print(getTransactionReceipt(tx)['blockNumber'])

@@ -7,7 +7,7 @@ import owncloud
 home = expanduser("~")
 
 # Password read from the file.
-f = open(home + "/.eBlocBroker/eudatPassword.txt", "r")
+f = open(home + "/.eBlocBroker/eudat_password.txt", "r")
 password = f.read().rstrip().strip(" ")
 f.close()
 

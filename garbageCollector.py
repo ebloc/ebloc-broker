@@ -4,8 +4,10 @@ import os
 from dotenv import load_dotenv
 
 from lib import HOME
+from utils import read_json
 
-load_dotenv(os.path.join(HOME + "/.eBlocBroker/", ".env"))  # Load .env from the given path
+# Load .env from the given path
+load_dotenv(os.path.join(f"{HOME}/.eBlocBroker/", ".env"))
 
 
 def addElement(data, key, elementToAdd):
@@ -18,14 +20,13 @@ def removeElement(data, elementToRemove):
             del data[elementToRemove]
 
 
-filePath = os.getenv("LOG_PATH") + "/" + "cachingRecord.json"
-print(filePath)
+f = os.getenv("LOG_PATH") + "/" + "cachingRecord.json"
+print(f)
 
-if not os.path.isfile(filePath):
+if not os.path.isfile(f):
     data = {}
 else:
-    with open(filePath) as data_file:
-        data = json.load(data_file)
+    success, data = read_json(f)
 
 addElement(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
 addElement(data, "ipfsHash", "timestamp")
@@ -38,5 +39,5 @@ if "jobKey" in data:
     print(data["jobKey"])
 
 removeElement(data, "ipfsHash")
-with open(filePath, "w") as data_file:
+with open(f, "w") as data_file:
     data = json.dump(data, data_file)

@@ -20,9 +20,9 @@ githubUsername = "eBloc"
 
 accoutLength = 10
 for i in range(0, accoutLength):
-    accountID = str(i)
+    account_id = str(i)
     account = w3.eth.accounts[i]
-    tx = register_requester(accountID, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
+    tx = register_requester(account_id, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
     print(account + " | " + str(i) + " | " + tx)
 print("")
 print("[", end="")

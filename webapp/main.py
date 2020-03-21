@@ -1,13 +1,13 @@
 import os
 import sys
 
-from flask import Flask, render_template, request
-from solc import compile_source
 from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 
 from contractCalls.getClusterAddresses import getClusterAddresses
 from contractCalls.getOwner import getOwner
+from flask import Flask, render_template, request
+from solc import compile_source
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -35,6 +35,4 @@ def hello_name(user):
 @app.route("/hello")
 def hello_name():
     dictt = getClusterAddresses()  # {'phy':50,'che':60,'maths':70}
-    return render_template(
-        "hello.html", blockNumber=str(eth_provider.blockNumber), result=dictt, len=len(dictt),
-    )
+    return render_template("hello.html", blockNumber=str(eth_provider.blockNumber), result=dictt, len=len(dictt),)
