@@ -98,11 +98,11 @@ Please note the following:
 coreNumber         = 128;
 clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+minilock_id         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100;
 ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 
-./register_provider.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
+./register_provider.py $coreNumber $clusterEmail $federationCloudId $minilock_id $corePriceMinuteWei $ipfsID
 ```
 
 - A Python daemon program called *Driver* is responsible for facilitating the communication between the eBlocBroker smart contract and the Slurm resource manager. After the cluster is registered please run: `./Driver.py`

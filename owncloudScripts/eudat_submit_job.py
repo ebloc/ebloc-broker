@@ -1,127 +1,142 @@
 #!/usr/bin/env python3
 
-import pprint
 import sys
 import time
 
-import owncloud
-
+from config import bp, EBLOCPATH  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib import CacheType, StorageID
-from lib_owncloud import eudat_initialize_folder, share_single_folder
-
-# from lib_owncloud import is_oc_mounted
+from lib import HOME, CacheType, StorageID, get_tx_status, printc
+from lib_git import git_commit_changes, is_git_repo
+from lib_owncloud import (eudat_initialize_folder, eudat_login,
+                          share_single_folder)
 
 
 def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
-    accountID = 1  # Different account than provider
     eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
+    if eBlocBroker is None:
+        return False, "eBlocBroker is not connected"
+
+    if w3 is None:
         return False, "web3 is not connected"
 
-    # if not is_oc_mounted():
-    #     return False, 'owncloud is not connected'
-
     provider = w3.toChecksumAddress(provider)  # netlab
-    status, provider_info = get_provider_info(provider)
+    success, provider_info = get_provider_info(provider)
+    account_id = 1  # Different account than provider
 
     folder_to_share_list = []  # Path of folder to share
-    source_code_hash_list = []
-    storageHour_list = []
-    coreMin_list = []
+    source_code_hashes = []
+    storage_hour_list = []
+    core_min_list = []
 
     # Full path of the sourceCodeFolders is given
-    folder_to_share_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/sourceCode")
-    folder_to_share_list.append("/home/netlab/eBlocBroker/owncloudScripts/exampleFolderToShare/data1")
+    folder_to_share_list.append(f"{EBLOCPATH}/base/sourceCode")
+    folder_to_share_list.append(f"{EBLOCPATH}/base/data/data1")
+
+    success = is_git_repo(folder_to_share_list)
+    if not success:
+        return False, ""
 
     for idx, folder in enumerate(folder_to_share_list):
-        folder_hash = eudat_initialize_folder(folder, oc)
+        if idx != 0:
+            print("")
+
+        printc(folder, "green")
+        success = git_commit_changes(folder)
+        if not success:
+            sys.exit(1)
+
+        try:
+            folder_hash = eudat_initialize_folder(folder, oc)
+        except Exception as error:
+            print(f"E: {error}")
+            sys.exit(1)
+
         if idx == 0:
-            jobKey = folder_hash
+            job_key = folder_hash
 
-        sourceCodeHash = w3.toBytes(text=folder_hash)  # required to send string as bytes
-        source_code_hash_list.append(sourceCodeHash)
+        source_code_hash = w3.toBytes(text=folder_hash)  # required to send string as bytes
+        source_code_hashes.append(source_code_hash)
         if not share_single_folder(folder_hash, oc, provider_info["fID"]):
-            sys.exit()
-        time.sleep(1)
+            sys.exit(1)
 
-    print("\nSubmitting Job...")
-    coreMin_list.append(5)
+        time.sleep(0.1)
+
+    printc("\nSubmitting Job...")
+    core_min_list.append(5)
     core_list = [1]
     dataTransferIn_list = [1, 1]
     dataTransferOut = 1
 
     storageID_list = [StorageID.EUDAT.value, StorageID.EUDAT.value]
-    cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
-    storageHour_list = [1, 1]
+    cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
+    storage_hour_list = [1, 1]
     data_prices_set_blocknumber_list = [0, 0]
-    print(source_code_hash_list)
-
-    requester = w3.toChecksumAddress(w3.eth.accounts[accountID])
-    jobPriceValue, _cost = cost(
+    print(source_code_hashes)
+    requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
+    job_price_value, _cost = cost(
         core_list,
-        coreMin_list,
+        core_min_list,
         provider,
         requester,
-        source_code_hash_list,
+        source_code_hashes,
         dataTransferIn_list,
         dataTransferOut,
-        storageHour_list,
+        storage_hour_list,
         storageID_list,
-        cacheType_list,
+        cache_types,
         data_prices_set_blocknumber_list,
         eBlocBroker,
         w3,
         False,
     )
 
-    status, result = submitJob(
+    success, output = submitJob(
         provider,
-        jobKey,
+        job_key,
         core_list,
-        coreMin_list,
+        core_min_list,
         dataTransferIn_list,
         dataTransferOut,
         storageID_list,
-        source_code_hash_list,
-        cacheType_list,
-        storageHour_list,
-        accountID,
-        jobPriceValue,
+        source_code_hashes,
+        cache_types,
+        storage_hour_list,
+        account_id,
+        job_price_value,
         data_prices_set_blocknumber_list,
     )
-    return status, result
+    return success, output
 
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    oc = owncloud.Client("https://b2drop.eudat.eu/")
-    oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
+    oc = eudat_login(
+        "059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl",
+    )
+
+    # oc = owncloud.Client("https://b2drop.eudat.eu/")
+    # oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
 
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
-        tarHash = sys.argv[2]
-        print("Provided hash=" + tarHash)
+        tar_hash = sys.argv[2]
+        print(f"provided_hash={tar_hash}")
     else:
-        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+        # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+        provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
 
-    status, result = eudat_submit_job(provider, oc)
-    if not status:
-        print(result)
-        sys.exit()
+    success, output = eudat_submit_job(provider, oc)
+    if not success:
+        print(output)
+        sys.exit(1)
     else:
-        print("tx_hash=" + result)
-        receipt = w3.eth.waitForTransactionReceipt(result)
-        print("Transaction receipt mined: \n")
-        pprint.pprint(dict(receipt))
-        print("Was transaction successful?")
-        pprint.pprint(receipt["status"])
+        receipt = get_tx_status(success, output)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
-                print("Job's index=" + str(logs[0].args["index"]))
+                print(f"Job's index={logs[0].args['index']}")
             except IndexError:
                 print("Transaction is reverted.")

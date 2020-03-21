@@ -21,30 +21,30 @@ def add_item(job_key, source_code_hash_list, requesterID, timestamp, cloudStorag
         "receivedBlock": job_info["receivedBlock"],
         "cacheDuration": job_info["cacheDuration"],
     }
-    result = coll.update({"job_key": new_item["job_key"]}, new_item, True)
-    return check_ok(result)
+    output = coll.update({"job_key": new_item["job_key"]}, new_item, True)
+    return check_ok(output)
 
 
 def delete_all():
-    result = coll.delete_many({})
-    return check_ok(result)
+    output = coll.delete_many({})
+    return check_ok(output)
 
 
 def delete_one(job_key):
-    result = coll.delete_one({"job_key": job_key})
-    return check_ok(result)
+    output = coll.delete_one({"job_key": job_key})
+    return check_ok(output)
 
 
-def add_item_shareid(key, shareID, share_token):
+def add_item_share_id(key, shareID, share_token):
     coll = mc["eBlocBroker"]["shareID"]
     new_item = {"key": key, "shareID": shareID, "share_token": share_token}
-    result = coll.update({"key": new_item["key"]}, new_item, True)
-    return check_ok(result)
+    output = coll.update({"key": new_item["key"]}, new_item, True)
+    return check_ok(output)
 
 
 def find_key(coll, key):
-    result = coll.find_one({"key": key})
-    if bool(result):
-        return True, result
+    output = coll.find_one({"key": key})
+    if bool(output):
+        return True, output
     else:
         return False, None

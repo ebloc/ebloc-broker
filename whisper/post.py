@@ -16,5 +16,5 @@ topic = "0x07678231"
 payloads = [web3.toHex(text="test message :)"), web3.toHex(text="2nd test message")]
 
 web3.geth.shh.post(
-    {"powTarget": 2.5, "powTime": 2, "ttl": 60, "payload": payloads[0], "topic": topic, "pubKey": receiver_pub}
+    {"powTarget": 2.5, "powTime": 2, "ttl": 60, "payload": payloads[0], "topic": topic, "pubKey": receiver_pub,}
 )

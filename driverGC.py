@@ -3,11 +3,10 @@
 from pymongo import MongoClient
 
 import lib
-import lib_mongodb
-from contractCalls.blockNumber import blockNumber
+from contractCalls.get_block_number import get_block_number
 from contractCalls.getJobStorageTime import getJobStorageTime
 from imports import connect
-from lib import silent_remove
+from lib import run_command, silent_remove
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
@@ -15,24 +14,24 @@ coll = cl["eBlocBroker"]["cache"]
 eBlocBroker, w3 = connect()
 
 """find_all"""
-blockNum = int(blockNumber())
-print(str(blockNum))
+block_number = get_block_number()
+print(block_number)
 
 storageID = None
 cursor = coll.find({})
 for document in cursor:
     # print(document)
-    receivedBlockNum, storageTime = getJobStorageTime(lib.PROVIDER_ID, document["sourceCodeHash"])
-    endBlockTime = receivedBlockNum + storageTime * 240
+    received_block_number, storage_time = getJobStorageTime(lib.PROVIDER_ID, document["sourceCodeHash"])
+    endBlockTime = received_block_number + storage_time * 240
     storageID = document["storageID"]
-    if endBlockTime < blockNum and receivedBlockNum != 0:
+    if endBlockTime < block_number and received_block_number != 0:
         if storageID == lib.StorageID.IPFS or storageID == lib.StorageID.IPFS_MINILOCK:
             ipfsHash = document["jobKey"]
-            command = ["ipfs", "pin", "rm", ipfsHash]
-            status, res = lib.execute_shell_command(command)
-            print(res)
-            status, res = lib.execute_shell_command(["ipfs", "repo", "gc"])
-            print(res)
+            cmd = ["ipfs", "pin", "rm", ipfsHash]
+            success, output = run_command(cmd)
+            print(output)
+            success, output = run_command(["ipfs", "repo", "gc"])
+            print(output)
         else:
             cachedFileName = (
                 lib.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
@@ -43,5 +42,5 @@ for document in cursor:
             print(cachedFileName)
             silent_remove(cachedFileName)
 
-        print(receivedBlockNum)
-        result = coll.delete_one({"jobKey": ipfsHash})
+        print(received_block_number)
+        output = coll.delete_one({"jobKey": ipfsHash})
