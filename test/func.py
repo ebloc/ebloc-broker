@@ -7,7 +7,7 @@ from os.path import expanduser
 from random import randint
 
 import lib
-from contractCalls.blockNumber import blockNumber
+from contractCalls.get_block_number import get_block_number
 from contractCalls.submitJob import submitJob
 from imports import connect_to_web3
 
@@ -55,9 +55,12 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             jobKey = line.rstrip().split(" ")
             sourceCodeHash = jobKey[5]  # time to sleep in seconds
             sleepTime = jobKey[6]  # time to sleep in seconds
-            blockNumber_ = blockNumber()
+            block_number = get_block_number()
 
-            log("Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + blockNumber_, path)
+            log(
+                "Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + str(block_number),
+                path,
+            )
             log("Nasa Submit range: " + jobKey[3] + " " + jobKey[4], path)
             log("Sleep Time to submit next job: " + sleepTime, path)
             log("Sourcecode Hash=" + sourceCodeHash, path)
@@ -70,11 +73,14 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 log("RunTimeInMinutes: " + "360", path)
                 coreMinuteGas = 360  # 6 hours for nasEUDAT simulation test.
 
-            accountID = randint(0, 9)
-            res = w3.personal.unlockAccount(
-                w3.eth.accounts[accountID], accountPassword
+            account_id = randint(0, 9)
+            output = w3.personal.unlockAccount(
+                w3.eth.accounts[account_id], accountPassword
             )  # unlocks the selected account in case if unlocks over time
-            log("AccountID:" + str(accountID) + " (" + w3.eth.accounts[accountID] + ") is unlocked=>" + str(res), path)
+            log(
+                "AccountID:" + str(account_id) + " (" + w3.eth.accounts[account_id] + ") is unlocked=>" + str(output),
+                path,
+            )
             log(
                 "hash="
                 + jobKey[0]
@@ -84,11 +90,11 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 + str(math.ceil(float(jobKey[1])))
                 + "| Core="
                 + str(coreNum)
-                + "| accountID="
-                + str(accountID),
+                + "| account_id="
+                + str(account_id),
                 path,
             )
-            # ===========
+
             log(
                 "submitJob("
                 + providerID
@@ -109,12 +115,12 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 + ", "
                 + str(gasStorageHour)
                 + ", "
-                + str(accountID)
+                + str(account_id)
                 + ")",
                 path,
             )
 
-            status, ret = submitJob(
+            success, output = submitJob(
                 provider,
                 jobKey,
                 core_list,
@@ -125,25 +131,25 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 sourceCodeHash_list,
                 cacheType,
                 cacheHour_list,
-                accountID,
-                jobPriceValue,
+                account_id,
+                job_price_value,
             )
 
-            # ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, accountID)  # delete
+            # ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, account_id)  # delete
 
-            if not status:
-                log(ret, path, 0)
+            if not success:
+                log(output, path, 0)
             else:
-                tx_hash = ret[0]
+                tx_hash = output[0]
                 log("tx_hash:" + tx_hash, path, 0)
-                log("computationalCost:" + ret[1], path, 0)
-                log("storageCost:" + ret[2], path, 0)
-                log("cacheCost:" + ret[3], path, 0)
-                log("dataTransferCost:" + ret[4], path, 0)
-                log("jobPriceValue:" + ret[5], path, 1)
+                log("computationalCost:" + output[1], path, 0)
+                log("storageCost:" + output[2], path, 0)
+                log("cacheCost:" + output[3], path, 0)
+                log("dataTransferCost:" + output[4], path, 0)
+                log("job_price_value:" + output[5], path, 1)
 
             txFile = open(path + "/" + providerID + ".txt", "a")
-            txFile.write(ret[0] + " " + str(accountID) + "\n")
+            txFile.write(output[0] + " " + str(account_id) + "\n")
             txFile.close()
             sleepSeconds = int(sleepTime)
 
@@ -155,8 +161,8 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             sys.stdout.write("\rSleeping is done!\n")
             receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt is not None:
-                res = lib.is_transaction_passed(w3, tx_hash)
-                log(f"Tx status:{res}", path)
+                output = lib.is_transaction_passed(w3, tx_hash)
+                log(f"Tx status:{output}", path)
             else:
                 log("Tx is not deployed yet", path)
 

@@ -136,10 +136,10 @@ Please note that: if you don't have any `Federated Cloud ID` or `MiniLock ID` gi
 coreNumber         = 128;
 providerName        = "eBlocProvider";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-providerMiniLockId  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+provider_minilock_id  = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 1000000000000000; //For experimental you could also give 1.
 ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieved from "ipfs id"
-eBlocBroker.createProvider(coreNumber, providerName, federationCloudId, providerMiniLockId, corePriceMinuteWei, ipfsID;
+eBlocBroker.createProvider(coreNumber, providerName, federationCloudId, provider_minilock_id, corePriceMinuteWei, ipfsID;
 ```
 
 **Trigger code on start and end of the submitted job:** Provider should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
@@ -158,7 +158,7 @@ Is is important that first you should run IPFS daemon on the background: `ipfs d
 If IPFS is successfully running on the background you should see something like this:
 
 ```bash
-[~] ps aux | grep 'ipfs daemon' | grep -v 'grep'
+$ ps aux | grep -E 'ipfs daemon' | grep -v 'grep'
 avatar           24190   1.1  2.1 556620660 344784 s013  SN    3:59PM   4:10.74 ipfs daemon
 ```
 
@@ -211,7 +211,7 @@ Main folder's IPFS hash(for example:`QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r58
 **How To Submit a Job:**
 
 ```bash
-eBlocBroker.getProviders(); //returns all available Providers Addresses.
+eBlocBroker.get_providers(); # Returns all available Providers Addresses.
 ["0x6af0204187a93710317542d383a1b547fa42e705"]
 ```
 ###**Submit a Job using IPFS:**
@@ -222,7 +222,7 @@ provider_info      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1
 providerCoreLimit = provider_info[3]
 pricePerMin      = provider_info[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-myMiniLockId     = ""
+user_minilock_id     = ""
 coreNum          = 1;
 coreGasDay       = 0;
 coreGasHour      = 0;
@@ -233,7 +233,7 @@ storageType       = 0 ; // Please note that 0 stands for IPFS , 1 stands for eud
 
 if (coreNum <= providerCoreLimit ) {//Before assigning coreNum checks the coreLimit of the provider.
 	//Following line submits the Job:
-	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, user_minilock_id, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
@@ -268,12 +268,12 @@ Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
 #####How to encripty your folder using miniLock
 
 ```bash
-myMiniLockId="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
-providerMiniLockId="9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
+user_minilock_id="LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
+provider_minilock_id="9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ";
 encrypyFolderPath="./ipfsCode"
 tar -cvzf $encrypyFolderPath.tar.gz $encrypyFolderPath
 
-mlck encrypt -f $encrypyFolderPath.tar.gz $providerMiniLockId --passphrase="$(cat mlck_password.txt)"
+mlck encrypt -f $encrypyFolderPath.tar.gz $provider_minilock_id --passphrase="$(cat mlck_password.txt)"
 ipfs add $ncrypyFolderPath.minilock
 added QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5 message.tar.gz.minilock
 ```
@@ -284,7 +284,7 @@ provider_info      = eBlocBroker.getProviderInfo("0x6af0204187a93710317542d383a1
 providerCoreLimit = provider_info[3]
 pricePerMin      = provider_info[4]
 jobHash          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-myMiniLockId     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
+user_minilock_id     = "LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi"
 coreNum          = 1;
 coreGasDay       = 0;
 coreGasHour      = 0;
@@ -295,7 +295,7 @@ storageType       = 2; // Please note that 0 stands for IPFS , 1 stands for euda
 
 if (coreNum <= providerCoreLimit ) {//Before assigning coreNum checks the coreLimit of the provider.
 	//Following line submits the Job:
-	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, user_minilock_id, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 
@@ -313,7 +313,7 @@ Example:
 ```bash
 providerID      = "0x6af0204187a93710317542d383a1b547fa42e705"; //providerID you would like to submit.
 pricePerMin    = eBlocBroker.getProviderCoreMinutePrice(providerID);
-myMiniLockId   = ""
+user_minilock_id   = ""
 jobHash        = "3d8e2dc2-b855-1036-807f-9dbd8c6b1579=folderName"
 coreNum        = 1; //Before assigning this value please check the coreLimit of the provider.
 coreGasDay     = 0;
@@ -326,7 +326,7 @@ storageType     = 1 ; // Please note that 0 stands for IPFS , 1 stands for eudat
 providerCoreLimit = eBlocBroker.getProviderCoreLimit(providerID);
 if (coreNum <= providerCoreLimit ) {
 	//Following line submits the Job:
-	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, myMiniLockId, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
+	eBlocBroker.insertJob(providerID, jobHash, coreNum, jobDescription, coreMinuteGas, storageType, user_minilock_id, {from: web3.eth.accounts[0], value: coreNum*pricePerMin*coreMinuteGas, gas: 3000000 } );
 }
 ```
 

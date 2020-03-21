@@ -23,10 +23,10 @@ if __name__ == "__main__":
         account = str(sys.argv[1])
     else:
         print("Please provide an Ethereum account as an argument.")
-        sys.exit()
+        sys.exit(1)
 
-    status, result = withdraw(account)
-    if status:
-        receipt = get_tx_status(status, result)
+    success, output = withdraw(account)
+    if success:
+        receipt = get_tx_status(success, output)
     else:
-        print(result)
+        print(output)

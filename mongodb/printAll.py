@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-
 from pymongo import MongoClient
-
-import lib_mongodb
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]

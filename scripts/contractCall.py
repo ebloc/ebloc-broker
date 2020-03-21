@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 
@@ -14,7 +13,7 @@ def contractCalls_check_output(call, args):
 def contractCalls(call, a1, a2, a3):
     contractCallPath = "contractCalls"
     return (
-        subprocess.Popen([contractCallPath + "/" + call, a1, a2, a3], stdout=subprocess.PIPE, universal_newlines=True)
+        subprocess.Popen([contractCallPath + "/" + call, a1, a2, a3], stdout=subprocess.PIPE, universal_newlines=True,)
         .communicate()[0]
         .strip()
     )

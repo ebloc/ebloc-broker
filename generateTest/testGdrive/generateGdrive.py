@@ -5,12 +5,13 @@ import random
 import subprocess
 from os.path import expanduser
 
+from imports import generate_md5sum
 from lib import compress_folder
 
 home = expanduser("~")
 path = os.getcwd()
 
-providerToShare = "alper01234alper@gmail.com"
+provider_to_share = "alper01234alper@gmail.com"
 flag = 0
 itemsToScan = 150 + 1
 hashesFile = open(f"{path}/hashOutput.txt", "w+")
@@ -26,46 +27,49 @@ with open(path + "/../nasa.txt") as test:
                 for line in ff:
                     f.write(line)
 
-            randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
+            random_hash = str(random.getrandbits(128)) + str(random.getrandbits(128))
             f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-            f.write("#" + randomHash + "\n")  # Add random line to create different hash
+            f.write("#" + random_hash + "\n")  # Add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
             f.close()
 
-            folderToShare = "ipfs"
-            tar_hash = (
-                subprocess.check_output(["../../scripts/generateMD5sum.sh", folderToShare]).decode("utf-8").strip()
-            )
+            folder_to_share = "ipfs"
+            tar_hash = generate_md5sum(folder_to_share)
             tar_hash = tar_hash.split(" ", 1)[0]
             print("SourecodeHash=" + tar_hash)
 
             os.environ["fileName"] = tar_hash
-            os.environ["providerToShare"] = "alper01234alper@gmail.com"
+            os.environ["provider_to_share"] = "alper01234alper@gmail.com"
 
-            tar_hash = compress_folder(folderToShare)
+            tar_hash = compress_folder(folder_to_share)
             # subprocess.run(['cp', '-a', '../ipfs', '../' + tar_hash])
             print("Uploading ...")
             # rclone copy ipfs remote:ipfs
-            res = (
+            output = (
                 subprocess.check_output(["rclone", "copy", tar_hash + ".tar.gz", "remote:" + tar_hash])
                 .decode("utf-8")
                 .strip()
             )
-            print(res)
+            print(output)
             subprocess.run(["mv", tar_hash + ".tar.gz", home + "/TESTS/GdriveSource"])
 
             while True:
                 try:
-                    res = (
+                    output = (
                         subprocess.check_output(
-                            ["gdrive", "list", "--query", "name contains '" + tar_hash + ".tar.gz" + "'", "--no-header"]
+                            [
+                                "gdrive",
+                                "list",
+                                "--query",
+                                "name contains '" + tar_hash + ".tar.gz" + "'",
+                                "--no-header",
+                            ]
                         )
                         .decode("utf-8")
                         .strip()
                     )
-                    # print(res)
-                    jobKey = res.split(" ")[0]
-                    print("jobKey=" + jobKey)
+                    job_key = output.split(" ")[0]
+                    print("job_key=" + job_key)
                 except Exception as e:
                     # time.sleep(0.25)
                     print(e.output.decode("utf-8").strip())
@@ -74,25 +78,25 @@ with open(path + "/../nasa.txt") as test:
 
             while True:
                 try:
-                    # jobKey = "1H9XSDzj15m_2IdNcblAzxk5VRWxF0CIP"
-                    res = (
+                    # job_key = "1H9XSDzj15m_2IdNcblAzxk5VRWxF0CIP"
+                    output = (
                         subprocess.check_output(
                             [
                                 "gdrive",
                                 "share",
-                                jobKey,
+                                job_key,
                                 "--role",
                                 "writer",
                                 "--type",
                                 "user",
                                 "--email",
-                                providerToShare,
+                                provider_to_share,
                             ]
                         )
                         .decode("utf-8")
                         .strip()
                     )
-                    print(res)
+                    print(output)
                 except Exception as e:
                     # time.sleep(0.25)
                     print(e.output.decode("utf-8").strip())
@@ -109,7 +113,7 @@ with open(path + "/../nasa.txt") as test:
                 break
 
             hashesFile.write(
-                jobKey
+                job_key
                 + " "
                 + str(int(lineIn[1]) - int(lineIn[0]))
                 + " "

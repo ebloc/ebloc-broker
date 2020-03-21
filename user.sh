@@ -7,7 +7,7 @@ BASEDIR=$2
 ## USERADDRESS="dummy"
 ## BASEDIR="/var/eBlocBroker"
 
-SLURMUSER="netlab"
+SLURMUSER="alper"
 USERNAME=$(echo -n $USERADDRESS | md5sum | head -c-4)  # Convert Ethereum User Address into 32-bits
 
 ## Force to add

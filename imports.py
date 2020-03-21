@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
-import json
 from os.path import expanduser
 
 from web3 import IPCProvider, Web3
 from web3.providers.rpc import HTTPProvider
 
 import config
-import lib
-from config import logging
+from config import EBLOCPATH, POA_CHAIN, RPC_PORT, logging
+from utils import read_json
 
 home = expanduser("~")
 
@@ -46,27 +45,25 @@ def connect():
 
 
 def connect_to_web3():
-    if not lib.POA_CHAIN:
+    if not POA_CHAIN:
         """
         * Note that you should create only one RPC Provider per process,
         * as it recycles underlying TCP/IP network connections between
         *  your process and Ethereum node
         """
-        config.w3 = Web3(HTTPProvider("http://localhost:" + str(lib.RPC_PORT)))
+        config.w3 = Web3(HTTPProvider(f"http://localhost:{RPC_PORT}"))
         from web3.shh import Shh
 
         Shh.attach(config.w3, "shh")
     else:
         config.w3 = Web3(IPCProvider("/private/geth.ipc"))
         from web3.middleware import geth_poa_middleware
-
         # inject the poa compatibility middleware to the innermost layer
         config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        # from web3.shh import Shh
-        # Shh.attach(web3, 'shh')
+
     if not config.w3.isConnected():
         logging.error("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc")
-        return False
+        return None
 
     return config.w3
 
@@ -75,16 +72,22 @@ def connect_to_eblocbroker():
     if config.w3 is None:
         config.w3 = connect_to_web3()
         if not config.w3:
+            logging.error("E: web3 is not connected")
             return False
 
-    contract = json.loads(open(home + "/eBlocBroker/contractCalls/contract.json").read())
-    contractAddress = contract["address"]
+    success, contract = read_json(f"{EBLOCPATH}/contractCalls/contract.json")
+    if not success:
+        logging.error("E: Couldn't read the contract.json file")
+        return None
 
-    with open(home + "/eBlocBroker/contractCalls/abi.json", "r") as abi_definition:
-        abi = json.load(abi_definition)
+    contract_address = contract["address"]
+    success, abi = read_json(f"{EBLOCPATH}/contractCalls/abi.json")
+    if not success:
+        logging.error("E: Couldn't read the abi.json file")
+        return None
 
-    contractAddress = config.w3.toChecksumAddress(contractAddress)
-    config.eBlocBroker = config.w3.eth.contract(contractAddress, abi=abi)
+    contract_address = config.w3.toChecksumAddress(contract_address)
+    config.eBlocBroker = config.w3.eth.contract(contract_address, abi=abi)
     return config.eBlocBroker
 
 

@@ -35,10 +35,10 @@ def transferOwnership(newOwner):
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         newOwner = str(sys.argv[1])
-        status, result = transferOwnership(newOwner)
-        if status:
-            receipt = get_tx_status(status, result)
+        success, output = transferOwnership(newOwner)
+        if success:
+            receipt = get_tx_status(success, output)
         else:
-            print(result)
+            print(output)
     else:
         print("Please provide the newOwner address as argument.")
