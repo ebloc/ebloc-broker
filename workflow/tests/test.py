@@ -19,9 +19,7 @@ def convertIpfsBytes32(hash_string):
 
 def IPFS_chech(greeter, chain, web3):
     ipfsHash = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vz"
-    hex_str = convertIpfsBytes32(
-        ipfsHash
-    )  # "7d5a99f603f231d53a4f39d1521f98d2e8bb279cf29bebfd0687dc98458e7f89";
+    hex_str = convertIpfsBytes32(ipfsHash)  # "7d5a99f603f231d53a4f39d1521f98d2e8bb279cf29bebfd0687dc98458e7f89";
     data = web3.toBytes(hexstr=hex_str)
     set_txn_hash = greeter.transact().setGreeting(data)
     contract_address = chain.wait.for_receipt(set_txn_hash)

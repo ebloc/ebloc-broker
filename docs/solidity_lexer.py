@@ -3,9 +3,10 @@
 import copy
 import re
 
-from pygments.lexer import ExtendedRegexLexer, RegexLexer, bygroups, include, this, using
-from pygments.token import (Comment, Keyword, Literal, Name, Number, Operator, Other, Punctuation,
-                            String, Text)
+from pygments.lexer import (ExtendedRegexLexer, RegexLexer, bygroups, include,
+                            this, using)
+from pygments.token import (Comment, Keyword, Literal, Name, Number, Operator,
+                            Other, Punctuation, String, Text)
 
 __all__ = ["SolidityLexer"]
 
@@ -25,12 +26,12 @@ class SolidityLexer(RegexLexer):
             (r"/\*\*", Comment.Special, "docstringmulti"),
             (r"/\*.*?\*/", Comment.Multiline),
         ],
-        "natspec": [(r"@author|@dev|@notice|@return|@param|@why3|@title", Keyword), (r".[^@*\n]*?", Comment.Special)],
+        "natspec": [(r"@author|@dev|@notice|@return|@param|@why3|@title", Keyword), (r".[^@*\n]*?", Comment.Special),],
         "docstringsingle": [(r"\n", Comment.Special, "#pop"), include("natspec")],
         "docstringmulti": [(r"\*/", Comment.Special, "#pop"), include("natspec")],
         "slashstartsregex": [
             include("commentsandwhitespace"),
-            (r"/(\\.|[^[/\\\n]|\[(\\.|[^\]\\\n])*])+/" r"([gim]+\b|\B)", String.Regex, "#pop"),
+            (r"/(\\.|[^[/\\\n]|\[(\\.|[^\]\\\n])*])+/" r"([gim]+\b|\B)", String.Regex, "#pop",),
             (r"(?=/)", Text, ("#pop", "badregex")),
             (r"", Text, "#pop"),
         ],
@@ -38,11 +39,7 @@ class SolidityLexer(RegexLexer):
         "root": [
             (r"^(?=\s|/|<!--)", Text, "slashstartsregex"),
             include("commentsandwhitespace"),
-            (
-                r"\+\+|--|\*\*|~|&&|\?|:|\|\||\\(?=\n)|" r"(<<|>>>?|==?|!=?|[-<>+*%&\|\^/])=?",
-                Operator,
-                "slashstartsregex",
-            ),
+            (r"\+\+|--|\*\*|~|&&|\?|:|\|\||\\(?=\n)|" r"(<<|>>>?|==?|!=?|[-<>+*%&\|\^/])=?", Operator, "slashstartsregex",),
             (r"[{(\[;,]", Punctuation, "slashstartsregex"),
             (r"[})\].]", Punctuation),
             (
@@ -53,11 +50,7 @@ class SolidityLexer(RegexLexer):
                 Keyword,
                 "slashstartsregex",
             ),
-            (
-                r"(var|let|with|function|event|modifier|struct|enum|contract|library)\b",
-                Keyword.Declaration,
-                "slashstartsregex",
-            ),
+            (r"(var|let|with|function|event|modifier|struct|enum|contract|library)\b", Keyword.Declaration, "slashstartsregex",),
             (
                 r"(bytes|string|address|uint|int|bool|byte|"
                 + "|".join(

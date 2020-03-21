@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 
-import os
 import traceback
 from os.path import expanduser
 
 from imports import connect
-from lib import get_tx_status
+from lib import PROVIDER_ID, get_tx_status
 
 home = expanduser("~")
 
 
 def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
     eBlocBroker, w3 = connect()
-    PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
     if availableCoreNum == 0:
         return (False, "Please enter positive value for the available core number")
@@ -39,8 +37,8 @@ if __name__ == "__main__":
     priceCache = 1
     prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
 
-    status, result = updateProviderPrices(availableCoreNum, commitmentBlockNum, prices)
-    if status:
-        receipt = get_tx_status(status, result)
+    success, output = updateProviderPrices(availableCoreNum, commitmentBlockNum, prices)
+    if success:
+        receipt = get_tx_status(success, output)
     else:
-        print(result)
+        print(output)

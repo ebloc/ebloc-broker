@@ -2,25 +2,31 @@
 
 import sys
 import traceback
+
 import owncloud
-from lib import StorageID, EBLOCPATH, CacheType, OC_USER_ID, get_tx_status
-from contract.scripts.lib import convertIpfsToBytes32, cost
+
+from config import load_log
+from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
+from lib import EBLOCPATH, OC_USER, CacheType, StorageID, get_tx_status
+from utils import ipfs_to_bytes32
+
+logging = load_log()
 
 
 def submitJob(
     provider,
     key,
-    core_list,
-    core_min_list,
+    cores,
+    core_execution_durations,
     dataTransferIn_list,
     dataTransferOut,
     storageID_list,
     source_code_hashes,
-    cache_types_list,
+    cache_types,
     storage_hour_list,
-    accountID,
+    account_id,
     job_price_value,
     data_prices_set_blocknumber_list,
 ):
@@ -29,16 +35,19 @@ def submitJob(
         return False, "E: web3 is not connected"
 
     provider = w3.toChecksumAddress(provider)
-    _from = w3.toChecksumAddress(w3.eth.accounts[accountID])
+    _from = w3.toChecksumAddress(w3.eth.accounts[account_id])
 
-    status, provider_info = get_provider_info(provider)
+    success, provider_info = get_provider_info(provider)
 
     print(f"Provider's available_core_num={provider_info['availableCoreNum']}")
     print(f"Provider's price_core_min={provider_info['priceCoreMin']}")
     # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=provider_info['blockReadFrom'], toBlock=provider_info['blockReadFrom'] + 1)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        return (False, f"E: Requested provider's Ethereum address {provider} does not registered.")
+        return (
+            False,
+            f"E: Requested provider's Ethereum address {provider} does not registered.",
+        )
 
     blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(_from).call()
 
@@ -65,44 +74,58 @@ def submitJob(
         if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
             return False, 'source_code_hashes should be 32 characters.'
     """
+    main_storageID = storageID_list[0]
     if not source_code_hashes:
         return False, "E: sourceCodeHash list is empty."
 
-    if len(key) != 46 and (
-        StorageID.IPFS.value == storageID_list or StorageID.IPFS_MINILOCK.value == storageID_list
-    ):
+    if len(key) != 46 and (StorageID.IPFS.value == main_storageID or StorageID.IPFS_MINILOCK.value == main_storageID):
         return (
             False,
             "E: key's length does not match with its original length, it should be 46. Please check your key length",
         )
 
-    if len(key) != 33 and StorageID.GDRIVE.value == storageID_list:
+    if len(key) != 33 and StorageID.GDRIVE.value == main_storageID:
         return (
             False,
             "E: key's length does not match with its original length, it should be 33. Please check your key length",
         )
 
-    for idx, core in enumerate(core_list):
+    for idx, core in enumerate(cores):
         if core > provider_info["availableCoreNum"]:
-            return (False, f"E: Requested {core}, which is {core}, is greater than the provider's core number")
-        if core_min_list[idx] == 0:
-            return (False, "E: core_min_list[" + str(idx) + "] is provided as 0. Please provide non-zero value")
+            return (
+                False,
+                f"E: Requested {core}, which is {core}, is greater than the provider's core number",
+            )
+        if core_execution_durations[idx] == 0:
+            return (
+                False,
+                f"E: core_execution_durations[{idx}] is provided as 0. Please provide non-zero value",
+            )
 
-    for i in range(len(storageID_list)):
-        if storageID_list[i] > 4:
-            return (False, "E: Wrong storageID_list value is given. Please provide from 0 to 4")
+    for storageID in storageID_list:
+        if storageID > 4:
+            return (
+                False,
+                "E: Wrong storageID_list value is given. Please provide from 0 to 4",
+            )
 
     if len(key) >= 64:
         return (False, "E: Length of key is greater than 64, please provide lesser")
 
-    for core_min in core_min_list:
+    for core_min in core_execution_durations:
         if core_min > 1440:
-            return (False, "E: core_min_list provided greater than 1440. Please provide smaller value")
+            return (
+                False,
+                "E: core_execution_durations provided greater than 1440. Please provide smaller value",
+            )
 
-    for cache_type in cache_types_list:
+    for cache_type in cache_types:
         if cache_type > 1:
             # cache_type = {0: private, 1: public}
-            return (False, f"E: cachType ({cache_types_list[i]}) provided greater than 1. Please provide smaller value")
+            return (
+                False,
+                f"E: cachType ({cache_type}) provided greater than 1. Please provide smaller value",
+            )
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
@@ -111,16 +134,16 @@ def submitJob(
         provider,
         provider_price_block_number,
         storageID_list,
-        cache_types_list,
+        cache_types,
         data_prices_set_blocknumber_list,
-        core_list,
-        core_min_list,
+        cores,
+        core_execution_durations,
         dataTransferOut,
     ]
 
     try:
         gas_limit = 4500000
-        print(source_code_hashes)
+        print(str(source_code_hashes))
         tx = eBlocBroker.functions.submitJob(
             key, dataTransferIn_list, args, storage_hour_list, source_code_hashes
         ).transact({"from": _from, "value": job_price_value, "gas": gas_limit})
@@ -136,117 +159,105 @@ if __name__ == "__main__":
     if len(sys.argv) == 10:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
         key = str(sys.argv[2])
-        core_list = int(sys.argv[3])
-        core_min_list = int(sys.argv[4])
+        cores = int(sys.argv[3])
+        core_execution_durations = int(sys.argv[4])
         dataTransfer = int(sys.argv[5])
         storageID_list = int(sys.argv[6])
         sourceCodeHash = str(sys.argv[7])
         storage_hour_list = int(sys.argv[8])
-        accountID = int(sys.argv[9])
+        account_id = int(sys.argv[9])
     elif len(sys.argv) == 13:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
         key = str(sys.argv[2])
-        core_list = int(sys.argv[3])
+        cores = int(sys.argv[3])
         coreDayDuration = int(sys.argv[4])
         coreHour = int(sys.argv[5])
-        core_min_list = int(sys.argv[6])
+        core_execution_durations = int(sys.argv[6])
         dataTransferIn = int(sys.argv[7])
         dataTransferOut = int(sys.argv[8])
         storageID_list = int(sys.argv[9])
         sourceCodeHash = str(sys.argv[10])
         storage_hour_list = int(sys.argv[11])
-        accountID = int(sys.argv[12])
-        core_min_list = core_min_list + coreHour * 60 + coreDayDuration * 1440
-        dataTransfer = dataTransferIn + dataTransferOut
+        account_id = int(sys.argv[12])
+        core_execution_durations = core_execution_durations + coreHour * 60 + coreDayDuration * 1440
     else:
         # Requester inputs for testing
-        accountID = 0
-        storageID_list = StorageID.IPFS.value
+        account_id = 1
         provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
-        cache_types_list = CacheType.PRIVATE.value  # default
-        storage_hour_list = []
+        main_storageID = StorageID.IPFS.value
         source_code_hashes = []
-        core_min_list_list = []
 
-        if storageID_list == StorageID.IPFS.value:  # IPFS
-            print("Submitting through IPFS...")
+        if main_storageID == StorageID.IPFS.value:
+            print("Submitting job through IPFS...")
             key = "QmbL46fEH7iaccEayKpS9FZnkPV5uss4SFmhDDvbmkABUJ"  # 30 seconds job
-            coreDayDuration = 0
-            coreHour = 0
-            core_min_list = 1
-            core_min_list = core_min_list + coreHour * 60 + coreDayDuration * 1440
-            core_min_list_list.append(core_min_list)
 
             # DataSourceCodes:
-            ipfsBytes32 = convertIpfsToBytes32(key)
+            ipfsBytes32 = ipfs_to_bytes32(key)
             source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
 
-            ipfsBytes32 = convertIpfsToBytes32("QmSYzLDW5B36jwGSkU8nyfHJ9xh9HLjMsjj7Ciadft9y65")  # data1/data.txt
+            ipfsBytes32 = ipfs_to_bytes32("QmZQAPpMpgokVsDu1hEaPsZeX5r4zW1jvkotD7xoRZ1YGq")  # data1/data.txt
             source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
 
+            storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
             storage_hour_list = [1, 1]
-            cache_types_list = CacheType.PUBLIC.value  # default
-        elif storageID_list == StorageID.EUDAT.value:
+            cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+        elif main_storageID == StorageID.EUDAT.value:
             print("Submitting through EUDAT")
             oc = owncloud.Client("https://b2drop.eudat.eu/")
-            with open(EBLOCPATH + "/eudatPassword.txt", "r") as content_file:
+            with open(EBLOCPATH + "/eudat_password.txt", "r") as content_file:
                 password = content_file.read().strip()
 
-            oc.login(OC_USER_ID, password)
+            oc.login(OC_USER, password)
             sourceCodeHash = "00000000000000000000000000000000"
-        elif storageID_list == StorageID.GITHUB.value:
-            print("Submitting through GitHub...")
-            key = "avatar-lavventura=simpleSlurmJob"
-            coreDayDuration = 0
-            coreHour = 0
-            core_min_list = 1
-            sourceCodeHash = "acfd2fd8a1e9ccf031db0a93a861f6eb"
 
-        core_list = [1]
+        cores = [1]
+        core_execution_durations = [1]
         dataTransferIn_list = [1, 1]
         dataTransferOut = 1
-        dataTransfer = [dataTransferIn_list, dataTransferOut]
+        data_prices_set_blocknumber_list = [0, 0]
 
-    requester = w3.toChecksumAddress(w3.eth.accounts[accountID])
-    job_price_value, cost = cost(
-        core_list,
-        core_min_list_list,
+    requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
+    job_price_value, _cost = cost(
+        cores,
+        core_execution_durations,
         provider,
         requester,
         source_code_hashes,
         dataTransferIn_list,
         dataTransferOut,
         storage_hour_list,
-        storage_hour_list,
+        storageID_list,
+        cache_types,
         data_prices_set_blocknumber_list,
         eBlocBroker,
         w3,
         False,
     )
 
-    status, result = submitJob(
+    success, output = submitJob(
         provider,
         key,
-        core_list,
-        core_min_list_list,
+        cores,
+        core_execution_durations,
         dataTransferIn_list,
         dataTransferOut,
         storageID_list,
         source_code_hashes,
-        cache_types_list,
+        cache_types,
         storage_hour_list,
-        accountID,
+        account_id,
         job_price_value,
+        data_prices_set_blocknumber_list,
     )
 
-    if not status:
-        print(result)
-        sys.exit()
+    if not success:
+        print(output)
+        sys.exit(1)
     else:
-        receipt = get_tx_status(status, result)
+        receipt = get_tx_status(success, output)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
-                print("Job's index=" + str(logs[0].args["index"]))
+                print(f"Job's index={logs[0].args['index']}")
             except IndexError:
-                print("Transaction is reverted.")
+                logging.error("E: Transaction is reverted.")
