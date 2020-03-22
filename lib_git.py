@@ -6,7 +6,7 @@ import time
 
 from config import bp, logging  # noqa: F401
 from lib import run_command, run_command_stdout_to_file
-from utils import getcwd
+from utils import getcwd, path_leaf
 
 
 def git_diff_patch(path, target_file) -> bool:
@@ -21,7 +21,7 @@ def git_diff_patch(path, target_file) -> bool:
     if not success:
         sys.exit(1)
 
-    cmd = ["git", "diff", "HEAD"]
+    cmd = ["git", "diff", "--binary", "HEAD"]
     success = run_command_stdout_to_file(cmd, target_file)
     os.chdir(cwd_temp)
     time.sleep(0.1)
@@ -32,13 +32,18 @@ def git_commit_changes(path) -> bool:
     cwd_temp = getcwd()
     os.chdir(path)
     # run_command(["git", "config", "core.fileMode", "false"])
+    success, output = run_command(["git", "diff", "--binary", "HEAD"])
+    if not output:
+        logging.info("Already committed with the given changes.")
+        os.chdir(cwd_temp)
+        return True
     try:
         # Required for files to be access on the cluster side due to permission issues
-        subprocess.run(["chmod", "-R", "775", "."])
+        subprocess.run(["chmod", "-R", "775", "."])  # Changes folder's hash
         # subprocess.run(["chmod", "-R", "755", "."])
         # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
         success, output = run_command(["git", "add", "-A", ".", "-v"])
-        success, is_git_cached = run_command(["git", "diff", "--cached", "--name-only"])
+        success, is_git_cached = run_command(["git", "diff", "--cached", "--name-only",])
         if output or is_git_cached:
             success, output = run_command(["git", "commit", "-m", "update", "-v"])
 
@@ -48,6 +53,27 @@ def git_commit_changes(path) -> bool:
 
     os.chdir(cwd_temp)
     return True
+
+
+def git_apply_patch(git_folder, patch_file):
+    cwd_temp = getcwd()
+    os.chdir(git_folder)
+
+    base_name = path_leaf(patch_file)
+    print(base_name)
+    base_name_split = base_name.split("_")
+    git_hash = base_name_split[1]
+    # folder_name = base_name_split[2]
+    success, output = run_command(["git", "checkout", git_hash])
+    run_command(["git", "reset", "--hard"])
+    run_command(["git", "clean", "-f"])
+    success, output = run_command(["git", "apply", "--stat", patch_file])
+    if not success:
+        return False
+
+    print(output)
+    success, output = run_command(["git", "apply", "--reject", patch_file])
+    os.chdir(cwd_temp)
 
 
 def is_git_repo(folders) -> bool:
