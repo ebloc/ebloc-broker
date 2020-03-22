@@ -4,7 +4,7 @@ import os
 import subprocess
 import time
 
-from config import bp, logging
+from config import bp, logging  # noqa: F401
 from lib import (LOG_PATH, CacheType, StorageID, calculate_folder_size,
                  get_ipfs_hash, is_ipfs_hash_cached, is_ipfs_hash_exists,
                  is_ipfs_running, log, run_command, silent_remove)
@@ -17,7 +17,6 @@ class IpfsClass(Storage):
         super(self.__class__, self).__init__(logged_job, jobInfo, requesterID, is_already_cached, oc)
         # cache_type is should be public on IPFS
         self.cache_type = CacheType.PUBLIC.value
-        self.share_token = "-1"  # Constant value for ipfs
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
 

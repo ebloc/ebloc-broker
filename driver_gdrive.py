@@ -18,7 +18,6 @@ from utils import byte_to_mb, generate_md5sum
 class GdriveClass(Storage):
     def __init__(self, logged_job, jobInfo, requesterID, is_already_cached, oc=None):
         super(self.__class__, self).__init__(logged_job, jobInfo, requesterID, is_already_cached, oc)
-        self.share_token = "-1"  # Constant value for Gdrive
 
     def assign_folder_path_to_download(self, id, source_code_hash, path):
         if self.cache_type[id] == CacheType.PUBLIC.value:

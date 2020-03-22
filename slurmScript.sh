@@ -28,8 +28,7 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     arg0=$(echo $name | cut -d "_" -f 1)  # jobKey
     arg1=$(echo $name | cut -d "_" -f 2)  # index
     arg2=$(echo $name | cut -d "_" -f 3)  # cloudStorageID
-    arg3=$(echo $name | cut -d "_" -f 4)  # shareToken
-    arg4=$(echo $name | cut -d "_" -f 5)  # received_block_number
+    arg3=$(echo $name | cut -d "_" -f 4)  # received_block_number
 
     if [[ $event == *"COMPLETED"* ]]; then
         status="COMPLETED"
@@ -39,11 +38,11 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
         status="FAILED"
     fi
 
-    echo "$status fileName:$name | $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
+    echo "$status fileName:$name | $arg0 $arg1 $arg2 $arg3 $name $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
     fi
 fi
 
@@ -52,8 +51,7 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     arg0=$(echo $name | cut -d "_" -f 1)  # jobKey
     arg1=$(echo $name | cut -d "_" -f 2)  # index
     arg2=$(echo $name | cut -d "_" -f 3)  # cloudStorageID
-    arg3=$(echo $name | cut -d "_" -f 4)  # shareToken
-    arg4=$(echo $name | cut -d "_" -f 5)  # received_block_number
+    arg3=$(echo $name | cut -d "_" -f 4)  # received_block_number
 
     echo "TIMEOUT fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 slurmJobID: $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
 
@@ -68,8 +66,7 @@ if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
     arg0=$(echo $name | cut -d "_" -f 1)  # jobKey
     arg1=$(echo $name | cut -d "_" -f 2)  # index
     arg2=$(echo $name | cut -d "_" -f 3)  # cloudStorageID
-    arg3=$(echo $name | cut -d "_" -f 4)  # shareToken
-    arg4=$(echo $name | cut -d "_" -f 5)  # received_block_number
+    arg3=$(echo $name | cut -d "_" -f 4)  # received_block_number
 
     echo "CANCELLED fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 slurmJobID: $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
 
@@ -84,13 +81,12 @@ if [[ $event == *"FAILED"* ]]; then # Failed slurm jobs are catched here
     arg0=$(echo $name | cut -d "_" -f 1)  # jobKey
     arg1=$(echo $name | cut -d "_" -f 2)  # index
     arg2=$(echo $name | cut -d "_" -f 3)  # cloudStorageID
-    arg3=$(echo $name | cut -d "_" -f 4)  # shareToken
-    arg4=$(echo $name | cut -d "_" -f 5)  # received_block_number
+    arg3=$(echo $name | cut -d "_" -f 4)  # received_block_number
 
-    echo "FAILED fileName:$name | $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
+    echo "FAILED fileName:$name | $arg0 $arg1 $arg2 $arg3 $name $slurmJobID" | mail -s "Message Subject" aalimog1@binghamton.edu
 
     if [ "$arg0" != "$arg1" ]; then # jobKey and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $arg4 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
     fi
 fi
