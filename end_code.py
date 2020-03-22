@@ -18,28 +18,31 @@ from contractCalls.processPayment import processPayment
 from imports import connect
 from lib import (HOME, PROVIDER_ID, StorageID, eblocbroker_function_call,
                  ipfs_add, remove_empty_files_and_folders, run_command,
-                 run_command_stdout_to_file)
+                 run_command_stdout_to_file, PROGRAM_PATH)
 from lib_gdrive import get_gdrive_file_info
 from lib_git import git_diff_patch
 from lib_owncloud import upload_results_to_eudat
 from utils import byte_to_mb, eth_address_to_md5, read_json
+from lib_mongodb import find_key
+from pymongo import MongoClient
 
 eBlocBroker, w3 = connect()
+mc = MongoClient()
 
 
 class ENDCODE:
     def __init__(
-        self, _job_key, _index, _cloud_storage_id, _share_token, _received_block_number, _folder_name, _slurm_job_id,
+        self, _job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,
     ) -> None:
         global logging
         self.job_key = _job_key
         self.index = _index
         self.cloud_storage_id = _cloud_storage_id
-        self.share_token = _share_token
         self.received_block_number = _received_block_number
         self.folder_name = _folder_name
         self.slurm_job_id = _slurm_job_id
-        self.encoded_share_token = ""
+        self.share_tokens = {}
+        self.encoded_share_tokens = {}
         self.dataTransferIn = 0
         self.dataTransferOut = 0
         self.result_ipfs_hash = ""
@@ -54,17 +57,13 @@ class ENDCODE:
         logging.info(f"START: {datetime.datetime.now()}")
         self.job_id = 0  # TODO: should be mapped slurm_job_id
         logging.info(
-            f"~/eBlocBroker/end_code.py {self.job_key} {self.index} {self.cloud_storage_id} {self.share_token} {self.received_block_number} {self.folder_name} {self.slurm_job_id}"
+            f"~/eBlocBroker/end_code.py {self.job_key} {self.index} {self.cloud_storage_id} {self.received_block_number} {self.folder_name} {self.slurm_job_id}"
         )
         logging.info(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             logging.error("job_key and index are same.")
             sys.exit(1)
 
-        if self.share_token != "-1":
-            self.encoded_share_token = base64.b64encode((f"{self.share_token}:").encode("utf-8")).decode("utf-8")
-
-        logging.info(f"encoded_share_token: {self.encoded_share_token}")
         success, self.job_info = eblocbroker_function_call(
             lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,), 10,
         )
@@ -74,10 +73,11 @@ class ENDCODE:
         requester_id = self.job_info["jobOwner"].lower()
         requester_id_address = eth_address_to_md5(requester_id)
         success, self.requester_info = get_requester_info(requester_id)
-        self.results_folder_prev = f"{lib.PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
+        self.results_folder_prev = f"{PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.results_data_folder = f"{self.results_folder_prev}/data"
+        self.private_dir = f"{PROGRAM_PATH}/{requester_id_address}/cache"
 
         remove_empty_files_and_folders(self.results_folder)
 
@@ -88,8 +88,6 @@ class ENDCODE:
         logging.info(f"job_key: {self.job_key}")
         logging.info(f"index: {self.index}")
         logging.info(f"cloud_storage_id: {self.cloud_storage_id}")
-        logging.info(f"share_token: {self.share_token}")
-        logging.info(f"encoded_share_token: {self.encoded_share_token}")
         logging.info(f"folder_name: {self.folder_name}")
         logging.info(f"providerID: {PROVIDER_ID}")
         logging.info(f"requester_id_address: {requester_id_address}")
@@ -133,6 +131,30 @@ class ENDCODE:
         f = open(f"{lib.LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
         f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
         f.close()
+
+    def get_shared_tokens(self):
+        success, data = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
+        if success:
+            share_ids = data
+
+        for source_code_hash in self.source_code_hashes_to_process:
+            try:
+                share_token = share_ids[source_code_hash]["share_token"]
+                self.share_tokens[source_code_hash] = share_token
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode("utf-8")
+            except KeyError:
+                success, share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
+                self.share_tokens[source_code_hash] = share_token
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode("utf-8")
+                if not success:
+                    logging.error(f"E: share_id cannot detected from key: {self.job_key}")
+                    return False
+
+        if success:
+            for key in share_ids:
+                value = share_ids[key]
+                encoded_value = self.encoded_share_tokens[key]
+                logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
     def remove_source_code(self):
         """Client's initial downloaded files are removed."""
@@ -220,7 +242,7 @@ class ENDCODE:
         _dataTransferOut = lib.calculate_folder_size(patch_file)
         logging.info(f"[{source_code_hash}]'s dataTransferOut => {_dataTransferOut} MB")
         self.dataTransferOut += _dataTransferOut
-        success = upload_results_to_eudat(self.encoded_share_token, patch_name, self.results_folder_prev, 5)
+        success = upload_results_to_eudat(self.encoded_share_tokens[source_code_hash], patch_name, self.results_folder_prev, 5)
         if not success:
             return False
 
@@ -409,6 +431,7 @@ class ENDCODE:
         if self.cloud_storage_id == StorageID.IPFS_MINILOCK.value:
             self.ipfs_minilock_upload()
         elif self.cloud_storage_id == StorageID.EUDAT.value:
+            self.get_shared_tokens()
             success = self.eudat_upload()
         elif self.cloud_storage_id == StorageID.GDRIVE.value:
             self.gdrive_upload()
@@ -420,7 +443,6 @@ class ENDCODE:
         logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         logging.info(f"dataTransferSum={dataTransferSum} MB => rounded={int(dataTransferSum)} MB")
-        # bp()
         self.process_payment_tx()
         logging.info("COMPLETED")
         # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
@@ -430,12 +452,11 @@ if __name__ == "__main__":
     _job_key = sys.argv[1]
     _index = sys.argv[2]
     _cloud_storage_id = int(sys.argv[3])
-    _share_token = sys.argv[4]
-    _received_block_number = sys.argv[5]
-    _folder_name = sys.argv[6]
-    _slurm_job_id = sys.argv[7]
+    _received_block_number = sys.argv[4]
+    _folder_name = sys.argv[5]
+    _slurm_job_id = sys.argv[6]
 
-    e = ENDCODE(_job_key, _index, _cloud_storage_id, _share_token, _received_block_number, _folder_name, _slurm_job_id,)
+    e = ENDCODE(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
     e.run()
 
 """ Approach to upload as .tar.gz. Currently not used.
