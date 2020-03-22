@@ -38,7 +38,6 @@ class Storage(BaseClass):
         self.private_dir = f"{PROGRAM_PATH}/{requesterID}/cache"
         self.public_dir = f"{PROGRAM_PATH}/cache"
         self.folder_type_dict = {}
-        self.share_token = None
 
         create_dir(self.private_dir)
         create_dir(self.public_dir)
@@ -154,7 +153,6 @@ class Storage(BaseClass):
         try:
             _sbatch_call(
                 self.logged_job,
-                self.share_token,
                 self.requesterID,
                 self.results_folder,
                 self.results_folder_prev,

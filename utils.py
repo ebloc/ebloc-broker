@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 import subprocess
-
+import ntpath
 import base58
 
 from config import EBLOCPATH
@@ -90,3 +90,8 @@ class Link:
             run_command(["ln", "-sfn", target, destination])
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash
+
+
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)

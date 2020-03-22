@@ -12,7 +12,7 @@ import config
 import lib
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
-from lib import WHERE, CacheType, log, run_command, silent_remove
+from lib import WHERE, CacheType, log, silent_remove
 from lib_mongodb import add_item_share_id, find_key
 from storage_class import Storage
 from utils import Link, byte_to_mb, create_dir, generate_md5sum, read_json
@@ -273,12 +273,14 @@ class EudatClass(Storage):
             return False
 
         logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB")
-        try:
-            self.share_token = self.shareID[self.job_key]["share_token"]
-        except KeyError:
-            success, self.share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
-            if not success:
-                logging.error(f"E: shareID cannot detected from key: {self.job_key}")
-            return False
+
+        for folder_name in self.source_code_hashes_to_process:
+            try:
+                self.shareID[folder_name]["share_token"]
+            except KeyError:
+                success, output = find_key(mc["eBlocBroker"]["shareID"], folder_name)
+                if not success:
+                    logging.error(f"E: shareID cannot detected from key: {self.job_key}")
+                return False
 
         return self.sbatch_call()
