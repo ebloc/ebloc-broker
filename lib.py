@@ -540,13 +540,13 @@ def compress_folder(folder_to_share):
     p3 = subprocess.Popen(
         [
             "tar",
-            "--absolute-names",
-            "--no-recursion",
-            "--null",
             "--mode=a+rwX",
             "--owner=0",
             "--group=0",
             "--numeric-owner",
+            "--absolute-names",
+            "--no-recursion",
+            "--null",
             "-T",
             "-",
             "-zcvf",
@@ -554,7 +554,7 @@ def compress_folder(folder_to_share):
         ],
         stdin=p2.stdout,
         stdout=subprocess.PIPE,
-        env={"pigz": "-n"},
+        env={"PIGZ": "-n"},
     )
     p2.stdout.close()
     p3.communicate()
@@ -568,7 +568,6 @@ def compress_folder(folder_to_share):
 
 def _sbatch_call(
     logged_job,
-    shareToken,
     requester_id,
     results_folder,
     results_folder_prev,
@@ -631,7 +630,7 @@ def _sbatch_call(
         logging.error(results_folder + '/run.sh does not exist')
         return False
     """
-    sbatch_file_path = f"{results_folder}/{job_key}_{index}_{cloud_storage_id}_{shareToken}_{logged_job.blockNumber}.sh"
+    sbatch_file_path = f"{results_folder}/{job_key}_{index}_{cloud_storage_id}_{logged_job.blockNumber}.sh"
     copyfile(f"{results_folder}/run.sh", sbatch_file_path)
 
     job_core_num = str(job_info["core"][job_id])
@@ -646,7 +645,7 @@ def _sbatch_call(
     for attempt in range(10):
         try:
             # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-            # cmd: sudo su - $requester_id -c "cd $results_folder && sbatch -c$job_core_num $results_folder/${job_key}*${index}*${cloud_storage_id}*$shareToken.sh --mail-type=ALL
+            # cmd: sudo su - $requester_id -c "cd $results_folder && sbatch -c$job_core_num $results_folder/${job_key}*${index}*${cloud_storage_id}.sh --mail-type=ALL
             job_id = (
                 subprocess.check_output(
                     [
