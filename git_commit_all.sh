@@ -10,6 +10,4 @@ else
     git commit -m "update"
 fi
 
-exit
-
 git push
