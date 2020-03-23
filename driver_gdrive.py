@@ -130,9 +130,7 @@ class GdriveClass(Storage):
             self.folder_path_to_download[source_code_hash] = cache_folder
             # self.assign_folder_path_to_download(id, source_code_hash, cache_folder)
 
-        logging.info(
-            f"Downloading => {key}" f"\n" f"Path to download => {self.folder_path_to_download[source_code_hash]}"
-        )
+        logging.info(f"Downloading => {key}\n Path to download => {self.folder_path_to_download[source_code_hash]}")
         if self.folder_type_dict[source_code_hash] == "folder":
             success, output = lib.subprocess_call_attempt(
                 [
