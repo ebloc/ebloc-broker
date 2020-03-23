@@ -16,30 +16,27 @@ from lib_owncloud import (eudat_initialize_folder, eudat_login,
 
 def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
     eBlocBroker, w3 = connect()
-    if eBlocBroker is None:
-        return False, "eBlocBroker is not connected"
-
-    if w3 is None:
+    if eBlocBroker is None or w3 is None:
         return False, "web3 is not connected"
 
-    provider = w3.toChecksumAddress(provider)  # netlab
+    provider = w3.toChecksumAddress(provider)
     success, provider_info = get_provider_info(provider)
     account_id = 1  # Different account than provider
 
-    folder_to_share_list = []  # Path of folder to share
+    folders_to_share = []  # Path of folder to share
     source_code_hashes = []
-    storage_hour_list = []
+    storage_hours = []
     core_min_list = []
 
     # Full path of the sourceCodeFolders is given
-    folder_to_share_list.append(f"{EBLOCPATH}/base/sourceCode")
-    folder_to_share_list.append(f"{EBLOCPATH}/base/data/data1")
+    folders_to_share.append(f"{EBLOCPATH}/base/sourceCode")
+    folders_to_share.append(f"{EBLOCPATH}/base/data/data1")
 
-    success = is_git_repo(folder_to_share_list)
+    success = is_git_repo(folders_to_share)
     if not success:
         return False, ""
 
-    for idx, folder in enumerate(folder_to_share_list):
+    for idx, folder in enumerate(folders_to_share):
         if idx != 0:
             print("")
 
@@ -57,7 +54,8 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
         if idx == 0:
             job_key = folder_hash
 
-        source_code_hash = w3.toBytes(text=folder_hash)  # required to send string as bytes
+        # Required to send string as bytes
+        source_code_hash = w3.toBytes(text=folder_hash)
         source_code_hashes.append(source_code_hash)
         if not share_single_folder(folder_hash, oc, provider_info["fID"]):
             sys.exit(1)
@@ -70,10 +68,10 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
     dataTransferIn_list = [1, 1]
     dataTransferOut = 1
 
-    storageID_list = [StorageID.EUDAT.value, StorageID.EUDAT.value]
+    storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
     cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
-    storage_hour_list = [1, 1]
-    data_prices_set_blocknumber_list = [0, 0]
+    storage_hours = [1, 1]
+    data_prices_set_blocknumbers = [0, 0]
     print(source_code_hashes)
     requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
     job_price_value, _cost = cost(
@@ -84,10 +82,10 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
         source_code_hashes,
         dataTransferIn_list,
         dataTransferOut,
-        storage_hour_list,
-        storageID_list,
+        storage_hours,
+        storage_ids,
         cache_types,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
         eBlocBroker,
         w3,
         False,
@@ -100,13 +98,13 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
         core_min_list,
         dataTransferIn_list,
         dataTransferOut,
-        storageID_list,
+        storage_ids,
         source_code_hashes,
         cache_types,
-        storage_hour_list,
+        storage_hours,
         account_id,
         job_price_value,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
     )
     return success, output
 
