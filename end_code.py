@@ -230,13 +230,7 @@ class ENDCODE:
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
 
     def _eudat_upload(self, path, source_code_hash) -> bool:
-        print(path)
-        os.chdir(path)
-        success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
-        patch_name = f"patch_{git_head_hash}_{source_code_hash}_{self.index}.diff"
-        logging.info(f"patch_name={patch_name}")
-        patch_file = f"{self.results_folder_prev}/{patch_name}"  # File to be uploaded
-        success = git_diff_patch(path, patch_file)
+        success, patch_name, patch_file = git_diff_patch(path, source_code_hash, self.index, self.results_folder_prev)
         # TODO: maybe tar the patch file
         time.sleep(0.1)
         _dataTransferOut = lib.calculate_folder_size(patch_file)
