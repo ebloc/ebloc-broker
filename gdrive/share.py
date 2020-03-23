@@ -3,23 +3,22 @@
 import json
 import os
 import shutil
-import subprocess
 import sys
 import traceback
 
-from config import load_log
+from config import logging
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import (CacheType, StorageID, compress_folder, get_tx_status, printc,
-                 silent_remove)
+                 silent_remove, EBLOCPATH, run_command)
 from lib_gdrive import gdrive_list, gdrive_upload_internal
 from utils import read_json
+from lib_git import git_commit_changes
 
-log = load_log(f"output.log")
 
-base_folder = "/home/netlab/eBlocBroker/gdrive/exampleFolderToShare/"
+base_folder = f"{EBLOCPATH}/base"
 
 
 def create_meta_json(f_path, job_key_dict):
@@ -27,13 +26,13 @@ def create_meta_json(f_path, job_key_dict):
         json.dump(job_key_dict, f)
 
     printc(f"meta_data.json file is updated on the base folder", "yellow")
-    log.info(f"{job_key_dict}")
+    logging.info(f"{job_key_dict}")
 
 
 def gdrive_upload(folder_to_share, job_key_flag=False):
     already_uploaded = False
     if job_key_flag:
-        log.info(f"job_key_flag={job_key_flag} | tar.gz file is inside a folder")
+        logging.info(f"job_key_flag={job_key_flag} | tar.gz file is inside a folder")
         dir_path = os.path.dirname(folder_to_share)
         tar_hash = compress_folder(folder_to_share)
 
@@ -47,26 +46,26 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
         output = gdrive_list(tar_hash, True)
         if not output:
             key = gdrive_upload_internal(dir_path, tar_hash, True)
-            print(gdrive_list(tar_hash))
+            logging.info(gdrive_list(tar_hash))
         else:
             printc(f"=> Requested folder {tar_hash} is already uploaded", "blue")
-            log.info(output)
+            logging.info(output)
             key = output.partition("\n")[0].split()[0]
             already_uploaded = True
 
         silent_remove(f"{dir_path}/{tar_hash}")  # created .tar.gz files are removed
 
     else:
-        log.info(f"job_key_flag={job_key_flag}")
+        logging.info(f"job_key_flag={job_key_flag}")
         dir_path = os.path.dirname(folder_to_share)
         tar_hash = compress_folder(folder_to_share)
         output = gdrive_list(tar_hash)
         if not output:
             key = gdrive_upload_internal(dir_path, tar_hash)
-            print(gdrive_list(tar_hash))
+            logging.info(gdrive_list(tar_hash))
         else:
             printc(f"=> Requested file {tar_hash}.tar.gz is already uploaded", "blue")
-            print(output)
+            logging.info(output)
             key = output.partition("\n")[0].split()[0]
             silent_remove(f"{dir_path}/{tar_hash}.tar.gz")  # created .tar.gz files are removed
             already_uploaded = True
@@ -75,19 +74,13 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
 
 
 def share_folder(folder_to_share, provider_to_share, job_key_flag=False):
-    log.info(f"folder_to_share={folder_to_share}")
+    logging.info(f"folder_to_share={folder_to_share}")
     job_key, already_uploaded, tar_hash = gdrive_upload(folder_to_share, job_key_flag)
-    log.info(f"job_key={job_key}")
-    # cmd: gdrive share $job_key --role writer --type user --email $provider_to_share
+    logging.info(f"job_key={job_key}")
     if not already_uploaded:
-        output = (
-            subprocess.check_output(
-                ["gdrive", "share", job_key, "--role", "writer", "--type", "user", "--email", provider_to_share,]
-            )
-            .decode("utf-8")
-            .strip()
-        )
-        log.info(f"share_output={output}")
+        cmd = ["gdrive", "share", job_key, "--role", "writer", "--type", "user", "--email", provider_to_share,]
+        success, output = run_command(cmd)
+        logging.info(f"share_output={output}")
 
     return job_key, tar_hash
 
@@ -97,25 +90,31 @@ def gdrive_submit_job(provider):
     if eBlocBroker is None or w3 is None:
         return False, "web3 is not connected"
 
-    account_id = 1
-    provider = w3.toChecksumAddress(provider)  # netlab
-    provider_to_share = "alper.alimoglu@gmail.com"  # 'alper01234alper@gmail.com'
+    provider = w3.toChecksumAddress(provider)
+    provider_to_share = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"  # '
     success, provider_info = get_provider_info(provider)
-    folder_to_share_list = []  # Path of folder to share
+    account_id = 1
 
+    folders_to_share = []  # Path of folder to share
     # Full path of the sourceCodeFolders is given
     job_key_dict = {}
     source_code_hash_list = []
     folderName_tar_hash = {}
 
-    sourceCodePath = f"{base_folder}/sourceCode"
-    folder_to_share_list.append(sourceCodePath)  # sourceCode at index 0
-    folder_to_share_list.append(f"{base_folder}/data1")
+    # sourceCode at index 0
+    folders_to_share.append(f"{base_folder}/sourceCode")
+    folders_to_share.append(f"{base_folder}/data/data1")
     # subprocess.run(['sudo', 'chmod', '-R', '777', folder_to_share])
 
+    for idx, folder in enumerate(folders_to_share):
+        printc(folder, "green")
+        success = git_commit_changes(folder)
+        if not success:
+            sys.exit(1)
+
     try:
-        if len(folder_to_share_list) > 1:
-            for folder_to_share in folder_to_share_list[1:]:
+        if len(folders_to_share) > 1:
+            for folder_to_share in folders_to_share[1:]:
                 # Starting from the first element ignoring source_folder
                 # Attempting to share the data folder
                 job_key, tar_hash = share_folder(folder_to_share, provider_to_share)
@@ -132,12 +131,12 @@ def gdrive_submit_job(provider):
             else:
                 create_meta_json(f"{base_folder}/meta_data.json", job_key_dict)
 
-        folder_to_share = folder_to_share_list[0]
+        folder_to_share = folders_to_share[0]
         job_key, tar_hash = share_folder(folder_to_share, provider_to_share, True)
         folderName_tar_hash[folder_to_share] = tar_hash
         job_key_dict[tar_hash] = job_key
     except Exception:
-        log.error(f"E: {traceback.format_exc()}")
+        logging.error(f"E: {traceback.format_exc()}")
         sys.exit(1)
 
     coreMin_list = []
@@ -146,22 +145,23 @@ def gdrive_submit_job(provider):
     dataTransferIn_list = [1, 1]
     dataTransferOut = 1
 
-    storageID_list = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
+    storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
     cacheType_list = [
         CacheType.PRIVATE.value,
         CacheType.PUBLIC.value,
     ]  # Covers public and private folders
-    storage_hour_list = [1, 1]
-    data_prices_set_blocknumber_list = [0, 0]
+    storage_hours = [1, 1]
+    data_prices_set_blocknumbers = [0, 0]
 
-    for folder_to_share in folder_to_share_list:
+    for folder_to_share in folders_to_share:
         tar_hash = folderName_tar_hash[folder_to_share]
-        source_code_hash = w3.toBytes(text=tar_hash)  # Required to send string as bytes == str_data.encode('utf-8')
+        # Required to send string as bytes == str_data.encode('utf-8')
+        source_code_hash = w3.toBytes(text=tar_hash)
         source_code_hash_list.append(source_code_hash)
 
-    tar_hash = folderName_tar_hash[folder_to_share_list[0]]
+    tar_hash = folderName_tar_hash[folders_to_share[0]]
     jobKey = job_key_dict[tar_hash]
-    log.info(f"job_key={jobKey}")
+    logging.info(f"job_key={jobKey}")
 
     requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
     job_price_value, _cost = cost(
@@ -172,16 +172,16 @@ def gdrive_submit_job(provider):
         source_code_hash_list,
         dataTransferIn_list,
         dataTransferOut,
-        storage_hour_list,
-        storageID_list,
+        storage_hours,
+        storage_ids,
         cacheType_list,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
         eBlocBroker,
         w3,
         False,
     )
 
-    log.info("\nSubmitting Job...")
+    logging.info("\nSubmitting Job...")
     success, output = submitJob(
         provider,
         jobKey,
@@ -189,13 +189,13 @@ def gdrive_submit_job(provider):
         coreMin_list,
         dataTransferIn_list,
         dataTransferOut,
-        storageID_list,
+        storage_ids,
         source_code_hash_list,
         cacheType_list,
-        storage_hour_list,
+        storage_hours,
         account_id,
         job_price_value,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
     )
 
     return success, output
@@ -203,17 +203,18 @@ def gdrive_submit_job(provider):
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+    # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+    provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
     success, output = gdrive_submit_job(provider)
 
     if not success:
-        log.info(output)
+        logging.error(output)
         sys.exit(1)
     else:
         receipt = get_tx_status(success, output)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
-                log.info(f"Job's index={logs[0].args['index']}")
+                logging.info(f"Job's index={logs[0].args['index']}")
             except IndexError:
-                log.info("Transaction is reverted.")
+                logging.info("Transaction is reverted.")
