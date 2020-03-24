@@ -625,12 +625,8 @@ def _sbatch_call(
 
     # logging.info(dataTransferIn)
     time.sleep(0.25)
-    """ TODO: delete check is done one the upper level
-    if not os.path.isfile(results_folder + '/run.sh'):
-        logging.error(results_folder + '/run.sh does not exist')
-        return False
-    """
-    sbatch_file_path = f"{results_folder}/{job_key}_{index}_{cloud_storage_id}_{logged_job.blockNumber}.sh"
+    # seperator character is ;
+    sbatch_file_path = f"{results_folder}/{job_key}*{index}*{cloud_storage_id}*{logged_job.blockNumber}.sh"
     copyfile(f"{results_folder}/run.sh", sbatch_file_path)
 
     job_core_num = str(job_info["core"][job_id])
@@ -654,7 +650,7 @@ def _sbatch_call(
                         "-",
                         requester_id,
                         "-c",
-                        f"cd {results_folder} && sbatch -N {job_core_num} {sbatch_file_path} --mail-type=ALL",
+                        f"cd {results_folder} && sbatch -N {job_core_num} \"{sbatch_file_path}\" --mail-type=ALL",
                     ]
                 )
                 .decode("utf-8")

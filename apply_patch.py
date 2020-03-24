@@ -2,6 +2,7 @@
 
 import os
 import sys
+
 from lib_git import git_apply_patch
 
 # patch_file = "/home/alper/patch/patch_7bfea156ad612b2a634d0b98e65fe75c815e256d_3cb8e5f14fbd05589469a62017da475d_2.diff"

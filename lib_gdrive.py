@@ -135,7 +135,7 @@ def gdrive_size(
                 size_to_download += _size
 
         output = byte_to_mb(size_to_download)
-        logging.info(f"Total_size={byte_size} bytes | Size to download={size_to_download} bytes ==> {output} MB")
+        logging.info(f"Total_size={byte_size} bytes | Size to download={size_to_download} bytes => {output} MB")
         return True, output, job_key_list, source_code_key
     else:
         return False, 0, [], source_code_key

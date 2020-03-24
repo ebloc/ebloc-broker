@@ -5,7 +5,7 @@ import sys
 import time
 
 from config import bp, logging  # noqa: F401
-from lib import run_command, run_command_stdout_to_file, printc
+from lib import printc, run_command, run_command_stdout_to_file
 from utils import getcwd, path_leaf
 
 
