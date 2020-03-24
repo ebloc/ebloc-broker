@@ -3,7 +3,7 @@ import subprocess
 import time
 
 from config import logging
-from lib import LOG_PATH, run_command
+from lib import run_command
 
 
 def get_idle_cores(is_print_flag=True):
@@ -46,7 +46,9 @@ def is_slurm_on() -> bool:
     success, output = run_command(["sinfo"])
     if "PARTITION" not in output:
         logging.error("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n")
-        logging.error(f"E: {output}")
+        if not output:
+            logging.error(f"E: {output}")
+
         logging.info("Starting Slurm... \n")
         subprocess.run(["sudo", "bash", "runSlurm.sh"])
         return False
