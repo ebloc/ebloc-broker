@@ -11,12 +11,11 @@ from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib import (CacheType, StorageID, compress_folder, get_tx_status, printc,
-                 silent_remove, EBLOCPATH, run_command)
+from lib import (EBLOCPATH, CacheType, StorageID, compress_folder,
+                 get_tx_status, printc, run_command, silent_remove)
 from lib_gdrive import gdrive_list, gdrive_upload_internal
-from utils import read_json
 from lib_git import git_commit_changes
-
+from utils import read_json
 
 base_folder = f"{EBLOCPATH}/base"
 

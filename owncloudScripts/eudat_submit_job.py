@@ -3,7 +3,7 @@
 import sys
 import time
 
-from config import bp, EBLOCPATH  # noqa: F401
+from config import EBLOCPATH, bp  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
