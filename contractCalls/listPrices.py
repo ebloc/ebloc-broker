@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from get_providers import get_providers
 import config
+from get_providers import get_providers
 
 
 def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):

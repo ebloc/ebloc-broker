@@ -1,12 +1,13 @@
 import binascii
 import hashlib
 import json
+import ntpath
 import os
 import subprocess
-import ntpath
+
 import base58
 
-from config import EBLOCPATH
+from config import EBLOCPATH, logging
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -88,6 +89,7 @@ class Link:
             self.data_map[folder] = folder_hash
             destination = f"{self.path_to}/{folder_hash}"
             run_command(["ln", "-sfn", target, destination])
+            logging.info(f"{target} is linked to {destination}")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash
 

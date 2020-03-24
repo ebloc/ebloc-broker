@@ -266,13 +266,13 @@ class EudatClass(Storage):
                 if output:
                     logging.info(output)
 
-        link = Link(self.results_data_folder, self.results_data_link)
-        link.link_folders()
         if not os.path.isfile(f"{self.results_folder}/run.sh"):
             logging.error(f"{self.results_folder}/run.sh file does not exist")
             return False
-
         logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB")
+
+        link = Link(self.results_data_folder, self.results_data_link)
+        link.link_folders()
 
         for folder_name in self.source_code_hashes_to_process:
             try:

@@ -5,14 +5,14 @@ import subprocess
 import time
 
 import lib
-from config import logging
+from config import bp, logging  # noqa: F401
 from contractCalls.get_provider_info import get_provider_info
 from lib import (WHERE, CacheType, calculate_folder_size, echo_grep_awk,
                  is_run_exists_in_tar, log, run_command, silent_remove)
 from lib_gdrive import (gdrive_get_file_id, gdrive_size, get_gdrive_file_info,
                         getMd5sum)
 from storage_class import Storage
-from utils import byte_to_mb, generate_md5sum
+from utils import Link, byte_to_mb, create_dir, generate_md5sum
 
 
 class GdriveClass(Storage):
@@ -153,8 +153,8 @@ class GdriveClass(Storage):
                 logging.error(f"E: Folder ({downloaded_folder_path}) is not downloaded successfully.")
                 return False
             else:
-                self.dataTransferIn = calculate_folder_size(downloaded_folder_path)
-                logging.info(f"dataTransferIn={self.dataTransferIn} MB | Rounded={int(self.dataTransferIn)} MB")
+                self.dataTransferIn_requested = calculate_folder_size(downloaded_folder_path)
+                logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB")
         else:
             success, output = lib.subprocess_call_attempt(
                 ["gdrive", "download", key, "--force", "--path", self.folder_path_to_download[source_code_hash],], 10,
@@ -173,8 +173,8 @@ class GdriveClass(Storage):
                 p2 = subprocess.Popen(["awk", "{print $5}"], stdin=p1.stdout, stdout=subprocess.PIPE)
                 p1.stdout.close()
                 # Returns downloaded files size in bytes
-                self.dataTransferIn = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
-                logging.info(f"dataTransferIn={self.dataTransferIn} MB | Rounded={int(self.dataTransferIn)} MB")
+                self.dataTransferIn_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
+                logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB")
 
         return True
 
@@ -189,7 +189,6 @@ class GdriveClass(Storage):
         mime_type = get_gdrive_file_info(gdriveInfo, "Mime")
         folder_name = get_gdrive_file_info(gdriveInfo, "Name")
         logging.info(f"mime_type={mime_type}")
-
         if job_key_flag:
             # key for the sourceCode tar.gz file is obtained
             success, self.dataTransferIn_used, self.job_key_list, key = gdrive_size(
@@ -205,16 +204,16 @@ class GdriveClass(Storage):
         if not success:
             return False
 
-        return mime_type, folder_name, self.dataTransferIn_used
+        return mime_type, folder_name
 
     def remove_downloaded_file(self, source_code_hash, id, path):
         if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][id] == 0:
             silent_remove(path)
 
     def get_data(self, key, id, job_key_flag=False):
-        mime_type, name, dataTransferIn_used = self.get_data_init(id, key, job_key_flag)
+        mime_type, name, = self.get_data_init(id, key, job_key_flag)
         if job_key_flag:
-            if dataTransferIn_used > self.dataTransferIn:
+            if self.dataTransferIn_used > self.dataTransferIn_requested:
                 logging.error(
                     "E: requested size to download the sourceCode and datafiles is greater that the given amount."
                 )
@@ -261,7 +260,13 @@ class GdriveClass(Storage):
                 return False
 
             cache_folder = self.folder_path_to_download[source_code_hash]
-            success, output = self.untar(f"{cache_folder}/{name}", self.results_folder)
+            if job_key_flag:
+                success, output = self.untar(f"{cache_folder}/{name}", self.results_folder)
+            else:
+                target = f"{self.results_data_folder}/{source_code_hash}"
+                create_dir(target)
+                success, output = self.untar(f"{cache_folder}/{name}", target)
+
             self.remove_downloaded_file(source_code_hash, id, f"{cache_folder}/{name}")
 
         elif "folder" in mime_type:
@@ -303,7 +308,10 @@ class GdriveClass(Storage):
             logging.error(f"{self.results_folder}/run.sh does not exist")
             return False
 
-        for idx, _key in enumerate(self.job_key_list):
-            self.get_data(_key, idx + 1)
+        for idx, key in enumerate(self.job_key_list):
+            self.get_data(key, idx + 1)
+
+        link = Link(self.results_data_folder, self.results_data_link)
+        link.link_folders()
 
         return self.sbatch_call()

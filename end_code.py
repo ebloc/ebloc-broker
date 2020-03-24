@@ -10,21 +10,23 @@ import sys
 import time
 from typing import List
 
+from pymongo import MongoClient
+
 import lib
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
-from lib import (HOME, PROVIDER_ID, StorageID, eblocbroker_function_call,
-                 ipfs_add, remove_empty_files_and_folders, run_command,
-                 run_command_stdout_to_file, PROGRAM_PATH)
+from lib import (GDRIVE, GDRIVE_METADATA, HOME, LOG_PATH, PROGRAM_PATH,
+                 PROVIDER_ID, StorageID, eblocbroker_function_call, ipfs_add,
+                 remove_empty_files_and_folders, run_command,
+                 run_command_stdout_to_file)
 from lib_gdrive import get_gdrive_file_info
 from lib_git import git_diff_patch
+from lib_mongodb import find_key
 from lib_owncloud import upload_results_to_eudat
 from utils import byte_to_mb, eth_address_to_md5, read_json
-from lib_mongodb import find_key
-from pymongo import MongoClient
 
 eBlocBroker, w3 = connect()
 mc = MongoClient()
@@ -52,8 +54,7 @@ class ENDCODE:
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"
         # print(my_env)
         os.environ["IPFS_PATH"] = f"{HOME}/.ipfs"
-
-        logging = load_log(f"{lib.LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
+        logging = load_log(f"{LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
         logging.info(f"START: {datetime.datetime.now()}")
         self.job_id = 0  # TODO: should be mapped slurm_job_id
         logging.info(
@@ -128,7 +129,7 @@ class ENDCODE:
             sys.exit(1)
 
         logging.info(f"processPayment()_tx_hash={tx_hash}")
-        f = open(f"{lib.LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
+        f = open(f"{LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
         f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
         f.close()
 
@@ -229,23 +230,10 @@ class ENDCODE:
         self.dataTransferOut = byte_to_mb(self.dataTransferOut)
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
 
-    def _eudat_upload(self, path, source_code_hash) -> bool:
-        success, patch_name, patch_file = git_diff_patch(path, source_code_hash, self.index, self.results_folder_prev)
-        # TODO: maybe tar the patch file
-        time.sleep(0.1)
-        _dataTransferOut = lib.calculate_folder_size(patch_file)
-        logging.info(f"[{source_code_hash}]'s dataTransferOut => {_dataTransferOut} MB")
-        self.dataTransferOut += _dataTransferOut
-        success = upload_results_to_eudat(self.encoded_share_tokens[source_code_hash], patch_name, self.results_folder_prev, 5)
-        if not success:
-            return False
-
-        return True
-
-    def eudat_upload(self) -> bool:
-        logging.info("Entered into Eudat case")
+    """
+    def gdrive_upload(self):
         lib.remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
-        success = self._eudat_upload(self.results_folder, self.source_code_hashes_to_process[0])
+        success = self._gdrive_upload(self.results_folder, self.job_key)
         if not success:
             return False
 
@@ -253,72 +241,28 @@ class ENDCODE:
             # starting from 1st index for data files
             logging.info(f"=> Patch for data {data_name}")
             data_path = f"{self.results_data_folder}/{data_name}"
-            success = self._eudat_upload(data_path, data_name)
+            bp()
+            success = self._gdrive_upload(data_path, data_name)
             if not success:
                 return False
         return True
+    """
 
-    def gdrive_upload(self):
-        # stored for both pipes otherwise its read and lost
-        success, gdrive_info = lib.subprocess_call_attempt(
-            [lib.GDRIVE, "info", "--bytes", self.job_key, "-c", lib.GDRIVE_METADATA], 500, 1,
-        )
+    def upload(self) -> bool:
+        lib.remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
+        success = self._upload(self.results_folder, self.job_key)
         if not success:
             return False
 
-        mime_type = get_gdrive_file_info(gdrive_info, "Mime")
-        logging.info(f"mime_type={mime_type}")
-        os.chdir(self.results_folder)
-        # if 'folder' in mime_type:  # Received job is in folder format
-        # TODO:
-        git_diff_patch()
-
-        cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
-        success, output = run_command(cmd, None, True)
-        logging.info(output)
-        time.sleep(0.1)
-        self.dataTransferOut = lib.calculate_folder_size(self.output_file_name)
-        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
-        if "folder" in mime_type:  # Received job is in folder format
-            logging.info("mime_type=folder")
-            cmd = [
-                lib.GDRIVE,
-                "upload",
-                "--parent",
-                self.job_key,
-                self.output_file_name,
-                "-c",
-                lib.GDRIVE_METADATA,
-            ]
-            success, output = lib.subprocess_call_attempt(cmd, 500)
-            logging.info(output)
-        elif "gzip" in mime_type:  # Received job is in folder tar.gz
-            logging.info("mime_type=tar.gz")
-            cmd = [
-                lib.GDRIVE,
-                "update",
-                self.job_key,
-                self.output_file_name,
-                "-c",
-                lib.GDRIVE_METADATA,
-            ]
-            success, output = lib.subprocess_call_attempt(cmd, 500)
-            logging.info(output)
-        elif "/zip" in mime_type:  # Received job is in zip format
-            logging.info("mime_type=zip")
-            cmd = [
-                lib.GDRIVE,
-                "update",
-                self.job_key,
-                self.output_file_name,
-                "-c",
-                lib.GDRIVE_METADATA,
-            ]
-            success, output = lib.subprocess_call_attempt(cmd, 500)
-            logging.info(output)
-        else:
-            logging.error("E: Files could not be uploaded")
-            sys.exit(1)
+        for data_name in self.source_code_hashes_to_process[1:]:
+            # starting from 1st index for data files
+            logging.info(f"=> Patch for data {data_name}")
+            data_path = f"{self.results_data_folder}/{data_name}"
+            success = self._upload(data_path, data_name)
+            bp()
+            if not success:
+                return False
+        return True
 
     def run(self):
         f = f"{self.results_folder_prev}/dataTransferIn.json"
@@ -418,6 +362,9 @@ class ENDCODE:
         logging.info(f"job_info={self.job_info}")
         self.output_file_name = f"result-{PROVIDER_ID}-{self.job_key}-{self.index}.tar.gz"
 
+        if not self.run_upload():
+            return False
+        """
         # TODO: cloud_storage_id is list should be iterated over
         # Here we know that job is already completed
         if self.cloud_storage_id == StorageID.IPFS.value:
@@ -429,6 +376,7 @@ class ENDCODE:
             success = self.eudat_upload()
         elif self.cloud_storage_id == StorageID.GDRIVE.value:
             self.gdrive_upload()
+        """
 
         if not success:
             return False
@@ -437,9 +385,79 @@ class ENDCODE:
         logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         logging.info(f"dataTransferSum={dataTransferSum} MB => rounded={int(dataTransferSum)} MB")
+        bp()
         self.process_payment_tx()
         logging.info("COMPLETED")
         # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
+
+
+class EudatClass(ENDCODE):
+    def __init__(self, _job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,) -> None:
+        super(self.__class__, self).__init__(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
+        logging.info("Entered into EUDAT case")
+
+    def run_upload(self):
+        self.get_shared_tokens()
+        return self.upload()
+
+    def _upload(self, path, source_code_hash) -> bool:
+        success, patch_name, patch_file = git_diff_patch(path, source_code_hash, self.index, self.results_folder_prev)
+        # TODO: maybe tar the patch file
+        time.sleep(0.1)
+        _dataTransferOut = lib.calculate_folder_size(patch_file)
+        logging.info(f"[{source_code_hash}]'s dataTransferOut => {_dataTransferOut} MB")
+        self.dataTransferOut += _dataTransferOut
+        success = upload_results_to_eudat(self.encoded_share_tokens[source_code_hash], patch_name, self.results_folder_prev, 5)
+        if not success:
+            return False
+
+        return True
+
+
+class GdriveClass(ENDCODE):
+    def __init__(self, _job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,) -> None:
+        super(self.__class__, self).__init__(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
+        logging.info("Entered into GDRIVE case")
+
+    def run_upload(self):
+        # TODO: get other data info
+        return self.upload()
+
+    def _upload(self, path, key) -> True:
+        success, patch_name, patch_file = git_diff_patch(path, key, self.index, self.results_folder_prev)
+
+        # Stored for both pipes otherwise its read and lost
+        success, gdrive_info = lib.subprocess_call_attempt(
+            [GDRIVE, "info", "--bytes", key, "-c", GDRIVE_METADATA], 100, 1,
+        )
+        if not success:
+            return False
+
+        mime_type = get_gdrive_file_info(gdrive_info, "Mime")
+        logging.info(f"mime_type={mime_type}")
+
+        # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
+        # success, output = run_command(cmd, None, True)
+        # logging.info(output)
+        # time.sleep(0.1)
+        self.dataTransferOut = lib.calculate_folder_size(patch_file)
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
+        if "folder" in mime_type:  # Received job is in folder format
+            logging.info("mime_type=folder")
+            cmd = [GDRIVE, "upload", "--parent", key, patch_file, "-c", GDRIVE_METADATA,]
+        elif "gzip" in mime_type:  # Received job is in folder tar.gz
+            logging.info("mime_type=tar.gz")
+            cmd = [GDRIVE, "update", key, patch_file, "-c", GDRIVE_METADATA,]
+        elif "/zip" in mime_type:  # Received job is in zip format
+            logging.info("mime_type=zip")
+            cmd = [GDRIVE, "update", key, patch_file, "-c", GDRIVE_METADATA,]
+        else:
+            logging.error("E: Files could not be uploaded")
+            return False
+
+        success, output = lib.subprocess_call_attempt(cmd, 100)
+        logging.info(output)
+        return success
 
 
 if __name__ == "__main__":
@@ -450,8 +468,19 @@ if __name__ == "__main__":
     _folder_name = sys.argv[5]
     _slurm_job_id = sys.argv[6]
 
-    e = ENDCODE(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
-    e.run()
+    """
+    if _cloud_storage_id == StorageID.IPFS.value:
+        self.ipfs_upload()
+    elif _cloud_storage_id == StorageID.IPFS_MINILOCK.value:
+        self.ipfs_minilock_upload()
+    elif _cloud_storage_id == StorageID.EUDAT.value:
+        self.get_shared_tokens()
+        success = self.eudat_upload()
+    """
+    if _cloud_storage_id == StorageID.GDRIVE.value:
+        cloud_storage = GdriveClass(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
+
+    cloud_storage.run()
 
 """ Approach to upload as .tar.gz. Currently not used.
                 remove_source_code()
