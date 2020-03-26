@@ -18,14 +18,28 @@ from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
-from lib import (GDRIVE, GDRIVE_METADATA, HOME, LOG_PATH, PROGRAM_PATH,
-                 PROVIDER_ID, StorageID, eblocbroker_function_call, ipfs_add,
-                 remove_empty_files_and_folders, run_command,
-                 run_command_stdout_to_file)
-from lib_gdrive import get_gdrive_file_info
+from lib import (
+    GDRIVE,
+    GDRIVE_METADATA,
+    HOME,
+    LOG_PATH,
+    PROGRAM_PATH,
+    PROVIDER_ID,
+    WHERE,
+    StorageID,
+    eblocbroker_function_call,
+    get_ipfs_cumulative_size,
+    ipfs_add,
+    remove_empty_files_and_folders,
+    run_command,
+    run_command_stdout_to_file,
+    subprocess_call_attempt,
+)
+from lib_gdrive import get_data_key_ids, get_gdrive_file_info
 from lib_git import git_diff_patch
 from lib_mongodb import find_key
 from lib_owncloud import upload_results_to_eudat
+from lib_slurm import get_elapsed_raw_time
 from utils import byte_to_mb, eth_address_to_md5, read_json
 
 eBlocBroker, w3 = connect()
@@ -33,16 +47,15 @@ mc = MongoClient()
 
 
 class ENDCODE:
-    def __init__(
-        self, _job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,
-    ) -> None:
+    def __init__(self, **kwargs) -> None:
         global logging
-        self.job_key = _job_key
-        self.index = _index
-        self.cloud_storage_id = _cloud_storage_id
-        self.received_block_number = _received_block_number
-        self.folder_name = _folder_name
-        self.slurm_job_id = _slurm_job_id
+        args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
+        self.job_key = kwargs.pop("job_key")
+        self.index = kwargs.pop("index")
+        self.cloud_storage_id = kwargs.pop("cloud_storage_id")
+        self.received_block_number = kwargs.pop("received_block_number")
+        self.folder_name = kwargs.pop("folder_name")
+        self.slurm_job_id = kwargs.pop("slurm_job_id")
         self.share_tokens = {}
         self.encoded_share_tokens = {}
         self.dataTransferIn = 0
@@ -55,18 +68,17 @@ class ENDCODE:
         # print(my_env)
         os.environ["IPFS_PATH"] = f"{HOME}/.ipfs"
         logging = load_log(f"{LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
+        logging.info(f"=> Entered into {self.__class__.__name__} case.")
         logging.info(f"START: {datetime.datetime.now()}")
         self.job_id = 0  # TODO: should be mapped slurm_job_id
-        logging.info(
-            f"~/eBlocBroker/end_code.py {self.job_key} {self.index} {self.cloud_storage_id} {self.received_block_number} {self.folder_name} {self.slurm_job_id}"
-        )
+        logging.info(f"~/eBlocBroker/end_code.py {args}")
         logging.info(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             logging.error("job_key and index are same.")
             sys.exit(1)
 
         success, self.job_info = eblocbroker_function_call(
-            lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,), 10,
+            lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
         )
         if not success:
             sys.exit(1)
@@ -75,7 +87,11 @@ class ENDCODE:
         requester_id_address = eth_address_to_md5(requester_id)
         success, self.requester_info = get_requester_info(requester_id)
         self.results_folder_prev = f"{PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
+        self.is_dir(self.results_folder_prev)
+
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        self.is_dir(self.results_folder)
+
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.results_data_folder = f"{self.results_folder_prev}/data"
         self.private_dir = f"{PROGRAM_PATH}/{requester_id_address}/cache"
@@ -100,7 +116,7 @@ class ENDCODE:
         p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
-        p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE,)
+        p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE)
         p2.stdout.close()
         date = p3.communicate()[0].decode("utf-8").strip()
 
@@ -133,6 +149,11 @@ class ENDCODE:
         f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
         f.close()
 
+    def is_dir(self, path):
+        if not os.path.isdir(path):
+            logging.error(f"{path} folder does not exist.")
+            sys.exit(1)
+
     def get_shared_tokens(self):
         success, data = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
         if success:
@@ -142,15 +163,18 @@ class ENDCODE:
             try:
                 share_token = share_ids[source_code_hash]["share_token"]
                 self.share_tokens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode("utf-8")
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
+                    "utf-8"
+                )
             except KeyError:
                 success, share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
                 self.share_tokens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode("utf-8")
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
+                    "utf-8"
+                )
                 if not success:
                     logging.error(f"E: share_id cannot detected from key: {self.job_key}")
                     return False
-
         if success:
             for key in share_ids:
                 value = share_ids[key]
@@ -165,92 +189,11 @@ class ENDCODE:
         if not files_to_remove or files_to_remove is not None:
             logging.info(f"Files to be removed: \n{files_to_remove}\n")
 
-        subprocess.run(
-            ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete",]
-        )
-
-    def ipfs_upload(self):
-        # TODO:
-        git_diff_patch()
-        success, self.result_ipfs_hash = ipfs_add(self.results_folder)
-
-        # self.dataTransferOut = lib.calculate_folder_size(results_folder)
-        # log.write('dataTransferOut=' + str(self.dataTransferOut) + ' MB => rounded=' + str(int(self.dataTransferOut)) + ' MB')
-        success, self.result_ipfs_hash = lib.get_ipfs_parent_hash(self.result_ipfs_hash)
-        cmd = ["ipfs", "pin", "add", self.result_ipfs_hash]
-        success, output = run_command(cmd, None, True)  # pin downloaded ipfs hash
-        print(output)
-
-        cmd = ["ipfs", "object", "stat", self.result_ipfs_hash]
-        success, is_ipfs_hash_exist = run_command(cmd, None, True)  # pin downloaded ipfs hash
-        for item in is_ipfs_hash_exist.split("\n"):
-            if "CumulativeSize" in item:
-                self.dataTransferOut = item.strip().split()[1]
-                break
-
-        self.dataTransferOut = byte_to_mb(self.dataTransferOut)
-        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
-
-    def ipfs_minilock_upload(self):
-        os.chdir(self.results_folder)
-        cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name,] + glob.glob("*")
-        success, output = run_command(cmd, None, True)
-        logging.info(output)
-
-        cmd = [
-            "mlck",
-            "encrypt",
-            "-f",
-            f"{self.results_folder}/result.tar.gz",
-            self.minilock_id,
-            "--anonymous",
-            f"--output-file={self.results_folder}/result.tar.gz.minilock",
-        ]
-        success, output = run_command(cmd, None, True)
-        logging.info(output)
-
-        # TODO:
-        git_diff_patch()
-
-        success, self.result_ipfs_hash = ipfs_add(f"{self.results_folder}/result.tar.gz.minilock")
-        logging.info(f"result_ipfs_hash={self.result_ipfs_hash}")
-
-        # self.dataTransferOut = lib.calculate_folder_size(results_folder + '/result.tar.gz.minilock')
-        # log.write('dataTransferOut=' + str(self.dataTransferOut) + ' MB => rounded=' + str(int(self.dataTransferOut)) + ' MB')
-        cmd = ["ipfs", "pin", "add", self.result_ipfs_hash]
-        success, output = run_command(cmd, None, True)
-        print(output)
-        cmd = ["ipfs", "object", "stat", self.result_ipfs_hash]
-        success, is_ipfs_hash_exist = run_command(cmd, None, True)
-        for item in is_ipfs_hash_exist.split("\n"):
-            if "CumulativeSize" in item:
-                self.dataTransferOut = item.strip().split()[1]
-                break
-
-        self.dataTransferOut = byte_to_mb(self.dataTransferOut)
-        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
-
-    """
-    def gdrive_upload(self):
-        lib.remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
-        success = self._gdrive_upload(self.results_folder, self.job_key)
-        if not success:
-            return False
-
-        for data_name in self.source_code_hashes_to_process[1:]:
-            # starting from 1st index for data files
-            logging.info(f"=> Patch for data {data_name}")
-            data_path = f"{self.results_data_folder}/{data_name}"
-            bp()
-            success = self._gdrive_upload(data_path, data_name)
-            if not success:
-                return False
-        return True
-    """
+        subprocess.run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
     def upload(self) -> bool:
         lib.remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
-        success = self._upload(self.results_folder, self.job_key)
+        success = self._upload(self.results_folder, self.job_key, True)
         if not success:
             return False
 
@@ -258,8 +201,7 @@ class ENDCODE:
             # starting from 1st index for data files
             logging.info(f"=> Patch for data {data_name}")
             data_path = f"{self.results_data_folder}/{data_name}"
-            success = self._upload(data_path, data_name)
-            bp()
+            success = self._upload(data_path, data_name, False)
             if not success:
                 return False
         return True
@@ -308,8 +250,7 @@ class ENDCODE:
                 sys.exit(1)
 
             success, self.job_info = eblocbroker_function_call(
-                lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,),
-                10,
+                lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
             )
             if not success:
                 sys.exit(1)
@@ -322,9 +263,8 @@ class ENDCODE:
             sys.exit(1)
 
         success, self.job_info = eblocbroker_function_call(
-            # sourceCodeHashes of the completed job is obtained from its event
             lambda: get_job_source_code_hashes(
-                self.job_info, PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+                self.job_info, PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number
             ),
             10,
         )
@@ -337,24 +277,9 @@ class ENDCODE:
 
         logging.info(f"job_name={self.folder_name}")
         cmd = ["scontrol", "show", "job", self.slurm_job_id]
-        success = run_command_stdout_to_file(cmd, f"{self.results_folder}/slurmJobInfo.out")
-        # cmd: sacct -n -X -j $slurm_job_id --format="Elapsed"
-        cmd = ["sacct", "-n", "-X", "-j", self.slurm_job_id, "--format=Elapsed"]
-        success, elapsed_time = run_command(cmd, None, True)
-        logging.info(f"ElapsedTime={elapsed_time}")
-        elapsed_time = elapsed_time.split(":")
-        elapsed_day = "0"
-        elapsed_hour = elapsed_time[0].strip()
-        elapsed_minute = elapsed_time[1].rstrip()
+        run_command_stdout_to_file(cmd, f"{self.results_folder}/slurmJobInfo.out")
 
-        if "-" in str(elapsed_hour):
-            elapsed_hour = elapsed_hour.split("-")
-            elapsed_day = elapsed_hour[0]
-            elapsed_hour = elapsed_hour[1]
-
-        self.elapsed_raw_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
-        logging.info(f"ElapsedRawTime={self.elapsed_raw_time}")
-
+        self.elapsed_raw_time = get_elapsed_raw_time(self.slurm_job_id)
         if self.elapsed_raw_time > int(executionDuration[self.job_id]):
             self.elapsed_raw_time = executionDuration[self.job_id]
 
@@ -364,121 +289,181 @@ class ENDCODE:
 
         if not self.run_upload():
             return False
-        """
-        # TODO: cloud_storage_id is list should be iterated over
-        # Here we know that job is already completed
-        if self.cloud_storage_id == StorageID.IPFS.value:
-            self.ipfs_upload()
-        if self.cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-            self.ipfs_minilock_upload()
-        elif self.cloud_storage_id == StorageID.EUDAT.value:
-            self.get_shared_tokens()
-            success = self.eudat_upload()
-        elif self.cloud_storage_id == StorageID.GDRIVE.value:
-            self.gdrive_upload()
-        """
-
-        if not success:
-            return False
 
         dataTransferSum = self.dataTransferIn + self.dataTransferOut
         logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         logging.info(f"dataTransferSum={dataTransferSum} MB => rounded={int(dataTransferSum)} MB")
-        bp()
         self.process_payment_tx()
         logging.info("COMPLETED")
         # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
 
 
-class EudatClass(ENDCODE):
-    def __init__(self, _job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,) -> None:
-        super(self.__class__, self).__init__(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
-        logging.info("Entered into EUDAT case")
+class IpfsMiniLockClass(ENDCODE):
+    def __init__(self, **kwargs) -> None:
+        # logging.info("Entered into IPFS_MINILOCK case")
+        super(self.__class__, self).__init__(**kwargs)
 
     def run_upload(self):
         self.get_shared_tokens()
         return self.upload()
 
-    def _upload(self, path, source_code_hash) -> bool:
-        success, patch_name, patch_file = git_diff_patch(path, source_code_hash, self.index, self.results_folder_prev)
-        # TODO: maybe tar the patch file
-        time.sleep(0.1)
+    def _upload(self, path, source_code_hash, is_job_key) -> bool:
+        os.chdir(self.results_folder)
+        cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
+        success, output = run_command(cmd, None, True)
+        logging.info(output)
+
+        cmd = [
+            "mlck",
+            "encrypt",
+            "-f",
+            f"{self.results_folder}/result.tar.gz",
+            self.minilock_id,
+            "--anonymous",
+            f"--output-file={self.results_folder}/result.tar.gz.minilock",
+        ]
+        success, output = run_command(cmd, None, True)
+        logging.info(output)
+
+        # TODO:
+        git_diff_patch()
+
+        success, self.result_ipfs_hash = ipfs_add(f"{self.results_folder}/result.tar.gz.minilock")
+        logging.info(f"result_ipfs_hash={self.result_ipfs_hash}")
+
+        # self.dataTransferOut = lib.calculate_folder_size(results_folder + '/result.tar.gz.minilock')
+        # log.write('dataTransferOut=' + str(self.dataTransferOut) + ' MB => rounded=' + str(int(self.dataTransferOut)) + ' MB')
+        cmd = ["ipfs", "pin", "add", self.result_ipfs_hash]
+        success, output = run_command(cmd, None, True)
+        print(output)
+
+        self.dataTransferOut = get_ipfs_cumulative_size(self.result_ipfs_hash)
+        self.dataTransferOut = byte_to_mb(self.dataTransferOut)
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
+
+
+class IpfsClass(ENDCODE):
+    def __init__(self, **kwargs) -> None:
+        super(self.__class__, self).__init__(**kwargs)
+
+    def run_upload(self):
+        self.get_shared_tokens()
+        return self.upload()
+
+    def _upload(self, path, source_code_hash, is_job_key) -> bool:
+        # TODO:
+        git_diff_patch()
+        success, self.result_ipfs_hash = ipfs_add(self.results_folder)
+
+        # self.dataTransferOut = lib.calculate_folder_size(results_folder)
+        # log.write('dataTransferOut=' + str(self.dataTransferOut) + ' MB => rounded=' + str(int(self.dataTransferOut)) + ' MB')
+        success, self.result_ipfs_hash = lib.get_ipfs_parent_hash(self.result_ipfs_hash)
+        cmd = ["ipfs", "pin", "add", self.result_ipfs_hash]
+        success, output = run_command(cmd, None, True)  # pin downloaded ipfs hash
+        print(output)
+
+        self.dataTransferOut = get_ipfs_cumulative_size(self.result_ipfs_hash)
+        self.dataTransferOut = byte_to_mb(self.dataTransferOut)
+        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
+
+
+class EudatClass(ENDCODE):
+    def __init__(self, **kwargs) -> None:
+        super(self.__class__, self).__init__(**kwargs)
+
+    def run_upload(self):
+        self.get_shared_tokens()
+        return self.upload()
+
+    def _upload(self, path, source_code_hash, is_job_key) -> bool:
+        patch_name, patch_file, is_file_empty = git_diff_patch(path, source_code_hash, self.index, self.results_folder_prev)
+        if is_file_empty:
+            return True
+
         _dataTransferOut = lib.calculate_folder_size(patch_file)
         logging.info(f"[{source_code_hash}]'s dataTransferOut => {_dataTransferOut} MB")
         self.dataTransferOut += _dataTransferOut
         success = upload_results_to_eudat(self.encoded_share_tokens[source_code_hash], patch_name, self.results_folder_prev, 5)
-        if not success:
-            return False
-
-        return True
+        return success
 
 
 class GdriveClass(ENDCODE):
-    def __init__(self, _job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,) -> None:
-        super(self.__class__, self).__init__(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
-        logging.info("Entered into GDRIVE case")
+    def __init__(self, **kwargs) -> None:
+        super(self.__class__, self).__init__(**kwargs)
 
-    def run_upload(self):
-        # TODO: get other data info
+    def run_upload(self) -> bool:
         return self.upload()
 
-    def _upload(self, path, key) -> True:
-        success, patch_name, patch_file = git_diff_patch(path, key, self.index, self.results_folder_prev)
+    def _upload(self, path, key, is_job_key) -> bool:
+        patch_name, patch_file, is_file_empty = git_diff_patch(path, key, self.index, self.results_folder_prev)
+        if is_file_empty:
+            return True
 
-        # Stored for both pipes otherwise its read and lost
-        success, gdrive_info = lib.subprocess_call_attempt(
-            [GDRIVE, "info", "--bytes", key, "-c", GDRIVE_METADATA], 100, 1,
-        )
-        if not success:
+        try:
+            if not is_job_key:
+                success, meta_data = get_data_key_ids(self.results_folder_prev)
+                if not success:
+                    return False
+
+                try:
+                    key = meta_data[key]
+                except:
+                    logging.error(f"[{WHERE(1)}] E: {key} does not have a match in meta_data.json")
+                    return False
+
+            cmd = [GDRIVE, "info", "--bytes", key, "-c", GDRIVE_METADATA]
+            gdrive_info = subprocess_call_attempt(cmd, 5)
+        except:
+            logging.error(f"[{WHERE(1)}] E: {key} does not have a match. meta_data={meta_data}")
             return False
 
         mime_type = get_gdrive_file_info(gdrive_info, "Mime")
         logging.info(f"mime_type={mime_type}")
 
-        # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
-        # success, output = run_command(cmd, None, True)
-        # logging.info(output)
-        # time.sleep(0.1)
-        self.dataTransferOut = lib.calculate_folder_size(patch_file)
+        self.dataTransferOut += lib.calculate_folder_size(patch_file)
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         if "folder" in mime_type:  # Received job is in folder format
             logging.info("mime_type=folder")
-            cmd = [GDRIVE, "upload", "--parent", key, patch_file, "-c", GDRIVE_METADATA,]
+            cmd = [GDRIVE, "upload", "--parent", key, patch_file, "-c", GDRIVE_METADATA]
         elif "gzip" in mime_type:  # Received job is in folder tar.gz
             logging.info("mime_type=tar.gz")
-            cmd = [GDRIVE, "update", key, patch_file, "-c", GDRIVE_METADATA,]
+            cmd = [GDRIVE, "update", key, patch_file, "-c", GDRIVE_METADATA]
         elif "/zip" in mime_type:  # Received job is in zip format
             logging.info("mime_type=zip")
-            cmd = [GDRIVE, "update", key, patch_file, "-c", GDRIVE_METADATA,]
+            cmd = [GDRIVE, "update", key, patch_file, "-c", GDRIVE_METADATA]
         else:
             logging.error("E: Files could not be uploaded")
             return False
+        try:
+            logging.info(subprocess_call_attempt(cmd, 5))
+        except:
+            logging.error(f"[{WHERE(1)}] E: gdrive could not upload the file.")
+            return False
 
-        success, output = lib.subprocess_call_attempt(cmd, 100)
-        logging.info(output)
-        return success
+        return True
 
 
 if __name__ == "__main__":
-    _job_key = sys.argv[1]
-    _index = sys.argv[2]
     _cloud_storage_id = int(sys.argv[3])
-    _received_block_number = sys.argv[4]
-    _folder_name = sys.argv[5]
-    _slurm_job_id = sys.argv[6]
 
-    """
-    if _cloud_storage_id == StorageID.IPFS.value:
-        self.ipfs_upload()
-    elif _cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-        self.ipfs_minilock_upload()
-    elif _cloud_storage_id == StorageID.EUDAT.value:
-        self.get_shared_tokens()
-        success = self.eudat_upload()
-    """
+    kwargs = {
+        "job_key": sys.argv[1],
+        "index": sys.argv[2],
+        "cloud_storage_id": _cloud_storage_id,
+        "received_block_number": sys.argv[4],
+        "folder_name": sys.argv[5],
+        "slurm_job_id": sys.argv[6],
+    }
+
     if _cloud_storage_id == StorageID.GDRIVE.value:
-        cloud_storage = GdriveClass(_job_key, _index, _cloud_storage_id, _received_block_number, _folder_name, _slurm_job_id,)
+        cloud_storage = GdriveClass(**kwargs)
+    elif _cloud_storage_id == StorageID.EUDAT.value:
+        cloud_storage = EudatClass(**kwargs)
+    elif _cloud_storage_id == StorageID.IPFS.value:
+        cloud_storage = IpfsClass(**kwargs)
+    elif _cloud_storage_id == StorageID.IPFS_MINILOCK.value:
+        cloud_storage = IpfsMiniLockClass(**kwargs)
 
     cloud_storage.run()
 
@@ -493,11 +478,14 @@ if __name__ == "__main__":
                 self.result_ipfs_hash = self.result_ipfs_hash.split(' ')[1]
                 silent_remove(results_folder + '/result.tar.gz')
 """
+# cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
+# success, output = run_command(cmd, None, True)
+# logging.info(output)
+# time.sleep(0.1)
 
 # self.remove_source_code()
 # cmd: tar -jcvf result-$providerID-$index.tar.gz *
 # cmd = ['tar', '-jcvf', self.output_file_name] + glob.glob("*")
-# log.write(run_command(cmd))
 # cmd = ["tar", "-N", self.modified_date, "-czfj", self.output_file_name] + glob.glob("*")
 # success, output = run_command(cmd, None, True)
 # logging.info(f"Files to be archived using tar: \n {output}")

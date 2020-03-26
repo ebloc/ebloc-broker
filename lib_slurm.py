@@ -31,7 +31,7 @@ def slurm_pending_jobs_check():
     idle_cores = get_idle_cores()
     is_print_flag = 0
     while idle_cores is None:
-        if is_print_flag == 0:
+        if not is_print_flag:
             logging.info("Waiting running jobs to be completed...")
             is_print_flag = 1
 
@@ -58,3 +58,21 @@ def is_slurm_on() -> bool:
     else:
         logging.info("Done")
         return True
+
+
+def get_elapsed_raw_time(slurm_job_id):
+    cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
+    success, elapsed_time = run_command(cmd, None, True)
+    logging.info(f"ElapsedTime={elapsed_time}")
+    elapsed_time = elapsed_time.split(":")
+    elapsed_day = "0"
+    elapsed_hour = elapsed_time[0].strip()
+    elapsed_minute = elapsed_time[1].rstrip()
+
+    if "-" in str(elapsed_hour):
+        elapsed_hour = elapsed_hour.split("-")
+        elapsed_day = elapsed_hour[0]
+        elapsed_hour = elapsed_hour[1]
+
+    elapsed_raw_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
+    logging.info(f"ElapsedRawTime={elapsed_raw_time}")

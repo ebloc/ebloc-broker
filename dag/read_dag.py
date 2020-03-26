@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
 import random
-import sys
 
-import matplotlib.pyplot as plt
 import networkx as nx
 
 job_ids = {}
 
 
 def dependencyJob(i):
-    if len(set(G.predecessors(i))) == 0:
+    if not len(set(G.predecessors(i))):
         job_id = notDependentSubmitJob(i)
         job_ids[i] = job_id
         print("job_id: " + str(job_id))
@@ -38,7 +36,7 @@ def dependentSubmitJob(i, predecessors):
         job_id_str = ""
 
         for j in predecessors:
-            if not j in job_ids:  # If the required job is not submitted to Slurm, recursive call
+            if j not in job_ids:  # If the required job is not submitted to Slurm, recursive call
                 dependencyJob(j)
 
             job_id_str += str(job_ids[j]) + ":"
@@ -57,7 +55,7 @@ print(list(G.nodes))
 for i in list(G.nodes):
     # print(i)
     # print(len(set(G.successors(i))))
-    if not i in job_ids:
+    if i not in job_ids:
         dependencyJob(i)
 
 

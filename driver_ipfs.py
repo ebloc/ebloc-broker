@@ -5,16 +5,26 @@ import subprocess
 import time
 
 from config import bp, logging  # noqa: F401
-from lib import (LOG_PATH, CacheType, StorageID, calculate_folder_size,
-                 get_ipfs_hash, is_ipfs_hash_cached, is_ipfs_hash_exists,
-                 is_ipfs_running, log, run_command, silent_remove)
+from lib import (
+    LOG_PATH,
+    CacheType,
+    StorageID,
+    calculate_folder_size,
+    get_ipfs_hash,
+    is_ipfs_hash_cached,
+    is_ipfs_hash_exists,
+    is_ipfs_running,
+    log,
+    run_command,
+    silent_remove,
+)
 from storage_class import Storage
-from utils import byte_to_mb, bytes32_to_ipfs
+from utils import byte_to_mb, bytes32_to_ipfs, create_dir
 
 
 class IpfsClass(Storage):
-    def __init__(self, logged_job, jobInfo, requesterID, is_already_cached, oc=None):
-        super(self.__class__, self).__init__(logged_job, jobInfo, requesterID, is_already_cached, oc)
+    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached, oc=None):
+        super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached, oc)
         # cache_type is should be public on IPFS
         self.cache_type = CacheType.PUBLIC.value
         self.ipfs_hashes = []
@@ -48,7 +58,6 @@ class IpfsClass(Storage):
         data_size_mb = byte_to_mb(cumulative_size)
         logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
 
-        # config.bp()
         if not success or not ("CumulativeSize" in ipfs_stat):
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve.")
             return False
@@ -67,7 +76,6 @@ class IpfsClass(Storage):
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
         success = self.check_ipfs_ipfs(self.job_key)
-        # config.bp()
         if not success:
             return False
 
@@ -81,7 +89,7 @@ class IpfsClass(Storage):
 
         initial_folder_size = calculate_folder_size(self.results_folder)
 
-        for ipfs_hash in self.ipfs_hashes:
+        for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # Here scripts knows that provided IPFS hashes exists
             logging.info(f"Attempting to get IPFS file {ipfs_hash}")
             is_hashed = False
@@ -89,10 +97,15 @@ class IpfsClass(Storage):
                 is_hashed = True
                 log(f"=> IPFS file {ipfs_hash} is already cached.", "blue")
 
-            get_ipfs_hash(ipfs_hash, self.results_folder, False)
+            if idx == 0:
+                target = self.results_folder
+            else:
+                target = f"{self.results_data_folder}/{ipfs_hash}"
+                create_dir(target)
+
+            get_ipfs_hash(ipfs_hash, target, False)
 
             if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:
-                # Case for the ipfsMiniLock
                 self.decrypt_using_minilock(ipfs_hash)
 
             if not is_hashed:
@@ -101,10 +114,9 @@ class IpfsClass(Storage):
                 initial_folder_size = folder_size
                 # self.dataTransferIn_used += byte_to_mb(cumulative_size)
 
-            if not os.path.isfile(f"{self.results_folder}/run.sh"):
+            if idx == 0 and not os.path.isfile(f"{self.results_folder}/run.sh"):
                 logging.error("run.sh file does not exist")
                 return False
 
         logging.info(f"dataTransferIn={self.dataTransferIn_used} MB | Rounded={int(self.dataTransferIn_used)} MB")
-
         return self.sbatch_call()

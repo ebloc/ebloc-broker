@@ -7,7 +7,7 @@ import sys
 import time
 
 import config
-from config import EBLOCPATH, load_log
+from config import EBLOCPATH, bp, load_log  # noqa: F401
 from contract.scripts.lib import DataStorage
 from contractCalls.doesProviderExist import doesProviderExist
 from contractCalls.doesRequesterExist import doesRequesterExist
@@ -23,11 +23,28 @@ from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
 from driver_ipfs import IpfsClass
 from imports import connect
-from lib import (BLOCK_READ_FROM_FILE, EUDAT_USE, HOME, IPFS_USE, LOG_PATH,
-                 OC_USER, PROGRAM_PATH, PROVIDER_ID, WHOAMI, CacheType,
-                 StorageID, is_driver_on, is_geth_on, is_ipfs_running,
-                 is_process_on, job_state_code, log, printc, run_command,
-                 terminate)
+from lib import (
+    BLOCK_READ_FROM_FILE,
+    EUDAT_USE,
+    HOME,
+    IPFS_USE,
+    LOG_PATH,
+    OC_USER,
+    PROGRAM_PATH,
+    PROVIDER_ID,
+    WHOAMI,
+    CacheType,
+    StorageID,
+    is_driver_on,
+    is_geth_on,
+    is_ipfs_running,
+    is_process_on,
+    job_state_code,
+    log,
+    printc,
+    run_command,
+    terminate,
+)
 from lib_owncloud import eudat_login
 from lib_slurm import get_idle_cores, is_slurm_on, slurm_pending_jobs_check
 from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
@@ -128,9 +145,15 @@ if WHOAMI == "" or EBLOCPATH == "" or PROVIDER_ID == "":
     logging.warning("Please run: ./folder_setup.sh")
     terminate()
 
-log(
-    "=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan",
-)
+# os.getenv('SLURMUSERR')
+slurm_user = os.getenv("SLURMUSER")
+if not os.getenv("SLURMUSER"):
+    logging.error("SLURMUSER is not set in .bashrc or .zshrc")
+    terminate()
+
+printc(f"slurm_user={slurm_user}")
+
+log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan")
 
 oc = startup()
 is_contract_exists = is_contract_exists()
@@ -231,9 +254,7 @@ while True:
         is_pass = False
         is_provider_received_job = True
 
-        log(
-            "-" * int(int(columns) / 2 - 12) + f" {idx} " + "-" * int(int(columns) / 2 - 12), "blue",
-        )
+        log("-" * int(int(columns) / 2 - 12) + f" {idx} " + "-" * int(int(columns) / 2 - 12), "blue")
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = logged_job.args["jobKey"]
         index = logged_job.args["index"]
@@ -281,10 +302,7 @@ while True:
                 f"is_already_cached={is_already_cached[source_code_hash]} \n"
             )
 
-        if (
-            logged_job.args["cloudStorageID"] == StorageID.IPFS
-            or logged_job.args["cloudStorageID"] == StorageID.IPFS_MINILOCK
-        ):
+        if logged_job.args["cloudStorageID"] == StorageID.IPFS or logged_job.args["cloudStorageID"] == StorageID.IPFS_MINILOCK:
             sourceCodeHash = bytes32_to_ipfs(logged_job.args["sourceCodeHash"])
             if sourceCodeHash != logged_job.args["jobKey"]:
                 logging.error("IPFS hash does not match with the given sourceCodeHash.")
@@ -321,15 +339,11 @@ while True:
 
         for job in range(1, len(job_infos_to_process[0]["core"])):
             job_info = get_job_info(PROVIDER_ID, job_key, index, job, block_number)
-            if job_info is not None:
-                job_infos_to_process.append(job_info)  # Adding jobs if workflow exist
+            if not job_info:
+                # Adds jobs if workflow exist
+                job_infos_to_process.append(job_info)
 
-        requester_id = ""
-        if (
-            is_pass
-            or len(job_infos_to_process[0]["core"]) == 0
-            or len(job_infos_to_process[0]["executionDuration"]) == 0
-        ):
+        if is_pass or not len(job_infos_to_process[0]["core"]) or not len(job_infos_to_process[0]["executionDuration"]):
             logging.error("Requested job does not exist")
             is_pass = True
         else:
@@ -360,23 +374,23 @@ while True:
 
         if not is_pass:
             logging.info("Adding user...")
-            success, output = run_command(["sudo", "bash", f"{EBLOCPATH}/user.sh", requester_id, PROGRAM_PATH])
+            success, output = run_command(["sudo", "bash", f"{EBLOCPATH}/user.sh", requester_id, PROGRAM_PATH, slurm_user])
             logging.info(output)
             requester_md5_id = eth_address_to_md5(requester_id)
             slurm_pending_jobs_check()
             main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
             if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-                ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
+                ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached)
                 ipfs.run()
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
                     eudat_login(OC_USER, f"{LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
-                eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc,)
+                eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc)
                 eudat.run()
                 # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
             elif main_cloud_storage_id == StorageID.GDRIVE.value:
-                gdrive = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
+                gdrive = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached)
                 gdrive.run()
 
     time.sleep(1)

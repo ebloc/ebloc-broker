@@ -1047,7 +1047,9 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         return true;
     }
 
-    /* Checks whether or not the given Ethereum address of the requester
+    /**
+       @noticea
+       Checks whether or not the given Ethereum address of the requester
        is already registered in eBlocBroker.
     */
     function doesRequesterExist(address requester) public view returns (bool) {

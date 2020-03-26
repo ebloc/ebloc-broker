@@ -35,12 +35,13 @@ def load_log(log_path=""):
             # format="%(asctime)s %(levelname)-8s [%(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
             format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
             handlers=[logging.FileHandler(log_path), logging.StreamHandler()],
-            datefmt='%Y-%m-%d %H:%M:%S',
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
     else:
         logging.basicConfig(
-            level=logging.INFO, format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
-            datefmt='%Y-%m-%d %H:%M:%S',
+            level=logging.INFO,
+            format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
     return logging

@@ -6,13 +6,12 @@ import shutil
 import sys
 import traceback
 
-from config import logging
+from config import bp, logging  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib import (EBLOCPATH, CacheType, StorageID, compress_folder,
-                 get_tx_status, printc, run_command, silent_remove)
+from lib import EBLOCPATH, CacheType, StorageID, compress_folder, get_tx_status, printc, run_command, silent_remove
 from lib_gdrive import gdrive_list, gdrive_upload_internal
 from lib_git import git_commit_changes
 from utils import read_json
@@ -30,30 +29,31 @@ def create_meta_json(f_path, job_key_dict):
 
 def gdrive_upload(folder_to_share, job_key_flag=False):
     already_uploaded = False
+    logging.info(f"job_key_flag={job_key_flag} | tar.gz file is inside a folder")
+    dir_path = os.path.dirname(folder_to_share)
+    tar_hash = compress_folder(folder_to_share)
+
+    path_to_move = f"{dir_path}/{tar_hash}"
+    if not os.path.exists(path_to_move):
+        os.makedirs(path_to_move)
+
+    shutil.move(f"{dir_path}/{tar_hash}.tar.gz", f"{path_to_move}/{tar_hash}.tar.gz")
     if job_key_flag:
-        logging.info(f"job_key_flag={job_key_flag} | tar.gz file is inside a folder")
-        dir_path = os.path.dirname(folder_to_share)
-        tar_hash = compress_folder(folder_to_share)
-
-        path_to_move = f"{dir_path}/{tar_hash}"
-        if not os.path.exists(path_to_move):
-            os.makedirs(path_to_move)
-
-        shutil.move(f"{dir_path}/{tar_hash}.tar.gz", f"{path_to_move}/{tar_hash}.tar.gz")
         shutil.copyfile(f"{base_folder}/meta_data.json", f"{path_to_move}/meta_data.json")
 
-        output = gdrive_list(tar_hash, True)
-        if not output:
-            key = gdrive_upload_internal(dir_path, tar_hash, True)
-            logging.info(gdrive_list(tar_hash))
-        else:
-            printc(f"=> Requested folder {tar_hash} is already uploaded", "blue")
-            logging.info(output)
-            key = output.partition("\n")[0].split()[0]
-            already_uploaded = True
+    output = gdrive_list(tar_hash, True)
+    if not output:
+        key = gdrive_upload_internal(dir_path, tar_hash, True)
+        logging.info(gdrive_list(tar_hash))
+    else:
+        printc(f"=> Requested folder {tar_hash} is already uploaded", "blue")
+        logging.info(output)
+        key = output.partition("\n")[0].split()[0]
+        already_uploaded = True
 
-        silent_remove(f"{dir_path}/{tar_hash}")  # created .tar.gz files are removed
+    silent_remove(f"{dir_path}/{tar_hash}")  # created .tar.gz files are removed
 
+    """
     else:
         logging.info(f"job_key_flag={job_key_flag}")
         dir_path = os.path.dirname(folder_to_share)
@@ -68,7 +68,7 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
             key = output.partition("\n")[0].split()[0]
             silent_remove(f"{dir_path}/{tar_hash}.tar.gz")  # created .tar.gz files are removed
             already_uploaded = True
-
+    """
     return key, already_uploaded, tar_hash
 
 
@@ -77,7 +77,7 @@ def share_folder(folder_to_share, provider_to_share, job_key_flag=False):
     job_key, already_uploaded, tar_hash = gdrive_upload(folder_to_share, job_key_flag)
     logging.info(f"job_key={job_key}")
     if not already_uploaded:
-        cmd = ["gdrive", "share", job_key, "--role", "writer", "--type", "user", "--email", provider_to_share,]
+        cmd = ["gdrive", "share", job_key, "--role", "writer", "--type", "user", "--email", provider_to_share]
         success, output = run_command(cmd)
         logging.info(f"share_output={output}")
 
@@ -145,10 +145,7 @@ def gdrive_submit_job(provider):
     dataTransferOut = 1
 
     storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    cacheType_list = [
-        CacheType.PRIVATE.value,
-        CacheType.PUBLIC.value,
-    ]  # Covers public and private folders
+    cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]  # Covers public and private folders
     storage_hours = [1, 1]
     data_prices_set_blocknumbers = [0, 0]
 
