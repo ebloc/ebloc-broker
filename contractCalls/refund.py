@@ -16,16 +16,10 @@ def refund(provider, _from, job_key, index, job_id, source_code_hashes):
     _from = w3.toChecksumAddress(_from)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        return (
-            False,
-            f"E: Requested provider's Ethereum Address {provider} does not exist.",
-        )
+        return (False, f"E: Requested provider's Ethereum Address {provider} does not exist.")
 
     if provider != _from and not eBlocBroker.functions.doesRequesterExist(_from).call():
-        return (
-            False,
-            f"E: Requested requester's Ethereum Address {_from} does not exist.",
-        )
+        return (False, f"E: Requested requester's Ethereum Address {_from} does not exist.")
     try:
         gasLimit = 4500000
         tx = eBlocBroker.functions.refund(provider, job_key, index, job_id, source_code_hashes).transact(

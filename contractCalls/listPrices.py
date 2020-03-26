@@ -5,7 +5,7 @@ from get_providers import get_providers
 
 
 def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):
-    (blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer,) = config.eBlocBroker.functions.getProviderInfo(
+    (blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer) = config.eBlocBroker.functions.getProviderInfo(
         providerAddress
     ).call()
 
@@ -16,8 +16,7 @@ def getProviderPriceInfo(providerAddress, requestedCore, coreMinuteGas, gasDataT
         print("{0: <19}".format("price: ") + "Requested core is greater than provider's core")
     else:
         print(
-            "{0: <19}".format("price: ")
-            + str(requestedCore * coreMinuteGas * priceCoreMin + gasDataTransfer * priceDataTransfer)
+            "{0: <19}".format("price: ") + str(requestedCore * coreMinuteGas * priceCoreMin + gasDataTransfer * priceDataTransfer)
         )
 
 

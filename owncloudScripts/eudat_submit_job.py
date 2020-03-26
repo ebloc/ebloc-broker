@@ -10,11 +10,10 @@ from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import HOME, CacheType, StorageID, get_tx_status, printc
 from lib_git import git_commit_changes, is_git_repo
-from lib_owncloud import (eudat_initialize_folder, eudat_login,
-                          share_single_folder)
+from lib_owncloud import eudat_initialize_folder, eudat_login, share_single_folder
 
 
-def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
+def eudat_submit_job(provider, oc):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "web3 is not connected"
@@ -59,7 +58,6 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
         source_code_hashes.append(source_code_hash)
         if not share_single_folder(folder_hash, oc, provider_info["fID"]):
             sys.exit(1)
-
         time.sleep(0.1)
 
     printc("\nSubmitting Job...")
@@ -111,9 +109,7 @@ def eudat_submit_job(provider, oc):  # fc33e7908fdf76f731900e9d8a382984
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    oc = eudat_login(
-        "059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl",
-    )
+    oc = eudat_login("059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl")
 
     # oc = owncloud.Client("https://b2drop.eudat.eu/")
     # oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
@@ -123,8 +119,8 @@ if __name__ == "__main__":
         tar_hash = sys.argv[2]
         print(f"provided_hash={tar_hash}")
     else:
-        # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
-        provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
+        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+        # provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
 
     success, output = eudat_submit_job(provider, oc)
     if not success:

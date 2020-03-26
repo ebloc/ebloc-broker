@@ -16,7 +16,7 @@ class DataStorage:
             if not w3.isChecksumAddress(provider):
                 provider = w3.toChecksumAddress(provider)
 
-            output = eB.functions.getJobStorageTime(provider, source_code_hash).call({'from': provider})
+            output = eB.functions.getJobStorageTime(provider, source_code_hash).call({"from": provider})
 
         self.received_block = output[0]
         self.storage_duration = output[1]
@@ -110,7 +110,7 @@ class JobPrices:
             else:
                 received_storage_deposit = self.eB.functions.getReceivedStorageDeposit(
                     self.job.provider, self.job.requester, source_code_hash
-                ).call({'from': self.msg_sender})
+                ).call({"from": self.msg_sender})
 
             if ds.received_block + ds.storage_duration < self.w3.eth.blockNumber:
                 # Storage time is completed
@@ -119,9 +119,7 @@ class JobPrices:
             print(f"is_private:{ds.is_private}")
             # print(received_block + storage_duration >= block_number)
             # if received_storage_deposit > 0 or
-            if (
-                received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber
-            ) or (
+            if (received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber) or (
                 ds.received_block + ds.storage_duration >= block_number and not ds.is_private and ds.is_verified_used
             ):
                 print(f"For {source_code_hash} no storage_cost is paid")
@@ -129,20 +127,18 @@ class JobPrices:
                 if self.job.data_prices_set_block_numbers[idx] > 0:
                     # If true, registered data's price should be considered for storage
                     output = self.eB.getRegisteredDataPrice(
-                        self.job.provider, source_code_hash, self.job.data_prices_set_block_numbers[idx],
+                        self.job.provider, source_code_hash, self.job.data_prices_set_block_numbers[idx]
                     )
                     data_price = output[0]
                     self.storage_cost += data_price
                     break
 
-                #  if received_storage_deposit == 0 and (received_block + storage_duration < w3.eth.blockNumber):
-                if received_storage_deposit == 0:
+                #  if not received_storage_deposit and (received_block + storage_duration < w3.eth.blockNumber):
+                if not received_storage_deposit:
                     dataTransferIn_sum += self.job.dataTransferIn[idx]
 
                     if self.job.storage_hours[idx] > 0:
-                        self.storage_cost += (
-                            self.price_storage * self.job.dataTransferIn[idx] * self.job.storage_hours[idx]
-                        )
+                        self.storage_cost += self.price_storage * self.job.dataTransferIn[idx] * self.job.storage_hours[idx]
                     else:
                         self.cache_cost += self.price_cache * self.job.dataTransferIn[idx]
 
