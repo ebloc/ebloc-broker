@@ -32,9 +32,7 @@ def eudatSubmitJob(tar_hash=None):
         priceStorage,
         priceCache,
     ) = eBlocBroker.functions.getProviderInfo(providerAddress).call()
-    my_filter = eBlocBroker.eventFilter(
-        "LogProvider", {"fromBlock": int(blockReadFrom), "toBlock": int(blockReadFrom) + 1},
-    )
+    my_filter = eBlocBroker.eventFilter("LogProvider", {"fromBlock": int(blockReadFrom), "toBlock": int(blockReadFrom) + 1})
     fID = my_filter.get_all_entries()[0].args["fID"]
 
     if tar_hash is None:
@@ -60,14 +58,7 @@ def eudatSubmitJob(tar_hash=None):
     account_id = 0
 
     output = submitJob(
-        str(provider),
-        str(tar_hash),
-        coreNum,
-        coreMinuteGas,
-        str(jobDescription),
-        cloudStorageID,
-        str(tar_hash),
-        account_id,
+        str(provider), str(tar_hash), coreNum, coreMinuteGas, str(jobDescription), cloudStorageID, str(tar_hash), account_id
     )
     print(output)
 

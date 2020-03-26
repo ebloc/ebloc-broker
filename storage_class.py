@@ -5,7 +5,7 @@ import traceback
 from config import logging
 from contractCalls.refund import refund
 from lib import PROGRAM_PATH, CacheType, _sbatch_call, log, run_command
-from utils import create_dir, generate_md5sum
+from utils import Link, create_dir, generate_md5sum
 
 
 class BaseClass(object):
@@ -14,8 +14,8 @@ class BaseClass(object):
 
 
 class Storage(BaseClass):
-    def __init__(self, logged_job, job_info, requesterID, is_already_cached, oc=None) -> None:
-        self.requesterID = requesterID
+    def __init__(self, logged_job, job_info, requester_id, is_already_cached, oc=None) -> None:
+        self.requester_id = requester_id
         self.job_info = job_info
         self.logged_job = logged_job
         self.job_key = self.logged_job.args["jobKey"]
@@ -31,11 +31,11 @@ class Storage(BaseClass):
         self.folder_path_to_download = {}
         self.oc = oc
         self.cloudStorageID = logged_job.args["cloudStorageID"]
-        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requesterID}/{self.job_key}_{self.index}"
+        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
         self.results_data_folder = f"{self.results_folder_prev}/data"
         self.results_data_link = f"{self.results_folder_prev}/data_link"
-        self.private_dir = f"{PROGRAM_PATH}/{requesterID}/cache"
+        self.private_dir = f"{PROGRAM_PATH}/{requester_id}/cache"
         self.public_dir = f"{PROGRAM_PATH}/cache"
         self.folder_type_dict = {}
 
@@ -48,12 +48,7 @@ class Storage(BaseClass):
     def complete_refund(self) -> bool:
         """Complete refund back to requester"""
         success, output = refund(
-            self.logged_job.args["provider"],
-            self.PROVIDER_ID,
-            self.job_key,
-            self.index,
-            self.job_id,
-            self.source_code_hashes,
+            self.logged_job.args["provider"], self.PROVIDER_ID, self.job_key, self.index, self.job_id, self.source_code_hashes
         )
         if not success:
             logging.error(output)
@@ -75,9 +70,7 @@ class Storage(BaseClass):
                 log(f"=> {name} is already cached under the public directory...", "blue")
             elif cache_type == CacheType.PRIVATE.value:
                 self.folder_path_to_download[name] = self.private_dir
-                log(
-                    f"=> {name} is already cached under the private directory...", "blue",
-                )
+                log(f"=> {name} is already cached under the private directory...", "blue")
 
             return True
 
@@ -118,9 +111,7 @@ class Storage(BaseClass):
         try:
             FNULL = open(os.devnull, "w")
             output = (
-                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL)
-                .decode("utf-8")
-                .strip()
+                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL).decode("utf-8").strip()
             )
             FNULL.close()
             if output.count("/") == 1:
@@ -151,9 +142,16 @@ class Storage(BaseClass):
 
     def sbatch_call(self) -> bool:
         try:
+            link = Link(self.results_data_folder, self.results_data_link)
+            link.link_folders()
+
+            # File permission for the requester's foders should be re-set.
+            path = f"{PROGRAM_PATH}/{self.requester_id}"
+            success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
+
             _sbatch_call(
                 self.logged_job,
-                self.requesterID,
+                self.requester_id,
                 self.results_folder,
                 self.results_folder_prev,
                 self.dataTransferIn_used,
