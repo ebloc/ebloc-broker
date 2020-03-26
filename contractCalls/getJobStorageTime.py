@@ -22,6 +22,4 @@ if __name__ == "__main__":
         sourceCodeHash = "acfd2fd8a1e9ccf031db0a93a861f6eb"
 
     receivedBlockNum, storageTime = getJobStorageTime(providerAddress, sourceCodeHash)
-    print(
-        f"receivedBlockNum={receivedBlockNum}; storageTime={storageTime}; endBlockTime={receivedBlockNum + storageTime * 240}"
-    )
+    print(f"receivedBlockNum={receivedBlockNum}; storageTime={storageTime}; endBlockTime={receivedBlockNum + storageTime * 240}")

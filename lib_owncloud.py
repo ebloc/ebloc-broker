@@ -73,7 +73,7 @@ def eudat_login(user, password_path, name):
         oc = pickle.load(f)
         try:
             printc("Reading from the dumped object...", "blue")
-            oc.list(".")
+            # oc.list(".")  # uncomment
             logging.info("SUCCESS. Read from dumped object.")
             return oc
         except subprocess.CalledProcessError as e:
@@ -163,9 +163,7 @@ def is_oc_mounted() -> bool:
     mount_path = "/oc"
     output = None
     try:
-        output = (
-            subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", mount_path]).decode("utf-8").strip()
-        )
+        output = subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", mount_path]).decode("utf-8").strip()
     except subprocess.CalledProcessError as e:
         print(f"E: {e}")
         return False

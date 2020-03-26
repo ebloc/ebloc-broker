@@ -19,7 +19,7 @@ ipfsFlag = 0
 def getLogJobs(provider_address, fromBlock):
     print("provider_address:" + provider_address + "\n")
     myFilter = eBlocBroker.events.LogReceipt.createFilter(
-        fromBlock=int(fromBlock), argument_filters={"provider_address": str(provider_address)},
+        fromBlock=int(fromBlock), argument_filters={"provider_address": str(provider_address)}
     )
     logged_jobs = myFilter.get_all_entries()
 
@@ -33,7 +33,7 @@ def getLogJobs(provider_address, fromBlock):
         receiptReturned[f"{provider_address}_{jobKey}_{index}"] = returned
 
     myFilter = eBlocBroker.events.LogJob.createFilter(
-        fromBlock=int(fromBlock), argument_filters={"provider_address": str(provider_address)},
+        fromBlock=int(fromBlock), argument_filters={"provider_address": str(provider_address)}
     )
     logged_jobs = myFilter.get_all_entries()
     _sum = 0
@@ -69,9 +69,7 @@ def getLogJobs(provider_address, fromBlock):
         )
 
         if ipfsFlag == 1 and inv_job_state_code[int(jobInfo["status"])] == "COMPLETED":
-            subprocess.run(
-                ["ipfs", "get", logged_jobs[i].args["jobKey"], "--output=ipfsHashes/" + logged_jobs[i].args["jobKey"]]
-            )
+            subprocess.run(["ipfs", "get", logged_jobs[i].args["jobKey"], "--output=ipfsHashes/" + logged_jobs[i].args["jobKey"]])
 
     print(f"TOTAL_GAINED={_sum}")
     print(str(completedCounter) + "/" + str(idx - 1))

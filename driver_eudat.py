@@ -15,14 +15,14 @@ from contractCalls.get_provider_info import get_provider_info
 from lib import WHERE, CacheType, log, silent_remove
 from lib_mongodb import add_item_share_id, find_key
 from storage_class import Storage
-from utils import Link, byte_to_mb, create_dir, generate_md5sum, read_json
+from utils import byte_to_mb, create_dir, generate_md5sum, read_json
 
 mc = MongoClient()
 
 
 class EudatClass(Storage):
-    def __init__(self, logged_job, jobInfo, requesterID, is_already_cached, oc):
-        super(self.__class__, self).__init__(logged_job, jobInfo, requesterID, is_already_cached, oc)
+    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached, oc):
+        super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached, oc)
         self.shareID = {}
         self.tar_downloaded_path = {}
         self.source_code_hashes_to_process: List[str] = []
@@ -59,9 +59,7 @@ class EudatClass(Storage):
                 if output == folder_name:
                     # Checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(
-                        f"=> {folder_name} is already cached under the public directory.", "blue",
-                    )
+                    log(f"=> {folder_name} is already cached under the public directory.", "blue")
                     return True
                 else:
                     self.folder_type_dict[folder_name] = "tar.gz"
@@ -72,11 +70,7 @@ class EudatClass(Storage):
                 if not self.eudat_download_folder(cached_folder, cached_folder, folder_name):
                     return False
 
-            if (
-                id == 0
-                and self.folder_type_dict[folder_name] == "tar.gz"
-                and not self.is_run_exists_in_tar(cached_tar_file)
-            ):
+            if id == 0 and self.folder_type_dict[folder_name] == "tar.gz" and not self.is_run_exists_in_tar(cached_tar_file):
                 silent_remove(cached_tar_file)
                 return False
         else:
@@ -134,9 +128,7 @@ class EudatClass(Storage):
             folder_name = source_code_hash_text
             self.folder_type_dict[folder_name] = None
             if os.path.isdir(f"{lib.OWN_CLOUD_PATH}/{folder_name}"):
-                logging.info(
-                    f"Eudat shared folder({folder_name}) is already accepted and exists on the eudat mounted folder."
-                )
+                logging.info(f"Eudat shared folder({folder_name}) is already accepted and exists on the eudat mounted folder.")
                 if os.path.isfile(f"{lib.OWN_CLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
                     self.folder_type_dict[folder_name] = "tar.gz"
                 else:
@@ -172,10 +164,7 @@ class EudatClass(Storage):
             folder_name = source_code_hash_text
             success, output = find_key(mc["eBlocBroker"]["shareID"], folder_name)
             if success:
-                self.shareID[folder_name] = {
-                    "shareID": output["shareID"],
-                    "share_token": output["share_token"],
-                }
+                self.shareID[folder_name] = {"shareID": output["shareID"], "share_token": output["share_token"]}
                 mongodb_accept_flag += 1
 
             if success or (folder_token_flag[folder_name] and bool(self.shareID)):
@@ -192,10 +181,7 @@ class EudatClass(Storage):
                     input_user = f"{share_list[idx]['user']}@b2drop.eudat.eu"
                     if input_folder_name == folder_name and input_user == f_id:
                         self.share_token = str(share_list[idx]["share_token"])
-                        self.shareID[folder_name] = {
-                            "shareID": int(share_id),
-                            "share_token": self.share_token,
-                        }
+                        self.shareID[folder_name] = {"shareID": int(share_id), "share_token": self.share_token}
                         # Adding into mongodb for future usage
                         success = add_item_share_id(folder_name, share_id, self.share_token)
                         if success:
@@ -243,9 +229,7 @@ class EudatClass(Storage):
             return False
 
         if self.dataTransferIn_used > self.dataTransferIn_requested:
-            logging.error(
-                "E: Requested size to download the source code and data files is greater that the given amount."
-            )
+            logging.error("E: Requested size to download the source code and data files is greater that the given amount.")
             return self.complete_refund()
 
         success = self.cache_wrapper()
@@ -270,9 +254,6 @@ class EudatClass(Storage):
             logging.error(f"{self.results_folder}/run.sh file does not exist")
             return False
         logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB")
-
-        link = Link(self.results_data_folder, self.results_data_link)
-        link.link_folders()
 
         for folder_name in self.source_code_hashes_to_process:
             try:

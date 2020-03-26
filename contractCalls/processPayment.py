@@ -29,10 +29,7 @@ def processPayment(
     if len(result_ipfs_hash) != 46 and (
         StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
     ):
-        return (
-            False,
-            "E: job_key's length does not match with its original length. Please check your job_key",
-        )
+        return (False, "E: job_key's length does not match with its original length. Please check your job_key")
 
     try:
         # result_ipfs_hash is converted into byte32 format

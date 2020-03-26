@@ -46,9 +46,7 @@ with open(path + "/../nasa.txt") as test:
             print("Uploading ...")
             # rclone copy ipfs remote:ipfs
             output = (
-                subprocess.check_output(["rclone", "copy", tar_hash + ".tar.gz", "remote:" + tar_hash])
-                .decode("utf-8")
-                .strip()
+                subprocess.check_output(["rclone", "copy", tar_hash + ".tar.gz", "remote:" + tar_hash]).decode("utf-8").strip()
             )
             print(output)
             subprocess.run(["mv", tar_hash + ".tar.gz", home + "/TESTS/GdriveSource"])
@@ -57,13 +55,7 @@ with open(path + "/../nasa.txt") as test:
                 try:
                     output = (
                         subprocess.check_output(
-                            [
-                                "gdrive",
-                                "list",
-                                "--query",
-                                "name contains '" + tar_hash + ".tar.gz" + "'",
-                                "--no-header",
-                            ]
+                            ["gdrive", "list", "--query", "name contains '" + tar_hash + ".tar.gz" + "'", "--no-header"]
                         )
                         .decode("utf-8")
                         .strip()
@@ -81,17 +73,7 @@ with open(path + "/../nasa.txt") as test:
                     # job_key = "1H9XSDzj15m_2IdNcblAzxk5VRWxF0CIP"
                     output = (
                         subprocess.check_output(
-                            [
-                                "gdrive",
-                                "share",
-                                job_key,
-                                "--role",
-                                "writer",
-                                "--type",
-                                "user",
-                                "--email",
-                                provider_to_share,
-                            ]
+                            ["gdrive", "share", job_key, "--role", "writer", "--type", "user", "--email", provider_to_share]
                         )
                         .decode("utf-8")
                         .strip()

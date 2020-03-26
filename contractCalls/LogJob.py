@@ -26,7 +26,7 @@ def run_log_job(from_block, provider):
         return
 
     event_filter = eBlocBroker.events.LogJob.createFilter(
-        fromBlock=int(from_block), toBlock="latest", argument_filters={"provider": str(provider)},
+        fromBlock=int(from_block), toBlock="latest", argument_filters={"provider": str(provider)}
     )
     logged_jobs = event_filter.get_all_entries()
 
@@ -56,9 +56,7 @@ def run_single_log_job(from_block, jobKey, transactionHash):
     if eBlocBroker is None or w3 is None:
         return
 
-    event_filter = eBlocBroker.events.LogJob.createFilter(
-        fromBlock=int(from_block), argument_filters={"provider": str(provider)}
-    )
+    event_filter = eBlocBroker.events.LogJob.createFilter(fromBlock=int(from_block), argument_filters={"provider": str(provider)})
     logged_jobs = event_filter.get_all_entries()
 
     if len(logged_jobs) > 0:
