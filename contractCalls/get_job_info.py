@@ -17,13 +17,13 @@ def update_job_cores(jobInfo, provider, job_key, index, job_id, received_block_n
 
     if received_block_number is None:
         received_block_number = 3082590  # Point where the eBlocBroker contract deployed
-        _toBlock = "latest"
+        to_block = "latest"
     else:
-        _toBlock = int(received_block_number)
+        to_block = int(received_block_number)
 
     try:
         event_filter = eBlocBroker.events.LogJob.createFilter(
-            fromBlock=int(received_block_number), toBlock=_toBlock, argument_filters={"provider": str(provider)},
+            fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)}
         )
         logged_jobs = event_filter.get_all_entries()
         for logged_job in logged_jobs:
@@ -36,19 +36,20 @@ def update_job_cores(jobInfo, provider, job_key, index, job_id, received_block_n
 
 
 def get_job_source_code_hashes(jobInfo, provider, job_key, index, job_id, received_block_number=None):
+    """source_code_hashes of the completed job is obtained from its event"""
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
 
     if received_block_number is None:
         received_block_number = 3082590  # Point where the eBlocBroker contract deployed
-        _toBlock = "latest"
+        to_block = "latest"
     else:
-        _toBlock = int(received_block_number)
+        to_block = int(received_block_number)
 
     try:
         event_filter = eBlocBroker.events.LogJob.createFilter(
-            fromBlock=int(received_block_number), toBlock=_toBlock, argument_filters={"provider": str(provider)},
+            fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)}
         )
         logged_jobs = event_filter.get_all_entries()
         for logged_job in logged_jobs:
@@ -56,23 +57,23 @@ def get_job_source_code_hashes(jobInfo, provider, job_key, index, job_id, receiv
                 jobInfo.update({"sourceCodeHash": logged_job.args["sourceCodeHash"]})
                 return True, jobInfo
     except Exception as e:
-        return False, f"Failed to get_Job_source_code_hash: {e}"
+        return False, f"E: Failed to get_Job_source_code_hash: {e}"
 
 
 def get_job_info(provider, job_key, index, job_id, received_block_number=None):
     logging.info(f"./get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}")
     if received_block_number is None:
         received_block_number = 3082590  # Point where the eBlocBroker is contract deployed
-        # _toBlock = "latest"
+        # to_block = "latest"
     # else:
-    #    _toBlock = int(received_block_number)
+    #    to_block = int(received_block_number)
 
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
         return False, "notconnected"
     try:
         provider = w3.toChecksumAddress(provider)
-        (job, received, jobOwner, dataTransferIn, dataTransferOut,) = eBlocBroker.functions.getJobInfo(
+        (job, received, jobOwner, dataTransferIn, dataTransferOut) = eBlocBroker.functions.getJobInfo(
             provider, job_key, int(index), int(job_id)
         ).call()
         jobPrices = eBlocBroker.functions.getProviderPricesForJob(provider, job_key, int(index)).call()
@@ -106,7 +107,7 @@ def get_job_info(provider, job_key, index, job_id, received_block_number=None):
         success, jobCores = update_job_cores(jobInfo, provider, job_key, index, job_id, received_block_number)
         # resultIpfsHash = ""
         event_filter = eBlocBroker.events.LogProcessPayment.createFilter(
-            fromBlock=int(received_block_number), toBlock="latest", argument_filters={"provider": str(provider)},
+            fromBlock=int(received_block_number), toBlock="latest", argument_filters={"provider": str(provider)}
         )
 
         logged_receipts = event_filter.get_all_entries()
@@ -163,10 +164,7 @@ if __name__ == "__main__":
         realExecutionTime = int(jobInfo["endTime"]) - int(jobInfo["startTime"])
 
     if type(jobInfo) is dict:
-        print(
-            "{0: <22}".format("stateCode:")
-            + f"{lib.inv_job_state_code[jobInfo['jobStateCode']]} ({jobInfo['jobStateCode']})"
-        )
+        print("{0: <22}".format("stateCode:") + f"{lib.inv_job_state_code[jobInfo['jobStateCode']]} ({jobInfo['jobStateCode']})")
         print("{0: <22}".format("core") + str(jobInfo["core"]))
         print("{0: <22}".format("startTime") + str(jobInfo["startTime"]))
         print("{0: <22}".format("endTime:") + str(jobInfo["endTime"]))

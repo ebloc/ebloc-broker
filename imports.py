@@ -58,6 +58,7 @@ def connect_to_web3():
     else:
         config.w3 = Web3(IPCProvider("/private/geth.ipc"))
         from web3.middleware import geth_poa_middleware
+
         # inject the poa compatibility middleware to the innermost layer
         config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -77,7 +78,7 @@ def connect_to_eblocbroker():
 
     success, contract = read_json(f"{EBLOCPATH}/contractCalls/contract.json")
     if not success:
-        logging.error("E: Couldn't read the contract.json file")
+        logging.error("E: Couldn't read the contract.json file.")
         return None
 
     contract_address = contract["address"]
