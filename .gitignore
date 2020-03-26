@@ -2,6 +2,8 @@
 
 *.swp
 
+base/meta_data\.json
+
 base/data/*tar.gz
 
 owncloudScripts/p.txt
@@ -319,8 +321,6 @@ contract/abi.json
 doo.py
 
 gdrive/output.log
-
-gdrive/exampleFolderToShare/meta_data.json
 
 end_code_flymake.py
 

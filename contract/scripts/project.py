@@ -1,8 +1,8 @@
 import pytest
 from brownie import *
-from tests import test_eblocbroker
 
 import scripts.lib
+from tests import test_eblocbroker
 
 
 def project():

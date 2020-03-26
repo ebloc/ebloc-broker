@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/flask/bin/activate
+source $HOME/venv/bin/activate
 
 export FLASK_APP=webapp/main.py
 export FLASK_DEBUG=1

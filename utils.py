@@ -71,6 +71,11 @@ def read_json(path):
     return False, ""
 
 
+def getsize(filename):
+    """Return the size of a file, reported by os.stat()."""
+    return os.stat(filename).st_size
+
+
 class Link:
     def __init__(self, path_from, path_to) -> None:
         self.path_from = path_from
@@ -78,6 +83,7 @@ class Link:
         self.data_map = {}
 
     def link_folders(self):
+        """Creates linked folders under data_link folder"""
         from os import listdir
         from os.path import isdir, join
         from lib import run_command

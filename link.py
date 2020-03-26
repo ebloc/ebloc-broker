@@ -20,6 +20,6 @@ if __name__ == "__main__":
     link.link_folders()
 
     for key, value in link.data_map.items():
-        print(f"{key} => {value}")
+        print(f"{key} => data_link/{value}")
 
     exit(0)

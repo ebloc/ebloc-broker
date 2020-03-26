@@ -14,7 +14,7 @@ def start_call(job_key, index, slurm_job_id):
     p1 = subprocess.Popen(["scontrol", "show", "job", slurm_job_id], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", "StartTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=StartTime=).*(?= E)"], stdin=p2.stdout, stdout=subprocess.PIPE,)
+    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=StartTime=).*(?= E)"], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
     date = p3.communicate()[0].decode("utf-8").strip()
     # cmd: date -d 2018-09-09T18:38:29 +"%s"
