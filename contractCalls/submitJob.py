@@ -9,8 +9,8 @@ from config import load_log, EBLOCPATH
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
-from lib import OC_USER, CacheType, StorageID, get_tx_status
-from utils import ipfs_to_bytes32
+from lib import OC_USER, CacheType, StorageID, get_tx_status, printc
+from utils import ipfs_toBytes
 
 logging = load_log()
 
@@ -25,10 +25,10 @@ def submitJob(
     storageID_list,
     source_code_hashes,
     cache_types,
-    storage_hour_list,
+    storage_hours,
     account_id,
     job_price_value,
-    data_prices_set_blocknumber_list,
+    data_prices_set_blocknumbers,
 ):
     eBlocBroker, w3 = connect()
     if eBlocBroker is None or w3 is None:
@@ -111,7 +111,7 @@ def submitJob(
         provider_price_block_number,
         storageID_list,
         cache_types,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
         cores,
         core_execution_durations,
         dataTransferOut,
@@ -120,7 +120,7 @@ def submitJob(
     try:
         gas_limit = 4500000
         print(str(source_code_hashes))
-        tx = eBlocBroker.functions.submitJob(key, dataTransferIn_list, args, storage_hour_list, source_code_hashes).transact(
+        tx = eBlocBroker.functions.submitJob(key, dataTransferIn_list, args, storage_hours, source_code_hashes).transact(
             {"from": _from, "value": job_price_value, "gas": gas_limit}
         )
     except Exception:
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         dataTransfer = int(sys.argv[5])
         storageID_list = int(sys.argv[6])
         sourceCodeHash = str(sys.argv[7])
-        storage_hour_list = int(sys.argv[8])
+        storage_hours = int(sys.argv[8])
         account_id = int(sys.argv[9])
     elif len(sys.argv) == 13:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         dataTransferOut = int(sys.argv[8])
         storageID_list = int(sys.argv[9])
         sourceCodeHash = str(sys.argv[10])
-        storage_hour_list = int(sys.argv[11])
+        storage_hours = int(sys.argv[11])
         account_id = int(sys.argv[12])
         core_execution_durations = core_execution_durations + coreHour * 60 + coreDayDuration * 1440
     else:
@@ -164,17 +164,14 @@ if __name__ == "__main__":
         source_code_hashes = []
 
         if main_storageID == StorageID.IPFS.value:
-            print("Submitting job through IPFS...")
+            printc("Submitting job through IPFS...")
             key = "QmQir5JfnSeR9imP89mtPFuxcRwqGLVmtAC3uXKPGzouHm"  # /base/sourceCode
-            ipfsBytes32 = ipfs_to_bytes32(key)
-            source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
-
             data_key = "Qmes3VeaqExPsz1XuDM1fdgFT88JyQaEYeDCcz4YNiedBP"  # data/data1
-            ipfsBytes32 = ipfs_to_bytes32(data_key)
-            source_code_hashes.append(w3.toBytes(hexstr=ipfsBytes32))
+            source_code_hashes.append(ipfs_toBytes(key))
+            source_code_hashes.append(ipfs_toBytes(data_key))
 
             storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
-            storage_hour_list = [1, 1]
+            storage_hours = [1, 1]
             cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
         elif main_storageID == StorageID.EUDAT.value:
             print("Submitting through EUDAT")
@@ -183,13 +180,12 @@ if __name__ == "__main__":
                 password = content_file.read().strip()
 
             oc.login(OC_USER, password)
-            sourceCodeHash = "00000000000000000000000000000000"
 
         cores = [1]
         core_execution_durations = [1]
         dataTransferIn_list = [1, 1]
         dataTransferOut = 1
-        data_prices_set_blocknumber_list = [0, 0]
+        data_prices_set_blocknumbers = [0, 0]
 
     requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
     job_price_value, _cost = cost(
@@ -200,10 +196,10 @@ if __name__ == "__main__":
         source_code_hashes,
         dataTransferIn_list,
         dataTransferOut,
-        storage_hour_list,
+        storage_hours,
         storageID_list,
         cache_types,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
         eBlocBroker,
         w3,
         False,
@@ -219,10 +215,10 @@ if __name__ == "__main__":
         storageID_list,
         source_code_hashes,
         cache_types,
-        storage_hour_list,
+        storage_hours,
         account_id,
         job_price_value,
-        data_prices_set_blocknumber_list,
+        data_prices_set_blocknumbers,
     )
 
     if not success:
