@@ -262,10 +262,14 @@ def is_ipfs_hash_exists(ipfs_hash, attempt_count):
         return False, None, None
 
 
-def ipfs_add(self, path):
-    if os.path.isdir(path):  # uploaded as folder
-        cmd = ["ipfs", "add", "-r", path]
-    elif os.path.isfile(path):  # uploaded as file
+def ipfs_add(path, hidden=False):
+    if os.path.isdir(path):
+        if hidden:
+            # Include files that are hidden. Only takes effect on recursive add.
+            cmd = ["ipfs", "add", "-r", "--hidden", "--quieter", "--progress", path]
+        else:
+            cmd = ["ipfs", "add", "-r", "--quieter", "--progress", path]
+    elif os.path.isfile(path):
         cmd = ["ipfs", "add", path]
     else:
         logging.error("E: Requested path does not exist.")
@@ -293,7 +297,6 @@ def calculate_folder_size(path) -> float:
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    # Returns downloaded files size in bytes
     byte_size = p2.communicate()[0].decode("utf-8").strip()
     return byte_to_mb(byte_size)
 

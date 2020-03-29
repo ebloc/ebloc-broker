@@ -6,10 +6,10 @@ import time
 
 from config import bp, logging  # noqa: F401
 from lib import printc, run_command, run_command_stdout_to_file
-from utils import getcwd, getsize, path_leaf
+from utils import getcwd, getsize, path_leaf, EBLOCPATH
 
 
-def git_diff_patch(path, source_code_hash, index, results_folder_prev) -> bool:
+def git_diff_patch(path, source_code_hash, index, target_path) -> bool:
     """
     * "git diff HEAD" for detecting all the changes:
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
@@ -19,11 +19,15 @@ def git_diff_patch(path, source_code_hash, index, results_folder_prev) -> bool:
     printc(path)
     cwd_temp = getcwd()
     os.chdir(path)
+
+    success, output = run_command(["git", "config", "core.fileMode", "false"])
+    # First ignore deleted files not to be added into git
+    success, output = run_command(["bash", f"{EBLOCPATH}/git_ignore_deleted.sh"])
     success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
     patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
     logging.info(f"patch_name={patch_name}")
     # File to be uploaded
-    patch_file = f"{results_folder_prev}/{patch_name}"
+    patch_file = f"{target_path}/{patch_name}"
 
     success, output = run_command(["git", "add", "-A", ".", "-v"])
     if not success:
@@ -118,4 +122,11 @@ def is_git_repo(folders) -> bool:
                 os.chdir(cwd_temp)
                 return False
     os.chdir(cwd_temp)
+    return success
+
+
+def git_pin(ipfs_hash) -> bool:
+    cmd = ["ipfs", "pin", "add", ipfs_hash]
+    success, output = run_command(cmd, None, True)
+    print(output)
     return success
