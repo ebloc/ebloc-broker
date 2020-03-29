@@ -46,7 +46,7 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
         status="FAILED"
     fi
 
-    msg="$status fileName:$name | $arg0 $arg1 $arg2 $arg3 $name $slurmJobID"
+    msg="$status fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
@@ -63,7 +63,7 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
     arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
 
-    msg="TIMEOUT fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 slurmJobID: $slurmJobID"
+    msg="TIMEOUT fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
@@ -80,7 +80,7 @@ if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
     arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
     arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
 
-    msg="CANCELLED fileName:$name |arg0:$arg0 arg1:$arg1 arg2:$arg2 arg3:$arg3 slurmJobID: $slurmJobID"
+    msg="CANCELLED fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
@@ -97,7 +97,7 @@ if [[ $event == *"FAILED"* ]]; then # Failed slurm jobs are catched here
     arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
     arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
 
-    msg="FAILED fileName:$name | $arg0 $arg1 $arg2 $arg3 $name $slurmJobID"
+    msg="FAILED fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 

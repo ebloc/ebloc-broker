@@ -6,6 +6,7 @@ import traceback
 from imports import connect
 from lib import PROVIDER_ID, StorageID, logging
 from utils import ipfs_to_bytes32
+from config import bp
 
 
 def processPayment(
@@ -26,21 +27,22 @@ def processPayment(
     eBlocBroker, w3 = connect()
     _from = w3.toChecksumAddress(PROVIDER_ID)
 
+    if not result_ipfs_hash:
+        return (False, "Given result_ipfs_hash is empty")
+
     if len(result_ipfs_hash) != 46 and (
         StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
     ):
-        return (False, "E: job_key's length does not match with its original length. Please check your job_key")
+        return (False, "job_key's length does not match with its original length. Please check your job_key")
 
     try:
-        # result_ipfs_hash is converted into byte32 format
-        result_ipfs_hash = w3.toBytes(hexstr=ipfs_to_bytes32(result_ipfs_hash))
-        if result_ipfs_hash == b"":
+        if result_ipfs_hash == b"" or not result_ipfs_hash:
             _result_ipfs_hash = "''"
         else:
-            _result_ipfs_hash = result_ipfs_hash.decode("utf-8")
+            _result_ipfs_hash = w3.toBytes(hexstr=ipfs_to_bytes32(result_ipfs_hash))
 
         logging.info(
-            f"~/eBlocBroker/contractCalls/processPayment.py {job_key} {index} {job_id} {execution_time_min} {_result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
+            f"~/eBlocBroker/contractCalls/processPayment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
         )
 
         final_job = True  # True only for the final job
@@ -55,7 +57,7 @@ def processPayment(
             final_job,
         ]
 
-        tx = eBlocBroker.functions.processPayment(job_key, args, int(execution_time_min), result_ipfs_hash).transact(
+        tx = eBlocBroker.functions.processPayment(job_key, args, int(execution_time_min), _result_ipfs_hash).transact(
             {"from": _from, "gas": 4500000}
         )
     except Exception:
