@@ -60,7 +60,7 @@ def is_slurm_on() -> bool:
         return True
 
 
-def get_elapsed_raw_time(slurm_job_id):
+def get_elapsed_raw_time(slurm_job_id) -> int:
     cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
     success, elapsed_time = run_command(cmd, None, True)
     logging.info(f"ElapsedTime={elapsed_time}")
@@ -76,3 +76,21 @@ def get_elapsed_raw_time(slurm_job_id):
 
     elapsed_raw_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
     logging.info(f"ElapsedRawTime={elapsed_raw_time}")
+    return elapsed_raw_time
+
+
+def get_job_end_time(slurm_job_id):
+    # cmd: scontrol show job slurm_job_id | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
+    success, output = run_command(["scontrol", "show", "job", slurm_job_id], None, True)
+    p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p2.stdout.close()
+    date = p3.communicate()[0].decode("utf-8").strip()
+
+    cmd = ["date", "-d", date, "+'%s'"]  # cmd: date -d 2018-09-09T21:50:51 +"%s"
+    success, end_time_stamp = run_command(cmd, None, True)
+    end_time_stamp = end_time_stamp.rstrip().replace("'", "")
+    logging.info(f"end_time_stamp={end_time_stamp}")
+    return end_time_stamp

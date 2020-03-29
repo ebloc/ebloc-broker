@@ -30,6 +30,7 @@ def string_to_bytes32(hash_str: str):
 
 
 def ipfs_to_bytes32(hash_str: str):
+    """Ipfs hash is converted into byte32 format"""
     bytes_array = base58.b58decode(hash_str)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
