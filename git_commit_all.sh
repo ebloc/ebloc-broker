@@ -4,6 +4,9 @@
 git add -A .
 
 git commit
+
+git push
+
 # str=$1
 #if [ ! -z "$str" -a "$str" != " " ]; then
 #    git commit -m $str
@@ -11,4 +14,3 @@ git commit
 #    git commit -m "update"
 #fi
 #
-#git push
