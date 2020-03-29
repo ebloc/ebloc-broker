@@ -4,7 +4,7 @@ import traceback
 
 from config import logging
 from contractCalls.refund import refund
-from lib import PROGRAM_PATH, CacheType, _sbatch_call, log, run_command
+from lib import PROGRAM_PATH, CacheType, _sbatch_call, log, run_command, WHOAMI
 from utils import Link, create_dir, generate_md5sum
 
 
@@ -37,6 +37,8 @@ class Storage(BaseClass):
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.private_dir = f"{PROGRAM_PATH}/{requester_id}/cache"
         self.public_dir = f"{PROGRAM_PATH}/cache"
+        self.patch_folder = f"{self.results_folder_prev}/patch"
+
         self.folder_type_dict = {}
 
         create_dir(self.private_dir)
@@ -44,6 +46,7 @@ class Storage(BaseClass):
         create_dir(self.results_folder)
         create_dir(self.results_data_folder)
         create_dir(self.results_data_link)
+        create_dir(self.patch_folder)
 
     def complete_refund(self) -> bool:
         """Complete refund back to requester"""
@@ -148,6 +151,7 @@ class Storage(BaseClass):
             # File permission for the requester's foders should be re-set.
             path = f"{PROGRAM_PATH}/{self.requester_id}"
             success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
+            success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{WHOAMI}:rwx", path])
 
             _sbatch_call(
                 self.logged_job,
