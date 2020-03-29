@@ -162,7 +162,8 @@ if not is_contract_exists:
     terminate()
 
 logging.info(f"is_web3_connected={is_web3_connected()}")
-logging.info(f"rootdir: {os.getcwd()}")
+logging.info(f"rootdir={os.getcwd()}")
+logging.info(f"whoami={WHOAMI}")
 
 success, contract = read_json("contractCalls/contract.json")
 if not success:
@@ -185,6 +186,7 @@ if not config.eBlocBroker.functions.isOrcIDVerified(PROVIDER_ID).call():
 
 deployed_block_number = get_deployed_block_number()
 logging.info("{0: <18}".format("provider_address:") + PROVIDER_ID)
+
 if not os.path.isfile(BLOCK_READ_FROM_FILE):
     f = open(BLOCK_READ_FROM_FILE, "w")
     f.write(f"{deployed_block_number}")
@@ -311,11 +313,7 @@ while True:
         if logged_job["blockNumber"] > int(max_val):
             max_val = logged_job["blockNumber"]
 
-        if logged_job.args["cloudStorageID"] == StorageID.GITHUB.value:
-            success, str_check = run_command(["bash", f"{EBLOCPATH}/str_check.sh", job_key.replace("=", "", 1)])
-        else:
-            success, str_check = run_command(["bash", f"{EBLOCPATH}/str_check.sh", job_key])
-
+        success, str_check = run_command(["bash", f"{EBLOCPATH}/str_check.sh", job_key])
         job_infos_to_process = []
         job_id = 0
         for attempt in range(10):
