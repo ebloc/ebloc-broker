@@ -6,7 +6,7 @@ import time
 from os.path import expanduser
 from random import randint
 
-import lib
+from lib import is_transaction_passed
 from contractCalls.get_block_number import get_block_number
 from contractCalls.submitJob import submitJob
 from imports import connect_to_web3
@@ -155,7 +155,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             sys.stdout.write("\rSleeping is done!\n")
             receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt is not None:
-                output = lib.is_transaction_passed(w3, tx_hash)
+                output = is_transaction_passed(w3, tx_hash)
                 log(f"Tx status:{output}", path)
             else:
                 log("Tx is not deployed yet", path)

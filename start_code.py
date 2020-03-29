@@ -4,8 +4,9 @@ import subprocess
 import sys
 import time
 
-import lib
+from lib import PROVIDER_ID, LOG_PATH
 from contractCalls.set_job_status_running import set_job_status_running
+from config import EBLOCPATH
 
 
 def start_call(job_key, index, slurm_job_id):
@@ -20,8 +21,8 @@ def start_call(job_key, index, slurm_job_id):
     # cmd: date -d 2018-09-09T18:38:29 +"%s"
     startTime = subprocess.check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
 
-    f = open(f"{lib.LOG_PATH}/transactions/{lib.PROVIDER_ID}.txt", "a")
-    f.write(f"{lib.EBLOCPATH}/contractCalls/set_job_status_running.py {job_key} {index} {job_id} {startTime}")
+    f = open(f"{LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
+    f.write(f"{EBLOCPATH}/contractCalls/set_job_status_running.py {job_key} {index} {job_id} {startTime}")
     f.write("\n")
     time.sleep(0.25)
     for attempt in range(1):
