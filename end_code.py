@@ -33,6 +33,8 @@ from lib import (
     run_command,
     run_command_stdout_to_file,
     subprocess_call_attempt,
+    is_dir,
+    silent_remove,
 )
 from lib_gdrive import get_data_key_ids, get_gdrive_file_info
 from lib_git import git_diff_patch, git_pin
@@ -86,10 +88,10 @@ class ENDCODE:
         requester_id_address = eth_address_to_md5(requester_id)
         success, self.requester_info = get_requester_info(requester_id)
         self.results_folder_prev = f"{PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
-        self.is_dir(self.results_folder_prev)
+        is_dir(self.results_folder_prev)
 
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
-        self.is_dir(self.results_folder)
+        is_dir(self.results_folder)
 
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.results_data_folder = f"{self.results_folder_prev}/data"
@@ -154,11 +156,6 @@ class ENDCODE:
         f = open(f"{LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
         f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
         f.close()
-
-    def is_dir(self, path):
-        if not os.path.isdir(path):
-            logging.error(f"{path} folder does not exist.")
-            sys.exit(1)
 
     def get_shared_tokens(self):
         success, data = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
@@ -327,9 +324,9 @@ class IpfsMiniLockClass(ENDCODE):
         ]
         success, output = run_command(cmd, None, True)
         logging.info(output)
-
-        # TODO: rm self.patch_file,
-        return True
+        if success:
+            silent_remove(self.patch_file)
+        return success
 
 
 class IpfsClass(ENDCODE):
