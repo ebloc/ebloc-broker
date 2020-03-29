@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from termcolor import colored
 
 import config
-from config import logging
+from config import logging, RPC_PORT
 from lib_mongodb import add_item
 from utils import byte_to_mb, read_json
 
@@ -48,19 +48,15 @@ load_dotenv(os.path.join(f"{HOME}/.eBlocBroker/", ".env"))
 
 WHOAMI = os.getenv("WHOAMI")
 SLURMUSER = os.getenv("SLURMUSER")
-EBLOCPATH = os.getenv("EBLOCPATH")  #
-RPC_PORT = os.getenv("RPC_PORT")  #
 LOG_PATH = os.getenv("LOG_PATH")
 GDRIVE = os.getenv("GDRIVE")
 OC_USER = os.getenv("OC_USER")
-POA_CHAIN = str(os.getenv("POA_CHAIN")).lower() in ("yes", "true", "t", "1")  #
 IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
 EUDAT_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1")
 
 GDRIVE_CLOUD_PATH = f"/home/{WHOAMI}/foo"
 GDRIVE_METADATA = f"/home/{WHOAMI}/.gdrive"
 IPFS_REPO = f"/home/{WHOAMI}/.ipfs"
-# HOME = f"/home/{WHOAMI}"
 OWN_CLOUD_PATH = "/oc"
 
 PROGRAM_PATH = "/var/eBlocBroker"
@@ -71,7 +67,6 @@ CANCEL_BLOCK_READ_FROM_FILE = f"{LOG_PATH}/cancelledBlockReadFrom.txt"
 
 if config.w3 is None:
     from imports import connect_to_web3
-
     connect_to_web3()
 
 PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
@@ -662,8 +657,8 @@ def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, 
     slurm_job_id = job_id.split()[3]
     logging.info(f"slurm_job_id={slurm_job_id}")
     try:
-        # cmd: scontrol update jobid=$slurm_job_id TimeLimit=$time_limit
-        subprocess.run(["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"], stderr=subprocess.STDOUT)
+        cmd = ["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"]
+        subprocess.run(cmd, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         logging.error(e.output.decode("utf-8").strip())
 
