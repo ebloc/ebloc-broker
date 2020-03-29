@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from imports import connect_to_web3
-from lib import EBLOCPATH
 from utils import read_json
+from config import EBLOCPATH
 
 
 def is_contract_exists():
