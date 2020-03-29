@@ -674,6 +674,12 @@ def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, 
     return True
 
 
+def is_dir(path):
+    if not os.path.isdir(path):
+        logging.error(f"{path} folder does not exist.")
+        sys.exit(1)
+
+
 def remove_empty_files_and_folders(results_folder) -> None:
     """Remove empty files if exists"""
     p1 = subprocess.Popen(["find", results_folder, "-size", "0", "-print0"], stdout=subprocess.PIPE)
