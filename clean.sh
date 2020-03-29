@@ -1,7 +1,4 @@
 #!/bin/bash
-#                            |
-# To Run:  sudo bash clean.sh|
-#-----------------------------
 
 pyclean docs/
 

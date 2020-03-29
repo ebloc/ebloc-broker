@@ -5,8 +5,8 @@ import traceback
 
 from imports import connect
 from lib import PROVIDER_ID, StorageID, logging
-from utils import ipfs_to_bytes32
-from config import bp
+from utils import ipfs_toBytes
+from config import bp  # noqa: F401
 
 
 def processPayment(
@@ -21,11 +21,8 @@ def processPayment(
     dataTransferOut,
     core,
     executionDuration,
-    eBlocBroker=None,
-    w3=None,
 ):
     eBlocBroker, w3 = connect()
-    _from = w3.toChecksumAddress(PROVIDER_ID)
 
     if not result_ipfs_hash:
         return (False, "Given result_ipfs_hash is empty")
@@ -39,7 +36,7 @@ def processPayment(
         if result_ipfs_hash == b"" or not result_ipfs_hash:
             _result_ipfs_hash = "''"
         else:
-            _result_ipfs_hash = w3.toBytes(hexstr=ipfs_to_bytes32(result_ipfs_hash))
+            _result_ipfs_hash = ipfs_toBytes(result_ipfs_hash)
 
         logging.info(
             f"~/eBlocBroker/contractCalls/processPayment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
@@ -58,7 +55,7 @@ def processPayment(
         ]
 
         tx = eBlocBroker.functions.processPayment(job_key, args, int(execution_time_min), _result_ipfs_hash).transact(
-            {"from": _from, "gas": 4500000}
+            {"from": PROVIDER_ID, "gas": 4500000}
         )
     except Exception:
         return False, traceback.format_exc()
