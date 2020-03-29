@@ -51,7 +51,7 @@ class IpfsClass(Storage):
         silent_remove(f"{self.results_folder}/{ipfs_hash}")
         silent_remove(f"{self.results_folder}/output.tar.gz")
 
-    def check_ipfs_ipfs(self, ipfs_hash) -> bool:
+    def check_ipfs(self, ipfs_hash) -> bool:
         success, ipfs_stat, cumulative_size = is_ipfs_hash_exists(ipfs_hash, attempt_count=1)
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
@@ -75,7 +75,7 @@ class IpfsClass(Storage):
             os.makedirs(self.results_folder)
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
-        success = self.check_ipfs_ipfs(self.job_key)
+        success = self.check_ipfs(self.job_key)
         if not success:
             return False
 
@@ -83,7 +83,7 @@ class IpfsClass(Storage):
             ipfs_hash = bytes32_to_ipfs(source_code_hash)
             if ipfs_hash not in self.ipfs_hashes:
                 # job_key as data hash already may added to the list
-                success = self.check_ipfs_ipfs(ipfs_hash)
+                success = self.check_ipfs(ipfs_hash)
                 if not success:
                     return False
 

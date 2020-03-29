@@ -94,7 +94,7 @@ def gdrive_submit_job(provider):
     success, provider_info = get_provider_info(provider)
     account_id = 1
 
-    folders_to_share = []  # Path of folder to share
+    folders_to_share = []
     # Full path of the sourceCodeFolders is given
     job_key_dict = {}
     source_code_hash_list = []

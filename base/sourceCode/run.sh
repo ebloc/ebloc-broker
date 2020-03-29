@@ -13,4 +13,6 @@ cat ../data_link/5322a2c84d6fe1126a90215c947bfb66/data.txt > completed.txt
 echo completed 14 - - - - - >> completed.txt
 echo "date is $_date" >> completed.txt
 echo "date is $_date" >> ../data_link/5322a2c84d6fe1126a90215c947bfb66/data.txt
+echo "date is $_date" >> example/somedata.txt
+cat example/somedata.txt > example/out.txt
 echo COMPLETED >> completed.txt
