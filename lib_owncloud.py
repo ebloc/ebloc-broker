@@ -9,8 +9,8 @@ import traceback
 
 import owncloud
 
-from config import bp, logging
-from lib import EBLOCPATH, compress_folder, printc, terminate
+from config import bp, logging, EBLOCPATH  # noqa: F401
+from lib import compress_folder, printc, terminate
 
 
 def _upload_results_to_eudat(encoded_share_token, output_file_name):

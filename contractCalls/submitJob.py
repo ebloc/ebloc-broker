@@ -5,11 +5,11 @@ import traceback
 
 import owncloud
 
-from config import load_log
+from config import load_log, EBLOCPATH
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
-from lib import EBLOCPATH, OC_USER, CacheType, StorageID, get_tx_status
+from lib import OC_USER, CacheType, StorageID, get_tx_status
 from utils import ipfs_to_bytes32
 
 logging = load_log()

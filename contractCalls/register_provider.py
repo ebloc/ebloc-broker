@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 
 from contractCalls.doesProviderExist import doesProviderExist
 from imports import connect
-from lib import EBLOCPATH, PROVIDER_ID, get_tx_status
+from lib import PROVIDER_ID, get_tx_status
 from utils import read_json
+from config import EBLOCPATH
 
 home = expanduser("~")
 load_dotenv(os.path.join(f"{home}/.eBlocBroker/", ".env"))  # Load .env from the given path
