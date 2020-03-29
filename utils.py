@@ -6,7 +6,7 @@ import os
 import subprocess
 
 import base58
-
+import config
 from config import EBLOCPATH, logging
 
 Qm = b"\x12 "
@@ -34,6 +34,11 @@ def ipfs_to_bytes32(hash_str: str):
     bytes_array = base58.b58decode(hash_str)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
+
+
+def ipfs_toBytes(ipfs_hash: str) -> str:
+    ipfs_bytes_32 = ipfs_to_bytes32(ipfs_hash)
+    return config.w3.toBytes(hexstr=ipfs_bytes_32)
 
 
 def byte_to_mb(size_in_bytes: int) -> int:

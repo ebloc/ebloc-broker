@@ -11,13 +11,14 @@ from typing import List
 
 from pymongo import MongoClient
 
-import lib
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
 from lib import (
+    job_state_code,
+    remove_files,
     GDRIVE,
     GDRIVE_METADATA,
     HOME,
@@ -35,6 +36,7 @@ from lib import (
     subprocess_call_attempt,
     is_dir,
     silent_remove,
+    calculate_folder_size,
 )
 from lib_gdrive import get_data_key_ids, get_gdrive_file_info
 from lib_git import git_diff_patch, git_pin
@@ -195,7 +197,7 @@ class ENDCODE:
         subprocess.run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
     def upload(self) -> bool:
-        lib.remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
+        remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
         logging.info(f"=> Patch for source_code {self.job_key}")
         self.patch_name, self.patch_file, is_file_empty = git_diff_patch(self.results_folder, self.job_key, self.index, self.patch_folder)
         if not is_file_empty:
@@ -239,7 +241,7 @@ class ENDCODE:
         logging.info("{0: <12}".format("fID:") + self.requester_info["fID"])
         logging.info("")
 
-        if self.job_info["jobStateCode"] == str(lib.job_state_code["COMPLETED"]):
+        if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
             logging.error("Job is completed and already get paid.")
             sys.exit(1)
 
@@ -247,12 +249,12 @@ class ENDCODE:
         logging.info(f"requested_execution_duration={executionDuration[self.job_id]} minutes")
 
         for attempt in range(10):
-            if self.job_info["jobStateCode"] == lib.job_state_code["RUNNING"]:
+            if self.job_info["jobStateCode"] == job_state_code["RUNNING"]:
                 # It will come here eventually, when setJob() is deployed.
                 logging.info("Job has been started.")
                 break  # Wait until does values updated on the blockchain
 
-            if self.job_info["jobStateCode"] == lib.job_state_code["COMPLETED"]:
+            if self.job_info["jobStateCode"] == job_state_code["COMPLETED"]:
                 # Detects an error on the SLURM side
                 logging.warning("E: Job is already completed job and its money is received.")
                 sys.exit(1)
@@ -353,7 +355,7 @@ class EudatClass(ENDCODE):
         return self.upload()
 
     def _upload(self, path, source_code_hash, is_job_key) -> bool:
-        data_transfer_out = lib.calculate_folder_size(self.patch_file)
+        data_transfer_out = calculate_folder_size(self.patch_file)
         logging.info(f"[{source_code_hash}]'s dataTransferOut => {data_transfer_out} MB")
         self.dataTransferOut += data_transfer_out
         success = upload_results_to_eudat(self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5)
@@ -388,7 +390,7 @@ class GdriveClass(ENDCODE):
         mime_type = get_gdrive_file_info(gdrive_info, "Mime")
         logging.info(f"mime_type={mime_type}")
 
-        self.dataTransferOut += lib.calculate_folder_size(self.patch_file)
+        self.dataTransferOut += calculate_folder_size(self.patch_file)
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         if "folder" in mime_type:
             # Received job is in folder format
