@@ -160,16 +160,16 @@ if __name__ == "__main__":
         else:
             _resultIpfsHash = ""
 
-    realExecutionTime = 0
-    if job_info["endTime"] is not None:
-        realExecutionTime = int(job_info["endTime"]) - int(job_info["startTime"])
+    real_execution_time = 0
+    if job_info["endTime"]:
+        real_execution_time = int(job_info["endTime"]) - int(job_info["startTime"])
 
     if type(job_info) is dict:
         print("{0: <22}".format("stateCode:") + f"{inv_job_state_code[job_info['jobStateCode']]} ({job_info['jobStateCode']})")
         print("{0: <22}".format("core") + str(job_info["core"]))
         print("{0: <22}".format("startTime") + str(job_info["startTime"]))
         print("{0: <22}".format("endTime:") + str(job_info["endTime"]))
-        print("{0: <22}".format("realExecutionTime:") + str(realExecutionTime) + " Seconds")
+        print("{0: <22}".format("real_execution_time:") + str(real_execution_time) + " Seconds")
         print("{0: <22}".format("receivedWei:") + str(job_info["receivedWei"]))
         print("{0: <22}".format("refundedWei:") + str(job_info["refundedWei"]))
         print("{0: <22}".format("Expected executionDuration:") + str(job_info["executionDuration"]))
