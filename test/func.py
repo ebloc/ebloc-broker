@@ -154,7 +154,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 time.sleep(1)
             sys.stdout.write("\rSleeping is done!\n")
             receipt = w3.eth.getTransactionReceipt(tx_hash)
-            if receipt is not None:
+            if receipt:
                 output = is_transaction_passed(w3, tx_hash)
                 log(f"Tx status:{output}", path)
             else:
