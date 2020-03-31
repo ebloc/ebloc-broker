@@ -50,7 +50,7 @@ library Lib {
     struct JobIndexes {
         uint32 index;
         uint32 jobID;
-        uint32 endTime;
+        uint32 completionTime;
         uint32 dataTransferIn;
         uint32 dataTransferOut;
         uint256[] core;
@@ -150,7 +150,7 @@ library Lib {
     function checkIfOverlapExists(
         IntervalNode storage self,
         Job memory _job,
-        uint32 endTime,
+        uint32 completionTime,
         int32 availableCore,
         uint256 core
     ) internal returns (bool flag) {
@@ -169,13 +169,13 @@ library Lib {
         // | Begin: isOverlap Algorithm |
         // +----------------------------+
 
-        if (endTime < list[addr].endpoint) {
+        if (completionTime < list[addr].endpoint) {
             flag = true;
             prevNode = list[addr];
             currentNode = list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
 
             do {
-                if (endTime > currentNode.endpoint) {
+                if (completionTime > currentNode.endpoint) {
                     addr = prevNode.next; /* "addr" points the index to the pushed the node */
                     break;
                 }
@@ -184,7 +184,7 @@ library Lib {
             } while (true);
         }
 
-        list.push(Interval({endpoint: endTime, core: int32(core), next: addr})); /* Inserted while keeping sorted order */
+        list.push(Interval({endpoint: completionTime, core: int32(core), next: addr})); /* Inserted while keeping sorted order */
         carriedSum = int32(core); /* Carried sum variable is assigned with job's given core number */
 
         if (!flag) {

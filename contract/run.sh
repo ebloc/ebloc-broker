@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source $HOME/venv/bin/activate
+which brownie
 brownie compile
 
 pytest tests -x -s
