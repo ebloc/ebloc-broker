@@ -42,10 +42,9 @@ if [ $setup -eq 1 ]; then
     pip install -U colored
     pip install -U pymongo
     pip install -U python-dotenv
-    pip install -U matplotlib
-    pip install -U pydot
-    pip install -U google-colab
     pip install -e .  # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
+    # pip install -U matplotlib
+    # pip install -U google-colab
     # pip install sphinx_rtd_theme
 
     ## npm

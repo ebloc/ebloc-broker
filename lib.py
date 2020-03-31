@@ -148,10 +148,10 @@ def terminate():
 
     # Following line is added, in case ./killall.sh does not work due to sudo.
     # Send the kill signal to all the process groups.
-    if config.driver_cancel_process is not None:
+    if config.driver_cancel_process:
         os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)  # obtained from global variable
 
-    if config.whisper_state_receiver_process is not None:
+    if config.whisper_state_receiver_process:
         # obtained from global variable, # raise SystemExit("Program Exited")
         os.killpg(os.getpgid(config.whisper_state_receiver_process.pid), signal.SIGTERM)
 
@@ -471,7 +471,7 @@ def preexec_function():
 
 def is_transaction_passed(tx_hash):
     receipt = config.w3.eth.getTransactionReceipt(tx_hash)
-    if receipt is not None:
+    if receipt:
         if receipt["status"] == 1:
             return True
 

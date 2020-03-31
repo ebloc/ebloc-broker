@@ -4,13 +4,13 @@ import sys
 import traceback
 
 import owncloud
-
+import config
 from config import load_log, EBLOCPATH
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
-from lib import OC_USER, CacheType, StorageID, get_tx_status, printc
-from utils import ipfs_toBytes
+from lib import OC_USER, CacheType, StorageID, get_tx_status, printc, ipfs_add, run_command
+from utils import ipfs_toBytes, generate_md5sum
 
 logging = load_log()
 
@@ -161,14 +161,38 @@ if __name__ == "__main__":
         account_id = 1
         provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
         main_storageID = StorageID.IPFS.value
+        ipfs_dict = {}
         source_code_hashes = []
+        folders = []
+        md5sums = []
+        # Full path of the sourceCodeFolders is given
+        folders.append(f"{EBLOCPATH}/base/sourceCode")
+        folders.append(f"{EBLOCPATH}/base/data/data1")
 
         if main_storageID == StorageID.IPFS.value:
             printc("Submitting job through IPFS...")
-            key = "QmQir5JfnSeR9imP89mtPFuxcRwqGLVmtAC3uXKPGzouHm"  # /base/sourceCode
-            data_key = "Qmes3VeaqExPsz1XuDM1fdgFT88JyQaEYeDCcz4YNiedBP"  # data/data1
-            source_code_hashes.append(ipfs_toBytes(key))
-            source_code_hashes.append(ipfs_toBytes(data_key))
+            ipfs_hashes = []
+            for idx, folder in enumerate(folders):
+                success, ipfs_hash = ipfs_add(folder, True)
+
+                success, output = run_command(["ipfs", "refs", ipfs_hash])
+                config.bp()
+                # ipfs_dict[ipfs_hash] = md5sums
+                ipfs_hashes.append(ipfs_hash)
+                if not success:
+                    sys.exit(1)
+                md5sum = generate_md5sum(folder)
+                print(md5sum)
+                if idx == 0:
+                    key = ipfs_hash
+                source_code_hashes.append(ipfs_toBytes(ipfs_hash))
+                md5sums.append(md5sum)
+
+            for idx, folder in enumerate(folders):
+                print(f"{ipfs_hashes[idx]} => {folder} md5sum:{md5sums[idx]}")
+
+
+            config.bp()
 
             storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
             storage_hours = [1, 1]
@@ -227,8 +251,8 @@ if __name__ == "__main__":
     else:
         receipt = get_tx_status(success, output)
         if receipt["status"] == 1:
-            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
-                print(f"Job's index={logs[0].args['index']}")
+                logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+                print(f"Job index={logs[0].args['index']}")
             except IndexError:
                 logging.error("E: Transaction is reverted.")
