@@ -21,7 +21,7 @@ class Network(object):
 
 
 def connect():
-    if config.eBlocBroker is not None and config.w3 is not None:
+    if config.eBlocBroker and config.w3:
         return config.eBlocBroker, config.w3
 
     if config.w3 is None:

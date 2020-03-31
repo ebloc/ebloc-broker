@@ -148,7 +148,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
        * by the provider provider and paying of unused core, cache, and dataTransfer usage cost
        * back to the client
        * @param key Uniqu ID for the given job.
-       * @param args The index of the job and ID of the job to identify for workflow {index, jobID, endTime}.
+       * @param args The index of the job and ID of the job to identify for workflow {index, jobID, completionTime}.
        * @param executionDuration Execution time in minutes of the completed job.
        * @param resultIpfsHash Ipfs hash of the generated output files.
        */
@@ -158,7 +158,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
         uint32 executionDuration,
         bytes32 resultIpfsHash
     ) public whenProviderRunning {
-        require(args.endTime <= block.timestamp, "Ahead now");
+        require(args.completionTime <= block.timestamp, "Ahead now");
 
         /* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
            is not mapped to a job, this will throw automatically and revert all changes */
@@ -225,7 +225,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
 
-        if (!provider.receiptList.checkIfOverlapExists(job, uint32(args.endTime), int32(info.availableCore), core)) {
+        if (!provider.receiptList.checkIfOverlapExists(job, uint32(args.completionTime), int32(info.availableCore), core)) {
             // Important to check already refunded job or not, prevents double spending
             job.jobStateCode = Lib.JobStateCodes.REFUNDED;
             amountToRefund = jobInfo.received;
@@ -872,7 +872,7 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
             recipient,
             receivedWei,
             refundedWei,
-            args.endTime,
+            args.completionTime,
             resultIpfsHash,
             args.dataTransferIn,
             args.dataTransferOut
@@ -1015,10 +1015,10 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
 
     /**
      * @dev Returns balance of the requested address in Wei. It takes a provider's Ethereum address as parameter.
-     * @param _owner The address of the requester or provider.
+     * @param owner The address of the requester or provider.
      */
-    function balanceOf(address _owner) external view returns (uint256) {
-        return balances[_owner];
+    function balanceOf(address owner) external view returns (uint256) {
+        return balances[owner];
     }
 
     /* Returns a list of registered provider Ethereum addresses */
@@ -1048,9 +1048,10 @@ contract eBlocBroker is eBlocBrokerInterface, eBlocBrokerBase {
     }
 
     /**
-       @noticea
-       Checks whether or not the given Ethereum address of the requester
-       is already registered in eBlocBroker.
+     * @dev
+     * Checks whether or not the given Ethereum address of the requester
+     * is already registered in eBlocBroker.
+     * @param requester The address of requester
     */
     function doesRequesterExist(address requester) public view returns (bool) {
         return requesterCommittedBlock[requester] > 0;

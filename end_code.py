@@ -191,7 +191,7 @@ class ENDCODE:
         timestamp_file = f"{self.results_folder_prev}/timestamp.txt"
         cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file]
         success, files_to_remove = run_command(cmd, None, True)
-        if not files_to_remove or files_to_remove is not None:
+        if not files_to_remove or files_to_remove:
             logging.info(f"Files to be removed: \n{files_to_remove}\n")
 
         subprocess.run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
