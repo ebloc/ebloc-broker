@@ -97,7 +97,7 @@ def gdrive_submit_job(provider):
     folders_to_share = []
     # Full path of the sourceCodeFolders is given
     job_key_dict = {}
-    source_code_hash_list = []
+    source_code_hashes = []
     folderName_tar_hash = {}
 
     # sourceCode at index 0
@@ -145,7 +145,8 @@ def gdrive_submit_job(provider):
     dataTransferOut = 1
 
     storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]  # Covers public and private folders
+    # Covers private and public folders
+    cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     storage_hours = [1, 1]
     data_prices_set_blocknumbers = [0, 0]
 
@@ -153,7 +154,7 @@ def gdrive_submit_job(provider):
         tar_hash = folderName_tar_hash[folder_to_share]
         # Required to send string as bytes == str_data.encode('utf-8')
         source_code_hash = w3.toBytes(text=tar_hash)
-        source_code_hash_list.append(source_code_hash)
+        source_code_hashes.append(source_code_hash)
 
     tar_hash = folderName_tar_hash[folders_to_share[0]]
     jobKey = job_key_dict[tar_hash]
@@ -165,7 +166,7 @@ def gdrive_submit_job(provider):
         coreMin_list,
         provider,
         requester,
-        source_code_hash_list,
+        source_code_hashes,
         dataTransferIn_list,
         dataTransferOut,
         storage_hours,
@@ -186,7 +187,7 @@ def gdrive_submit_job(provider):
         dataTransferIn_list,
         dataTransferOut,
         storage_ids,
-        source_code_hash_list,
+        source_code_hashes,
         cacheType_list,
         storage_hours,
         account_id,

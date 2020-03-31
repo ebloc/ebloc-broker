@@ -17,7 +17,7 @@ interface eBlocBrokerInterface {
         address recipient,
         uint256 receivedWei, // Value in wei to be recevied by the provider
         uint256 refundedWei, // Value in wei to be refunded to the requester
-        uint256 endTime,
+        uint256 completionTime,
         bytes32 resultIpfsHash,
         uint256 dataTransferIn,
         uint256 dataTransferOut
