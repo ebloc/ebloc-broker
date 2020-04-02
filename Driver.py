@@ -80,7 +80,7 @@ def run_whisper_state_receiver():
     """Runs driverReceiver daemon on the background."""
     if not os.path.isfile(f"{HOME}/.eBlocBroker/whisperInfo.txt"):
         # First time running:
-        logging.info(f"run: {EBLOCPATH}/scripts/whisperInitialize.py")
+        logging.info(f"run: {EBLOCPATH}/scripts/whisper_initialize.py")
         terminate()
     else:
         success, data = read_json(f"{HOME}/.eBlocBroker/whisperInfo.txt")
@@ -90,7 +90,7 @@ def run_whisper_state_receiver():
 
         if not success or not config.w3.geth.shh.hasKeyPair(kId):
             logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
-            logging.warning("Please first run: scripts/whisperInitialize.py")
+            logging.warning("Please first run: scripts/whisper_initialize.py")
             terminate()
 
     if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
@@ -392,8 +392,9 @@ while True:
                 gdrive.run()
 
     time.sleep(1)
-    if len(logged_jobs_to_process) > 0 and int(max_val) != 0:
-        f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
+    if len(logged_jobs_to_process) > 0 and int(max_val) > 0:
+        # Updates the latest read block number
+        f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")
         block_read_from = int(max_val) + 1
         f_block_read_from.write(f"{block_read_from}")
         f_block_read_from.close()

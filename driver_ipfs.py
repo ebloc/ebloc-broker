@@ -5,13 +5,13 @@ import subprocess
 import time
 
 from config import bp, logging  # noqa: F401
+from lib_ipfs import get_ipfs_hash
 from lib import (
     LOG_PATH,
     CacheType,
     StorageID,
     calculate_folder_size,
-    get_ipfs_hash,
-    is_ipfs_hash_cached,
+    is_ipfs_hash_locally_cached,
     is_ipfs_hash_exists,
     is_ipfs_running,
     log,
@@ -20,6 +20,7 @@ from lib import (
 )
 from storage_class import Storage
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir
+from lib_git import git_initialize_check
 
 
 class IpfsClass(Storage):
@@ -69,7 +70,7 @@ class IpfsClass(Storage):
         if not success:
             return False
 
-        logging.info(f"is_ipfs_hash_cached={is_ipfs_hash_cached(self.job_key)}")
+        logging.info(f"is_ipfs_hash_locally_cached={is_ipfs_hash_locally_cached(self.job_key)}")
 
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
@@ -91,9 +92,9 @@ class IpfsClass(Storage):
 
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # Here scripts knows that provided IPFS hashes exists
-            logging.info(f"Attempting to get IPFS file {ipfs_hash}")
+            logging.info(f"Attempting to get IPFS file => {ipfs_hash}")
             is_hashed = False
-            if is_ipfs_hash_cached(ipfs_hash):
+            if is_ipfs_hash_locally_cached(ipfs_hash):
                 is_hashed = True
                 log(f"=> IPFS file {ipfs_hash} is already cached.", "blue")
 
@@ -104,6 +105,10 @@ class IpfsClass(Storage):
                 create_dir(target)
 
             get_ipfs_hash(ipfs_hash, target, False)
+
+            success = git_initialize_check(target)
+            if not success:
+                return False
 
             if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:
                 self.decrypt_using_minilock(ipfs_hash)

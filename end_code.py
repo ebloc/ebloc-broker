@@ -199,17 +199,26 @@ class ENDCODE:
     def upload(self) -> bool:
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
         logging.info(f"=> Patch for source_code {self.job_key}")
-        self.patch_name, self.patch_file, is_file_empty = git_diff_patch(self.results_folder, self.job_key, self.index, self.patch_folder)
+        try:
+            self.patch_name, self.patch_file, is_file_empty = git_diff_patch(self.results_folder, self.job_key, self.index, self.patch_folder, self.cloud_storage_id)
+        except:
+            return False
+
         if not is_file_empty:
             success = self._upload(self.results_folder, self.job_key, True)
             if not success:
                 return False
 
         for data_name in self.source_code_hashes_to_process[1:]:
-            # starting from 1st index for data files
+            # Starting from 1st index for data files
             logging.info(f"=> Patch for data-file {data_name}")
             data_path = f"{self.results_data_folder}/{data_name}"
-            self.patch_name, self.patch_file, is_file_empty = git_diff_patch(data_path, data_name, self.index, self.patch_folder)
+
+            try:
+                self.patch_name, self.patch_file, is_file_empty = git_diff_patch(data_path, data_name, self.index, self.patch_folder, self.cloud_storage_id)
+            except:
+                return False
+
             if not is_file_empty:
                 success = self._upload(data_path, data_name, False)
                 if not success:
@@ -266,7 +275,7 @@ class ENDCODE:
                 sys.exit(1)
 
             logging.info(f"Waiting for {attempt * 15} seconds to pass...")
-            # Short sleep here so this loop is not keeping CPU busy //setJobSuccess may deploy late.
+            # Short sleep here so this loop is not keeping CPU busy due to setJobSuccess may deploy late.
             time.sleep(15)
         else: # Failed all the attempts - abort
             sys.exit(1)
@@ -304,7 +313,6 @@ class ENDCODE:
 
 class IpfsMiniLockClass(ENDCODE):
     def __init__(self, **kwargs) -> None:
-        # logging.info("Entered into IPFS_MINILOCK case")
         super(self.__class__, self).__init__(**kwargs)
 
     def run_upload(self):
