@@ -173,7 +173,8 @@ if __name__ == "__main__":
             printc("Submitting job through IPFS...")
             ipfs_hashes = []
             for idx, folder in enumerate(folders):
-                success, ipfs_hash = ipfs_add(folder, True)
+                success, ipfs_hash = ipfs_add(folder)
+                # success, ipfs_hash = ipfs_add(folder, True)  # includes .git/
 
                 success, output = run_command(["ipfs", "refs", ipfs_hash])
                 config.bp()

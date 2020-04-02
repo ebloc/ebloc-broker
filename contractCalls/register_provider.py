@@ -20,7 +20,7 @@ eBlocBroker, w3 = connect()
 
 def register_provider(availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num):
     if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
-        return False, "Please first run: ../scripts/whisperInitialize.py"
+        return False, "Please first run: ../scripts/whisper_initialize.py"
     else:
         success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
@@ -30,7 +30,7 @@ def register_provider(availableCoreNum, email, federation_cloud_id, minilock_id,
             return (
                 False,
                 f"Whisper node's private key of a key pair did not match with the given ID.\n"
-                f"Please run: {EBLOCPATH}/scripts/whisperInitialize.py",
+                f"Please run: {EBLOCPATH}/scripts/whisper_initialize.py",
             )
 
     if doesProviderExist(PROVIDER_ID):
