@@ -9,6 +9,6 @@ git merge --squash HEAD@{1}
 
 # Commit those squashed changes.  The commit message will be helpfully
 # prepopulated with the commit messages of all the squashed commits:
-git commit -m "update"
+git commit # -m "update"
 
 git push -f
