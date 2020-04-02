@@ -96,7 +96,6 @@ class JobStateCodes(Enum):
     TIMEOUT = 6
 
 
-# Creates the hashmap.
 job_state_code = {}
 
 # Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
@@ -120,7 +119,6 @@ inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 
 def get_tx_status(success, output):
-    # from pprint import pformat
     logging.info(f"tx_hash={output}")
     receipt = config.w3.eth.waitForTransactionReceipt(output)
     logging.info("Transaction receipt mined: \n")
@@ -131,10 +129,10 @@ def get_tx_status(success, output):
 
 
 def check_size_of_file_before_download(file_type, key=None):
+    # TODO fill
     if int(file_type) == StorageID.IPFS.value or int(file_type) == StorageID.IPFS_MINILOCK.value:
-        if key is None:  # key refers to ipfs_hash
+        if not key:
             return False
-        pass
     elif int(file_type) == StorageID.EUDAT.value:
         pass
     elif int(file_type) == StorageID.GDRIVE.value:
@@ -161,7 +159,7 @@ def terminate():
     sys.exit(1)
 
 
-def try_except(f):
+def try_except(func):
     """Calls given function inside try/except
 
     Args:
@@ -170,10 +168,10 @@ def try_except(f):
     Returns status and output of the function
     """
     try:
-        return f()
+        return func()
     except Exception:
         logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
-        return False, None
+        return
 
 
 def get_ipfs_cumulative_size(source_code_hash):
@@ -229,20 +227,9 @@ def get_only_ipfs_hash(path) -> Tuple[bool, str]:
     return True, result_ipfs_hash
 
 
-def get_ipfs_hash(ipfs_hash, path, is_storage_paid):
-    output = subprocess.check_output(["ipfs", "get", ipfs_hash, f"--output={path}"]).decode("utf-8").rstrip()
-    logging.info(output)
-
-    if is_storage_paid:
-        # Pin downloaded ipfs hash if storage is paid
-        output = subprocess.check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
-        logging.info(output)
-
-
 def is_ipfs_hash_exists(ipfs_hash, attempt_count):
+    logging.info(f"Attempting to check IPFS file {ipfs_hash}")
     for attempt in range(attempt_count):
-        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
-        # IPFS_PATH=$HOME"/.ipfs" && export IPFS_PATH TODO: Probably not required
         timeout_duration = "300"  # Wait max 5 minutes.
         success, ipfs_stat = run_command(["timeout", timeout_duration, "ipfs", "object", "stat", ipfs_hash])
         if not success:
@@ -257,10 +244,10 @@ def is_ipfs_hash_exists(ipfs_hash, attempt_count):
         return False, None, None
 
 
-def ipfs_add(path, hidden=False):
+def ipfs_add(path, is_hidden=False):
     if os.path.isdir(path):
-        if hidden:
-            # Include files that are hidden. Only takes effect on recursive add.
+        if is_hidden:
+            # Include files that are hidden such as .git/. Only takes effect on recursive add.
             cmd = ["ipfs", "add", "-r", "--hidden", "--quieter", "--progress", path]
         else:
             cmd = ["ipfs", "add", "-r", "--quieter", "--progress", path]
@@ -326,7 +313,7 @@ def subprocess_call_attempt(cmd, attempt_count=1, print_flag=True):
             return subprocess.check_output(cmd).decode("utf-8").strip()
         except Exception:
             if not count and print_flag:
-                logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
+                logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
 
             if count + 1 == attempt_count:
                 raise SystemExit
@@ -388,7 +375,6 @@ def remove_files(file_name):
     else:
         if not silent_remove(file_name):
             return False
-
     return True
 
 
@@ -402,9 +388,9 @@ def echo_grep_awk(str_data, grep_str, awk_column):
     return p3.communicate()[0].decode("utf-8").strip()
 
 
-def eblocbroker_function_call(f, attempt):
+def eblocbroker_function_call(func, attempt):
     for attempt in range(attempt):
-        success, output = f()
+        success, output = func()
         if success:
             return True, output
         else:
@@ -417,14 +403,15 @@ def eblocbroker_function_call(f, attempt):
         return False, output
 
 
-def is_ipfs_hash_cached(ipfs_hash):
-    p1 = subprocess.Popen(["ipfs", "refs", "local"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "-c", ipfs_hash], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    output = p2.communicate()[0].decode("utf-8").strip()
-    if output == "1":
+def is_ipfs_hash_locally_cached(ipfs_hash) -> bool:
+    """Run ipfs --offline refs -r or ipfs --offline block stat etc even if your normal daemon is running.
+       With that you can check if something is available locally or no"""
+    try:
+        FNULL = open(os.devnull, "w")
+        subprocess.check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=FNULL)
+        FNULL.close()
         return True
-    else:
+    except Exception:
         return False
 
 
@@ -474,7 +461,6 @@ def is_transaction_passed(tx_hash):
     if receipt:
         if receipt["status"] == 1:
             return True
-
     return False
 
 
