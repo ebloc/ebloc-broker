@@ -1,4 +1,4 @@
-# How to Use eBlocBroker 
+# How to Use eBlocBroker
 
 ## About
 *eBlocBroker* is a blockchain based autonomous computational resource broker.
@@ -10,7 +10,7 @@
 
 [Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [IPFS](https://ipfs.io/docs/install/), [Slurm](https://github.com/SchedMD/slurm)
 
-## How to connect into Private Ethereum Blockchain (eBloc) 
+## How to connect into Private Ethereum Blockchain (eBloc)
 
 - Connect into [eBlocPOA](https://github.com/ebloc/eBlocPOA)
 - Connect into [eBlocPOW](https://github.com/ebloc/eBlocPOW)
@@ -35,9 +35,9 @@ Repeat passphrase:
 Address: {a0a50a64cac0744dea5287d1025b8ef28aeff36e}
 ```
 
-Your new account is locked with a password. Please give a password. Do not forget this password. Please enter a difficult passphrase for your account. 
+Your new account is locked with a password. Please give a password. Do not forget this password. Please enter a difficult passphrase for your account.
 
-You should see your `Keystore File (UTC / JSON)`under `keystore` directory. 
+You should see your `Keystore File (UTC / JSON)`under `keystore` directory.
 
 ```bash
 [~/eBlocPOA]$ ls keystore
@@ -57,7 +57,7 @@ Repeat passphrase:
 ["0x7d334606c71417f944ff8ba5c09e3672066244f8"]
 ```
 
-Now you should see your `Keystore File (UTC / JSON)`under `private/keystore` directory. 
+Now you should see your `Keystore File (UTC / JSON)`under `private/keystore` directory.
 
 ```bash
 [~/eBlocPOA]$ ls private/keystore
@@ -78,10 +78,10 @@ Laater, please do following inside your Amazon instance.
 
 ```bash
 # To run eBloc Etheruem Node
-$ eblocServer          
+$ eblocServer
 
 # To run eBlocBroker Driver
-$ cd $HOME/eBlocBroker 
+$ cd $HOME/eBlocBroker
 $ bash initialize.sh # Do it only once.
 $ sudo ./Driver.sh
 ```
@@ -90,17 +90,17 @@ $ sudo ./Driver.sh
 
 ### Cluster Side: How to register a cluster
 
-Please note the following: 
+Please note the following:
 
-- If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `./registerCluster.py` to submit your jobs. 
+- If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `./registerCluster.py` to submit your jobs.
 
 ```bash
 coreNumber         = 128;
 clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
-corePriceMinuteWei = 100; 
-ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"; 
+corePriceMinuteWei = 100;
+ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 
 ./registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 ```
@@ -109,9 +109,9 @@ ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 
 <!---
 ### Slurm Setup:
-Slurm should run on the background. Please run: 
+Slurm should run on the background. Please run:
 
-```bash 
+```bash
 sudo ./runSlurm.sh
 ```
 
@@ -177,7 +177,7 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-storageType     = 0 # Please note that '0' stands for IPFS repository share. 
+storageType     = 0 # Please note that '0' stands for IPFS repository share.
 ```
 
 #### **2. How to submit a job using EUDAT**
@@ -193,7 +193,7 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-storageType     = 1 # Please note that '1' stands for EUDAT repository share. 
+storageType     = 1 # Please note that '1' stands for EUDAT repository share.
 ```
 
 #### **3. How to submit a job using IPFS+miniLock**
@@ -223,7 +223,7 @@ mlck decrypt -f fileName --passphrase="$(cat mlck_password.txt)" --output-file=.
 Please update following arguments inside `submitJob.py` file.
 
 ```python
-clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit. 
+clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit.
 jobKey          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 coreNum         = 1
 coreGasDay      = 0
@@ -231,23 +231,23 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-storageType     = 2 # Please note 2 stands for IPFS with miniLock repository share. 
+storageType     = 2 # Please note 2 stands for IPFS with miniLock repository share.
 ```
 
 #### **4. How to submit a job using GitHub**
 
-If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`. Please update following arguments inside `submitJob.py` file. 
+If my github repository is `https://github.com/avatar-lavventura/simpleSlurmJob.git`. Please write your username followed by the folder name having '=' in between. Example: `avatar-lavventura=simpleSlurmJob`. Please update following arguments inside `submitJob.py` file.
 
 ```python
 clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit.
-jobKey          = "avatar-lavventura=simpleSlurmJob" 
+jobKey          = "avatar-lavventura=simpleSlurmJob"
 coreNum         = 1
 coreGasDay      = 0
 coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-storageType     = 3 # Please note that 3 stands for github repository share. 
+storageType     = 3 # Please note that 3 stands for github repository share.
 ```
 -------------------------
 
@@ -299,7 +299,7 @@ storageType     = 4 # Please note that 4 stands for gdrive repository share.
 
 ### **How to Obtain Submitted Job's Information:**
 
-You can use `./getJobInfo.py` to submit your jobs. 
+You can use `./getJobInfo.py` to submit your jobs.
 
 ```bash
 clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID that you have submitted your job.
@@ -308,7 +308,7 @@ index     = 0
 ./getJobInfo.py $clusterID $jobKey $index
 ```
 
-- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or `COMPLETED`. 
+- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or `COMPLETED`.
 
 -----------
 
