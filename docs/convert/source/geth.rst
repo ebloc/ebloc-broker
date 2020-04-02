@@ -81,7 +81,7 @@ Building from source
 
 .. code:: bash
 
-    git clone https://github.com/ethereum/go-ethereum 
+    git clone https://github.com/ethereum/go-ethereum
     cd go-ethereum/
     git pull
     make geth
@@ -104,8 +104,7 @@ Do following for both Linux and Mac
 After ``go-ethereum`` is installed, copy ``geth`` located under
 ``go-ethereum/build/bin`` into\ ``/usr/local/bin``:
 
-.. code:: bash
-
+.. code-block:: shell
     $ ls go-ethereum/build/bin
     geth
     $ sudo cp build/bin/geth /usr/local/bin/
@@ -151,7 +150,7 @@ Downloading
 
 .. code:: bash
 
-    cd $HOME 
+    cd $HOME
     git clone https://github.com/ebloc/eblocPOA.git
 
     cd eblocPOA

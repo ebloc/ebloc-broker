@@ -13,6 +13,7 @@ from os.path import expanduser
 from web3 import HTTPProvider, Web3
 
 import lib
+from lib import EBLOCPATH
 from utils import read_json
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
@@ -107,7 +108,7 @@ def main(_test_flag=False):
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
         # First time running:
-        log("Please first run: python whisperInitialize.py")
+        log(f"Please first run: {EBLOCPATH}/scripts/whisper_initialize.py")
         sys.exit(1)
     else:
         success, data = read_json(home + "/.eBlocBroker/whisperInfo.txt")

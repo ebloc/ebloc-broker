@@ -18,7 +18,7 @@ def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
         return
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
-        return False, "Please first run: ../scripts/whisperInitialize.py"
+        return False, "Please first run: ../scripts/whisper_initialize.py"
     else:
         success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
@@ -26,7 +26,7 @@ def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
         if not w3.geth.shh.hasKeyPair(kId):
             return (
                 False,
-                "Whisper node's private key of a key pair did not match with the given ID.\nPlease re-run: ../scripts/whisperInitialize.py",
+                "Whisper node's private key of a key pair did not match with the given ID.\nPlease re-run: ../scripts/whisper_initialize.py",
             )
 
     if len(federationCloudId) < 128 and len(email) < 128 and (len(minilock_id) == 0 or len(minilock_id) == 45):

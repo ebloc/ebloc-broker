@@ -19,7 +19,7 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
 
     home = expanduser("~")
     if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
-        return (False, "Please first run: python ~/eBlocBroker/scripts/whisperInitialize.py")
+        return (False, "Please first run: python ~/eBlocBroker/scripts/whisper_initialize.py")
     else:
         success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
