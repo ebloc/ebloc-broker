@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
         # First time running:
-        log("Please first run: python whisperInitialize.py")
+        log("Please first run: python whisper_initialize.py")
         sys.exit(1)
     else:
         success, data = read_json(home + "/.eBlocBroker/whisperInfo.txt")

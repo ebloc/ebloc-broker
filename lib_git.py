@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import subprocess
-import sys
 import time
 
 from config import bp, logging  # noqa: F401
@@ -9,7 +8,34 @@ from lib import printc, run_command, run_command_stdout_to_file
 from utils import getcwd, getsize, path_leaf, EBLOCPATH
 
 
-def git_diff_patch(path, source_code_hash, index, target_path) -> bool:
+def git_initialize_check(path):
+    cwd_temp = getcwd()
+    os.chdir(path)
+    if not is_git_initialized(path, True):
+        try:
+            run_command(["git", "init"])
+            git_add_all()
+        except Exception as error:
+            logging.error(f"E: {error}")
+            os.chdir(cwd_temp)
+            return False
+    os.chdir(cwd_temp)
+    return True
+
+
+def is_git_initialized(path, is_in_path=False):
+    if not is_in_path:
+        cwd_temp = getcwd()
+        os.chdir(path)
+    success, output = run_command(["git", "rev-parse", "--show-toplevel"])
+    if not is_in_path:
+        os.chdir(cwd_temp)
+    if not success:
+        return False
+    return path == output
+
+
+def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
     """
     * "git diff HEAD" for detecting all the changes:
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
@@ -20,33 +46,35 @@ def git_diff_patch(path, source_code_hash, index, target_path) -> bool:
     cwd_temp = getcwd()
     os.chdir(path)
 
+    """TODO
+    if not is_git_initialized(path):
+        upload everything
+    """
     success, output = run_command(["git", "config", "core.fileMode", "false"])
     # First ignore deleted files not to be added into git
     success, output = run_command(["bash", f"{EBLOCPATH}/git_ignore_deleted.sh"])
     success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
     patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
     logging.info(f"patch_name={patch_name}")
-    # File to be uploaded
-    patch_file = f"{target_path}/{patch_name}"
+    patch_file = f"{target_path}/{patch_name}"  # File to be uploaded
 
     success, output = run_command(["git", "add", "-A", ".", "-v"])
     if not success:
-        sys.exit(1)
+        os.chdir(cwd_temp)
+        raise Exception("git could not add files")
 
-    cmd = ["git", "diff", "--binary", "HEAD"]
     try:
+        cmd = ["git", "diff", "--binary", "HEAD"]
         run_command_stdout_to_file(cmd, patch_file)
     except:
         pass
 
     os.chdir(cwd_temp)
     time.sleep(0.1)
-
     if not getsize(patch_file):
         logging.info("Created patch file is empty, nothing to upload.")
         is_file_empty = True
         os.remove(patch_file)
-
     return patch_name, patch_file, is_file_empty
 
 
@@ -112,9 +140,7 @@ def is_git_repo(folders) -> bool:
     cwd_temp = getcwd()
     for idx, folder in enumerate(folders):
         os.chdir(folder)
-        _path = getcwd()
-        succuss, output = run_command(["git", "rev-parse", "--show-toplevel"])
-        if _path != output:
+        if is_git_initialized(folder):
             logging.warning(f".git does not exits in {folder}. Applying: git init")
             success, output = run_command(["git", "init"])
             logging.info(output)

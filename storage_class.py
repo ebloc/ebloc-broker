@@ -148,7 +148,7 @@ class Storage(BaseClass):
             link = Link(self.results_data_folder, self.results_data_link)
             link.link_folders()
 
-            # File permission for the requester's foders should be re-set.
+            #  File permission for the requester's foders should be re-set.
             path = f"{PROGRAM_PATH}/{self.requester_id}"
             success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
             success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{WHOAMI}:rwx", path])

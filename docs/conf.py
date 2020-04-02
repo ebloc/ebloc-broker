@@ -15,7 +15,6 @@
 import os
 import sys
 
-# -------
 import sphinx_rtd_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -95,6 +94,7 @@ exclude_patterns = ["_build"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 
+
 # Custom solidity lexer
 def setup(sphinx):
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -160,6 +160,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+#  html_css_files = ["css/custom.css"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -222,4 +223,4 @@ html_static_path = ["_static"]
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "EblocBroker"
+htmlhelp_basename = "eBlocBroker"
