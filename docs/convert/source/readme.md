@@ -92,17 +92,17 @@ $ sudo ./Driver.sh
 
 Please note the following:
 
-- If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `./register_provider.py` to submit your jobs.
+- If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can use `./registerCluster.py` to submit your jobs.
 
 ```bash
 coreNumber         = 128;
 clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-minilock_id         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
+miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100;
 ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 
-./register_provider.py $coreNumber $clusterEmail $federationCloudId $minilock_id $corePriceMinuteWei $ipfsID
+./registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
 ```
 
 - A Python daemon program called *Driver* is responsible for facilitating the communication between the eBlocBroker smart contract and the Slurm resource manager. After the cluster is registered please run: `./Driver.py`
@@ -154,7 +154,7 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 
 ### **How to Submit a Job**
 
-In order to submit your job each user should already registered into eBlocBroker.You can use `./register_requester.py` to register. Please update followin arguments inside `register_requester.py` file.
+In order to submit your job each user should already registered into eBlocBroker.You can use `./registerUser.py` to register. Please update followin arguments inside `registerUser.py` file.
 
 `account`, `userEmail`, `federationCloudID`, `miniLockID`, and `ipfsAddress`.
 
@@ -299,13 +299,13 @@ storageType     = 4 # Please note that 4 stands for gdrive repository share.
 
 ### **How to Obtain Submitted Job's Information:**
 
-You can use `./get_job_info.py` to submit your jobs.
+You can use `./getJobInfo.py` to submit your jobs.
 
 ```bash
 clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID that you have submitted your job.
 jobKey    = "6a6783e74a655aad01bf2d1202362685"
 index     = 0
-./get_job_info.py $clusterID $jobKey $index
+./getJobInfo.py $clusterID $jobKey $index
 ```
 
 - Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or `COMPLETED`.
