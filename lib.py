@@ -12,16 +12,15 @@ import time
 import traceback
 from datetime import datetime, timedelta
 from enum import Enum
-from os.path import expanduser
 from shutil import copyfile
 from typing import Tuple
 
-from dotenv import load_dotenv
 from termcolor import colored
 
 import config
-from config import logging, RPC_PORT
+from config import bp, logging  # noqa: F401
 from lib_mongodb import add_item
+from settings import WHERE, init_env
 from utils import byte_to_mb, read_json
 
 
@@ -32,38 +31,6 @@ def enum(*sequential, **named):
     enums["reverse_mapping"] = reverse
     return type("Enum", (), enums)
 
-
-def WHERE(back=0):
-    try:
-        frame = sys._getframe(back + 1)
-    except:
-        frame = sys._getframe(1)
-
-    return "%s/%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name)
-
-
-HOME = expanduser("~")
-# Load .env from the given path
-load_dotenv(os.path.join(f"{HOME}/.eBlocBroker/", ".env"))
-
-WHOAMI = os.getenv("WHOAMI")
-SLURMUSER = os.getenv("SLURMUSER")
-LOG_PATH = os.getenv("LOG_PATH")
-GDRIVE = os.getenv("GDRIVE")
-OC_USER = os.getenv("OC_USER")
-IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
-EUDAT_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1")
-
-GDRIVE_CLOUD_PATH = f"/home/{WHOAMI}/foo"
-GDRIVE_METADATA = f"/home/{WHOAMI}/.gdrive"
-IPFS_REPO = f"/home/{WHOAMI}/.ipfs"
-OWN_CLOUD_PATH = "/oc"
-
-PROGRAM_PATH = "/var/eBlocBroker"
-JOBS_READ_FROM_FILE = f"{LOG_PATH}/test.txt"
-CANCEL_JOBS_READ_FROM_FILE = f"{LOG_PATH}/cancelledJobs.txt"
-BLOCK_READ_FROM_FILE = f"{LOG_PATH}/blockReadFrom.txt"
-CANCEL_BLOCK_READ_FROM_FILE = f"{LOG_PATH}/cancelledBlockReadFrom.txt"
 
 if config.w3 is None:
     from imports import connect_to_web3
@@ -116,6 +83,46 @@ job_state_code["TIMEOUT"] = 6
 job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
+
+
+def printc(text, color="white"):
+    print(colored(f"\033[1m{text}\033[0m", color))
+
+
+def session_start_msg(slurm_user, columns=100):
+    log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan")
+    printc(f"slurm_user={slurm_user} ] provider_address={PROVIDER_ID}", "blue")
+
+
+def run_driver_cancel():
+    """Runs driver_cancel daemon on the background."""
+    if not is_process_on("python.*[d]riverCancel", "driverCancel"):
+        # Running driver_cancel.py on the background if it is not already
+        config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
+
+
+def run_whisper_state_receiver():
+    env = init_env()
+    """Runs driverReceiver daemon on the background."""
+    if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
+        # First time running:
+        logging.info(f"run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
+        terminate()
+    else:
+        success, data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+        kId = {}
+        if success:
+            kId = data["kId"]
+
+        if not success or not config.w3.geth.shh.hasKeyPair(kId):
+            logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
+            logging.warning("Please first run: scripts/whisper_initialize.py")
+            terminate()
+
+    if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
+        # Running driver_cancel.py on the background
+        # TODO: should be '0' to store log at a file and not print output
+        config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
 
 
 def get_tx_status(success, output):
@@ -283,11 +290,11 @@ def calculate_folder_size(path) -> float:
     return byte_to_mb(byte_size)
 
 
-def printc(text, color="white"):
-    print(colored(f"\033[1m{text}\033[0m", color))
+def log(text, color="", is_new_line=True, filename=None):
+    if not filename:
+        env = init_env()
+        filename = f"{env.LOG_PATH}/transactions/providerOut.txt"
 
-
-def log(text, color="", is_new_line=True, filename=f"{LOG_PATH}/transactions/providerOut.txt"):
     if color != "":
         if is_new_line:
             printc(text)
@@ -446,7 +453,8 @@ def is_ipfs_on() -> bool:
 
 def is_geth_on():
     """ Checks whether geth runs on the background."""
-    port = str(RPC_PORT)
+    env = init_env()
+    port = str(env.RPC_PORT)
     port = insert_character(port, 1, "]")
     port = insert_character(port, 0, "[")
     return is_process_on(f"geth.*{port}", "Geth")
@@ -466,6 +474,7 @@ def is_transaction_passed(tx_hash):
 
 # Checks that does IPFS run on the background or not
 def is_ipfs_running():
+    env = init_env()
     output = is_ipfs_on()
     if output:
         return True
@@ -473,7 +482,7 @@ def is_ipfs_running():
         logging.error("E: IPFS does not work on the background.")
         logging.info("* Starting IPFS: nohup ipfs daemon --mount &")
         cmd = ["nohup", "ipfs", "daemon", "--mount"]
-        path = f"{LOG_PATH}/ipfs.out"
+        path = f"{env.LOG_PATH}/ipfs.out"
         with open(path, "w") as stdout:
             subprocess.Popen(cmd, stdout=stdout, stderr=stdout, preexec_fn=os.setpgrp)
             logging.info(f"Writing into {path} is completed.")

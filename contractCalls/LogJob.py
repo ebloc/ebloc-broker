@@ -7,8 +7,8 @@ Guide asynchronous polling: http://web3py.readthedocs.io/en/latest/filters.html#
 import sys
 import time
 
-import lib
 from imports import connect
+from lib import CacheType, StorageID
 from utils import bytes32_to_ipfs
 
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         # print(logged_jobs[i])
         cloudStorageID = logged_job.args["cloudStorageID"]
         """
-        if lib.StorageID.IPFS.value == cloudStorageID or lib.cloudStorageID.IPFS_MINILOCK.value == cloudStorageID:
+        if StorageID.IPFS.value == cloudStorageID or cloudStorageID.IPFS_MINILOCK.value == cloudStorageID:
             jobKey = bytes32_to_ipfs(logged_jobs[i].args['jobKey'])
         else:
             jobKey = logged_jobs[i].args['jobKey']
@@ -92,8 +92,8 @@ if __name__ == "__main__":
         print("provider: " + logged_job.args["provider"])
         print("jobKey: " + logged_job.args["jobKey"])
         print("index: " + str(logged_job.args["index"]))
-        print("cloudStorageID: " + str(lib.StorageID(cloudStorageID).name))
-        print("cacheType: " + str(lib.CacheType(logged_job.args["cacheType"]).name))
+        print("cloudStorageID: " + str(StorageID(cloudStorageID).name))
+        print("cacheType: " + str(CacheType(logged_job.args["cacheType"]).name))
         print("received: " + str(logged_job.args["received"]))
 
         for value in logged_job.args["sourceCodeHash"]:

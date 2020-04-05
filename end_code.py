@@ -16,37 +16,21 @@ from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
-from lib import (
-    job_state_code,
-    remove_files,
-    GDRIVE,
-    GDRIVE_METADATA,
-    HOME,
-    LOG_PATH,
-    PROGRAM_PATH,
-    PROVIDER_ID,
-    WHERE,
-    StorageID,
-    eblocbroker_function_call,
-    get_ipfs_cumulative_size,
-    ipfs_add,
-    remove_empty_files_and_folders,
-    run_command,
-    run_command_stdout_to_file,
-    subprocess_call_attempt,
-    is_dir,
-    silent_remove,
-    calculate_folder_size,
-)
+from lib import (StorageID, calculate_folder_size, eblocbroker_function_call,
+                 get_ipfs_cumulative_size, ipfs_add, is_dir, job_state_code,
+                 remove_empty_files_and_folders, remove_files, run_command,
+                 run_command_stdout_to_file, silent_remove, subprocess_call_attempt)
 from lib_gdrive import get_data_key_ids, get_gdrive_file_info
 from lib_git import git_diff_patch, git_pin
 from lib_mongodb import find_key
 from lib_owncloud import upload_results_to_eudat
 from lib_slurm import get_elapsed_raw_time, get_job_end_time
-from utils import byte_to_mb, eth_address_to_md5, read_json, bytes32_to_ipfs, create_dir
+from settings import WHERE, init_env
+from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
 
 eBlocBroker, w3 = connect()
 mc = MongoClient()
+env = init_env()
 
 
 class ENDCODE:
@@ -69,8 +53,8 @@ class ENDCODE:
         # my_env = os.environ.copy();
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"
         # print(my_env)
-        os.environ["IPFS_PATH"] = f"{HOME}/.ipfs"
-        logging = load_log(f"{LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
+        os.environ["IPFS_PATH"] = f"{env.HOME}/.ipfs"
+        logging = load_log(f"{env.LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
         logging.info(f"=> Entered into {self.__class__.__name__} case.")
         logging.info(f"START: {datetime.datetime.now()}")
         self.job_id = 0  # TODO: should be mapped slurm_job_id
@@ -81,7 +65,7 @@ class ENDCODE:
             sys.exit(1)
 
         success, self.job_info = eblocbroker_function_call(
-            lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
+            lambda: get_job_info(env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
         )
         if not success:
             sys.exit(1)
@@ -89,7 +73,7 @@ class ENDCODE:
         requester_id = self.job_info["jobOwner"].lower()
         requester_id_address = eth_address_to_md5(requester_id)
         success, self.requester_info = get_requester_info(requester_id)
-        self.results_folder_prev = f"{PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
+        self.results_folder_prev = f"{env.PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
         is_dir(self.results_folder_prev)
 
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
@@ -97,21 +81,21 @@ class ENDCODE:
 
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.results_data_folder = f"{self.results_folder_prev}/data"
-        self.private_dir = f"{PROGRAM_PATH}/{requester_id_address}/cache"
+        self.private_dir = f"{env.PROGRAM_PATH}/{requester_id_address}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
 
         create_dir(self.patch_folder)
         remove_empty_files_and_folders(self.results_folder)
 
         logging.info(f"whoami: {getpass.getuser()} - {os.getegid()}")
-        logging.info(f"home: {HOME}")
+        logging.info(f"home: {env.HOME}")
         logging.info(f"pwd: {os.getcwd()}")
         logging.info(f"results_folder: {self.results_folder}")
         logging.info(f"job_key: {self.job_key}")
         logging.info(f"index: {self.index}")
         logging.info(f"cloud_storage_id: {self.cloud_storage_id}")
         logging.info(f"folder_name: {self.folder_name}")
-        logging.info(f"providerID: {PROVIDER_ID}")
+        logging.info(f"providerID: {env.PROVIDER_ID}")
         logging.info(f"requester_id_address: {requester_id_address}")
         logging.info(f"received: {self.job_info['received']}")
 
@@ -155,7 +139,7 @@ class ENDCODE:
             sys.exit(1)
 
         logging.info(f"processPayment()_tx_hash={tx_hash}")
-        f = open(f"{LOG_PATH}/transactions/{PROVIDER_ID}.txt", "a")
+        f = open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a")
         f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
         f.close()
 
@@ -269,7 +253,7 @@ class ENDCODE:
                 sys.exit(1)
 
             success, self.job_info = eblocbroker_function_call(
-                lambda: get_job_info(PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
+                lambda: get_job_info(env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
             )
             if not success:
                 sys.exit(1)
@@ -282,7 +266,7 @@ class ENDCODE:
 
         success, self.job_info = eblocbroker_function_call(
             lambda: get_job_source_code_hashes(
-                self.job_info, PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number
+                self.job_info, env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number
             ),
             10,
         )
@@ -389,7 +373,7 @@ class GdriveClass(ENDCODE):
                     logging.error(f"[{WHERE(1)}] E: {key} does not have a match in meta_data.json")
                     return False
 
-            cmd = [GDRIVE, "info", "--bytes", key, "-c", GDRIVE_METADATA]
+            cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
             gdrive_info = subprocess_call_attempt(cmd, 5)
         except:
             logging.error(f"[{WHERE(1)}] E: {key} does not have a match. meta_data={meta_data}")
@@ -403,22 +387,22 @@ class GdriveClass(ENDCODE):
         if "folder" in mime_type:
             # Received job is in folder format
             logging.info("mime_type=folder")
-            cmd = [GDRIVE, "upload", "--parent", key, self.patch_file, "-c", GDRIVE_METADATA]
+            cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type:
             # Received job is in folder tar.gz
             logging.info("mime_type=tar.gz")
-            cmd = [GDRIVE, "update", key, self.patch_file, "-c", GDRIVE_METADATA]
+            cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "/zip" in mime_type:
             # Received job is in zip format
             logging.info("mime_type=zip")
-            cmd = [GDRIVE, "update", key, self.patch_file, "-c", GDRIVE_METADATA]
+            cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         else:
             logging.error("E: Files could not be uploaded")
             return False
         try:
             logging.info(subprocess_call_attempt(cmd, 5))
         except:
-            logging.error(f"[{WHERE(1)}] E: gdrive could not upload the file.")
+            logging.error(f"[{env.WHERE(1)}] E: gdrive could not upload the file.")
             return False
 
         return True

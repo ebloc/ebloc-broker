@@ -12,8 +12,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
+import doctest
 import os
+import sys
+
+#-------
+import sphinx_rtd_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -119,8 +123,6 @@ todo_include_todos = False
 # a list of builtin themes.
 #html_theme = 'alabaster'
 
-#-------
-import sphinx_rtd_theme
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -227,7 +229,6 @@ htmlhelp_basename = 'EblocBroker'
 
 # -- Doctest configuration ----------------------------------------
 
-import doctest
 
 doctest_default_flags = (0
     | doctest.DONT_ACCEPT_TRUE_FOR_1

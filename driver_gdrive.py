@@ -4,23 +4,16 @@ import os
 import subprocess
 import time
 
-import lib
 from config import bp, logging  # noqa: F401
 from contractCalls.get_provider_info import get_provider_info
-from lib import (
-    WHERE,
-    CacheType,
-    calculate_folder_size,
-    echo_grep_awk,
-    is_run_exists_in_tar,
-    log,
-    run_command,
-    silent_remove,
-    subprocess_call_attempt,
-)
+from lib import (WHERE, CacheType, calculate_folder_size, echo_grep_awk, is_run_exists_in_tar, log,
+                 run_command, silent_remove, subprocess_call_attempt)
 from lib_gdrive import gdrive_get_file_id, gdrive_size, get_gdrive_file_info
+from settings import init_env
 from storage_class import Storage
 from utils import byte_to_mb, create_dir, generate_md5sum
+
+env = init_env()
 
 
 class GdriveClass(Storage):
@@ -183,7 +176,7 @@ class GdriveClass(Storage):
 
     def get_data_init(self, id, key, is_job_key=False):
         try:
-            gdrive_info = subprocess_call_attempt(["gdrive", "info", "--bytes", key, "-c", lib.GDRIVE_METADATA], 10)
+            gdrive_info = subprocess_call_attempt(["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA], 10)
         except:
             return False
 
@@ -219,7 +212,7 @@ class GdriveClass(Storage):
                 return False
 
             try:
-                cmd = ["gdrive", "info", "--bytes", key, "-c", lib.GDRIVE_METADATA]
+                cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call_attempt(cmd, 10)
             except:
                 return False
@@ -239,7 +232,7 @@ class GdriveClass(Storage):
 
         if "gzip" in mime_type:
             try:
-                cmd = ["gdrive", "info", "--bytes", key, "-c", lib.GDRIVE_METADATA]
+                cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call_attempt(cmd, 10)
             except:
                 return False
@@ -282,7 +275,7 @@ class GdriveClass(Storage):
             return False
 
     def run(self) -> bool:
-        log(f"=> New job has been received. Googe Drive call | {time.ctime()}", "blue")
+        log(f"[{time.ctime()}] New job has been received through Google Drive", "blue")
         success, provider_info = get_provider_info(self.logged_job.args["provider"])
 
         if not os.path.isdir(self.results_folder):

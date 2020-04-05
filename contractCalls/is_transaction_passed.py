@@ -3,21 +3,22 @@
 import sys
 
 import lib
-from imports import connect
+from imports import connect_to_web3
 
 
 def is_transaction_passed(tx_hash):
-    eBlocBroker, w3 = connect()
+    w3 = connect_to_web3()
     if w3 is None:
         sys.exit(1)
 
-    return lib.is_transaction_passed(w3, tx_hash)
+    return lib.is_transaction_passed(tx_hash)
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         tx_hash = str(sys.argv[1])
     else:
+        print("Please provide tx as an argument")
         sys.exit(1)
 
-    print("is_transaction_passed=" + str(is_transaction_passed(tx_hash)))
+    print(f"is_transaction_passed={is_transaction_passed(tx_hash)}")

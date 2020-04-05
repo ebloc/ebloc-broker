@@ -7,7 +7,7 @@ import sys
 import time
 
 import config
-from config import EBLOCPATH, bp, load_log  # noqa: F401
+from config import bp, load_log  # noqa: F401
 from contract.scripts.lib import DataStorage
 from contractCalls.doesProviderExist import doesProviderExist
 from contractCalls.doesRequesterExist import doesRequesterExist
@@ -23,84 +23,20 @@ from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
 from driver_ipfs import IpfsClass
 from imports import connect
-from lib import (
-    BLOCK_READ_FROM_FILE,
-    EUDAT_USE,
-    HOME,
-    IPFS_USE,
-    LOG_PATH,
-    OC_USER,
-    PROGRAM_PATH,
-    PROVIDER_ID,
-    WHOAMI,
-    CacheType,
-    StorageID,
-    is_driver_on,
-    is_geth_on,
-    is_ipfs_running,
-    is_process_on,
-    job_state_code,
-    log,
-    printc,
-    run_command,
-    terminate,
-)
+from lib import (CacheType, StorageID, is_driver_on, is_geth_on, is_ipfs_running, job_state_code,
+                 log, printc, run_command, run_whisper_state_receiver, session_start_msg, terminate)
 from lib_owncloud import eudat_login
 from lib_slurm import get_idle_cores, is_slurm_on, slurm_pending_jobs_check
+from settings import init_env
 from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
 
-# Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
-subprocess.run(["sudo", "printf", ""])
-
-logging = load_log(f"{LOG_PATH}/transactions/providerOut.txt")
-
-config.eBlocBroker, config.w3 = connect()
-
-if config.eBlocBroker is None or config.w3 is None:
-    terminate()
-
-oc = None
-driver_cancel_process = None
-whisper_state_receiver_process = None
-my_env = os.environ.copy()
-
-if not PROVIDER_ID:
-    logging.error("PROVIDER_ID is None")
-    terminate()
+env = init_env()
 
 
-def run_driver_cancel():
-    """Runs driver_cancel daemon on the background."""
-    if not is_process_on("python.*[d]riverCancel", "driverCancel"):
-        # Running driver_cancel.py on the background if it is not already
-        config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
-
-
-def run_whisper_state_receiver():
-    """Runs driverReceiver daemon on the background."""
-    if not os.path.isfile(f"{HOME}/.eBlocBroker/whisperInfo.txt"):
-        # First time running:
-        logging.info(f"run: {EBLOCPATH}/scripts/whisper_initialize.py")
-        terminate()
-    else:
-        success, data = read_json(f"{HOME}/.eBlocBroker/whisperInfo.txt")
-        kId = {}
-        if success:
-            kId = data["kId"]
-
-        if not success or not config.w3.geth.shh.hasKeyPair(kId):
-            logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
-            logging.warning("Please first run: scripts/whisper_initialize.py")
-            terminate()
-
-    if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
-        # Running driver_cancel.py on the background
-        # TODO: should be '0' to store log at a file and not print output
-        config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
-
-
-def startup():
+def startup(slurm_user):
     """ Startup functions are called."""
+    session_start_msg(slurm_user)
+
     oc = None
     if is_driver_on():
         printc("Track output: tail -f ~/.eBlocBroker/transactions/providerOut.txt", "blue")
@@ -115,47 +51,56 @@ def startup():
 
     # run_driver_cancel()
     run_whisper_state_receiver()
-    if EUDAT_USE:
-        if OC_USER is None or OC_USER == "":
-            logging.error(f"OC_USER is not set in {EBLOCPATH}/.env")
+    if env.EUDAT_USE:
+        if env.OC_USER is None or env.OC_USER == "":
+            logging.error(f"OC_USER is not set in {env.EBLOCPATH}/.env")
+            terminate()
+        oc = eudat_login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
+
+    if env.GDRIVE_USE:
+        success, output = run_command(["gdrive", "version"])
+        if not success:
+            logging.warning("Please install gdrive or check its path")
             terminate()
 
-        oc = eudat_login(OC_USER, f"{LOG_PATH}/eudat_password.txt", ".oc.pckl")
+    if env.IPFS_USE:
+        is_ipfs_running()
 
     return oc
 
+# Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
+subprocess.run(["sudo", "printf", ""])
 
-def check_programs():
-    success, output = run_command(["gdrive", "version"])
-    if not success:
-        logging.warning("Please install gdrive or check its path")
-        terminate()
+logging = load_log(f"{env.LOG_PATH}/transactions/providerOut.txt")
+config.eBlocBroker, config.w3 = connect()
 
-    if IPFS_USE:
-        is_ipfs_running()
+if config.eBlocBroker is None or config.w3 is None:
+    terminate()
 
-
-# output = subprocess.check_output(['stty', 'size']).decode('utf-8').strip()
-# rows = output[0] columns = output[1]
 columns = 100
-check_programs()
+oc = None
+driver_cancel_process = None
+whisper_state_receiver_process = None
+my_env = os.environ.copy()
+
+if not env.PROVIDER_ID:
+    logging.error("PROVIDER_ID is None")
+    terminate()
+
+
 yes = set(["yes", "y", "ye"])
 no = set(["no", "n"])
-if WHOAMI == "" or EBLOCPATH == "" or PROVIDER_ID == "":
+if env.WHOAMI == "" or env.EBLOCPATH == "" or env.PROVIDER_ID == "":
     logging.warning("Please run: ./folder_setup.sh")
     terminate()
 
 # os.getenv('SLURMUSERR')
 slurm_user = os.getenv("SLURMUSER")
-if not os.getenv("SLURMUSER"):
+if not slurm_user:
     logging.error("SLURMUSER is not set in .bashrc or .zshrc")
     terminate()
 
-printc(f"slurm_user={slurm_user}")
-
-log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan")
-
-oc = startup()
+oc = startup(slurm_user)
 is_contract_exists = is_contract_exists()
 if not is_contract_exists:
     logging.error("Please check that you are using eBlocPOA blockchain")
@@ -163,7 +108,7 @@ if not is_contract_exists:
 
 logging.info(f"is_web3_connected={is_web3_connected()}")
 logging.info(f"rootdir={os.getcwd()}")
-logging.info(f"whoami={WHOAMI}")
+logging.info(f"whoami={env.WHOAMI}")
 
 success, contract = read_json("contractCalls/contract.json")
 if not success:
@@ -171,28 +116,26 @@ if not success:
 contractAddress = contract["address"]
 logging.info("{0: <18}".format("contract_address:") + contractAddress)
 
-if not doesProviderExist(PROVIDER_ID):
+if not doesProviderExist(env.PROVIDER_ID):
     logging.error(
-        f"E: Your Ethereum address {PROVIDER_ID}"
+        f"E: Your Ethereum address {env.PROVIDER_ID}"
         "does not match with any provider in eBlocBroker. Please register your \n"
         "provider using your Ethereum Address in to the eBlocBroker. You can \n"
         "use 'contractCalls/register_provider.py' script to register your provider."
     )
     terminate()
 
-if not config.eBlocBroker.functions.isOrcIDVerified(PROVIDER_ID).call():
+if not config.eBlocBroker.functions.isOrcIDVerified(env.PROVIDER_ID).call():
     logging.error("E: Provider's orcid is not verified.")
     terminate()
 
 deployed_block_number = get_deployed_block_number()
-logging.info("{0: <18}".format("provider_address:") + PROVIDER_ID)
-
-if not os.path.isfile(BLOCK_READ_FROM_FILE):
-    f = open(BLOCK_READ_FROM_FILE, "w")
+if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
+    f = open(env.BLOCK_READ_FROM_FILE, "w")
     f.write(f"{deployed_block_number}")
     f.close()
 
-f = open(BLOCK_READ_FROM_FILE, "r")
+f = open(env.BLOCK_READ_FROM_FILE, "r")
 block_read_from_local = f.read().strip()
 f.close()
 
@@ -203,7 +146,7 @@ if not block_read_from_local.isdigit():
         choice = input().lower()
         if choice in yes:
             block_read_from_local = deployed_block_number
-            f = open(BLOCK_READ_FROM_FILE, "w")
+            f = open(env.BLOCK_READ_FROM_FILE, "w")
             f.write(deployed_block_number)
             f.close()
             break
@@ -213,7 +156,7 @@ if not block_read_from_local.isdigit():
             sys.stdout.warning("Please respond with 'yes' or 'no'")
 
 block_read_from = str(block_read_from_local)
-balance_temp = get_balance(PROVIDER_ID)
+balance_temp = get_balance(env.PROVIDER_ID)
 logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
 
 while True:
@@ -221,7 +164,7 @@ while True:
         logging.error(f"block_read_from={block_read_from}")
         terminate()
 
-    balance = get_balance(PROVIDER_ID)
+    balance = get_balance(env.PROVIDER_ID)
     success, squeue_output = run_command(["squeue"])
     if "squeue: error:" in str(squeue_output):
         logging.error(f"SLURM is not running on the background, please run: sudo ./runSlurm.sh.")
@@ -232,7 +175,7 @@ while True:
     log(f"Current Slurm Running jobs success:\n {squeue_output}")
     log("-" * int(columns), "green")
     if "notconnected" != balance:
-        log(f"Current Time: {time.ctime()} | provider_gained_wei={int(balance) - int(balance_temp)}")
+        log(f"[{time.ctime()}] provider_gained_wei={int(balance) - int(balance_temp)}")
 
     log(f"Waiting new job to come since block number={block_read_from}", "green")
     current_block_number = get_block_number()
@@ -247,7 +190,7 @@ while True:
     block_read_from = str(block_read_from)  # Starting reading event's location has been updated
     # block_read_from = '3082590' # used for test purposes
     slurm_pending_jobs_check()
-    logged_jobs_to_process = run_log_job(block_read_from, PROVIDER_ID)
+    logged_jobs_to_process = run_log_job(block_read_from, env.PROVIDER_ID)
     max_val = 0
     is_provider_received_job = False
     is_already_cached = {}
@@ -279,7 +222,7 @@ while True:
             else:
                 source_code_hash = config.w3.toText(source_code_hash_byte)
 
-            ds = DataStorage(config.eBlocBroker, config.w3, PROVIDER_ID, source_code_hash_byte)
+            ds = DataStorage(config.eBlocBroker, config.w3, env.PROVIDER_ID, source_code_hash_byte)
             received_block.append(ds.received_block)
             storageDuration.append(ds.storage_duration)
 
@@ -313,11 +256,11 @@ while True:
         if logged_job["blockNumber"] > int(max_val):
             max_val = logged_job["blockNumber"]
 
-        success, str_check = run_command(["bash", f"{EBLOCPATH}/str_check.sh", job_key])
+        success, str_check = run_command(["bash", f"{env.EBLOCPATH}/str_check.sh", job_key])
         job_infos_to_process = []
         job_id = 0
         for attempt in range(10):
-            success, job_info = get_job_info(PROVIDER_ID, job_key, index, job_id, block_number)
+            success, job_info = get_job_info(env.PROVIDER_ID, job_key, index, job_id, block_number)
             if not success:
                 print(job_info)
 
@@ -336,7 +279,7 @@ while True:
             break
 
         for job in range(1, len(job_infos_to_process[0]["core"])):
-            job_info = get_job_info(PROVIDER_ID, job_key, index, job, block_number)
+            job_info = get_job_info(env.PROVIDER_ID, job_key, index, job, block_number)
             if not job_info:
                 # Adds jobs if workflow exist
                 job_infos_to_process.append(job_info)
@@ -372,7 +315,7 @@ while True:
 
         if not is_pass:
             logging.info("Adding user...")
-            success, output = run_command(["sudo", "bash", f"{EBLOCPATH}/user.sh", requester_id, PROGRAM_PATH, slurm_user])
+            success, output = run_command(["sudo", "bash", f"{env.EBLOCPATH}/user.sh", requester_id, env.PROGRAM_PATH, slurm_user])
             logging.info(output)
             requester_md5_id = eth_address_to_md5(requester_id)
             slurm_pending_jobs_check()
@@ -382,7 +325,7 @@ while True:
                 ipfs.run()
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
-                    eudat_login(OC_USER, f"{LOG_PATH}/eudat_password.txt", ".oc.pckl")
+                    eudat_login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
                 eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc)
                 eudat.run()
@@ -394,7 +337,7 @@ while True:
     time.sleep(1)
     if len(logged_jobs_to_process) > 0 and int(max_val) > 0:
         # Updates the latest read block number
-        f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")
+        f_block_read_from = open(env.BLOCK_READ_FROM_FILE, "w")
         block_read_from = int(max_val) + 1
         f_block_read_from.write(f"{block_read_from}")
         f_block_read_from.close()
@@ -402,7 +345,7 @@ while True:
     # If there is no submitted job for the provider, block start to read from current block number
     if not is_provider_received_job:
         # Updates the latest read block number on the file
-        f_block_read_from = open(BLOCK_READ_FROM_FILE, "w")
+        f_block_read_from = open(env.BLOCK_READ_FROM_FILE, "w")
         f_block_read_from.write(f"{current_block_number}")
         f_block_read_from.close()
         block_read_from = str(current_block_number)

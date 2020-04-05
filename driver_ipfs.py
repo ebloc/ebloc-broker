@@ -5,22 +5,13 @@ import subprocess
 import time
 
 from config import bp, logging  # noqa: F401
+from lib import (CacheType, StorageID, calculate_folder_size, is_ipfs_hash_exists,
+                 is_ipfs_hash_locally_cached, is_ipfs_running, log, run_command, silent_remove)
+from lib_git import git_initialize_check
 from lib_ipfs import get_ipfs_hash
-from lib import (
-    LOG_PATH,
-    CacheType,
-    StorageID,
-    calculate_folder_size,
-    is_ipfs_hash_locally_cached,
-    is_ipfs_hash_exists,
-    is_ipfs_running,
-    log,
-    run_command,
-    silent_remove,
-)
+from settings import init_env
 from storage_class import Storage
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir
-from lib_git import git_initialize_check
 
 
 class IpfsClass(Storage):
@@ -32,7 +23,8 @@ class IpfsClass(Storage):
         self.cumulative_sizes = {}
 
     def decrypt_using_minilock(self, ipfs_hash):
-        with open(f"{LOG_PATH}/private/miniLockPassword.txt", "r") as content_file:
+        env = init_env()
+        with open(f"{env.LOG_PATH}/private/miniLockPassword.txt", "r") as content_file:
             passW = content_file.read().strip()
 
         cmd = [
@@ -65,9 +57,8 @@ class IpfsClass(Storage):
         return True
 
     def run(self):
-        log(f"=> New job has been received. IPFS call | {time.ctime()}", "blue")
-        success = is_ipfs_running()
-        if not success:
+        log(f"[{time.ctime()}] New job has been received through IPFS", "blue")
+        if not is_ipfs_running():
             return False
 
         logging.info(f"is_ipfs_hash_locally_cached={is_ipfs_hash_locally_cached(self.job_key)}")
@@ -76,8 +67,7 @@ class IpfsClass(Storage):
             os.makedirs(self.results_folder)
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
-        success = self.check_ipfs(self.job_key)
-        if not success:
+        if not self.check_ipfs(self.job_key):
             return False
 
         for source_code_hash in self.source_code_hashes:
@@ -89,10 +79,9 @@ class IpfsClass(Storage):
                     return False
 
         initial_folder_size = calculate_folder_size(self.results_folder)
-
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # Here scripts knows that provided IPFS hashes exists
-            logging.info(f"Attempting to get IPFS file => {ipfs_hash}")
+            logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
             is_hashed = False
             if is_ipfs_hash_locally_cached(ipfs_hash):
                 is_hashed = True
@@ -105,9 +94,7 @@ class IpfsClass(Storage):
                 create_dir(target)
 
             get_ipfs_hash(ipfs_hash, target, False)
-
-            success = git_initialize_check(target)
-            if not success:
+            if not git_initialize_check(target):
                 return False
 
             if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:

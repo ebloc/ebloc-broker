@@ -22,7 +22,6 @@ def get_idle_cores(is_print_flag=True):
     else:
         logging.error("sinfo is emptry string.")
         idle_cores = None
-
     return idle_cores
 
 
