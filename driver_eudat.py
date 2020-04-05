@@ -9,14 +9,15 @@ from typing import List
 from pymongo import MongoClient
 
 import config
-import lib
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
-from lib import WHERE, CacheType, log, silent_remove
+from lib import CacheType, log, silent_remove
 from lib_mongodb import add_item_share_id, find_key
+from settings import WHERE, init_env
 from storage_class import Storage
 from utils import byte_to_mb, create_dir, generate_md5sum, read_json
 
+env = init_env()
 mc = MongoClient()
 
 
@@ -127,9 +128,9 @@ class EudatClass(Storage):
         for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
             folder_name = source_code_hash_text
             self.folder_type_dict[folder_name] = None
-            if os.path.isdir(f"{lib.OWN_CLOUD_PATH}/{folder_name}"):
+            if os.path.isdir(f"{env.OWN_CLOUD_PATH}/{folder_name}"):
                 logging.info(f"Eudat shared folder({folder_name}) is already accepted and exists on the eudat mounted folder.")
-                if os.path.isfile(f"{lib.OWN_CLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
+                if os.path.isfile(f"{env.OWN_CLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
                     self.folder_type_dict[folder_name] = "tar.gz"
                 else:
                     self.folder_type_dict[folder_name] = "folder"
@@ -221,7 +222,7 @@ class EudatClass(Storage):
 
     def run(self) -> bool:
         # TODO: refund check
-        log(f"New job has been received. EUDAT call | {time.ctime()}", "blue")
+        log(f"[{time.ctime()}] New job has been received through EUDAT", "blue")
 
         success, provider_info = get_provider_info(self.logged_job.args["provider"])
         success, self.dataTransferIn_used = self.eudat_get_share_token(provider_info["fID"])

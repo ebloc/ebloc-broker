@@ -3,7 +3,10 @@
 import traceback
 
 from imports import connect
-from lib import PROVIDER_ID, get_tx_status
+from lib import get_tx_status
+from settings import init_env
+
+env = init_env()
 
 
 def register_data(sourceCodeHash, price, commitmentBlockDuration):
@@ -13,7 +16,7 @@ def register_data(sourceCodeHash, price, commitmentBlockDuration):
 
     try:
         tx = eBlocBroker.functions.registerData(sourceCodeHash, price, commitmentBlockDuration).transact(
-            {"from": w3.toChecksumAddress(PROVIDER_ID), "gas": 100000}
+            {"from": env.PROVIDER_ID, "gas": 100000}
         )
 
     except Exception:

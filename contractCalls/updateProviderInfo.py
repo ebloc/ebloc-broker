@@ -3,13 +3,13 @@
 
 import os
 import traceback
-from os.path import expanduser
 
 from imports import connect, connect_to_web3
-from lib import PROVIDER_ID, get_tx_status
+from lib import get_tx_status
+from settings import init_env
 from utils import read_json
 
-home = expanduser("~")
+env = init_env()
 
 
 def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
@@ -17,10 +17,10 @@ def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
     if eBlocBroker is None or w3 is None:
         return
 
-    if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
+    if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
         return False, "Please first run: ../scripts/whisper_initialize.py"
     else:
-        success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
+        success, data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):
@@ -33,7 +33,7 @@ def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
         try:
             tx = eBlocBroker.functions.updateProviderInfo(
                 email, federationCloudId, minilock_id, ipfsAddress, whisperPubKey
-            ).transact({"from": PROVIDER_ID, "gas": 4500000})
+            ).transact({"from": env.PROVIDER_ID, "gas": 4500000})
         except Exception:
             return False, traceback.format_exc()
 

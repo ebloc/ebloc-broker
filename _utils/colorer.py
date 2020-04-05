@@ -12,8 +12,6 @@ def add_coloring_to_emit_windows(fn):
 
         return ctypes.windll.kernel32.GetStdHandle(self.STD_OUTPUT_HANDLE)
 
-    out_handle = property(_out_handle)
-
     def _set_color(self, code):
         import ctypes
 
@@ -73,7 +71,6 @@ def add_coloring_to_emit_windows(fn):
 
         ret = fn(*args)
         args[0]._set_color(FOREGROUND_WHITE)
-        # print "after"
         return ret
 
     return new
@@ -95,8 +92,8 @@ def add_coloring_to_emit_ansi(fn):
             color = "\x1b[35m"  # pink
         else:
             color = "\x1b[0m"  # normal
+
         args[1].msg = color + args[1].msg + "\x1b[0m"  # normal
-        # print "after"
         return fn(*args)
 
     return new
@@ -108,6 +105,7 @@ if platform.system() == "Windows":
 else:
     # all non-Windows platforms are supporting ANSI escapes so we use them
     logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
+
     # log = logging.getLogger()
     # log.addFilter(log_filter())
     # //hdlr = logging.StreamHandler()

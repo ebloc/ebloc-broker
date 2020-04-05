@@ -2,11 +2,13 @@
 
 from pymongo import MongoClient
 
-import lib
 from contractCalls.get_block_number import get_block_number
 from contractCalls.getJobStorageTime import getJobStorageTime
 from imports import connect
-from lib import run_command, silent_remove
+from lib import StorageID, run_command, silent_remove
+from settings import init_env
+
+env = init_env()
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
@@ -21,11 +23,11 @@ storageID = None
 cursor = coll.find({})
 for document in cursor:
     # print(document)
-    received_block_number, storage_time = getJobStorageTime(lib.PROVIDER_ID, document["sourceCodeHash"])
+    received_block_number, storage_time = getJobStorageTime(env.PROVIDER_ID, document["sourceCodeHash"])
     endBlockTime = received_block_number + storage_time * 240
     storageID = document["storageID"]
     if endBlockTime < block_number and received_block_number != 0:
-        if storageID == lib.StorageID.IPFS or storageID == lib.StorageID.IPFS_MINILOCK:
+        if storageID == StorageID.IPFS or storageID == StorageID.IPFS_MINILOCK:
             ipfsHash = document["jobKey"]
             cmd = ["ipfs", "pin", "rm", ipfsHash]
             success, output = run_command(cmd)
@@ -33,10 +35,10 @@ for document in cursor:
             success, output = run_command(["ipfs", "repo", "gc"])
             print(output)
         else:
-            cachedFileName = lib.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
+            cachedFileName = env.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
             print(cachedFileName)
             silent_remove(cachedFileName)
-            cachedFileName = lib.PROGRAM_PATH + "/cache/" + document["sourceCodeHash"] + "tar.gz"
+            cachedFileName = env.PROGRAM_PATH + "/cache/" + document["sourceCodeHash"] + "tar.gz"
             print(cachedFileName)
             silent_remove(cachedFileName)
 

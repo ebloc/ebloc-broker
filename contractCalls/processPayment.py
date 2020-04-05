@@ -3,10 +3,13 @@
 import sys
 import traceback
 
-from imports import connect
-from lib import PROVIDER_ID, StorageID, logging
-from utils import ipfs_toBytes
 from config import bp  # noqa: F401
+from imports import connect
+from lib import StorageID, logging
+from settings import init_env
+from utils import ipfs_toBytes
+
+env = init_env()
 
 
 def processPayment(
@@ -55,7 +58,7 @@ def processPayment(
         ]
 
         tx = eBlocBroker.functions.processPayment(job_key, args, int(execution_time_min), _result_ipfs_hash).transact(
-            {"from": PROVIDER_ID, "gas": 4500000}
+            {"from": env.PROVIDER_ID, "gas": 4500000}
         )
     except Exception:
         return False, traceback.format_exc()

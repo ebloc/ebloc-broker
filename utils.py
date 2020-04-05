@@ -6,8 +6,10 @@ import os
 import subprocess
 
 import base58
+
 import config
-from config import EBLOCPATH, logging
+from config import logging
+from settings import init_env
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -49,7 +51,8 @@ def byte_to_mb(size_in_bytes: int) -> int:
 
 
 def generate_md5sum(path: str) -> str:
-    return subprocess.check_output(["bash", f"{EBLOCPATH}/scripts/generateMD5sum.sh", path]).decode("utf-8").rstrip()
+    env = init_env()
+    return subprocess.check_output(["bash", f"{env.EBLOCPATH}/bash_scripts/generateMD5sum.sh", path]).decode("utf-8").rstrip()
 
 
 def create_dir(path: str) -> None:
