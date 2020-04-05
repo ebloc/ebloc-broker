@@ -6,10 +6,10 @@ import time
 from os.path import expanduser
 from random import randint
 
-from lib import is_transaction_passed
 from contractCalls.get_block_number import get_block_number
 from contractCalls.submitJob import submitJob
 from imports import connect_to_web3
+from lib import is_transaction_passed
 
 home = expanduser("~")
 w3 = connect_to_web3()

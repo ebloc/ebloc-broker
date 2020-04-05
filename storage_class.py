@@ -4,8 +4,11 @@ import traceback
 
 from config import logging
 from contractCalls.refund import refund
-from lib import PROGRAM_PATH, CacheType, _sbatch_call, log, run_command, WHOAMI
+from lib import CacheType, _sbatch_call, log, run_command
+from settings import init_env
 from utils import Link, create_dir, generate_md5sum
+
+env = init_env()
 
 
 class BaseClass(object):
@@ -31,12 +34,12 @@ class Storage(BaseClass):
         self.folder_path_to_download = {}
         self.oc = oc
         self.cloudStorageID = logged_job.args["cloudStorageID"]
-        self.results_folder_prev = f"{PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
+        self.results_folder_prev = f"{env.PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
         self.results_data_folder = f"{self.results_folder_prev}/data"
         self.results_data_link = f"{self.results_folder_prev}/data_link"
-        self.private_dir = f"{PROGRAM_PATH}/{requester_id}/cache"
-        self.public_dir = f"{PROGRAM_PATH}/cache"
+        self.private_dir = f"{env.PROGRAM_PATH}/{requester_id}/cache"
+        self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
 
         self.folder_type_dict = {}
@@ -149,9 +152,9 @@ class Storage(BaseClass):
             link.link_folders()
 
             #  File permission for the requester's foders should be re-set.
-            path = f"{PROGRAM_PATH}/{self.requester_id}"
+            path = f"{env.PROGRAM_PATH}/{self.requester_id}"
             success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
-            success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{WHOAMI}:rwx", path])
+            success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{env.WHOAMI}:rwx", path])
 
             _sbatch_call(
                 self.logged_job,

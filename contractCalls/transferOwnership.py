@@ -4,12 +4,15 @@ import sys
 import traceback
 
 from imports import connect
-from lib import PROVIDER_ID, get_tx_status
+from lib import get_tx_status
+from settings import init_env
+
+env = init_env()
 
 
 def transferOwnership(newOwner):
     eBlocBroker, w3 = connect()
-    _from = w3.toChecksumAddress(PROVIDER_ID)
+    _from = w3.toChecksumAddress(env.PROVIDER_ID)
     newOwner = w3.toChecksumAddress(newOwner)
 
     if eBlocBroker is None or w3 is None:

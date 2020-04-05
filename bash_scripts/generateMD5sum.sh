@@ -29,7 +29,7 @@ else
     target=$(realpath $target)
 fi
 
-machineOS=$(bash $HOME/eBlocBroker/scripts/machine.sh)
+machineOS=$(bash $HOME/eBlocBroker/bash_scripts/machine.sh)
 if [ "$machineOS" == "Mac" ]; then
     if  [ "$target" == "." ]; then
         find $target -not -path "$target/.git/*" -not -path "$target/.git/hooks/*" -type f \( -exec md5 -q  "$PWD"/{} \; \) | awk '{print $1}' | sort | md5

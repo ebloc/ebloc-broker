@@ -3,18 +3,19 @@
 import sys
 import traceback
 
-import lib
 from imports import connect
+from settings import init_env
 
 
 def set_job_status_running(_key, index, job_id, startTime):
     eBlocBroker, w3 = connect()
+    env = init_env()
     if eBlocBroker is None or w3 is None:
         return
 
     try:
         tx = eBlocBroker.functions.setJobStatusRunning(_key, int(index), int(job_id), int(startTime)).transact(
-            {"from": w3.toChecksumAddress(lib.PROVIDER_ID), "gas": 4500000}
+            {"from": w3.toChecksumAddress(env.PROVIDER_ID), "gas": 4500000}
         )
     except Exception:
         return False, traceback.format_exc()

@@ -57,8 +57,8 @@ if [ $setup -eq 1 ]; then
     # npm install web3_ipc
     # npm install dotenv
 
-    machineOS=$(bash $HOME/eBlocBroker/scripts/machine.sh)
-    if [ "$machineOS" == "Mac" ]; then
+    machine_os=$(bash $HOME/eBlocBroker/bash_scripts/machine.sh)
+    if [ "$machine_os" == "Mac" ]; then
         brew install realpath # Mac Packages
     else
         ## Linux Packages

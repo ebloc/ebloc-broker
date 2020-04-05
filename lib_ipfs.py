@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from config import bp, logging  # noqa: F401
 import subprocess
+
+from config import bp, logging  # noqa: F401
 
 
 def get_ipfs_hash(ipfs_hash, path, is_storage_paid):
