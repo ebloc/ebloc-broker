@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
 import traceback
-from os.path import expanduser
 
 from imports import connect
-from lib import PROVIDER_ID, get_tx_status
-
-home = expanduser("~")
+from lib import get_tx_status
+from settings import init_env
 
 
 def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
     eBlocBroker, w3 = connect()
+    env = init_env()
 
     if availableCoreNum == 0:
         return (False, "Please enter positive value for the available core number")
@@ -20,7 +19,7 @@ def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
 
     try:
         tx = eBlocBroker.functions.updateProviderPrices(availableCoreNum, commitmentBlockNum, prices).transact(
-            {"from": PROVIDER_ID, "gas": 4500000}
+            {"from": env.PROVIDER_ID, "gas": 4500000}
         )
     except Exception:
         return False, traceback.format_exc()

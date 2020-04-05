@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
-from os.path import expanduser
-
 from web3 import IPCProvider, Web3
 from web3.providers.rpc import HTTPProvider
 
+import _utils.colorer  # noqa: F401
 import config
-from config import EBLOCPATH, POA_CHAIN, RPC_PORT, logging
+from config import bp, logging  # noqa: F401
+from settings import init_env
 from utils import read_json
-
-home = expanduser("~")
 
 
 class Network(object):
@@ -45,13 +43,15 @@ def connect():
 
 
 def connect_to_web3():
-    if not POA_CHAIN:
+    env = init_env()
+
+    if not env.POA_CHAIN:
         """
         * Note that you should create only one RPC Provider per process,
         * as it recycles underlying TCP/IP network connections between
         *  your process and Ethereum node
         """
-        config.w3 = Web3(HTTPProvider(f"http://localhost:{RPC_PORT}"))
+        config.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
         from web3.shh import Shh
 
         Shh.attach(config.w3, "shh")
@@ -66,23 +66,27 @@ def connect_to_web3():
         logging.error("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc")
         return None
 
+    if not env.PROVIDER_ID:
+        env.set_provider_id()
     return config.w3
 
 
 def connect_to_eblocbroker():
+    env = init_env()
+
     if config.w3 is None:
         config.w3 = connect_to_web3()
         if not config.w3:
             logging.error("E: web3 is not connected")
             return False
 
-    success, contract = read_json(f"{EBLOCPATH}/contractCalls/contract.json")
+    success, contract = read_json(f"{env.EBLOCPATH}/contractCalls/contract.json")
     if not success:
         logging.error("E: Couldn't read the contract.json file.")
         return None
 
     contract_address = contract["address"]
-    success, abi = read_json(f"{EBLOCPATH}/contractCalls/abi.json")
+    success, abi = read_json(f"{env.EBLOCPATH}/contractCalls/abi.json")
     if not success:
         logging.error("E: Couldn't read the abi.json file")
         return None

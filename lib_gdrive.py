@@ -5,8 +5,11 @@ import os
 import subprocess
 
 from config import bp, logging  # noqa: F401
-from lib import GDRIVE_METADATA, echo_grep_awk, run_command, subprocess_call_attempt
+from lib import echo_grep_awk, run_command, subprocess_call_attempt
+from settings import init_env
 from utils import byte_to_mb, read_json
+
+env = init_env()
 
 
 def gdrive_list(tar_hash, is_folder=False):
@@ -81,7 +84,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
             cmd = ["gdrive", "download", "--recursive", data_files_id, "--force", "--path", results_folder_prev]
             output = subprocess_call_attempt(cmd, 10)
 
-            cmd = ["gdrive", "info", "--bytes", source_code_key, "-c", GDRIVE_METADATA]
+            cmd = ["gdrive", "info", "--bytes", source_code_key, "-c", env.GDRIVE_METADATA]
             gdrive_info = subprocess_call_attempt(cmd, 10)
         except:
             return False
@@ -109,7 +112,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
             output = gdrive_get_file_id(_key)
             data_key = echo_grep_awk(output, f"{k}.tar.gz", "1")
             try:
-                cmd = ["gdrive", "info", "--bytes", data_key, "-c", GDRIVE_METADATA]
+                cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call_attempt(cmd, 10)
             except:
                 return False

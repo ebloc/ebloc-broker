@@ -4,7 +4,8 @@ import copy
 import re
 
 from pygments.lexer import ExtendedRegexLexer, RegexLexer, bygroups, include, this, using
-from pygments.token import Comment, Keyword, Literal, Name, Number, Operator, Other, Punctuation, String, Text
+from pygments.token import (Comment, Keyword, Literal, Name, Number, Operator, Other, Punctuation,
+                            String, Text)
 
 __all__ = ["SolidityLexer"]
 
