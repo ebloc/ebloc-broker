@@ -4,13 +4,15 @@ import sys
 import traceback
 
 import owncloud
+
 import config
-from config import load_log, EBLOCPATH
+from config import load_log
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
-from lib import OC_USER, CacheType, StorageID, get_tx_status, printc, ipfs_add, run_command
-from utils import ipfs_toBytes, generate_md5sum
+from lib import CacheType, StorageID, get_tx_status, ipfs_add, printc, run_command
+from settings import init_env
+from utils import generate_md5sum, ipfs_toBytes
 
 logging = load_log()
 
@@ -131,6 +133,7 @@ def submitJob(
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
+    env = init_env()
 
     if len(sys.argv) == 10:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
@@ -166,8 +169,8 @@ if __name__ == "__main__":
         folders = []
         md5sums = []
         # Full path of the sourceCodeFolders is given
-        folders.append(f"{EBLOCPATH}/base/sourceCode")
-        folders.append(f"{EBLOCPATH}/base/data/data1")
+        folders.append(f"{env.EBLOCPATH}/base/sourceCode")
+        folders.append(f"{env.EBLOCPATH}/base/data/data1")
 
         if main_storageID == StorageID.IPFS.value:
             printc("Submitting job through IPFS...")
@@ -177,7 +180,6 @@ if __name__ == "__main__":
                 # success, ipfs_hash = ipfs_add(folder, True)  # includes .git/
 
                 success, output = run_command(["ipfs", "refs", ipfs_hash])
-                config.bp()
                 # ipfs_dict[ipfs_hash] = md5sums
                 ipfs_hashes.append(ipfs_hash)
                 if not success:
@@ -192,19 +194,17 @@ if __name__ == "__main__":
             for idx, folder in enumerate(folders):
                 print(f"{ipfs_hashes[idx]} => {folder} md5sum:{md5sums[idx]}")
 
-
-            config.bp()
-
+            # config.bp()
             storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
             storage_hours = [1, 1]
             cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
         elif main_storageID == StorageID.EUDAT.value:
             print("Submitting through EUDAT")
             oc = owncloud.Client("https://b2drop.eudat.eu/")
-            with open(EBLOCPATH + "/eudat_password.txt", "r") as content_file:
+            with open(env.EBLOCPATH + "/eudat_password.txt", "r") as content_file:
                 password = content_file.read().strip()
 
-            oc.login(OC_USER, password)
+            oc.login(env.OC_USER, password)
 
         cores = [1]
         core_execution_durations = [1]

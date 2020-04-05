@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-import lib
 from contractCalls.get_job_info import get_job_info
 from imports import connect
+from lib import job_state_code
+from settings import init_env
+
+env = init_env()
 
 eBlocBroker, w3 = connect()
 
-fname = f"{lib.LOG_PATH}/queuedJobs.txt"
+fname = f"{env.LOG_PATH}/queuedJobs.txt"
 
 sum1 = 0
 with open(fname, "r") as ins:
@@ -29,7 +32,7 @@ with open(fname, "r") as ins:
             + output[3]
             + "|"
             + "{0: <16}".format("status:")
-            + lib.job_state_code[str(job_info["status"])]
+            + job_state_code[str(job_info["status"])]
             + " "
             + "{0: <16}".format('core"')
             + str(job_info["core"])

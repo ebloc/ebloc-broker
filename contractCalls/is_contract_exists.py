@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 from imports import connect_to_web3
+from settings import init_env
 from utils import read_json
-from config import EBLOCPATH
+
+env = init_env()
 
 
 def is_contract_exists():
-    success, contract = read_json(f"{EBLOCPATH}/contractCalls/contract.json")
+    success, contract = read_json(f"{env.EBLOCPATH}/contractCalls/contract.json")
     if not success:
         return False
 
@@ -21,4 +23,4 @@ def is_contract_exists():
 
 
 if __name__ == "__main__":
-    print("is_contract_exists=" + str(is_contract_exists()))
+    print(f"is_contract_exists={is_contract_exists()}")

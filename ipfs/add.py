@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from lib import ipfs_add
 from config import EBLOCPATH
+from lib import ipfs_add
 
 path = "/home/netlab/eBlocBroker/base/sourceCode"
 base_folder = f"{EBLOCPATH}/base"

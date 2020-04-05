@@ -1,13 +1,15 @@
 import sys
 
-from solc import compile_source
 from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 
-from config import EBLOCPATH, HOME, RPC_PORT
 from contractCalls.get_owner import get_owner
 from contractCalls.get_providers import get_providers
 from flask import Flask, render_template, request
+from settings import init_env
+from solc import compile_source
+
+env = init_env()
 
 # TODO: env should be load first
 app = Flask(__name__)
@@ -20,7 +22,7 @@ w3 = Web3(http_provider).eth
 @app.route("/")
 def hello_world():
     output = get_owner()
-    return f"block_number={w3.blockNumber} | {sys.version} | owner={output} {RPC_PORT} {EBLOCPATH}."
+    return f"block_number={w3.blockNumber} | {sys.version} | owner={output} {env.RPC_PORT} {env.EBLOCPATH}."
 
 
 @app.route("/hello")

@@ -5,10 +5,12 @@ import time
 
 from config import bp, logging  # noqa: F401
 from lib import printc, run_command, run_command_stdout_to_file
-from utils import getcwd, getsize, path_leaf, EBLOCPATH
+from settings import init_env
+from utils import getcwd, getsize, path_leaf
 
 
 def git_initialize_check(path):
+    """ .git/ folder should exist within the target folder"""
     cwd_temp = getcwd()
     os.chdir(path)
     if not is_git_initialized(path, True):
@@ -27,11 +29,13 @@ def is_git_initialized(path, is_in_path=False):
     if not is_in_path:
         cwd_temp = getcwd()
         os.chdir(path)
-    success, output = run_command(["git", "rev-parse", "--show-toplevel"])
-    if not is_in_path:
-        os.chdir(cwd_temp)
-    if not success:
+    try:
+        output = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("utf-8").strip()
+    except:
         return False
+    finally:
+        if not is_in_path:
+            os.chdir(cwd_temp)
     return path == output
 
 
@@ -41,6 +45,7 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
     * This shows all the changes since the last commit, whether or not they have been staged for commit or not.
     """
+    env = init_env()
     is_file_empty = False
     printc(path)
     cwd_temp = getcwd()
@@ -52,7 +57,7 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
     """
     success, output = run_command(["git", "config", "core.fileMode", "false"])
     # First ignore deleted files not to be added into git
-    success, output = run_command(["bash", f"{EBLOCPATH}/git_ignore_deleted.sh"])
+    success, output = run_command(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
     success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
     patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
     logging.info(f"patch_name={patch_name}")

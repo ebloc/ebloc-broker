@@ -6,12 +6,13 @@ import shutil
 import sys
 import traceback
 
-from config import bp, logging, EBLOCPATH  # noqa: F401
+from config import EBLOCPATH, bp, logging  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib import CacheType, StorageID, compress_folder, get_tx_status, printc, run_command, silent_remove
+from lib import (CacheType, StorageID, compress_folder, get_tx_status, printc, run_command,
+                 silent_remove)
 from lib_gdrive import gdrive_list, gdrive_upload_internal
 from lib_git import git_commit_changes
 from utils import read_json

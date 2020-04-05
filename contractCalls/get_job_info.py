@@ -5,12 +5,11 @@ import sys
 import traceback
 
 import config
-from lib import StorageID, inv_job_state_code
 from config import logging
-from imports import connect
-from utils import bytes32_to_ipfs, empty_bytes32
 from contractCalls.get_deployed_block_number import get_deployed_block_number
-
+from imports import connect
+from lib import StorageID, inv_job_state_code
+from utils import bytes32_to_ipfs, empty_bytes32
 
 config.eBlocBroker, config.w3 = connect()
 

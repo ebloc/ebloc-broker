@@ -12,10 +12,11 @@ from os.path import expanduser
 
 from web3 import HTTPProvider, Web3
 
-import lib
-from lib import EBLOCPATH
+from lib import run_command
+from settings import init_env
 from utils import read_json
 
+env = init_env()
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 
 home = expanduser("~")
@@ -30,7 +31,7 @@ def log(strIn):
     if test_flag:
         print(strIn)
     else:
-        txFile = open(lib.LOG_PATH + "/whisperStateReceiverLog.out", "a")
+        txFile = open(env.LOG_PATH + "/whisperStateReceiverLog.out", "a")
         txFile.write(strIn + "\n")
         txFile.close()
 
@@ -38,7 +39,7 @@ def log(strIn):
 def post(recipientPublicKey):
     # https://stackoverflow.com/a/50095154/2402577
     cmd = ["sinfo", "-h", "-o%C"]
-    success, output = lib.run_command(cmd)
+    success, output = run_command(cmd)
     output = output[0].split("/")
     allocated_core = output[0]
     idle_core = output[1]
@@ -108,7 +109,7 @@ def main(_test_flag=False):
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
         # First time running:
-        log(f"Please first run: {EBLOCPATH}/scripts/whisper_initialize.py")
+        log(f"Please first run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
         sys.exit(1)
     else:
         success, data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
