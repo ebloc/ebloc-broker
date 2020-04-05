@@ -9,8 +9,9 @@ import traceback
 
 import owncloud
 
-from config import bp, logging, EBLOCPATH  # noqa: F401
+from config import bp, logging  # noqa: F401
 from lib import compress_folder, printc, terminate
+from settings import init_env
 
 
 def _upload_results_to_eudat(encoded_share_token, output_file_name):
@@ -65,9 +66,9 @@ def upload_results_to_eudat(encoded_share_token, output_file_name, results_folde
 
 
 def eudat_login(user, password_path, name):
-    # logging.innfo("Login into owncloud... ", "blue", False)
     logging.info("Login into owncloud... ")
-    fname = f"{EBLOCPATH}/{name}"
+    env = init_env()
+    fname = f"{env.EBLOCPATH}/{name}"
     if os.path.isfile(fname):
         f = open(fname, "rb")
         oc = pickle.load(f)

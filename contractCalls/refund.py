@@ -2,12 +2,12 @@
 
 import sys
 import traceback
-from os.path import expanduser
 
 from imports import connect
-from lib import PROVIDER_ID, get_tx_status
+from lib import get_tx_status
+from settings import init_env
 
-home = expanduser("~")
+env = init_env()
 
 
 def refund(provider, _from, job_key, index, job_id, source_code_hashes):
@@ -42,8 +42,8 @@ if __name__ == "__main__":
         job_id = int(sys.argv[5])
         source_code_hashes = sys.argv[6]
     else:
-        provider = w3.toChecksumAddress(PROVIDER_ID)
-        _from = w3.toChecksumAddress(PROVIDER_ID)
+        provider = w3.toChecksumAddress(env.PROVIDER_ID)
+        _from = w3.toChecksumAddress(env.PROVIDER_ID)
         job_key = "QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U"
         index = 0
         job_id = 0

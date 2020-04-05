@@ -1,7 +1,6 @@
 import pytest
-from brownie import *
-
 import scripts.lib
+from brownie import *
 from tests import test_eblocbroker
 
 

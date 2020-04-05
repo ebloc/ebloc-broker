@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 
-import os
 import subprocess
 import sys
-from os.path import expanduser
-
-from dotenv import load_dotenv
 
 from contractCalls.get_job_info import get_job_info
 from imports import connect
-from lib import PROVIDER_ID, inv_job_state_code
+from lib import inv_job_state_code
+from settings import init_env
 
-home = expanduser("~")
 eBlocBroker, w3 = connect()
+env = init_env()
 ipfsFlag = 0
 
 
@@ -80,8 +77,7 @@ if __name__ == "__main__":
         provider_address = str(sys.argv[1])
         fromBlock = int(sys.argv[2])
     else:
-        load_dotenv(os.path.join(home + "/.eBlocBroker", ".env"))  # Load .env from the given path
-        provider_address = PROVIDER_ID
+        provider_address = env.PROVIDER_ID
         fromBlock = 2215127
 
     print(fromBlock)
