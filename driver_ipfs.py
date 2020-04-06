@@ -4,15 +4,14 @@ import os
 import subprocess
 import time
 
+import libs.git as git
+import libs.ipfs as ipfs
 from config import bp, logging  # noqa: F401
 from lib import (CacheType, StorageID, calculate_folder_size, is_ipfs_hash_exists,
                  is_ipfs_hash_locally_cached, is_ipfs_running, log, run_command, silent_remove)
-from lib_git import git_initialize_check
+from settings import init_env
 from storage_class import Storage
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir
-
-import libs.ipfs as ipfs
-from settings import init_env
 
 
 class IpfsClass(Storage):
@@ -95,7 +94,7 @@ class IpfsClass(Storage):
                 create_dir(target)
 
             ipfs.get_hash(ipfs_hash, target, False)
-            if not git_initialize_check(target):
+            if not git.initialize_check(target):
                 return False
 
             if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:

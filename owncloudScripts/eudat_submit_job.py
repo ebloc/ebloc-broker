@@ -3,13 +3,13 @@
 import sys
 import time
 
+import libs.git as git
 from config import EBLOCPATH, bp  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import HOME, CacheType, StorageID, get_tx_status, printc
-from lib_git import git_commit_changes, is_git_repo
 from lib_owncloud import eudat_initialize_folder, eudat_login, share_single_folder
 
 
@@ -31,7 +31,7 @@ def eudat_submit_job(provider, oc):
     folders_to_share.append(f"{EBLOCPATH}/base/sourceCode")
     folders_to_share.append(f"{EBLOCPATH}/base/data/data1")
 
-    success = is_git_repo(folders_to_share)
+    success = git.is_repo(folders_to_share)
     if not success:
         return False, ""
 
@@ -40,7 +40,7 @@ def eudat_submit_job(provider, oc):
             print("")
 
         printc(folder, "green")
-        success = git_commit_changes(folder)
+        success = git.commit_changes(folder)
         if not success:
             sys.exit(1)
 

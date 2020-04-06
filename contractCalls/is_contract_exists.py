@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 from imports import connect_to_web3
-from utils import read_json
-
 from settings import init_env
+from utils import read_json
 
 env = init_env()
 

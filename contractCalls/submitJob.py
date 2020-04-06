@@ -3,16 +3,16 @@
 import sys
 import traceback
 
-import config
 import owncloud
+
+import config
 from config import load_log
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
 from lib import CacheType, StorageID, get_tx_status, ipfs_add, printc, run_command
-from utils import generate_md5sum, ipfs_toBytes
-
 from settings import init_env
+from utils import generate_md5sum, ipfs_toBytes
 
 logging = load_log()
 

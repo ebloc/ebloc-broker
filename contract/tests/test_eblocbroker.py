@@ -6,10 +6,11 @@ from os import path, sys
 from pdb import set_trace as bp  # noqa: F401
 
 import brownie
-import lib  # noqa: F401
 import scripts.lib
-import utils
 from brownie import accounts
+
+import lib  # noqa: F401
+import utils
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
