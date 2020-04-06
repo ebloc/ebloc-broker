@@ -9,6 +9,10 @@ import sys
 import time
 from typing import List
 
+from pymongo import MongoClient
+
+import libs.git as git
+import libs.ipfs as ipfs
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
@@ -19,15 +23,11 @@ from lib import (StorageID, calculate_folder_size, eblocbroker_function_call,
                  remove_empty_files_and_folders, remove_files, run_command,
                  run_command_stdout_to_file, silent_remove, subprocess_call_attempt)
 from lib_gdrive import get_data_key_ids, get_gdrive_file_info
-from lib_git import git_diff_patch
 from lib_mongodb import find_key
 from lib_owncloud import upload_results_to_eudat
 from lib_slurm import get_elapsed_raw_time, get_job_end_time
-from pymongo import MongoClient
-from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
-
-import libs.ipfs as ipfs
 from settings import WHERE, init_env
+from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
 
 eBlocBroker, w3 = connect()
 mc = MongoClient()
@@ -189,7 +189,7 @@ class ENDCODE:
             logging.info(f"=> Patch for data file {name}")
 
         try:
-            self.patch_name, self.patch_file, is_file_empty = git_diff_patch(source, name, self.index, self.patch_folder, self.cloud_storage_id)
+            self.patch_name, self.patch_file, is_file_empty = git.diff_patch(source, name, self.index, self.patch_folder, self.cloud_storage_id)
         except:
             return False
 

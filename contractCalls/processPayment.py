@@ -6,9 +6,8 @@ import traceback
 from config import bp  # noqa: F401
 from imports import connect
 from lib import StorageID, logging
-from utils import ipfs_toBytes
-
 from settings import init_env
+from utils import ipfs_toBytes
 
 env = init_env()
 

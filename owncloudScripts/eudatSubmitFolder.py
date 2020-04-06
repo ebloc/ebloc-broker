@@ -6,6 +6,7 @@ import sys
 import time
 
 import owncloud
+
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib_owncloud import is_oc_mounted, share_single_folder
