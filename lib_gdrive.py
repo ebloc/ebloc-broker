@@ -6,8 +6,9 @@ import subprocess
 
 from config import bp, logging  # noqa: F401
 from lib import echo_grep_awk, run_command, subprocess_call_attempt
-from settings import init_env
 from utils import byte_to_mb, read_json
+
+from settings import init_env
 
 env = init_env()
 

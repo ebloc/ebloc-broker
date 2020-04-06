@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+import config
+from config import bp, logging  # noqa: F401
+from utils import read_json
 from web3 import IPCProvider, Web3
 from web3.providers.rpc import HTTPProvider
 
 import _utils.colorer  # noqa: F401
-import config
-from config import bp, logging  # noqa: F401
 from settings import init_env
-from utils import read_json
 
 
 class Network(object):

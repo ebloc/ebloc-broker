@@ -6,6 +6,7 @@ import sys
 from contractCalls.get_job_info import get_job_info
 from imports import connect
 from lib import inv_job_state_code
+
 from settings import init_env
 
 eBlocBroker, w3 = connect()
