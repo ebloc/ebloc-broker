@@ -9,9 +9,10 @@ from contractCalls.get_provider_info import get_provider_info
 from lib import (WHERE, CacheType, calculate_folder_size, echo_grep_awk, is_run_exists_in_tar, log,
                  run_command, silent_remove, subprocess_call_attempt)
 from lib_gdrive import gdrive_get_file_id, gdrive_size, get_gdrive_file_info
-from settings import init_env
 from storage_class import Storage
 from utils import byte_to_mb, create_dir, generate_md5sum
+
+from settings import init_env
 
 env = init_env()
 

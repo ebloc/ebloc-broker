@@ -3,10 +3,12 @@ import os
 import subprocess
 import time
 
+import git
 from config import bp, logging  # noqa: F401
-from lib import printc, run_command, run_command_stdout_to_file
-from settings import init_env
+from lib import printc, run_command
 from utils import getcwd, getsize, path_leaf
+
+from settings import init_env
 
 
 def git_initialize_check(path):
@@ -25,18 +27,28 @@ def git_initialize_check(path):
     return True
 
 
-def is_git_initialized(path, is_in_path=False):
+def is_git_initialized(path, is_in_path=False) -> bool:
     if not is_in_path:
         cwd_temp = getcwd()
         os.chdir(path)
     try:
-        output = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("utf-8").strip()
+        repo = git.Repo('.', search_parent_directories=True)
+        working_tree_dir = repo.working_tree_dir
     except:
         return False
     finally:
         if not is_in_path:
             os.chdir(cwd_temp)
-    return path == output
+    return path == working_tree_dir
+
+
+def git_diff_zip(filename):
+    f = open(filename, "w")
+    p1 = subprocess.Popen(["git", "diff", "--binary", "HEAD"], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(["gzip", "-9c"], stdin=p1.stdout, stdout=f)
+    p1.stdout.close()
+    p2.communicate()
+    f.close()
 
 
 def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
@@ -53,28 +65,27 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
 
     """TODO
     if not is_git_initialized(path):
-        upload everything
+        upload everything, changed files!
     """
     success, output = run_command(["git", "config", "core.fileMode", "false"])
     # First ignore deleted files not to be added into git
     success, output = run_command(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
     success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
     patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
-    logging.info(f"patch_name={patch_name}")
-    patch_file = f"{target_path}/{patch_name}"  # File to be uploaded
 
-    success, output = run_command(["git", "add", "-A", ".", "-v"])
-    if not success:
-        os.chdir(cwd_temp)
-        raise Exception("git could not add files")
+    # File to be uploaded as zip
+    patch_file = f"{target_path}/{patch_name}.gz"
+    logging.info(f"patch_path={patch_name}.gz")
 
+    repo = git.Repo('.', search_parent_directories=True)
     try:
-        cmd = ["git", "diff", "--binary", "HEAD"]
-        run_command_stdout_to_file(cmd, patch_file)
+        repo.git.add(A=True)
+        git_diff_zip(patch_file)
     except:
-        pass
+        return False
+    finally:
+        os.chdir(cwd_temp)
 
-    os.chdir(cwd_temp)
     time.sleep(0.1)
     if not getsize(patch_file):
         logging.info("Created patch file is empty, nothing to upload.")
@@ -83,39 +94,54 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
     return patch_name, patch_file, is_file_empty
 
 
-def git_add_all():
+def git_add_all(repo=None):
+    if not repo:
+        repo = git.Repo('.', search_parent_directories=True)
+
     # Required for files to be access on the cluster side due to permission issues
     subprocess.run(["chmod", "-R", "775", "."])  # Changes folder's hash
     # subprocess.run(["chmod", "-R", "755", "."])
     # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
-    success, output = run_command(["git", "add", "-A", ".", "-v"])
-    success, is_git_cached = run_command(["git", "diff", "--cached", "--name-only"])
-    if output or is_git_cached:
-        success, output = run_command(["git", "commit", "-m", "update", "-v"])
+
+    try:
+        repo.git.add(A=True)  # git add -A .
+
+        try:
+            is_diff = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
+            success = True
+        except:
+            # If it is the first commit HEAD might not exist
+            success, is_diff = run_command(["git", "diff", "--cached", "--shortstat"])
+
+        if success and is_diff:
+            repo.git.commit('-m', 'update')  # git commit -m update
+        return True
+    except:
+        return False
 
 
 def git_commit_changes(path) -> bool:
     cwd_temp = getcwd()
     os.chdir(path)
+    repo = git.Repo('.', search_parent_directories=True)
 
     success, output = run_command(["ls", "-l", ".git/refs/heads"])
     if output == "total 0":
         logging.warning("There is no first commit")
     else:
-        # run_command(["git", "config", "core.fileMode", "false"])
-        success, output = run_command(["git", "diff", "--binary", "HEAD"])
-        if not output:
+        repo.git.add(A=True)
+        if len(repo.index.diff("HEAD")) == 0:
             logging.info(f"{path} is already committed with the given changes.")
             os.chdir(cwd_temp)
             return True
-
     try:
-        git_add_all()
+        git_add_all(repo)
     except Exception as error:
         logging.error(f"E: {error}")
         return False
+    finally:
+        os.chdir(cwd_temp)
 
-    os.chdir(cwd_temp)
     return True
 
 
@@ -153,11 +179,4 @@ def is_git_repo(folders) -> bool:
                 os.chdir(cwd_temp)
                 return False
     os.chdir(cwd_temp)
-    return success
-
-
-def git_pin(ipfs_hash) -> bool:
-    cmd = ["ipfs", "pin", "add", ipfs_hash]
-    success, output = run_command(cmd, None, True)
-    print(output)
     return success

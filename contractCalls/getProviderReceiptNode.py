@@ -2,8 +2,9 @@
 
 import sys
 
-from doesProviderExist import doesProviderExist
 from imports import connect_to_eblocbroker
+
+from doesProviderExist import doesProviderExist
 
 
 def getProviderReceiptNode(provider_address, index):
