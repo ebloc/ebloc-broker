@@ -3,7 +3,6 @@
 import os
 
 import owncloud
-
 from lib_owncloud import get_size
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")

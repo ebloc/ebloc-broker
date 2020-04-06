@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from pymongo import MongoClient
-
 from contractCalls.get_block_number import get_block_number
 from contractCalls.getJobStorageTime import getJobStorageTime
 from imports import connect
 from lib import StorageID, run_command, silent_remove
+from pymongo import MongoClient
+
 from settings import init_env
 
 env = init_env()

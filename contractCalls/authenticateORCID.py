@@ -4,11 +4,12 @@ import sys
 import traceback
 
 from config import load_log
+from imports import connect
+from lib import get_tx_status
+
 from doesProviderExist import doesProviderExist
 from doesRequesterExist import doesRequesterExist
-from imports import connect
 from is_owner import is_owner
-from lib import get_tx_status
 
 
 def authenticateORCID(address, orc_id) -> (bool, str):
