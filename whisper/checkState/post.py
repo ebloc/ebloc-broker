@@ -5,9 +5,10 @@ import itertools
 import json
 import os
 
-from utils import read_json
 from web3 import HTTPProvider, Web3
 from web3.shh import Shh
+
+from utils import read_json
 
 web3 = Web3(HTTPProvider("http://localhost:8545"))
 

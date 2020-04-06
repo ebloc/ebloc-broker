@@ -6,9 +6,10 @@ import os.path
 import sys
 from os.path import expanduser
 
-from utils import read_json
 from web3 import HTTPProvider, Web3
 from web3.auto import w3
+
+from utils import read_json
 
 home = expanduser("~")
 

@@ -6,9 +6,8 @@ import traceback
 
 from imports import connect, connect_to_web3
 from lib import get_tx_status
-from utils import read_json
-
 from settings import init_env
+from utils import read_json
 
 env = init_env()
 

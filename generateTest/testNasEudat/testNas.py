@@ -12,8 +12,9 @@ from os.path import expanduser
 from random import randint
 from test.func import testFunc
 
-import lib
 import owncloud
+
+import lib
 
 home = expanduser("~")
 

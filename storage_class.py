@@ -5,9 +5,8 @@ import traceback
 from config import logging
 from contractCalls.refund import refund
 from lib import CacheType, _sbatch_call, log, run_command
-from utils import Link, create_dir, generate_md5sum
-
 from settings import init_env
+from utils import Link, create_dir, generate_md5sum
 
 env = init_env()
 
