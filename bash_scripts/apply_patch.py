@@ -3,7 +3,7 @@
 import os
 import sys
 
-from lib_git import git_apply_patch
+import libs.git as git
 
 # patch_file = "/home/alper/patch/patch_7bfea156ad612b2a634d0b98e65fe75c815e256d_3cb8e5f14fbd05589469a62017da475d_2.diff"
 # git_folder = "/home/alper/base/sourceCode"
@@ -14,4 +14,4 @@ git_folder = "/home/alper/base/data/data1"
 if not os.path.isfile(patch_file):
     sys.exit(1)
 
-git_apply_patch(git_folder, patch_file)
+git.apply_patch(git_folder, patch_file)

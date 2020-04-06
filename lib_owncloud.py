@@ -8,9 +8,9 @@ import time
 import traceback
 
 import owncloud
+
 from config import bp, logging  # noqa: F401
 from lib import compress_folder, printc, terminate
-
 from settings import init_env
 
 

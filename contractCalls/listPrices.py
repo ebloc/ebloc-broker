@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import config
-
 from get_providers import get_providers
 
 

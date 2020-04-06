@@ -6,9 +6,8 @@ import traceback
 from contractCalls.doesProviderExist import doesProviderExist
 from imports import connect
 from lib import get_tx_status
-from utils import read_json
-
 from settings import init_env
+from utils import read_json
 
 eBlocBroker, w3 = connect()
 env = init_env()
