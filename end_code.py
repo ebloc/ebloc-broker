@@ -9,8 +9,6 @@ import sys
 import time
 from typing import List
 
-from pymongo import MongoClient
-
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
@@ -21,12 +19,15 @@ from lib import (StorageID, calculate_folder_size, eblocbroker_function_call,
                  remove_empty_files_and_folders, remove_files, run_command,
                  run_command_stdout_to_file, silent_remove, subprocess_call_attempt)
 from lib_gdrive import get_data_key_ids, get_gdrive_file_info
-from lib_git import git_diff_patch, git_pin
+from lib_git import git_diff_patch
 from lib_mongodb import find_key
 from lib_owncloud import upload_results_to_eudat
 from lib_slurm import get_elapsed_raw_time, get_job_end_time
-from settings import WHERE, init_env
+from pymongo import MongoClient
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
+
+import libs.ipfs as ipfs
+from settings import WHERE, init_env
 
 eBlocBroker, w3 = connect()
 mc = MongoClient()
@@ -111,7 +112,7 @@ class ENDCODE:
     def ipfs_add_folder(self, folder_path):
         success, self.result_ipfs_hash = ipfs_add(folder_path)
         logging.info(f"result_ipfs_hash={self.result_ipfs_hash}")
-        git_pin(self.result_ipfs_hash)
+        ipfs.pin(self.result_ipfs_hash)
         data_transfer_out = get_ipfs_cumulative_size(self.result_ipfs_hash)
         data_transfer_out = byte_to_mb(data_transfer_out)
         self.dataTransferOut += data_transfer_out
@@ -140,7 +141,7 @@ class ENDCODE:
 
         logging.info(f"processPayment()_tx_hash={tx_hash}")
         f = open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a")
-        f.write(f"{self.job_key}_{self.index} | tx_hash: {tx_hash} | process_payment_tx()")
+        f.write(f"{self.job_key}_{self.index} | [processPayment()] tx_hash: {tx_hash} |")
         f.close()
 
     def get_shared_tokens(self):
@@ -151,7 +152,7 @@ class ENDCODE:
         for source_code_hash in self.source_code_hashes_to_process:
             try:
                 share_token = share_ids[source_code_hash]["share_token"]
-                self.share_tokens[source_code_hash] = share_token
+                self.share_tkens[source_code_hash] = share_token
                 self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
                     "utf-8"
                 )
@@ -180,33 +181,37 @@ class ENDCODE:
 
         subprocess.run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
-    def upload(self) -> bool:
-        remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
-        logging.info(f"=> Patch for source_code {self.job_key}")
+    def git_diff_patch_and_upload(self, source, name, is_job_key) -> bool:
+        if is_job_key:
+            logging.info(f"patch_base={self.patch_folder}")
+            logging.info(f"=> Patch for source code {name}")
+        else:
+            logging.info(f"=> Patch for data file {name}")
+
         try:
-            self.patch_name, self.patch_file, is_file_empty = git_diff_patch(self.results_folder, self.job_key, self.index, self.patch_folder, self.cloud_storage_id)
+            self.patch_name, self.patch_file, is_file_empty = git_diff_patch(source, name, self.index, self.patch_folder, self.cloud_storage_id)
         except:
             return False
 
         if not is_file_empty:
-            success = self._upload(self.results_folder, self.job_key, True)
+            success = self._upload(source, name, is_job_key)
             if not success:
                 return False
+        return True
 
-        for data_name in self.source_code_hashes_to_process[1:]:
+    def upload(self) -> bool:
+        remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
+
+        success = self.git_diff_patch_and_upload(self.results_folder, self.job_key, True)
+        if not success:
+            return False
+
+        for name in self.source_code_hashes_to_process[1:]:
             # Starting from 1st index for data files
-            logging.info(f"=> Patch for data-file {data_name}")
-            data_path = f"{self.results_data_folder}/{data_name}"
-
-            try:
-                self.patch_name, self.patch_file, is_file_empty = git_diff_patch(data_path, data_name, self.index, self.patch_folder, self.cloud_storage_id)
-            except:
+            source = f"{self.results_data_folder}/{name}"
+            success = self.git_diff_patch_and_upload(source, name, False)
+            if not success:
                 return False
-
-            if not is_file_empty:
-                success = self._upload(data_path, data_name, False)
-                if not success:
-                    return False
         return True
 
     def run(self):
@@ -261,7 +266,7 @@ class ENDCODE:
             logging.info(f"Waiting for {attempt * 15} seconds to pass...")
             # Short sleep here so this loop is not keeping CPU busy due to setJobSuccess may deploy late.
             time.sleep(15)
-        else: # Failed all the attempts - abort
+        else:  # Failed all the attempts - abort
             sys.exit(1)
 
         success, self.job_info = eblocbroker_function_call(
@@ -301,9 +306,9 @@ class IpfsMiniLockClass(ENDCODE):
 
     def run_upload(self):
         success = self.upload()
+
         # It will upload files after all the patchings are completed
-        success = self.ipfs_add_folder(self.patch_folder)
-        return success
+        return self.ipfs_add_folder(self.patch_folder)
 
     def _upload(self, path, source_code_hash, is_job_key) -> bool:
         os.chdir(self.results_folder)
@@ -385,20 +390,13 @@ class GdriveClass(ENDCODE):
         self.dataTransferOut += calculate_folder_size(self.patch_file)
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         if "folder" in mime_type:
-            # Received job is in folder format
-            logging.info("mime_type=folder")
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
-        elif "gzip" in mime_type:
-            # Received job is in folder tar.gz
-            logging.info("mime_type=tar.gz")
-            cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
-        elif "/zip" in mime_type:
-            # Received job is in zip format
-            logging.info("mime_type=zip")
+        elif "gzip" in mime_type or "/zip" in mime_type:
             cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         else:
             logging.error("E: Files could not be uploaded")
             return False
+
         try:
             logging.info(subprocess_call_attempt(cmd, 5))
         except:
