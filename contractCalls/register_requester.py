@@ -6,11 +6,10 @@ import traceback
 from os.path import expanduser
 
 from config import load_log
+from doesRequesterExist import doesRequesterExist
 from imports import connect, connect_to_web3
 from lib import get_tx_status
 from utils import read_json
-
-from doesRequesterExist import doesRequesterExist
 
 
 def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAddress, githubUsername):

@@ -6,16 +6,16 @@ import time
 import traceback
 from typing import List
 
+from pymongo import MongoClient
+
 import config
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
 from lib import CacheType, log, silent_remove
 from lib_mongodb import add_item_share_id, find_key
-from pymongo import MongoClient
+from settings import WHERE, init_env
 from storage_class import Storage
 from utils import byte_to_mb, create_dir, generate_md5sum, read_json
-
-from settings import WHERE, init_env
 
 env = init_env()
 mc = MongoClient()

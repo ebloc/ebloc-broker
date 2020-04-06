@@ -4,7 +4,6 @@ import traceback
 
 from imports import connect
 from lib import get_tx_status
-
 from settings import init_env
 
 env = init_env()

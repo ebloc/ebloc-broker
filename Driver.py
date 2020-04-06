@@ -27,9 +27,8 @@ from lib import (CacheType, StorageID, is_driver_on, is_geth_on, is_ipfs_running
                  log, printc, run_command, run_whisper_state_receiver, session_start_msg, terminate)
 from lib_owncloud import eudat_login
 from lib_slurm import get_idle_cores, is_slurm_on, slurm_pending_jobs_check
-from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
-
 from settings import init_env
+from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
 
 env = init_env()
 

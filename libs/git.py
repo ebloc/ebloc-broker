@@ -4,21 +4,21 @@ import subprocess
 import time
 
 import git
+
 from config import bp, logging  # noqa: F401
 from lib import printc, run_command
+from settings import init_env
 from utils import getcwd, getsize, path_leaf
 
-from settings import init_env
 
-
-def git_initialize_check(path):
+def initialize_check(path):
     """ .git/ folder should exist within the target folder"""
     cwd_temp = getcwd()
     os.chdir(path)
-    if not is_git_initialized(path, True):
+    if not is_initialized(path, True):
         try:
             run_command(["git", "init"])
-            git_add_all()
+            add_all()
         except Exception as error:
             logging.error(f"E: {error}")
             os.chdir(cwd_temp)
@@ -27,7 +27,7 @@ def git_initialize_check(path):
     return True
 
 
-def is_git_initialized(path, is_in_path=False) -> bool:
+def is_initialized(path, is_in_path=False) -> bool:
     if not is_in_path:
         cwd_temp = getcwd()
         os.chdir(path)
@@ -42,7 +42,7 @@ def is_git_initialized(path, is_in_path=False) -> bool:
     return path == working_tree_dir
 
 
-def git_diff_zip(filename):
+def diff_zip(filename):
     f = open(filename, "w")
     p1 = subprocess.Popen(["git", "diff", "--binary", "HEAD"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["gzip", "-9c"], stdin=p1.stdout, stdout=f)
@@ -51,7 +51,7 @@ def git_diff_zip(filename):
     f.close()
 
 
-def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
+def diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
     """
     * "git diff HEAD" for detecting all the changes:
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
@@ -64,7 +64,7 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
     os.chdir(path)
 
     """TODO
-    if not is_git_initialized(path):
+    if not is_initialized(path):
         upload everything, changed files!
     """
     success, output = run_command(["git", "config", "core.fileMode", "false"])
@@ -80,7 +80,7 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
     repo = git.Repo('.', search_parent_directories=True)
     try:
         repo.git.add(A=True)
-        git_diff_zip(patch_file)
+        diff_zip(patch_file)
     except:
         return False
     finally:
@@ -94,7 +94,7 @@ def git_diff_patch(path, source_code_hash, index, target_path, cloud_storage_id)
     return patch_name, patch_file, is_file_empty
 
 
-def git_add_all(repo=None):
+def add_all(repo=None):
     if not repo:
         repo = git.Repo('.', search_parent_directories=True)
 
@@ -120,7 +120,7 @@ def git_add_all(repo=None):
         return False
 
 
-def git_commit_changes(path) -> bool:
+def commit_changes(path) -> bool:
     cwd_temp = getcwd()
     os.chdir(path)
     repo = git.Repo('.', search_parent_directories=True)
@@ -135,7 +135,7 @@ def git_commit_changes(path) -> bool:
             os.chdir(cwd_temp)
             return True
     try:
-        git_add_all(repo)
+        add_all(repo)
     except Exception as error:
         logging.error(f"E: {error}")
         return False
@@ -145,7 +145,7 @@ def git_commit_changes(path) -> bool:
     return True
 
 
-def git_apply_patch(git_folder, patch_file):
+def apply_patch(git_folder, patch_file):
     cwd_temp = getcwd()
     os.chdir(git_folder)
 
@@ -166,12 +166,12 @@ def git_apply_patch(git_folder, patch_file):
     os.chdir(cwd_temp)
 
 
-def is_git_repo(folders) -> bool:
+def is_repo(folders) -> bool:
     success = True
     cwd_temp = getcwd()
     for idx, folder in enumerate(folders):
         os.chdir(folder)
-        if is_git_initialized(folder):
+        if is_initialized(folder):
             logging.warning(f".git does not exits in {folder}. Applying: git init")
             success, output = run_command(["git", "init"])
             logging.info(output)
