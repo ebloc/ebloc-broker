@@ -3,6 +3,7 @@
 from contractCalls.get_job_info import get_job_info
 from imports import connect
 from lib import job_state_code
+
 from settings import init_env
 
 env = init_env()
