@@ -15,13 +15,13 @@ from enum import Enum
 from shutil import copyfile
 from typing import Tuple
 
-from termcolor import colored
-
 import config
 from config import bp, logging  # noqa: F401
 from lib_mongodb import add_item
-from settings import WHERE, init_env
+from termcolor import colored
 from utils import byte_to_mb, read_json
+
+from settings import WHERE, init_env
 
 
 # enum: https://stackoverflow.com/a/1695250/2402577

@@ -8,7 +8,6 @@ from os.path import expanduser
 from random import randint
 
 import owncloud
-
 from lib_owncloud import eudat_initialize_folder, share_single_folder
 
 home = expanduser("~")

@@ -12,9 +12,8 @@ from os.path import expanduser
 from random import randint
 from test.func import testFunc
 
-import owncloud
-
 import lib
+import owncloud
 
 home = expanduser("~")
 path = os.getcwd()
