@@ -10,11 +10,11 @@ import os.path
 import sys
 from os.path import expanduser
 
-from lib import run_command
-from utils import read_json
 from web3 import HTTPProvider, Web3
 
+from lib import run_command
 from settings import init_env
+from utils import read_json
 
 env = init_env()
 w3 = Web3(HTTPProvider("http://localhost:8545"))

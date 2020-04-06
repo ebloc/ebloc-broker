@@ -7,9 +7,8 @@ from config import load_log
 from contractCalls.get_deployed_block_number import get_deployed_block_number
 from contractCalls.LogJob import LogJob
 from imports import connect_to_web3
-from utils import eth_address_to_md5
-
 from settings import init_env
+from utils import eth_address_to_md5
 
 env = init_env()
 
