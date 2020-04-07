@@ -54,7 +54,12 @@ class Storage(BaseClass):
     def complete_refund(self) -> bool:
         """Complete refund back to requester"""
         success, output = refund(
-            self.logged_job.args["provider"], self.PROVIDER_ID, self.job_key, self.index, self.job_id, self.source_code_hashes
+            self.logged_job.args["provider"],
+            self.PROVIDER_ID,
+            self.job_key,
+            self.index,
+            self.job_id,
+            self.source_code_hashes,
         )
         if not success:
             logging.error(output)
@@ -76,7 +81,9 @@ class Storage(BaseClass):
                 log(f"=> {name} is already cached under the public directory...", "blue")
             elif cache_type == CacheType.PRIVATE.value:
                 self.folder_path_to_download[name] = self.private_dir
-                log(f"=> {name} is already cached under the private directory...", "blue")
+                log(
+                    f"=> {name} is already cached under the private directory...", "blue",
+                )
 
             return True
 
@@ -115,11 +122,11 @@ class Storage(BaseClass):
 
     def is_run_exists_in_tar(self, tar_path) -> bool:
         try:
-            FNULL = open(os.devnull, "w")
             output = (
-                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL).decode("utf-8").strip()
+                subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=subprocess.DEVNULL,)
+                .decode("utf-8")
+                .strip()
             )
-            FNULL.close()
             if output.count("/") == 1:
                 # Main folder should contain the 'run.sh' file
                 logging.info("./run.sh exists under the parent folder")

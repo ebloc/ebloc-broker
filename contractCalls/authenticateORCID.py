@@ -23,7 +23,10 @@ def authenticateORCID(address, orc_id) -> (bool, str):
         return False, f"E: Account: {account} is not a valid address."
 
     if not is_owner(account):
-        return (False, f"E: Account: {account} that will call the transaction is not the owner of the contract.")
+        return (
+            False,
+            f"E: Account: {account} that will call the transaction is not the owner of the contract.",
+        )
 
     output = doesProviderExist(address)
     if not doesRequesterExist(address) and not output:
@@ -37,12 +40,17 @@ def authenticateORCID(address, orc_id) -> (bool, str):
 
     if not eBlocBroker.functions.isOrcIDVerified(address).call():
         try:
-            tx = eBlocBroker.functions.authenticateOrcID(address, str.encode(orc_id)).transact({"from": account, "gas": 4500000})
+            tx = eBlocBroker.functions.authenticateOrcID(address, str.encode(orc_id)).transact(
+                {"from": account, "gas": 4500000}
+            )
         except Exception:
             return False, traceback.format_exc()
         return True, tx.hex()
     else:
-        return (False, f"address: {address} that has orc_id: {orc_id} is already authenticated.")
+        return (
+            False,
+            f"address: {address} that has orc_id: {orc_id} is already authenticated.",
+        )
 
 
 if __name__ == "__main__":

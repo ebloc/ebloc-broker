@@ -63,7 +63,9 @@ def connect_to_web3():
         config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
     if not config.w3.isConnected():
-        logging.error("E: If web3 is not connected please run the following: sudo chown $(whoami) /private/geth.ipc")
+        logging.error(
+            "E: If web3 is not connected please start geth server and run the following: sudo chown $(whoami) /private/geth.ipc"
+        )
         return None
 
     if not env.PROVIDER_ID:

@@ -3,8 +3,8 @@
 import sys
 import time
 
-import libs.git as git
 import libs.eudat as eudat
+import libs.git as git
 from config import EBLOCPATH, bp  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
@@ -109,7 +109,9 @@ def eudat_submit_job(provider, oc):
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    oc = eudat.login("059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl")
+    oc = eudat.login(
+        "059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl",
+    )
 
     # oc = owncloud.Client("https://b2drop.eudat.eu/")
     # oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")

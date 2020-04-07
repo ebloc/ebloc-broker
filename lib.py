@@ -18,9 +18,9 @@ from typing import Tuple
 from termcolor import colored
 
 import config
+import libs.mongodb as mongodb
 from config import bp, logging  # noqa: F401
 from settings import WHERE, init_env
-import libs.mongodb as mongodb
 from utils import byte_to_mb, read_json
 
 
@@ -34,6 +34,7 @@ def enum(*sequential, **named):
 
 if config.w3 is None:
     from imports import connect_to_web3
+
     connect_to_web3()
 
 PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
@@ -90,7 +91,9 @@ def printc(text, color="white"):
 
 
 def session_start_msg(slurm_user, columns=100):
-    log("=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan")
+    log(
+        "=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan",
+    )
     printc(f"slurm_user={slurm_user} ] provider_address={PROVIDER_ID}", "blue")
 
 
@@ -339,6 +342,15 @@ def run_command_stdout_to_file(cmd, path, is_exit_flag=False) -> bool:
             raise SystemExit
 
 
+def run(cmd) -> str:
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
+    except Exception:
+        cmd_str = " ".join(cmd)
+        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {cmd_str}")
+        raise
+
+
 def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
     output = ""
     try:
@@ -414,9 +426,7 @@ def is_ipfs_hash_locally_cached(ipfs_hash) -> bool:
     """Run ipfs --offline refs -r or ipfs --offline block stat etc even if your normal daemon is running.
        With that you can check if something is available locally or no"""
     try:
-        FNULL = open(os.devnull, "w")
-        subprocess.check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=FNULL)
-        FNULL.close()
+        subprocess.check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=subprocess.DEVNULL)
         return True
     except Exception:
         return False
@@ -499,12 +509,12 @@ def is_ipfs_running():
 
 def is_run_exists_in_tar(tar_path):
     try:
-        FNULL = open(os.devnull, "w")
         logging.info(tar_path)
         output = (
-            subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=FNULL).decode("utf-8").strip()
+            subprocess.check_output(["tar", "ztf", tar_path, "--wildcards", "*/run.sh"], stderr=subprocess.DEVNULL,)
+            .decode("utf-8")
+            .strip()
         )
-        FNULL.close()
         if output.count("/") == 1:  # Main folder should contain the 'run.sh' file
             logging.info("./run.sh exists under the parent folder")
             return True
@@ -556,7 +566,9 @@ def compress_folder(folder_to_share):
     return tar_hash
 
 
-def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, dataTransferIn, source_code_hash_list, job_info):
+def _sbatch_call(
+    logged_job, requester_id, results_folder, results_folder_prev, dataTransferIn, source_code_hash_list, job_info,
+):
     job_key = logged_job.args["jobKey"]
     index = logged_job.args["index"]
     cloud_storage_id = logged_job.args["cloudStorageID"][0]  # 0 indicated maps to sourceCode
@@ -565,7 +577,7 @@ def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, 
 
     # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
     date = (
-        subprocess.check_output(["date", "--date=" + "1 seconds", "+%b %d %k:%M:%S %Y"], env={"LANG": "en_us_88591"})
+        subprocess.check_output(["date", "--date=" + "1 seconds", "+%b %d %k:%M:%S %Y"], env={"LANG": "en_us_88591"},)
         .decode("utf-8")
         .strip()
     )
@@ -590,7 +602,9 @@ def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, 
 
     logging.info("Adding recevied job into mongodb database.")
     # Adding job_key info along with its cacheDuration into mongodb
-    mongodb.add_item(job_key, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info)
+    mongodb.add_item(
+        job_key, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info,
+    )
 
     # TODO: update as used_dataTransferIn value
     f = f"{results_folder_prev}/dataTransferIn.json"
@@ -639,10 +653,20 @@ def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, 
             time.sleep(1)  # Wait 1 second for Slurm idle core to be updated.
         except subprocess.CalledProcessError as e:
             logging.error(e.output.decode("utf-8").strip())
-            success, output = run_command(["sacctmgr", "remove", "user", "where", f"user={requester_id}", "--immediate"])
+            success, output = run_command(
+                ["sacctmgr", "remove", "user", "where", f"user={requester_id}", "--immediate",]
+            )
             success, output = run_command(["sacctmgr", "add", "account", requester_id, "--immediate"])
             success, output = run_command(
-                ["sacctmgr", "create", "user", requester_id, f"defaultaccount={requester_id}", "adminlevel=[None]", "--immediate"]
+                [
+                    "sacctmgr",
+                    "create",
+                    "user",
+                    requester_id,
+                    f"defaultaccount={requester_id}",
+                    "adminlevel=[None]",
+                    "--immediate",
+                ]
             )
         else:
             break
@@ -679,7 +703,7 @@ def remove_empty_files_and_folders(results_folder) -> None:
 
     # Removes empty folders
     subprocess.run(["find", results_folder, "-type", "d", "-empty", "-delete"])
-    p1 = subprocess.Popen(["find", results_folder, "-type", "d", "-empty", "-print0"], stdout=subprocess.PIPE)
+    p1 = subprocess.Popen(["find", results_folder, "-type", "d", "-empty", "-print0"], stdout=subprocess.PIPE,)
     p2 = subprocess.Popen(["xargs", "-0", "-r", "rmdir"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     p2.communicate()

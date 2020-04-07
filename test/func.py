@@ -57,7 +57,10 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             sleepTime = jobKey[6]  # time to sleep in seconds
             block_number = get_block_number()
 
-            log("Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + str(block_number), path)
+            log(
+                "Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + str(block_number),
+                path,
+            )
             log("Nasa Submit range: " + jobKey[3] + " " + jobKey[4], path)
             log("Sleep Time to submit next job: " + sleepTime, path)
             log("Sourcecode Hash=" + sourceCodeHash, path)
@@ -74,7 +77,10 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             output = w3.personal.unlockAccount(
                 w3.eth.accounts[account_id], accountPassword
             )  # unlocks the selected account in case if unlocks over time
-            log("AccountID:" + str(account_id) + " (" + w3.eth.accounts[account_id] + ") is unlocked=>" + str(output), path)
+            log(
+                "AccountID:" + str(account_id) + " (" + w3.eth.accounts[account_id] + ") is unlocked=>" + str(output),
+                path,
+            )
             log(
                 "hash="
                 + jobKey[0]

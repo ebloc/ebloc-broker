@@ -81,7 +81,7 @@ def get_job_end_time(slurm_job_id):
     p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE,)
     p2.stdout.close()
     date = p3.communicate()[0].decode("utf-8").strip()
 

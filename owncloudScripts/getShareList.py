@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import owncloud
+
 # import libs.eudat as eudat
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
