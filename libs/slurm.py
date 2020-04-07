@@ -25,7 +25,7 @@ def get_idle_cores(is_print_flag=True):
     return idle_cores
 
 
-def slurm_pending_jobs_check():
+def pending_jobs_check():
     """ If there is no idle cores, waits for idle cores to be emerged. """
     idle_cores = get_idle_cores()
     is_print_flag = 0
@@ -33,15 +33,13 @@ def slurm_pending_jobs_check():
         if not is_print_flag:
             logging.info("Waiting running jobs to be completed...")
             is_print_flag = 1
-
         time.sleep(10)
         idle_cores = get_idle_cores(False)
 
 
-def is_slurm_on() -> bool:
+def is_on() -> bool:
     """Checks whether Slurm runs on the background or not, if not runs slurm"""
     logging.info("Checking Slurm... ")
-
     success, output = run_command(["sinfo"])
     if "PARTITION" not in output:
         logging.error("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n")
@@ -67,7 +65,6 @@ def get_elapsed_raw_time(slurm_job_id) -> int:
     elapsed_day = "0"
     elapsed_hour = elapsed_time[0].strip()
     elapsed_minute = elapsed_time[1].rstrip()
-
     if "-" in str(elapsed_hour):
         elapsed_hour = elapsed_hour.split("-")
         elapsed_day = elapsed_hour[0]
