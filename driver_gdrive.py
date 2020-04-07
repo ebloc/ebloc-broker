@@ -3,12 +3,12 @@
 import os
 import subprocess
 import time
+import libs.gdrive as gdrive
 
 from config import bp, logging  # noqa: F401
 from contractCalls.get_provider_info import get_provider_info
 from lib import (WHERE, CacheType, calculate_folder_size, echo_grep_awk, is_run_exists_in_tar, log,
                  run_command, silent_remove, subprocess_call_attempt)
-from lib_gdrive import gdrive_get_file_id, gdrive_size, get_gdrive_file_info
 from settings import init_env
 from storage_class import Storage
 from utils import byte_to_mb, create_dir, generate_md5sum
@@ -180,12 +180,12 @@ class GdriveClass(Storage):
         except:
             return False
 
-        mime_type = get_gdrive_file_info(gdrive_info, "Mime")
-        folder_name = get_gdrive_file_info(gdrive_info, "Name")
+        mime_type = gdrive.get_file_info(gdrive_info, "Mime")
+        folder_name = gdrive.get_file_info(gdrive_info, "Name")
         logging.info(f"mime_type={mime_type}")
         if is_job_key:
             # key for the sourceCode tar.gz file is obtained
-            success, self.dataTransferIn_used, self.job_key_list, key = gdrive_size(
+            success, self.dataTransferIn_used, self.job_key_list, key = gdrive.size(
                 key,
                 mime_type,
                 folder_name,
@@ -217,8 +217,8 @@ class GdriveClass(Storage):
             except:
                 return False
 
-            mime_type = get_gdrive_file_info(gdrive_info, "Mime")
-            name = get_gdrive_file_info(gdrive_info, "Name")
+            mime_type = gdrive.get_file_info(gdrive_info, "Mime")
+            name = gdrive.get_file_info(gdrive_info, "Name")
 
         source_code_hash = name.replace(".tar.gz", "")  # folder is already stored by its source_code_hash
         logging.info(f"name={name}")
@@ -226,7 +226,7 @@ class GdriveClass(Storage):
         if id == 0:
             # Source code folder, ignore downloading result-*
             name = f"{name}.tar.gz"
-            output = gdrive_get_file_id(key)
+            output = gdrive.get_file_id(key)
             key = echo_grep_awk(output, name, "1")
             mime_type = "gzip"
 
@@ -237,7 +237,7 @@ class GdriveClass(Storage):
             except:
                 return False
 
-            source_code_hash = get_gdrive_file_info(gdrive_info, "Md5sum")
+            source_code_hash = gdrive.get_file_info(gdrive_info, "Md5sum")
             self.md5sum_dict[key] = source_code_hash
             logging.info(f"md5sum={self.md5sum_dict[key]}")
 
