@@ -13,7 +13,9 @@ eBlocBroker, w3 = connect()
 env = init_env()
 
 
-def register_provider(availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num):
+def register_provider(
+    availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
+):
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
         return False, "Please first run: ../scripts/whisper_initialize.py"
     else:
@@ -29,7 +31,10 @@ def register_provider(availableCoreNum, email, federation_cloud_id, minilock_id,
             )
 
     if doesProviderExist(env.PROVIDER_ID):
-        return (False, f"Provider {env.PROVIDER_ID} is already registered. Please call the updateProvider() function for an update.")
+        return (
+            False,
+            f"Provider {env.PROVIDER_ID} is already registered. Please call the updateProvider() function for an update.",
+        )
 
     if commitment_block_num < 240:
         return False, "Commitment block number should be greater than 240"
@@ -68,7 +73,7 @@ if __name__ == "__main__":
     commitment_block_num = 240
 
     success, output = register_provider(
-        availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num
+        availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
     )
     if success:
         receipt = get_tx_status(success, output)

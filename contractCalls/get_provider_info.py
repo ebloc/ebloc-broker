@@ -18,7 +18,7 @@ def get_provider_info(_provider):
 
     blockReadFrom, providerPriceInfo = eBlocBroker.functions.getProviderInfo(provider, 0).call()
     event_filter = eBlocBroker.events.LogProviderInfo.createFilter(
-        fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)}
+        fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)},
     )
 
     provider_info = {

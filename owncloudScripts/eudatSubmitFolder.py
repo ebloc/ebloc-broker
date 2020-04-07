@@ -7,10 +7,10 @@ import time
 
 import owncloud
 
+import libs.eudat as eudat
 from contractCalls.submitJob import submitJob
 from imports import connect
 from utils import generate_md5sum
-import libs.eudat as eudat
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
@@ -32,7 +32,9 @@ def eudatSubmitJob(tar_hash=None):
         priceStorage,
         priceCache,
     ) = eBlocBroker.functions.getProviderInfo(providerAddress).call()
-    my_filter = eBlocBroker.eventFilter("LogProvider", {"fromBlock": int(blockReadFrom), "toBlock": int(blockReadFrom) + 1})
+    my_filter = eBlocBroker.eventFilter(
+        "LogProvider", {"fromBlock": int(blockReadFrom), "toBlock": int(blockReadFrom) + 1},
+    )
     fID = my_filter.get_all_entries()[0].args["fID"]
 
     if tar_hash is None:
@@ -58,7 +60,14 @@ def eudatSubmitJob(tar_hash=None):
     account_id = 0
 
     output = submitJob(
-        str(provider), str(tar_hash), coreNum, coreMinuteGas, str(jobDescription), cloudStorageID, str(tar_hash), account_id
+        str(provider),
+        str(tar_hash),
+        coreNum,
+        coreMinuteGas,
+        str(jobDescription),
+        cloudStorageID,
+        str(tar_hash),
+        account_id,
     )
     print(output)
 
