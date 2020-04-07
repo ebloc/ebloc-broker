@@ -26,9 +26,9 @@ from imports import connect
 from lib import (CacheType, StorageID, is_driver_on, is_geth_on, is_ipfs_running, job_state_code,
                  log, printc, run_command, run_whisper_state_receiver, session_start_msg, terminate)
 from lib_owncloud import eudat_login
-from lib_slurm import get_idle_cores, is_slurm_on, slurm_pending_jobs_check
 from settings import init_env
 from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
+import libs.slurm as slurm
 
 env = init_env()
 
@@ -45,7 +45,7 @@ def startup(slurm_user):
     if not is_geth_on():
         sys.exit(1)  # TODO: check to call terminate()
 
-    success = is_slurm_on()
+    success = slurm.is_on()
     if not success:
         sys.exit(1)
 
@@ -171,7 +171,7 @@ while True:
         logging.error(squeue_output)
         terminate()
 
-    idle_cores = get_idle_cores()
+    idle_cores = slurm.get_idle_cores()
     log(f"Current Slurm Running jobs success:\n {squeue_output}")
     log("-" * int(columns), "green")
     if "notconnected" != balance:
@@ -189,7 +189,7 @@ while True:
     logging.info(f"Passed incremented block number... Continue to wait from block number={block_read_from}")
     block_read_from = str(block_read_from)  # Starting reading event's location has been updated
     # block_read_from = '3082590' # used for test purposes
-    slurm_pending_jobs_check()
+    slurm.pending_jobs_check()
     logged_jobs_to_process = run_log_job(block_read_from, env.PROVIDER_ID)
     max_val = 0
     is_provider_received_job = False
@@ -318,7 +318,7 @@ while True:
             success, output = run_command(["sudo", "bash", f"{env.EBLOCPATH}/user.sh", requester_id, env.PROGRAM_PATH, slurm_user])
             logging.info(output)
             requester_md5_id = eth_address_to_md5(requester_id)
-            slurm_pending_jobs_check()
+            slurm.pending_jobs_check()
             main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
             if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
                 ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached)
