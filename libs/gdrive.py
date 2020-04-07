@@ -12,7 +12,7 @@ from utils import byte_to_mb, read_json
 env = init_env()
 
 
-def gdrive_list(tar_hash, is_folder=False):
+def list(tar_hash, is_folder=False):
     if is_folder:
         output = (
             subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}'", "--no-header"]).decode("utf-8").strip()
@@ -27,7 +27,7 @@ def gdrive_list(tar_hash, is_folder=False):
     return output
 
 
-def gdrive_upload_internal(dir_path, tar_hash, is_folder=False):
+def upload_internal(dir_path, tar_hash, is_folder=False):
     if is_folder:
         subprocess.run(["gdrive", "upload", "--recursive", f"{dir_path}/{tar_hash}"])
 
@@ -49,11 +49,11 @@ def gdrive_upload_internal(dir_path, tar_hash, is_folder=False):
     return output.split(" ")[0]
 
 
-def get_gdrive_file_info(gdrive_info, _type):
+def get_file_info(gdrive_info, _type):
     return echo_grep_awk(gdrive_info, _type, "2")
 
 
-def gdrive_get_file_id(key):
+def get_file_id(key):
     cmd = ["gdrive", "list", "--query", f"'{key}' in parents"]
     success, output = run_command(cmd, None, True)
     return output
@@ -69,11 +69,11 @@ def get_data_key_ids(results_folder_prev):
     return True, meta_data
 
 
-def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hash_list, is_cached):
+def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hash_list, is_cached):
     source_code_key = None
     size_to_download = 0
     if "folder" in mime_type:
-        output = gdrive_get_file_id(key)
+        output = get_file_id(key)
         data_files_id = echo_grep_awk(output, "meta_data.json", "1")
         # key for the sourceCode elimination output*.tar.gz files
         source_code_key = echo_grep_awk(output, f"{folder_name}.tar.gz", "1")
@@ -89,7 +89,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
         except:
             return False
 
-        md5sum = get_gdrive_file_info(gdrive_info, "Md5sum")
+        md5sum = get_file_info(gdrive_info, "Md5sum")
         if md5sum != source_code_hash_list[0].decode("utf-8"):
             # Checks md5sum obtained from gdrive and given by the user
             logging.error("E: md5sum does not match with the provided data[0]")
@@ -97,7 +97,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
         else:
             logging.info(f"Success on {md5sum} folder")
 
-        byte_size = int(get_gdrive_file_info(gdrive_info, "Size"))
+        byte_size = int(get_file_info(gdrive_info, "Size"))
         logging.info(f"sourceCodeHash[0]_size={byte_size} bytes")
         if not is_cached[source_code_hash_list[0].decode("utf-8")]:
             size_to_download += byte_size
@@ -109,7 +109,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
         data_key_dict = {}
         for idx, (k, v) in enumerate(meta_data.items(), start=1):
             _key = str(v)
-            output = gdrive_get_file_id(_key)
+            output = get_file_id(_key)
             data_key = echo_grep_awk(output, f"{k}.tar.gz", "1")
             try:
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
@@ -117,7 +117,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
             except:
                 return False
 
-            md5sum = get_gdrive_file_info(gdrive_info, "Md5sum")
+            md5sum = get_file_info(gdrive_info, "Md5sum")
             if md5sum != source_code_hash_list[idx].decode("utf-8"):
                 # Checks md5sum obtained from gdrive and given by the user
                 print(idx)
@@ -128,7 +128,7 @@ def gdrive_size(key, mime_type, folder_name, gdrive_info, results_folder_prev, s
                 return False, 0, [], source_code_key
 
             data_key_dict[md5sum] = data_key
-            _size = int(get_gdrive_file_info(gdrive_info, "Size"))
+            _size = int(get_file_info(gdrive_info, "Size"))
             logging.info(f"sourceCodeHash[{idx}]_size={_size} bytes")
             byte_size += _size
             if not is_cached[source_code_hash_list[idx].decode("utf-8")]:

@@ -4,11 +4,9 @@ import os
 import random
 import subprocess
 import time
-from os.path import expanduser
-
+import libs.eudat as eudat
 import owncloud
-
-from lib_owncloud import eudat_initialize_folder, share_single_folder
+from os.path import expanduser
 
 home = expanduser("~")
 path = os.getcwd()
@@ -42,10 +40,10 @@ with open(path + "/../nasa.txt") as test:
             f.write("#" + randomHash + "\n")  # Add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
             f.close()
-            tarHash = eudat_initialize_folder("ipfs", oc)  # Should give folder name
+            tarHash = eudat.initialize_folder("ipfs", oc)  # Should give folder name
             time.sleep(1)
             # After run.sh is update share the ipfs through eudat
-            print(share_single_folder(tarHash, oc))
+            print(eudat.share_single_folder(tarHash, oc))
             if flag == 1:
                 hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
 
