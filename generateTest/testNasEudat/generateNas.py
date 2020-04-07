@@ -4,10 +4,12 @@ import itertools
 import os
 import subprocess
 import time
-import libs.eudat as eudat
-import owncloud
 from os.path import expanduser
 from random import randint
+
+import owncloud
+
+import libs.eudat as eudat
 
 home = expanduser("~")
 

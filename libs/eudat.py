@@ -6,6 +6,7 @@ import pickle
 import subprocess
 import time
 import traceback
+
 import owncloud
 
 from config import bp, logging  # noqa: F401
@@ -163,7 +164,9 @@ def is_oc_mounted() -> bool:
     mount_path = "/oc"
     output = None
     try:
-        output = subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", mount_path]).decode("utf-8").strip()
+        output = (
+            subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", mount_path]).decode("utf-8").strip()
+        )
     except subprocess.CalledProcessError as e:
         print(f"E: {e}")
         return False

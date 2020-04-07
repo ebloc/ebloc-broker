@@ -32,7 +32,7 @@ def is_initialized(path, is_in_path=False) -> bool:
         cwd_temp = getcwd()
         os.chdir(path)
     try:
-        repo = git.Repo('.', search_parent_directories=True)
+        repo = git.Repo(".", search_parent_directories=True)
         working_tree_dir = repo.working_tree_dir
     except:
         return False
@@ -77,7 +77,7 @@ def diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
     patch_file = f"{target_path}/{patch_name}.gz"
     logging.info(f"patch_path={patch_name}.gz")
 
-    repo = git.Repo('.', search_parent_directories=True)
+    repo = git.Repo(".", search_parent_directories=True)
     try:
         repo.git.add(A=True)
         diff_zip(patch_file)
@@ -96,7 +96,7 @@ def diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
 
 def add_all(repo=None):
     if not repo:
-        repo = git.Repo('.', search_parent_directories=True)
+        repo = git.Repo(".", search_parent_directories=True)
 
     # Required for files to be access on the cluster side due to permission issues
     subprocess.run(["chmod", "-R", "775", "."])  # Changes folder's hash
@@ -114,7 +114,7 @@ def add_all(repo=None):
             success, is_diff = run_command(["git", "diff", "--cached", "--shortstat"])
 
         if success and is_diff:
-            repo.git.commit('-m', 'update')  # git commit -m update
+            repo.git.commit("-m", "update")  # git commit -m update
         return True
     except:
         return False
@@ -123,7 +123,7 @@ def add_all(repo=None):
 def commit_changes(path) -> bool:
     cwd_temp = getcwd()
     os.chdir(path)
-    repo = git.Repo('.', search_parent_directories=True)
+    repo = git.Repo(".", search_parent_directories=True)
 
     success, output = run_command(["ls", "-l", ".git/refs/heads"])
     if output == "total 0":

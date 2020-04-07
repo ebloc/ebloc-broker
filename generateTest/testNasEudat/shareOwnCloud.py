@@ -28,4 +28,6 @@ for i in range(0, len(folderNames) - 1):
     name = folderNames[i]
     print(name)
     if not oc.is_shared(name):
-        oc.share_file_with_user(name, "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", remote_user=True, perms=31)
+        oc.share_file_with_user(
+            name, "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", remote_user=True, perms=31,
+        )

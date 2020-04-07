@@ -7,6 +7,8 @@ import sys
 import time
 
 import config
+import libs.eudat as eudat
+import libs.slurm as slurm
 from config import bp, load_log  # noqa: F401
 from contract.scripts.lib import DataStorage
 from contractCalls.doesProviderExist import doesProviderExist
@@ -23,12 +25,23 @@ from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
 from driver_ipfs import IpfsClass
 from imports import connect
-from lib import (CacheType, StorageID, is_driver_on, is_geth_on, is_ipfs_running, job_state_code,
-                 log, printc, run_command, run_whisper_state_receiver, session_start_msg, terminate)
+from lib import (
+    CacheType,
+    StorageID,
+    is_driver_on,
+    is_geth_on,
+    is_ipfs_running,
+    job_state_code,
+    log,
+    printc,
+    run,
+    run_command,
+    run_whisper_state_receiver,
+    session_start_msg,
+    terminate,
+)
 from settings import init_env
 from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
-import libs.slurm as slurm
-import libs.eudat as eudat
 
 env = init_env()
 
@@ -58,8 +71,9 @@ def startup(slurm_user):
         oc = eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
     if env.GDRIVE_USE:
-        success, output = run_command(["gdrive", "version"])
-        if not success:
+        try:
+            run(["gdrive", "version"])
+        except:
             logging.warning("Please install gdrive or check its path")
             terminate()
 
@@ -167,7 +181,7 @@ while True:
 
     balance = get_balance(env.PROVIDER_ID)
     success, squeue_output = run_command(["squeue"])
-    if "squeue: error:" in str(squeue_output):
+    if not success or "squeue: error:" in str(squeue_output):
         logging.error(f"SLURM is not running on the background, please run: sudo ./runSlurm.sh.")
         logging.error(squeue_output)
         terminate()
@@ -199,8 +213,8 @@ while True:
     for idx, logged_job in enumerate(logged_jobs_to_process):
         is_pass = False
         is_provider_received_job = True
-
-        log("-" * int(int(columns) / 2 - 12) + f" {idx} " + "-" * int(int(columns) / 2 - 12), "blue")
+        columns_size = int(int(columns) / 2 - 12)
+        log("-" * columns_size + f" {idx} " + "-" * columns_size, "blue")
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = logged_job.args["jobKey"]
         index = logged_job.args["index"]
@@ -248,7 +262,10 @@ while True:
                 f"is_already_cached={is_already_cached[source_code_hash]} \n"
             )
 
-        if logged_job.args["cloudStorageID"] == StorageID.IPFS or logged_job.args["cloudStorageID"] == StorageID.IPFS_MINILOCK:
+        if (
+            logged_job.args["cloudStorageID"] == StorageID.IPFS
+            or logged_job.args["cloudStorageID"] == StorageID.IPFS_MINILOCK
+        ):
             sourceCodeHash = bytes32_to_ipfs(logged_job.args["sourceCodeHash"])
             if sourceCodeHash != logged_job.args["jobKey"]:
                 logging.error("IPFS hash does not match with the given sourceCodeHash.")
@@ -316,23 +333,25 @@ while True:
 
         if not is_pass:
             logging.info("Adding user...")
-            success, output = run_command(["sudo", "bash", f"{env.EBLOCPATH}/user.sh", requester_id, env.PROGRAM_PATH, slurm_user])
+            success, output = run_command(
+                ["sudo", "bash", f"{env.EBLOCPATH}/user.sh", requester_id, env.PROGRAM_PATH, slurm_user,]
+            )
             logging.info(output)
             requester_md5_id = eth_address_to_md5(requester_id)
             slurm.pending_jobs_check()
             main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
             if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-                ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached)
+                ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
                 ipfs.run()
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
                     eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
-                eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc)
+                eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc,)
                 eudat.run()
                 # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
             elif main_cloud_storage_id == StorageID.GDRIVE.value:
-                gdrive = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached)
+                gdrive = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
                 gdrive.run()
 
     time.sleep(1)

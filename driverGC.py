@@ -35,7 +35,9 @@ for document in cursor:
             success, output = run_command(["ipfs", "repo", "gc"])
             print(output)
         else:
-            cachedFileName = env.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
+            cachedFileName = (
+                env.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
+            )
             print(cachedFileName)
             silent_remove(cachedFileName)
             cachedFileName = env.PROGRAM_PATH + "/cache/" + document["sourceCodeHash"] + "tar.gz"

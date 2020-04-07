@@ -6,10 +6,10 @@ from os import path, sys
 from pdb import set_trace as bp  # noqa: F401
 
 import brownie
-import scripts.lib
 from brownie import accounts
 
 import lib  # noqa: F401
+import scripts.lib
 import utils
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
@@ -508,7 +508,9 @@ def test_storage_refund(eB, rpc, web3):
 
     isVerified = [True, True]
     # Called by the cluster
-    eB.sourceCodeHashReceived(jobKey, index, sourceCodeHash_list, cacheType_list, isVerified, {"from": provider, "gas": 4500000})
+    eB.sourceCodeHashReceived(
+        jobKey, index, sourceCodeHash_list, cacheType_list, isVerified, {"from": provider, "gas": 4500000}
+    )
 
     for source_code_hash in sourceCodeHash_list:
         print(eB.getJobStorageTime(provider, source_code_hash))
@@ -535,7 +537,9 @@ def test_updateProvider(eB, rpc, web3):
     rpc.mine(5)
     register_provider(eB, rpc, web3)
     federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    tx = eB.updateProviderInfo(provider_email, federatedCloudID, miniLockID, ipfs_address, whisperPubKey, {"from": accounts[0]})
+    tx = eB.updateProviderInfo(
+        provider_email, federatedCloudID, miniLockID, ipfs_address, whisperPubKey, {"from": accounts[0]}
+    )
 
     print(eB.getUpdatedProviderPricesBlocks(accounts[0]))
 

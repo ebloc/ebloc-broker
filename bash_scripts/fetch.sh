@@ -5,6 +5,6 @@ git checkout master
 git reset --hard origin/master
 
 git fetch
-git checkout origin/master -- contract/
-git checkout origin/master -- contractCalls/contract.json
-git checkout origin/master -- contractCalls/abi.json
+git checkout origin/master -- $HOME/eBlocBroker/contract/
+git checkout origin/master -- $HOME/eBlocBroker/contractCalls/contract.json
+git checkout origin/master -- $HOME/eBlocBroker/contractCalls/abi.json
