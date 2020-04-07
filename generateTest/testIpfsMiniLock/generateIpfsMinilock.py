@@ -34,10 +34,19 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             encrypyFolderPath = "/home/prc/eBlocBroker/generateTest/ipfs"
             os.chdir(encrypyFolderPath)
             p1 = subprocess.Popen(["find", ".", "-print0"], stdout=subprocess.PIPE)
-            p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
+            p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"},)
             p1.stdout.close()
 
-            cmd = ["tar", "--absolute-names", "--no-recursion", "--null", "-T", "-", "-zcvf", "../ipfs.tar.gz"]
+            cmd = [
+                "tar",
+                "--absolute-names",
+                "--no-recursion",
+                "--null",
+                "-T",
+                "-",
+                "-zcvf",
+                "../ipfs.tar.gz",
+            ]
             p3 = subprocess.Popen(cmd, stdin=p2.stdout, stdout=subprocess.PIPE, env={"GZIP": "-n"})
             p2.stdout.close()
             p3.communicate()

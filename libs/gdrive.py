@@ -15,11 +15,13 @@ env = init_env()
 def list(tar_hash, is_folder=False):
     if is_folder:
         output = (
-            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}'", "--no-header"]).decode("utf-8").strip()
+            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}'", "--no-header"])
+            .decode("utf-8")
+            .strip()
         )
     else:
         output = (
-            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}.tar.gz'", "--no-header"])
+            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}.tar.gz'", "--no-header",])
             .decode("utf-8")
             .strip()
         )
@@ -32,7 +34,9 @@ def upload_internal(dir_path, tar_hash, is_folder=False):
         subprocess.run(["gdrive", "upload", "--recursive", f"{dir_path}/{tar_hash}"])
 
         output = (
-            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}'", "--no-header"]).decode("utf-8").strip()
+            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}'", "--no-header"])
+            .decode("utf-8")
+            .strip()
         )
     else:
         # subprocess.run(['mv', folderToShare + '.tar.gz', tar_hash + '.tar.gz'])
@@ -41,7 +45,7 @@ def upload_internal(dir_path, tar_hash, is_folder=False):
         os.remove(tar_file_path)
 
         output = (
-            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}.tar.gz'", "--no-header"])
+            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}.tar.gz'", "--no-header",])
             .decode("utf-8")
             .strip()
         )
@@ -69,7 +73,9 @@ def get_data_key_ids(results_folder_prev):
     return True, meta_data
 
 
-def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hash_list, is_cached):
+def size(
+    key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hash_list, is_cached,
+):
     source_code_key = None
     size_to_download = 0
     if "folder" in mime_type:
@@ -81,10 +87,25 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             if not data_files_id:
                 return False
 
-            cmd = ["gdrive", "download", "--recursive", data_files_id, "--force", "--path", results_folder_prev]
+            cmd = [
+                "gdrive",
+                "download",
+                "--recursive",
+                data_files_id,
+                "--force",
+                "--path",
+                results_folder_prev,
+            ]
             output = subprocess_call_attempt(cmd, 10)
 
-            cmd = ["gdrive", "info", "--bytes", source_code_key, "-c", env.GDRIVE_METADATA]
+            cmd = [
+                "gdrive",
+                "info",
+                "--bytes",
+                source_code_key,
+                "-c",
+                env.GDRIVE_METADATA,
+            ]
             gdrive_info = subprocess_call_attempt(cmd, 10)
         except:
             return False

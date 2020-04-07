@@ -19,14 +19,20 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
 
     home = expanduser("~")
     if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
-        return (False, "Please first run: python ~/eBlocBroker/scripts/whisper_initialize.py")
+        return (
+            False,
+            "Please first run: python ~/eBlocBroker/scripts/whisper_initialize.py",
+        )
     else:
         success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
 
         if not w3.geth.shh.hasKeyPair(kId):
-            return (False, "Whisper node's private key of a key pair did not match with the given ID")
+            return (
+                False,
+                "Whisper node's private key of a key pair did not match with the given ID",
+            )
 
     account = w3.eth.accounts[int(account_id)]  # Requester's Ethereum Address
     if doesRequesterExist(account):
@@ -35,7 +41,7 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
     if len(federationCloudID) < 128 and len(email) < 128:
         try:
             tx = eBlocBroker.functions.registerRequester(
-                email, federationCloudID, miniLockID, ipfsAddress, githubUsername, whisperPubKey
+                email, federationCloudID, miniLockID, ipfsAddress, githubUsername, whisperPubKey,
             ).transact({"from": account, "gas": 4500000})
         except Exception:
             return False, traceback.format_exc()

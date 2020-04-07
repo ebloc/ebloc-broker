@@ -20,7 +20,9 @@ def get_requester_info(requester):
 
     try:
         blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(requester).call()
-        event_filter = eBlocBroker.events.LogRequester.createFilter(fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1)
+        event_filter = eBlocBroker.events.LogRequester.createFilter(
+            fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1
+        )
         requesterInfo = {
             "requester": requester,
             "blockReadFrom": blockReadFrom,

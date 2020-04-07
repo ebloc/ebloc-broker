@@ -10,7 +10,7 @@ def WHERE(back=0):
         frame = sys._getframe(back + 1)
     except:
         frame = sys._getframe(1)
-    return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name)
+    return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name,)
 
 
 def init_env():
