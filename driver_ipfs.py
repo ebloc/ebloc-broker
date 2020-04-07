@@ -7,8 +7,17 @@ import time
 import libs.git as git
 import libs.ipfs as ipfs
 from config import bp, logging  # noqa: F401
-from lib import (CacheType, StorageID, calculate_folder_size, is_ipfs_hash_exists,
-                 is_ipfs_hash_locally_cached, is_ipfs_running, log, run_command, silent_remove)
+from lib import (
+    CacheType,
+    StorageID,
+    calculate_folder_size,
+    is_ipfs_hash_exists,
+    is_ipfs_hash_locally_cached,
+    is_ipfs_running,
+    log,
+    run_command,
+    silent_remove,
+)
 from settings import init_env
 from storage_class import Storage
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir

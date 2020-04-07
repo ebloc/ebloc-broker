@@ -28,11 +28,11 @@ class ENV:
         self.GDRIVE = os.getenv("GDRIVE")
         self.OC_USER = os.getenv("OC_USER")
         self.IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
-        self.EUDAT_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1")
-        self.GDRIVE_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1")
+        self.EUDAT_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1",)
+        self.GDRIVE_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1",)
 
         self.EBLOCPATH = os.getenv("EBLOCPATH")
-        self.POA_CHAIN = str(os.getenv("POA_CHAIN")).lower() in ("yes", "true", "t", "1")
+        self.POA_CHAIN = str(os.getenv("POA_CHAIN")).lower() in ("yes", "true", "t", "1",)
         self.RPC_PORT = os.getenv("RPC_PORT")
 
         self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"

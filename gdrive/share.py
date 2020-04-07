@@ -6,15 +6,14 @@ import shutil
 import sys
 import traceback
 
-import libs.git as git
 import libs.gdrive as gdrive
+import libs.git as git
 from config import EBLOCPATH, bp, logging  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib import (CacheType, StorageID, compress_folder, get_tx_status, printc, run_command,
-                 silent_remove)
+from lib import CacheType, StorageID, compress_folder, get_tx_status, printc, run_command, silent_remove
 from utils import read_json
 
 base_folder = f"{EBLOCPATH}/base"
@@ -78,7 +77,17 @@ def share_folder(folder_to_share, provider_to_share, job_key_flag=False):
     job_key, already_uploaded, tar_hash = gdrive_upload(folder_to_share, job_key_flag)
     logging.info(f"job_key={job_key}")
     if not already_uploaded:
-        cmd = ["gdrive", "share", job_key, "--role", "writer", "--type", "user", "--email", provider_to_share]
+        cmd = [
+            "gdrive",
+            "share",
+            job_key,
+            "--role",
+            "writer",
+            "--type",
+            "user",
+            "--email",
+            provider_to_share,
+        ]
         success, output = run_command(cmd)
         logging.info(f"share_output={output}")
 
