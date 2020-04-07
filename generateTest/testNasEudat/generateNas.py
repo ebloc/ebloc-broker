@@ -4,15 +4,12 @@ import itertools
 import os
 import subprocess
 import time
+import libs.eudat as eudat
+import owncloud
 from os.path import expanduser
 from random import randint
 
-import owncloud
-
-from lib_owncloud import eudat_initialize_folder, share_single_folder
-
 home = expanduser("~")
-
 
 path = os.getcwd()
 os.environ["path"] = path
@@ -55,9 +52,9 @@ for idx in itertools.count(0):
         f.write("bin/lu.B.x inputlu.data")
 
     f.close()
-    tarHash = eudat_initialize_folder("ipfs", oc)
+    tarHash = eudat.initialize_folder("ipfs", oc)
     time.sleep(1)
-    print(share_single_folder(tarHash, oc))
+    print(eudat.share_single_folder(tarHash, oc))
     print(f"Shared Job#{idx}")
     sleepTime = randint(300, 600)
     hashesFile.write(

@@ -6,7 +6,6 @@ import pickle
 import subprocess
 import time
 import traceback
-
 import owncloud
 
 from config import bp, logging  # noqa: F401
@@ -14,7 +13,7 @@ from lib import compress_folder, printc, terminate
 from settings import init_env
 
 
-def _upload_results_to_eudat(encoded_share_token, output_file_name):
+def _upload_results(encoded_share_token, output_file_name):
     """ doc: https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577
     cmd:
     curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encoded_share_token\'==\' \
@@ -43,12 +42,12 @@ def _upload_results_to_eudat(encoded_share_token, output_file_name):
     return p, output, error
 
 
-def upload_results_to_eudat(encoded_share_token, output_file_name, results_folder_prev, attempt_count=1):
-    """Wrapper for the _upload_results_to_eudat() function"""
+def upload_results(encoded_share_token, output_file_name, results_folder_prev, attempt_count=1):
+    """Wrapper for the _upload_results() function"""
     cwd_temp = os.getcwd()
     os.chdir(results_folder_prev)
     for attempt in range(attempt_count):
-        p, output, err = _upload_results_to_eudat(encoded_share_token, output_file_name)
+        p, output, err = _upload_results(encoded_share_token, output_file_name)
         output = output.strip().decode("utf-8")
         err = err.decode("utf-8")
         if p.returncode != 0 or "<d:error" in output:
@@ -65,7 +64,7 @@ def upload_results_to_eudat(encoded_share_token, output_file_name, results_folde
         return False
 
 
-def eudat_login(user, password_path, name):
+def login(user, password_path, name):
     logging.info("Login into owncloud... ")
     env = init_env()
     fname = f"{env.EBLOCPATH}/{name}"
@@ -132,7 +131,7 @@ def share_single_folder(folder_name, oc, fID) -> bool:
         return False
 
 
-def eudat_initialize_folder(folder_to_share, oc) -> str:
+def initialize_folder(folder_to_share, oc) -> str:
     dir_path = os.path.dirname(folder_to_share)
     tar_hash = compress_folder(folder_to_share)
     try:

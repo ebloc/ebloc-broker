@@ -7,6 +7,7 @@ import sys
 import traceback
 
 import libs.git as git
+import libs.gdrive as gdrive
 from config import EBLOCPATH, bp, logging  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
@@ -14,7 +15,6 @@ from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import (CacheType, StorageID, compress_folder, get_tx_status, printc, run_command,
                  silent_remove)
-from lib_gdrive import gdrive_list, gdrive_upload_internal
 from utils import read_json
 
 base_folder = f"{EBLOCPATH}/base"
@@ -42,10 +42,10 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
     if job_key_flag:
         shutil.copyfile(f"{base_folder}/meta_data.json", f"{path_to_move}/meta_data.json")
 
-    output = gdrive_list(tar_hash, True)
+    output = gdrive.list(tar_hash, True)
     if not output:
-        key = gdrive_upload_internal(dir_path, tar_hash, True)
-        logging.info(gdrive_list(tar_hash))
+        key = gdrive.upload_internal(dir_path, tar_hash, True)
+        logging.info(gdrive.list(tar_hash))
     else:
         printc(f"=> Requested folder {tar_hash} is already uploaded", "blue")
         logging.info(output)
@@ -59,10 +59,10 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
         logging.info(f"job_key_flag={job_key_flag}")
         dir_path = os.path.dirname(folder_to_share)
         tar_hash = compress_folder(folder_to_share)
-        output = gdrive_list(tar_hash)
+        output = gdrive.list(tar_hash)
         if not output:
-            key = gdrive_upload_internal(dir_path, tar_hash)
-            logging.info(gdrive_list(tar_hash))
+            key = gdrive.upload_internal(dir_path, tar_hash)
+            logging.info(gdrive.list(tar_hash))
         else:
             printc(f"=> Requested file {tar_hash}.tar.gz is already uploaded", "blue")
             logging.info(output)

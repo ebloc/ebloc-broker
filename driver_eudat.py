@@ -12,10 +12,10 @@ import config
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
 from lib import CacheType, log, silent_remove
-from lib_mongodb import add_item_share_id, find_key
 from settings import WHERE, init_env
 from storage_class import Storage
 from utils import byte_to_mb, create_dir, generate_md5sum, read_json
+import libs.mongodb as mongodb
 
 env = init_env()
 mc = MongoClient()
@@ -163,7 +163,7 @@ class EudatClass(Storage):
         accept_flag = 0
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
-            success, output = find_key(mc["eBlocBroker"]["shareID"], folder_name)
+            success, output = mongodb.find_key(mc["eBlocBroker"]["shareID"], folder_name)
             if success:
                 self.shareID[folder_name] = {"shareID": output["shareID"], "share_token": output["share_token"]}
                 mongodb_accept_flag += 1
@@ -184,7 +184,7 @@ class EudatClass(Storage):
                         self.share_token = str(share_list[idx]["share_token"])
                         self.shareID[folder_name] = {"shareID": int(share_id), "share_token": self.share_token}
                         # Adding into mongodb for future usage
-                        success = add_item_share_id(folder_name, share_id, self.share_token)
+                        success = mongodb.add_item_share_id(folder_name, share_id, self.share_token)
                         if success:
                             logging.info("Successfull added into mongodb")
                         else:
@@ -260,7 +260,7 @@ class EudatClass(Storage):
             try:
                 self.shareID[folder_name]["share_token"]
             except KeyError:
-                success, output = find_key(mc["eBlocBroker"]["shareID"], folder_name)
+                success, output = mongodb.find_key(mc["eBlocBroker"]["shareID"], folder_name)
                 if not success:
                     logging.error(f"E: shareID cannot detected from key: {self.job_key}")
                 return False
