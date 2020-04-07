@@ -25,10 +25,10 @@ from driver_ipfs import IpfsClass
 from imports import connect
 from lib import (CacheType, StorageID, is_driver_on, is_geth_on, is_ipfs_running, job_state_code,
                  log, printc, run_command, run_whisper_state_receiver, session_start_msg, terminate)
-from lib_owncloud import eudat_login
 from settings import init_env
 from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
 import libs.slurm as slurm
+import libs.eudat as eudat
 
 env = init_env()
 
@@ -55,7 +55,7 @@ def startup(slurm_user):
         if env.OC_USER is None or env.OC_USER == "":
             logging.error(f"OC_USER is not set in {env.EBLOCPATH}/.env")
             terminate()
-        oc = eudat_login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
+        oc = eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
     if env.GDRIVE_USE:
         success, output = run_command(["gdrive", "version"])
@@ -67,6 +67,7 @@ def startup(slurm_user):
         is_ipfs_running()
 
     return oc
+
 
 # Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
 subprocess.run(["sudo", "printf", ""])
@@ -325,7 +326,7 @@ while True:
                 ipfs.run()
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if oc is None:
-                    eudat_login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
+                    eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
                 eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc)
                 eudat.run()

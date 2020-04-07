@@ -19,8 +19,8 @@ from termcolor import colored
 
 import config
 from config import bp, logging  # noqa: F401
-from lib_mongodb import add_item
 from settings import WHERE, init_env
+import libs.mongodb as mongodb
 from utils import byte_to_mb, read_json
 
 
@@ -590,7 +590,7 @@ def _sbatch_call(logged_job, requester_id, results_folder, results_folder_prev, 
 
     logging.info("Adding recevied job into mongodb database.")
     # Adding job_key info along with its cacheDuration into mongodb
-    add_item(job_key, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info)
+    mongodb.add_item(job_key, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info)
 
     # TODO: update as used_dataTransferIn value
     f = f"{results_folder_prev}/dataTransferIn.json"

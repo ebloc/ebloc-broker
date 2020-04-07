@@ -2,12 +2,11 @@
 
 import os
 from os.path import expanduser
-
-from lib_owncloud import eudat_login
+import libs.eudat as eudat
 
 home = expanduser("~")
 
-oc = eudat_login("aalimog1@@boun.edu.tr", "/home/alper/.eBlocBroker/password_owncloud.txt")
+oc = eudat.login("aalimog1@@boun.edu.tr", "/home/alper/.eBlocBroker/password_owncloud.txt")
 folderNames = os.listdir(home + "/oc")
 
 for i in range(0, len(folderNames) - 1):
