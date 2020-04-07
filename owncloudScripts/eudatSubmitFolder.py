@@ -9,8 +9,8 @@ import owncloud
 
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib_owncloud import is_oc_mounted, share_single_folder
 from utils import generate_md5sum
+import libs.eudat as eudat
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
@@ -48,8 +48,8 @@ def eudatSubmitJob(tar_hash=None):
             sys.exit(1)
 
     time.sleep(1)
-    print(share_single_folder(tar_hash, oc, fID))
-    # subprocess.run(['python', 'share_single_folder.py', tar_hash])
+    print(eudat.share_single_folder(tar_hash, oc, fID))
+    # subprocess.run(['python', 'eudat.share_single_folder.py', tar_hash])
     print("\nSubmitting Job...")
     coreNum = 1
     coreMinuteGas = 5

@@ -14,6 +14,9 @@ from pymongo import MongoClient
 import libs.git as git
 import libs.ipfs as ipfs
 import libs.slurm as slurm
+import libs.mongodb as mongodb
+import libs.gdrive as gdrive
+import libs.eudat as eudat
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
@@ -23,12 +26,8 @@ from lib import (StorageID, calculate_folder_size, eblocbroker_function_call,
                  get_ipfs_cumulative_size, ipfs_add, is_dir, job_state_code,
                  remove_empty_files_and_folders, remove_files, run_command,
                  run_command_stdout_to_file, silent_remove, subprocess_call_attempt)
-from lib_gdrive import get_data_key_ids, get_gdrive_file_info
-from lib_mongodb import find_key
-from lib_owncloud import upload_results_to_eudat
 from settings import WHERE, init_env
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
-
 
 eBlocBroker, w3 = connect()
 mc = MongoClient()
@@ -158,7 +157,7 @@ class ENDCODE:
                     "utf-8"
                 )
             except KeyError:
-                success, share_token = find_key(mc["eBlocBroker"]["shareID"], self.job_key)
+                success, share_token = mongodb.find_key(mc["eBlocBroker"]["shareID"], self.job_key)
                 self.share_tokens[source_code_hash] = share_token
                 self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
                     "utf-8"
@@ -356,7 +355,7 @@ class EudatClass(ENDCODE):
         data_transfer_out = calculate_folder_size(self.patch_file)
         logging.info(f"[{source_code_hash}]'s dataTransferOut => {data_transfer_out} MB")
         self.dataTransferOut += data_transfer_out
-        success = upload_results_to_eudat(self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5)
+        success = eudat.upload_results(self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5)
         return success
 
 
@@ -370,7 +369,7 @@ class GdriveClass(ENDCODE):
     def _upload(self, path, key, is_job_key) -> bool:
         try:
             if not is_job_key:
-                success, meta_data = get_data_key_ids(self.results_folder_prev)
+                success, meta_data = gdrive.get_data_key_ids(self.results_folder_prev)
                 if not success:
                     return False
                 try:
@@ -385,7 +384,7 @@ class GdriveClass(ENDCODE):
             logging.error(f"[{WHERE(1)}] E: {key} does not have a match. meta_data={meta_data}")
             return False
 
-        mime_type = get_gdrive_file_info(gdrive_info, "Mime")
+        mime_type = gdrive.get_file_info(gdrive_info, "Mime")
         logging.info(f"mime_type={mime_type}")
 
         self.dataTransferOut += calculate_folder_size(self.patch_file)
