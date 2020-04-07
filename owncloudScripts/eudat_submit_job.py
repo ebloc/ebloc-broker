@@ -4,13 +4,13 @@ import sys
 import time
 
 import libs.git as git
+import libs.eudat as eudat
 from config import EBLOCPATH, bp  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import HOME, CacheType, StorageID, get_tx_status, printc
-from lib_owncloud import eudat_initialize_folder, eudat_login, share_single_folder
 
 
 def eudat_submit_job(provider, oc):
@@ -45,7 +45,7 @@ def eudat_submit_job(provider, oc):
             sys.exit(1)
 
         try:
-            folder_hash = eudat_initialize_folder(folder, oc)
+            folder_hash = eudat.initialize_folder(folder, oc)
         except Exception as error:
             print(f"E: {error}")
             sys.exit(1)
@@ -56,7 +56,7 @@ def eudat_submit_job(provider, oc):
         # Required to send string as bytes
         source_code_hash = w3.toBytes(text=folder_hash)
         source_code_hashes.append(source_code_hash)
-        if not share_single_folder(folder_hash, oc, provider_info["fID"]):
+        if not eudat.share_single_folder(folder_hash, oc, provider_info["fID"]):
             sys.exit(1)
         time.sleep(0.1)
 
@@ -109,7 +109,7 @@ def eudat_submit_job(provider, oc):
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    oc = eudat_login("059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl")
+    oc = eudat.login("059ab6ba-4030-48bb-b81b-12115f531296", f"{HOME}/eBlocBroker/owncloudScripts/p.txt", ".oc_client.pckl")
 
     # oc = owncloud.Client("https://b2drop.eudat.eu/")
     # oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
