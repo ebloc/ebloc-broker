@@ -11,21 +11,32 @@ from typing import List
 
 from pymongo import MongoClient
 
+import libs.eudat as eudat
+import libs.gdrive as gdrive
 import libs.git as git
 import libs.ipfs as ipfs
-import libs.slurm as slurm
 import libs.mongodb as mongodb
-import libs.gdrive as gdrive
-import libs.eudat as eudat
+import libs.slurm as slurm
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.processPayment import processPayment
 from imports import connect
-from lib import (StorageID, calculate_folder_size, eblocbroker_function_call,
-                 get_ipfs_cumulative_size, ipfs_add, is_dir, job_state_code,
-                 remove_empty_files_and_folders, remove_files, run_command,
-                 run_command_stdout_to_file, silent_remove, subprocess_call_attempt)
+from lib import (
+    StorageID,
+    calculate_folder_size,
+    eblocbroker_function_call,
+    get_ipfs_cumulative_size,
+    ipfs_add,
+    is_dir,
+    job_state_code,
+    remove_empty_files_and_folders,
+    remove_files,
+    run_command,
+    run_command_stdout_to_file,
+    silent_remove,
+    subprocess_call_attempt,
+)
 from settings import WHERE, init_env
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
 
@@ -66,7 +77,8 @@ class ENDCODE:
             sys.exit(1)
 
         success, self.job_info = eblocbroker_function_call(
-            lambda: get_job_info(env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
+            lambda: get_job_info(env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,),
+            10,
         )
         if not success:
             sys.exit(1)
@@ -153,15 +165,15 @@ class ENDCODE:
             try:
                 share_token = share_ids[source_code_hash]["share_token"]
                 self.share_tkens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
-                    "utf-8"
-                )
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode(
+                    (f"{share_token}:").encode("utf-8")
+                ).decode("utf-8")
             except KeyError:
                 success, share_token = mongodb.find_key(mc["eBlocBroker"]["shareID"], self.job_key)
                 self.share_tokens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
-                    "utf-8"
-                )
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode(
+                    (f"{share_token}:").encode("utf-8")
+                ).decode("utf-8")
                 if not success:
                     logging.error(f"E: share_id cannot detected from key: {self.job_key}")
                     return False
@@ -169,7 +181,9 @@ class ENDCODE:
             for key in share_ids:
                 value = share_ids[key]
                 encoded_value = self.encoded_share_tokens[key]
-                logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
+                logging.info(
+                    "shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value)
+                )
 
     def remove_source_code(self):
         """Client's initial downloaded files are removed."""
@@ -179,7 +193,9 @@ class ENDCODE:
         if not files_to_remove or files_to_remove:
             logging.info(f"Files to be removed: \n{files_to_remove}\n")
 
-        subprocess.run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
+        subprocess.run(
+            ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete",]
+        )
 
     def git_diff_patch_and_upload(self, source, name, is_job_key) -> bool:
         if is_job_key:
@@ -189,7 +205,9 @@ class ENDCODE:
             logging.info(f"=> Patch for data file {name}")
 
         try:
-            self.patch_name, self.patch_file, is_file_empty = git.diff_patch(source, name, self.index, self.patch_folder, self.cloud_storage_id)
+            self.patch_name, self.patch_file, is_file_empty = git.diff_patch(
+                source, name, self.index, self.patch_folder, self.cloud_storage_id
+            )
         except:
             return False
 
@@ -258,7 +276,10 @@ class ENDCODE:
                 sys.exit(1)
 
             success, self.job_info = eblocbroker_function_call(
-                lambda: get_job_info(env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number), 10
+                lambda: get_job_info(
+                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+                ),
+                10,
             )
             if not success:
                 sys.exit(1)
@@ -271,7 +292,7 @@ class ENDCODE:
 
         success, self.job_info = eblocbroker_function_call(
             lambda: get_job_source_code_hashes(
-                self.job_info, env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number
+                self.job_info, env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
             ),
             10,
         )
@@ -355,7 +376,9 @@ class EudatClass(ENDCODE):
         data_transfer_out = calculate_folder_size(self.patch_file)
         logging.info(f"[{source_code_hash}]'s dataTransferOut => {data_transfer_out} MB")
         self.dataTransferOut += data_transfer_out
-        success = eudat.upload_results(self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5)
+        success = eudat.upload_results(
+            self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5,
+        )
         return success
 
 
@@ -390,9 +413,24 @@ class GdriveClass(ENDCODE):
         self.dataTransferOut += calculate_folder_size(self.patch_file)
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         if "folder" in mime_type:
-            cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
+            cmd = [
+                env.GDRIVE,
+                "upload",
+                "--parent",
+                key,
+                self.patch_file,
+                "-c",
+                env.GDRIVE_METADATA,
+            ]
         elif "gzip" in mime_type or "/zip" in mime_type:
-            cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
+            cmd = [
+                env.GDRIVE,
+                "update",
+                key,
+                self.patch_file,
+                "-c",
+                env.GDRIVE_METADATA,
+            ]
         else:
             logging.error("E: Files could not be uploaded")
             return False
@@ -428,7 +466,6 @@ if __name__ == "__main__":
         cloud_storage = IpfsMiniLockClass(**kwargs)
 
     cloud_storage.run()
-
 
 
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")

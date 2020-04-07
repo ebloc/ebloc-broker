@@ -15,4 +15,6 @@ receiver_pub = "0x04e2947a2c78ce17c2de5c266a1db90360b4a975b1c63b9a43b6c65cae570e
 topic = "0x07678231"
 payloads = [web3.toHex(text="test message :)"), web3.toHex(text="2nd test message")]
 
-web3.geth.shh.post({"powTarget": 2.5, "powTime": 2, "ttl": 60, "payload": payloads[0], "topic": topic, "pubKey": receiver_pub})
+web3.geth.shh.post(
+    {"powTarget": 2.5, "powTime": 2, "ttl": 60, "payload": payloads[0], "topic": topic, "pubKey": receiver_pub,}
+)

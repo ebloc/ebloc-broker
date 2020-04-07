@@ -10,4 +10,5 @@ echo "=> isort in process"
 isort -rc $HOME/eBlocBroker
 
 printf "\n=> black in process\n"
-black $HOME/eBlocBroker --exclude venv $HOME/eBlocBroker/docs --fast --line-length 130
+black . --fast --line-length 120
+# black $HOME/eBlocBroker --exclude venv $HOME/eBlocBroker/docs  --line-length 80

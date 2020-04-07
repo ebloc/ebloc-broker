@@ -46,7 +46,10 @@ def submitJob(
     # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=provider_info['blockReadFrom'], toBlock=provider_info['blockReadFrom'] + 1)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        return (False, f"E: Requested provider's Ethereum address {provider} does not registered.")
+        return (
+            False,
+            f"E: Requested provider's Ethereum address {provider} does not registered.",
+        )
 
     blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(_from).call()
 
@@ -78,32 +81,53 @@ def submitJob(
         return False, "E: sourceCodeHash list is empty."
 
     if len(key) != 46 and (StorageID.IPFS.value == main_storageID or StorageID.IPFS_MINILOCK.value == main_storageID):
-        return (False, "E: key's length does not match with its original length, it should be 46. Please check your key length")
+        return (
+            False,
+            "E: key's length does not match with its original length, it should be 46. Please check your key length",
+        )
 
     if len(key) != 33 and StorageID.GDRIVE.value == main_storageID:
-        return (False, "E: key's length does not match with its original length, it should be 33. Please check your key length")
+        return (
+            False,
+            "E: key's length does not match with its original length, it should be 33. Please check your key length",
+        )
 
     for idx, core in enumerate(cores):
         if core > provider_info["availableCoreNum"]:
-            return (False, f"E: Requested {core}, which is {core}, is greater than the provider's core number")
+            return (
+                False,
+                f"E: Requested {core}, which is {core}, is greater than the provider's core number",
+            )
         if core_execution_durations[idx] == 0:
-            return (False, f"E: core_execution_durations[{idx}] is provided as 0. Please provide non-zero value")
+            return (
+                False,
+                f"E: core_execution_durations[{idx}] is provided as 0. Please provide non-zero value",
+            )
 
     for storageID in storageID_list:
         if storageID > 4:
-            return (False, "E: Wrong storageID_list value is given. Please provide from 0 to 4")
+            return (
+                False,
+                "E: Wrong storageID_list value is given. Please provide from 0 to 4",
+            )
 
     if len(key) >= 64:
         return (False, "E: Length of key is greater than 64, please provide lesser")
 
     for core_min in core_execution_durations:
         if core_min > 1440:
-            return (False, "E: core_execution_durations provided greater than 1440. Please provide smaller value")
+            return (
+                False,
+                "E: core_execution_durations provided greater than 1440. Please provide smaller value",
+            )
 
     for cache_type in cache_types:
         if cache_type > 1:
             # cache_type = {0: private, 1: public}
-            return (False, f"E: cachType ({cache_type}) provided greater than 1. Please provide smaller value")
+            return (
+                False,
+                f"E: cachType ({cache_type}) provided greater than 1. Please provide smaller value",
+            )
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
@@ -122,9 +146,9 @@ def submitJob(
     try:
         gas_limit = 4500000
         print(str(source_code_hashes))
-        tx = eBlocBroker.functions.submitJob(key, dataTransferIn_list, args, storage_hours, source_code_hashes).transact(
-            {"from": _from, "value": job_price_value, "gas": gas_limit}
-        )
+        tx = eBlocBroker.functions.submitJob(
+            key, dataTransferIn_list, args, storage_hours, source_code_hashes
+        ).transact({"from": _from, "value": job_price_value, "gas": gas_limit})
     except Exception:
         return False, traceback.format_exc()
 

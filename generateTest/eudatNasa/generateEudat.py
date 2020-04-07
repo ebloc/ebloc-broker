@@ -4,9 +4,11 @@ import os
 import random
 import subprocess
 import time
-import libs.eudat as eudat
-import owncloud
 from os.path import expanduser
+
+import owncloud
+
+import libs.eudat as eudat
 
 home = expanduser("~")
 path = os.getcwd()

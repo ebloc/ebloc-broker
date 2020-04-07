@@ -25,7 +25,7 @@ def update_job_cores(job_info, provider, job_key, index, job_id, received_block_
         to_block = int(received_block_number)
     try:
         event_filter = config.eBlocBroker.events.LogJob.createFilter(
-            fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)}
+            fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)},
         )
         logged_jobs = event_filter.get_all_entries()
         for logged_job in logged_jobs:
@@ -51,7 +51,7 @@ def get_job_source_code_hashes(job_info, provider, job_key, index, job_id, recei
 
     try:
         event_filter = config.eBlocBroker.events.LogJob.createFilter(
-            fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)}
+            fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)},
         )
         logged_jobs = event_filter.get_all_entries()
         for logged_job in logged_jobs:
@@ -63,13 +63,15 @@ def get_job_source_code_hashes(job_info, provider, job_key, index, job_id, recei
 
 
 def get_job_info(provider, job_key, index, job_id, received_block_number=None):
-    logging.info(f"~/eBlocBroker/contractCalls/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}")
+    logging.info(
+        f"~/eBlocBroker/contractCalls/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}"
+    )
     if config.eBlocBroker is None or config.w3 is None:
         return False, "notconnected"
 
     try:
         provider = config.w3.toChecksumAddress(provider)
-        (job, received, jobOwner, dataTransferIn, dataTransferOut) = config.eBlocBroker.functions.getJobInfo(
+        (job, received, jobOwner, dataTransferIn, dataTransferOut,) = config.eBlocBroker.functions.getJobInfo(
             provider, job_key, int(index), int(job_id)
         ).call()
         jobPrices = config.eBlocBroker.functions.getProviderPricesForJob(provider, job_key, int(index)).call()
@@ -108,7 +110,7 @@ def get_job_info(provider, job_key, index, job_id, received_block_number=None):
         #    to_block = int(received_block_number)
 
         event_filter = config.eBlocBroker.events.LogProcessPayment.createFilter(
-            fromBlock=int(received_block_number), toBlock="latest", argument_filters={"provider": str(provider)}
+            fromBlock=int(received_block_number), toBlock="latest", argument_filters={"provider": str(provider)},
         )
 
         logged_receipts = event_filter.get_all_entries()
@@ -164,7 +166,10 @@ if __name__ == "__main__":
         real_execution_time = int(job_info["endTime"]) - int(job_info["startTime"])
 
     if type(job_info) is dict:
-        print("{0: <22}".format("stateCode:") + f"{inv_job_state_code[job_info['jobStateCode']]} ({job_info['jobStateCode']})")
+        print(
+            "{0: <22}".format("stateCode:")
+            + f"{inv_job_state_code[job_info['jobStateCode']]} ({job_info['jobStateCode']})"
+        )
         print("{0: <22}".format("core") + str(job_info["core"]))
         print("{0: <22}".format("startTime") + str(job_info["startTime"]))
         print("{0: <22}".format("endTime:") + str(job_info["endTime"]))
@@ -185,7 +190,9 @@ if __name__ == "__main__":
         print("{0: <22}".format("dataTransferIn_used:") + str(job_info["dataTransferIn_used"]))
         print("{0: <22}".format("dataTransferOut_used:") + str(job_info["dataTransferOut_used"]))
 
-        success, job_info = get_job_source_code_hashes(job_info, provider, job_key, index, job_id, received_block_number)
+        success, job_info = get_job_source_code_hashes(
+            job_info, provider, job_key, index, job_id, received_block_number
+        )
         # print("{0: <22}".format("source_code_hash:") + str(job_info["sourceCodeHash"]))
         print("source_code_hashes:")
         for idx, code_hash in enumerate(job_info["sourceCodeHash"]):
