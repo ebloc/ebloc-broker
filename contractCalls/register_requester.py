@@ -6,7 +6,7 @@ import traceback
 from os.path import expanduser
 
 from config import load_log
-from doesRequesterExist import doesRequesterExist
+from does_requester_exist import does_requester_exist
 from imports import connect, connect_to_web3
 from lib import get_tx_status
 from utils import read_json
@@ -27,7 +27,6 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
         success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
-
         if not w3.geth.shh.hasKeyPair(kId):
             return (
                 False,
@@ -35,7 +34,7 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
             )
 
     account = w3.eth.accounts[int(account_id)]  # Requester's Ethereum Address
-    if doesRequesterExist(account):
+    if does_requester_exist(account):
         return False, f"Requester {account} is already registered."
 
     if len(federationCloudID) < 128 and len(email) < 128:

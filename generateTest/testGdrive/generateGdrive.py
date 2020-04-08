@@ -41,7 +41,7 @@ with open(path + "/../nasa.txt") as test:
             os.environ["fileName"] = tar_hash
             os.environ["provider_to_share"] = "alper01234alper@gmail.com"
 
-            tar_hash = compress_folder(folder_to_share)
+            tar_hash, tar_path = compress_folder(folder_to_share)
             # subprocess.run(['cp', '-a', '../ipfs', '../' + tar_hash])
             print("Uploading ...")
             # rclone copy ipfs remote:ipfs

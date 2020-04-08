@@ -4,8 +4,8 @@ import sys
 import traceback
 
 from config import load_log
+from does_requester_exist import does_requester_exist
 from doesProviderExist import doesProviderExist
-from doesRequesterExist import doesRequesterExist
 from imports import connect
 from is_owner import is_owner
 from lib import get_tx_status
@@ -29,7 +29,7 @@ def authenticateORCID(address, orc_id) -> (bool, str):
         )
 
     output = doesProviderExist(address)
-    if not doesRequesterExist(address) and not output:
+    if not does_requester_exist(address) and not output:
         return False, f"E: Address: {address} is not registered."
 
     if len(orc_id) != 19:

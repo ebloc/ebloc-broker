@@ -52,11 +52,15 @@ def byte_to_mb(size_in_bytes: int) -> int:
 
 def generate_md5sum(path: str) -> str:
     env = init_env()
-    return (
-        subprocess.check_output(["bash", f"{env.EBLOCPATH}/bash_scripts/generateMD5sum.sh", path])
-        .decode("utf-8")
-        .rstrip()
-    )
+    if os.path.isdir(path):
+        return (
+            subprocess.check_output(["bash", f"{env.EBLOCPATH}/bash_scripts/generate_md5sum_for_folder.sh", path])
+            .decode("utf-8")
+            .rstrip()
+        )
+    else:
+        tar_hash = subprocess.check_output(["md5sum", path]).decode("utf-8").strip()
+        return tar_hash.split(" ", 1)[0]
 
 
 def create_dir(path: str) -> None:
