@@ -5,12 +5,12 @@ import traceback
 
 import owncloud
 
-import config
-from config import load_log
+from config import bp, load_log  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
-from lib import CacheType, StorageID, get_tx_status, ipfs_add, printc, run_command
+from lib import CacheType, StorageID, get_tx_status, ipfs_add, printc, run_command, silent_remove
+from libs.ipfs import mlck_encrypt
 from settings import init_env
 from utils import generate_md5sum, ipfs_toBytes
 
@@ -187,52 +187,69 @@ if __name__ == "__main__":
         # Requester inputs for testing
         account_id = 1
         provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
-        main_storageID = StorageID.IPFS.value
+        main_storageID = StorageID.IPFS_MINILOCK.value
+        # main_storageID = StorageID.IPFS.value
         ipfs_dict = {}
         source_code_hashes = []
         folders = []
         md5sums = []
+        ipfs_hashes = []
         # Full path of the sourceCodeFolders is given
         folders.append(f"{env.EBLOCPATH}/base/sourceCode")
         folders.append(f"{env.EBLOCPATH}/base/data/data1")
 
-        if main_storageID == StorageID.IPFS.value:
-            printc("Submitting job through IPFS...")
-            ipfs_hashes = []
-            for idx, folder in enumerate(folders):
-                success, ipfs_hash = ipfs_add(folder)
-                # success, ipfs_hash = ipfs_add(folder, True)  # includes .git/
+        if main_storageID == StorageID.IPFS.value or main_storageID == StorageID.IPFS_MINILOCK.value:
+            if main_storageID == StorageID.IPFS.value:
+                printc("Submitting job through IPFS...")
+                storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
+            if main_storageID == StorageID.IPFS_MINILOCK.value:
+                printc("Submitting job through IPFS_MINILOCK...")
+                storageID_list = [StorageID.IPFS_MINILOCK.value, StorageID.IPFS_MINILOCK.value]
 
+            cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+            for idx, folder in enumerate(folders):
+                target = folder
+                if main_storageID == StorageID.IPFS_MINILOCK.value:
+                    provider_minilock_id = (
+                        "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"  # TODO: read from the provider
+                    )
+                    mlck_pass = "bright wind east is pen be lazy usual"
+                    success, target = mlck_encrypt(provider_minilock_id, mlck_pass, target)
+                    if not success:
+                        sys.exit(1)
+                    printc(f"minilock_file:{target}", "blue")
+
+                success, ipfs_hash = ipfs_add(target)
+                # success, ipfs_hash = ipfs_add(folder, True)  # includes .git/
                 success, output = run_command(["ipfs", "refs", ipfs_hash])
-                # ipfs_dict[ipfs_hash] = md5sums
-                ipfs_hashes.append(ipfs_hash)
                 if not success:
                     sys.exit(1)
-                md5sum = generate_md5sum(folder)
-                print(md5sum)
+
+                # ipfs_dict[ipfs_hash] = md5sums
+                ipfs_hashes.append(ipfs_hash)
+                md5sum = generate_md5sum(target)
                 if idx == 0:
                     key = ipfs_hash
+
                 source_code_hashes.append(ipfs_toBytes(ipfs_hash))
                 md5sums.append(md5sum)
+                printc(f"{target} \nipfs_hash:{ipfs_hashes[idx]}  md5sum:{md5sums[idx]}\n", "green")
+                if main_storageID == StorageID.IPFS_MINILOCK.value:
+                    # Created .minilock file is removed since its already in ipfs
+                    silent_remove(target)
 
-            for idx, folder in enumerate(folders):
-                print(f"{ipfs_hashes[idx]} => {folder} md5sum:{md5sums[idx]}")
-
-            # config.bp()
-            storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
-            storage_hours = [1, 1]
-            cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
         elif main_storageID == StorageID.EUDAT.value:
             print("Submitting through EUDAT")
             oc = owncloud.Client("https://b2drop.eudat.eu/")
-            with open(env.EBLOCPATH + "/eudat_password.txt", "r") as content_file:
+            with open(f"{env.EBLOCPATH}/eudat_password.txt", "r") as content_file:
                 password = content_file.read().strip()
 
             oc.login(env.OC_USER, password)
 
         cores = [1]
         core_execution_durations = [1]
-        dataTransferIn_list = [1, 1]
+        storage_hours = [1, 1]
+        dataTransferIn_list = [1, 1]  # TODO: calculate from the file itself
         dataTransferOut = 1
         data_prices_set_blocknumbers = [0, 0]
 

@@ -87,10 +87,12 @@ class ENDCODE:
         requester_id_address = eth_address_to_md5(requester_id)
         success, self.requester_info = get_requester_info(requester_id)
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
-        is_dir(self.results_folder_prev)
+        if not is_dir(self.results_folder_prev):
+            sys.exit(1)
 
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
-        is_dir(self.results_folder)
+        if not is_dir(self.results_folder):
+            sys.exit(1)
 
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.results_data_folder = f"{self.results_folder_prev}/data"
@@ -220,14 +222,14 @@ class ENDCODE:
     def upload(self) -> bool:
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
 
-        success = self.git_diff_patch_and_upload(self.results_folder, self.job_key, True)
+        success = self.git_diff_patch_and_upload(self.results_folder, self.job_key, is_job_key=True)
         if not success:
             return False
 
         for name in self.source_code_hashes_to_process[1:]:
             # Starting from 1st index for data files
             source = f"{self.results_data_folder}/{name}"
-            success = self.git_diff_patch_and_upload(source, name, False)
+            success = self.git_diff_patch_and_upload(source, name, is_job_key=False)
             if not success:
                 return False
         return True
@@ -342,7 +344,7 @@ class IpfsMiniLockClass(ENDCODE):
             "--anonymous",
             f"--output-file={self.patch_file}.minilock",
         ]
-        success, output = run_command(cmd, None, True)
+        success, output = run_command(cmd, my_env=None, is_exit_flag=True)
         logging.info(output)
         if success:
             silent_remove(self.patch_file)
