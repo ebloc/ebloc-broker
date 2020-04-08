@@ -31,7 +31,7 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
     already_uploaded = False
     logging.info(f"job_key_flag={job_key_flag} | tar.gz file is inside a folder")
     dir_path = os.path.dirname(folder_to_share)
-    tar_hash = compress_folder(folder_to_share)
+    tar_hash, tar_path = compress_folder(folder_to_share)
 
     path_to_move = f"{dir_path}/{tar_hash}"
     if not os.path.exists(path_to_move):
@@ -57,7 +57,7 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
     else:
         logging.info(f"job_key_flag={job_key_flag}")
         dir_path = os.path.dirname(folder_to_share)
-        tar_hash = compress_folder(folder_to_share)
+        tar_hash, tar_path = compress_folder(folder_to_share)
         output = gdrive.list(tar_hash)
         if not output:
             key = gdrive.upload_internal(dir_path, tar_hash)
@@ -141,7 +141,7 @@ def gdrive_submit_job(provider):
                 create_meta_json(f"{base_folder}/meta_data.json", job_key_dict)
 
         folder_to_share = folders_to_share[0]
-        job_key, tar_hash = share_folder(folder_to_share, provider_to_share, True)
+        job_key, tar_hash = share_folder(folder_to_share, provider_to_share, job_key_flag=True)
         folderName_tar_hash[folder_to_share] = tar_hash
         job_key_dict[tar_hash] = job_key
     except Exception:

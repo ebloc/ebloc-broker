@@ -148,7 +148,7 @@ class Storage(BaseClass):
                 "-C",
                 extract_to,
             ]
-            success, output = run_command(cmd, None, True)
+            success, output = run_command(cmd, my_env=None, is_exit_flag=True)
             return success, output
         else:
             return False, ""

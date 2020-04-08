@@ -5,7 +5,7 @@ import sys
 from imports import connect
 
 
-def doesRequesterExist(address):
+def does_requester_exist(address):
     eBlocBroker, w3 = connect()
     address = w3.toChecksumAddress(address)
     return eBlocBroker.functions.doesRequesterExist(address).call()
@@ -17,4 +17,4 @@ if __name__ == "__main__":
     else:
         requester = "0x57b60037B82154eC7149142c606bA024fBb0f991"
 
-    print(doesRequesterExist(requester))
+    print(does_requester_exist(requester))
