@@ -21,7 +21,7 @@ import config
 import libs.mongodb as mongodb
 from config import bp, logging  # noqa: F401
 from settings import WHERE, init_env
-from utils import byte_to_mb, read_json
+from utils import byte_to_mb, generate_md5sum, read_json
 
 
 # enum: https://stackoverflow.com/a/1695250/2402577
@@ -375,7 +375,8 @@ def silent_remove(path) -> bool:
         if os.path.isfile(path):
             os.remove(path)
         elif os.path.isdir(path):
-            shutil.rmtree(path)  # deletes a directory and all its contents
+            # deletes a directory and all its contents
+            shutil.rmtree(path)
         else:
             return False
 
@@ -491,9 +492,9 @@ def is_ipfs_running():
     else:
         logging.error("E: IPFS does not work on the background.")
         logging.info("* Starting IPFS: nohup ipfs daemon --mount &")
-        cmd = ["nohup", "ipfs", "daemon", "--mount"]
         path = f"{env.LOG_PATH}/ipfs.out"
         with open(path, "w") as stdout:
+            cmd = ["nohup", "ipfs", "daemon", "--mount"]
             subprocess.Popen(cmd, stdout=stdout, stderr=stdout, preexec_fn=os.setpgrp)
             logging.info(f"Writing into {path} is completed.")
 
@@ -559,11 +560,10 @@ def compress_folder(folder_to_share):
     p2.stdout.close()
     p3.communicate()
 
-    tar_hash = subprocess.check_output(["md5sum", f"{base_name}.tar.gz"]).decode("utf-8").strip()
-    tar_hash = tar_hash.split(" ", 1)[0]
+    tar_hash = generate_md5sum(f"{base_name}.tar.gz")
     shutil.move(f"{base_name}.tar.gz", f"{tar_hash}.tar.gz")
     os.chdir(current_path)
-    return tar_hash
+    return tar_hash, f"{dir_path}/{tar_hash}.tar.gz"
 
 
 def _sbatch_call(
@@ -688,10 +688,11 @@ def _sbatch_call(
     return True
 
 
-def is_dir(path):
+def is_dir(path) -> bool:
     if not os.path.isdir(path):
         logging.error(f"{path} folder does not exist.")
-        sys.exit(1)
+        return False
+    return True
 
 
 def remove_empty_files_and_folders(results_folder) -> None:
