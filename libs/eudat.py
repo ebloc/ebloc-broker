@@ -37,7 +37,7 @@ def _upload_results(encoded_share_token, output_file_name):
         f"https://b2drop.eudat.eu/public.php/webdav/{output_file_name}",
     ]
     cmd_str = " ".join(cmd)
-    logging.info(f"cmd: {cmd_str}")  # used for test purposes
+    logging.info(f"cmd: {cmd_str}")  # Used for test purposes
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = p.communicate()
     return p, output, error
@@ -134,7 +134,7 @@ def share_single_folder(folder_name, oc, fID) -> bool:
 
 def initialize_folder(folder_to_share, oc) -> str:
     dir_path = os.path.dirname(folder_to_share)
-    tar_hash = compress_folder(folder_to_share)
+    tar_hash, tar_path = compress_folder(folder_to_share)
     try:
         output = oc.mkdir(tar_hash)
         print(output)

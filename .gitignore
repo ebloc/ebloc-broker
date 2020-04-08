@@ -1,3 +1,7 @@
+base/*.tar.gz.minilock
+
+base/data/*.tar.gz.minilock
+
 *.swo
 
 *.swp

@@ -200,7 +200,8 @@ storageType     = 1 # Please note that '1' stands for EUDAT repository share.
 
 ###### miniLock Setup
 
-Please check following [tutorial](https://www.npmjs.com/package/minilock-cli). Do following code only to generate miniLock ID once and do not lose your passphrase:
+Please check following
+[tutorial](https://www.npmjs.com/package/minilock-cli). Do the following code only to generate miniLock ID once and do not lose your passphrase:
 
 ```bash
 $ mlck id alice@gmail.com --save --passphrase='bright wind east is pen be lazy usual'

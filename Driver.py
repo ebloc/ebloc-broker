@@ -11,8 +11,8 @@ import libs.eudat as eudat
 import libs.slurm as slurm
 from config import bp, load_log  # noqa: F401
 from contract.scripts.lib import DataStorage
+from contractCalls.does_requester_exist import does_requester_exist
 from contractCalls.doesProviderExist import doesProviderExist
-from contractCalls.doesRequesterExist import doesRequesterExist
 from contractCalls.get_balance import get_balance
 from contractCalls.get_block_number import get_block_number
 from contractCalls.get_deployed_block_number import get_deployed_block_number
@@ -50,7 +50,6 @@ def startup(slurm_user):
     """ Startup functions are called."""
     session_start_msg(slurm_user)
 
-    oc = None
     if is_driver_on():
         printc("Track output: tail -f ~/.eBlocBroker/transactions/providerOut.txt", "blue")
         sys.exit(1)
@@ -64,11 +63,6 @@ def startup(slurm_user):
 
     # run_driver_cancel()
     run_whisper_state_receiver()
-    if env.EUDAT_USE:
-        if env.OC_USER is None or env.OC_USER == "":
-            logging.error(f"OC_USER is not set in {env.EBLOCPATH}/.env")
-            terminate()
-        oc = eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
     if env.GDRIVE_USE:
         try:
@@ -80,7 +74,11 @@ def startup(slurm_user):
     if env.IPFS_USE:
         is_ipfs_running()
 
-    return oc
+    if env.EUDAT_USE:
+        if env.OC_USER is None or env.OC_USER == "":
+            logging.error(f"OC_USER is not set in {env.EBLOCPATH}/.env")
+            terminate()
+        return eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
 
 
 # Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
@@ -308,7 +306,7 @@ while True:
         else:
             logging.info(f"jobOwner/requester_id: {job_infos_to_process[0]['jobOwner']}")
             requester_id = job_infos_to_process[0]["jobOwner"].lower()
-            is_requester_exist = doesRequesterExist(requester_id)
+            is_requester_exist = does_requester_exist(requester_id)
             if job_infos_to_process[0]["jobStateCode"] == job_state_code["COMPLETED"]:
                 logging.info("Job is already completed.")
                 is_pass = True
@@ -322,11 +320,11 @@ while True:
                 is_pass = True
 
             if "False" in str_check:
-                logging.error("Filename contains invalid character")
+                logging.error("Filename contains invalid character.")
                 is_pass = True
 
             if not is_requester_exist:
-                logging.error("Job owner is not registered")
+                logging.error("Job owner is not registered.")
                 is_pass = True
             else:
                 success, requesterInfo = get_requester_info(requester_id)
