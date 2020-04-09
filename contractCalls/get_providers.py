@@ -7,10 +7,10 @@ def get_providers(eBlocBroker=None):
     if eBlocBroker is None:
         from imports import connect_to_eblocbroker
 
-        eBlocBroker = connect_to_eblocbroker()
-
-    if not eBlocBroker:
-        return None
+        try:
+            eBlocBroker = connect_to_eblocbroker()
+        except Exception:
+            return None
 
     return eBlocBroker.functions.getProviders().call()
 

@@ -112,12 +112,15 @@ def run_whisper_state_receiver():
         logging.info(f"run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
         terminate()
     else:
-        success, data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
-        kId = {}
-        if success:
+        try:
+            data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+            kId = {}
             kId = data["kId"]
+        except:
+            logging.error(traceback.format_exc())
+            terminate()
 
-        if not success or not config.w3.geth.shh.hasKeyPair(kId):
+        if not config.w3.geth.shh.hasKeyPair(kId):
             logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
             logging.warning("Please first run: scripts/whisper_initialize.py")
             terminate()
@@ -180,7 +183,7 @@ def try_except(func):
     try:
         return func()
     except Exception:
-        logging.error(f"{WHERE(1)} - {traceback.format_exc()}")
+        logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
         return
 
 
@@ -357,7 +360,6 @@ def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
         if is_exit_flag:
             terminate()
         return False, output
-
     return True, output
 
 
@@ -404,15 +406,15 @@ def eblocbroker_function_call(func, attempt):
     for attempt in range(attempt):
         success, output = func()
         if success:
-            return True, output
+            return output
         else:
             logging.error(f"[{WHERE(1)}] E: {output}")
             if output == "notconnected":
                 time.sleep(1)
             else:
-                return False, output
+                raise
     else:
-        return False, output
+        return output
 
 
 def is_ipfs_hash_locally_cached(ipfs_hash) -> bool:
@@ -600,10 +602,10 @@ def _sbatch_call(
 
     # TODO: update as used_dataTransferIn value
     f = f"{results_folder_prev}/dataTransferIn.json"
-    success, data = read_json(f)
-    if success:
+    try:
+        data = read_json(f)
         dataTransferIn = data["dataTransferIn"]
-    else:
+    except:
         data = {}
         data["dataTransferIn"] = dataTransferIn
         with open(f, "w") as outfile:

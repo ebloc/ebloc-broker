@@ -5,6 +5,7 @@ import pprint
 import subprocess
 import sys
 import time
+import traceback
 
 import config
 import libs.eudat as eudat
@@ -123,9 +124,12 @@ logging.info(f"is_web3_connected={is_web3_connected()}")
 logging.info(f"rootdir={os.getcwd()}")
 logging.info(f"whoami={env.WHOAMI}")
 
-success, contract = read_json("contractCalls/contract.json")
-if not success:
+try:
+    contract = read_json("contractCalls/contract.json")
+except:
+    logging.error(traceback.format_exc())
     terminate()
+
 contractAddress = contract["address"]
 logging.info("{0: <18}".format("contract_address:") + contractAddress)
 
@@ -187,7 +191,7 @@ while True:
     idle_cores = slurm.get_idle_cores()
     log(f"Current Slurm Running jobs success:\n {squeue_output}")
     log("-" * int(columns), "green")
-    if "notconnected" != balance:
+    if isinstance(balance, int):
         log(f"[{get_time()}] provider_gained_wei={int(balance) - int(balance_temp)}")
 
     log(f"Waiting new job to come since block number={block_read_from}", "green")
