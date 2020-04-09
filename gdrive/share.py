@@ -131,13 +131,13 @@ def gdrive_submit_job(provider):
                 job_key_dict[tar_hash] = job_key
 
             data_files_json_path = f"{base_folder}/meta_data.json"
-            success, data_json = read_json(data_files_json_path)
-            if success:
+            try:
+                data_json = read_json(data_files_json_path)
                 if job_key_dict == data_json:
                     printc("meta_data.json file already exists", "blue")
                 else:
                     create_meta_json(f"{base_folder}/meta_data.json", job_key_dict)
-            else:
+            except:
                 create_meta_json(f"{base_folder}/meta_data.json", job_key_dict)
 
         folder_to_share = folders_to_share[0]

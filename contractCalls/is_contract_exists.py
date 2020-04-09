@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import traceback
+
 from imports import connect_to_web3
 from settings import init_env
 from utils import read_json
@@ -8,8 +10,10 @@ env = init_env()
 
 
 def is_contract_exists():
-    success, contract = read_json(f"{env.EBLOCPATH}/contractCalls/contract.json")
-    if not success:
+    try:
+        contract = read_json(f"{env.EBLOCPATH}/contractCalls/contract.json")
+    except:
+        print(traceback.format_exc())
         return False
 
     contract_address = contract["address"]

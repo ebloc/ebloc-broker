@@ -7,7 +7,10 @@ def isOrcIDVerified(requesterAddress, eBlocBroker=None):
     if eBlocBroker is None:
         from imports import connect_to_eblocbroker
 
-        eBlocBroker = connect_to_eblocbroker()
+        try:
+            eBlocBroker = connect_to_eblocbroker()
+        except Exception:
+            return None
 
     if not eBlocBroker.functions.isOrcIDVerified(requester).call():
         return False

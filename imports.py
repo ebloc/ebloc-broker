@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import traceback
+
 from web3 import IPCProvider, Web3
 from web3.providers.rpc import HTTPProvider
 
@@ -75,23 +77,28 @@ def connect_to_web3():
 
 def connect_to_eblocbroker():
     env = init_env()
-
     if config.w3 is None:
-        config.w3 = connect_to_web3()
-        if not config.w3:
-            logging.error("E: web3 is not connected")
-            return False
+        try:
+            config.w3 = connect_to_web3()
+        except:
+            logging.error("E: Web3 is not connected")
+            logging.error(traceback.format_exc())
+            raise
 
-    success, contract = read_json(f"{env.EBLOCPATH}/contractCalls/contract.json")
-    if not success:
+    try:
+        contract = read_json(f"{env.EBLOCPATH}/contractCalls/contract.json")
+    except:
         logging.error("E: Couldn't read the contract.json file.")
-        return None
+        logging.error(traceback.format_exc())
+        raise
 
     contract_address = contract["address"]
-    success, abi = read_json(f"{env.EBLOCPATH}/contractCalls/abi.json")
-    if not success:
+    try:  # TODO: add decoder/template for this kind of call
+        abi = read_json(f"{env.EBLOCPATH}/contractCalls/abi.json")
+    except:
         logging.error("E: Couldn't read the abi.json file")
-        return None
+        logging.error(traceback.format_exc())
+        raise
 
     contract_address = config.w3.toChecksumAddress(contract_address)
     config.eBlocBroker = config.w3.eth.contract(contract_address, abi=abi)
