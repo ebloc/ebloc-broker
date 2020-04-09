@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ./clean.sh
+./pre_commit.sh
+
 git add -A .
-
 git commit
-
-git push
+git push -f
 
 # str=$1
 #if [ ! -z "$str" -a "$str" != " " ]; then

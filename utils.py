@@ -4,6 +4,7 @@ import json
 import ntpath
 import os
 import subprocess
+import time
 
 import base58
 
@@ -13,6 +14,10 @@ from settings import init_env
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+
+
+def get_time():
+    return time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def bytes32_to_string(bytes_array):

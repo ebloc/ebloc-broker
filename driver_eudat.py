@@ -15,7 +15,7 @@ from contractCalls.get_provider_info import get_provider_info
 from lib import CacheType, log, silent_remove
 from settings import WHERE, init_env
 from storage_class import Storage
-from utils import byte_to_mb, create_dir, generate_md5sum, read_json
+from utils import byte_to_mb, create_dir, generate_md5sum, get_time, read_json
 
 env = init_env()
 mc = MongoClient()
@@ -236,7 +236,7 @@ class EudatClass(Storage):
 
     def run(self) -> bool:
         # TODO: refund check
-        log(f"[{time.ctime()}] New job has been received through EUDAT", "blue")
+        log(f"[{get_time()}] New job has been received through EUDAT", "cyan")
 
         success, provider_info = get_provider_info(self.logged_job.args["provider"])
         success, self.dataTransferIn_used = self.eudat_get_share_token(provider_info["fID"])

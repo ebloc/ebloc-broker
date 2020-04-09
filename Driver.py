@@ -41,7 +41,7 @@ from lib import (
     terminate,
 )
 from settings import init_env
-from utils import bytes32_to_ipfs, eth_address_to_md5, read_json
+from utils import bytes32_to_ipfs, eth_address_to_md5, get_time, read_json
 
 env = init_env()
 
@@ -51,7 +51,7 @@ def startup(slurm_user):
     session_start_msg(slurm_user)
 
     if is_driver_on():
-        printc("Track output: tail -f ~/.eBlocBroker/transactions/providerOut.txt", "blue")
+        printc("Track output: tail -f ~/.eBlocBroker/transactions/provider.log", "blue")
         sys.exit(1)
 
     if not is_geth_on():
@@ -84,7 +84,7 @@ def startup(slurm_user):
 # Dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
 subprocess.run(["sudo", "printf", ""])
 
-logging = load_log(f"{env.LOG_PATH}/transactions/providerOut.txt")
+logging = load_log(f"{env.LOG_PATH}/transactions/provider.log")
 config.eBlocBroker, config.w3 = connect()
 
 if config.eBlocBroker is None or config.w3 is None:
@@ -188,7 +188,7 @@ while True:
     log(f"Current Slurm Running jobs success:\n {squeue_output}")
     log("-" * int(columns), "green")
     if "notconnected" != balance:
-        log(f"[{time.ctime()}] provider_gained_wei={int(balance) - int(balance_temp)}")
+        log(f"[{get_time()}] provider_gained_wei={int(balance) - int(balance_temp)}")
 
     log(f"Waiting new job to come since block number={block_read_from}", "green")
     current_block_number = get_block_number()
@@ -224,7 +224,7 @@ while True:
             f"provider={logged_job.args['provider']} \n"
             f"job_key={job_key} \n"
             f"index={index} \n"
-            f"received={logged_job.args['received']} \n",
+            f"received={logged_job.args['received']}",
             "yellow",
         )
         received_block = []
