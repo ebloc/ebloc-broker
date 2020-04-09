@@ -4,6 +4,8 @@ import asyncio
 import itertools
 import json
 import os
+import sys
+import traceback
 
 from web3 import HTTPProvider, Web3
 from web3.shh import Shh
@@ -53,7 +55,12 @@ if __name__ == "__main__":
         with open("data.txt", "w") as outfile:
             json.dump(data, outfile)
     else:
-        success, data = read_json("data.txt")
+        try:
+            data = read_json("data.txt")
+        except:
+            print(traceback.format_exc())
+            sys.exit(1)
+
         kId = data["kId"]
         publicKey = data["publicKey"]
 

@@ -76,11 +76,14 @@ class ENDCODE:
             logging.error("job_key and index are same.")
             sys.exit(1)
 
-        success, self.job_info = eblocbroker_function_call(
-            lambda: get_job_info(env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,),
-            10,
-        )
-        if not success:
+        try:
+            self.job_info = eblocbroker_function_call(
+                lambda: get_job_info(
+                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+                ),
+                10,
+            )
+        except:
             sys.exit(1)
 
         requester_id = self.job_info["jobOwner"].lower()
@@ -134,23 +137,24 @@ class ENDCODE:
 
     def process_payment_tx(self):
         end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
-        success, tx_hash = eblocbroker_function_call(
-            lambda: processPayment(
-                self.job_key,
-                self.index,
-                self.job_id,
-                self.elapsed_raw_time,
-                self.result_ipfs_hash,
-                self.cloud_storage_id,
-                end_time_stamp,
-                self.dataTransferIn,
-                self.dataTransferOut,
-                self.job_info["core"],
-                self.job_info["executionDuration"],
-            ),
-            10,
-        )
-        if not success:
+        try:
+            tx_hash = eblocbroker_function_call(
+                lambda: processPayment(
+                    self.job_key,
+                    self.index,
+                    self.job_id,
+                    self.elapsed_raw_time,
+                    self.result_ipfs_hash,
+                    self.cloud_storage_id,
+                    end_time_stamp,
+                    self.dataTransferIn,
+                    self.dataTransferOut,
+                    self.job_info["core"],
+                    self.job_info["executionDuration"],
+                ),
+                10,
+            )
+        except:
             sys.exit(1)
 
         logging.info(f"processPayment()_tx_hash={tx_hash}")
@@ -159,9 +163,11 @@ class ENDCODE:
         f.close()
 
     def get_shared_tokens(self):
-        success, data = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
-        if success:
+        try:
+            data = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
             share_ids = data
+        except:
+            pass
 
         for source_code_hash in self.source_code_hashes_to_process:
             try:
@@ -236,10 +242,10 @@ class ENDCODE:
 
     def run(self):
         f = f"{self.results_folder_prev}/dataTransferIn.json"
-        success, data = read_json(f)
-        if success:
+        try:
+            data = read_json(f)
             self.dataTransferIn = data["dataTransferIn"]
-        else:
+        except:
             logging.error("dataTransferIn.json does not exist...")
 
         logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
@@ -277,13 +283,14 @@ class ENDCODE:
                 logging.warning("E: Job is already completed job and its money is received.")
                 sys.exit(1)
 
-            success, self.job_info = eblocbroker_function_call(
-                lambda: get_job_info(
-                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
-                ),
-                10,
-            )
-            if not success:
+            try:
+                self.job_info = eblocbroker_function_call(
+                    lambda: get_job_info(
+                        env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+                    ),
+                    10,
+                )
+            except:
                 sys.exit(1)
 
             logging.info(f"Waiting for {attempt * 15} seconds to pass...")
@@ -292,13 +299,14 @@ class ENDCODE:
         else:  # Failed all the attempts - abort
             sys.exit(1)
 
-        success, self.job_info = eblocbroker_function_call(
-            lambda: get_job_source_code_hashes(
-                self.job_info, env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
-            ),
-            10,
-        )
-        if not success:
+        try:
+            self.job_info = eblocbroker_function_call(
+                lambda: get_job_source_code_hashes(
+                    self.job_info, env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+                ),
+                10,
+            )
+        except:
             sys.exit(1)
 
         self.source_code_hashes = self.job_info["sourceCodeHash"]

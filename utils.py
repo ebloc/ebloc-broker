@@ -89,8 +89,7 @@ def eth_address_to_md5(address):
 def read_json(path):
     if os.path.isfile(path) and os.path.getsize(path) > 0:
         with open(path) as json_file:
-            return True, json.load(json_file)
-    return False, ""
+            return json.load(json_file)
 
 
 def getsize(filename):

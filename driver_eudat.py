@@ -151,9 +151,11 @@ class EudatClass(Storage):
             except Exception:
                 folder_token_flag[folder_name] = False
 
-        success, data = read_json(shareID_file)
-        if success:
+        try:  # TODO: pass on template'i ekle
+            data = read_json(shareID_file)
             self.shareID = data
+        except:
+            pass
 
         logging.info(f"shareID_dict={self.shareID}")
         for attempt in range(5):
