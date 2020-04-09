@@ -2,7 +2,6 @@
 
 import os
 import subprocess
-import time
 
 import libs.gdrive as gdrive
 from config import bp, logging  # noqa: F401
@@ -20,7 +19,7 @@ from lib import (
 )
 from settings import init_env
 from storage_class import Storage
-from utils import byte_to_mb, create_dir, generate_md5sum
+from utils import byte_to_mb, create_dir, generate_md5sum, get_time
 
 env = init_env()
 
@@ -310,7 +309,7 @@ class GdriveClass(Storage):
             return False
 
     def run(self) -> bool:
-        log(f"[{time.ctime()}] New job has been received through Google Drive", "blue")
+        log(f"[{get_time()}] New job has been received through Google Drive", "cyan")
         success, provider_info = get_provider_info(self.logged_job.args["provider"])
 
         if not os.path.isdir(self.results_folder):
