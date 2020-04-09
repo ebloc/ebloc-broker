@@ -19,7 +19,12 @@ def register_provider(
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
         return False, "Please first run: ../scripts/whisper_initialize.py"
     else:
-        success, data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+        try:
+            data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+        except:
+            print(traceback.format_exc())
+            return False, None
+
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
 

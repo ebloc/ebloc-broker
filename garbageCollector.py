@@ -26,7 +26,10 @@ print(f)
 if not os.path.isfile(f):
     data = {}
 else:
-    success, data = read_json(f)
+    try:
+        data = read_json(f)
+    except:
+        pass
 
 addElement(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
 addElement(data, "ipfsHash", "timestamp")

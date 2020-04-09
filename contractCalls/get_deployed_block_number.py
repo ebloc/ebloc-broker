@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import traceback
 from os.path import expanduser
 
 import config
@@ -16,7 +17,12 @@ def get_deployed_block_number():
     if not config.w3:
         return False
 
-    success, contract = read_json(home + "/eBlocBroker/contractCalls/contract.json")
+    try:
+        contract = read_json(f"{home}/eBlocBroker/contractCalls/contract.json")
+    except:
+        print(traceback.format_exc())
+        return False
+
     return config.w3.eth.getTransaction(contract["txHash"]).blockNumber
 
 
