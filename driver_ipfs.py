@@ -2,7 +2,6 @@
 
 import os
 import subprocess
-import time
 
 import libs.git as git
 import libs.ipfs as ipfs
@@ -20,16 +19,17 @@ from lib import (
 )
 from settings import init_env
 from storage_class import Storage
-from utils import byte_to_mb, bytes32_to_ipfs, create_dir
+from utils import byte_to_mb, bytes32_to_ipfs, create_dir, get_time
 
 
 class IpfsClass(Storage):
     def __init__(self, logged_job, jobInfo, requester_id, is_already_cached, oc=None):
         super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached, oc)
-        # cache_type is should be public on IPFS
+        # cache_type is always public on IPFS
         self.cache_type = CacheType.PUBLIC.value
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
+        self.is_minilock = False
 
     def decrypt_using_minilock(self, ipfs_hash):
         env = init_env()
@@ -65,13 +65,18 @@ class IpfsClass(Storage):
             return False
         return True
 
-    def run(self):
-        log(f"[{time.ctime()}] New job has been received through IPFS", "blue")
+    def run(self) -> bool:
+        if self.cloudStorageID == StorageID.IPFS.value:
+            log(f"[{get_time()}] New job has been received through IPFS", "cyan")
+        else:
+            log(f"[{get_time()}] New job has been received through IPFS_MINILOCK", "cyan")
+            self.is_minilock = True
+
         if not is_ipfs_running():
             return False
 
         logging.info(f"is_ipfs_hash_locally_cached={is_ipfs_hash_locally_cached(self.job_key)}")
-
+        bp()
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -106,7 +111,7 @@ class IpfsClass(Storage):
             if not git.initialize_check(target):
                 return False
 
-            if self.cloudStorageID == StorageID.IPFS_MINILOCK.value:
+            if self.is_minilock:
                 self.decrypt_using_minilock(ipfs_hash)
 
             if not is_hashed:
