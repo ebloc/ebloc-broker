@@ -24,7 +24,12 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
             "Please first run: python ~/eBlocBroker/scripts/whisper_initialize.py",
         )
     else:
-        success, data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
+        try:
+            data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
+        except:
+            logging.error(traceback.format_exc())
+            return False
+
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):

@@ -34,24 +34,24 @@ class IpfsClass(Storage):
     def decrypt_using_minilock(self, ipfs_hash):
         env = init_env()
         with open(f"{env.LOG_PATH}/private/miniLockPassword.txt", "r") as content_file:
-            passW = content_file.read().strip()
+            _pass = content_file.read().strip()
 
         cmd = [
             "mlck",
             "decrypt",
             "-f",
             f"{self.results_folder}/ipfsHash",
-            f"--passphrase={passW}",
+            f"--passphrase={_pass}",
             f"--output-file={self.results_folder}/output.tar.gz",
         ]
-        passW = None
+        _pass = None
         success, output = run_command(cmd)
         cmd = None
         logging.info(f"mlck decrypt success={success}")
         tar_file = f"{self.results_folder}/output.tar.gz"
         subprocess.run(["tar", "-xvf", tar_file, "-C", self.results_folder])
+        silent_remove(tar_file)
         silent_remove(f"{self.results_folder}/{ipfs_hash}")
-        silent_remove(f"{self.results_folder}/output.tar.gz")
 
     def check_ipfs(self, ipfs_hash) -> bool:
         success, ipfs_stat, cumulative_size = is_ipfs_hash_exists(ipfs_hash, attempt_count=1)

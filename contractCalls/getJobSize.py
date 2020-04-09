@@ -6,7 +6,11 @@ from imports import connect_to_eblocbroker
 
 
 def getJobSize(provider, key):
-    eBlocBroker = connect_to_eblocbroker()
+    try:
+        eBlocBroker = connect_to_eblocbroker()
+    except Exception:
+        return None
+
     return eBlocBroker.call().getJobSize(provider, key)
 
 

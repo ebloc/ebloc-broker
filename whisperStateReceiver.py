@@ -8,6 +8,7 @@
 import asyncio
 import os.path
 import sys
+import traceback
 from os.path import expanduser
 
 from web3 import HTTPProvider, Web3
@@ -112,7 +113,12 @@ def main(_test_flag=False):
         log(f"Please first run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
         sys.exit(1)
     else:
-        success, data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
+        try:
+            data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
+        except:
+            print(traceback.format_exc())
+            sys.exit(1)
+
         kId = data["kId"]
         publicKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):
