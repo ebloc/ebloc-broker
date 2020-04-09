@@ -293,27 +293,19 @@ def calculate_folder_size(path) -> float:
     return byte_to_mb(byte_size)
 
 
-def log(text, color="", is_new_line=True, filename=None):
+def log(text, color="", filename=None):
     if not filename:
         env = init_env()
-        filename = f"{env.LOG_PATH}/transactions/providerOut.txt"
+        filename = f"{env.LOG_PATH}/transactions/provider.log"
 
-    if color != "":
-        if is_new_line:
-            printc(text)
-        else:
-            print(colored(f"\033[1m{text}\033[0m", color), end="")
+    if color:
+        print(colored(f"\033[1m{text}\033[0m", color))
     else:
-        if is_new_line:
-            print(text)
-        else:
-            print(text, end="")
+        printc(text)
+        # print(text, end="")  # no newline
 
     f = open(filename, "a")
-    if is_new_line:
-        f.write(f"{text}\n")
-    else:
-        f.write(text)
+    f.write(text)
     f.close()
 
 

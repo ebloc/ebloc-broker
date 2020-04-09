@@ -35,7 +35,8 @@ Repeat passphrase:
 Address: {a0a50a64cac0744dea5287d1025b8ef28aeff36e}
 ```
 
-Your new account is locked with a password. Please give a password. Do not forget this password. Please enter a difficult passphrase for your account.
+Your new account is locked with a password. Please give a password.
+Do not forget this password. Please enter a difficult passphrase for your account.
 
 You should see your `Keystore File (UTC / JSON)`under `keystore` directory.
 
@@ -46,7 +47,8 @@ UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
 
 **On the console, use:**
 
-You can also create your Ethereum account inside your `geth-client`. Here your `Keystore File` will be created with root permission, `eBlocWallet` will not able to unlock it.
+You can also create your Ethereum account inside your `geth-client`.
+Here your Keystore File` will be created with root permission, `eBlocWallet` will not able to unlock it.
 
 ```bash
 > personal.newAccount()
