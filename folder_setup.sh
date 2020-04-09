@@ -26,8 +26,6 @@ if [ ! -d cache ]; then
     mkdir -p cache
 fi
 
-# touch $HOME/.eBlocBroker/transactions/providerOut.txt # delete
-
 sudo chmod +x $current_dir/slurmScript.sh
 #======================================================================
 cd $current_dir
