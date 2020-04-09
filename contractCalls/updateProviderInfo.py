@@ -20,7 +20,12 @@ def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
         return False, "Please first run: ../scripts/whisper_initialize.py"
     else:
-        success, data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+        try:
+            data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+        except:
+            print(traceback.format_exc())
+            return False
+
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):

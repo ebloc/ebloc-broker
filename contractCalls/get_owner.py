@@ -5,9 +5,10 @@ def get_owner(eBlocBroker=None):
     if eBlocBroker is None:
         from imports import connect_to_eblocbroker
 
-        eBlocBroker = connect_to_eblocbroker()
-        if not eBlocBroker:
-            return False
+        try:
+            eBlocBroker = connect_to_eblocbroker()
+        except Exception:
+            return None
 
     return eBlocBroker.functions.getOwner().call()
 

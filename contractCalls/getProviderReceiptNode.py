@@ -7,7 +7,10 @@ from imports import connect_to_eblocbroker
 
 
 def getProviderReceiptNode(provider_address, index):
-    eBlocBroker = connect_to_eblocbroker()
+    try:
+        eBlocBroker = connect_to_eblocbroker()
+    except Exception:
+        return None
     return eBlocBroker.functions.getProviderReceiptNode(provider_address, index).call()
 
 

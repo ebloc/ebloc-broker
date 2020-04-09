@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import traceback
 
 from config import bp, logging  # noqa: F401
 from lib import echo_grep_awk, run_command, subprocess_call_attempt
@@ -66,8 +67,10 @@ def get_file_id(key):
 def get_data_key_ids(results_folder_prev):
     f = f"{results_folder_prev}/meta_data.json"
     logging.info(f"meta_data_path={f}")
-    success, meta_data = read_json(f)
-    if not success:
+    try:
+        meta_data = read_json(f)
+    except:
+        logging.error(traceback.format_exc())
         return False, ""
 
     return True, meta_data
