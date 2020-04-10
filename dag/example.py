@@ -1,5 +1,3 @@
-import sys
-
 import matplotlib.pyplot as plt
 import networkx as nx
 
@@ -17,7 +15,7 @@ G.add_edge("B", "job4", weight=0)
 G.add_edge("C", "E", weight=0)
 G.add_edge("D", "E", weight=10)
 
-nx.nx_pydot.write_dot(G, "job.dot")  # Saves DAG into job.dot file
+nx.nx_pydot.write_dot(G, "job.dot")  # saves DAG into job.dot file
 
 nx.draw(G, with_labels=True)
 plt.savefig("labels.png")

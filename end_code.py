@@ -35,7 +35,7 @@ from lib import (
     run_command,
     run_command_stdout_to_file,
     silent_remove,
-    subprocess_call_attempt,
+    subprocess_call,
 )
 from settings import WHERE, init_env
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir, eth_address_to_md5, read_json
@@ -227,13 +227,12 @@ class ENDCODE:
 
     def upload(self) -> bool:
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
-
         success = self.git_diff_patch_and_upload(self.results_folder, self.job_key, is_job_key=True)
         if not success:
             return False
 
         for name in self.source_code_hashes_to_process[1:]:
-            # Starting from 1st index for data files
+            # starting from 1st index for data files
             source = f"{self.results_data_folder}/{name}"
             success = self.git_diff_patch_and_upload(source, name, is_job_key=False)
             if not success:
@@ -274,12 +273,12 @@ class ENDCODE:
 
         for attempt in range(10):
             if self.job_info["jobStateCode"] == job_state_code["RUNNING"]:
-                # It will come here eventually, when setJob() is deployed.
+                # it will come here eventually, when setJob() is deployed.
                 logging.info("Job has been started.")
-                break  # Wait until does values updated on the blockchain
+                break  # wait until does values updated on the blockchain
 
             if self.job_info["jobStateCode"] == job_state_code["COMPLETED"]:
-                # Detects an error on the SLURM side
+                # detects an error on the SLURM side
                 logging.warning("E: Job is already completed job and its money is received.")
                 sys.exit(1)
 
@@ -294,9 +293,9 @@ class ENDCODE:
                 sys.exit(1)
 
             logging.info(f"Waiting for {attempt * 15} seconds to pass...")
-            # Short sleep here so this loop is not keeping CPU busy due to setJobSuccess may deploy late.
+            # short sleep here so this loop is not keeping CPU busy due to setJobSuccess may deploy late
             time.sleep(15)
-        else:  # Failed all the attempts - abort
+        else:  # failed all the attempts - abort
             sys.exit(1)
 
         try:
@@ -336,9 +335,8 @@ class IpfsMiniLockClass(ENDCODE):
         super(self.__class__, self).__init__(**kwargs)
 
     def run_upload(self):
-        success = self.upload()
-
-        # It will upload files after all the patchings are completed
+        self.upload()
+        # it will upload files after all the patchings are completed
         return self.ipfs_add_folder(self.patch_folder)
 
     def _upload(self, path, source_code_hash, is_job_key) -> bool:
@@ -365,7 +363,7 @@ class IpfsClass(ENDCODE):
 
     def run_upload(self):
         success = self.upload()
-        # It will upload files after all the patchings are completed
+        # it will upload files after all the patchings are completed
         success = self.ipfs_add_folder(self.patch_folder)
         return success
 
@@ -412,7 +410,7 @@ class GdriveClass(ENDCODE):
                     return False
 
             cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
-            gdrive_info = subprocess_call_attempt(cmd, 5)
+            gdrive_info = subprocess_call(cmd, 5)
         except:
             logging.error(f"[{WHERE(1)}] E: {key} does not have a match. meta_data={meta_data}")
             return False
@@ -446,9 +444,9 @@ class GdriveClass(ENDCODE):
             return False
 
         try:
-            logging.info(subprocess_call_attempt(cmd, 5))
+            logging.info(subprocess_call(cmd, 5))
         except:
-            logging.error(f"[{env.WHERE(1)}] E: gdrive could not upload the file.")
+            logging.error(f"[{env.WHERE(1)}] E: gdrive could not upload the file")
             return False
 
         return True
@@ -456,7 +454,6 @@ class GdriveClass(ENDCODE):
 
 if __name__ == "__main__":
     _cloud_storage_id = int(sys.argv[3])
-
     kwargs = {
         "job_key": sys.argv[1],
         "index": sys.argv[2],

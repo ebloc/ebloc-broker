@@ -24,8 +24,8 @@ testType = "eudat-nasa"
 readTest = "hashOutput.txt"
 cacheType = lib.cacheType.private
 
-# Login to EUDAT account----------------------------------------
-f = open(f"{home}/TESTS/password.txt", "r")  # Password read from the file.
+# login to EUDAT account----------------------------------------
+f = open(f"{home}/TESTS/password.txt", "r")  # password read from the file
 password = f.read().strip()
 f.close()
 oc = owncloud.Client("https://b2drop.eudat.eu/")

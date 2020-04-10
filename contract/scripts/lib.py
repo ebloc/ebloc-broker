@@ -113,7 +113,7 @@ class JobPrices:
                 ).call({"from": self.msg_sender})
 
             if ds.received_block + ds.storage_duration < self.w3.eth.blockNumber:
-                # Storage time is completed
+                # storage time is completed
                 received_storage_deposit = 0
 
             print(f"is_private:{ds.is_private}")
@@ -127,7 +127,7 @@ class JobPrices:
                 print(f"For {source_code_hash} no storage_cost is paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0:
-                    # If true, registered data's price should be considered for storage
+                    # if true, registered data's price should be considered for storage
                     output = self.eB.getRegisteredDataPrice(
                         self.job.provider, source_code_hash, self.job.data_prices_set_block_numbers[idx],
                     )

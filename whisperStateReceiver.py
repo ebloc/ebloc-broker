@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # To run:
-# ./whisperStateReceiver.py 0 # Logs into a file
-# ./whisperStateReceiver.py 1 # Prints into console
+# ./whisperStateReceiver.py 0 # logs into a file
+# ./whisperStateReceiver.py 1 # prints into console
 
 # from web3.auto import w3
 import asyncio
@@ -109,7 +109,7 @@ def main(_test_flag=False):
         test_flag = False
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
-        # First time running:
+        # first time running
         log(f"Please first run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
         sys.exit(1)
     else:
@@ -126,7 +126,7 @@ def main(_test_flag=False):
             sys.exit(1)
 
         # myFilter = w3.geth.shh.newMessageFilter({'topic': topic, 'privateKeyID': kId, 'recipientPublicKey': publicKey})
-        # myFilter.poll_interval = 600; # Make it equal with the live-time of the message
+        # myFilter.poll_interval = 600; # make it equal with the live-time of the message
         filter_id = data["filter_id"]
         log("filter_id=" + filter_id)
         myFilter = w3.eth.filter(filter_id=filter_id)

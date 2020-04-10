@@ -20,14 +20,14 @@ def eudat_submit_job(provider, oc):
 
     provider = w3.toChecksumAddress(provider)
     success, provider_info = get_provider_info(provider)
-    account_id = 1  # Different account than provider
+    account_id = 1  # different account than provider
 
-    folders_to_share = []  # Path of folder to share
+    folders_to_share = []  # path of folder to share
     source_code_hashes = []
     storage_hours = []
     core_min_list = []
 
-    # Full path of the sourceCodeFolders is given
+    # full path of the sourceCodeFolders is given
     folders_to_share.append(f"{EBLOCPATH}/base/sourceCode")
     folders_to_share.append(f"{EBLOCPATH}/base/data/data1")
 
@@ -53,7 +53,7 @@ def eudat_submit_job(provider, oc):
         if idx == 0:
             job_key = folder_hash
 
-        # Required to send string as bytes
+        # required to send string as bytes
         source_code_hash = w3.toBytes(text=folder_hash)
         source_code_hashes.append(source_code_hash)
         if not eudat.share_single_folder(folder_hash, oc, provider_info["fID"]):

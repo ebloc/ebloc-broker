@@ -37,7 +37,7 @@ if __name__ == "__main__":
     topic = "0x07678231"
 
     if not os.path.isfile("data.txt"):
-        # First time running:
+        # first time running
         print("Initializing...")
         kId = web3.shh.newKeyPair()
         publicKey = web3.shh.getPublicKey(kId)

@@ -12,7 +12,7 @@ shareList = oc.list_open_remote_share()
 
 for i in range(len(shareList) - 1, -1, -1):
     inputFolderName = shareList[i]["name"]
-    inputFolderName = inputFolderName[1:]  # Removes '/' on the beginning
+    inputFolderName = inputFolderName[1:]  # removes '/' on the beginning
     inputID = shareList[i]["id"]
     inputOwner = shareList[i]["owner"]
 
