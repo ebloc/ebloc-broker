@@ -1,12 +1,16 @@
 import os
+import sys
 
 from lib import execute_shell_cmd, get_ipfs_parent_hash
 
 
-def addToIPFS(results_folder):
-    cmd = ["ipfs", "add", "-r", results_folder]  # Uploaded as folder
-    success, output = execute_shell_cmd(cmd, None, True)
-    success, result_ipfs_hash = get_ipfs_parent_hash(output)
+def add_to_ipfs(results_folder):
+    cmd = ["ipfs", "add", "-r", results_folder]  # uploaded as folder
+    try:
+        success, output = execute_shell_cmd(cmd, None, True)
+        result_ipfs_hash = get_ipfs_parent_hash(output)
+    except Exception:
+        sys.exit()
 
     if os.path.isdir(results_folder):
         basename = os.path.basename(os.path.normpath(results_folder))
@@ -18,4 +22,4 @@ def addToIPFS(results_folder):
 
 
 results_folder = "/home/netlab/eBlocBroker/DAG"
-addToIPFS(results_folder)
+add_to_ipfs(results_folder)

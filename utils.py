@@ -31,13 +31,13 @@ def bytes32_to_ipfs(bytes_array):
 
 
 def string_to_bytes32(hash_str: str):
-    """Convert string into  bytes array"""
+    """Convert string into  bytes array."""
     bytes_array = base58.b58decode(hash_str)
     return binascii.hexlify(bytes_array).decode("utf-8")
 
 
 def ipfs_to_bytes32(hash_str: str):
-    """Ipfs hash is converted into byte32 format"""
+    """Ipfs hash is converted into byte32 format."""
     bytes_array = base58.b58decode(hash_str)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
@@ -50,7 +50,7 @@ def ipfs_toBytes(ipfs_hash: str) -> str:
 
 def byte_to_mb(size_in_bytes: int) -> int:
     """Instead of a size divisor of 1024 * 1024 you could use the
-    << bitwise shifting operator, i.e. 1<<20 to get megabytes"""
+    << bitwise shifting operator, i.e. 1<<20 to get megabytes."""
     MBFACTOR = float(1 << 20)
     return int(size_in_bytes) / MBFACTOR
 
@@ -82,7 +82,7 @@ def getcwd():
 
 
 def eth_address_to_md5(address):
-    """Convert Ethereum User Address into 32-bits"""
+    """Convert Ethereum User Address into 32-bits."""
     return hashlib.md5(address.encode("utf-8")).hexdigest()
 
 

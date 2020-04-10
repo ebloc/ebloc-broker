@@ -36,8 +36,8 @@ def _upload_results(encoded_share_token, output_file_name):
         f"@{output_file_name}",
         f"https://b2drop.eudat.eu/public.php/webdav/{output_file_name}",
     ]
-    cmd_str = " ".join(cmd)
-    logging.info(f"cmd: {cmd_str}")  # Used for test purposes
+    _cmd = " ".join(cmd)
+    logging.info(f"cmd: {_cmd}")  # used for test purposes
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = p.communicate()
     return p, output, error
@@ -48,29 +48,28 @@ def upload_results(encoded_share_token, output_file_name, results_folder_prev, a
     cwd_temp = os.getcwd()
     os.chdir(results_folder_prev)
     for attempt in range(attempt_count):
-        p, output, err = _upload_results(encoded_share_token, output_file_name)
+        p, output, error = _upload_results(encoded_share_token, output_file_name)
         output = output.strip().decode("utf-8")
-        err = err.decode("utf-8")
+        error = error.decode("utf-8")
         if p.returncode != 0 or "<d:error" in output:
             logging.error("E: EUDAT repository did not successfully loaded.")
-            print(err)
-            logging.error(f"curl is failed. {p.returncode} => {err.decode('utf-8')}. {output}")
+            logging.error(f"E: curl is failed. {p.returncode} => {error.decode('utf-8')}. {output}")
             time.sleep(1)  # wait 1 second for next step retry to upload
         else:  # success on upload
             os.chdir(cwd_temp)
             return True
     else:
-        # Failed all the attempts - abort
+        # failed all the attempts - abort
         os.chdir(cwd_temp)
         return False
 
 
 def login(user, password_path, name):
-    logging.info("Login into owncloud... ")
+    logging.info("Login into owncloud...")
     env = init_env()
-    fname = f"{env.EBLOCPATH}/{name}"
-    if os.path.isfile(fname):
-        f = open(fname, "rb")
+    f = f"{env.EBLOCPATH}/{name}"
+    if os.path.isfile(f):
+        f = open(f, "rb")
         oc = pickle.load(f)
         try:
             printc("Reading from the dumped object...", "blue")
@@ -82,7 +81,7 @@ def login(user, password_path, name):
 
     oc = owncloud.Client("https://b2drop.eudat.eu/")
     if not user:
-        logging.error(f"User is empty")
+        logging.error(f"E: User is empty")
         terminate()
 
     with open(password_path, "r") as content_file:
@@ -90,7 +89,7 @@ def login(user, password_path, name):
 
     for attempt in range(5):
         try:
-            # Unlocks the EUDAT account
+            # unlocks the EUDAT account
             oc.login(user, password)
             password = None
             f = open(".oc.pckl", "wb")
@@ -122,10 +121,10 @@ def share_single_folder(folder_name, oc, fID) -> bool:
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
         if not oc.is_shared(folder_name):
             oc.share_file_with_user(folder_name, fID, remote_user=True, perms=31)
-            print("Sharing is completed successfully.")
+            print("Sharing is completed successfully")
             return True
         else:
-            printc("=> Requester folder is already shared.", "blue")
+            printc("=> Requester folder is already shared", "blue")
             return True
     except Exception:
         print(traceback.format_exc())
@@ -139,7 +138,7 @@ def initialize_folder(folder_to_share, oc) -> str:
         output = oc.mkdir(tar_hash)
         print(output)
     except Exception:
-        printc("Folder is already created.", "blue")
+        printc("Folder is already created", "blue")
 
     try:
         tar_file = f"./{tar_hash}/{tar_hash}.tar.gz"

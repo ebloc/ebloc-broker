@@ -35,7 +35,7 @@ G.add_edge("job7", "job0", weight=10)
 G.add_edge("job8", "job7", weight=10)
 G.add_edge("job9", "job7", weight=10)
 
-# Saves DAG into job.dot file
+# saves DAG into job.dot file
 nx.nx_pydot.write_dot(G, "job.dot")
 
 listG = list(G.nodes)

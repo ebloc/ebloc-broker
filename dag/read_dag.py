@@ -27,7 +27,7 @@ def notDependentSubmitJob(i):
 
 def dependentSubmitJob(i, predecessors):
     if len(predecessors) == 1:
-        if not predecessors[0] in job_ids:  # If the required job is not submitted to Slurm, recursive call
+        if not predecessors[0] in job_ids:  # if the required job is not submitted to Slurm, recursive call
             dependencyJob(predecessors[0])
 
         print("sbatch --dependency=afterok:" + str(job_ids[predecessors[0]]) + " " + i + ".sh")
@@ -36,7 +36,7 @@ def dependentSubmitJob(i, predecessors):
         job_id_str = ""
 
         for j in predecessors:
-            if j not in job_ids:  # If the required job is not submitted to Slurm, recursive call
+            if j not in job_ids:  # if the required job is not submitted to Slurm, recursive call
                 dependencyJob(j)
 
             job_id_str += str(job_ids[j]) + ":"

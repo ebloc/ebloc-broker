@@ -184,7 +184,7 @@ if __name__ == "__main__":
         account_id = int(sys.argv[12])
         core_execution_durations = core_execution_durations + coreHour * 60 + coreDayDuration * 1440
     else:
-        # Requester inputs for testing
+        # requester inputs for testing
         account_id = 1
         provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
         main_storageID = StorageID.IPFS_MINILOCK.value
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         folders = []
         md5sums = []
         ipfs_hashes = []
-        # Full path of the sourceCodeFolders is given
+        # full path of the sourceCodeFolders is given
         folders.append(f"{env.EBLOCPATH}/base/sourceCode")
         folders.append(f"{env.EBLOCPATH}/base/data/data1")
 
@@ -235,7 +235,7 @@ if __name__ == "__main__":
                 md5sums.append(md5sum)
                 printc(f"{target} \nipfs_hash:{ipfs_hashes[idx]}  md5sum:{md5sums[idx]}\n", "green")
                 if main_storageID == StorageID.IPFS_MINILOCK.value:
-                    # Created .minilock file is removed since its already in ipfs
+                    # created .minilock file is removed since its already in ipfs
                     silent_remove(target)
 
         elif main_storageID == StorageID.EUDAT.value:

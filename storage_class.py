@@ -71,7 +71,7 @@ class Storage(BaseClass):
     def is_md5sum_matches(self, path, name, id, folder_type, cache_type) -> bool:
         output = generate_md5sum(path)
         if output == name:
-            # Checking is already downloaded folder's hash matches with the given hash
+            # checking is already downloaded folder's hash matches with the given hash
             if self.whoami() == "EudatClass" and folder_type != "":
                 self.folder_type_dict[name] = folder_type
 
@@ -92,7 +92,7 @@ class Storage(BaseClass):
     def is_cached(self, name, id) -> bool:
         success = False
         if self.cache_type[id] == CacheType.PRIVATE.value:
-            # First checking does is already exist under public cache directory
+            # first checking does is already exist under public cache directory
             cached_folder = f"{self.public_dir}/{name}"
             cached_tar_file = f"{cached_folder}.tar.gz"
 
@@ -105,7 +105,7 @@ class Storage(BaseClass):
 
                 success = self.is_md5sum_matches(cached_tar_file, name, id, "", CacheType.PUBLIC.value)
         else:
-            # First checking does is already exist under the requesting user's private cache directory
+            # first checking does is already exist under the requesting user's private cache directory
             cached_folder = self.private_dir
             cached_folder = f"{self.private_dir}/{name}"
             cached_tar_file = f"{cached_folder}.tar.gz"
@@ -128,7 +128,7 @@ class Storage(BaseClass):
                 .strip()
             )
             if output.count("/") == 1:
-                # Main folder should contain the 'run.sh' file
+                # main folder should contain the 'run.sh' file
                 logging.info("./run.sh exists under the parent folder")
                 return True
             else:

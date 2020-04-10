@@ -35,7 +35,7 @@ if __name__ == "__main__":
     print(web3.geth.shh.info)
 
     if not os.path.isfile(home + "/.eBlocBroker/whisperInfo.txt"):
-        # First time running:
+        # first time running
         log("Please first run: python whisper_initialize.py")
         sys.exit(1)
     else:

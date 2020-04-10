@@ -66,14 +66,14 @@ class JobStateCodes(Enum):
 
 job_state_code = {}
 
-# Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
-# Initial state
+# add keys to the hashmap # https://slurm.schedmd.com/squeue.html
+# initial state
 job_state_code["SUBMITTED"] = 0
-# Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run.
+# indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run.
 job_state_code["PENDING"] = 1
 # The job currently is allocated to a node and is running. Corresponding data files are downloaded and verified.*/
 job_state_code["RUNNING"] = 2
-# Indicates if job is refunded */
+# indicates if job is refunded */
 job_state_code["REFUNDED"] = 3
 # Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. Set by the requester
 job_state_code["CANCELLED"] = 4
@@ -100,7 +100,7 @@ def session_start_msg(slurm_user, columns=100):
 def run_driver_cancel():
     """Runs driver_cancel daemon on the background."""
     if not is_process_on("python.*[d]riverCancel", "driverCancel"):
-        # Running driver_cancel.py on the background if it is not already
+        # running driver_cancel.py on the background if it is not already
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
@@ -108,16 +108,15 @@ def run_whisper_state_receiver():
     env = init_env()
     """Runs driverReceiver daemon on the background."""
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
-        # First time running:
+        # first time running
         logging.info(f"run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
         terminate()
     else:
         try:
             data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
-            kId = {}
             kId = data["kId"]
         except:
-            logging.error(traceback.format_exc())
+            logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()}")
             terminate()
 
         if not config.w3.geth.shh.hasKeyPair(kId):
@@ -126,7 +125,7 @@ def run_whisper_state_receiver():
             terminate()
 
     if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
-        # Running driver_cancel.py on the background
+        # running driver_cancel.py on the background
         # TODO: should be '0' to store log at a file and not print output
         config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
 
@@ -157,8 +156,8 @@ def terminate():
     """ Terminates Driver and all the dependent python programs to it."""
     logging.error(f"E: [{WHERE(1)}] terminate() function is called.")
 
-    # Following line is added, in case ./killall.sh does not work due to sudo.
-    # Send the kill signal to all the process groups.
+    # following line is added, in case ./killall.sh does not work due to sudo
+    # send the kill signal to all the process groups.
     if config.driver_cancel_process:
         os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)  # obtained from global variable
 
@@ -166,25 +165,26 @@ def terminate():
         # obtained from global variable, # raise SystemExit("Program Exited")
         os.killpg(os.getpgid(config.whisper_state_receiver_process.pid), signal.SIGTERM)
 
-    # Kill all the dependent processes and exit
+    # kill all the dependent processes and exit
     output = subprocess.check_output(["bash", "killall.sh"]).decode("utf-8").rstrip()
     logging.info(output)
     sys.exit(1)
 
 
-def try_except(func):
+def _try(func):
     """Calls given function inside try/except
 
     Args:
         f: yield function
 
+    Example called: _try(lambda: f())
     Returns status and output of the function
     """
     try:
         return func()
     except Exception:
         logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
-        return
+        raise
 
 
 def get_ipfs_cumulative_size(source_code_hash):
@@ -211,7 +211,7 @@ def get_ipfs_parent_hash(result_ipfs_hash) -> Tuple[bool, str]:
     p2.stdout.close()
     result_ipfs_hash = p3.communicate()[0].decode("utf-8").strip()
     logging.info(f"result_ipfs_hash={result_ipfs_hash}")
-    return True, result_ipfs_hash
+    return result_ipfs_hash
 
 
 def get_only_ipfs_hash(path) -> Tuple[bool, str]:
@@ -229,21 +229,18 @@ def get_only_ipfs_hash(path) -> Tuple[bool, str]:
     else:
         logging.error("E: Requested path does not exist.")
         return False, None
-
-    success, output = run_command(cmd, None, is_exit_flag=True)
-    if success:
-        success, result_ipfs_hash = try_except(lambda: get_ipfs_parent_hash(output), is_exit_flag=True)
-
-    if not success:
+    try:
+        success, output = run_command(cmd)
+        result_ipfs_hash = _try(lambda: get_ipfs_parent_hash(output))
+        return True, result_ipfs_hash
+    except Exception:
         return False, None
-
-    return True, result_ipfs_hash
 
 
 def is_ipfs_hash_exists(ipfs_hash, attempt_count):
     logging.info(f"Attempting to check IPFS file {ipfs_hash}")
     for attempt in range(attempt_count):
-        timeout_duration = "300"  # Wait max 5 minutes.
+        timeout_duration = "300"  # wait max 5 minutes
         success, ipfs_stat = run_command(["timeout", timeout_duration, "ipfs", "object", "stat", ipfs_hash])
         if not success:
             logging.error(f"E: Failed to find IPFS file: {ipfs_hash}")
@@ -260,7 +257,7 @@ def is_ipfs_hash_exists(ipfs_hash, attempt_count):
 def ipfs_add(path, is_hidden=False):
     if os.path.isdir(path):
         if is_hidden:
-            # Include files that are hidden such as .git/. Only takes effect on recursive add.
+            # include files that are hidden such as .git/. Only takes effect on recursive add
             cmd = ["ipfs", "add", "-r", "--hidden", "--quieter", "--progress", path]
         else:
             cmd = ["ipfs", "add", "-r", "--quieter", "--progress", path]
@@ -277,10 +274,10 @@ def ipfs_add(path, is_hidden=False):
 
         if not success or not result_ipfs_hash:
             logging.error(f"E: Generated new hash returned empty. Trying again... Try count: {attempt}")
-            time.sleep(5)  # Wait 5 seconds for next retry to upload again
+            time.sleep(5)  # wait 5 seconds for next retry to upload again
         else:  # success
             break
-    else:  # Failed all the attempts - abort
+    else:  # failed all the attempts - abort
         sys.exit(1)
 
     return True, result_ipfs_hash
@@ -312,7 +309,7 @@ def log(text, color="", filename=None):
     f.close()
 
 
-def subprocess_call_attempt(cmd, attempt_count=1, print_flag=True):
+def subprocess_call(cmd, attempt_count=1, print_flag=True):
     for count in range(attempt_count):
         try:
             return subprocess.check_output(cmd).decode("utf-8").strip()
@@ -332,8 +329,8 @@ def run_command_stdout_to_file(cmd, path, is_exit_flag=False) -> bool:
             subprocess.Popen(cmd, stdout=stdout)
             logging.info(f"Writing into path is completed => {path}")
         except Exception:
-            cmd_str = " ".join(cmd)
-            logging.error(f"[{WHERE(1)}] - {traceback.format_exc()} command:\n {cmd_str}")
+            _cmd = " ".join(cmd)
+            logging.error(f"[{WHERE(1)}] - {traceback.format_exc()} command:\n {_cmd}")
             raise SystemExit
 
 
@@ -341,8 +338,8 @@ def run(cmd) -> str:
     try:
         return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
     except Exception:
-        cmd_str = " ".join(cmd)
-        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {cmd_str}")
+        _cmd = " ".join(cmd)
+        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {_cmd}")
         raise
 
 
@@ -354,9 +351,9 @@ def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
         else:
             output = subprocess.check_output(cmd, env=my_env).decode("utf-8").strip()
     except Exception:
-        cmd_str = " ".join(cmd)
+        _cmd = " ".join(cmd)
         print(output)
-        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {cmd_str}")
+        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {_cmd}")
         if is_exit_flag:
             terminate()
         return False, output
@@ -364,7 +361,7 @@ def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
 
 
 def silent_remove(path) -> bool:
-    # Link: https://stackoverflow.com/a/10840586/2402577
+    # link: https://stackoverflow.com/a/10840586/2402577
     try:
         if os.path.isfile(path):
             os.remove(path)
@@ -381,13 +378,13 @@ def silent_remove(path) -> bool:
         return False
 
 
-def remove_files(file_name):
-    if "*" in file_name:
-        for f in glob.glob(file_name):
+def remove_files(filename):
+    if "*" in filename:
+        for f in glob.glob(filename):
             if not silent_remove(f):
                 return False
     else:
-        if not silent_remove(file_name):
+        if not silent_remove(filename):
             return False
     return True
 
@@ -419,7 +416,7 @@ def eblocbroker_function_call(func, attempt):
 
 def is_ipfs_hash_locally_cached(ipfs_hash) -> bool:
     """Run ipfs --offline refs -r or ipfs --offline block stat etc even if your normal daemon is running.
-       With that you can check if something is available locally or no"""
+       With that you can check if something is available locally or no."""
     try:
         subprocess.check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=subprocess.DEVNULL)
         return True
@@ -441,7 +438,7 @@ def is_process_on(process_name, name, process_count=0) -> bool:
     p2.stdout.close()
     output = p3.communicate()[0].decode("utf-8").strip()
     if int(output) > process_count:
-        logging.warning(f"{name} is already running.")
+        logging.warning(f"{name} is already running")
         return True
     return False
 
@@ -469,16 +466,19 @@ def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def is_transaction_passed(tx_hash):
+def is_transaction_passed(tx_hash) -> bool:
     receipt = config.w3.eth.getTransactionReceipt(tx_hash)
-    if receipt:
+    try:
         if receipt["status"] == 1:
             return True
+    except:
+        pass
+
     return False
 
 
-# Checks that does IPFS run on the background or not
 def is_ipfs_running():
+    """ Checks that does IPFS run on the background or not."""
     env = init_env()
     output = is_ipfs_on()
     if output:
@@ -496,7 +496,7 @@ def is_ipfs_running():
         with open(path, "r") as content_file:
             logging.info(content_file.read())
 
-        # IPFS mounted at: /ipfs
+        # ipfs mounted at: /ipfs
         output = subprocess.check_output(["sudo", "ipfs", "mount", "-f", "/ipfs"]).decode("utf-8").strip()
         logging.info(output)
         return is_ipfs_on()
@@ -510,7 +510,7 @@ def is_run_exists_in_tar(tar_path):
             .decode("utf-8")
             .strip()
         )
-        if output.count("/") == 1:  # Main folder should contain the 'run.sh' file
+        if output.count("/") == 1:  # main folder should contain the 'run.sh' file
             logging.info("./run.sh exists under the parent folder")
             return True
         else:
@@ -527,7 +527,7 @@ def compress_folder(folder_to_share):
     dir_path = os.path.dirname(folder_to_share)
     os.chdir(dir_path)
 
-    # Tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
+    # tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
     # cmd: find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
     p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
@@ -561,13 +561,13 @@ def compress_folder(folder_to_share):
 
 
 def _sbatch_call(
-    logged_job, requester_id, results_folder, results_folder_prev, dataTransferIn, source_code_hash_list, job_info,
+    logged_job, requester_id, results_folder, results_folder_prev, dataTransferIn, source_code_hashes, job_info
 ):
     job_key = logged_job.args["jobKey"]
     index = logged_job.args["index"]
-    cloud_storage_id = logged_job.args["cloudStorageID"][0]  # 0 indicated maps to sourceCode
+    main_cloud_storage_id = logged_job.args["cloudStorageID"][0]  # 0 indicated maps to sourceCode
     job_info = job_info[0]
-    job_id = 0  # Base job_id for them workflow
+    job_id = 0  # base job_id for them workflow
 
     # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
     date = (
@@ -595,9 +595,9 @@ def _sbatch_call(
     f.close()
 
     logging.info("Adding recevied job into mongodb database.")
-    # Adding job_key info along with its cacheDuration into mongodb
+    # adding job_key info along with its cacheDuration into mongodb
     mongodb.add_item(
-        job_key, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info,
+        job_key, source_code_hashes, requester_id, timestamp, main_cloud_storage_id, job_info,
     )
 
     # TODO: update as used_dataTransferIn value
@@ -614,22 +614,25 @@ def _sbatch_call(
     # logging.info(dataTransferIn)
     time.sleep(0.25)
     # seperator character is ;
-    sbatch_file_path = f"{results_folder}/{job_key}*{index}*{cloud_storage_id}*{logged_job.blockNumber}.sh"
+    sbatch_file_path = f"{results_folder}/{job_key}*{index}*{main_cloud_storage_id}*{logged_job.blockNumber}.sh"
     copyfile(f"{results_folder}/run.sh", sbatch_file_path)
 
     job_core_num = str(job_info["core"][job_id])
-    # Client's requested seconds to run his/her job, 1 minute additional given.
+    # client's requested seconds to run his/her job, 1 minute additional given
     execution_time_second = timedelta(seconds=int((job_info["executionDuration"][job_id] + 1) * 60))
     d = datetime(1, 1, 1) + execution_time_second
     time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
     logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")
-    # Give permission to user that will send jobs to Slurm.
+    # give permission to user that will send jobs to Slurm.
     subprocess.check_output(["sudo", "chown", "-R", requester_id, results_folder])
 
     for attempt in range(10):
         try:
-            # SLURM submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-            # cmd: sudo su - $requester_id -c "cd $results_folder && sbatch -c$job_core_num $results_folder/${job_key}*${index}*${cloud_storage_id}.sh --mail-type=ALL
+            # slurm submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+            """ cmd:
+            sudo su - $requester_id -c "cd $results_folder &&
+            sbatch -c$job_core_num $results_folder/${job_key}*${index}*${main_cloud_storage_id}.sh --mail-type=ALL
+            """
             job_id = (
                 subprocess.check_output(
                     [
@@ -644,7 +647,7 @@ def _sbatch_call(
                 .decode("utf-8")
                 .strip()
             )
-            time.sleep(1)  # Wait 1 second for Slurm idle core to be updated.
+            time.sleep(1)  # wait 1 second for Slurm idle core to be updated
         except subprocess.CalledProcessError as e:
             logging.error(e.output.decode("utf-8").strip())
             success, output = run_command(
@@ -676,7 +679,7 @@ def _sbatch_call(
         logging.error(e.output.decode("utf-8").strip())
 
     if not slurm_job_id.isdigit():
-        logging.error("E: Detects an error on the SLURM side. slurm_job_id is not a digit.")
+        logging.error("E: Detects an error on the SLURM side. slurm_job_id is not a digit")
         return False
 
     return True
@@ -696,7 +699,7 @@ def remove_empty_files_and_folders(results_folder) -> None:
     p1.stdout.close()
     p2.communicate()
 
-    # Removes empty folders
+    # removes empty folders
     subprocess.run(["find", results_folder, "-type", "d", "-empty", "-delete"])
     p1 = subprocess.Popen(["find", results_folder, "-type", "d", "-empty", "-print0"], stdout=subprocess.PIPE,)
     p2 = subprocess.Popen(["xargs", "-0", "-r", "rmdir"], stdin=p1.stdout, stdout=subprocess.PIPE)

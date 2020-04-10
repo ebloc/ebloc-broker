@@ -18,7 +18,7 @@ import lib
 
 home = expanduser("~")
 path = os.getcwd()
-# Definitions =============================================
+# definitions =============================================
 providerID = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 testType = "gdrive"
 readTest = "hashOutput.txt"

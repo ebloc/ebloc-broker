@@ -84,7 +84,7 @@ $ eblocServer
 
 # To run eBlocBroker Driver
 $ cd $HOME/eBlocBroker
-$ bash initialize.sh # Do it only once.
+$ bash initialize.sh # do it only once
 $ sudo ./Driver.sh
 ```
 

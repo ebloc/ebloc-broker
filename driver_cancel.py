@@ -26,9 +26,9 @@ if not cancel_block_read_from_local.isdigit():
 log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
 max_val = 0
 while True:
-    # cancel_block_read_from_local = 2000000 # For test purposes
+    # cancel_block_read_from_local = 2000000 # for test purposes
 
-    # Waits here until new job cancelled into the provider
+    # waits here until new job cancelled into the provider
     logged_jobs_to_process = LogJob.run_log_cancel_refund(cancel_block_read_from_local, env.PROVIDER_ID)
 
     for logged_job in logged_jobs_to_process:
@@ -85,7 +85,7 @@ while True:
 
     if int(max_val) != 0:
         value = max_val + 1
-        f_blockReadFrom = open(env.CANCEL_BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
+        f_blockReadFrom = open(env.CANCEL_BLOCK_READ_FROM_FILE, "w")  # updates the latest read block number
         f_blockReadFrom.write(f"{value}")
         f_blockReadFrom.close()
         cancel_block_read_from_local = str(value)
@@ -93,7 +93,7 @@ while True:
         log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
     else:
         currentBlockNumber = block_number()
-        f_blockReadFrom = open(env.CANCEL_BLOCK_READ_FROM_FILE, "w")  # Updates the latest read block number
+        f_blockReadFrom = open(env.CANCEL_BLOCK_READ_FROM_FILE, "w")  # updates the latest read block number
         f_blockReadFrom.write(f"{currentBlockNumber}")
         f_blockReadFrom.close()
         log_dc("---------------------------------------------")
