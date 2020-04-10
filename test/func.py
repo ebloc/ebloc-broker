@@ -14,13 +14,13 @@ from lib import is_transaction_passed
 home = expanduser("~")
 w3 = connect_to_web3()
 
-f = open(f"{home}/TESTS/accountPassword.txt", "r")  # Password read from the file.
+f = open(f"{home}/TESTS/accountPassword.txt", "r")  # password read from the file
 accountPassword = f.read().strip()
 f.close()
 
 
-def log(my_string, path, printFlag=0):
-    if printFlag == 0:
+def log(my_string, path, print_flag=0):
+    if print_flag == 0:
         print(my_string)
 
     f = open(f"{path}/clientOutput.txt", "a")

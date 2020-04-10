@@ -141,7 +141,7 @@ def test_stored_data_usage(eB, rpc, web3):
     dataTransferIn_2 = 1
     dataTransferOut = 1
     dataTransferIn_list = [dataTransferIn_1, dataTransferIn_2]
-    # Provider's registered data won't be used
+    # provider's registered data won't be used
     storage_hour_list = [1, 1]
     data_prices_set_blocknumber_list = [0, 0]
     data_transfer = [(dataTransferIn_1 + dataTransferIn_2), dataTransferOut]
@@ -179,7 +179,7 @@ def test_stored_data_usage(eB, rpc, web3):
         web3,
     )
 
-    # First time job is submitted with the data files
+    # first time job is submitted with the data files
     tx = eB.submitJob(
         jobKey,
         dataTransferIn_list,
@@ -256,7 +256,7 @@ def test_stored_data_usage(eB, rpc, web3):
         web3,
     )
 
-    # First time job is submitted with the data files
+    # first time job is submitted with the data files
     tx = eB.submitJob(
         jobKey,
         dataTransferIn_list,
@@ -393,7 +393,7 @@ def test_storage_refund(eB, rpc, web3):
     storageID_list = [lib.StorageID.EUDAT.value, lib.StorageID.IPFS.value]
     cacheType_list = [lib.CacheType.PRIVATE.value, lib.CacheType.PUBLIC.value]
 
-    # Provider's registered data won't be used
+    # provider's registered data won't be used
     data_prices_set_blocknumber_list = [0, 0]
 
     job_price_value, cost = scripts.lib.cost(
@@ -507,7 +507,7 @@ def test_storage_refund(eB, rpc, web3):
         storagePayment.append(eB.getReceivedStorageDeposit(provider, _requester, source_code_hash))
 
     isVerified = [True, True]
-    # Called by the cluster
+    # called by the cluster
     eB.sourceCodeHashReceived(
         jobKey, index, sourceCodeHash_list, cacheType_list, isVerified, {"from": provider, "gas": 4500000}
     )
@@ -524,7 +524,7 @@ def test_storage_refund(eB, rpc, web3):
 
     print("Passing 1 hour time...")
     rpc.mine(240)
-    # After deadline (1 hr) is completed to store the data, provider could obtain the money
+    # after deadline (1 hr) is completed to store the data, provider could obtain the money
     for idx, source_code_hash in enumerate(sourceCodeHash_list):
         tx = eB.receiveStorageDeposit(_requester, source_code_hash, {"from": provider, "gas": 4500000})
         amount = tx.events["LogStorageDeposit"]["payment"]
@@ -590,7 +590,7 @@ def test_multipleData(eB, rpc, web3):
     dataTransferIn_2 = 100
     dataTransferOut = 100
     dataTransferIn_list = [dataTransferIn_1, dataTransferIn_2]
-    # Provider's registered data won't be used
+    # provider's registered data won't be used
     storage_hour_list = [1, 1]
     data_prices_set_blocknumber_list = [0, 0]
     data_transfer = [(dataTransferIn_1 + dataTransferIn_2), dataTransferOut]
@@ -628,7 +628,7 @@ def test_multipleData(eB, rpc, web3):
         web3,
     )
 
-    # First time job is submitted with the data files
+    # first time job is submitted with the data files
     tx = eB.submitJob(
         jobKey,
         dataTransferIn_list,
@@ -642,7 +642,7 @@ def test_multipleData(eB, rpc, web3):
     print(tx.events["LogJob"]["jobKey"])
     assert cost["storage_cost"] == 200, "Since it is not verified yet storage_cost should be 200"
 
-    # Second time job is wanted to send by the same user  with the same data files
+    # second time job is wanted to send by the same user  with the same data files
     job_price_value, cost = scripts.lib.cost(
         core_list,
         coreMin_list,
@@ -660,7 +660,7 @@ def test_multipleData(eB, rpc, web3):
     )
     assert cost["storage_cost"] == 0, "Since storage_cost is already paid by the user it should be 0"
 
-    # Second time job is wanted to send by the differnt user  with the same data files
+    # second time job is wanted to send by the differnt user  with the same data files
     job_price_value, cost = scripts.lib.cost(
         core_list,
         coreMin_list,
@@ -686,7 +686,7 @@ def test_multipleData(eB, rpc, web3):
         jobKey, index, sourceCodeHash_list, cacheType_list, isVerified_list, {"from": provider, "gas": 4500000}
     )
 
-    # Second time job is wanted to send by the differnt user  with the same data files
+    # second time job is wanted to send by the differnt user  with the same data files
     job_price_value, cost = scripts.lib.cost(
         core_list,
         coreMin_list,
@@ -704,7 +704,7 @@ def test_multipleData(eB, rpc, web3):
     )
     assert cost["storage_cost"] == 0, "Since it is verified torageCost should be 0"
 
-    # Second time job is wanted to send by the differnt user  with the same data files
+    # second time job is wanted to send by the differnt user  with the same data files
     job_price_value, cost = scripts.lib.cost(
         core_list,
         coreMin_list,
@@ -754,7 +754,7 @@ def test_multipleData(eB, rpc, web3):
 
     print("jobIndex=" + str(tx.events["LogJob"]["index"]))
 
-    # Provider Side:--------------------
+    # provider Side:--------------------
     index = 0
     jobID = 0
     startTime = get_block_timestamp(web3)
@@ -818,7 +818,7 @@ def test_workflow(eB, rpc, web3):
         eB.updataDataPrice(sourceCodeHash, 20, 100, {"from": provider})
 
     eB.registerData(sourceCodeHash, 20, 240, {"from": provider})
-    eB.removeRegisteredData(sourceCodeHash, {"from": provider})  # Should submitJob fail if it is not removed
+    eB.removeRegisteredData(sourceCodeHash, {"from": provider})  # should submitJob fail if it is not removed
 
     sourceCodeHash1 = "0x68b8d8218e730fc2957bcb12119cb204"
 
@@ -1046,9 +1046,9 @@ def test_submitJob(eB, rpc, web3):
             # time.sleep(1)
             # rpc.mine(int(arguments[0]))
 
-            jobKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"  # Source Code's jobKey
+            jobKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"  # source Code's jobKey
 
-            dataKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"  # Source Code's jobKey
+            dataKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"  # source Code's jobKey
             ipfsBytes32 = utils.ipfs_to_bytes32(dataKey)
             sourceCodeHash = web3.toBytes(hexstr=ipfsBytes32)
             # print("Client Balance before: " + str(web3.eth.balanceOf(account)))
@@ -1162,7 +1162,7 @@ def test_submitJob(eB, rpc, web3):
             print(f"received={received} | refunded={refunded}")
 
     print("\nContractBalance=" + str(eB.getContractBalance()))
-    # Prints finalize version of the linked list.
+    # prints finalize version of the linked list.
     size = eB.getProviderReceiptSize(provider)
     for idx in range(0, size):
         print(eB.getProviderReceiptNode(provider, idx))

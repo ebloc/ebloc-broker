@@ -41,7 +41,7 @@ class EudatClass(Storage):
         success = self.is_cached(folder_name, id)
         cached_folder = ""
         if self.cache_type[id] == CacheType.PRIVATE.value:
-            # Download into private directory at $HOME/.eBlocBroker/cache
+            # download into private directory at $HOME/.eBlocBroker/cache
             cached_folder = self.private_dir
         elif self.cache_type[id] == CacheType.PUBLIC.value:
             cached_folder = self.public_dir
@@ -58,7 +58,7 @@ class EudatClass(Storage):
             if os.path.isdir(cached_folder):
                 output = generate_md5sum(f"{cached_folder}/{folder_name}.tar.gz")
                 if output == folder_name:
-                    # Checking is already downloaded folder's hash matches with the given hash
+                    # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
                     log(
                         f"=> {folder_name} is already cached under the public directory.", "blue",
@@ -85,7 +85,7 @@ class EudatClass(Storage):
             self.folder_type_dict[folder_name] = "tar.gz"
             output = generate_md5sum(cached_tar_file)
             if output == folder_name:
-                # Checking is already downloaded folder's hash matches with the given hash
+                # checking is already downloaded folder's hash matches with the given hash
                 log(f"=> {cached_tar_file} is already cached.", "blue")
                 self.tar_downloaded_path[folder_name] = cached_tar_file
                 self.folder_type_dict[folder_name] = "tar.gz"
@@ -96,9 +96,9 @@ class EudatClass(Storage):
         return True
 
     def eudat_download_folder(self, results_folder_prev, results_folder, folder_name) -> bool:
-        # Assumes job is sent as .tar.gz file
+        # assumes job is sent as .tar.gz file
         cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
-        logging.info(f"[ {WHERE(1)} ] - Downloading output.zip for {folder_name} -> {cached_tar_file}")
+        logging.info(f"[{WHERE(1)}] - Downloading output.zip for {folder_name} -> {cached_tar_file}")
         for attempt in range(5):
             try:
                 f = f"/{folder_name}/{folder_name}.tar.gz"
@@ -117,7 +117,7 @@ class EudatClass(Storage):
                 break
         else:
             success = self.complete_refund()
-            return False  # Should return back to Driver
+            return False  # should return back to Driver
 
         # TODO: check hash of the downloaded file is correct or not
         return True
@@ -186,9 +186,9 @@ class EudatClass(Storage):
             else:
                 logging.info("Searching share tokens for the related source code folder.")
                 for idx in range(len(share_list) - 1, -1, -1):
-                    # Starts iterating from last item to the first one
+                    # starts iterating from last item to the first one
                     input_folder_name = share_list[idx]["name"]
-                    # Removes '/' on the beginning of the string
+                    # removes '/' on the beginning of the string
                     input_folder_name = input_folder_name[1:]
                     share_id = share_list[idx]["id"]
                     # inputOwner = share_list[i]['owner']
@@ -199,7 +199,7 @@ class EudatClass(Storage):
                             "shareID": int(share_id),
                             "share_token": self.share_token,
                         }
-                        # Adding into mongodb for future usage
+                        # adding into mongodb for future usage
                         success = mongodb.add_item_share_id(folder_name, share_id, self.share_token)
                         if success:
                             logging.info("Successfull added into mongodb")
@@ -257,7 +257,7 @@ class EudatClass(Storage):
 
         for folder_name in self.source_code_hashes_to_process:
             if self.folder_type_dict[folder_name] == "tar.gz":
-                # Untar cached tar file into private directory
+                # untar cached tar file into private directory
                 tar_to_extract = self.tar_downloaded_path[folder_name]
                 if self.job_key == folder_name:
                     target = self.results_folder

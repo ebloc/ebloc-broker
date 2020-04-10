@@ -13,7 +13,7 @@ home = expanduser("~")
 topic = "0x07678231"
 
 print("Initializing...")
-k_id = w3.geth.shh.newKeyPair()  # Generates a new public and private key pair for message decryption and encryption.
+k_id = w3.geth.shh.newKeyPair()  # generates a new public and private key pair for message decryption and encryption.
 public_key = w3.geth.shh.getPublicKey(k_id)
 filter_id = w3.geth.shh.newMessageFilter({"topic": topic, "privateKeyID": k_id, "recipientPublicKey": public_key})
 

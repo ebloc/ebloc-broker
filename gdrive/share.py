@@ -105,7 +105,7 @@ def gdrive_submit_job(provider):
     account_id = 1
 
     folders_to_share = []
-    # Full path of the sourceCodeFolders is given
+    # full path of the sourceCodeFolders is given
     job_key_dict = {}
     source_code_hashes = []
     folderName_tar_hash = {}
@@ -124,8 +124,8 @@ def gdrive_submit_job(provider):
     try:
         if len(folders_to_share) > 1:
             for folder_to_share in folders_to_share[1:]:
-                # Starting from the first element ignoring source_folder
-                # Attempting to share the data folder
+                # starting from the first element ignoring source_folder
+                # attempting to share the data folder
                 job_key, tar_hash = share_folder(folder_to_share, provider_to_share)
                 folderName_tar_hash[folder_to_share] = tar_hash
                 job_key_dict[tar_hash] = job_key
@@ -155,14 +155,14 @@ def gdrive_submit_job(provider):
     dataTransferOut = 1
 
     storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    # Covers private and public folders
+    # covers private and public folders
     cacheType_list = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     storage_hours = [1, 1]
     data_prices_set_blocknumbers = [0, 0]
 
     for folder_to_share in folders_to_share:
         tar_hash = folderName_tar_hash[folder_to_share]
-        # Required to send string as bytes == str_data.encode('utf-8')
+        # required to send string as bytes == str_data.encode('utf-8')
         source_code_hash = w3.toBytes(text=tar_hash)
         source_code_hashes.append(source_code_hash)
 

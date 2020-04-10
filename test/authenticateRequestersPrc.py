@@ -16,7 +16,7 @@ eBlocBroker, w3 = connect()
 # -------------------------------------------------------
 orcID = "0000-0001-7642-0552"
 
-# Registered addresses on PRC-95
+# registered addresses on PRC-95
 accounts = [
     "0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5",
     "0x289C3D804a3B5bEB9C5A542AD2711541cbb1572c",
