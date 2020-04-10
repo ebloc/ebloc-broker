@@ -28,7 +28,7 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
 
             randomHash = str(random.getrandbits(128)) + str(random.getrandbits(128))
             f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-            f.write("#" + randomHash + "\n")  # Add random line to create different hash
+            f.write("#" + randomHash + "\n")  # add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
             f.close()
             encrypyFolderPath = "/home/prc/eBlocBroker/generateTest/ipfs"

@@ -92,7 +92,7 @@ if __name__ == "__main__":
         dataTransferOut = float(my_args[8])
         core = my_args[9]
         executionDuration = my_args[10]
-    else:  # Dummy call
+    else:  # dummy call
         job_key = "cdd786fca7ab7aa0c55bc039c6c68137"
         index = 0
         job_id = 0

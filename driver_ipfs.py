@@ -55,14 +55,14 @@ class IpfsClass(Storage):
 
     def check_ipfs(self, ipfs_hash) -> bool:
         success, ipfs_stat, cumulative_size = is_ipfs_hash_exists(ipfs_hash, attempt_count=1)
+        if not success or not ("CumulativeSize" in ipfs_stat):
+            logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
+            return False
+
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
         logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
-
-        if not success or not ("CumulativeSize" in ipfs_stat):
-            logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve.")
-            return False
         return True
 
     def run(self) -> bool:
@@ -94,7 +94,7 @@ class IpfsClass(Storage):
 
         initial_folder_size = calculate_folder_size(self.results_folder)
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
-            # Here scripts knows that provided IPFS hashes exists
+            # here scripts knows that provided IPFS hashes exists
             logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
             is_hashed = False
             if is_ipfs_hash_locally_cached(ipfs_hash):

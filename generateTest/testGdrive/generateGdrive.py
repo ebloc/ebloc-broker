@@ -29,7 +29,7 @@ with open(path + "/../nasa.txt") as test:
 
             random_hash = str(random.getrandbits(128)) + str(random.getrandbits(128))
             f.write("sleep " + str(int(lineIn[1]) - int(lineIn[0])) + "\n")
-            f.write("#" + random_hash + "\n")  # Add random line to create different hash
+            f.write("#" + random_hash + "\n")  # add random line to create different hash
             f.write("echo completed " + str(int(lineIn[1]) - int(lineIn[0])) + " > completed.txt\n")
             f.close()
 

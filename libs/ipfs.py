@@ -11,7 +11,7 @@ def get_hash(ipfs_hash, path, is_storage_paid):
     logging.info(output)
 
     if is_storage_paid:
-        # Pin downloaded ipfs hash if storage is paid
+        # pin downloaded ipfs hash if storage is paid
         output = subprocess.check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
         logging.info(output)
 

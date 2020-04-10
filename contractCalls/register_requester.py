@@ -38,7 +38,7 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
                 "Whisper node's private key of a key pair did not match with the given ID",
             )
 
-    account = w3.eth.accounts[int(account_id)]  # Requester's Ethereum Address
+    account = w3.eth.accounts[int(account_id)]  # requester's Ethereum Address
     if does_requester_exist(account):
         return False, f"Requester {account} is already registered."
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         ipfsAddress = str(sys.argv[5])
         githubUsername = str(sys.argv[6])
     else:
-        account = 1  # Requster's Ethereum Address
+        account = 1  # requster's Ethereum Address
         email = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"
         federationCloudID = "059ab6ba-4030-48bb-b81b-12115f531296"
         miniLockID = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
