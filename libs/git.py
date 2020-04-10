@@ -68,12 +68,12 @@ def diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
         upload everything, changed files!
     """
     success, output = run_command(["git", "config", "core.fileMode", "false"])
-    # First ignore deleted files not to be added into git
+    # first ignore deleted files not to be added into git
     success, output = run_command(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
     success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
     patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
 
-    # File to be uploaded as zip
+    # file to be uploaded as zip
     patch_file = f"{target_path}/{patch_name}.gz"
     logging.info(f"patch_path={patch_name}.gz")
 
@@ -98,8 +98,8 @@ def add_all(repo=None):
     if not repo:
         repo = git.Repo(".", search_parent_directories=True)
 
-    # Required for files to be access on the cluster side due to permission issues
-    subprocess.run(["chmod", "-R", "775", "."])  # Changes folder's hash
+    # required for files to be access on the cluster side due to permission issues
+    subprocess.run(["chmod", "-R", "775", "."])  # changes folder's hash
     # subprocess.run(["chmod", "-R", "755", "."])
     # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
 
@@ -110,7 +110,7 @@ def add_all(repo=None):
             is_diff = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
             success = True
         except:
-            # If it is the first commit HEAD might not exist
+            # if it is the first commit HEAD might not exist
             success, is_diff = run_command(["git", "diff", "--cached", "--shortstat"])
 
         if success and is_diff:

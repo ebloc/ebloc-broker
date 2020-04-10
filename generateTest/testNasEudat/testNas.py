@@ -19,7 +19,7 @@ import lib
 home = expanduser("~")
 
 path = os.getcwd()
-# Definitions =============================================
+# definitions =============================================
 providerID = "0x4e4a0750350796164d8defc442a712b7557bf282"  # netlab
 testType = "eudat-nas"
 readTest = "hashOutput.txt"
@@ -32,8 +32,8 @@ def log(strIn):
     txFile.close()
 
 
-# Login to EUDAT account----------------------------------------
-f = open(home + "/TESTS/password.txt", "r")  # Password read from the file.
+# login to EUDAT account----------------------------------------
+f = open(home + "/TESTS/password.txt", "r")  # password read from the file
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client("https://b2drop.eudat.eu/")

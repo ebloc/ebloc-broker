@@ -5,6 +5,7 @@ import os
 from os.path import expanduser
 from pdb import set_trace as bp  # noqa: F401
 
+import colored_traceback
 from dotenv import load_dotenv
 
 import _utils.colorer  # noqa: F401
@@ -14,12 +15,13 @@ w3 = None
 driver_cancel_process = None
 whisper_state_receiver_process = None
 env = None
+colored_traceback.add_hook(always=True)
 
 
 class ENV:
     def __init__(self) -> None:
         self.HOME = expanduser("~")
-        # Load .env from the given path
+        # load .env from the given path
         load_dotenv(os.path.join(f"{self.HOME}/.eBlocBroker/", ".env"))
 
         self.WHOAMI = os.getenv("WHOAMI")

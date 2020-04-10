@@ -16,8 +16,8 @@ home = expanduser("~")
 path = os.getcwd()
 os.environ["path"] = path
 
-# Login to EUDAT account----------------------------------------
-f = open(home + "/TESTS/password.txt", "r")  # Password read from the file.
+# login to EUDAT account----------------------------------------
+f = open(home + "/TESTS/password.txt", "r")  # password read from the file
 password = f.read().replace("\n", "").replace(" ", "")
 f.close()
 oc = owncloud.Client("https://b2drop.eudat.eu/")
@@ -38,18 +38,18 @@ for idx in itertools.count(0):
         for line in ff:
             f.write(line)
 
-    testId = randint(0, 3)
+    test_id = randint(0, 3)
     coreNum = 1  # randint(1, 2)
-    if testId == 0:
+    if test_id == 0:
         f.write("make bt CLASS=B\n")
         f.write("bin/bt.B.x inputbt.data")
-    elif testId == 1:
+    elif test_id == 1:
         f.write("make sp CLASS=B\n")
         f.write("bin/sp.B.x inputsp.data")
-    elif testId == 2:
+    elif test_id == 2:
         f.write("make ua CLASS=B\n")
         f.write("bin/ua.B.x inputua.data")
-    elif testId == 3:
+    elif test_id == 3:
         f.write("make lu CLASS=B\n")
         f.write("bin/lu.B.x inputlu.data")
 
@@ -80,16 +80,16 @@ for idx in itertools.count(0):
 subprocess.run(["cp", path + "/hashOutput.txt", path + "/hashOutput_temp.txt"])
 
 """
-    if testId == 0:
+    if test_id == 0:
         f.write("make bt CLASS=B\n")
         f.write("mpirun -n " + str(coreNum) + " bin/bt.B.x inputbt.data")
-    elif testId == 1:
+    elif test_id == 1:
         f.write("make sp CLASS=B\n")
         f.write("mpirun -n " + str(coreNum) + " bin/sp.B.x inputsp.data")
-    elif testId == 2:
+    elif test_id == 2:
         f.write("make ua CLASS=B\n")
         f.write("mpirun -n " + str(coreNum) + " bin/ua.B.x inputua.data")
-    elif testId == 3:
+    elif test_id == 3:
         f.write("make lu CLASS=B\n")
         f.write("mpirun -n " + str(coreNum) + " bin/lu.B.x inputlu.data")
 """
