@@ -14,7 +14,7 @@ from utils import read_json
 
 class Network(object):
     def __init__(self):
-        # Let's add some data to the [instance of the] class.
+        # let's add some data to the [instance of the] class.
         self.eBlocBroker = None
         self.w3 = None
         self.oc = None

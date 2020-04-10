@@ -6,7 +6,7 @@ import subprocess
 import traceback
 
 from config import bp, logging  # noqa: F401
-from lib import echo_grep_awk, run_command, subprocess_call_attempt
+from lib import echo_grep_awk, run_command, subprocess_call
 from settings import init_env
 from utils import byte_to_mb, read_json
 
@@ -99,7 +99,7 @@ def size(
                 "--path",
                 results_folder_prev,
             ]
-            output = subprocess_call_attempt(cmd, 10)
+            output = subprocess_call(cmd, 10)
 
             cmd = [
                 "gdrive",
@@ -109,13 +109,13 @@ def size(
                 "-c",
                 env.GDRIVE_METADATA,
             ]
-            gdrive_info = subprocess_call_attempt(cmd, 10)
+            gdrive_info = subprocess_call(cmd, 10)
         except:
             return False
 
         md5sum = get_file_info(gdrive_info, "Md5sum")
         if md5sum != source_code_hash_list[0].decode("utf-8"):
-            # Checks md5sum obtained from gdrive and given by the user
+            # checks md5sum obtained from gdrive and given by the user
             logging.error("E: md5sum does not match with the provided data[0]")
             return False, 0, [], source_code_key
         else:
@@ -137,14 +137,13 @@ def size(
             data_key = echo_grep_awk(output, f"{k}.tar.gz", "1")
             try:
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
-                gdrive_info = subprocess_call_attempt(cmd, 10)
+                gdrive_info = subprocess_call(cmd, 10)
             except:
                 return False
 
             md5sum = get_file_info(gdrive_info, "Md5sum")
             if md5sum != source_code_hash_list[idx].decode("utf-8"):
-                # Checks md5sum obtained from gdrive and given by the user
-                print(idx)
+                # checks md5sum obtained from gdrive and given by the user
                 logging.error(
                     f"md5sum={md5sum} | given={source_code_hash_list[idx].decode('utf-8')} \n"
                     f"E: md5sum does not match with the provided data[{idx}]"
@@ -163,7 +162,7 @@ def size(
             with open(data_link_file, "w") as f:
                 json.dump(data_key_dict, f)
         else:
-            logging.error("Something is wrong. data_key_dict is {}.")
+            logging.error("E: Something is wrong. data_key_dict is {}.")
             return False, 0, [], source_code_key
 
         output = byte_to_mb(size_to_download)

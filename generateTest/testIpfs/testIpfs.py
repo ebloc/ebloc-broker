@@ -18,7 +18,7 @@ import lib
 
 home = expanduser("~")
 path = os.getcwd()
-# Definitions =============================================
+# definitions =============================================
 providerID = "0x2fe8fb59f6e24703f8732fcd38f4ac9e8f56d8aa"  # googleInstance-3
 testType = "ipfs"
 readTest = "hashOutput.txt"

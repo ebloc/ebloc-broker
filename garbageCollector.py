@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from lib import HOME
 from utils import read_json
 
-# Load .env from the given path
+# load .env from the given path
 load_dotenv(os.path.join(f"{HOME}/.eBlocBroker/", ".env"))
 
 

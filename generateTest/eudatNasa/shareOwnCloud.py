@@ -9,9 +9,9 @@ import owncloud
 path = os.getcwd()
 home = expanduser("~")
 
-# Login to EUDAT account----------------------------------------
+# login to EUDAT account----------------------------------------
 
-f = open(home + "/TESTS/password.txt", "r")  # Password read from the file.
+f = open(home + "/TESTS/password.txt", "r")  # password read from the file
 password = f.read().strip()
 f.close()
 oc = owncloud.Client("https://b2drop.eudat.eu/")
