@@ -40,7 +40,7 @@ if __name__ == "__main__":
         newOwner = str(sys.argv[1])
         success, output = transferOwnership(newOwner)
         if success:
-            receipt = get_tx_status(success, output)
+            receipt = get_tx_status(output)
         else:
             print(output)
     else:

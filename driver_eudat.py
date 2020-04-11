@@ -255,7 +255,7 @@ class EudatClass(Storage):
         if not success:
             return False
 
-        for folder_name in self.source_code_hashes_to_process:
+        for idx, folder_name in enumerate(self.source_code_hashes_to_process):
             if self.folder_type_dict[folder_name] == "tar.gz":
                 # untar cached tar file into private directory
                 tar_to_extract = self.tar_downloaded_path[folder_name]
@@ -269,11 +269,12 @@ class EudatClass(Storage):
                 if output:
                     logging.info(output)
 
-        if not os.path.isfile(f"{self.results_folder}/run.sh"):
-            logging.error(f"{self.results_folder}/run.sh file does not exist")
-            return False
-        logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB")
+                if idx == 0 and not self.check_run_sh():
+                    # TODO: refund
+                    success = self.complete_refund()
+                    return False
 
+        logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB")
         for folder_name in self.source_code_hashes_to_process:
             try:
                 self.shareID[folder_name]["share_token"]

@@ -130,7 +130,7 @@ def run_whisper_state_receiver():
         config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
 
 
-def get_tx_status(success, output):
+def get_tx_status(output):
     logging.info(f"tx_hash={output}")
     receipt = config.w3.eth.waitForTransactionReceipt(output)
     logging.info("Transaction receipt mined: \n")
