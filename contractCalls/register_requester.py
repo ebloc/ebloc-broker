@@ -75,6 +75,6 @@ if __name__ == "__main__":
     w3 = connect_to_web3()
     success, output = register_requester(account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
     if success:
-        receipt = get_tx_status(success, output)
+        receipt = get_tx_status(output)
     else:
         logging.error(f"E: {output}")
