@@ -30,6 +30,6 @@ if __name__ == "__main__":
     success, output = register_data(sourceCodeHash, 20, 240)
 
     if success:
-        receipt = get_tx_status(success, output)
+        receipt = get_tx_status(output)
     else:
         print(output)

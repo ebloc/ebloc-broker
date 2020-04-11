@@ -74,7 +74,6 @@ class IpfsClass(Storage):
 
         if not is_ipfs_running():
             return False
-
         logging.info(f"is_ipfs_hash_locally_cached={is_ipfs_hash_locally_cached(self.job_key)}")
         bp()
         if not os.path.isdir(self.results_folder):
@@ -107,7 +106,7 @@ class IpfsClass(Storage):
                 target = f"{self.results_data_folder}/{ipfs_hash}"
                 create_dir(target)
 
-            ipfs.get_hash(ipfs_hash, target, False)
+            ipfs.get_hash(ipfs_hash, target, is_storage_paid=False)
             if not git.initialize_check(target):
                 return False
 
@@ -120,8 +119,9 @@ class IpfsClass(Storage):
                 initial_folder_size = folder_size
                 # self.dataTransferIn_used += byte_to_mb(cumulative_size)
 
-            if idx == 0 and not os.path.isfile(f"{self.results_folder}/run.sh"):
-                logging.error("run.sh file does not exist")
+            if idx == 0 and not self.check_run_sh():
+                # TODO: refund
+                success = self.complete_refund()
                 return False
 
         logging.info(f"dataTransferIn={self.dataTransferIn_used} MB | Rounded={int(self.dataTransferIn_used)} MB")
