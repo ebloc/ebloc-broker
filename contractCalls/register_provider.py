@@ -81,6 +81,6 @@ if __name__ == "__main__":
         availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
     )
     if success:
-        receipt = get_tx_status(success, output)
+        receipt = get_tx_status(output)
     else:
         print(f"E: {output}")
