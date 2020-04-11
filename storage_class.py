@@ -36,6 +36,7 @@ class Storage(BaseClass):
         self.cloudStorageID = logged_job.args["cloudStorageID"]
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+        self.run_path = f"{self.results_folder}/run.sh"
         self.results_data_folder = f"{self.results_folder_prev}/data"
         self.results_data_link = f"{self.results_folder_prev}/data_link"
         self.private_dir = f"{env.PROGRAM_PATH}/{requester_id}/cache"
@@ -53,20 +54,19 @@ class Storage(BaseClass):
 
     def complete_refund(self) -> bool:
         """Complete refund back to requester"""
-        success, output = refund(
-            self.logged_job.args["provider"],
-            self.PROVIDER_ID,
-            self.job_key,
-            self.index,
-            self.job_id,
-            self.source_code_hashes,
-        )
-        if not success:
-            logging.error(output)
-        else:
-            logging.info(f"refund()_tx_hash={output}")
-
-        return success
+        try:
+            tx_hash = refund(
+                self.logged_job.args["provider"],
+                self.PROVIDER_ID,
+                self.job_key,
+                self.index,
+                self.job_id,
+                self.source_code_hashes,
+            )
+            logging.info(f"refund() tx_hash={tx_hash}")
+            return True
+        except:
+            return False
 
     def is_md5sum_matches(self, path, name, id, folder_type, cache_type) -> bool:
         output = generate_md5sum(path)
@@ -152,6 +152,12 @@ class Storage(BaseClass):
             return success, output
         else:
             return False, ""
+
+    def check_run_sh(self) -> bool:
+        if not os.path.isfile(self.run_path):
+            logging.error(f"E: {self.run_path} file does not exist")
+            return False
+        return True
 
     def sbatch_call(self) -> bool:
         try:

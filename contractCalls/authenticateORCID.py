@@ -70,6 +70,6 @@ if __name__ == "__main__":
 
     success, output = authenticateORCID(address, orc_id)
     if success:
-        receipt = get_tx_status(success, output)
+        receipt = get_tx_status(output)
     else:
         logging.error(output)

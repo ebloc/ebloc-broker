@@ -291,7 +291,7 @@ if __name__ == "__main__":
         print(output)
         sys.exit(1)
     else:
-        receipt = get_tx_status(success, output)
+        receipt = get_tx_status(output)
         if receipt["status"] == 1:
             try:
                 logs = eBlocBroker.events.LogJob().processReceipt(receipt)

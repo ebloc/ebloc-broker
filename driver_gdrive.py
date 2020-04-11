@@ -309,8 +309,9 @@ class GdriveClass(Storage):
             self.get_data_init(0, self.job_key, True)
             self.get_data(self.job_key, 0, True)
 
-        if not os.path.isfile(f"{self.results_folder}/run.sh"):
-            logging.error(f"{self.results_folder}/run.sh does not exist")
+        if not self.check_run_sh():
+            # TODO: refund
+            success = self.complete_refund()
             return False
 
         for idx, (key, value) in enumerate(self.job_key_list.items()):
