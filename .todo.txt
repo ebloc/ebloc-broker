@@ -18,3 +18,5 @@ TODO:
 # endTime => completionTime
 
 * docs/ add quickstart
+
+# check refund()
