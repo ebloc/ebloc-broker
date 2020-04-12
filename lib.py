@@ -9,7 +9,6 @@ import signal
 import subprocess
 import sys
 import time
-import traceback
 from datetime import datetime, timedelta
 from enum import Enum
 from shutil import copyfile
@@ -21,7 +20,7 @@ import config
 import libs.mongodb as mongodb
 from config import bp, logging  # noqa: F401
 from settings import WHERE, init_env
-from utils import byte_to_mb, generate_md5sum, read_json
+from utils import _colorize_traceback, byte_to_mb, generate_md5sum, read_json
 
 
 # enum: https://stackoverflow.com/a/1695250/2402577
@@ -32,7 +31,7 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-if config.w3 is None:
+if not config.w3:
     from imports import connect_to_web3
 
     connect_to_web3()
@@ -116,12 +115,12 @@ def run_whisper_state_receiver():
             data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
             kId = data["kId"]
         except:
-            logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()}")
+            logging.error(f"[{WHERE(1)}] \n {_colorize_traceback()}")
             terminate()
 
         if not config.w3.geth.shh.hasKeyPair(kId):
             logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
-            logging.warning("Please first run: scripts/whisper_initialize.py")
+            logging.warning("Please first run: python_scripts/whisper_initialize.py")
             terminate()
 
     if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
@@ -130,9 +129,9 @@ def run_whisper_state_receiver():
         config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
 
 
-def get_tx_status(output):
-    logging.info(f"tx_hash={output}")
-    receipt = config.w3.eth.waitForTransactionReceipt(output)
+def get_tx_status(tx_hash):
+    logging.info(f"tx_hash={tx_hash}")
+    receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
     logging.info("Transaction receipt mined: \n")
     # logging.info(pformat(receipt))
     pprint.pprint(dict(receipt))  # delete
@@ -183,7 +182,7 @@ def _try(func):
     try:
         return func()
     except Exception:
-        logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
+        logging.error(f"[{WHERE(1)}] - {_colorize_traceback()}")
         raise
 
 
@@ -315,7 +314,7 @@ def subprocess_call(cmd, attempt_count=1, print_flag=True):
             return subprocess.check_output(cmd).decode("utf-8").strip()
         except Exception:
             if not count and print_flag:
-                logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
+                logging.error(f"[{WHERE(1)}] - {_colorize_traceback()}")
 
             if count + 1 == attempt_count:
                 raise SystemExit
@@ -330,7 +329,7 @@ def run_command_stdout_to_file(cmd, path, is_exit_flag=False) -> bool:
             logging.info(f"Writing into path is completed => {path}")
         except Exception:
             _cmd = " ".join(cmd)
-            logging.error(f"[{WHERE(1)}] - {traceback.format_exc()} command:\n {_cmd}")
+            logging.error(f"[{WHERE(1)}] - {_colorize_traceback()} command:\n {_cmd}")
             raise SystemExit
 
 
@@ -339,7 +338,7 @@ def run(cmd) -> str:
         return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
     except Exception:
         _cmd = " ".join(cmd)
-        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {_cmd}")
+        logging.error(f"[{WHERE(1)}] \n {_colorize_traceback()} command:\n {_cmd}")
         raise
 
 
@@ -353,7 +352,7 @@ def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
     except Exception:
         _cmd = " ".join(cmd)
         print(output)
-        logging.error(f"[{WHERE(1)}] \n {traceback.format_exc()} command:\n {_cmd}")
+        logging.error(f"[{WHERE(1)}] \n {_colorize_traceback()} command:\n {_cmd}")
         if is_exit_flag:
             terminate()
         return False, output
@@ -374,11 +373,11 @@ def silent_remove(path) -> bool:
         logging.info(f"[{WHERE(1)}] - {path} is removed")
         return True
     except Exception:
-        logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
+        logging.error(f"[{WHERE(1)}] - {_colorize_traceback()}")
         return False
 
 
-def remove_files(filename):
+def remove_files(filename) -> bool:
     if "*" in filename:
         for f in glob.glob(filename):
             if not silent_remove(f):
@@ -401,17 +400,16 @@ def echo_grep_awk(str_data, grep_str, awk_column):
 
 def eblocbroker_function_call(func, attempt):
     for attempt in range(attempt):
-        success, output = func()
-        if success:
-            return output
-        else:
-            logging.error(f"[{WHERE(1)}] E: {output}")
-            if output == "notconnected":
+        try:
+            return func()
+        except Exception as e:
+            if type(e).__name__ == "Web3NotConnected":
                 time.sleep(1)
             else:
+                logging.error(_colorize_traceback())
                 raise
     else:
-        return output
+        raise
 
 
 def is_ipfs_hash_locally_cached(ipfs_hash) -> bool:

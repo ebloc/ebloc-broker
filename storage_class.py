@@ -1,12 +1,11 @@
 import os
 import subprocess
-import traceback
 
 from config import logging
 from contractCalls.refund import refund
 from lib import CacheType, _sbatch_call, log, run_command
 from settings import init_env
-from utils import Link, create_dir, generate_md5sum
+from utils import Link, _colorize_traceback, create_dir, generate_md5sum
 
 env = init_env()
 
@@ -179,7 +178,7 @@ class Storage(BaseClass):
                 self.job_info,
             )
         except Exception:
-            logging.error(f"E: Failed to call _sbatch_call() function.\n{traceback.format_exc()}")
+            logging.error(f"E: Failed to call _sbatch_call() function.\n{_colorize_traceback()}")
             return False
 
         return True

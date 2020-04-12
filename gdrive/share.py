@@ -4,7 +4,6 @@ import json
 import os
 import shutil
 import sys
-import traceback
 
 import libs.gdrive as gdrive
 import libs.git as git
@@ -14,7 +13,7 @@ from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import CacheType, StorageID, compress_folder, get_tx_status, printc, run_command, silent_remove
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
 base_folder = f"{EBLOCPATH}/base"
 
@@ -96,12 +95,10 @@ def share_folder(folder_to_share, provider_to_share, job_key_flag=False):
 
 def gdrive_submit_job(provider):
     eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return False, "web3 is not connected"
 
     provider = w3.toChecksumAddress(provider)
     provider_to_share = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"  # '
-    success, provider_info = get_provider_info(provider)
+    # provider_info = get_provider_info(provider)
     account_id = 1
 
     folders_to_share = []
@@ -145,7 +142,7 @@ def gdrive_submit_job(provider):
         folderName_tar_hash[folder_to_share] = tar_hash
         job_key_dict[tar_hash] = job_key
     except Exception:
-        logging.error(f"E: {traceback.format_exc()}")
+        logging.error(f"E: {_colorize_traceback()}")
         sys.exit(1)
 
     coreMin_list = []
@@ -189,39 +186,41 @@ def gdrive_submit_job(provider):
     )
 
     logging.info("\nSubmitting Job...")
-    success, output = submitJob(
-        provider,
-        jobKey,
-        core_list,
-        coreMin_list,
-        dataTransferIn_list,
-        dataTransferOut,
-        storage_ids,
-        source_code_hashes,
-        cacheType_list,
-        storage_hours,
-        account_id,
-        job_price_value,
-        data_prices_set_blocknumbers,
-    )
-
-    return success, output
+    try:
+        tx_hash = submitJob(
+            provider,
+            jobKey,
+            core_list,
+            coreMin_list,
+            dataTransferIn_list,
+            dataTransferOut,
+            storage_ids,
+            source_code_hashes,
+            cacheType_list,
+            storage_hours,
+            account_id,
+            job_price_value,
+            data_prices_set_blocknumbers,
+        )
+        return tx_hash
+    except:
+        logging.error(_colorize_traceback())
+        raise
 
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
     # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
     provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
-    success, output = gdrive_submit_job(provider)
-
-    if not success:
-        logging.error(output)
-        sys.exit(1)
-    else:
-        receipt = get_tx_status(success, output)
+    try:
+        tx_hash = gdrive_submit_job(provider)
+        receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
                 logging.info(f"Job's index={logs[0].args['index']}")
             except IndexError:
                 logging.info("Transaction is reverted.")
+    except:
+        logging.error(_colorize_traceback())
+        sys.exit(1)

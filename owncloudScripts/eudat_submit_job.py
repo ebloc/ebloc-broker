@@ -11,6 +11,7 @@ from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import HOME, CacheType, StorageID, get_tx_status, printc
+from utils import _colorize_traceback
 
 
 def eudat_submit_job(provider, oc):
@@ -19,7 +20,7 @@ def eudat_submit_job(provider, oc):
         return False, "web3 is not connected"
 
     provider = w3.toChecksumAddress(provider)
-    success, provider_info = get_provider_info(provider)
+    provider_info = get_provider_info(provider)
     account_id = 1  # different account than provider
 
     folders_to_share = []  # path of folder to share
@@ -89,22 +90,26 @@ def eudat_submit_job(provider, oc):
         False,
     )
 
-    success, output = submitJob(
-        provider,
-        job_key,
-        core_list,
-        core_min_list,
-        dataTransferIn_list,
-        dataTransferOut,
-        storage_ids,
-        source_code_hashes,
-        cache_types,
-        storage_hours,
-        account_id,
-        job_price_value,
-        data_prices_set_blocknumbers,
-    )
-    return success, output
+    try:
+        tx_hash = submitJob(
+            provider,
+            job_key,
+            core_list,
+            core_min_list,
+            dataTransferIn_list,
+            dataTransferOut,
+            storage_ids,
+            source_code_hashes,
+            cache_types,
+            storage_hours,
+            account_id,
+            job_price_value,
+            data_prices_set_blocknumbers,
+        )
+        return tx_hash
+    except:
+        print(_colorize_traceback())
+        raise
 
 
 if __name__ == "__main__":
@@ -124,15 +129,15 @@ if __name__ == "__main__":
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
         # provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
 
-    success, output = eudat_submit_job(provider, oc)
-    if not success:
-        print(output)
-        sys.exit(1)
-    else:
-        receipt = get_tx_status(success, output)
+    try:
+        tx_hash = eudat_submit_job(provider, oc)
+        receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
                 print(f"Job's index={logs[0].args['index']}")
             except IndexError:
                 print("Transaction is reverted.")
+    except:
+        print(_colorize_traceback())
+        sys.exit(1)

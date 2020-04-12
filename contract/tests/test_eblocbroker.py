@@ -478,7 +478,7 @@ def test_storage_refund(eB, rpc, web3):
     assert eB.balanceOf(provider) == 0
 
     # ---------------------------------------------------------------
-    print("----Same Job submitted after full refund -----")
+    print("========= Same Job submitted after full refund =========")
 
     tx = eB.submitJob(
         jobKey,

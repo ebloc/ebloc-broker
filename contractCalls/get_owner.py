@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+import sys
 
-def get_owner(eBlocBroker=None):
-    if eBlocBroker is None:
-        from imports import connect_to_eblocbroker
+from imports import connect
+from utils import _colorize_traceback
 
-        try:
-            eBlocBroker = connect_to_eblocbroker()
-        except Exception:
-            return None
 
+def get_owner():
+    eBlocBroker, w3 = connect()
     return eBlocBroker.functions.getOwner().call()
 
 
 if __name__ == "__main__":
-    print(get_owner())
+    try:
+        print(get_owner())
+    except:
+        print(_colorize_traceback())
+        sys.exit()

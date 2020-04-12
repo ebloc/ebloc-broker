@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-import traceback
+import sys
 
+from config import logging
 from imports import connect
 from lib import get_tx_status
 from settings import init_env
+from utils import _colorize_traceback
 
 
 def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
@@ -12,19 +14,21 @@ def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
     env = init_env()
 
     if availableCoreNum == 0:
-        return (False, "Please enter positive value for the available core number")
+        logging.error("Please enter positive value for the available core number")
+        raise
 
     if commitmentBlockNum == 0:
-        return (False, "Please enter positive value for the commitment block number")
+        logging.error("Please enter positive value for the commitment block number")
+        raise
 
     try:
         tx = eBlocBroker.functions.updateProviderPrices(availableCoreNum, commitmentBlockNum, prices).transact(
             {"from": env.PROVIDER_ID, "gas": 4500000}
         )
+        return tx.hex()
     except Exception:
-        return False, traceback.format_exc()
-
-    return True, tx.hex()
+        logging.error(_colorize_traceback)
+        raise
 
 
 if __name__ == "__main__":
@@ -36,8 +40,9 @@ if __name__ == "__main__":
     priceCache = 1
     prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
 
-    success, output = updateProviderPrices(availableCoreNum, commitmentBlockNum, prices)
-    if success:
-        receipt = get_tx_status(output)
-    else:
-        print(output)
+    try:
+        tx_hash = updateProviderPrices(availableCoreNum, commitmentBlockNum, prices)
+        receipt = get_tx_status(tx_hash)
+    except:
+        logging.error(_colorize_traceback())
+        sys.exit(1)

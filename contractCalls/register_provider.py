@@ -1,48 +1,51 @@
 #!/usr/bin/env python3
 
 import os
-import traceback
 
+from config import logging
 from contractCalls.doesProviderExist import doesProviderExist
 from imports import connect
 from lib import get_tx_status
 from settings import init_env
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
-eBlocBroker, w3 = connect()
 env = init_env()
 
 
 def register_provider(
     availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
 ):
+    eBlocBroker, w3 = connect()
+
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
-        return False, "Please first run: ../scripts/whisper_initialize.py"
+        logging.error("Please first run: ../scripts/whisper_initialize.py")
+        raise
     else:
         try:
             data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
         except:
-            print(traceback.format_exc())
-            return False, None
+            logging.error(_colorize_traceback())
+            raise
 
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
 
         if not w3.geth.shh.hasKeyPair(kId):
-            return (
-                False,
+            logging.error(
                 f"Whisper node's private key of a key pair did not match with the given ID.\n"
-                f"Please run: {env.EBLOCPATH}/scripts/whisper_initialize.py",
+                f"Please run: {env.EBLOCPATH}/scripts/whisper_initialize.py"
             )
+            raise
 
     if doesProviderExist(env.PROVIDER_ID):
-        return (
-            False,
-            f"Provider {env.PROVIDER_ID} is already registered. Please call the updateProvider() function for an update.",
+        logging.error(
+            f"Provider {env.PROVIDER_ID} is already registered. Please call the updateProvider() function for an update."
         )
+        raise
 
     if commitment_block_num < 240:
-        return False, "Commitment block number should be greater than 240"
+        logging.error("Commitment block number should be greater than 240")
+        raise
 
     if len(federation_cloud_id) < 128 and len(email) < 128 and (len(minilock_id) == 0 or len(minilock_id) == 45):
         try:
@@ -56,10 +59,10 @@ def register_provider(
                 ipfsAddress,
                 whisperPubKey,
             ).transact({"from": env.PROVIDER_ID, "gas": 4500000})
+            return tx.hex()
         except Exception:
-            return False, traceback.format_exc()
-
-        return True, tx.hex()
+            logging.error(_colorize_traceback)
+            raise
 
 
 if __name__ == "__main__":
@@ -77,10 +80,10 @@ if __name__ == "__main__":
 
     commitment_block_num = 240
 
-    success, output = register_provider(
-        availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
-    )
-    if success:
-        receipt = get_tx_status(output)
-    else:
-        print(f"E: {output}")
+    try:
+        tx_hash = register_provider(
+            availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
+        )
+        receipt = get_tx_status(tx_hash)
+    except:
+        print(_colorize_traceback())

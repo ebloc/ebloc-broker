@@ -120,7 +120,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 path,
             )
 
-            success, output = submitJob(
+            output = submitJob(
                 provider,
                 jobKey,
                 core_list,
