@@ -18,6 +18,10 @@ env = None
 colored_traceback.add_hook(always=True)
 
 
+class Web3NotConnected(Exception):
+    pass
+
+
 class ENV:
     def __init__(self) -> None:
         self.HOME = expanduser("~")

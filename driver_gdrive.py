@@ -301,7 +301,7 @@ class GdriveClass(Storage):
 
     def run(self) -> bool:
         log(f"[{get_time()}] New job has been received through Google Drive", "cyan")
-        success, provider_info = get_provider_info(self.logged_job.args["provider"])
+        # provider_info = get_provider_info(self.logged_job.args["provider"])
 
         if not os.path.isdir(self.results_folder):
             self.get_data(self.job_key, 0, True)

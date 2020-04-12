@@ -2,47 +2,47 @@
 
 
 import os
-import traceback
+import sys
 
+from config import logging
 from imports import connect, connect_to_web3
 from lib import get_tx_status
 from settings import init_env
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
 env = init_env()
 
 
 def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):
     eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return
 
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
-        return False, "Please first run: ../scripts/whisper_initialize.py"
+        logging.error("Please first run: ../scripts/whisper_initialize.py")
+        raise
     else:
         try:
             data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
         except:
-            print(traceback.format_exc())
-            return False
+            logging.error(_colorize_traceback())
+            raise
 
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):
-            return (
-                False,
-                "Whisper node's private key of a key pair did not match with the given ID.\nPlease re-run: ../scripts/whisper_initialize.py",
+            logging.error(
+                "Whisper node's private key of a key pair did not match with the given ID.\nPlease re-run: ../scripts/whisper_initialize.py"
             )
+            raise
 
     if len(federationCloudId) < 128 and len(email) < 128 and (len(minilock_id) == 0 or len(minilock_id) == 45):
         try:
             tx = eBlocBroker.functions.updateProviderInfo(
                 email, federationCloudId, minilock_id, ipfsAddress, whisperPubKey
             ).transact({"from": env.PROVIDER_ID, "gas": 4500000})
+            return tx.hex()
         except Exception:
-            return False, traceback.format_exc()
-
-        return True, tx.hex()
+            logging.error(_colorize_traceback())
+            raise
 
 
 if __name__ == "__main__":
@@ -51,9 +51,10 @@ if __name__ == "__main__":
     minilock_id = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
     ipfsAddress = "/ip4/193.140.196.159/tcp/4001/ipfs/QmNQ74xaWquZseMhZJCPfV47WttP9hAoPEXeCMKsh3Cap4"
 
-    w3 = connect_to_web3()
-    success, output = updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress)
-    if success:
-        receipt = get_tx_status(output)
-    else:
-        print(output)
+    try:
+        w3 = connect_to_web3()
+        tx_hash = updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress)
+        receipt = get_tx_status(tx_hash)
+    except:
+        logging.error(_colorize_traceback())
+        sys.exit(1)
