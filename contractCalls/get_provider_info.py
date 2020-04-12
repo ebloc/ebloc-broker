@@ -2,41 +2,46 @@
 
 import sys
 
+from config import logging  # noqa: F401
 from imports import connect
+from utils import _colorize_traceback
 
 
 def get_provider_info(_provider):
     eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return
 
     provider = w3.toChecksumAddress(_provider)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        print(f"Provider {provider} is not registered. Please try again with registered Ethereum Address as provider.")
-        sys.exit(1)
+        logging.error(
+            f"Provider {provider} is not registered. Please try again with registered Ethereum Address as provider."
+        )
+        raise
 
-    blockReadFrom, providerPriceInfo = eBlocBroker.functions.getProviderInfo(provider, 0).call()
-    event_filter = eBlocBroker.events.LogProviderInfo.createFilter(
-        fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)},
-    )
+    try:
+        blockReadFrom, providerPriceInfo = eBlocBroker.functions.getProviderInfo(provider, 0).call()
+        event_filter = eBlocBroker.events.LogProviderInfo.createFilter(
+            fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)},
+        )
 
-    provider_info = {
-        "blockReadFrom": blockReadFrom,
-        "availableCoreNum": providerPriceInfo[0],
-        "commitmentBlockNum": providerPriceInfo[1],
-        "priceCoreMin": providerPriceInfo[2],
-        "priceDataTransfer": providerPriceInfo[3],
-        "priceStorage": providerPriceInfo[4],
-        "priceCache": providerPriceInfo[5],
-        "email": event_filter.get_all_entries()[-1].args["email"],  # -1 indicated the most recent emitted evet
-        "miniLockID": event_filter.get_all_entries()[-1].args["miniLockID"],
-        "ipfsID": event_filter.get_all_entries()[-1].args["ipfsID"],
-        "fID": event_filter.get_all_entries()[-1].args["fID"],
-        "whisperID": "0x" + event_filter.get_all_entries()[-1].args["whisperID"],
-    }
-
-    return True, provider_info
+        provider_info = {
+            "blockReadFrom": blockReadFrom,
+            "availableCoreNum": providerPriceInfo[0],
+            "commitmentBlockNum": providerPriceInfo[1],
+            "priceCoreMin": providerPriceInfo[2],
+            "priceDataTransfer": providerPriceInfo[3],
+            "priceStorage": providerPriceInfo[4],
+            "priceCache": providerPriceInfo[5],
+            "email": event_filter.get_all_entries()[-1].args["email"],  # -1 indicated the most recent emitted evet
+            "miniLockID": event_filter.get_all_entries()[-1].args["miniLockID"],
+            "ipfsID": event_filter.get_all_entries()[-1].args["ipfsID"],
+            "fID": event_filter.get_all_entries()[-1].args["fID"],
+            "whisperID": "0x" + event_filter.get_all_entries()[-1].args["whisperID"],
+        }
+        return provider_info
+    except:
+        logging.error(_colorize_traceback())
+        raise
 
 
 if __name__ == "__main__":
@@ -45,9 +50,8 @@ if __name__ == "__main__":
     else:
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 
-    success, provider_info = get_provider_info(provider)
-
-    if success:
+    try:
+        provider_info = get_provider_info(provider)
         print(
             "{0: <20}".format("blockReadFrom: ")
             + str(provider_info["blockReadFrom"])
@@ -85,3 +89,6 @@ if __name__ == "__main__":
             + "{0: <20}".format("whisperID: ")
             + provider_info["whisperID"]
         )
+    except:
+        logging.error(_colorize_traceback())
+        sys.exit(1)

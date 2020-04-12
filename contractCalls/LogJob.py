@@ -21,9 +21,10 @@ def logReturn(event_filter, poll_interval):
 
 
 def run_log_job(from_block, provider):
-    eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return
+    try:
+        eBlocBroker, w3 = connect()
+    except:
+        raise
 
     event_filter = eBlocBroker.events.LogJob.createFilter(
         fromBlock=int(from_block), toBlock="latest", argument_filters={"provider": str(provider)},
@@ -37,9 +38,10 @@ def run_log_job(from_block, provider):
 
 
 def run_log_cancel_refund(from_block, provider):
-    eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return
+    try:
+        eBlocBroker, w3 = connect()
+    except:
+        raise
 
     event_filter = eBlocBroker.events.LogRefund.createFilter(
         fromBlock=int(from_block), argument_filters={"provider": str(provider)}
@@ -52,9 +54,10 @@ def run_log_cancel_refund(from_block, provider):
 
 
 def run_single_log_job(from_block, jobKey, transactionHash):
-    eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return
+    try:
+        eBlocBroker, w3 = connect()
+    except:
+        raise
 
     event_filter = eBlocBroker.events.LogJob.createFilter(
         fromBlock=int(from_block), argument_filters={"provider": str(provider)}

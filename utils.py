@@ -5,15 +5,24 @@ import ntpath
 import os
 import subprocess
 import time
+import traceback
 
 import base58
+from pygments import formatters, highlight, lexers
 
 import config
 from config import logging
-from settings import init_env
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+
+
+def _colorize_traceback():
+    tb_text = "".join(traceback.format_exc())
+    lexer = lexers.get_lexer_by_name("pytb", stripall=True)
+    formatter = formatters.get_formatter_by_name("terminal")
+    tb_colored = highlight(tb_text, lexer, formatter)
+    return tb_colored
 
 
 def get_time():
@@ -56,6 +65,8 @@ def byte_to_mb(size_in_bytes: int) -> int:
 
 
 def generate_md5sum(path: str) -> str:
+    from settings import init_env
+
     env = init_env()
     if os.path.isdir(path):
         return (

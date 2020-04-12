@@ -12,6 +12,7 @@ import owncloud
 from config import bp, logging  # noqa: F401
 from lib import compress_folder, printc, terminate
 from settings import init_env
+from utils import _colorize_traceback
 
 
 def _upload_results(encoded_share_token, output_file_name):
@@ -99,8 +100,8 @@ def login(user, password_path, name):
             return oc
         except Exception:
             _traceback = traceback.format_exc()
-            logging.error(_traceback)
-            if "[Errno 110] Connection timed out" in _traceback:
+            logging.error(_colorize_traceback())
+            if "Errno 110" in _traceback or "Connection timed out" in _traceback:
                 logging.warning("Sleeping for 15 seconds to overcome the max retries that exceeded.")
                 time.sleep(15)
             else:
@@ -127,7 +128,7 @@ def share_single_folder(folder_name, oc, fID) -> bool:
             printc("=> Requester folder is already shared", "blue")
             return True
     except Exception:
-        print(traceback.format_exc())
+        print(_colorize_traceback())
         return False
 
 
@@ -149,7 +150,7 @@ def initialize_folder(folder_to_share, oc) -> str:
 
         os.remove(f"{dir_path}/{tar_hash}.tar.gz")
     except Exception:
-        print(traceback.format_exc())
+        print(_colorize_traceback())
         raise Exception("oc could not connected to upload the file")
 
     return tar_hash

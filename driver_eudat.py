@@ -3,7 +3,6 @@
 import json
 import os
 import time
-import traceback
 from typing import List
 
 from pymongo import MongoClient
@@ -15,7 +14,7 @@ from contractCalls.get_provider_info import get_provider_info
 from lib import CacheType, log, silent_remove
 from settings import WHERE, init_env
 from storage_class import Storage
-from utils import byte_to_mb, create_dir, generate_md5sum, get_time, read_json
+from utils import _colorize_traceback, byte_to_mb, create_dir, generate_md5sum, get_time, read_json
 
 env = init_env()
 mc = MongoClient()
@@ -110,7 +109,7 @@ class EudatClass(Storage):
                     logging.error("Something is wrong")
                     return False
             except Exception:
-                logging.error(f"E: Failed to download eudat file.\n{traceback.format_exc()}")
+                logging.error(f"E: Failed to download eudat file.\n{_colorize_traceback()}")
                 logging.warning("Waiting for 5 seconds...")
                 time.sleep(5)
             else:
@@ -162,7 +161,7 @@ class EudatClass(Storage):
             try:
                 share_list = self.oc.list_open_remote_share()
             except Exception:
-                logging.error(f"E: Failed to list_open_remote_share eudat.\n{traceback.format_exc()}")
+                logging.error(f"E: Failed to list_open_remote_share eudat.\n{_colorize_traceback()}")
                 time.sleep(1)
             else:
                 break
@@ -240,9 +239,12 @@ class EudatClass(Storage):
         # TODO: refund check
         log(f"[{get_time()}] New job has been received through EUDAT", "cyan")
 
-        success, provider_info = get_provider_info(self.logged_job.args["provider"])
-        success, self.dataTransferIn_used = self.eudat_get_share_token(provider_info["fID"])
-        if not success:
+        try:
+            provider_info = get_provider_info(self.logged_job.args["provider"])
+            success, self.dataTransferIn_used = self.eudat_get_share_token(provider_info["fID"])
+            if not success:
+                return False
+        except:
             return False
 
         if self.dataTransferIn_used > self.dataTransferIn_requested:

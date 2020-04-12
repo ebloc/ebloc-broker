@@ -3,14 +3,13 @@
 import asyncio
 import os.path
 import sys
-import traceback
 from os.path import expanduser
 
 from web3 import HTTPProvider, Web3
 from web3.auto import w3
 
 from lib import log
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
 home = expanduser("~")
 
@@ -42,7 +41,7 @@ if __name__ == "__main__":
         try:
             data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
         except:
-            log(traceback.format_exc())
+            log(_colorize_traceback())
 
         kId = data["kId"]
         publicKey = data["publicKey"]

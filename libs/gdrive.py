@@ -3,12 +3,11 @@
 import json
 import os
 import subprocess
-import traceback
 
 from config import bp, logging  # noqa: F401
 from lib import echo_grep_awk, run_command, subprocess_call
 from settings import init_env
-from utils import byte_to_mb, read_json
+from utils import _colorize_traceback, byte_to_mb, read_json
 
 env = init_env()
 
@@ -70,7 +69,7 @@ def get_data_key_ids(results_folder_prev):
     try:
         meta_data = read_json(f)
     except:
-        logging.error(traceback.format_exc())
+        logging.error(_colorize_traceback())
         return False, ""
 
     return True, meta_data

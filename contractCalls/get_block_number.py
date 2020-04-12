@@ -2,20 +2,15 @@
 
 import sys
 
-import config
 from config import load_log
-from imports import connect_to_web3
+from imports import connect
 
 logging = load_log()
 
 
 def get_block_number():
-    if config.w3 is None:
-        config.w3 = connect_to_web3()
-        if not config.w3:
-            raise Exception("web3 is not connected")
-
-    return config.w3.eth.blockNumber
+    eBlocBroker, w3 = connect()
+    return w3.eth.blockNumber
 
 
 if __name__ == "__main__":
