@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 
 import sys
-import traceback
 
 import owncloud
 
-from config import bp, load_log  # noqa: F401
+from config import bp, load_log, logging  # noqa: F401
 from contract.scripts.lib import cost
 from contractCalls.get_provider_info import get_provider_info
 from imports import connect
 from lib import CacheType, StorageID, get_tx_status, ipfs_add, printc, run_command, silent_remove
 from libs.ipfs import mlck_encrypt
 from settings import init_env
-from utils import generate_md5sum, ipfs_toBytes
-
-logging = load_log()
+from utils import _colorize_traceback, generate_md5sum, ipfs_toBytes
 
 
 def submitJob(
@@ -33,31 +30,33 @@ def submitJob(
     data_prices_set_blocknumbers,
 ):
     eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return False, "E: web3 is not connected"
 
     provider = w3.toChecksumAddress(provider)
     _from = w3.toChecksumAddress(w3.eth.accounts[account_id])
 
-    success, provider_info = get_provider_info(provider)
+    try:
+        provider_info = get_provider_info(provider)
+    except:
+        print(_colorize_traceback())
+        raise
 
     print(f"Provider's available_core_num={provider_info['availableCoreNum']}")
     print(f"Provider's price_core_min={provider_info['priceCoreMin']}")
     # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(fromBlock=provider_info['blockReadFrom'], toBlock=provider_info['blockReadFrom'] + 1)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        return (
-            False,
-            f"E: Requested provider's Ethereum address {provider} does not registered.",
-        )
+        logging.error(f"E: Requested provider's Ethereum address {provider} does not registered.")
+        raise
 
     blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(_from).call()
 
     if not eBlocBroker.functions.doesRequesterExist(_from).call():
-        return (False, f"E: Requester's Ethereum address {_from} does not exist.")
+        logging.error(f"E: Requester's Ethereum address {_from} does not exist")
+        raise
 
     if not eBlocBroker.functions.isOrcIDVerified(_from).call():
-        return (False, f"E: Requester's orcid: {orcid.decode('UTF')} is not verified.")
+        logging.error(f"E: Requester's orcid: {orcid.decode('UTF')} is not verified")
+        raise
 
     """
     if StorageID_list.IPFS == storageID_list or StorageID_list.IPFS_MINILOCK == storageID_list:
@@ -65,8 +64,6 @@ def submitJob(
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress']nnn
        print('Trying to connect into ' + strVal)
        output = os.popen('ipfs swarm connect ' + strVal).read()
-       if 'success' in output:
-          print(output)
     """
 
     """
@@ -78,56 +75,49 @@ def submitJob(
     """
     main_storageID = storageID_list[0]
     if not source_code_hashes:
-        return False, "E: sourceCodeHash list is empty."
+        logging.error("E: sourceCodeHash list is empty.")
+        raise
 
     if len(key) != 46 and (StorageID.IPFS.value == main_storageID or StorageID.IPFS_MINILOCK.value == main_storageID):
-        return (
-            False,
-            "E: key's length does not match with its original length, it should be 46. Please check your key length",
+        logging.error(
+            "E: key's length does not match with its original length, it should be 46. Please check your key length"
         )
+        raise
 
     if len(key) != 33 and StorageID.GDRIVE.value == main_storageID:
-        return (
-            False,
-            "E: key's length does not match with its original length, it should be 33. Please check your key length",
+        logging.error(
+            "E: key's length does not match with its original length, it should be 33. Please check your key length"
         )
+        raise
 
     for idx, core in enumerate(cores):
         if core > provider_info["availableCoreNum"]:
-            return (
-                False,
-                f"E: Requested {core}, which is {core}, is greater than the provider's core number",
-            )
+            logging.error(f"E: Requested {core}, which is {core}, is greater than the provider's core number")
+            raise
+
         if core_execution_durations[idx] == 0:
-            return (
-                False,
-                f"E: core_execution_durations[{idx}] is provided as 0. Please provide non-zero value",
-            )
+            logging.error(f"E: core_execution_durations[{idx}] is provided as 0. Please provide non-zero value")
+            raise
 
     for storageID in storageID_list:
         if storageID > 4:
-            return (
-                False,
-                "E: Wrong storageID_list value is given. Please provide from 0 to 4",
-            )
+            logging.error("E: Wrong storageID_list value is given. Please provide from 0 to 4")
+            raise
 
     if len(key) >= 64:
-        return (False, "E: Length of key is greater than 64, please provide lesser")
+        logging.error("E: Length of key is greater than 64, please provide lesser")
+        raise
 
     for core_min in core_execution_durations:
         if core_min > 1440:
-            return (
-                False,
-                "E: core_execution_durations provided greater than 1440. Please provide smaller value",
-            )
+            logging.error("E: core_execution_durations provided greater than 1440. Please provide smaller value")
+            raise
 
     for cache_type in cache_types:
         if cache_type > 1:
             # cache_type = {0: private, 1: public}
-            return (
-                False,
-                f"E: cachType ({cache_type}) provided greater than 1. Please provide smaller value",
-            )
+            logging.error(f"E: cachType ({cache_type}) provided greater than 1. Please provide smaller value")
+            raise
 
     # if len(jobDescription) >= 128:
     #    return 'Length of jobDescription is greater than 128, please provide lesser.'
@@ -149,10 +139,10 @@ def submitJob(
         tx = eBlocBroker.functions.submitJob(
             key, dataTransferIn_list, args, storage_hours, source_code_hashes
         ).transact({"from": _from, "value": job_price_value, "gas": gas_limit})
+        return tx.hex()
     except Exception:
-        return False, traceback.format_exc()
-
-    return True, str(tx.hex())
+        logging.error(_colorize_traceback)
+        raise
 
 
 if __name__ == "__main__":
@@ -271,26 +261,22 @@ if __name__ == "__main__":
         False,
     )
 
-    success, output = submitJob(
-        provider,
-        key,
-        cores,
-        core_execution_durations,
-        dataTransferIn_list,
-        dataTransferOut,
-        storageID_list,
-        source_code_hashes,
-        cache_types,
-        storage_hours,
-        account_id,
-        job_price_value,
-        data_prices_set_blocknumbers,
-    )
-
-    if not success:
-        print(output)
-        sys.exit(1)
-    else:
+    try:
+        output = submitJob(
+            provider,
+            key,
+            cores,
+            core_execution_durations,
+            dataTransferIn_list,
+            dataTransferOut,
+            storageID_list,
+            source_code_hashes,
+            cache_types,
+            storage_hours,
+            account_id,
+            job_price_value,
+            data_prices_set_blocknumbers,
+        )
         receipt = get_tx_status(output)
         if receipt["status"] == 1:
             try:
@@ -298,3 +284,6 @@ if __name__ == "__main__":
                 print(f"Job index={logs[0].args['index']}")
             except IndexError:
                 logging.error("E: Transaction is reverted.")
+    except:
+        print(_colorize_traceback())
+        sys.exit(1)

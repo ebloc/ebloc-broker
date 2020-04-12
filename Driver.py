@@ -5,7 +5,6 @@ import pprint
 import subprocess
 import sys
 import time
-import traceback
 
 import config
 import libs.eudat as eudat
@@ -29,6 +28,7 @@ from imports import connect
 from lib import (
     CacheType,
     StorageID,
+    eblocbroker_function_call,
     is_driver_on,
     is_geth_on,
     is_ipfs_running,
@@ -42,7 +42,7 @@ from lib import (
     terminate,
 )
 from settings import init_env
-from utils import bytes32_to_ipfs, eth_address_to_md5, get_time, read_json
+from utils import _colorize_traceback, bytes32_to_ipfs, eth_address_to_md5, get_time, read_json
 
 env = init_env()
 
@@ -62,8 +62,8 @@ def startup(slurm_user):
     if not success:
         sys.exit(1)
 
-    # run_driver_cancel()
-    run_whisper_state_receiver()
+    # run_driver_cancel()  # TODO: uncomment
+    # run_whisper_state_receiver()  # TODO: uncomment
     if env.GDRIVE_USE:
         try:
             run(["gdrive", "version"])
@@ -124,7 +124,7 @@ logging.info(f"whoami={env.WHOAMI}")
 try:
     contract = read_json("contractCalls/contract.json")
 except:
-    logging.error(traceback.format_exc())
+    logging.error(_colorize_traceback())
     terminate()
 
 contract_address = contract["address"]
@@ -272,21 +272,18 @@ while True:
         success, str_check = run_command(["bash", f"{env.EBLOCPATH}/str_check.sh", job_key])
         job_infos_to_process = []
         job_id = 0
-        for attempt in range(10):
-            success, job_info = get_job_info(env.PROVIDER_ID, job_key, index, job_id, block_number)
-            if success:
-                job_info.update({"received_block": received_block})
-                job_info.update({"storageDuration": storageDuration})
-                job_info.update({"cacheType": logged_job.args["cacheType"]})
-                pprint.pprint(job_info)
-                job_infos_to_process.append(job_info)
-                break
-            else:
-                logging.error(f"E: {job_infos_to_process}")
-                time.sleep(1)
-        else:
+
+        try:
+            job_info = eblocbroker_function_call(
+                lambda: get_job_info(env.PROVIDER_ID, job_key, index, job_id, block_number), 10,
+            )
+            job_info.update({"received_block": received_block})
+            job_info.update({"storageDuration": storageDuration})
+            job_info.update({"cacheType": logged_job.args["cacheType"]})
+            pprint.pprint(job_info)
+            job_infos_to_process.append(job_info)
+        except:
             is_break = True
-            break
 
         for job in range(1, len(job_infos_to_process[0]["core"])):
             try:
@@ -325,7 +322,10 @@ while True:
                 logging.error("Job owner is not registered.")
                 is_break = True
             else:
-                success, requester_info = get_requester_info(requester_id)
+                try:
+                    requester_info = get_requester_info(requester_id)
+                except:
+                    is_break = True
 
         if not is_break:
             logging.info("Adding user...")
