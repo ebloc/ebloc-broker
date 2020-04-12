@@ -20,7 +20,7 @@ import libs.slurm as slurm
 from config import bp, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
-from contractCalls.processPayment import processPayment
+from contractCalls.process_payment import process_payment
 from imports import connect
 from lib import (
     StorageID,
@@ -88,7 +88,11 @@ class ENDCODE:
 
         requester_id = self.job_info["jobOwner"].lower()
         requester_id_address = eth_address_to_md5(requester_id)
-        success, self.requester_info = get_requester_info(requester_id)
+        try:
+            self.requester_info = get_requester_info(requester_id)
+        except:
+            sys.exit(1)
+
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
         if not is_dir(self.results_folder_prev):
             sys.exit(1)
@@ -139,7 +143,7 @@ class ENDCODE:
         end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         try:
             tx_hash = eblocbroker_function_call(
-                lambda: processPayment(
+                lambda: process_payment(
                     self.job_key,
                     self.index,
                     self.job_id,
@@ -265,7 +269,7 @@ class ENDCODE:
         logging.info("")
 
         if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
-            logging.error("Job is completed and already get paid.")
+            logging.error("Job is completed and already get paid")
             sys.exit(1)
 
         executionDuration = self.job_info["executionDuration"]

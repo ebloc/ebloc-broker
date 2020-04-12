@@ -17,11 +17,11 @@ def refund(provider, _from, job_key, index, job_id, source_code_hashes):
     _from = w3.toChecksumAddress(_from)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
-        logging.error(f"E: Requested provider's Ethereum Address {provider} does not exist.")
+        logging.error(f"E: Requested provider's Ethereum address {provider} does not exist")
         raise
 
     if provider != _from and not eBlocBroker.functions.doesRequesterExist(_from).call():
-        logging.error(f"E: Requested requester's Ethereum Address {_from} does not exist.")
+        logging.error(f"E: Requested requester's Ethereum address {_from} does not exist")
         raise
 
     try:
@@ -29,16 +29,14 @@ def refund(provider, _from, job_key, index, job_id, source_code_hashes):
         tx = eBlocBroker.functions.refund(provider, job_key, index, job_id, source_code_hashes).transact(
             {"from": _from, "gas": gas_limit}
         )
+        return tx.hex()
     except Exception:
         logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
         raise
 
-    return tx.hex()
-
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-
     if len(sys.argv) == 7:
         provider = w3.toChecksumAddress(str(sys.argv[1]))
         _from = w3.toChecksumAddress(str(sys.argv[2]))
@@ -58,13 +56,14 @@ if __name__ == "__main__":
         ]
 
     try:
-        output = refund(provider, _from, job_key, index, job_id, source_code_hashes)
-        receipt = get_tx_status(output)
+        tx_hash = refund(provider, _from, job_key, index, job_id, source_code_hashes)
+        receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
-                print(f"Job's index={logs[0].args['index']}")
+                logging.info(f"Job's index={logs[0].args['index']}")
             except Exception:
-                print("E: Transaction is reverted")
+                logging.error("E: Transaction is reverted")
     except:
+        logging.error(traceback.format_exc())
         sys.exit(1)
