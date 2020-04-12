@@ -2,14 +2,13 @@
 
 import os
 import sys
-import traceback
 from os.path import expanduser
 
-from config import load_log
+from config import logging
 from does_requester_exist import does_requester_exist
 from imports import connect, connect_to_web3
 from lib import get_tx_status
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
 
 def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAddress, githubUsername):
@@ -19,24 +18,20 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
 
     home = expanduser("~")
     if not os.path.isfile(f"{home}/.eBlocBroker/whisperInfo.txt"):
-        return (
-            False,
-            "Please first run: python ~/eBlocBroker/scripts/whisper_initialize.py",
-        )
+        logging.error("Please first run: python ~/eBlocBroker/scripts/whisper_initialize.py")
+        raise
     else:
         try:
             data = read_json(f"{home}/.eBlocBroker/whisperInfo.txt")
         except:
-            logging.error(traceback.format_exc())
-            return False
+            logging.error(_colorize_traceback())
+            raise
 
         kId = data["kId"]
         whisperPubKey = data["publicKey"]
         if not w3.geth.shh.hasKeyPair(kId):
-            return (
-                False,
-                "Whisper node's private key of a key pair did not match with the given ID",
-            )
+            logging.error("Whisper node's private key of a key pair did not match with the given ID",)
+            raise
 
     account = w3.eth.accounts[int(account_id)]  # requester's Ethereum Address
     if does_requester_exist(account):
@@ -47,16 +42,13 @@ def register_requester(account_id, email, federationCloudID, miniLockID, ipfsAdd
             tx = eBlocBroker.functions.registerRequester(
                 email, federationCloudID, miniLockID, ipfsAddress, githubUsername, whisperPubKey,
             ).transact({"from": account, "gas": 4500000})
+            return tx.hex()
         except Exception:
-            return False, traceback.format_exc()
-
-        return True, tx.hex()
+            logging.error(_colorize_traceback())
+            raise
 
 
 if __name__ == "__main__":
-    global logging
-    logging = load_log()
-
     if len(sys.argv) == 7:
         account = int(sys.argv[1])
         email = str(sys.argv[2])
@@ -73,8 +65,10 @@ if __name__ == "__main__":
         githubUsername = "eBloc"
 
     w3 = connect_to_web3()
-    success, output = register_requester(account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
-    if success:
-        receipt = get_tx_status(output)
-    else:
-        logging.error(f"E: {output}")
+
+    try:
+        tx_hash = register_requester(account, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
+        receipt = get_tx_status(tx_hash)
+    except:
+        logging.error(_colorize_traceback())
+        sys.exit(1)

@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
 import sys
-import traceback
 
-from config import bp  # noqa: F401
+from config import bp, logging  # noqa: F401
 from imports import connect
-from lib import StorageID, logging
+from lib import StorageID
 from settings import init_env
-from utils import ipfs_toBytes
+from utils import _colorize_traceback, ipfs_toBytes
 
 env = init_env()
 
 
-def processPayment(
+def process_payment(
     job_key,
     index,
     job_id,
@@ -25,18 +24,21 @@ def processPayment(
     core,
     executionDuration,
 ):
+    logging.info(
+        f"~/eBlocBroker/contractCalls/process_payment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
+    )
+
     eBlocBroker, w3 = connect()
 
     if not result_ipfs_hash:
-        return (False, "Given result_ipfs_hash is empty")
+        logging.error("E: Given result_ipfs_hash is empty")
+        raise
 
     if len(result_ipfs_hash) != 46 and (
         StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
     ):
-        return (
-            False,
-            "job_key's length does not match with its original length. Please check your job_key",
-        )
+        logging.error("E: job_key's length does not match with its original length. Please check your job_key")
+        raise
 
     try:
         if result_ipfs_hash == b"" or not result_ipfs_hash:
@@ -44,11 +46,7 @@ def processPayment(
         else:
             _result_ipfs_hash = ipfs_toBytes(result_ipfs_hash)
 
-        logging.info(
-            f"~/eBlocBroker/contractCalls/processPayment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
-        )
-
-        final_job = True  # True only for the final job
+        final_job = True  # true only for the final job
         args = [
             int(index),
             int(job_id),
@@ -64,9 +62,10 @@ def processPayment(
             {"from": env.PROVIDER_ID, "gas": 4500000}
         )
     except Exception:
-        return False, traceback.format_exc()
+        logging.error(_colorize_traceback())
+        raise
 
-    return True, tx.hex()
+    return tx.hex()
 
 
 if __name__ == "__main__":
@@ -105,20 +104,20 @@ if __name__ == "__main__":
         core = [1]
         executionDuration = [5]
 
-    success, output = processPayment(
-        job_key,
-        index,
-        job_id,
-        execution_time_min,
-        result_ipfs_hash,
-        cloud_storage_id,
-        end_time,
-        dataTransferIn,
-        dataTransferOut,
-        core,
-        executionDuration,
-    )
-    if success:
-        print(f"tx_hash={output}")
-    else:
-        print(output)
+    try:
+        tx_hash = process_payment(
+            job_key,
+            index,
+            job_id,
+            execution_time_min,
+            result_ipfs_hash,
+            cloud_storage_id,
+            end_time,
+            dataTransferIn,
+            dataTransferOut,
+            core,
+            executionDuration,
+        )
+        print(f"tx_hash={tx_hash}")
+    except:
+        sys.exit(1)

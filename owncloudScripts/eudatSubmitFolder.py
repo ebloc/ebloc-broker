@@ -10,7 +10,7 @@ import owncloud
 import libs.eudat as eudat
 from contractCalls.submitJob import submitJob
 from imports import connect
-from utils import generate_md5sum
+from utils import _colorize_traceback, generate_md5sum
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
@@ -59,17 +59,21 @@ def eudatSubmitJob(tar_hash=None):
     cloudStorageID = 1
     account_id = 0
 
-    output = submitJob(
-        str(provider),
-        str(tar_hash),
-        coreNum,
-        coreMinuteGas,
-        str(jobDescription),
-        cloudStorageID,
-        str(tar_hash),
-        account_id,
-    )
-    print(output)
+    try:
+        tx_hash = submitJob(
+            str(provider),
+            str(tar_hash),
+            coreNum,
+            coreMinuteGas,
+            str(jobDescription),
+            cloudStorageID,
+            str(tar_hash),
+            account_id,
+        )
+        print(tx_hash)
+    except:
+        print(_colorize_traceback())
+        sys.exit(1)
 
 
 if __name__ == "__main__":

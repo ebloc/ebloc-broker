@@ -5,12 +5,11 @@ import itertools
 import json
 import os
 import sys
-import traceback
 
 from web3 import HTTPProvider, Web3
 from web3.shh import Shh
 
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
 web3 = Web3(HTTPProvider("http://localhost:8545"))
 
@@ -58,7 +57,7 @@ if __name__ == "__main__":
         try:
             data = read_json("data.txt")
         except:
-            print(traceback.format_exc())
+            print(_colorize_traceback())
             sys.exit(1)
 
         kId = data["kId"]

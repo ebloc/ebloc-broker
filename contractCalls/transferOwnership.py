@@ -1,47 +1,51 @@
 #!/usr/bin/env python3
 
 import sys
-import traceback
 
+from config import logging
 from imports import connect
 from lib import get_tx_status
 from settings import init_env
+from utils import _colorize_traceback
 
 env = init_env()
 
 
 def transferOwnership(newOwner):
     eBlocBroker, w3 = connect()
+
     _from = w3.toChecksumAddress(env.PROVIDER_ID)
     newOwner = w3.toChecksumAddress(newOwner)
-
-    if eBlocBroker is None or w3 is None:
-        return False, "web3 is notconnected."
-
     if newOwner == "0x0000000000000000000000000000000000000000":
-        return False, "Provided address is zero."
+        logging.error("Provided address is zero")
+        raise
 
     if not w3.isAddress(newOwner):
-        return False, "Provided address is not valid."
+        logging.error("Provided address is not valid")
+        raise
 
     if eBlocBroker.functions.getOwner().call() == newOwner:
-        return False, "newOwner is already the owner"
+        logging.error("newOwner is already the owner")
+        raise
 
     try:
         tx = eBlocBroker.functions.transferOwnership(newOwner).transact({"from": _from, "gas": 4500000})
+        return tx.hex()
     except Exception:
-        return False, traceback.format_exc()
-
-    return True, tx.hex()
+        logging.error(_colorize_traceback())
+        raise
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         newOwner = str(sys.argv[1])
-        success, output = transferOwnership(newOwner)
-        if success:
-            receipt = get_tx_status(output)
-        else:
-            print(output)
     else:
         print("Please provide the newOwner address as argument.")
+        sys.exit(1)
+
+    try:
+        tx_hash = transferOwnership(newOwner)
+        receipt = get_tx_status(tx_hash)
+    except:
+        logging.error(_colorize_traceback())
+        sys.exit(1)

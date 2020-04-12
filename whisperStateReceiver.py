@@ -8,14 +8,13 @@
 import asyncio
 import os.path
 import sys
-import traceback
 from os.path import expanduser
 
 from web3 import HTTPProvider, Web3
 
 from lib import run_command
 from settings import init_env
-from utils import read_json
+from utils import _colorize_traceback, read_json
 
 env = init_env()
 w3 = Web3(HTTPProvider("http://localhost:8545"))
@@ -116,7 +115,7 @@ def main(_test_flag=False):
         try:
             data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
         except:
-            print(traceback.format_exc())
+            print(_colorize_traceback())
             sys.exit(1)
 
         kId = data["kId"]

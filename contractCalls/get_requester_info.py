@@ -3,22 +3,27 @@
 import sys
 import traceback
 
+from config import logging  # noqa: F401
 from imports import connect
+from settings import WHERE
 
 
 def get_requester_info(requester):
-    eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return
-
-    requester = w3.toChecksumAddress(requester)
-    if not eBlocBroker.functions.doesRequesterExist(requester).call():
-        return (
-            False,
-            "Requester is not registered. Please try again with registered Ethereum Address as requester. \nYou can register your requester using: register_requester.py script.",
-        )
+    try:
+        eBlocBroker, w3 = connect()
+    except:
+        raise
 
     try:
+        requester = w3.toChecksumAddress(requester)
+        if not eBlocBroker.functions.doesRequesterExist(requester).call():
+            logging.error(
+                f"E: Requester({requester}) is not registered.\n"
+                "Please try again with registered Ethereum Address as requester. \n"
+                "You can register your requester using: register_requester.py script"
+            )
+            raise
+
         blockReadFrom, orcid = eBlocBroker.functions.getRequesterInfo(requester).call()
         event_filter = eBlocBroker.events.LogRequester.createFilter(
             fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1
@@ -33,25 +38,20 @@ def get_requester_info(requester):
             "orcid": orcid.decode("utf-8"),
             "orcidVerify": eBlocBroker.functions.isOrcIDVerified(requester).call(),
         }
-        return True, requester_info
+        return requester_info
     except Exception:
-        return False, traceback.format_exc()
+        logging.error(f"[{WHERE(1)}] - {traceback.format_exc()}")
+        raise
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        requester = str(sys.argv[1])
-        printType = str(sys.argv[2])
+    if len(sys.argv) == 1:
+        requester = "0x57b60037b82154ec7149142c606ba024fbb0f991"
     elif len(sys.argv) == 2:
         requester = str(sys.argv[1])
-        printType = "0"
-    else:
-        requester = "0x57b60037b82154ec7149142c606ba024fbb0f991"
-        printType = "0"
 
-    success, requester_info = get_requester_info(requester)
-
-    if success:
+    try:
+        requester_info = get_requester_info(requester)
         print(
             "{0: <15}".format("requester: ")
             + requester_info["requester"]
@@ -77,5 +77,5 @@ if __name__ == "__main__":
             + "{0: <15}".format("orcidVerify: ")
             + str(requester_info["orcidVerify"])
         )
-    else:
-        print(requester_info)
+    except Exception:
+        sys.exit(1)

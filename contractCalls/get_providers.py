@@ -2,24 +2,27 @@
 
 import sys
 
+from config import logging  # noqa: F401
+from config import Web3NotConnected
+from imports import connect
+from utils import _colorize_traceback
 
-def get_providers(eBlocBroker=None):
-    if eBlocBroker is None:
-        from imports import connect_to_eblocbroker
 
-        try:
-            eBlocBroker = connect_to_eblocbroker()
-        except Exception:
-            return None
+def get_providers():
+    eBlocBroker, w3 = connect()
 
-    return eBlocBroker.functions.getProviders().call()
+    try:
+        return eBlocBroker.functions.getProviders().call()
+    except:
+        logging.error(_colorize_traceback())
+        raise Web3NotConnected()
 
 
 if __name__ == "__main__":
-    providers = get_providers()
-    if not providers:
-        print(providers)
+    try:
+        providers = get_providers()
+        for provider in providers:
+            print(provider)
+    except Exception:
+        logging.error(_colorize_traceback())
         sys.exit(1)
-
-    for provider in providers:
-        print(provider)

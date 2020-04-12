@@ -11,12 +11,9 @@ from imports import connect
 from lib import StorageID, inv_job_state_code
 from utils import bytes32_to_ipfs, empty_bytes32
 
-config.eBlocBroker, config.w3 = connect()
-
 
 def update_job_cores(job_info, provider, job_key, index, job_id, received_block_number=None):
-    if config.eBlocBroker is None or config.w3 is None:
-        return False, "notconnected"
+    eBlocBroker, w3 = connect()
 
     if not received_block_number:
         received_block_number = get_deployed_block_number()
@@ -33,15 +30,15 @@ def update_job_cores(job_info, provider, job_key, index, job_id, received_block_
                 job_info.update({"core": logged_job.args["core"]})
                 job_info.update({"executionDuration": logged_job.args["executionDuration"]})
                 job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
-                return True, job_info
+                return job_info
     except Exception as e:
-        return False, f"Failed to update_job_cores: {e}"
+        logging.error(f"Failed to update_job_cores: {e}")
+        raise
 
 
 def get_job_source_code_hashes(job_info, provider, job_key, index, job_id, received_block_number=None):
-    """source_code_hashes of the completed job is obtained from its event"""
-    if config.eBlocBroker is None or config.w3 is None:
-        return False, "notconnected"
+    """Source_code_hashes of the completed job is obtained from its event."""
+    eBlocBroker, w3 = connect()
 
     if received_block_number is None:
         received_block_number = get_deployed_block_number()
@@ -57,18 +54,17 @@ def get_job_source_code_hashes(job_info, provider, job_key, index, job_id, recei
         for logged_job in logged_jobs:
             if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(index):
                 job_info.update({"sourceCodeHash": logged_job.args["sourceCodeHash"]})
-                return True, job_info
+                return job_info
     except Exception as e:
-        return False, f"E: Failed to get_Job_source_code_hash: {e}"
+        logging.error(f"E: Failed to get_Job_source_code_hash: {e}")
+        raise
 
 
 def get_job_info(provider, job_key, index, job_id, received_block_number=None):
     logging.info(
         f"~/eBlocBroker/contractCalls/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}"
     )
-    if config.eBlocBroker is None or config.w3 is None:
-        return False, "notconnected"
-
+    eBlocBroker, w3 = connect()
     try:
         provider = config.w3.toChecksumAddress(provider)
         (job, received, jobOwner, dataTransferIn, dataTransferOut,) = config.eBlocBroker.functions.getJobInfo(
@@ -103,7 +99,7 @@ def get_job_info(provider, job_key, index, job_id, received_block_number=None):
             "dataTransferIn_used": None,
             "dataTransferOut_used": None,
         }
-        success, jobCores = update_job_cores(job_info, provider, job_key, index, job_id, received_block_number)
+        job_info = update_job_cores(job_info, provider, job_key, index, job_id, received_block_number)
         if received_block_number is None:
             received_block_number = get_deployed_block_number()
         # else:
@@ -123,14 +119,15 @@ def get_job_info(provider, job_key, index, job_id, received_block_number=None):
                 job_info.update({"dataTransferIn_used": logged_receipt.args["dataTransferIn"]})
                 job_info.update({"dataTransferOut_used": logged_receipt.args["dataTransferOut"]})
                 break
-
     except Exception:
-        return False, f"E: Failed to getJobInfo: {traceback.format_exc()}"
+        logging.error(f"E: Failed to getJobInfo: {traceback.format_exc()}")
+        raise
 
     if str(job_info["core"]) == "0":
-        return False, "E: Failed to getJobInfo: Out of index"
+        logging.error("E: Failed to getJobInfo: Out of index")
+        raise
 
-    return True, job_info
+    return job_info
 
 
 if __name__ == "__main__":
@@ -147,10 +144,9 @@ if __name__ == "__main__":
         print("Please provide {provider, job_key, index, and job_id} as arguments")
         sys.exit(1)
 
-    success, job_info = get_job_info(provider, job_key, index, job_id, received_block_number)
-
-    if not success:
-        print(job_info)
+    try:
+        job_info = get_job_info(provider, job_key, index, job_id, received_block_number)
+    except:
         sys.exit(1)
 
     if job_info["resultIpfsHash"] == empty_bytes32:
@@ -190,9 +186,7 @@ if __name__ == "__main__":
         print("{0: <22}".format("dataTransferIn_used:") + str(job_info["dataTransferIn_used"]))
         print("{0: <22}".format("dataTransferOut_used:") + str(job_info["dataTransferOut_used"]))
 
-        success, job_info = get_job_source_code_hashes(
-            job_info, provider, job_key, index, job_id, received_block_number
-        )
+        job_info = get_job_source_code_hashes(job_info, provider, job_key, index, job_id, received_block_number)
         # print("{0: <22}".format("source_code_hash:") + str(job_info["sourceCodeHash"]))
         print("source_code_hashes:")
         for idx, code_hash in enumerate(job_info["sourceCodeHash"]):
