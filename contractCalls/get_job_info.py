@@ -61,11 +61,9 @@ def get_job_source_code_hashes(job_info, provider, job_key, index, job_id, recei
 
 
 def get_job_info(provider, job_key, index, job_id, received_block_number=None):
-    logging.info(
-        f"~/eBlocBroker/contractCalls/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}"
-    )
-    eBlocBroker, w3 = connect()
+    # logging.info(f"~/eBlocBroker/contractCalls/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}")
     try:
+        eBlocBroker, w3 = connect()
         provider = config.w3.toChecksumAddress(provider)
         (job, received, jobOwner, dataTransferIn, dataTransferOut,) = config.eBlocBroker.functions.getJobInfo(
             provider, job_key, int(index), int(job_id)
