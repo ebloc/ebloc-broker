@@ -221,27 +221,28 @@ class ENDCODE:
                 source, name, self.index, self.patch_folder, self.cloud_storage_id
             )
         except:
-            return False
+            raise
 
         if not is_file_empty:
-            success = self._upload(source, name, is_job_key)
-            if not success:
-                return False
-        return True
+            if not self._upload(source, name, is_job_key):
+                raise
 
     def upload(self) -> bool:
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
-        success = self.git_diff_patch_and_upload(self.results_folder, self.job_key, is_job_key=True)
-        if not success:
+        try:
+            self.git_diff_patch_and_upload(self.results_folder, self.job_key, is_job_key=True)
+        except:
             return False
 
         for name in self.source_code_hashes_to_process[1:]:
             # starting from 1st index for data files
             source = f"{self.results_data_folder}/{name}"
-            success = self.git_diff_patch_and_upload(source, name, is_job_key=False)
-            if not success:
+            try:
+                self.git_diff_patch_and_upload(source, name, is_job_key=False)
+            except:
                 return False
-        return True
+
+        return self.finally_upload()
 
     def run(self):
         f = f"{self.results_folder_prev}/dataTransferIn.json"
@@ -340,6 +341,8 @@ class IpfsMiniLockClass(ENDCODE):
 
     def run_upload(self):
         self.upload()
+
+    def finally_upload(self):
         # it will upload files after all the patchings are completed
         return self.ipfs_add_folder(self.patch_folder)
 
@@ -354,7 +357,10 @@ class IpfsMiniLockClass(ENDCODE):
             "--anonymous",
             f"--output-file={self.patch_file}.minilock",
         ]
-        success, output = run_command(cmd, my_env=None, is_exit_flag=True)
+        success, output = run_command(cmd)
+        if not success:
+            sys.exit(1)
+
         logging.info(output)
         if success:
             silent_remove(self.patch_file)
@@ -366,10 +372,11 @@ class IpfsClass(ENDCODE):
         super(self.__class__, self).__init__(**kwargs)
 
     def run_upload(self):
-        success = self.upload()
+        return self.upload()
+
+    def finally_upload(self):
         # it will upload files after all the patchings are completed
-        success = self.ipfs_add_folder(self.patch_folder)
-        return success
+        return self.ipfs_add_folder(self.patch_folder)
 
     def _upload(self, path, source_code_hash, is_job_key) -> bool:
         """It will upload after all patchings are completed"""
@@ -383,6 +390,9 @@ class EudatClass(ENDCODE):
     def run_upload(self):
         self.get_shared_tokens()
         return self.upload()
+
+    def finally_upload(self):
+        pass
 
     def _upload(self, path, source_code_hash, is_job_key) -> bool:
         data_transfer_out = calculate_folder_size(self.patch_file)
@@ -401,12 +411,16 @@ class GdriveClass(ENDCODE):
     def run_upload(self) -> bool:
         return self.upload()
 
+    def finally_upload(self):
+        pass
+
     def _upload(self, path, key, is_job_key) -> bool:
         try:
             if not is_job_key:
                 success, meta_data = gdrive.get_data_key_ids(self.results_folder_prev)
                 if not success:
                     return False
+
                 try:
                     key = meta_data[key]
                 except:
