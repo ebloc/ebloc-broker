@@ -338,7 +338,10 @@ while True:
             main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
             if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
                 ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
-                ipfs.run()
+                try:
+                    ipfs.run()
+                except:
+                    logging.error(_colorize_traceback())
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if not oc:
                     eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
