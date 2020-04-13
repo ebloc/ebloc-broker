@@ -23,6 +23,13 @@ from settings import WHERE, init_env
 from utils import _colorize_traceback, byte_to_mb, generate_md5sum, read_json
 
 
+class COLOR:
+    PURPLE = "\033[95m"
+    BLUE = "\033[94m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
+
+
 # enum: https://stackoverflow.com/a/1695250/2402577
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
@@ -338,7 +345,9 @@ def run(cmd) -> str:
         return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
     except Exception:
         _cmd = " ".join(cmd)
-        logging.error(f"[{WHERE(1)}] \n {_colorize_traceback()} command:\n {_cmd}")
+        logging.error(
+            f"[{WHERE(1)}] \n {_colorize_traceback()}" f"Command:\n{COLOR.PURPLE}{COLOR.BOLD}{_cmd}{COLOR.END}\n"
+        )
         raise
 
 
@@ -352,7 +361,9 @@ def run_command(cmd, my_env=None, is_exit_flag=False) -> Tuple[bool, str]:
     except Exception:
         _cmd = " ".join(cmd)
         print(output)
-        logging.error(f"[{WHERE(1)}] \n {_colorize_traceback()} command:\n {_cmd}")
+        logging.error(
+            f"[{WHERE(1)}] \n {_colorize_traceback()}" f"Command:\n{COLOR.PURPLE}{COLOR.BOLD}{_cmd}{COLOR.END}\n"
+        )
         if is_exit_flag:
             terminate()
         return False, output
@@ -495,7 +506,7 @@ def is_ipfs_running():
             logging.info(content_file.read())
 
         # ipfs mounted at: /ipfs
-        output = subprocess.check_output(["sudo", "ipfs", "mount", "-f", "/ipfs"]).decode("utf-8").strip()
+        success, output = run_command(["sudo", "ipfs", "mount", "-f", "/ipfs"])
         logging.info(output)
         return is_ipfs_on()
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import subprocess
 
 import libs.git as git
 import libs.ipfs as ipfs
@@ -29,29 +28,38 @@ class IpfsClass(Storage):
         self.cache_type = CacheType.PUBLIC.value
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
-        self.is_minilock = False
 
-    def decrypt_using_minilock(self, ipfs_hash):
+    def decrypt_using_minilock(self, minilock_file, extract_target):
         env = init_env()
-        with open(f"{env.LOG_PATH}/private/miniLockPassword.txt", "r") as content_file:
+
+        with open(f"{env.LOG_PATH}/mini_lock_pass.txt", "r") as content_file:
             _pass = content_file.read().strip()
 
+        tar_file = f"{minilock_file}.tar.gz"
         cmd = [
             "mlck",
             "decrypt",
             "-f",
-            f"{self.results_folder}/ipfsHash",
+            minilock_file,
             f"--passphrase={_pass}",
-            f"--output-file={self.results_folder}/output.tar.gz",
+            f"--output-file={tar_file}",
         ]
         _pass = None
+
         success, output = run_command(cmd)
-        cmd = None
-        logging.info(f"mlck decrypt success={success}")
-        tar_file = f"{self.results_folder}/output.tar.gz"
-        subprocess.run(["tar", "-xvf", tar_file, "-C", self.results_folder])
-        silent_remove(tar_file)
-        silent_remove(f"{self.results_folder}/{ipfs_hash}")
+        if not success:
+            silent_remove(minilock_file)
+            return False
+        try:
+            silent_remove(minilock_file)
+            logging.info(f"mlck decrypt: SUCCESS")
+            run_command(["tar", "-xvf", tar_file, "-C", extract_target, "--strip", "1"])
+        except:
+            logging.error("E: Could not decrypt the given file")
+            raise
+        finally:
+            cmd = None
+            silent_remove(tar_file)
 
     def check_ipfs(self, ipfs_hash) -> bool:
         success, ipfs_stat, cumulative_size = is_ipfs_hash_exists(ipfs_hash, attempt_count=1)
@@ -66,16 +74,15 @@ class IpfsClass(Storage):
         return True
 
     def run(self) -> bool:
-        if self.cloudStorageID == StorageID.IPFS.value:
-            log(f"[{get_time()}] New job has been received through IPFS", "cyan")
+        if self.cloudStorageID[0] == StorageID.IPFS.value:
+            log(f"[{get_time()}] Job's source code has been sent through IPFS", "cyan")
         else:
-            log(f"[{get_time()}] New job has been received through IPFS_MINILOCK", "cyan")
-            self.is_minilock = True
+            log(f"[{get_time()}] Job's source code has been sent through IPFS_MINILOCK", "cyan")
 
         if not is_ipfs_running():
             return False
+
         logging.info(f"is_ipfs_hash_locally_cached={is_ipfs_hash_locally_cached(self.job_key)}")
-        bp()
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -94,8 +101,8 @@ class IpfsClass(Storage):
         initial_folder_size = calculate_folder_size(self.results_folder)
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists
-            logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
             is_hashed = False
+            logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
             if is_ipfs_hash_locally_cached(ipfs_hash):
                 is_hashed = True
                 log(f"=> IPFS file {ipfs_hash} is already cached.", "blue")
@@ -103,15 +110,21 @@ class IpfsClass(Storage):
             if idx == 0:
                 target = self.results_folder
             else:
-                target = f"{self.results_data_folder}/{ipfs_hash}"
+                #  "_" added before the filename in case $ ipfs get <ipfs_hash>
+                target = f"{self.results_data_folder}/_{ipfs_hash}"
                 create_dir(target)
 
-            ipfs.get_hash(ipfs_hash, target, is_storage_paid=False)
+            is_storage_paid = False  # TODO: should be set before by user input
+            ipfs.get_hash(ipfs_hash, target, is_storage_paid)
+            if idx > 0:
+                os.rename(target, f"{self.results_data_folder}/{ipfs_hash}")
+                target = f"{self.results_data_folder}/{ipfs_hash}"
+
+            if self.cloudStorageID[idx] == StorageID.IPFS_MINILOCK.value:
+                self.decrypt_using_minilock(f"{target}/{ipfs_hash}", target)
+
             if not git.initialize_check(target):
                 return False
-
-            if self.is_minilock:
-                self.decrypt_using_minilock(ipfs_hash)
 
             if not is_hashed:
                 folder_size = calculate_folder_size(self.results_folder)
