@@ -21,7 +21,7 @@ def submitJob(
     core_execution_durations,
     dataTransferIn_list,
     dataTransferOut,
-    storageID_list,
+    storage_id_list,
     source_code_hashes,
     cache_types,
     storage_hours,
@@ -59,7 +59,7 @@ def submitJob(
         raise
 
     """
-    if StorageID_list.IPFS == storageID_list or StorageID_list.IPFS_MINILOCK == storageID_list:
+    if StorageID_list.IPFS == storage_id_list or StorageID_list.IPFS_MINILOCK == storage_id_list:
        is_ipfs_running()
        strVal = my_filter.get_all_entries()[0].args['ipfsAddress']nnn
        print('Trying to connect into ' + strVal)
@@ -73,7 +73,7 @@ def submitJob(
         if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
             return False, 'source_code_hashes should be 32 characters.'
     """
-    main_storageID = storageID_list[0]
+    main_storageID = storage_id_list[0]
     if not source_code_hashes:
         logging.error("E: sourceCodeHash list is empty.")
         raise
@@ -99,9 +99,9 @@ def submitJob(
             logging.error(f"E: core_execution_durations[{idx}] is provided as 0. Please provide non-zero value")
             raise
 
-    for storageID in storageID_list:
+    for storageID in storage_id_list:
         if storageID > 4:
-            logging.error("E: Wrong storageID_list value is given. Please provide from 0 to 4")
+            logging.error("E: Wrong storage_id_list value is given. Please provide from 0 to 4")
             raise
 
     if len(key) >= 64:
@@ -125,7 +125,7 @@ def submitJob(
     args = [
         provider,
         provider_price_block_number,
-        storageID_list,
+        storage_id_list,
         cache_types,
         data_prices_set_blocknumbers,
         cores,
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         cores = int(sys.argv[3])
         core_execution_durations = int(sys.argv[4])
         dataTransfer = int(sys.argv[5])
-        storageID_list = int(sys.argv[6])
+        storage_id_list = int(sys.argv[6])
         sourceCodeHash = str(sys.argv[7])
         storage_hours = int(sys.argv[8])
         account_id = int(sys.argv[9])
@@ -168,7 +168,7 @@ if __name__ == "__main__":
         core_execution_durations = int(sys.argv[6])
         dataTransferIn = int(sys.argv[7])
         dataTransferOut = int(sys.argv[8])
-        storageID_list = int(sys.argv[9])
+        storage_id_list = int(sys.argv[9])
         sourceCodeHash = str(sys.argv[10])
         storage_hours = int(sys.argv[11])
         account_id = int(sys.argv[12])
@@ -177,8 +177,14 @@ if __name__ == "__main__":
         # requester inputs for testing
         account_id = 1
         provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
-        main_storageID = StorageID.IPFS_MINILOCK.value
-        # main_storageID = StorageID.IPFS.value
+
+        storage_id_list = [StorageID.IPFS.value, StorageID.IPFS.value]
+        # storage_id_list = [StorageID.IPFS_MINILOCK.value, StorageID.IPFS_MINILOCK.value]
+        # storage_id_list = [StorageID.IPFS_MINILOCK.value, StorageID.IPFS.value]
+
+        main_storageID = storage_id_list[0]
+        cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+
         ipfs_dict = {}
         source_code_hashes = []
         folders = []
@@ -190,16 +196,14 @@ if __name__ == "__main__":
 
         if main_storageID == StorageID.IPFS.value or main_storageID == StorageID.IPFS_MINILOCK.value:
             if main_storageID == StorageID.IPFS.value:
-                printc("Submitting job through IPFS...")
-                storageID_list = [StorageID.IPFS.value, StorageID.IPFS.value]
-            if main_storageID == StorageID.IPFS_MINILOCK.value:
-                printc("Submitting job through IPFS_MINILOCK...")
-                storageID_list = [StorageID.IPFS_MINILOCK.value, StorageID.IPFS_MINILOCK.value]
+                printc("Submitting source code through IPFS...")
 
-            cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+            if main_storageID == StorageID.IPFS_MINILOCK.value:
+                printc("Submitting source code through IPFS_MINILOCK...")
+
             for idx, folder in enumerate(folders):
                 target = folder
-                if main_storageID == StorageID.IPFS_MINILOCK.value:
+                if storage_id_list[idx] == StorageID.IPFS_MINILOCK.value:
                     provider_minilock_id = (
                         "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"  # TODO: read from the provider
                     )
@@ -227,7 +231,6 @@ if __name__ == "__main__":
                 if main_storageID == StorageID.IPFS_MINILOCK.value:
                     # created .minilock file is removed since its already in ipfs
                     silent_remove(target)
-
         elif main_storageID == StorageID.EUDAT.value:
             print("Submitting through EUDAT")
             oc = owncloud.Client("https://b2drop.eudat.eu/")
@@ -253,7 +256,7 @@ if __name__ == "__main__":
         dataTransferIn_list,
         dataTransferOut,
         storage_hours,
-        storageID_list,
+        storage_id_list,
         cache_types,
         data_prices_set_blocknumbers,
         eBlocBroker,
@@ -269,7 +272,7 @@ if __name__ == "__main__":
             core_execution_durations,
             dataTransferIn_list,
             dataTransferOut,
-            storageID_list,
+            storage_id_list,
             source_code_hashes,
             cache_types,
             storage_hours,
