@@ -7,8 +7,10 @@ from lib import compress_folder, run_command, silent_remove
 
 
 def get_hash(ipfs_hash, path, is_storage_paid):
-    output = subprocess.check_output(["ipfs", "get", ipfs_hash, f"--output={path}"]).decode("utf-8").rstrip()
+    success, output = run_command(["ipfs", "get", ipfs_hash, f"--output={path}"])
     logging.info(output)
+    if not success:
+        raise
 
     if is_storage_paid:
         # pin downloaded ipfs hash if storage is paid
