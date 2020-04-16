@@ -51,6 +51,7 @@ class ENV:
         self.CANCEL_JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledJobs.txt"
         self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/blockReadFrom.txt"
         self.CANCEL_BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledBlockReadFrom.txt"
+        self.OC_CLIENT = f"{self.LOG_PATH}/.oc_client.pckl"
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
         else:

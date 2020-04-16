@@ -12,8 +12,8 @@ import libs.mongodb as mongodb
 from config import logging
 from contractCalls.get_provider_info import get_provider_info
 from lib import CacheType, log, silent_remove
-from settings import WHERE, init_env
-from storage_class import Storage
+from libs.storage_class import Storage
+from settings import init_env
 from utils import _colorize_traceback, byte_to_mb, create_dir, generate_md5sum, get_time, read_json
 
 env = init_env()
@@ -31,8 +31,7 @@ class EudatClass(Storage):
 
     def cache_wrapper(self) -> bool:
         for idx, folder_name in enumerate(self.source_code_hashes_to_process):
-            success = self.cache(folder_name, idx)
-            if not success:
+            if not self.cache(folder_name, idx):
                 return False
         return True
 
@@ -46,7 +45,6 @@ class EudatClass(Storage):
             cached_folder = self.public_dir
 
         cached_tar_file = f"{cached_folder}/{folder_name}.tar.gz"
-
         if success:
             self.folder_type_dict[folder_name] = "tar.gz"
             self.tar_downloaded_path[folder_name] = cached_tar_file
@@ -97,16 +95,14 @@ class EudatClass(Storage):
     def eudat_download_folder(self, results_folder_prev, results_folder, folder_name) -> bool:
         # assumes job is sent as .tar.gz file
         cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
-        logging.info(f"[{WHERE(1)}] - Downloading output.zip for {folder_name} -> {cached_tar_file}")
+        logging.info(f"Downloading output.zip for: {folder_name} -> {cached_tar_file}")
         for attempt in range(5):
             try:
-                f = f"/{folder_name}/{folder_name}.tar.gz"
-                success = self.oc.get_file(f, cached_tar_file)
-                self.tar_downloaded_path[folder_name] = cached_tar_file
-                if success:
+                if self.oc.get_file(f"/{folder_name}/{folder_name}.tar.gz", cached_tar_file):
+                    self.tar_downloaded_path[folder_name] = cached_tar_file
                     logging.info("Done")
                 else:
-                    logging.error("Something is wrong")
+                    logging.error("E: Something is wrong; oc could not retrieve the file")
                     return False
             except Exception:
                 logging.error(f"E: Failed to download eudat file.\n{_colorize_traceback()}")
@@ -115,8 +111,8 @@ class EudatClass(Storage):
             else:
                 break
         else:
-            success = self.complete_refund()
-            return False  # should return back to Driver
+            self.complete_refund()
+            return False
 
         # TODO: check hash of the downloaded file is correct or not
         return True
@@ -134,8 +130,8 @@ class EudatClass(Storage):
             folder_name = source_code_hash_text
             self.folder_type_dict[folder_name] = None
             if os.path.isdir(f"{env.OWN_CLOUD_PATH}/{folder_name}"):
-                logging.info(
-                    f"Eudat shared folder({folder_name}) is already accepted and exists on the eudat mounted folder."
+                logging.warning(
+                    f"Eudat shared folder({folder_name}) is already accepted and exists on the eudat's mounted folder."
                 )
                 if os.path.isfile(f"{env.OWN_CLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
                     self.folder_type_dict[folder_name] = "tar.gz"
@@ -183,7 +179,7 @@ class EudatClass(Storage):
             if success or (folder_token_flag[folder_name] and bool(self.shareID)):
                 accept_flag += 1
             else:
-                logging.info("Searching share tokens for the related source code folder.")
+                logging.info("Searching share tokens for the related source code folder")
                 for idx in range(len(share_list) - 1, -1, -1):
                     # starts iterating from last item to the first one
                     input_folder_name = share_list[idx]["name"]
@@ -204,7 +200,9 @@ class EudatClass(Storage):
                             logging.info("Successfull added into mongodb")
                         else:
                             logging.error("E: Something is wrong, Not added into mongodb")
-                        logging.info(f"Found. Name={folder_name} | ShareID={share_id} | share_token={self.share_token}")
+                        logging.info(
+                            f"Found. name={folder_name} | share_id={share_id} | share_token={self.share_token}"
+                        )
                         self.oc.accept_remote_share(int(share_id))
                         logging.info("shareID is accepted.")
                         accept_flag += 1
@@ -253,8 +251,7 @@ class EudatClass(Storage):
             )
             return self.complete_refund()
 
-        success = self.cache_wrapper()
-        if not success:
+        if not self.cache_wrapper():
             return False
 
         for idx, folder_name in enumerate(self.source_code_hashes_to_process):
@@ -283,7 +280,7 @@ class EudatClass(Storage):
             except KeyError:
                 success, output = mongodb.find_key(mc["eBlocBroker"]["shareID"], folder_name)
                 if not success:
-                    logging.error(f"E: shareID cannot detected from key: {self.job_key}")
-                return False
+                    logging.error(f"E: share_id cannot be detected from key: {self.job_key}")
+                    return False
 
         return self.sbatch_call()

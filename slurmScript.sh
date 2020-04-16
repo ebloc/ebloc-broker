@@ -35,8 +35,7 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
-    arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
-    arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
+    arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
 
     if [[ $event == *"COMPLETED"* ]]; then
         status="COMPLETED"
@@ -46,13 +45,13 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
         status="FAILED"
     fi
 
-    msg="$status fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
+    msg="$status fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurmJobID
     fi
 fi
 
@@ -60,16 +59,15 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Failed)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
-    arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
-    arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
+    arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
 
-    msg="TIMEOUT fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
+    msg="TIMEOUT fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurmJobID
     fi
 fi
 
@@ -77,16 +75,15 @@ if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
     name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
-    arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
-    arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
+    arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
 
-    msg="CANCELLED fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
+    msg="CANCELLED fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurmJobID
     fi
 fi
 
@@ -94,15 +91,14 @@ if [[ $event == *"FAILED"* ]]; then # Failed slurm jobs are catched here
     name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
-    arg2=$(echo $name | cut -d "*" -f 3)  # cloud_storage_id
-    arg3=$(echo $name | cut -d "*" -f 4)  # received_block_number
+    arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
 
-    msg="FAILED fileName:$name | $arg0 $arg1 $arg2 $arg3 \"$name\" $slurmJobID"
+    msg="FAILED fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurmJobID"
     echo $msg | mail -s "Message Subject" aalimog1@binghamton.edu
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
 	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurmJobID
+	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurmJobID
     fi
 fi

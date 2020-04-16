@@ -6,7 +6,7 @@ import time
 import git
 
 from config import bp, logging  # noqa: F401
-from lib import printc, run_command
+from lib import printc, run, run_command
 from settings import init_env
 from utils import getcwd, getsize, path_leaf
 
@@ -42,6 +42,10 @@ def is_initialized(path, is_in_path=False) -> bool:
     return path == working_tree_dir
 
 
+def extract_gzip():
+    pass
+
+
 def diff_zip(filename):
     f = open(filename, "w")
     p1 = subprocess.Popen(["git", "diff", "--binary", "HEAD"], stdout=subprocess.PIPE)
@@ -51,7 +55,7 @@ def diff_zip(filename):
     f.close()
 
 
-def diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
+def diff_patch(path, source_code_hash, index, target_path):
     """
     * "git diff HEAD" for detecting all the changes:
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
@@ -91,6 +95,7 @@ def diff_patch(path, source_code_hash, index, target_path, cloud_storage_id):
         logging.info("Created patch file is empty, nothing to upload.")
         is_file_empty = True
         os.remove(patch_file)
+
     return patch_name, patch_file, is_file_empty
 
 
@@ -98,14 +103,12 @@ def add_all(repo=None):
     if not repo:
         repo = git.Repo(".", search_parent_directories=True)
 
-    # required for files to be access on the cluster side due to permission issues
-    subprocess.run(["chmod", "-R", "775", "."])  # changes folder's hash
     # subprocess.run(["chmod", "-R", "755", "."])
     # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
-
+    # required for files to be access on the cluster side due to permission issues
+    subprocess.run(["chmod", "-R", "775", "."])  # changes folder's hash
     try:
         repo.git.add(A=True)  # git add -A .
-
         try:
             is_diff = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
             success = True
@@ -125,13 +128,17 @@ def commit_changes(path) -> bool:
     os.chdir(path)
     repo = git.Repo(".", search_parent_directories=True)
 
-    success, output = run_command(["ls", "-l", ".git/refs/heads"])
+    try:
+        output = run(["ls", "-l", ".git/refs/heads"])
+    except:
+        raise
+
     if output == "total 0":
         logging.warning("There is no first commit")
     else:
         repo.git.add(A=True)
         if len(repo.index.diff("HEAD")) == 0:
-            logging.info(f"{path} is already committed with the given changes.")
+            logging.info(f"{path} is already committed with the given changes")
             os.chdir(cwd_temp)
             return True
     try:
