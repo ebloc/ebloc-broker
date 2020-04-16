@@ -9,7 +9,6 @@ find . -name '*.*~' -delete
 find . -name '\#*' -delete
 find . -name __pycache__ -type d -exec rm -rf {} +
 
-rm -f checkSinfoOut.txt
 rm -f .node-xmlhttprequest*
 rm -f ./docs/solidity_lexer.pyc
 rm -f ipfs.out

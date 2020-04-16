@@ -6,7 +6,7 @@ from config import bp, logging  # noqa: F401
 from imports import connect
 from lib import StorageID
 from settings import init_env
-from utils import _colorize_traceback, ipfs_toBytes
+from utils import _colorize_traceback, ipfs_to_bytes
 
 env = init_env()
 
@@ -17,7 +17,7 @@ def process_payment(
     job_id,
     execution_time_min,
     result_ipfs_hash,
-    cloud_storage_id,
+    cloud_storage_ids,
     end_time,
     dataTransferIn,
     dataTransferOut,
@@ -25,26 +25,23 @@ def process_payment(
     executionDuration,
 ):
     logging.info(
-        f"~/eBlocBroker/contractCalls/process_payment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_id} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
+        f"~/eBlocBroker/contractCalls/process_payment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_ids} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
     )
 
     eBlocBroker, w3 = connect()
 
-    if not result_ipfs_hash:
-        logging.error("E: Given result_ipfs_hash is empty")
-        raise
-
-    if len(result_ipfs_hash) != 46 and (
-        StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
-    ):
-        logging.error("E: job_key's length does not match with its original length. Please check your job_key")
-        raise
+    for cloud_storage_id in cloud_storage_ids:
+        if len(result_ipfs_hash) != 46 and (
+            StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
+        ):
+            logging.error("E: Result ipfs's length does not match with its original length. Please check your job_key")
+            raise
 
     try:
         if result_ipfs_hash == b"" or not result_ipfs_hash:
-            _result_ipfs_hash = "''"
+            _result_ipfs_hash = ""
         else:
-            _result_ipfs_hash = ipfs_toBytes(result_ipfs_hash)
+            _result_ipfs_hash = ipfs_to_bytes(result_ipfs_hash)
 
         final_job = True  # true only for the final job
         args = [
@@ -57,7 +54,6 @@ def process_payment(
             executionDuration,
             final_job,
         ]
-
         tx = eBlocBroker.functions.processPayment(job_key, args, int(execution_time_min), _result_ipfs_hash).transact(
             {"from": env.PROVIDER_ID, "gas": 4500000}
         )

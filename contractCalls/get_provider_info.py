@@ -9,12 +9,11 @@ from utils import _colorize_traceback
 
 def get_provider_info(_provider):
     eBlocBroker, w3 = connect()
-
     provider = w3.toChecksumAddress(_provider)
 
     if not eBlocBroker.functions.doesProviderExist(provider).call():
         logging.error(
-            f"Provider {provider} is not registered. Please try again with registered Ethereum Address as provider."
+            f"E: Provider {provider} is not registered. Please try again with registered Ethereum Address as provider."
         )
         raise
 
@@ -23,7 +22,6 @@ def get_provider_info(_provider):
         event_filter = eBlocBroker.events.LogProviderInfo.createFilter(
             fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1, argument_filters={"provider": str(provider)},
         )
-
         provider_info = {
             "blockReadFrom": blockReadFrom,
             "availableCoreNum": providerPriceInfo[0],

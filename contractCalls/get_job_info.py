@@ -24,6 +24,7 @@ def update_job_cores(job_info, provider, job_key, index, job_id, received_block_
         event_filter = config.eBlocBroker.events.LogJob.createFilter(
             fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)},
         )
+
         logged_jobs = event_filter.get_all_entries()
         for logged_job in logged_jobs:
             if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(index):
@@ -31,6 +32,8 @@ def update_job_cores(job_info, provider, job_key, index, job_id, received_block_
                 job_info.update({"executionDuration": logged_job.args["executionDuration"]})
                 job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 return job_info
+            else:
+                logging.error(f"E: Failed to find job to update")
     except Exception as e:
         logging.error(f"Failed to update_job_cores: {e}")
         raise
@@ -97,6 +100,7 @@ def get_job_info(provider, job_key, index, job_id, received_block_number=None):
             "dataTransferIn_used": None,
             "dataTransferOut_used": None,
         }
+
         job_info = update_job_cores(job_info, provider, job_key, index, job_id, received_block_number)
         if received_block_number is None:
             received_block_number = get_deployed_block_number()

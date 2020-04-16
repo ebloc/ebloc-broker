@@ -1,14 +1,13 @@
 import os
 import sys
 
-from lib import execute_shell_cmd, get_ipfs_parent_hash
+from lib import get_parent_hash, run
 
 
 def add_to_ipfs(results_folder):
     cmd = ["ipfs", "add", "-r", results_folder]  # uploaded as folder
     try:
-        success, output = execute_shell_cmd(cmd, None, True)
-        result_ipfs_hash = get_ipfs_parent_hash(output)
+        result_ipfs_hash = get_parent_hash(run(cmd))
     except Exception:
         sys.exit()
 
