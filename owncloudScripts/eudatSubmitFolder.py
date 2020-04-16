@@ -76,7 +76,7 @@ def eudatSubmitJob(tar_hash=None):
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == " __main__":
     if len(sys.argv) == 2:
         print("Provided hash=" + sys.argv[1])  # tar_hash = '656e8fca04058356f180ae4ff26c33a8'
         success, output = eudatSubmitJob(sys.argv[1])

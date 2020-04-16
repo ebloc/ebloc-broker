@@ -25,10 +25,10 @@ from driver_eudat import EudatClass
 from driver_gdrive import GdriveClass
 from driver_ipfs import IpfsClass
 from imports import connect
+from lib import eblocbroker_function_call  # run_whisper_state_receiver,
 from lib import (
     CacheType,
     StorageID,
-    eblocbroker_function_call,
     is_driver_on,
     is_geth_on,
     is_ipfs_running,
@@ -37,19 +37,28 @@ from lib import (
     printc,
     run,
     run_command,
-    run_whisper_state_receiver,
     session_start_msg,
     terminate,
 )
 from settings import init_env
-from utils import _colorize_traceback, bytes32_to_ipfs, eth_address_to_md5, get_time, read_json
+from utils import (
+    _colorize_traceback,
+    bytes32_to_ipfs,
+    eth_address_to_md5,
+    get_time,
+    no,
+    read_file,
+    read_json,
+    write_to_file,
+    yes,
+)
 
 env = init_env()
 
 
-def startup(slurm_user):
+def startup(slurm_user, block_number):
     """ Startup functions are called."""
-    session_start_msg(slurm_user)
+    session_start_msg(slurm_user, block_number)
 
     if is_driver_on():
         printc("Track output: tail -f ~/.eBlocBroker/transactions/provider.log", "blue")
@@ -68,7 +77,7 @@ def startup(slurm_user):
         try:
             run(["gdrive", "version"])
         except:
-            logging.warning("Please install gdrive or check its path")
+            logging.warning("E: Please install gdrive or check its path")
             terminate()
 
     if env.IPFS_USE:
@@ -76,9 +85,10 @@ def startup(slurm_user):
 
     if env.EUDAT_USE:
         if not env.OC_USER:
-            logging.error(f"OC_USER is not set in {env.LOG_PATH}/.env")
+            logging.error(f"E: OC_USER is not set in {env.LOG_PATH}/.env")
             terminate()
-        return eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", f"{env.LOG_PATH}/.oc.pckl")
+
+        return eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", env.OC_CLIENT)
 
 
 # dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
@@ -91,8 +101,6 @@ if not config.eBlocBroker or not config.w3:
     terminate()
 
 columns = 100
-yes = set(["yes", "y", "ye"])
-no = set(["no", "n"])
 oc = None
 driver_cancel_process = None
 whisper_state_receiver_process = None
@@ -111,7 +119,28 @@ if not slurm_user:
     logging.error("SLURMUSER is not set in .bashrc or .zshrc")
     terminate()
 
-oc = startup(slurm_user)
+# ---
+deployed_block_number = get_deployed_block_number()
+if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
+    write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
+
+block_read_from_local = read_file(env.BLOCK_READ_FROM_FILE)
+if not block_read_from_local.isdigit():
+    logging.error("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
+    logging.info("#> Would you like to read from contract's deployed block number? [Y/n]")
+    while True:
+        choice = input().lower()
+        if choice in yes:
+            block_read_from_local = deployed_block_number
+            write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
+            break
+        elif choice in no:
+            terminate()
+        else:
+            sys.stdout.warning("Please respond with 'yes' or 'no'")
+# ---
+
+oc = startup(slurm_user, block_read_from_local)
 is_contract_exists = is_contract_exists()
 if not is_contract_exists:
     logging.error("Please check that you are using eBlocPOA blockchain")
@@ -143,33 +172,7 @@ if not config.eBlocBroker.functions.isOrcIDVerified(env.PROVIDER_ID).call():
     logging.error("E: Provider's orcid is not verified.")
     terminate()
 
-deployed_block_number = get_deployed_block_number()
-if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
-    f = open(env.BLOCK_READ_FROM_FILE, "w")
-    f.write(f"{deployed_block_number}")
-    f.close()
-
-f = open(env.BLOCK_READ_FROM_FILE, "r")
-block_read_from_local = f.read().strip()
-f.close()
-
-if not block_read_from_local.isdigit():
-    logging.error("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
-    logging.info("#> Would you like to read from contract's deployed block number? [Y/n]")
-    while True:
-        choice = input().lower()
-        if choice in yes:
-            block_read_from_local = deployed_block_number
-            f = open(env.BLOCK_READ_FROM_FILE, "w")
-            f.write(deployed_block_number)
-            f.close()
-            break
-        elif choice in no:
-            terminate()
-        else:
-            sys.stdout.warning("Please respond with 'yes' or 'no'")
-
-block_read_from = str(block_read_from_local)
+block_read_from = block_read_from_local
 balance_temp = get_balance(env.PROVIDER_ID)
 logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
 
@@ -179,21 +182,26 @@ while True:
         terminate()
 
     balance = get_balance(env.PROVIDER_ID)
-    success, squeue_output = run_command(["squeue"])
-    if not success or "squeue: error:" in str(squeue_output):
+    success, output = run_command(["squeue"])
+    # gets other info after the first line
+    _output = f"{output}\n".split("\n", 1)[1]
+
+    if not success or "squeue: error:" in str(output):
         logging.error(f"SLURM is not running on the background. Please run: sudo ./runSlurm.sh")
-        logging.error(squeue_output)
+        logging.error(output)
         terminate()
 
     idle_cores = slurm.get_idle_cores()
-    log(f"Current Slurm Running jobs success:\n {squeue_output}")
-    log("-" * int(columns), "green")
+    if len(_output) > 0:
+        log(f"Current Slurm Running jobs success:\n {output}")
+        log("-" * int(columns), "green")
+
     if isinstance(balance, int):
         log(f"[{get_time()}] provider_gained_wei={int(balance) - int(balance_temp)}")
 
-    log(f"[{get_time()}] Waiting new job to come since block number={block_read_from}", "green")
+    log(f"[{get_time()}] Waiting new job to come since block number={block_read_from}", "magenta")
     current_block_number = get_block_number()
-    logging.info("Waiting for new block to increment by one.")
+    logging.info("Waiting for new block to increment by one")
     logging.info(f"Current block number={current_block_number} | sync from block number={block_read_from}")
     logging.info(f"is_web3_connected={is_web3_connected()}")
     while current_block_number < int(block_read_from):
@@ -344,7 +352,7 @@ while True:
                     logging.error(_colorize_traceback())
             elif main_cloud_storage_id == StorageID.EUDAT.value:
                 if not oc:
-                    eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", ".oc.pckl")
+                    eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", env.OC_CLIENT)
 
                 eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc,)
                 eudat.run()
@@ -356,15 +364,11 @@ while True:
     time.sleep(1)
     if len(logged_jobs_to_process) > 0 and int(max_val) > 0:
         # updates the latest read block number
-        f_block_read_from = open(env.BLOCK_READ_FROM_FILE, "w")
         block_read_from = int(max_val) + 1
-        f_block_read_from.write(f"{block_read_from}")
-        f_block_read_from.close()
+        write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
 
     # if there is no submitted job for the provider, block start to read from current block number
     if not is_provider_received_job:
         # updates the latest read block number on the file
-        f_block_read_from = open(env.BLOCK_READ_FROM_FILE, "w")
-        f_block_read_from.write(f"{current_block_number}")
-        f_block_read_from.close()
-        block_read_from = str(current_block_number)
+        write_to_file(env.BLOCK_READ_FROM_FILE, current_block_number)
+        block_read_from = current_block_number

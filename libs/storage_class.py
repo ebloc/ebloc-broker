@@ -3,7 +3,7 @@ import subprocess
 
 from config import logging
 from contractCalls.refund import refund
-from lib import CacheType, _sbatch_call, log, run_command
+from lib import CacheType, _sbatch_call, log, run, run_command
 from settings import init_env
 from utils import Link, _colorize_traceback, create_dir, generate_md5sum
 
@@ -147,9 +147,12 @@ class Storage(BaseClass):
                 "-C",
                 extract_to,
             ]
-            return run_command(cmd, my_env=None, is_exit_flag=True)
+            try:
+                return True, run(cmd)
+            except:
+                return False, None
         else:
-            return False, ""
+            return False, None
 
     def check_run_sh(self) -> bool:
         if not os.path.isfile(self.run_path):
