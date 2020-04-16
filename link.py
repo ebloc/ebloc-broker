@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 
-import os
-
-from config import EBLOCPATH
+from lib import check_linked_data
+from settings import init_env
 from utils import Link, create_dir
 
+env = init_env()
+
 if __name__ == "__main__":
-    try:
-        cwd = os.path.dirname(os.path.abspath(__file__))
-    except Exception:
-        cwd = os.getcwd()
+    path_from = f"{env.EBLOCPATH}/base/data"
+    path_to = f"{env.EBLOCPATH}/base/data_link"
 
-    path_from = f"{EBLOCPATH}/base/data"
-    path_to = f"{EBLOCPATH}/base/data_link"
-
+    check_linked_data(path_from, path_to)
+    """
     create_dir(path_to)
 
     link = Link(path_from, path_to)
@@ -21,5 +19,5 @@ if __name__ == "__main__":
 
     for key, value in link.data_map.items():
         print(f"{key} => data_link/{value}")
-
+    """
     exit(0)

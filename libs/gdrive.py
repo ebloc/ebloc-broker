@@ -5,7 +5,7 @@ import os
 import subprocess
 
 from config import bp, logging  # noqa: F401
-from lib import echo_grep_awk, run_command, subprocess_call
+from lib import echo_grep_awk, run, subprocess_call
 from settings import init_env
 from utils import _colorize_traceback, byte_to_mb, read_json
 
@@ -58,9 +58,7 @@ def get_file_info(gdrive_info, _type):
 
 
 def get_file_id(key):
-    cmd = ["gdrive", "list", "--query", f"'{key}' in parents"]
-    success, output = run_command(cmd, None, True)
-    return output
+    return run(["gdrive", "list", "--query", f"'{key}' in parents"])
 
 
 def get_data_key_ids(results_folder_prev):
@@ -81,7 +79,11 @@ def size(
     source_code_key = None
     size_to_download = 0
     if "folder" in mime_type:
-        output = get_file_id(key)
+        try:
+            output = get_file_id(key)
+        except:
+            return False
+
         data_files_id = echo_grep_awk(output, "meta_data.json", "1")
         # key for the sourceCode elimination output*.tar.gz files
         source_code_key = echo_grep_awk(output, f"{folder_name}.tar.gz", "1")
@@ -132,9 +134,9 @@ def size(
         data_key_dict = {}
         for idx, (k, v) in enumerate(meta_data.items(), start=1):
             _key = str(v)
-            output = get_file_id(_key)
-            data_key = echo_grep_awk(output, f"{k}.tar.gz", "1")
             try:
+                output = get_file_id(_key)
+                data_key = echo_grep_awk(output, f"{k}.tar.gz", "1")
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
             except:

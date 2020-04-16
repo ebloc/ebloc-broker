@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 import subprocess
+import sys
 import time
 
 from config import logging
-from lib import run_command
+from lib import run
 
 
 def get_idle_cores(is_print_flag=True):
     cmd = ["sinfo", "-h", "-o%C"]
-    success, core_info = run_command(cmd)
+    core_info = run(cmd)
     core_info = core_info.split("/")
     if len(core_info) != 0:
         allocated_cores = core_info[0]
@@ -40,7 +41,7 @@ def pending_jobs_check():
 def is_on() -> bool:
     """Checks whether Slurm runs on the background or not, if not runs slurm."""
     logging.info("Checking Slurm... ")
-    success, output = run_command(["sinfo"])
+    output = run(["sinfo"])
     if "PARTITION" not in output:
         logging.error("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n")
         if not output:
@@ -58,8 +59,12 @@ def is_on() -> bool:
 
 
 def get_elapsed_raw_time(slurm_job_id) -> int:
-    cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
-    success, elapsed_time = run_command(cmd, None, True)
+    try:
+        cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
+        elapsed_time = run(cmd)
+    except:
+        sys.exit(1)
+
     logging.info(f"ElapsedTime={elapsed_time}")
     elapsed_time = elapsed_time.split(":")
     elapsed_day = "0"
@@ -77,7 +82,10 @@ def get_elapsed_raw_time(slurm_job_id) -> int:
 
 def get_job_end_time(slurm_job_id):
     # cmd: scontrol show job slurm_job_id | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
-    success, output = run_command(["scontrol", "show", "job", slurm_job_id], None, True)
+    try:
+        output = run(["scontrol", "show", "job", slurm_job_id])
+    except:
+        sys.exit()
     p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
@@ -86,7 +94,10 @@ def get_job_end_time(slurm_job_id):
     date = p3.communicate()[0].decode("utf-8").strip()
 
     cmd = ["date", "-d", date, "+'%s'"]  # cmd: date -d 2018-09-09T21:50:51 +"%s"
-    success, end_time_stamp = run_command(cmd, None, True)
+    try:
+        end_time_stamp = run(cmd)
+    except:
+        sys.exit()
     end_time_stamp = end_time_stamp.rstrip().replace("'", "")
     logging.info(f"end_time_stamp={end_time_stamp}")
     return end_time_stamp

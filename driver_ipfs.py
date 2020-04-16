@@ -1,23 +1,14 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 
 import libs.git as git
 import libs.ipfs as ipfs
 from config import bp, logging  # noqa: F401
-from lib import (
-    CacheType,
-    StorageID,
-    calculate_folder_size,
-    is_ipfs_hash_exists,
-    is_ipfs_hash_locally_cached,
-    is_ipfs_running,
-    log,
-    run_command,
-    silent_remove,
-)
+from lib import CacheType, StorageID, calculate_folder_size, is_ipfs_running, log, run_command, silent_remove
+from libs.storage_class import Storage
 from settings import init_env
-from storage_class import Storage
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir, get_time
 
 
@@ -62,7 +53,7 @@ class IpfsClass(Storage):
             silent_remove(tar_file)
 
     def check_ipfs(self, ipfs_hash) -> bool:
-        success, ipfs_stat, cumulative_size = is_ipfs_hash_exists(ipfs_hash, attempt_count=1)
+        success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempt_count=1)
         if not success or not ("CumulativeSize" in ipfs_stat):
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
             return False
@@ -82,7 +73,7 @@ class IpfsClass(Storage):
         if not is_ipfs_running():
             return False
 
-        logging.info(f"is_ipfs_hash_locally_cached={is_ipfs_hash_locally_cached(self.job_key)}")
+        logging.info(f"is_hash_locally_cached={ipfs.is_hash_locally_cached(self.job_key)}")
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -103,7 +94,7 @@ class IpfsClass(Storage):
             # here scripts knows that provided IPFS hashes exists
             is_hashed = False
             logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
-            if is_ipfs_hash_locally_cached(ipfs_hash):
+            if ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
                 log(f"=> IPFS file {ipfs_hash} is already cached.", "blue")
 
@@ -115,9 +106,9 @@ class IpfsClass(Storage):
                 create_dir(target)
 
             is_storage_paid = False  # TODO: should be set before by user input
-            ipfs.get_hash(ipfs_hash, target, is_storage_paid)
+            ipfs.get(ipfs_hash, target, is_storage_paid)
             if idx > 0:
-                os.rename(target, f"{self.results_data_folder}/{ipfs_hash}")
+                shutil.move(target, f"{self.results_data_folder}/{ipfs_hash}")  # unix mv command
                 target = f"{self.results_data_folder}/{ipfs_hash}"
 
             if self.cloudStorageID[idx] == StorageID.IPFS_MINILOCK.value:

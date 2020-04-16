@@ -9,10 +9,10 @@ sleep 14
 
 _date=$(LANG=en_us_88591; date)
 
-cat ../data_link/5322a2c84d6fe1126a90215c947bfb66/data.txt > completed.txt
-echo completed 14 - - - - - >> completed.txt
+cat ../data_link/2b573907a7c7075a47339969f6f3d9f7/data.txt > completed.txt
+echo "job is completed. Sleep time was 14 seconds" >> completed.txt
 echo "date is $_date" >> completed.txt
-echo "date is $_date" >> ../data_link/5322a2c84d6fe1126a90215c947bfb66/data.txt
+echo "date is $_date" >> ../data_link/2b573907a7c7075a47339969f6f3d9f7/data.txt
 echo "date is $_date" >> example/somedata.txt
 cat example/somedata.txt > example/out.txt
 echo COMPLETED >> completed.txt
