@@ -124,7 +124,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 provider,
                 jobKey,
                 core_list,
-                coreMin_list,
+                core_execution_durations,
                 dataTransferIn,
                 dataTransferOut,
                 cloudStorageID,
@@ -132,7 +132,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 cacheType,
                 cacheHour_list,
                 account_id,
-                job_price_value,
+                job_price,
             )
 
             # ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, account_id)  # delete
@@ -146,7 +146,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 log("storageCost:" + output[2], path, 0)
                 log("cacheCost:" + output[3], path, 0)
                 log("dataTransferCost:" + output[4], path, 0)
-                log("job_price_value:" + output[5], path, 1)
+                log("job_price:" + output[5], path, 1)
 
             txFile = open(path + "/" + providerID + ".txt", "a")
             txFile.write(output[0] + " " + str(account_id) + "\n")

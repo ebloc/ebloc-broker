@@ -4,6 +4,7 @@ from os import path, sys
 from pdb import set_trace as bp  # noqa: F401
 
 from lib import CacheType, StorageID
+from utils import _colorize_traceback
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
@@ -25,41 +26,29 @@ class DataStorage:
 
 
 class Job:
-    def __init__(
-        self,
-        provider,
-        requester,
-        cores,
-        core_execution_durations,
-        source_code_hashes,
-        storage_hours,
-        storage_ids,
-        cache_types,
-        dataTransferIn,
-        dataTransferOut,
-        data_prices_set_block_numbers,
-    ) -> None:
-        assert len(cores) == len(core_execution_durations)
-        assert len(source_code_hashes) == len(storage_hours)
-        assert len(storage_hours) == len(storage_ids)
-        assert len(cache_types) == len(storage_ids)
+    def __init__(self, **kwargs) -> None:
+        self.core_execution_durations = []
+        self.folders_to_share = []  # path of folder to share
+        self.source_code_hashes = []
+        self.storage_hours = []
+        self.core_execution_durations = []
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-        for idx, storage_id in enumerate(storage_ids):
-            assert storage_id <= 4
-            if storage_id == StorageID.IPFS:
-                assert cache_types[idx] == CacheType.PUBLIC.value
+    def check(self):
+        try:
+            assert len(self.cores) == len(self.core_execution_durations)
+            assert len(self.source_code_hashes) == len(self.storage_hours)
+            assert len(self.storage_hours) == len(self.storage_ids)
+            assert len(self.cache_types) == len(self.storage_ids)
 
-        self.provider = provider
-        self.requester = requester
-        self.cores = cores
-        self.core_execution_durations = core_execution_durations
-        self.source_code_hashes = source_code_hashes
-        self.storage_hours = storage_hours
-        self.storage_ids = storage_ids
-        self.cache_types = cache_types
-        self.dataTransferIn = dataTransferIn
-        self.dataTransferOut = dataTransferOut
-        self.data_prices_set_block_numbers = data_prices_set_block_numbers
+            for idx, storage_id in enumerate(self.storage_ids):
+                assert storage_id <= 4
+                if storage_id == StorageID.IPFS:
+                    assert self.cache_types[idx] == CacheType.PUBLIC.value
+        except:
+            print(_colorize_traceback())
+            raise
 
 
 class JobPrices:
@@ -69,10 +58,10 @@ class JobPrices:
         self.msg_sender = msg_sender
         self.is_brownie = is_brownie
         self.computational_cost = 0
-        self.job_price_value = 0
+        self.job_price = 0
         self.cache_cost = 0
         self.storage_cost = 0
-        self.dataTransferIn_sum = 0
+        self.dataTransferIns_sum = 0
         self.job_price = 0
         self.cost = {}
 
@@ -97,12 +86,11 @@ class JobPrices:
         """ Calculating the cache cost """
         self.storage_cost = 0
         self.cache_cost = 0
-        dataTransferIn_sum = 0
+        dataTransferIns_sum = 0
         block_number = self.w3.eth.blockNumber
 
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
             ds = DataStorage(self.eB, self.w3, self.job.provider, source_code_hash, self.is_brownie)
-
             if self.is_brownie:
                 received_storage_deposit = self.eB.getReceivedStorageDeposit(
                     self.job.provider, self.job.requester, source_code_hash
@@ -137,21 +125,21 @@ class JobPrices:
 
                 #  if not received_storage_deposit and (received_block + storage_duration < w3.eth.blockNumber):
                 if not received_storage_deposit:
-                    dataTransferIn_sum += self.job.dataTransferIn[idx]
+                    dataTransferIns_sum += self.job.dataTransferIns[idx]
 
                     if self.job.storage_hours[idx] > 0:
                         self.storage_cost += (
-                            self.price_storage * self.job.dataTransferIn[idx] * self.job.storage_hours[idx]
+                            self.price_storage * self.job.dataTransferIns[idx] * self.job.storage_hours[idx]
                         )
                     else:
-                        self.cache_cost += self.price_cache * self.job.dataTransferIn[idx]
+                        self.cache_cost += self.price_cache * self.job.dataTransferIns[idx]
 
-        self.dataTransfer_cost = self.price_data_transfer * (dataTransferIn_sum + self.job.dataTransferOut)
+        self.dataTransfer_cost = self.price_data_transfer * (dataTransferIns_sum + self.job.dataTransferOut)
 
     def set_job_price(self):
         self.job_price = self.computational_cost + self.dataTransfer_cost + self.cache_cost + self.storage_cost
         print(
-            f"\njob_price_value={self.job_price_value} <=> "
+            f"\njob_price={self.job_price} <=> "
             f"cache_cost={self.cache_cost} | storage_cost={self.storage_cost} | dataTransfer_cost={self.dataTransfer_cost} | computational_cost={self.computational_cost}"
         )
         self.cost["computational_cost"] = self.computational_cost
@@ -161,37 +149,14 @@ class JobPrices:
 
 
 def cost(
-    cores,
-    core_execution_durations,
-    provider,
-    requester,
-    source_code_hashes,
-    dataTransferIn,
-    dataTransferOut,
-    storage_hours,
-    storage_ids,
-    cache_types,
-    data_prices_set_block_numbers,
-    eB,
-    w3,
-    is_brownie=True,
+    provider, requester, job, eB, w3, is_brownie=True,
 ):
     print("\nEntered into cost calculation...")
-    job = Job(
-        provider,
-        requester,
-        cores,
-        core_execution_durations,
-        source_code_hashes,
-        storage_hours,
-        storage_ids,
-        cache_types,
-        dataTransferIn,
-        dataTransferOut,
-        data_prices_set_block_numbers,
-    )
-    jp = JobPrices(eB, w3, job, provider, is_brownie)
+    job.provider = provider
+    job.requester = requester
+    job.check()
 
+    jp = JobPrices(eB, w3, job, provider, is_brownie)
     jp.set_computational_cost()
     jp.set_storage_cost()
     jp.set_job_price()
