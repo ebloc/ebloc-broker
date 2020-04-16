@@ -3,11 +3,13 @@ import os
 
 from dotenv import load_dotenv
 
-from lib import HOME
+from settings import init_env
 from utils import read_json
 
+env = init_env()
+
 # load .env from the given path
-load_dotenv(os.path.join(f"{HOME}/.eBlocBroker/", ".env"))
+load_dotenv(os.path.join(f"{env.HOME}/.eBlocBroker/", ".env"))
 
 
 def addElement(data, key, elementToAdd):

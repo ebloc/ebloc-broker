@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from config import EBLOCPATH
-from lib import ipfs_add
+from libs import ipfs
 
 path = "/home/netlab/eBlocBroker/base/sourceCode"
 base_folder = f"{EBLOCPATH}/base"
@@ -12,8 +12,8 @@ folders_to_share.append(f"{base_folder}/sourceCode")
 folders_to_share.append(f"{base_folder}/data/data1")
 
 for path in folders_to_share:
-    success, ipfs_hash = ipfs_add(path)
-    # success, ipfs_hash = ipfs_add(path, True)
+    success, ipfs_hash = ipfs.add(path)
+    # success, ipfs_hash = ipfs.add(path, True)
     ipfs_hashes[path] = ipfs_hash
 
 for k, v in ipfs_hashes.items():

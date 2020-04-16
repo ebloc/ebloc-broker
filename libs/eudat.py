@@ -10,7 +10,7 @@ import traceback
 import owncloud
 
 from config import bp, logging  # noqa: F401
-from lib import compress_folder, printc, terminate
+from lib import compress_folder, printc, run, terminate
 from settings import init_env
 from utils import _colorize_traceback
 
@@ -65,12 +65,11 @@ def upload_results(encoded_share_token, output_file_name, results_folder_prev, a
         return False
 
 
-def login(user, password_path, name):
+def login(user, password_path, fname):
     logging.info("Login into owncloud...")
-    env = init_env()
-    f = f"{env.EBLOCPATH}/{name}"
-    if os.path.isfile(f):
-        f = open(f, "rb")
+
+    if os.path.isfile(fname):
+        f = open(fname, "rb")
         oc = pickle.load(f)
         try:
             printc("Reading from the dumped object...", "blue")
@@ -90,10 +89,9 @@ def login(user, password_path, name):
 
     for attempt in range(5):
         try:
-            # unlocks the EUDAT account
             oc.login(user, password)
             password = None
-            f = open(".oc.pckl", "wb")
+            f = open(fname, "wb")
             pickle.dump(oc, f)
             f.close()
             logging.info("SUCCESS")
@@ -164,11 +162,8 @@ def is_oc_mounted() -> bool:
     mount_path = "/oc"
     output = None
     try:
-        output = (
-            subprocess.check_output(["findmnt", "--noheadings", "-lo", "source", mount_path]).decode("utf-8").strip()
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"E: {e}")
+        output = run(["findmnt", "--noheadings", "-lo", "source", mount_path])
+    except:
         return False
 
     if not ("b2drop.eudat.eu/remote.php/webdav/" in output):

@@ -13,7 +13,6 @@ mkdir -p /var/eBlocBroker/cache
 
 find $HOME/.eBlocBroker/*/* -mindepth 1 ! -regex '^./private\(/.*\)?' -delete 2> /dev/null
 rm -f $HOME/.eBlocBroker/my-app.pid
-rm -f $HOME/.eBlocBroker/checkSinfoOut.txt
 rm -f $HOME/.eBlocBroker/logJobs.txt
 rm -f $HOME/.eBlocBroker/queuedJobs.txt
 rm -f $HOME/.eBlocBroker/test.txt
