@@ -3,7 +3,7 @@
 import os
 import sys
 
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from contract.scripts.lib import Job, cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
@@ -11,12 +11,10 @@ from imports import connect
 from lib import CacheType, StorageID, check_linked_data, get_tx_status, printc, run, silent_remove
 from libs import ipfs
 from libs.ipfs import mlck_encrypt
-from settings import init_env
 from utils import _colorize_traceback, generate_md5sum, ipfs_to_bytes
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    env = init_env()
     job = Job()
 
     printc("Attempt to submit a job", "blue")
@@ -31,11 +29,7 @@ if __name__ == "__main__":
     main_storageID = job.storage_ids[0]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
 
-    md5sums = []
-    ipfs_hashes = []
-
-    folders = []
-    # full path of the sourceCodeFolders is given
+    folders = []  # full paths are provided
     folders.append(f"{env.EBLOCPATH}/base/sourceCode")
     folders.append(f"{env.EBLOCPATH}/base/data/data1")
 
@@ -75,14 +69,12 @@ if __name__ == "__main__":
         except:
             sys.exit(1)
 
-        ipfs_hashes.append(ipfs_hash)
         md5sum = generate_md5sum(target)
         if idx == 0:
             key = ipfs_hash
 
         job.source_code_hashes.append(ipfs_to_bytes(ipfs_hash))
-        md5sums.append(md5sum)
-        printc(f"{target} \nipfs_hash:{ipfs_hashes[idx]}  md5sum:{md5sums[idx]}\n", "green")
+        printc(f"{target} \nipfs_hash:{ipfs_hash}  md5sum:{md5sum}\n", "green")
         if main_storageID == StorageID.IPFS_MINILOCK.value:
             # created .minilock file is removed since its already in ipfs
             silent_remove(target)
@@ -95,7 +87,7 @@ if __name__ == "__main__":
     job.data_prices_set_block_numbers = [0, 0]
 
     requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
-    job_price, _cost = cost(provider, requester, job, eBlocBroker, w3, False,)
+    job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
         receipt = get_tx_status(submitJob(provider, key, account_id, job_price, job))
         if receipt["status"] == 1:

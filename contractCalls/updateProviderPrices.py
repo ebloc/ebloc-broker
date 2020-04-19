@@ -2,16 +2,14 @@
 
 import sys
 
-from config import logging
+from config import env, logging
 from imports import connect
 from lib import get_tx_status
-from settings import init_env
 from utils import _colorize_traceback
 
 
 def updateProviderPrices(availableCoreNum, commitmentBlockNum, prices):
     eBlocBroker, w3 = connect()
-    env = init_env()
 
     if availableCoreNum == 0:
         logging.error("Please enter positive value for the available core number")

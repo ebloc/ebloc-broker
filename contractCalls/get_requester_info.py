@@ -5,7 +5,7 @@ import traceback
 
 from config import logging  # noqa: F401
 from imports import connect
-from settings import WHERE
+from lib import WHERE
 
 
 def get_requester_info(requester):

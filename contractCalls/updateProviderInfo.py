@@ -4,13 +4,10 @@
 import os
 import sys
 
-from config import logging
+from config import env, logging
 from imports import connect, connect_to_web3
 from lib import get_tx_status
-from settings import init_env
 from utils import _colorize_traceback, read_json
-
-env = init_env()
 
 
 def updateProviderInfo(email, federationCloudId, minilock_id, ipfsAddress):

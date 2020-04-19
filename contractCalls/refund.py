@@ -3,12 +3,9 @@
 import sys
 import traceback
 
-from config import logging  # noqa: F401
+from config import env, logging  # noqa: F401
 from imports import connect
-from lib import get_tx_status
-from settings import WHERE, init_env
-
-env = init_env()
+from lib import WHERE, get_tx_status
 
 
 def refund(provider, _from, job_key, index, job_id, source_code_hashes):

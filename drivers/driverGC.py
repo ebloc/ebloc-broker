@@ -2,13 +2,11 @@
 
 from pymongo import MongoClient
 
+from config import env
 from contractCalls.get_block_number import get_block_number
 from contractCalls.getJobStorageTime import getJobStorageTime
 from imports import connect
 from lib import StorageID, run_command, silent_remove
-from settings import init_env
-
-env = init_env()
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
