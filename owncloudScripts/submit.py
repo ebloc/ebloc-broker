@@ -5,20 +5,18 @@ import time
 
 import libs.eudat as eudat
 import libs.git as git
-from config import bp  # noqa: F401
+from config import bp, env  # noqa: F401
 from contract.scripts.lib import Job, cost
 from contractCalls.get_provider_info import get_provider_info
 from contractCalls.submitJob import submitJob
 from imports import connect
 from lib import CacheType, StorageID, get_tx_status, printc
-from settings import init_env
 from utils import _colorize_traceback
 
-env = init_env()
+eBlocBroker, w3 = connect()
 
 
 def submit(provider, oc):
-    eBlocBroker, w3 = connect()
     job = Job()
 
     provider = w3.toChecksumAddress(provider)
@@ -40,13 +38,9 @@ def submit(provider, oc):
         try:
             git.initialize_check(folder)
             git.commit_changes(folder)
-        except:
-            sys.exit(1)
-
-        try:
             folder_hash = eudat.initialize_folder(folder, oc)
-        except Exception as error:
-            print(f"E: {error}")
+            print(_colorize_traceback())
+        except:
             sys.exit(1)
 
         if idx == 0:
@@ -54,16 +48,16 @@ def submit(provider, oc):
 
         # required to send string as bytes
         job.source_code_hashes.append(w3.toBytes(text=folder_hash))
+        print(provider_info["fID"])
         if not eudat.share_single_folder(folder_hash, oc, provider_info["fID"]):
             sys.exit(1)
         time.sleep(0.1)
 
-    printc("\nSubmitting Job...")
-    job.core_execution_durations.append(5)
+    printc("\nSubmitting the job")
+    job.core_execution_durations = [5]
     job.cores = [1]
     job.dataTransferIns = [1, 1]
     job.dataTransferOut = 1
-
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     job.storage_hours = [1, 1]
@@ -71,7 +65,7 @@ def submit(provider, oc):
     print(job.source_code_hashes)
     requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
 
-    job_price, _cost = cost(provider, requester, job, eBlocBroker, w3, False)
+    job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
         return submitJob(provider, job_key, account_id, job_price, job)
     except:
@@ -80,11 +74,8 @@ def submit(provider, oc):
 
 
 if __name__ == "__main__":
-    eBlocBroker, w3 = connect()
-    oc = eudat.login("059ab6ba-4030-48bb-b81b-12115f531296", f"{env.LOG_PATH}/eudat_password.txt", env.OC_CLIENT,)
-
-    # oc = owncloud.Client("https://b2drop.eudat.eu/")
-    # oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
+    oc_requester = "059ab6ba-4030-48bb-b81b-12115f531296"
+    oc = eudat.login(oc_requester, f"{env.LOG_PATH}/.eudat_client.txt", env.OC_CLIENT_REQUESTER)
 
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])

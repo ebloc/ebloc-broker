@@ -7,28 +7,26 @@ import sys
 
 import libs.gdrive as gdrive
 import libs.git as git
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from contract.scripts.lib import Job, cost
 from contractCalls.submitJob import submitJob
 from imports import connect
-from lib import CacheType, StorageID, compress_folder, get_tx_status, printc, run_command, silent_remove
-from settings import init_env
+from lib import CacheType, StorageID, compress_folder, get_tx_status, printc, run, silent_remove
 from utils import _colorize_traceback, read_json
 
-env = init_env()
 base_folder = f"{env.EBLOCPATH}/base"
 
 
-def create_meta_json(f_path, job_key_dict):
-    with open(f_path, "w") as f:
-        json.dump(job_key_dict, f)
+def create_meta_json(filename, job_keys):
+    with open(filename, "w") as f:
+        json.dump(job_keys, f)
 
-    printc(f"meta_data.json file is updated on the base folder", "yellow")
-    logging.info(f"{job_key_dict}")
+    printc(f"meta_data.json file is updated into the base folder", "yellow")
+    logging.info(job_keys)
 
 
 def gdrive_upload(folder_to_share, job_key_flag=False):
-    already_uploaded = False
+    is_already_uploaded = False
     logging.info(f"job_key_flag={job_key_flag} | tar.gz file is inside a folder")
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, tar_path = compress_folder(folder_to_share)
@@ -41,45 +39,27 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
     if job_key_flag:
         shutil.copyfile(f"{base_folder}/meta_data.json", f"{path_to_move}/meta_data.json")
 
-    output = gdrive.list(tar_hash, True)
-    if not output:
+    is_file_exist = gdrive.list(tar_hash, is_folder=True)
+    if not is_file_exist:
         key = gdrive.upload_internal(dir_path, tar_hash, True)
         logging.info(gdrive.list(tar_hash))
     else:
         printc(f"=> Requested folder {tar_hash} is already uploaded", "blue")
-        logging.info(output)
-        key = output.partition("\n")[0].split()[0]
-        already_uploaded = True
+        logging.info(is_file_exist)
+        key = is_file_exist.partition("\n")[0].split()[0]
+        is_already_uploaded = True
 
     silent_remove(f"{dir_path}/{tar_hash}")  # created .tar.gz files are removed
-
-    """
-    else:
-        logging.info(f"job_key_flag={job_key_flag}")
-        dir_path = os.path.dirname(folder_to_share)
-        tar_hash, tar_path = compress_folder(folder_to_share)
-        output = gdrive.list(tar_hash)
-        if not output:
-            key = gdrive.upload_internal(dir_path, tar_hash)
-            logging.info(gdrive.list(tar_hash))
-        else:
-            printc(f"=> Requested file {tar_hash}.tar.gz is already uploaded", "blue")
-            logging.info(output)
-            key = output.partition("\n")[0].split()[0]
-            silent_remove(f"{dir_path}/{tar_hash}.tar.gz")  # created .tar.gz files are removed
-            already_uploaded = True
-    """
-    return key, already_uploaded, tar_hash
+    return key, is_already_uploaded, tar_hash
 
 
 def share_folder(folder_to_share, provider, job_key_flag=False):
     logging.info(f"folder_to_share={folder_to_share}")
-    key, already_uploaded, tar_hash = gdrive_upload(folder_to_share, job_key_flag)
+    key, is_already_uploaded, tar_hash = gdrive_upload(folder_to_share, job_key_flag)
     logging.info(f"job_key={key}")
     cmd = ["gdrive", "share", key, "--role", "writer", "--type", "user", "--email", provider]
-    if not already_uploaded:
-        success, output = run_command(cmd)
-        logging.info(f"share_output={output}")
+    if not is_already_uploaded:
+        logging.info(f"share_output={run(cmd)}")
 
     return key, tar_hash
 
@@ -93,11 +73,9 @@ def gdrive_submit_job(provider):
     # provider_info = get_provider_info(provider)
     account_id = 1
 
-    # full path of the sourceCodeFolders is given
-    job_key_dict = {}
-    folderName_tar_hash = {}
+    job_keys = {}
+    foldername_tar_hash = {}
 
-    # sourceCode at index 0
     job.folders_to_share.append(f"{base_folder}/sourceCode")
     job.folders_to_share.append(f"{base_folder}/data/data1")
     # subprocess.run(['sudo', 'chmod', '-R', '777', folder_to_share])
@@ -116,53 +94,51 @@ def gdrive_submit_job(provider):
                 # starting from the first element ignoring source_folder
                 # attempting to share the data folder
                 job_key, tar_hash = share_folder(folder_to_share, provider_to_share)
-                folderName_tar_hash[folder_to_share] = tar_hash
-                job_key_dict[tar_hash] = job_key
+                foldername_tar_hash[folder_to_share] = tar_hash
+                job_keys[tar_hash] = job_key
 
             data_files_json_path = f"{base_folder}/meta_data.json"
             try:
                 data_json = read_json(data_files_json_path)
-                if job_key_dict == data_json:
+                if job_keys == data_json:
                     printc("meta_data.json file already exists", "blue")
                 else:
-                    create_meta_json(f"{base_folder}/meta_data.json", job_key_dict)
+                    create_meta_json(f"{base_folder}/meta_data.json", job_keys)
             except:
-                create_meta_json(f"{base_folder}/meta_data.json", job_key_dict)
+                create_meta_json(f"{base_folder}/meta_data.json", job_keys)
 
         folder_to_share = job.folders_to_share[0]
         job_key, tar_hash = share_folder(folder_to_share, provider_to_share, job_key_flag=True)
-        folderName_tar_hash[folder_to_share] = tar_hash
-        job_key_dict[tar_hash] = job_key
+        foldername_tar_hash[folder_to_share] = tar_hash
+        job_keys[tar_hash] = job_key
     except Exception:
-        logging.error(f"E: {_colorize_traceback()}")
+        logging.error(_colorize_traceback())
         sys.exit(1)
 
-    job.core_execution_durations.append(5)
+    job.core_execution_durations = [5]
     job.cores = [1]
     job.dataTransferIns = [1, 1]
     job.dataTransferOut = 1
 
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    # covers private and public folders
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
 
     for folder_to_share in job.folders_to_share:
-        tar_hash = folderName_tar_hash[folder_to_share]
+        tar_hash = foldername_tar_hash[folder_to_share]
         # required to send string as bytes == str_data.encode('utf-8')
         job.source_code_hashes.append(w3.toBytes(text=tar_hash))
 
-    tar_hash = folderName_tar_hash[job.folders_to_share[0]]
-    jobKey = job_key_dict[tar_hash]
-    logging.info(f"job_key={jobKey}")
+    tar_hash = foldername_tar_hash[job.folders_to_share[0]]
+    job_key = job_keys[tar_hash]
+    logging.info(f"job_key={job_key}")
 
     requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
-    job_price, _cost = cost(provider, requester, job, eBlocBroker, w3, False,)
-
-    logging.info("\nSubmitting Job...")
+    job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
+    logging.info("\nSubmitting the job")
     try:
-        return submitJob(provider, jobKey, account_id, job_price, job,)
+        return submitJob(provider, job_key, account_id, job_price, job)
     except:
         logging.error(_colorize_traceback())
         raise
@@ -184,3 +160,20 @@ if __name__ == "__main__":
     except:
         logging.error(_colorize_traceback())
         sys.exit(1)
+
+"""
+    else:
+        logging.info(f"job_key_flag={job_key_flag}")
+        dir_path = os.path.dirname(folder_to_share)
+        tar_hash, tar_path = compress_folder(folder_to_share)
+        output = gdrive.list(tar_hash)
+        if not output:
+            key = gdrive.upload_internal(dir_path, tar_hash)
+            logging.info(gdrive.list(tar_hash))
+        else:
+            printc(f"=> Requested file {tar_hash}.tar.gz is already uploaded", "blue")
+            logging.info(output)
+            key = output.partition("\n")[0].split()[0]
+            silent_remove(f"{dir_path}/{tar_hash}.tar.gz")  # created .tar.gz files are removed
+            is_already_uploaded = True
+"""

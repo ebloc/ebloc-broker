@@ -1,13 +1,10 @@
 import os
 import subprocess
 
-from config import logging
+from config import env, logging
 from contractCalls.refund import refund
-from lib import CacheType, _sbatch_call, log, run, run_command
-from settings import init_env
+from lib import CacheType, _sbatch_call, log, run
 from utils import Link, _colorize_traceback, create_dir, generate_md5sum
-
-env = init_env()
 
 
 class BaseClass(object):
@@ -16,7 +13,7 @@ class BaseClass(object):
 
 
 class Storage(BaseClass):
-    def __init__(self, logged_job, job_info, requester_id, is_already_cached, oc=None) -> None:
+    def __init__(self, logged_job, job_info, requester_id, is_already_cached) -> None:
         self.requester_id = requester_id
         self.job_info = job_info
         self.logged_job = logged_job
@@ -31,7 +28,6 @@ class Storage(BaseClass):
         self.job_key_list = []
         self.md5sum_dict = {}
         self.folder_path_to_download = {}
-        self.oc = oc
         self.cloudStorageID = logged_job.args["cloudStorageID"]
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
@@ -63,9 +59,8 @@ class Storage(BaseClass):
                 self.source_code_hashes,
             )
             logging.info(f"refund() tx_hash={tx_hash}")
-            return True
         except:
-            return False
+            raise
 
     def is_md5sum_matches(self, path, name, id, folder_type, cache_type) -> bool:
         output = generate_md5sum(path)
@@ -138,15 +133,9 @@ class Storage(BaseClass):
             return False
 
     def untar(self, tar_file, extract_to):
+        # umask can be ignored by using the -p (--preserve) option
+        cmd = ["tar", "xfp", tar_file, "--strip-components=1", "-C", extract_to]
         if os.path.isfile(tar_file):
-            cmd = [
-                "tar",
-                "xfp",  # umask can be ignored by using the -p (--preserve) option
-                tar_file,
-                "--strip-components=1",
-                "-C",
-                extract_to,
-            ]
             try:
                 return True, run(cmd)
             except:
@@ -165,10 +154,10 @@ class Storage(BaseClass):
             link = Link(self.results_data_folder, self.results_data_link)
             link.link_folders()
 
-            #  File permission for the requester's foders should be re-set.
+            # file permission for the requester's foders should be re-set
             path = f"{env.PROGRAM_PATH}/{self.requester_id}"
-            success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
-            success, output = run_command(["sudo", "setfacl", "-R", "-m", f"user:{env.WHOAMI}:rwx", path])
+            run(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
+            run(["sudo", "setfacl", "-R", "-m", f"user:{env.WHOAMI}:rwx", path])
 
             _sbatch_call(
                 self.logged_job,
@@ -181,6 +170,4 @@ class Storage(BaseClass):
             )
         except Exception:
             logging.error(f"E: Failed to call _sbatch_call() function.\n{_colorize_traceback()}")
-            return False
-
-        return True
+            raise

@@ -148,7 +148,7 @@ sudo mkdir -p /ipns
 sudo chown $l:root /ipfs
 sudo chown $l:root /ipns
 
-echo -e "Note: Update the following file 'eudat_password.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudat_password.txt'"
+echo -e "Note: Update the following file '~/.eBlocBroker/.eudat_provider.txt' with your EUDAT account's password. \nBest to make sure the file is not readable or even listable for anyone but you. You achieve this with:\n 'chmod 700 eudat_password.txt'"
 
 #echo -e "\nUpdate the following file 'miniLockPassword.txt' with your Minilock accounts password."
 #echo -e "Please enter your miniLock password,"

@@ -2,11 +2,9 @@
 
 import traceback
 
+from config import env
 from imports import connect_to_web3
-from settings import init_env
 from utils import read_json
-
-env = init_env()
 
 
 def is_contract_exists():
