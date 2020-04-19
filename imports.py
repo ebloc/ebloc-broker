@@ -5,7 +5,7 @@ from web3.providers.rpc import HTTPProvider
 
 import _utils.colorer  # noqa: F401
 import config
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from utils import _colorize_traceback, read_json
 
 
@@ -26,10 +26,6 @@ def connect():
 
 
 def connect_to_web3():
-    from settings import init_env
-
-    env = init_env()
-
     if config.w3:
         return config.w3
 
@@ -64,9 +60,6 @@ def connect_to_web3():
 
 
 def connect_to_eblocbroker():
-    from settings import init_env
-
-    env = init_env()
     if config.eBlocBroker:
         return config.eBlocBroker
 
@@ -81,7 +74,7 @@ def connect_to_eblocbroker():
 
     contract_address = contract["address"]
     try:  # TODO: add decoder/template for this kind of call
-        abi = read_json(f"{env.EBLOCPATH}/contractCalls/abi.json")
+        abi = read_json(f"{env.EBLOCPATH}/contractCalls/abi.json", is_dict=False)
     except:
         logging.error("E: Couldn't read the abi.json file")
         logging.error(_colorize_traceback())

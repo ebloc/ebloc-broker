@@ -9,7 +9,7 @@ import time
 import config
 import libs.eudat as eudat
 import libs.slurm as slurm
-from config import bp, load_log  # noqa: F401
+from config import bp, env, load_log  # noqa: F401
 from contract.scripts.lib import DataStorage
 from contractCalls.does_requester_exist import does_requester_exist
 from contractCalls.doesProviderExist import doesProviderExist
@@ -21,9 +21,9 @@ from contractCalls.get_requester_info import get_requester_info
 from contractCalls.is_contract_exists import is_contract_exists
 from contractCalls.is_web3_connected import is_web3_connected
 from contractCalls.LogJob import run_log_job
-from driver_eudat import EudatClass
-from driver_gdrive import GdriveClass
-from driver_ipfs import IpfsClass
+from drivers.eudat import EudatClass
+from drivers.gdrive import GdriveClass
+from drivers.ipfs import IpfsClass
 from imports import connect
 from lib import eblocbroker_function_call  # run_whisper_state_receiver,
 from lib import (
@@ -40,7 +40,6 @@ from lib import (
     session_start_msg,
     terminate,
 )
-from settings import init_env
 from utils import (
     _colorize_traceback,
     bytes32_to_ipfs,
@@ -53,22 +52,19 @@ from utils import (
     yes,
 )
 
-env = init_env()
-
 
 def startup(slurm_user, block_number):
     """ Startup functions are called."""
     session_start_msg(slurm_user, block_number)
 
     if is_driver_on():
-        printc("Track output: tail -f ~/.eBlocBroker/transactions/provider.log", "blue")
+        printc("Track output using:\ntail -f ~/.eBlocBroker/transactions/provider.log", "blue")
         sys.exit(1)
 
     if not is_geth_on():
         sys.exit(1)  # TODO: check to call terminate()
 
-    success = slurm.is_on()
-    if not success:
+    if not slurm.is_on():
         sys.exit(1)
 
     # run_driver_cancel()  # TODO: uncomment
@@ -88,7 +84,7 @@ def startup(slurm_user, block_number):
             logging.error(f"E: OC_USER is not set in {env.LOG_PATH}/.env")
             terminate()
 
-        return eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", env.OC_CLIENT)
+        return eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
 
 
 # dummy sudo command to get the password when session starts for only create users and submit slurm job under another user
@@ -101,7 +97,6 @@ if not config.eBlocBroker or not config.w3:
     terminate()
 
 columns = 100
-oc = None
 driver_cancel_process = None
 whisper_state_receiver_process = None
 _env = os.environ.copy()
@@ -119,7 +114,6 @@ if not slurm_user:
     logging.error("SLURMUSER is not set in .bashrc or .zshrc")
     terminate()
 
-# ---
 deployed_block_number = get_deployed_block_number()
 if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
     write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
@@ -138,9 +132,8 @@ if not block_read_from_local.isdigit():
             terminate()
         else:
             sys.stdout.warning("Please respond with 'yes' or 'no'")
-# ---
 
-oc = startup(slurm_user, block_read_from_local)
+config.oc = startup(slurm_user, block_read_from_local)
 is_contract_exists = is_contract_exists()
 if not is_contract_exists:
     logging.error("Please check that you are using eBlocPOA blockchain")
@@ -277,7 +270,12 @@ while True:
         if logged_job["blockNumber"] > int(max_val):
             max_val = logged_job["blockNumber"]
 
-        success, str_check = run_command(["bash", f"{env.EBLOCPATH}/str_check.sh", job_key])
+        try:
+            run(["bash", f"{env.EBLOCPATH}/str_check.sh", job_key])
+        except:
+            logging.error("E: Filename contains invalid character")
+            is_break = True
+
         job_infos_to_process = []
         job_id = 0
 
@@ -322,10 +320,6 @@ while True:
                 logging.info("Job is already captured. It is in process or completed.")
                 is_break = True
 
-            if "False" in str_check:
-                logging.error("Filename contains invalid character.")
-                is_break = True
-
             if not is_requester_exist:
                 logging.error("Job owner is not registered.")
                 is_break = True
@@ -337,37 +331,37 @@ while True:
 
         if not is_break:
             logging.info("Adding user...")
-            success, output = run_command(
-                ["sudo", "bash", f"{env.EBLOCPATH}/user.sh", requester_id, env.PROGRAM_PATH, slurm_user,]
-            )
-            logging.info(output)
-            requester_md5_id = eth_address_to_md5(requester_id)
-            slurm.pending_jobs_check()
-            main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
-            if main_cloud_storage_id == StorageID.IPFS.value or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value:
-                ipfs = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
-                try:
-                    ipfs.run()
-                except:
-                    logging.error(_colorize_traceback())
-            elif main_cloud_storage_id == StorageID.EUDAT.value:
-                if not oc:
-                    eudat.login(env.OC_USER, f"{env.LOG_PATH}/eudat_password.txt", env.OC_CLIENT)
+            try:
+                output = run(["sudo", "bash", f"{env.EBLOCPATH}/user.sh", requester_id, env.PROGRAM_PATH, slurm_user])
+                logging.info(output)
+                requester_md5_id = eth_address_to_md5(requester_id)
+                slurm.pending_jobs_check()
+                main_cloud_storage_id = logged_job.args["cloudStorageID"][0]
+                if (
+                    main_cloud_storage_id == StorageID.IPFS.value
+                    or main_cloud_storage_id == StorageID.IPFS_MINILOCK.value
+                ):
+                    storage_class = IpfsClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
+                elif main_cloud_storage_id == StorageID.EUDAT.value:
+                    if not config.oc:
+                        eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
+                    storage_class = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached)
+                    # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
+                elif main_cloud_storage_id == StorageID.GDRIVE.value:
+                    storage_class = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
 
-                eudat = EudatClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached, oc,)
-                eudat.run()
-                # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
-            elif main_cloud_storage_id == StorageID.GDRIVE.value:
-                gdrive = GdriveClass(logged_job, job_infos_to_process, requester_md5_id, is_already_cached,)
-                gdrive.run()
+                storage_class.run()
+                time.sleep(1)
+            except:
+                logging.error(_colorize_traceback())
+                bp()  # delete
 
-    time.sleep(1)
     if len(logged_jobs_to_process) > 0 and int(max_val) > 0:
         # updates the latest read block number
         block_read_from = int(max_val) + 1
         write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
 
-    # if there is no submitted job for the provider, block start to read from current block number
+    # if there is no submitted job for the provider, block start to read from the current block number
     if not is_provider_received_job:
         # updates the latest read block number on the file
         write_to_file(env.BLOCK_READ_FROM_FILE, current_block_number)

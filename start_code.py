@@ -4,10 +4,8 @@ import subprocess
 import sys
 import time
 
+from config import env
 from contractCalls.set_job_status_running import set_job_status_running
-from settings import init_env
-
-env = init_env()
 
 
 def start_call(job_key, index, slurm_job_id):

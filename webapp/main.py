@@ -3,13 +3,11 @@ import sys
 from web3 import HTTPProvider, Web3
 from web3.contract import ConciseContract
 
+from config import env
 from contractCalls.get_owner import get_owner
 from contractCalls.get_providers import get_providers
 from flask import Flask, render_template, request
-from settings import init_env
 from solc import compile_source
-
-env = init_env()
 
 # TODO: env should be load first
 app = Flask(__name__)

@@ -9,20 +9,18 @@ from pymongo import MongoClient
 
 import config
 import libs.mongodb as mongodb
-from config import logging
+from config import bp, env, logging  # noqa: F401
 from contractCalls.get_provider_info import get_provider_info
 from lib import CacheType, log, silent_remove
 from libs.storage_class import Storage
-from settings import init_env
-from utils import _colorize_traceback, byte_to_mb, create_dir, generate_md5sum, get_time, read_json
+from utils import _colorize_traceback, create_dir, generate_md5sum, get_time, read_json
 
-env = init_env()
 mc = MongoClient()
 
 
 class EudatClass(Storage):
-    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached, oc):
-        super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached, oc)
+    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached):
+        super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached)
         self.shareID = {}
         self.tar_downloaded_path = {}
         self.source_code_hashes_to_process: List[str] = []
@@ -51,15 +49,12 @@ class EudatClass(Storage):
             return True
 
         if not os.path.isfile(cached_tar_file):
-            # if os.path.isfile(cached_foldernnn + '/run.sh'):
-            if os.path.isdir(cached_folder):
-                output = generate_md5sum(f"{cached_folder}/{folder_name}.tar.gz")
-                if output == folder_name:
+            if os.path.isfile(f"{cached_folder}/{folder_name}.tar.gz"):
+                tar_hash = generate_md5sum(f"{cached_folder}/{folder_name}.tar.gz")
+                if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(
-                        f"=> {folder_name} is already cached under the public directory.", "blue",
-                    )
+                    log(f"{folder_name} is already cached under the public directory.", "blue")
                     return True
                 else:
                     self.folder_type_dict[folder_name] = "tar.gz"
@@ -98,7 +93,7 @@ class EudatClass(Storage):
         logging.info(f"Downloading output.zip for: {folder_name} -> {cached_tar_file}")
         for attempt in range(5):
             try:
-                if self.oc.get_file(f"/{folder_name}/{folder_name}.tar.gz", cached_tar_file):
+                if config.oc.get_file(f"/{folder_name}/{folder_name}.tar.gz", cached_tar_file):
                     self.tar_downloaded_path[folder_name] = cached_tar_file
                     logging.info("Done")
                 else:
@@ -122,42 +117,46 @@ class EudatClass(Storage):
         folder_token_flag = {}
         if not os.path.isdir(self.private_dir):
             logging.error(f"{self.private_dir} does not exist")
-            return False
+            raise
 
         shareID_file = f"{self.private_dir}/{self.job_key}_shareID.json"
         accept_flag = 0
         for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
             folder_name = source_code_hash_text
             self.folder_type_dict[folder_name] = None
-            if os.path.isdir(f"{env.OWN_CLOUD_PATH}/{folder_name}"):
+            if os.path.isdir(f"{env.OWNCLOUD_PATH}/{folder_name}"):
                 logging.warning(
                     f"Eudat shared folder({folder_name}) is already accepted and exists on the eudat's mounted folder."
                 )
-                if os.path.isfile(f"{env.OWN_CLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
+                if os.path.isfile(f"{env.OWNLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
                     self.folder_type_dict[folder_name] = "tar.gz"
                 else:
                     self.folder_type_dict[folder_name] = "folder"
+
             try:
-                info = self.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
+                info = config.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
+                logging.info("Shared folder is already accepted")
                 size = info.attributes["{DAV:}getcontentlength"]
                 folder_token_flag[folder_name] = True
                 logging.info(f"index={idx} /{folder_name}/{folder_name}.tar.gz => {size} bytes")
                 accept_flag += 1
             except Exception:
+                logging.warning("E: Shared folder did not accepted yet")
                 folder_token_flag[folder_name] = False
 
         try:  # TODO: pass on template'i ekle
             data = read_json(shareID_file)
-            self.shareID = data
+            if type(data) is dict and bool(data):
+                self.shareID = data
         except:
             pass
 
-        logging.info(f"shareID_dict={self.shareID}")
+        logging.info(f"share_id_dict={self.shareID}")
         for attempt in range(5):
             try:
-                share_list = self.oc.list_open_remote_share()
+                share_list = config.oc.list_open_remote_share()
             except Exception:
-                logging.error(f"E: Failed to list_open_remote_share eudat.\n{_colorize_traceback()}")
+                logging.error(f"E: Failed to list_open_remote_share eudat\n{_colorize_traceback()}")
                 time.sleep(1)
             else:
                 break
@@ -203,7 +202,7 @@ class EudatClass(Storage):
                         logging.info(
                             f"Found. name={folder_name} | share_id={share_id} | share_token={self.share_token}"
                         )
-                        self.oc.accept_remote_share(int(share_id))
+                        config.oc.accept_remote_share(int(share_id))
                         logging.info("shareID is accepted.")
                         accept_flag += 1
                         break
@@ -213,41 +212,40 @@ class EudatClass(Storage):
             if mongodb_accept_flag is len(self.source_code_hashes):
                 logging.info("Shared token a lready exists on mongodb")
             else:
-                logging.error(f"E: Couldn't find a shared file. Found ones are: {self.shareID}")
-                return False
+                logging.error(f"E: Could not find a shared file. Found ones are: {self.shareID}")
+                raise
 
         if bool(self.shareID):
             with open(shareID_file, "w") as f:
                 json.dump(self.shareID, f)
         else:
             logging.error("Something is wrong. shareID is {}.")
-            return False
+            raise
 
         size_to_download = 0
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
             if not self.is_already_cached[folder_name]:
-                info = self.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
+                info = config.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
                 size_to_download += int(info.attributes["{DAV:}getcontentlength"])
 
         logging.info(f"Total size to download={size_to_download}")
-        return True, byte_to_mb(size_to_download)
+        self.dataTransferIn_used = size_to_download
 
     def run(self) -> bool:
         # TODO: refund check
         log(f"[{get_time()}] New job has been received through EUDAT", "cyan")
-
         try:
             provider_info = get_provider_info(self.logged_job.args["provider"])
-            success, self.dataTransferIn_used = self.eudat_get_share_token(provider_info["fID"])
-            if not success:
-                return False
+            self.eudat_get_share_token(provider_info["fID"])
         except:
-            return False
+            logging.error("E: could not get the share id")
+            logging.info(_colorize_traceback())
+            raise
 
         if self.dataTransferIn_used > self.dataTransferIn_requested:
             logging.error(
-                "E: Requested size to download the source code and data files is greater that the given amount."
+                "E: Requested size to download the source code and data files is greater that the given amount"
             )
             return self.complete_refund()
 

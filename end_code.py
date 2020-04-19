@@ -16,17 +16,19 @@ import libs.git as git
 import libs.ipfs as ipfs
 import libs.mongodb as mongodb
 import libs.slurm as slurm
-from config import bp, load_log  # noqa: F401
+from config import bp, env, load_log  # noqa: F401
 from contractCalls.get_job_info import get_job_info, get_job_source_code_hashes
 from contractCalls.get_requester_info import get_requester_info
 from contractCalls.process_payment import process_payment
 from imports import connect
 from lib import (
+    WHERE,
     StorageID,
     calculate_folder_size,
     eblocbroker_function_call,
     is_dir,
     job_state_code,
+    log,
     remove_empty_files_and_folders,
     remove_files,
     run,
@@ -34,7 +36,6 @@ from lib import (
     silent_remove,
     subprocess_call,
 )
-from settings import WHERE, init_env
 from utils import (
     _colorize_traceback,
     byte_to_mb,
@@ -48,7 +49,6 @@ from utils import (
 
 eBlocBroker, w3 = connect()
 mc = MongoClient()
-env = init_env()
 
 
 class IpfsMiniLock(object):
@@ -183,10 +183,11 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
         # logging.info(f"=> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id
-        logging.info(f"~/eBlocBroker/end_code.py {args}")
-        logging.info(f"slurm_job_id={self.slurm_job_id}")
+
+        log(f"~/eBlocBroker/end_code.py {args}", "blue")
+        log(f"slurm_job_id={self.slurm_job_id}", "white")
         if self.job_key == self.index:
-            logging.error("job_key and index are same.")
+            logging.error("job_key and index are same")
             sys.exit(1)
 
         try:
@@ -222,17 +223,17 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
 
         remove_empty_files_and_folders(self.results_folder)
 
-        logging.info(f"whoami: {getpass.getuser()} - {os.getegid()}")
-        logging.info(f"home: {env.HOME}")
-        logging.info(f"pwd: {os.getcwd()}")
-        logging.info(f"results_folder: {self.results_folder}")
-        logging.info(f"job_key: {self.job_key}")
-        logging.info(f"index: {self.index}")
-        logging.info(f"cloud_storage_ids: {self.cloud_storage_ids}")
-        logging.info(f"folder_name: {self.folder_name}")
-        logging.info(f"providerID: {env.PROVIDER_ID}")
-        logging.info(f"requester_id_address: {requester_id_address}")
-        logging.info(f"received: {self.job_info['received']}")
+        log(f"whoami: {getpass.getuser()} - {os.getegid()}", "white")
+        log(f"home: {env.HOME}", "white")
+        log(f"pwd: {os.getcwd()}", "white")
+        log(f"results_folder: {self.results_folder}", "white")
+        log(f"job_key: {self.job_key}", "white")
+        log(f"index: {self.index}", "white")
+        log(f"cloud_storage_ids: {self.cloud_storage_ids}", "white")
+        log(f"folder_name: {self.folder_name}", "white")
+        log(f"providerID: {env.PROVIDER_ID}", "white")
+        log(f"requester_id_address: {requester_id_address}", "white")
+        log(f"received: {self.job_info['received']}", "white")
 
     def get_cloud_storage_class(self, _id):
         """Returns cloud storage used for the id of the data"""
@@ -306,7 +307,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
         for source_code_hash in self.source_code_hashes_to_process:
             try:
                 share_token = share_ids[source_code_hash]["share_token"]
-                self.share_tkens[source_code_hash] = share_token
+                self.share_tokens[source_code_hash] = share_token
                 self.encoded_share_tokens[source_code_hash] = base64.b64encode(
                     (f"{share_token}:").encode("utf-8")
                 ).decode("utf-8")
@@ -319,13 +320,11 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
                 if not success:
                     logging.error(f"E: share_id cannot detected from key: {self.job_key}")
                     return False
-        if success:
-            for key in share_ids:
-                value = share_ids[key]
-                encoded_value = self.encoded_share_tokens[key]
-                logging.info(
-                    "shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value)
-                )
+
+        for key in share_ids:
+            value = share_ids[key]
+            encoded_value = self.encoded_share_tokens[key]
+            logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
     def remove_source_code(self):
         """Client's initial downloaded files are removed."""

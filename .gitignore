@@ -1,5 +1,7 @@
 koo.py
 
+base/*.tar.gz
+
 base/*.tar.gz.minilock
 
 base/data/*.tar.gz.minilock
@@ -59,8 +61,6 @@ contractCalls/\.#registerCluster\.py
 contract/populus\.ini
 
 contract/migrations/__init__\.py
-
-eudat_password\.txt
 
 contracts/populus\.ini
 
