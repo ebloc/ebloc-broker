@@ -148,9 +148,11 @@ class JobPrices:
         self.cost["storage_cost"] = self.storage_cost
 
 
-def cost(
-    provider, requester, job, eB, w3, is_brownie=True,
-):
+def cost(provider, requester, job, eB, w3, is_brownie=False):
+    called_filename = path.basename(sys._getframe(1).f_code.co_filename)
+    if called_filename.startswith("test_"):
+        is_brownie = True
+
     print("\nEntered into cost calculation...")
     job.provider = provider
     job.requester = requester

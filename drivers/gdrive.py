@@ -4,15 +4,12 @@ import os
 import subprocess
 
 import libs.gdrive as gdrive
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 
 # from contractCalls.get_provider_info import get_provider_info
 from lib import WHERE, CacheType, calculate_folder_size, echo_grep_awk, log, run, silent_remove, subprocess_call
 from libs.storage_class import Storage
-from settings import init_env
 from utils import byte_to_mb, create_dir, generate_md5sum, get_time
-
-env = init_env()
 
 
 class GdriveClass(Storage):

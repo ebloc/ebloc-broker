@@ -2,13 +2,10 @@
 
 import sys
 
-from config import logging
+from config import env, logging
 from imports import connect
 from lib import get_tx_status
-from settings import init_env
 from utils import _colorize_traceback
-
-env = init_env()
 
 
 def transferOwnership(newOwner):

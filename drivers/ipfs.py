@@ -5,10 +5,9 @@ import shutil
 
 import libs.git as git
 import libs.ipfs as ipfs
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from lib import CacheType, StorageID, calculate_folder_size, is_ipfs_running, log, run_command, silent_remove
 from libs.storage_class import Storage
-from settings import init_env
 from utils import byte_to_mb, bytes32_to_ipfs, create_dir, get_time
 
 
@@ -21,8 +20,6 @@ class IpfsClass(Storage):
         self.cumulative_sizes = {}
 
     def decrypt_using_minilock(self, minilock_file, extract_target):
-        env = init_env()
-
         with open(f"{env.LOG_PATH}/mini_lock_pass.txt", "r") as content_file:
             _pass = content_file.read().strip()
 
@@ -52,17 +49,16 @@ class IpfsClass(Storage):
             cmd = None
             silent_remove(tar_file)
 
-    def check_ipfs(self, ipfs_hash) -> bool:
+    def check_ipfs(self, ipfs_hash) -> None:
         success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempt_count=1)
         if not success or not ("CumulativeSize" in ipfs_stat):
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
-            return False
+            raise
 
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
         logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
-        return True
 
     def run(self) -> bool:
         if self.cloudStorageID[0] == StorageID.IPFS.value:
@@ -78,15 +74,18 @@ class IpfsClass(Storage):
             os.makedirs(self.results_folder)
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
-        if not self.check_ipfs(self.job_key):
+        try:
+            self.check_ipfs(self.job_key)
+        except:
             return False
 
         for source_code_hash in self.source_code_hashes:
             ipfs_hash = bytes32_to_ipfs(source_code_hash)
             if ipfs_hash not in self.ipfs_hashes:
                 # job_key as data hash already may added to the list
-                success = self.check_ipfs(ipfs_hash)
-                if not success:
+                try:
+                    self.check_ipfs(ipfs_hash)
+                except:
                     return False
 
         initial_folder_size = calculate_folder_size(self.results_folder)

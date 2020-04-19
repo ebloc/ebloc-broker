@@ -2,13 +2,10 @@
 
 import sys
 
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from imports import connect
 from lib import StorageID
-from settings import init_env
 from utils import _colorize_traceback, ipfs_to_bytes
-
-env = init_env()
 
 
 def process_payment(
