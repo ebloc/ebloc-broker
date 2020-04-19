@@ -10,8 +10,7 @@ import traceback
 import base58
 from pygments import formatters, highlight, lexers
 
-import config
-from config import logging
+from config import env, logging
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -56,6 +55,8 @@ def ipfs_to_bytes32(hash_str: str):
 
 
 def ipfs_to_bytes(ipfs_hash: str) -> str:
+    import config
+
     ipfs_bytes_32 = ipfs_to_bytes32(ipfs_hash)
     return config.w3.toBytes(hexstr=ipfs_bytes_32)
 
@@ -68,15 +69,18 @@ def byte_to_mb(size_in_bytes: int) -> int:
 
 
 def generate_md5sum(path: str) -> str:
-    from settings import init_env
+    from lib import run
 
-    env = init_env()
     if os.path.isdir(path):
         script = f"{env.EBLOCPATH}/bash_scripts/generate_md5sum_for_folder.sh"
-        return subprocess.check_output(["bash", script, path]).decode("utf-8").rstrip()
+        return run(["bash", script, path])
     else:
-        tar_hash = subprocess.check_output(["md5sum", path]).decode("utf-8").strip()
-        return tar_hash.split(" ", 1)[0]
+        if os.path.isfile(path):
+            tar_hash = subprocess.check_output(["md5sum", path]).decode("utf-8").strip()
+            return tar_hash.split(" ", 1)[0]
+        else:
+            logging.error(f"{path} does not exist")
+            raise
 
 
 def create_dir(path: str) -> None:
@@ -114,10 +118,23 @@ def read_file(fname):
         file.close()
 
 
-def read_json(path):
+def read_json(path, is_dict=True):
     if os.path.isfile(path) and os.path.getsize(path) > 0:
         with open(path) as json_file:
-            return json.load(json_file)
+            data = json.load(json_file)
+            if is_dict:
+                if type(data) is dict:
+                    return data
+                else:
+                    return dict()
+            else:
+                if data:
+                    return data
+                else:
+                    return None
+
+    else:
+        return dict()
 
 
 def getsize(filename):
@@ -152,7 +169,7 @@ class Link:
         """Creates linked folders under data_link folder"""
         from os import listdir
         from os.path import isdir, join
-        from lib import run_command
+        from lib import run_command, printc
 
         if not paths:
             # instead of full path only returns folder names
@@ -172,6 +189,6 @@ class Link:
             self.data_map[folder_name] = folder_hash
             destination = f"{self.path_to}/{folder_hash}"
             run_command(["ln", "-sfn", target, destination])
-            logging.info(f"{target} is linked to {destination}")
+            printc(f"{target} [is linked to]\n{destination}", "blue")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash

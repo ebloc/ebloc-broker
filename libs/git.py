@@ -5,9 +5,8 @@ import time
 
 import git
 
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from lib import printc, run, run_command
-from settings import init_env
 from utils import getcwd, getsize, path_leaf
 
 
@@ -61,7 +60,6 @@ def diff_patch(path, source_code_hash, index, target_path):
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
     * This shows all the changes since the last commit, whether or not they have been staged for commit or not.
     """
-    env = init_env()
     is_file_empty = False
     printc(path)
     cwd_temp = getcwd()
@@ -136,9 +134,13 @@ def commit_changes(path) -> bool:
     if output == "total 0":
         logging.warning("There is no first commit")
     else:
-        repo.git.add(A=True)
+        changed_files = [item.a_path for item in repo.index.diff(None)]
+        if len(changed_files) > 0:
+            logging.info(f"Adding changed files:\{changed_files}")
+            repo.git.add(A=True)
+
         if len(repo.index.diff("HEAD")) == 0:
-            logging.info(f"{path} is already committed with the given changes")
+            logging.info(f"{path} is committed with the given changes")
             os.chdir(cwd_temp)
             return True
     try:
@@ -178,7 +180,7 @@ def is_repo(folders) -> bool:
     cwd_temp = getcwd()
     for idx, folder in enumerate(folders):
         os.chdir(folder)
-        if is_initialized(folder):
+        if not is_initialized(folder):
             logging.warning(f".git does not exits in {folder}. Applying: git init")
             success, output = run_command(["git", "init"])
             logging.info(output)

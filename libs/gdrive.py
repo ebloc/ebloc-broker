@@ -4,29 +4,19 @@ import json
 import os
 import subprocess
 
-from config import bp, logging  # noqa: F401
+from config import bp, env, logging  # noqa: F401
 from lib import echo_grep_awk, run, subprocess_call
-from settings import init_env
 from utils import _colorize_traceback, byte_to_mb, read_json
-
-env = init_env()
 
 
 def list(tar_hash, is_folder=False):
     if is_folder:
-        output = (
-            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}'", "--no-header"])
-            .decode("utf-8")
-            .strip()
-        )
+        filename = f"name='{tar_hash}'"
     else:
-        output = (
-            subprocess.check_output(["gdrive", "list", "--query", f"name='{tar_hash}.tar.gz'", "--no-header",])
-            .decode("utf-8")
-            .strip()
-        )
-        #  output = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tar_hash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()
-    return output
+        filename = f"name='{tar_hash}.tar.gz'"
+
+    # run(['gdrive', 'list', '--query', 'name contains \'' + tar_hash + '.tar.gz' + '\'', '--no-header'])
+    return run(["gdrive", "list", "--query", filename, "--no-header",])
 
 
 def upload_internal(dir_path, tar_hash, is_folder=False):

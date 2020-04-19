@@ -18,8 +18,7 @@ from termcolor import colored
 
 import config
 import libs.mongodb as mongodb
-from config import bp, logging  # noqa: F401
-from settings import WHERE, init_env
+from config import bp, env, logging  # noqa: F401
 from utils import Link, _colorize_traceback, byte_to_mb, create_dir, generate_md5sum, no, read_json, write_to_file, yes
 
 
@@ -92,6 +91,15 @@ job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 
+def WHERE(back=0):
+    try:
+        frame = sys._getframe(back + 1)
+    except:
+        frame = sys._getframe(1)
+
+    return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name,)
+
+
 def printc(text, color="white"):
     print(colored(f"\033[1m{text}\033[0m", color))
 
@@ -111,7 +119,6 @@ def run_driver_cancel():
 
 
 def run_whisper_state_receiver():
-    env = init_env()
     """Runs driverReceiver daemon on the background."""
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
         # first time running
@@ -203,20 +210,23 @@ def calculate_folder_size(path) -> float:
     return byte_to_mb(byte_size)
 
 
-def log(text, color="", filename=None):
+def log(text, color=None, filename=None):
     if not filename:
-        env = init_env()
-        filename = f"{env.LOG_PATH}/transactions/provider.log"
+        if config.log_filename:
+            filename = config.log_filename
+        else:
+            filename = f"{env.LOG_PATH}/transactions/provider.log"
 
     if color:
-        print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color))
+        printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color))
+        f = open(filename, "a")
+        f.write(colored(f"{COLOR.BOLD}{text}\n{COLOR.END}", color))
+        f.close()
     else:
-        printc(text)
-        # print(text, end="")  # no newline
-
-    f = open(filename, "a")
-    f.write(text)
-    f.close()
+        print(text)
+        f = open(filename, "a")
+        f.write(text + "\n")
+        f.close()
 
 
 def print_trace(cmd):
@@ -355,7 +365,6 @@ def is_ipfs_on() -> bool:
 
 def is_geth_on():
     """ Checks whether geth runs on the background."""
-    env = init_env()
     port = str(env.RPC_PORT)
     port = insert_character(port, 1, "]")
     port = insert_character(port, 0, "[")
@@ -379,7 +388,6 @@ def is_transaction_passed(tx_hash) -> bool:
 
 def is_ipfs_running():
     """ Checks that does IPFS run on the background or not."""
-    env = init_env()
     output = is_ipfs_on()
     if output:
         return True
@@ -428,13 +436,14 @@ def compress_folder(folder_to_share):
     os.chdir(dir_path)
 
     # tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
-    # cmd: find exampleFolderToShare -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf exampleFolderToShare.tar.gz
+    # cmd: find . -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf $tar_hash.tar.gz
     p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
     p1.stdout.close()
     p3 = subprocess.Popen(
         [
             "tar",
+            "-Ipigz",
             "--mode=a+rwX",
             "--owner=0",
             "--group=0",
@@ -444,7 +453,7 @@ def compress_folder(folder_to_share):
             "--null",
             "-T",
             "-",
-            "-zcvf",
+            "-cvf",
             f"{base_name}.tar.gz",
         ],
         stdin=p2.stdout,

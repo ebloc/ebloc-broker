@@ -3,15 +3,16 @@
 import os
 import os.path
 import pickle
+import shutil
 import subprocess
 import time
 import traceback
 
 import owncloud
 
-from config import bp, logging  # noqa: F401
+import config
+from config import bp, env, logging  # noqa: F401
 from lib import compress_folder, printc, run, terminate
-from settings import init_env
 from utils import _colorize_traceback
 
 
@@ -53,7 +54,7 @@ def upload_results(encoded_share_token, output_file_name, results_folder_prev, a
         output = output.strip().decode("utf-8")
         error = error.decode("utf-8")
         if p.returncode != 0 or "<d:error" in output:
-            logging.error("E: EUDAT repository did not successfully loaded.")
+            logging.error("E: EUDAT repository did not successfully loaded")
             logging.error(f"E: curl is failed. {p.returncode} => {error.decode('utf-8')}. {output}")
             time.sleep(1)  # wait 1 second for next step retry to upload
         else:  # success on upload
@@ -66,20 +67,18 @@ def upload_results(encoded_share_token, output_file_name, results_folder_prev, a
 
 
 def login(user, password_path, fname):
-    logging.info("Login into owncloud...")
-
+    logging.info(f"Login into owncloud user:{user}")
     if os.path.isfile(fname):
         f = open(fname, "rb")
-        oc = pickle.load(f)
+        config.oc = pickle.load(f)
         try:
             printc("Reading from the dumped object...", "blue")
             # oc.list(".")  # uncomment
             logging.info("SUCCESS. Read from dumped object.")
-            return oc
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
 
-    oc = owncloud.Client("https://b2drop.eudat.eu/")
+    config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     if not user:
         logging.error(f"E: User is empty")
         terminate()
@@ -89,29 +88,25 @@ def login(user, password_path, fname):
 
     for attempt in range(5):
         try:
-            oc.login(user, password)
+            config.oc.login(user, password)
             password = None
             f = open(fname, "wb")
-            pickle.dump(oc, f)
+            pickle.dump(config.oc, f)
             f.close()
-            logging.info("SUCCESS")
-            return oc
         except Exception:
             _traceback = traceback.format_exc()
             logging.error(_colorize_traceback())
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
-                logging.warning("Sleeping for 15 seconds to overcome the max retries that exceeded.")
+                logging.warning("Sleeping for 15 seconds to overcome the max retries that exceeded")
                 time.sleep(15)
             else:
-                logging.error(f"User is none")
+                logging.error(f"E: User is None object")
                 terminate()
         else:
             break
     else:
-        logging.error("User is none")
+        logging.error("E: User is None object")
         terminate()
-
-    return oc
 
 
 def share_single_folder(folder_name, oc, fID) -> bool:
@@ -133,23 +128,35 @@ def share_single_folder(folder_name, oc, fID) -> bool:
 def initialize_folder(folder_to_share, oc) -> str:
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, tar_path = compress_folder(folder_to_share)
-    try:
-        output = oc.mkdir(tar_hash)
-        print(output)
-    except Exception:
-        printc("Folder is already created", "blue")
+    tar_source = f"{dir_path}/{tar_hash}.tar.gz"
 
     try:
-        tar_file = f"./{tar_hash}/{tar_hash}.tar.gz"
-        print(tar_file)
-        success = oc.put_file(tar_file, f"{dir_path}/{tar_hash}.tar.gz")
-        if not success:
-            raise Exception("oc could not connected put the file")
+        oc.mkdir(tar_hash)
+    except Exception as e:
+        if "405" not in str(e):
+            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}"):
+                try:
+                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}")
+                except:
+                    raise
+            else:
+                printc("Folder is already created", "blue")
+        else:
+            printc("Folder is already created", "blue")
 
-        os.remove(f"{dir_path}/{tar_hash}.tar.gz")
-    except Exception:
-        print(_colorize_traceback())
-        raise Exception("oc could not connected to upload the file")
+    tar_dst = f"{tar_hash}/{tar_hash}.tar.gz"
+
+    try:
+        oc.put_file(f"./{tar_dst}", tar_source)
+        os.remove(tar_source)
+    except Exception as e:
+        if type(e).__name__ == "HTTPResponseError":
+            try:
+                shutil.copyfile(tar_source, f"{env.OWNCLOUD_PATH}/{tar_dst}")
+            except:
+                raise
+        else:
+            raise Exception("oc could not connected in order to upload the file")
 
     return tar_hash
 

@@ -10,13 +10,6 @@ from dotenv import load_dotenv
 
 import _utils.colorer  # noqa: F401
 
-eBlocBroker = None
-w3 = None
-driver_cancel_process = None
-whisper_state_receiver_process = None
-env = None
-colored_traceback.add_hook(always=True)
-
 
 class Web3NotConnected(Exception):
     pass
@@ -44,7 +37,7 @@ class ENV:
         self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self.GDRIVE_METADATA = f"/home/{self.WHOAMI}/.gdrive"
         self.IPFS_REPO = f"/home/{self.WHOAMI}/.ipfs"
-        self.OWN_CLOUD_PATH = "/oc"
+        self.OWNCLOUD_PATH = "/oc"
 
         self.PROGRAM_PATH = "/var/eBlocBroker"
         self.JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/test.txt"
@@ -52,6 +45,7 @@ class ENV:
         self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/blockReadFrom.txt"
         self.CANCEL_BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledBlockReadFrom.txt"
         self.OC_CLIENT = f"{self.LOG_PATH}/.oc_client.pckl"
+        self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
         else:
@@ -67,6 +61,8 @@ def load_log(log_path=""):
         log.removeHandler(hdlr)
 
     if log_path:
+        global log_filename
+        log_filename = log_path
         logging.basicConfig(
             level=logging.INFO,
             # format="%(asctime)s %(levelname)-8s [%(module)s %(lineno)d] %(message)s",
@@ -83,3 +79,13 @@ def load_log(log_path=""):
         )
 
     return logging
+
+
+eBlocBroker = None
+w3 = None
+oc = None
+log_filename = None
+driver_cancel_process = None
+whisper_state_receiver_process = None
+colored_traceback.add_hook(always=True)
+env = ENV()
