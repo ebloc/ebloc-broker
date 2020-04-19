@@ -158,7 +158,7 @@ def test_stored_data_usage(eB, rpc, web3):
         job.dataTransferOut,
     ]
 
-    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
     # first time job is submitted with the data files
     tx = eB.submitJob(
@@ -176,7 +176,7 @@ def test_stored_data_usage(eB, rpc, web3):
     print(tx.events["LogJob"]["jobKey"])
     assert cost["storage_cost"] == 2
 
-    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
     print("jobIndex=" + str(tx.events["LogJob"]["index"]))
     print(tx.events["LogJob"]["jobKey"])
@@ -207,7 +207,7 @@ def test_stored_data_usage(eB, rpc, web3):
     print("Passing 1 hour time...")
     rpc.mine(241)
 
-    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
     # first time job is submitted with the data files
     tx = eB.submitJob(
@@ -257,7 +257,7 @@ def test_computational_refund(eB, rpc, web3):
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
     providerPriceBlockNumber = eB.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
@@ -331,7 +331,7 @@ def test_storage_refund(eB, rpc, web3):
     # provider's registered data won't be used
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
     job_price += 1  # for test 1 wei extra is paid
     args = [
@@ -529,7 +529,7 @@ def test_multipleData(eB, rpc, web3):
         job.dataTransferOut,
     ]
 
-    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+    job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
     # first time job is submitted with the data files
     tx = eB.submitJob(
@@ -912,7 +912,7 @@ def test_submitJob(eB, rpc, web3):
             ]
 
             # print(source_code_hashes[0])
-            job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3,)
+            job_price, cost = scripts.lib.cost(provider, requester, job, eB, web3)
 
             job_priceSum += job_price
             dataTransferIns = [100]

@@ -5,7 +5,6 @@ import pwd
 
 def username_check(check):
     """Check if username exists."""
-
     try:
         pwd.getpwnam(check)
         print("USER %s EXISTS. TRY A DIFFERENT USERNAME." % (check))
@@ -16,7 +15,5 @@ def username_check(check):
         return True
 
 
-success = username_check("alper1k")
-
-if not success:
+if not username_check("alper1k"):
     print("here")

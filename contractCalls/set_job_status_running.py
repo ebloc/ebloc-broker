@@ -2,15 +2,13 @@
 
 import sys
 
-from config import logging  # noqa: F401
+from config import env, logging  # noqa: F401
 from imports import connect
-from settings import init_env
 from utils import _colorize_traceback
 
 
 def set_job_status_running(_key, index, job_id, startTime):
     eBlocBroker, w3 = connect()
-    env = init_env()
 
     try:
         tx = eBlocBroker.functions.setJobStatusRunning(_key, int(index), int(job_id), int(startTime)).transact(

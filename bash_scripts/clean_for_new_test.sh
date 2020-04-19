@@ -24,6 +24,6 @@ rm -f  $HOME/.eBlocBroker/transactions/*
 cat /dev/null > $HOME/.eBlocBroker/providerDriver.out
 
 ./killall.sh
-./clean.sh
+clean.sh
 
 python3 -uB $HOME/eBlocBroker/contractCalls/get_block_number.py True > $HOME/.eBlocBroker/blockReadFrom.txt

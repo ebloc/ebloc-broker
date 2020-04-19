@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
+from config import env
 from lib import check_linked_data
-from settings import init_env
 from utils import Link, create_dir
-
-env = init_env()
 
 if __name__ == "__main__":
     path_from = f"{env.EBLOCPATH}/base/data"
