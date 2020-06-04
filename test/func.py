@@ -6,13 +6,14 @@ import time
 from os.path import expanduser
 from random import randint
 
-from contractCalls.get_block_number import get_block_number
-from contractCalls.submitJob import submitJob
+import eblocbroker.Contract as Contract
 from imports import connect_to_web3
-from lib import is_transaction_passed
+from utils import is_transaction_passed
 
 home = expanduser("~")
 w3 = connect_to_web3()
+ebb = Contract.eblocbroker
+
 
 f = open(f"{home}/TESTS/accountPassword.txt", "r")  # password read from the file
 accountPassword = f.read().strip()
@@ -55,7 +56,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             jobKey = line.rstrip().split(" ")
             sourceCodeHash = jobKey[5]  # time to sleep in seconds
             sleepTime = jobKey[6]  # time to sleep in seconds
-            block_number = get_block_number()
+            block_number = ebb.get_block_number()
 
             log(
                 "Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + str(block_number),
@@ -96,7 +97,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             )
 
             log(
-                "submitJob("
+                "submit_job("
                 + providerID
                 + ", "
                 + jobKey_
@@ -120,11 +121,11 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 path,
             )
 
-            output = submitJob(
+            output = ebb.submit_job(
                 provider,
                 jobKey,
                 core_list,
-                core_execution_durations,
+                execution_durations,
                 dataTransferIn,
                 dataTransferOut,
                 cloudStorageID,
@@ -135,7 +136,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 job_price,
             )
 
-            # ret = submitJob(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, account_id)  # delete
+            # ret = submit_job(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, account_id)  # delete
 
             if not success:
                 log(output, path, 0)

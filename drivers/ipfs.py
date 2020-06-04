@@ -5,17 +5,17 @@ import shutil
 
 import libs.git as git
 import libs.ipfs as ipfs
-from config import bp, env, logging  # noqa: F401
-from lib import CacheType, StorageID, calculate_folder_size, is_ipfs_running, log, run_command, silent_remove
-from libs.storage_class import Storage
-from utils import byte_to_mb, bytes32_to_ipfs, create_dir, get_time
+from config import ThreadFilter, bp, env, logging, setup_logger  # noqa: F401
+from drivers.storage_class import Storage
+from lib import calculate_folder_size, is_ipfs_running, run, run_command, silent_remove
+from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, create_dir, get_time, log
 
 
 class IpfsClass(Storage):
-    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached, oc=None):
-        super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached, oc)
+    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached):
+        super().__init__(logged_job, jobInfo, requester_id, is_already_cached)
         # cache_type is always public on IPFS
-        self.cache_type = CacheType.PUBLIC.value
+        self.cache_type = CacheType.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
 
@@ -34,13 +34,15 @@ class IpfsClass(Storage):
         ]
         _pass = None
 
-        success, output = run_command(cmd)
-        if not success:
+        try:
+            run(cmd)
+        except:
             silent_remove(minilock_file)
-            return False
+            raise
+
         try:
             silent_remove(minilock_file)
-            logging.info(f"mlck decrypt: SUCCESS")
+            logging.info("mlck decrypt: SUCCESS")
             run_command(["tar", "-xvf", tar_file, "-C", extract_target, "--strip", "1"])
         except:
             logging.error("E: Could not decrypt the given file")
@@ -51,7 +53,7 @@ class IpfsClass(Storage):
 
     def check_ipfs(self, ipfs_hash) -> None:
         success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempt_count=1)
-        if not success or not ("CumulativeSize" in ipfs_stat):
+        if not success or "CumulativeSize" not in ipfs_stat:
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
             raise
 
@@ -61,10 +63,21 @@ class IpfsClass(Storage):
         logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
 
     def run(self) -> bool:
-        if self.cloudStorageID[0] == StorageID.IPFS.value:
-            log(f"[{get_time()}] Job's source code has been sent through IPFS", "cyan")
+        self.thread_log_setup()
+        setup_logger(self.drivers_log_path)
+
+        if self.cloudStorageID[0] == StorageID.IPFS:
+            log(
+                f"[{get_time()}] Job's source code has been sent through IPFS ",
+                "---------------------------------------------------------",
+                "cyan",
+            )
         else:
-            log(f"[{get_time()}] Job's source code has been sent through IPFS_MINILOCK", "cyan")
+            log(
+                f"[{get_time()}] Job's source code has been sent through IPFS_MINILOCK ",
+                "---------------------------------------------------------",
+                "cyan",
+            )
 
         if not is_ipfs_running():
             return False
@@ -107,10 +120,10 @@ class IpfsClass(Storage):
             is_storage_paid = False  # TODO: should be set before by user input
             ipfs.get(ipfs_hash, target, is_storage_paid)
             if idx > 0:
-                shutil.move(target, f"{self.results_data_folder}/{ipfs_hash}")  # unix mv command
+                shutil.move(target, f"{self.results_data_folder}/{ipfs_hash}")  # UNIX 'mv' command
                 target = f"{self.results_data_folder}/{ipfs_hash}"
 
-            if self.cloudStorageID[idx] == StorageID.IPFS_MINILOCK.value:
+            if self.cloudStorageID[idx] == StorageID.IPFS_MINILOCK:
                 self.decrypt_using_minilock(f"{target}/{ipfs_hash}", target)
 
             if not git.initialize_check(target):
@@ -118,14 +131,13 @@ class IpfsClass(Storage):
 
             if not is_hashed:
                 folder_size = calculate_folder_size(self.results_folder)
-                self.dataTransferIn_used += folder_size - initial_folder_size
+                self.dataTransferIn_to_download += folder_size - initial_folder_size
                 initial_folder_size = folder_size
-                # self.dataTransferIn_used += byte_to_mb(cumulative_size)
+                # self.dataTransferIn_to_download += byte_to_mb(cumulative_size)
 
             if idx == 0 and not self.check_run_sh():
-                # TODO: refund
-                success = self.complete_refund()
+                self.complete_refund()
                 return False
 
-        logging.info(f"dataTransferIn={self.dataTransferIn_used} MB | Rounded={int(self.dataTransferIn_used)} MB")
+        log(f"dataTransferIn={self.dataTransferIn_to_download} MB | Rounded={int(self.dataTransferIn_to_download)} MB")
         return self.sbatch_call()

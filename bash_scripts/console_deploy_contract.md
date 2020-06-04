@@ -43,11 +43,11 @@ sed -i 's/\/\*emit\*\//emit/g'            $HOME/myContract/eBlocBroker.sol
 sed -i 's/\/\*payable\*\//payable/g'            $HOME/myContract/eBlocBroker.sol
 sed -i 's/\/\*payable\*\//payable/g'            $HOME/myContract/Lib.sol
 sed -i 's/function eBlocBroker()/constructor()/g' $HOME/myContract/eBlocBroker.sol
-head -7    $HOME/myContract/eBlocBroker.sol > $HOME/myContract/e.sol 
+head -7    $HOME/myContract/eBlocBroker.sol > $HOME/myContract/e.sol
 tail -n+3  $HOME/myContract/eBlocBrokerInterface.sol >> $HOME/myContract/e.sol
-echo "" >> $HOME/myContract/e.sol 
+echo "" >> $HOME/myContract/e.sol
 tail -n+11 $HOME/myContract/eBlocBroker.sol >> $HOME/myContract/e.sol
-echo "" >> $HOME/myContract/e.sol 
+echo "" >> $HOME/myContract/e.sol
 tail -n+9  $HOME/myContract/Lib.sol >> $HOME/myContract/e.sol
 sed -i 's/\^0.4.17/\^0.5.2/g' $HOME/myContract/e.sol
 sed -i 's/import \".\/Lib.sol\";//g' $HOME/myContract/e.sol
@@ -129,8 +129,8 @@ testOutput.contracts["e.sol:eBlocBroker"].abi
 ```
 
 ```
-cd $HOME/eBlocBroker/contractCalls/
-nano address.json # cp eBlocBroker mined! address =========> contractCalls/address.json
-nano abi.json     # cp printed_ABI                =========> contractCalls/abi.json
+cd $HOME/eBlocBroker/eblocbroker/
+nano address.json # cp eBlocBroker mined! address =========> eblocbroker/address.json
+nano abi.json     # cp printed_ABI                =========> eblocbroker/abi.json
 ./fixAbi.sh
 ```

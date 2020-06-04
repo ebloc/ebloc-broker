@@ -2,7 +2,10 @@
 
 pyclean docs/
 
+find . -name '.DS_Store' -delete
 find . -name '*.pyc' -delete
+find . -name 'flycheck_*.py' -delete
+
 find . -name 'nohup.out' -delete
 find . -name '*_flymake.py' -delete
 find . -name '*.*~' -delete
@@ -21,4 +24,4 @@ rm -rf docs/_build_html/
 rm -rf __pycache__/
 rm -rf docs/_build/
 
-echo 'Cleaning is completed!'
+echo -e "Cleaning is completed"
