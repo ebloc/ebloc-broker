@@ -6,7 +6,6 @@
 
 pragma solidity ^0.6.0;
 
-
 interface eBlocBrokerInterface {
     // Logged when the provider calls the receiveDeposit() method. Records the completed jobs' information under receiveDeposit() method call.
     event LogProcessPayment(
@@ -40,22 +39,24 @@ interface eBlocBrokerInterface {
         uint256 refunded
     );
 
-    // Records the registered providers' registered information under registerProvider() method call.  (fID stands for federationCloudId)
+    // Records the registered providers' registered information under
+    // registerProvider() method call.  (fID stands for federationCloudId)
     event LogProviderInfo(
         address indexed provider,
+        bytes32 gpgFingerprint,
         string email,
         string fID,
-        string miniLockID,
         string ipfsID,
         string whisperID
     );
 
-    // Records the registered requesters' registered information under registerRequester() method call.
+    // Records the registered requesters' registered information under
+    // registerRequester() method call.
     event LogRequester(
         address indexed requester,
+        bytes32 gpgFingerprint,
         string email,
         string fID,
-        string miniLockID,
         string ipfsID,
         string githubUsername,
         string whisperID
@@ -75,9 +76,10 @@ interface eBlocBrokerInterface {
 
     /**
        @notice
-       * For the requested job, the LogStorageDeposit() event logs the storage deposit transferred to its provider,
-       * which was processed either by the submitJob() or the receiveStorageDeposit() function.
-       */
+       * For the requested job, the LogStorageDeposit() event logs the storage
+         deposit transferred to its provider, which was processed either by the
+         submitJob() or the receiveStorageDeposit() function.
+     */
     event LogStorageDeposit(address indexed paidAddress, uint256 payment);
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);

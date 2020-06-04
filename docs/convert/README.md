@@ -108,13 +108,13 @@ sbatch -U science -N1 run.sh
 Submitted batch job 1
 ```
 
-#### Running `IPFS`, `Parity` and eBlocBroker scripts on the background:
+#### Running `IPFS`, and eBlocBroker scripts on the background:
 
 ```bash
 ipfs daemon &
 nohup eblocpserver &
 cd $EBLOCBROKER
-nohup python py_providerDriver.py &
+nohup ./runDaemon.sh &
 ```
 
 ----
@@ -142,7 +142,7 @@ ipfsID             = "QmXsbsmdvHkn2fPSS9fXnSH2YZ382f8nNVojYbELsBEbKb"; //recieve
 eBlocBroker.createProvider(coreNumber, providerName, federationCloudId, provider_minilock_id, corePriceMinuteWei, ipfsID;
 ```
 
-**Trigger code on start and end of the submitted job:** Provider should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/slurmScript.sh`
+**Trigger code on start and end of the submitted job:** Provider should do: `sudo chmod +x /path/to/slurmScript.sh`. This will allow script to be readable and executable by any SlurmUser. Update following line on the slurm.conf file: `MailProg=/home/ubuntu/eBlocBroker/bash_scripts/slurmScript.sh`
 
 ```bash
 sudo chmod 755 ~/.eBlocBroker/*

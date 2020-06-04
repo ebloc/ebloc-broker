@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 
+import os
 from os import path, sys
 from pdb import set_trace as bp  # noqa: F401
 
-from lib import CacheType, StorageID
-from utils import _colorize_traceback
+from utils import CacheType, StorageID, _colorize_traceback, log
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 
+zero_address = "0x0000000000000000000000000000000000000000"
+zero_bytes32 = "0x00"
+
+
 class DataStorage:
-    def __init__(self, eB, w3, provider, source_code_hash, brownie=False) -> None:
-        if brownie:
+    def __init__(self, eB, w3, provider, source_code_hash, is_brownie=False) -> None:
+        if is_brownie:
             output = eB.getJobStorageTime(provider, source_code_hash)
         else:
             if not w3.isChecksumAddress(provider):
                 provider = w3.toChecksumAddress(provider)
-
             output = eB.functions.getJobStorageTime(provider, source_code_hash).call({"from": provider})
 
         self.received_block = output[0]
@@ -27,17 +30,17 @@ class DataStorage:
 
 class Job:
     def __init__(self, **kwargs) -> None:
-        self.core_execution_durations = []
+        self.execution_durations = []
         self.folders_to_share = []  # path of folder to share
         self.source_code_hashes = []
         self.storage_hours = []
-        self.core_execution_durations = []
+        self.execution_durations = []
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def check(self):
         try:
-            assert len(self.cores) == len(self.core_execution_durations)
+            assert len(self.cores) == len(self.execution_durations)
             assert len(self.source_code_hashes) == len(self.storage_hours)
             assert len(self.storage_hours) == len(self.storage_ids)
             assert len(self.cache_types) == len(self.storage_ids)
@@ -45,9 +48,9 @@ class Job:
             for idx, storage_id in enumerate(self.storage_ids):
                 assert storage_id <= 4
                 if storage_id == StorageID.IPFS:
-                    assert self.cache_types[idx] == CacheType.PUBLIC.value
+                    assert self.cache_types[idx] == CacheType.PUBLIC
         except:
-            print(_colorize_traceback())
+            _colorize_traceback()
             raise
 
 
@@ -63,7 +66,7 @@ class JobPrices:
         self.storage_cost = 0
         self.dataTransferIns_sum = 0
         self.job_price = 0
-        self.cost = {}
+        self.cost = dict()
 
         if is_brownie:
             provider_info = eB.getProviderInfo(job.provider, 0)
@@ -80,15 +83,14 @@ class JobPrices:
     def set_computational_cost(self):
         self.computational_cost = 0
         for idx, core in enumerate(self.job.cores):
-            self.computational_cost += int(self.price_core_min * core * self.job.core_execution_durations[idx])
+            self.computational_cost += int(self.price_core_min * core * self.job.execution_durations[idx])
 
     def set_storage_cost(self):
-        """ Calculating the cache cost """
+        """Calculating the cache cost."""
         self.storage_cost = 0
         self.cache_cost = 0
         dataTransferIns_sum = 0
         block_number = self.w3.eth.blockNumber
-
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
             ds = DataStorage(self.eB, self.w3, self.job.provider, source_code_hash, self.is_brownie)
             if self.is_brownie:
@@ -138,14 +140,13 @@ class JobPrices:
 
     def set_job_price(self):
         self.job_price = self.computational_cost + self.dataTransfer_cost + self.cache_cost + self.storage_cost
-        print(
-            f"\njob_price={self.job_price} <=> "
-            f"cache_cost={self.cache_cost} | storage_cost={self.storage_cost} | dataTransfer_cost={self.dataTransfer_cost} | computational_cost={self.computational_cost}"
-        )
+        log(f"job_price={self.job_price}", "blue")
         self.cost["computational_cost"] = self.computational_cost
         self.cost["dataTransfer_cost"] = self.dataTransfer_cost
         self.cost["cache_cost"] = self.cache_cost
         self.cost["storage_cost"] = self.storage_cost
+        for key, value in self.cost.items():
+            log(f"\t=> {key}={value}", "blue")
 
 
 def cost(provider, requester, job, eB, w3, is_brownie=False):
@@ -164,3 +165,9 @@ def cost(provider, requester, job, eB, w3, is_brownie=False):
     jp.set_job_price()
 
     return jp.job_price, jp.cost
+
+
+def new_test():
+    rows, columns = os.popen("stty size", "r").read().split()
+    line = "-" * int(columns)
+    print("\x1b[6;30;43m" + line + "\x1b[0m")

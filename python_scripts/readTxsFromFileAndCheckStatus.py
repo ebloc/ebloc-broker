@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import lib
 from imports import connect_to_web3
+from utils import is_transaction_passed
 
 web3 = connect_to_web3()
 
@@ -10,6 +10,6 @@ with open("dum.txt") as f:
 
 for i in range(0, len(lines)):
     tx = lines[i]
-    output = lib.is_transaction_passed(web3, tx)
+    output = is_transaction_passed(web3, tx)
     if not output:
         print(tx + " " + str(output))

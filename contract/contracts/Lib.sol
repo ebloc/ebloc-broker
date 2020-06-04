@@ -6,7 +6,6 @@
 
 pragma solidity ^0.6.0;
 
-
 library Lib {
     enum CacheType {
         PUBLIC, /* 0 */
@@ -26,22 +25,47 @@ library Lib {
     enum JobStateCodes {
         /* Following states {0, 1, 2} will allow to request refund */
         SUBMITTED, /* 0 Initial state */
-        PENDING, /* 1 Indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run. */
-        RUNNING, /* 2 The job currently is allocated to a node and is running. Corresponding data files are downloaded and verified.*/
+        PENDING,
+        /* 1 Indicates when a request is receieved by the provider. The
+         * job is waiting for resource allocation. It will eventually
+         * run. */
+        RUNNING,
+        /* 2 The job currently is allocated to a node and is
+         * running. Corresponding data files are downloaded and
+         * verified.*/
         /* Following states {3, 4, 5} used to prevent double spending */
         REFUNDED, /* 3 Indicates if job is refunded */
-        CANCELLED, /* 4 Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. Set by the requester*/
-        COMPLETED, /* 5 The job has completed successfully and deposit is paid to the provider */
+        CANCELLED,
+        /* 4 Job was explicitly cancelled by the requester or system
+         * administrator. The job may or may not have been
+         * initiated. Set by the requester*/
+        COMPLETED,
+        /* 5 The job has completed successfully and deposit is paid
+         * to the provider */
         TIMEOUT, /* 6 Job terminated upon reaching its time limit. */
         COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT /* 7  */
     }
 
     struct JobArgument {
-        address payable provider; /* An Ethereum address value containing the Ethereum address of the provider that is requested to run the job. */
-        uint32 providerPriceBlockIndex; /* A uint32 value containing the block number when the requested provider set its prices most recent. */
-        uint8[] cloudStorageID; /* An array of uint8 values that denote whether the requester’s data is stored and shared using either IPFS, EUDAT, IPFS (with MiniLock encryption), or Google Drive. */
-        uint8[] cacheType; /* An array of uint8 values that denote whether the requester’s data will be cached privately within job owner's home directory, or publicly for other requesters' access within a shared directory for all the requesters. */
-        uint32[] dataPricesSetBlockNum; /* An array of uint32 values that denote whether the provider’s registered data will be used or not. */
+        /* An Ethereum address value containing the Ethereum address of the
+         * provider that is requested to run the job. */
+        address payable provider;
+        /* A uint32 value containing the block number when the requested
+         * provider set its prices most recent. */
+        uint32 providerPriceBlockIndex;
+        /* An array of uint8 values that denote whether the requester’s data is
+	   stored and shared using either IPFS, EUDAT, IPFS (with MiniLock
+	   encryption), or Google Drive. */
+        uint8[] cloudStorageID;
+        /* An array of uint8 values that denote whether the requester’s data
+	    will be cached privately within job owner's home directory, or
+	    publicly for other requesters' access within a shared directory for
+	    all the requesters.
+	 */
+        uint8[] cacheType;
+        /* An array of uint32 values that denote whether the provider’s
+         * registered data will be used or not. */
+        uint32[] dataPricesSetBlockNum;
         uint16[] core;
         uint16[] executionDuration;
         uint32 dataTransferOut;

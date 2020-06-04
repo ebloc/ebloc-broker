@@ -6,7 +6,6 @@ For experiment purposes reqisters 10 users from prc-95
 
 from os.path import expanduser
 
-from contractCalls.register_requester import register_requester
 from imports import connect
 
 home = expanduser("~")
@@ -24,6 +23,7 @@ for i in range(0, accoutLength):
     account = w3.eth.accounts[i]
     tx = register_requester(account_id, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
     print(account + " | " + str(i) + " | " + tx)
+
 print("")
 print("[", end="")
 for i in range(0, accoutLength):

@@ -2,30 +2,31 @@
 
 from pymongo import MongoClient
 
+import eblocbroker.Contract as Contract
 from config import env
-from contractCalls.get_block_number import get_block_number
-from contractCalls.getJobStorageTime import getJobStorageTime
 from imports import connect
-from lib import StorageID, run_command, silent_remove
+from lib import run_command, silent_remove
+from utils import StorageID
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
 eBlocBroker, w3 = connect()
+ebb = Contract.eblocbroker
 
 """find_all"""
-block_number = get_block_number()
+block_number = ebb.get_block_number()
 print(block_number)
 
 storageID = None
 cursor = coll.find({})
 for document in cursor:
     # print(document)
-    received_block_number, storage_time = getJobStorageTime(env.PROVIDER_ID, document["sourceCodeHash"])
+    received_block_number, storage_time = ebb.get_job_storage_time(env.PROVIDER_ID, document["sourceCodeHash"])
     endBlockTime = received_block_number + storage_time * 240
     storageID = document["storageID"]
     if endBlockTime < block_number and received_block_number != 0:
-        if storageID == StorageID.IPFS or storageID == StorageID.IPFS_MINILOCK:
+        if storageID in (StorageID.IPFS, StorageID.IPFS_MINILOCK):
             ipfsHash = document["jobKey"]
             cmd = ["ipfs", "pin", "rm", ipfsHash]
             success, output = run_command(cmd)

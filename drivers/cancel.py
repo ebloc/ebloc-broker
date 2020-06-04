@@ -3,30 +3,31 @@
 import subprocess
 import time
 
-from config import env, load_log
-from contractCalls.get_deployed_block_number import get_deployed_block_number
-from contractCalls.LogJob import LogJob
+import eblocbroker.Contract as Contract
+from config import env, setup_logger
 from imports import connect_to_web3
 from utils import eth_address_to_md5
 
 w3 = connect_to_web3()
+ebb = Contract.eblocbroker
 testFlag = False
-log_dc = load_log(f"{env.LOG_PATH}/cancelledJobsLog.out")
+log_dc = setup_logger(f"{env.LOG_PATH}/cancelledJobsLog.out")
 
 
 with open(env.CANCEL_BLOCK_READ_FROM_FILE, "r") as content_file:
     cancel_block_read_from_local = content_file.read().strip()
 
 if not cancel_block_read_from_local.isdigit():
-    cancel_block_read_from_local = get_deployed_block_number()
+    cancel_block_read_from_local = ebb.get_deployed_block_number()
 
 log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
 max_val = 0
 while True:
+    time.sleep(0.1)
     # cancel_block_read_from_local = 2000000 # for test purposes
 
     # waits here until new job cancelled into the provider
-    logged_jobs_to_process = LogJob.run_log_cancel_refund(cancel_block_read_from_local, env.PROVIDER_ID)
+    logged_jobs_to_process = ebb.LogJob.run_log_cancel_refund(cancel_block_read_from_local, env.PROVIDER_ID)
 
     for logged_job in logged_jobs_to_process:
         msg_sender = w3.eth.getTransactionReceipt(logged_job["transactionHash"].hex())["from"].lower()

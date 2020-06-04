@@ -7,13 +7,14 @@ import time
 
 import owncloud
 
+import eblocbroker.Contract as Contract
 import libs.eudat as eudat
-from contractCalls.submitJob import submitJob
 from imports import connect
 from utils import _colorize_traceback, generate_md5sum
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
+ebb = Contract.eblocbroker
 
 
 def eudatSubmitJob(tar_hash=None):
@@ -60,7 +61,7 @@ def eudatSubmitJob(tar_hash=None):
     account_id = 0
 
     try:
-        tx_hash = submitJob(
+        tx_hash = ebb.submit_job(
             str(provider),
             str(tar_hash),
             coreNum,
@@ -72,7 +73,7 @@ def eudatSubmitJob(tar_hash=None):
         )
         print(tx_hash)
     except:
-        print(_colorize_traceback())
+        _colorize_traceback()
         sys.exit(1)
 
 

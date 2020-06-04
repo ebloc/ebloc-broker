@@ -1,31 +1,28 @@
 import sys
 
 from web3 import HTTPProvider, Web3
-from web3.contract import ConciseContract
 
+import eblocbroker.Contract as Contract
 from config import env
-from contractCalls.get_owner import get_owner
-from contractCalls.get_providers import get_providers
-from flask import Flask, render_template, request
-from solc import compile_source
+from flask import Flask, render_template
 
 # TODO: env should be load first
 app = Flask(__name__)
 
 # open a connection to the local ethereum node
-http_provider = HTTPProvider("http://localhost:8545")
-w3 = Web3(http_provider).eth
+w3 = Web3(HTTPProvider("http://localhost:8545")).eth
+ebb = Contract.eblocbroker
 
 
 @app.route("/")
 def hello_world():
-    output = get_owner()
+    output = ebb.get_owner()
     return f"block_number={w3.blockNumber} | {sys.version} | owner={output} {env.RPC_PORT} {env.EBLOCPATH}."
 
 
 @app.route("/hello")
 def hello_name():
-    _dict = get_providers()  # {'phy':50,'che':60,'maths':70}
+    _dict = ebb.get_providers()  # {'phy':50,'che':60,'maths':70}
     return render_template("hello.html", blockNumber=str(w3.blockNumber), result=dict, len=len(_dict))
 
 
