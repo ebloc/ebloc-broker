@@ -3,6 +3,7 @@
 import asyncio
 import os.path
 import sys
+import time
 from os.path import expanduser
 
 from web3 import HTTPProvider, Web3
@@ -25,6 +26,7 @@ async def log_loop(filter_id, poll_interval):
         for event in w3.geth.shh.getMessages(filter_id):  # event_filter.get_new_entries():
             handle_event(event)  # TODO: add try catch
         await asyncio.sleep(poll_interval)
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -41,7 +43,7 @@ if __name__ == "__main__":
         try:
             data = read_json(home + "/.eBlocBroker/whisperInfo.txt")
         except:
-            log(_colorize_traceback())
+            _colorize_traceback()
 
         kId = data["kId"]
         publicKey = data["publicKey"]
@@ -54,7 +56,8 @@ if __name__ == "__main__":
 
     retreived_messages = web3.geth.shh.getMessages(filter_id)
 
-    print("publicKeyK: " + publicKey)
+    print(f"topic={topic}")
+    print(f"public_key={publicKey}")
     """
     print('FilterID: ' + filter_id)
     print('receiverPrivateK: ' + web3.geth.shh.getPrivateKey(kId));
@@ -62,7 +65,6 @@ if __name__ == "__main__":
     print('PubKey: ' + web3.geth.shh.getPublicKey(kId))
     """
     # retreived_messages = web3.geth.shh.getMessages('13723641127bc212ab379100a5d9e05e09b8c34fe1357f51e54cf17b568918cc')
-
     for i in range(0, len(retreived_messages)):
         print(retreived_messages[i]["payload"].decode("utf-8"))
         print("---------------------------------")

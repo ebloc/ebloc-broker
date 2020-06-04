@@ -5,13 +5,14 @@ import time
 
 import git
 
-from config import bp, env, logging  # noqa: F401
-from lib import printc, run, run_command
-from utils import getcwd, getsize, path_leaf
+from config import env, logging
+from lib import run, run_command
+from startup import bp  # noqa: F401
+from utils import getcwd, getsize, path_leaf, printc
 
 
 def initialize_check(path):
-    """ .git/ folder should exist within the target folder"""
+    """.git/ folder should exist within the target folder"""
     cwd_temp = getcwd()
     os.chdir(path)
     if not is_initialized(path, True):
@@ -69,11 +70,14 @@ def diff_patch(path, source_code_hash, index, target_path):
     if not is_initialized(path):
         upload everything, changed files!
     """
-    success, output = run_command(["git", "config", "core.fileMode", "false"])
-    # first ignore deleted files not to be added into git
-    success, output = run_command(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
-    success, git_head_hash = run_command(["git", "rev-parse", "HEAD"])
-    patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
+    try:
+        run(["git", "config", "core.fileMode", "false"])
+        # first ignore deleted files not to be added into git
+        run(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
+        git_head_hash = run(["git", "rev-parse", "HEAD"])
+        patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
+    except:
+        return False
 
     # file to be uploaded as zip
     patch_file = f"{target_path}/{patch_name}.gz"
@@ -101,10 +105,14 @@ def add_all(repo=None):
     if not repo:
         repo = git.Repo(".", search_parent_directories=True)
 
-    # subprocess.run(["chmod", "-R", "755", "."])
-    # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
-    # required for files to be access on the cluster side due to permission issues
-    subprocess.run(["chmod", "-R", "775", "."])  # changes folder's hash
+    try:
+        # subprocess.run(["chmod", "-R", "755", "."])
+        # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
+        # required for files to be access on the cluster side due to permission issues
+        run(["chmod", "-R", "775", "."])  # changes folder's hash
+    except:
+        pass
+
     try:
         repo.git.add(A=True)  # git add -A .
         try:
@@ -128,8 +136,8 @@ def commit_changes(path) -> bool:
 
     try:
         output = run(["ls", "-l", ".git/refs/heads"])
-    except:
-        raise
+    except Exception as e:
+        raise Exception("E: Problem on git.commit_changes()") from e
 
     if output == "total 0":
         logging.warning("There is no first commit")
@@ -163,29 +171,31 @@ def apply_patch(git_folder, patch_file):
     base_name_split = base_name.split("_")
     git_hash = base_name_split[1]
     # folder_name = base_name_split[2]
-    success, output = run_command(["git", "checkout", git_hash])
-    run_command(["git", "reset", "--hard"])
-    run_command(["git", "clean", "-f"])
-    success, output = run_command(["git", "apply", "--stat", patch_file])
-    if not success:
+    try:
+        run(["git", "checkout", git_hash])
+        run(["git", "reset", "--hard"])
+        run(["git", "clean", "-f"])
+        logging.info(run(["git", "apply", "--stat", patch_file]))
+        logging.info(run(["git", "apply", "--reject", patch_file]))
+        return True
+    except:
         return False
-
-    print(output)
-    success, output = run_command(["git", "apply", "--reject", patch_file])
-    os.chdir(cwd_temp)
+    finally:
+        os.chdir(cwd_temp)
 
 
 def is_repo(folders) -> bool:
-    success = True
     cwd_temp = getcwd()
-    for idx, folder in enumerate(folders):
+    for folder in folders:
         os.chdir(folder)
         if not is_initialized(folder):
-            logging.warning(f".git does not exits in {folder}. Applying: git init")
-            success, output = run_command(["git", "init"])
-            logging.info(output)
-            if not success:
-                os.chdir(cwd_temp)
+            logging.warning(f".git does not exits in {folder}. Applying: `git init`")
+            try:
+                run(["git", "init"])
+            except:
                 return False
+            finally:
+                os.chdir(cwd_temp)
+
     os.chdir(cwd_temp)
-    return success
+    return True

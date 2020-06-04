@@ -1,7 +1,8 @@
 import os
 import sys
 
-from lib import get_parent_hash, run
+from lib import run
+from libs.ipfs import get_parent_hash
 
 
 def add_to_ipfs(results_folder):
