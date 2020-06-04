@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+import eblocbroker.Contract as Contract
 from config import env
-from contractCalls.get_job_info import get_job_info
 from imports import connect
 from lib import job_state_code
 
 eBlocBroker, w3 = connect()
+ebb = Contract.eblocbroker
 
 fname = f"{env.LOG_PATH}/queuedJobs.txt"
 
@@ -18,7 +19,7 @@ with open(fname, "r") as ins:
         index = output[3]
 
         sum1 += int(output[7]) - int(output[8])
-        job_info = get_job_info(provider, job_key, index, None)
+        job_info = ebb.get_job_info(provider, job_key, index, None)
 
         print(
             str(idx)
@@ -54,5 +55,4 @@ with open(fname, "r") as ins:
             + job_info["jobOwner"]
         )
 
-print(idx)
 print(f"GAINED={sum1}")

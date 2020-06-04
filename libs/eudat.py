@@ -11,13 +11,15 @@ import traceback
 import owncloud
 
 import config
-from config import bp, env, logging  # noqa: F401
+from config import env, logging
 from lib import compress_folder, printc, run, terminate
-from utils import _colorize_traceback
+from startup import bp  # noqa: F401
+from utils import _colorize_traceback, popen_communicate
 
 
 def _upload_results(encoded_share_token, output_file_name):
-    """ doc: https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577
+    """Uploads results into Eudat using curl
+    doc: https://stackoverflow.com/a/44556541/2402577, https://stackoverflow.com/a/24972004/2402577
     cmd:
     curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encoded_share_token\'==\' \
             --data-binary \'@result-\'$providerID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$providerID-$index.tar.gz
@@ -40,9 +42,8 @@ def _upload_results(encoded_share_token, output_file_name):
     ]
     _cmd = " ".join(cmd)
     logging.info(f"cmd: {_cmd}")  # used for test purposes
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, error = p.communicate()
-    return p, output, error
+
+    return popen_communicate(cmd)
 
 
 def upload_results(encoded_share_token, output_file_name, results_folder_prev, attempt_count=1):
@@ -51,22 +52,19 @@ def upload_results(encoded_share_token, output_file_name, results_folder_prev, a
     os.chdir(results_folder_prev)
     for attempt in range(attempt_count):
         p, output, error = _upload_results(encoded_share_token, output_file_name)
-        output = output.strip().decode("utf-8")
-        error = error.decode("utf-8")
         if p.returncode != 0 or "<d:error" in output:
             logging.error("E: EUDAT repository did not successfully loaded")
-            logging.error(f"E: curl is failed. {p.returncode} => {error.decode('utf-8')}. {output}")
+            logging.error(f"E: curl is failed. {p.returncode} => [{error}] {output}")
             time.sleep(1)  # wait 1 second for next step retry to upload
         else:  # success on upload
             os.chdir(cwd_temp)
             return True
-    else:
-        # failed all the attempts - abort
-        os.chdir(cwd_temp)
-        return False
+    # failed all the attempts - abort
+    os.chdir(cwd_temp)
+    return False
 
 
-def login(user, password_path, fname):
+def login(user, password_path, fname) -> None:
     logging.info(f"Login into owncloud user:{user}")
     if os.path.isfile(fname):
         f = open(fname, "rb")
@@ -80,13 +78,13 @@ def login(user, password_path, fname):
 
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     if not user:
-        logging.error(f"E: User is empty")
+        logging.error("E: User is empty")
         terminate()
 
     with open(password_path, "r") as content_file:
         password = content_file.read().strip()
 
-    for attempt in range(5):
+    for attempt in range(config.RECONNECT_ATTEMPTS):
         try:
             config.oc.login(user, password)
             password = None
@@ -95,12 +93,12 @@ def login(user, password_path, fname):
             f.close()
         except Exception:
             _traceback = traceback.format_exc()
-            logging.error(_colorize_traceback())
+            _colorize_traceback()
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
                 logging.warning("Sleeping for 15 seconds to overcome the max retries that exceeded")
                 time.sleep(15)
             else:
-                logging.error(f"E: User is None object")
+                logging.error("E: User is None object")
                 terminate()
         else:
             break
@@ -109,29 +107,28 @@ def login(user, password_path, fname):
         terminate()
 
 
-def share_single_folder(folder_name, oc, fID) -> bool:
+def share_single_folder(folder_name, f_id) -> bool:
     try:
         # folder_names = os.listdir('/oc')
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
-        if not oc.is_shared(folder_name):
-            oc.share_file_with_user(folder_name, fID, remote_user=True, perms=31)
+        if not config.oc.is_shared(folder_name):
+            config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
             print("Sharing is completed successfully")
             return True
-        else:
-            printc("=> Requester folder is already shared", "blue")
-            return True
+
+        printc("=> Requester folder is already shared", "blue")
+        return True
     except Exception:
-        print(_colorize_traceback())
+        _colorize_traceback()
         return False
 
 
-def initialize_folder(folder_to_share, oc) -> str:
+def initialize_folder(folder_to_share) -> str:
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, tar_path = compress_folder(folder_to_share)
     tar_source = f"{dir_path}/{tar_hash}.tar.gz"
-
     try:
-        oc.mkdir(tar_hash)
+        config.oc.mkdir(tar_hash)
     except Exception as e:
         if "405" not in str(e):
             if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}"):
@@ -147,7 +144,7 @@ def initialize_folder(folder_to_share, oc) -> str:
     tar_dst = f"{tar_hash}/{tar_hash}.tar.gz"
 
     try:
-        oc.put_file(f"./{tar_dst}", tar_source)
+        config.oc.put_file(f"./{tar_dst}", tar_source)
         os.remove(tar_source)
     except Exception as e:
         if type(e).__name__ == "HTTPResponseError":

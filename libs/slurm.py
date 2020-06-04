@@ -5,37 +5,64 @@ import time
 
 from config import logging
 from lib import run
+from utils import _colorize_traceback, popen_communicate
+
+
+def add_user_to_slurm(user):
+    # remove__user(user)
+    cmd = ["sacctmgr", "add", "account", user, "--immediate"]
+    p, output, *_ = popen_communicate(cmd)
+    if p.returncode != 0 and "Nothing new added" not in output:
+        _colorize_traceback()
+        logging.error(f"E: sacctmgr remove error: {output}")
+        raise
+
+    try:
+        if "Nothing new added" not in output:
+            run(["sacctmgr", "create", "user", user, f"defaultaccount={user}", "adminlevel=[None]", "--immediate"])
+    except Exception as e:
+        raise Exception("E: Problem on sacctmgr create user") from e
+
+
+def remove_user(user):
+    cmd = ["sacctmgr", "remove", "user", "where", f"user={user}", "--immediate"]
+    p, output, *_ = popen_communicate(cmd)
+    if p.returncode and "Nothing deleted" not in output:
+        logging.error(f"E: sacctmgr remove error: {output}")
+        raise
 
 
 def get_idle_cores(is_print_flag=True):
-    cmd = ["sinfo", "-h", "-o%C"]
-    core_info = run(cmd)
-    core_info = core_info.split("/")
+    core_info = run(["sinfo", "-h", "-o%C"]).split("/")
     if len(core_info) != 0:
         allocated_cores = core_info[0]
         idle_cores = core_info[1]
         other_cores = core_info[2]
-        total_number_of_cores = core_info[3]
+        total_cores = core_info[3]
         if is_print_flag:
             logging.info(
-                f"AllocatedCores={allocated_cores} |IdleCores={idle_cores} |OtherCores={other_cores} |TotalNumberOfCores={total_number_of_cores}"
+                f"AllocatedCores={allocated_cores} |"
+                f"IdleCores={idle_cores} |"
+                f"OtherCores={other_cores} |"
+                f"TotalNumberOfCores={total_cores}"
             )
     else:
         logging.error("sinfo is emptry string")
         idle_cores = None
+
     return idle_cores
 
 
 def pending_jobs_check():
-    """ If there is no idle cores, waits for idle cores to be emerged."""
+    """If there is no idle cores, waits for idle cores to be emerged."""
     idle_cores = get_idle_cores()
     is_print_flag = 0
     while idle_cores is None:
         if not is_print_flag:
             logging.info("Waiting running jobs to be completed...")
             is_print_flag = 1
+        idle_cores = get_idle_cores(is_print_flag=False)
         time.sleep(10)
-        idle_cores = get_idle_cores(False)
 
 
 def is_on() -> bool:
@@ -43,12 +70,12 @@ def is_on() -> bool:
     logging.info("Checking Slurm... ")
     output = run(["sinfo"])
     if "PARTITION" not in output:
-        logging.error("E: sinfo returns emprty string, please run:\nsudo ./runSlurm.sh\n")
+        logging.error("E: sinfo returns emprty string, please run:\nsudo ./bash_scripts/run_slurm.sh\n")
         if not output:
             logging.error(f"E: {output}")
 
         logging.info("Starting Slurm... \n")
-        subprocess.run(["sudo", "bash", "runSlurm.sh"])
+        subprocess.run(["sudo", "bash", "bash_scripts/run_slurm.sh"])
         return False
     elif "sinfo: error" in output:
         logging.error(f"Error on munged: \n {output} \n run:\nsudo munged -f \n" "/etc/init.d/munge start")

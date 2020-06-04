@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from config import EBLOCPATH
+from config import env
 from libs import ipfs
 
 path = "/home/netlab/eBlocBroker/base/sourceCode"
-base_folder = f"{EBLOCPATH}/base"
+base_folder = f"{env.EBLOCPATH}/base"
 
 ipfs_hashes = {}
 folders_to_share = []
