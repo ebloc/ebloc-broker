@@ -4,12 +4,13 @@ import json
 import os
 import subprocess
 
-from config import bp, env, logging  # noqa: F401
+from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
+from startup import bp  # noqa: F401
 from utils import _colorize_traceback, byte_to_mb, read_json
 
 
-def list(tar_hash, is_folder=False):
+def _list(tar_hash, is_folder=False):
     if is_folder:
         filename = f"name='{tar_hash}'"
     else:
@@ -57,7 +58,7 @@ def get_data_key_ids(results_folder_prev):
     try:
         meta_data = read_json(f)
     except:
-        logging.error(_colorize_traceback())
+        _colorize_traceback()
         return False, ""
 
     return True, meta_data

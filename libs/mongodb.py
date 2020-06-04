@@ -5,10 +5,7 @@ coll = mc["eBlocBroker"]["cache"]
 
 
 def check_ok(result):
-    if result["ok"] == 1.0:
-        return True
-    else:
-        return False
+    return bool(result["ok"])
 
 
 def add_item(job_key, source_code_hash_list, requesterID, timestamp, cloudStorageID, job_info):
@@ -42,9 +39,9 @@ def add_item_share_id(key, shareID, share_token):
     return check_ok(output)
 
 
-def find_key(coll, key):
-    output = coll.find_one({"key": key})
+def find_key(_coll, key):
+    output = _coll.find_one({"key": key})
     if bool(output):
-        return True, output
+        return output
     else:
-        return False, None
+        raise

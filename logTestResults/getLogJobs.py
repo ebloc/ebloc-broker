@@ -3,12 +3,13 @@
 import subprocess
 import sys
 
+import eblocbroker.Contract as Contract
 from config import env
-from contractCalls.get_job_info import get_job_info
 from imports import connect
 from lib import inv_job_state_code
 
 eBlocBroker, w3 = connect()
+ebb = Contract.eblocbroker
 ipfsFlag = 0
 
 
@@ -41,7 +42,7 @@ def getLogJobs(provider_address, fromBlock):
         _blockNumber = logged_job["blockNumber"]
         # print(logged_jobs[i])
         # print(logged_jobs[i].args['jobKey'])
-        jobInfo = get_job_info(provider_address, jobKey, index, _blockNumber)
+        jobInfo = ebb.get_job_info(provider_address, jobKey, index, _blockNumber)
         # print('received: ' +  )
         returned = 0
         key = f"{provider_address}_{jobKey}_{index}"

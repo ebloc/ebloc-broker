@@ -57,7 +57,7 @@ if __name__ == "__main__":
         try:
             data = read_json("data.txt")
         except:
-            print(_colorize_traceback())
+            _colorize_traceback()
             sys.exit(1)
 
         kId = data["kId"]

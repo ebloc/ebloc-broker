@@ -2,16 +2,53 @@
 
 import logging
 import os
+import sys
+import threading
+from logging import Filter
 from os.path import expanduser
 from pdb import set_trace as bp  # noqa: F401
+from typing import Type
 
-import colored_traceback
 from dotenv import load_dotenv
+from web3 import Web3
 
+import _utils.colored_traceback as colored_traceback
 import _utils.colorer  # noqa: F401
 
 
+class ThreadFilter(Filter):
+    """Only accept log records from a specific thread or thread name"""
+
+    def __init__(self, thread_id=None, thread_name=None):
+        if thread_id is None and thread_name is None:
+            raise ValueError("Must set at a thread_id and/or thread_name to filter on")
+
+        self._threadid = thread_id
+        self._thread_name = thread_name
+
+    def filter(self, record):
+        if self._threadid is not None and record.thread != self._threadid:
+            return False
+        if self._thread_name is not None and record.threadName != self._thread_name:
+            return False
+        return True
+
+
+class IgnoreThreadsFilter(Filter):
+    """Only accepts log records that originated from the main thread"""
+
+    def __init__(self):
+        self._main_thread_id = threading.main_thread().ident
+
+    def filter(self, record):
+        return record.thread == self._main_thread_id
+
+
 class Web3NotConnected(Exception):
+    pass
+
+
+class QuietExit(Exception):
     pass
 
 
@@ -20,7 +57,7 @@ class ENV:
         self.HOME = expanduser("~")
         # load .env from the given path
         load_dotenv(os.path.join(f"{self.HOME}/.eBlocBroker/", ".env"))
-
+        self.log_filename = None
         self.WHOAMI = os.getenv("WHOAMI")
         self.SLURMUSER = os.getenv("SLURMUSER")
         self.LOG_PATH = os.getenv("LOG_PATH")
@@ -37,6 +74,8 @@ class ENV:
         self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self.GDRIVE_METADATA = f"/home/{self.WHOAMI}/.gdrive"
         self.IPFS_REPO = f"/home/{self.WHOAMI}/.ipfs"
+        self.IPFS_LOG = f"{self.LOG_PATH}/ipfs.out"
+        self.GANACHE_LOG = f"{self.LOG_PATH}/ganache.out"
         self.OWNCLOUD_PATH = "/oc"
 
         self.PROGRAM_PATH = "/var/eBlocBroker"
@@ -52,26 +91,40 @@ class ENV:
             self.PROVIDER_ID = None
 
     def set_provider_id(self):
-        self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+        if not os.getenv("PROVIDER_ID"):
+            print("E: Please set PROVIDER_ID in ~/.eBlocBroker/.env")
+            sys.exit(1)
+        else:
+            self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
 
-def load_log(log_path=""):
-    log = logging.getLogger()  # root logger
-    for hdlr in log.handlers[:]:  # remove all old handlers
-        log.removeHandler(hdlr)
+def setup_logger(log_path="", is_brownie=False):
+    _log = logging.getLogger()  # root logger
+    for hdlr in _log.handlers[:]:  # remove all old handlers
+        _log.removeHandler(hdlr)
 
-    if log_path:
-        global log_filename
-        log_filename = log_path
+    if is_brownie:
         logging.basicConfig(
+            level=logging.INFO, format="[%(funcName)21s():%(lineno)3s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    elif log_path:
+        env.log_filename = log_path
+        # Attach the IgnoreThreadsFilter to the main root log handler
+        # This is responsible for ignoring all log records originating from
+        # new threads.
+        main_handler = logging.FileHandler(log_path, "a")
+        main_handler.addFilter(IgnoreThreadsFilter())
+        logging.basicConfig(
+            handlers=[logging.StreamHandler(), main_handler],
             level=logging.INFO,
+            # handlers=[logging.StreamHandler(), logging.FileHandler(log_path)],
             # format="%(asctime)s %(levelname)-8s [%(module)s %(lineno)d] %(message)s",
             # format="%(asctime)s %(levelname)-8s [%(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
             format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
-            handlers=[logging.FileHandler(log_path), logging.StreamHandler()],
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-    else:
+        # logger.info("Log_path => %s", log_path)
+    else:  # only stdout
         logging.basicConfig(
             level=logging.INFO,
             format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
@@ -82,10 +135,16 @@ def load_log(log_path=""):
 
 
 eBlocBroker = None
-w3 = None
+w3 = None  # type: Type[Web3]
+contract = None
+
+coll = None
 oc = None
-log_filename = None
 driver_cancel_process = None
 whisper_state_receiver_process = None
 colored_traceback.add_hook(always=True)
 env = ENV()
+logger = setup_logger()  # Default initialization
+
+RECONNECT_ATTEMPTS = 5
+RECONNECT_SLEEP = 15

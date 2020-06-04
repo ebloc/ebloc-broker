@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 # encoding: utf-8
 import logging
 import platform
@@ -93,7 +94,8 @@ def add_coloring_to_emit_ansi(fn):
         else:
             color = "\x1b[0m"  # normal
 
-        args[1].msg = color + args[1].msg + "\x1b[0m"  # normal
+        # args[1].lineno = color + str(args[1].lineno) + "\x1b[0m"  # normal
+        args[1].msg = color + str(args[1].msg) + "\x1b[0m"  # normal
         return fn(*args)
 
     return new

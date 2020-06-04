@@ -6,7 +6,7 @@ rpcPort="8545" # Please change it if you have different RPC_PORT number.
 # Update repository with the latest update
 # git fetch --all && git reset --hard origin/master
 
-# Pre-installation:-----------------------------------------
+## Pre-installation:
 if [ $setup -eq 1 ]; then
     ## Upgrade geth on Ubuntu: ----------------------------
     # sudo apt-get install software-properties-common
@@ -103,7 +103,7 @@ if [ $setup -eq 1 ]; then
     echo 'export PATH=$PATH:'$(echo $gopath)'/bin' >> $HOME/.profile
     source $HOME/.profile
     gdrive about
-    # ===============================================================
+
     ## gdfuse
     # https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization
 
