@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import glob
-import json
 import os
 import pprint
 import shutil
@@ -9,28 +8,38 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta
-from enum import Enum
-from shutil import copyfile
+from multiprocessing import Process
+from threading import Thread
 from typing import Tuple
 
-from termcolor import colored
-
 import config
-import libs.mongodb as mongodb
-from config import bp, env, logging  # noqa: F401
-from utils import Link, _colorize_traceback, byte_to_mb, create_dir, generate_md5sum, no, read_json, write_to_file, yes
+from config import env, logging
+from startup import bp  # noqa: F401
+from utils import (
+    WHERE,
+    Link,
+    StorageID,
+    _colorize_traceback,
+    byte_to_mb,
+    create_dir,
+    generate_md5sum,
+    is_ipfs_on,
+    is_process_on,
+    log,
+    no,
+    print_trace,
+    printc,
+    read_json,
+    run,
+    yes,
+)
 
 
-class COLOR:
-    PURPLE = "\033[95m"
-    BLUE = "\033[94m"
-    BOLD = "\033[1m"
-    END = "\033[0m"
-
-
-# enum: https://stackoverflow.com/a/1695250/2402577
 def enum(*sequential, **named):
+    """Sets reverse mapping for the Enum.
+
+    helpful: https://stackoverflow.com/a/1695250/2402577
+    """
     enums = dict(zip(sequential, range(len(sequential))), **named)
     reverse = dict((value, key) for key, value in enums.items())
     enums["reverse_mapping"] = reverse
@@ -43,31 +52,6 @@ if not config.w3:
     connect_to_web3()
 
 PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
-
-
-class CacheType(Enum):
-    PUBLIC = 0
-    PRIVATE = 1
-
-
-class StorageID(Enum):
-    IPFS = 0
-    EUDAT = 1
-    IPFS_MINILOCK = 2
-    GITHUB = 3
-    GDRIVE = 4
-    NONE = 5
-
-
-class JobStateCodes(Enum):
-    SUBMITTED = 0
-    PENDING = 1
-    RUNNING = 2
-    REFUNDED = 3
-    CANCELLED = 4
-    COMPLETED = 5
-    TIMEOUT = 6
-
 
 job_state_code = {}
 
@@ -91,23 +75,9 @@ job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 inv_job_state_code = {v: k for k, v in job_state_code.items()}
 
 
-def WHERE(back=0):
-    try:
-        frame = sys._getframe(back + 1)
-    except:
-        frame = sys._getframe(1)
-
-    return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name,)
-
-
-def printc(text, color="white"):
-    print(colored(f"\033[1m{text}\033[0m", color))
-
-
 def session_start_msg(slurm_user, block_number, columns=104):
-    log(
-        "=" * int(int(columns) / 2 - 12) + " provider session starts " + "=" * int(int(columns) / 2 - 12), "cyan",
-    )
+    _columns = int(int(columns) / 2 - 12)
+    log("=" * _columns + " provider session starts " + "=" * _columns, "cyan")
     printc(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", "blue")
 
 
@@ -129,7 +99,7 @@ def run_whisper_state_receiver():
             data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
             kId = data["kId"]
         except:
-            logging.error(f"[{WHERE(1)}] \n {_colorize_traceback()}")
+            _colorize_traceback()
             terminate()
 
         if not config.w3.geth.shh.hasKeyPair(kId):
@@ -144,44 +114,51 @@ def run_whisper_state_receiver():
 
 
 def get_tx_status(tx_hash):
-    logging.info(f"tx_hash={tx_hash}")
+    log(f"tx_hash={tx_hash}")
     receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
     logging.info("Transaction receipt mined: \n")
     # logging.info(pformat(receipt))
     pprint.pprint(dict(receipt))  # delete
-    logging.info(f"Was transaction successful? => status={receipt['status']}")
+    log("Was transaction successful?")
+    if receipt["status"] == 1:
+        log("Transaction is deployed", "green")
+    else:
+        log("E: Transaction is reverted", "red")
+
     return receipt
 
 
 def check_size_of_file_before_download(file_type, key=None):
     # TODO fill
-    if int(file_type) == StorageID.IPFS.value or int(file_type) == StorageID.IPFS_MINILOCK.value:
+    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_MINILOCK):
         if not key:
             return False
-    elif int(file_type) == StorageID.EUDAT.value:
+    elif int(file_type) == StorageID.EUDAT:
         pass
-    elif int(file_type) == StorageID.GDRIVE.value:
+    elif int(file_type) == StorageID.GDRIVE:
         pass
     return True
 
 
-def terminate():
-    """ Terminates Driver and all the dependent python programs to it."""
-    logging.error(f"E: [{WHERE(1)}] terminate() function is called.")
+def terminate(error_msg=""):
+    """Terminates Driver and all the dependent python programs to it."""
+    logging.error(f"E: [{WHERE(1)}] | {error_msg}")
 
     # following line is added, in case ./killall.sh does not work due to sudo
-    # send the kill signal to all the process groups.
+    # send the kill signal to all the process groups
     if config.driver_cancel_process:
-        os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)  # obtained from global variable
+        # obtained from global variable
+        os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)
 
     if config.whisper_state_receiver_process:
         # obtained from global variable, # raise SystemExit("Program Exited")
         os.killpg(os.getpgid(config.whisper_state_receiver_process.pid), signal.SIGTERM)
 
-    # kill all the dependent processes and exit
-    output = subprocess.check_output(["bash", "killall.sh"]).decode("utf-8").rstrip()
-    logging.info(output)
-    sys.exit(1)
+    try:
+        # kill all the dependent processes and exit
+        run(["bash", "killall.sh"])
+    except:
+        sys.exit(1)
 
 
 def _try(func):
@@ -196,7 +173,7 @@ def _try(func):
     try:
         return func()
     except Exception:
-        logging.error(f"[{WHERE(1)}] - {_colorize_traceback()}")
+        _colorize_traceback()
         raise
 
 
@@ -210,46 +187,31 @@ def calculate_folder_size(path) -> float:
     return byte_to_mb(byte_size)
 
 
-def log(text, color=None, filename=None):
-    if not filename:
-        if config.log_filename:
-            filename = config.log_filename
-        else:
-            filename = f"{env.LOG_PATH}/transactions/provider.log"
-
-    if color:
-        printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color))
-        f = open(filename, "a")
-        f.write(colored(f"{COLOR.BOLD}{text}\n{COLOR.END}", color))
-        f.close()
-    else:
-        print(text)
-        f = open(filename, "a")
-        f.write(text + "\n")
-        f.close()
-
-
-def print_trace(cmd):
-    _cmd = " ".join(cmd)
-    logging.error(f"[{WHERE(1)}]\n{_colorize_traceback()}" f"Command:\n{COLOR.PURPLE}{COLOR.BOLD}{_cmd}{COLOR.END}\n")
-
-
-def subprocess_call(cmd, attempt_count=1, print_flag=True):
-    for count in range(attempt_count):
+def subprocess_call(cmd, attempt=1, print_flag=True):
+    for count in range(attempt):
         try:
             return subprocess.check_output(cmd).decode("utf-8").strip()
         except Exception:
             if not count and print_flag:
                 print_trace(cmd)
 
-            if count + 1 == attempt_count:
+            if count + 1 == attempt:
                 raise SystemExit
 
             logging.info(f"try={count}")
             time.sleep(0.1)
 
 
-def run_command_stdout_to_file(cmd, path) -> bool:
+def alper(func, attempt):
+    for _attempt in range(attempt):
+        try:
+            return func
+        except Exception:
+            time.sleep(0.1)
+    raise
+
+
+def run_stdout_to_file(cmd, path) -> bool:
     with open(path, "w") as stdout:
         try:
             subprocess.Popen(cmd, stdout=stdout)
@@ -257,14 +219,6 @@ def run_command_stdout_to_file(cmd, path) -> bool:
         except Exception:
             print_trace(cmd)
             raise SystemExit
-
-
-def run(cmd) -> str:
-    try:
-        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
-    except Exception:
-        print_trace(cmd)
-        raise
 
 
 def run_command(cmd, my_env=None) -> Tuple[bool, str]:
@@ -282,6 +236,8 @@ def run_command(cmd, my_env=None) -> Tuple[bool, str]:
 
 
 def silent_remove(path) -> bool:
+    """Removes file or folders based on the file type."""
+
     # link: https://stackoverflow.com/a/10840586/2402577
     try:
         if os.path.isfile(path):
@@ -292,10 +248,10 @@ def silent_remove(path) -> bool:
         else:
             return False
 
-        logging.info(f"[{WHERE(1)}] - {path} is removed")
+        logging.info(f"[{WHERE(1)}]\n{path} is removed")
         return True
     except Exception:
-        logging.error(f"[{WHERE(1)}] - {_colorize_traceback()}")
+        _colorize_traceback()
         return False
 
 
@@ -321,96 +277,49 @@ def echo_grep_awk(str_data, grep_str, awk_column):
 
 
 def eblocbroker_function_call(func, attempt):
-    for attempt in range(attempt):
+    for _attempt in range(attempt):
         try:
             return func()
         except Exception as e:
             if type(e).__name__ == "Web3NotConnected":
                 time.sleep(1)
             else:
-                logging.error(_colorize_traceback())
+                _colorize_traceback()
                 raise
-    else:
-        raise
-
-
-def insert_character(string, index, char) -> str:
-    return string[:index] + char + string[index:]
-
-
-def is_process_on(process_name, name, process_count=0) -> bool:
-    """Checks wheather the process runs on the background.
-    Doc: https://stackoverflow.com/a/6482230/2402577"""
-    p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["wc", "-l"], stdin=p2.stdout, stdout=subprocess.PIPE)
-    p2.stdout.close()
-    output = p3.communicate()[0].decode("utf-8").strip()
-    if int(output) > process_count:
-        logging.warning(f"{name} is already running")
-        return True
-    return False
-
-
-def is_driver_on() -> bool:
-    """ Checks whether driver runs on the background."""
-    return is_process_on("python.*[D]river", "Driver", 1)
-
-
-def is_ipfs_on() -> bool:
-    """ Checks whether ipfs runs on the background."""
-    return is_process_on("[i]pfs\ daemon", "IPFS")
-
-
-def is_geth_on():
-    """ Checks whether geth runs on the background."""
-    port = str(env.RPC_PORT)
-    port = insert_character(port, 1, "]")
-    port = insert_character(port, 0, "[")
-    return is_process_on(f"geth.*{port}", "Geth")
+    raise
 
 
 def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def is_transaction_passed(tx_hash) -> bool:
-    receipt = config.w3.eth.getTransactionReceipt(tx_hash)
-    try:
-        if receipt["status"] == 1:
-            return True
-    except:
-        pass
-
-    return False
-
-
 def is_ipfs_running():
-    """ Checks that does IPFS run on the background or not."""
-    output = is_ipfs_on()
-    if output:
+    """Checks that does IPFS run on the background or not."""
+    if is_ipfs_on():
         return True
-    else:
-        logging.error("E: IPFS does not work on the background.")
-        logging.info("* Starting IPFS: nohup ipfs daemon --mount &")
-        path = f"{env.LOG_PATH}/ipfs.out"
-        with open(path, "w") as stdout:
-            cmd = ["nohup", "ipfs", "daemon", "--mount"]
-            subprocess.Popen(cmd, stdout=stdout, stderr=stdout, preexec_fn=os.setpgrp)
-            logging.info(f"Writing into {path} is completed.")
 
-        time.sleep(5)
-        with open(path, "r") as content_file:
-            logging.info(content_file.read())
+    log("E: IPFS does not work on the background", "blue")
+    log("#> Starting IPFS daemon on the background", "blue")
+    while True:
+        output = run(["python3", f"{env.EBLOCPATH}/python_scripts/ipfs_daemon.py"])
+        log(output, "blue")
+        time.sleep(1)
+        if is_ipfs_on():
+            break
+        else:
+            with open(env.IPFS_LOG, "r") as content_file:
+                logging.info(content_file.read())
+        time.sleep(1)
 
-        # ipfs mounted at: /ipfs
-        success, output = run_command(["sudo", "ipfs", "mount", "-f", "/ipfs"])
-        logging.info(output)
-        return is_ipfs_on()
+    return is_ipfs_on()
 
 
 def check_linked_data(path_from, path_to, folders=None):
+    """Generates folder as hard linked of the given folder paths or provider main folder.
+
+    :param path_to: linked folders into into given path
+    :param folders: if given, iterate over all folders
+    """
     create_dir(path_to)
     link = Link(path_from, path_to)
     link.link_folders(folders)
@@ -429,7 +338,15 @@ def check_linked_data(path_from, path_to, folders=None):
         sys.stdout.warning("Please respond with 'yes' or 'no'")
 
 
+# TODO: carry into utils
 def compress_folder(folder_to_share):
+    """Compress folder using tar
+    - Note that to get fully reproducible tarballs, you should also impose the sort order used by tar:
+
+    links:
+    - https://unix.stackexchange.com/a/438330/198423,
+    - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
+    """
     current_path = os.getcwd()
     base_name = os.path.basename(folder_to_share)
     dir_path = os.path.dirname(folder_to_share)
@@ -469,144 +386,30 @@ def compress_folder(folder_to_share):
     return tar_hash, f"{dir_path}/{tar_hash}.tar.gz"
 
 
-def _sbatch_call(
-    logged_job, requester_id, results_folder, results_folder_prev, dataTransferIn, source_code_hashes, job_info
-):
-    job_key = logged_job.args["jobKey"]
-    index = logged_job.args["index"]
-    main_cloud_storage_id = logged_job.args["cloudStorageID"][0]  # 0 indicated maps to sourceCode
-    job_info = job_info[0]
-    job_id = 0  # base job_id for them workflow
-    job_block_number = logged_job.blockNumber
-
-    # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
-    date = (
-        subprocess.check_output(["date", "--date=" + "1 seconds", "+%b %d %k:%M:%S %Y"], env={"LANG": "en_us_88591"},)
-        .decode("utf-8")
-        .strip()
-    )
-    logging.info(f"Date={date}")
-    write_to_file(f"{results_folder_prev}/modified_date.txt", date)
-
-    # cmd: echo date | date +%s
-    p1 = subprocess.Popen(["echo", date], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["date", "+%s"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    timestamp = p2.communicate()[0].decode("utf-8").strip()
-    logging.info(f"Timestamp={timestamp}")
-    write_to_file(f"{results_folder_prev}/timestamp.txt", timestamp)
-
-    logging.info(f"job_received_block_number={job_block_number}")
-    # write_to_file(f"{results_folder_prev}/blockNumber.txt", job_block_number)
-
-    logging.info("Adding recevied job into mongodb database.")
-    # adding job_key info along with its cacheDuration into mongodb
-    mongodb.add_item(
-        job_key, source_code_hashes, requester_id, timestamp, main_cloud_storage_id, job_info,
-    )
-
-    # TODO: update as used_dataTransferIn value
-    f = f"{results_folder_prev}/dataTransferIn.json"
-    try:
-        data = read_json(f)
-        dataTransferIn = data["dataTransferIn"]
-    except:
-        data = {}
-        data["dataTransferIn"] = dataTransferIn
-        with open(f, "w") as outfile:
-            json.dump(data, outfile)
-
-    # logging.info(dataTransferIn)
-    time.sleep(0.25)
-    # seperator character is ;
-    sbatch_file_path = f"{results_folder}/{job_key}*{index}*{job_block_number}.sh"
-    copyfile(f"{results_folder}/run.sh", sbatch_file_path)
-
-    job_core_num = str(job_info["core"][job_id])
-    # client's requested seconds to run his/her job, 1 minute additional given
-    execution_time_second = timedelta(seconds=int((job_info["executionDuration"][job_id] + 1) * 60))
-    d = datetime(1, 1, 1) + execution_time_second
-    time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-    logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")
-    # give permission to user that will send jobs to Slurm.
-    subprocess.check_output(["sudo", "chown", "-R", requester_id, results_folder])
-
-    for attempt in range(10):
-        try:
-            # slurm submit job, Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-            """ cmd:
-            sudo su - $requester_id -c "cd $results_folder &&
-            sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
-            """
-            job_id = (
-                subprocess.check_output(
-                    [
-                        "sudo",
-                        "su",
-                        "-",
-                        requester_id,
-                        "-c",
-                        f'cd {results_folder} && sbatch -N {job_core_num} "{sbatch_file_path}" --mail-type=ALL',
-                    ]
-                )
-                .decode("utf-8")
-                .strip()
-            )
-            time.sleep(1)  # wait 1 second for Slurm idle core to be updated
-        except subprocess.CalledProcessError as e:
-            logging.error(e.output.decode("utf-8").strip())
-            success, output = run_command(
-                ["sacctmgr", "remove", "user", "where", f"user={requester_id}", "--immediate",]
-            )
-            success, output = run_command(["sacctmgr", "add", "account", requester_id, "--immediate"])
-            success, output = run_command(
-                [
-                    "sacctmgr",
-                    "create",
-                    "user",
-                    requester_id,
-                    f"defaultaccount={requester_id}",
-                    "adminlevel=[None]",
-                    "--immediate",
-                ]
-            )
-        else:
-            break
-    else:
-        sys.exit(1)
-
-    slurm_job_id = job_id.split()[3]
-    logging.info(f"slurm_job_id={slurm_job_id}")
-    try:
-        cmd = ["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"]
-        subprocess.run(cmd, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        logging.error(e.output.decode("utf-8").strip())
-
-    if not slurm_job_id.isdigit():
-        logging.error("E: Detects an error on the SLURM side. slurm_job_id is not a digit")
-        return False
-
-    return True
-
-
 def is_dir(path) -> bool:
     if not os.path.isdir(path):
-        logging.error(f"{path} folder does not exist.")
+        logging.error(f"{path} folder does not exist")
         return False
     return True
 
 
-def remove_empty_files_and_folders(results_folder) -> None:
-    """Remove empty files if exists"""
-    p1 = subprocess.Popen(["find", results_folder, "-size", "0", "-print0"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["xargs", "-0", "-r", "rm"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p2.communicate()
+def run_storage_thread(storage_class):
+    storage_thread = Thread(target=storage_class.run, args=("thread",))
+    # This thread dies when main thread (only non-daemon thread) exits.
+    storage_thread.daemon = True
+    storage_thread.start()
+    try:
+        storage_thread.join()  # waits until the job is completed
+    except (KeyboardInterrupt, SystemExit):
+        sys.stdout.flush()
+        sys.exit(1)  # KeyboardInterrupt
 
-    # removes empty folders
-    subprocess.run(["find", results_folder, "-type", "d", "-empty", "-delete"])
-    p1 = subprocess.Popen(["find", results_folder, "-type", "d", "-empty", "-print0"], stdout=subprocess.PIPE,)
-    p2 = subprocess.Popen(["xargs", "-0", "-r", "rmdir"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p2.communicate()
+
+def run_storage_process(storage_class):
+    storage_process = Process(target=storage_class.run, args=("process",))
+    storage_process.start()
+    try:
+        storage_process.join()  # waits until the job is completed
+    except (KeyboardInterrupt, SystemExit):
+        storage_process.terminate()
+        sys.exit(1)  # KeyboardInterrupt

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import sys
+
 from config import env
 from lib import check_linked_data
-from utils import Link, create_dir
+
+# from utils import Link, create_dir
 
 if __name__ == "__main__":
     path_from = f"{env.EBLOCPATH}/base/data"
@@ -18,4 +21,4 @@ if __name__ == "__main__":
     for key, value in link.data_map.items():
         print(f"{key} => data_link/{value}")
     """
-    exit(0)
+    sys.exit(0)

@@ -1,6 +1,5 @@
 pragma solidity ^0.6.0;
 
-
 // Taken from https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol
 
 /**
@@ -108,7 +107,6 @@ library SafeMath {
         return a % b;
     }
 }
-
 
 library SafeMath32 {
     function add(uint32 _a, uint32 _b) internal pure returns (uint32) {

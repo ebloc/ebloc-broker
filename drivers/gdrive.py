@@ -4,37 +4,34 @@ import os
 import subprocess
 
 import libs.gdrive as gdrive
-from config import bp, env, logging  # noqa: F401
-
-# from contractCalls.get_provider_info import get_provider_info
-from lib import WHERE, CacheType, calculate_folder_size, echo_grep_awk, log, run, silent_remove, subprocess_call
-from libs.storage_class import Storage
-from utils import byte_to_mb, create_dir, generate_md5sum, get_time
+from config import env, logging, setup_logger
+from drivers.storage_class import Storage
+from lib import calculate_folder_size, echo_grep_awk, log, run, silent_remove, subprocess_call
+from startup import bp  # noqa: F401
+from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time
 
 
 class GdriveClass(Storage):
-    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached, oc=None):
-        super(self.__class__, self).__init__(logged_job, jobInfo, requester_id, is_already_cached, oc)
-
-    def assign_folder_path_to_download(self, id, source_code_hash, path):
-        if self.cache_type[id] == CacheType.PUBLIC.value:
+    def assign_folder_path_to_download(self, _id, source_code_hash, path):
+        if self.cache_type[_id] == CacheType.PUBLIC:
             self.folder_path_to_download[source_code_hash] = path
-        elif self.cache_type[id] == CacheType.PRIVATE.value:
+        elif self.cache_type[_id] == CacheType.PRIVATE:
             self.folder_path_to_download[source_code_hash] = self.private_dir
 
-    def cache(self, id, name, source_code_hash, key, is_job_key):
-        if id == 0:
+    def cache(self, _id, name, source_code_hash, key, is_job_key):
+        if _id == 0:
             if self.folder_type_dict[source_code_hash] == "folder":
                 self.folder_type_dict[source_code_hash] = "gzip"
 
-        if self.cache_type[id] == CacheType.PRIVATE.value:
+        self.check_already_cached(source_code_hash)
+        if self.cache_type[_id] == CacheType.PRIVATE:
             # first checking does is already exist under public cache directory
             cache_folder = f"{self.private_dir}"
             cached_tar_file = f"{cache_folder}/{name}"
             if self.folder_type_dict[source_code_hash] == "gzip":
                 if os.path.isfile(cached_tar_file):
                     self.is_already_cached[source_code_hash] = True
-                    self.assign_folder_path_to_download(id, source_code_hash, cached_tar_file)
+                    self.assign_folder_path_to_download(_id, source_code_hash, cached_tar_file)
                     output = generate_md5sum(cached_tar_file)
                     if output != self.md5sum_dict[key]:
                         logging.error("E: File's md5sum does not match with its orignal md5sum value")
@@ -43,16 +40,16 @@ class GdriveClass(Storage):
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         log(f"=> {name} is already cached within private cache directory", "blue")
-                        self.cache_type[id] = CacheType.PRIVATE.value
+                        self.cache_type[_id] = CacheType.PRIVATE
                         return True, None
                 else:
-                    if not self.gdrive_download_folder(name, key, source_code_hash, id, cache_folder):
+                    if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                         return False, None
             elif self.folder_type_dict[source_code_hash] == "folder":
                 output = ""
                 if os.path.isfile(cached_tar_file):
                     self.is_already_cached[source_code_hash] = True
-                    self.assign_folder_path_to_download(id, source_code_hash, cache_folder)
+                    self.assign_folder_path_to_download(_id, source_code_hash, cache_folder)
                     output = generate_md5sum(cached_tar_file)
                 elif os.path.isdir(cache_folder):
                     self.is_already_cached[source_code_hash] = True
@@ -62,17 +59,17 @@ class GdriveClass(Storage):
                 if output == source_code_hash:
                     # checking is already downloaded folder's hash matches with the given hash
                     log(f"=> {name} is already cached within the private cache directory", "blue")
-                    self.cache_type[id] = CacheType.PRIVATE.value
+                    self.cache_type[_id] = CacheType.PRIVATE
                     return True, None
                 else:
-                    if not self.gdrive_download_folder(name, key, source_code_hash, id, cache_folder):
+                    if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                         return False, None
-        elif self.cache_type[id] == CacheType.PUBLIC.value:
+        elif self.cache_type[_id] == CacheType.PUBLIC:
             cache_folder = self.public_dir
             cached_tar_file = f"{cache_folder}/{name}"
             if self.folder_type_dict[source_code_hash] == "gzip":
                 if not os.path.isfile(cached_tar_file):
-                    if not self.gdrive_download_folder(name, key, source_code_hash, id, cache_folder):
+                    if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                         return False, None
 
                     if is_job_key and not self.is_run_exists_in_tar(cached_tar_file):
@@ -85,7 +82,7 @@ class GdriveClass(Storage):
                         self.folder_path_to_download[source_code_hash] = self.public_dir
                         log(f"=> {name} is already cached within public cache directory", "blue")
                     else:
-                        if not self.gdrive_download_folder(name, key, source_code_hash, id, cache_folder):
+                        if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                             return False, None
             elif self.folder_type_dict[source_code_hash] == "folder":
                 tar_file = f"{cache_folder}/{source_code_hash}/{name}"
@@ -97,27 +94,27 @@ class GdriveClass(Storage):
                         log(f"=> {name} is already cached within public cache directory", "blue")
                     else:
                         if not self.gdrive_download_folder(
-                            name, key, source_code_hash, id, f"{self.public_dir}/{name}"
+                            name, key, source_code_hash, _id, f"{self.public_dir}/{name}"
                         ):
                             return False, None
                 else:
-                    if not self.gdrive_download_folder(name, key, source_code_hash, id, f"{self.public_dir}/{name}"):
+                    if not self.gdrive_download_folder(name, key, source_code_hash, _id, f"{self.public_dir}/{name}"):
                         return False, None
 
         return True, None
 
-    def gdrive_download_folder(self, name, key, source_code_hash, id, cache_folder) -> bool:
+    def gdrive_download_folder(self, name, key, source_code_hash, _id, cache_folder) -> bool:
         log(f"[{WHERE(1)}] called from", "blue")
-        success = self.is_cached(source_code_hash, id)
+        success = self.is_cached(source_code_hash, _id)
         if success:
             return True
 
-        if not self.is_already_cached[source_code_hash] and not self.jobInfo[0]["storageDuration"][id]:
+        if not self.is_already_cached[source_code_hash] and not self.jobInfo[0]["storageDuration"][_id]:
             log("Downloaded as temporary data file", "yellow")
             self.folder_path_to_download[source_code_hash] = self.results_folder_prev
         else:
             self.folder_path_to_download[source_code_hash] = cache_folder
-            # self.assign_folder_path_to_download(id, source_code_hash, cache_folder)
+            # self.assign_folder_path_to_download(_id, source_code_hash, cache_folder)
 
         logging.info(f"Downloading => {key}\n Path to download => {self.folder_path_to_download[source_code_hash]}")
         if self.folder_type_dict[source_code_hash] == "folder":
@@ -142,14 +139,7 @@ class GdriveClass(Storage):
         else:
             try:
                 folder = self.folder_path_to_download[source_code_hash]
-                cmd = [
-                    "gdrive",
-                    "download",
-                    key,
-                    "--force",
-                    "--path",
-                    folder,
-                ]
+                cmd = ["gdrive", "download", key, "--force", "--path", folder]
                 subprocess_call(cmd, 10)
             except:
                 return False
@@ -158,20 +148,19 @@ class GdriveClass(Storage):
             if not os.path.isfile(file_path):
                 logging.error(f"[{WHERE(1)}] E: File {file_path} is not downloaded successfully")
                 return False
-            else:
-                filename = f"{self.folder_path_to_download[source_code_hash]}/{name}"
-                p1 = subprocess.Popen(["ls", "-ln", filename,], stdout=subprocess.PIPE,)
-                p2 = subprocess.Popen(["awk", "{print $5}"], stdin=p1.stdout, stdout=subprocess.PIPE)
-                p1.stdout.close()
-                # returns downloaded files size in bytes
-                self.dataTransferIn_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
-                logging.info(
-                    f"dataTransferIn_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB"
-                )
 
+            filename = f"{self.folder_path_to_download[source_code_hash]}/{name}"
+            p1 = subprocess.Popen(["ls", "-ln", filename,], stdout=subprocess.PIPE,)
+            p2 = subprocess.Popen(["awk", "{print $5}"], stdin=p1.stdout, stdout=subprocess.PIPE)
+            p1.stdout.close()
+            # returns downloaded files size in bytes
+            self.dataTransferIn_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
+            logging.info(
+                f"dataTransferIn_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB"
+            )
         return True
 
-    def get_data_init(self, id, key, is_job_key=False):
+    def get_data_init(self, _id, key, is_job_key=False):
         try:
             gdrive_info = subprocess_call(["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA], 10)
         except:
@@ -182,7 +171,7 @@ class GdriveClass(Storage):
         logging.info(f"mime_type={mime_type}")
         if is_job_key:
             # key for the sourceCode tar.gz file is obtained
-            success, self.dataTransferIn_used, self.job_key_list, key = gdrive.size(
+            success, self.dataTransferIn_to_download, self.job_key_list, key = gdrive.size(
                 key,
                 mime_type,
                 folder_name,
@@ -196,14 +185,14 @@ class GdriveClass(Storage):
 
         return mime_type, folder_name
 
-    def remove_downloaded_file(self, source_code_hash, id, path):
-        if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][id]:
+    def remove_downloaded_file(self, source_code_hash, _id, path):
+        if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][_id]:
             silent_remove(path)
 
-    def get_data(self, key, id, is_job_key=False):
-        mime_type, name, = self.get_data_init(id, key, is_job_key)
+    def get_data(self, key, _id, is_job_key=False):
+        mime_type, name, = self.get_data_init(_id, key, is_job_key)
         if is_job_key:
-            if self.dataTransferIn_used > self.dataTransferIn_requested:
+            if self.dataTransferIn_to_download > self.dataTransferIn_requested:
                 logging.error(
                     "E: requested size to download the sourceCode and datafiles is greater that the given amount"
                 )
@@ -219,10 +208,11 @@ class GdriveClass(Storage):
             mime_type = gdrive.get_file_info(gdrive_info, "Mime")
             name = gdrive.get_file_info(gdrive_info, "Name")
 
-        source_code_hash = name.replace(".tar.gz", "")  # folder is already stored by its source_code_hash
+        # folder is already stored by its source_code_hash
+        source_code_hash = name.replace(".tar.gz", "")
         logging.info(f"name={name}")
         logging.info(f"mime_type={mime_type}")
-        if id == 0:
+        if _id == 0:
             # source code folder, ignore downloading result-*
             name = f"{name}.tar.gz"
             try:
@@ -245,7 +235,7 @@ class GdriveClass(Storage):
 
             # recieved job is in folder tar.gz
             self.folder_type_dict[source_code_hash] = "gzip"
-            success, ipfs_hash = self.cache(id, name, source_code_hash, key, is_job_key)
+            success, ipfs_hash = self.cache(_id, name, source_code_hash, key, is_job_key)
             if not success:
                 return False
 
@@ -255,13 +245,17 @@ class GdriveClass(Storage):
                 target = f"{self.results_data_folder}/{source_code_hash}"
                 create_dir(target)
 
-            cache_folder = self.folder_path_to_download[source_code_hash]
-            success, output = self.untar(f"{cache_folder}/{name}", target)
-            self.remove_downloaded_file(source_code_hash, id, f"{cache_folder}/{name}")
+            try:
+                cache_folder = self.folder_path_to_download[source_code_hash]
+                self.untar(f"{cache_folder}/{name}", target, is_print=True)
+            except:
+                return False
+
+            self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}")
         elif "folder" in mime_type:
             # recieved job is in folder format
             self.folder_type_dict[source_code_hash] = "folder"
-            success, ipfs_hash = self.cache(id, name, source_code_hash, key, is_job_key)
+            success, ipfs_hash = self.cache(_id, name, source_code_hash, key, is_job_key)
             if not success:
                 return False
 
@@ -278,17 +272,26 @@ class GdriveClass(Storage):
                 output = run(cmd)
             except:
                 return False
-            self.remove_downloaded_file(source_code_hash, id, f"{cache_folder}/{name}/")
+
+            self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}/")
             tar_file = f"{self.results_folder}/{name}.tar.gz"
-            success, output = self.untar(tar_file, self.results_folder)
-            if success:
+            try:
+                self.untar(tar_file, self.results_folder, is_print=True)
                 silent_remove(tar_file)
+            except:
+                return False
         else:
             return False
 
     def run(self) -> bool:
-        log(f"[{get_time()}] New job has been received through Google Drive", "cyan")
-        # provider_info = get_provider_info(self.logged_job.args["provider"])
+        setup_logger(self.drivers_log_path)
+        # self.thread_log_setup()
+
+        log(
+            f"[{get_time()}] New job has been received through Google Drive ",
+            "---------------------------------------------------------",
+            "cyan",
+        )
 
         if not os.path.isdir(self.results_folder):
             self.get_data(self.job_key, 0, True)
@@ -297,9 +300,7 @@ class GdriveClass(Storage):
             self.get_data(self.job_key, 0, True)
 
         if not self.check_run_sh():
-            # TODO: refund
-            success = self.complete_refund()
-            return False
+            self.complete_refund()
 
         for idx, (key, value) in enumerate(self.job_key_list.items()):
             self.get_data(value, idx + 1)

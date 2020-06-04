@@ -6,12 +6,13 @@ For experiment purposes reqisters 10 users from prc-95
 
 from os.path import expanduser
 
-from contractCalls.authenticateORCID import authenticateORCID
+import eblocbroker.Contract as Contract
 from imports import connect
 
 home = expanduser("~")
 
 eBlocBroker, w3 = connect()
+ebb = Contract.eblocbroker
 
 # -------------------------------------------------------
 orcID = "0000-0001-7642-0552"
@@ -30,5 +31,5 @@ accounts = [
     "0x496acA2bE0694A1137B05cE7fFDcd982bFb53FAD",
 ]
 
-for i in range(0, len(accounts)):
-    print(authenticateORCID(accounts[i], orcID))
+for idx, account in enumerate(accounts):
+    print(ebb.authenticate_orc_id(accounts[idx], orcID, _from=0))
