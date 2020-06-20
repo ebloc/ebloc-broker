@@ -34,19 +34,19 @@ def refund(self, provider, _from, job_key, index, job_id, cores, execution_durat
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
     if len(sys.argv) == 7:
-        provider = ebb.w3.toChecksumAddress(str(sys.argv[1]))
-        _from = ebb.w3.toChecksumAddress(str(sys.argv[2]))
+        provider = Ebb.w3.toChecksumAddress(str(sys.argv[1]))
+        _from = Ebb.w3.toChecksumAddress(str(sys.argv[2]))
         job_key = str(sys.argv[3])
         index = int(sys.argv[4])
         job_id = int(sys.argv[5])
         cores = sys.argv[6]
         execution_durations = sys.argv[7]
     else:
-        provider = ebb.w3.toChecksumAddress(env.PROVIDER_ID)
-        _from = ebb.w3.toChecksumAddress(env.PROVIDER_ID)
+        provider = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
+        _from = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
         job_key = "QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U"
         index = 0
         job_id = 0
@@ -54,10 +54,10 @@ if __name__ == "__main__":
         execution_durations = [5]  #
 
     try:
-        tx_hash = ebb.refund(provider, _from, job_key, index, job_id, cores, execution_durations)
+        tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, execution_durations)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            logs = ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
+            logs = Ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
                 logging.info(f"Job's index={logs[0].args['index']}")
             except Exception:

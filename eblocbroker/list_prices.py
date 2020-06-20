@@ -4,28 +4,28 @@ import config
 
 
 def get_provider_price_info(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):
-    (blockReadFrom, coreNumber, priceCoreMin, priceDataTransfer,) = config.eBlocBroker.functions.getProviderInfo(
+    (blockReadFrom, coreNumber, price_core_min, price_data_transfer,) = config.Ebb.functions.getProviderInfo(
         providerAddress
     ).call()
 
     print("{0: <19}".format("coreNumber: ") + str(coreNumber))
-    print("{0: <19}".format("priceCoreMin: ") + str(priceCoreMin))
-    print("{0: <19}".format("priceDataTransfer: ") + str(priceDataTransfer))
+    print("{0: <19}".format("price_core_min: ") + str(price_core_min))
+    print("{0: <19}".format("price_data_transfer: ") + str(price_data_transfer))
     if requestedCore > coreNumber:
         print("{0: <19}".format("price: ") + "Requested core is greater than provider's core")
     else:
         print(
             "{0: <19}".format("price: ")
-            + str(requestedCore * coreMinuteGas * priceCoreMin + gasDataTransfer * priceDataTransfer)
+            + str(requestedCore * coreMinuteGas * price_core_min + gasDataTransfer * price_data_transfer)
         )
 
 
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
-    providers = ebb.get_providers()
+    providers = Ebb.get_providers()
 
     requestedCore = 2
     coreGasDay = 0

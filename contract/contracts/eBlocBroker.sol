@@ -333,11 +333,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
+        string memory ipfsID,
+        string memory whisperID,
         uint32 availableCore,
         uint32[] memory prices,
-        uint32 commitmentBlockDuration,
-        string memory ipfsID,
-        string memory whisperID
+        uint32 commitmentBlockDuration
     ) public whenProviderNotRegistered returns (bool) {
         Lib.Provider storage provider = providers[msg.sender];
 
@@ -362,9 +362,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     function updateProviderInfo(
+	bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
-        bytes32 gpgFingerprint,
         string memory ipfsID,
         string memory whisperID
     ) public whenProviderRegistered returns (bool) {

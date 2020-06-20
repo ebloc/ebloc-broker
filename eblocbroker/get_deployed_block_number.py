@@ -2,7 +2,7 @@
 
 import eblocbroker.Contract as Contract
 
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 if __name__ == "__main__":
-    print(ebb.get_deployed_block_number())
+    print(Ebb.get_deployed_block_number())

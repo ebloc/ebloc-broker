@@ -2,8 +2,8 @@
 
 import eblocbroker.Contract as Contract
 
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 
 if __name__ == "__main__":
-    print(f"is_contract_exists={ebb.is_contract_exists()}")
+    print(f"is_contract_exists={Ebb.is_contract_exists()}")

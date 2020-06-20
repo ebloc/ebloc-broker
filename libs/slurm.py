@@ -5,7 +5,7 @@ import time
 
 from config import logging
 from lib import run
-from utils import _colorize_traceback, popen_communicate
+from utils import _colorize_traceback, log, popen_communicate
 
 
 def add_user_to_slurm(user):
@@ -33,6 +33,7 @@ def remove_user(user):
 
 
 def get_idle_cores(is_print_flag=True):
+    # https://stackoverflow.com/a/50095154/2402577
     core_info = run(["sinfo", "-h", "-o%C"]).split("/")
     if len(core_info) != 0:
         allocated_cores = core_info[0]
@@ -40,16 +41,16 @@ def get_idle_cores(is_print_flag=True):
         other_cores = core_info[2]
         total_cores = core_info[3]
         if is_print_flag:
-            logging.info(
+            log(
                 f"AllocatedCores={allocated_cores} |"
                 f"IdleCores={idle_cores} |"
                 f"OtherCores={other_cores} |"
-                f"TotalNumberOfCores={total_cores}"
+                f"TotalNumberOfCores={total_cores}",
+                "green",
             )
     else:
         logging.error("sinfo is emptry string")
         idle_cores = None
-
     return idle_cores
 
 
@@ -70,13 +71,15 @@ def is_on() -> bool:
     logging.info("Checking Slurm... ")
     output = run(["sinfo"])
     if "PARTITION" not in output:
-        logging.error("E: sinfo returns emprty string, please run:\nsudo ./bash_scripts/run_slurm.sh\n")
+        logging.error("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")
         if not output:
             logging.error(f"E: {output}")
-
-        logging.info("Starting Slurm... \n")
-        subprocess.run(["sudo", "bash", "bash_scripts/run_slurm.sh"])
-        return False
+        try:
+            logging.info("Starting Slurm... \n")
+            run(["sudo", "bash", "bash_scripts/run_slurm.sh"])
+            return True
+        except:
+            return False
     elif "sinfo: error" in output:
         logging.error(f"Error on munged: \n {output} \n run:\nsudo munged -f \n" "/etc/init.d/munge start")
         return False

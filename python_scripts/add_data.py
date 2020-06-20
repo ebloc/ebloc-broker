@@ -6,8 +6,8 @@ from libs.ipfs import get_parent_hash
 
 
 def add_to_ipfs(results_folder):
-    cmd = ["ipfs", "add", "-r", results_folder]  # uploaded as folder
     try:
+        cmd = ["ipfs", "add", "-r", results_folder]  # uploaded as folder
         result_ipfs_hash = get_parent_hash(run(cmd))
     except Exception:
         sys.exit()

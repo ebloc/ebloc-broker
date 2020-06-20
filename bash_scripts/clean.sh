@@ -9,6 +9,7 @@ find . -name 'flycheck_*.py' -delete
 find . -name 'nohup.out' -delete
 find . -name '*_flymake.py' -delete
 find . -name '*.*~' -delete
+find . -name '*~' -delete
 find . -name '\#*' -delete
 find . -name __pycache__ -type d -exec rm -rf {} +
 
