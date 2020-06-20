@@ -27,7 +27,7 @@ def process_payment(
     )
 
     for cloud_storage_id in cloud_storage_ids:
-        if len(result_ipfs_hash) != 46 and cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_MINILOCK):
+        if len(result_ipfs_hash) != 46 and cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             logging.error("E: Result ipfs's length does not match with its original length. Please check your job_key")
             raise
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         index = 0
         job_id = 0
         execution_time_min = 1
-        result_ipfs_hash = b""
+        result_ipfs_hash = ""
         cloud_storage_id = 1
         end_time = 1584375940
         dataTransferIn = 0.029152870178222656

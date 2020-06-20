@@ -1,8 +1,6 @@
 import importlib
 
-from brownie import *
-
-from scripts import project
+from contract.scripts import project
 
 
 def main():

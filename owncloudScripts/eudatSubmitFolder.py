@@ -14,7 +14,7 @@ from utils import _colorize_traceback, generate_md5sum
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 
 def eudatSubmitJob(tar_hash=None):
@@ -28,10 +28,10 @@ def eudatSubmitJob(tar_hash=None):
     (
         blockReadFrom,
         availableCoreNum,
-        priceCoreMin,
-        priceDataTransfer,
-        priceStorage,
-        priceCache,
+        price_core_min,
+        price_data_transfer,
+        price_storage,
+        price_cache,
     ) = eBlocBroker.functions.getProviderInfo(providerAddress).call()
     my_filter = eBlocBroker.eventFilter(
         "LogProvider", {"fromBlock": int(blockReadFrom), "toBlock": int(blockReadFrom) + 1},
@@ -61,7 +61,7 @@ def eudatSubmitJob(tar_hash=None):
     account_id = 0
 
     try:
-        tx_hash = ebb.submit_job(
+        tx_hash = Ebb.submit_job(
             str(provider),
             str(tar_hash),
             coreNum,

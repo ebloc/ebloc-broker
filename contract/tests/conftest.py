@@ -10,7 +10,6 @@ def isolate(fn_isolation):
 
 
 @pytest.fixture(scope="module")
-def eB(Lib, eBlocBroker, accounts):
+def _Ebb(Lib, eBlocBroker, accounts):
     accounts[0].deploy(Lib)
-    t = accounts[0].deploy(eBlocBroker)
-    yield t
+    yield accounts[0].deploy(eBlocBroker)

@@ -71,7 +71,7 @@ class ENV:
         self.POA_CHAIN = str(os.getenv("POA_CHAIN")).lower() in ("yes", "true", "t", "1",)
         self.RPC_PORT = os.getenv("RPC_PORT")
 
-        self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
+        # self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self.GDRIVE_METADATA = f"/home/{self.WHOAMI}/.gdrive"
         self.IPFS_REPO = f"/home/{self.WHOAMI}/.ipfs"
         self.IPFS_LOG = f"{self.LOG_PATH}/ipfs.out"
@@ -81,10 +81,16 @@ class ENV:
         self.PROGRAM_PATH = "/var/eBlocBroker"
         self.JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/test.txt"
         self.CANCEL_JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledJobs.txt"
-        self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/blockReadFrom.txt"
+        self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
+
         self.CANCEL_BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledBlockReadFrom.txt"
         self.OC_CLIENT = f"{self.LOG_PATH}/.oc_client.pckl"
         self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
+
+        self.WHISPER_INFO = f"{self.LOG_PATH}/whisper_info.txt"
+        self.WHISPER_LOG = f"{self.LOG_PATH}/whisper_state_receiver.out"
+        self.WHISPER_TOPIC = "0x07678231"
+
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
         else:
@@ -114,6 +120,7 @@ def setup_logger(log_path="", is_brownie=False):
         # new threads.
         main_handler = logging.FileHandler(log_path, "a")
         main_handler.addFilter(IgnoreThreadsFilter())
+
         logging.basicConfig(
             handlers=[logging.StreamHandler(), main_handler],
             level=logging.INFO,
@@ -130,11 +137,10 @@ def setup_logger(log_path="", is_brownie=False):
             format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
+    return logging.getLogger()
 
-    return logging
 
-
-eBlocBroker = None
+Ebb = None
 w3 = None  # type: Type[Web3]
 contract = None
 
@@ -148,3 +154,4 @@ logger = setup_logger()  # Default initialization
 
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
+IS_THREADING_ENABLED = False

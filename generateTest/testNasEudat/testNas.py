@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
 
-import datetime
-import getpass
-import hashlib
-import math
 import os
-import random
-import sys
-import time
 from os.path import expanduser
-from random import randint
 from test.func import testFunc
 
 import owncloud
@@ -19,12 +11,13 @@ import lib
 home = expanduser("~")
 
 path = os.getcwd()
-# definitions =============================================
+
 providerID = "0x4e4a0750350796164d8defc442a712b7557bf282"  # netlab
 testType = "eudat-nas"
 readTest = "hashOutput.txt"
 cacheType = lib.cacheType.private
-# =========================================================
+
+
 def log(strIn):
     print(strIn)
     txFile = open(path + "/clientOutput.txt", "a")

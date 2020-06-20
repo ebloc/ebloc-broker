@@ -49,9 +49,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # general information about the project.
-project = u"eBlocBroker"
-copyright = u"2017, Alper Alimoglu, Prof. Dr. Can Ozturan"
-author = u"Alper Alimoglu, Prof. Dr. Can Ozturan"
+project = "eBlocBroker"
+copyright = "2017, Alper Alimoglu, Prof. Dr. Can Ozturan"
+author = "Alper Alimoglu, Prof. Dr. Can Ozturan"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

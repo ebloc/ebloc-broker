@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
 
-import datetime
-import getpass
-import hashlib
-import math
 import os
-import random
-import sys
-import time
 from os.path import expanduser
-from random import randint
 from test.func import testFunc
 
 import owncloud

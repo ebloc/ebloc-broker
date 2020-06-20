@@ -12,7 +12,7 @@ from imports import connect
 home = expanduser("~")
 
 eBlocBroker, w3 = connect()
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 # -------------------------------------------------------
 orcID = "0000-0001-7642-0552"
@@ -32,4 +32,4 @@ accounts = [
 ]
 
 for idx, account in enumerate(accounts):
-    print(ebb.authenticate_orc_id(accounts[idx], orcID, _from=0))
+    print(Ebb.authenticate_orc_id(accounts[idx], orcID, _from=0))
