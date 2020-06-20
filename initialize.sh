@@ -72,6 +72,7 @@ if [ $setup -eq 1 ]; then
         sudo apt-get install bc
         sudo apt-get install realpath
 	sudo apt-get install acl
+	sudo apt-get install pigz
     fi
 
     # mongodb guide => https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/

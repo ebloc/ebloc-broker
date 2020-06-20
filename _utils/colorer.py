@@ -103,10 +103,10 @@ def add_coloring_to_emit_ansi(fn):
 
 if platform.system() == "Windows":
     # windows does not support ANSI escapes and we are using API calls to set the console color
-    logging.StreamHandler.emit = add_coloring_to_emit_windows(logging.StreamHandler.emit)
+    logging.StreamHandler.emit = add_coloring_to_emit_windows(logging.StreamHandler.emit)  # type: ignore
 else:
     # all non-Windows platforms are supporting ANSI escapes so we use them
-    logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
+    logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)  # type: ignore
 
     # log = logging.getLogger()
     # log.addFilter(log_filter())

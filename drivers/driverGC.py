@@ -12,21 +12,21 @@ cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
 eBlocBroker, w3 = connect()
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 """find_all"""
-block_number = ebb.get_block_number()
+block_number = Ebb.get_block_number()
 print(block_number)
 
 storageID = None
 cursor = coll.find({})
 for document in cursor:
     # print(document)
-    received_block_number, storage_time = ebb.get_job_storage_time(env.PROVIDER_ID, document["sourceCodeHash"])
+    received_block_number, storage_time = Ebb.get_job_storage_time(env.PROVIDER_ID, document["sourceCodeHash"])
     endBlockTime = received_block_number + storage_time * 240
     storageID = document["storageID"]
     if endBlockTime < block_number and received_block_number != 0:
-        if storageID in (StorageID.IPFS, StorageID.IPFS_MINILOCK):
+        if storageID in (StorageID.IPFS, StorageID.IPFS_GPG):
             ipfsHash = document["jobKey"]
             cmd = ["ipfs", "pin", "rm", ipfsHash]
             success, output = run_command(cmd)

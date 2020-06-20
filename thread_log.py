@@ -35,7 +35,7 @@ def hello(name):  # shared module on write time
 def thread_function(name):
     # A dedicated per-thread handler
     # thread_file_handler = f"/tmp/threadlogfile-{threading.get_ident()}.log"
-    thread_file_handler = "/tmp/threadlogfile.log"
+    thread_file_handler = f"/tmp/threadlogfile{name}.log"
     thread_handler = logging.FileHandler(thread_file_handler, "a")
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     thread_handler.setFormatter(formatter)
@@ -53,7 +53,9 @@ if __name__ == "__main__":
     # consider giving the thread a name (add name=...), then you could
     # use ThreadFilter(threadname=...) to select on all messages with that name
     # The thread name does not have to be unique.
-    x = threading.Thread(target=thread_function, args=("thread==1",))
+    x = threading.Thread(target=thread_function, args=("thread_1",))
+    y = threading.Thread(target=thread_function, args=("thread_2",))
     x.start()
+    y.start()
 
     hello("main_thread_end")

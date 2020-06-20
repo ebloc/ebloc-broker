@@ -9,60 +9,91 @@ from contract.scripts.lib import Job, cost
 from imports import connect
 from lib import check_linked_data, get_tx_status, run, silent_remove
 from libs import ipfs
-from libs.ipfs import mlck_encrypt
+from libs.ipfs import gpg_encrypt
 from startup import bp  # noqa: F401
-from utils import CacheType, StorageID, _colorize_traceback, generate_md5sum, ipfs_to_bytes32, printc
+from utils import (
+    CacheType,
+    StorageID,
+    _colorize_traceback,
+    generate_md5sum,
+    ipfs_to_bytes32,
+    is_dpkg_installed,
+    log,
+    printc,
+)
 
 if __name__ == "__main__":
+    printc("Attempt to submit a job.", "blue")
     eBlocBroker, w3 = connect()
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
     job = Job()
 
-    printc("Attempt to submit a job", "blue")
-    # requester inputs for testing
-    account_id = 1
-    provider = w3.toChecksumAddress("0x57b60037b82154ec7149142c606ba024fbb0f991")  # netlab
+    if not is_dpkg_installed("pigz"):
+        log("E: Install pigz: sudo apt-get install pigz", "red")
+        sys.exit()
 
-    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
-    # storage_ids = [StorageID.IPFS_MINILOCK, StorageID.IPFS_MINILOCK]
-    # storage_ids = [StorageID.IPFS_MINILOCK, StorageID.IPFS]
+    account_id = 1
+    provider = w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")  # netlab
+    try:
+        _from = Ebb.account_id_to_address(account_id)
+    except:
+        _colorize_traceback()
+        sys.exit(1)
+
+    if not Ebb.eBlocBroker.functions.doesRequesterExist(_from).call():
+        log(f"E: Requester's Ethereum address {_from} is not registered", "red")
+        sys.exit(1)
+
+    *_, orcid = Ebb.eBlocBroker.functions.getRequesterInfo(_from).call()
+    if not Ebb.eBlocBroker.functions.isOrcIDVerified(_from).call():
+        log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified", "red")
+        sys.exit(1)
+
+    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
+    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
 
     main_storage_id = job.storage_ids[0]
     job.cache_types = [CacheType.PUBLIC, CacheType.PUBLIC]
 
+    # TODO: let user directly provide the IPFS hash instead of the folder
     folders = []  # full paths are provided
     folders.append(f"{env.EBLOCPATH}/base/sourceCode")
     folders.append(f"{env.EBLOCPATH}/base/data/data1")
 
     path_to = f"{env.EBLOCPATH}/base/data_link"
-    check_linked_data(None, path_to, folders[1:])
+    check_linked_data(None, path_to, folders[1:], force_continue=True)
     for folder in folders:
         if not os.path.isdir(folder):
             print(f"{folder} path does not exist")
             sys.exit(1)
 
     if main_storage_id == StorageID.IPFS:
-        printc("Submitting source code through IPFS...")
-    elif main_storage_id == StorageID.IPFS_MINILOCK:
-        printc("Submitting source code through IPFS_MINILOCK...")
+        log("==> Submitting source code through IPFS", "cyan")
+    elif main_storage_id == StorageID.IPFS_GPG:
+        log("==> Submitting source code through IPFS_GPG", "cyan")
     else:
-        printc("Please provide IPFS or IPFS_MINILOCK storage type")
+        printc("Please provide IPFS or IPFS_GPG storage type")
         sys.exit(1)
 
+    targets = []
     for idx, folder in enumerate(folders):
         try:
-            provider_info = ebb.get_provider_info(provider)
+            provider_info = Ebb.get_provider_info(provider)
         except:
             sys.exit()
 
         target = folder
-        if job.storage_ids[idx] == StorageID.IPFS_MINILOCK:
-            # provider_minilock_id = provider_info["miniLockID"] # TODO: read from the provider
-            provider_minilock_id = "SjPmN3Fet4bKSBJAutnAwA15ct9UciNBNYo1BQCFiEjHn"
-            mlck_pass = "bright wind east is pen be lazy usual"
+        if job.storage_ids[idx] == StorageID.IPFS_GPG:
+            provider_gpg_finderprint = provider_info["gpg_fingerprint"]
+            if not provider_gpg_finderprint:
+                printc("E: Provider did not register any GPG fingerprint.")
+                sys.exit(1)
+
             try:
-                target = mlck_encrypt(provider_minilock_id, mlck_pass, target)
-                printc(f"minilock_file:{target}", "blue")
+                # target is updated
+                target = gpg_encrypt(provider_gpg_finderprint, target)
+                printc(f"GPG_file: {target}", "blue")
             except:
                 sys.exit(1)
 
@@ -71,17 +102,22 @@ if __name__ == "__main__":
             # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
             run(["ipfs", "refs", ipfs_hash])
         except:
+            _colorize_traceback()
             sys.exit(1)
 
         if idx == 0:
             key = ipfs_hash
 
         job.source_code_hashes.append(ipfs_to_bytes32(ipfs_hash))
-        printc(f"{target} \nipfs_hash:{ipfs_hash}  md5sum:{generate_md5sum(target)}\n", "green")
-        if main_storage_id == StorageID.IPFS_MINILOCK:
-            # created .minilock file is removed since its already in ipfs
-            silent_remove(target)
+        printc(f"ipfs_hash: {ipfs_hash}\nmd5sum: {generate_md5sum(target)}", "yellow")
+        if main_storage_id == StorageID.IPFS_GPG:
+            # created .gpg file will be removed since its already in ipfs
+            targets.append(target)
 
+        if idx != len(folders) - 1:
+            print("------")
+
+    # requester inputs for testing
     job.cores = [1]
     job.execution_durations = [1]
     job.storage_hours = [1, 1]
@@ -89,16 +125,21 @@ if __name__ == "__main__":
     job.dataTransferOut = 1
     job.data_prices_set_block_numbers = [0, 0]
 
-    requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
+    requester = Ebb.account_id_to_address(account_id)
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
+    bp()
     try:
-        receipt = get_tx_status(ebb.submit_job(provider, key, account_id, job_price, job))
+        receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
         if receipt["status"] == 1:
             try:
                 logs = eBlocBroker.events.LogJob().processReceipt(receipt)
                 print(f"job_index={logs[0].args['index']}")
+                for target in targets:
+                    silent_remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted.")
     except:
         _colorize_traceback()
         sys.exit(1)
+    finally:
+        pass

@@ -7,19 +7,19 @@ import time
 from io import StringIO
 from typing import Tuple
 
-from config import logging
+from config import env, logging
 from lib import _try, compress_folder, run, silent_remove
 from startup import bp  # noqa: F401
-from utils import log
+from utils import _colorize_traceback, log, untar
 
 
-def is_hash_exists_online(ipfs_hash, attempt_count):
+def is_hash_exists_online(ipfs_hash, attempts):
     logging.info(f"Attempting to check IPFS file {ipfs_hash}")
-    for attempt in range(attempt_count):
+    for attempt in range(attempts):
         try:
             timeout_duration = "300"  # wait max 5 minutes
             ipfs_stat = run(["timeout", timeout_duration, "ipfs", "object", "stat", ipfs_hash])
-            log(ipfs_stat, "yellow")
+            log(f"attemt={attempt}\n{ipfs_stat}", "yellow")
             for item in ipfs_stat.split("\n"):
                 if "CumulativeSize" in item:
                     cumulative_size = item.strip().split()[1]
@@ -27,8 +27,7 @@ def is_hash_exists_online(ipfs_hash, attempt_count):
         except:
             logging.error(f"E: Failed to find IPFS file: {ipfs_hash}")
             return False, None, None
-    else:
-        return False, None, None
+    return False, None, None
 
 
 def is_hash_locally_cached(ipfs_hash) -> bool:
@@ -55,16 +54,82 @@ def pin(ipfs_hash) -> bool:
     return run(["ipfs", "pin", "add", ipfs_hash])
 
 
-def mlck_encrypt(provider_minilock_id, mlck_pass, target):
-    is_delete = False
-    if os.path.isdir(target):
-        tar_hash, target_compressed = compress_folder(target)
-        is_delete = True
+def decrypt_using_gpg(gpg_file, extract_target):
+    if not os.path.isfile(f"{gpg_file}.gpg"):
+        os.symlink(gpg_file, f"{gpg_file}.gpg")
+
+    gpg_file_link = f"{gpg_file}.gpg"
+    tar_file = f"{gpg_file}.tar.gz"
+
+    """cmd:
+    gpg --output={tar_file} --pinentry-mode loopback \
+        --passphrase-file=f"{env.LOG_PATH}/gpg_pass.txt" \
+        --decrypt {gpg_file_link}
+    """
+    cmd = [
+        "gpg",
+        "--batch",
+        "--yes",
+        f"--output={tar_file}",
+        "--pinentry-mode",
+        "loopback",
+        f"--passphrase-file={env.LOG_PATH}/.gpg_pass.txt",
+        "--decrypt",
+        gpg_file_link,
+    ]
 
     try:
-        run(["mlck", "encrypt", "-f", target_compressed, provider_minilock_id, f"--passphrase={mlck_pass}"])
-        return f"{target_compressed}.minilock"
+        run(cmd)
     except:
+        _colorize_traceback()
+        raise
+    finally:
+        os.unlink(gpg_file_link)
+        silent_remove(gpg_file)  # Downloaded file is removed
+
+    try:
+        log("mlck decrypt: SUCCESS", "green")
+        untar(tar_file, extract_target)
+    except:
+        logging.error("E: Could not extract the given tar file")
+        raise
+    finally:
+        cmd = None
+        silent_remove(tar_file)
+
+
+def gpg_encrypt(provider_gpg_finderprint, target):
+    is_delete = False
+    if os.path.isdir(target):
+        try:
+            *_, target_compressed = compress_folder(target)
+            is_delete = True
+        except:
+            _colorize_traceback()
+            sys.exit()
+
+    encrypted_file_target = f"{target_compressed}.gpg"
+    if os.path.isfile(encrypted_file_target):
+        log(f"{encrypted_file_target} is already created.", "green")
+        return encrypted_file_target
+
+    try:
+        run(
+            [
+                "gpg",
+                "--batch",
+                "--yes",
+                "--recipient",
+                provider_gpg_finderprint,
+                "--output",
+                encrypted_file_target,
+                "--encrypt",
+                target_compressed,
+            ]
+        )
+        return encrypted_file_target
+    except:
+        _colorize_traceback()
         raise
     finally:
         if is_delete:
@@ -132,7 +197,7 @@ def add(path: str, is_hidden=False):
     else:  # failed all the attempts - abort
         sys.exit(1)
 
-    return True, result_ipfs_hash
+    return result_ipfs_hash
 
 
 def get_only_ipfs_hash(path) -> Tuple[bool, str]:

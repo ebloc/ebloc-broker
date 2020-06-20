@@ -4,11 +4,11 @@ import os
 
 from config import env, logging
 from lib import get_tx_status
-from utils import _colorize_traceback, read_json
+from utils import _colorize_traceback, log, read_json
 
 
 def register_provider(
-    self, availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num
+    self, available_core_num, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_address, commitment_block_num
 ):
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
         logging.error("Please first run: ../scripts/whisper_initialize.py")
@@ -24,15 +24,14 @@ def register_provider(
     whisperPubKey = data["publicKey"]
 
     if not self.w3.geth.shh.hasKeyPair(kId):
-        logging.error(
-            f"Whisper node's private key of a key pair did not match with the given ID.\n"
-            f"Please run: {env.EBLOCPATH}/scripts/whisper_initialize.py"
-        )
+        logging.error("\nWhisper node's private key of a key pair did not match with the given ID. Please run:")
+        log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py \n", "yellow")
         raise
 
     if self.does_provider_exist(env.PROVIDER_ID):
-        logging.error(
-            f"Provider {env.PROVIDER_ID} is already registered. Please call the updateProvider() function for an update."
+        log(
+            "E: Provider {env.PROVIDER_ID} is already registered.\nPlease call the updateProvider() function for an update.",
+            "red",
         )
         raise
 
@@ -48,19 +47,15 @@ def register_provider(
         logging.error("E: email should be less than 128")
         raise
 
-    if len(minilock_id) != 0 or len(minilock_id) != 45:
-        logging.error("E: minilock_id should be 0 or 45")
-        raise
-
     try:
         tx = self.eBlocBroker.functions.registerProvider(
             email,
             federation_cloud_id,
-            minilock_id,
-            availableCoreNum,
+            gpg_fingerprint,
+            available_core_num,
             prices,
             commitment_block_num,
-            ipfsAddress,
+            ipfs_address,
             whisperPubKey,
         ).transact({"from": env.PROVIDER_ID, "gas": 4500000})
         return tx.hex()
@@ -72,25 +67,25 @@ def register_provider(
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
-    availableCoreNum = 128
+    available_core_num = 128
     email = "alper01234alper@gmail.com"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
-    minilock_id = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
-    ipfsAddress = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
+    gpg_fingerprint = "0x0359190A05DF2B72729344221D522F92EFA2F330"
 
-    priceCoreMin = 100
-    priceDataTransfer = 1
-    priceStorage = 1
-    priceCache = 1
-    prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
+    ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 
+    price_core_min = 100
+    price_data_transfer = 1
+    price_storage = 1
+    price_cache = 1
+    prices = [price_core_min, price_data_transfer, price_storage, price_cache]
     commitment_block_num = 240
 
     try:
-        tx_hash = ebb.register_provider(
-            availableCoreNum, email, federation_cloud_id, minilock_id, prices, ipfsAddress, commitment_block_num,
+        tx_hash = Ebb.register_provider(
+            available_core_num, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_address, commitment_block_num,
         )
         receipt = get_tx_status(tx_hash)
     except:

@@ -11,13 +11,13 @@ from pymongo import MongoClient
 import config
 import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
-from config import env, logging, setup_logger
+from config import env, logging
 from drivers.storage_class import Storage
 from lib import silent_remove
 from startup import bp  # noqa: F401
-from utils import CacheType, _colorize_traceback, create_dir, generate_md5sum, get_time, log, read_json
+from utils import CacheType, _colorize_traceback, create_dir, generate_md5sum, get_time, log, read_json, untar
 
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 
 class EudatClass(Storage):
@@ -242,21 +242,15 @@ class EudatClass(Storage):
             if not self.is_already_cached[folder_name]:
                 info = config.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
                 self.dataTransferIn_to_download += int(info.attributes["{DAV:}getcontentlength"])
-
         log(f"Total size to download={self.dataTransferIn_to_download} bytes", "blue")
 
     def run(self, _type) -> bool:
         self.start_time = time.time()
-        try:
-            if _type == "process":
-                setup_logger(self.drivers_log_path)
-            else:
-                self.thread_log_setup()
+        if env.IS_THREADING_ENABLED:
+            self.thread_log_setup()
 
-            bp()
-            config.logging.info("alper")
+        try:
             log(f"Log_path => {self.drivers_log_path}", "green")
-            return False
             self._run()
             # self.thread_log_setup()
         except Exception:
@@ -277,18 +271,17 @@ class EudatClass(Storage):
         # TODO: refund check
         self.mc = MongoClient()
         self.coll = self.mc["eBlocBroker"]["cache"]
-
         try:
-            provider_info = ebb.get_provider_info(self.logged_job.args["provider"])
-            self.eudat_get_share_token(provider_info["fID"])
+            provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
+            self.eudat_get_share_token(provider_info["f_id"])
         except:
             logging.error("E: could not get the share id")
             _colorize_traceback()
             raise
 
         if self.dataTransferIn_to_download > self.dataTransferIn_requested:
-            log(f"dataTransferIn_to_download={self.dataTransferIn_to_download}", "red")
-            log(f"dataTransferIn_requested={self.dataTransferIn_requested}", "red")
+            log(f"data_transfer_in_to_download={self.dataTransferIn_to_download}", "red")
+            log(f"data_transfer_in_requested={self.dataTransferIn_requested}", "red")
             logging.error(
                 "E: Requested size to download the source code and data files is greater that the given amount"
             )
@@ -308,7 +301,7 @@ class EudatClass(Storage):
                     create_dir(target)
 
                 try:
-                    self.untar(tar_to_extract, target, is_print=True)
+                    untar(tar_to_extract, target)
                 except:
                     return False
 
@@ -316,7 +309,7 @@ class EudatClass(Storage):
                     self.complete_refund()
                     return False
 
-        logging.info(f"dataTransferIn_requested={self.dataTransferIn_requested} MB")
+        logging.info(f"data_transfer_in_requested={self.dataTransferIn_requested} MB")
         for folder_name in self.source_code_hashes_to_process:
             try:
                 self.shareID[folder_name]["share_token"]
@@ -326,5 +319,4 @@ class EudatClass(Storage):
                 except:
                     logging.error(f"E: share_id cannot be detected from key: {self.job_key}")
                     return False
-
         return self.sbatch_call()

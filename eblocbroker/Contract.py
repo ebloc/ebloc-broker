@@ -25,11 +25,14 @@ class Contract:
     from eblocbroker.update_provider_prices import update_provider_prices
     from eblocbroker.transfer_ownership import transfer_ownership
 
+    def account_id_to_address(self, account_id):
+        return self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
+
     def get_job_size(self, provider, key):
         return self.eBlocBroker.call().getJobSize(provider, key)
 
-    def is_orcid_verified(self, requester):
-        return self.eBlocBroker.functions.isOrcIDVerified(requester).call()
+    def is_orcid_verified(self, address):
+        return self.eBlocBroker.functions.isOrcIDVerified(address).call()
 
     def does_requester_exist(self, address):
         address = self.w3.toChecksumAddress(address)
@@ -74,9 +77,9 @@ class Contract:
             _colorize_traceback()
             raise
 
-    def set_job_status_running(self, key, index, job_id, startTime):
+    def set_job_status_running(self, key, index, job_id, start_time):
         try:
-            tx = self.eBlocBroker.functions.setJobStatusRunning(key, int(index), int(job_id), int(startTime)).transact(
+            tx = self.eBlocBroker.functions.setJobStatusRunning(key, int(index), int(job_id), int(start_time)).transact(
                 {"from": self.w3.toChecksumAddress(env.PROVIDER_ID), "gas": 4500000}
             )
             return tx.hex()

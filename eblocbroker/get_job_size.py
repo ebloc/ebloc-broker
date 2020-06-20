@@ -5,7 +5,7 @@ import sys
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
@@ -14,4 +14,4 @@ if __name__ == "__main__":
         provider = "0x4e4a0750350796164d8defc442a712b7557bf282"
         key = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"
 
-    print(ebb.getJobSize(provider, key))
+    print(Ebb.getJobSize(provider, key))

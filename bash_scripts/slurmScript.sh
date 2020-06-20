@@ -13,6 +13,8 @@ event=$(echo $c | awk '{print $8}')
 
 msg="Your message | $a | $b | $c //$event"
 echo $msg | mail -s "Message Subject" $EMAIL
+
+echo ""   >> $LOG_FILE
 echo $msg >> $LOG_FILE
 
 slurm_job_id=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
@@ -21,7 +23,7 @@ if [[ $c == *" Began, "* ]]; then
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
 
-    msg="JOB STARTED: $name |$arg0 $arg1 $slurm_job_id"
+    msg="JOB STARTED: $name | $arg0 $arg1 $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo $msg >> $LOG_FILE
 
@@ -33,7 +35,7 @@ fi
 
 if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     # COMPLETED or FILEDslurm jobs are catched here
-    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
+    name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
@@ -56,7 +58,8 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     fi
 fi
 
-if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
+if [[ $event == *"TIMEOUT"* ]]; then
+    # Timeouted slurm jobs are catched here
     name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Failed)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
@@ -72,8 +75,9 @@ if [[ $event == *"TIMEOUT"* ]]; then # Timeouted slurm jobs are catched here
     fi
 fi
 
-if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
-    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
+if [[ $event == *"CANCELLED"* ]]; then
+    # Cancelled slurm jobs are catched here
+    name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
@@ -88,8 +92,9 @@ if [[ $event == *"CANCELLED"* ]]; then # Cancelled slurm jobs are catched here
     fi
 fi
 
-if [[ $event == *"FAILED"* ]]; then # Failed slurm jobs are catched here
-    name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Ended)')
+if [[ $event == *"FAILED"* ]]; then
+    # Failed slurm jobs are catched here
+    name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number

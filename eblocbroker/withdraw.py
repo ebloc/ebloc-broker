@@ -2,13 +2,12 @@
 
 import sys
 
-from config import logging
 from lib import get_tx_status
 
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
     if len(sys.argv) == 2:
         account = str(sys.argv[1])
@@ -17,7 +16,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        tx_hash = ebb.withdraw(account)
+        tx_hash = Ebb.withdraw(account)
         receipt = get_tx_status(tx_hash)
     except:
         sys.exit(1)

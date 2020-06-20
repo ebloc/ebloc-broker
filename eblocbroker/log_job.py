@@ -7,18 +7,26 @@ http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-event
 import sys
 import time
 
+from config import logging
 from utils import CacheType, StorageID, bytes32_to_ipfs
 
 
 def log_return(event_filter, poll_interval):
+    sleep_duration = 0
     while True:
+        sys.stdout.write("\r")
+        sys.stdout.write("Waiting logs for {:1d} seconds...".format(sleep_duration))
+        sys.stdout.flush()
+
         logged_jobs = event_filter.get_new_entries()
         if len(logged_jobs) > 0:
             return logged_jobs
+        sleep_duration += poll_interval
         time.sleep(poll_interval)
 
 
 def run_log_job(self, from_block, provider):
+    logging.info("Waiting new logs to be come...")
     event_filter = self.eBlocBroker.events.LogJob.createFilter(
         fromBlock=int(from_block), toBlock="latest", argument_filters={"provider": str(provider)},
     )
@@ -59,7 +67,7 @@ def run_single_log_job(self, from_block, jobKey, transactionHash):
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
     if len(sys.argv) == 3:
         from_block = int(sys.argv[1])
@@ -68,13 +76,13 @@ if __name__ == "__main__":
         from_block = 3070724
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 
-    logged_jobs = ebb.run_log_job(from_block, provider)
+    logged_jobs = Ebb.run_log_job(from_block, provider)
 
     for logged_job in logged_jobs:
         # print(logged_jobs[i])
         cloudStorageID = logged_job.args["cloudStorageID"]
         """
-        if StorageID.IPFS == cloudStorageID or cloudStorageID.IPFS_MINILOCK == cloudStorageID:
+        if StorageID.IPFS == cloudStorageID or cloudStorageID.IPFS_GPG == cloudStorageID:
             jobKey = bytes32_to_ipfs(logged_jobs[i].args['jobKey'])
         else:
             jobKey = logged_jobs[i].args['jobKey']

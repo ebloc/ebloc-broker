@@ -196,8 +196,8 @@ library Lib {
         if (completionTime < list[addr].endpoint) {
             flag = true;
             prevNode = list[addr];
-            currentNode = list[prevNode.next]; /* Current node points index of previous tail-node right after the insert operation */
-
+	    /* Current node points index of previous tail-node right after the insert operation */
+            currentNode = list[prevNode.next];
             do {
                 if (completionTime > currentNode.endpoint) {
                     addr = prevNode.next; /* "addr" points the index to the pushed the node */
@@ -208,7 +208,8 @@ library Lib {
             } while (true);
         }
 
-        list.push(Interval({endpoint: completionTime, core: int32(core), next: addr})); /* Inserted while keeping sorted order */
+	/* Inserted while keeping sorted order */
+        list.push(Interval({endpoint: completionTime, core: int32(core), next: addr}));
         carriedSum = int32(core); /* Carried sum variable is assigned with job's given core number */
 
         if (!flag) {
@@ -221,7 +222,6 @@ library Lib {
         }
 
         currentNode = list[prevNode.next]; /* Current node points index before insert operation is done */
-
         do {
             /* Inside while loop carriedSum is updated */
             if (startTime >= currentNode.endpoint) {
@@ -233,7 +233,8 @@ library Lib {
 
             carriedSum += currentNode.core;
 
-            /* If enters into if statement it means revert() is catched and all the previous operations are reverted back */
+            /* If enters into if statement it means revert() is catched and all
+               the previous operations are reverted back */
             if (carriedSum > availableCore) {
                 delete list[list.length - 1];
                 if (!flag) self.tail = addrTemp;

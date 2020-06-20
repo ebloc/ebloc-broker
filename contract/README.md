@@ -9,8 +9,12 @@ brew install solidity
 
 ## Brownie Upgrade
 
-pip install eth-brownie -U
+```
+pip install --upgrade pip
+pip install -U eth-brownie
+```
 
+-----------------------------------------------
 
 source $HOME/venv/bin/activate
 brownie console --network private
@@ -23,4 +27,5 @@ import json
 with open('../eblocbroker/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 ```
+
 # // , indent=2
