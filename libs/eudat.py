@@ -12,9 +12,9 @@ import owncloud
 
 import config
 from config import env, logging
-from lib import compress_folder, printc, run, terminate
+from lib import compress_folder, printc, run
 from startup import bp  # noqa: F401
-from utils import _colorize_traceback, popen_communicate
+from utils import _colorize_traceback, popen_communicate, sleep_timer, terminate
 
 
 def _upload_results(encoded_share_token, output_file_name):
@@ -95,10 +95,11 @@ def login(user, password_path, fname) -> None:
             _traceback = traceback.format_exc()
             _colorize_traceback()
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
-                logging.warning("Sleeping for 15 seconds to overcome the max retries that exceeded")
-                time.sleep(15)
+                sleep_duration = 15
+                logging.warning(f"Sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
+                sleep_timer(sleep_duration)
             else:
-                logging.error("E: User is None object")
+                logging.error("E: Could nt connect into Eudat")
                 terminate()
         else:
             break

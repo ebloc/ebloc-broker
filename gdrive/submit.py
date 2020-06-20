@@ -15,7 +15,7 @@ from startup import bp  # noqa: F401
 from utils import CacheType, StorageID, _colorize_traceback, log, read_json
 
 base_folder = f"{env.EBLOCPATH}/base"
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 
 def create_meta_json(filename, job_keys):
@@ -68,7 +68,7 @@ def share_folder(folder_to_share, provider, job_key_flag=False):
 def gdrive_submit_job(provider):
     job = Job()
 
-    provider = ebb.w3.toChecksumAddress(provider)
+    provider = Ebb.w3.toChecksumAddress(provider)
     provider_to_share = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"  # '
     # provider_info = get_provider_info(provider)
     account_id = 1
@@ -128,17 +128,17 @@ def gdrive_submit_job(provider):
     for folder_to_share in job.folders_to_share:
         tar_hash = foldername_tar_hash[folder_to_share]
         # required to send string as bytes == str_data.encode('utf-8')
-        job.source_code_hashes.append(ebb.w3.toBytes(text=tar_hash))
+        job.source_code_hashes.append(Ebb.w3.toBytes(text=tar_hash))
 
     tar_hash = foldername_tar_hash[job.folders_to_share[0]]
     job_key = job_keys[tar_hash]
     logging.info(f"job_key={job_key}")
 
-    requester = ebb.w3.toChecksumAddress(ebb.w3.eth.accounts[account_id])
-    job_price, _cost = cost(provider, requester, job, ebb.eBlocBroker, ebb.w3)
+    requester = Ebb.w3.toChecksumAddress(Ebb.w3.eth.accounts[account_id])
+    job_price, _cost = cost(provider, requester, job, Ebb.eBlocBroker, Ebb.w3)
     logging.info("\nSubmitting the job")
     try:
-        return ebb.submit_job(provider, job_key, account_id, job_price, job)
+        return Ebb.submit_job(provider, job_key, account_id, job_price, job)
     except:
         _colorize_traceback()
         raise
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         tx_hash = gdrive_submit_job(provider)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            logs = ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
+            logs = Ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
                 logging.info(f"Job's index={logs[0].args['index']}")
                 log("SUCCESS", "green")

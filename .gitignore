@@ -4,9 +4,7 @@ koo.py
 
 base/*.tar.gz
 
-base/*.tar.gz.minilock
-
-base/data/*.tar.gz.minilock
+*.tar.gz.gpg
 
 *.swo
 
@@ -97,8 +95,6 @@ slurmGuide/example/completed\.txt
 \.node-xmlhttprequest-sync-31728
 
 eblocbroker/ipfs\.out
-
-miniLockPassword\.txt
 
 venv/pyvenv\.cfg
 
@@ -236,10 +232,6 @@ generateTest/testNasEudat/0x4e4a0750350796164d8defc442a712b7557bf282\.txt
 
 generateTest/testNasEudat/clientOutput\.txt
 
-generateTest/testIpfsMiniLock/hashOutput\.txt
-
-generateTest/testIpfsMiniLock/ipfs\.tar\.gz\.minilock
-
 generateTest/testGdrive/hashOutput\.txt
 
 generateTest/testGdrive/clientOutput\.txt
@@ -249,12 +241,6 @@ generateTest/testGdrive/0x57b60037b82154ec7149142c606ba024fbb0f991\.txt
 generateTest/testGdrive/ipfs/run\.sh
 
 generateTest/testNasEudat/ipfs/run\.sh
-
-generateTest/testIpfsMiniLock/clientOutput\.txt
-
-generateTest/testIpfsMiniLock/0x398bd2a9a39637884b49b2b0930de7d83eb08a8e\.txt
-
-generateTest/ipfs\.tar\.gz\.minilock
 
 generateTest/ipfs\.tar\.gz
 
@@ -474,3 +460,5 @@ cython_debug/
 flycheck_*
 
 cd
+
+.*~

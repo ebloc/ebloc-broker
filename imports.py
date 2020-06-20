@@ -9,23 +9,23 @@ import _utils.colorer  # noqa: F401
 import config
 from config import env, logging
 from startup import bp  # noqa: F401
-from utils import _colorize_traceback, read_json
+from utils import _colorize_traceback, log, read_json
 
 
 def connect():
-    if config.eBlocBroker and config.w3:
-        return config.eBlocBroker, config.w3
+    if config.Ebb and config.w3:
+        return config.Ebb, config.w3
 
     if config.w3 is None:
         config.w3 = connect_to_web3()
 
-    if config.eBlocBroker is None:
+    if config.Ebb is None:
         try:
-            config.eBlocBroker = connect_to_eblocbroker()
+            config.Ebb = connect_to_eblocbroker()
         except Exception as e:
             raise Exception("E: Problem on web3 connection") from e
 
-    return config.eBlocBroker, config.w3
+    return config.Ebb, config.w3
 
 
 def connect_to_web3():
@@ -47,10 +47,8 @@ def connect_to_web3():
         config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
     if not config.w3.isConnected():
-        logging.error(
-            "E: If web3 is not connected please start geth server and run the following:\n"
-            "sudo chown $(whoami) /private/geth.ipc"
-        )
+        logging.error("\nE: If web3 is not connected please start geth server and run the following:")
+        log("sudo chown $(whoami) /private/geth.ipc", "green")
         raise config.Web3NotConnected()
 
     if not env.PROVIDER_ID:
@@ -60,8 +58,8 @@ def connect_to_web3():
 
 
 def connect_to_eblocbroker():
-    if config.eBlocBroker:
-        return config.eBlocBroker
+    if config.Ebb:
+        return config.Ebb
 
     if config.w3 is None:
         config.w3 = connect_to_web3()
@@ -82,8 +80,8 @@ def connect_to_eblocbroker():
 
     try:
         contract_address = config.w3.toChecksumAddress(contract_address)
-        config.eBlocBroker = config.w3.eth.contract(contract_address, abi=abi)
-        return config.eBlocBroker
+        config.Ebb = config.w3.eth.contract(contract_address, abi=abi)
+        return config.Ebb
     except:
         logging.error("E: Couldn't retrieve eBlocBroker contract")
         raise

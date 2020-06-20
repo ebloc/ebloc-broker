@@ -26,12 +26,12 @@ from utils import (
     is_ipfs_on,
     is_process_on,
     log,
-    no,
     print_trace,
     printc,
+    question_yes_no,
     read_json,
     run,
-    yes,
+    terminate,
 )
 
 
@@ -90,13 +90,13 @@ def run_driver_cancel():
 
 def run_whisper_state_receiver():
     """Runs driverReceiver daemon on the background."""
-    if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisperInfo.txt"):
+    if not os.path.isfile(env.WHISPER_INFO):
         # first time running
-        logging.info(f"run: {env.EBLOCPATH}/scripts/whisper_initialize.py")
+        logging.warning(f"Run: {env.EBLOCPATH}/whisper/initialize.py")
         terminate()
     else:
         try:
-            data = read_json(f"{env.HOME}/.eBlocBroker/whisperInfo.txt")
+            data = read_json(env.WHISPER_INFO)
             kId = data["kId"]
         except:
             _colorize_traceback()
@@ -110,16 +110,20 @@ def run_whisper_state_receiver():
     if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
         # running driver_cancel.py on the background
         # TODO: should be '0' to store log at a file and not print output
-        config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisperStateReceiver.py"])
+        config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisper/state_receiver.py"])
 
 
 def get_tx_status(tx_hash):
+    if not tx_hash:
+        log(f"tx_hash={tx_hash}")
+        return tx_hash
+
     log(f"tx_hash={tx_hash}")
     receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
-    logging.info("Transaction receipt mined: \n")
+    logging.info("Transaction receipt mined:")
     # logging.info(pformat(receipt))
     pprint.pprint(dict(receipt))  # delete
-    log("Was transaction successful?")
+    log("#> Was transaction successful?")
     if receipt["status"] == 1:
         log("Transaction is deployed", "green")
     else:
@@ -130,7 +134,7 @@ def get_tx_status(tx_hash):
 
 def check_size_of_file_before_download(file_type, key=None):
     # TODO fill
-    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_MINILOCK):
+    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
         if not key:
             return False
     elif int(file_type) == StorageID.EUDAT:
@@ -138,27 +142,6 @@ def check_size_of_file_before_download(file_type, key=None):
     elif int(file_type) == StorageID.GDRIVE:
         pass
     return True
-
-
-def terminate(error_msg=""):
-    """Terminates Driver and all the dependent python programs to it."""
-    logging.error(f"E: [{WHERE(1)}] | {error_msg}")
-
-    # following line is added, in case ./killall.sh does not work due to sudo
-    # send the kill signal to all the process groups
-    if config.driver_cancel_process:
-        # obtained from global variable
-        os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)
-
-    if config.whisper_state_receiver_process:
-        # obtained from global variable, # raise SystemExit("Program Exited")
-        os.killpg(os.getpgid(config.whisper_state_receiver_process.pid), signal.SIGTERM)
-
-    try:
-        # kill all the dependent processes and exit
-        run(["bash", "killall.sh"])
-    except:
-        sys.exit(1)
 
 
 def _try(func):
@@ -202,16 +185,7 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
             time.sleep(0.1)
 
 
-def alper(func, attempt):
-    for _attempt in range(attempt):
-        try:
-            return func
-        except Exception:
-            time.sleep(0.1)
-    raise
-
-
-def run_stdout_to_file(cmd, path) -> bool:
+def run_stdout_to_file(cmd, path) -> None:
     with open(path, "w") as stdout:
         try:
             subprocess.Popen(cmd, stdout=stdout)
@@ -236,9 +210,12 @@ def run_command(cmd, my_env=None) -> Tuple[bool, str]:
 
 
 def silent_remove(path) -> bool:
-    """Removes file or folders based on the file type."""
+    """Removes file or folders based on the file type.
 
-    # link: https://stackoverflow.com/a/10840586/2402577
+    doc:
+    - https://stackoverflow.com/a/10840586/2402577
+    """
+
     try:
         if os.path.isfile(path):
             os.remove(path)
@@ -301,7 +278,7 @@ def is_ipfs_running():
     log("E: IPFS does not work on the background", "blue")
     log("#> Starting IPFS daemon on the background", "blue")
     while True:
-        output = run(["python3", f"{env.EBLOCPATH}/python_scripts/ipfs_daemon.py"])
+        output = run(["python3", f"{env.EBLOCPATH}/daemons/ipfs.py"])
         log(output, "blue")
         time.sleep(1)
         if is_ipfs_on():
@@ -310,11 +287,10 @@ def is_ipfs_running():
             with open(env.IPFS_LOG, "r") as content_file:
                 logging.info(content_file.read())
         time.sleep(1)
-
     return is_ipfs_on()
 
 
-def check_linked_data(path_from, path_to, folders=None):
+def check_linked_data(path_from, path_to, folders=None, force_continue=False):
     """Generates folder as hard linked of the given folder paths or provider main folder.
 
     :param path_to: linked folders into into given path
@@ -327,15 +303,10 @@ def check_linked_data(path_from, path_to, folders=None):
     for key, value in link.data_map.items():
         print(f"{key} => data_link/{value}")
 
-    print("#> Would you like to continue with linked folder path in your run.sh? [Y/n]")
-    while True:
-        choice = input().lower()
-        if choice in yes:
-            break
-        elif choice in no:
-            sys.exit(0)
-    else:
-        sys.stdout.warning("Please respond with 'yes' or 'no'")
+    if force_continue:
+        return
+
+    question_yes_no("#> Would you like to continue with linked folder path in your run.sh? [Y/n]: ")
 
 
 # TODO: carry into utils
@@ -343,7 +314,7 @@ def compress_folder(folder_to_share):
     """Compress folder using tar
     - Note that to get fully reproducible tarballs, you should also impose the sort order used by tar:
 
-    links:
+    Helpful links:
     - https://unix.stackexchange.com/a/438330/198423,
     - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
@@ -353,7 +324,10 @@ def compress_folder(folder_to_share):
     os.chdir(dir_path)
 
     # tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
-    # cmd: find . -print0 | LC_ALL=C sort -z | GZIP=-n tar --absolute-names --no-recursion --null -T - -zcvf $tar_hash.tar.gz
+    """cmd:
+    find . -print0 | LC_ALL=C sort -z | \
+    PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names --no-recursion --null -T - -zcvf $tar_hash.tar.gz
+    """
     p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
     p1.stdout.close()
@@ -375,15 +349,17 @@ def compress_folder(folder_to_share):
         ],
         stdin=p2.stdout,
         stdout=subprocess.PIPE,
-        env={"PIGZ": "-n"},
+        env={"PIGZ": "-n"},  # GZIP
     )
     p2.stdout.close()
     p3.communicate()
 
     tar_hash = generate_md5sum(f"{base_name}.tar.gz")
-    shutil.move(f"{base_name}.tar.gz", f"{tar_hash}.tar.gz")
+    tar_file = f"{tar_hash}.tar.gz"
+    shutil.move(f"{base_name}.tar.gz", tar_file)
+    log(f"Created tar file={dir_path}/{tar_file}")
     os.chdir(current_path)
-    return tar_hash, f"{dir_path}/{tar_hash}.tar.gz"
+    return tar_hash, f"{dir_path}/{tar_file}"
 
 
 def is_dir(path) -> bool:
@@ -394,9 +370,16 @@ def is_dir(path) -> bool:
 
 
 def run_storage_thread(storage_class):
-    storage_thread = Thread(target=storage_class.run, args=("thread",))
+    # consider giving the thread a name (add name=...), then you could
+    # use ThreadFilter(threadname=...) to select on all messages with that name
+    # The thread name does not have to be unique.
+    storage_thread = Thread(target=storage_class.run)
+    storage_thread.name = storage_class.thread_name
+
     # This thread dies when main thread (only non-daemon thread) exits.
     storage_thread.daemon = True
+    log("==> ", "blue", None, is_new_line=False)
+    log(f"thread_log_path={storage_class.drivers_log_path}")
     storage_thread.start()
     try:
         storage_thread.join()  # waits until the job is completed
@@ -406,7 +389,7 @@ def run_storage_thread(storage_class):
 
 
 def run_storage_process(storage_class):
-    storage_process = Process(target=storage_class.run, args=("process",))
+    storage_process = Process(target=storage_class.run)
     storage_process.start()
     try:
         storage_process.join()  # waits until the job is completed

@@ -1,10 +1,15 @@
 #!/bin/bash
 
 source $HOME/venv/bin/activate
-which brownie
 brownie compile
 
-$HOME/eBlocBroker/daemons/ganache.py
+PORT=8547
+sed -i 's/\(port: \).*/\1'$PORT'/' ~/.brownie/network-config.yaml
 
-# pytest tests -x -s --disable-pytest-warnings --log-level=INFO
-pytest tests -s -x -k "test_update_provider" --disable-pytest-warnings
+$HOME/eBlocBroker/daemons/ganache.py $PORT
+pytest tests -s -x -v --disable-pytest-warnings --log-level=INFO
+# pytest tests --capture=sys -s -x -k "test_workflow" --disable-pytest-warnings
+
+# -I
+# -s -v  // verbose
+# pytest tests -s -x -k "test_register" --disable-pytest-warnings

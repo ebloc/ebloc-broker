@@ -8,7 +8,7 @@ from config import env, logging, setup_logger
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, silent_remove, subprocess_call
 from startup import bp  # noqa: F401
-from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time
+from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time, untar
 
 
 class GdriveClass(Storage):
@@ -100,7 +100,6 @@ class GdriveClass(Storage):
                 else:
                     if not self.gdrive_download_folder(name, key, source_code_hash, _id, f"{self.public_dir}/{name}"):
                         return False, None
-
         return True, None
 
     def gdrive_download_folder(self, name, key, source_code_hash, _id, cache_folder) -> bool:
@@ -134,7 +133,7 @@ class GdriveClass(Storage):
             else:
                 self.dataTransferIn_requested = calculate_folder_size(downloaded_folder_path)
                 logging.info(
-                    f"dataTransferIn_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB"
+                    f"data_transfer_in_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB"
                 )
         else:
             try:
@@ -247,7 +246,8 @@ class GdriveClass(Storage):
 
             try:
                 cache_folder = self.folder_path_to_download[source_code_hash]
-                self.untar(f"{cache_folder}/{name}", target, is_print=True)
+                untar(f"{cache_folder}/{name}", target)
+                return True
             except:
                 return False
 
@@ -276,8 +276,9 @@ class GdriveClass(Storage):
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}/")
             tar_file = f"{self.results_folder}/{name}.tar.gz"
             try:
-                self.untar(tar_file, self.results_folder, is_print=True)
+                untar(tar_file, self.results_folder)
                 silent_remove(tar_file)
+                return True
             except:
                 return False
         else:

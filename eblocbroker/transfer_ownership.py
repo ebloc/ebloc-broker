@@ -4,13 +4,13 @@ import sys
 
 from config import env, logging
 from lib import get_tx_status
-from utils import _colorize_traceback
+from utils import ZERO_ADDRESS, _colorize_traceback
 
 
 def transfer_ownership(self, new_owner):
     _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
     new_owner = self.w3.toChecksumAddress(new_owner)
-    if new_owner == "0x0000000000000000000000000000000000000000":
+    if new_owner == ZERO_ADDRESS:
         logging.error("Provided address is zero")
         raise
 
@@ -33,7 +33,7 @@ def transfer_ownership(self, new_owner):
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
     if len(sys.argv) == 2:
         new_owner = str(sys.argv[1])
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        tx_hash = ebb.transfer_ownership(new_owner)
+        tx_hash = Ebb.transfer_ownership(new_owner)
         receipt = get_tx_status(tx_hash)
     except:
         _colorize_traceback()
