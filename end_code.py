@@ -16,7 +16,7 @@ import libs.git as git
 import libs.ipfs as ipfs
 import libs.mongodb as mongodb
 import libs.slurm as slurm
-from config import logging, setup_logger
+from config import env, logging, setup_logger
 from imports import connect
 from lib import (
     calculate_folder_size,
@@ -46,11 +46,22 @@ from utils import (
 )
 
 eBlocBroker, w3 = connect()
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 mc = MongoClient()
 
 
-class IpfsMiniLock:
+class Common:
+    """Prevents "Class" has no attribute "method" mypy warnings."""
+
+    def __init__(self) -> None:
+        self.results_folder = ""
+        self.results_folder_prev = ""
+        self.patch_file = ""
+        self.patch_name = ""
+        self.dataTransferOut = 0
+
+
+class IpfsGPG(Common):
     def initialize(self):
         pass
 
@@ -74,16 +85,16 @@ class IpfsMiniLock:
         return True
 
 
-class Ipfs:
+class Ipfs(Common):
     def initialize(self):
         pass
 
     def upload(self, *_) -> bool:
-        """It will upload after all patchings are completed"""
+        """It will upload after all patchings are completed."""
         return True
 
 
-class Eudat:
+class Eudat(Common):
     def initialize(self):
         try:
             self.get_shared_tokens()
@@ -100,7 +111,7 @@ class Eudat:
         return success
 
 
-class Gdrive:
+class Gdrive(Common):
     def initialize(self):
         pass
 
@@ -138,13 +149,13 @@ class Gdrive:
         try:
             logging.info(subprocess_call(cmd, 5))
         except:
-            logging.error(f"[{env.WHERE(1)}] E: gdrive could not upload the file")
+            logging.error(f"[{WHERE(1)}] E: gdrive could not upload the file")
             return False
 
         return True
 
 
-class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
+class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def __init__(self, **kwargs) -> None:
         args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
         self.job_key = kwargs.pop("job_key")
@@ -155,14 +166,11 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
         self.share_tokens = {}
         self.encoded_share_tokens = {}
         self.dataTransferIn = 0
-        self.dataTransferOut = 0
         self.elapsed_raw_time = 0
         self.source_code_hashes_to_process: List[str] = []
         self.source_code_hashes: List[str] = []
         self.result_ipfs_hash = ""
-        self.patch_name = None
         self.minilock_id = None
-        self.patch_file = None
         self.modified_date = None
 
         # https://stackoverflow.com/a/5971326/2402577 , https://stackoverflow.com/a/4453495/2402577
@@ -183,7 +191,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
 
         try:
             self.job_info = eblocbroker_function_call(
-                lambda: ebb.get_job_info(
+                lambda: Ebb.get_job_info(
                     env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
                 ),
                 10,
@@ -191,7 +199,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
             self.cloud_storage_ids = self.job_info["cloudStorageID"]
             requester_id = self.job_info["jobOwner"].lower()
             requester_id_address = eth_address_to_md5(requester_id)
-            self.requester_info = ebb.get_requester_info(requester_id)
+            self.requester_info = Ebb.get_requester_info(requester_id)
         except:
             sys.exit(1)
 
@@ -230,8 +238,8 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
         """Returns cloud storage used for the id of the data"""
         if self.cloud_storage_ids[_id] == StorageID.IPFS:
             return Ipfs
-        if self.cloud_storage_ids[_id] == StorageID.IPFS_MINILOCK:
-            return IpfsMiniLock
+        if self.cloud_storage_ids[_id] == StorageID.IPFS_GPG:
+            return IpfsGPG
         if self.cloud_storage_ids[_id] == StorageID.EUDAT:
             return Eudat
         if self.cloud_storage_ids[_id] == StorageID.GDRIVE:
@@ -240,7 +248,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
 
     def set_source_code_hashes_to_process(self):
         for idx, source_code_hash in enumerate(self.source_code_hashes):
-            if self.cloud_storage_ids[idx] == StorageID.IPFS or self.cloud_storage_ids[idx] == StorageID.IPFS_MINILOCK:
+            if self.cloud_storage_ids[idx] in [StorageID.IPFS, StorageID.IPFS_GPG]:
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 self.source_code_hashes_to_process.append(ipfs_hash)
             else:
@@ -263,7 +271,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
         try:
             end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
             tx_hash = eblocbroker_function_call(
-                lambda: ebb.process_payment(
+                lambda: Ebb.process_payment(
                     self.job_key,
                     self.index,
                     self.job_id,
@@ -338,7 +346,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
             logging.info(f"Patch for data file {name}")
 
         try:
-            if storage_class is Ipfs or storage_class is IpfsMiniLock:
+            if storage_class is Ipfs or storage_class is IpfsGPG:
                 target_path = self.patch_folder_ipfs
             else:
                 target_path = self.patch_folder
@@ -413,7 +421,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
 
             try:
                 self.job_info = eblocbroker_function_call(
-                    lambda: ebb.get_job_info(
+                    lambda: Ebb.get_job_info(
                         env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
                     ),
                     10,
@@ -430,7 +438,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
 
         try:
             self.job_info = eblocbroker_function_call(
-                lambda: ebb.get_job_source_code_hashes(
+                lambda: Ebb.get_job_source_code_hashes(
                     self.job_info, env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
                 ),
                 10,
@@ -460,7 +468,7 @@ class ENDCODE(IpfsMiniLock, Ipfs, Eudat, Gdrive):
         logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
         logging.info(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
         self.process_payment_tx()
-        logging.info("All done!")
+        log("All done!", "green")
         # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
 
 

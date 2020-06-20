@@ -2,12 +2,13 @@
 
 import os
 import shutil
+import time
 
 import libs.git as git
 import libs.ipfs as ipfs
 from config import ThreadFilter, bp, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
-from lib import calculate_folder_size, is_ipfs_running, run, run_command, silent_remove
+from lib import calculate_folder_size, is_ipfs_running, silent_remove
 from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, create_dir, get_time, log
 
 
@@ -19,40 +20,8 @@ class IpfsClass(Storage):
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
 
-    def decrypt_using_minilock(self, minilock_file, extract_target):
-        with open(f"{env.LOG_PATH}/mini_lock_pass.txt", "r") as content_file:
-            _pass = content_file.read().strip()
-
-        tar_file = f"{minilock_file}.tar.gz"
-        cmd = [
-            "mlck",
-            "decrypt",
-            "-f",
-            minilock_file,
-            f"--passphrase={_pass}",
-            f"--output-file={tar_file}",
-        ]
-        _pass = None
-
-        try:
-            run(cmd)
-        except:
-            silent_remove(minilock_file)
-            raise
-
-        try:
-            silent_remove(minilock_file)
-            logging.info("mlck decrypt: SUCCESS")
-            run_command(["tar", "-xvf", tar_file, "-C", extract_target, "--strip", "1"])
-        except:
-            logging.error("E: Could not decrypt the given file")
-            raise
-        finally:
-            cmd = None
-            silent_remove(tar_file)
-
     def check_ipfs(self, ipfs_hash) -> None:
-        success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempt_count=1)
+        success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempts=1)
         if not success or "CumulativeSize" not in ipfs_stat:
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
             raise
@@ -63,21 +32,14 @@ class IpfsClass(Storage):
         logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
 
     def run(self) -> bool:
-        self.thread_log_setup()
-        setup_logger(self.drivers_log_path)
+        self.start_time = time.time()
+        if env.IS_THREADING_ENABLED:
+            self.thread_log_setup()
 
         if self.cloudStorageID[0] == StorageID.IPFS:
-            log(
-                f"[{get_time()}] Job's source code has been sent through IPFS ",
-                "---------------------------------------------------------",
-                "cyan",
-            )
+            log(f"[{get_time()}] Job's source code has been sent through IPFS ", "cyan")
         else:
-            log(
-                f"[{get_time()}] Job's source code has been sent through IPFS_MINILOCK ",
-                "---------------------------------------------------------",
-                "cyan",
-            )
+            log(f"[{get_time()}] Job's source code has been sent through IPFS_GPG ", "cyan")
 
         if not is_ipfs_running():
             return False
@@ -120,12 +82,15 @@ class IpfsClass(Storage):
             is_storage_paid = False  # TODO: should be set before by user input
             ipfs.get(ipfs_hash, target, is_storage_paid)
             if idx > 0:
-                shutil.move(target, f"{self.results_data_folder}/{ipfs_hash}")  # UNIX 'mv' command
-                target = f"{self.results_data_folder}/{ipfs_hash}"
+                # https://stackoverflow.com/a/31814223/2402577
+                dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
+                if os.path.exists(dst_filename):
+                    silent_remove(dst_filename)
+                shutil.move(target, dst_filename)  # UNIX 'mv' command
+                target = dst_filename
 
-            if self.cloudStorageID[idx] == StorageID.IPFS_MINILOCK:
-                self.decrypt_using_minilock(f"{target}/{ipfs_hash}", target)
-
+            if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
+                ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
             if not git.initialize_check(target):
                 return False
 
@@ -139,5 +104,7 @@ class IpfsClass(Storage):
                 self.complete_refund()
                 return False
 
-        log(f"dataTransferIn={self.dataTransferIn_to_download} MB | Rounded={int(self.dataTransferIn_to_download)} MB")
+        log(
+            f"data_transfer_in={self.dataTransferIn_to_download} MB | rounded={int(self.dataTransferIn_to_download)} MB"
+        )
         return self.sbatch_call()

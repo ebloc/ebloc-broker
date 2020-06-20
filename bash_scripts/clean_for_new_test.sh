@@ -27,4 +27,5 @@ cat /dev/null > $HOME/.eBlocBroker/provider.log
 ./killall.sh
 clean.sh
 
-python3 -uB $HOME/eBlocBroker/eblocbroker/get_block_number.py True > $HOME/.eBlocBroker/blockReadFrom.txt
+# Update block.continue.txt with the current block number
+python3 -uB $HOME/eBlocBroker/eblocbroker/get_block_number.py True > $HOME/.eBlocBroker/block_continue.txt

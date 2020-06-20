@@ -1,10 +1,15 @@
+#!/usr/bin/env python3
+
 import binascii
 import hashlib
 import json
 import ntpath
 import os
+import signal
+import socket
 import subprocess
 import sys
+import threading
 import time
 import traceback
 from enum import IntEnum
@@ -14,13 +19,18 @@ from pygments import formatters, highlight, lexers
 from termcolor import colored
 
 import config
+from _utils._getch import _Getch
 from config import env, logging
+from startup import bp  # noqa: F401
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+zero_bytes32 = "0x00"
 
 yes = set(["yes", "y", "ye"])
 no = set(["no", "n"])
+log_files = {}
 
 
 class BaseEnum(IntEnum):
@@ -42,7 +52,7 @@ class CacheType(BaseEnum):
 class StorageID(BaseEnum):
     IPFS = 0
     EUDAT = 1
-    IPFS_MINILOCK = 2
+    IPFS_GPG = 2
     GITHUB = 3
     GDRIVE = 4
     NONE = 5
@@ -55,12 +65,49 @@ class COLOR:
     END = "\033[0m"
 
 
+def untar(tar_file, extract_to):
+    if not is_dir_empty(extract_to):
+        log(f"{tar_file} is already extracted into {extract_to}")
+        return
+
+    # umask can be ignored by using the -p (--preserve) option
+    # --no-overwrite-dir: preserve metadata of existing directories
+    cmd = ["tar", "-xvfp", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
+    run(cmd)
+
+
+def is_internet_on(host="8.8.8.8", port=53, timeout=3):
+    """
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    doc: https://stackoverflow.com/a/33117579/2402577
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error as ex:
+        print(ex)
+        return False
+
+
+def sleep_timer(sleep_duration):
+    log(f"Sleeping for {sleep_duration} seconds. Called from {[WHERE(1)]}", "blue")
+    for remaining in range(sleep_duration, 0, -1):
+        sys.stdout.write("\r")
+        sys.stdout.write("{:1d} seconds remaining...".format(remaining))
+        sys.stdout.flush()
+        time.sleep(1)
+    sys.stdout.write("\rSleeping is done!                               \n")
+
+
 def run(cmd, is_print_trace=True) -> str:
     try:
-        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
-    except Exception:
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
+    except Exception as exc:
         if is_print_trace:
-            print_trace(cmd, back=2)
+            print_trace(cmd, back=2, exc=exc.output.decode("utf-8"))
         raise
 
 
@@ -99,16 +146,16 @@ def insert_character(string, index, char) -> str:
     return string[:index] + char + string[index:]
 
 
-def _colorize_traceback(_str=None):
+def _colorize_traceback(string=None):
     tb_text = "".join(traceback.format_exc())
     lexer = lexers.get_lexer_by_name("pytb", stripall=True)
     # to check: print $terminfo[colors]
     formatter = formatters.get_formatter_by_name("terminal")
     tb_colored = highlight(tb_text, lexer, formatter)
-    if not _str:
+    if not string:
         log(f"{[WHERE(1)]} ", "blue", None, is_new_line=False)
     else:
-        log(f"[{WHERE(1)} {_str}] ", "blue", None, is_new_line=False)
+        log(f"[{WHERE(1)} {string}] ", "blue", None, is_new_line=False)
     log(tb_colored)
 
 
@@ -265,7 +312,9 @@ def printc(text, color="white", is_new_line=True):
 
 # TODO: send arguments without order //  is_bold
 def log(text, color="white", filename=None, is_new_line=True):
-    if not filename:
+    if threading.current_thread().name != "MainThread" and env.IS_THREADING_ENABLED:
+        filename = log_files[threading.current_thread().name]
+    elif not filename:
         if env.log_filename:
             filename = env.log_filename
         else:
@@ -273,7 +322,8 @@ def log(text, color="white", filename=None, is_new_line=True):
 
     f = open(filename, "a")
     if color:
-        printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color), color, is_new_line)
+        if threading.current_thread().name == "MainThread":
+            printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color), color, is_new_line)
         if is_new_line:
             f.write(colored(f"{COLOR.BOLD}{text}\n{COLOR.END}", color))
         else:
@@ -287,10 +337,12 @@ def log(text, color="white", filename=None, is_new_line=True):
     f.close()
 
 
-def print_trace(cmd, back=1):
+def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
-    _cmd = f"{COLOR.PURPLE}{COLOR.BOLD}{_cmd}{COLOR.END}"
-    logging.error(f"[{WHERE(back)}]\n{_colorize_traceback()} command:\n{_cmd}\n")
+    log(f"\n{_cmd}", "red")
+    if exc:
+        log(f"Error message:\n{exc}", "yellow")
+    logging.error(f"[{WHERE(back)}]\n{_colorize_traceback()}\n")
 
 
 def WHERE(back=0):
@@ -301,7 +353,7 @@ def WHERE(back=0):
     return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name,)
 
 
-def is_process_on(process_name, name, process_count=0) -> bool:
+def is_process_on(process_name, name, process_count=0, port=None) -> bool:
     """Checks wheather the process runs on the background.
     Doc: https://stackoverflow.com/a/6482230/2402577"""
     p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
@@ -309,24 +361,42 @@ def is_process_on(process_name, name, process_count=0) -> bool:
     p1.stdout.close()
     p3 = subprocess.Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
-    p4 = subprocess.Popen(["wc", "-l"], stdin=p3.stdout, stdout=subprocess.PIPE)
-    p3.stdout.close()
-    output = p4.communicate()[0].decode("utf-8").strip()
-    if int(output) > process_count:
-        log(f"{name} is already running on the background", "yellow")
-        return True
+    output = p3.communicate()[0].decode("utf-8").strip().splitlines()
+    pids = []
+    for line in output:
+        fields = line.strip().split()
+        # Array indices start at 0 unlike awk, 1 indice points the port number
+        pids.append(fields[1])
+
+    if len(pids) > process_count:
+        if port:
+            # How to find processes based on port and kill them all?
+            # https://stackoverflow.com/a/5043907/2402577
+            p1 = subprocess.Popen(["lsof", "-i", f"tcp:{port}"], stdout=subprocess.PIPE)
+            p2 = subprocess.Popen(["grep", "LISTEN"], stdin=p1.stdout, stdout=subprocess.PIPE)
+            out = p2.communicate()[0].decode("utf-8").strip()
+            running_pid = out.strip().split()[1]
+            if running_pid in pids:
+                log(f"{name} is already running on the background pid={running_pid}", "yellow")
+                return True
+        else:
+            log(f"{name} is already running on the background", "yellow")
+            return True
     return False
 
 
-def is_driver_on():
+def is_driver_on() -> bool:
     """Check whether driver runs on the background."""
-    if is_process_on("python.*[D]river", "Driver", 1):
+    if is_process_on("python.*[D]river", "Driver", process_count=1):
+        printc("Track output using:")
+        printc("tail -f ~/.eBlocBroker/provider.log", "blue")
         raise config.QuietExit
+    return True
 
 
-def is_ganache_on() -> bool:
+def is_ganache_on(port) -> bool:
     """Checks whether Ganache CLI runs on the background."""
-    return is_process_on("[g]anache-cli ", "Ganache CLI")
+    return is_process_on("node.*[g]anache-cli", "Ganache CLI", process_count=0, port=port)
 
 
 def is_geth_on():
@@ -351,17 +421,70 @@ def is_ipfs_running():
     log("E: IPFS does not work on the background", "blue")
     log("#> Starting IPFS daemon on the background", "blue")
     while True:
-        output = run(["python3", f"{env.EBLOCPATH}/python_scripts/ipfs_daemon.py"])
-        log(output, "blue")
+        output = run(["python3", f"{env.EBLOCPATH}/python_scripts/run_ipfs_daemon.py"])
         time.sleep(1)
+        with open(env.IPFS_LOG, "r") as content_file:
+            log(content_file.read(), "blue")
+            log(output, "blue")
         if is_ipfs_on():
-            break
-        else:
-            with open(env.IPFS_LOG, "r") as content_file:
-                logging.info(content_file.read())
-        time.sleep(1)
-
+            return True
     return is_ipfs_on()
+
+
+def check_ubuntu_packages(packages=None):
+    if not packages:
+        packages = ["pigz", "curl", "mailutils", "munge"]
+
+    for package in packages:
+        if not is_dpkg_installed(package):
+            return False
+    return True
+
+
+def is_dpkg_installed(package_name):
+    try:
+        run(["dpkg", "-s", package_name])
+        return True
+    except:
+        return False
+
+
+def terminate(error_msg=""):
+    """Terminates Driver and all the dependent python programs to it."""
+    logging.error(f"E: [{WHERE(1)}] {error_msg}")
+
+    # following line is added, in case ./killall.sh does not work due to sudo
+    # send the kill signal to all the process groups
+    if config.driver_cancel_process:
+        # obtained from global variable
+        os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)
+
+    if config.whisper_state_receiver_process:
+        # obtained from global variable, # raise SystemExit("Program Exited")
+        os.killpg(os.getpgid(config.whisper_state_receiver_process.pid), signal.SIGTERM)
+
+    try:
+        # kill all the dependent processes and exit
+        run(["bash", f"{env.EBLOCPATH}/bash_scripts/killall.sh"])
+    except:
+        sys.exit(1)
+
+
+def question_yes_no(message, is_terminate=False):
+    print(message, end="", flush=True)
+    getch = _Getch()
+    while True:
+        choice = getch().lower()
+        if choice in yes:
+            break
+        elif choice in no or choice == "\x04":
+            if is_terminate:
+                print("\n")
+                terminate()
+            else:
+                sys.exit()
+        else:
+            print("\nPlease respond with 'yes' or 'no': ", end="", flush=True)
 
 
 class Link:

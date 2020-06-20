@@ -6,7 +6,7 @@ from imports import connect
 from lib import job_state_code
 
 eBlocBroker, w3 = connect()
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 fname = f"{env.LOG_PATH}/queuedJobs.txt"
 
@@ -19,7 +19,7 @@ with open(fname, "r") as ins:
         index = output[3]
 
         sum1 += int(output[7]) - int(output[8])
-        job_info = ebb.get_job_info(provider, job_key, index, None)
+        job_info = Ebb.get_job_info(provider, job_key, index, None)
 
         print(
             str(idx)

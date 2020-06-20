@@ -15,6 +15,7 @@
 ** TODO oc may have "owncloud.owncloud.HTTPResponseError: HTTP error: 401" error
 
 ** TODO _colorize_traceback() <= Remove logging // log
+
 ** DONE pause => suspend  // unpause => resume
    CLOSED: [2020-06-01 Mon 13:24]
 
@@ -25,3 +26,7 @@
    CLOSED: [2020-05-02 Sat 15:26]
 ** DONE Comment:
    #+STARTUP: showall
+
+* lib.py
+** Some code should go into utils.py
+   Some functıons are public that should carried into `utils.py`
