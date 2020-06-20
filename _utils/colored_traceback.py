@@ -5,8 +5,6 @@ def add_hook(always=False, style="default", debug=False):
     isatty = getattr(sys.stderr, "isatty", lambda: False)
     if always or isatty():
         try:
-            import pygments  # flake8:noqa
-
             colorizer = Colorizer(style, debug)
             sys.excepthook = colorizer.colorize_traceback
         except ImportError:
@@ -14,7 +12,7 @@ def add_hook(always=False, style="default", debug=False):
                 sys.stderr.write("Failed to add coloring hook; pygments not available\n")
 
 
-class Colorizer(object):
+class Colorizer:
     def __init__(self, style, debug=False):
         self.style = style
         self.debug = debug

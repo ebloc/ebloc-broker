@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import getpass
-import hashlib
-
 import owncloud
 
 # https://github.com/owncloud/pyocclient/blob/master/owncloud/owncloud.py
@@ -43,5 +40,5 @@ for i in range(0, len(z) ):
 val = oc.accept_remote_share("1195");
 #print(val)
 #oc.decline_remote_share(68)
-#oc.remove 
+#oc.remove
 """

@@ -14,15 +14,15 @@ from startup import bp  # noqa: F401
 from utils import CacheType, StorageID, _colorize_traceback, log, printc
 
 eBlocBroker, w3 = connect()
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 
 def submit(provider, account_id):
     job = Job()
 
     provider = w3.toChecksumAddress(provider)
-    provider_info = ebb.get_provider_info(provider)
-    print(f"provider[fID]={str(provider_info['fID'])}")
+    provider_info = Ebb.get_provider_info(provider)
+    print(f"provider[fID]={str(provider_info['f_id'])}")
 
     # full path of the sourceCodeFolders is given
     job.folders_to_share.append(f"{env.EBLOCPATH}/base/sourceCode")
@@ -49,7 +49,7 @@ def submit(provider, account_id):
 
         # required to send string as bytes
         job.source_code_hashes.append(w3.toBytes(text=folder_hash))
-        if not eudat.share_single_folder(folder_hash, provider_info["fID"]):
+        if not eudat.share_single_folder(folder_hash, provider_info["f_id"]):
             sys.exit(1)
 
         time.sleep(0.1)
@@ -69,7 +69,7 @@ def submit(provider, account_id):
 
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
-        return ebb.submit_job(provider, job_key, account_id, job_price, job)
+        return Ebb.submit_job(provider, job_key, account_id, job_price, job)
     except Exception as e:
         _colorize_traceback()
         if type(e).__name__ == "QuietExit":

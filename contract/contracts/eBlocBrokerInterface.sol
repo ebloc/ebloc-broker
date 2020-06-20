@@ -43,7 +43,7 @@ interface eBlocBrokerInterface {
     // registerProvider() method call.  (fID stands for federationCloudId)
     event LogProviderInfo(
         address indexed provider,
-        bytes32 gpgFingerprint,
+        bytes32 indexed gpgFingerprint,
         string email,
         string fID,
         string ipfsID,
@@ -54,7 +54,7 @@ interface eBlocBrokerInterface {
     // registerRequester() method call.
     event LogRequester(
         address indexed requester,
-        bytes32 gpgFingerprint,
+        bytes32 indexed gpgFingerprint,
         string email,
         string fID,
         string ipfsID,

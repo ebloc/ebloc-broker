@@ -1,3 +1,5 @@
 #!/bin/bash
 
-ganache-cli --port 8545 --gasLimit 6721975 --accounts 10 --hardfork istanbul --allowUnlimitedContractSize
+PORT=8547
+sed -i 's/\(port: \).*/\1'$PORT'/' ~/.brownie/network-config.yaml
+ganache-cli --port $PORT --gasLimit 6721975 --accounts 100 --hardfork istanbul --allowUnlimitedContractSize

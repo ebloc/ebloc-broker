@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
 import math
-import sys
 import time
 from os.path import expanduser
 from random import randint
 
 import eblocbroker.Contract as Contract
 from imports import connect_to_web3
-from utils import is_transaction_passed
+from utils import is_transaction_passed, sleep_timer
 
 home = expanduser("~")
 w3 = connect_to_web3()
-ebb = Contract.eblocbroker
+Ebb = Contract.eblocbroker
 
 
 f = open(f"{home}/TESTS/accountPassword.txt", "r")  # password read from the file
@@ -56,7 +55,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             jobKey = line.rstrip().split(" ")
             sourceCodeHash = jobKey[5]  # time to sleep in seconds
             sleepTime = jobKey[6]  # time to sleep in seconds
-            block_number = ebb.get_block_number()
+            block_number = Ebb.get_block_number()
 
             log(
                 "Job: " + str(idx + 1) + "| Current Time: " + time.ctime() + "| BlockNumber: " + str(block_number),
@@ -121,7 +120,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 path,
             )
 
-            output = ebb.submit_job(
+            output = Ebb.submit_job(
                 provider,
                 jobKey,
                 core_list,
@@ -152,14 +151,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             txFile = open(path + "/" + providerID + ".txt", "a")
             txFile.write(output[0] + " " + str(account_id) + "\n")
             txFile.close()
-            sleepSeconds = int(sleepTime)
-
-            for remaining in range(sleepSeconds, 0, -1):
-                sys.stdout.write("\r")
-                sys.stdout.write("{:2d} seconds remaining...".format(remaining))
-                sys.stdout.flush()
-                time.sleep(1)
-            sys.stdout.write("\rSleeping is done!\n")
+            sleep_timer(int(sleepTime))
             receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt:
                 output = is_transaction_passed(w3, tx_hash)

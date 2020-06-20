@@ -3,12 +3,14 @@ import os
 import subprocess
 import sys
 import time
+import uuid
 from datetime import datetime, timedelta
 from shutil import copyfile
 
 import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
 import libs.slurm as slurm
+import utils
 from config import ThreadFilter, env, logging
 from lib import log, run
 from startup import bp  # noqa: F401
@@ -31,6 +33,7 @@ class BaseClass:
 
 class Storage(BaseClass):
     def __init__(self, logged_job, job_info, requester_id, is_already_cached) -> None:
+        self.thread_name = uuid.uuid4().hex  # https://stackoverflow.com/a/44992275/2402577
         self.requester_id = requester_id
         self.job_info = job_info
         self.logged_job = logged_job
@@ -57,11 +60,12 @@ class Storage(BaseClass):
         self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.folder_type_dict = {}
-        self.ebb = Contract.eblocbroker
+        self.Ebb = Contract.eblocbroker
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.mc = None
         self.coll = None
+        utils.log_files[self.thread_name] = self.drivers_log_path
 
         create_dir(self.private_dir)
         create_dir(self.public_dir)
@@ -74,6 +78,10 @@ class Storage(BaseClass):
         import threading
         import config
 
+        _log = logging.getLogger()  # root logger
+        for hdlr in _log.handlers[:]:  # remove all old handlers
+            _log.removeHandler(hdlr)
+
         # A dedicated per-thread handler
         thread_handler = logging.FileHandler(self.drivers_log_path, "a")
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -81,9 +89,12 @@ class Storage(BaseClass):
         # The ThreadFilter makes sure this handler only accepts logrecords that originate
         # in *this* thread, only. It needs the current thread id for this:
         thread_handler.addFilter(ThreadFilter(thread_id=threading.get_ident()))
-        _log = logging.getLogger()
-        _log.addHandler(thread_handler)
-        config.logging = _log
+        config.logging.addHandler(thread_handler)
+        time.sleep(0.1)
+        # config.logging = logging
+        # _log = logging.getLogger()
+        # _log.addHandler(thread_handler)
+        # config.logging = _log
 
     def check_already_cached(self, source_code_hash):
         if os.path.isfile(f"{self.private_dir}/{source_code_hash}.tar.gz"):
@@ -98,7 +109,7 @@ class Storage(BaseClass):
     def complete_refund(self) -> bool:
         """Complete refund back to the requester"""
         try:
-            tx_hash = self.ebb.refund(
+            tx_hash = self.Ebb.refund(
                 self.logged_job.args["provider"],
                 env.PROVIDER_ID,
                 self.job_key,
@@ -181,24 +192,6 @@ class Storage(BaseClass):
         except:
             logging.error("E: run.sh does not exist under the parent folder")
             return False
-
-    def untar(self, tar_file, extract_to, is_print=False):
-        if not is_dir_empty(extract_to):
-            log(f"{tar_file} is already extracted into {extract_to}")
-            return
-
-        # umask can be ignored by using the -p (--preserve) option
-        cmd = ["tar", "xfp", tar_file, "--strip-components=1", "-C", extract_to]
-        if os.path.isfile(tar_file):
-            try:
-                output = run(cmd)
-                if is_print:
-                    log(output)
-            except:
-                _colorize_traceback()
-                raise
-        else:
-            raise
 
     def check_run_sh(self) -> bool:
         if not os.path.isfile(self.run_path):

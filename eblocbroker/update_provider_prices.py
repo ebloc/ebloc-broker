@@ -29,18 +29,18 @@ def update_provider_prices(self, availableCoreNum, commitmentBlockNum, prices):
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
 
-    ebb = Contract.eblocbroker
+    Ebb = Contract.eblocbroker
 
     availableCoreNum = 128
     commitmentBlockNum = 10
-    priceCoreMin = 100
-    priceDataTransfer = 1
-    priceStorage = 1
-    priceCache = 1
-    prices = [priceCoreMin, priceDataTransfer, priceStorage, priceCache]
+    price_core_min = 100
+    price_data_transfer = 1
+    price_storage = 1
+    price_cache = 1
+    prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
     try:
-        tx_hash = ebb.update_provider_prices(availableCoreNum, commitmentBlockNum, prices)
+        tx_hash = Ebb.update_provider_prices(availableCoreNum, commitmentBlockNum, prices)
         receipt = get_tx_status(tx_hash)
     except:
         _colorize_traceback()

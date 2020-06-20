@@ -2,14 +2,23 @@
 
 from web3 import HTTPProvider, Web3
 
+from config import env
+
 web3 = Web3(HTTPProvider("http://localhost:8545"))
 
-# Obtained from node_1 and assigned here.
-receiver_pub = "0x04890c6c513fb3d2e375dee1f3fb8a35fb49e55382013cee152e106d6abbb9db1aa765cd61f59b9d078b9875aa38d31c5aaae826895f6ffea6de4645d170042fc7"
+# Obtained from the node_1 and assigned here
+receiver_pub = "0x04d2a70458f4f3f821870d1979203f84e1cad44bd9cdc6f710eb513ef917c96a25188ff1d4b6b7e83e5168872ce958b29b4b8959f9118ddaf876f10227450540c2"
 
-topic = "0x07678231"
 payloads = [web3.toHex(text="test message :)"), web3.toHex(text="2nd test message")]
 
+# target_peer = "40760b97c4ff1aa2d6fb13b99747db3cd19995828776ce208fd5c4bf5caac7ba"
 web3.geth.shh.post(
-    {"powTarget": 2.5, "powTime": 2, "ttl": 60, "payload": payloads[0], "topic": topic, "pubKey": receiver_pub,}
+    {
+        "powTarget": 2.5,
+        "powTime": 2,
+        "ttl": 60,
+        "payload": payloads[0],
+        "topic": env.WHISPER_TOPIC,
+        "pubKey": receiver_pub,
+    }
 )
