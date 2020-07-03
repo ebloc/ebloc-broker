@@ -196,7 +196,6 @@ if __name__ == "__main__":
             else:
                 _hash = config.w3.toText(code_hash)
                 _type = "md5sum"
-
             print(f"[{idx}] {_type}: {_hash} <= {code_hash}")
     else:
         print(job_info)

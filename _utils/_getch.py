@@ -2,7 +2,7 @@ import sys
 import termios
 import tty
 
-from startup import bp  # noqa: F401
+from _tools import bp  # noqa: F401
 
 
 class _Getch:

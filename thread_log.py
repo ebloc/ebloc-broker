@@ -25,7 +25,7 @@ logging.basicConfig(
 )
 
 log = logging.getLogger()
-log.info("Running Urban Planning")
+log.info("Running Example")
 
 
 def hello(name):  # shared module on write time

@@ -1,0 +1,27 @@
+* TASKS
+** NOTE: C-c C-t TODO => Done | | C-c / t
+** TODO Later do, when cache time is completed:
+   oc.decline_remote_share(int(<share_id>)) to cancel shared folder at
+   end_code or after some time later
+** TODO /* Sets the job's state (stateID) which is obtained from Slurm */
+   Slurm status should be set on the receiveDeposit call not setJobStatus
+** TODO refundStoragePayment => refundStorageDeposit
+** TODO receiveStoragePayment => receiveStorageDeposity
+** TODO DAS2-fs1-2003-1.swf =>
+   https://www.cse.huji.ac.il/labs/parallel/workload/l_das2/index.html
+   Starting from // 5955  9447070
+
+** TODO endTime => completionTime
+** TODO oc may have "owncloud.owncloud.HTTPResponseError: HTTP error: 401" error
+
+** TODO _colorize_traceback() <= Remove logging // log
+** DONE pause => suspend  // unpause => resume
+   CLOSED: [2020-06-01 Mon 13:24]
+
+** DONE check refund()
+** DONE docs/ add quickstart
+   CLOSED: [2020-05-02 Sat 15:42]
+
+   CLOSED: [2020-05-02 Sat 15:26]
+** DONE Comment:
+   #+STARTUP: showall

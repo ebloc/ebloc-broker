@@ -457,11 +457,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         string memory email,
         string memory federatedCloudID,
         string memory ipfsID,
-        string memory githubName,
         string memory whisperID
     ) public returns (bool) {
         requesterCommittedBlock[msg.sender] = uint32(block.number);
-        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, githubName, whisperID);
+        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
         return true;
     }
 

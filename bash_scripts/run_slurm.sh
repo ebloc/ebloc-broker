@@ -5,7 +5,8 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-sudo killall slurmctld slurmdbd slurmd
+sudo killall slurmctld slurmdbd slurmd > /dev/null 2>&1
+
 sudo munged -f
 sudo /etc/init.d/munge start
 sudo slurmd
