@@ -8,8 +8,9 @@ from utils import popen_communicate
 
 
 def run():
-    silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK")
+    """Runs IPFS daemon."""
     silent_remove(f"{env.HOME}/.ipfs/repo.lock")
+    silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 
     # https://stackoverflow.com/a/8375012/2402577
     with daemon.DaemonContext():

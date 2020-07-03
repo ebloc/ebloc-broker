@@ -11,7 +11,8 @@ def get_provider_info(self, _provider):
 
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
         logging.error(
-            f"\nE: Provider {provider} is not registered.\nPlease try again with registered Ethereum Address as provider."
+            f"\nE: Provider {provider} is not registered.\nPlease try again with registered Ethereum Address as"
+            " provider."
         )
         raise
 
@@ -47,7 +48,7 @@ def get_provider_info(self, _provider):
 if __name__ == "__main__":
     from eblocbroker.Contract import Contract
 
-    c = Contract()
+    Ebb = Contract()
 
     if len(sys.argv) == 2:
         provider = str(sys.argv[1])
@@ -55,7 +56,7 @@ if __name__ == "__main__":
         provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 
     try:
-        provider_info = c.get_provider_info(provider)
+        provider_info = Ebb.get_provider_info(provider)
         for key, value in provider_info.items():
             print("{0: <22}".format(f"{key}:") + str(value))
     except:

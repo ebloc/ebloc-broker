@@ -1,17 +1,37 @@
-<!doctype html>
-<html>
-  <body>
-    
-    <h1>BlockNumber {{ blockNumber }}!</h1>
+<title>Reusable Form Demo</title>
+<link rel="stylesheet" media="screen" href="static/css/bootstrap.min.css">
+<link rel="stylesheet" href="static/css/bootstrap-theme.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<div class="container">
+  <h2>Flask Web Form</h2>
+  <form action="" method="post" role="form">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" class="form-control" id="name" name="name" placeholder="What's your name?">
 
-    <ol> 
-      <!-- For loop logic of jinja template -->
-      {%for i in range(0, len)%} 
-      
-      <li>{{result[i]}}</li> 
-      {%endfor%} 
-      
-    </ol>
-  </body>
-</html>
+      <label for="email">Email:</label>
+      <input type="text" class="form-control" id="email" name="email" placeholder="Your email will be used to contact you.">
 
+      <label for="password">Password:</label>
+      <input type="password" class="form-control" id="password" name="password" placeholder="Enter a password.">
+
+    </div>
+    <button type="submit" class="btn btn-success">Submit</button>
+  </form>{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+
+  {% for message in messages %}
+  {% if "Error" not in message[1]: %}
+  <div class="alert alert-info">
+    <strong>Success! </strong> {{ message[1] }}</div>
+  {% endif %}
+
+  {% if "Error" in message[1]: %}
+  <div class="alert alert-warning">
+    {{ message[1] }}</div>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+</div>

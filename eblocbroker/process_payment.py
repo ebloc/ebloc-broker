@@ -2,9 +2,9 @@
 
 import sys
 
+from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import StorageID
-from startup import bp  # noqa: F401
 from utils import _colorize_traceback, ipfs_to_bytes32
 
 
@@ -23,7 +23,9 @@ def process_payment(
     executionDuration,
 ):
     logging.info(
-        f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {execution_time_min} {result_ipfs_hash} {cloud_storage_ids} {end_time} {dataTransferIn} {dataTransferOut} '{core}' '{executionDuration}'"
+        f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {execution_time_min}"
+        f" {result_ipfs_hash} {cloud_storage_ids} {end_time} {dataTransferIn} {dataTransferOut} '{core}'"
+        f" '{executionDuration}'"
     )
 
     for cloud_storage_id in cloud_storage_ids:

@@ -1,33 +1,26 @@
-import sys
+#!/usr/bin/env python3
 
 from flask import Flask, render_template
-from web3 import HTTPProvider, Web3
 
-import eblocbroker.Contract as Contract
-from config import env
+import config
 
-# TODO: env should be load first
+# Settings
 app = Flask(__name__)
-
-# open a connection to the local ethereum node
-w3 = Web3(HTTPProvider("http://localhost:8545")).eth
-Ebb = Contract.eblocbroker
+app.config.from_pyfile("settings.py")
 
 
 @app.route("/")
-def hello_world():
-    output = Ebb.get_owner()
-    return f"block_number={w3.blockNumber} | {sys.version} | owner={output} {env.RPC_PORT} {env.EBLOCPATH}."
+def index():
+    print(config.Ebb.get_owner())
+    return app.config.get("WHOAMI")
 
 
-@app.route("/hello")
-def hello_name():
-    _dict = Ebb.get_providers()  # {'phy':50,'che':60,'maths':70}
-    return render_template("hello.html", blockNumber=str(w3.blockNumber), result=dict, len=len(_dict))
+# home route
+@app.route("/")
+def hello():
+    # index()
+    return render_template("index.html", name=app.config.get("WHOAMI"), block_number=config.Ebb.get_block_number())
 
 
-"""
-@app.route('/hello/<user>')
-def hello_name(user):
-   return render_template('hello.html', name = user)
-"""
+if __name__ == "__main__":
+    app.run(debug=True)

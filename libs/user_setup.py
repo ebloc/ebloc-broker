@@ -3,10 +3,10 @@ import hashlib
 import os
 import pwd
 
+from _tools import bp  # noqa: F401
 from config import logging
 from lib import run, silent_remove  # noqa: F401
 from libs.slurm import add_user_to_slurm  # noqa: F401
-from startup import bp  # noqa: F401
 from utils import create_dir, log, popen_communicate
 
 

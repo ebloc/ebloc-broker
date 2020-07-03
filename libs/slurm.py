@@ -81,7 +81,7 @@ def is_on() -> bool:
         except:
             return False
     elif "sinfo: error" in output:
-        logging.error(f"Error on munged: \n {output} \n run:\nsudo munged -f \n" "/etc/init.d/munge start")
+        logging.error(f"Error on munged: \n {output} \n run:\nsudo munged -f \n/etc/init.d/munge start")
         return False
     else:
         logging.info("Done")

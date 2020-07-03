@@ -4,9 +4,9 @@ import json
 import os
 import subprocess
 
+from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
-from startup import bp  # noqa: F401
 from utils import _colorize_traceback, byte_to_mb, read_json
 
 

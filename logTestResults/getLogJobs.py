@@ -62,7 +62,8 @@ def getLogJobs(provider_address, fromBlock):
         #   print('gained:0')
 
         print(
-            f"{idx} | {logged_jobs[i].args['jobKey']} {logged_jobs[i].args['index']} {inv_job_state_code[int(jobInfo['status'])]} {jobInfo['received']} {returned} {gained}"
+            f"{idx} | {logged_jobs[i].args['jobKey']} {logged_jobs[i].args['index']}"
+            f" {inv_job_state_code[int(jobInfo['status'])]} {jobInfo['received']} {returned} {gained}"
         )
 
         if ipfsFlag == 1 and inv_job_state_code[int(jobInfo["status"])] == "COMPLETED":

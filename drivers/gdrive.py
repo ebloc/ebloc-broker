@@ -4,10 +4,10 @@ import os
 import subprocess
 
 import libs.gdrive as gdrive
+from _tools import bp  # noqa
 from config import env, logging, setup_logger
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, silent_remove, subprocess_call
-from startup import bp  # noqa: F401
 from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time, untar
 
 
@@ -133,7 +133,8 @@ class GdriveClass(Storage):
             else:
                 self.dataTransferIn_requested = calculate_folder_size(downloaded_folder_path)
                 logging.info(
-                    f"data_transfer_in_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB"
+                    f"data_transfer_in_requested={self.dataTransferIn_requested} MB | "
+                    f"Rounded={int(self.dataTransferIn_requested)} MB"
                 )
         else:
             try:
@@ -155,7 +156,8 @@ class GdriveClass(Storage):
             # returns downloaded files size in bytes
             self.dataTransferIn_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
             logging.info(
-                f"dataTransferIn_requested={self.dataTransferIn_requested} MB | Rounded={int(self.dataTransferIn_requested)} MB"
+                f"dataTransferIn_requested={self.dataTransferIn_requested} MB |"
+                f" Rounded={int(self.dataTransferIn_requested)} MB"
             )
         return True
 
