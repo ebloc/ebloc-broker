@@ -2,10 +2,10 @@
 
 import logging
 import os
-import sys
 import threading
 from logging import Filter
 from os.path import expanduser
+from pathlib import Path
 from pdb import set_trace as bp  # noqa: F401
 from typing import Type
 
@@ -55,8 +55,8 @@ class QuietExit(Exception):
 class ENV:
     def __init__(self) -> None:
         self.HOME = expanduser("~")
-        # load .env from the given path
-        load_dotenv(os.path.join(f"{self.HOME}/.eBlocBroker/", ".env"))
+        env_path = Path(f"{self.HOME}/.eBlocBroker/") / ".env"
+        load_dotenv(dotenv_path=env_path)
         self.log_filename = None
         self.WHOAMI = os.getenv("WHOAMI")
         self.SLURMUSER = os.getenv("SLURMUSER")
@@ -90,16 +90,20 @@ class ENV:
         self.WHISPER_INFO = f"{self.LOG_PATH}/whisper_info.txt"
         self.WHISPER_LOG = f"{self.LOG_PATH}/whisper_state_receiver.out"
         self.WHISPER_TOPIC = "0x07678231"
+        self.IS_THREADING_ENABLED = False
 
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
         else:
             self.PROVIDER_ID = None
 
-    def set_provider_id(self):
+    def set_provider_id(self, provider_id=None):
         if not os.getenv("PROVIDER_ID"):
-            print("E: Please set PROVIDER_ID in ~/.eBlocBroker/.env")
-            sys.exit(1)
+            if provider_id:
+                print(w3)
+                self.PROVIDER_ID = w3.toChecksumAddress(provider_id)
+            else:
+                print("E: Please set PROVIDER_ID in ~/.eBlocBroker/.env")
         else:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
@@ -141,7 +145,7 @@ def setup_logger(log_path="", is_brownie=False):
 
 
 Ebb = None
-w3 = None  # type: Type[Web3]
+w3 = None  # # type: Type[Web3]
 contract = None
 
 coll = None

@@ -19,9 +19,9 @@ from pygments import formatters, highlight, lexers
 from termcolor import colored
 
 import config
+from _tools import bp  # noqa: F401
 from _utils._getch import _Getch
 from config import env, logging
-from startup import bp  # noqa: F401
 
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -70,8 +70,10 @@ def untar(tar_file, extract_to):
         log(f"{tar_file} is already extracted into {extract_to}")
         return
 
-    # umask can be ignored by using the -p (--preserve) option
-    # --no-overwrite-dir: preserve metadata of existing directories
+    """
+    umask can be ignored by using the -p (--preserve) option
+        --no-overwrite-dir: preserve metadata of existing directories
+    """
     cmd = ["tar", "-xvfp", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
     run(cmd)
 
@@ -147,6 +149,7 @@ def insert_character(string, index, char) -> str:
 
 
 def _colorize_traceback(string=None):
+    """Logs the traceback."""
     tb_text = "".join(traceback.format_exc())
     lexer = lexers.get_lexer_by_name("pytb", stripall=True)
     # to check: print $terminfo[colors]
@@ -405,7 +408,8 @@ def is_geth_on():
     port = insert_character(port, 1, "]")
     port = insert_character(port, 0, "[")
     if not is_process_on(f"geth.*{port}", "Geth"):
-        raise
+        log("E: geth is not running on the background. Please run:\nsudo ~/eBlocPOA/server.sh", "red")
+        raise config.QuietExit
 
 
 def is_ipfs_on() -> bool:

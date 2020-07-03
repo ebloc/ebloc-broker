@@ -15,5 +15,6 @@ if __name__ == "__main__":
 
     receivedBlockNum, storageTime = Ebb.getJobStorageTime(providerAddress, sourceCodeHash)
     print(
-        f"receivedBlockNum={receivedBlockNum}; storageTime={storageTime}; endBlockTime={receivedBlockNum + storageTime * 240}"
+        f"receivedBlockNum={receivedBlockNum}; storageTime={storageTime};"
+        f" endBlockTime={receivedBlockNum + storageTime * 240}"
     )

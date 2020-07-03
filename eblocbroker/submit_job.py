@@ -2,9 +2,9 @@
 
 
 import config
+from _tools import bp  # noqa: F401
 from config import logging
 from lib import StorageID
-from startup import bp  # noqa: F401
 from utils import _colorize_traceback
 
 

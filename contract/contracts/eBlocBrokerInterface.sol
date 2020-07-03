@@ -58,7 +58,6 @@ interface eBlocBrokerInterface {
         string email,
         string fID,
         string ipfsID,
-        string githubUsername,
         string whisperID
     );
 

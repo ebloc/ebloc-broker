@@ -6,11 +6,11 @@ import time
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.git as git
+from _tools import bp  # noqa: F401
 from config import env
 from contract.scripts.lib import Job, cost
 from imports import connect
 from lib import get_tx_status
-from startup import bp  # noqa: F401
 from utils import CacheType, StorageID, _colorize_traceback, log, printc
 
 eBlocBroker, w3 = connect()
