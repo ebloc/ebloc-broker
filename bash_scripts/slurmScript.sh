@@ -1,20 +1,20 @@
 #!/bin/bash
 
-HOME="/home/netlab"
+HOME="/home/alper"
 VENV_PATH="${HOME}/venv"
 EBLOCBROKER_PATH="${HOME}/eBlocBroker"
-LOG_FILE="${HOME}/.eBlocBroker/log.txt"
 EMAIL="aalimog1@binghamton.edu"
+LOG_FILE="${HOME}/.eBlocBroker/slurm_script.log"
 
 a=$(echo $0)
 b=$(echo $1)
 c=$(echo $2)
 event=$(echo $c | awk '{print $8}')
 
-msg="Your message | $a | $b | $c //$event"
+msg="\n[$(date)] $a | $b | $c //$event"
 echo $msg | mail -s "Message Subject" $EMAIL
 
-echo ""   >> $LOG_FILE
+echo "--" >> $LOG_FILE
 echo $msg >> $LOG_FILE
 
 slurm_job_id=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')

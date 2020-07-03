@@ -10,7 +10,7 @@ fi
 
 sudo killall slurmctld slurmdbd slurmd
 sudo munged -f
-sudo /etc/init.d/munge start 
+sudo /etc/init.d/munge start
 
 sudo slurmdbd &
 sudo -u $(logname) mkdir -p /tmp/slurmstate

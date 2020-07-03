@@ -57,8 +57,8 @@ while True:
                     user_name,
                     "-c",
                     f"job_name=$(echo {jobKey}_{index}/JOB_TO_RUN/{jobKey}*{index}*sh"
-                    f"| xargs -n 1 basename);"
-                    f"sacct -n -X --format jobid --name $job_name",
+                    "| xargs -n 1 basename);"
+                    "sacct -n -X --format jobid --name $job_name",
                 ]
             )
             .decode("utf-8")

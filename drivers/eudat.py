@@ -11,10 +11,10 @@ from pymongo import MongoClient
 import config
 import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
+from _tools import bp  # noqa: F401
 from config import env, logging
 from drivers.storage_class import Storage
 from lib import silent_remove
-from startup import bp  # noqa: F401
 from utils import CacheType, _colorize_traceback, create_dir, generate_md5sum, get_time, log, read_json, untar
 
 Ebb = Contract.eblocbroker

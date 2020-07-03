@@ -93,8 +93,8 @@ if [ ! -d transactions ]; then
     mkdir -p transactions
 fi
 
-if [ ! -d endCodeAnalyse ]; then
-    mkdir -p endCodeAnalyse
+if [ ! -d end_code_output ]; then
+    mkdir -p end_code_output
 fi
 
 if [ ! -d cache ]; then

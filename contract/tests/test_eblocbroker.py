@@ -7,10 +7,10 @@ import pytest
 
 import brownie
 import config
+from _tools import bp  # noqa: F401
 from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import DataStorage, Job, cost, new_test
-from startup import bp  # noqa: F401
 from utils import CacheType, StorageID, ipfs_to_bytes32, logging, zero_bytes32
 
 # from brownie.test import given, strategy
@@ -64,7 +64,8 @@ def mine(block_number):
     height = web3.eth.blockNumber
     rpc.mine(block_number)
     print(
-        f"Mine {block_number} empty blocks == {h:d}:{m:02d}:{s:02d} (h/m/s) | current_block_number={web3.eth.blockNumber}"
+        f"Mine {block_number} empty blocks == {h:d}:{m:02d}:{s:02d} (h/m/s) |"
+        f" current_block_number={web3.eth.blockNumber}"
     )
     assert web3.eth.blockNumber == height + block_number
 
@@ -136,7 +137,6 @@ def register_requester(account):
         "alper.alimoglu@gmail.com",
         "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
         "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf",
-        "ebloc",
         whisper_pub_key,
         {"from": account},
     )

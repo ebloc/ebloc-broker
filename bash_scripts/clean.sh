@@ -1,6 +1,10 @@
 #!/bin/bash
 
-pyclean docs/
+if [ -e docs/ ]; then
+    pyclean docs/
+fi
+
+rm -rf dist build */*.egg-info *.egg-info
 
 find . -name '.DS_Store' -delete
 find . -name '*.pyc' -delete
@@ -11,6 +15,8 @@ find . -name '*_flymake.py' -delete
 find . -name '*.*~' -delete
 find . -name '*~' -delete
 find . -name '\#*' -delete
+find . -name '.*.*py.swo' -delete
+find . -name '.*.*py.swp' -delete
 find . -name __pycache__ -type d -exec rm -rf {} +
 
 rm -f .node-xmlhttprequest*

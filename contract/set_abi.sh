@@ -11,4 +11,4 @@ EOF
 )"
 
 echo "$input" | brownie console --network private
-mv abi.json ../eblocbroker/abi.json
+mv abi.json $HOME/eBlocBroker/eblocbroker/abi.json
