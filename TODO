@@ -1,5 +1,8 @@
+                                                                 *outline*
+
 * TASKS
-** NOTE: C-c C-t TODO => Done | | C-c / t
+** Remove registerRequester githubusername argument
+** Remove ~minilock~ keywords from the repo *alper*
 ** TODO Later do, when cache time is completed:
    oc.decline_remote_share(int(<share_id>)) to cancel shared folder at
    end_code or after some time later
@@ -30,3 +33,8 @@
 * lib.py
 ** Some code should go into utils.py
    Some functıons are public that should carried into `utils.py`
+
+* NOTES
+** NOTE: C-c C-t TODO => Done | | C-c / t
+** /italic/, _underlined_, =verbatim= and ~code~, and, if you must, +strike-through+
+** C-c / t || C-c / T DONE

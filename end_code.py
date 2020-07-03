@@ -5,7 +5,7 @@ import getpass
 import os
 import sys
 import time
-from typing import List
+from typing import Dict, List
 
 from pymongo import MongoClient
 
@@ -16,6 +16,7 @@ import libs.git as git
 import libs.ipfs as ipfs
 import libs.mongodb as mongodb
 import libs.slurm as slurm
+from _tools import bp  # noqa
 from config import env, logging, setup_logger
 from imports import connect
 from lib import (
@@ -29,7 +30,6 @@ from lib import (
     silent_remove,
     subprocess_call,
 )
-from startup import bp  # noqa: F401
 from utils import (
     WHERE,
     StorageID,
@@ -57,6 +57,7 @@ class Common:
         self.results_folder = ""
         self.results_folder_prev = ""
         self.patch_file = ""
+        self.minilock_id = ""
         self.patch_name = ""
         self.dataTransferOut = 0
 
@@ -163,14 +164,14 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.received_block_number = kwargs.pop("received_block_number")
         self.folder_name = kwargs.pop("folder_name")
         self.slurm_job_id = kwargs.pop("slurm_job_id")
-        self.share_tokens = {}
-        self.encoded_share_tokens = {}
+        self.share_tokens = {}  # type: Dict[str, str]
+        self.encoded_share_tokens = {}  # type: Dict[str, str]
         self.dataTransferIn = 0
         self.elapsed_raw_time = 0
         self.source_code_hashes_to_process: List[str] = []
         self.source_code_hashes: List[str] = []
         self.result_ipfs_hash = ""
-        self.minilock_id = None
+        self.minilock_id = ""
         self.modified_date = None
 
         # https://stackoverflow.com/a/5971326/2402577 , https://stackoverflow.com/a/4453495/2402577
@@ -178,7 +179,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"
         # print(my_env)
         os.environ["IPFS_PATH"] = f"{env.HOME}/.ipfs"
-        logging = setup_logger(f"{env.LOG_PATH}/endCodeAnalyse/{self.job_key}_{self.index}.log")
+        logging = setup_logger(f"{env.LOG_PATH}/end_code_output/{self.job_key}_{self.index}.log")
         # logging.info(f"=> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id

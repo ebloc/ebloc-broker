@@ -11,15 +11,15 @@ import config
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.slurm as slurm
+from _tools import bp  # noqa
 from config import env, logging, setup_logger
 from contract.scripts.lib import DataStorage
 from drivers.eudat import EudatClass
 from drivers.gdrive import GdriveClass
 from drivers.ipfs import IpfsClass
 from imports import connect
-from lib import job_state_code, run, run_command, run_storage_thread, session_start_msg  # noqa: F401
+from lib import job_state_code, run, run_command, run_storage_thread, session_start_msg
 from libs.user_setup import user_add
-from startup import bp  # noqa: F401
 from utils import (
     CacheType,
     StorageID,
@@ -43,10 +43,9 @@ from utils import (
 
 from lib import eblocbroker_function_call  # noqa: F401; run_whisper_state_receiver,
 
+
 # from multiprocessing import Process
 # from threading import Thread
-
-
 def wait_till_idle_core_available():
     while True:
         idle_cores = slurm.get_idle_cores(is_print_flag=False)
@@ -57,9 +56,10 @@ def wait_till_idle_core_available():
             break
 
 
-def startup(slurm_user, block_number):
-    """Startup functions are called."""
+def tools(slurm_user, block_number):
+    """Tools functions are called."""
     session_start_msg(slurm_user, block_number)
+    bp()
     if not is_internet_on():
         logging.error("E: Network connection is down")
         terminate()
@@ -99,8 +99,8 @@ def run_driver():
     # dummy sudo command to get the password when session starts for only to
     # create users and submit slurm job under another user
     run(["sudo", "printf", ""])
+    env.IS_THREADING_ENABLED = False
 
-    env.IS_THREADING_ENABLED = True
     config.logging = setup_logger(f"{env.LOG_PATH}/provider.log")
     columns = 100
     # driver_cancel_process = None
@@ -135,13 +135,14 @@ def run_driver():
         block_number_saved = deployed_block_number
         write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
 
-    startup(slurm_user, block_number_saved)
+    tools(slurm_user, block_number_saved)
     try:
         Ebb.is_contract_exists()
         contract_file = read_json("eblocbroker/contract.json")
     except:
         terminate()
 
+    log(f"is_threading={env.IS_THREADING_ENABLED}", color="blue")
     log(f"is_web3_connected={Ebb.is_web3_connected()}", color="blue")
     log(f"log_file={env.LOG_PATH}/provider.log", color="blue")
     log(f"rootdir={os.getcwd()}", color="blue")
@@ -218,7 +219,7 @@ def run_driver():
             # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
             job_key = logged_job.args["jobKey"]
             index = logged_job.args["index"]
-            cloudStorageID = logged_job.args["cloudStorageID"]
+            cloud_storage_id = logged_job.args["cloudStorageID"]
             block_number = logged_job["blockNumber"]
             log(f"job_key={job_key} | index={index}", color="green")
             log(
@@ -233,7 +234,7 @@ def run_driver():
             for idx, source_code_hash_byte in enumerate(logged_job.args["sourceCodeHash"]):
                 if idx > 0:
                     log("")
-                if cloudStorageID[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
+                if cloud_storage_id[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
                     source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
                     if idx == 0 and source_code_hash != job_key:
                         logging.error("E: IPFS hash does not match with the given source_code_hash.")
@@ -262,12 +263,12 @@ def run_driver():
                     f"sourceCodeHash[{idx}]={source_code_hash}\n"
                     f"received_block={ds.received_block}\n"
                     f"storageDuration(block_number)={ds.storage_duration}\n"
-                    f"cloudStorageID[{idx}]={StorageID(cloudStorageID[idx]).name}\n"
+                    f"cloud_storage_id[{idx}]={StorageID(cloud_storage_id[idx]).name}\n"
                     f"cached_type={CacheType(logged_job.args['cacheType'][idx]).name}\n"
                     f"is_already_cached={is_already_cached[source_code_hash]}"
                 )
 
-            if logged_job["blockNumber"] > int(max_blocknumber):
+            if logged_job["blockNumber"] > max_blocknumber:
                 max_blocknumber = logged_job["blockNumber"]
 
             try:
@@ -293,7 +294,7 @@ def run_driver():
 
             for job in range(1, len(job_infos[0]["core"])):
                 try:
-                    job_infos.append(  # adds jobs if workflow exists
+                    job_infos.append(  # add jobs into list, if workflow is given
                         Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, block_number)
                     )
                 except:
@@ -305,7 +306,10 @@ def run_driver():
 
             log(f"requester={job_infos[0]['jobOwner'].lower()}", color="yellow")
             requester_id = job_infos[0]["jobOwner"].lower()
-            is_requester_exist = Ebb.does_requester_exist(requester_id)
+            if not Ebb.does_requester_exist(requester_id):
+                logging.error("E: Job owner is not registered")
+                continue
+
             if job_infos[0]["jobStateCode"] == job_state_code["COMPLETED"]:
                 logging.info("Job is already completed")
                 continue
@@ -315,13 +319,8 @@ def run_driver():
                 continue
 
             if not job_infos[0]["jobStateCode"] == job_state_code["SUBMITTED"]:
-                logging.info("Job is already captured. It is in process or completed.")
+                log("Job is already captured or it is in process or completed.", "green")
                 continue
-
-            if not is_requester_exist:
-                logging.error("E: Job owner is not registered")
-                continue
-
             try:
                 user_add(requester_id, env.PROGRAM_PATH, slurm_user)
                 requester_md5_id = eth_address_to_md5(requester_id)
@@ -351,18 +350,20 @@ def run_driver():
                 sys.exit(1)
 
         sys.exit(1)  # delete
-        if len(logged_jobs_to_process) > 0 and int(max_blocknumber) > 0:
+        if len(logged_jobs_to_process) > 0 and max_blocknumber > 0:
             # updates the latest read block number
-            block_read_from = int(max_blocknumber) + 1
+            block_read_from = max_blocknumber + 1
             write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
-
         if not is_provider_received_job:
-            # if there is no submitted job for the provider, block start to read
-            # from the current block number updates the latest read block number
-            # read from the file
+            # If there is no submitted job for the provider, block start to read
+            # from the current block number and updates the latest read
+            # block number read from the file.
             write_to_file(env.BLOCK_READ_FROM_FILE, current_block_number)
             block_read_from = current_block_number
 
 
 if __name__ == "__main__":
-    run_driver()
+    try:
+        run_driver()
+    except KeyboardInterrupt:
+        print("Clean exit....")

@@ -7,9 +7,9 @@ import time
 from io import StringIO
 from typing import Tuple
 
+from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import _try, compress_folder, run, silent_remove
-from startup import bp  # noqa: F401
 from utils import _colorize_traceback, log, untar
 
 
@@ -32,7 +32,7 @@ def is_hash_exists_online(ipfs_hash, attempts):
 
 def is_hash_locally_cached(ipfs_hash) -> bool:
     """Run ipfs --offline refs -r or ipfs --offline block stat etc even if your normal daemon is running.
-       With that you can check if something is available locally or no."""
+    With that you can check if something is available locally or no."""
     try:
         subprocess.check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=subprocess.DEVNULL)
         return True

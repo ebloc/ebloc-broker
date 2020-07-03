@@ -28,8 +28,9 @@ if [ $setup -eq 1 ]; then
 
     sudo apt install python-pip
     pip install wheel
-    python3 -m venv $HOME/venv # python3.6 -m venv --without-pip venv
-    source $HOME/venv/bin/activate
+    venv_path=$HOME"/venv"
+    python3 -m venv $venv_path # python3.6 -m venv --without-pip venv
+    source $venv_path/bin/activate
 
     # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
     pip install --upgrade pip --user

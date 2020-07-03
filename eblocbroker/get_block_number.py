@@ -10,7 +10,7 @@ logging = setup_logger()
 
 
 if __name__ == "__main__":
-    c = Contract()
+    Ebb = Contract()
 
     is_write_to_file = False
     if len(sys.argv) == 2:
@@ -19,7 +19,7 @@ if __name__ == "__main__":
             is_write_to_file = True
 
     try:
-        output = c.get_block_number()
+        output = Ebb.get_block_number()
         if is_write_to_file:
             print(output)
         else:

@@ -25,7 +25,7 @@ def get_requester_info(self, requester):
             "requester": requester,
             "blockReadFrom": blockReadFrom,
             "email": event_filter.get_all_entries()[0].args["email"],
-            "miniLockID": event_filter.get_all_entries()[0].args["miniLockID"],
+            "gpgFingerprint": event_filter.get_all_entries()[0].args["gpgFingerprint"],
             "ipfsID": event_filter.get_all_entries()[0].args["ipfsID"],
             "fID": event_filter.get_all_entries()[0].args["fID"],
             "orcid": orcid.decode("utf-8"),
@@ -43,36 +43,15 @@ if __name__ == "__main__":
     contract = Contract()
 
     if len(sys.argv) == 1:
-        requester = "0x57b60037b82154ec7149142c606ba024fbb0f991"
+        requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
     elif len(sys.argv) == 2:
         requester = str(sys.argv[1])
 
     try:
         requester_info = contract.get_requester_info(requester)
-        print(
-            "{0: <15}".format("requester: ")
-            + requester_info["requester"]
-            + "\n"
-            + "{0: <15}".format("blockReadFrom: ")
-            + str(requester_info["blockReadFrom"])
-            + "\n"
-            + "{0: <15}".format("email: ")
-            + requester_info["email"]
-            + "\n"
-            + "{0: <15}".format("miniLockID: ")
-            + requester_info["miniLockID"]
-            + "\n"
-            + "{0: <15}".format("ipfsID: ")
-            + requester_info["ipfsID"]
-            + "\n"
-            + "{0: <15}".format("fID: ")
-            + requester_info["fID"]
-            + "\n"
-            + "{0: <15}".format("orcid: ")
-            + requester_info["orcid"]
-            + "\n"
-            + "{0: <15}".format("orcidVerify: ")
-            + str(requester_info["orcidVerify"])
-        )
+        for key, value in requester_info.items():
+            if key == "orcidVerify":
+                value = requester_info["orcidVerify"]
+            print("{0: <15}".format(f"{key}:") + str(value))
     except Exception:
         sys.exit(1)
