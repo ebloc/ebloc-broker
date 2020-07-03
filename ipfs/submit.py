@@ -4,13 +4,13 @@ import os
 import sys
 
 import eblocbroker.Contract as Contract
+from _tools import bp  # noqa: F401
 from config import env, logging
 from contract.scripts.lib import Job, cost
 from imports import connect
 from lib import check_linked_data, get_tx_status, run, silent_remove
 from libs import ipfs
 from libs.ipfs import gpg_encrypt
-from startup import bp  # noqa: F401
 from utils import (
     CacheType,
     StorageID,
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     job = Job()
 
     if not is_dpkg_installed("pigz"):
-        log("E: Install pigz: sudo apt-get install pigz", "red")
+        log("E: Install pigz:\nsudo apt-get install pigz", "red")
         sys.exit()
 
     account_id = 1
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     elif main_storage_id == StorageID.IPFS_GPG:
         log("==> Submitting source code through IPFS_GPG", "cyan")
     else:
-        printc("Please provide IPFS or IPFS_GPG storage type")
+        log("E: Please provide IPFS or IPFS_GPG storage type", "red")
         sys.exit(1)
 
     targets = []
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             targets.append(target)
 
         if idx != len(folders) - 1:
-            print("------")
+            print("--------------")
 
     # requester inputs for testing
     job.cores = [1]

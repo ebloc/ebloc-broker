@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 from web3 import IPCProvider, Web3
 from web3.geth import shh
 from web3.middleware import geth_poa_middleware
@@ -7,9 +9,9 @@ from web3.providers.rpc import HTTPProvider
 
 import _utils.colorer  # noqa: F401
 import config
+from _tools import bp  # noqa: F401
 from config import env, logging
-from startup import bp  # noqa: F401
-from utils import _colorize_traceback, log, read_json
+from utils import _colorize_traceback, is_geth_on, log, read_json
 
 
 def connect():
@@ -47,7 +49,18 @@ def connect_to_web3():
         config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
     if not config.w3.isConnected():
-        logging.error("\nE: If web3 is not connected please start geth server and run the following:")
+        try:
+            is_geth_on()
+        except Exception as e:
+            if type(e).__name__ != "QuietExit":
+                _colorize_traceback()
+            else:
+                sys.exit(1)
+
+        logging.error(
+            "\nE: If web3 is not connected please start geth server and give permission to /private/geth.ipc file"
+            " doing:"
+        )
         log("sudo chown $(whoami) /private/geth.ipc", "green")
         raise config.Web3NotConnected()
 

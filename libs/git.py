@@ -5,9 +5,9 @@ import time
 
 import git
 
+from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import run, run_command
-from startup import bp  # noqa: F401
 from utils import getcwd, getsize, path_leaf, printc
 
 

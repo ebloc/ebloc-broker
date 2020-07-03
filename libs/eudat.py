@@ -11,9 +11,9 @@ import traceback
 import owncloud
 
 import config
+from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import compress_folder, printc, run
-from startup import bp  # noqa: F401
 from utils import _colorize_traceback, popen_communicate, sleep_timer, terminate
 
 

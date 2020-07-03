@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 import glob
 import os
 import pprint
@@ -13,8 +14,8 @@ from threading import Thread
 from typing import Tuple
 
 import config
+from _tools import bp  # noqa: F401
 from config import env, logging
-from startup import bp  # noqa: F401
 from utils import (
     WHERE,
     Link,
@@ -38,7 +39,8 @@ from utils import (
 def enum(*sequential, **named):
     """Sets reverse mapping for the Enum.
 
-    helpful: https://stackoverflow.com/a/1695250/2402577
+    Helpful Links:
+    - https://stackoverflow.com/a/1695250/2402577
     """
     enums = dict(zip(sequential, range(len(sequential))), **named)
     reverse = dict((value, key) for key, value in enums.items())
@@ -51,20 +53,25 @@ if not config.w3:
 
     connect_to_web3()
 
-PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+if not env.PROVIDER_ID:
+    PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+else:
+    PROVIDER_ID = env.PROVIDER_ID
 
 job_state_code = {}
 
 # add keys to the hashmap # https://slurm.schedmd.com/squeue.html
-# initial state
-job_state_code["SUBMITTED"] = 0
-# indicates when a request is receieved by the provider. The job is waiting for resource allocation. It will eventually run.
+job_state_code["SUBMITTED"] = 0  # initial state
+# indicates when a request is receieved by the provider. The job is waiting
+# for resource allocation. It will eventually run.
 job_state_code["PENDING"] = 1
-# The job currently is allocated to a node and is running. Corresponding data files are downloaded and verified.*/
+# The job currently is allocated to a node and is running. Corresponding data
+# files are downloaded and verified.
 job_state_code["RUNNING"] = 2
-# indicates if job is refunded */
+# indicates if job is refunded
 job_state_code["REFUNDED"] = 3
-# Job was explicitly cancelled by the requester or system administrator. The job may or may not have been initiated. Set by the requester
+# Job was explicitly cancelled by the requester or system administrator.
+# The job may or may not have been initiated. Set by the requester
 job_state_code["CANCELLED"] = 4
 # The job has completed successfully and deposit is paid to the provider
 job_state_code["COMPLETED"] = 5
@@ -72,12 +79,13 @@ job_state_code["COMPLETED"] = 5
 job_state_code["TIMEOUT"] = 6
 job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 
-inv_job_state_code = {v: k for k, v in job_state_code.items()}
+inv_job_state_code = {value: key for key, value in job_state_code.items()}
 
 
 def session_start_msg(slurm_user, block_number, columns=104):
     _columns = int(int(columns) / 2 - 12)
-    log("=" * _columns + " provider session starts " + "=" * _columns, "cyan")
+    date_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    log(date_now + " " + "=" * (_columns - 16) + " provider session starts " + "=" * (_columns - 5), "cyan")
     printc(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", "blue")
 
 
@@ -113,7 +121,7 @@ def run_whisper_state_receiver():
         config.whisper_state_receiver_process = subprocess.Popen(["python3", "whisper/state_receiver.py"])
 
 
-def get_tx_status(tx_hash):
+def get_tx_status(tx_hash) -> str:
     if not tx_hash:
         log(f"tx_hash={tx_hash}")
         return tx_hash
@@ -128,7 +136,6 @@ def get_tx_status(tx_hash):
         log("Transaction is deployed", "green")
     else:
         log("E: Transaction is reverted", "red")
-
     return receipt
 
 
@@ -212,7 +219,7 @@ def run_command(cmd, my_env=None) -> Tuple[bool, str]:
 def silent_remove(path) -> bool:
     """Removes file or folders based on the file type.
 
-    doc:
+    Helpful Links:
     - https://stackoverflow.com/a/10840586/2402577
     """
 
@@ -314,8 +321,8 @@ def compress_folder(folder_to_share):
     """Compress folder using tar
     - Note that to get fully reproducible tarballs, you should also impose the sort order used by tar:
 
-    Helpful links:
-    - https://unix.stackexchange.com/a/438330/198423,
+    Helpful Links:
+    - https://unix.stackexchange.com/a/438330/198423  == (tar produces different files each time)
     - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
     current_path = os.getcwd()
@@ -323,10 +330,10 @@ def compress_folder(folder_to_share):
     dir_path = os.path.dirname(folder_to_share)
     os.chdir(dir_path)
 
-    # tar produces different files each time: https://unix.stackexchange.com/a/438330/198423
     """cmd:
     find . -print0 | LC_ALL=C sort -z | \
-    PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names --no-recursion --null -T - -zcvf $tar_hash.tar.gz
+    PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
+                --no-recursion --null -T - -zcvf $tar_hash.tar.gz
     """
     p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
@@ -349,7 +356,7 @@ def compress_folder(folder_to_share):
         ],
         stdin=p2.stdout,
         stdout=subprocess.PIPE,
-        env={"PIGZ": "-n"},  # GZIP
+        env={"PIGZ": "-n"},  # alternative: GZIP
     )
     p2.stdout.close()
     p3.communicate()
@@ -376,7 +383,7 @@ def run_storage_thread(storage_class):
     storage_thread = Thread(target=storage_class.run)
     storage_thread.name = storage_class.thread_name
 
-    # This thread dies when main thread (only non-daemon thread) exits.
+    # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
     log("==> ", "blue", None, is_new_line=False)
     log(f"thread_log_path={storage_class.drivers_log_path}")
@@ -385,7 +392,7 @@ def run_storage_thread(storage_class):
         storage_thread.join()  # waits until the job is completed
     except (KeyboardInterrupt, SystemExit):
         sys.stdout.flush()
-        sys.exit(1)  # KeyboardInterrupt
+        sys.exit(1)
 
 
 def run_storage_process(storage_class):
@@ -395,4 +402,4 @@ def run_storage_process(storage_class):
         storage_process.join()  # waits until the job is completed
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
-        sys.exit(1)  # KeyboardInterrupt
+        sys.exit(1)

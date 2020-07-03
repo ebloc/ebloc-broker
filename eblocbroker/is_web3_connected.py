@@ -7,8 +7,7 @@ from utils import _colorize_traceback
 
 if __name__ == "__main__":
     try:
-        c = Contract()
-        print(c.is_web3_connected())
+        print(Contract().is_web3_connected())
     except:
         _colorize_traceback()
         sys.exit(1)

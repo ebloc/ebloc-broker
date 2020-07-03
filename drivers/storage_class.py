@@ -11,9 +11,9 @@ import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
 import libs.slurm as slurm
 import utils
+from _tools import bp  # noqa: F401
 from config import ThreadFilter, env, logging
 from lib import log, run
-from startup import bp  # noqa: F401
 from utils import (
     CacheType,
     Link,
