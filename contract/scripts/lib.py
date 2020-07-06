@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import os
-from os import path, sys
-from pdb import set_trace as bp  # noqa: F401
+import sys
+from os import path, popen
 
-from utils import CacheType, StorageID, _colorize_traceback, log
+from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, log
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
@@ -111,7 +110,7 @@ class JobPrices:
             ) or (
                 ds.received_block + ds.storage_duration >= block_number and not ds.is_private and ds.is_verified_used
             ):
-                print(f"For {source_code_hash} cost of storage is not paid")
+                print(f"For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0:
                     # if true, registered data's price should be considered for storage
@@ -164,7 +163,7 @@ def cost(provider, requester, job, Ebb, w3, is_brownie=False):
 
 def new_test():
     try:
-        *_, columns = os.popen("stty size", "r").read().split()
+        *_, columns = popen("stty size", "r").read().split()
     except:
         columns = 20
 

@@ -10,10 +10,11 @@ if __name__ == "__main__":
     contract = Contract()
     try:
         providers = contract.get_providers()
+        if len(providers) == 0:
+            print("There is not any registered provider")
+
         for provider in providers:
             print(provider)
-        else:
-            print("There is not any registered provider")
     except Exception:
         _colorize_traceback()
         sys.exit(1)

@@ -11,8 +11,8 @@ def get_provider_info(self, _provider):
 
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
         logging.error(
-            f"\nE: Provider {provider} is not registered.\nPlease try again with registered Ethereum Address as"
-            " provider."
+            f"\nE: Provider {provider} is not registered."
+            "\nPlease try again with registered Ethereum Address as provider."
         )
         raise
 

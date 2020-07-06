@@ -4,7 +4,7 @@ import sys
 
 from settings import init_env
 
-from config import bp, logging  # noqa: F401
+from config import logging
 from imports import connect
 from lib import StorageID
 from utils import _colorize_traceback, ipfs_toBytes
@@ -32,7 +32,6 @@ def process_payment(
     )
 
     eBlocBroker, w3 = connect()
-
     if not result_ipfs_hash:
         logging.error("E: Given result_ipfs_hash is empty")
         raise
@@ -99,7 +98,7 @@ if __name__ == "__main__":
         index = 0
         job_id = 0
         execution_time_min = 1
-        result_ipfs_hash = b""
+        result_ipfs_hash = ""
         cloud_storage_id = 1
         end_time = 1584375940
         dataTransferIn = 0.029152870178222656

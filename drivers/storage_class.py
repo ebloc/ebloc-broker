@@ -6,24 +6,15 @@ import time
 import uuid
 from datetime import datetime, timedelta
 from shutil import copyfile
+from typing import Dict
 
 import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
 import libs.slurm as slurm
 import utils
-from _tools import bp  # noqa: F401
 from config import ThreadFilter, env, logging
 from lib import log, run
-from utils import (
-    CacheType,
-    Link,
-    _colorize_traceback,
-    create_dir,
-    generate_md5sum,
-    is_dir_empty,
-    read_json,
-    write_to_file,
-)
+from utils import CacheType, Link, _colorize_traceback, create_dir, generate_md5sum, read_json, write_to_file
 
 
 class BaseClass:
@@ -49,7 +40,7 @@ class Storage(BaseClass):
         self.source_code_hashes = logged_job.args["sourceCodeHash"]
         self.job_key_list = []
         self.md5sum_dict = {}
-        self.folder_path_to_download = {}
+        self.folder_path_to_download: Dict[str, str] = {}
         self.cloudStorageID = logged_job.args["cloudStorageID"]
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
@@ -59,7 +50,7 @@ class Storage(BaseClass):
         self.private_dir = f"{env.PROGRAM_PATH}/{requester_id}/cache"
         self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
-        self.folder_type_dict = {}
+        self.folder_type_dict: Dict[str, str] = {}
         self.Ebb = Contract.eblocbroker
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
@@ -106,7 +97,7 @@ class Storage(BaseClass):
             log(f"{source_code_hash} is already cached in {self.public_dir}")
             self.is_already_cached[source_code_hash] = True
 
-    def complete_refund(self) -> bool:
+    def complete_refund(self) -> str:
         """Complete refund back to the requester"""
         try:
             tx_hash = self.Ebb.refund(
@@ -120,6 +111,7 @@ class Storage(BaseClass):
             )
             log("==> ", "blue", None, is_new_line=False)
             log(f"refund() tx_hash={tx_hash}")
+            return tx_hash
         except:
             _colorize_traceback()
             raise
@@ -195,16 +187,17 @@ class Storage(BaseClass):
 
     def check_run_sh(self) -> bool:
         if not os.path.isfile(self.run_path):
+            breakpoint()
             logging.error(f"E: {self.run_path} file does not exist")
             return False
         return True
 
-    def sbatch_call(self) -> bool:
+    def sbatch_call(self):
         try:
             link = Link(self.results_data_folder, self.results_data_link)
             link.link_folders()
 
-            # file permission for the requester's foders should be re-set
+            # file permission for the requester's foders should be reset
             path = f"{env.PROGRAM_PATH}/{self.requester_id}"
             run(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
             run(["sudo", "setfacl", "-R", "-m", f"user:{env.WHOAMI}:rwx", path])

@@ -9,7 +9,6 @@ from web3.providers.rpc import HTTPProvider
 
 import _utils.colorer  # noqa: F401
 import config
-from _tools import bp  # noqa: F401
 from config import env, logging
 from utils import _colorize_traceback, is_geth_on, log, read_json
 
