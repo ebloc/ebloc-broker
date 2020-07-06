@@ -5,8 +5,8 @@ from pymongo import MongoClient
 import eblocbroker.Contract as Contract
 from config import env
 from imports import connect
-from lib import run_command, silent_remove
-from utils import StorageID
+from lib import run_command
+from utils import StorageID, silent_remove
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]

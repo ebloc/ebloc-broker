@@ -16,7 +16,6 @@ import libs.git as git
 import libs.ipfs as ipfs
 import libs.mongodb as mongodb
 import libs.slurm as slurm
-from _tools import bp  # noqa
 from config import env, logging, setup_logger
 from imports import connect
 from lib import (

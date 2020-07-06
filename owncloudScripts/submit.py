@@ -6,7 +6,6 @@ import time
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.git as git
-from _tools import bp  # noqa: F401
 from config import env
 from contract.scripts.lib import Job, cost
 from imports import connect

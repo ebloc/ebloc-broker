@@ -6,10 +6,10 @@ import time
 
 import libs.git as git
 import libs.ipfs as ipfs
-from config import ThreadFilter, bp, env, logging, setup_logger  # noqa: F401
+from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
-from lib import calculate_folder_size, is_ipfs_running, silent_remove
-from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, create_dir, get_time, log
+from lib import calculate_folder_size, is_ipfs_running
+from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, create_dir, get_time, log, silent_remove
 
 
 class IpfsClass(Storage):

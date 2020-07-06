@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os
 import re
 import subprocess
@@ -7,10 +8,19 @@ import time
 from io import StringIO
 from typing import Tuple
 
-from _tools import bp  # noqa: F401
+from cid import make_cid
+
 from config import env, logging
-from lib import _try, compress_folder, run, silent_remove
-from utils import _colorize_traceback, log, untar
+from lib import _try, compress_folder, run
+from utils import _colorize_traceback, log, run_with_output, silent_remove, untar
+
+
+def is_valid(ipfs_hash: str) -> bool:
+    try:
+        make_cid(ipfs_hash)
+        return True
+    except:
+        return False
 
 
 def is_hash_exists_online(ipfs_hash, attempts):
@@ -41,7 +51,7 @@ def is_hash_locally_cached(ipfs_hash) -> bool:
 
 
 def get(ipfs_hash, path, is_storage_paid):
-    output = run(["ipfs", "get", ipfs_hash, f"--output={path}"])
+    output = run_with_output(["ipfs", "get", "--progress", ipfs_hash, f"--output={path}"])
     logging.info(output)
 
     if is_storage_paid:
@@ -171,24 +181,26 @@ def add(path: str, is_hidden=False):
     if os.path.isdir(path):
         if is_hidden:
             # include files that are hidden such as .git/. Only takes effect on recursive add
-            cmd = ["ipfs", "add", "-r", "--hidden", "--quieter", "--progress", "--local", path]
+            cmd = ["ipfs", "add", "-r", "--hidden", "--quiet", "--progress", "--local", path]
         else:
-            cmd = ["ipfs", "add", "-r", "--quieter", "--progress", "--local", path]
+            cmd = ["ipfs", "add", "-r", "--quiet", "--progress", "--local", path]
     elif os.path.isfile(path):
-        cmd = ["ipfs", "add", path]
+        cmd = ["ipfs", "add", "--quiet", "--progress", path]
     else:
         logging.error("E: Requested path does not exist")
         raise
 
     for attempt in range(10):
         try:
-            result_ipfs_hash = run(cmd)
-            if os.path.isfile(path):
-                result_ipfs_hash = result_ipfs_hash.split(" ")[1]
-
-            if not result_ipfs_hash:
+            result_ipfs_hash = run_with_output(cmd)
+            if not result_ipfs_hash and not is_valid(result_ipfs_hash):
                 logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
-                time.sleep(5)  # wait 5 seconds for next retry to upload again
+                time.sleep(5)
+            elif not is_valid(result_ipfs_hash):
+                logging.error(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
+                time.sleep(5)
+            else:
+                break
         except:
             logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
             time.sleep(5)
@@ -196,11 +208,10 @@ def add(path: str, is_hidden=False):
             break
     else:  # failed all the attempts - abort
         sys.exit(1)
-
     return result_ipfs_hash
 
 
-def get_only_ipfs_hash(path) -> Tuple[bool, str]:
+def get_only_ipfs_hash(path) -> str:
     """Gets only chunk and hash of a given path, do not write to disk.
 
     Args:
@@ -214,13 +225,13 @@ def get_only_ipfs_hash(path) -> Tuple[bool, str]:
         cmd = ["ipfs", "add", path, "--only-hash"]
     else:
         logging.error("E: Requested path does not exist.")
-        return False, None
+        raise
     try:
         output = run(cmd)
         result_ipfs_hash = _try(lambda: get_parent_hash(output))
-        return True, result_ipfs_hash
+        return result_ipfs_hash
     except Exception:
-        return False, None
+        raise
 
 
 def connect_to_bootstrap_node():

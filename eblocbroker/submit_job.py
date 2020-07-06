@@ -2,10 +2,9 @@
 
 
 import config
-from _tools import bp  # noqa: F401
 from config import logging
 from lib import StorageID
-from utils import _colorize_traceback
+from utils import _colorize_traceback, bytes32_to_ipfs, log
 
 
 def check_before_submit(self, provider, _from, provider_info, key, job):
@@ -90,7 +89,6 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 def submit_job(self, provider, key, account_id, job_price, job):
     provider = self.w3.toChecksumAddress(provider)
     _from = self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
-
     try:
         provider_info = self.get_provider_info(provider)
         print(f"Provider's available_core_num={provider_info['available_core_num']}")
@@ -117,7 +115,14 @@ def submit_job(self, provider, key, account_id, job_price, job):
     ]
     try:
         gas_limit = 4500000
-        print(str(job.source_code_hashes))
+
+        log("source_code_hashes:")
+        source_code_hashes_l = []
+        for source_code_hash in job.source_code_hashes:
+            source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
+        log(source_code_hashes_l)
+        log("")
+
         tx = self.eBlocBroker.functions.submitJob(
             key, job.dataTransferIns, args, job.storage_hours, job.source_code_hashes
         ).transact({"from": _from, "value": job_price, "gas": gas_limit})

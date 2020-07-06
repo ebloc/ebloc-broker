@@ -12,15 +12,18 @@ from utils import _colorize_traceback, log
 def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerprint, ipfs_address):
     whisper_pub_key = check_whisper()
     account = self.w3.eth.accounts[int(account_id)]  # requester's Ethereum Address
-    if not self.does_requester_exist(account):
-        return f"Requester {account} is already registered."
+
+    if self.does_requester_exist(account):
+        log(f"E: Requester {account} is already registered.", "red")
+        raise
 
     if len(federation_cloud_id) >= 128 and len(email) >= 128:
-        return "E: federation_cloud_id or email is more than 128"
+        log("E: federation_cloud_id or email is more than 128")
+        raise
 
     try:
         tx = self.eBlocBroker.functions.registerRequester(
-            gpg_fingerprint, email, federation_cloud_id, ipfs_address, "", whisper_pub_key,
+            gpg_fingerprint, email, federation_cloud_id, ipfs_address, whisper_pub_key,
         ).transact({"from": account, "gas": 4500000})
         return tx.hex()
     except Exception:
@@ -29,7 +32,6 @@ def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerp
 
 
 if __name__ == "__main__":
-    from _tools import bp
     import eblocbroker.Contract as Contract
 
     Ebb = Contract.eblocbroker

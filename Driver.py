@@ -11,7 +11,6 @@ import config
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.slurm as slurm
-from _tools import bp  # noqa
 from config import env, logging, setup_logger
 from contract.scripts.lib import DataStorage
 from drivers.eudat import EudatClass
@@ -59,7 +58,6 @@ def wait_till_idle_core_available():
 def tools(slurm_user, block_number):
     """Tools functions are called."""
     session_start_msg(slurm_user, block_number)
-    bp()
     if not is_internet_on():
         logging.error("E: Network connection is down")
         terminate()
@@ -366,4 +364,4 @@ if __name__ == "__main__":
     try:
         run_driver()
     except KeyboardInterrupt:
-        print("Clean exit....")
+        pass
