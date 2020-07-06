@@ -4,11 +4,10 @@ import os
 import subprocess
 
 import libs.gdrive as gdrive
-from _tools import bp  # noqa
 from config import env, logging, setup_logger
 from drivers.storage_class import Storage
-from lib import calculate_folder_size, echo_grep_awk, log, run, silent_remove, subprocess_call
-from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time, untar
+from lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
+from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time, silent_remove, untar
 
 
 class GdriveClass(Storage):

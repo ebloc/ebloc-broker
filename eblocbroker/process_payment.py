@@ -2,7 +2,6 @@
 
 import sys
 
-from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import StorageID
 from utils import _colorize_traceback, ipfs_to_bytes32

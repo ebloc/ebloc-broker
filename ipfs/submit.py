@@ -4,11 +4,10 @@ import os
 import sys
 
 import eblocbroker.Contract as Contract
-from _tools import bp  # noqa: F401
 from config import env, logging
 from contract.scripts.lib import Job, cost
 from imports import connect
-from lib import check_linked_data, get_tx_status, run, silent_remove
+from lib import check_linked_data, get_tx_status, run
 from libs import ipfs
 from libs.ipfs import gpg_encrypt
 from utils import (
@@ -20,6 +19,7 @@ from utils import (
     is_dpkg_installed,
     log,
     printc,
+    silent_remove,
 )
 
 if __name__ == "__main__":
@@ -127,7 +127,6 @@ if __name__ == "__main__":
 
     requester = Ebb.account_id_to_address(account_id)
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
-    bp()
     try:
         receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
         if receipt["status"] == 1:

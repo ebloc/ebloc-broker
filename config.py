@@ -6,14 +6,14 @@ import threading
 from logging import Filter
 from os.path import expanduser
 from pathlib import Path
-from pdb import set_trace as bp  # noqa: F401
-from typing import Type
 
 from dotenv import load_dotenv
-from web3 import Web3
 
 import _utils.colored_traceback as colored_traceback
-import _utils.colorer  # noqa: F401
+import _utils.colorer  # NOQA
+
+# from typing import Type
+# from web3 import Web3
 
 
 class ThreadFilter(Filter):

@@ -3,8 +3,7 @@
 import daemon
 
 from config import env
-from lib import is_ipfs_on, silent_remove
-from utils import popen_communicate
+from utils import is_ipfs_on, popen_communicate, silent_remove
 
 
 def run():

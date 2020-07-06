@@ -3,17 +3,19 @@
 import sys
 
 from config import logging  # noqa: F401
-from utils import _colorize_traceback
+from utils import _colorize_traceback, log
 
 
 def get_requester_info(self, requester):
     try:
         requester = self.w3.toChecksumAddress(requester)
-        if not self.eBlocBroker.functions.doesRequesterExist(requester).call():
-            logging.error(
+
+        if not self.does_requester_exist(requester):
+            log(
                 f"E: Requester({requester}) is not registered.\n"
                 "Please try again with registered Ethereum Address as requester. \n"
-                "You can register your requester using: register_requester.py script"
+                "You can register your requester using: register_requester.py script",
+                "red",
             )
             raise
 
@@ -25,7 +27,7 @@ def get_requester_info(self, requester):
             "requester": requester,
             "blockReadFrom": blockReadFrom,
             "email": event_filter.get_all_entries()[0].args["email"],
-            "gpgFingerprint": event_filter.get_all_entries()[0].args["gpgFingerprint"],
+            "gpgFingerprint": event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex(),
             "ipfsID": event_filter.get_all_entries()[0].args["ipfsID"],
             "fID": event_filter.get_all_entries()[0].args["fID"],
             "orcid": orcid.decode("utf-8"),
@@ -52,6 +54,6 @@ if __name__ == "__main__":
         for key, value in requester_info.items():
             if key == "orcidVerify":
                 value = requester_info["orcidVerify"]
-            print("{0: <15}".format(f"{key}:") + str(value))
+            print("{0: <16}".format(f"{key}:") + str(value))
     except Exception:
         sys.exit(1)

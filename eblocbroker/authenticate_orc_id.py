@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from typing import Tuple
 
 import config
 from config import logging
@@ -8,7 +9,7 @@ from lib import get_tx_status
 from utils import _colorize_traceback
 
 
-def authenticate_orc_id(self, address, orc_id, _from) -> (bool, str):
+def authenticate_orc_id(self, address, orc_id, _from) -> Tuple[bool, str]:
     address = self.w3.toChecksumAddress(address)
 
     if not self.w3.isAddress(_from):
