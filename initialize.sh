@@ -8,6 +8,9 @@ rpcPort="8545" # Please change it if you have different RPC_PORT number.
 
 ## Pre-installation:
 if [ $setup -eq 1 ]; then
+    sudo groupadd eblocbroker
+    # members eblocbroker
+
     ## Upgrade geth on Ubuntu: ----------------------------
     # sudo apt-get install software-properties-common
     # sudo add-apt-repository -y ppa:ethereum/ethereum

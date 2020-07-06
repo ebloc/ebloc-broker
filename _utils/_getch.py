@@ -2,8 +2,6 @@ import sys
 import termios
 import tty
 
-from _tools import bp  # noqa: F401
-
 
 class _Getch:
     """Gets a single character from standard input.  Does not echo to the screen.

@@ -1,7 +1,9 @@
 #!/bin/bash
 
 
-~/eBlocBroker/python_scripts/ipfs_daemon.py
+~/eBlocBroker/daemons/ipfs.py
+
+# ~/eBlocBroker/python_scripts/ipfs_daemon.py
 
 echo -e "Sleeping for 5 seconds for ipfs to be on"
 sleep 5
