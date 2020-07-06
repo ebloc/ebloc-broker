@@ -14,10 +14,8 @@ from threading import Thread
 from typing import Tuple
 
 import config
-from _tools import bp  # noqa: F401
 from config import env, logging
 from utils import (
-    WHERE,
     Link,
     StorageID,
     _colorize_traceback,
@@ -32,6 +30,7 @@ from utils import (
     question_yes_no,
     read_json,
     run,
+    silent_remove,
     terminate,
 )
 
@@ -50,7 +49,6 @@ def enum(*sequential, **named):
 
 if not config.w3:
     from imports import connect_to_web3
-
     connect_to_web3()
 
 if not env.PROVIDER_ID:
@@ -123,15 +121,20 @@ def run_whisper_state_receiver():
 
 def get_tx_status(tx_hash) -> str:
     if not tx_hash:
-        log(f"tx_hash={tx_hash}")
+        log(f"tx_hash={tx_hash}", "blue")
         return tx_hash
 
     log(f"tx_hash={tx_hash}")
     receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
-    logging.info("Transaction receipt mined:")
+    logging.info("Transaction receipt is mined:")
     # logging.info(pformat(receipt))
-    pprint.pprint(dict(receipt))  # delete
-    log("#> Was transaction successful?")
+    pprint.pprint(dict(receipt), depth=1)
+    log("")
+    for idx, _log in enumerate(receipt["logs"]):
+        log(f"log {idx}", "blue")
+        pprint.pprint(_log.__dict__)
+
+    log("\n#> Was transaction successful? ", color="white", filename=None, is_new_line=False)
     if receipt["status"] == 1:
         log("Transaction is deployed", "green")
     else:
@@ -214,29 +217,6 @@ def run_command(cmd, my_env=None) -> Tuple[bool, str]:
         print_trace(cmd)
         return False, output
     return True, output
-
-
-def silent_remove(path) -> bool:
-    """Removes file or folders based on the file type.
-
-    Helpful Links:
-    - https://stackoverflow.com/a/10840586/2402577
-    """
-
-    try:
-        if os.path.isfile(path):
-            os.remove(path)
-        elif os.path.isdir(path):
-            # deletes a directory and all its contents
-            shutil.rmtree(path)
-        else:
-            return False
-
-        logging.info(f"[{WHERE(1)}]\n{path} is removed")
-        return True
-    except Exception:
-        _colorize_traceback()
-        return False
 
 
 def remove_files(filename) -> bool:

@@ -5,21 +5,22 @@ import hashlib
 import json
 import ntpath
 import os
+import re
+import shutil
 import signal
 import socket
-import subprocess
 import sys
 import threading
 import time
 import traceback
 from enum import IntEnum
+from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
 
 import base58
 from pygments import formatters, highlight, lexers
 from termcolor import colored
 
 import config
-from _tools import bp  # noqa: F401
 from _utils._getch import _Getch
 from config import env, logging
 
@@ -104,13 +105,31 @@ def sleep_timer(sleep_duration):
     sys.stdout.write("\rSleeping is done!                               \n")
 
 
+def remove_ansi_escape_sequence(string):
+    # https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    return ansi_escape.sub("", string)
+
+
 def run(cmd, is_print_trace=True) -> str:
     try:
-        return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
+        return check_output(cmd, stderr=STDOUT).decode("utf-8").strip()
     except Exception as exc:
         if is_print_trace:
             print_trace(cmd, back=2, exc=exc.output.decode("utf-8"))
         raise
+
+
+def run_with_output(cmd):
+    # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    ret = ""
+    with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            ret += line
+            print(line, end='') # process line here
+            return line.strip()
+    if p.returncode != 0:
+        raise CalledProcessError(p.returncode, p.args)
 
 
 def popen_communicate(cmd, stdout_file=None):
@@ -119,10 +138,10 @@ def popen_communicate(cmd, stdout_file=None):
     results into a file
     """
     if stdout_file is None:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
         with open(stdout_file, "w") as outfile:
-            p = subprocess.Popen(cmd, stdout=outfile, stderr=outfile, universal_newlines=True)
+            p = Popen(cmd, stdout=outfile, stderr=outfile, universal_newlines=True)
 
             output, error = p.communicate()
             p.wait()
@@ -178,8 +197,12 @@ def string_to_bytes32(hash_str: str):
 
 def bytes32_to_ipfs(bytes_array):
     """Convert bytes_array into IPFS hash format."""
-    merge = Qm + bytes_array
-    return base58.b58encode(merge).decode("utf-8")
+    if isinstance(bytes_array, bytes):
+        merge = Qm + bytes_array
+        return base58.b58encode(merge).decode("utf-8")
+    else:
+        logging.info(f"{isinstance} is not a bytes instance")
+    return bytes_array
 
 
 def _ipfs_to_bytes32(hash_str: str):
@@ -207,7 +230,7 @@ def generate_md5sum(path: str) -> str:
         return run(["bash", script, path])
 
     if os.path.isfile(path):
-        tar_hash = subprocess.check_output(["md5sum", path]).decode("utf-8").strip()
+        tar_hash = check_output(["md5sum", path]).decode("utf-8").strip()
         return tar_hash.split(" ", 1)[0]
     else:
         logging.error(f"{path} does not exist")
@@ -281,7 +304,7 @@ def path_leaf(path):
 
 def is_dir_empty(path):
     # cmd = ["find", path, "-mindepth", "1", "-print", "-quit"]
-    # output = subprocess.check_output(cmd).decode("utf-8").strip()
+    # output = check_output(cmd).decode("utf-8").strip()
     # return not output
     return next(os.scandir(path), None) is None
 
@@ -356,13 +379,41 @@ def WHERE(back=0):
     return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name,)
 
 
+def silent_remove(path) -> bool:
+    """Removes file or folders based on the file type.
+
+    Helpful Links:
+    - https://stackoverflow.com/a/10840586/2402577
+    """
+
+    try:
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            # deletes a directory and all its contents
+            shutil.rmtree(path)
+        else:
+            return False
+
+        logging.info(f"[{WHERE(1)}]\n{path} is removed")
+        return True
+    except Exception:
+        _colorize_traceback()
+        return False
+
+
+def is_ipfs_on() -> bool:
+    """Checks whether ipfs runs on the background."""
+    return is_process_on("[i]pfs\ daemon", "IPFS")
+
+
 def is_process_on(process_name, name, process_count=0, port=None) -> bool:
     """Checks wheather the process runs on the background.
     Doc: https://stackoverflow.com/a/6482230/2402577"""
-    p1 = subprocess.Popen(["ps", "aux"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "-v", "flycheck_"], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1 = Popen(["ps", "aux"], stdout=PIPE)
+    p2 = Popen(["grep", "-v", "flycheck_"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()
     output = p3.communicate()[0].decode("utf-8").strip().splitlines()
     pids = []
@@ -375,8 +426,8 @@ def is_process_on(process_name, name, process_count=0, port=None) -> bool:
         if port:
             # How to find processes based on port and kill them all?
             # https://stackoverflow.com/a/5043907/2402577
-            p1 = subprocess.Popen(["lsof", "-i", f"tcp:{port}"], stdout=subprocess.PIPE)
-            p2 = subprocess.Popen(["grep", "LISTEN"], stdin=p1.stdout, stdout=subprocess.PIPE)
+            p1 = Popen(["lsof", "-i", f"tcp:{port}"], stdout=PIPE)
+            p2 = Popen(["grep", "LISTEN"], stdin=p1.stdout, stdout=PIPE)
             out = p2.communicate()[0].decode("utf-8").strip()
             running_pid = out.strip().split()[1]
             if running_pid in pids:
@@ -410,11 +461,6 @@ def is_geth_on():
     if not is_process_on(f"geth.*{port}", "Geth"):
         log("E: geth is not running on the background. Please run:\nsudo ~/eBlocPOA/server.sh", "red")
         raise config.QuietExit
-
-
-def is_ipfs_on() -> bool:
-    """Checks whether ipfs runs on the background."""
-    return is_process_on("[i]pfs\ daemon", "IPFS")
 
 
 def is_ipfs_running():

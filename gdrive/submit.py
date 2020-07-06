@@ -8,11 +8,10 @@ import sys
 import eblocbroker.Contract as Contract
 import libs.gdrive as gdrive
 import libs.git as git
-from _tools import bp  # noqa: F401
 from config import env, logging
 from contract.scripts.lib import Job, cost
-from lib import compress_folder, get_tx_status, printc, run, silent_remove
-from utils import CacheType, StorageID, _colorize_traceback, log, read_json
+from lib import compress_folder, get_tx_status, printc, run
+from utils import CacheType, StorageID, _colorize_traceback, log, read_json, silent_remove
 
 base_folder = f"{env.EBLOCPATH}/base"
 Ebb = Contract.eblocbroker

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+
 import os
 import subprocess
 import time
 
 import git
 
-from _tools import bp  # noqa: F401
 from config import env, logging
 from lib import run, run_command
 from utils import getcwd, getsize, path_leaf, printc

@@ -1,3 +1,7 @@
+*.py
+
+*.*~
+
 foo\.py
 
 koo.py
