@@ -7,7 +7,6 @@ from utils import ZERO_ADDRESS
 
 
 def project():
-    print("ben_is_awesome_and_king")
     accounts[0].deploy(Lib)
     Ebb = accounts[0].deploy(eBlocBroker)
 

@@ -4,10 +4,10 @@ import os
 from os import path, sys
 
 import pytest
+from _tools import bp  # noqa: F401
 
 import brownie
 import config
-from _tools import bp  # noqa: F401
 from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import DataStorage, Job, cost, new_test
