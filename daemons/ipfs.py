@@ -7,9 +7,6 @@ from utils import is_ipfs_on, popen_communicate, silent_remove
 
 
 def run():
-    silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK")
-    silent_remove(f"{env.HOME}/.ipfs/repo.lock")
-
     # https://stackoverflow.com/a/8375012/2402577
     with daemon.DaemonContext():
         cmd = ["ipfs", "daemon"]  # , "--mount"]
@@ -21,5 +18,8 @@ def run():
 
 
 if __name__ == "__main__":
+    silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK")
+    silent_remove(f"{env.HOME}/.ipfs/repo.lock")
+
     if not is_ipfs_on():
         run()

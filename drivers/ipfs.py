@@ -91,6 +91,7 @@ class IpfsClass(Storage):
 
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
                 ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
+
             if not git.initialize_check(target):
                 return False
 

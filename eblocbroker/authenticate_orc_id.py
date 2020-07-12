@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from typing import Tuple
+from typing import Union
 
 import config
 from config import logging
@@ -9,7 +9,7 @@ from lib import get_tx_status
 from utils import _colorize_traceback
 
 
-def authenticate_orc_id(self, address, orc_id, _from) -> Tuple[bool, str]:
+def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
     address = self.w3.toChecksumAddress(address)
 
     if not self.w3.isAddress(_from):
@@ -58,12 +58,10 @@ if __name__ == "__main__":
     else:
         logging.error("E: Please provide the address and its orc_id as argument.")
         sys.exit(1)
-        # ./authenticate_orc_id.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 0000-0001-7642-0552
-        # 0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571 # home / requester
-        # address = '0x57b60037b82154ec7149142c606ba024fbb0f991' # netlab
-        # address = '0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5' # prc
-        # orc_id       = '0000-0001-7642-0552'
-
+        """
+        ./authenticate_orc_id.py 0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571 0000-0001-7642-0552
+        ./authenticate_orc_id.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 0000-0001-7642-0552
+        """
     try:
         tx_hash = Ebb.authenticate_orc_id(address, orc_id, _from=config.w3.eth.accounts[0])
         if tx_hash:

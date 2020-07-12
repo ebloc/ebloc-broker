@@ -17,6 +17,8 @@ find . -name '*~' -delete
 find . -name '\#*' -delete
 find . -name '.*.*py.swo' -delete
 find . -name '.*.*py.swp' -delete
+find . -name 'nohup.*' -delete
+
 find . -name __pycache__ -type d -exec rm -rf {} +
 
 rm -f .node-xmlhttprequest*

@@ -37,7 +37,7 @@ def process_payment(
         raise
 
     if len(result_ipfs_hash) != 46 and (
-        StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_MINILOCK.value == cloud_storage_id
+        StorageID.IPFS.value == cloud_storage_id or StorageID.IPFS_GPG.value == cloud_storage_id
     ):
         logging.error("E: job_key's length does not match with its original length. Please check your job_key")
         raise

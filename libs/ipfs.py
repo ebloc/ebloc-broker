@@ -51,7 +51,7 @@ def is_hash_locally_cached(ipfs_hash) -> bool:
 
 
 def get(ipfs_hash, path, is_storage_paid):
-    output = run_with_output(["ipfs", "get", "--progress", ipfs_hash, f"--output={path}"])
+    output = run_with_output(["ipfs", "get", ipfs_hash, f"--output={path}"])
     logging.info(output)
 
     if is_storage_paid:
@@ -65,6 +65,9 @@ def pin(ipfs_hash) -> bool:
 
 
 def decrypt_using_gpg(gpg_file, extract_target):
+    """This function is specific for using on driver.ipfs to decript tar file,
+    specific for "tar.gz" file types
+    """
     if not os.path.isfile(f"{gpg_file}.gpg"):
         os.symlink(gpg_file, f"{gpg_file}.gpg")
 
@@ -90,6 +93,7 @@ def decrypt_using_gpg(gpg_file, extract_target):
 
     try:
         run(cmd)
+        log("GPG decrypt is successfull", "green")
     except:
         _colorize_traceback()
         raise
@@ -98,52 +102,61 @@ def decrypt_using_gpg(gpg_file, extract_target):
         silent_remove(gpg_file)  # Downloaded file is removed
 
     try:
-        log("mlck decrypt: SUCCESS", "green")
         untar(tar_file, extract_target)
     except:
         logging.error("E: Could not extract the given tar file")
         raise
     finally:
         cmd = None
+        silent_remove(f"{extract_target}/.git")
         silent_remove(tar_file)
 
 
-def gpg_encrypt(provider_gpg_finderprint, target):
+def gpg_encrypt(user_gpg_finderprint, target):
     is_delete = False
     if os.path.isdir(target):
         try:
-            *_, target_compressed = compress_folder(target)
+            *_, encrypt_target = compress_folder(target)
+            encrypted_file_target = f"{encrypt_target}.gpg"
             is_delete = True
         except:
             _colorize_traceback()
-            sys.exit()
+            sys.exit(1)
+    else:
+        if not os.path.isfile(target):
+            logging.error(f"{target} does not exist")
+            sys.exit(1)
+        else:
+            breakpoint()
+            encrypt_target = target
+            encrypted_file_target = f"{target}.gpg"
+            is_delete = True
 
-    encrypted_file_target = f"{target_compressed}.gpg"
     if os.path.isfile(encrypted_file_target):
         log(f"{encrypted_file_target} is already created.", "green")
         return encrypted_file_target
 
     try:
-        run(
-            [
-                "gpg",
-                "--batch",
-                "--yes",
-                "--recipient",
-                provider_gpg_finderprint,
-                "--output",
-                encrypted_file_target,
-                "--encrypt",
-                target_compressed,
-            ]
-        )
+        cmd = [
+            "gpg",
+            "--batch",
+            "--yes",
+            "--recipient",
+            user_gpg_finderprint,
+            "--output",
+            encrypted_file_target,
+            "--encrypt",
+            encrypt_target,
+        ]
+        breakpoint()
+        run(cmd)
         return encrypted_file_target
     except:
         _colorize_traceback()
         raise
     finally:
         if is_delete:
-            silent_remove(target_compressed)
+            silent_remove(encrypt_target)
 
 
 def get_cumulative_size(source_code_hash):
@@ -181,11 +194,11 @@ def add(path: str, is_hidden=False):
     if os.path.isdir(path):
         if is_hidden:
             # include files that are hidden such as .git/. Only takes effect on recursive add
-            cmd = ["ipfs", "add", "-r", "--hidden", "--quiet", "--progress", "--local", path]
+            cmd = ["ipfs", "add", "-r", "--hidden", "--quieter", "--progress", "--local", path]
         else:
-            cmd = ["ipfs", "add", "-r", "--quiet", "--progress", "--local", path]
+            cmd = ["ipfs", "add", "-r", "--quieter", "--progress", "--local", path]
     elif os.path.isfile(path):
-        cmd = ["ipfs", "add", "--quiet", "--progress", path]
+        cmd = ["ipfs", "add", "--quieter", "--progress", path]
     else:
         logging.error("E: Requested path does not exist")
         raise

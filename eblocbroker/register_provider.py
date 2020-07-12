@@ -13,7 +13,7 @@ def register_provider(
     self, available_core_num, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block
 ):
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisper_info.txt"):
-        logging.error(f"Please first run: {env.HOME}/eBlocBroker/whisper/initialize.py")
+        logging.error(f"Please first run:\n{env.HOME}/eBlocBroker/whisper/initialize.py")
         raise
 
     try:
@@ -22,10 +22,11 @@ def register_provider(
         _colorize_traceback()
         raise
 
-    kId = data["key_id"]
+    key_id = data["key_id"]
     whisper_pub_key = data["public_key"]
 
-    if not self.w3.geth.shh.hasKeyPair(kId):
+    breakpoint()
+    if not self.w3.geth.shh.hasKeyPair(key_id):
         logging.error("\nWhisper node's private key of a key pair did not match with the given ID. Please run:")
         log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py \n", "yellow")
         raise
