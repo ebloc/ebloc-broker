@@ -80,7 +80,6 @@ def submit(provider, account_id):
 if __name__ == "__main__":
     oc_requester = "059ab6ba-4030-48bb-b81b-12115f531296"
     account_id = 1  # different account than provider
-    #
     eudat.login(oc_requester, f"{env.LOG_PATH}/.eudat_client.txt", env.OC_CLIENT_REQUESTER)
 
     if len(sys.argv) == 3:
@@ -95,10 +94,13 @@ if __name__ == "__main__":
         tx_hash = submit(provider, account_id)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
+            breakpoint()
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
             try:
-                print(f"Job's index={logs[0].args['index']}")
+                job_index = logs[0].args['index']
+                log(f"job_index={job_index}", "green")
             except IndexError:
-                print("Transaction is reverted.")
+                print("Transaction is reverted")
     except Exception:
+        _colorize_traceback()
         sys.exit(1)

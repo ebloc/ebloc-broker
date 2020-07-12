@@ -18,6 +18,7 @@ from drivers.gdrive import GdriveClass
 from drivers.ipfs import IpfsClass
 from imports import connect
 from lib import job_state_code, run, run_command, run_storage_thread, session_start_msg
+from libs import mongodb
 from libs.user_setup import user_add
 from utils import (
     CacheType,
@@ -43,8 +44,11 @@ from utils import (
 from lib import eblocbroker_function_call  # noqa: F401; run_whisper_state_receiver,
 
 
+run(["sudo", "printf", "hello"])
 # from multiprocessing import Process
 # from threading import Thread
+
+
 def wait_till_idle_core_available():
     while True:
         idle_cores = slurm.get_idle_cores(is_print_flag=False)
@@ -69,7 +73,7 @@ def tools(slurm_user, block_number):
     except Exception as e:
         if type(e).__name__ != "QuietExit":
             _colorize_traceback()
-        sys.exit(1)
+            sys.exit(1)
 
     # run_driver_cancel()  # TODO: uncomment
     # run_whisper_state_receiver()  # TODO: uncomment
@@ -99,7 +103,7 @@ def run_driver():
     run(["sudo", "printf", ""])
     env.IS_THREADING_ENABLED = False
 
-    config.logging = setup_logger(f"{env.LOG_PATH}/provider.log")
+    config.logging = setup_logger(env.DRIVER_LOG)
     columns = 100
     # driver_cancel_process = None
     # whisper_state_receiver_process = None
@@ -115,7 +119,7 @@ def run_driver():
         terminate("PROVIDER_ID is None")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
-        logging.warning("Please run: ./folder_setup.sh")
+        logging.warning(f"Please run: {env.EBLOCPATH}/folder_setup.sh")
         terminate()
 
     slurm_user = os.getenv("SLURMUSER")
@@ -140,9 +144,9 @@ def run_driver():
     except:
         terminate()
 
-    log(f"is_threading={env.IS_THREADING_ENABLED}", color="blue")
+    # log(f"is_threading={env.IS_THREADING_ENABLED}", color="blue")
     log(f"is_web3_connected={Ebb.is_web3_connected()}", color="blue")
-    log(f"log_file={env.LOG_PATH}/provider.log", color="blue")
+    log(f"log_file={env.DRIVER_LOG}", color="blue")
     log(f"rootdir={os.getcwd()}", color="blue")
     log(f"whoami={env.WHOAMI}", color="blue")
     log("{0: <18}".format("contract_address:") + contract_file["address"], color="blue")
@@ -175,8 +179,7 @@ def run_driver():
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         success, squeue_output = run_command(["squeue"])
-        # gets other info after the first line
-
+        # gets real unfo under the header after the first line
         if not success or "squeue: error:" in str(squeue_output):
             logging.error("SLURM is not running on the background. Please run:\nsudo ./bash_scripts/run_slurm.sh")
             log(squeue_output, "red")
@@ -284,7 +287,6 @@ def run_driver():
                 job_info.update({"received_block": received_block})
                 job_info.update({"storageDuration": storageDuration})
                 job_info.update({"cacheType": logged_job.args["cacheType"]})
-                log("")
                 pprint.pprint(job_info)
                 job_infos.append(job_info)
             except:
@@ -302,10 +304,14 @@ def run_driver():
                 logging.error("E: Requested job does not exist")
                 continue
 
-            log(f"requester={job_infos[0]['jobOwner'].lower()}", color="yellow")
-            requester_id = job_infos[0]["jobOwner"].lower()
+            requester_id = job_infos[0]["jobOwner"]
+            log(f"requester={requester_id}", color="yellow")
             if not Ebb.does_requester_exist(requester_id):
                 logging.error("E: Job owner is not registered")
+                continue
+
+            if mongodb.is_received(str(requester_id), job_key, index): # Preventing to download it again
+                log("mongodb> Job is already received", "green")
                 continue
 
             if job_infos[0]["jobStateCode"] == job_state_code["COMPLETED"]:
@@ -319,6 +325,7 @@ def run_driver():
             if not job_infos[0]["jobStateCode"] == job_state_code["SUBMITTED"]:
                 log("Job is already captured or it is in process or completed.", "green")
                 continue
+
             try:
                 user_add(requester_id, env.PROGRAM_PATH, slurm_user)
                 requester_md5_id = eth_address_to_md5(requester_id)
@@ -345,9 +352,10 @@ def run_driver():
                 else:
                     storage_class.run()
             except:
+                _colorize_traceback()
                 sys.exit(1)
 
-        sys.exit(1)  # delete
+        # sys.exit("E: exited due to testing")  # delete
         if len(logged_jobs_to_process) > 0 and max_blocknumber > 0:
             # updates the latest read block number
             block_read_from = max_blocknumber + 1

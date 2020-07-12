@@ -97,18 +97,17 @@ $ sudo ./Driver.sh
 
 Please note the following:
 
-- If you do not have any `Federated Cloud ID` or `MiniLock ID` give an empty string: `""`. You can
+- If you do not have any `Federated Cloud ID` give an empty string: `""`. You can
   use `./registerCluster.py` to submit your jobs.
 
 ```bash
 coreNumber         = 128;
 clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-miniLockId         = "9VZyJy1gRFJfdDtAjRitqmjSxPjSAjBR6BxH59UeNgKzQ"
 corePriceMinuteWei = 100;
 ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 
-./registerCluster.py $coreNumber $clusterEmail $federationCloudId $miniLockId $corePriceMinuteWei $ipfsID
+./registerCluster.py $coreNumber $clusterEmail $federationCloudId $corePriceMinuteWei $ipfsID
 ```
 
 - A Python daemon program called *Driver* is responsible for facilitating the communication between
@@ -168,7 +167,7 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 
 In order to submit your job each user should already registered into eBlocBroker.You can use `./registerUser.py` to register. Please update followin arguments inside `registerUser.py` file.
 
-`account`, `userEmail`, `federationCloudID`, `miniLockID`, and `ipfsAddress`.
+`account`, `userEmail`, `federationCloudID`, and `ipfsAddress`.
 
 After registiration is done, each user should authenticate their ORCID iD using the following
 [link](http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php).
@@ -212,30 +211,7 @@ gasBandwidthOut = 100
 storageType     = 1 # Please note that '1' stands for EUDAT repository share.
 ```
 
-#### **3. How to submit a job using IPFS+miniLock**
-
-###### miniLock Setup
-
-Please check following [tutorial](https://www.npmjs.com/package/minilock-cli). Do the following code
-only to generate miniLock ID once and do not lose your passphrase:
-
-```bash
-$ mlck id alice@gmail.com --save --passphrase='bright wind east is pen be lazy usual'
-```
-
-You can look up your miniLock ID any time.
-
-```bash
-$ mlck id
-Your miniLock ID: LRFbCrhCeN2uVCdDXd2bagoCM1fVcGvUzwhfVdqfyVuhi
-```
-
-###### How to decript your folder using miniLock
-
-```bash
-mlck decrypt -f fileName --passphrase="$(cat mlck_password.txt)" --output-file=./output.tar.gz
-```
----------
+#### **3. How to submit a job using IPFS with GPG**
 
 Please update following arguments inside `submit_job.py` file.
 
@@ -248,7 +224,7 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-storageType     = 2 # Please note 2 stands for IPFS with miniLock repository share.
+storageType     = 2 # Please note 2 stands for IPFS with GPG repository share.
 ```
 
 #### **4. How to submit a job using Google-Drive**

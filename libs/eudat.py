@@ -13,7 +13,7 @@ import owncloud
 import config
 from config import env, logging
 from lib import compress_folder, printc, run
-from utils import _colorize_traceback, popen_communicate, sleep_timer, terminate
+from utils import _colorize_traceback, cd, popen_communicate, sleep_timer, terminate
 
 
 def _upload_results(encoded_share_token, output_file_name):
@@ -47,23 +47,19 @@ def _upload_results(encoded_share_token, output_file_name):
 
 def upload_results(encoded_share_token, output_file_name, results_folder_prev, attempt_count=1):
     """Wrapper for the _upload_results() function"""
-    cwd_temp = os.getcwd()
-    os.chdir(results_folder_prev)
-    for attempt in range(attempt_count):
-        p, output, error = _upload_results(encoded_share_token, output_file_name)
-        if p.returncode != 0 or "<d:error" in output:
-            logging.error("E: EUDAT repository did not successfully loaded")
-            logging.error(f"E: curl is failed. {p.returncode} => [{error}] {output}")
-            time.sleep(1)  # wait 1 second for next step retry to upload
-        else:  # success on upload
-            os.chdir(cwd_temp)
-            return True
-    # failed all the attempts - abort
-    os.chdir(cwd_temp)
-    return False
+    with cd(results_folder_prev):
+        for attempt in range(attempt_count):
+            p, output, error = _upload_results(encoded_share_token, output_file_name)
+            if p.returncode != 0 or "<d:error" in output:
+                logging.error("E: EUDAT repository did not successfully loaded")
+                logging.error(f"E: curl is failed. {p.returncode} => [{error}] {output}")
+                time.sleep(1)  # wait 1 second for next step retry to upload
+            else:  # success on upload
+                return True
+        return False
 
 
-def login(user, password_path, fname) -> None:
+def login(user, password_path, fname: str) -> None:
     logging.info(f"Login into owncloud user:{user}")
     if os.path.isfile(fname):
         f = open(fname, "rb")
@@ -86,7 +82,7 @@ def login(user, password_path, fname) -> None:
     for attempt in range(config.RECONNECT_ATTEMPTS):
         try:
             config.oc.login(user, password)
-            password = None
+            password = ""
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()

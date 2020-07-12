@@ -196,7 +196,7 @@ library Lib {
         if (completionTime < list[addr].endpoint) {
             flag = true;
             prevNode = list[addr];
-	    /* Current node points index of previous tail-node right after the insert operation */
+            /* Current node points index of previous tail-node right after the insert operation */
             currentNode = list[prevNode.next];
             do {
                 if (completionTime > currentNode.endpoint) {
@@ -208,7 +208,7 @@ library Lib {
             } while (true);
         }
 
-	/* Inserted while keeping sorted order */
+        /* Inserted while keeping sorted order */
         list.push(Interval({endpoint: completionTime, core: int32(core), next: addr}));
         carriedSum = int32(core); /* Carried sum variable is assigned with job's given core number */
 

@@ -78,14 +78,18 @@ sacctmgr list cluster
 sacctmgr show assoc format=account
 sacctmgr show assoc format=account,user,partition where user=<user_name>
 
+sacctmgr show user -s
 ```
 
 -----------
 
 # mysql
+
+```
 sudo su
 mysql -u root -p   [ENTER]
 
 SELECT User FROM mysql.user;
 CREATE USER 'slurm'@'localhost' IDENTIFIED BY '12345';
         'slurm'==$(whoami)
+```

@@ -185,22 +185,21 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint256 amountToRefund;
         uint256 core = args.core[args.jobID];
         uint256 _executionDuration = args.executionDuration[args.jobID];
-
         if (args.dataTransferIn > 0) {
-            // if dataTransfer[0] contains a positive value, then its the first submitted job
+            // if dataTransferIn contains a positive value, then its the first submitted job
             if (jobInfo.cacheCost > 0) {
                 // Checking data transferring cost
-                amountToGain = info.priceCache.mul(args.dataTransferIn); //cacheCostToReceive
-                amountToRefund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); //cacheCostToRefund
+                amountToGain = info.priceCache.mul(args.dataTransferIn); //cache_cost_to_receive
+                amountToRefund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); //cache_cost_to_refund
                 require(amountToGain.add(amountToRefund) <= jobInfo.cacheCost);
                 delete jobInfo.cacheCost; // Prevents additional cacheCost to be requested, can request cache cost only one time
             }
 
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {
                 // Checking data transferring cost
-                amountToRefund = amountToRefund.add(
+                amountToRefund = amountToRefund.add( // dataTransferRefund
                     info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
-                ); // dataTransferRefund
+                );
                 // Prevents additional cacheCost to be requested
                 delete jobInfo.dataTransferIn;
             }
@@ -210,23 +209,34 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             amountToRefund = amountToRefund.add(
                 info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut))
             );
-            // Prevents additional dataTransfer to be request for dataTransferOut
+
+            if (jobInfo.cacheCost > 0) {
+                // If job cache is not used full refund for cache
+                amountToRefund = amountToRefund.add(info.priceCache.mul(jobInfo.cacheCost));
+                delete jobInfo.cacheCost;
+            }
+
+            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
+                // If job data transfer is not used full refund for cache
+                amountToRefund = amountToRefund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
+                delete jobInfo.dataTransferIn;
+            }
+
+            // Prevents additional dataTransfer profit to be request for dataTransferOut
             delete jobInfo.dataTransferOut;
         }
 
         amountToGain = amountToGain.add(
-            uint256(info.priceCoreMin).mul(core.mul(executionDuration)).add( //computationalCost
-                info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut))) //dataTransferCost
+            uint256(info.priceCoreMin).mul(core.mul(executionDuration)).add( // computational_cost
+                info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut))) // data_transfer_cost
             )
         );
 
-        // computationalCostRefund
-        amountToRefund = amountToRefund.add(
+        amountToRefund = amountToRefund.add( // computational_cost_refund
             uint256(info.priceCoreMin).mul(core.mul((_executionDuration.sub(uint256(executionDuration)))))
         );
 
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
-
         if (
             !provider.receiptList.checkIfOverlapExists(
                 job,
@@ -362,7 +372,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     function updateProviderInfo(
-	bytes32 gpgFingerprint,
+        bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
         string memory ipfsID,

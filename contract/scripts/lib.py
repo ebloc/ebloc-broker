@@ -59,7 +59,7 @@ class JobPrices:
         self.job_price = 0
         self.cache_cost = 0
         self.storage_cost = 0
-        self.dataTransferIns_sum = 0
+        self.data_transfer_in_sum = 0
         self.job_price = 0
         self.cost = dict()
         self.data_transfer_cost = None
@@ -85,7 +85,7 @@ class JobPrices:
         """Calculating the cache cost."""
         self.storage_cost = 0
         self.cache_cost = 0
-        dataTransferIns_sum = 0
+        data_transfer_in_sum = 0
         block_number = self.w3.eth.blockNumber
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
             ds = DataStorage(self.Ebb, self.w3, self.job.provider, source_code_hash, self.is_brownie)
@@ -123,24 +123,32 @@ class JobPrices:
 
                 #  if not received_storage_deposit and (received_block + storage_duration < w3.eth.blockNumber):
                 if not received_storage_deposit:
-                    dataTransferIns_sum += self.job.dataTransferIns[idx]
+                    data_transfer_in_sum += self.job.dataTransferIns[idx]
                     if self.job.storage_hours[idx] > 0:
                         self.storage_cost += (
                             self.price_storage * self.job.dataTransferIns[idx] * self.job.storage_hours[idx]
                         )
                     else:
                         self.cache_cost += self.price_cache * self.job.dataTransferIns[idx]
-        self.data_transfer_cost = self.price_data_transfer * (dataTransferIns_sum + self.job.dataTransferOut)
+        self.data_transfer_in_cost = self.price_data_transfer * data_transfer_in_sum
+        self.data_transfer_out_cost = self.price_data_transfer * self.job.dataTransferOut
+        self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
 
     def set_job_price(self):
         self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
         log(f"job_price={self.job_price}", "blue")
         self.cost["computational"] = self.computational_cost
-        self.cost["data_transfer"] = self.data_transfer_cost
         self.cost["cache"] = self.cache_cost
         self.cost["storage"] = self.storage_cost
+        self.cost["data_transfer_in"] = self.data_transfer_in_cost
+        self.cost["data_transfer_out"] = self.data_transfer_out_cost
+        self.cost["data_transfer"] = self.data_transfer_cost
         for key, value in self.cost.items():
-            log(f"\t=> {key}={value}", "blue")
+            if key == "data_transfer":
+                log(f"\t=> {key}={value} <=> [in:{self.cost['data_transfer_in']} out:{self.cost['data_transfer_out']}]", "blue")
+            else:
+                if key != "data_transfer_out" and key != "data_transfer_in":
+                    log(f"\t=> {key}={value}", "blue")
 
 
 def cost(provider, requester, job, Ebb, w3, is_brownie=False):
