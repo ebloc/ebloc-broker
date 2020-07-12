@@ -6,7 +6,7 @@ import time
 import uuid
 from datetime import datetime, timedelta
 from shutil import copyfile
-from typing import Dict
+from typing import Dict, List
 
 import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
@@ -14,7 +14,20 @@ import libs.slurm as slurm
 import utils
 from config import ThreadFilter, env, logging
 from lib import log, run
-from utils import CacheType, Link, _colorize_traceback, create_dir, generate_md5sum, read_json, write_to_file
+from libs.slurm import remove_user
+from libs.sudo import _run_as_sudo
+from libs.user_setup import add_user_to_slurm
+from utils import (
+    CacheType,
+    Link,
+    _colorize_traceback,
+    bytes32_to_ipfs,
+    cd,
+    create_dir,
+    generate_md5sum,
+    read_json,
+    write_to_file,
+)
 
 
 class BaseClass:
@@ -37,13 +50,15 @@ class Storage(BaseClass):
         self.dataTransferIn_requested = job_info[0]["dataTransferIn"]
         self.dataTransferIn_to_download = 0  # size_to_download
         self.is_already_cached = is_already_cached
-        self.source_code_hashes = logged_job.args["sourceCodeHash"]
-        self.job_key_list = []
+        self.source_code_hashes: List[bytes] = logged_job.args["sourceCodeHash"]
+        self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
+        self.job_key_list: List[str] = []
         self.md5sum_dict = {}
         self.folder_path_to_download: Dict[str, str] = {}
         self.cloudStorageID = logged_job.args["cloudStorageID"]
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
+
         self.run_path = f"{self.results_folder}/run.sh"
         self.results_data_folder = f"{self.results_folder_prev}/data"
         self.results_data_link = f"{self.results_folder_prev}/data_link"
@@ -131,9 +146,7 @@ class Storage(BaseClass):
                 self.folder_path_to_download[name] = self.private_dir
                 log("==> ", "blue", None, is_new_line=False)
                 log(f"{name} is already cached under the private directory")
-
             return True
-
         return False
 
     def is_cached(self, name, _id) -> bool:
@@ -239,10 +252,10 @@ class Storage(BaseClass):
         # write_to_file(f"{results_folder_prev}/blockNumber.txt", job_block_number)
 
         logging.info("Adding recevied job into mongodb database.")
+
         # adding job_key info along with its cacheDuration into mongodb
-        mongodb.add_item(
-            job_key, self.source_code_hashes, self.requester_id, timestamp, main_cloud_storage_id, job_info,
-        )
+        mongodb.add_item(job_key, self.index, self.source_code_hashes_str,
+                         self.requester_id, timestamp, main_cloud_storage_id, job_info)
 
         # TODO: update as used_dataTransferIn value
         data_transfer_in_json = f"{self.results_folder_prev}/dataTransferIn.json"
@@ -274,11 +287,19 @@ class Storage(BaseClass):
                 sudo su - $requester_id -c "cd $results_folder &&
                 sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
                 """
-                sub_cmd = f'cd {self.results_folder} && sbatch -N {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
-                job_id = run(["sudo", "su", "-", self.requester_id, "-c", sub_cmd])
+                cmd = f"sbatch -N {job_core_num} \"{sbatch_file_path}\" --mail-type=ALL"
+                with cd(self.results_folder):
+                    try:
+                        job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
+                    except Exception as e:
+                        if "Invalid account" in str(e):
+                            remove_user(env.SLURMUSER)
+                            add_user_to_slurm(env.SLURMUSER)
+                            job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
                 time.sleep(1)  # wait 1 second for Slurm idle core to be updated
             except Exception:
                 _colorize_traceback()
+                breakpoint()
                 slurm.remove_user(self.requester_id)
                 slurm.add_user_to_slurm(self.requester_id)
             else:
@@ -286,7 +307,7 @@ class Storage(BaseClass):
         else:
             sys.exit(1)
 
-        slurm_job_id = job_id.split()[3]
+        slurm_job_id = job_id.split()[3]  # "Submitted batch job N"
         logging.info(f"slurm_job_id={slurm_job_id}")
         try:
             run(["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"])

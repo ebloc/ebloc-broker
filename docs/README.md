@@ -1,6 +1,7 @@
 # Convert
 
-`convert/convert.sh`
+`$HOME/eBlocBroker/docs/convert/run_convert.sh`
+
 
 # Run
 

@@ -56,7 +56,6 @@ if [ $setup -eq 1 ]; then
     sudo npm install -g n # npm install --save
     sudo n latest
     sudo npm install -g --unsafe-perm=true --allow-root ganache-cli
-    sudo npm install -g minilock-cli
     # npm install web3
     # npm install web3_ipc
     # npm install dotenv

@@ -43,8 +43,6 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 eudatFlag = 1
             elif testType == "ipfs":
                 cloudStorageID = 0
-            elif testType == "ipfsMiniLock":
-                cloudStorageID = 2
             elif testType == "gdrive":
                 cloudStorageID = 4
 

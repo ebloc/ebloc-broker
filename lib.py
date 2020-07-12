@@ -20,6 +20,7 @@ from utils import (
     StorageID,
     _colorize_traceback,
     byte_to_mb,
+    cd,
     create_dir,
     generate_md5sum,
     is_ipfs_on,
@@ -305,47 +306,45 @@ def compress_folder(folder_to_share):
     - https://unix.stackexchange.com/a/438330/198423  == (tar produces different files each time)
     - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
-    current_path = os.getcwd()
     base_name = os.path.basename(folder_to_share)
     dir_path = os.path.dirname(folder_to_share)
-    os.chdir(dir_path)
 
-    """cmd:
-    find . -print0 | LC_ALL=C sort -z | \
-    PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
-                --no-recursion --null -T - -zcvf $tar_hash.tar.gz
-    """
-    p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
-    p1.stdout.close()
-    p3 = subprocess.Popen(
-        [
-            "tar",
-            "-Ipigz",
-            "--mode=a+rwX",
-            "--owner=0",
-            "--group=0",
-            "--numeric-owner",
-            "--absolute-names",
-            "--no-recursion",
-            "--null",
-            "-T",
-            "-",
-            "-cvf",
-            f"{base_name}.tar.gz",
-        ],
-        stdin=p2.stdout,
-        stdout=subprocess.PIPE,
-        env={"PIGZ": "-n"},  # alternative: GZIP
-    )
-    p2.stdout.close()
-    p3.communicate()
+    with cd(dir_path):
+        """cmd:
+        find . -print0 | LC_ALL=C sort -z | \
+        PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
+                    --no-recursion --null -T - -zcvf $tar_hash.tar.gz
+        """
+        p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
+        p1.stdout.close()
+        p3 = subprocess.Popen(
+            [
+                "tar",
+                "-Ipigz",
+                "--mode=a+rwX",
+                "--owner=0",
+                "--group=0",
+                "--numeric-owner",
+                "--absolute-names",
+                "--no-recursion",
+                "--null",
+                "-T",
+                "-",
+                "-cvf",
+                f"{base_name}.tar.gz",
+            ],
+            stdin=p2.stdout,
+            stdout=subprocess.PIPE,
+            env={"PIGZ": "-n"},  # alternative: GZIP
+        )
+        p2.stdout.close()
+        p3.communicate()
 
-    tar_hash = generate_md5sum(f"{base_name}.tar.gz")
-    tar_file = f"{tar_hash}.tar.gz"
-    shutil.move(f"{base_name}.tar.gz", tar_file)
-    log(f"Created tar file={dir_path}/{tar_file}")
-    os.chdir(current_path)
+        tar_hash = generate_md5sum(f"{base_name}.tar.gz")
+        tar_file = f"{tar_hash}.tar.gz"
+        shutil.move(f"{base_name}.tar.gz", tar_file)
+        log(f"Created tar file={dir_path}/{tar_file}")
     return tar_hash, f"{dir_path}/{tar_file}"
 
 

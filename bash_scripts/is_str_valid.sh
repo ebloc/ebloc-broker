@@ -14,7 +14,6 @@ if ! [[ $string =~ ^[0-9a-zA-Z._-]+$ ]]; then
     exit
 fi
 
-
 key_len=$(echo "${#string}")
 if [ $key_len -gt 255 ]; then
     echo "E: length is greater than 255"

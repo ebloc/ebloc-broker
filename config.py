@@ -6,6 +6,7 @@ import threading
 from logging import Filter
 from os.path import expanduser
 from pathlib import Path
+from typing import Union
 
 from dotenv import load_dotenv
 
@@ -61,6 +62,7 @@ class ENV:
         self.WHOAMI = os.getenv("WHOAMI")
         self.SLURMUSER = os.getenv("SLURMUSER")
         self.LOG_PATH = os.getenv("LOG_PATH")
+
         self.GDRIVE = os.getenv("GDRIVE")
         self.OC_USER = os.getenv("OC_USER")
         self.IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
@@ -75,9 +77,9 @@ class ENV:
         self.GDRIVE_METADATA = f"/home/{self.WHOAMI}/.gdrive"
         self.IPFS_REPO = f"/home/{self.WHOAMI}/.ipfs"
         self.IPFS_LOG = f"{self.LOG_PATH}/ipfs.out"
+        self.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
         self.GANACHE_LOG = f"{self.LOG_PATH}/ganache.out"
         self.OWNCLOUD_PATH = "/oc"
-
         self.PROGRAM_PATH = "/var/eBlocBroker"
         self.JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/test.txt"
         self.CANCEL_JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledJobs.txt"
@@ -91,11 +93,9 @@ class ENV:
         self.WHISPER_LOG = f"{self.LOG_PATH}/whisper_state_receiver.out"
         self.WHISPER_TOPIC = "0x07678231"
         self.IS_THREADING_ENABLED = False
-
+        self.PROVIDER_ID = None  # type: Union[str, None]
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
-        else:
-            self.PROVIDER_ID = None
 
     def set_provider_id(self, provider_id=None):
         if not os.getenv("PROVIDER_ID"):
@@ -132,7 +132,8 @@ def setup_logger(log_path="", is_brownie=False):
             # format="%(asctime)s %(levelname)-8s [%(module)s %(lineno)d] %(message)s",
             # format="%(asctime)s %(levelname)-8s [%(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
             format="[%(asctime)s %(filename)15s:%(lineno)s - %(funcName)21s()] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+            datefmt="%H:%M:%S",
+            # datefmt="%Y-%m-%d %H:%M:%S",
         )
         # logger.info("Log_path => %s", log_path)
     else:  # only stdout
