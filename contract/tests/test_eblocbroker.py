@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import os
-from os import path, sys
+import sys
+from os import path
 
 import pytest
-from _tools import bp  # noqa: F401
 
 import brownie
 import config
@@ -193,12 +193,12 @@ def test_stored_data_usage():
     job.cores = [1]
     job.execution_durations = [5]
 
-    job.providerPriceBlockNumber = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PRIVATE.value]
     args = [
         provider,
-        job.providerPriceBlockNumber,
+        job.provider_price_block_number,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -305,10 +305,10 @@ def test_computational_refund():
 
     job_price, _cost = cost(provider, requester, job, Ebb, web3)
 
-    providerPriceBlockNumber = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        providerPriceBlockNumber,
+        provider_price_block_number,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -333,7 +333,8 @@ def test_computational_refund():
     mine(5)
 
     args = [index, jobID, 1579524998, 2, 0, [1], [5], True]
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, 1, zero_bytes32, {"from": accounts[0]})
+    execution_duration = 1
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_duration, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     print(str(received_sum) + " " + str(refunded_sum))
@@ -366,7 +367,7 @@ def test_storage_refund():
     job.cores = [2]
     job.execution_durations = [10]
 
-    job.providerPriceBlockNumber = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
 
@@ -378,7 +379,7 @@ def test_storage_refund():
     job_price += 1  # for test 1 wei extra is paid
     args = [
         provider,
-        job.providerPriceBlockNumber,
+        job.provider_price_block_number,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -534,7 +535,7 @@ def test_update_provider():
     assert block_read_from == commitmentBlockNum + provider_registered_bn
 
 
-def test_multipleData():
+def test_multiple_data():
     job = Job()
     provider = accounts[0]
     requester = accounts[1]
@@ -557,12 +558,12 @@ def test_multipleData():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
     job.execution_durations = [10]
-    providerPriceBlockNumber = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     args = [
         provider,
-        providerPriceBlockNumber,
+        provider_price_block_number,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -872,6 +873,69 @@ def test_workflow():
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
     # Ebb.updateDataReceivedBlock(result_ipfs_hash, {"from": accounts[4]})
+
+
+def test_simple_submit():
+    job = Job()
+    provider = accounts[0]
+    requester = accounts[1]
+
+    register_provider(100)
+    register_requester(requester)
+
+    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
+    job.cores = [1]
+    job.execution_durations = [1]
+    job.dataTransferIns = [1, 1]
+    job.dataTransferOut = 1
+    job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.storage_hours = [0, 0]
+    job.data_prices_set_block_numbers = [0, 0]
+
+    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.execution_durations,
+        job.dataTransferOut,
+    ]
+    tx = Ebb.submitJob(
+        job.source_code_hashes[0],
+        job.dataTransferIns,
+        args,
+        job.storage_hours,
+        job.source_code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+
+    index = 0
+    jobID = 0
+    startTime = 1579524978
+    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    rpc.sleep(60)
+    mine(5)
+
+    completionTime = 1579524998
+    dataTransferIn = 0
+    dataTransferOut = 0.01
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    execution_time_min = 1
+    out_hash = b'[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99'
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, out_hash, {"from": accounts[0]})
+    # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
+    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    # print(str(received_sum) + " " + str(refunded_sum))
+    assert received_sum == 100 and refunded_sum == 5
+    withdraw(accounts[0], received_sum)
+    withdraw(requester, refunded_sum)
 
 
 def test_submitJob():

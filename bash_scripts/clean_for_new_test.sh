@@ -27,9 +27,11 @@ rm -f $HOME/.eBlocBroker/ipfs.out
 cat /dev/null > $HOME/.eBlocBroker/provider.log
 cat /dev/null > $HOME/.eBlocBroker/log.txt
 
-./killall.sh
+$HOME/eBlocBroker/bash_scripts/killall.sh
 clean.sh
 
 # Update block.continue.txt with the current block number
 python3 -uB $HOME/eBlocBroker/eblocbroker/get_block_number.py True > \
 	$HOME/.eBlocBroker/block_continue.txt
+
+python3 $HOME/eBlocBroker/mongodb/delete_all.py

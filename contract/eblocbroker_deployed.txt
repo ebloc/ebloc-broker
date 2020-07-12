@@ -1,17 +1,17 @@
-Brownie v1.8.9 - Python development framework for Ethereum
+Brownie v1.9.7 - Python development framework for Ethereum
 
 ContractProject is the active project.
 
 Running '[0;1;34mscripts.eBlocBroker[0;m.[0;1;36mmain[0;m'...
-Transaction sent: [0;1;34m0x23dacc5e2266dd30671c6a56d6e9c8d42b5722b99fbc63295d9b98da83cfb70c[0;m
+Transaction sent: [0;1;34m0x587443c6efb06033a584d2987117dc59c3182fb1a340ea6b6344e58954b68210[0;m
   Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m154358[0;m
 Waiting for confirmation...
-  Lib.constructor confirmed - Block: [0;1;34m4903112[0;m   Gas used: [0;1;34m154358[0;m ([0;1;34m100.00%[0;m)
-  Lib deployed at: [0;1;34m0xeAAE844ef9c335752228358c8B3A59e382F307b5[0;m
+  Lib.constructor confirmed - Block: [0;1;34m4940862[0;m   Gas used: [0;1;34m154358[0;m ([0;1;34m100.00%[0;m)
+  Lib deployed at: [0;1;34m0x589B4457A5715855300D69f316b73F5f7bA7da18[0;m
 
-Transaction sent: [0;1;34m0x5217bccc996858000b1f27d5c7099fb2db618be9ecb643057c34cce3a47b61d2[0;m
-  Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m5002945[0;m
+Transaction sent: [0;1;34m0xdefbbd52d8623aee2033542a8254eb5c84f79dfe3dbafc6ece85eeb376eec126[0;m
+  Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m5037561[0;m
 Waiting for confirmation...
-  eBlocBroker.constructor confirmed - Block: [0;1;34m4903113[0;m   Gas used: [0;1;34m5002945[0;m ([0;1;34m100.00%[0;m)
-  eBlocBroker deployed at: [0;1;34m0xDF651C28348488AE894AB70F2fB474Cd041435af[0;m
+  eBlocBroker.constructor confirmed - Block: [0;1;34m4940863[0;m   Gas used: [0;1;34m5037561[0;m ([0;1;34m100.00%[0;m)
+  eBlocBroker deployed at: [0;1;34m0x98A9BCfdE638D24B289B99936882428389457D1f[0;m
 

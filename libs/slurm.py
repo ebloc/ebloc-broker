@@ -3,25 +3,26 @@ import subprocess
 import sys
 import time
 
-from config import logging
+from config import env, logging
 from lib import run
 from utils import _colorize_traceback, log, popen_communicate
 
 
 def add_user_to_slurm(user):
     # remove__user(user)
-    cmd = ["sacctmgr", "add", "account", user, "--immediate"]
+    cmd = ["sacctmgr", "add", "user", user, f"account={user}", "--immediate"]
+    # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
     if p.returncode != 0 and "Nothing new added" not in output:
         _colorize_traceback()
         logging.error(f"E: sacctmgr remove error: {output}")
         raise
 
-    try:
-        if "Nothing new added" not in output:
-            run(["sacctmgr", "create", "user", user, f"defaultaccount={user}", "adminlevel=[None]", "--immediate"])
-    except Exception as e:
-        raise Exception("E: Problem on sacctmgr create user") from e
+    # try:
+    #     if "Nothing new added" not in output:
+    #         run(["sacctmgr", "create", "user", user, f"defaultaccount={env.SLURMUSER}", "adminlevel=[None]", "--immediate"])
+    # except Exception as e:
+    #     raise Exception("E: Problem on sacctmgr create user") from e
 
 
 def remove_user(user):
