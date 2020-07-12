@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 import traceback
+from contextlib import contextmanager
 from enum import IntEnum
 from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
 
@@ -66,16 +67,29 @@ class COLOR:
     END = "\033[0m"
 
 
-def untar(tar_file, extract_to):
-    if not is_dir_empty(extract_to):
-        log(f"{tar_file} is already extracted into {extract_to}")
-        return
+def extract_gzip(filename):
+    run(["gunzip", "--force", filename])
 
-    """
+
+def untar(tar_file, extract_to):
+    """untar give tar file
     umask can be ignored by using the -p (--preserve) option
         --no-overwrite-dir: preserve metadata of existing directories
+
+    tar interprets the next argument after -f as the file name of the tar file.
+    Put the p before the f:
     """
-    cmd = ["tar", "-xvfp", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
+    filename = os.path.basename(tar_file)
+    accept_files = [".git", filename]
+    if not is_dir_empty(extract_to):
+        for name in os.listdir(extract_to):
+            # if tar itself already exist inside the same directory along with
+            # `.git` file
+            if name not in accept_files:
+                log(f"{tar_file} is already extracted into {extract_to}")
+                return
+
+    cmd = ["tar", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
     run(cmd)
 
 
@@ -129,6 +143,7 @@ def run_with_output(cmd):
             print(line, end='') # process line here
             return line.strip()
     if p.returncode != 0:
+        breakpoint()
         raise CalledProcessError(p.returncode, p.args)
 
 
@@ -239,7 +254,7 @@ def generate_md5sum(path: str) -> str:
 
 def create_dir(path: str) -> None:
     if not os.path.isdir(path):
-        os.makedirs(path)
+        os.makedirs(path)  # mkdir
 
 
 def getcwd():
@@ -302,7 +317,7 @@ def path_leaf(path):
     return tail or ntpath.basename(head)
 
 
-def is_dir_empty(path):
+def is_dir_empty(path) -> bool:
     # cmd = ["find", path, "-mindepth", "1", "-print", "-quit"]
     # output = check_output(cmd).decode("utf-8").strip()
     # return not output
@@ -344,7 +359,7 @@ def log(text, color="white", filename=None, is_new_line=True):
         if env.log_filename:
             filename = env.log_filename
         else:
-            filename = f"{env.LOG_PATH}/provider.log"
+            filename = env.DRIVER_LOG
 
     f = open(filename, "a")
     if color:
@@ -443,7 +458,7 @@ def is_driver_on() -> bool:
     """Check whether driver runs on the background."""
     if is_process_on("python.*[D]river", "Driver", process_count=1):
         printc("Track output using:")
-        printc("tail -f ~/.eBlocBroker/provider.log", "blue")
+        printc(f"tail -f {env.DRIVER_LOG}", "blue")
         raise config.QuietExit
     return True
 
@@ -570,3 +585,18 @@ class Link:
             printc(f"{target} [is linked to]\n{destination}", "blue")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash
+
+
+class cd:
+    """Context manager for changing the current working directory
+    doc: https://stackoverflow.com/a/13197763/2402577
+    """
+    def __init__(self, new_path):
+        self.new_path = os.path.expanduser(new_path)
+
+    def __enter__(self):
+        self.saved_path = os.getcwd()
+        os.chdir(self.new_path)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.saved_path)

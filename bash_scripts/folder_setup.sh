@@ -163,13 +163,7 @@ echo -e "Note: Update the following file '~/.eBlocBroker/.eudat_provider.txt' \
      Best to make sure the file is not readable or even listable for anyone but you. \
      You achieve this with:\n 'chmod 700 eudat_password.txt'"
 
-## echo -e "\nUpdate the following file 'miniLockPassword.txt' with your Minilock accounts password."
-## echo -e "Please enter your miniLock password,"
-## read -s PASSWORD
-## echo $PASSWORD > $HOME/.eBlocBroker/private/miniLockPassword.txt
-## sudo chmod 700 $HOME/.eBlocBroker/private/miniLockPassword.txt
-
-# sudo chmod 700 /home/*
 
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node
+# sudo chmod 700 /home/*

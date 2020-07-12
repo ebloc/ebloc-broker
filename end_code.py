@@ -3,6 +3,7 @@
 import base64
 import getpass
 import os
+import pprint
 import sys
 import time
 from typing import Dict, List
@@ -56,9 +57,10 @@ class Common:
         self.results_folder = ""
         self.results_folder_prev = ""
         self.patch_file = ""
-        self.minilock_id = ""
+        self.requester_gpg_fingerprint = ""
         self.patch_name = ""
-        self.dataTransferOut = 0
+        self.data_transfer_out = 0.0
+        self.encoded_share_tokens = {}  # type: Dict[str, str]
 
 
 class IpfsGPG(Common):
@@ -66,22 +68,13 @@ class IpfsGPG(Common):
         pass
 
     def upload(self, *_) -> bool:
-        os.chdir(self.results_folder)
-        cmd = [
-            "mlck",
-            "encrypt",
-            "-f",
-            self.patch_file,
-            self.minilock_id,
-            "--anonymous",
-            f"--output-file={self.patch_file}.minilock",
-        ]
         try:
-            logging.info(run(cmd))
+            """It will upload after all patchings are completed."""
+            target = ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
+            log(f"GPG_file: {target}", "blue")
         except:
+            silent_remove(self.patch_file)
             sys.exit(1)
-
-        silent_remove(self.patch_file)
         return True
 
 
@@ -102,9 +95,9 @@ class Eudat(Common):
             sys.exit(1)
 
     def upload(self, source_code_hash, *_) -> bool:
-        data_transfer_out = calculate_folder_size(self.patch_file)
-        logging.info(f"[{source_code_hash}]'s dataTransferOut => {data_transfer_out} MB")
-        self.dataTransferOut += data_transfer_out
+        _data_transfer_out = calculate_folder_size(self.patch_file)
+        logging.info(f"[{source_code_hash}]'s data_transfer_out => {_data_transfer_out} MB")
+        self.data_transfer_out += _data_transfer_out
         success = eudat.upload_results(
             self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5,
         )
@@ -136,8 +129,8 @@ class Gdrive(Common):
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
         logging.info(f"mime_type={mime_type}")
-        self.dataTransferOut += calculate_folder_size(self.patch_file)
-        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
+        self.data_transfer_out += calculate_folder_size(self.patch_file)
+        logging.info(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type or "/zip" in mime_type:
@@ -164,13 +157,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.folder_name = kwargs.pop("folder_name")
         self.slurm_job_id = kwargs.pop("slurm_job_id")
         self.share_tokens = {}  # type: Dict[str, str]
-        self.encoded_share_tokens = {}  # type: Dict[str, str]
         self.dataTransferIn = 0
+        self.data_transfer_out = 0.0
         self.elapsed_raw_time = 0
         self.source_code_hashes_to_process: List[str] = []
         self.source_code_hashes: List[str] = []
         self.result_ipfs_hash = ""
-        self.minilock_id = ""
+        self.requester_gpg_fingerprint = ""
         self.modified_date = None
 
         # https://stackoverflow.com/a/5971326/2402577 , https://stackoverflow.com/a/4453495/2402577
@@ -190,6 +183,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             sys.exit(1)
 
         try:
+
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_info(
                     env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
@@ -197,7 +191,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 10,
             )
             self.cloud_storage_ids = self.job_info["cloudStorageID"]
-            requester_id = self.job_info["jobOwner"].lower()
+            requester_id = self.job_info["jobOwner"]
             requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
         except:
@@ -230,7 +224,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"index: {self.index}")
         log(f"cloud_storage_ids: {self.cloud_storage_ids}")
         log(f"folder_name: {self.folder_name}")
-        log(f"providerID: {env.PROVIDER_ID}")
+        log(f"providerID: {env.PROVIDER_ID}")  # noqa
         log(f"requester_id_address: {requester_id_address}")
         log(f"received: {self.job_info['received']}")
 
@@ -265,7 +259,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             raise
 
         data_transfer_out = byte_to_mb(data_transfer_out)
-        self.dataTransferOut += data_transfer_out
+        self.data_transfer_out += data_transfer_out
 
     def process_payment_tx(self):
         try:
@@ -280,7 +274,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.cloud_storage_ids,
                     end_time_stamp,
                     self.dataTransferIn,
-                    self.dataTransferOut,
+                    self.data_transfer_out,
                     self.job_info["core"],
                     self.job_info["executionDuration"],
                 ),
@@ -336,7 +330,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
-    def git_diff_patch_and_upload(self, source, name, storage_class, is_job_key) -> bool:
+    def git_diff_patch_and_upload(self, source, name, storage_class, is_job_key):
         if is_job_key:
             logging.info(f"patch_base={self.patch_folder}")
             log("==> ", "blue", None, is_new_line=False)
@@ -358,7 +352,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         except Exception as e:
             raise Exception("E: Problem on git_diff_patch_and_upload()") from e
 
-    def upload_driver(self) -> bool:
+    def upload_driver(self):
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
         try:
             storage_class = self.get_cloud_storage_class(0)
@@ -394,10 +388,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         except:
             logging.error("E: modified_date.txt file couldn't be read")
 
-        self.minilock_id = self.requester_info["miniLockID"]
+        self.requester_gpg_fingerprint = self.requester_info["gpgFingerprint"]
         logging.info("job_owner's info: --------------------------------------------")
         logging.info("{0: <12}".format("email:") + self.requester_info["email"])
-        logging.info("{0: <12}".format("miniLockID:") + self.minilock_id)
+        logging.info("{0: <12}".format("gpgFingerprint:") + self.requester_gpg_fingerprint)
         logging.info("{0: <12}".format("ipfsID:") + self.requester_info["ipfsID"])
         logging.info("{0: <12}".format("fID:") + self.requester_info["fID"])
         logging.info("-------------------------------------------------------------")
@@ -455,7 +449,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.elapsed_raw_time = execution_duration[self.job_id]
 
         logging.info(f"finalized_elapsed_raw_time={self.elapsed_raw_time}")
-        logging.info(f"job_info={self.job_info}")
+
+        _job_info = pprint.pformat(self.job_info)
+        logging.info(f"job_info={_job_info}")
         self.get_cloud_storage_class(0).initialize(self)
         try:
             self.upload_driver()
@@ -463,12 +459,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             _colorize_traceback()
             sys.exit(1)
 
-        data_transfer_sum = self.dataTransferIn + self.dataTransferOut
-        logging.info(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
-        logging.info(f"dataTransferOut={self.dataTransferOut} MB => rounded={int(self.dataTransferOut)} MB")
-        logging.info(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
-        self.process_payment_tx()
-        log("All done!", "green")
+        data_transfer_sum = self.dataTransferIn + self.data_transfer_out
+        log(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
+        log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
+        log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
+        # self.process_payment_tx()
+        # log("All done!", "green")
         # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
 
 
