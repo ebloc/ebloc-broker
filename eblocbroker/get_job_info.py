@@ -3,10 +3,12 @@
 
 import sys
 import traceback
+from typing import Union
 
 import config
 from config import logging
 from lib import inv_job_state_code
+from libs.mongodb import get_job_block_number
 from utils import StorageID, _colorize_traceback, bytes32_to_ipfs, empty_bytes32, log
 
 
@@ -28,8 +30,8 @@ def update_job_cores(self, job_info, provider, job_key, index, job_id=0, receive
                 job_info.update({"executionDuration": logged_job.args["executionDuration"]})
                 job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 return job_info
-            else:
-                logging.error("E: Failed to find job to update")
+        else:
+            logging.error("E: Failed to find job to update")
     except Exception as e:
         _colorize_traceback()
         logging.error(f"Failed to update_job_cores: {e}")
@@ -59,22 +61,22 @@ def get_job_source_code_hashes(self, job_info, provider, job_key, index, job_id=
 
 
 def get_job_info(self, provider, job_key, index, job_id, received_block_number=None):
-    # logging.info(f"~/eBlocBroker/eblocbroke/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}")
+    log(f"~/eBlocBroker/eblocbroker/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}", "cyan")
     try:
         provider = config.w3.toChecksumAddress(provider)
-        (job, received, jobOwner, dataTransferIn, dataTransferOut,) = config.Ebb.functions.getJobInfo(
+        (job, received, job_owner, dataTransferIn, dataTransferOut,) = config.Ebb.functions.getJobInfo(
             provider, job_key, int(index), int(job_id)
         ).call()
         jobPrices = config.Ebb.functions.getProviderPricesForJob(provider, job_key, int(index)).call()
 
-        job_info = {
+        self.job_info = {
             "startTime": job[0],
             "jobStateCode": job[1],
             "core": None,
             "executionDuration": None,
             "cloudStorageID": None,
             "received": received,
-            "jobOwner": jobOwner,
+            "jobOwner": job_owner.lower(),
             "dataTransferIn": dataTransferIn,
             "dataTransferOut": dataTransferOut,
             "availableCore": jobPrices[0],
@@ -85,19 +87,24 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
             "price_cache": jobPrices[5],
             "cacheType": None,
             "resultIpfsHash": "",
-            "endTime": None,
+            "completion_time": None,
             "refundedWei": None,
-            "receivedBlock": None,
+            "received_block": None,
             "receivedWei": None,
             "cacheDuration": None,
             "sourceCodeHash": None,
+            "received_block_number": received_block_number,
             "dataTransferIn_to_download": None,
             "dataTransferOut_used": None,
         }
 
-        job_info = self.update_job_cores(job_info, provider, job_key, index, job_id, received_block_number)
+        self.job_info = self.update_job_cores(self.job_info, provider, job_key, index, job_id, received_block_number)
         if received_block_number is None:
-            received_block_number = self.get_deployed_block_number()
+            # First reading from the mongodb, this will increase the speed to fetch from the logged data
+            received_block_number = get_job_block_number(self.job_info["jobOwner"], job_key, index)
+            if received_block_number == 0:
+                received_block_number = self.get_deployed_block_number()
+            self.job_info["received_block_number"] = received_block_number
         # else:
         #    to_block = int(received_block_number)
 
@@ -108,22 +115,22 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
         logged_receipts = event_filter.get_all_entries()
         for logged_receipt in logged_receipts:
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
-                job_info.update({"resultIpfsHash": logged_receipt.args["resultIpfsHash"]})
-                job_info.update({"endTime": logged_receipt.args["endTime"]})
-                job_info.update({"receivedWei": logged_receipt.args["receivedWei"]})
-                job_info.update({"refundedWei": logged_receipt.args["refundedWei"]})
-                job_info.update({"dataTransferIn_to_download": logged_receipt.args["dataTransferIn"]})
-                job_info.update({"dataTransferOut_used": logged_receipt.args["dataTransferOut"]})
+                self.job_info.update({"resultIpfsHash": logged_receipt.args["resultIpfsHash"]})
+                self.job_info.update({"completion_time": logged_receipt.args["completionTime"]})
+                self.job_info.update({"receivedWei": logged_receipt.args["receivedWei"]})
+                self.job_info.update({"refundedWei": logged_receipt.args["refundedWei"]})
+                self.job_info.update({"dataTransferIn_to_download": logged_receipt.args["dataTransferIn"]})
+                self.job_info.update({"dataTransferOut_used": logged_receipt.args["dataTransferOut"]})
                 break
     except Exception:
         logging.error(f"E: Failed to getJobInfo: {traceback.format_exc()}")
         raise
 
-    if str(job_info["core"]) == "0":
+    if str(self.job_info["core"]) == "0":
         logging.error("E: Failed to getJobInfo: Out of index")
         raise
 
-    return job_info
+    return self.job_info
 
 
 if __name__ == "__main__":
@@ -136,7 +143,7 @@ if __name__ == "__main__":
         index = int(sys.argv[3])
         job_id = int(sys.argv[4])
         if len(sys.argv) == 6:
-            received_block_number = int(sys.argv[5])
+            received_block_number = int(sys.argv[5])  # type: Union[int, None]
         else:
             received_block_number = None
     else:
@@ -144,7 +151,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        job_info = get_job_info(provider, job_key, index, job_id, received_block_number)
+        job_info = Ebb.get_job_info(provider, job_key, index, job_id, received_block_number)
     except:
         sys.exit(1)
 
@@ -157,36 +164,36 @@ if __name__ == "__main__":
             _resultIpfsHash = ""
 
     real_execution_time = 0
-    if job_info["endTime"]:
-        real_execution_time = int(job_info["endTime"]) - int(job_info["startTime"])
+    if job_info["completion_time"]:
+        real_execution_time = int(job_info["completion_time"]) - int(job_info["startTime"])
 
     if isinstance(job_info, dict):
         print(
-            "{0: <22}".format("stateCode:")
+            "{0: <25}".format("stateCode:")
             + f"{inv_job_state_code[job_info['jobStateCode']]} ({job_info['jobStateCode']})"
         )
-        print("{0: <22}".format("core") + str(job_info["core"]))
-        print("{0: <22}".format("startTime") + str(job_info["startTime"]))
-        print("{0: <22}".format("endTime:") + str(job_info["endTime"]))
-        print("{0: <22}".format("real_execution_time:") + str(real_execution_time) + " Seconds")
-        print("{0: <22}".format("receivedWei:") + str(job_info["receivedWei"]))
-        print("{0: <22}".format("refundedWei:") + str(job_info["refundedWei"]))
-        print("{0: <22}".format("Expected executionDuration:") + str(job_info["executionDuration"]))
-        print("{0: <22}".format("job_infoOwner:") + str(job_info["jobOwner"]))
-        print("{0: <22}".format("availableCore:") + str(job_info["availableCore"]))
-        print("{0: <22}".format("priceCommitmentBlockDuration:") + str(job_info["commitmentBlockDuration"]))
-        print("{0: <22}".format("price_core_min:") + str(job_info["priceCoreMin"]))
-        print("{0: <22}".format("price_data_transfer:") + str(job_info["priceDataTransfer"]))
-        print("{0: <22}".format("price_storage:") + str(job_info["priceStorage"]))
-        print("{0: <22}".format("price_cache:") + str(job_info["priceCache"]))
-        print("{0: <22}".format("resultIpfsHash:") + _resultIpfsHash)
-        print("{0: <22}".format("dataTransferIn:") + str(job_info["dataTransferIn"]))
-        print("{0: <22}".format("dataTransferOut:") + str(job_info["dataTransferOut"]))
-        print("{0: <22}".format("dataTransferIn_to_download:") + str(job_info["dataTransferIn_to_download"]))
-        print("{0: <22}".format("dataTransferOut_used:") + str(job_info["dataTransferOut_used"]))
+        print("{0: <25}".format("core") + str(job_info["core"]))
+        print("{0: <25}".format("startTime") + str(job_info["startTime"]))
+        print("{0: <25}".format("completion_time:") + str(job_info["completion_time"]))
+        print("{0: <25}".format("real_execution_time:") + str(real_execution_time) + " seconds")
+        print("{0: <25}".format("received_wei:") + str(job_info["receivedWei"]))
+        print("{0: <25}".format("refunded_wei:") + str(job_info["refundedWei"]))
+        print("{0: <25}".format("expected_execution_time:") + str(job_info["executionDuration"]))
+        print("{0: <25}".format("job_infoOwner:") + str(job_info["jobOwner"]))
+        print("{0: <25}".format("availableCore:") + str(job_info["availableCore"]))
+        print("{0: <25}".format("price_core_min:") + str(job_info["price_core_min"]))
+        print("{0: <25}".format("price_data_transfer:") + str(job_info["price_data_transfer"]))
+        print("{0: <25}".format("price_storage:") + str(job_info["price_storage"]))
+        print("{0: <25}".format("price_cache:") + str(job_info["price_cache"]))
+        print("{0: <25}".format("resultIpfsHash:") + _resultIpfsHash)
+        print("{0: <25}".format("dataTransferIn:") + str(job_info["dataTransferIn"]))
+        print("{0: <25}".format("dataTransferOut:") + str(job_info["dataTransferOut"]))
+        print("{0: <25}".format("dataTransferIn_to_download:") + str(job_info["dataTransferIn_to_download"]))
+        print("{0: <25}".format("dataTransferOut_used:") + str(job_info["dataTransferOut_used"]))
+        print("{0: <25}".format("price_commitment_block_duration:") + str(job_info["commitmentBlockDuration"]))
 
         job_info = Ebb.get_job_source_code_hashes(job_info, provider, job_key, index, job_id, received_block_number)
-        # print("{0: <22}".format("source_code_hash:") + str(job_info["sourceCodeHash"]))
+        # print("{0: <25}".format("source_code_hash:") + str(job_info["sourceCodeHash"]))
         log("source_code_hashes:", "blue")
         for idx, code_hash in enumerate(job_info["sourceCodeHash"]):
             main_cloud_storage_id = job_info["cloudStorageID"][idx]

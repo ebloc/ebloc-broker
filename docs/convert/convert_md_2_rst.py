@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Convert Markdown to reStructuredText extension for Sphinx Doc
 
 Scans for '.md' files and converts them to '.rst' files using pandoc.
@@ -12,12 +14,12 @@ sys.path.insert(0, os.path.abspath('.'))
 """
 
 import os
+from os.path import expanduser
 
 import pypandoc
 
 
 def setup(app):
-    print("hello")
     path = os.path.abspath(".") + "/source"
     for dir, subdir, files in os.walk(path):
         for file in files:
@@ -51,4 +53,5 @@ def convert_md_2_rst_process(filename_root):
     file_target.close()
 
 
-setup("/Users/alper/eBlocBroker/docs/convert")
+home = expanduser("~")
+setup(f"{home}/eBlocBroker/docs/convert")

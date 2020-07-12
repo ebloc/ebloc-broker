@@ -2,6 +2,12 @@
 
 # https://stackoverflow.com/questions/35800082/how-to-trap-err-when-using-set-e-in-bash
 
+num_changed_files=$(git diff HEAD  --name-only | wc -l)
+if [ "$num_changed_files" -eq 0 ]; then
+    echo no changed files to commit
+    exit
+fi
+
 RED="\033[1;31m"
 GREEN="\033[1;32m"
 NC="\033[0m" # No Color
@@ -22,6 +28,14 @@ function func(){
     if [[ $PWD =~ "eBlocBroker" ]]
     then
         SKIP=mypy pre-commit run --all-files
+
+	count=$(git diff --name-only $HOME/eBlocBroker/contract/contracts | wc -l)
+	if [ $count -gt 0 ]
+	   then
+	   cd $HOME/eBlocBroker/contract
+	   ./solium.sh
+	   cd $current_dir
+	fi
     fi
 
     set -eE  # same as: `set -o errexit -o errtrace`

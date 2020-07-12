@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import sys
+from typing import Any, Union
 
 from config import env, logging
-from lib import StorageID
+from lib import StorageID, job_state_code
 from utils import _colorize_traceback, ipfs_to_bytes32
 
 
@@ -19,11 +20,11 @@ def process_payment(
     dataTransferIn,
     dataTransferOut,
     core,
-    executionDuration,
+    executionDuration
 ):
     logging.info(
         f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {execution_time_min}"
-        f" {result_ipfs_hash} {cloud_storage_ids} {end_time} {dataTransferIn} {dataTransferOut} '{core}'"
+        f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {dataTransferIn} {dataTransferOut} '{core}'"
         f" '{executionDuration}'"
     )
 
@@ -32,6 +33,18 @@ def process_payment(
             logging.error("E: Result ipfs's length does not match with its original length. Please check your job_key")
             raise
 
+    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id)
+    if self.job_info["jobStateCode"] == job_state_code["COMPLETED"]:
+        logging.error("Job is completed and already get paid")
+        sys.exit(1)
+
+    breakpoint()
+
+    """
+    if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
+        logging.error("Job is completed and already get paid")
+        sys.exit(1)
+    """
     try:
         if result_ipfs_hash == b"" or not result_ipfs_hash:
             _result_ipfs_hash = ""
@@ -61,12 +74,11 @@ def process_payment(
 
 if __name__ == "__main__":
     from eblocbroker.Contract import Contract
-
     contract = Contract()
 
     if len(sys.argv) == 12:
         args = sys.argv[1:]
-        my_args = []
+        my_args = []  # type: Union[Any]
         for arg in args:
             if arg.startswith("[") and arg.endswith("]"):
                 arg = arg.replace("[", "").replace("]", "")
@@ -74,18 +86,23 @@ if __name__ == "__main__":
             else:
                 my_args.append(arg)
 
-        print(args)
         job_key = str(my_args[0])
         index = int(my_args[1])
         job_id = int(my_args[2])
         execution_time_min = int(my_args[3])
         result_ipfs_hash = str(my_args[4])
-        cloud_storage_id = int(my_args[5])
+        cloud_storage_id = my_args[5]
         end_time = int(my_args[6])
         dataTransferIn = float(my_args[7])
         dataTransferOut = float(my_args[8])
         core = my_args[9]
         executionDuration = my_args[10]
+
+        # convert all strings in a list to int of the following arguments
+        cloud_storage_id = list(map(int, cloud_storage_id))
+        core = list(map(int, core))
+        executionDuration = list(map(int, executionDuration))
+
     else:  # dummy call
         job_key = "cdd786fca7ab7aa0c55bc039c6c68137"
         index = 0

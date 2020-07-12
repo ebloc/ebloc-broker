@@ -252,7 +252,7 @@ class EudatClass(Storage):
                 self.dataTransferIn_to_download += int(info.attributes["{DAV:}getcontentlength"])
         log(f"Total size to download={self.dataTransferIn_to_download} bytes", "blue")
 
-    def run(self, _type) -> bool:
+    def run(self) -> bool:
         self.start_time = time.time()
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
@@ -261,6 +261,7 @@ class EudatClass(Storage):
             log(f"Log_path => {self.drivers_log_path}", "green")
             self._run()
             # self.thread_log_setup()
+            return True
         except Exception:
             _colorize_traceback(f"{self.job_key}_{self.index}")
             sys.exit(1)

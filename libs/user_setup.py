@@ -17,7 +17,7 @@ def remove_user(user_name, user_dir):
     sudo rm -rf $BASEDIR/$USERNAME
     sacctmgr remove user where user=$USERNAME --immediate
     """
-    run(["sudo", "userdel", user_name])
+    run(["sudo", "userdel", "--force", user_name])
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user_name}", "--immediate"]
     p, output, *_ = popen_communicate(cmd)
     if p.returncode != 0 and "Nothing deleted" not in output:
@@ -50,7 +50,7 @@ def set_folder_permission(path, user_name, slurm_user):
 
     # Inserting user into the eblocbroker group
     # cmd: sudo usermod -a -G eblocbroker ebdf86b0ad4765fda68158489cec9908
-    run(["sudo", "usermod", "-a", "-G", "eblocbroker", user_name])
+    run(["sudo", "usermod", "-L", "-a", "-G", "eblocbroker", user_name])
 
 
 def user_add(user_address, basedir, slurm_user):
@@ -61,18 +61,18 @@ def user_add(user_address, basedir, slurm_user):
     add_user_to_slurm(user_name)
 
     if username_check(user_name):
-        run(["sudo", "useradd", "-d", user_dir, "-m", user_name])
+        run(["sudo", "useradd", "-d", user_dir, "-m", user_name, "--shell", "/bin/bash"])
         log(f"{user_address} => {user_name}) is added as user", "yellow")
         try:
             set_folder_permission(user_dir, user_name, slurm_user)
             add_user_to_slurm(user_name)
             create_dir(f"{user_dir}/cache")
         except:
-            run(["sudo", "userdel", user_name])
+            run(["sudo", "userdel", "--force", user_name])
     else:
         if not os.path.isdir(user_dir):
-            log(f"{user_address} => {user_name} does not exist. Attempting to readd the user", "yellow")
-            run(["sudo", "userdel", user_name])
+            log(f"{user_address} => {user_name} does not exist. Attempting to read the user", "yellow")
+            run(["sudo", "userdel", "--force", user_name])
             run(["sudo", "useradd", "-d", user_dir, "-m", user_name])
             set_folder_permission(user_dir, user_name, slurm_user)
             log(f"{user_address} => {user_name} is created", "yellow")

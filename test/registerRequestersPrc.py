@@ -13,7 +13,6 @@ eBlocBroker, w3 = connect()
 
 email = "aalimog1@binghamton.edu"
 federationCloudID = "059ab6ba-4030-48bb-b81b-12115f531296"
-miniLockID = "jj2Fn8St9tzLeErBiXA6oiZatnDwJ2YrnLY3Uyn4msD8k"
 ipfsAddress = "/ip4/193.140.197.95/tcp/3002/ipfs/QmSdnexZEQGKuj31PqrRP7XNZ4wvKMZWasvhqDYc9Y5G3C"
 githubUsername = "eBloc"
 
@@ -21,7 +20,7 @@ accoutLength = 10
 for i in range(0, accoutLength):
     account_id = str(i)
     account = w3.eth.accounts[i]
-    tx = register_requester(account_id, email, federationCloudID, miniLockID, ipfsAddress, githubUsername)
+    tx = register_requester(account_id, email, federationCloudID, ipfsAddress, githubUsername)
     print(account + " | " + str(i) + " | " + tx)
 
 print("")

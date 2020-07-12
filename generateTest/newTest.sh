@@ -7,10 +7,6 @@ cd testIpfs
 ./cleanForNewTest.sh
 ./runDaemon.sh a
 
-cd ../testIpfsMiniLock
-./cleanForNewTest.sh
-./runDaemon.sh a
-
 cd ../testNasEudat
 ./cleanForNewTest.sh
 ./runDaemon.sh a
