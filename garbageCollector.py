@@ -19,7 +19,6 @@ def removeElement(data, elementToRemove):
         if elementToRemove in element:
             del data[elementToRemove]
 
-
 f = os.getenv("LOG_PATH") + "/" + "cachingRecord.json"
 print(f)
 

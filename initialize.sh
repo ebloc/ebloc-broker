@@ -6,7 +6,8 @@ rpcPort="8545" # Please change it if you have different RPC_PORT number.
 # Update repository with the latest update
 # git fetch --all && git reset --hard origin/master
 
-## Pre-installation:
+# Pre-installation
+# ----------------
 if [ $setup -eq 1 ]; then
     sudo groupadd eblocbroker
     # members eblocbroker

@@ -7,7 +7,7 @@ from utils import is_ipfs_on, popen_communicate, silent_remove
 
 
 def run():
-    """Runs IPFS daemon."""
+    """Runs IPFS daemon"""
     silent_remove(f"{env.HOME}/.ipfs/repo.lock")
     silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 

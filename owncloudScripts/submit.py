@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import pprint
 import sys
 import time
 
@@ -94,11 +95,11 @@ if __name__ == "__main__":
         tx_hash = submit(provider, account_id)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            breakpoint()
             logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+            pprint.pprint(vars(logs[0].args))
             try:
-                job_index = logs[0].args['index']
-                log(f"job_index={job_index}", "green")
+                log(f"Job's index={logs[0].args['index']}")
+                log("SUCCESS", "green")
             except IndexError:
                 print("Transaction is reverted")
     except Exception:

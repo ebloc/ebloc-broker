@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+import pprint
 import sys
-import traceback
 
 from config import env, logging  # noqa: F401
 from lib import get_tx_status
-from utils import _colorize_traceback
+from utils import _colorize_traceback, log
 
 
 def refund(self, provider, _from, job_key, index, job_id, cores, execution_durations):
@@ -57,11 +57,14 @@ if __name__ == "__main__":
         tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, execution_durations)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            logs = Ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
+            logs = Ebb.eBlocBroker.events.LogRefundRequest().processReceipt(receipt)
+            pprint.pprint(vars(logs[0].args))
             try:
-                logging.info(f"Job's index={logs[0].args['index']}")
+                logging.info(f"refunded_wei={logs[0].args['refundedWei']}")
+                log("SUCCESS", "green")
             except Exception:
                 logging.error("E: Transaction is reverted")
-    except:
-        logging.error(traceback.format_exc())
+    except Exception as e:
+        if type(e).__name__ != "QuietExit":
+            _colorize_traceback()
         sys.exit(1)
