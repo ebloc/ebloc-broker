@@ -7,14 +7,14 @@ from utils import _colorize_traceback, read_json
 class Contract:
     def __init__(self):
         from imports import connect
-
         self.eBlocBroker, self.w3 = connect()
 
     # Imported methods
+    # ----------------
     from eblocbroker.authenticate_orc_id import authenticate_orc_id
     from eblocbroker.get_provider_info import get_provider_info
     from eblocbroker.process_payment import process_payment
-    from eblocbroker.submit_job import submit_job, check_before_submit
+    from eblocbroker.submit_job import submit_job, check_before_submit, is_users_valid
     from eblocbroker.get_job_info import get_job_info, update_job_cores, get_job_source_code_hashes
     from eblocbroker.get_requester_info import get_requester_info
     from eblocbroker.log_job import run_log_cancel_refund, run_log_job
