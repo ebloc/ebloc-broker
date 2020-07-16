@@ -67,6 +67,10 @@ class COLOR:
     END = "\033[0m"
 
 
+def print_arrow(color="white"):
+    log("==> ", color, None, is_new_line=False)
+
+
 def extract_gzip(filename):
     run(["gunzip", "--force", filename])
 

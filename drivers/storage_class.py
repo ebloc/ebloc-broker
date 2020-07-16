@@ -25,6 +25,7 @@ from utils import (
     cd,
     create_dir,
     generate_md5sum,
+    print_arrow,
     read_json,
     write_to_file,
 )
@@ -104,11 +105,11 @@ class Storage(BaseClass):
 
     def check_already_cached(self, source_code_hash):
         if os.path.isfile(f"{self.private_dir}/{source_code_hash}.tar.gz"):
-            log("==> ", "blue", None, is_new_line=False)
+            print_arrow("blue")
             log(f"{source_code_hash} is already cached in {self.private_dir}")
             self.is_already_cached[source_code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{source_code_hash}.tar.gz"):
-            log("==> ", "blue", None, is_new_line=False)
+            print_arrow("blue")
             log(f"{source_code_hash} is already cached in {self.public_dir}")
             self.is_already_cached[source_code_hash] = True
 
@@ -124,7 +125,7 @@ class Storage(BaseClass):
                 self.cores,
                 self.execution_durations,
             )
-            log("==> ", "blue", None, is_new_line=False)
+            print_arrow("blue")
             log(f"refund() tx_hash={tx_hash}")
             return tx_hash
         except:
@@ -144,7 +145,7 @@ class Storage(BaseClass):
                 log(f"=> {name} is already cached under the public directory...", "blue")
             elif cache_type == CacheType.PRIVATE:
                 self.folder_path_to_download[name] = self.private_dir
-                log("==> ", "blue", None, is_new_line=False)
+                print_arrow("blue")
                 log(f"{name} is already cached under the private directory")
             return True
         return False

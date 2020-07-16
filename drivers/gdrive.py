@@ -2,9 +2,10 @@
 
 import os
 import subprocess
+import time
 
 import libs.gdrive as gdrive
-from config import env, logging, setup_logger
+from config import env, logging
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
 from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time, silent_remove, untar
@@ -286,14 +287,11 @@ class GdriveClass(Storage):
             return False
 
     def run(self) -> bool:
-        setup_logger(self.drivers_log_path)
-        # self.thread_log_setup()
+        self.start_time = time.time()
+        if env.IS_THREADING_ENABLED:
+            self.thread_log_setup()
 
-        log(
-            f"[{get_time()}] New job has been received through Google Drive ",
-            "---------------------------------------------------------",
-            "cyan",
-        )
+        log(f"[{get_time()}] Job's source code has been sent through Google Drive", "cyan")
 
         if not os.path.isdir(self.results_folder):
             self.get_data(self.job_key, 0, True)

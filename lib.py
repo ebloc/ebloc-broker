@@ -26,6 +26,7 @@ from utils import (
     is_ipfs_on,
     is_process_on,
     log,
+    print_arrow,
     print_trace,
     printc,
     question_yes_no,
@@ -130,10 +131,11 @@ def get_tx_status(tx_hash) -> str:
     logging.info("Transaction receipt is mined:")
     # logging.info(pformat(receipt))
     pprint.pprint(dict(receipt), depth=1)
-    log("")
-    for idx, _log in enumerate(receipt["logs"]):
-        log(f"log {idx}", "blue")
-        pprint.pprint(_log.__dict__)
+    # log("")
+    # for idx, _log in enumerate(receipt["logs"]):
+    #     # All logs fried under the tx
+    #     log(f"log {idx}", "blue")
+    #     pprint.pprint(_log.__dict__)
 
     log("\n#> Was transaction successful? ", color="white", filename=None, is_new_line=False)
     if receipt["status"] == 1:
@@ -364,7 +366,7 @@ def run_storage_thread(storage_class):
 
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
-    log("==> ", "blue", None, is_new_line=False)
+    print_arrow("blue")
     log(f"thread_log_path={storage_class.drivers_log_path}")
     storage_thread.start()
     try:
