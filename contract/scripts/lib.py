@@ -2,7 +2,9 @@
 
 import sys
 from os import path, popen
+from typing import List
 
+import config
 from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, log
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
@@ -24,11 +26,12 @@ class DataStorage:
 
 
 class Job:
+    """Object for the job that will be submitted"""
     def __init__(self, **kwargs) -> None:
-        self.execution_durations = []
-        self.folders_to_share = []  # path of folder to share
-        self.source_code_hashes = []
-        self.storage_hours = []
+        self.execution_durations: List[int] = []
+        self.folders_to_share: List[str] = []  # path of folder to share
+        self.source_code_hashes: List[bytes] = []
+        self.storage_hours: List[int] = []
         self.execution_durations = []
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -66,8 +69,12 @@ class JobPrices:
 
         if is_brownie:
             provider_info = Ebb.getProviderInfo(job.provider, 0)
-        else:
-            provider_info = Ebb.functions.getProviderInfo(job.provider, 0).call()
+        else:  # real chain
+            if Ebb.functions.doesProviderExist(job.provider).call():
+                provider_info = Ebb.functions.getProviderInfo(job.provider, 0).call()
+            else:
+                log(f"E: {job.provider} does not exist as a provider", "red")
+                raise config.QuietExit
 
         provider_price_info = provider_info[1]
         self.job = job
@@ -165,7 +172,6 @@ def cost(provider, requester, job, Ebb, w3, is_brownie=False):
     jp.set_computational_cost()
     jp.set_storage_cost()
     jp.set_job_price()
-
     return jp.job_price, jp.cost
 
 

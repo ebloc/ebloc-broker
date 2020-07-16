@@ -7,7 +7,7 @@ from lib import StorageID
 from utils import _colorize_traceback, bytes32_to_ipfs, log
 
 
-def check_before_submit(self, provider, _from, provider_info, key, job):
+def is_users_valid(self, provider, _from):
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
         logging.error(f"\nE: Requested provider's Ethereum address {provider} does not registered.")
         raise
@@ -21,23 +21,9 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         logging.error(f"\nE: Requester's orcid: {orcid.decode('UTF')} is not verified")
         raise
 
-    """
-    if StorageID_list.IPFS == storage_ids or StorageID_list.IPFS_GPG == storage_ids:
-       is_ipfs_running()
-       strVal = my_filter.get_all_entries()[0].args['ipfsAddress']nnn
-       print('Trying to connect into ' + strVal)
-       output = os.popen('ipfs swarm connect ' + strVal).read()
-    """
 
-    """
-    print(source_code_hashes[0].encode('utf-8'))
-    for i in range(len(source_code_hashes)):
-        source_code_hashes[i] = source_code_hashes[i]
-        if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
-            return False, 'source_code_hashes should be 32 characters.'
-    """
-    # if len(jobDescription) >= 128:
-    #    return 'Length of jobDescription is greater than 128, please provide lesser.'
+def check_before_submit(self, provider, _from, provider_info, key, job):
+    self.is_users_valid(provider, _from)
 
     main_storage_id = job.storage_ids[0]
     if not job.source_code_hashes:
@@ -85,6 +71,24 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             logging.error(f"\nE: cachType ({cache_type}) provided greater than 1. Please provide smaller value")
             raise
 
+    """
+    if StorageID_list.IPFS == storage_ids or StorageID_list.IPFS_GPG == storage_ids:
+       is_ipfs_running()
+       strVal = my_filter.get_all_entries()[0].args['ipfsAddress']nnn
+       print('Trying to connect into ' + strVal)
+       output = os.popen('ipfs swarm connect ' + strVal).read()
+    """
+
+    """
+    print(source_code_hashes[0].encode('utf-8'))
+    for i in range(len(source_code_hashes)):
+        source_code_hashes[i] = source_code_hashes[i]
+        if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
+            return False, 'source_code_hashes should be 32 characters.'
+    """
+    # if len(jobDescription) >= 128:
+    #    return 'Length of jobDescription is greater than 128, please provide lesser.'
+
 
 def submit_job(self, provider, key, account_id, job_price, job):
     provider = self.w3.toChecksumAddress(provider)
@@ -115,14 +119,13 @@ def submit_job(self, provider, key, account_id, job_price, job):
     ]
     try:
         gas_limit = 4500000
-
         log("source_code_hashes:")
         source_code_hashes_l = []
         for source_code_hash in job.source_code_hashes:
             source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
+
         log(source_code_hashes_l)
         log("")
-
         tx = self.eBlocBroker.functions.submitJob(
             key, job.dataTransferIns, args, job.storage_hours, job.source_code_hashes
         ).transact({"from": _from, "value": job_price, "gas": gas_limit})
