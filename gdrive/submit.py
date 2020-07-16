@@ -2,9 +2,11 @@
 
 import json
 import os
+import pprint
 import shutil
 import sys
 
+import config
 import eblocbroker.Contract as Contract
 import libs.gdrive as gdrive
 import libs.git as git
@@ -64,13 +66,18 @@ def share_folder(folder_to_share, provider, job_key_flag=False):
     return key, tar_hash
 
 
-def gdrive_submit_job(provider):
+def gdrive_submit_job(provider, _from):
     job = Job()
+    try:
+        provider_info = Ebb.get_provider_info(provider)
+        print(f"Provider's available_core_num={provider_info['available_core_num']}")
+        print(f"Provider's price_core_min={provider_info['price_core_min']}")
+    except:
+        raise config.QuietExit
 
+    Ebb.is_users_valid(provider, _from)
     provider = Ebb.w3.toChecksumAddress(provider)
     provider_to_share = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"  # '
-    # provider_info = get_provider_info(provider)
-    account_id = 1
 
     job_keys = {}
     foldername_tar_hash = {}
@@ -134,30 +141,34 @@ def gdrive_submit_job(provider):
     logging.info(f"job_key={job_key}")
 
     requester = Ebb.w3.toChecksumAddress(Ebb.w3.eth.accounts[account_id])
-    job_price, _cost = cost(provider, requester, job, Ebb.eBlocBroker, Ebb.w3)
-    logging.info("\nSubmitting the job")
     try:
+        job_price, _cost = cost(provider, requester, job, Ebb.eBlocBroker, Ebb.w3)
+        logging.info("\nSubmitting the job")
         return Ebb.submit_job(provider, job_key, account_id, job_price, job)
-    except:
-        _colorize_traceback()
-        raise
+    except Exception as e:
+        raise e  # re-raises the error
 
 
 if __name__ == "__main__":
-    provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
-    # provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
+    account_id = 1
+    _from = Ebb.w3.toChecksumAddress(Ebb.w3.eth.accounts[account_id])
+
+    # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+    provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
     try:
-        tx_hash = gdrive_submit_job(provider)
+        tx_hash = gdrive_submit_job(provider, _from)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             logs = Ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
+            pprint.pprint(vars(logs[0].args))
             try:
                 logging.info(f"Job's index={logs[0].args['index']}")
                 log("SUCCESS", "green")
             except IndexError:
                 logging.info("Transaction is reverted.")
-    except:
-        _colorize_traceback()
+    except Exception as e:
+        if type(e).__name__ != "QuietExit":
+            _colorize_traceback()
         sys.exit(1)
 
 """

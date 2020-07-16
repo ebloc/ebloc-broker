@@ -40,6 +40,7 @@ from utils import (
     eth_address_to_md5,
     is_dir_empty,
     log,
+    print_arrow,
     read_file,
     read_json,
     remove_empty_files_and_folders,
@@ -52,7 +53,6 @@ mc = MongoClient()
 
 class Common:
     """Prevents "Class" has no attribute "method" mypy warnings."""
-
     def __init__(self) -> None:
         self.results_folder = ""
         self.results_folder_prev = ""
@@ -60,7 +60,6 @@ class Common:
         self.requester_gpg_fingerprint = ""
         self.patch_name = ""
         self.data_transfer_out = 0.0
-        self.encoded_share_tokens = {}  # type: Dict[str, str]
 
 
 class IpfsGPG(Common):
@@ -88,6 +87,9 @@ class Ipfs(Common):
 
 
 class Eudat(Common):
+    def __init__(self) -> None:
+        self.encoded_share_tokens = {}  # type: Dict[str, str]
+
     def initialize(self):
         try:
             self.get_shared_tokens()
@@ -165,6 +167,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.result_ipfs_hash = ""
         self.requester_gpg_fingerprint = ""
         self.modified_date = None
+        self.encoded_share_tokens = {}  # type: Dict[str, str]
 
         # https://stackoverflow.com/a/5971326/2402577 , https://stackoverflow.com/a/4453495/2402577
         # my_env = os.environ.copy();
@@ -228,6 +231,35 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"requester_id_address: {requester_id_address}")
         log(f"received: {self.job_info['received']}")
 
+    def get_shared_tokens(self):
+        try:
+            share_ids = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
+        except:
+            pass
+
+        for source_code_hash in self.source_code_hashes_to_process:
+            try:
+                share_token = share_ids[source_code_hash]["share_token"]
+                self.share_tokens[source_code_hash] = share_token
+                self.encoded_share_tokens[source_code_hash] = base64.b64encode(
+                    (f"{share_token}:").encode("utf-8")
+                ).decode("utf-8")
+            except KeyError:
+                try:
+                    share_token = mongodb.find_key(mc["eBlocBroker"]["shareID"], self.job_key)
+                    self.share_tokens[source_code_hash] = share_token
+                    self.encoded_share_tokens[source_code_hash] = base64.b64encode(
+                        (f"{share_token}:").encode("utf-8")
+                    ).decode("utf-8")
+                except:
+                    logging.error(f"E: share_id cannot detected from key: {self.job_key}")
+                    raise
+
+        for key in share_ids:
+            value = share_ids[key]
+            encoded_value = self.encoded_share_tokens[key]
+            logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
+
     def get_cloud_storage_class(self, _id):
         """Returns cloud storage used for the id of the data"""
         if self.cloud_storage_ids[_id] == StorageID.IPFS:
@@ -287,35 +319,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         with open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a") as f:
             f.write(f"processPayment {self.job_key} {self.index} {tx_hash}")
 
-    def get_shared_tokens(self):
-        try:
-            share_ids = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
-        except:
-            pass
-
-        for source_code_hash in self.source_code_hashes_to_process:
-            try:
-                share_token = share_ids[source_code_hash]["share_token"]
-                self.share_tokens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode(
-                    (f"{share_token}:").encode("utf-8")
-                ).decode("utf-8")
-            except KeyError:
-                try:
-                    share_token = mongodb.find_key(mc["eBlocBroker"]["shareID"], self.job_key)
-                    self.share_tokens[source_code_hash] = share_token
-                    self.encoded_share_tokens[source_code_hash] = base64.b64encode(
-                        (f"{share_token}:").encode("utf-8")
-                    ).decode("utf-8")
-                except:
-                    logging.error(f"E: share_id cannot detected from key: {self.job_key}")
-                    raise
-
-        for key in share_ids:
-            value = share_ids[key]
-            encoded_value = self.encoded_share_tokens[key]
-            logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
-
     def remove_source_code(self):
         """Client's initial downloaded files are removed"""
         timestamp_file = f"{self.results_folder_prev}/timestamp.txt"
@@ -333,11 +336,11 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def git_diff_patch_and_upload(self, source, name, storage_class, is_job_key):
         if is_job_key:
             logging.info(f"patch_base={self.patch_folder}")
-            log("==> ", "blue", None, is_new_line=False)
-            logging.info(f"Patch for source code {name}")
+            print_arrow("blue")
+            log(f"Patch for source code {name}", "blue")
         else:
-            log("==> ", "blue", None, is_new_line=False)
-            logging.info(f"Patch for data file {name}")
+            print_arrow("blue")
+            log(f"Patch for data file {name}", "blue")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
@@ -451,20 +454,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         logging.info(f"finalized_elapsed_raw_time={self.elapsed_raw_time}")
 
         _job_info = pprint.pformat(self.job_info)
-        logging.info(f"job_info={_job_info}")
-        self.get_cloud_storage_class(0).initialize(self)
+        log(f"job_info:\n{_job_info}", "green")
         try:
+            self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
         except:
             _colorize_traceback()
             sys.exit(1)
 
         data_transfer_sum = self.dataTransferIn + self.data_transfer_out
-        log(f"dataTransferIn={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
+        log(f"data_transfer_in={self.dataTransferIn} MB => rounded={int(self.dataTransferIn)} MB")
         log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
-        # self.process_payment_tx()
-        # log("All done!", "green")
+        self.process_payment_tx()
+        log("All done!", "green")
         # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
 
 

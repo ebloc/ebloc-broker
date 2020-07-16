@@ -8,7 +8,6 @@ from utils import _colorize_traceback
 
 def get_provider_info(self, _provider):
     provider = self.w3.toChecksumAddress(_provider)
-
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
         logging.error(
             f"\nE: Provider {provider} is not registered."

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import pprint
 import sys
 
 import eblocbroker.Contract as Contract
@@ -130,9 +131,11 @@ if __name__ == "__main__":
     try:
         receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
         if receipt["status"] == 1:
+            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+            pprint.pprint(vars(logs[0].args))
             try:
-                logs = eBlocBroker.events.LogJob().processReceipt(receipt)
-                print(f"job_index={logs[0].args['index']}")
+                log(f"job_index={logs[0].args['index']}")
+                log("SUCCESS", "green")
                 for target in targets:
                     silent_remove(target)
             except IndexError:

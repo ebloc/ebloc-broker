@@ -310,7 +310,8 @@ def run_driver():
                 logging.error("E: Job owner is not registered")
                 continue
 
-            if mongodb.is_received(str(requester_id), job_key, index): # Preventing to download it again
+            if mongodb.is_received(str(requester_id), job_key, index):
+                # Preventing to download or submit again
                 log("mongodb> Job is already received", "green")
                 continue
 
