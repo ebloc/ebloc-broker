@@ -2,6 +2,8 @@
 
 import pytest
 
+YEAR = 365 * 86400
+
 
 @pytest.fixture(scope="function", autouse=True)
 def isolate(fn_isolation):

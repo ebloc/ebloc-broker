@@ -23,14 +23,13 @@ def start_call(job_key, index, slurm_job_id):
     start_time = subprocess.check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
 
     env.log_filename = f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt"
-
     f = open(env.log_filename, "a")
     f.write(f"\n{env.EBLOCPATH}/eblocbroker/set_job_status_running.py {job_key} {index} {job_id} {start_time}\n")
-    time.sleep(0.25)
+    time.sleep(.25)
 
     for attempt in range(2):
         if attempt > 0:
-            time.sleep(15)
+            time.sleep(env.BLOCK_DURATION)
         try:
             tx_hash = Ebb.set_job_status_running(job_key, index, job_id, start_time)
             break

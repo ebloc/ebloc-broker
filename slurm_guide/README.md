@@ -16,18 +16,18 @@ sudo apt-get install mysql-client libmysqlclient-dev
 sudo apt-get install default-libmysqlclient-dev
 sudo apt-get install libmysqlclient
 sudo apt-get install libmysqld-dev
-'''
+```
 
-'''
+```
 git clone https://github.com/SchedMD/slurm
 cd slurm
 ./configure --enable-debug --enable-multiple-slurmd | ./configure --enable-debug --enable-front-end
 sudo make
 sudo make install
-```
 
 sudo cp slurm.conf /usr/local/etc/slurm.conf
 sudo cp slurmdbd.conf /usr/local/etc/slurmdbd.conf
+```
 
 6. Hostname setup:
 
@@ -52,7 +52,7 @@ grant all privileges on slurm_acct_db.* to 'slurm'@'localhost';
 flush privileges;
 ```
 
-8.
+8. Cont
 
 ```
 mkdir /var/log/slurm

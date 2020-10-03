@@ -12,7 +12,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         account = str(sys.argv[1])
     else:
-        print("Please provide an Ethereum account as an argument")
+        print("Please provide an Ethereum account as an argument.")
         sys.exit(1)
 
     try:

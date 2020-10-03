@@ -62,8 +62,8 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             ipfsHash = os.popen("ipfs add ../ipfs.tar.gz.minilock").read()
             ipfsHash = ipfsHash.split(" ")[1]
             print("ipfsHash=" + ipfsHash)
-            if flag == 1:
-                hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
+            # if flag == 1:
+            #     hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
 
             flag = 1
             startTimeTemp = int(lineIn[0])

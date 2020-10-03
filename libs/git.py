@@ -80,7 +80,7 @@ def diff_patch(path, source_code_hash, index, target_path):
         except:
             return False
 
-    time.sleep(0.1)
+    time.sleep(.25)
     if not getsize(patch_file):
         logging.info("Created patch file is empty, nothing to upload.")
         is_file_empty = True

@@ -4,8 +4,8 @@ import sys
 from os import path, popen
 from typing import List
 
-import config
-from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, log
+from config import QuietExit
+from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, log
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
@@ -51,6 +51,32 @@ class Job:
             _colorize_traceback()
             raise
 
+    def check_account_status(self, account_id):
+        import eblocbroker.Contract as Contract
+        _Ebb = Contract.eblocbroker
+        try:
+            _from = _Ebb.account_id_to_address(account_id)
+            if is_geth_account_locked(_from):
+                log(f"E: Account({_from}) is locked", "red")
+                raise QuietExit
+
+            if not _Ebb.eBlocBroker.functions.doesRequesterExist(_from).call():
+                log(f"E: Requester's Ethereum address {_from} is not registered", "red")
+                sys.exit(1)
+
+            *_, orcid = _Ebb.eBlocBroker.functions.getRequesterInfo(_from).call()
+            if not _Ebb.eBlocBroker.functions.isOrcIDVerified(_from).call():
+                if orcid != empty_bytes32:
+                    log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified", "red")
+                else:
+                    log(f"E: Requester({_from})'s orcid is not registered", "red")
+                raise QuietExit
+        except QuietExit:
+            sys.exit(1)
+        except:
+            _colorize_traceback()
+            sys.exit(1)
+
 
 class JobPrices:
     def __init__(self, Ebb, w3, job, msg_sender, is_brownie=False):
@@ -74,7 +100,7 @@ class JobPrices:
                 provider_info = Ebb.functions.getProviderInfo(job.provider, 0).call()
             else:
                 log(f"E: {job.provider} does not exist as a provider", "red")
-                raise config.QuietExit
+                raise QuietExit
 
         provider_price_info = provider_info[1]
         self.job = job
@@ -93,7 +119,6 @@ class JobPrices:
         self.storage_cost = 0
         self.cache_cost = 0
         data_transfer_in_sum = 0
-        block_number = self.w3.eth.blockNumber
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
             ds = DataStorage(self.Ebb, self.w3, self.job.provider, source_code_hash, self.is_brownie)
             if self.is_brownie:
@@ -110,12 +135,12 @@ class JobPrices:
                 received_storage_deposit = 0
 
             print(f"is_private:{ds.is_private}")
-            # print(received_block + storage_duration >= block_number)
+            # print(received_block + storage_duration >= self.w3.eth.blockNumber)
             # if received_storage_deposit > 0 or
             if (
                 received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber
             ) or (
-                ds.received_block + ds.storage_duration >= block_number and not ds.is_private and ds.is_verified_used
+                ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber and not ds.is_private and ds.is_verified_used
             ):
                 print(f"For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
             else:

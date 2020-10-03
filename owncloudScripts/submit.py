@@ -4,6 +4,8 @@ import pprint
 import sys
 import time
 
+from web3.logs import DISCARD
+
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.git as git
@@ -52,7 +54,7 @@ def submit(provider, account_id):
         if not eudat.share_single_folder(folder_hash, provider_info["f_id"]):
             sys.exit(1)
 
-        time.sleep(0.1)
+        time.sleep(.25)
 
     printc("\nSubmitting the job")
     job.execution_durations = [5]
@@ -95,7 +97,7 @@ if __name__ == "__main__":
         tx_hash = submit(provider, account_id)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
+            logs = eBlocBroker.events.LogJob().processReceipt(receipt, errors=DISCARD)
             pprint.pprint(vars(logs[0].args))
             try:
                 log(f"Job's index={logs[0].args['index']}")

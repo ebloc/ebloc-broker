@@ -26,6 +26,7 @@ from utils import (
     is_ipfs_on,
     is_process_on,
     log,
+    popen_communicate,
     print_arrow,
     print_trace,
     printc,
@@ -82,10 +83,11 @@ job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 inv_job_state_code = {value: key for key, value in job_state_code.items()}
 
 
-def session_start_msg(slurm_user, block_number, columns=104):
+def session_start_msg(slurm_user, block_number, pid, columns=104):
     _columns = int(int(columns) / 2 - 12)
     date_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     log(date_now + " " + "=" * (_columns - 16) + " provider session starts " + "=" * (_columns - 5), "cyan")
+    log(f"This Driver process has the PID {pid}", c="blue")
     printc(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", "blue")
 
 
@@ -100,20 +102,19 @@ def run_whisper_state_receiver():
     """Runs driverReceiver daemon on the background."""
     if not os.path.isfile(env.WHISPER_INFO):
         # first time running
-        logging.warning(f"Run: {env.EBLOCPATH}/whisper/initialize.py")
-        terminate()
+        logging.warning(f"Please run:\n{env.EBLOCPATH}/whisper/initialize.py")
+        terminate(msg="", is_traceback=False)
     else:
         try:
             data = read_json(env.WHISPER_INFO)
-            kId = data["kId"]
+            key_id = data["key_id"]
         except:
             _colorize_traceback()
             terminate()
 
-        if not config.w3.geth.shh.hasKeyPair(kId):
-            logging.error("E: Whisper node's private key of a key pair did not match with the given ID")
+        if not config.w3.geth.shh.hasKeyPair(key_id):
             logging.warning("Please first run: python_scripts/whisper_initialize.py")
-            terminate()
+            terminate("E: Whisper node's private key of a key pair did not match with the given ID")
 
     if not is_process_on("python.*[d]riverReceiver", "driverReceiver"):
         # running driver_cancel.py on the background
@@ -127,22 +128,22 @@ def get_tx_status(tx_hash) -> str:
         return tx_hash
 
     log(f"tx_hash={tx_hash}")
-    receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
     logging.info("Transaction receipt is mined:")
+    pprint.pprint(dict(tx_receipt), depth=1)
     # logging.info(pformat(receipt))
-    pprint.pprint(dict(receipt), depth=1)
     # log("")
     # for idx, _log in enumerate(receipt["logs"]):
     #     # All logs fried under the tx
     #     log(f"log {idx}", "blue")
     #     pprint.pprint(_log.__dict__)
 
-    log("\n#> Was transaction successful? ", color="white", filename=None, is_new_line=False)
-    if receipt["status"] == 1:
+    log("\n#> Was transaction successful? ", c="white", filename=None, is_new_line=False)
+    if tx_receipt["status"] == 1:
         log("Transaction is deployed", "green")
     else:
         log("E: Transaction is reverted", "red")
-    return receipt
+    return tx_receipt
 
 
 def check_size_of_file_before_download(file_type, key=None):
@@ -157,22 +158,6 @@ def check_size_of_file_before_download(file_type, key=None):
     return True
 
 
-def _try(func):
-    """Calls given function inside try/except
-
-    Args:
-        f: yield function
-
-    Example called: _try(lambda: f())
-    Returns status and output of the function
-    """
-    try:
-        return func()
-    except Exception:
-        _colorize_traceback()
-        raise
-
-
 def calculate_folder_size(path) -> float:
     """Return the size of the given path in MB."""
     byte_size = 0
@@ -184,6 +169,7 @@ def calculate_folder_size(path) -> float:
 
 
 def subprocess_call(cmd, attempt=1, print_flag=True):
+    cmd = list(map(str, cmd))  # all items should be str
     for count in range(attempt):
         try:
             return subprocess.check_output(cmd).decode("utf-8").strip()
@@ -195,20 +181,22 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
                 raise SystemExit
 
             logging.info(f"try={count}")
-            time.sleep(0.1)
+            time.sleep(.25)
 
 
 def run_stdout_to_file(cmd, path) -> None:
-    with open(path, "w") as stdout:
-        try:
-            subprocess.Popen(cmd, stdout=stdout)
-            logging.info(f"Writing into path is completed => {path}")
-        except Exception:
-            print_trace(cmd)
-            raise SystemExit
+    p, output, error = popen_communicate(cmd, stdout_file=path)
+    if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
+        _cmd = " ".join(cmd)
+        log(f"\n{_cmd}", "red")
+        logging.error(f"E: scontrol error: {output}")
+        raise
+    else:
+        logging.info(f"\nWriting into path is completed => {path}")
 
 
 def run_command(cmd, my_env=None) -> Tuple[bool, str]:
+    cmd = list(map(str, cmd))  # all items should be str
     output = ""
     try:
         if my_env is None:
@@ -297,57 +285,6 @@ def check_linked_data(path_from, path_to, folders=None, force_continue=False):
         return
 
     question_yes_no("#> Would you like to continue with linked folder path in your run.sh? [Y/n]: ")
-
-
-# TODO: carry into utils
-def compress_folder(folder_to_share):
-    """Compress folder using tar
-    - Note that to get fully reproducible tarballs, you should also impose the sort order used by tar:
-
-    Helpful Links:
-    - https://unix.stackexchange.com/a/438330/198423  == (tar produces different files each time)
-    - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
-    """
-    base_name = os.path.basename(folder_to_share)
-    dir_path = os.path.dirname(folder_to_share)
-
-    with cd(dir_path):
-        """cmd:
-        find . -print0 | LC_ALL=C sort -z | \
-        PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
-                    --no-recursion --null -T - -zcvf $tar_hash.tar.gz
-        """
-        p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
-        p1.stdout.close()
-        p3 = subprocess.Popen(
-            [
-                "tar",
-                "-Ipigz",
-                "--mode=a+rwX",
-                "--owner=0",
-                "--group=0",
-                "--numeric-owner",
-                "--absolute-names",
-                "--no-recursion",
-                "--null",
-                "-T",
-                "-",
-                "-cvf",
-                f"{base_name}.tar.gz",
-            ],
-            stdin=p2.stdout,
-            stdout=subprocess.PIPE,
-            env={"PIGZ": "-n"},  # alternative: GZIP
-        )
-        p2.stdout.close()
-        p3.communicate()
-
-        tar_hash = generate_md5sum(f"{base_name}.tar.gz")
-        tar_file = f"{tar_hash}.tar.gz"
-        shutil.move(f"{base_name}.tar.gz", tar_file)
-        log(f"Created tar file={dir_path}/{tar_file}")
-    return tar_hash, f"{dir_path}/{tar_file}"
 
 
 def is_dir(path) -> bool:

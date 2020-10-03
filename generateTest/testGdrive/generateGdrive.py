@@ -6,7 +6,7 @@ import subprocess
 from os.path import expanduser
 
 from imports import generate_md5sum
-from lib import compress_folder
+from utils import compress_folder
 
 home = expanduser("~")
 path = os.getcwd()
@@ -71,7 +71,7 @@ with open(path + "/../nasa.txt") as test:
                     job_key = output.split(" ")[0]
                     print("job_key=" + job_key)
                 except Exception as e:
-                    # time.sleep(0.25)
+                    # time.sleep(.25)
                     print(e.output.decode("utf-8").strip())
                 else:
                     break
@@ -98,13 +98,13 @@ with open(path + "/../nasa.txt") as test:
                     )
                     print(output)
                 except Exception as e:
-                    # time.sleep(0.25)
+                    # time.sleep(.25)
                     print(e.output.decode("utf-8").strip())
                 else:
                     break
 
-            if flag == 1:
-                hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
+            # if flag == 1:
+            #     hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
 
             flag = 1
             startTimeTemp = int(lineIn[0])
