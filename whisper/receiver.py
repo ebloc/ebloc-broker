@@ -22,7 +22,7 @@ async def log_loop(filter_id, poll_interval):
         for event in w3.geth.shh.getMessages(filter_id):  # event_filter.get_new_entries():
             handle_event(event)  # TODO: add try catch
         await asyncio.sleep(poll_interval)
-        time.sleep(0.1)
+        time.sleep(.25)
 
 
 if __name__ == "__main__":

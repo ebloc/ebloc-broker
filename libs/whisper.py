@@ -28,6 +28,8 @@ def check_whisper():
             log("E: Whisper node's private key of a key pair did not match with the given ID", "red")
             raise
     except:
+        log("Please first run:")
+        log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py", "green")
         _colorize_traceback()
         raise
     return whisper_pub_key
@@ -83,4 +85,4 @@ async def log_loop(filter_id, poll_interval, is_return=False, public_key="", is_
 
         sleep_duration += poll_interval
         await asyncio.sleep(poll_interval)
-        time.sleep(0.1)
+        time.sleep(.25)

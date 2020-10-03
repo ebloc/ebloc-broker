@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import sys
+
+import ipfshttpclient
 
 import config
 from config import logging
 from lib import StorageID
-from utils import _colorize_traceback, bytes32_to_ipfs, log
+from utils import _colorize_traceback, bytes32_to_ipfs, is_ipfs_running, log
 
 
 def is_users_valid(self, provider, _from):
@@ -18,7 +21,10 @@ def is_users_valid(self, provider, _from):
         raise
 
     if not self.eBlocBroker.functions.isOrcIDVerified(_from).call():
-        logging.error(f"\nE: Requester's orcid: {orcid.decode('UTF')} is not verified")
+        if orcid:
+            log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified", "red")
+        else:
+            log("\nE: Requester({_from})'s orcid is not registered")
         raise
 
 
@@ -71,13 +77,23 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             logging.error(f"\nE: cachType ({cache_type}) provided greater than 1. Please provide smaller value")
             raise
 
-    """
-    if StorageID_list.IPFS == storage_ids or StorageID_list.IPFS_GPG == storage_ids:
-       is_ipfs_running()
-       strVal = my_filter.get_all_entries()[0].args['ipfsAddress']nnn
-       print('Trying to connect into ' + strVal)
-       output = os.popen('ipfs swarm connect ' + strVal).read()
-    """
+    if not is_ipfs_running():
+        sys.exit()
+
+    client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001/http')
+    for storage_id in job.storage_ids:
+        if storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
+            try:
+                print(f"trying to connect into {provider_info['ipfs_id']}")
+                output = client.swarm.connect(provider_info["ipfs_id"])
+                if ("connect" and "success") in str(output):
+                    log(str(output), "green")
+                    break
+            except:
+                sys.exit
+    else:
+        sys.exit()
+    return True
 
     """
     print(source_code_hashes[0].encode('utf-8'))

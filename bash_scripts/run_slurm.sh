@@ -1,9 +1,10 @@
 #!/bin/bash
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit
-fi
+# if [ "$EUID" -ne 0 ]
+#   then echo "Please run as root"
+#   exit
+# fi
+sudo echo ""
 
 sudo killall slurmctld slurmdbd slurmd > /dev/null 2>&1
 
@@ -18,4 +19,4 @@ sleep 1
 
 sudo slurmctld -c
 # sudo slurmctld -cDvvvvvv
-sinfo
+/usr/local/bin/sinfo

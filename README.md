@@ -15,7 +15,7 @@
 ## How to connect into Private Ethereum Blockchain (eBloc)
 
 - Connect into [eBlocPOA](https://github.com/ebloc/eBlocPOA)
-- Connect into [eBlocPOW](https://github.com/ebloc/eBlocPOW)
+<!-- - Connect into [eBlocPOW](https://github.com/ebloc/eBlocPOW) -->
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
 

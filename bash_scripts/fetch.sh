@@ -4,7 +4,7 @@
 git checkout master
 git reset --hard origin/master
 
-git fetch
+git fetch --all
 git checkout origin/master -- $HOME/eBlocBroker/contract/
 git checkout origin/master -- $HOME/eBlocBroker/eblocbroker/contract.json
 git checkout origin/master -- $HOME/eBlocBroker/eblocbroker/abi.json

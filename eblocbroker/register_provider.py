@@ -12,12 +12,12 @@ from utils import _colorize_traceback, log, read_json
 def register_provider(
     self, available_core_num, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block
 ):
-    if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisper_info.txt"):
+    if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisper_info.json"):
         logging.error(f"Please first run:\n{env.HOME}/eBlocBroker/whisper/initialize.py")
         raise
 
     try:
-        data = read_json(f"{env.HOME}/.eBlocBroker/whisper_info.txt")
+        data = read_json(f"{env.HOME}/.eBlocBroker/whisper_info.json")
     except:
         _colorize_traceback()
         raise
@@ -25,7 +25,6 @@ def register_provider(
     key_id = data["key_id"]
     whisper_pub_key = data["public_key"]
 
-    breakpoint()
     if not self.w3.geth.shh.hasKeyPair(key_id):
         logging.error("\nWhisper node's private key of a key pair did not match with the given ID. Please run:")
         log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py \n", "yellow")
@@ -35,7 +34,7 @@ def register_provider(
         log(
             "E: Provider {env.PROVIDER_ID} is already registered.\n"
             "Please call the updateProvider() function for an update.",
-            "red",
+            c="red",
         )
         raise
 
