@@ -4,8 +4,10 @@ import os
 import pprint
 import sys
 
+from web3.logs import DISCARD
+
 import eblocbroker.Contract as Contract
-from config import env, logging
+from config import QuietExit, env, logging
 from contract.scripts.lib import Job, cost
 from imports import connect
 from lib import check_linked_data, get_tx_status, run
@@ -24,7 +26,6 @@ from utils import (
 )
 
 if __name__ == "__main__":
-    printc("Attempt to submit a job.", "blue")
     eBlocBroker, w3 = connect()
     Ebb = Contract.eblocbroker
     job = Job()
@@ -36,20 +37,11 @@ if __name__ == "__main__":
     account_id = 1
     provider = w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")  # netlab
     try:
-        _from = Ebb.account_id_to_address(account_id)
-    except:
-        _colorize_traceback()
-        sys.exit(1)
+        job.check_account_status(account_id)
+    except Exception as e:
+        raise e
 
-    if not Ebb.eBlocBroker.functions.doesRequesterExist(_from).call():
-        log(f"E: Requester's Ethereum address {_from} is not registered", "red")
-        sys.exit(1)
-
-    *_, orcid = Ebb.eBlocBroker.functions.getRequesterInfo(_from).call()
-    if not Ebb.eBlocBroker.functions.isOrcIDVerified(_from).call():
-        log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified", "red")
-        sys.exit(1)
-
+    printc("Attempt to submit a job.", "blue")
     # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
@@ -129,17 +121,19 @@ if __name__ == "__main__":
     requester = Ebb.account_id_to_address(account_id)
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
-        receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
-        if receipt["status"] == 1:
-            logs = eBlocBroker.events.LogJob().processReceipt(receipt)
-            pprint.pprint(vars(logs[0].args))
+        tx_receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
+        if tx_receipt["status"] == 1:
+            processed_logs = eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+            pprint.pprint(vars(processed_logs[0].args))
             try:
-                log(f"job_index={logs[0].args['index']}")
+                log(f"job_index={processed_logs[0].args['index']}")
                 log("SUCCESS", "green")
                 for target in targets:
                     silent_remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted.")
+    except QuietExit:
+        sys.exit(1)
     except:
         _colorize_traceback()
         sys.exit(1)

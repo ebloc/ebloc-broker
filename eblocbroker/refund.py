@@ -2,6 +2,9 @@
 
 import pprint
 import sys
+from typing import List
+
+from web3.logs import DISCARD
 
 from config import env, logging  # noqa: F401
 from lib import get_tx_status
@@ -42,25 +45,25 @@ if __name__ == "__main__":
         job_key = str(sys.argv[3])
         index = int(sys.argv[4])
         job_id = int(sys.argv[5])
-        cores = sys.argv[6]
-        execution_durations = sys.argv[7]
+        cores = sys.argv[6]  # type: List[str]
+        execution_durations = sys.argv[7]  # type: List[str]
     else:
         provider = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
         _from = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
         job_key = "QmXFVGtxUBLfR2cYPNQtUjRxMv93yzUdej6kYwV1fqUD3U"
         index = 0
         job_id = 0
-        cores = [1]  #
-        execution_durations = [5]  #
+        cores = ["1"]
+        execution_durations = ["5"]
 
     try:
         tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, execution_durations)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            logs = Ebb.eBlocBroker.events.LogRefundRequest().processReceipt(receipt)
-            pprint.pprint(vars(logs[0].args))
+            processed_logs = Ebb.eBlocBroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
+            pprint.pprint(vars(processed_logs[0].args))
             try:
-                logging.info(f"refunded_wei={logs[0].args['refundedWei']}")
+                logging.info(f"refunded_wei={processed_logs[0].args['refundedWei']}")
                 log("SUCCESS", "green")
             except Exception:
                 logging.error("E: Transaction is reverted")

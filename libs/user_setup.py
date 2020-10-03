@@ -38,15 +38,20 @@ def username_check(check):
         return True
 
 
+def give_RWE_access(user, path):
+    """Give Read/Write/Execute access to the given user on the give folder."""
+    run(["sudo", "setfacl", "-R", "-m", f"user:{user}:rwx", path])
+
+
 def set_folder_permission(path, user_name, slurm_user):
     # block others and people in the same group to do read/write/execute
     run(["sudo", "chmod", "700", path])
 
     # give Read/Write/Execute access to USER on the give folder
-    run(["sudo", "setfacl", "-R", "-m", f"user:{user_name}:rwx", path])
+    give_RWE_access(user_name, path)
 
     # give Read/Write/Execute access to root user on the give folder
-    run(["sudo", "setfacl", "-R", "-m", f"user:{slurm_user}:rwx", path])
+    give_RWE_access(slurm_user, path)
 
     # Inserting user into the eblocbroker group
     # cmd: sudo usermod -a -G eblocbroker ebdf86b0ad4765fda68158489cec9908

@@ -1,14 +1,13 @@
 import os
 import sys
 
-from lib import run
-from libs.ipfs import get_parent_hash
+import libs.ipfs as ipfs
 
 
 def add_to_ipfs(results_folder):
     try:
-        cmd = ["ipfs", "add", "-r", results_folder]  # uploaded as folder
-        result_ipfs_hash = get_parent_hash(run(cmd))
+        result_ipfs_hash = ipfs.add(results_folder)
+        print(result_ipfs_hash)
     except Exception:
         sys.exit()
 
@@ -21,5 +20,5 @@ def add_to_ipfs(results_folder):
     # shutil.move(results_folder, filepath + '/' + resultIpfsHash)
 
 
-results_folder = "/home/netlab/eBlocBroker/DAG"
+results_folder = "/home/alper/DAG"
 add_to_ipfs(results_folder)

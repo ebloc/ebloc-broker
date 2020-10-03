@@ -4,6 +4,7 @@ import sys
 
 import ipfshttpclient
 
+from config import QuietExit
 from lib import get_tx_status
 from libs.whisper import check_whisper
 from utils import _colorize_traceback, log
@@ -12,10 +13,11 @@ from utils import _colorize_traceback, log
 def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerprint, ipfs_address):
     whisper_pub_key = check_whisper()
     account = self.w3.eth.accounts[int(account_id)]  # requester's Ethereum Address
+    log(f"==> registering {account} as requester", c="yellow", is_bold=False)
 
     if self.does_requester_exist(account):
-        log(f"E: Requester {account} is already registered.", "red")
-        raise
+        log(f"E: Requester {account} is already registered.", "blue")
+        raise QuietExit
 
     if len(federation_cloud_id) >= 128 and len(email) >= 128:
         log("E: federation_cloud_id or email is more than 128")
@@ -36,10 +38,9 @@ if __name__ == "__main__":
 
     Ebb = Contract.eblocbroker
     try:
-        alper = 100
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except:
-        log("E: Run IPFS daemon", "red")
+        log("E: Run IPFS daemon to detect your ipfs-id", "red")
         exit(1)
 
     if len(sys.argv) == 6:
@@ -58,6 +59,7 @@ if __name__ == "__main__":
     try:
         tx_hash = Ebb.register_requester(account, email, federation_cloud_id, gpg_fingerprint, ipfs_address)
         receipt = get_tx_status(tx_hash)
-    except:
-        _colorize_traceback()
+    except Exception as e:
+        if type(e).__name__ != "QuietExit":
+            _colorize_traceback()
         sys.exit(1)

@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
+import pprint
 import sys
+
+from web3.logs import DISCARD
 
 from imports import connect
 
 eBlocBroker, w3 = connect()
-
-
-def processLog(log):
-    print(log)
-    print("-----------")
-    print(log[0].args["index"])
 
 
 if __name__ == "__main__":
@@ -21,11 +18,13 @@ if __name__ == "__main__":
         tx_hash = "0xe7f0bdc249458d36105120cf1a0fa5036a9368c5fd13aa37448dae5993d92a33"
         event = "LogReceipt"
 
-    receipt = w3.eth.getTransactionReceipt(tx_hash)
+    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     if event == "LogJob":
-        logs = eBlocBroker.events.LogJob().processReceipt(receipt)
-        processLog(logs)
+        processed_logs = eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+        pprint.pprint(vars(processed_logs[0].args))
+        print("-----------")
 
     if event == "LogReceipt":
-        logs = eBlocBroker.events.LogReceipt().processReceipt(receipt)
-        processLog(logs)
+        processed_logs = eBlocBroker.events.LogReceipt().processReceipt(tx_receipt, errors=DISCARD)
+        pprint.pprint(vars(processed_logs[0].args))
+        print("-----------")

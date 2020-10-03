@@ -17,7 +17,7 @@ import libs.git as git
 import libs.ipfs as ipfs
 import libs.mongodb as mongodb
 import libs.slurm as slurm
-from config import env, logging, setup_logger
+from config import QuietExit, env, logging, setup_logger
 from imports import connect
 from lib import (
     calculate_folder_size,
@@ -169,7 +169,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
 
-        # https://stackoverflow.com/a/5971326/2402577 , https://stackoverflow.com/a/4453495/2402577
+        # [https://stackoverflow.com/a/4453495/2402577, https://stackoverflow.com/a/5971326/2402577]
         # my_env = os.environ.copy();
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"
         # print(my_env)
@@ -178,7 +178,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         # logging.info(f"=> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id
-
         log(f"~/eBlocBroker/end_code.py {args}", "blue")
         log(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -186,7 +185,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             sys.exit(1)
 
         try:
-
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_info(
                     env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
@@ -295,7 +293,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
     def process_payment_tx(self):
         try:
-            end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
             tx_hash = eblocbroker_function_call(
                 lambda: Ebb.process_payment(
                     self.job_key,
@@ -304,7 +301,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.elapsed_raw_time,
                     self.result_ipfs_hash,
                     self.cloud_storage_ids,
-                    end_time_stamp,
+                    self.end_time_stamp,
                     self.dataTransferIn,
                     self.data_transfer_out,
                     self.job_info["core"],
@@ -314,6 +311,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             )
             logging.info(tx_hash)
         except:
+            _colorize_traceback()
             sys.exit(1)
 
         with open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a") as f:
@@ -392,16 +390,16 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             logging.error("E: modified_date.txt file couldn't be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpgFingerprint"]
-        logging.info("job_owner's info: --------------------------------------------")
-        logging.info("{0: <12}".format("email:") + self.requester_info["email"])
-        logging.info("{0: <12}".format("gpgFingerprint:") + self.requester_gpg_fingerprint)
-        logging.info("{0: <12}".format("ipfsID:") + self.requester_info["ipfsID"])
-        logging.info("{0: <12}".format("fID:") + self.requester_info["fID"])
-        logging.info("-------------------------------------------------------------")
+        log("job_owner's info", "green")
+        log("================", "green")
+        log("{0: <16}".format("email:") + self.requester_info["email"], "green")
+        log("{0: <16}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
+        log("{0: <16}".format("ipfs_id:") + self.requester_info["ipfsID"], "green")
+        log("{0: <16}".format("f_id:") + self.requester_info["fID"], "green")
 
         if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
-            logging.error("Job is completed and already get paid")
-            sys.exit(1)
+            log("==> Job is already completed job and its money is received", "yellow")
+            raise QuietExit
 
         execution_duration = self.job_info["executionDuration"]
         logging.info(f"requested_execution_duration={execution_duration[self.job_id]} minutes")
@@ -413,8 +411,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
             if self.job_info["jobStateCode"] == job_state_code["COMPLETED"]:
                 # detects an error on the slurm side
-                logging.warning("Job is already completed job and its money is received")
-                sys.exit(1)
+                log("==> Job is already completed job and its money is received", "yellow")
+                raise QuietExit
 
             try:
                 self.job_info = eblocbroker_function_call(
@@ -445,8 +443,18 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         self.source_code_hashes = self.job_info["sourceCodeHash"]
         self.set_source_code_hashes_to_process()
-        cmd = ["scontrol", "show", "job", self.slurm_job_id]
-        run_stdout_to_file(cmd, f"{self.results_folder}/slurmJobInfo.out")
+
+        slurm_log_output_file = f"{self.results_folder}/slurmJobInfo.out"
+        try:
+            # in some cases scontrol cannot find the job_id
+            cmd = ["scontrol", "show", "job", self.slurm_job_id]
+            run_stdout_to_file(cmd, slurm_log_output_file)
+        except:
+            cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format",
+                   "jobname,Account,nnodes,ncpus,Elapsed,CPUTime,AllocCPUS,State,ExitCode,End"]
+            run_stdout_to_file(cmd, slurm_log_output_file)
+
+        self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_raw_time = slurm.get_elapsed_raw_time(self.slurm_job_id)
         if self.elapsed_raw_time > int(execution_duration[self.job_id]):
             self.elapsed_raw_time = execution_duration[self.job_id]
@@ -468,7 +476,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
         self.process_payment_tx()
         log("All done!", "green")
-        # TODO; garbage collector: Removed downloaded code from local since it is not needed anymore
+        # TODO; garbage collector: removed downloaded code from local since it is not needed anymore
 
 
 if __name__ == "__main__":
@@ -480,7 +488,13 @@ if __name__ == "__main__":
         "slurm_job_id": sys.argv[5],
     }
     cloud_storage = ENDCODE(**kwargs)
-    cloud_storage.run()
+    try:
+        cloud_storage.run()
+    except Exception as e:
+        if type(e).__name__ != "QuietExit":
+            _colorize_traceback()
+        sys.exit(1)
+
 
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
 # success, output = run(cmd)
@@ -500,7 +514,7 @@ if __name__ == "__main__":
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
 # success, output = run(cmd)
 # logging.info(output)
-# time.sleep(0.1)
+# time.sleep(.25)
 
 # self.remove_source_code()
 # cmd: tar -jcvf result-$providerID-$index.tar.gz *
