@@ -17,7 +17,7 @@ env.log_filename = env.WHISPER_LOG
 
 def receiver(filter_id, public_key):
     retreived_messages = w3.geth.shh.getMessages(filter_id)
-    log(f"whisper_id(public key)={public_key}", "blue")
+    log(f"==> whisper_id(public key):\n{public_key}", "blue")
 
     """
     log('FilterID: ' + filter_id)

@@ -15,8 +15,8 @@ sudo dpkg -i --force-overwrite /var/cache/apt/archives/condor_8.6.13-453497-ubun
 sudo apt -f install
 
 $ condor_version
-$CondorVersion: 8.6.13 Oct 30 2018 BuildID: 453497 $
-$CondorPlatform: x86_64_Ubuntu14 $
+$ CondorVersion: 8.6.13 Oct 30 2018 BuildID: 453497 $
+$ CondorPlatform: x86_64_Ubuntu14 $
 ```
 
 --------------
@@ -34,7 +34,7 @@ sudo mkdir -p /var/lib/condor/execute
 sudo chown -R condor: /var/lib/condor
 sudo chmod 1777 /var/lib/condor/spool/local_univ_execute
 sudo chmod 1777 /var/lib/condor/execute
-	
+
 mkdir -p /var/log/condor/
 sudo chown -R condor: /var/log/condor
 sudo chmod 1777 /var/log/condor
@@ -44,7 +44,7 @@ sudo service condor stop
 sudo killall condor
 sudo killall condor_procd
 
-sudo service condor start # Condor should run as a system service. 
+sudo service condor start # Condor should run as a system service.
 
 $ ps auxwwww | grep condor # You should see all processes run under condor.
 condor      7656  0.0  0.2  47508  4644 ?        Ss   08:43   0:00 /usr/sbin/condor_master -pidfile /var/run/condor/condor.pid
@@ -67,7 +67,7 @@ OWNER BATCH_NAME      SUBMITTED   DONE   RUN    IDLE   HOLD  TOTAL JOB_IDS
 montage-workflow-v2: https://github.com/pegasus-isi/montage-workflow-v2
 
 ```
-./example-dss.sh 
+./example-dss.sh
 
 $ pegasus-run  /home/alper/pegasus/montage-workflow-v2/work/1540532824
 Submitting to condor montage-0.dag.condor.sub

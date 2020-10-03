@@ -6,14 +6,15 @@ import pprint
 import shutil
 import sys
 
-import config
+from web3.logs import DISCARD
+
 import eblocbroker.Contract as Contract
 import libs.gdrive as gdrive
 import libs.git as git
-from config import env, logging
+from config import QuietExit, env, logging
 from contract.scripts.lib import Job, cost
-from lib import compress_folder, get_tx_status, printc, run
-from utils import CacheType, StorageID, _colorize_traceback, log, read_json, silent_remove
+from lib import get_tx_status, printc, run
+from utils import CacheType, StorageID, _colorize_traceback, compress_folder, log, read_json, silent_remove
 
 base_folder = f"{env.EBLOCPATH}/base"
 Ebb = Contract.eblocbroker
@@ -68,12 +69,18 @@ def share_folder(folder_to_share, provider, job_key_flag=False):
 
 def gdrive_submit_job(provider, _from):
     job = Job()
+
+    try:
+        job.check_account_status(_from)
+    except Exception as e:
+        raise e
+
     try:
         provider_info = Ebb.get_provider_info(provider)
         print(f"Provider's available_core_num={provider_info['available_core_num']}")
         print(f"Provider's price_core_min={provider_info['price_core_min']}")
     except:
-        raise config.QuietExit
+        raise QuietExit
 
     Ebb.is_users_valid(provider, _from)
     provider = Ebb.w3.toChecksumAddress(provider)
@@ -159,7 +166,7 @@ if __name__ == "__main__":
         tx_hash = gdrive_submit_job(provider, _from)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            logs = Ebb.eBlocBroker.events.LogJob().processReceipt(receipt)
+            logs = Ebb.eBlocBroker.events.LogJob().processReceipt(receipt, errors=DISCARD)
             pprint.pprint(vars(logs[0].args))
             try:
                 logging.info(f"Job's index={logs[0].args['index']}")

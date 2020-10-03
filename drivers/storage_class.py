@@ -16,7 +16,7 @@ from config import ThreadFilter, env, logging
 from lib import log, run
 from libs.slurm import remove_user
 from libs.sudo import _run_as_sudo
-from libs.user_setup import add_user_to_slurm
+from libs.user_setup import add_user_to_slurm, give_RWE_access
 from utils import (
     CacheType,
     Link,
@@ -57,13 +57,13 @@ class Storage(BaseClass):
         self.md5sum_dict = {}
         self.folder_path_to_download: Dict[str, str] = {}
         self.cloudStorageID = logged_job.args["cloudStorageID"]
-        self.results_folder_prev = f"{env.PROGRAM_PATH}/{self.requester_id}/{self.job_key}_{self.index}"
+        self.requester_home = f"{env.PROGRAM_PATH}/{self.requester_id}"
+        self.results_folder_prev = f"{self.requester_home}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
-
         self.run_path = f"{self.results_folder}/run.sh"
         self.results_data_folder = f"{self.results_folder_prev}/data"
         self.results_data_link = f"{self.results_folder_prev}/data_link"
-        self.private_dir = f"{env.PROGRAM_PATH}/{requester_id}/cache"
+        self.private_dir = f"{self.requester_home}/cache"
         self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.folder_type_dict: Dict[str, str] = {}
@@ -74,7 +74,12 @@ class Storage(BaseClass):
         self.coll = None
         utils.log_files[self.thread_name] = self.drivers_log_path
 
-        create_dir(self.private_dir)
+        try:
+            create_dir(self.private_dir)
+        except PermissionError:
+            give_RWE_access(env.SLURMUSER, self.requester_home)
+            create_dir(self.private_dir)
+
         create_dir(self.public_dir)
         create_dir(self.results_folder)
         create_dir(self.results_data_folder)
@@ -97,7 +102,7 @@ class Storage(BaseClass):
         # in *this* thread, only. It needs the current thread id for this:
         thread_handler.addFilter(ThreadFilter(thread_id=threading.get_ident()))
         config.logging.addHandler(thread_handler)
-        time.sleep(0.1)
+        time.sleep(.25)
         # config.logging = logging
         # _log = logging.getLogger()
         # _log.addHandler(thread_handler)
@@ -201,7 +206,6 @@ class Storage(BaseClass):
 
     def check_run_sh(self) -> bool:
         if not os.path.isfile(self.run_path):
-            breakpoint()
             logging.error(f"E: {self.run_path} file does not exist")
             return False
         return True
@@ -210,12 +214,9 @@ class Storage(BaseClass):
         try:
             link = Link(self.results_data_folder, self.results_data_link)
             link.link_folders()
-
             # file permission for the requester's foders should be reset
-            path = f"{env.PROGRAM_PATH}/{self.requester_id}"
-            run(["sudo", "setfacl", "-R", "-m", f"user:{self.requester_id}:rwx", path])
-            run(["sudo", "setfacl", "-R", "-m", f"user:{env.WHOAMI}:rwx", path])
-
+            give_RWE_access(self.requester_id, self.requester_home)
+            give_RWE_access(env.WHOAMI, self.requester_home)
             self._sbatch_call()
         except Exception:
             logging.error("Failed to call _sbatch_call() function.")
@@ -267,7 +268,7 @@ class Storage(BaseClass):
             data["dataTransferIn"] = self.dataTransferIn_to_download
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
-            time.sleep(0.25)
+            time.sleep(.25)
 
         # logging.info(dataTransferIn)
         # seperator character is *
@@ -300,7 +301,6 @@ class Storage(BaseClass):
                 time.sleep(1)  # wait 1 second for Slurm idle core to be updated
             except Exception:
                 _colorize_traceback()
-                breakpoint()
                 slurm.remove_user(self.requester_id)
                 slurm.add_user_to_slurm(self.requester_id)
             else:

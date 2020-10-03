@@ -28,8 +28,8 @@ if [[ $c == *" Began, "* ]]; then
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
-	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id
+        source $VENV_PATH/bin/activate
+        python3 -uB $EBLOCBROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id
     fi
 fi
 
@@ -53,8 +53,8 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
-	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        source $VENV_PATH/bin/activate
+        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
     fi
 fi
 
@@ -70,8 +70,8 @@ if [[ $event == *"TIMEOUT"* ]]; then
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
-	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        source $VENV_PATH/bin/activate
+        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
     fi
 fi
 
@@ -87,8 +87,8 @@ if [[ $event == *"CANCELLED"* ]]; then
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
-	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        source $VENV_PATH/bin/activate
+        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
     fi
 fi
 
@@ -104,7 +104,7 @@ if [[ $event == *"FAILED"* ]]; then
     echo $msg >> $LOG_FILE
 
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
-	source $VENV_PATH/bin/activate
-	python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        source $VENV_PATH/bin/activate
+        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
     fi
 fi

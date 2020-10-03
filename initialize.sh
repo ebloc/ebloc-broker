@@ -1,7 +1,7 @@
 #!/bin/bash
 
 setup=0
-rpcPort="8545" # Please change it if you have different RPC_PORT number.
+RPC_PORT="8545" # Please change it if you have different RPC_PORT number.
 
 # Update repository with the latest update
 # git fetch --all && git reset --hard origin/master
@@ -9,8 +9,15 @@ rpcPort="8545" # Please change it if you have different RPC_PORT number.
 # Pre-installation
 # ----------------
 if [ $setup -eq 1 ]; then
-    sudo groupadd eblocbroker
+    # What are correct permissions for /tmp ? I unintentionally set it
+    # all public recursively. https://unix.stackexchange.com/a/71625/198423
+    # =====================================================================
+    sudo chmod 1777 /tmp
+    sudo find /tmp -mindepth 1 -name '.*-unix' -exec chmod 1777 {} + -prune -o -exec chmod go-rwx {} +
+
+    mkdir -p /tmp/run
     # members eblocbroker
+    sudo groupadd eblocbroker
 
     ## Upgrade geth on Ubuntu: ----------------------------
     # sudo apt-get install software-properties-common
@@ -19,26 +26,24 @@ if [ $setup -eq 1 ]; then
     # sudo apt-get upgrade ethereum
     #------------------------------------------------------
 
-    ## Install Python3.6 on Ubuntu: -------------
-    # sudo add-apt-repository ppa:deadsnakes/ppa
-    # sudo apt-get update
-    # sudo apt-get install python3.6
-    #--------------------------------------------
+    ## Install Python3.7
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt-get update
+    sudo apt-get install python3.7
+    sudo apt-get install python3.7-venv
 
-    ## Python3.6 setup, required for all providers!
-    sudo apt-get install python3-dev
-    sudo apt-get install python3-venv
-    sudo apt-get install python3.6-dev
+    # sudo update-alternatives --config python3
+    sudo apt-get update
+    sudo apt-get install unixodbc-dev
+    sudo apt-get install python-dev
 
     sudo apt install python-pip
-    pip install wheel
-    venv_path=$HOME"/venv"
-    python3 -m venv $venv_path # python3.6 -m venv --without-pip venv
-    source $venv_path/bin/activate
+    python3.7 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
+    source $HOME/venv/bin/activate
 
     # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
     pip install --upgrade pip --user
-
+    pip install wheel
     pip install -r requirements.txt
 
     pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
@@ -52,7 +57,7 @@ if [ $setup -eq 1 ]; then
     # pip install -U google-colab
     # pip install sphinx_rtd_theme
 
-    ## npm
+    ## NPM
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
     sudo n latest
@@ -66,17 +71,16 @@ if [ $setup -eq 1 ]; then
         brew install realpath # Mac Packages
     else
         ## Linux Packages
-	sudo apt-get install munge
-	sudo apt-get install mailutils
-	sudo apt-get install curl
-
+        sudo apt-get install munge
+        sudo apt-get install mailutils
+        sudo apt-get install curl
         sudo apt-get install davfs2
         sudo apt-get install python-psutil
         sudo apt-get install -y nodejs
         sudo apt-get install bc
         sudo apt-get install realpath
-	sudo apt-get install acl
-	sudo apt-get install pigz
+        sudo apt-get install acl
+        sudo apt-get install pigz
     fi
 
     # mongodb guide => https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
@@ -118,6 +122,7 @@ if [ $setup -eq 1 ]; then
     # download_docs=false
     sed -i.bak "s/^\(shared_with_me=\).*/\1true/" $HOME/.gdfuse/me/config
 fi
+
 # IPFS check
 # nc IP PORT
 # Should return: /multistream/1.0.0

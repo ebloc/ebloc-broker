@@ -12,8 +12,8 @@ import owncloud
 
 import config
 from config import env, logging
-from lib import compress_folder, printc, run
-from utils import _colorize_traceback, cd, popen_communicate, sleep_timer, terminate
+from lib import printc, run
+from utils import _colorize_traceback, cd, compress_folder, popen_communicate, sleep_timer, terminate
 
 
 def _upload_results(encoded_share_token, output_file_name):
