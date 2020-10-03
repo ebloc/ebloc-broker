@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-import subprocess
-import sys
+
 import time
 
-from config import env, logging
+from config import QuietExit, logging
 from lib import run
-from utils import _colorize_traceback, log, popen_communicate
+from utils import BashCommandsException, _colorize_traceback, log, popen_communicate
 
 
 def add_user_to_slurm(user):
@@ -27,10 +26,10 @@ def add_user_to_slurm(user):
 
 def remove_user(user):
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user}", "--immediate"]
-    p, output, *_ = popen_communicate(cmd)
+    p, output, error_msg = popen_communicate(cmd)
     if p.returncode and "Nothing deleted" not in output:
         logging.error(f"E: sacctmgr remove error: {output}")
-        raise
+        raise BashCommandsException(p.returncode, output, error_msg, str(cmd))
 
 
 def get_idle_cores(is_print_flag=True):
@@ -94,7 +93,7 @@ def get_elapsed_raw_time(slurm_job_id) -> int:
         cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
         elapsed_time = run(cmd)
     except:
-        sys.exit(1)
+        raise QuietExit
 
     logging.info(f"ElapsedTime={elapsed_time}")
     elapsed_time = elapsed_time.split(":")
@@ -111,24 +110,19 @@ def get_elapsed_raw_time(slurm_job_id) -> int:
     return elapsed_raw_time
 
 
-def get_job_end_time(slurm_job_id):
-    # cmd: scontrol show job slurm_job_id | grep 'EndTime'| grep -o -P '(?<=EndTime=).*(?= )'
-    try:
-        output = run(["scontrol", "show", "job", slurm_job_id])
-    except:
-        sys.exit()
-    p1 = subprocess.Popen(["echo", output], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["grep", "EndTime"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
-    p3 = subprocess.Popen(["grep", "-o", "-P", "(?<=EndTime=).*(?= )"], stdin=p2.stdout, stdout=subprocess.PIPE,)
-    p2.stdout.close()
-    date = p3.communicate()[0].decode("utf-8").strip()
+def get_job_end_time(slurm_job_id) -> int:
+    """Get the end time of the job in universal time"""
+    end_time = run(["sacct", "-n", "-X", "-j", slurm_job_id, "--format=End"])
+    if end_time == "":
+        log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.", "red")
+        raise QuietExit
 
-    cmd = ["date", "-d", date, "+'%s'"]  # cmd: date -d 2018-09-09T21:50:51 +"%s"
     try:
-        end_time_stamp = run(cmd)
+        # cmd: date -d 2018-09-09T21:50:51 +"%s"
+        end_time_stamp = run(["date", "-d", end_time, "+'%s'"])
     except:
-        sys.exit()
+        raise QuietExit
+
     end_time_stamp = end_time_stamp.rstrip().replace("'", "")
-    logging.info(f"end_time_stamp={end_time_stamp}")
+    log(f"end_time_stamp={end_time_stamp}", "blue")
     return end_time_stamp

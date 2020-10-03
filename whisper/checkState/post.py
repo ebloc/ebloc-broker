@@ -38,17 +38,17 @@ if __name__ == "__main__":
     if not os.path.isfile("data.txt"):
         # first time running
         print("Initializing...")
-        kId = web3.shh.newKeyPair()
-        publicKey = web3.shh.getPublicKey(kId)
+        key_id = web3.shh.newKeyPair()
+        public_key = web3.shh.getPublicKey(key_id)
 
-        msg_filter = web3.shh.newMessageFilter({"topic": topic, "privateKeyID": kId, "recipientPublicKey": publicKey})
+        msg_filter = web3.shh.newMessageFilter({"topic": topic, "privateKeyID": key_id, "recipientPublicKey": public_key})
         msg_filter.poll_interval = 600
         # make it equal with the live-time of the message
         filter_id = msg_filter.filter_id
 
         data = {}
-        data["kId"] = kId
-        data["publicKey"] = publicKey
+        data["key_id"] = key_id
+        data["public_key"] = public_key
         data["filter_id"] = filter_id
 
         with open("data.txt", "w") as outfile:
@@ -60,12 +60,12 @@ if __name__ == "__main__":
             _colorize_traceback()
             sys.exit(1)
 
-        kId = data["kId"]
-        publicKey = data["publicKey"]
+        key_id = data["key_id"]
+        public_key = data["public_key"]
 
-    print(publicKey)
+    print(public_key)
 
-    msg_filter = web3.shh.newMessageFilter({"topic": topic, "privateKeyID": kId, "recipientPublicKey": publicKey})
+    msg_filter = web3.shh.newMessageFilter({"topic": topic, "privateKeyID": key_id, "recipientPublicKey": public_key})
     msg_filter.poll_interval = 600
     # make it equal with the live-time of the message
     filter_id = msg_filter.filter_id
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # Obtained from node_1 and assigned here.
     receiver_pub = "0x04b3b8efbea4fbdcbaee11771a23bb76ec571aee4c0a78e52b0705822146e70a59b8e92eade03393c78b3f6bf6890564abf0ecc664a382cf59c5a59075abc99d6a"
 
-    payloads = [web3.toHex(text=publicKey), web3.toHex(text="2nd test message")]
+    payloads = [web3.toHex(text=public_key), web3.toHex(text="2nd test message")]
 
     web3.shh.post(
         {

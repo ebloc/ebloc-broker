@@ -267,7 +267,7 @@ class EudatClass(Storage):
             _colorize_traceback(f"{self.job_key}_{self.index}")
             sys.exit(1)
         finally:
-            time.sleep(0.1)
+            time.sleep(.25)
 
     def _run(self) -> bool:
         log(

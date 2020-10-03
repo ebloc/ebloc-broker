@@ -6,14 +6,14 @@ import threading
 from logging import Filter
 from os.path import expanduser
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from dotenv import load_dotenv
+from web3 import Web3
 
 import _utils.colored_traceback as colored_traceback
 import _utils.colorer  # NOQA
 
-# from typing import Type
 # from web3 import Web3
 
 
@@ -61,8 +61,8 @@ class ENV:
         self.log_filename = None
         self.WHOAMI = os.getenv("WHOAMI")
         self.SLURMUSER = os.getenv("SLURMUSER")
-        self.LOG_PATH = os.getenv("LOG_PATH")
 
+        self.LOG_PATH = os.getenv("LOG_PATH")
         self.GDRIVE = os.getenv("GDRIVE")
         self.OC_USER = os.getenv("OC_USER")
         self.IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
@@ -89,13 +89,19 @@ class ENV:
         self.OC_CLIENT = f"{self.LOG_PATH}/.oc_client.pckl"
         self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
 
-        self.WHISPER_INFO = f"{self.LOG_PATH}/whisper_info.txt"
+        self.WHISPER_INFO = f"{self.LOG_PATH}/whisper_info.json"
         self.WHISPER_LOG = f"{self.LOG_PATH}/whisper_state_receiver.out"
         self.WHISPER_TOPIC = "0x07678231"
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+
+        if not os.path.isdir("/tmp/run"):
+            os.makedirs("/tmp/run")  # mkdir
+
+        self.DRIVER_LOCKFILE = "/tmp/run/driver_popen.pid"
+        self.DRIVER_DAEMON_LOCK = "/tmp/run/driverdaemon.pid"
 
     def set_provider_id(self, provider_id=None):
         if not os.getenv("PROVIDER_ID"):
@@ -104,6 +110,7 @@ class ENV:
                 self.PROVIDER_ID = w3.toChecksumAddress(provider_id)
             else:
                 print("E: Please set PROVIDER_ID in ~/.eBlocBroker/.env")
+                raise QuietExit
         else:
             self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
@@ -146,8 +153,8 @@ def setup_logger(log_path="", is_brownie=False):
 
 
 Ebb = None
-w3 = None  # # type: Type[Web3]
 contract = None
+w3: Optional[Web3] = None
 
 coll = None
 oc = None
@@ -159,4 +166,5 @@ logger = setup_logger()  # Default initialization
 
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
+BLOCK_DURATION = 15  # seconds
 IS_THREADING_ENABLED = False

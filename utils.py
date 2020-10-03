@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import binascii
+import errno
 import hashlib
 import json
 import ntpath
@@ -9,11 +10,12 @@ import re
 import shutil
 import signal
 import socket
+import subprocess
 import sys
 import threading
 import time
 import traceback
-from contextlib import contextmanager
+from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
 
@@ -33,6 +35,14 @@ zero_bytes32 = "0x00"
 yes = set(["yes", "y", "ye"])
 no = set(["no", "n"])
 log_files = {}
+
+
+class BashCommandsException(Exception):
+    def __init__(self, returncode, output, error_msg):
+        self.returncode = returncode
+        self.output = output
+        self.error_msg = error_msg
+        Exception.__init__('Error in executed command')
 
 
 class BaseEnum(IntEnum):
@@ -67,6 +77,11 @@ class COLOR:
     END = "\033[0m"
 
 
+def print_warning(msg):
+    log("Warning: ", "yellow", None, is_new_line=True)
+    log(msg)
+
+
 def print_arrow(color="white"):
     log("==> ", color, None, is_new_line=False)
 
@@ -76,7 +91,7 @@ def extract_gzip(filename):
 
 
 def untar(tar_file, extract_to):
-    """untar give tar file
+    """ untar give tar file
     umask can be ignored by using the -p (--preserve) option
         --no-overwrite-dir: preserve metadata of existing directories
 
@@ -97,9 +112,8 @@ def untar(tar_file, extract_to):
     run(cmd)
 
 
-def is_internet_on(host="8.8.8.8", port=53, timeout=3):
-    """
-    Host: 8.8.8.8 (google-public-dns-a.google.com)
+def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
+    """ Host: 8.8.8.8 (google-public-dns-a.google.com)
     OpenPort: 53/tcp
     Service: domain (DNS/TCP)
     doc: https://stackoverflow.com/a/33117579/2402577
@@ -129,25 +143,43 @@ def remove_ansi_escape_sequence(string):
     return ansi_escape.sub("", string)
 
 
+def _try(func):
+    """Calls given function inside try/except
+
+    Args:
+        f: yield function
+
+    Example called: _try(lambda: f())
+    Returns status and output of the function
+    """
+    try:
+        return func()
+    except Exception:
+        _colorize_traceback()
+        raise
+
+
 def run(cmd, is_print_trace=True) -> str:
+    cmd = list(map(str, cmd))  # all items should be str
     try:
         return check_output(cmd, stderr=STDOUT).decode("utf-8").strip()
-    except Exception as exc:
+    except Exception as e:
         if is_print_trace:
-            print_trace(cmd, back=2, exc=exc.output.decode("utf-8"))
-        raise
+            print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
+            _colorize_traceback()
+        raise e
 
 
 def run_with_output(cmd):
     # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    cmd = list(map(str, cmd))  # all items should be str
     ret = ""
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             ret += line
-            print(line, end='') # process line here
+            print(line, end='')  # process line here
             return line.strip()
     if p.returncode != 0:
-        breakpoint()
         raise CalledProcessError(p.returncode, p.args)
 
 
@@ -156,12 +188,13 @@ def popen_communicate(cmd, stdout_file=None):
     during the run stdout_file is not None in case of nohup process writes its
     results into a file
     """
+    cmd = list(map(str, cmd))  # all items should be str
     if stdout_file is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
         with open(stdout_file, "w") as outfile:
-            p = Popen(cmd, stdout=outfile, stderr=outfile, universal_newlines=True)
-
+            # output written into file, error will be returned
+            p = Popen(cmd, stdout=outfile, stderr=PIPE, universal_newlines=True)
             output, error = p.communicate()
             p.wait()
             return p, output, error
@@ -348,15 +381,22 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     pass
 
 
-def printc(text, color="white", is_new_line=True):
+def printc(text, c="white", is_new_line=True, is_bold=True):
     if is_new_line:
-        print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color))
+        if is_bold:
+            print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c))
+        else:
+            print(colored(text, c))
     else:
-        print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color), end="")
+        if is_bold:
+            print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c), end="")
+        else:
+            print(colored(text, c), end="")
 
 
 # TODO: send arguments without order //  is_bold
-def log(text, color="white", filename=None, is_new_line=True):
+def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
+    text = str(text)
     if threading.current_thread().name != "MainThread" and env.IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
@@ -366,13 +406,22 @@ def log(text, color="white", filename=None, is_new_line=True):
             filename = env.DRIVER_LOG
 
     f = open(filename, "a")
-    if color:
+    if c:
         if threading.current_thread().name == "MainThread":
-            printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color), color, is_new_line)
+            if is_bold:
+                printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c), c, is_new_line, is_bold)
+            else:
+                printc(colored(text, c), c, is_new_line, is_bold)
         if is_new_line:
-            f.write(colored(f"{COLOR.BOLD}{text}\n{COLOR.END}", color))
+            if is_bold:
+                f.write(colored(f"{COLOR.BOLD}{text}\n{COLOR.END}", c))
+            else:
+                f.write(colored(text, c))
         else:
-            f.write(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color))
+            if is_bold:
+                f.write(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c))
+            else:
+                f.write(colored(text, c))
     else:
         print(text)
         if is_new_line:
@@ -384,10 +433,9 @@ def log(text, color="white", filename=None, is_new_line=True):
 
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
-    log(f"\n{_cmd}", "red")
+    log(f"==> failed_cmd:\n{_cmd}", c="yellow")
     if exc:
-        log(f"Error message:\n{exc}", "yellow")
-    logging.error(f"[{WHERE(back)}]\n{_colorize_traceback()}\n")
+        log(f"\n[{WHERE(back)}] Error:\n{exc}", "red")
 
 
 def WHERE(back=0):
@@ -407,23 +455,25 @@ def silent_remove(path) -> bool:
 
     try:
         if os.path.isfile(path):
-            os.remove(path)
+            with suppress(FileNotFoundError):
+                os.remove(path)
         elif os.path.isdir(path):
             # deletes a directory and all its contents
             shutil.rmtree(path)
         else:
             return False
 
-        logging.info(f"[{WHERE(1)}]\n{path} is removed")
+        log(f"==> [{WHERE(1)}]\n{path} is removed", "yellow")
         return True
-    except Exception:
-        _colorize_traceback()
-        return False
+    except Exception as e:
+        if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
+            _colorize_traceback()
+            raise e
 
 
 def is_ipfs_on() -> bool:
     """Checks whether ipfs runs on the background."""
-    return is_process_on("[i]pfs\ daemon", "IPFS")
+    return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0)
 
 
 def is_process_on(process_name, name, process_count=0, port=None) -> bool:
@@ -432,9 +482,11 @@ def is_process_on(process_name, name, process_count=0, port=None) -> bool:
     p1 = Popen(["ps", "aux"], stdout=PIPE)
     p2 = Popen(["grep", "-v", "flycheck_"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
-    p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
+    p3 = Popen(["grep", "-v", "grep"], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()
-    output = p3.communicate()[0].decode("utf-8").strip().splitlines()
+    p4 = Popen(["grep", "-E", process_name], stdin=p3.stdout, stdout=PIPE)
+    p3.stdout.close()
+    output = p4.communicate()[0].decode("utf-8").strip().splitlines()
     pids = []
     for line in output:
         fields = line.strip().split()
@@ -458,13 +510,27 @@ def is_process_on(process_name, name, process_count=0, port=None) -> bool:
     return False
 
 
-def is_driver_on() -> bool:
+def is_geth_account_locked(address) -> bool:
+    if isinstance(address, int):
+        # if given input is an account_id
+        return config.w3.geth.personal.list_wallets()[address]["status"] == "Locked"
+    else:
+        address = config.w3.toChecksumAddress(address)
+        for account_idx in range(0, len(config.w3.geth.personal.list_wallets())):
+            _address = config.w3.geth.personal.list_wallets()[account_idx]["accounts"][0]["address"]
+            if _address == address:
+                return config.w3.geth.personal.list_wallets()[account_idx]["status"] == "Locked"
+    return False
+
+
+def is_driver_on(process_count=0) -> bool:
     """Check whether driver runs on the background."""
-    if is_process_on("python.*[D]river", "Driver", process_count=1):
+    if is_process_on("python.*[D]river", "Driver", process_count):
         printc("Track output using:")
         printc(f"tail -f {env.DRIVER_LOG}", "blue")
         raise config.QuietExit
-    return True
+    else:
+        return False
 
 
 def is_ganache_on(port) -> bool:
@@ -477,7 +543,7 @@ def is_geth_on():
     port = str(env.RPC_PORT)
     port = insert_character(port, 1, "]")
     port = insert_character(port, 0, "[")
-    if not is_process_on(f"geth.*{port}", "Geth"):
+    if not is_process_on(f"geth.*{port}", "Geth", process_count=0):
         log("E: geth is not running on the background. Please run:\nsudo ~/eBlocPOA/server.sh", "red")
         raise config.QuietExit
 
@@ -510,7 +576,7 @@ def check_ubuntu_packages(packages=None):
     return True
 
 
-def is_dpkg_installed(package_name):
+def is_dpkg_installed(package_name) -> bool:
     try:
         run(["dpkg", "-s", package_name])
         return True
@@ -518,12 +584,16 @@ def is_dpkg_installed(package_name):
         return False
 
 
-def terminate(error_msg=""):
+def terminate(msg="", is_traceback=True):
     """Terminates Driver and all the dependent python programs to it."""
-    logging.error(f"E: [{WHERE(1)}] {error_msg}")
+    if msg:
+        log(text=f"[{WHERE(1)}] Termianted \n{msg}", c="red", is_bold=False)
 
-    # following line is added, in case ./killall.sh does not work due to sudo
-    # send the kill signal to all the process groups
+    if is_traceback:
+        _colorize_traceback()
+
+    # Following line is added, in case ./killall.sh does not work due to sudo
+    # It sends the kill signal to all the process groups
     if config.driver_cancel_process:
         # obtained from global variable
         os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)
@@ -554,6 +624,61 @@ def question_yes_no(message, is_terminate=False):
                 sys.exit()
         else:
             print("\nPlease respond with 'yes' or 'no': ", end="", flush=True)
+
+
+def json_pretty(json_data):
+    """Prints json in readeable clean format."""
+    print(json.dumps(json_data, indent=4, sort_keys=True))
+
+
+def compress_folder(folder_to_share):
+    """Compress folder using tar
+    - Note that to get fully reproducible tarballs, you should also impose the sort order used by tar
+
+    Helpful Links:
+    - https://unix.stackexchange.com/a/438330/198423  == (tar produces different files each time)
+    - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
+    """
+    base_name = os.path.basename(folder_to_share)
+    dir_path = os.path.dirname(folder_to_share)
+
+    with cd(dir_path):
+        """cmd:
+        find . -print0 | LC_ALL=C sort -z | \
+        PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
+                    --no-recursion --null -T - -zcvf $tar_hash.tar.gz
+        """
+        p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
+        p1.stdout.close()
+        p3 = subprocess.Popen(
+            [
+                "tar",
+                "-Ipigz",
+                "--mode=a+rwX",
+                "--owner=0",
+                "--group=0",
+                "--numeric-owner",
+                "--absolute-names",
+                "--no-recursion",
+                "--null",
+                "-T",
+                "-",
+                "-cvf",
+                f"{base_name}.tar.gz",
+            ],
+            stdin=p2.stdout,
+            stdout=subprocess.PIPE,
+            env={"PIGZ": "-n"},  # alternative: GZIP
+        )
+        p2.stdout.close()
+        p3.communicate()
+
+        tar_hash = generate_md5sum(f"{base_name}.tar.gz")
+        tar_file = f"{tar_hash}.tar.gz"
+        shutil.move(f"{base_name}.tar.gz", tar_file)
+        log(f"Created tar file={dir_path}/{tar_file}")
+    return tar_hash, f"{dir_path}/{tar_file}"
 
 
 class Link:

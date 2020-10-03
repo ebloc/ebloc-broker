@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# link: https://stackoverflow.com/a/50193944/2402577
 # $ pip instal -e .
+# link: https://stackoverflow.com/a/50193944/2402577
 
 from setuptools import find_packages, setup
 
@@ -19,8 +19,8 @@ setup(
     version="1.0.4",  # don't change this manually, use bumpversion instead
     license="MIT",
     description=(  # noqa: E501
-        "A Python framework to communicate with eBlocBroker, which is a blockchain based autonomous computational"
-        " resource broker."
+        "A Python framework to communicate with eBlocBroker, which is "
+        "a blockchain based autonomous computational resource broker."
     ),
     # long_description=long_description,
     # long_description_content_type="text/markdown",
@@ -29,7 +29,7 @@ setup(
     url="https://github.com/ebloc/eBlocBroker",
     keywords=["eblocbroker"],
     include_package_data=True,
-    python_requires=">=3.6,<4",
+    python_requires=">=3.7,<4",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -40,5 +40,6 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    packages=find_packages(),
+    packages=find_packages('src'),
+    setup_requires=['wheel'],
 )

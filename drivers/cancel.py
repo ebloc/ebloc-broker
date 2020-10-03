@@ -23,7 +23,7 @@ if not cancel_block_read_from_local.isdigit():
 log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
 max_val = 0
 while True:
-    time.sleep(0.1)
+    time.sleep(.25)
     # cancel_block_read_from_local = 2000000 # for test purposes
 
     # waits here until new job cancelled into the provider
