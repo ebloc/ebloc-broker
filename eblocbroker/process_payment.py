@@ -38,8 +38,6 @@ def process_payment(
         logging.error("Job is completed and already get paid")
         sys.exit(1)
 
-    breakpoint()
-
     """
     if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
         logging.error("Job is completed and already get paid")

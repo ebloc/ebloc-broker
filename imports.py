@@ -10,7 +10,7 @@ from web3.providers.rpc import HTTPProvider
 import _utils.colorer  # noqa: F401
 import config
 from config import env, logging
-from utils import _colorize_traceback, is_geth_on, log, read_json
+from utils import _colorize_traceback, is_geth_on, log, read_json, terminate
 
 
 def connect():
@@ -57,14 +57,20 @@ def connect_to_web3():
                 sys.exit(1)
 
         logging.error(
-            "\nE: If web3 is not connected please start geth server and give permission to /private/geth.ipc file"
-            " doing:"
+            "\nE: If web3 is not connected please start geth server and give permission \n"
+            "to /private/geth.ipc file doing:"
         )
-        log("sudo chown $(whoami) /private/geth.ipc", "green")
-        raise config.Web3NotConnected()
+        log("sudo chown $(whoami) /private/geth.ipc\n", "green")
+        terminate(msg="", is_traceback=False)
+        # raise config.QuietExit()
 
     if not env.PROVIDER_ID:
-        env.set_provider_id()
+        try:
+            env.set_provider_id()
+        except Exception as e:
+            if type(e).__name__ != "QuietExit":
+                _colorize_traceback()
+            sys.exit(1)
 
     return config.w3
 
@@ -91,8 +97,8 @@ def connect_to_eblocbroker():
         raise
 
     try:
-        contract_address = config.w3.toChecksumAddress(contract_address)
         config.Ebb = config.w3.eth.contract(contract_address, abi=abi)
+        config.Ebb.contract_address = config.w3.toChecksumAddress(contract_address)
         return config.Ebb
     except:
         logging.error("E: Couldn't retrieve eBlocBroker contract")

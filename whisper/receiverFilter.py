@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-import time
-
-from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 from web3.shh import Shh
 
@@ -16,17 +12,17 @@ loadFlag = 0
 
 if loadFlag == 1:
     privateKey = "0x5fc212a0774add56f4a32b59a1cf6100ae0ef8fe1481c1ab7d011796d1e53320"
-    kId = web3.shh.addPrivateKey(privateKey)
+    key_id = web3.shh.addPrivateKey(privateKey)
 else:
-    kId = web3.shh.newKeyPair()
+    key_id = web3.shh.newKeyPair()
 
-receiver_priv = web3.shh.getPrivateKey(kId)
-receiver_pub = web3.shh.getPublicKey(kId)
+receiver_priv = web3.shh.getPrivateKey(key_id)
+receiver_pub = web3.shh.getPublicKey(key_id)
 
 print("receiverPrivK: " + receiver_priv)
 print("receiverPubK: " + receiver_pub)
 
-myFilter = web3.shh.newMessageFilter({"topic": "0x07678231", "privateKeyID": kId})
+myFilter = web3.shh.newMessageFilter({"topic": "0x07678231", "privateKeyID": key_id})
 print("FilterID: " + myFilter.filter_id)
 
 input("Press Enter to continue...")

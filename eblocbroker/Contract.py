@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 
+import sys
+
 from config import Web3NotConnected, env
 from utils import _colorize_traceback, read_json
 
 
 class Contract:
     def __init__(self):
-        from imports import connect
-        self.eBlocBroker, self.w3 = connect()
+        try:
+            from imports import connect
+            self.eBlocBroker, self.w3 = connect()
+        except Exception as e:
+            if type(e).__name__ != "QuietExit":
+                _colorize_traceback()
+            sys.exit(1)
 
     # Imported methods
-    # ----------------
+    # ================
     from eblocbroker.authenticate_orc_id import authenticate_orc_id
     from eblocbroker.get_provider_info import get_provider_info
     from eblocbroker.process_payment import process_payment
@@ -26,7 +33,10 @@ class Contract:
     from eblocbroker.transfer_ownership import transfer_ownership
 
     def account_id_to_address(self, account_id):
-        return self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
+        if isinstance(account_id, int):
+            return self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
+        else:
+            return self.w3.toChecksumAddress(account_id)
 
     def get_job_size(self, provider, key):
         return self.eBlocBroker.call().getJobSize(provider, key)
@@ -141,6 +151,10 @@ class Contract:
         If the transaction has not yet been mined returns 'None'
         """
         return self.w3.eth.getTransactionReceipt(tx)
+
+    def print_contract_info(self):
+        print(f"address={self.eBlocBroker.contract_address}")
+        print(f"deployed_block_number={self.get_deployed_block_number()}")
 
 
 eblocbroker = Contract()

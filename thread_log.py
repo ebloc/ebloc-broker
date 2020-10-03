@@ -43,13 +43,12 @@ def thread_function(name):
     # in *this* thread, only. It needs the current thread id for this:
     thread_handler.addFilter(ThreadFilter(thread_id=threading.get_ident()))
     log.addHandler(thread_handler)
-    time.sleep(0.1)
+    time.sleep(.25)
     hello(name)
 
 
 if __name__ == "__main__":
     log.info("main_thread_start")
-
     # consider giving the thread a name (add name=...), then you could
     # use ThreadFilter(threadname=...) to select on all messages with that name
     # The thread name does not have to be unique.
@@ -57,5 +56,4 @@ if __name__ == "__main__":
     y = threading.Thread(target=thread_function, args=("thread_2",))
     x.start()
     y.start()
-
     hello("main_thread_end")

@@ -2,12 +2,14 @@
 
 import daemon
 
+import libs.ipfs as ipfs
 from config import env
-from utils import is_ipfs_on, popen_communicate, silent_remove
+from utils import is_ipfs_on, popen_communicate
 
 
 def run():
     # https://stackoverflow.com/a/8375012/2402577
+    print("running ipfs")
     with daemon.DaemonContext():
         cmd = ["ipfs", "daemon"]  # , "--mount"]
         popen_communicate(cmd, env.IPFS_LOG)
@@ -18,8 +20,6 @@ def run():
 
 
 if __name__ == "__main__":
-    silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK")
-    silent_remove(f"{env.HOME}/.ipfs/repo.lock")
-
     if not is_ipfs_on():
+        ipfs.remove_lock_files()
         run()
