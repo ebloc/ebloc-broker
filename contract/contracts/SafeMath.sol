@@ -1,6 +1,10 @@
-pragma solidity ^0.6.0;
+// SPDX-License-Identifier: MIT
 
-// Taken from https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol
+pragma solidity ^0.7.1;
+
+/**
+ * Taken from https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol
+ */
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
