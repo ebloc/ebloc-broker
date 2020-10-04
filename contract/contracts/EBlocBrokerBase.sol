@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 /*
   file:   eBlocBrokerBase.sol
   author: Alper Alimoglu
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.1;
 import "./Lib.sol";
 
 contract EBlocBrokerBase {
@@ -51,10 +53,10 @@ contract EBlocBrokerBase {
     }
 
     /**
-     * @dev Modifier to make a function callable only when given timestamp is smaller than the block.timestamp(now)
+     * @dev Modifier to make a function callable only when given timestamp is smaller than the block.timestamp
      */
     modifier whenBehindNow(uint256 timestamp) {
-        require(timestamp <= now); // dev: Ahead now
+        require(timestamp <= block.timestamp); // dev: Ahead block.timestamp
         _;
     }
 

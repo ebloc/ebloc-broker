@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 /*
   file:   eBlocBrokerInterface.sol
   author: Alper Alimoglu
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.1;
 
 interface eBlocBrokerInterface {
     // Logged when the provider calls the receiveDeposit() method. Records the completed jobs' information under receiveDeposit() method call.

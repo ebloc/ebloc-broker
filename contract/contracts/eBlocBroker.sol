@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 /*
   file:   eBlocBroker.sol
   author: Alper Alimoglu
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.1;
 pragma experimental ABIEncoderV2;
 
 import "./Lib.sol";
@@ -36,7 +38,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender.
      */
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -59,7 +61,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint256 amount = balances[msg.sender];
         // Set zero the balance before sending to prevent reentrancy attacks
         delete balances[msg.sender]; // gas refund is made
-        (bool success, ) = msg.sender.call.value(amount)(""); // This forwards all available gas
+        (bool success, ) = msg.sender.call{value:amount}(""); // This forwards all available gas
         require(success, "Transfer failed"); // Return value is checked
     }
 
@@ -750,7 +752,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
 
         /* Provider can sets job's status as RUNNING and its startTime only one time
-	   job.jobStateCode should be {SUBMITTED (0), PENDING(1)} */
+           job.jobStateCode should be {SUBMITTED (0), PENDING(1)} */
         require(job.jobStateCode <= Lib.JobStateCodes.PENDING, "Not permitted");
         job.startTime = startTime;
         job.jobStateCode = Lib.JobStateCodes.RUNNING;

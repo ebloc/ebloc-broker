@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 /*
   file:   Lib.sol
   author: Alper Alimoglu
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.1;
 
 library Lib {
     enum CacheType {
@@ -54,14 +56,14 @@ library Lib {
          * provider set its prices most recent. */
         uint32 providerPriceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
-	   stored and shared using either IPFS, EUDAT, IPFS (with MiniLock
-	   encryption), or Google Drive. */
+           stored and shared using either IPFS, EUDAT, IPFS (with MiniLock
+           encryption), or Google Drive. */
         uint8[] cloudStorageID;
         /* An array of uint8 values that denote whether the requester’s data
-	    will be cached privately within job owner's home directory, or
-	    publicly for other requesters' access within a shared directory for
-	    all the requesters.
-	 */
+            will be cached privately within job owner's home directory, or
+            publicly for other requesters' access within a shared directory for
+            all the requesters.
+         */
         uint8[] cacheType;
         /* An array of uint32 values that denote whether the provider’s
          * registered data will be used or not. */
