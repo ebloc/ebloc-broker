@@ -306,7 +306,7 @@ def run_driver():
             requester_id = job_infos[0]["jobOwner"]
             log(f"requester={requester_id}", c="yellow")
             if not Ebb.does_requester_exist(requester_id):
-                logging.error("E: Job owner is not registered")
+                logging.error("E: job owner is not registered")
                 continue
 
             if mongodb.is_received(str(requester_id), job_key, index):
