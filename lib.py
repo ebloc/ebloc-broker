@@ -54,7 +54,7 @@ if not config.w3:
     from imports import connect_to_web3
     connect_to_web3()
 
-if not env.PROVIDER_ID:
+if not env.PROVIDER_ID and config.w3:
     PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 else:
     PROVIDER_ID = env.PROVIDER_ID

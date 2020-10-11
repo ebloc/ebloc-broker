@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # install: npm install -g ethlint --force
-# npm install --save-dev prettier prettier-plugin-solidity -g
+# npm install -g --save-dev prettier prettier-plugin-solidity
 # https://github.com/duaraghav8/solium-plugin-security
 
 # MAC

@@ -32,8 +32,8 @@ empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 zero_bytes32 = "0x00"
 
-yes = set(["yes", "y", "ye"])
-no = set(["no", "n"])
+yes = set(["yes", "y", "ye", "yy"])
+no = set(["no", "n", "nn"])
 log_files = {}
 
 
@@ -688,7 +688,7 @@ class Link:
         self.data_map = {}
 
     def link_folders(self, paths=None):
-        """Creates linked folders under data_link folder"""
+        """Creates linked folders under data_link/ folder"""
         from os import listdir
         from os.path import isdir, join
         from lib import run_command, printc

@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.1;
+pragma solidity 0.7.0;
 
 interface eBlocBrokerInterface {
     // Logged when the provider calls the receiveDeposit() method. Records the completed jobs' information under receiveDeposit() method call.

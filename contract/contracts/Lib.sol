@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.1;
+pragma solidity ^0.7.0;
 
 library Lib {
     enum CacheType {
@@ -164,13 +164,20 @@ library Lib {
      *@dev Invoked when registerProvider() function is called
      *@param self | Provider struct
      */
-
     function constructProvider(Provider storage self) internal {
         self.isRunning = true;
         self.committedBlock = uint32(block.number);
 
         IntervalNode storage selfReceiptList = self.receiptList;
         selfReceiptList.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
+    }
+
+    function _isOverlapAlgorithm(
+        Interval[] storage list,
+        uint32 prevNode_next,
+        uint32 startTime // 148084
+    ) internal returns (bool flag) {
+        Interval memory currentNode = list[0];
     }
 
     function checkIfOverlapExists(
@@ -220,8 +227,13 @@ library Lib {
         } else {
             addrTemp = prevNode.next;
             prevNodeTemp = prevNode;
-            prevNode.next = uint32(list.length - 1); /* Node that pushed in-between the linked-list */
+            /* Node that pushed in-between the linked-list , additional 5k storage for read from the list */
+            prevNode.next = uint32(list.length - 1);
         }
+
+        // TODO: currentNode => memory
+        _isOverlapAlgorithm(list, prevNode.next, startTime);
+        // ===============
 
         currentNode = list[prevNode.next]; /* Current node points index before insert operation is done */
         do {
@@ -229,7 +241,7 @@ library Lib {
             if (startTime >= currentNode.endpoint) {
                 /* Covers [val, val1) s = s-1 */
                 list.push(Interval({endpoint: startTime, core: -1 * int32(core), next: prevNode.next}));
-                prevNode.next = uint32(list.length - 1);
+                prevNode.next = uint32(list.length - 1); // change on storage
                 return true;
             }
 
@@ -240,7 +252,7 @@ library Lib {
             if (carriedSum > availableCore) {
                 delete list[list.length - 1];
                 if (!flag) self.tail = addrTemp;
-                else prevNodeTemp.next = addrTemp;
+                else prevNodeTemp.next = addrTemp; // change on storage
 
                 self.deletedItemNum += 1;
                 return false;

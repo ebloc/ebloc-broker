@@ -915,6 +915,8 @@ def test_simple_submit():
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 
+    print("submitJob_gas_used=" + str(tx.__dict__['gas_used']))
+    breakpoint() # DEBUG
     index = 0
     jobID = 0
     startTime = 1579524978
@@ -936,6 +938,222 @@ def test_simple_submit():
     assert received_sum == 100 and refunded_sum == 5
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
+
+
+def test_submitJob_gas():
+    job = Job()
+    provider = accounts[0]
+    requester = accounts[1]
+
+    register_provider(100)
+    register_requester(requester)
+
+    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
+    job.cores = [1]
+    job.execution_durations = [1]
+    job.dataTransferIns = [1]
+    job.dataTransferOut = 1
+    job.storage_ids = [StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+
+    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.execution_durations,
+        job.dataTransferOut,
+    ]
+    tx = Ebb.submitJob(
+        job.source_code_hashes[0],
+        job.dataTransferIns,
+        args,
+        job.storage_hours,
+        job.source_code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+
+    index = 0
+    jobID = 0
+    startTime = 10
+    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    rpc.sleep(60)
+    mine(5)
+
+    completionTime = 20
+    dataTransferIn = 0
+    dataTransferOut = 0
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    execution_time_min = 1
+
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
+    print("received_gas_used=" + str(tx.__dict__['gas_used']))
+
+    # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
+    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    # print(str(received_sum) + " " + str(refunded_sum))
+
+    # withdraw(accounts[0], received_sum)
+    # withdraw(requester, refunded_sum)
+    # ------------
+    job = Job()
+    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
+    job.cores = [1]
+    job.execution_durations = [1]
+    job.dataTransferIns = [1]
+    job.dataTransferOut = 1
+    job.storage_ids = [StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+
+    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.execution_durations,
+        job.dataTransferOut,
+    ]
+    tx = Ebb.submitJob(
+        job.source_code_hashes[0],
+        job.dataTransferIns,
+        args,
+        job.storage_hours,
+        job.source_code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+
+    index = 1
+    jobID = 0
+    startTime = 29
+    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    rpc.sleep(60)
+    mine(5)
+
+    completionTime = 35
+    dataTransferIn = 0
+    dataTransferOut = 0
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    execution_time_min = 1
+
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
+    print("received_gas_used=" + str(tx.__dict__['gas_used']))
+    # ------------
+    job = Job()
+    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
+    job.cores = [1]
+    job.execution_durations = [1]
+    job.dataTransferIns = [1]
+    job.dataTransferOut = 1
+    job.storage_ids = [StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+
+    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.execution_durations,
+        job.dataTransferOut,
+    ]
+    tx = Ebb.submitJob(
+        job.source_code_hashes[0],
+        job.dataTransferIns,
+        args,
+        job.storage_hours,
+        job.source_code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+
+    index = 2
+    jobID = 0
+    startTime = 30
+    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    rpc.sleep(60)
+    mine(5)
+    # 148072 151555
+    completionTime = 45
+    dataTransferIn = 0
+    dataTransferOut = 0
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    execution_time_min = 1
+
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
+    print("received_gas_used=" + str(tx.__dict__['gas_used']))
+    # ------------
+    job = Job()
+    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
+    job.cores = [1]
+    job.execution_durations = [1]
+    job.dataTransferIns = [1]
+    job.dataTransferOut = 1
+    job.storage_ids = [StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+
+    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.execution_durations,
+        job.dataTransferOut,
+    ]
+    tx = Ebb.submitJob(
+        job.source_code_hashes[0],
+        job.dataTransferIns,
+        args,
+        job.storage_hours,
+        job.source_code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+
+    index = 3
+    jobID = 0
+    startTime = 44
+    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    rpc.sleep(60)
+    mine(5)
+    completionTime = 51
+    dataTransferIn = 0
+    dataTransferOut = 0
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    execution_time_min = 1
+
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
+    print("received_gas_used=" + str(tx.__dict__['gas_used']))
+
+    size = Ebb.getProviderReceiptSize(provider)
+    for idx in range(0, size):
+        print(Ebb.getProviderReceiptNode(provider, idx))
+    print("----------------------------------")
 
 
 def test_submitJob():
@@ -1024,7 +1242,7 @@ def test_submitJob():
                 {"from": requester, "value": web3.toWei(job_price, "wei")},
             )
             # print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
-            print("jobIndex=" + str(tx.events["LogJob"]["index"]))
+            print("job_index=" + str(tx.events["LogJob"]["index"]))
 
             # print("Contract Balance after: " + str(web3.eth.balanceOf(accounts[0])))
             # print("Client Balance after: " + str(web3.eth.balanceOf(accounts[8])))
@@ -1033,7 +1251,7 @@ def test_submitJob():
             print(Ebb.getJobInfo(provider, jobKey, index, jobID))
             index += 1
 
-    print(f"TotalPaid={job_priceSum}")
+    print(f"total_paid={job_priceSum}")
     # print(block_read_from)
     # rpc.mine(100)
     # print(web3.eth.blockNumber)

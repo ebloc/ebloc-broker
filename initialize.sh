@@ -16,8 +16,7 @@ if [ $setup -eq 1 ]; then
     sudo find /tmp -mindepth 1 -name '.*-unix' -exec chmod 1777 {} + -prune -o -exec chmod go-rwx {} +
 
     mkdir -p /tmp/run
-    # members eblocbroker
-    sudo groupadd eblocbroker
+    sudo groupadd eblocbroker # members eblocbroker
 
     ## Upgrade geth on Ubuntu: ----------------------------
     # sudo apt-get install software-properties-common
@@ -38,7 +37,7 @@ if [ $setup -eq 1 ]; then
     sudo apt-get install python-dev
 
     sudo apt install python-pip
-    python3.7 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
+    python3 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
     source $HOME/venv/bin/activate
 
     # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
@@ -61,7 +60,7 @@ if [ $setup -eq 1 ]; then
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
     sudo n latest
-    sudo npm install -g --unsafe-perm=true --allow-root ganache-cli
+    sudo npm install -g --unsafe-perm=true --allow-root ganache-cli  # npm install -g ganache-cli
     # npm install web3
     # npm install web3_ipc
     # npm install dotenv

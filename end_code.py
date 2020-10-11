@@ -54,11 +54,11 @@ mc = MongoClient()
 class Common:
     """Prevents "Class" has no attribute "method" mypy warnings."""
     def __init__(self) -> None:
-        self.results_folder = ""
         self.results_folder_prev = ""
         self.patch_file = ""
         self.requester_gpg_fingerprint = ""
         self.patch_name = ""
+        self.results_folder = ""
         self.data_transfer_out = 0.0
 
 

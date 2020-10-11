@@ -17,7 +17,7 @@ pip install -U eth-brownie
 -----------------------------------------------
 
 source $HOME/venv/bin/activate
-brownie console --network private
+brownie console --network eblocpoa
 > web3.eth.blockNumber
 
 Paste following to get abi into console:
@@ -29,3 +29,8 @@ with open('../eblocbroker/abi.json','w') as fp:
 ```
 
 # // , indent=2
+
+
+```
+mv network-config_.yaml ~/.brownie/network-config.yaml
+```
