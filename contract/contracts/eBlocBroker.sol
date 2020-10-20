@@ -241,7 +241,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
         if (
             !provider.receiptList.checkIfOverlapExists(
-                job,
+                job.startTime,
                 uint32(args.completionTime),
                 int32(info.availableCore),
                 core

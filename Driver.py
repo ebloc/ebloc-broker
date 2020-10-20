@@ -402,4 +402,4 @@ if __name__ == "__main__":
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
             _colorize_traceback()
-        sys.exit(1), #
+        sys.exit(1)

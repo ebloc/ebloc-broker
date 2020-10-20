@@ -45,13 +45,9 @@ if [ $setup -eq 1 ]; then
     pip install wheel
     pip install -r requirements.txt
 
-    pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
-    pip install -U pyocclient  # owncloud_py
-    pip install -U typing      # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-    pip install -U colored
-    pip install -U pymongo
-    pip install -U python-dotenv
-    pip install -e .  # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
+    # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
+    pip install -e .
+
     # pip install -U matplotlib
     # pip install -U google-colab
     # pip install sphinx_rtd_theme
@@ -71,8 +67,8 @@ if [ $setup -eq 1 ]; then
     else
         ## Linux Packages
         sudo apt-get install munge
-        sudo apt-get install mailutils
         sudo apt-get install curl
+        sudo apt-get install mailutils
         sudo apt-get install davfs2
         sudo apt-get install python-psutil
         sudo apt-get install -y nodejs

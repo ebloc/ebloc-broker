@@ -1,6 +1,8 @@
 #!/bin/bash
 
 source $HOME/venv/bin/activate
+
+rm -rf reports/
 brownie compile
 
 PORT=8547

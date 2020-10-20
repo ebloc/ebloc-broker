@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -14,7 +14,6 @@ from contract.scripts.lib import DataStorage, Job, cost, new_test
 from utils import CacheType, StorageID, ipfs_to_bytes32, logging, zero_bytes32
 
 # from brownie.test import given, strategy
-Ebb = None
 setup_logger("", True)
 config.logging.propagate = False
 
@@ -40,8 +39,7 @@ ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3U
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb  # noqa: F401
-    Ebb = _Ebb
+    config.Ebb = _Ebb
     config.w3 = web3
 
 
@@ -51,7 +49,7 @@ def run_around_tests():
 
 
 def check_price_keys(price_keys, provider, source_code_hash1):
-    res = Ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
+    res = config.Ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
     for key in price_keys:
         if key > 0:
             assert key in res, f"{key} does no exist in price keys({res}) for the registered data{source_code_hash1}"
@@ -81,11 +79,11 @@ def get_block_number():
 
 def withdraw(address, amount):
     temp = address.balance()
-    assert Ebb.balanceOf(address) == amount
-    Ebb.withdraw({"from": address, "gas_price": 0})
+    assert config.Ebb.balanceOf(address) == amount
+    config.Ebb.withdraw({"from": address, "gas_price": 0})
     received = address.balance() - temp
     assert amount == received
-    assert Ebb.balanceOf(address) == 0
+    assert config.Ebb.balanceOf(address) == 0
 
 
 def get_block_timestamp():
@@ -93,12 +91,12 @@ def get_block_timestamp():
 
 
 def register_provider(price_core_min=1):
-    """Register Provider"""
+    """Register provider."""
     mine(1)
     web3.eth.defaultAccount = accounts[0]
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
-    tx = Ebb.registerProvider(
+    tx = config.Ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_email,
         federatedCloudID,
@@ -117,22 +115,22 @@ def register_provider(price_core_min=1):
 
     orc_id = "0000-0001-7642-0442"
     orc_id_as_bytes = str.encode(orc_id)
-    assert not Ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
-    Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
-    assert Ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified is failed"
+    assert not config.Ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
+    config.Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+    assert config.Ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified is failed"
 
     # orc_id should only set once for the same user
     with brownie.reverts():
-        Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+        config.Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
 
-    *_, b = Ebb.getRequesterInfo(accounts[0])
+    *_, b = config.Ebb.getRequesterInfo(accounts[0])
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
     return provider_registered_bn
 
 
 def register_requester(account):
     """Register requester."""
-    tx = Ebb.registerRequester(
+    tx = config.Ebb.registerRequester(
         GPG_FINGERPRINT,
         "alper.alimoglu@gmail.com",
         "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
@@ -140,26 +138,26 @@ def register_requester(account):
         whisper_pub_key,
         {"from": account},
     )
-    assert Ebb.doesRequesterExist(account), True
+    assert config.Ebb.doesRequesterExist(account), True
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogRequester"]["gpgFingerprint"])
     assert gpg_fingerprint == GPG_FINGERPRINT
 
     orc_id = "0000-0001-7642-0552"
     orc_id_as_bytes = str.encode(orc_id)
 
-    # logging.info(f"isOrcIDVerified={Ebb.isOrcIDVerified(account)}")
+    # logging.info(f"isOrcIDVerified={config.Ebb.isOrcIDVerified(account)}")
 
-    assert not Ebb.isOrcIDVerified(account), "orc_id initial value should be false"
+    assert not config.Ebb.isOrcIDVerified(account), "orc_id initial value should be false"
 
-    Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})  # ORCID should be registered.
+    config.Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})  # ORCID should be registered.
 
-    assert Ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
-    assert not Ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
+    assert config.Ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
+    assert not config.Ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
 
     with brownie.reverts():  # orc_id should only set once for the same user
-        Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
+        config.Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
 
-    *_, b = Ebb.getRequesterInfo(account)
+    *_, b = config.Ebb.getRequesterInfo(account)
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
@@ -193,7 +191,7 @@ def test_stored_data_usage():
     job.cores = [1]
     job.execution_durations = [5]
 
-    job.provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PRIVATE.value]
     args = [
@@ -207,10 +205,10 @@ def test_stored_data_usage():
         job.dataTransferOut,
     ]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
 
     # first time job is submitted with the data files
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -225,7 +223,7 @@ def test_stored_data_usage():
     print(tx.events["LogJob"]["jobKey"])
     assert _cost["storage"] == 2
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
 
     print("jobIndex=" + str(tx.events["LogJob"]["index"]))
     print(tx.events["LogJob"]["jobKey"])
@@ -234,7 +232,7 @@ def test_stored_data_usage():
 
     with brownie.reverts():
         job_price_revert = 500  # dataTransferIn cost is ignored
-        tx = Ebb.submitJob(
+        tx = config.Ebb.submitJob(
             jobKey,
             job.dataTransferIns,
             args,
@@ -243,7 +241,7 @@ def test_stored_data_usage():
             {"from": requester, "value": web3.toWei(job_price_revert, "wei")},
         )
 
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -255,9 +253,9 @@ def test_stored_data_usage():
     assert "LogDataStorageRequest" not in tx.events
     mine(240)
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
     # first time job is submitted with the data files
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -272,17 +270,17 @@ def test_stored_data_usage():
 # @pytest.mark.skip(reason="skip")
 def test_ownership():
     """Get Owner"""
-    assert Ebb.getOwner() == accounts[0]
+    assert config.Ebb.getOwner() == accounts[0]
 
     with brownie.reverts():  # transferOwnership should revert
-        Ebb.transferOwnership("0x0000000000000000000000000000000000000000", {"from": accounts[0]})
+        config.Ebb.transferOwnership("0x0000000000000000000000000000000000000000", {"from": accounts[0]})
 
-    Ebb.transferOwnership(accounts[1], {"from": accounts[0]})
-    assert Ebb.getOwner() == accounts[1]
+    config.Ebb.transferOwnership(accounts[1], {"from": accounts[0]})
+    assert config.Ebb.getOwner() == accounts[1]
 
 
 def test_initial_balances():
-    assert Ebb.balanceOf(accounts[0]) == 0
+    assert config.Ebb.balanceOf(accounts[0]) == 0
 
 
 def test_computational_refund():
@@ -303,9 +301,9 @@ def test_computational_refund():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
 
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
         provider_price_block_number,
@@ -316,7 +314,7 @@ def test_computational_refund():
         job.execution_durations,
         job.dataTransferOut,
     ]
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         job.source_code_hashes[0],
         job.dataTransferIns,
         args,
@@ -328,13 +326,13 @@ def test_computational_refund():
     index = 0
     jobID = 0
     startTime = 1579524978
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
     rpc.sleep(60)
     mine(5)
 
     args = [index, jobID, 1579524998, 2, 0, [1], [5], True]
     execution_duration = 1
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_duration, zero_bytes32, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(job.source_code_hashes[0], args, execution_duration, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     print(str(received_sum) + " " + str(refunded_sum))
@@ -367,14 +365,14 @@ def test_storage_refund():
     job.cores = [2]
     job.execution_durations = [10]
 
-    job.provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
 
     # provider's registered data won't be used
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
 
     job_price += 1  # for test 1 wei extra is paid
     args = [
@@ -387,7 +385,7 @@ def test_storage_refund():
         job.execution_durations,
         job.dataTransferOut,
     ]
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -404,49 +402,49 @@ def test_storage_refund():
 
     index = 0
     jobID = 0
-    tx = Ebb.refund(provider, jobKey, index, jobID, job.cores, job.execution_durations, {"from": provider})
-    print(Ebb.getJobInfo(provider, jobKey, index, jobID))
+    tx = config.Ebb.refund(provider, jobKey, index, jobID, job.cores, job.execution_durations, {"from": provider})
+    print(config.Ebb.getJobInfo(provider, jobKey, index, jobID))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
     print(f"refundedWei={refundedWei}")
     withdraw(requester, refundedWei)
 
     # VM Exception while processing transaction: invalid opcode
     with brownie.reverts():
-        Ebb.getJobInfo(provider, jobKey, 5, jobID)
+        config.Ebb.getJobInfo(provider, jobKey, 5, jobID)
 
     storage_cost_sum = 0
     for source_code_hash in job.source_code_hashes:
-        storage_cost_sum += Ebb.getReceivedStorageDeposit(provider, requester, source_code_hash)
+        storage_cost_sum += config.Ebb.getReceivedStorageDeposit(provider, requester, source_code_hash)
 
     assert _cost["storage"] == storage_cost_sum
     assert _cost["computational"] + _cost["data_transfer"] + _cost["cache"] == refundedWei
     mine(240)
 
-    tx = Ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000})
+    tx = config.Ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000})
     refundedWei = tx.events["LogStorageDeposit"]["payment"]
     print("refundedWei=" + str(refundedWei))
     withdraw(requester, refundedWei)
 
     with brownie.reverts():  # refundStorageDeposit should revert
-        tx = Ebb.refundStorageDeposit(
+        tx = config.Ebb.refundStorageDeposit(
             provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000}
         )
 
-    tx = Ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[1], {"from": requester, "gas": 4500000})
+    tx = config.Ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[1], {"from": requester, "gas": 4500000})
     refundedWei = tx.events["LogStorageDeposit"]["payment"]
     paid_address = tx.events["LogStorageDeposit"]["paidAddress"]
     withdraw(requester, refundedWei)
 
     with brownie.reverts():  # refundStorageDeposit should revert
-        tx = Ebb.refundStorageDeposit(
+        tx = config.Ebb.refundStorageDeposit(
             provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000}
         )
 
     assert requester == paid_address
-    assert Ebb.balanceOf(provider) == 0
+    assert config.Ebb.balanceOf(provider) == 0
 
     print("========= Same Job submitted after full refund =========")
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -460,8 +458,8 @@ def test_storage_refund():
 
     index = 1
     jobID = 0
-    tx = Ebb.refund(provider, jobKey, index, jobID, job.cores, job.execution_durations, {"from": provider})
-    print(Ebb.getJobInfo(provider, jobKey, index, jobID))
+    tx = config.Ebb.refund(provider, jobKey, index, jobID, job.cores, job.execution_durations, {"from": provider})
+    print(config.Ebb.getJobInfo(provider, jobKey, index, jobID))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
     print("refundedWei=" + str(refundedWei))
 
@@ -470,28 +468,28 @@ def test_storage_refund():
     storage_cost_sum = 0
     storage_payment = []
     for source_code_hash in job.source_code_hashes:
-        storage_payment.append(Ebb.getReceivedStorageDeposit(provider, requester, source_code_hash))
+        storage_payment.append(config.Ebb.getReceivedStorageDeposit(provider, requester, source_code_hash))
 
     job.isVerified = [True, True]
     # called by the cluster
-    Ebb.sourceCodeHashReceived(
+    config.Ebb.sourceCodeHashReceived(
         jobKey, index, job.source_code_hashes, job.cache_types, job.isVerified, {"from": provider, "gas": 4500000}
     )
 
     for source_code_hash in job.source_code_hashes:
-        print(Ebb.getJobStorageTime(provider, source_code_hash))
+        print(config.Ebb.getJobStorageTime(provider, source_code_hash))
 
     with brownie.reverts():  # refundStorageDeposit should revert, because it is already used by the provider
         for source_code_hash in job.source_code_hashes:
-            tx = Ebb.refundStorageDeposit(provider, requester, source_code_hash, {"from": requester, "gas": 4500000})
+            tx = config.Ebb.refundStorageDeposit(provider, requester, source_code_hash, {"from": requester, "gas": 4500000})
 
     with brownie.reverts():
-        tx = Ebb.receiveStorageDeposit(requester, job.source_code_hashes[0], {"from": provider, "gas": 4500000})
+        tx = config.Ebb.receiveStorageDeposit(requester, job.source_code_hashes[0], {"from": provider, "gas": 4500000})
 
     mine(240)
     # after deadline (1 hr) is completed to store the data, provider could obtain the money
     for idx, source_code_hash in enumerate(job.source_code_hashes):
-        tx = Ebb.receiveStorageDeposit(requester, source_code_hash, {"from": provider, "gas": 4500000})
+        tx = config.Ebb.receiveStorageDeposit(requester, source_code_hash, {"from": provider, "gas": 4500000})
         amount = tx.events["LogStorageDeposit"]["payment"]
         withdraw(provider, amount)
         assert storage_payment[idx] == amount
@@ -502,34 +500,34 @@ def test_update_provider():
     provider_registered_bn = register_provider()
 
     federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    Ebb.updateProviderInfo(
+    config.Ebb.updateProviderInfo(
         GPG_FINGERPRINT, provider_email, federatedCloudID, ipfs_address, whisper_pub_key, {"from": accounts[0]}
     )
-    print(Ebb.getUpdatedProviderPricesBlocks(accounts[0]))
+    print(config.Ebb.getUpdatedProviderPricesBlocks(accounts[0]))
 
     available_core_num = 64
-    Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
+    config.Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
 
     available_core_num = 128
-    Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
+    config.Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
 
-    prices_set_block_number = Ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
-    assert Ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 128
+    prices_set_block_number = config.Ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
+    assert config.Ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 128
 
     available_core_num = 16
-    Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
+    config.Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
 
-    prices_set_block_number = Ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
-    assert Ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 16
+    prices_set_block_number = config.Ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
+    assert config.Ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 16
     mine(240)
 
     available_core_num = 32
-    Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
+    config.Ebb.updateProviderPrices(available_core_num, commitmentBlockNum, prices, {"from": accounts[0]})
 
-    print(Ebb.getUpdatedProviderPricesBlocks(accounts[0]))
-    assert Ebb.getUpdatedProviderPricesBlocks(accounts[0])[2] == commitmentBlockNum * 2 + provider_registered_bn
+    print(config.Ebb.getUpdatedProviderPricesBlocks(accounts[0]))
+    assert config.Ebb.getUpdatedProviderPricesBlocks(accounts[0])[2] == commitmentBlockNum * 2 + provider_registered_bn
 
-    providerPriceInfo = Ebb.getProviderInfo(accounts[0], 0)
+    providerPriceInfo = config.Ebb.getProviderInfo(accounts[0], 0)
 
     block_read_from = providerPriceInfo[0]
     assert block_read_from == commitmentBlockNum + provider_registered_bn
@@ -558,7 +556,7 @@ def test_multiple_data():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
     job.execution_durations = [10]
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     args = [
@@ -572,10 +570,10 @@ def test_multiple_data():
         job.dataTransferOut,
     ]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
 
     # first time job is submitted with the data files
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -589,36 +587,36 @@ def test_multiple_data():
     assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
 
     # second time job is wanted to send by the same user  with the same data files
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3,)
     assert _cost["storage"] == 0, "Since cost of storage is already paid by the user it should be 0"
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = cost(provider, requester_1, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester_1, job, config.Ebb, web3,)
     print(str(_cost))
     assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
 
     # => Cluster verifies the gvien data files for the related job
     index = 0
     isVerified_list = [True, True]
-    tx = Ebb.sourceCodeHashReceived(
+    tx = config.Ebb.sourceCodeHashReceived(
         jobKey, index, job.source_code_hashes, job.cache_types, isVerified_list, {"from": provider, "gas": 4500000}
     )
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3,)
     assert _cost["storage"] == 0, "Since it is verified torageCost should be 0"
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = cost(provider, requester_1, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester_1, job, config.Ebb, web3,)
     assert _cost["storage"] == 100, "Since data1 is verified and publis, its cost of storage should be 0"
 
     # ds = scripts.DataStorage(provider, source_code_hashes[1], True)
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3,)
 
     assert _cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
     assert _cost["data_transfer"] == job.dataTransferOut, "cost of data_transfer should cover only dataTransferOut"
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -635,7 +633,7 @@ def test_multiple_data():
     startTime = get_block_timestamp()
     execution_time = 10
     result_ipfs_hash = "0xabcd"
-    tx = Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
 
     rpc.sleep(15 * 4 * execution_time)
     mine(1)
@@ -650,7 +648,7 @@ def test_multiple_data():
         job.execution_durations,
         False,
     ]
-    tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     print(f"{received_sum} {refunded_sum}")
@@ -667,14 +665,14 @@ def test_multiple_data():
     startTime = get_block_timestamp()
     execution_time = 10
     result_ipfs_hash = "0xabcd"
-    tx = Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
 
     rpc.sleep(15 * 4 * execution_time)
     mine(1)
     end_time = startTime + 15 * 4 * execution_time
 
     args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, False]
-    tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     # print(tx.events['LogProcessPayment'])
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
@@ -696,40 +694,40 @@ def test_workflow():
     jobKey = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd"
     source_code_hash = ipfs_to_bytes32(jobKey)
     with brownie.reverts():  # getJobInfo should revert
-        Ebb.updataDataPrice(source_code_hash, 20, 100, {"from": provider})
+        config.Ebb.updataDataPrice(source_code_hash, 20, 100, {"from": provider})
 
-    Ebb.registerData(source_code_hash, 20, 240, {"from": provider})
-    Ebb.removeRegisteredData(source_code_hash, {"from": provider})  # should submitJob fail if it is not removed
+    config.Ebb.registerData(source_code_hash, 20, 240, {"from": provider})
+    config.Ebb.removeRegisteredData(source_code_hash, {"from": provider})  # should submitJob fail if it is not removed
 
     source_code_hash1 = "0x68b8d8218e730fc2957bcb12119cb204"
     # "web3.toBytes(hexstr=ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve"))
-    Ebb.registerData(source_code_hash1, 20, 240, {"from": provider})
+    config.Ebb.registerData(source_code_hash1, 20, 240, {"from": provider})
     mine(6)
 
     with brownie.reverts():  # registerData should revert
-        Ebb.registerData(source_code_hash1, 20, 1000, {"from": provider})
+        config.Ebb.registerData(source_code_hash1, 20, 1000, {"from": provider})
 
-    Ebb.updataDataPrice(source_code_hash1, 250, 241, {"from": provider})
+    config.Ebb.updataDataPrice(source_code_hash1, 250, 241, {"from": provider})
 
-    data_block_numbers = Ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
+    data_block_numbers = config.Ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
     print(f"getRegisteredDataBlockNumbers={data_block_numbers[1]}")
     get_block_number()
-    data_prices = Ebb.getRegisteredDataPrice(provider, source_code_hash1, 0)
+    data_prices = config.Ebb.getRegisteredDataPrice(provider, source_code_hash1, 0)
     print(f"registerDataPrice={data_prices}")
     assert data_prices[0] == 20
 
-    res = Ebb.getRegisteredDataPrice(provider, source_code_hash1, data_block_numbers[1])
+    res = config.Ebb.getRegisteredDataPrice(provider, source_code_hash1, data_block_numbers[1])
     print(f"registerDataPrice={res}")
     assert res[0] == 250
 
     mine(231)
 
-    res = Ebb.getRegisteredDataPrice(provider, source_code_hash1, 0)
+    res = config.Ebb.getRegisteredDataPrice(provider, source_code_hash1, 0)
     print(f"registerDataPrice={res}")
     assert res[0] == 20
     mine(1)
 
-    res = Ebb.getRegisteredDataPrice(provider, source_code_hash1, 0)
+    res = config.Ebb.getRegisteredDataPrice(provider, source_code_hash1, 0)
     print(f"registerDataPrice={res}")
     assert res[0] == 250
 
@@ -750,7 +748,7 @@ def test_workflow():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     args = [
         provider,
-        Ebb.getProviderSetBlockNumbers(accounts[0])[-1],
+        config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1],
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -759,10 +757,9 @@ def test_workflow():
         job.dataTransferOut,
     ]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
-
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3,)
     # first submit
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -771,9 +768,9 @@ def test_workflow():
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 
-    print(Ebb.getJobInfo(provider, jobKey, 0, 0))
-    print(Ebb.getJobInfo(provider, jobKey, 0, 1))
-    print(Ebb.getJobInfo(provider, jobKey, 0, 2))
+    print(config.Ebb.getJobInfo(provider, jobKey, 0, 0))
+    print(config.Ebb.getJobInfo(provider, jobKey, 0, 1))
+    print(config.Ebb.getJobInfo(provider, jobKey, 0, 2))
 
     print("-------------------")
     assert (
@@ -782,19 +779,19 @@ def test_workflow():
     ), "Registered Data should be used"
 
     with brownie.reverts():  # getJobInfo should revert
-        print(Ebb.getJobInfo(provider, jobKey, 1, 2))
-        print(Ebb.getJobInfo(provider, jobKey, 0, 3))
+        print(config.Ebb.getJobInfo(provider, jobKey, 1, 2))
+        print(config.Ebb.getJobInfo(provider, jobKey, 0, 3))
 
     # setJobStatus for the workflow:
     index = 0
     jobID = 0
     startTime = 10
-    tx = Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
 
     index = 0
     jobID = 1
     startTime = 20
-    tx = Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
 
     # processPayment for the workflow:
     index = 0
@@ -809,7 +806,7 @@ def test_workflow():
     received_sum = 0
     refunded_sum = 0
     args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, False]
-    tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     # print(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
@@ -825,7 +822,7 @@ def test_workflow():
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
 
     args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, False]
-    tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
     received_sum += tx.events["LogProcessPayment"]["receivedWei"]
@@ -851,15 +848,15 @@ def test_workflow():
             job.execution_durations,
             False,
         ]
-        tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+        tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     index = 0
     jobID = 2
     startTime = 20
-    tx = Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
 
     args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, True]
-    tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     # print(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
@@ -872,7 +869,7 @@ def test_workflow():
     assert job_price - _cost["storage"] == received_sum + refunded_sum
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
-    # Ebb.updateDataReceivedBlock(result_ipfs_hash, {"from": accounts[4]})
+    # config.Ebb.updateDataReceivedBlock(result_ipfs_hash, {"from": accounts[4]})
 
 
 def test_simple_submit():
@@ -884,7 +881,7 @@ def test_simple_submit():
     register_requester(requester)
 
     job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
-    job.cores = [1]
+    job.cores = [2]
     job.execution_durations = [1]
     job.dataTransferIns = [1, 1]
     job.dataTransferOut = 1
@@ -893,8 +890,8 @@ def test_simple_submit():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
+    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
 
     args = [
         provider,
@@ -906,7 +903,7 @@ def test_simple_submit():
         job.execution_durations,
         job.dataTransferOut,
     ]
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         job.source_code_hashes[0],
         job.dataTransferIns,
         args,
@@ -916,11 +913,10 @@ def test_simple_submit():
     )
 
     print("submitJob_gas_used=" + str(tx.__dict__['gas_used']))
-    breakpoint() # DEBUG
     index = 0
     jobID = 0
     startTime = 1579524978
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
     rpc.sleep(60)
     mine(5)
 
@@ -930,230 +926,14 @@ def test_simple_submit():
     args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
     execution_time_min = 1
     out_hash = b'[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99'
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, out_hash, {"from": accounts[0]})
-    # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, out_hash, {"from": accounts[0]})
+    # tx = config.Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     # print(str(received_sum) + " " + str(refunded_sum))
     assert received_sum == 100 and refunded_sum == 5
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
-
-
-def test_submitJob_gas():
-    job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-
-    register_provider(100)
-    register_requester(requester)
-
-    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = Ebb.submitJob(
-        job.source_code_hashes[0],
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    index = 0
-    jobID = 0
-    startTime = 10
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
-    rpc.sleep(60)
-    mine(5)
-
-    completionTime = 20
-    dataTransferIn = 0
-    dataTransferOut = 0
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
-    execution_time_min = 1
-
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-
-    # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
-    # print(str(received_sum) + " " + str(refunded_sum))
-
-    # withdraw(accounts[0], received_sum)
-    # withdraw(requester, refunded_sum)
-    # ------------
-    job = Job()
-    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = Ebb.submitJob(
-        job.source_code_hashes[0],
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    index = 1
-    jobID = 0
-    startTime = 29
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
-    rpc.sleep(60)
-    mine(5)
-
-    completionTime = 35
-    dataTransferIn = 0
-    dataTransferOut = 0
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
-    execution_time_min = 1
-
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-    # ------------
-    job = Job()
-    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = Ebb.submitJob(
-        job.source_code_hashes[0],
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    index = 2
-    jobID = 0
-    startTime = 30
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
-    rpc.sleep(60)
-    mine(5)
-    # 148072 151555
-    completionTime = 45
-    dataTransferIn = 0
-    dataTransferOut = 0
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
-    execution_time_min = 1
-
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-    # ------------
-    job = Job()
-    job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
-    provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = Ebb.submitJob(
-        job.source_code_hashes[0],
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    index = 3
-    jobID = 0
-    startTime = 44
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
-    rpc.sleep(60)
-    mine(5)
-    completionTime = 51
-    dataTransferIn = 0
-    dataTransferOut = 0
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
-    execution_time_min = 1
-
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, "", {"from": accounts[0]})
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-
-    size = Ebb.getProviderReceiptSize(provider)
-    for idx in range(0, size):
-        print(Ebb.getProviderReceiptNode(provider, idx))
-    print("----------------------------------")
 
 
 def test_submitJob():
@@ -1168,9 +948,9 @@ def test_submitJob():
     # fname = cwd + '/files/test_.txt'
 
     print("Registered provider addresses:")
-    print(Ebb.getProviders())
+    print(config.Ebb.getProviders())
 
-    providerPriceInfo = Ebb.getProviderInfo(accounts[0], 0)
+    providerPriceInfo = config.Ebb.getProviderInfo(accounts[0], 0)
     # block_read_from = providerPriceInfo[0]
     _providerPriceInfo = providerPriceInfo[1]
     # availableCoreNum = _providerPriceInfo[0]
@@ -1218,7 +998,7 @@ def test_submitJob():
 
             args = [
                 provider,
-                Ebb.getProviderSetBlockNumbers(accounts[0])[-1],
+                config.Ebb.getProviderSetBlockNumbers(accounts[0])[-1],
                 job.storage_ids,
                 job.cache_types,
                 job.data_prices_set_block_numbers,
@@ -1228,12 +1008,11 @@ def test_submitJob():
             ]
 
             # print(source_code_hashes[0])
-            job_price, _cost = cost(provider, requester, job, Ebb, web3)
-
+            job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
             job_priceSum += job_price
             dataTransferIns = [100]
 
-            tx = Ebb.submitJob(
+            tx = config.Ebb.submitJob(
                 jobKey,
                 dataTransferIns,
                 args,
@@ -1248,7 +1027,7 @@ def test_submitJob():
             # print("Client Balance after: " + str(web3.eth.balanceOf(accounts[8])))
             # sys.stdout.write('jobInfo: ')
             # sys.stdout.flush()
-            print(Ebb.getJobInfo(provider, jobKey, index, jobID))
+            print(config.Ebb.getJobInfo(provider, jobKey, index, jobID))
             index += 1
 
     print(f"total_paid={job_priceSum}")
@@ -1260,10 +1039,10 @@ def test_submitJob():
     with open(fname) as f:
         for index, line in enumerate(f):
             arguments = line.rstrip("\n").split(" ")
-            tx = Ebb.setJobStatusRunning(jobKey, index, jobID, int(arguments[0]), {"from": accounts[0]})
+            tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, int(arguments[0]), {"from": accounts[0]})
             if index == 0:
                 with brownie.reverts():
-                    tx = Ebb.setJobStatusRunning(jobKey, index, jobID, int(arguments[0]) + 1, {"from": accounts[0]})
+                    tx = config.Ebb.setJobStatusRunning(jobKey, index, jobID, int(arguments[0]) + 1, {"from": accounts[0]})
 
     print("----------------------------------")
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
@@ -1283,7 +1062,7 @@ def test_submitJob():
             job.cores = [core]
             job.execution_durations = [coreMin]
 
-            print("\nContractBalance=" + str(Ebb.getContractBalance()))
+            print("\nContractBalance=" + str(config.Ebb.getContractBalance()))
             jobID = 0
             execution_time = int(arguments[1]) - int(arguments[0])
             end_time = int(arguments[1])
@@ -1297,7 +1076,7 @@ def test_submitJob():
                 job.execution_durations,
                 True,
             ]
-            tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+            tx = config.Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
             # source_code_hashes
             received = tx.events["LogProcessPayment"]["receivedWei"]
             refunded = tx.events["LogProcessPayment"]["refundedWei"]
@@ -1305,15 +1084,15 @@ def test_submitJob():
             withdraw(requester, refunded)
             print(f"received={received} | refunded={refunded}")
 
-    print("\nContractBalance=" + str(Ebb.getContractBalance()))
+    print("\ncontract_balance=" + str(config.Ebb.getContractBalance()))
     # prints finalize version of the linked list.
-    size = Ebb.getProviderReceiptSize(provider)
+    size = config.Ebb.getProviderReceiptSize(provider)
     for idx in range(0, size):
-        print(Ebb.getProviderReceiptNode(provider, idx))
+        print(config.Ebb.getProviderReceiptNode(provider, idx))
 
     print("----------------------------------")
     print(f"StorageTime for job: {jobKey}")
-    ds = DataStorage(Ebb, web3, provider, source_code_hash, True)
+    ds = DataStorage(config.Ebb, web3, provider, source_code_hash, True)
 
     print(
         f"receivedBlockNumber={ds.received_block} |"
@@ -1323,14 +1102,14 @@ def test_submitJob():
     )
     print(
         "received_storage_deposit="
-        + str(Ebb.getReceivedStorageDeposit(provider, requester, source_code_hash, {"from": provider}))
+        + str(config.Ebb.getReceivedStorageDeposit(provider, requester, source_code_hash, {"from": provider}))
     )
     # print("\x1b[6;30;42m" + "========== DONE ==========" + "\x1b[0m")
 
     """
     mine(240)
-    tx = Ebb.receiveStorageDeposit(requester, source_code_hash, {"from": provider});
+    tx = config.Ebb.receiveStorageDeposit(requester, source_code_hash, {"from": provider});
     print('receiveStorageDeposit => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
-    print(Ebb.getReceivedStorageDeposit(requester, source_code_hash, {"from": }))
+    print(config.Ebb.getReceivedStorageDeposit(requester, source_code_hash, {"from": }))
     print('----------------------------------')
     """

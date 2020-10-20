@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.0;
+pragma solidity 0.7.0;
 
 library Lib {
     enum CacheType {
@@ -48,9 +48,15 @@ library Lib {
         COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT /* 7  */
     }
 
+    struct Interval {
+        uint32 next; // Points to next the node
+        uint32 endpoint;
+        int32 core; // Job's requested core number
+    }
+
     struct JobArgument {
         /* An Ethereum address value containing the Ethereum address of the
-         * provider that is requested to run the job. */
+           provider that is requested to run the job. */
         address payable provider;
         /* A uint32 value containing the block number when the requested
          * provider set its prices most recent. */
@@ -148,15 +154,9 @@ library Lib {
         IntervalNode receiptList; // receiptList will be use to check either job's start and end time overlapped or not
     }
 
-    struct Interval {
-        uint32 endpoint;
-        int32 core; // Job's requested core number
-        uint32 next; // Points to next the node
-    }
-
     struct IntervalNode {
-        uint32 tail; // Tail of the linked list
-        uint32 deletedItemNum; // Keep track of deleted nodes
+        uint32 tail; // tail of the linked list
+        uint32 deletedItemNum; // keep track of deleted nodes
         Interval[] list; // A dynamically-sized array of interval structs
     }
 
@@ -167,40 +167,71 @@ library Lib {
     function constructProvider(Provider storage self) internal {
         self.isRunning = true;
         self.committedBlock = uint32(block.number);
-
-        IntervalNode storage selfReceiptList = self.receiptList;
-        selfReceiptList.list.push(Interval({endpoint: 0, core: 0, next: 0})); /* Dummy node is inserted on initialization */
+        IntervalNode storage receiptList = self.receiptList;
+        receiptList.list.push(Interval({next: 0, endpoint: 0, core: 0})); /* Dummy node is inserted on initialization */
     }
 
     function _isOverlapAlgorithm(
-        Interval[] storage list,
         uint32 prevNode_next,
-        uint32 startTime // 148084
-    ) internal returns (bool flag) {
-        Interval memory currentNode = list[0];
+        uint32 startTime,
+        int32 carriedSum, /* assigned with job's given core number */
+        int32 availableCore,
+        int32 core,
+        Interval storage prevNode_storage,
+        Interval[] storage list
+    ) internal returns (bool flag, bool isDeleted) {
+        Interval memory currentNode = list[prevNode_next]; /* Current node points index before insert operation is done */
+        Interval memory prevNode = prevNode_storage;
+        do {
+            /* Covers [val, val1) s = s-1 */
+            if (startTime >= currentNode.endpoint) {
+                if (startTime == currentNode.endpoint) {
+                    int32 temp = currentNode.core + (int32(core) * -1);
+                    if (temp != 0) {
+                        list[prevNode.next].core = currentNode.core + (int32(core) * -1);
+                    }
+
+                    prevNode_storage.next = list[prevNode.next].next;
+                    delete list[prevNode.next];
+                    isDeleted = true;
+                } else {
+                    list.push(Interval({next: prevNode.next, endpoint: startTime, core: int32(core) * -1}));
+                    if (!flag) {
+                        prevNode_storage.next = uint32(list.length - 1);
+                    } else {
+                        // additional 5k storage for read from the list
+                        list[prevNode_next].next = uint32(list.length - 1);
+                    }
+                }
+                return (true, isDeleted);
+            }
+            carriedSum += currentNode.core; /* Inside while loop carriedSum is updated */
+            /* If enters into if statement it means revert() is catched and all
+               the previous operations are reverted back */
+            if (carriedSum > availableCore) {
+                return (false, false);
+            }
+            prevNode_next = prevNode.next;
+            prevNode = currentNode;
+            currentNode = list[currentNode.next];
+            flag = true;
+        } while (true);
     }
 
     function checkIfOverlapExists(
         IntervalNode storage self,
-        Job memory _job,
+        uint32 startTime,
         uint32 completionTime,
         int32 availableCore,
         uint256 core
     ) internal returns (bool flag) {
         Interval[] storage list = self.list;
-
         uint32 addrTemp;
         uint32 addr = self.tail;
-        uint32 startTime = _job.startTime;
-        int32 carriedSum;
 
         Interval storage prevNode = list[0];
-        Interval storage currentNode = list[0];
-        Interval storage prevNodeTemp = list[0];
-
-        // +----------------------------+
-        // | Begin: isOverlap Algorithm |
-        // +----------------------------+
+        Interval storage currentNode = prevNode;
+        Interval storage prevNodeTemp = prevNode;
 
         if (completionTime < list[addr].endpoint) {
             flag = true;
@@ -217,9 +248,8 @@ library Lib {
             } while (true);
         }
 
-        /* Inserted while keeping sorted order */
-        list.push(Interval({endpoint: completionTime, core: int32(core), next: addr}));
-        carriedSum = int32(core); /* Carried sum variable is assigned with job's given core number */
+        /* Inserted while keeping the sorted order */
+        list.push(Interval({next: addr, endpoint: completionTime, core: int32(core)}));
 
         if (!flag) {
             addrTemp = addr;
@@ -227,44 +257,32 @@ library Lib {
         } else {
             addrTemp = prevNode.next;
             prevNodeTemp = prevNode;
-            /* Node that pushed in-between the linked-list , additional 5k storage for read from the list */
+            /* Node that pushed in-between the linked-list, additional 5k storage for read from the list */
             prevNode.next = uint32(list.length - 1);
         }
 
-        // TODO: currentNode => memory
-        _isOverlapAlgorithm(list, prevNode.next, startTime);
-        // ===============
-
-        currentNode = list[prevNode.next]; /* Current node points index before insert operation is done */
-        do {
-            /* Inside while loop carriedSum is updated */
-            if (startTime >= currentNode.endpoint) {
-                /* Covers [val, val1) s = s-1 */
-                list.push(Interval({endpoint: startTime, core: -1 * int32(core), next: prevNode.next}));
-                prevNode.next = uint32(list.length - 1); // change on storage
-                return true;
+        (bool isOverlapFlag, bool isDeleted) = _isOverlapAlgorithm(
+            prevNode.next,
+            startTime,
+            int32(core),
+            availableCore,
+            int32(core),
+            prevNode,
+            list
+        );
+        if (isOverlapFlag) {
+            if (isDeleted) self.deletedItemNum += 1;
+            return true;
+        } else {
+            delete list[list.length - 1];
+            if (!flag) {
+                self.tail = addrTemp;
+            } else {
+                prevNodeTemp.next = addrTemp; // change on storage
             }
-
-            carriedSum += currentNode.core;
-
-            /* If enters into if statement it means revert() is catched and all
-               the previous operations are reverted back */
-            if (carriedSum > availableCore) {
-                delete list[list.length - 1];
-                if (!flag) self.tail = addrTemp;
-                else prevNodeTemp.next = addrTemp; // change on storage
-
-                self.deletedItemNum += 1;
-                return false;
-            }
-
-            prevNode = currentNode;
-            currentNode = list[currentNode.next];
-        } while (true);
-
-        // +--------------------------+
-        // | End: isOverlap Algorithm |
-        // +--------------------------+
+            self.deletedItemNum += 1;
+            return false;
+        }
     }
 
     /* Used for tests */
@@ -275,8 +293,9 @@ library Lib {
     /* Used for test */
     function printIndex(IntervalNode storage self, uint32 index) external view returns (uint256, int32) {
         uint32 _index = self.tail;
-        for (uint256 i = 0; i < index; i++) _index = self.list[_index].next;
-
+        for (uint256 i = 0; i < index; i++) {
+            _index = self.list[_index].next;
+        }
         return (self.list[_index].endpoint, self.list[_index].core);
     }
 }

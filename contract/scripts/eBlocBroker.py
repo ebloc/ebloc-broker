@@ -9,7 +9,7 @@ def main():
     accounts[0].deploy(Lib)
     ebb = accounts[0].deploy(eBlocBroker)
 
-    if network.show_active() == "private":
+    if network.show_active() == "eblocpoa":
         from os.path import expanduser
         home = expanduser("~")
         abi_file = f"{home}/eBlocBroker/eblocbroker/abi.json"

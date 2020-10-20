@@ -12,10 +12,13 @@ apt-cache search mysql | grep "-dev"
 sudo apt-get update
 
 sudo apt-get install build-essential gcc libmunge-dev libmunge2 munge mysql-server
-sudo apt-get install mysql-client libmysqlclient-dev
+sudo apt-get install mysql-server
+sudo apt-get install software-properties-common
+sudo apt-get install mysql-client
 sudo apt-get install default-libmysqlclient-dev
-sudo apt-get install libmysqlclient
 sudo apt-get install libmysqld-dev
+sudo apt-get install libmysqlclient-dev
+
 ```
 
 ```

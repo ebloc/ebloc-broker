@@ -30,14 +30,17 @@ coloredlogs==14.0
 cryptography==2.9
 cytoolz==0.10.1
 daemon==1.2
+DateTime==4.3
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.4
+eth-brownie==1.11.8
 eth-event==1.2.0
 eth-hash==0.2.0
+eth-keyfile==0.5.1
 eth-keys==0.2.4
 eth-rlp==0.1.2
 eth-typing==2.2.1
@@ -73,7 +76,10 @@ Jinja2==2.11.2
 jsonschema==3.2.0
 keyring==21.2.1
 lazy-object-proxy==1.4.3
+lockfile==0.12.2
 lru-dict==1.1.6
+MarkupSafe==1.1.1
+mccabe==0.6.1
 mercurial==5.4.2
 more-itertools==8.2.0
 morphys==1.0
@@ -92,8 +98,10 @@ parsimonious==0.8.1
 parso==0.7.0
 PasteDeploy==2.1.0
 pathspec==0.7.0
+Persistence==3.0
 persistent==4.6.4
 pexpect==4.8.0
+pickleshare==0.7.5
 pkginfo==1.5.0.1
 pluggy==0.13.1
 pre-commit==2.5.1
@@ -103,11 +111,14 @@ psutil==5.7.2
 ptyprocess==0.6.0
 py==1.8.1
 py-cid==0.3.0
+py-multibase==1.0.1
 py-multicodec==0.2.1
 py-multihash==0.2.3
 py-solc-ast==1.2.5
 py-solc-x==1.0.0
+pycodestyle==2.6.0
 pycparser==2.20
+pycryptodome==3.9.8
 pyflakes==2.2.0
 Pygments==2.6.1
 pygments-lexer-solidity==0.5.1
@@ -141,7 +152,10 @@ RestrictedPython==5.0
 rfc3986==1.4.0
 rlp==1.2.0
 roman==3.3
+rope==0.18.0
 -e git+https://github.com/python-rope/ropemacs.git@b054227a2225b4b796c26ba39340fd50157956cb#egg=ropemacs
+ropemode==0.5
+SecretStorage==3.1.2
 seed-isort-config==2.2.0
 selenium==3.141.0
 semantic-version==2.8.5
@@ -149,6 +163,7 @@ sexpdata==0.0.3
 six==1.14.0
 smmap==3.0.1
 sortedcontainers==2.1.0
+soupsieve==2.0.1
 sshtunnel==0.1.4
 sudo==1.0.0
 termcolor==1.1.0
@@ -177,7 +192,9 @@ wrapt==1.12.1
 WSGIProxy2==0.4.6
 WTForms==2.3.1
 z3c.pt==3.3.0
+zc.lockfile==2.0
 ZConfig==3.5.0
 zExceptions==4.1
 zipp==3.1.0
 ZODB==5.6.0
+zodbpickle==2.0.0
