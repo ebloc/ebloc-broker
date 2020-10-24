@@ -33,6 +33,7 @@ daemon==1.2
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
+-e git+https://github.com/ebloc/eBlocBroker.git@e3433a76911c161fb5efb0c9b35ba67de54b6486#egg=eBlocBroker
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.4
@@ -143,7 +144,6 @@ rlp==1.2.0
 roman==3.3
 -e git+https://github.com/python-rope/ropemacs.git@b054227a2225b4b796c26ba39340fd50157956cb#egg=ropemacs
 seed-isort-config==2.2.0
-selenium==3.141.0
 semantic-version==2.8.5
 sexpdata==0.0.3
 six==1.14.0

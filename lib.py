@@ -184,12 +184,12 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
             time.sleep(.25)
 
 
-def run_stdout_to_file(cmd, path) -> None:
+def run_stdout_to_file(cmd, path, mode="w") -> None:
     p, output, error = popen_communicate(cmd, stdout_file=path)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", "red")
-        logging.error(f"E: scontrol error: {output}")
+        logging.error(f"E: scontrol error\n{output}")
         raise
     else:
         logging.info(f"\nWriting into path is completed => {path}")

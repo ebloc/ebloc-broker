@@ -80,7 +80,7 @@ def tools(block_number):
             _colorize_traceback()
         sys.exit(1)
 
-    # run_whisper_state_receiver()  # TODO: uncomment
+    # run_wnnhisper_state_receiver()  # TODO: uncomment
     # run_driver_cancel()  # TODO: uncomment
     if env.GDRIVE_USE:
         try:
@@ -104,7 +104,7 @@ def tools(block_number):
 def run_driver():
     """Run the main driver script for eblocbroker on the background."""
     # dummy sudo command to get the password when session starts for only to
-    # create users and submit slurm job under another user
+    # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
 
     env.IS_THREADING_ENABLED = False
@@ -170,7 +170,7 @@ def run_driver():
 
     block_read_from = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
-    logging.info("deployed_block_number=%s balance=%s", deployed_block_number, balance_temp)
+    logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
 
     while True:
         wait_till_idle_core_available()
@@ -208,6 +208,7 @@ def run_driver():
 
         log(f"Passed incremented block number... Watching from block number={block_read_from}", c="yellow")
         # starting reading event's location has been updated
+
         block_read_from = str(block_read_from)
         slurm.pending_jobs_check()
         logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)

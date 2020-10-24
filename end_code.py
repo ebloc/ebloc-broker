@@ -181,7 +181,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"~/eBlocBroker/end_code.py {args}", "blue")
         log(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
-            logging.error("job_key and index are same")
+            logging.error("E: Key and index are same")
             sys.exit(1)
 
         try:
@@ -444,15 +444,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.source_code_hashes = self.job_info["sourceCodeHash"]
         self.set_source_code_hashes_to_process()
 
+        # Logs jobs' info
         slurm_log_output_file = f"{self.results_folder}/slurmJobInfo.out"
-        try:
-            # in some cases scontrol cannot find the job_id
-            cmd = ["scontrol", "show", "job", self.slurm_job_id]
-            run_stdout_to_file(cmd, slurm_log_output_file)
-        except:
-            cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format",
-                   "jobname,Account,nnodes,ncpus,Elapsed,CPUTime,AllocCPUS,State,ExitCode,End"]
-            run_stdout_to_file(cmd, slurm_log_output_file)
+        cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
+        cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
+        run_stdout_to_file(cmd, slurm_log_output_file)
+        cmd.pop().append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End")
+        run_stdout_to_file(cmd, slurm_log_output_file, mode="a")
 
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_raw_time = slurm.get_elapsed_raw_time(self.slurm_job_id)

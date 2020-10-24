@@ -1,3 +1,7 @@
+slurm-*\.out
+
+contract/report*\.json
+
 grep
 
 doo.py
@@ -311,4 +315,5 @@ end_code_flymake.py
 owncloudScripts/exampleFolderToShare/data1/output.file
 
 owncloudScripts/base/data_link/
+
 .oc.pckl

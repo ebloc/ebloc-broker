@@ -330,7 +330,7 @@ def test_computational_refund():
     rpc.sleep(60)
     mine(5)
 
-    args = [index, jobID, 1579524998, 2, 0, [1], [5], True]
+    args = [index, jobID, 1579524998, 2, 0, job.cores, [5], True]
     execution_duration = 1
     tx = config.Ebb.processPayment(job.source_code_hashes[0], args, execution_duration, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
@@ -877,10 +877,12 @@ def test_simple_submit():
     provider = accounts[0]
     requester = accounts[1]
 
-    register_provider(100)
+    price_core_min = 100
+    register_provider(price_core_min)
     register_requester(requester)
 
     job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
+    job.key = job.source_code_hashes[0]
     job.cores = [2]
     job.execution_durations = [1]
     job.dataTransferIns = [1, 1]
@@ -903,8 +905,9 @@ def test_simple_submit():
         job.execution_durations,
         job.dataTransferOut,
     ]
+
     tx = config.Ebb.submitJob(
-        job.source_code_hashes[0],
+        job.key,
         job.dataTransferIns,
         args,
         job.storage_hours,
@@ -916,27 +919,27 @@ def test_simple_submit():
     index = 0
     jobID = 0
     startTime = 1579524978
-    tx = config.Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    tx = config.Ebb.setJobStatusRunning(job.key, index, jobID, startTime, {"from": provider})
     rpc.sleep(60)
     mine(5)
 
     completionTime = 1579524998
     dataTransferIn = 0
     dataTransferOut = 0.01
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
     execution_time_min = 1
     out_hash = b'[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99'
-    tx = config.Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, out_hash, {"from": accounts[0]})
+    tx = config.Ebb.processPayment(job.key, args, execution_time_min, out_hash, {"from": accounts[0]})
     # tx = config.Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     # print(str(received_sum) + " " + str(refunded_sum))
-    assert received_sum == 100 and refunded_sum == 5
+    assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
 
 
-def test_submitJob():
+def test_submit_job():
     job = Job()
     provider = accounts[0]
     requester = accounts[1]

@@ -32,8 +32,8 @@ empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 zero_bytes32 = "0x00"
 
-yes = set(["yes", "y", "ye", "yy"])
-no = set(["no", "n", "nn"])
+yes = set(["yes", "y", "ye", "ys"])
+no = set(["no", "n"])
 log_files = {}
 
 
@@ -42,7 +42,7 @@ class BashCommandsException(Exception):
         self.returncode = returncode
         self.output = output
         self.error_msg = error_msg
-        Exception.__init__('Error in executed command')
+        Exception.__init__('Error in the executed command')
 
 
 class BaseEnum(IntEnum):
@@ -183,7 +183,7 @@ def run_with_output(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-def popen_communicate(cmd, stdout_file=None):
+def popen_communicate(cmd, stdout_file=None, mode="w"):
     """Acts similir to lib.run(cmd) but also returns the output message captures on
     during the run stdout_file is not None in case of nohup process writes its
     results into a file
@@ -192,7 +192,7 @@ def popen_communicate(cmd, stdout_file=None):
     if stdout_file is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
-        with open(stdout_file, "w") as outfile:
+        with open(stdout_file, mode) as outfile:
             # output written into file, error will be returned
             p = Popen(cmd, stdout=outfile, stderr=PIPE, universal_newlines=True)
             output, error = p.communicate()
@@ -540,10 +540,9 @@ def is_ganache_on(port) -> bool:
 
 def is_geth_on():
     """Checks whether geth runs on the background."""
-    port = str(env.RPC_PORT)
-    port = insert_character(port, 1, "]")
-    port = insert_character(port, 0, "[")
-    if not is_process_on(f"geth.*{port}", "Geth", process_count=0):
+    process_name = f"geth|{env.RPC_PORT}"
+    print(process_name)
+    if not is_process_on(process_name, "Geth", process_count=0):
         log("E: geth is not running on the background. Please run:\nsudo ~/eBlocPOA/server.sh", "red")
         raise config.QuietExit
 

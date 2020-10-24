@@ -10,7 +10,7 @@ import config
 from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import Job, cost, new_test
-from contract.tests.test_eblocbroker import register_provider, register_requester, withdraw
+from contract.tests.test_eblocbroker import register_provider, register_requester, withdraw  # noqa
 from utils import CacheType, StorageID
 
 # from brownie.test import given, strategy
@@ -247,7 +247,7 @@ def test_submitJob_gas():
 
     job.key = job.source_code_hashes[0]
     job.index = 3
-    job.cores = [1]
+    job.cores = [2]
     job.execution_durations = [1]
     job.dataTransferIns = [1]
     job.dataTransferOut = 1
@@ -277,10 +277,10 @@ def test_submitJob_gas():
         job.source_code_hashes,
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
-
+    #
     jobID = 0
     startTime = 34
-    # startTime = 45
+    # startTime = 44
     tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
     rpc.sleep(60)
     mine(5)
@@ -304,4 +304,3 @@ def test_submitJob_gas():
         print(config.Ebb.getProviderReceiptNode(provider, idx))
 
     print("=> gas_cost_for_iteration=" + str(gas_end - gas_base))
-    print("DONE")
