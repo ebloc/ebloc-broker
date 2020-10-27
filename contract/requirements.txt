@@ -27,7 +27,7 @@ colorama==0.4.3
 colored==1.4.2
 colored-traceback==0.3.0
 coloredlogs==14.0
-cryptography==2.9
+cryptography==3.2
 cytoolz==0.10.1
 daemon==1.2
 DateTime==4.3
