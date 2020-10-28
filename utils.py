@@ -716,7 +716,7 @@ class Link:
 
 
 class cd:
-    """Context manager for changing the current working directory
+    """Context manager for changing the current working directory.
     doc: https://stackoverflow.com/a/13197763/2402577
     """
     def __init__(self, new_path):

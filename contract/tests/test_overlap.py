@@ -304,3 +304,5 @@ def test_submitJob_gas():
         print(config.Ebb.getProviderReceiptNode(provider, idx))
 
     print("=> gas_cost_for_iteration=" + str(gas_end - gas_base))
+
+    # TODO : revert on tx check

@@ -27,13 +27,13 @@ colorama==0.4.3
 colored==1.4.2
 colored-traceback==0.3.0
 coloredlogs==14.0
-cryptography==2.9
+cryptography==3.2
 cytoolz==0.10.1
 daemon==1.2
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
--e git+https://github.com/ebloc/eBlocBroker.git@e3433a76911c161fb5efb0c9b35ba67de54b6486#egg=eBlocBroker
+-e git+https://github.com/ebloc/eBlocBroker.git@6dde9e8f755f73d0112580ad0845c40f8140cd65#egg=eBlocBroker
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.4

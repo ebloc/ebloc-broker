@@ -34,7 +34,6 @@ DateTime==4.3
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
--e git+https://github.com/ebloc/eBlocBroker.git@7ae19d32496cda21223f2207e84716d1dd4c69f1#egg=eBlocBroker
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.2

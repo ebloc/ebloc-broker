@@ -28,15 +28,15 @@ if [ $setup -eq 1 ]; then
     ## Install Python3.7
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt-get update
-    sudo apt-get install python3.7
-    sudo apt-get install python3.7-venv
+    sudo apt-get install python3
+    sudo apt-get install python3-venv
+    sudo apt-get install python-pip
 
     # sudo update-alternatives --config python3
     sudo apt-get update
     sudo apt-get install unixodbc-dev
     sudo apt-get install python-dev
 
-    sudo apt install python-pip
     python3 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
     source $HOME/venv/bin/activate
 
@@ -47,12 +47,11 @@ if [ $setup -eq 1 ]; then
 
     # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
     pip install -e .
-
     # pip install -U matplotlib
     # pip install -U google-colab
     # pip install sphinx_rtd_theme
 
-    ## NPM
+    ## npm
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
     sudo n latest

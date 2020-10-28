@@ -360,7 +360,7 @@ def run_driver():
                 sys.exit(1)
 
         if len(logged_jobs_to_process) > 0 and max_blocknumber > 0:
-            # updates the latest read block number
+            # updates the latest read block-number
             block_read_from = max_blocknumber + 1
             write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
         if not is_provider_received_job:

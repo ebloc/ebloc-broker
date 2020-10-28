@@ -203,9 +203,10 @@ library Lib {
         uint256 currentNode_index,
         uint256 prevNode_index,
         int32 availableCore,
-        uint32 _length
+        uint32 _length,
+        int32 carriedSum
     ) internal returns (bool) {
-        int32 carriedSum = core; // Carried sum variable is assigned with job's given core number
+        // int32 carriedSum = core; // Carried sum variable is assigned with job's given core number
         uint256 currentNode_endpoint = self.items[currentNode_index].endpoint; // read from the storage
         int32 currentNode_core = self.items[currentNode_index].core;
         uint32 currentNode_next = self.items[currentNode_index].next;
@@ -254,47 +255,76 @@ library Lib {
         uint256 addr = self.tail;
         uint256 prevNode_index;
         uint256 currentNode_index;
-        if (completionTime < ll.items[addr].endpoint) {
-            flag = true;
-            prevNode_index = addr;
+        int32 _carriedSum;
+        uint256 _length = ll.length;
+
+        if (completionTime <= ll.items[addr].endpoint) {
             /* Current node points index of previous tail-node right after the insert operation */
-            currentNode_index = ll.items[prevNode_index].next;
-            uint32 currentNode_endpoint = ll.items[currentNode_index].endpoint;
-            uint32 currentNode_next = ll.items[currentNode_index].next;
+            // currentNode_index = ll.items[prevNode_index].next;
+            currentNode_index = prevNode_index = addr;
+            uint32 currentNode_endpoint = ll.items[prevNode_index].endpoint;
+            uint32 currentNode_next = ll.items[prevNode_index].next;
+            int32 currentNode_core = ll.items[prevNode_index].core;
             do {
-                if (completionTime > currentNode_endpoint) {
+                if (completionTime >= currentNode_endpoint) {
+                    if (completionTime == currentNode_endpoint) {
+                        _carriedSum = currentNode_core + int32(core);
+                        if (_carriedSum != 0) {
+                            if (_carriedSum > availableCore) return false;
+
+                            flag = true; // helps to prevent pushing since it is already added
+                        }
+                    }
                     addr = currentNode_index; /* "addr" points the index to be added into the linked list */
                     break;
                 }
+
                 prevNode_index = currentNode_index;
                 currentNode_index = currentNode_next;
                 currentNode_endpoint = ll.items[currentNode_index].endpoint;
                 currentNode_next = ll.items[currentNode_index].next;
+                currentNode_core = ll.items[currentNode_index].core;
             } while (true);
         }
 
-        uint256 _length = ll.length;
-        /* Inserted while keeping sorted order */
-        push(ll, addr, completionTime, int32(core), uint32(_length));
-        _length += 1;
-
         if (!flag) {
-            addrTemp = addr;
-            prevNode_index = self.tail = uint32(_length - 1);
-        } else {
-            addrTemp = ll.items[prevNode_index].next;
-            ll.items[prevNode_index].next = uint32(_length - 1);
+            /* Inserted while keeping sorted order */
+            push(ll, addr, completionTime, int32(core), uint32(_length));
+            _length += 1;
+            _carriedSum = int32(core);
+
+            if (prevNode_index == 0) {
+                addrTemp = addr;
+                prevNode_index = self.tail = uint32(_length - 1);
+            } else {
+                addrTemp = ll.items[prevNode_index].next;
+                ll.items[prevNode_index].next = uint32(_length - 1);
+            }
         }
 
         currentNode_index = ll.items[prevNode_index].next;
-        if (_iterate(ll, int32(core), startTime, currentNode_index, prevNode_index, availableCore, uint32(_length))) {
+        if (
+            _iterate(
+                ll,
+                int32(core),
+                startTime,
+                currentNode_index,
+                prevNode_index,
+                availableCore,
+                uint32(_length),
+                _carriedSum
+            )
+        ) {
+            if (flag) ll.items[addr].core = _carriedSum;
             return true;
         } else {
-            delete ll.items[uint32(_length - 1)];
             if (!flag) {
-                self.tail = uint32(addrTemp);
-            } else {
-                ll.items[prevNode_index].next = uint32(addrTemp); // change on storage
+                delete ll.items[uint32(_length - 1)];
+                if (prevNode_index == self.tail) {
+                    self.tail = uint32(addrTemp);
+                } else {
+                    ll.items[prevNode_index].next = uint32(addrTemp); // change on storage
+                }
             }
             return false;
         }
