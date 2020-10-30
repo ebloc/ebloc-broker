@@ -31,7 +31,7 @@ colored==1.4.2
 colored-traceback==0.3.0
 coloredlogs==14.0
 constantly==15.1.0
-cryptography==2.9
+cryptography==3.2
 cytoolz==0.11.0
 daemon==1.2
 dateparser==0.7.6
