@@ -18,13 +18,6 @@ if [ $setup -eq 1 ]; then
     mkdir -p /tmp/run
     sudo groupadd eblocbroker # members eblocbroker
 
-    ## Upgrade geth on Ubuntu: ----------------------------
-    # sudo apt-get install software-properties-common
-    # sudo add-apt-repository -y ppa:ethereum/ethereum
-    # sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-    # sudo apt-get upgrade ethereum
-    #------------------------------------------------------
-
     ## Install Python3.7
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt-get update
@@ -37,7 +30,7 @@ if [ $setup -eq 1 ]; then
     sudo apt-get install unixodbc-dev
     sudo apt-get install python-dev
 
-    python3 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
+    python3.7 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
     source $HOME/venv/bin/activate
 
     # Recover pip: sudo python3 -m pip uninstall pip && sudo apt install python3-pip --reinstall
@@ -92,12 +85,8 @@ if [ $setup -eq 1 ]; then
 
     ## install go--------------------------------------------------
     sudo apt-get update
-    wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
-    sudo tar -xvf go1.14.linux-amd64.tar.gz
-    rm -f go1.14.linux-amd64.tar.gz
-    rm -rf /usr/local/go
-    sudo mv go /usr/local
-    echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
+    wget -c https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
+    # echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
     # -------------------------------------------------------------
 
     ## Install google-drive: ========================================

@@ -36,6 +36,9 @@ commitmentBlockNum = 240
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
 ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 
+provider = None
+requester = None
+
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
@@ -46,6 +49,32 @@ def my_own_session_run_at_beginning(_Ebb):
 @pytest.fixture(autouse=True)
 def run_around_tests():
     new_test()
+
+
+def check_list(is_print=True):
+    size = config.Ebb.getProviderReceiptSize(provider)
+    if is_print:
+        print(f"length={size}")
+
+    for idx in range(0, size):
+        value = config.Ebb.getProviderReceiptNode(provider, idx)
+        if is_print:
+            print(value)
+
+    _list = []
+    carried_sum = 0
+    for idx in range(0, size):
+        value = config.Ebb.getProviderReceiptNode(provider, idx)
+        if value[0] != 0:
+            carried_sum += value[1]
+
+        assert carried_sum <= available_core_num, \
+            f"carried sum={carried_sum} exceed available_core_num={available_core_num}"
+
+        _list.append(value[0])
+
+    assert _list == sorted(_list, reverse=True)
+    assert carried_sum == 0
 
 
 def check_price_keys(price_keys, provider, source_code_hash1):
@@ -68,241 +97,299 @@ def mine(block_number):
     assert web3.eth.blockNumber == height + block_number
 
 
-def test_submitJob_gas():
+def submit_receipt(index, cores, startTime, completionTime, execution_time_min, is_print=True):
+    print("==> [" + str(startTime) + ", " + str(completionTime) + "]" + " cores=" + str(cores))
     job = Job()
+    job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
+    job.key = job.source_code_hashes[0]
+    job.index = index
+    job.cores = cores
+    job.execution_durations = [1]
+    job.dataTransferIns = [1]
+    job.dataTransferOut = 1
+    job.storage_ids = [StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+
+    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
+    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(provider)[-1]
+
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.execution_durations,
+        job.dataTransferOut,
+    ]
+    tx = config.Ebb.submitJob(
+        job.key,
+        job.dataTransferIns,
+        args,
+        job.storage_hours,
+        job.source_code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+
+    jobID = 0
+    tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
+    rpc.sleep(60)
+    mine(5)
+    dataTransferIn = 0
+    dataTransferOut = 0
+
+    args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
+
+    tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
+    if is_print:
+        print("received_gas_used=" + str(tx.__dict__['gas_used']))
+    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    # withdraw(provider, received_sum)
+    # withdraw(requester, refunded_sum)
+    check_list(is_print)
+    if is_print:
+        print("==============================================")
+    return tx
+
+
+def test_submitJob_gas():
+    global provider
+    global requester
+
     provider = accounts[0]
     requester = accounts[1]
 
     register_provider(100)
     register_requester(requester)
 
-    job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
-    job.key = job.source_code_hashes[0]
-    job.index = 0
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
-    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(provider)[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = config.Ebb.submitJob(
-        job.key,
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    jobID = 0
     startTime = 10
-    tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
-    rpc.sleep(60)
-    mine(5)
     completionTime = 20
-    dataTransferIn = 0
-    dataTransferOut = 0
-    execution_time_min = 1
-    args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
-
-    tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
-    # withdraw(provider, received_sum)
-    # withdraw(requester, refunded_sum)
-    print(config.Ebb.getJobInfo(provider, job.key, job.index, jobID))
-
-    # tx = config.Ebb.processPayment(job.key, args, execution_time_min, zero_bytes32, {"from": provider})
-    # ------------
-    job = Job()
-    job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
-    job.key = job.source_code_hashes[0]
-    job.index = 1
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
-    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(provider)[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = config.Ebb.submitJob(
-        job.key,
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    jobID = 0
-    startTime = 27
-    tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
-    rpc.sleep(60)
-    mine(5)
-
-    completionTime = 35
-    dataTransferIn = 0
-    dataTransferOut = 0
-    args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
-    execution_time_min = 1
-
-    tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
-    # withdraw(provider, received_sum)
-    # withdraw(requester, refunded_sum)
-    print(config.Ebb.getJobInfo(provider, job.key, job.index, jobID))
-
-    job = Job()
-    job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
-    job.key = job.source_code_hashes[0]
-    job.index = 2
-    job.cores = [1]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
-    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(provider)[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = config.Ebb.submitJob(
-        job.key,
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-
-    jobID = 0
-    startTime = 30
-    tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
-    rpc.sleep(60)
-    mine(5)
-    completionTime = 45
-    dataTransferIn = 0
-    dataTransferOut = 0
-    args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
-    execution_time_min = 1
-
-    tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
+    cores = [127]
+    index = 0
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 10
+    completionTime = 25
+    cores = [1]
+    index = 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 11
+    completionTime = 25
+    cores = [1]
+    index = 2
+    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
     gas_base = int(tx.__dict__['gas_used'])
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
-    # withdraw(provider, received_sum)
-    # withdraw(requester, refunded_sum)
-    print(config.Ebb.getJobInfo(provider, job.key, job.index, jobID))
-
-    # ------------
-    job = Job()
-    job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
-
-    job.key = job.source_code_hashes[0]
-    job.index = 3
-    job.cores = [2]
-    job.execution_durations = [1]
-    job.dataTransferIns = [1]
-    job.dataTransferOut = 1
-    job.storage_ids = [StorageID.EUDAT.value]
-    job.cache_types = [CacheType.PUBLIC.value]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-
-    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
-    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(provider)[-1]
-
-    args = [
-        provider,
-        provider_price_block_number,
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.execution_durations,
-        job.dataTransferOut,
-    ]
-    tx = config.Ebb.submitJob(
-        job.key,
-        job.dataTransferIns,
-        args,
-        job.storage_hours,
-        job.source_code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
-    )
-    #
-    jobID = 0
-    startTime = 34
-    # startTime = 44
-    tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
-    rpc.sleep(60)
-    mine(5)
-    completionTime = 51
-    dataTransferIn = 0
-    dataTransferOut = 0
-    execution_time_min = 1
-    args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
-
-    tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
+    # -------------------
+    startTime = 8
+    completionTime = 9
+    cores = [65]
+    index = 3
+    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
     gas_end = int(tx.__dict__['gas_used'])
-    print("received_gas_used=" + str(tx.__dict__['gas_used']))
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
-    # withdraw(provider, received_sum)
-    # withdraw(requester, refunded_sum)
-    print(config.Ebb.getJobInfo(provider, job.key, job.index, jobID))
-
-    size = config.Ebb.getProviderReceiptSize(provider)
-    for idx in range(0, size):
-        print(config.Ebb.getProviderReceiptNode(provider, idx))
-
+    check_list()
     print("=> gas_cost_for_iteration=" + str(gas_end - gas_base))
 
     # TODO : revert on tx check
+
+
+def test_test1():
+    global provider
+    global requester
+
+    provider = accounts[0]
+    requester = accounts[1]
+
+    register_provider(100)
+    register_requester(requester)
+
+    startTime = 10
+    completionTime = 20
+    cores = [1]
+    index = 0
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 27
+    completionTime = 35
+    cores = [1]
+    index = 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 30
+    completionTime = 45
+    cores = [1]
+    index = 2
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 30
+    completionTime = 45
+    cores = [1]
+    index = 3
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 27
+    completionTime = 30
+    cores = [120]
+    index = 4
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+
+
+def test_test2():
+    global provider
+    global requester
+
+    provider = accounts[0]
+    requester = accounts[1]
+
+    register_provider(100)
+    register_requester(requester)
+
+    startTime = 10
+    completionTime = 20
+    cores = [1]
+    index = 0
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 10
+    completionTime = 20
+    cores = [128]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 9
+    completionTime = 19
+    cores = [128]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 11
+    completionTime = 21
+    cores = [128]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 15
+    completionTime = 25
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 8
+    completionTime = 9
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 40
+    completionTime = 45
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 40
+    completionTime = 45
+    cores = [126]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 41
+    completionTime = 45
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 39
+    completionTime = 41
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 26
+    completionTime = 39
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 20
+    completionTime = 38
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 20
+    completionTime = 37
+    cores = [8]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 39
+    completionTime = 40
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 37
+    completionTime = 39
+    cores = [8]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 45
+    completionTime = 50
+    cores = [128]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 39
+    completionTime = 40
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 40
+    completionTime = 41
+    cores = [1]
+    index += 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+
+
+def test_test3():
+    global provider
+    global requester
+
+    provider = accounts[0]
+    requester = accounts[1]
+
+    register_provider(100)
+    register_requester(requester)
+
+    startTime = 10
+    completionTime = 20
+    cores = [1]
+    index = 0
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 27
+    completionTime = 35
+    cores = [1]
+    index = 1
+    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    # -------------------
+    startTime = 30
+    completionTime = 45
+    cores = [1]
+    index = 2
+    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    gas_base = int(tx.__dict__['gas_used'])
+    # -------------------
+    startTime = 34
+    completionTime = 51
+    cores = [1]
+    index = 3
+    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    gas_end = int(tx.__dict__['gas_used'])
+    print("=> gas_cost_for_iteration=" + str(gas_end - gas_base))

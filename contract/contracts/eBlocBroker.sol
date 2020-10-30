@@ -23,6 +23,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     using SafeMath32 for uint32;
     using SafeMath for uint256;
 
+    using Lib for Lib.IntervalArg;
     using Lib for Lib.IntervalNode;
     using Lib for Lib.Provider;
     using Lib for Lib.Status;
@@ -239,14 +240,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         );
 
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
-        if (
-            !provider.receiptList.checkIfOverlapExists(
-                job.startTime,
-                uint32(args.completionTime),
-                int32(info.availableCore),
-                core
-            )
-        ) {
+
+        Lib.IntervalArg memory _interval;
+        _interval.startTime = job.startTime;
+        _interval.completionTime = uint32(args.completionTime);
+        _interval.availableCore = int32(info.availableCore);
+        _interval.core = int32(core);
+
+        if (provider.receiptList.checkIfOverlapExists(_interval) == 0) {
             // Important to check already refunded job or not, prevents double spending
             job.jobStateCode = Lib.JobStateCodes.REFUNDED;
             amountToRefund = jobInfo.received;

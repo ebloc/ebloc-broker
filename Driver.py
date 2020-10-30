@@ -158,7 +158,8 @@ def run_driver():
     log("{0: <18}".format("contract_address:") + contract_file["address"], c="blue")
 
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
-        write_to_file(env.BLOCK_READ_FROM_FILE, Ebb.get_block_number())  # updated since cluster is not registered
+        # Updated since cluster is not registered
+        write_to_file(env.BLOCK_READ_FROM_FILE, Ebb.get_block_number())
         terminate(textwrap.fill(
             f"E: Your Ethereum address {env.PROVIDER_ID} "
             "does not match with any provider in eBlocBroker. Please register your "
@@ -166,7 +167,7 @@ def run_driver():
             "use eblocbroker/register_provider.py script to register your provider."), is_traceback=False)
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-        terminate("E: Provider's orcid is not verified")
+        terminate(f"E: Provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
     block_read_from = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
