@@ -24,7 +24,7 @@ find . -name '.*.*py.swp' -delete
 find . -name 'nohup.*' -delete
 find . -name "\*scratch\*" -delete
 find . -name '*.bak' -delete
-find -name "#*#" -print -delete
+find . -name "#*#" -print -delete
 
 rm -f geth_server.out
 rm -f .node-xmlhttprequest*

@@ -1,17 +1,22 @@
-Brownie v1.9.7 - Python development framework for Ethereum
+Brownie v1.11.8 - Python development framework for Ethereum
 
+/home/alper/eBlocBroker/contract/contracts/eBlocBroker.sol
+/home/alper/eBlocBroker/contract/contracts/eBlocBrokerInterface.sol
+/home/alper/eBlocBroker/contract/contracts/Lib.sol
+/home/alper/eBlocBroker/contract/contracts/EBlocBrokerBase.sol
+/home/alper/eBlocBroker/contract/contracts/SafeMath.sol
 ContractProject is the active project.
 
-Running '[0;1;34mscripts.eBlocBroker[0;m.[0;1;36mmain[0;m'...
-Transaction sent: [0;1;34m0x587443c6efb06033a584d2987117dc59c3182fb1a340ea6b6344e58954b68210[0;m
-  Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m154358[0;m
+Running '[0;1;34mscripts/eBlocBroker.py[0;m::[0;1;36mmain[0;m'...
+Transaction sent: [0;1;34m0x3297e3b87d855d3a371eb4f739022365c2c2c3ce52377c8be5ca2d8263c188da[0;m
+  Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m147271[0;m
 Waiting for confirmation...
-  Lib.constructor confirmed - Block: [0;1;34m4940862[0;m   Gas used: [0;1;34m154358[0;m ([0;1;34m100.00%[0;m)
-  Lib deployed at: [0;1;34m0x589B4457A5715855300D69f316b73F5f7bA7da18[0;m
+  Lib.constructor confirmed - Block: [0;1;34m5530150[0;m   Gas used: [0;1;34m133883[0;m ([0;1;34m90.91%[0;m)
+  Lib deployed at: [0;1;34m0x28B5A79De0dae9CaB80ee98e76a379d22860E4F5[0;m
 
-Transaction sent: [0;1;34m0xdefbbd52d8623aee2033542a8254eb5c84f79dfe3dbafc6ece85eeb376eec126[0;m
-  Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m5037561[0;m
+Transaction sent: [0;1;34m0xc9d3b7805c7bcffa72a1ec8a2a7b5ebfbee975b08bb9073db965cfd6131523d2[0;m
+  Gas price: [0;1;34m18.0[0;m gwei   Gas limit: [0;1;34m5363295[0;m
 Waiting for confirmation...
-  eBlocBroker.constructor confirmed - Block: [0;1;34m4940863[0;m   Gas used: [0;1;34m5037561[0;m ([0;1;34m100.00%[0;m)
-  eBlocBroker deployed at: [0;1;34m0x98A9BCfdE638D24B289B99936882428389457D1f[0;m
+  eBlocBroker.constructor confirmed - Block: [0;1;34m5530151[0;m   Gas used: [0;1;34m4875723[0;m ([0;1;34m90.91%[0;m)
+  eBlocBroker deployed at: [0;1;34m0xFd1DEDa822b09Ccfe6c0479AEAaAfA0eD5147800[0;m
 

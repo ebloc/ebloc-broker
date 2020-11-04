@@ -26,7 +26,7 @@ class DataStorage:
 
 
 class Job:
-    """Object for the job that will be submitted"""
+    """Object for the job that will be submitted."""
     def __init__(self, **kwargs) -> None:
         self.execution_durations: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share

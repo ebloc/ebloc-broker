@@ -61,6 +61,7 @@ if __name__ == "__main__":
         """
         ./authenticate_orc_id.py 0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571 0000-0001-7642-0552
         ./authenticate_orc_id.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 0000-0001-7642-0552
+        ./authenticate_orc_id.py 0x57b60037B82154eC7149142c606bA024fBb0f991 0000-0001-7642-0552  # netlab-cluster
         """
     try:
         tx_hash = Ebb.authenticate_orc_id(address, orc_id, _from=config.w3.eth.accounts[0])

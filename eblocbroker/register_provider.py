@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 
 import ipfshttpclient
 
@@ -10,7 +11,7 @@ from utils import _colorize_traceback, log, read_json
 
 
 def register_provider(
-    self, available_core_num, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block
+    self, available_core, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block
 ):
     if not os.path.isfile(f"{env.HOME}/.eBlocBroker/whisper_info.json"):
         logging.error(f"Please first run:\n{env.HOME}/eBlocBroker/whisper/initialize.py")
@@ -27,7 +28,7 @@ def register_provider(
 
     if not self.w3.geth.shh.hasKeyPair(key_id):
         logging.error("\nWhisper node's private key of a key pair did not match with the given ID. Please run:")
-        log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py \n", "yellow")
+        log(f"{env.EBLOCPATH}/whisper/initialize.py \n", "yellow")
         raise
 
     if self.does_provider_exist(env.PROVIDER_ID):
@@ -57,7 +58,7 @@ def register_provider(
             federation_cloud_id,
             ipfs_id,
             whisper_pub_key,
-            available_core_num,
+            available_core,
             prices,
             commitment_block,
         ).transact({"from": env.PROVIDER_ID, "gas": 4500000})
@@ -69,20 +70,26 @@ def register_provider(
 
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
-
-    client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
+    addr = "/ip4/127.0.0.1/tcp/5001/http"
+    try:
+        client = ipfshttpclient.connect(addr)
+        print(client)
+    except Exception:
+        _colorize_traceback()
+        log("E: Connection error to IPFS, please run it on the background.\nPlease run ~/eBlocBroker/daemons/ipfs.py", "red")
+        sys.exit(1)
 
     Ebb = Contract.eblocbroker
     # https://github.com/ipfs-shipyard/py-ipfs-http-client
-    client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
+    client = ipfshttpclient.connect(addr)
 
-    available_core_num = 128
+    available_core = 128
     email = "alper01234alper@gmail.com"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
     gpg_fingerprint = "0x0359190A05DF2B72729344221D522F92EFA2F330"
 
     ipfs_id = client.id()["Addresses"][-1]
-    print(f"ipfs_id={ipfs_id}")
+    print(f"ipfs_id={ipfs_id}\n")
 
     price_core_min = 100
     price_data_transfer = 1
@@ -93,7 +100,7 @@ if __name__ == "__main__":
 
     try:
         tx_hash = Ebb.register_provider(
-            available_core_num, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block,
+            available_core, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block,
         )
         receipt = get_tx_status(tx_hash)
     except:

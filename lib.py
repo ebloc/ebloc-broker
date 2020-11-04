@@ -4,7 +4,6 @@ import datetime
 import glob
 import os
 import pprint
-import shutil
 import signal
 import subprocess
 import sys
@@ -20,9 +19,7 @@ from utils import (
     StorageID,
     _colorize_traceback,
     byte_to_mb,
-    cd,
     create_dir,
-    generate_md5sum,
     is_ipfs_on,
     is_process_on,
     log,
@@ -54,7 +51,7 @@ if not config.w3:
     from imports import connect_to_web3
     connect_to_web3()
 
-if not env.PROVIDER_ID:
+if not env.PROVIDER_ID and config.w3:
     PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 else:
     PROVIDER_ID = env.PROVIDER_ID
@@ -169,7 +166,7 @@ def calculate_folder_size(path) -> float:
 
 
 def subprocess_call(cmd, attempt=1, print_flag=True):
-    cmd = list(map(str, cmd))  # all items should be str
+    cmd = list(map(str, cmd))  # always should be type: str
     for count in range(attempt):
         try:
             return subprocess.check_output(cmd).decode("utf-8").strip()
@@ -184,12 +181,12 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
             time.sleep(.25)
 
 
-def run_stdout_to_file(cmd, path) -> None:
+def run_stdout_to_file(cmd, path, mode="w") -> None:
     p, output, error = popen_communicate(cmd, stdout_file=path)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", "red")
-        logging.error(f"E: scontrol error: {output}")
+        logging.error(f"E: scontrol error\n{output}")
         raise
     else:
         logging.info(f"\nWriting into path is completed => {path}")

@@ -61,7 +61,7 @@ class Pidfile():
         os.remove(self.pidfile)
 
     def _check(self):
-        """check if a process is still running the process id is expected to be in
+        """Check if a process is still running the process id is expected to be in
         pidfile, which should exist. if it is still running, returns the pid, if not,
         return False."""
         with open(self.pidfile, 'r') as f:

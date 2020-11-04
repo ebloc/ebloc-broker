@@ -29,7 +29,7 @@ def check_whisper():
             raise
     except:
         log("Please first run:")
-        log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py", "green")
+        log(f"{env.EBLOCPATH}/whisper/initialize.py", "green")
         _colorize_traceback()
         raise
     return whisper_pub_key
