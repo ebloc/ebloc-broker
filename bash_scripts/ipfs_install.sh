@@ -1,27 +1,33 @@
 #!/bin/bash
 
+# Install IPFS
+
+# Download the Linux binary from dist.ipfs.io (opens new window).
+
 # Install given version of IPFS. Check latest version from here: https://github.com/ipfs/go-ipfs/releases
 # https://gist.github.com/MiguelBel/b3b5f711aa8d9362afa5f16e4e972461
 
 # pre-requirements
 sudo apt-get install golang-go -y
 
-
-
 cd /tmp
-version='v0.5.1'
-                                           # go-ipfs_v0.5.1_linux-amd64.tar.gz
-wget https://dist.ipfs.io/go-ipfs/${version}/go-ipfs_${version}_linux-386.tar.gz
-tar -xvf go-ipfs_${version}_linux-386.tar.gz
-sudo mv go-ipfs/ipfs /usr/local/bin/ipfs
-rm go-ipfs_${version}_linux-386.tar.gz
-rm -rf go-ipfs
+# version=$(curl -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
+version="0.6.0"
+echo "version to download=v"$version
+                                            # go-ipfs_${version}_linux-386.tar.gz
+wget https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_linux-amd64.tar.gz
+
+tar -xvf go-ipfs_v${version}_linux-amd64.tar.gz
+cd go-ipfs
+sudo bash install.sh
+cd ..
+rm -f go-ipfs_${version}_linux-386.tar.gz
+rm -rf go-ipfs/
 
 echo ""
 ipfs version
-# ipfs version 0.5.1
 
-
+: '
 # https://github.com/ipfs/ipfs-cluster
 # https://cluster.ipfs.io/download/
 
@@ -32,3 +38,4 @@ cd ipfs-cluster
 go install ./cmd/ipfs-cluster-service
 go install ./cmd/ipfs-cluster-ctl
 go install ./cmd/ipfs-cluster-follow
+'

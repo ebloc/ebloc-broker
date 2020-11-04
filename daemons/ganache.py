@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import time
 
 import daemon
 
@@ -10,6 +11,7 @@ from utils import is_ganache_on, popen_communicate
 
 def run(port):
     # https://stackoverflow.com/a/8375012/2402577
+    print("Running Ganache CLI")
     with daemon.DaemonContext():
         cmd = [
             "ganache-cli",
@@ -28,10 +30,10 @@ def run(port):
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
-        port = str(sys.argv[1])
+        port = int(sys.argv[1])
     else:
         port = 8545
 
     if not is_ganache_on(port):
-        print("Running Ganache CLI")
         run(port)
+        time.sleep(0.2)

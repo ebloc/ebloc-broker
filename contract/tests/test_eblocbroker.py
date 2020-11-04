@@ -14,7 +14,6 @@ from contract.scripts.lib import DataStorage, Job, cost, new_test
 from utils import CacheType, StorageID, ipfs_to_bytes32, logging, zero_bytes32
 
 # from brownie.test import given, strategy
-Ebb = None
 setup_logger("", True)
 config.logging.propagate = False
 
@@ -36,12 +35,14 @@ commitmentBlockNum = 240
 
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
 ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
+Ebb = None
 
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb  # noqa: F401
+    global Ebb
     Ebb = _Ebb
+    config.Ebb = _Ebb
     config.w3 = web3
 
 
@@ -98,7 +99,7 @@ def register_provider(price_core_min=1):
     web3.eth.defaultAccount = accounts[0]
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
-    tx = Ebb.registerProvider(
+    tx = config.Ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_email,
         federatedCloudID,
@@ -117,22 +118,22 @@ def register_provider(price_core_min=1):
 
     orc_id = "0000-0001-7642-0442"
     orc_id_as_bytes = str.encode(orc_id)
-    assert not Ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
-    Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
-    assert Ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified is failed"
+    assert not config.Ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
+    config.Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+    assert config.Ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified is failed"
 
     # orc_id should only set once for the same user
     with brownie.reverts():
-        Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+        config.Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
 
-    *_, b = Ebb.getRequesterInfo(accounts[0])
+    *_, b = config.Ebb.getRequesterInfo(accounts[0])
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
     return provider_registered_bn
 
 
 def register_requester(account):
     """Register requester."""
-    tx = Ebb.registerRequester(
+    tx = config.Ebb.registerRequester(
         GPG_FINGERPRINT,
         "alper.alimoglu@gmail.com",
         "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
@@ -140,7 +141,7 @@ def register_requester(account):
         whisper_pub_key,
         {"from": account},
     )
-    assert Ebb.doesRequesterExist(account), True
+    assert config.Ebb.doesRequesterExist(account), True
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogRequester"]["gpgFingerprint"])
     assert gpg_fingerprint == GPG_FINGERPRINT
 
@@ -149,17 +150,17 @@ def register_requester(account):
 
     # logging.info(f"isOrcIDVerified={Ebb.isOrcIDVerified(account)}")
 
-    assert not Ebb.isOrcIDVerified(account), "orc_id initial value should be false"
+    assert not config.Ebb.isOrcIDVerified(account), "orc_id initial value should be false"
 
-    Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})  # ORCID should be registered.
+    config.Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})  # ORCID should be registered.
 
-    assert Ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
-    assert not Ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
+    assert config.Ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
+    assert not config.Ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
 
     with brownie.reverts():  # orc_id should only set once for the same user
-        Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
+        config.Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
 
-    *_, b = Ebb.getRequesterInfo(account)
+    *_, b = config.Ebb.getRequesterInfo(account)
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
@@ -210,7 +211,7 @@ def test_stored_data_usage():
     job_price, _cost = cost(provider, requester, job, Ebb, web3)
 
     # first time job is submitted with the data files
-    tx = Ebb.submitJob(
+    tx = config.Ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -332,7 +333,7 @@ def test_computational_refund():
     rpc.sleep(60)
     mine(5)
 
-    args = [index, jobID, 1579524998, 2, 0, [1], [5], True]
+    args = [index, jobID, 1579524998, 2, 0, job.cores, [5], True]
     execution_duration = 1
     tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_duration, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
@@ -880,11 +881,13 @@ def test_simple_submit():
     provider = accounts[0]
     requester = accounts[1]
 
-    register_provider(100)
+    price_core_min = 100
+    register_provider(price_core_min)
     register_requester(requester)
 
     job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
-    job.cores = [1]
+    job.key = job.source_code_hashes[0]
+    job.cores = [2]
     job.execution_durations = [1]
     job.dataTransferIns = [1, 1]
     job.dataTransferOut = 1
@@ -906,8 +909,9 @@ def test_simple_submit():
         job.execution_durations,
         job.dataTransferOut,
     ]
+
     tx = Ebb.submitJob(
-        job.source_code_hashes[0],
+        job.key,
         job.dataTransferIns,
         args,
         job.storage_hours,
@@ -915,30 +919,31 @@ def test_simple_submit():
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 
+    print("submitJob_gas_used=" + str(tx.__dict__['gas_used']))
     index = 0
     jobID = 0
     startTime = 1579524978
-    tx = Ebb.setJobStatusRunning(job.source_code_hashes[0], index, jobID, startTime, {"from": accounts[0]})
+    tx = Ebb.setJobStatusRunning(job.key, index, jobID, startTime, {"from": provider})
     rpc.sleep(60)
     mine(5)
 
     completionTime = 1579524998
     dataTransferIn = 0
     dataTransferOut = 0.01
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, [1], [1], True]
+    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
     execution_time_min = 1
     out_hash = b'[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99'
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, out_hash, {"from": accounts[0]})
+    tx = Ebb.processPayment(job.key, args, execution_time_min, out_hash, {"from": accounts[0]})
     # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     # print(str(received_sum) + " " + str(refunded_sum))
-    assert received_sum == 100 and refunded_sum == 5
+    assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
 
 
-def test_submitJob():
+def test_submit_job():
     job = Job()
     provider = accounts[0]
     requester = accounts[1]
@@ -1024,7 +1029,7 @@ def test_submitJob():
                 {"from": requester, "value": web3.toWei(job_price, "wei")},
             )
             # print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
-            print("jobIndex=" + str(tx.events["LogJob"]["index"]))
+            print("job_index=" + str(tx.events["LogJob"]["index"]))
 
             # print("Contract Balance after: " + str(web3.eth.balanceOf(accounts[0])))
             # print("Client Balance after: " + str(web3.eth.balanceOf(accounts[8])))
@@ -1033,7 +1038,7 @@ def test_submitJob():
             print(Ebb.getJobInfo(provider, jobKey, index, jobID))
             index += 1
 
-    print(f"TotalPaid={job_priceSum}")
+    print(f"total_paid={job_priceSum}")
     # print(block_read_from)
     # rpc.mine(100)
     # print(web3.eth.blockNumber)

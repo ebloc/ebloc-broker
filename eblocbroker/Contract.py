@@ -73,7 +73,11 @@ class Contract:
             _colorize_traceback()
             return False
 
-        return self.w3.eth.getTransaction(contract["txHash"]).blockNumber
+        block_number = self.w3.eth.getTransaction(contract["txHash"]).blockNumber
+        if block_number is None:
+            return "#> Contract is not available on the blockchain, is it synced?"
+        else:
+            return self.w3.eth.getTransaction(contract["txHash"]).blockNumber
 
     def is_web3_connected(self):
         return self.w3.isConnected()
@@ -146,7 +150,7 @@ class Contract:
 
     def get_transaction_receipt(self, tx):
         """
-        doc: https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
+        Doc: https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
         Returns the transaction receipt specified by transactionHash.
         If the transaction has not yet been mined returns 'None'
         """

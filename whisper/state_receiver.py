@@ -46,7 +46,7 @@ def receiver(filter_id, public_key):
 def main():
     if not os.path.isfile(env.WHISPER_INFO):
         log("Please first run:")
-        log(f"{env.EBLOCPATH}/python_scripts/whisper_initialize.py", "green")
+        log(f"{env.EBLOCPATH}/whisper/initialize.py", "green")
         sys.exit(1)
     else:
         try:
