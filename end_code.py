@@ -54,11 +54,11 @@ mc = MongoClient()
 class Common:
     """Prevents "Class" has no attribute "method" mypy warnings."""
     def __init__(self) -> None:
-        self.results_folder = ""
         self.results_folder_prev = ""
         self.patch_file = ""
         self.requester_gpg_fingerprint = ""
         self.patch_name = ""
+        self.results_folder = ""
         self.data_transfer_out = 0.0
 
 
@@ -181,7 +181,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"~/eBlocBroker/end_code.py {args}", "blue")
         log(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
-            logging.error("job_key and index are same")
+            logging.error("E: Key and index are same")
             sys.exit(1)
 
         try:
@@ -387,7 +387,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")
             logging.info(f"modified_date={self.modified_date}")
         except:
-            logging.error("E: modified_date.txt file couldn't be read")
+            logging.error("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpgFingerprint"]
         log("job_owner's info", "green")
@@ -444,15 +444,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.source_code_hashes = self.job_info["sourceCodeHash"]
         self.set_source_code_hashes_to_process()
 
+        # log jobs' info
         slurm_log_output_file = f"{self.results_folder}/slurmJobInfo.out"
-        try:
-            # in some cases scontrol cannot find the job_id
-            cmd = ["scontrol", "show", "job", self.slurm_job_id]
-            run_stdout_to_file(cmd, slurm_log_output_file)
-        except:
-            cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format",
-                   "jobname,Account,nnodes,ncpus,Elapsed,CPUTime,AllocCPUS,State,ExitCode,End"]
-            run_stdout_to_file(cmd, slurm_log_output_file)
+        cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
+        cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
+        run_stdout_to_file(cmd, slurm_log_output_file)
+        cmd.pop().append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End")
+        run_stdout_to_file(cmd, slurm_log_output_file, mode="a")
 
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_raw_time = slurm.get_elapsed_raw_time(self.slurm_job_id)
@@ -475,8 +473,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
         self.process_payment_tx()
-        log("All done!", "green")
-        # TODO; garbage collector: removed downloaded code from local since it is not needed anymore
+        log("All done!", c="green")
+        # TODO; garbage collector, removed downloaded code from local since it is not needed anymore
 
 
 if __name__ == "__main__":

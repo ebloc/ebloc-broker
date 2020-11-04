@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.1;
+pragma solidity 0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "./Lib.sol";
@@ -23,7 +23,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     using SafeMath32 for uint32;
     using SafeMath for uint256;
 
-    using Lib for Lib.IntervalNode;
+    using Lib for Lib.IntervalArg;
+    using Lib for Lib.LL;
     using Lib for Lib.Provider;
     using Lib for Lib.Status;
     using Lib for Lib.JobStateCodes;
@@ -38,7 +39,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender.
      */
-    constructor() {
+    constructor() public {
         owner = msg.sender;
     }
 
@@ -61,7 +62,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint256 amount = balances[msg.sender];
         // Set zero the balance before sending to prevent reentrancy attacks
         delete balances[msg.sender]; // gas refund is made
-        (bool success, ) = msg.sender.call{value:amount}(""); // This forwards all available gas
+        (bool success, ) = msg.sender.call{value: amount}(""); // This forwards all available gas
         require(success, "Transfer failed"); // Return value is checked
     }
 
@@ -239,14 +240,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         );
 
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
-        if (
-            !provider.receiptList.checkIfOverlapExists(
-                job,
-                uint32(args.completionTime),
-                int32(info.availableCore),
-                core
-            )
-        ) {
+
+        Lib.IntervalArg memory _interval;
+        _interval.startTime = job.startTime;
+        _interval.completionTime = uint32(args.completionTime);
+        _interval.availableCore = int32(info.availableCore);
+        _interval.core = int32(core);
+
+        if (provider.receiptList.checkIfOverlapExists(_interval) == 0) {
             // Important to check already refunded job or not, prevents double spending
             job.jobStateCode = Lib.JobStateCodes.REFUNDED;
             amountToRefund = jobInfo.received;
@@ -646,18 +647,15 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         require(msg.value >= totalCost);
         // Here returned "_providerPriceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
-        provider.jobStatus[key].push(
-            Lib.Status({
-                cacheCost: storageDuration[0],
-                dataTransferIn: dataTransferIn[0],
-                dataTransferOut: args.dataTransferOut,
-                pricesSetBlockNum: uint32(_providerPriceBlockIndex),
-                received: totalCost.sub(storageCost),
-                jobOwner: msg.sender,
-                sourceCodeHash: keccak256(abi.encodePacked(sourceCodeHash, args.cacheType)),
-                jobInfo: keccak256(abi.encodePacked(args.core, args.executionDuration))
-            })
-        );
+        Lib.Status storage st = provider.jobStatus[key].push();
+        st.cacheCost = storageDuration[0];
+        st.dataTransferIn = dataTransferIn[0];
+        st.dataTransferOut = args.dataTransferOut;
+        st.pricesSetBlockNum = uint32(_providerPriceBlockIndex);
+        st.received = totalCost.sub(storageCost);
+        st.jobOwner = msg.sender;
+        st.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
+        st.jobInfo = keccak256(abi.encodePacked(args.core, args.executionDuration));
 
         _providerPriceBlockIndex = provider.jobStatus[key].length - 1;
         uint256 refunded;
@@ -697,7 +695,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bool[] memory isVerified
     ) public {
         Lib.Provider storage provider = providers[msg.sender];
-        Lib.Status memory jobInfo = provider.jobStatus[key][index];
+        Lib.Status storage jobInfo = provider.jobStatus[key][index];
 
         // List of provide sourceCodeHashes should be same as with the ones that
         // are provided along with the job
@@ -1094,7 +1092,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         string memory key,
         uint256 index
     ) public view returns (Lib.ProviderInfo memory) {
-        Lib.Status memory jobInfo = providers[_provider].jobStatus[key][index];
+        Lib.Status storage jobInfo = providers[_provider].jobStatus[key][index];
         Lib.ProviderInfo memory providerInfo = providers[_provider].info[jobInfo.pricesSetBlockNum];
 
         return (providerInfo);

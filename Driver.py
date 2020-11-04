@@ -80,7 +80,7 @@ def tools(block_number):
             _colorize_traceback()
         sys.exit(1)
 
-    # run_whisper_state_receiver()  # TODO: uncomment
+    # run_wnnhisper_state_receiver()  # TODO: uncomment
     # run_driver_cancel()  # TODO: uncomment
     if env.GDRIVE_USE:
         try:
@@ -104,9 +104,8 @@ def tools(block_number):
 def run_driver():
     """Run the main driver script for eblocbroker on the background."""
     # dummy sudo command to get the password when session starts for only to
-    # create users and submit slurm job under another user
+    # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
-
     env.IS_THREADING_ENABLED = False
     config.logging = setup_logger(env.DRIVER_LOG)
     columns = 100
@@ -146,9 +145,11 @@ def run_driver():
         Ebb.is_contract_exists()
         contract_file = read_json(f"{env.EBLOCPATH}/eblocbroker/contract.json")
     except:
-        terminate("contract.json file does not exist")
+        terminate("E: Contract address does not exist on the blockchain, is the blockchain sync?")
 
-    # log(f"is_threading={env.IS_THREADING_ENABLED}", c="blue")
+    if env.IS_THREADING_ENABLED:
+        log(f"is_threading={env.IS_THREADING_ENABLED}", c="blue")
+
     log(f"is_web3_connected={Ebb.is_web3_connected()}", c="blue")
     log(f"log_file={env.DRIVER_LOG}", c="blue")
     log(f"rootdir={os.getcwd()}", c="blue")
@@ -156,6 +157,8 @@ def run_driver():
     log("{0: <18}".format("contract_address:") + contract_file["address"], c="blue")
 
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
+        # Updated since cluster is not registered
+        write_to_file(env.BLOCK_READ_FROM_FILE, Ebb.get_block_number())
         terminate(textwrap.fill(
             f"E: Your Ethereum address {env.PROVIDER_ID} "
             "does not match with any provider in eBlocBroker. Please register your "
@@ -163,11 +166,11 @@ def run_driver():
             "use eblocbroker/register_provider.py script to register your provider."), is_traceback=False)
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-        terminate("E: Provider's orcid is not verified")
+        terminate(f"E: Provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
     block_read_from = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
-    logging.info("deployed_block_number=%s balance=%s", deployed_block_number, balance_temp)
+    logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
 
     while True:
         wait_till_idle_core_available()
@@ -205,6 +208,7 @@ def run_driver():
 
         log(f"Passed incremented block number... Watching from block number={block_read_from}", c="yellow")
         # starting reading event's location has been updated
+
         block_read_from = str(block_read_from)
         slurm.pending_jobs_check()
         logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
@@ -237,7 +241,7 @@ def run_driver():
                 if cloud_storage_id[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
                     source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
                     if idx == 0 and source_code_hash != job_key:
-                        logging.error("E: IPFS hash does not match with the given source_code_hash.")
+                        logging.error("E: IPFS hash does not match with the given source_code_hash")
                         continue
                 else:
                     source_code_hash = config.w3.toText(source_code_hash_byte)
@@ -247,7 +251,7 @@ def run_driver():
                 storageDuration.append(ds.storage_duration)
 
                 is_already_cached[source_code_hash] = False  # FIXME double check
-                # if remaining time to cache is 0, then caching is requested for the related source_code_hash
+                # If remaining time to cache is 0, then caching is requested for the related source_code_hash
                 if ds.received_block + ds.storage_duration >= block_number:
                     if ds.received_block < block_number:
                         is_already_cached[source_code_hash] = True
@@ -356,12 +360,12 @@ def run_driver():
                 sys.exit(1)
 
         if len(logged_jobs_to_process) > 0 and max_blocknumber > 0:
-            # updates the latest read block number
+            # Uqpdates the latest read block-number
             block_read_from = max_blocknumber + 1
             write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
         if not is_provider_received_job:
-            # If there is no submitted job for the provider, than block start to
-            # read from the current block number and updates the latest read
+            # If there is no submitted job for the provider, than block start
+            # to read from the current block number and updates the latest read
             # block number read from the file
             write_to_file(env.BLOCK_READ_FROM_FILE, current_block_number)
             block_read_from = current_block_number
@@ -383,7 +387,7 @@ if __name__ == "__main__":
                 # open(env.DRIVER_LOCKFILE, 'w').close()
                 run_driver()
             except zc.lockfile.LockError:
-                print("E: can't lock file, the pid file is in use, oops.")
+                print("E: can't lock the file, the pid file is in use, oops.")
             except config.QuietExit:
                 pass
             except Exception as e:
@@ -399,4 +403,4 @@ if __name__ == "__main__":
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
             _colorize_traceback()
-        sys.exit(1)
+        sys.exit(1), #
