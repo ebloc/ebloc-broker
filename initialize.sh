@@ -16,28 +16,20 @@ if [ $setup -eq 1 ]; then
     sudo find /tmp -mindepth 1 -name '.*-unix' -exec chmod 1777 {} + -prune -o -exec chmod go-rwx {} +
 
     mkdir -p /tmp/run
-    # members eblocbroker
-    sudo groupadd eblocbroker
-
-    ## Upgrade geth on Ubuntu: ----------------------------
-    # sudo apt-get install software-properties-common
-    # sudo add-apt-repository -y ppa:ethereum/ethereum
-    # sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-    # sudo apt-get upgrade ethereum
-    #------------------------------------------------------
+    sudo groupadd eblocbroker # members eblocbroker
 
     ## Install Python3.7
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt-get update
-    sudo apt-get install python3.7
-    sudo apt-get install python3.7-venv
+    sudo apt-get install python3
+    sudo apt-get install python3-venv
+    sudo apt-get install python-pip
 
     # sudo update-alternatives --config python3
     sudo apt-get update
     sudo apt-get install unixodbc-dev
     sudo apt-get install python-dev
 
-    sudo apt install python-pip
     python3.7 -m venv $HOME/venv  # python3.7 -m venv --without-pip ~/venv
     source $HOME/venv/bin/activate
 
@@ -46,22 +38,17 @@ if [ $setup -eq 1 ]; then
     pip install wheel
     pip install -r requirements.txt
 
-    pip install -U web3        # pip install --upgrade web3 # pip install --pre --upgrade web3
-    pip install -U pyocclient  # owncloud_py
-    pip install -U typing      # (https://github.com/ethereum/web3.py/issues/736#issuecomment-378679295)
-    pip install -U colored
-    pip install -U pymongo
-    pip install -U python-dotenv
-    pip install -e .  # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
+    # This is must https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
+    pip install -e .
     # pip install -U matplotlib
     # pip install -U google-colab
     # pip install sphinx_rtd_theme
 
-    ## NPM
+    ## npm
     wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
     sudo npm install -g n # npm install --save
     sudo n latest
-    sudo npm install -g --unsafe-perm=true --allow-root ganache-cli
+    sudo npm install -g --unsafe-perm=true --allow-root ganache-cli  # npm install -g ganache-cli
     # npm install web3
     # npm install web3_ipc
     # npm install dotenv
@@ -98,12 +85,8 @@ if [ $setup -eq 1 ]; then
 
     ## install go--------------------------------------------------
     sudo apt-get update
-    wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
-    sudo tar -xvf go1.14.linux-amd64.tar.gz
-    rm -f go1.14.linux-amd64.tar.gz
-    rm -rf /usr/local/go
-    sudo mv go /usr/local
-    echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
+    wget -c https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
+    # echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
     # -------------------------------------------------------------
 
     ## Install google-drive: ========================================
