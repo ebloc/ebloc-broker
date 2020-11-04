@@ -289,6 +289,11 @@ def generate_md5sum(path: str) -> str:
         raise
 
 
+def create_dirs(paths) -> None:
+    for path in paths:
+        create_dir(path)
+
+
 def create_dir(path: str) -> None:
     if not os.path.isdir(path):
         os.makedirs(path)  # mkdir
@@ -395,7 +400,7 @@ def printc(text, c=None, is_new_line=True, is_bold=True):
 
 
 # TODO: send arguments without order //  is_bold
-def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
+def log(text="", c="white", filename=None, is_new_line=True, is_bold=True):
     is_arrow = False
     if text[0:3] == "==>":
         is_arrow = True
@@ -516,6 +521,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
                 log(f"==> {name} is already running on the background", "green")
             return True
 
+    name = name.replace("\\", "").replace(">", "").replace("<", "")
     log(f"{name} is not running on the background", "yellow")
     return False
 
@@ -554,7 +560,7 @@ def is_geth_on():
     print(process_name)
     if not is_process_on(process_name, "Geth", process_count=0):
         log("E: geth is not running on the background. Please run:", "red")
-        log("sudo ~/eBlocPOA/server.sh", "yellow")
+        log(f"sudo ~/eBlocPOA/server.sh", "yellow")
         raise config.QuietExit
 
 
@@ -578,7 +584,7 @@ def is_ipfs_running():
 
 def check_ubuntu_packages(packages=None):
     if not packages:
-        packages = ["pigz", "curl", "mailutils", "munge"]
+        packages = ["pigz", "curl", "mailutils", "munge", "git"]
 
     for package in packages:
         if not is_dpkg_installed(package):

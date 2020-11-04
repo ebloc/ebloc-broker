@@ -22,8 +22,6 @@ class IpfsClass(Storage):
 
     def check_ipfs(self, ipfs_hash) -> None:
         success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempts=1)
-        breakpoint() # DEBUG
-
         if not success or "CumulativeSize" not in ipfs_stat:
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
             raise

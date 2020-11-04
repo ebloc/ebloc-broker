@@ -116,7 +116,7 @@ class Storage(BaseClass):
             self.is_already_cached[source_code_hash] = True
 
     def complete_refund(self) -> str:
-        """Complete refund back to the requester"""
+        """Complete refund back to the requester."""
         try:
             tx_hash = self.Ebb.refund(
                 self.logged_job.args["provider"],
@@ -214,7 +214,7 @@ class Storage(BaseClass):
             give_RWE_access(env.WHOAMI, self.requester_home)
             self._sbatch_call()
         except Exception:
-            logging.error("Failed to call _sbatch_call() function.")
+            logging.error("E: Failed to call _sbatch_call() function.")
             _colorize_traceback()
             raise
 

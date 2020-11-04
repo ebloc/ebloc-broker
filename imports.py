@@ -9,7 +9,7 @@ from web3.providers.rpc import HTTPProvider
 
 import _utils.colorer  # noqa: F401
 import config
-from config import env, logging
+from config import QuietExit, env, logging
 from utils import _colorize_traceback, is_geth_on, log, read_json, terminate
 
 
@@ -83,6 +83,10 @@ def connect_to_eblocbroker():
         config.w3 = connect_to_web3()
 
     try:
+        if env.EBLOCPATH is None or env.EBLOCPATH == "":
+            logging.error("E: EBLOCPATH variable is empty", "red")
+            raise QuietExit
+
         contract = read_json(f"{env.EBLOCPATH}/eblocbroker/contract.json")
     except:
         logging.error("E: Couldn't read the contract.json file")

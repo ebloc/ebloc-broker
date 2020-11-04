@@ -63,9 +63,7 @@ def get_data_key_ids(results_folder_prev):
     return True, meta_data
 
 
-def size(
-    key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hash_list, is_cached,
-):
+def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hashes, is_cached):
     source_code_key = None
     size_to_download = 0
     if "folder" in mime_type:
@@ -105,7 +103,7 @@ def size(
             return False
 
         md5sum = get_file_info(gdrive_info, "Md5sum")
-        if md5sum != source_code_hash_list[0].decode("utf-8"):
+        if md5sum != source_code_hashes[0].decode("utf-8"):
             # checks md5sum obtained from gdrive and given by the user
             logging.error("E: md5sum does not match with the provided data[0]")
             return False, 0, [], source_code_key
@@ -114,7 +112,7 @@ def size(
 
         byte_size = int(get_file_info(gdrive_info, "Size"))
         logging.info(f"sourceCodeHash[0]_size={byte_size} bytes")
-        if not is_cached[source_code_hash_list[0].decode("utf-8")]:
+        if not is_cached[source_code_hashes[0].decode("utf-8")]:
             size_to_download += byte_size
 
         success, meta_data = get_data_key_ids(results_folder_prev)
@@ -133,10 +131,10 @@ def size(
                 return False
 
             md5sum = get_file_info(gdrive_info, "Md5sum")
-            if md5sum != source_code_hash_list[idx].decode("utf-8"):
+            if md5sum != source_code_hashes[idx].decode("utf-8"):
                 # checks md5sum obtained from gdrive and given by the user
                 logging.error(
-                    f"md5sum={md5sum} | given={source_code_hash_list[idx].decode('utf-8')} \n"
+                    f"md5sum={md5sum} | given={source_code_hashes[idx].decode('utf-8')} \n"
                     f"E: md5sum does not match with the provided data[{idx}]"
                 )
                 return False, 0, [], source_code_key
@@ -145,7 +143,7 @@ def size(
             _size = int(get_file_info(gdrive_info, "Size"))
             logging.info(f"sourceCodeHash[{idx}]_size={_size} bytes")
             byte_size += _size
-            if not is_cached[source_code_hash_list[idx].decode("utf-8")]:
+            if not is_cached[source_code_hashes[idx].decode("utf-8")]:
                 size_to_download += _size
 
         data_link_file = f"{results_folder_prev}/meta_data_link.json"
@@ -153,7 +151,7 @@ def size(
             with open(data_link_file, "w") as f:
                 json.dump(data_key_dict, f)
         else:
-            logging.error("E: Something is wrong. data_key_dict is {}.")
+            logging.error("E: Something is wrong. data_key_dict is {}")
             return False, 0, [], source_code_key
 
         output = byte_to_mb(size_to_download)

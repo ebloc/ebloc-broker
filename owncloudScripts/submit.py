@@ -88,8 +88,8 @@ if __name__ == "__main__":
         tar_hash = sys.argv[2]
         print(f"provided_hash={tar_hash}")
     else:
-        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
-        # provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
+        # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+        provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home2-vm
 
     try:
         tx_hash = submit(provider, account_id)
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             logs = eBlocBroker.events.LogJob().processReceipt(receipt, errors=DISCARD)
             pprint.pprint(vars(logs[0].args))
             try:
-                log(f"Job's index={logs[0].args['index']}")
+                log(f"job's index={logs[0].args['index']}")
                 log("SUCCESS", "green")
             except IndexError:
                 print("Transaction is reverted")

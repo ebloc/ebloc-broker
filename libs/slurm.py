@@ -3,7 +3,7 @@
 import time
 
 import config
-from config import QuietExit, logging
+from config import QuietExit, env, logging
 from lib import run
 from utils import BashCommandsException, _colorize_traceback, is_process_on, log, popen_communicate
 
@@ -74,7 +74,8 @@ def is_on() -> bool:
 
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
-            log(f"E: {process_name} is not running in the background. Please run:\nsudo ~/eBlocBroker/bash_scripts/run_slurm.sh\n", "red")
+            process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
+            log(f"E: {process_name} is not running in the background. Please run:\nsudo {env.EBLOCPATH}/bash_scripts/run_slurm.sh", "red")
             raise config.QuietExit
 
     output = run(["sinfo"])

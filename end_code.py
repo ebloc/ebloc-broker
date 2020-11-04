@@ -471,7 +471,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
         self.process_payment_tx()
         log("All done!", c="green")
-        # TODO; garbage collector, removed downloaded code from local since it is not needed anymore
+        # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
 
 
 if __name__ == "__main__":
@@ -493,7 +493,6 @@ if __name__ == "__main__":
 
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
 # success, output = run(cmd)
-# logging.info(output)
 # self.output_file_name = f"result-{PROVIDER_ID}-{self.job_key}-{self.index}.tar.gz"
 """Approach to upload as .tar.gz. Currently not used.
                 remove_source_code()
@@ -509,7 +508,6 @@ if __name__ == "__main__":
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
 # success, output = run(cmd)
 # logging.info(output)
-# time.sleep(.25)
 
 # self.remove_source_code()
 # cmd: tar -jcvf result-$providerID-$index.tar.gz *

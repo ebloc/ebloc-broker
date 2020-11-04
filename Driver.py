@@ -68,7 +68,7 @@ def wait_till_idle_core_available():
 
 
 def tools(block_number):
-    """Checks whether required functions are in use or not."""
+    """Checks whether the required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_number, pid)
     if not is_internet_on():
         terminate("E: Network connection is down")
@@ -80,7 +80,7 @@ def tools(block_number):
             _colorize_traceback()
         sys.exit(1)
 
-    # run_whisper_state_receiver()  # TODO: uncomment
+    # run_wnnhisper_state_receiver()  # TODO: uncomment
     # run_driver_cancel()  # TODO: uncomment
     if env.GDRIVE_USE:
         try:
@@ -136,7 +136,7 @@ def run_driver():
     block_number_saved = read_file(env.BLOCK_READ_FROM_FILE)
     if not block_number_saved.isdigit():
         logging.warning("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
-        question_yes_no("#> Would you like to read from contract's deployed block number? [Y/n]: ",
+        question_yes_no("## Would you like to read from contract's deployed block number? [Y/n]: ",
                         is_terminate=True)
         block_number_saved = deployed_block_number
         write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
@@ -156,7 +156,6 @@ def run_driver():
     log(f"rootdir={os.getcwd()}", c="blue")
     log(f"whoami={env.WHOAMI}", c="blue")
     log("{0: <18}".format("contract_address:") + contract_file["address"], c="blue")
-
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # Updated since cluster is not registered
         write_to_file(env.BLOCK_READ_FROM_FILE, Ebb.get_block_number())
@@ -203,7 +202,6 @@ def run_driver():
 
         log(f"block_read_from={block_read_from}")
         while current_block_number < int(block_read_from):
-            print(Ebb.get_block_number())
             current_block_number = Ebb.get_block_number()
             time.sleep(.25)
 
@@ -382,6 +380,8 @@ if __name__ == "__main__":
                 try:
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 except PermissionError:
+                    log("E: PermissionError for the lock file")
+                    _colorize_traceback()
                     give_RWE_access(env.WHOAMI, "/tmp/run")
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 # open(env.DRIVER_LOCKFILE, 'w').close()

@@ -5,7 +5,7 @@ if [ -e docs/ ]; then
 fi
 
 pyclean () {
-    find . | grep -E "(.mypy_cache|.pytest_cache|__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+    find . | grep -E "(.mypy_cache|.pytest_cache|__pycache__|\.pyc|\.pyo$)" | xargs rm -rf &>/dev/null
 }
 
 pyclean

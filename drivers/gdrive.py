@@ -291,8 +291,7 @@ class GdriveClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        log(f"[{get_time()}] Job's source code has been sent through Google Drive", "cyan")
-
+        log(f"[{get_time()}] job's source code has been sent through Google Drive", "cyan")
         if not os.path.isdir(self.results_folder):
             self.get_data(self.job_key, 0, True)
         else:
