@@ -9,7 +9,7 @@ from utils import is_ipfs_on, popen_communicate
 
 def run():
     # https://stackoverflow.com/a/8375012/2402577
-    print("running ipfs")
+    print("running ipfs daemon")
     with daemon.DaemonContext():
         cmd = ["ipfs", "daemon"]  # , "--mount"]
         popen_communicate(cmd, env.IPFS_LOG)

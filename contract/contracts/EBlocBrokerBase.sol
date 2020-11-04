@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.1;
+pragma solidity 0.7.0;
 import "./Lib.sol";
 
 contract EBlocBrokerBase {

@@ -1,11 +1,6 @@
 live:
   - name: Ethereum
     networks:
-      - name: Private (eBlocPOA)
-        chainid: 23422
-        id: private
-        host: http://127.0.0.1:8545/
-        gas_price: false
       - name: Mainnet (Infura)
         chainid: 1
         id: mainnet
@@ -31,6 +26,12 @@ live:
         id: kovan
         host: https://kovan.infura.io/v3/$WEB3_INFURA_PROJECT_ID
         explorer: https://api-kovan.etherscan.io/api
+      - name: Private (eBlocPOA)
+        id: eblocpoa
+        host: http://127.0.0.1:8545/
+        chainid: 23422
+        gas_price: false
+
   - name: Ethereum Classic
     networks:
       - name: Mainnet
@@ -52,7 +53,7 @@ development:
     cmd_settings:
       port: 8547
       gas_limit: 6721975
-      accounts: 100
+      accounts: 10
       evm_version: istanbul
       mnemonic: brownie
   - name: Ganache-CLI (Mainnet Fork)

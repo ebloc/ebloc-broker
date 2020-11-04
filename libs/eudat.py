@@ -59,48 +59,54 @@ def upload_results(encoded_share_token, output_file_name, results_folder_prev, a
         return False
 
 
-def login(user, password_path, fname: str) -> None:
-    logging.info(f"Login into owncloud user:{user}")
-    if os.path.isfile(fname):
-        f = open(fname, "rb")
-        config.oc = pickle.load(f)
-        try:
-            printc("Reading from the dumped object...", "blue")
-            # oc.list(".")  # uncomment
-            logging.info("SUCCESS. Read from dumped object.")
-        except subprocess.CalledProcessError as e:
-            logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
-
+def _login(fname, user, password_path):
+    sleep_duration = 15
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
-    if not user:
-        logging.error("E: User is empty")
-        terminate()
-
     with open(password_path, "r") as content_file:
         password = content_file.read().strip()
 
     for attempt in range(config.RECONNECT_ATTEMPTS):
         try:
-            config.oc.login(user, password)
+            printc("==> Trying to login into owncloud ", c="blue", is_new_line=False)
+            config.oc.login(user, password)  # May take long time to connect
             password = ""
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()
+            printc("[ok]")
         except Exception:
             _traceback = traceback.format_exc()
             _colorize_traceback()
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
-                sleep_duration = 15
                 logging.warning(f"Sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
             else:
                 logging.error("E: Could nt connect into Eudat")
                 terminate()
         else:
-            break
+            return False
     else:
         logging.error("E: User is None object")
         terminate()
+
+
+def login(user, password_path, fname: str) -> None:
+    if not user:
+        logging.error("E: User is empty")
+        terminate()
+
+    if os.path.isfile(fname):
+        f = open(fname, "rb")
+        config.oc = pickle.load(f)
+        try:
+            printc(f"Login into owncloud user reading from the dumped object={fname} ", c="blue", is_new_line=False)
+            config.oc.get_config()
+            printc("[ok]")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
+            _login(fname, user, password_path)
+    else:
+        _login(fname, user, password_path)
 
 
 def share_single_folder(folder_name, f_id) -> bool:

@@ -9,8 +9,9 @@
 
 ## Build dependencies
 
-[Geth](https://github.com/ethereum/go-ethereum/wiki/geth), [IPFS](https://ipfs.io/docs/install/),
-[Slurm](https://github.com/SchedMD/slurm)
+- [Geth](https://github.com/ethereum/go-ethereum/wiki/geth)
+- [Slurm](https://github.com/SchedMD/slurm)
+- [IPFS](https://ipfs.io/docs/install/)
 
 ## How to connect into Private Ethereum Blockchain (eBloc)
 
@@ -49,8 +50,8 @@ UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
 
 **On the console, use:**
 
-You can also create your Ethereum account inside your `geth-client`. Here your Keystore File` will
-be created with root permission, `eBlocWallet` will not able to unlock it.
+You can also create your Ethereum account using `geth-client`. Here your
+keystore file will be created with root permission and `eBlocWallet` will not able to unlock it.
 
 ```bash
 > personal.newAccount()
@@ -61,7 +62,7 @@ Repeat passphrase:
 ["0x7d334606c71417f944ff8ba5c09e3672066244f8"]
 ```
 
-Now you should see your `Keystore File (UTC / JSON)` under `private/keystore` directory.
+Now you should see `Keystore File (UTC / JSON)` file under the `private/keystore` directory.
 
 ```bash
 [~/eBlocPOA]$ ls private/keystore
@@ -79,7 +80,7 @@ sudo chown -R $(whoami) private/keystore/UTC--...
 
 -------
 
-Later, please do following inside your Amazon instance.
+Later, do following inside your instance.
 
 ```bash
 # To run eBloc Etheruem Node
@@ -91,11 +92,9 @@ $ bash initialize.sh # do it only once
 $ sudo ./Driver.sh
 ```
 
-## Start Running Cluster using eBlocBroker
+## Running Cluster using eBlocBroker
 
 ### Cluster Side: How to register a cluster
-
-Please note the following:
 
 - If you do not have any `Federated Cloud ID` give an empty string: `""`. You can
   use `./registerCluster.py` to submit your jobs.
