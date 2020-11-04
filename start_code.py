@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import subprocess
 import sys
@@ -26,7 +26,6 @@ def start_call(job_key, index, slurm_job_id):
     f = open(env.log_filename, "a")
     f.write(f"\n{env.EBLOCPATH}/eblocbroker/set_job_status_running.py {job_key} {index} {job_id} {start_time}\n")
     time.sleep(.25)
-
     for attempt in range(2):
         if attempt > 0:
             time.sleep(env.BLOCK_DURATION)
@@ -50,5 +49,4 @@ if __name__ == "__main__":
     job_key = sys.argv[1]
     index = sys.argv[2]
     slurm_job_id = sys.argv[3]
-
     start_call(job_key, index, slurm_job_id)

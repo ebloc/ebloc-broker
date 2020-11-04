@@ -10,11 +10,13 @@ from lib import StorageID
 from utils import _colorize_traceback, bytes32_to_ipfs, is_ipfs_running, log
 
 
-def is_users_valid(self, provider, _from):
+def is_provider_valid(self, provider):
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
         logging.error(f"\nE: Requested provider's Ethereum address {provider} does not registered.")
         raise
 
+
+def is_requester_valid(self, _from):
     *_, orcid = self.eBlocBroker.functions.getRequesterInfo(_from).call()
     if not self.eBlocBroker.functions.doesRequesterExist(_from).call():
         logging.error(f"\nE: Requester's Ethereum address {_from} is not registered")
@@ -29,7 +31,8 @@ def is_users_valid(self, provider, _from):
 
 
 def check_before_submit(self, provider, _from, provider_info, key, job):
-    self.is_users_valid(provider, _from)
+    self.is_provider_valid(provider)
+    self.is_requester_valid(_from)
 
     main_storage_id = job.storage_ids[0]
     if not job.source_code_hashes:

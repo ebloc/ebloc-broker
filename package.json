@@ -11,7 +11,6 @@
       "binstring": "*",
       "bs58": "*",
       "dotenv": "^6.0.0",
-      "minilock-cli": "*",
       "require": "^2.4.20",
       "scrypt": "^6.0.3",
       "sleep": "^5.1.1",
@@ -20,8 +19,8 @@
       "web3_ipc": "*"
    },
    "devDependencies": {
-      "prettier": "^2.0.5",
-      "prettier-plugin-solidity": "^1.0.0-alpha.53"
+      "prettier": "^2.1.2",
+      "prettier-plugin-solidity": "^1.0.0-alpha.58"
    },
    "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1"

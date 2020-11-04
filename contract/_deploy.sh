@@ -4,7 +4,7 @@
 
 source $HOME/venv/bin/activate
 brownie compile
-brownie run eBlocBroker --network private | tee eblocbroker_deployed.txt
+brownie run eBlocBroker --network eblocpoa | tee eblocbroker_deployed.txt
 
 file=$HOME/eBlocBroker/eblocbroker/contract.json
 
@@ -36,5 +36,5 @@ jq '.txHash = $newVal' --arg newVal $ebb_tx $file > tmp.$$.json && mv tmp.$$.jso
 jq '.address = $newVal' --arg newVal $ebb_address $file > tmp.$$.json && mv tmp.$$.json $file
 cat $file
 
-printf "Setting abi"
+printf "setting abi"
 ./set_abi.sh
