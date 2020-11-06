@@ -2,9 +2,10 @@
 
 import time
 
+import config
 from config import QuietExit, logging
 from lib import run
-from utils import BashCommandsException, _colorize_traceback, log, popen_communicate
+from utils import BashCommandsException, _colorize_traceback, is_process_on, log, popen_communicate
 
 
 def add_user_to_slurm(user):
@@ -69,6 +70,13 @@ def pending_jobs_check():
 def is_on() -> bool:
     """Checks whether Slurm runs on the background or not, if not runs slurm."""
     logging.info("Checking Slurm... ")
+    processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
+
+    for process_name in processes:
+        if not is_process_on(process_name, process_name, process_count=0, is_print=False):
+            log(f"E: {process_name} is not running in the background. Please run:\nsudo ~/eBlocBroker/bash_scripts/run_slurm.sh\n", "red")
+            raise config.QuietExit
+
     output = run(["sinfo"])
     if "PARTITION" not in output:
         logging.error("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")

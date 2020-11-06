@@ -6,7 +6,7 @@ import json
 from web3 import HTTPProvider, Web3
 
 from config import env
-from utils import json_pretty, print_arrow, printc
+from utils import json_pretty, log
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 
@@ -29,5 +29,4 @@ json_pretty(data)  # prints data
 with open(env.WHISPER_INFO, "w") as outfile:
     json.dump(data, outfile)
 
-print_arrow("blue")
-printc(f"You can access your whisper info from {env.WHISPER_INFO}", "green")
+log(f"=> You can access your whisper info from {env.WHISPER_INFO}", "green")

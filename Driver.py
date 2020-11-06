@@ -68,7 +68,7 @@ def wait_till_idle_core_available():
 
 
 def tools(block_number):
-    """Tools functions are called."""
+    """Checks whether required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_number, pid)
     if not is_internet_on():
         terminate("E: Network connection is down")
@@ -80,7 +80,7 @@ def tools(block_number):
             _colorize_traceback()
         sys.exit(1)
 
-    # run_wnnhisper_state_receiver()  # TODO: uncomment
+    # run_whisper_state_receiver()  # TODO: uncomment
     # run_driver_cancel()  # TODO: uncomment
     if env.GDRIVE_USE:
         try:
@@ -111,6 +111,7 @@ def run_driver():
     columns = 100
     # driver_cancel_process = None
     # whisper_state_receiver_process = None
+
     try:
         from imports import connect
         connect()
@@ -349,12 +350,11 @@ def run_driver():
                     # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
                 elif main_cloud_storage_id == StorageID.GDRIVE:
                     storage_class = GdriveClass(logged_job, job_infos, requester_md5_id, is_already_cached,)
-
-                # run_storage_process(storage_class)
-                if env.IS_THREADING_ENABLED:
-                    run_storage_thread(storage_class)
-                else:
-                    storage_class.run()
+                    # run_storage_process(storage_class)
+                    if env.IS_THREADING_ENABLED:
+                        run_storage_thread(storage_class)
+                    else:
+                        storage_class.run()
             except:
                 _colorize_traceback()
                 sys.exit(1)
@@ -403,4 +403,4 @@ if __name__ == "__main__":
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
             _colorize_traceback()
-        sys.exit(1), #
+        sys.exit(1)
