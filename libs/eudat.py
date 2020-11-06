@@ -73,7 +73,7 @@ def _login(fname, user, password_path):
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            printc("[ok]")
+            printc(text="[ ok ]", is_bold=False)
         except Exception:
             _traceback = traceback.format_exc()
             _colorize_traceback()
@@ -101,7 +101,7 @@ def login(user, password_path, fname: str) -> None:
         try:
             printc(f"Login into owncloud user reading from the dumped object={fname} ", c="blue", is_new_line=False)
             config.oc.get_config()
-            printc("[ok]")
+            printc("[ ok ]", is_bold=False)
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)
