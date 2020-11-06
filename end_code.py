@@ -40,7 +40,6 @@ from utils import (
     eth_address_to_md5,
     is_dir_empty,
     log,
-    print_arrow,
     read_file,
     read_json,
     remove_empty_files_and_folders,
@@ -334,11 +333,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def git_diff_patch_and_upload(self, source, name, storage_class, is_job_key):
         if is_job_key:
             logging.info(f"patch_base={self.patch_folder}")
-            print_arrow("blue")
-            log(f"Patch for source code {name}", "blue")
+            log(f"==> Patch for source code {name}", "blue")
         else:
-            print_arrow("blue")
-            log(f"Patch for data file {name}", "blue")
+            log(f"==> Patch for data file {name}", "blue")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
