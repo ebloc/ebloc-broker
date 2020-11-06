@@ -21,6 +21,8 @@ Ebb = Contract.eblocbroker
 
 def submit(provider, account_id):
     job = Job()
+    requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
+    job.Ebb.is_requester_valid(requester)
 
     provider = w3.toChecksumAddress(provider)
     provider_info = Ebb.get_provider_info(provider)
@@ -55,7 +57,6 @@ def submit(provider, account_id):
             sys.exit(1)
 
         time.sleep(.25)
-
     printc("\nSubmitting the job")
     job.execution_durations = [5]
     job.cores = [1]
@@ -67,8 +68,6 @@ def submit(provider, account_id):
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
     print(job.source_code_hashes)
-    requester = w3.toChecksumAddress(w3.eth.accounts[account_id])
-
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
         return Ebb.submit_job(provider, job_key, account_id, job_price, job)
@@ -84,14 +83,13 @@ if __name__ == "__main__":
     oc_requester = "059ab6ba-4030-48bb-b81b-12115f531296"
     account_id = 1  # different account than provider
     eudat.login(oc_requester, f"{env.LOG_PATH}/.eudat_client.txt", env.OC_CLIENT_REQUESTER)
-
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
         tar_hash = sys.argv[2]
         print(f"provided_hash={tar_hash}")
     else:
-        # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
-        provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
+        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
+        # provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home-vm
 
     try:
         tx_hash = submit(provider, account_id)

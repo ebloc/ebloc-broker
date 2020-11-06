@@ -317,3 +317,5 @@ owncloudScripts/exampleFolderToShare/data1/output.file
 owncloudScripts/base/data_link/
 
 .oc.pckl
+
+.idea/

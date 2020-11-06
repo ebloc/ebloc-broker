@@ -381,7 +381,7 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     pass
 
 
-def printc(text, c="white", is_new_line=True, is_bold=True):
+def printc(text, c=None, is_new_line=True, is_bold=True):
     if is_new_line:
         if is_bold:
             print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c))
@@ -396,7 +396,10 @@ def printc(text, c="white", is_new_line=True, is_bold=True):
 
 # TODO: send arguments without order //  is_bold
 def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
-    # TODO: check first 3 chars are ==> if yes color them
+    is_arrow = False
+    if text[0:3] == "==>":
+        is_arrow = True
+
     text = str(text)
     if threading.current_thread().name != "MainThread" and env.IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
@@ -408,27 +411,29 @@ def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
 
     f = open(filename, "a")
     if c:
+        if is_bold:
+            _text = f"{COLOR.BOLD}{text}{COLOR.END}"
+        else:
+            _text = text
+
         if threading.current_thread().name == "MainThread":
-            if is_bold:
-                printc(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c), c, is_new_line, is_bold)
+            if is_arrow:
+                printc(colored("==>", "blue"), c="blue", is_new_line=False, is_bold=True)
+                printc(colored(text[3:], c), c, is_new_line, is_bold)
             else:
                 printc(colored(text, c), c, is_new_line, is_bold)
-        if is_new_line:
+        if is_arrow:
             if is_bold:
-                f.write(colored(f"{COLOR.BOLD}{text}\n{COLOR.END}", c))
-            else:
-                f.write(colored(text, c))
+                _text = f"{COLOR.BOLD}{text[3:]}{COLOR.END}"
+            f.write(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + colored(_text, c))
         else:
-            if is_bold:
-                f.write(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c))
-            else:
-                f.write(colored(text, c))
+            f.write(colored(_text, c))
     else:
         print(text)
-        if is_new_line:
-            f.write(f"{text}\n")
-        else:
-            f.write(text)
+        f.write(text)
+
+    if is_new_line:
+        f.write("\n")
     f.close()
 
 
@@ -477,7 +482,7 @@ def is_ipfs_on() -> bool:
     return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0)
 
 
-def is_process_on(process_name, name, process_count=0, port=None) -> bool:
+def is_process_on(process_name, name, process_count=0, port=None, is_print=True) -> bool:
     """Checks wheather the process runs on the background.
     Doc: https://stackoverflow.com/a/6482230/2402577"""
     p1 = Popen(["ps", "aux"], stdout=PIPE)
@@ -503,11 +508,15 @@ def is_process_on(process_name, name, process_count=0, port=None) -> bool:
             out = p2.communicate()[0].decode("utf-8").strip()
             running_pid = out.strip().split()[1]
             if running_pid in pids:
-                log(f"{name} is already running on the background pid={running_pid}", "yellow")
+                if is_print:
+                    log(f"==> {name} is already running on the background, its pid={running_pid}", "green")
                 return True
         else:
-            log(f"{name} is already running on the background", "yellow")
+            if is_print:
+                log(f"==> {name} is already running on the background", "green")
             return True
+
+    log(f"{name} is not running on the background", "yellow")
     return False
 
 

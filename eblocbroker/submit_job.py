@@ -12,7 +12,7 @@ from utils import _colorize_traceback, bytes32_to_ipfs, is_ipfs_running, log
 
 def is_provider_valid(self, provider):
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
-        logging.error(f"\nE: Requested provider's Ethereum address {provider} does not registered.")
+        logging.error(f"\nE: Requested provider's Ethereum address {provider} does not registered")
         raise
 
 
@@ -33,7 +33,6 @@ def is_requester_valid(self, _from):
 def check_before_submit(self, provider, _from, provider_info, key, job):
     self.is_provider_valid(provider)
     self.is_requester_valid(_from)
-
     main_storage_id = job.storage_ids[0]
     if not job.source_code_hashes:
         logging.error("E: sourceCodeHash list is empty")
@@ -83,9 +82,10 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     if not is_ipfs_running():
         sys.exit()
 
-    client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001/http')
+    client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     for storage_id in job.storage_ids:
         if storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
+            # TODO: check is valid IPFS id
             try:
                 print(f"trying to connect into {provider_info['ipfs_id']}")
                 output = client.swarm.connect(provider_info["ipfs_id"])
@@ -93,20 +93,18 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
                     log(str(output), "green")
                     break
             except:
+                _colorize_traceback()
+                log("E: connection into provider's IPFS node via swarm is not accomplished", "red")
                 sys.exit
-    else:
-        sys.exit()
     return True
 
-    """
+    """ TODO: can it be more than 32 characters
     print(source_code_hashes[0].encode('utf-8'))
     for i in range(len(source_code_hashes)):
         source_code_hashes[i] = source_code_hashes[i]
         if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
             return False, 'source_code_hashes should be 32 characters.'
     """
-    # if len(jobDescription) >= 128:
-    #    return 'Length of jobDescription is greater than 128, please provide lesser.'
 
 
 def submit_job(self, provider, key, account_id, job_price, job):
@@ -124,7 +122,6 @@ def submit_job(self, provider, key, account_id, job_price, job):
         raise
 
     self.check_before_submit(provider, _from, provider_info, key, job)
-
     provider_price_block_number = self.eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
     args = [
         provider,

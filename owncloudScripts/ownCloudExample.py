@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+breakpoint() # DEBUG#!/usr/bin/env python
 
 import owncloud
 
