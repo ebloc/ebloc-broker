@@ -20,7 +20,6 @@ from utils import (
     generate_md5sum,
     get_time,
     log,
-    print_arrow,
     read_json,
     silent_remove,
     untar,
@@ -122,8 +121,7 @@ class EudatClass(Storage):
             output = generate_md5sum(cached_tar_file)
             if output == folder_name:
                 # checking is already downloaded folder's hash matches with the given hash
-                print_arrow("blue")
-                log(f"{cached_tar_file} is already cached")
+                log(f"==> {cached_tar_file} is already cached")
                 self.tar_downloaded_path[folder_name] = cached_tar_file
                 self.folder_type_dict[folder_name] = "tar.gz"
                 return True
@@ -275,8 +273,7 @@ class EudatClass(Storage):
             "---------------------------------------------------------",
             "cyan",
         )
-        print_arrow("blue")
-        log(f"Keep track from: tail -f {self.drivers_log_path}")
+        log(f"==> Keep track from: tail -f {self.drivers_log_path}")
 
         # TODO: refund check
         self.mc = MongoClient()

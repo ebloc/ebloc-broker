@@ -4,6 +4,7 @@ import sys
 from os import path, popen
 from typing import List
 
+import eblocbroker.Contract as Contract
 from config import QuietExit
 from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, log
 
@@ -33,6 +34,7 @@ class Job:
         self.source_code_hashes: List[bytes] = []
         self.storage_hours: List[int] = []
         self.execution_durations = []
+        self.Ebb = Contract.eblocbroker
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -52,7 +54,6 @@ class Job:
             raise
 
     def check_account_status(self, account_id):
-        import eblocbroker.Contract as Contract
         _Ebb = Contract.eblocbroker
         try:
             _from = _Ebb.account_id_to_address(account_id)
