@@ -8,7 +8,7 @@ import libs.gdrive as gdrive
 from config import env, logging
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
-from utils import WHERE, CacheType, byte_to_mb, create_dir, generate_md5sum, get_time, silent_remove, untar
+from utils import WHERE, CacheType, byte_to_mb, generate_md5sum, get_time, mkdir, silent_remove, untar
 
 
 class GdriveClass(Storage):
@@ -39,7 +39,7 @@ class GdriveClass(Storage):
 
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
-                        log(f"=> {name} is already cached within private cache directory", "blue")
+                        log(f"==> {name} is already cached within private cache directory", "blue")
                         self.cache_type[_id] = CacheType.PRIVATE
                         return True, None
                 else:
@@ -58,7 +58,7 @@ class GdriveClass(Storage):
 
                 if output == source_code_hash:
                     # checking is already downloaded folder's hash matches with the given hash
-                    log(f"=> {name} is already cached within the private cache directory", "blue")
+                    log(f"==> {name} is already cached within the private cache directory", "blue")
                     self.cache_type[_id] = CacheType.PRIVATE
                     return True, None
                 else:
@@ -80,7 +80,7 @@ class GdriveClass(Storage):
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[source_code_hash] = self.public_dir
-                        log(f"=> {name} is already cached within public cache directory", "blue")
+                        log(f"==> {name} is already cached within public cache directory", "blue")
                     else:
                         if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                             return False, None
@@ -91,7 +91,7 @@ class GdriveClass(Storage):
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[source_code_hash] = self.public_dir
-                        log(f"=> {name} is already cached within public cache directory", "blue")
+                        log(f"==> {name} is already cached within public cache directory", "blue")
                     else:
                         if not self.gdrive_download_folder(
                             name, key, source_code_hash, _id, f"{self.public_dir}/{name}"
@@ -244,7 +244,7 @@ class GdriveClass(Storage):
                 target = self.results_folder
             else:
                 target = f"{self.results_data_folder}/{source_code_hash}"
-                create_dir(target)
+                mkdir(target)
 
             try:
                 cache_folder = self.folder_path_to_download[source_code_hash]
@@ -291,8 +291,7 @@ class GdriveClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        log(f"[{get_time()}] Job's source code has been sent through Google Drive", "cyan")
-
+        log(f"[{get_time()}] job's source code has been sent through Google Drive", "cyan")
         if not os.path.isdir(self.results_folder):
             self.get_data(self.job_key, 0, True)
         else:

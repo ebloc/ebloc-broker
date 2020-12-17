@@ -20,7 +20,7 @@ def process_payment(
     dataTransferIn,
     dataTransferOut,
     core,
-    executionDuration
+    executionDuration,
 ):
     logging.info(
         f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {execution_time_min}"
@@ -72,6 +72,7 @@ def process_payment(
 
 if __name__ == "__main__":
     from eblocbroker.Contract import Contract
+
     contract = Contract()
 
     if len(sys.argv) == 12:

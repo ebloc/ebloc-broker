@@ -11,6 +11,7 @@ import config
 from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import DataStorage, Job, cost, new_test
+from imports import connect
 from utils import CacheType, StorageID, ipfs_to_bytes32, logging, zero_bytes32
 
 # from brownie.test import given, strategy
@@ -40,10 +41,7 @@ Ebb = None
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb
-    Ebb = _Ebb
-    config.Ebb = _Ebb
-    config.w3 = web3
+    connect()
 
 
 @pytest.fixture(autouse=True)
@@ -99,7 +97,7 @@ def register_provider(price_core_min=1):
     web3.eth.defaultAccount = accounts[0]
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
-    tx = config.Ebb.registerProvider(
+    tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_email,
         federatedCloudID,
@@ -118,22 +116,22 @@ def register_provider(price_core_min=1):
 
     orc_id = "0000-0001-7642-0442"
     orc_id_as_bytes = str.encode(orc_id)
-    assert not config.Ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
-    config.Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
-    assert config.Ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified is failed"
+    assert not config.ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
+    config.ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+    assert config.ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified is failed"
 
     # orc_id should only set once for the same user
     with brownie.reverts():
-        config.Ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+        config.ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
 
-    *_, b = config.Ebb.getRequesterInfo(accounts[0])
+    *_, b = config.ebb.getRequesterInfo(accounts[0])
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
     return provider_registered_bn
 
 
 def register_requester(account):
     """Register requester."""
-    tx = config.Ebb.registerRequester(
+    tx = config.ebb.registerRequester(
         GPG_FINGERPRINT,
         "alper.alimoglu@gmail.com",
         "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
@@ -141,7 +139,7 @@ def register_requester(account):
         whisper_pub_key,
         {"from": account},
     )
-    assert config.Ebb.doesRequesterExist(account), True
+    assert config.ebb.doesRequesterExist(account), True
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogRequester"]["gpgFingerprint"])
     assert gpg_fingerprint == GPG_FINGERPRINT
 
@@ -150,17 +148,17 @@ def register_requester(account):
 
     # logging.info(f"isOrcIDVerified={Ebb.isOrcIDVerified(account)}")
 
-    assert not config.Ebb.isOrcIDVerified(account), "orc_id initial value should be false"
+    assert not config.ebb.isOrcIDVerified(account), "orc_id initial value should be false"
 
-    config.Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})  # ORCID should be registered.
+    config.ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})  # ORCID should be registered.
 
-    assert config.Ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
-    assert not config.Ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
+    assert config.ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
+    assert not config.ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
 
     with brownie.reverts():  # orc_id should only set once for the same user
-        config.Ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
+        config.ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
 
-    *_, b = config.Ebb.getRequesterInfo(account)
+    *_, b = config.ebb.getRequesterInfo(account)
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
@@ -211,7 +209,7 @@ def test_stored_data_usage():
     job_price, _cost = cost(provider, requester, job, Ebb, web3)
 
     # first time job is submitted with the data files
-    tx = config.Ebb.submitJob(
+    tx = config.ebb.submitJob(
         jobKey,
         job.dataTransferIns,
         args,
@@ -919,7 +917,7 @@ def test_simple_submit():
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 
-    print("submitJob_gas_used=" + str(tx.__dict__['gas_used']))
+    print("submitJob_gas_used=" + str(tx.__dict__["gas_used"]))
     index = 0
     jobID = 0
     startTime = 1579524978
@@ -932,7 +930,7 @@ def test_simple_submit():
     dataTransferOut = 0.01
     args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
     execution_time_min = 1
-    out_hash = b'[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99'
+    out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
     tx = Ebb.processPayment(job.key, args, execution_time_min, out_hash, {"from": accounts[0]})
     # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]

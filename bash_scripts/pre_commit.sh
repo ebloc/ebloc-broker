@@ -12,7 +12,7 @@ pre-commit run --all-files
 
 : '
 source $HOME/venv/bin/activate
-echo "=> isort in process"
+echo "==> isort in process"
 isort -rc $HOME/eBlocBroker
 
 echo -e "\n=> black in process"

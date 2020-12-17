@@ -68,7 +68,7 @@ def wait_till_idle_core_available():
 
 
 def tools(block_number):
-    """Checks whether required functions are in use or not."""
+    """Checks whether the required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_number, pid)
     if not is_internet_on():
         terminate("E: Network connection is down")
@@ -80,7 +80,7 @@ def tools(block_number):
             _colorize_traceback()
         sys.exit(1)
 
-    # run_whisper_state_receiver()  # TODO: uncomment
+    # run_wnnhisper_state_receiver()  # TODO: uncomment
     # run_driver_cancel()  # TODO: uncomment
     if env.GDRIVE_USE:
         try:
@@ -114,8 +114,10 @@ def run_driver():
 
     try:
         from imports import connect
+
         connect()
-        Ebb = Contract.eblocbroker
+        config.Ebb = Ebb = Contract.eblocbroker
+        Contract.eblocbroker.ebb = config.ebb  # set for global use across functions
     except:
         _colorize_traceback()
         terminate()
@@ -136,8 +138,7 @@ def run_driver():
     block_number_saved = read_file(env.BLOCK_READ_FROM_FILE)
     if not block_number_saved.isdigit():
         logging.warning("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
-        question_yes_no("#> Would you like to read from contract's deployed block number? [Y/n]: ",
-                        is_terminate=True)
+        question_yes_no("## Would you like to read from contract's deployed block number? [Y/n]: ", is_terminate=True)
         block_number_saved = deployed_block_number
         write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
 
@@ -149,22 +150,26 @@ def run_driver():
         terminate("E: Contract address does not exist on the blockchain, is the blockchain sync?")
 
     if env.IS_THREADING_ENABLED:
-        log(f"is_threading={env.IS_THREADING_ENABLED}", c="blue")
+        log(f"is_threading={env.IS_THREADING_ENABLED}", color="blue")
 
-    log(f"is_web3_connected={Ebb.is_web3_connected()}", c="blue")
-    log(f"log_file={env.DRIVER_LOG}", c="blue")
-    log(f"rootdir={os.getcwd()}", c="blue")
-    log(f"whoami={env.WHOAMI}", c="blue")
-    log("{0: <18}".format("contract_address:") + contract_file["address"], c="blue")
-
+    Ebb.is_eth_account_locked(env.PROVIDER_ID)
+    log(f"is_web3_connected={Ebb.is_web3_connected()}", color="blue")
+    log(f"log_file={env.DRIVER_LOG}", color="blue")
+    log(f"rootdir={os.getcwd()}", color="blue")
+    log(f"whoami={env.WHOAMI}", color="blue")
+    log("{0: <18}".format("contract_address:") + contract_file["address"], color="blue")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # Updated since cluster is not registered
         write_to_file(env.BLOCK_READ_FROM_FILE, Ebb.get_block_number())
-        terminate(textwrap.fill(
-            f"E: Your Ethereum address {env.PROVIDER_ID} "
-            "does not match with any provider in eBlocBroker. Please register your "
-            "provider using your Ethereum Address in to the eBlocBroker. You can "
-            "use eblocbroker/register_provider.py script to register your provider."), is_traceback=False)
+        terminate(
+            textwrap.fill(
+                f"E: Your Ethereum address {env.PROVIDER_ID} "
+                "does not match with any provider in eBlocBroker. Please register your "
+                "provider using your Ethereum Address in to the eBlocBroker. You can "
+                "use eblocbroker/register_provider.py script to register your provider."
+            ),
+            is_traceback=False,
+        )
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
         terminate(f"E: Provider's ({env.PROVIDER_ID}) ORCID is not verified")
@@ -175,7 +180,7 @@ def run_driver():
 
     while True:
         wait_till_idle_core_available()
-        time.sleep(.25)
+        time.sleep(0.25)
         if not str(block_read_from).isdigit():
             terminate(f"block_read_from={block_read_from}")
 
@@ -184,7 +189,7 @@ def run_driver():
         # gets real unfo under the header after the first line
         if not success or "squeue: error:" in str(squeue_output):
             logging.error("SLURM is not running on the background. Please run:\nsudo ./bash_scripts/run_slurm.sh")
-            log(squeue_output, "red", is_bold=False)
+            log(squeue_output, color="red", is_bold=False)
             terminate()
 
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
@@ -192,22 +197,30 @@ def run_driver():
             log(f"Current slurm running jobs status:\n{squeue_output}")
             log("-" * int(columns), "green")
 
+        log(f"[{get_time()}]", "blue")
         if isinstance(balance, int):
-            log(f"[{get_time()}] provider_gained_wei={int(balance) - int(balance_temp)}")
+            log(f"==> provider_gained_wei={int(balance) - int(balance_temp)}")
 
         current_block_number = Ebb.get_block_number()
-        log(f"[{get_time()}] waiting new job to come since block number={block_read_from}", "blue")
-        log(f"[{get_time()}] waiting for new block to increment by one", "blue")
-        log(f"[{get_time()}] current_block={current_block_number} | sync_from={block_read_from}", "blue")
-        log(f"[{get_time()}] is_web3_connected={Ebb.is_web3_connected()}", "blue")
+        log(f"==> waiting new job to come since block number={block_read_from}", "blue")
+        log("==> waiting for new block to increment by one", "blue")
+        log(f"==> current_block={current_block_number} | sync_from={block_read_from}", "blue")
+        log(f"==> is_web3_connected={Ebb.is_web3_connected()}", "blue")
 
         log(f"block_read_from={block_read_from}")
+        flag = True
         while current_block_number < int(block_read_from):
-            print(Ebb.get_block_number())
             current_block_number = Ebb.get_block_number()
-            time.sleep(.25)
+            if flag:
+                log(
+                    "## Waiting block number to be updated from the blockchain, it remains constant at"
+                    f" {current_block_number}...",
+                    color="blue",
+                )
+            flag = False
+            time.sleep(0.25)
 
-        log(f"Passed incremented block number... Watching from block number={block_read_from}", c="yellow")
+        log(f"Passed incremented block number... Watching from block number={block_read_from}", color="yellow")
         # starting reading event's location has been updated
 
         block_read_from = str(block_read_from)
@@ -220,19 +233,19 @@ def run_driver():
             wait_till_idle_core_available()
             is_provider_received_job = True
             columns_size = int(int(columns) / 2 - 12)
-            log("-" * columns_size + f" {idx} " + "-" * columns_size, c="blue")
+            log("-" * columns_size + f" {idx} " + "-" * columns_size, color="blue")
             # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
             job_key = logged_job.args["jobKey"]
             index = logged_job.args["index"]
             cloud_storage_id = logged_job.args["cloudStorageID"]
             block_number = logged_job["blockNumber"]
-            log(f"job_key={job_key} | index={index}", c="green")
+            log(f"job_key={job_key} | index={index}", color="green")
             log(
                 f"received_block_number={block_number} \n"
                 f"transactionHash={logged_job['transactionHash'].hex()} | log_index={logged_job['logIndex']} \n"
                 f"provider={logged_job.args['provider']} \n"
                 f"received={logged_job.args['received']}",
-                c="yellow",
+                color="yellow",
             )
             received_block = []
             storageDuration = []
@@ -247,7 +260,7 @@ def run_driver():
                 else:
                     source_code_hash = config.w3.toText(source_code_hash_byte)
 
-                ds = DataStorage(config.Ebb, config.w3, env.PROVIDER_ID, source_code_hash_byte)
+                ds = DataStorage(config.ebb, config.w3, env.PROVIDER_ID, source_code_hash_byte)
                 received_block.append(ds.received_block)
                 storageDuration.append(ds.storage_duration)
 
@@ -309,7 +322,7 @@ def run_driver():
                 continue
 
             requester_id = job_infos[0]["jobOwner"]
-            log(f"requester={requester_id}", c="yellow")
+            log(f"requester={requester_id}", color="yellow")
             if not Ebb.does_requester_exist(requester_id):
                 logging.error("E: job owner is not registered")
                 continue
@@ -350,17 +363,18 @@ def run_driver():
                     # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
                 elif main_cloud_storage_id == StorageID.GDRIVE:
                     storage_class = GdriveClass(logged_job, job_infos, requester_md5_id, is_already_cached,)
-                    # run_storage_process(storage_class)
-                    if env.IS_THREADING_ENABLED:
-                        run_storage_thread(storage_class)
-                    else:
-                        storage_class.run()
+
+                # run_storage_process(storage_class)
+                if env.IS_THREADING_ENABLED:
+                    run_storage_thread(storage_class)
+                else:
+                    storage_class.run()
             except:
                 _colorize_traceback()
                 sys.exit(1)
 
         if len(logged_jobs_to_process) > 0 and max_blocknumber > 0:
-            # Uqpdates the latest read block-number
+            # updates the latest read block-number
             block_read_from = max_blocknumber + 1
             write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
         if not is_provider_received_job:
@@ -382,22 +396,24 @@ if __name__ == "__main__":
                 try:
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 except PermissionError:
+                    log("E: PermissionError for the lock file")
+                    _colorize_traceback()
                     give_RWE_access(env.WHOAMI, "/tmp/run")
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 # open(env.DRIVER_LOCKFILE, 'w').close()
                 run_driver()
             except zc.lockfile.LockError:
-                print("E: can't lock the file, the pid file is in use, oops.")
+                log("E: can't lock the file, the pid file is in use", color="red")
             except config.QuietExit:
                 pass
             except Exception as e:
-                log(e)
+                log(f"\nE: {e}", "red")
                 _colorize_traceback()
             finally:
                 try:
                     if lock:
                         lock.close()
-                        open(env.DRIVER_LOCKFILE, 'w').close()
+                        open(env.DRIVER_LOCKFILE, "w").close()
                 except:
                     _colorize_traceback()
     except Exception as e:

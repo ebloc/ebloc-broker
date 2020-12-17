@@ -35,7 +35,7 @@ def register_provider(
         log(
             "E: Provider {env.PROVIDER_ID} is already registered.\n"
             "Please call the updateProvider() function for an update.",
-            c="red",
+            color="red",
         )
         raise
 
@@ -70,13 +70,17 @@ def register_provider(
 
 if __name__ == "__main__":
     import eblocbroker.Contract as Contract
+
     addr = "/ip4/127.0.0.1/tcp/5001/http"
     try:
         client = ipfshttpclient.connect(addr)
         print(client)
     except Exception:
         _colorize_traceback()
-        log("E: Connection error to IPFS, please run it on the background.\nPlease run ~/eBlocBroker/daemons/ipfs.py", "red")
+        log(
+            "E: Connection error to IPFS, please run it on the background.\nPlease run ~/eBlocBroker/daemons/ipfs.py",
+            "red",
+        )
         sys.exit(1)
 
     Ebb = Contract.eblocbroker

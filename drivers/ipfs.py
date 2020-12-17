@@ -9,7 +9,7 @@ import libs.ipfs as ipfs
 from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, is_ipfs_running
-from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, create_dir, get_time, log, silent_remove
+from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir, silent_remove
 
 
 class IpfsClass(Storage):
@@ -21,9 +21,7 @@ class IpfsClass(Storage):
         self.cumulative_sizes = {}
 
     def check_ipfs(self, ipfs_hash) -> None:
-        success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash, attempts=1)
-        breakpoint() # DEBUG
-
+        success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash)
         if not success or "CumulativeSize" not in ipfs_stat:
             logging.error("E: Markle not found! Timeout for the IPFS object stat retrieve")
             raise
@@ -52,6 +50,7 @@ class IpfsClass(Storage):
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
         try:
+            breakpoint()  # DEBUG
             self.check_ipfs(self.job_key)
         except:
             return False
@@ -72,14 +71,14 @@ class IpfsClass(Storage):
             logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
             if ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
-                log(f"=> IPFS file {ipfs_hash} is already cached.", "blue")
+                log(f"==> IPFS file {ipfs_hash} is already cached.", "blue")
 
             if idx == 0:
                 target = self.results_folder
             else:
                 #  "_" added before the filename in case $ ipfs get <ipfs_hash>
                 target = f"{self.results_data_folder}/_{ipfs_hash}"
-                create_dir(target)
+                mkdir(target)
 
             is_storage_paid = False  # TODO: should be set before by user input
             ipfs.get(ipfs_hash, target, is_storage_paid)

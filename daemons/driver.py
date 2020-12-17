@@ -14,7 +14,7 @@ if __name__ == "__main__":
     cmd = ["python3", "Driver.py"]
     daemon_base = Daemon_base(pidfile, env.EBLOCPATH, cmd)
     if len(sys.argv) == 2:
-        if sys.argv[1] in ['start', "s"]:
+        if sys.argv[1] in ["start", "s"]:
             try:
                 is_driver_on()
                 daemon_base.start()
@@ -22,9 +22,9 @@ if __name__ == "__main__":
                 if type(e).__name__ != "QuietExit":
                     _colorize_traceback()
                     sys.exit(1)
-        elif sys.argv[1] in ['terminate', "t"]:
+        elif sys.argv[1] in ["terminate", "t"]:
             daemon_base.terminate()
-        elif sys.argv[1] in ['reload', "r"]:
+        elif sys.argv[1] in ["reload", "r"]:
             daemon_base.restart()
         else:
             print("Unknown command")
