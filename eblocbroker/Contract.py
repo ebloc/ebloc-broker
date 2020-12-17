@@ -3,13 +3,14 @@
 import sys
 
 from config import Web3NotConnected, env
-from utils import _colorize_traceback, read_json
+from utils import _colorize_traceback, read_json, terminate
 
 
 class Contract:
     def __init__(self):
         try:
             from imports import connect
+
             self.eBlocBroker, self.w3 = connect()
         except Exception as e:
             if type(e).__name__ != "QuietExit":
@@ -31,6 +32,18 @@ class Contract:
     from eblocbroker.update_provider_info import update_provider_info
     from eblocbroker.update_provider_prices import update_provider_prices
     from eblocbroker.transfer_ownership import transfer_ownership
+
+    ebb = None  # contract object
+
+    def is_eth_account_locked(self, addr):
+        for account in self.w3.geth.personal.list_wallets():
+            _address = account["accounts"][0]["address"]
+            if _address == addr:
+                if account["status"] == "Locked":
+                    terminate(f"E: PROVIDER_ID({_address}) is locked, unlock it for futher use", is_traceback=False)
+
+    def is_synced(self):
+        return self.w3.eth.syncing
 
     def account_id_to_address(self, account_id):
         if isinstance(account_id, int):
@@ -161,4 +174,4 @@ class Contract:
         print(f"deployed_block_number={self.get_deployed_block_number()}")
 
 
-eblocbroker = Contract()
+eblocbroker = Contract()  # object to access smart-contract functions

@@ -7,8 +7,13 @@
 
 base="/var/eBlocBroker"
 mkdir -p $base/to_delete
+
 mv $base/* $base/to_delete 2>/dev/null
-mv $base/to_delete/public $base/
+
+if [ -d "$base/to_delete/public" ]; then
+    mv $base/to_delete/public $base/
+fi
+
 rm -rf $base/to_delete
 mkdir -p $base/cache
 
@@ -23,11 +28,24 @@ rm -f $HOME/.eBlocBroker/my-app.pid
 cat /dev/null > $HOME/.eBlocBroker/provider.log
 cat /dev/null > $HOME/.eBlocBroker/log.txt
 
-$HOME/eBlocBroker/bash_scripts/killall.sh
-clean.sh
+killall.sh
 
+# clean some file
+rm -f geth_server.out
+rm -f .node-xmlhttprequest*
+rm -f ipfs.out
+rm -f modified_date.txt
+rm -f package-lock.json
+# rm -f .oc.pckl
+rm -f base/meta_data.json
+
+rm -rf docs/_build_html/
+rm -rf docs/_build/
+
+
+cp $HOME/eBlocBroker/bash_scripts/slurmScript.sh $base
 # Update block.continue.txt with the current block number
 python3 -uB $HOME/eBlocBroker/eblocbroker/get_block_number.py True > \
-	$HOME/.eBlocBroker/block_continue.txt
+        $HOME/.eBlocBroker/block_continue.txt
 
-python3 $HOME/eBlocBroker/mongodb/delete_all.py
+# python3 $HOME/eBlocBroker/mongodb/delete_all.py

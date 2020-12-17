@@ -19,14 +19,12 @@ from utils import (
     StorageID,
     _colorize_traceback,
     byte_to_mb,
-    create_dir,
     is_ipfs_on,
     is_process_on,
     log,
+    mkdir,
     popen_communicate,
-    print_arrow,
     print_trace,
-    printc,
     question_yes_no,
     read_json,
     run,
@@ -49,6 +47,7 @@ def enum(*sequential, **named):
 
 if not config.w3:
     from imports import connect_to_web3
+
     connect_to_web3()
 
 if not env.PROVIDER_ID and config.w3:
@@ -84,8 +83,8 @@ def session_start_msg(slurm_user, block_number, pid, columns=104):
     _columns = int(int(columns) / 2 - 12)
     date_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     log(date_now + " " + "=" * (_columns - 16) + " provider session starts " + "=" * (_columns - 5), "cyan")
-    log(f"This Driver process has the PID {pid}", c="blue")
-    printc(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", "blue")
+    log(f"This Driver process has the PID {pid}", color="blue")
+    log(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", color="blue")
 
 
 def run_driver_cancel():
@@ -120,10 +119,6 @@ def run_whisper_state_receiver():
 
 
 def get_tx_status(tx_hash) -> str:
-    if not tx_hash:
-        log(f"tx_hash={tx_hash}", "blue")
-        return tx_hash
-
     log(f"tx_hash={tx_hash}")
     tx_receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
     logging.info("Transaction receipt is mined:")
@@ -135,7 +130,7 @@ def get_tx_status(tx_hash) -> str:
     #     log(f"log {idx}", "blue")
     #     pprint.pprint(_log.__dict__)
 
-    log("\n#> Was transaction successful? ", c="white", filename=None, is_new_line=False)
+    log("\n#> Was transaction successful? ", color="white", filename=None)
     if tx_receipt["status"] == 1:
         log("Transaction is deployed", "green")
     else:
@@ -155,14 +150,17 @@ def check_size_of_file_before_download(file_type, key=None):
     return True
 
 
-def calculate_folder_size(path) -> float:
-    """Return the size of the given path in MB."""
+def calculate_folder_size(path, _type="mb") -> float:
+    """Return the size of the given path in MB, bytes if wanted"""
     byte_size = 0
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
+    p1.stdout.close()  # type: ignore
     byte_size = p2.communicate()[0].decode("utf-8").strip()
-    return byte_to_mb(byte_size)
+    if _type == "bytes":
+        return byte_size
+    else:
+        return byte_to_mb(byte_size)
 
 
 def subprocess_call(cmd, attempt=1, print_flag=True):
@@ -178,22 +176,21 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
                 raise SystemExit
 
             logging.info(f"try={count}")
-            time.sleep(.25)
+            time.sleep(0.25)
 
 
-def run_stdout_to_file(cmd, path, mode="w") -> None:
+def run_stdout_to_file(cmd, path) -> None:
     p, output, error = popen_communicate(cmd, stdout_file=path)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
-        log(f"\n{_cmd}", "red")
+        log(f"\n{_cmd}", color="red")
         logging.error(f"E: scontrol error\n{output}")
         raise
-    else:
-        logging.info(f"\nWriting into path is completed => {path}")
+    logging.info(f"\nWriting into path is completed => {path}")
 
 
 def run_command(cmd, my_env=None) -> Tuple[bool, str]:
-    cmd = list(map(str, cmd))  # all items should be str
+    cmd = list(map(str, cmd))  # all items should be string
     output = ""
     try:
         if my_env is None:
@@ -210,20 +207,27 @@ def run_command(cmd, my_env=None) -> Tuple[bool, str]:
 def remove_files(filename) -> bool:
     if "*" in filename:
         for f in glob.glob(filename):
-            if not silent_remove(f):
+            try:
+                silent_remove(f)
+            except:
+                _colorize_traceback()
                 return False
     else:
-        if not silent_remove(filename):
+        try:
+            silent_remove(filename)
+        except:
+            _colorize_traceback()
             return False
+
     return True
 
 
-def echo_grep_awk(str_data, grep_str, awk_column):
+def echo_grep_awk(str_data, grep_str, column_num):
     """cmd: echo gdrive_info | grep _type | awk \'{print $2}\'"""
     p1 = subprocess.Popen(["echo", str_data], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", grep_str], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(["awk", "{print $" + awk_column + "}"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(["awk", "{print $" + column_num + "}"], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
     return p3.communicate()[0].decode("utf-8").strip()
 
@@ -251,7 +255,7 @@ def is_ipfs_running():
         return True
 
     log("E: IPFS does not work on the background", "blue")
-    log("#> Starting IPFS daemon on the background", "blue")
+    log("## Starting IPFS daemon on the background", "blue")
     while True:
         output = run(["python3", f"{env.EBLOCPATH}/daemons/ipfs.py"])
         log(output, "blue")
@@ -265,28 +269,30 @@ def is_ipfs_running():
     return is_ipfs_on()
 
 
-def check_linked_data(path_from, path_to, folders=None, force_continue=False):
+def check_linked_data(path_from, path_to, folders=None, is_continue=False):
     """Generates folder as hard linked of the given folder paths or provider main folder.
 
     :param path_to: linked folders into into given path
     :param folders: if given, iterate over all folders
     """
-    create_dir(path_to)
+    mkdir(path_to)
     link = Link(path_from, path_to)
     link.link_folders(folders)
-
+    log("")
     for key, value in link.data_map.items():
-        print(f"{key} => data_link/{value}")
+        log("*", color="blue", end="")
+        print(f" {key} ==> data_link/{value}")
 
-    if force_continue:
-        return
-
-    question_yes_no("#> Would you like to continue with linked folder path in your run.sh? [Y/n]: ")
+    if not is_continue:
+        question_yes_no(
+            "\n## Would you like to continue with linked folder path in your run.sh?\n"
+            "If yes, please update your run.sh file [Y/n]: "
+        )
 
 
 def is_dir(path) -> bool:
     if not os.path.isdir(path):
-        logging.error(f"{path} folder does not exist")
+        logging.error(f"==> {path} folder does not exist")
         return False
     return True
 
@@ -300,8 +306,7 @@ def run_storage_thread(storage_class):
 
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
-    print_arrow("blue")
-    log(f"thread_log_path={storage_class.drivers_log_path}")
+    log(f"==> thread_log_path={storage_class.drivers_log_path}")
     storage_thread.start()
     try:
         storage_thread.join()  # waits until the job is completed

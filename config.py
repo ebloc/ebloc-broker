@@ -6,15 +6,16 @@ import threading
 from logging import Filter
 from os.path import expanduser
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from dotenv import load_dotenv
-from web3 import Web3
+from web3 import Web3  # noqa: F401
 
 import _utils.colored_traceback as colored_traceback
-import _utils.colorer  # NOQA
+import _utils.colorer  # noqa
 
-# from web3 import Web3
+# import eblocbroker.Contract as Contract
+# from eblocbroker.Contract import Contract
 
 
 class ThreadFilter(Filter):
@@ -56,22 +57,39 @@ class QuietExit(Exception):
 class ENV:
     def __init__(self) -> None:
         self.HOME = expanduser("~")
-        env_path = Path(f"{self.HOME}/.eBlocBroker/") / ".env"
-        load_dotenv(dotenv_path=env_path)
+        env_file = Path(f"{self.HOME}/.eBlocBroker/") / ".env"
+        _env = dict()
+        try:
+            with open(env_file) as f:
+                for line in f:
+                    if line.startswith("#") or not line.strip():
+                        continue
+                    # if 'export' not in line:
+                    #     continue
+                    # Remove leading `export `, if you have those
+                    # then, split name / value pair
+                    # key, value = line.replace('export ', '', 1).strip().split('=', 1)
+                    key, value = line.strip().split("=", 1)
+                    _env[key] = value.replace('"', "")  # Save to a dict
+        except IOError:
+            print("E: File not accessible")
+            return
+
+        load_dotenv(dotenv_path=env_file)
         self.log_filename = None
-        self.WHOAMI = os.getenv("WHOAMI")
-        self.SLURMUSER = os.getenv("SLURMUSER")
 
-        self.LOG_PATH = os.getenv("LOG_PATH")
-        self.GDRIVE = os.getenv("GDRIVE")
-        self.OC_USER = os.getenv("OC_USER")
-        self.IPFS_USE = str(os.getenv("IPFS_USE")).lower() in ("yes", "true", "t", "1")
-        self.EUDAT_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1",)
-        self.GDRIVE_USE = str(os.getenv("EUDAT_USE")).lower() in ("yes", "true", "t", "1",)
+        self.WHOAMI = _env["WHOAMI"]
+        self.SLURMUSER = _env["SLURMUSER"]
+        self.LOG_PATH = _env["LOG_PATH"]
+        self.GDRIVE = _env["GDRIVE"]
+        self.OC_USER = _env["OC_USER"]
 
-        self.EBLOCPATH = os.getenv("EBLOCPATH")
-        self.POA_CHAIN = str(os.getenv("POA_CHAIN")).lower() in ("yes", "true", "t", "1",)
-        self.RPC_PORT = os.getenv("RPC_PORT")
+        self.IPFS_USE = str(_env["IPFS_USE"]).lower() in ("yes", "true", "t", "1")
+        self.EUDAT_USE = str(_env["EUDAT_USE"]).lower() in ("yes", "true", "t", "1",)
+        self.GDRIVE_USE = str(_env["EUDAT_USE"]).lower() in ("yes", "true", "t", "1",)
+        self.EBLOCPATH = _env["EBLOCPATH"]
+        self.POA_CHAIN = str(_env["POA_CHAIN"]).lower() in ("yes", "true", "t", "1",)
+        self.RPC_PORT = _env["RPC_PORT"]
 
         # self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self.GDRIVE_METADATA = f"/home/{self.WHOAMI}/.gdrive"
@@ -81,6 +99,7 @@ class ENV:
         self.GANACHE_LOG = f"{self.LOG_PATH}/ganache.out"
         self.OWNCLOUD_PATH = "/oc"
         self.PROGRAM_PATH = "/var/eBlocBroker"
+        self.LINKS = f"{self.LOG_PATH}/links"
         self.JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/test.txt"
         self.CANCEL_JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledJobs.txt"
         self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
@@ -95,7 +114,7 @@ class ENV:
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]
         if w3:
-            self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+            self.PROVIDER_ID = w3.toChecksumAddress(_env["PROVIDER_ID"])
 
         if not os.path.isdir("/tmp/run"):
             os.makedirs("/tmp/run")  # mkdir
@@ -152,9 +171,10 @@ def setup_logger(log_path="", is_brownie=False):
     return logging.getLogger()
 
 
-Ebb = None
+Ebb = None  # eBlocBlock Contract Class
+ebb = None  # eBlocBroker Contract on the blockchain
+w3: Web3 = None
 contract = None
-w3: Optional[Web3] = None
 
 coll = None
 oc = None
@@ -164,7 +184,7 @@ colored_traceback.add_hook(always=True)
 env = ENV()
 logger = setup_logger()  # Default initialization
 
+BLOCK_DURATION = 15
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
-BLOCK_DURATION = 15  # seconds
 IS_THREADING_ENABLED = False

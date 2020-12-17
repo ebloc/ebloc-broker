@@ -3,43 +3,43 @@
 configure_coinbase () { # coinbase address setup
     COINBASE=$(echo $COINBASE)
     if [[ ! -v COINBASE ]]; then
-	echo "COINBASE is not set"
-	echo "Type your provider Ethereum Address, followed by [ENTER]:"
-	read COINBASE
-	echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
+        echo "COINBASE is not set"
+        echo "Type your provider Ethereum Address, followed by [ENTER]:"
+        read COINBASE
+        echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
     elif [[ -z "$COINBASE" ]]; then
-	echo "COINBASE is set to the empty string"
-	echo "Type your provider Ethereum Address, followed by [ENTER]:"
-	read COINBASE
-	echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
+        echo "COINBASE is set to the empty string"
+        echo "Type your provider Ethereum Address, followed by [ENTER]:"
+        read COINBASE
+        echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
     else
-	echo "COINBASE is: $COINBASE"
-	check=$(eblocbroker/is_address.py $COINBASE)
-	if [ "$check" != "True" ]; then
-	    echo "Ethereum address is not valid, please use a valid one."
-	    exit
-	fi
-	sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $HOME/.eBlocBroker/.env
-	rm $HOME/.eBlocBroker/.env.bak
+        echo "COINBASE is: $COINBASE"
+        check=$(eblocbroker/is_address.py $COINBASE)
+        if [ "$check" != "True" ]; then
+            echo "Ethereum address is not valid, please use a valid one."
+            exit
+        fi
+        sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $HOME/.eBlocBroker/.env
+        rm $HOME/.eBlocBroker/.env.bak
     fi
 }
 
 configure_oc () { # OC_USER address setup
     OC_USER=$(echo $OC_USER)
     if [[ ! -v OC_USER ]]; then
-	echo "OC_USER is not set"
-	echo "Type your OC_USER, followed by [ENTER]:"
-	read OC_USER
+        echo "OC_USER is not set"
+        echo "Type your OC_USER, followed by [ENTER]:"
+        read OC_USER
     elif [[ -z "$OC_USER" ]]; then
-	echo "OC_USER is set to the empty string"
-	echo "Type your OC_USER, followed by [ENTER]:"
-	read OC_USER
+        echo "OC_USER is set to the empty string"
+        echo "Type your OC_USER, followed by [ENTER]:"
+        read OC_USER
     fi
     sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $HOME/.eBlocBroker/.env
     rm -f $HOME/.eBlocBroker/.env.bak
 
     if ! grep -q "export OC_USER=" $HOME/.profile; then
-	echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
+        echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
     fi
     source $HOME/.profile
 }
@@ -83,29 +83,18 @@ fi
 
 if [ ! -d $HOME/.eBlocBroker ]; then
     mkdir -p $HOME/.eBlocBroker
-    mkdir -p $HOME/.eBlocBroker/private
-    mkdir -p $HOME/.eBlocBroker/drivers_output
 fi
 
-cd $HOME/.eBlocBroker
+mkdir -p $HOME/.eBlocBroker/private
+mkdir -p $HOME/.eBlocBroker/drivers_output
+mkdir -p $HOME/.eBlocBroker/links
+mkdir -p $HOME/.eBlocBroker/transactions
+mkdir -p $HOME/.eBlocBroker/end_code_output
+mkdir -p $HOME/.eBlocBroker/cache
 
-if [ ! -d transactions ]; then
-    mkdir -p transactions
+if [ ! -f $current_dir/.env ]; then
+    cp $current_dir/.env $HOME/.eBlocBroker
 fi
-
-if [ ! -d end_code_output ]; then
-    mkdir -p end_code_output
-fi
-
-if [ ! -d cache ]; then
-    mkdir -p cache
-fi
-
-sudo chmod +x $current_dir/bash_scripts/slurmScript.sh
-#======================================================================
-cd $current_dir
-
-cp .env $HOME/.eBlocBroker
 
 # EBLOCPATH setup
 venvPath=$HOME"/venv"

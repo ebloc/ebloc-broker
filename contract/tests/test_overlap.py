@@ -11,6 +11,7 @@ from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import Job, cost, new_test
 from contract.tests.test_eblocbroker import register_provider, register_requester, withdraw  # noqa
+from imports import connect
 from utils import CacheType, StorageID
 
 # from brownie.test import given, strategy
@@ -42,8 +43,7 @@ requester = None
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    config.Ebb = _Ebb
-    config.w3 = web3
+    connect()
 
 
 @pytest.fixture(autouse=True)
@@ -64,12 +64,13 @@ def check_list(is_print=True):
     _list = []
     carried_sum = 0
     for idx in range(0, size):
-        value = config.Ebb.getProviderReceiptNode(provider, idx)
+        value = config.ebb.getProviderReceiptNode(provider, idx)
         if value[0] != 0:
             carried_sum += value[1]
 
-        assert carried_sum <= available_core_num, \
-            f"carried sum={carried_sum} exceed available_core_num={available_core_num}"
+        assert (
+            carried_sum <= available_core_num
+        ), f"carried sum={carried_sum} exceed available_core_num={available_core_num}"
 
         _list.append(value[0])
 
@@ -78,7 +79,7 @@ def check_list(is_print=True):
 
 
 def check_price_keys(price_keys, provider, source_code_hash1):
-    res = config.Ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
+    res = config.ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
     for key in price_keys:
         if key > 0:
             assert key in res, f"{key} does no exist in price keys({res}) for the registered data{source_code_hash1}"
@@ -145,7 +146,7 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
 
     tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
     if is_print:
-        print("received_gas_used=" + str(tx.__dict__['gas_used']))
+        print("received_gas_used=" + str(tx.__dict__["gas_used"]))
     # received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     # refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     # withdraw(provider, received_sum)
@@ -183,16 +184,16 @@ def test_submitJob_gas():
     cores = [1]
     index = 2
     tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
-    gas_base = int(tx.__dict__['gas_used'])
+    gas_base = int(tx.__dict__["gas_used"])
     # -------------------
     startTime = 8
     completionTime = 9
     cores = [65]
     index = 3
     tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
-    gas_end = int(tx.__dict__['gas_used'])
+    gas_end = int(tx.__dict__["gas_used"])
     check_list()
-    print("=> gas_cost_for_iteration=" + str(gas_end - gas_base))
+    print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
 
     # TODO : revert on tx check
 
@@ -384,12 +385,12 @@ def test_test3():
     cores = [1]
     index = 2
     tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
-    gas_base = int(tx.__dict__['gas_used'])
+    gas_base = int(tx.__dict__["gas_used"])
     # -------------------
     startTime = 34
     completionTime = 51
     cores = [1]
     index = 3
     tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
-    gas_end = int(tx.__dict__['gas_used'])
-    print("=> gas_cost_for_iteration=" + str(gas_end - gas_base))
+    gas_end = int(tx.__dict__["gas_used"])
+    print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))

@@ -13,7 +13,7 @@ class PidfileProcessRunningException(BaseException):
     pass
 
 
-class Pidfile():
+class Pidfile:
     def __init__(self, path, log=sys.stdout.write, warn=sys.stderr.write):
         self.pidfile = path
         self.log = log
@@ -22,16 +22,16 @@ class Pidfile():
     def __enter__(self):
         try:
             self.pidfd = os.open(self.pidfile, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
-            self.log('locked pidfile %s' % self.pidfile)
+            self.log("locked pidfile %s" % self.pidfile)
         except OSError as e:
             if e.errno == errno.EEXIST:
                 pid = self._check()
                 if pid:
                     self.pidfd = None
-                    raise ProcessRunningException('process already running in %s as pid %s' % (self.pidfile, pid))
+                    raise ProcessRunningException("process already running in %s as pid %s" % (self.pidfile, pid))
                 else:
                     os.remove(self.pidfile)
-                    self.warn('removed staled lockfile %s' % (self.pidfile))
+                    self.warn("removed staled lockfile %s" % (self.pidfile))
                     self.pidfd = os.open(self.pidfile, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
             else:
                 raise
@@ -57,14 +57,14 @@ class Pidfile():
             return False
 
     def _remove(self):
-        self.log('removed pidfile %s' % self.pidfile)
+        self.log("removed pidfile %s" % self.pidfile)
         os.remove(self.pidfile)
 
     def _check(self):
         """Check if a process is still running the process id is expected to be in
         pidfile, which should exist. if it is still running, returns the pid, if not,
         return False."""
-        with open(self.pidfile, 'r') as f:
+        with open(self.pidfile, "r") as f:
             try:
                 pidstr = f.read()
                 pid = int(pidstr)

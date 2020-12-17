@@ -5,6 +5,7 @@ import re
 import signal
 import sys
 import time
+
 # from io import StringIO
 from subprocess import DEVNULL, check_output
 
@@ -23,24 +24,24 @@ def is_valid(ipfs_hash: str) -> bool:
         return False
 
 
-# Register an handler for the timeout
-def handler(signum, frame):
-    print("Forever is over!")
-    raise Exception("end of time")
+def handler():
+    """Register an handler for the timeout."""
+    _colorize_traceback()
+    raise Exception("E: Forever is over, end of time")
 
 
 def ipfs_stat(ipfs_hash):
     """This function *may* run for an indetermined time...
     Returns a dict with the size of the block with the given hash."""
-    client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001/http')
+    client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
     return client.object.stat(ipfs_hash)
 
 
-def is_hash_exists_online(ipfs_hash, attempts):
+def is_hash_exists_online(ipfs_hash):
     logging.info(f"Attempting to check IPFS file {ipfs_hash}")
     signal.signal(signal.SIGALRM, handler)
-    signal.alarm(300) # wait max 5 minutes
+    signal.alarm(300)  # wait max 5 minutes
     try:
         output = ipfs_stat(ipfs_hash)
         print(f"CumulativeSize={output}")
@@ -166,7 +167,7 @@ def gpg_encrypt(user_gpg_finderprint, target):
     except Exception as e:
         _colorize_traceback()
         if "encryption failed: Unusable public key" in str(e.output):
-            log("==> Solution: https://stackoverflow.com/a/34132924/2402577", c="yellow", is_bold=False)
+            log("==> Solution: https://stackoverflow.com/a/34132924/2402577", color="yellow", is_bold=False)
         raise e
     finally:
         if is_delete:
@@ -183,7 +184,7 @@ def add(path: str, is_hidden=False):
     :param is_hidden: boolean if it is true hidden files/foders are included such as .git
     """
     if os.path.isdir(path):
-        cmd = ["ipfs", "add", "-r", "--quiet", "--progress", "--local", path]
+        cmd = ["ipfs", "add", "-r", "--quiet", "--progress", "--offline", path]
         if is_hidden:
             # include files that are hidden such as .git/.
             # Only takes effect on recursive add
@@ -261,7 +262,7 @@ def connect_to_bootstrap_node():
     else:
         return False
 
-    print(f"Trying to connect into {peer_address}")
+    print(f"==> Trying to connect into {peer_address} using swarm connect")
     output = client.swarm.connect(peer_address)
     if ("connect" and "success") in str(output):
         log(str(output), "green")
