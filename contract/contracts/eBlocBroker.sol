@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity 0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 import "./Lib.sol";
@@ -62,7 +62,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint256 amount = balances[msg.sender];
         // Set zero the balance before sending to prevent reentrancy attacks
         delete balances[msg.sender]; // gas refund is made
-        (bool success, ) = msg.sender.call{value: amount}(""); // This forwards all available gas
+        // Forwards all available gas
+        (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed"); // Return value is checked
     }
 
@@ -85,7 +86,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32 index,
         uint32 jobID,
         uint256[] memory core,
-        uint256[] memory executionDuration
+        uint256[] memory elapsedTime
     ) public returns (bool) {
         Lib.Provider storage provider = providers[_provider];
         /*
@@ -93,30 +94,30 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
           is not mapped to a job , this will throw automatically and revert all changes
         */
         Lib.Status storage jobInfo = provider.jobStatus[key][index];
-        require(jobInfo.jobInfo == keccak256(abi.encodePacked(core, executionDuration)));
+        require(jobInfo.jobInfo == keccak256(abi.encodePacked(core, elapsedTime)));
 
         Lib.Job storage job = jobInfo.jobs[jobID];
 
         require(
             (msg.sender == jobInfo.jobOwner || msg.sender == _provider) &&
-                job.jobStateCode != Lib.JobStateCodes.COMPLETED &&
-                job.jobStateCode != Lib.JobStateCodes.REFUNDED &&
-                job.jobStateCode != Lib.JobStateCodes.CANCELLED
+                job.stateCode != Lib.JobStateCodes.COMPLETED &&
+                job.stateCode != Lib.JobStateCodes.REFUNDED &&
+                job.stateCode != Lib.JobStateCodes.CANCELLED
         );
 
         uint256 amount;
         if (
             !provider.isRunning || // If provider stop running
-            job.jobStateCode <= Lib.JobStateCodes.PENDING || // If job' state is SUBMITTED(0) or PENDING(1)
-            (job.jobStateCode == Lib.JobStateCodes.RUNNING &&
-                (block.timestamp - job.startTime) > executionDuration[jobID] * 60 + 1 hours)
+            job.stateCode <= Lib.JobStateCodes.PENDING || // If job' state is SUBMITTED(0) or PENDING(1)
+            (job.stateCode == Lib.JobStateCodes.RUNNING &&
+                (block.timestamp - job.startTime) > elapsedTime[jobID] * 60 + 1 hours)
         ) {
-            // job.jobStateCode remain in running state after one hour that job should have finished
-            job.jobStateCode = Lib.JobStateCodes.REFUNDED; /* Prevents double spending and re-entrancy attack */
+            // job.stateCode remain in running state after one hour that job should have finished
+            job.stateCode = Lib.JobStateCodes.REFUNDED; /* Prevents double spending and re-entrancy attack */
             amount = jobInfo.received;
             jobInfo.received = 0; // Balance is zeroed out before the transfer
             balances[jobInfo.jobOwner] += amount;
-        } else if (job.jobStateCode == Lib.JobStateCodes.RUNNING) job.jobStateCode = Lib.JobStateCodes.CANCELLED;
+        } else if (job.stateCode == Lib.JobStateCodes.RUNNING) job.stateCode = Lib.JobStateCodes.CANCELLED;
         else revert();
 
         emit LogRefundRequest(_provider, key, index, jobID, amount); /* scancel log */
@@ -134,12 +135,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.Provider storage provider = providers[msg.sender];
         Lib.Status   storage jobInfo  = provider.jobStatus[key][index];
 
-        require(job.jobStateCode != Lib.JobStateCodes.COMPLETED &&
-                job.jobStateCode != Lib.JobStateCodes.REFUNDED &&
-                job.jobStateCode != Lib.JobStateCodes.COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT
+        require(job.stateCode != Lib.JobStateCodes.COMPLETED &&
+                job.stateCode != Lib.JobStateCodes.REFUNDED &&
+                job.stateCode != Lib.JobStateCodes.COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT
                 );
 
-        job.jobStateCode = Lib.JobStateCodes.COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT;
+        job.stateCode = Lib.JobStateCodes.COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT;
         // (msg.sender, key, index)
 
     }
@@ -152,13 +153,13 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        * back to the client
        * @param key Uniqu ID for the given job.
        * @param args The index of the job and ID of the job to identify for workflow {index, jobID, completionTime}.
-       * @param executionDuration Execution time in minutes of the completed job.
+       * @param elapsedTime Execution time in minutes of the completed job.
        * @param resultIpfsHash Ipfs hash of the generated output files.
        */
     function processPayment(
         string memory key,
         Lib.JobIndexes memory args,
-        uint32 executionDuration,
+        uint32 elapsedTime,
         bytes32 resultIpfsHash
     ) public whenProviderRunning {
         require(args.completionTime <= block.timestamp, "Ahead now");
@@ -167,19 +168,19 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
            is not mapped to a job, this will throw automatically and revert all changes */
         Lib.Provider storage provider = providers[msg.sender];
         Lib.Status storage jobInfo = provider.jobStatus[key][args.index];
-        require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.executionDuration)));
+        require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.runTime)));
 
         Lib.Job storage job = jobInfo.jobs[args.jobID]; /* Used as a pointer to a storage */
 
         require(
-            job.jobStateCode != Lib.JobStateCodes.COMPLETED &&
-                job.jobStateCode != Lib.JobStateCodes.REFUNDED &&
+            job.stateCode != Lib.JobStateCodes.COMPLETED &&
+                job.stateCode != Lib.JobStateCodes.REFUNDED &&
                 // Provider cannot request more execution time of the job that is already requested
-                executionDuration <= args.executionDuration[args.jobID] &&
+                elapsedTime <= args.runTime[args.jobID] &&
                 // Provider cannot request more than the job's given dataTransferIn or dataTransferOut
                 (args.dataTransferIn <= jobInfo.dataTransferIn || args.dataTransferOut <= jobInfo.dataTransferOut) &&
                 // Job should be in running state if positive execution duration is provided
-                (executionDuration > 0 && job.jobStateCode == Lib.JobStateCodes.RUNNING)
+                (elapsedTime > 0 && job.stateCode == Lib.JobStateCodes.RUNNING)
         );
 
         Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
@@ -187,7 +188,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint256 amountToGain;
         uint256 amountToRefund;
         uint256 core = args.core[args.jobID];
-        uint256 _executionDuration = args.executionDuration[args.jobID];
+        uint256 _runTime = args.runTime[args.jobID];
         if (args.dataTransferIn > 0) {
             // if dataTransferIn contains a positive value, then its the first submitted job
             if (jobInfo.cacheCost > 0) {
@@ -230,13 +231,13 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         }
 
         amountToGain = amountToGain.add(
-            uint256(info.priceCoreMin).mul(core.mul(executionDuration)).add( // computational_cost
+            uint256(info.priceCoreMin).mul(core.mul(elapsedTime)).add( // computational_cost
                 info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut))) // data_transfer_cost
             )
         );
 
         amountToRefund = amountToRefund.add( // computational_cost_refund
-            uint256(info.priceCoreMin).mul(core.mul((_executionDuration.sub(uint256(executionDuration)))))
+            uint256(info.priceCoreMin).mul(core.mul((_runTime.sub(uint256(elapsedTime)))))
         );
 
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
@@ -249,7 +250,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         if (provider.receiptList.checkIfOverlapExists(_interval) == 0) {
             // Important to check already refunded job or not, prevents double spending
-            job.jobStateCode = Lib.JobStateCodes.REFUNDED;
+            job.stateCode = Lib.JobStateCodes.REFUNDED;
             amountToRefund = jobInfo.received;
             jobInfo.received = 0;
             // Pay back newOwned(jobInfo.received) back to the requester, which is full refund
@@ -258,10 +259,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             return;
         }
 
-        // Setting job.jobStateCode into REFUNDED or COMPLETED prevents double
+        // Setting job.stateCode into REFUNDED or COMPLETED prevents double
         // spending used as a Reentrancy Guard
-        if (job.jobStateCode == Lib.JobStateCodes.CANCELLED) job.jobStateCode = Lib.JobStateCodes.REFUNDED;
-        else job.jobStateCode = Lib.JobStateCodes.COMPLETED;
+        if (job.stateCode == Lib.JobStateCodes.CANCELLED) job.stateCode = Lib.JobStateCodes.REFUNDED;
+        else job.stateCode = Lib.JobStateCodes.COMPLETED;
 
         jobInfo.received = jobInfo.received.sub(amountToGain.add(amountToRefund));
 
@@ -338,8 +339,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        of the committed prices.
      * @param ipfsID is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
-     * @param whisperID is a string containing public key for a key pair ID that
-       is generated on Whisper.
      * @return bool
      */
     function registerProvider(
@@ -347,7 +346,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         string memory email,
         string memory federatedCloudID,
         string memory ipfsID,
-        string memory whisperID,
         uint32 availableCore,
         uint32[] memory prices,
         uint32 commitmentBlockDuration
@@ -369,8 +367,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         pricesSetBlockNum[msg.sender].push(uint32(block.number));
         provider.constructProvider();
         registeredProviders.push(msg.sender);
-
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
 
@@ -378,10 +375,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
-        string memory ipfsID,
-        string memory whisperID
+        string memory ipfsID
     ) public whenProviderRegistered returns (bool) {
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
 
@@ -419,7 +415,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
             if (_committedBlock <= block.number) {
                 _committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;
-
                 // Next price cycle to be considered
                 _committedBlock = _pricesSetBlockNum + _committedBlock * _commitmentBlockDuration;
             }
@@ -451,7 +446,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Registers and updates a requester's (msg.sender's) information to
+     * @dev Register or update a requester's (msg.sender's) information to
      * eBlocBroker.
      *
      * @param gpgFingerprint | is a bytes8 containing a gpg key ID that is used by the
@@ -461,29 +456,26 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        sharing requester's repository with the provider through EUDAT.
      * @param ipfsID | is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
-     * @param whisperID | is a string containing public key for a key pair ID
-       that is generated on Whisper.
      * @return bool
      */
     function registerRequester(
         bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
-        string memory ipfsID,
-        string memory whisperID
+        string memory ipfsID
     ) public returns (bool) {
         requesterCommittedBlock[msg.sender] = uint32(block.number);
-        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
+        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
 
     /**
-     * @dev Registers a given data's sourceCodeHash registiration by the cluster
+     * @dev Registers a given data's sourceCodeHash by the cluster
      *
-     * @param sourceCodeHash Source code hashe of the provided data
+     * @param sourceCodeHash source code hash of the provided data
      * @param price Price in wei of the data
      * @param commitmentBlockDuration | Commitment duration of the given price
-       in block length
+       in block duration
        */
     function registerData(
         bytes32 sourceCodeHash,
@@ -491,7 +483,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32 commitmentBlockDuration
     ) public whenProviderRegistered {
         Lib.RegisteredData storage registeredData = providers[msg.sender].registeredData[sourceCodeHash];
-
         require(
             registeredData.committedBlock.length == 0 && // In order to register, is shouldn't be already registered
                 commitmentBlockDuration >= ONE_HOUR_BLOCK_DURATION
@@ -521,10 +512,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Updated a given data's sourceCodeHash registiration by the cluster
      *
-     * @param sourceCodeHash | Source code hashe of the provided data
-     * @param price | Price in wei of the data
-     * @param commitmentBlockDuration | Commitment duration of the given price
-         in block length
+     * @param sourceCodeHash: Source code hashe of the provided data
+     * @param price: Price in wei of the data
+     * @param commitmentBlockDuration: Commitment duration of the given price
+         in block duration
        */
     function updataDataPrice(
         bytes32 sourceCodeHash,
@@ -558,36 +549,47 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Performs a job submission through eBlocBroker by a requester. This deposit is locked until the job is
+     * @dev Performs a job submission through eBlocBroker by a requester. This
+       deposit is locked until the job is
      * finalized or cancelled.
      *
      * @param key Contains a unique name for the requester’s job.
-     * @param dataTransferIn An array of uint32 values that denote the amount of data transfer to be made in
-              megabytes in order to download the requester’s data from cloud storage into provider’s local storage.
+     * @param dataTransferIn An array of uint32 values that denote the amount of
+              data transfer to be made in megabytes in order to download the
+              requester’s data from cloud storage into provider’s local storage.
      * @param args is a structure containing additional values as follows:
-     * => provider is an Ethereum address value containing the Ethereum address of the provider that is requested to run
-          the job.
-     * => cloudStorageID | An array of uint8 values that denote whether the requester’s data is stored and shared
-          using either IPFS, EUDAT, IPFS (with GNU Privacy Guard encryption), or Google Drive.
-     * => cacheType An array of uint8 values that denote whether the requester’s data will be cached privately
-         within job owner's home directory, or publicly for other requesters' access within a shared directory for all
-         the requesters.
-     * => core An array of uint16 values containing the number of cores requested to run the workflow with respect
-          to each of the corresponding job.
-     * => executionDuration An array of uint32 values containing the expected duration in minutes to run the
-          workflow with respect to each of the corresponding job.
-     * => providerPriceBlockIndex The uint32 value containing the block number when the requested provider set its
-          prices most recent.
-     * => dataPricfesSetBlockNum An array of uint32 values that denote whether the provider’s registered data will
-          be used or not. If it is zero, then requester’s own data will be considered, which that is cached or
-          downloaded from the cloud storage will be considered.  Otherwise it should be the block number when the
-          requested provider’s registered data’s price is set most recent corresponding to each of the sourceCodeHash.
-     * => dataTransferOut Value denoting the amount of data transfer required in megabytes to upload output
-          files generated by the requester’s job into cloud storage.
-     * @param storageDuration An array of uint32 values that denote the duration it will take in hours to cache the
-              downloaded data of the received job.
-     * @param sourceCodeHash An array of bytes32 values that are MD5 hashes with respect to each of the corresponding
-              source code and data files.
+     * => provider is an Ethereum address value containing the Ethereum address
+          of the provider that is requested to run the job.
+     * => cloudStorageID | An array of uint8 values that denote whether the
+          requester’s data is stored and shared using either IPFS, EUDAT, IPFS
+          (with GNU Privacy Guard encryption), or Google Drive.
+     * => cacheType An array of uint8 values that denote whether the requester’s
+          data will be cached privately within job owner's home directory, or
+          publicly for other requesters' access within a shared directory for
+          all the requesters.
+     * => core An array of uint16 values containing the number of cores
+          requested to run the workflow with respect to each of the
+          corresponding job.
+     * => The runTime argument is an array of uint32 values containing the
+          expected run time in minutes to run the workflow regarding each of the
+          corresponding jobs.
+     * => providerPriceBlockIndex The uint32 value containing the block number
+          when the requested provider set its prices most recent.
+     * => dataPricfesSetBlockNum An array of uint32 values that denote whether
+          the provider’s registered data will be used or not. If it is zero,
+          then requester’s own data will be considered, which that is cached or
+          downloaded from the cloud storage will be considered.  Otherwise it
+          should be the block number when the requested provider’s registered
+          data’s price is set most recent corresponding to each of the
+          sourceCodeHash.
+     * => dataTransferOut Value denoting the amount of data transfer required in
+          megabytes to upload output files generated by the requester’s job into
+          cloud storage.
+     * @param storageDuration An array of uint32 values that denote the duration
+              it will take in hours to cache the downloaded data of the received
+              job.
+     * @param sourceCodeHash An array of bytes32 values that are MD5 hashes with
+              respect to each of the corresponding source code and data files.
      */
     function submitJob(
         string memory key,
@@ -607,7 +609,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 storageDuration.length == args.cloudStorageID.length &&
                 storageDuration.length == args.cacheType.length &&
                 args.cloudStorageID[0] <= 4 &&
-                args.core.length == args.executionDuration.length &&
+                args.core.length == args.runTime.length &&
                 doesRequesterExist(msg.sender) &&
                 bytes(key).length <= 255 && // Maximum key length is 255 that will be used as folder name
                 orcID[msg.sender].length > 0 &&
@@ -618,7 +620,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             for (uint256 i = 1; i < args.cloudStorageID.length; i++)
                 require(
                     args.cloudStorageID[0] == args.cloudStorageID[i] ||
-                        args.cloudStorageID[i] == uint8(Lib.CloudStorageID.IPFS)
+                    args.cloudStorageID[i] <= uint8(Lib.CloudStorageID.NONE)  // IPFS or IPFS_GPG or NONE
                 );
 
         uint32[] memory providerInfo = pricesSetBlockNum[args.provider];
@@ -628,7 +630,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (_providerPriceBlockIndex > block.number) _providerPriceBlockIndex = providerInfo[providerInfo.length - 2];
 
         require(args.providerPriceBlockIndex == _providerPriceBlockIndex);
-
         Lib.ProviderInfo memory info = provider.info[_providerPriceBlockIndex];
 
         uint256 totalCost;
@@ -643,7 +644,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             storageDuration,
             info
         );
-        totalCost = totalCost.add(_calculateComputationalCost(info, args.core, args.executionDuration));
+        totalCost = totalCost.add(_calculateComputationalCost(info, args.core, args.runTime));
 
         require(msg.value >= totalCost);
         // Here returned "_providerPriceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
@@ -655,7 +656,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         st.received = totalCost.sub(storageCost);
         st.jobOwner = msg.sender;
         st.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
-        st.jobInfo = keccak256(abi.encodePacked(args.core, args.executionDuration));
+        st.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
 
         _providerPriceBlockIndex = provider.jobStatus[key].length - 1;
         uint256 refunded;
@@ -664,7 +665,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             // Transfers extra payment (msg.value - sum), if any, back to requester (msg.sender)
             balances[msg.sender] += refunded;
         }
-
         _logJobEvent(key, uint32(_providerPriceBlockIndex), sourceCodeHash, args, refunded);
         return;
     }
@@ -717,13 +717,13 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         }
     }
 
-    /* @dev Sets the job's state (stateID) which is obtained from Slurm */
-    function setJobStatus(Lib.Job storage job, Lib.JobStateCodes jobStateCode)
+    /* @dev Sets the job's state (stateCode) which is obtained from Slurm */
+    function setJobStatus(Lib.Job storage job, Lib.JobStateCodes stateCode)
         internal
-        validJobStateCode(jobStateCode)
+        validJobStateCode(stateCode)
         returns (bool)
     {
-        job.jobStateCode = jobStateCode;
+        job.stateCode = stateCode;
         return true;
     }
 
@@ -734,9 +734,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     ) public returns (bool) {
         /* Used as a pointer to a storage */
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
-        // job.jobStateCode should be {SUBMITTED (0)}
-        require(job.jobStateCode == Lib.JobStateCodes.SUBMITTED, "Not permitted");
-        job.jobStateCode = Lib.JobStateCodes.PENDING;
+        // job.stateCode should be {SUBMITTED (0)}
+        require(job.stateCode == Lib.JobStateCodes.SUBMITTED, "Not permitted");
+        job.stateCode = Lib.JobStateCodes.PENDING;
         emit LogSetJob(msg.sender, key, index, jobID, uint8(Lib.JobStateCodes.PENDING));
     }
 
@@ -750,10 +750,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
 
         /* Provider can sets job's status as RUNNING and its startTime only one time
-           job.jobStateCode should be {SUBMITTED (0), PENDING(1)} */
-        require(job.jobStateCode <= Lib.JobStateCodes.PENDING, "Not permitted");
+           job.stateCode should be {SUBMITTED (0), PENDING(1)} */
+        require(job.stateCode <= Lib.JobStateCodes.PENDING, "Not permitted");
         job.startTime = startTime;
-        job.jobStateCode = Lib.JobStateCodes.RUNNING;
+        job.stateCode = Lib.JobStateCodes.RUNNING;
         emit LogSetJob(msg.sender, key, index, jobID, uint8(Lib.JobStateCodes.RUNNING));
         return true;
     }
@@ -799,16 +799,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     function _calculateComputationalCost(
         Lib.ProviderInfo memory info,
         uint16[] memory core,
-        uint16[] memory executionDuration
+        uint16[] memory runTime
     ) internal pure returns (uint256 sum) {
-        uint256 executionDurationSum;
+        uint256 totalRunTime;
         for (uint256 i = 0; i < core.length; i++) {
-            uint256 computationalCost = uint256(info.priceCoreMin).mul(
-                uint256(core[i]).mul(uint256(executionDuration[i]))
-            );
-            executionDurationSum = executionDurationSum.add(executionDuration[i]);
+            uint256 computationalCost = uint256(info.priceCoreMin).mul(uint256(core[i]).mul(uint256(runTime[i])));
+            totalRunTime = totalRunTime.add(runTime[i]);
             // Total execution time of the workflow should be shorter than a day
-            require(core[i] <= info.availableCore && computationalCost > 0 && executionDurationSum <= 1440);
+            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 1440);
             sum = sum.add(computationalCost);
         }
         return sum;
@@ -818,7 +816,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32 dataPricesSetBlockNum,
         Lib.RegisteredData storage registeredData,
         uint32 cacheCost
-    ) internal returns (uint256, uint32) {
+    ) internal view returns (uint256, uint32) {
         // If true, then used cluster's registered data if exists
         if (dataPricesSetBlockNum > 0) {
             if (registeredData.committedBlock.length > 0) {
@@ -833,7 +831,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 require(_dataPriceSetBlockNum == _dataPriceSetBlockNum);
                 // Data is provided by the provider with its own price
                 uint32 _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price;
-                if (_dataPrice > 1) cacheCost = cacheCost.add(_dataPrice);
+                if (_dataPrice > 1)
+                    cacheCost = cacheCost.add(_dataPrice);
 
                 return (1, cacheCost);
             }
@@ -969,7 +968,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             sourceCodeHash,
             args.cacheType,
             args.core,
-            args.executionDuration,
+            args.runTime,
             msg.value,
             refunded
         );
@@ -1105,7 +1104,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
     function getJobSize(address _provider, string memory key) public view returns (uint256) {
         require(providers[msg.sender].committedBlock > 0);
-
         return providers[_provider].jobStatus[key].length;
     }
 

@@ -1,0 +1,11 @@
+software-properties-common
+build-essential
+gcc
+libmunge-dev
+libmunge2
+munge
+mysql-server
+mysql-client
+libmysqlclient-dev
+libmariadbd-dev
+libmariadb-dev

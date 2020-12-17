@@ -4,9 +4,8 @@ import os
 from os.path import expanduser
 from test.func import testFunc
 
-import owncloud
-
 import lib
+import owncloud
 
 
 def log(strIn):

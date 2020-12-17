@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity 0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 
 interface eBlocBrokerInterface {
     // Logged when the provider calls the receiveDeposit() method. Records the completed jobs' information under receiveDeposit() method call.
@@ -25,7 +25,7 @@ interface eBlocBrokerInterface {
     );
 
     // Records the updated jobs' information under setJobStatus() method call
-    event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 jobStateCodes);
+    event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 stateCodes);
 
     // Records the submitted jobs' information under submitJob() method call
     event LogJob(
@@ -36,7 +36,7 @@ interface eBlocBrokerInterface {
         bytes32[] sourceCodeHash,
         uint8[] cacheType,
         uint16[] core,
-        uint16[] executionDuration,
+        uint16[] runTime,
         uint256 received,
         uint256 refunded
     );
@@ -48,8 +48,7 @@ interface eBlocBrokerInterface {
         bytes32 indexed gpgFingerprint,
         string email,
         string fID,
-        string ipfsID,
-        string whisperID
+        string ipfsID
     );
 
     // Records the registered requesters' registered information under
@@ -59,8 +58,7 @@ interface eBlocBrokerInterface {
         bytes32 indexed gpgFingerprint,
         string email,
         string fID,
-        string ipfsID,
-        string whisperID
+        string ipfsID
     );
 
     // Records the refunded jobs' information under refund() method call

@@ -5,7 +5,7 @@
 
 wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
 mv geth.md source/geth.md
-cp $HOME/eBlocBroker/README.md /home/alper/eBlocBroker/docs/convert/source/readme.md
+cp $HOME/ebloc-broker/README.md /home/alper/ebloc-broker/docs/convert/source/readme.md
 
 ./convert_md_2_rst.py
 

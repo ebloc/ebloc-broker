@@ -9,32 +9,45 @@ brew tap ethereum/ethereum
 brew install solidity
 ```
 
-## Brownie Upgrade
+----------------------------------------------------
 
-```
-pip install --upgrade pip
-pip install -U eth-brownie
-```
-
------------------------------------------------------
+# Brownie
 
 ```
 source $HOME/venv/bin/activate
+brownie console --network development
 brownie console --network eblocpoa
-> web3.eth.blockNumber
+>>> web3.eth.blockNumber
 ```
 
-Paste following to get abi into console:
+## Get API
+
+Paste following to get abi into console (`brownie console`):
+
+`cd ~/ebloc-broker/contract`
 
 ```
 import json
-with open('../eblocbroker/abi.json','w') as fp:
+with open('../broker/eblocbroker/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 ```
 
-# // , indent=2
-
+----------------------------------------------------
 
 ```
-mv network-config_.yaml ~/.brownie/network-config.yaml
+cp ~/eBlocBroker/contract/network-config_.yaml ~/.brownie/network-config.yaml
+```
+
+----------------------------------------------------
+
+# Accounts
+
+- Path: `~/.brownie/accounts`
+
+```bash
+$ brownie console --network bloxberg
+>>> accounts
+>>> acct = accounts.load("alper")
+>>> acct.deploy(Lib)
+>>> ebb = acct.deploy(eBlocBroker)
 ```

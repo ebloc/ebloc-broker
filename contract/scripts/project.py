@@ -1,21 +1,23 @@
-import pytest
-from tests import test_eblocbroker
+#!/usr/bin/env python3
 
-import contract.scripts.lib
-from brownie import *
-from utils import ZERO_ADDRESS
+import pytest  # noqa: F401
+
+import contract.scripts.lib  # noqa: F401
+from broker.utils import ZERO_ADDRESS
+from brownie import *  # noqa
+from contract.tests import test_eblocbroker  # noqa: F401
 
 
 def project():
-    accounts[0].deploy(Lib)
-    Ebb = accounts[0].deploy(eBlocBroker)
+    accounts[0].deploy(Lib)  # noqa
+    ebb = accounts[0].deploy(eBlocBroker)  # noqa
 
-    print(Ebb.getOwner())
+    print(ebb.getOwner())
 
     try:
-        tx = Ebb.transferOwnership(ZERO_ADDRESS, {"from": accounts[0]}).raisingFunction()
+        tx = ebb.transferOwnership(ZERO_ADDRESS, {"from": accounts[0]}).raisingFunction()  # noqa
     except:
-        tx = history[-1]
+        tx = history[-1]  # noqa
         print(tx.revert_msg)
 
-    print("END")
+    print("FIN")

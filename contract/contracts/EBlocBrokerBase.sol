@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity 0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 import "./Lib.sol";
 
 contract EBlocBrokerBase {
@@ -19,7 +19,7 @@ contract EBlocBrokerBase {
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID
     // mapping(string => mapping(uint32 => uint => Job) jobs;
 
-    uint32 constant ONE_HOUR_BLOCK_DURATION = 240; // ~1 hour
+    uint32 constant ONE_HOUR_BLOCK_DURATION = 600; // ~1 hour , avg block time is 6 seconds
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -77,11 +77,11 @@ contract EBlocBrokerBase {
     }
 
     /**
-     * @dev Modifier to make a function callable only when stateID is valid
+     * @dev Modifier to make a function callable only when stateCode is valid
      */
-    modifier validJobStateCode(Lib.JobStateCodes jobStateCode) {
-        /*stateID cannot be NULL, COMPLETED, REFUNDED on setJobStatus call */
-        require(uint8(jobStateCode) > 1 && uint8(jobStateCode) < 7);
+    modifier validJobStateCode(Lib.JobStateCodes stateCode) {
+        /*stateCode cannot be NULL, COMPLETED, REFUNDED on setJobStatus call */
+        require(uint8(stateCode) > 1 && uint8(stateCode) < 7);
         _;
     }
 

@@ -2,8 +2,8 @@
 
 import pytest
 
+from broker.utils import ZERO_ADDRESS
 from brownie import accounts
-from utils import ZERO_ADDRESS
 
 
 def test_ownership(Ebb):

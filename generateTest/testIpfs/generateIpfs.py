@@ -5,7 +5,7 @@ import random
 import subprocess
 from os.path import expanduser
 
-from utils import generate_md5sum
+from broker.utils import generate_md5sum
 
 home = expanduser("~")
 
@@ -40,6 +40,7 @@ with open(path + "/../test_DAS2-fs1-2003-1.swf") as test:
             tar_hash = tar_hash.split(" ", 1)[0]
             print("SourecodeHash=" + tar_hash)
             print("ipfsHash=" + ipfsHash)
+            startTimeTemp = 0
             if flag == 1:
                 hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
 

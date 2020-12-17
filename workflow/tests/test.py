@@ -6,7 +6,7 @@ Qm = b"\x12 "
 
 
 def convertBytes32Ipfs(bytes_array):
-    bytes_init = base58.b58decode("Qm")
+    # bytes_init = base58.b58decode("Qm")
     merge = Qm + bytes_array
     return base58.b58encode(merge).decode("utf-8")
 

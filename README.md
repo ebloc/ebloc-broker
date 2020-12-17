@@ -1,45 +1,41 @@
-# How to Use eBlocBroker
+How to Use eBlocBroker
+======================
 
-## About
-*eBlocBroker* is a blockchain based autonomous computational resource broker.
+## Overview
+eBlocBroker is a blockchain based autonomous computational resource broker.
 
 - **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or
   [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr)
 - [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html)
 
 ## Build dependencies
-
-- [Geth](https://github.com/ethereum/go-ethereum/wiki/geth)
 - [Slurm](https://github.com/SchedMD/slurm)
+- [Geth](https://github.com/ethereum/go-ethereum/wiki/geth)
 - [IPFS](https://ipfs.io/docs/install/)
 
 ## How to connect into Private Ethereum Blockchain (eBloc)
-
 - Connect into [eBlocPOA](https://github.com/ebloc/eBlocPOA)
-<!-- - Connect into [eBlocPOW](https://github.com/ebloc/eBlocPOW) -->
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
-
-
-An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also available that contains
-`geth` setup to connect to our Ethereum based private proof-of-authority blockchain network (*eBlocPOA*).
+An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also
+available that contains `geth` setup to connect to our Ethereum based private
+proof-of-authority blockchain network (*eBlocPOA*).
 
 ### Create an Ethereum Account
 
 **Creating an account:**
-
 ```bash
 $ cd eBlocPOA
-$ eblocPath="$PWD"
-$ geth --datadir="$eblocPath" account new
+$ eBlocPath="$PWD"
+$ geth --datadir="$eBlocPath" account new
 Your new account is locked with a password. Please give a password. Do not forget this password.
 Passphrase:
 Repeat passphrase:
 Address: {a0a50a64cac0744dea5287d1025b8ef28aeff36e}
 ```
 
-Your new account is locked with a password. Please give a password.
-Do not forget this password. Please enter a difficult passphrase for your account.
+Your new account is locked with a password. Please give a password.  Do not
+forget this password. Please enter a difficult passphrase for your account.
 
 You should see your `Keystore File (UTC / JSON)`under `keystore` directory.
 
@@ -49,9 +45,9 @@ UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
 ```
 
 **On the console, use:**
-
-You can also create your Ethereum account using `geth-client`. Here your
-keystore file will be created with root permission and `eBlocWallet` will not able to unlock it.
+You can also create your Ethereum account using `geth-client`.
+Here your keystore file will be created with root permission and `eBlocWallet`
+will not able to unlock it.
 
 ```bash
 > personal.newAccount()
@@ -62,7 +58,8 @@ Repeat passphrase:
 ["0x7d334606c71417f944ff8ba5c09e3672066244f8"]
 ```
 
-Now you should see `Keystore File (UTC / JSON)` file under the `private/keystore` directory.
+Now you should see `Keystore File (UTC / JSON)` file under the
+`private/keystore` directory.
 
 ```bash
 [~/eBlocPOA]$ ls private/keystore
@@ -75,10 +72,10 @@ To give open acccess to the keystore file:
 sudo chown -R $(whoami) private/keystore/UTC--...
 ```
 
-- Afterwards, open the following file: `$HOME/eBlocBroker/.profile` and set `COINBASE` with your
-  created Ethereum Address.
+- Afterwards, open the following file: `$HOME/ebloc-broker/.profile` and set
+  `COINBASE` with your created Ethereum Address.
 
--------
+---------------------------------------------------------------------------
 
 Later, do following inside your instance.
 
@@ -86,16 +83,14 @@ Later, do following inside your instance.
 # To run eBloc Etheruem Node
 $ eblocServer
 
-# To run eBlocBroker Driver
-$ cd $HOME/eBlocBroker
+# To run ebloc-broker Driver
+$ cd $HOME/ebloc-broker
 $ bash initialize.sh # do it only once
 $ sudo ./Driver.sh
 ```
 
-## Running Cluster using eBlocBroker
-
+## Running Cluster using ebloc-broker
 ### Cluster Side: How to register a cluster
-
 - If you do not have any `Federated Cloud ID` give an empty string: `""`. You can
   use `./registerCluster.py` to submit your jobs.
 
@@ -109,39 +104,21 @@ ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4m
 ./registerCluster.py $coreNumber $clusterEmail $federationCloudId $corePriceMinuteWei $ipfsID
 ```
 
-- A Python daemon program called *Driver* is responsible for facilitating the communication between
-  the eBlocBroker smart contract and the Slurm resource manager. After the cluster is registered
-  please run: `./Driver.py`
-
-<!---
-### Slurm Setup:
-Slurm should run on the background. Please run:
-
-```bash
-sudo ./bash_scripts/run_slurm.sh
-```
-
-Following example should successfully submit the job:
-
-```bash
-cd eBlocBroker/slurmJobExample
-sbatch -N1 run.sh
-Submitted batch job 1
-```
--->
-
-------------------------------
+- A Python daemon program called *Driver* is responsible for facilitating the
+  communication between the eBlocBroker smart contract and the Slurm resource
+  manager. After the cluster is registered please run: `./Driver.py`
 
 ### Client Side: How to obtain IPFS Hash of the job:
-
 It is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is
 not running, cluster is not able to get the IPFS object from the client's node.
 
 Example code could be seen under `eBlocBroker/slurmJobExample` directory:
 
-Client should put his Slurm script inside a file called `run.sh`. Please note that you do not have
-to identify `-n` and `-t` parameters, since they will be overwritten with arguments provided by the
-client on the cluster end
+Client should put his Slurm script inside a file called `run.sh`. It should be
+created executable using `chmod + run.sh` command. Please note that you do not
+have to identify `-n` and `-t` parameters, since they will be overwritten with
+arguments provided by the client on the cluster end.
+
 
 Target into the folder you want to submit and do: `ipfs add -r .` You will see something similiar with following output:
 
@@ -164,11 +141,14 @@ added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
 
 ### **How to Submit a Job**
 
-In order to submit your job each user should already registered into eBlocBroker.You can use `./registerUser.py` to register. Please update followin arguments inside `registerUser.py` file.
+In order to submit your job each user should already registered into
+eBlocBroker.You can use `./register_requester.py` to register. Please update followin
+arguments inside `registerUser.py` file.
 
 `account`, `userEmail`, `federationCloudID`, and `ipfsAddress`.
 
-After registiration is done, each user should authenticate their ORCID iD using the following
+After registiration is done, each user should authenticate their ORCID iD using
+the following
 [link](http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php).
 
 -----------
@@ -184,29 +164,22 @@ Please update following arguments inside `submit_job.py` file.
 clusterAddress  = "0x4e4a0750350796164D8DefC442a712B7557BF282"
 ipfsHash        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 coreNum         = 1;
-coreGasDay      = 0
-coreGasHour     = 0
-coreGasMin      = 10
-gasBandwidthIn  = 100
-gasBandwidthOut = 100
 storageType     = 0 # Please note that '0' stands for IPFS repository share.
 ```
 
 #### **2. How to submit a job using EUDAT**
 
-Before doing this you have to be sure that you have shared your folder with cluster's FID. Please
-[follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be
-accepted. Please update following arguments inside `submit_job.py` file.
+Before doing this you have to be sure that you have shared your folder with
+cluster's FID.
+Please [follow](https://github.com/avatar-lavventura/someCode/issues/4).
+Otherwise your
+job will not be accepted. Please update following arguments inside
+`submit_job.py` file.
 
 ```python
 clusterAddress  = "0x4e4a0750350796164D8DefC442a712B7557BF282"
 jobKey          = "folderName"
 coreNum         = 1
-coreGasDay      = 0
-coreGasHour     = 0
-coreGasMin      = 10
-gasBandwidthIn  = 100
-gasBandwidthOut = 100
 storageType     = 1 # Please note that '1' stands for EUDAT repository share.
 ```
 
@@ -218,11 +191,6 @@ Please update following arguments inside `submit_job.py` file.
 clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit.
 jobKey          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
 coreNum         = 1
-coreGasDay      = 0
-coreGasHour     = 0
-coreGasMin      = 10
-gasBandwidthIn  = 100
-gasBandwidthOut = 100
 storageType     = 2 # Please note 2 stands for IPFS with GPG repository share.
 ```
 
@@ -254,10 +222,10 @@ echo $jobKey # This is jobKey
 gdrive share $jobKey  --role writer --type user --email $clusterToShare
 ```
 
-If your work is compressed under folder name such as `folder_path/folderName,/RUN.zip`; please name it
-`RUN.zip` or `RUN.tar.gz`.
+If your work is compressed under folder name such as
+`folder_path/folderName,/RUN.zip`; please name it `RUN.zip` or `RUN.tar.gz`.
 
----------
+--------------
 
 Please update following arguments inside `submit_job.py` file.
 
@@ -265,11 +233,6 @@ Please update following arguments inside `submit_job.py` file.
 clusterID       = "0xda1e61e853bb8d63b1426295f59cb45a34425b63" # clusterID you would like to submit.
 jobKey          = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
 coreNum         = 1
-coreGasDay      = 0
-coreGasHour     = 0
-coreGasMin      = 10
-gasBandwidthIn  = 100
-gasBandwidthOut = 100
 storageType     = 4 # Please note that 4 stands for gdrive repository share.
 ```
 
@@ -284,16 +247,34 @@ index     = 0
 ./getJobInfo.py $clusterID $jobKey $index
 ```
 
-- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or `COMPLETED`.
+- Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or
+  `COMPLETED`.
 
------------
+-----------------
 
-### Events
+## Set Time
 
-#### Keep track of logged received jobs and their status
+System clock can actually go out of synch pretty quickly, in less than 15
+minutes. It can be substituted for a time-synchronizing daemon like ntpd.
+
 
 ```bash
-clusterAddress="0x57b60037b82154ec7149142c606ba024fbb0f991"
-fromBlock=1000000
-logTestResults/getLogJobs.py $clusterAddress $fromBlock
+sudo timedatectl set-ntp true
+$ cat /etc/systemd/timesyncd.conf
+[Time]
+NTP=pool.ntp.org
+
+sudo timedatectl set-timezone UTC
+sudo systemctl restart systemd-timesyncd.service
+systemctl status systemd-timesyncd
+timedatectl
+timedatectl timesync-status
+
+# https://serverfault.com/a/949069/395276
+sudo apt install chrony
+sudo systemctl enable chrony
+sudo systemctl start chronyd
+
+chronyc tracking
+chronyc makestep
 ```

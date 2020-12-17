@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 
 library Lib {
     enum CacheType {
@@ -16,11 +16,10 @@ library Lib {
 
     enum CloudStorageID {
         IPFS, /* 0 */
-        EUDAT, /* 1 */
-        IPFS_MINILOCK, /* 2 */
-        GITHUB, /* 3 */
-        GDRIVE, /* 4 */
-        NONE /* 5 Requested to use from registered data */
+        IPFS_GPG, /* 1 */
+        NONE, /* 2 Request to use from registered/cached data */
+        EUDAT, /* 3 */
+        GDRIVE /* 4 */
     }
 
     /* Status of the submitted job Enum */
@@ -56,7 +55,7 @@ library Lib {
          * provider set its prices most recent. */
         uint32 providerPriceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
-           stored and shared using either IPFS, EUDAT, IPFS (with MiniLock
+           stored and shared using either IPFS, EUDAT, IPFS (with GPG
            encryption), or Google Drive. */
         uint8[] cloudStorageID;
         /* An array of uint8 values that denote whether the requester’s data
@@ -69,7 +68,7 @@ library Lib {
          * registered data will be used or not. */
         uint32[] dataPricesSetBlockNum;
         uint16[] core;
-        uint16[] executionDuration;
+        uint16[] runTime;
         uint32 dataTransferOut;
     }
 
@@ -80,7 +79,7 @@ library Lib {
         uint32 dataTransferIn;
         uint32 dataTransferOut;
         uint256[] core;
-        uint256[] executionDuration;
+        uint256[] runTime;
         bool endJob;
     }
 
@@ -107,7 +106,7 @@ library Lib {
     }
 
     struct Job {
-        JobStateCodes jobStateCode; // Assigned by the provider
+        JobStateCodes stateCode; // Assigned by the provider
         uint32 startTime; // Submitted job's starting universal time on the server side. Assigned by the provider
     }
 
@@ -189,6 +188,7 @@ library Lib {
 
     function _recursive(Interval storage self)
         internal
+        view
         returns (
             uint32,
             uint32,
