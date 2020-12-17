@@ -19,7 +19,7 @@ def update_job_cores(self, job_info, provider, job_key, index, job_id=0, receive
     else:
         to_block = int(received_block_number)
     try:
-        event_filter = config.Ebb.events.LogJob.createFilter(
+        event_filter = config.ebb.events.LogJob.createFilter(
             fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)},
         )
 
@@ -47,7 +47,7 @@ def get_job_source_code_hashes(self, job_info, provider, job_key, index, job_id=
         to_block = int(received_block_number)
 
     try:
-        event_filter = config.Ebb.events.LogJob.createFilter(
+        event_filter = config.ebb.events.LogJob.createFilter(
             fromBlock=int(received_block_number), toBlock=to_block, argument_filters={"provider": str(provider)},
         )
         logged_jobs = event_filter.get_all_entries()
@@ -60,18 +60,23 @@ def get_job_source_code_hashes(self, job_info, provider, job_key, index, job_id=
         raise
 
 
-def get_job_info(self, provider, job_key, index, job_id, received_block_number=None):
-    log(f"~/eBlocBroker/eblocbroker/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}", "cyan")
+def get_job_info(self, provider, job_key, index, job_id, received_block_number=None, is_print=True):
+    if is_print:
+        log(
+            f"~/eBlocBroker/eblocbroker/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}",
+            "cyan",
+        )
+
     try:
         provider = config.w3.toChecksumAddress(provider)
-        (job, received, job_owner, dataTransferIn, dataTransferOut,) = config.Ebb.functions.getJobInfo(
+        (job, received, job_owner, dataTransferIn, dataTransferOut,) = config.ebb.functions.getJobInfo(
             provider, job_key, int(index), int(job_id)
         ).call()
-        jobPrices = config.Ebb.functions.getProviderPricesForJob(provider, job_key, int(index)).call()
 
+        jobPrices = config.ebb.functions.getProviderPricesForJob(provider, job_key, int(index)).call()
         self.job_info = {
-            "startTime": job[0],
-            "jobStateCode": job[1],
+            "jobStateCode": job[0],
+            "startTime": job[1],
             "core": None,
             "executionDuration": None,
             "cloudStorageID": None,

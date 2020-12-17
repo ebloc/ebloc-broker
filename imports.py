@@ -3,30 +3,29 @@
 import sys
 
 from web3 import IPCProvider, Web3
-from web3.geth import shh
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 
 import _utils.colorer  # noqa: F401
 import config
-from config import env, logging
+from config import QuietExit, env, logging
 from utils import _colorize_traceback, is_geth_on, log, read_json, terminate
 
 
 def connect():
-    if config.Ebb and config.w3:
-        return config.Ebb, config.w3
+    if config.ebb and config.w3:
+        return config.ebb, config.w3
 
     if config.w3 is None:
         config.w3 = connect_to_web3()
 
-    if config.Ebb is None:
+    if config.ebb is None:
         try:
-            config.Ebb = connect_to_eblocbroker()
+            config.ebb = connect_to_eblocbroker()
         except Exception as e:
             raise Exception("E: Problem on web3 connection") from e
 
-    return config.Ebb, config.w3
+    return config.ebb, config.w3
 
 
 def connect_to_web3():
@@ -40,8 +39,9 @@ def connect_to_web3():
         your process and Ethereum node
         """
         config.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
-        config.w3.shh.attach(config.w3, "shh")
-        shh.attach(config.w3, "shh")
+        # from web3.geth import shh  # does not work on > web3==5.11
+        # config.w3.shh.attach(config.w3, "shh")
+        # shh.attach(config.w3, "shh")
     else:
         config.w3 = Web3(IPCProvider("/private/geth.ipc"))
         # inject the poa compatibility middleware to the innermost layer
@@ -61,7 +61,7 @@ def connect_to_web3():
             "to /private/geth.ipc file doing:"
         )
         log("sudo chown $(whoami) /private/geth.ipc\n", "green")
-        terminate(msg="", is_traceback=False)
+        terminate(is_traceback=False)
         # raise config.QuietExit()
 
     if not env.PROVIDER_ID:
@@ -76,13 +76,17 @@ def connect_to_web3():
 
 
 def connect_to_eblocbroker():
-    if config.Ebb:
-        return config.Ebb
+    if config.ebb:
+        return config.ebb
 
     if config.w3 is None:
         config.w3 = connect_to_web3()
 
     try:
+        if env.EBLOCPATH is None or env.EBLOCPATH == "":
+            logging.error("E: EBLOCPATH variable is empty", "red")
+            raise QuietExit
+
         contract = read_json(f"{env.EBLOCPATH}/eblocbroker/contract.json")
     except:
         logging.error("E: Couldn't read the contract.json file")
@@ -97,9 +101,9 @@ def connect_to_eblocbroker():
         raise
 
     try:
-        config.Ebb = config.w3.eth.contract(contract_address, abi=abi)
-        config.Ebb.contract_address = config.w3.toChecksumAddress(contract_address)
-        return config.Ebb
+        config.ebb = config.w3.eth.contract(contract_address, abi=abi)
+        config.ebb.contract_address = config.w3.toChecksumAddress(contract_address)
+        return config.ebb
     except:
         logging.error("E: Couldn't retrieve eBlocBroker contract")
         raise

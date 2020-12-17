@@ -15,36 +15,40 @@ if [[ $1 = *".tar.gz" ]]; then
 fi
 
 if [[ $1 = *"//"* ]]; then
-    echo "Please do not use // on your folder path."
-    exit;
+    echo "E: Please do not use // on your folder path."
+    exit 64
 fi
 
 target=${1%/}
 
 # Control will enter here if $DIRECTORY doesn't exist.
 if [ ! -d "$target" ]; then
-    echo 'Requested folder does not exit. Please provide complete path. Path='$target
-    exit
-else
+    echo 'E: Requested folder does not exit. Please provide complete path. Path='$target
+    exit 64
+nelse
     target=$(realpath $target)
 fi
 
 machine_os=$(bash $HOME/eBlocBroker/bash_scripts/machine.sh)
 if [ "$machine_os" == "Mac" ]; then
     # doc: https://stackoverflow.com/a/4210072/2402577
+    #
+    # When the -L option is in effect, the -type predicate will always match
+    # against the type of the file that a symbolic link points to rather than
+    # the link itself
     if  [ "$target" == "." ]; then
-        find $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
-	-exec md5 -q "$PWD"/{} \; | awk '{print $1}' | sort | md5
+        find -L $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
+        -exec md5 -q "$PWD"/{} \; | awk '{print $1}' | sort | md5
     else
-        find $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
-	-exec md5 -q /{} \; | awk '{print $1}' | sort | md5
+        find -L $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
+        -exec md5 -q /{} \; | awk '{print $1}' | sort | md5
     fi
 else
     if  [ "$target" == "." ]; then
-        find $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
-	-exec md5sum "$PWD"/{} \; | awk '{print $1}' | sort | md5sum | awk '{print $1}'
+        find -L $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
+        -exec md5sum "$PWD"/{} \; | awk '{print $1}' | sort | md5sum | awk '{print $1}'
     else
-        find $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
-	-exec md5sum /{} \; | awk '{print $1}' | sort | md5sum | awk '{print $1}'
+        find -L $target \( -name "venv" -o -name "__pycache__" -o -name ".git*" -o -name "node_modules" \) -prune -o -type f \
+        -exec md5sum /{} \; | awk '{print $1}' | sort | md5sum | awk '{print $1}'
     fi
 fi

@@ -23,7 +23,7 @@ def add_item(job_key, index, source_code_hash_list, requester_id, timestamp, clo
         "timestamp": timestamp,
         "cloudStorageID": cloudStorageID,
         "cacheDuration": job_info["cacheDuration"],
-        "receieved": False
+        "receieved": False,
     }
     output = collection.update({"job_key": new_item["job_key"]}, new_item, True)
     return check_ok(output)
@@ -54,7 +54,7 @@ def find_key(_coll, key):
 
 
 def get_job_block_number(requester_address, key, index) -> int:
-    cursor = collection.find({"requester_address":requester_address.lower(), "job_key":key, "index":index})
+    cursor = collection.find({"requester_address": requester_address.lower(), "job_key": key, "index": index})
     for document in cursor:
         return document["received_block_number"]
     else:
@@ -62,7 +62,7 @@ def get_job_block_number(requester_address, key, index) -> int:
 
 
 def is_received(requester_address, key, index, is_print=False) -> bool:
-    cursor = collection.find({"requester_address":requester_address.lower(), "job_key":key, "index":index})
+    cursor = collection.find({"requester_address": requester_address.lower(), "job_key": key, "index": index})
     if is_print:
         for document in cursor:
             pprint(document)

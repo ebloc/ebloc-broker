@@ -18,8 +18,10 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
+from typing import Dict
 
 import base58
+import pytz
 from pygments import formatters, highlight, lexers
 from termcolor import colored
 
@@ -35,6 +37,7 @@ zero_bytes32 = "0x00"
 yes = set(["yes", "y", "ye", "ys"])
 no = set(["no", "n"])
 log_files = {}
+EXIT_FAILURE = 1
 
 
 class BashCommandsException(Exception):
@@ -42,7 +45,7 @@ class BashCommandsException(Exception):
         self.returncode = returncode
         self.output = output
         self.error_msg = error_msg
-        Exception.__init__('Error in the executed command')
+        Exception.__init__("Error in the executed command")
 
 
 class BaseEnum(IntEnum):
@@ -77,13 +80,17 @@ class COLOR:
     END = "\033[0m"
 
 
-def print_warning(msg):
-    log("Warning: ", "yellow", None, is_new_line=True)
-    log(msg)
+def print_ok():
+    log("[ ", is_bold=False, end="")
+    log("ok", color="green", end="", is_bold=False)
+    log(" ]", is_bold=False)
 
 
-def print_arrow(color="white"):
-    log("==> ", color, None, is_new_line=False)
+def utc_to_local(utc_dt):
+    # dt.strftime("%d/%m/%Y") # to get the date
+    local_tz = pytz.timezone("Europe/Istanbul")
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    return local_tz.normalize(local_dt)
 
 
 def extract_gzip(filename):
@@ -91,7 +98,7 @@ def extract_gzip(filename):
 
 
 def untar(tar_file, extract_to):
-    """ untar give tar file
+    """untar give tar file
     umask can be ignored by using the -p (--preserve) option
         --no-overwrite-dir: preserve metadata of existing directories
 
@@ -113,7 +120,7 @@ def untar(tar_file, extract_to):
 
 
 def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
-    """ Host: 8.8.8.8 (google-public-dns-a.google.com)
+    """Host: 8.8.8.8 (google-public-dns-a.google.com)
     OpenPort: 53/tcp
     Service: domain (DNS/TCP)
     doc: https://stackoverflow.com/a/33117579/2402577
@@ -177,7 +184,7 @@ def run_with_output(cmd):
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             ret += line
-            print(line, end='')  # process line here
+            print(line, end="")  # process line here
             return line.strip()
     if p.returncode != 0:
         raise CalledProcessError(p.returncode, p.args)
@@ -227,9 +234,9 @@ def _colorize_traceback(string=None):
     formatter = formatters.get_formatter_by_name("terminal")
     tb_colored = highlight(tb_text, lexer, formatter)
     if not string:
-        log(f"{[WHERE(1)]} ", "blue", None, is_new_line=False)
+        log(f"{[WHERE(1)]} ", "blue", None)
     else:
-        log(f"[{WHERE(1)} {string}] ", "blue", None, is_new_line=False)
+        log(f"[{WHERE(1)} {string}] ", "blue", None, end=False)
     log(tb_colored)
 
 
@@ -273,7 +280,7 @@ def byte_to_mb(size_in_bytes: int) -> int:
     """Instead of a size divisor of 1024 * 1024 you could use the
     bitwise shifting operator (<<), i.e. 1<<20 to get megabytes."""
     MBFACTOR = float(1 << 20)
-    return int(size_in_bytes) / MBFACTOR
+    return int(int(size_in_bytes) / MBFACTOR)
 
 
 def generate_md5sum(path: str) -> str:
@@ -289,9 +296,14 @@ def generate_md5sum(path: str) -> str:
         raise
 
 
-def create_dir(path: str) -> None:
+def mkdir(path: str) -> None:
     if not os.path.isdir(path):
-        os.makedirs(path)  # mkdir
+        os.makedirs(path)
+
+
+def mkdirs(paths) -> None:
+    for path in paths:
+        mkdir(path)
 
 
 def getcwd():
@@ -307,7 +319,7 @@ def eth_address_to_md5(address):
     return hashlib.md5(address.encode("utf-8")).hexdigest()
 
 
-def write_to_file(fname, message):
+def write_to_file(fname, message) -> None:
     with open(fname, "w") as f:
         f.write(str(message))
 
@@ -381,26 +393,37 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     pass
 
 
-def printc(text, c=None, is_new_line=True, is_bold=True):
-    if is_new_line:
+def print_color(text, color=None, is_bold=True, end=None):
+    if str(text)[0:3] == "==>":
+        print(colored(f"{COLOR.BOLD}==>{COLOR.END}", color="blue"), end="", flush=True)
+        text = text[3:]
+    elif str(text)[0:2] == "E:":
+        print(colored(f"{COLOR.BOLD}E:{COLOR.END}", color="red"), end="", flush=True)
+        text = text[2:]
+
+    if end is None:
         if is_bold:
-            print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c))
+            print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color))
         else:
-            print(colored(text, c))
-    else:
+            print(colored(text, color))
+    elif end == "":
         if is_bold:
-            print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", c), end="", flush=True)
+            print(colored(f"{COLOR.BOLD}{text}{COLOR.END}", color), end="", flush=True)
         else:
-            print(colored(text, c), end="")
+            print(colored(text, color), end="")
 
 
-# TODO: send arguments without order //  is_bold
-def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
-    is_arrow = False
-    if text[0:3] == "==>":
-        is_arrow = True
-
+def log(text="", color=None, filename=None, end=None, is_bold=True):
     text = str(text)
+    is_arrow = False
+    is_error = False
+    if text[:3] == "==>":
+        is_arrow = True
+    elif text[:2] == "E:":
+        is_error = True
+    elif text == "SUCCESS":
+        color = "green"
+
     if threading.current_thread().name != "MainThread" and env.IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
@@ -410,7 +433,7 @@ def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
             filename = env.DRIVER_LOG
 
     f = open(filename, "a")
-    if c:
+    if color:
         if is_bold:
             _text = f"{COLOR.BOLD}{text}{COLOR.END}"
         else:
@@ -418,28 +441,44 @@ def log(text, c="white", filename=None, is_new_line=True, is_bold=True):
 
         if threading.current_thread().name == "MainThread":
             if is_arrow:
-                printc(colored("==>", "blue"), c="blue", is_new_line=False, is_bold=True)
-                printc(colored(text[3:], c), c, is_new_line, is_bold)
+                print(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + f"{COLOR.BOLD}{text[3:]}{COLOR.END}")
+            elif is_error:
+                print(colored(f"{COLOR.BOLD}E:{COLOR.END}", "red") + f"{COLOR.BOLD}{text[2:]}{COLOR.END}")
             else:
-                printc(colored(text, c), c, is_new_line, is_bold)
+                print_color(colored(text, color), color, is_bold, end)
+
         if is_arrow:
             if is_bold:
                 _text = f"{COLOR.BOLD}{text[3:]}{COLOR.END}"
-            f.write(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + colored(_text, c))
+            else:
+                _text = text[3:]
+            f.write(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + colored(_text, color))
+        elif is_error:
+            if is_bold:
+                _text = f"{COLOR.BOLD}{text[2:]}{COLOR.END}"
+            else:
+                _text = text[2:]
+            f.write(colored(f"{COLOR.BOLD}E:{COLOR.END}", "red") + colored(_text, color))
         else:
-            f.write(colored(_text, c))
+            f.write(colored(_text, color))
     else:
-        print(text)
+        if is_arrow:
+            print(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + f"{COLOR.BOLD}{text[3:]}{COLOR.END}")
+        elif is_error:
+            print(colored(f"{COLOR.BOLD}E:{COLOR.END}", "red") + f"{COLOR.BOLD}{text[2:]}{COLOR.END}")
+        else:
+            print(text, end=end)
+
         f.write(text)
 
-    if is_new_line:
+    if end is None:
         f.write("\n")
     f.close()
 
 
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
-    log(f"==> failed_cmd:\n{_cmd}", c="yellow")
+    log(f"==> failed_cmd:\n{_cmd}", color="yellow")
     if exc:
         log(f"\n[{WHERE(back)}] Error:\n{exc}", "red")
 
@@ -449,11 +488,11 @@ def WHERE(back=0):
         frame = sys._getframe(back + 1)
     except:
         frame = sys._getframe(1)
-    return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name,)
+    return "%s:%s %s()" % (os.path.basename(frame.f_code.co_filename), frame.f_lineno, frame.f_code.co_name)
 
 
-def silent_remove(path) -> bool:
-    """Removes file or folders based on the file type.
+def silent_remove(path):
+    """Removes file or folders based on its the file type.
 
     Helpful Links:
     - https://stackoverflow.com/a/10840586/2402577
@@ -467,10 +506,10 @@ def silent_remove(path) -> bool:
             # deletes a directory and all its contents
             shutil.rmtree(path)
         else:
-            return False
+            log(f"E: Given path '{path}' does not exists. Nothing is removed. [{WHERE(1)}]")
+            return
 
         log(f"==> [{WHERE(1)}]\n{path} is removed", "yellow")
-        return True
     except Exception as e:
         if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
             _colorize_traceback()
@@ -509,13 +548,20 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             running_pid = out.strip().split()[1]
             if running_pid in pids:
                 if is_print:
-                    log(f"==> {name} is already running on the background, its pid={running_pid}", "green")
+                    if name == "Driver":
+                        print_color(f"==> {name} is already running on the background, its pid={running_pid}", "green")
+                    else:
+                        log(f"==> {name} is already running on the background, its pid={running_pid}", "green")
                 return True
         else:
             if is_print:
-                log(f"==> {name} is already running on the background", "green")
+                if name == "Driver":
+                    print_color(f"==> {name} is already running on the background", "green")
+                else:
+                    log(f"==> {name} is already running on the background", "green")
             return True
 
+    name = name.replace("\\", "").replace(">", "").replace("<", "")
     log(f"{name} is not running on the background", "yellow")
     return False
 
@@ -536,11 +582,11 @@ def is_geth_account_locked(address) -> bool:
 def is_driver_on(process_count=0) -> bool:
     """Check whether driver runs on the background."""
     if is_process_on("python.*[D]river", "Driver", process_count):
-        printc("Track output using:")
-        printc(f"tail -f {env.DRIVER_LOG}", "blue")
+        print_color("Track output using:")
+        print_color(f"tail -f {env.DRIVER_LOG}", "blue")
         raise config.QuietExit
-    else:
-        return False
+
+    return False
 
 
 def is_ganache_on(port) -> bool:
@@ -564,13 +610,13 @@ def is_ipfs_running():
         return True
 
     log("E: IPFS does not work on the background", "blue")
-    log("#> Starting IPFS daemon on the background", "blue")
+    log("## Starting IPFS daemon on the background", "blue")
     while True:
         output = run(["python3", f"{env.EBLOCPATH}/python_scripts/run_ipfs_daemon.py"])
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read(), "blue")
-            log(output, "blue")
+            log(content_file.read(), color="blue")
+            log(output, color="blue")
         if is_ipfs_on():
             return True
     return is_ipfs_on()
@@ -578,7 +624,7 @@ def is_ipfs_running():
 
 def check_ubuntu_packages(packages=None):
     if not packages:
-        packages = ["pigz", "curl", "mailutils", "munge"]
+        packages = ["pigz", "curl", "mailutils", "munge", "git"]
 
     for package in packages:
         if not is_dpkg_installed(package):
@@ -597,7 +643,7 @@ def is_dpkg_installed(package_name) -> bool:
 def terminate(msg="", is_traceback=True):
     """Terminates Driver and all the dependent python programs to it."""
     if msg:
-        log(text=f"[{WHERE(1)}] Terminated \n{msg}\n", c="red", is_bold=False)
+        log(text=f"[{WHERE(1)}] Terminated \n{msg}", color="red", is_bold=True)
 
     if is_traceback:
         _colorize_traceback()
@@ -631,7 +677,7 @@ def question_yes_no(message, is_terminate=False):
                 print("\n")
                 terminate()
             else:
-                sys.exit()
+                sys.exit(1)
         else:
             print("\nPlease respond with 'yes' or 'no': ", end="", flush=True)
 
@@ -693,15 +739,18 @@ def compress_folder(folder_to_share):
 
 class Link:
     def __init__(self, path_from, path_to) -> None:
-        self.path_from = path_from
-        self.path_to = path_to
-        self.data_map = {}
+        self.data_map = {}  # type: Dict[str, str]
+        if path_from:
+            self.path_from = path_from.rstrip("\/")  # in case if its ending with "/" char
+
+        if path_to:
+            self.path_to = path_to.rstrip("\/")
 
     def link_folders(self, paths=None):
-        """Creates linked folders under data_link/ folder"""
+        """Creates linked folders under the data_link/ folder"""
         from os import listdir
         from os.path import isdir, join
-        from lib import run_command, printc
+        from lib import run_command
 
         if not paths:
             # instead of full path only returns folder names
@@ -717,13 +766,19 @@ class Link:
             else:
                 folder_name = path_leaf(target)
 
-            folder_hash = generate_md5sum(target)
+            try:
+                folder_hash = generate_md5sum(target)
+            except Exception as e:
+                raise e
+
             self.data_map[folder_name] = folder_hash
             destination = f"{self.path_to}/{folder_hash}"
+
             run_command(["ln", "-sfn", target, destination])
-            printc(f"{target} [is linked to]\n{destination}", "blue")
+            log(f"* '{target}' => ", end="")
+            log(f"'{destination}'", color="yellow")
             folder_new_hash = generate_md5sum(destination)
-            assert folder_hash == folder_new_hash
+            assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"
 
 
 class cd:
@@ -731,6 +786,7 @@ class cd:
 
     doc: https://stackoverflow.com/a/13197763/2402577
     """
+
     def __init__(self, new_path):
         self.new_path = os.path.expanduser(new_path)
 

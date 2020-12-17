@@ -36,10 +36,10 @@ from utils import (
     _colorize_traceback,
     byte_to_mb,
     bytes32_to_ipfs,
-    create_dir,
     eth_address_to_md5,
     is_dir_empty,
     log,
+    mkdir,
     read_file,
     read_json,
     remove_empty_files_and_folders,
@@ -52,11 +52,12 @@ mc = MongoClient()
 
 class Common:
     """Prevents "Class" has no attribute "method" mypy warnings."""
+
     def __init__(self) -> None:
         self.results_folder_prev = ""
         self.patch_file = ""
         self.requester_gpg_fingerprint = ""
-        self.patch_name = ""
+        self.patch_upload_name = ""
         self.results_folder = ""
         self.data_transfer_out = 0.0
 
@@ -67,7 +68,7 @@ class IpfsGPG(Common):
 
     def upload(self, *_) -> bool:
         try:
-            """It will upload after all patchings are completed."""
+            """Upload files right after all the patchings are completed."""
             target = ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
             log(f"GPG_file: {target}", "blue")
         except:
@@ -81,7 +82,7 @@ class Ipfs(Common):
         pass
 
     def upload(self, *_) -> bool:
-        """It will upload after all patchings are completed."""
+        """Upload files after all patchings are completed."""
         return True
 
 
@@ -91,16 +92,30 @@ class Eudat(Common):
 
     def initialize(self):
         try:
+            eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
+        except:
+            pass
+
+        try:
             self.get_shared_tokens()
         except:
             sys.exit(1)
 
     def upload(self, source_code_hash, *_) -> bool:
+        try:
+            uploaded_file_size = eudat.get_size(f_name=f"{source_code_hash}/{self.patch_upload_name}")
+            size_in_bytes = calculate_folder_size(self.patch_file, _type="bytes")
+            if uploaded_file_size == float(size_in_bytes):
+                log(f"==> {self.patch_file} is already uploaded")
+                return True
+        except:  # First time uploading
+            pass
+
         _data_transfer_out = calculate_folder_size(self.patch_file)
         logging.info(f"[{source_code_hash}]'s data_transfer_out => {_data_transfer_out} MB")
         self.data_transfer_out += _data_transfer_out
         success = eudat.upload_results(
-            self.encoded_share_tokens[source_code_hash], self.patch_name, self.results_folder_prev, 5,
+            self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, 5,
         )
         return success
 
@@ -165,6 +180,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.source_code_hashes: List[str] = []
         self.result_ipfs_hash = ""
         self.requester_gpg_fingerprint = ""
+        self.end_time_stamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
 
@@ -174,7 +190,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         # print(my_env)
         os.environ["IPFS_PATH"] = f"{env.HOME}/.ipfs"
         logging = setup_logger(f"{env.LOG_PATH}/end_code_output/{self.job_key}_{self.index}.log")
-        # logging.info(f"=> Entered into {self.__class__.__name__} case.") # delete
+        # logging.info(f"==> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id
         log(f"~/eBlocBroker/end_code.py {args}", "blue")
@@ -211,8 +227,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.patch_folder_ipfs = f"{self.results_folder_prev}/patch_ipfs"
 
-        create_dir(self.patch_folder)
-        create_dir(self.patch_folder_ipfs)
+        mkdir(self.patch_folder)
+        mkdir(self.patch_folder_ipfs)
 
         remove_empty_files_and_folders(self.results_folder)
 
@@ -343,7 +359,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             else:
                 target_path = self.patch_folder
 
-            self.patch_name, self.patch_file, is_file_empty = git.diff_patch(source, name, self.index, target_path)
+            self.patch_upload_name, self.patch_file, is_file_empty = git.diff_patch(
+                source, name, self.index, target_path
+            )
             if not is_file_empty:
                 if not storage_class.upload(self, name, is_job_key):
                     raise
@@ -389,17 +407,18 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.requester_gpg_fingerprint = self.requester_info["gpgFingerprint"]
         log("job_owner's info", "green")
         log("================", "green")
-        log("{0: <16}".format("email:") + self.requester_info["email"], "green")
-        log("{0: <16}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
-        log("{0: <16}".format("ipfs_id:") + self.requester_info["ipfsID"], "green")
-        log("{0: <16}".format("f_id:") + self.requester_info["fID"], "green")
+        log("{0: <17}".format("email:") + self.requester_info["email"], "green")
+        log("{0: <17}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
+        log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfsID"], "green")
+        log("{0: <17}".format("f_id:") + self.requester_info["fID"], "green")
 
         if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
             log("==> Job is already completed job and its money is received", "yellow")
             raise QuietExit
 
         execution_duration = self.job_info["executionDuration"]
-        logging.info(f"requested_execution_duration={execution_duration[self.job_id]} minutes")
+        log(f"==> requested_execution_duration={execution_duration[self.job_id]} minutes")
+        is_print = True
         for attempt in range(10):
             if self.job_info["jobStateCode"] == job_state_code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed
@@ -414,14 +433,18 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             try:
                 self.job_info = eblocbroker_function_call(
                     lambda: Ebb.get_job_info(
-                        env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number,
+                        env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
                     ),
                     10,
                 )
+                is_print = False
             except:
                 sys.exit(1)
 
-            logging.info(f"Waiting for {attempt * 15} seconds to pass...")
+            log(
+                f"==> start_code tx of the job is not obtained yet. Waiting for {attempt * 15} seconds to pass...",
+                is_bold=False,
+            )
             # short sleep here so this loop is not keeping CPU busy due to
             # setJobSuccess may deploy late
             time.sleep(15)
@@ -446,8 +469,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
         run_stdout_to_file(cmd, slurm_log_output_file)
-        cmd.pop().append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End")
-        run_stdout_to_file(cmd, slurm_log_output_file, mode="a")
+        cmd.pop()
+        cmd.append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End")
+        run_stdout_to_file(cmd, slurm_log_output_file)
 
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_raw_time = slurm.get_elapsed_raw_time(self.slurm_job_id)
@@ -470,8 +494,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
         self.process_payment_tx()
-        log("All done!", c="green")
-        # TODO; garbage collector, removed downloaded code from local since it is not needed anymore
+        log("SUCCESS", color="green")
+        # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
 
 
 if __name__ == "__main__":
@@ -493,7 +517,6 @@ if __name__ == "__main__":
 
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
 # success, output = run(cmd)
-# logging.info(output)
 # self.output_file_name = f"result-{PROVIDER_ID}-{self.job_key}-{self.index}.tar.gz"
 """Approach to upload as .tar.gz. Currently not used.
                 remove_source_code()
@@ -509,7 +532,6 @@ if __name__ == "__main__":
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
 # success, output = run(cmd)
 # logging.info(output)
-# time.sleep(.25)
 
 # self.remove_source_code()
 # cmd: tar -jcvf result-$providerID-$index.tar.gz *

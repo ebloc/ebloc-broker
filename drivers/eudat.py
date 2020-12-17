@@ -13,17 +13,7 @@ import eblocbroker.Contract as Contract
 import libs.mongodb as mongodb
 from config import env, logging
 from drivers.storage_class import Storage
-from utils import (
-    CacheType,
-    _colorize_traceback,
-    create_dir,
-    generate_md5sum,
-    get_time,
-    log,
-    read_json,
-    silent_remove,
-    untar,
-)
+from utils import CacheType, _colorize_traceback, generate_md5sum, get_time, log, mkdir, read_json, silent_remove, untar
 
 Ebb = Contract.eblocbroker
 
@@ -66,7 +56,7 @@ class EudatClass(Storage):
                 }
                 # adding into mongodb for future usage
                 if mongodb.add_item_share_id(folder_name, share_id, self.share_token):
-                    logging.info("Successfull added into mongodb")
+                    logging.info("Added into mongodb [ SUCCESS ]")
                 else:
                     logging.error("E: Something is wrong, Not added into mongodb")
 
@@ -265,7 +255,7 @@ class EudatClass(Storage):
             _colorize_traceback(f"{self.job_key}_{self.index}")
             sys.exit(1)
         finally:
-            time.sleep(.25)
+            time.sleep(0.25)
 
     def _run(self) -> bool:
         log(
@@ -284,7 +274,7 @@ class EudatClass(Storage):
         except:
             logging.error("E: could not get the share id")
             _colorize_traceback()
-            raise
+            return False
 
         if self.dataTransferIn_to_download > self.dataTransferIn_requested:
             log(f"data_transfer_in_to_download={self.dataTransferIn_to_download}", "red")
@@ -305,7 +295,7 @@ class EudatClass(Storage):
                     target = self.results_folder
                 else:
                     target = f"{self.results_data_folder}/{folder_name}"
-                    create_dir(target)
+                    mkdir(target)
 
                 try:
                     untar(tar_to_extract, target)

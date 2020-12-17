@@ -3,20 +3,20 @@
 import config
 
 
-def get_provider_price_info(providerAddress, requestedCore, coreMinuteGas, gasDataTransfer):
-    (blockReadFrom, coreNumber, price_core_min, price_data_transfer,) = config.Ebb.functions.getProviderInfo(
+def get_provider_price_info(providerAddress, requested_core, coreMinuteGas, gasDataTransfer):
+    (blockReadFrom, coreNumber, price_core_min, price_data_transfer,) = config.ebb.functions.getProviderInfo(
         providerAddress
     ).call()
 
     print("{0: <19}".format("coreNumber: ") + str(coreNumber))
     print("{0: <19}".format("price_core_min: ") + str(price_core_min))
     print("{0: <19}".format("price_data_transfer: ") + str(price_data_transfer))
-    if requestedCore > coreNumber:
+    if requested_core > coreNumber:
         print("{0: <19}".format("price: ") + "Requested core is greater than provider's core")
     else:
         print(
             "{0: <19}".format("price: ")
-            + str(requestedCore * coreMinuteGas * price_core_min + gasDataTransfer * price_data_transfer)
+            + str(requested_core * coreMinuteGas * price_core_min + gasDataTransfer * price_data_transfer)
         )
 
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     providers = Ebb.get_providers()
 
-    requestedCore = 2
+    requested_core = 2
     coreGasDay = 0
     coreGasHour = 0
     coreGasMin = 1
@@ -38,4 +38,4 @@ if __name__ == "__main__":
 
     for provider in providers:
         print(provider)
-        get_provider_price_info(provider, requestedCore, coreMinuteGas, gasDataTransfer)
+        get_provider_price_info(provider, requested_core, coreMinuteGas, gasDataTransfer)

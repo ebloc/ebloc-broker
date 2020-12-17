@@ -41,23 +41,27 @@ if __name__ == "__main__":
         raise e
 
     log("==> Attempt to submit a job")
-    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
-    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
 
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)
 
+    _base = f"{env.HOME}/test_eblocbroker"
+    source_code_dir = f"{_base}/source_code"
+    data_1_dir = f"{_base}/datasets/BL06-camel-sml"
+
     # TODO: let user directly provide the IPFS hash instead of the folder
-    folders = []  # full paths are provided
-    folders.append(f"{env.EBLOCPATH}/base/sourceCode")
-    folders.append(f"{env.EBLOCPATH}/base/data/data1")
+    code_paths = []
+    code_paths.append(source_code_dir)
+    code_paths.append(data_1_dir)
 
     path_from = f"{env.EBLOCPATH}/base/data"
     path_to = f"{env.LINKS}/base/data_link"
-    check_linked_data(path_from, path_to, folders[1:])
-    for folder in folders:
+    check_linked_data(path_from, path_to, code_paths[1:])
+    for folder in code_paths:
         if not os.path.isdir(folder):
             log(f"E: {folder} path does not exist")
             sys.exit(1)
@@ -71,7 +75,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     targets = []
-    for idx, folder in enumerate(folders):
+    for idx, folder in enumerate(code_paths):
         try:
             provider_info = Ebb.get_provider_info(provider)
         except:
@@ -103,13 +107,14 @@ if __name__ == "__main__":
             key = ipfs_hash
 
         job.source_code_hashes.append(ipfs_to_bytes32(ipfs_hash))
-        log(f"ipfs_hash: {ipfs_hash}\nmd5sum: {generate_md5sum(target)}", color="yellow")
+        log(f"==> ipfs_hash: {ipfs_hash}")
+        log(f"==> md5sum: {generate_md5sum(target)}")
         if main_storage_id == StorageID.IPFS_GPG:
             # created .gpg file will be removed since its already in ipfs
             targets.append(target)
 
-        if idx != len(folders) - 1:
-            print("--------------")
+        if idx != len(code_paths) - 1:
+            log("-------------------------------------------------", color="yellow")
 
     # requester inputs for testing
     job.cores = [1]
@@ -122,6 +127,7 @@ if __name__ == "__main__":
     requester = Ebb.account_id_to_address(account_id)
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
+        breakpoint()  # DEBUG
         tx_receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
         if tx_receipt["status"] == 1:
             processed_logs = eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)

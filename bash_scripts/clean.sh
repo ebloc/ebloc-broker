@@ -1,16 +1,16 @@
 #!/bin/bash
 
-if [ -e docs/ ]; then
-    pyclean docs/
-fi
+# if [ -e docs/ ]; then
+#     pyclean docs/
+# fi
 
-pyclean () {
-    find . | grep -E "(.mypy_cache|.pytest_cache|__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-}
+# pyclean () {
+#     find . | grep -E "(.mypy_cache|.pytest_cache|__pycache__|\.pyc|\.pyo$)" | xargs rm -rf &>/dev/null
+# }
 
-pyclean
+# pyclean
 
-rm -rf dist build */*.egg-info *.egg-info
+# rm -rf dist build */*.egg-info *.egg-info
 
 find . -name '.DS_Store' -delete
 find . -name 'flycheck_*.py' -delete
@@ -31,10 +31,10 @@ rm -f .node-xmlhttprequest*
 rm -f ipfs.out
 rm -f modified_date.txt
 rm -f package-lock.json
-rm -f .oc.pckl
+# rm -f .oc.pckl
 rm -f base/meta_data.json
 
 rm -rf docs/_build_html/
 rm -rf docs/_build/
 
-echo -e "cleaning is completed"
+echo -e "cleaning [ SUCCESS ]"

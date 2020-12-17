@@ -14,8 +14,6 @@ doo
 
 nohup.*
 
-*.py
-
 *.*~
 
 foo\.py
@@ -319,3 +317,7 @@ owncloudScripts/base/data_link/
 .oc.pckl
 
 .idea/
+
+doo.*
+
+gdown.py/gdown.*
