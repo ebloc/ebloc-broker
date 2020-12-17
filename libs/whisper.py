@@ -2,14 +2,18 @@
 
 import asyncio
 import os
+import pprint
 import sys
 import time
 
+from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 
 from config import env
 from lib import run_command
 from utils import _colorize_traceback, log, read_json
+
+pp = pprint.PrettyPrinter(indent=4)
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 public_key = None
@@ -55,27 +59,31 @@ def reply_sinfo(recipient_public_key, my_public_key):
                     "pubKey": recipient_public_key,
                 }
             )
-        except:
-            reply_sinfo(recipient_public_key, my_public_key)
+        except Exception as e:
+            print(str(e))
+            sys.exit(1)
+            # reply_sinfo(recipient_public_key, my_public_key)
     else:
-        log("Sender and receivers public keys are same.", "yellow")
+        log("E: Sender and receivers public keys are same", "blue")
 
 
 def handle_event(event, public_key, is_reply_sinfo=False):
-    message = event["payload"].decode("utf-8")
-    log(message)
+    # pp.pprint(event)
     if is_reply_sinfo:
+        message = event["payload"].hex()  # received text is the sender's public-id
         reply_sinfo(message, public_key)
+    else:
+        log(event["payload"].decode("utf-8"), color="blue")
+        return
 
 
 async def log_loop(filter_id, poll_interval, is_return=False, public_key="", is_reply_sinfo=False):
     log(f"Listening started.\npublic_key={public_key}", "green")
     sleep_duration = 0
     while True:
-        sys.stdout.write("\r")
-        sys.stdout.write("Waiting Whisper messages for {:1d} seconds...".format(sleep_duration))
+        sys.stdout.write("\r==> Waiting Whisper messages for {:1d} seconds...".format(sleep_duration))
         sys.stdout.flush()
-        for event in w3.geth.shh.getMessages(filter_id):  # event_filter.get_new_entries():
+        for event in w3.geth.shh.getMessages(filter_id):
             try:
                 handle_event(event, public_key, is_reply_sinfo)
                 if is_return:
@@ -85,4 +93,4 @@ async def log_loop(filter_id, poll_interval, is_return=False, public_key="", is_
 
         sleep_duration += poll_interval
         await asyncio.sleep(poll_interval)
-        time.sleep(.25)
+        time.sleep(0.25)

@@ -4,6 +4,7 @@ import sys
 from os import path, popen
 from typing import List
 
+import config
 import eblocbroker.Contract as Contract
 from config import QuietExit
 from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, log
@@ -12,13 +13,14 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 
 class DataStorage:
-    def __init__(self, Ebb, w3, provider, source_code_hash, is_brownie=False) -> None:
+    def __init__(self, ebb, w3, provider, source_code_hash, is_brownie=False) -> None:
         if is_brownie:
-            output = Ebb.getJobStorageTime(provider, source_code_hash)
+            output = ebb.getJobStorageTime(provider, source_code_hash)
         else:
             if not w3.isChecksumAddress(provider):
                 provider = w3.toChecksumAddress(provider)
-            output = Ebb.functions.getJobStorageTime(provider, source_code_hash).call({"from": provider})
+
+            output = ebb.functions.getJobStorageTime(provider, source_code_hash).call({"from": provider})
 
         self.received_block = output[0]
         self.storage_duration = output[1]
@@ -28,11 +30,13 @@ class DataStorage:
 
 class Job:
     """Object for the job that will be submitted."""
+
     def __init__(self, **kwargs) -> None:
         self.execution_durations: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
         self.storage_hours: List[int] = []
+        self.cache_types: List[int] = []
         self.execution_durations = []
         self.Ebb = Contract.eblocbroker
         for key, value in kwargs.items():
@@ -52,6 +56,12 @@ class Job:
         except:
             _colorize_traceback()
             raise
+
+    def set_cache_types(self, types) -> None:
+        self.cache_types = types
+        for idx, storage_id in enumerate(self.storage_ids):
+            if storage_id == StorageID.IPFS_GPG:
+                self.cache_types[idx] = CacheType.PRIVATE
 
     def check_account_status(self, account_id):
         _Ebb = Contract.eblocbroker
@@ -80,8 +90,8 @@ class Job:
 
 
 class JobPrices:
-    def __init__(self, Ebb, w3, job, msg_sender, is_brownie=False):
-        self.Ebb = Ebb
+    def __init__(self, ebb, w3, job, msg_sender, is_brownie=False):
+        self.ebb = ebb
         self.w3 = w3
         self.msg_sender = msg_sender
         self.is_brownie = is_brownie
@@ -95,10 +105,10 @@ class JobPrices:
         self.data_transfer_cost = None
 
         if is_brownie:
-            provider_info = Ebb.getProviderInfo(job.provider, 0)
+            provider_info = self.ebb.getProviderInfo(job.provider, 0)
         else:  # real chain
-            if Ebb.functions.doesProviderExist(job.provider).call():
-                provider_info = Ebb.functions.getProviderInfo(job.provider, 0).call()
+            if self.ebb.functions.doesProviderExist(job.provider).call():
+                provider_info = self.ebb.functions.getProviderInfo(job.provider, 0).call()
             else:
                 log(f"E: {job.provider} does not exist as a provider", "red")
                 raise QuietExit
@@ -121,13 +131,13 @@ class JobPrices:
         self.cache_cost = 0
         data_transfer_in_sum = 0
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
-            ds = DataStorage(self.Ebb, self.w3, self.job.provider, source_code_hash, self.is_brownie)
+            ds = DataStorage(self.ebb, self.w3, self.job.provider, source_code_hash, self.is_brownie)
             if self.is_brownie:
-                received_storage_deposit = self.Ebb.getReceivedStorageDeposit(
+                received_storage_deposit = self.ebb.getReceivedStorageDeposit(
                     self.job.provider, self.job.requester, source_code_hash
                 )
             else:
-                received_storage_deposit = self.Ebb.functions.getReceivedStorageDeposit(
+                received_storage_deposit = self.ebb.functions.getReceivedStorageDeposit(
                     self.job.provider, self.job.requester, source_code_hash
                 ).call({"from": self.msg_sender})
 
@@ -141,13 +151,15 @@ class JobPrices:
             if (
                 received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber
             ) or (
-                ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber and not ds.is_private and ds.is_verified_used
+                ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber
+                and not ds.is_private
+                and ds.is_verified_used
             ):
                 print(f"For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0:
                     # if true, registered data's price should be considered for storage
-                    output = self.Ebb.getRegisteredDataPrice(
+                    output = self.ebb.getRegisteredDataPrice(
                         self.job.provider, source_code_hash, self.job.data_prices_set_block_numbers[idx],
                     )
                     data_price = output[0]
@@ -178,23 +190,26 @@ class JobPrices:
         self.cost["data_transfer"] = self.data_transfer_cost
         for key, value in self.cost.items():
             if key == "data_transfer":
-                log(f"\t=> {key}={value} <=> [in:{self.cost['data_transfer_in']} out:{self.cost['data_transfer_out']}]", "blue")
+                log(
+                    f"\t=> {key}={value} <=> [in:{self.cost['data_transfer_in']} out:{self.cost['data_transfer_out']}]",
+                    "blue",
+                )
             else:
                 if key != "data_transfer_out" and key != "data_transfer_in":
                     log(f"\t=> {key}={value}", "blue")
 
 
-def cost(provider, requester, job, Ebb, w3, is_brownie=False):
+def cost(provider, requester, job, ebb=config.ebb, w3=config.w3, is_brownie=False):
     called_filename = path.basename(sys._getframe(1).f_code.co_filename)
     if called_filename.startswith("test_"):
         is_brownie = True
 
-    print("\nEntered into cost calculation...")
+    print("\nEntered into the cost calculation...")
     job.provider = provider
     job.requester = requester
     job.check()
 
-    jp = JobPrices(Ebb, w3, job, provider, is_brownie)
+    jp = JobPrices(ebb, w3, job, provider, is_brownie)
     jp.set_computational_cost()
     jp.set_storage_cost()
     jp.set_job_price()

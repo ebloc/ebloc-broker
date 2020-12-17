@@ -7,7 +7,7 @@ import pwd
 from config import logging
 from lib import run
 from libs.slurm import add_user_to_slurm
-from utils import create_dir, log, popen_communicate, silent_remove  # noqa: F401
+from utils import log, mkdir, popen_communicate, silent_remove  # noqa: F401
 
 
 def remove_user(user_name, user_dir):
@@ -71,7 +71,7 @@ def user_add(user_address, basedir, slurm_user):
         try:
             set_folder_permission(user_dir, user_name, slurm_user)
             add_user_to_slurm(user_name)
-            create_dir(f"{user_dir}/cache")
+            mkdir(f"{user_dir}/cache")
         except:
             run(["sudo", "userdel", "--force", user_name])
     else:
@@ -83,7 +83,7 @@ def user_add(user_address, basedir, slurm_user):
             log(f"{user_address} => {user_name} is created", "yellow")
             # force to add user to slurm
             add_user_to_slurm(user_name)
-            create_dir(f"{user_dir}/cache")
+            mkdir(f"{user_dir}/cache")
         else:
             log(f"{user_address} => {user_name} has already been created", "yellow")
 

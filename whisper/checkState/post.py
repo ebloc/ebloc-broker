@@ -7,13 +7,11 @@ import os
 import sys
 
 from web3 import HTTPProvider, Web3
-from web3.shh import Shh
 
 from utils import _colorize_traceback, read_json
 
 web3 = Web3(HTTPProvider("http://localhost:8545"))
-
-Shh.attach(web3, "shh")
+receiver_pub = "0x049714e8e7b1a778e8631f76b1e0ab5ae9d0d7663020050d584b2512c4a67a2011b0c11412373f9ca88274957903863be1b01a6c6fecfc50051d64e7a1aa50b170"
 
 
 def handle_event(event):
@@ -38,10 +36,12 @@ if __name__ == "__main__":
     if not os.path.isfile("data.txt"):
         # first time running
         print("Initializing...")
-        key_id = web3.shh.newKeyPair()
-        public_key = web3.shh.getPublicKey(key_id)
+        key_id = web3.geth.shh.newKeyPair()
+        public_key = web3.geth.shh.getPublicKey(key_id)
 
-        msg_filter = web3.shh.newMessageFilter({"topic": topic, "privateKeyID": key_id, "recipientPublicKey": public_key})
+        msg_filter = web3.geth.shh.new_message_filter(
+            {"topic": topic, "privateKeyID": key_id, "recipientPublicKey": public_key}
+        )
         msg_filter.poll_interval = 600
         # make it equal with the live-time of the message
         filter_id = msg_filter.filter_id
@@ -65,17 +65,17 @@ if __name__ == "__main__":
 
     print(public_key)
 
-    msg_filter = web3.shh.newMessageFilter({"topic": topic, "privateKeyID": key_id, "recipientPublicKey": public_key})
+    msg_filter = web3.geth.shh.newMessageFilter(
+        {"topic": topic, "privateKeyID": key_id, "recipientPublicKey": public_key}
+    )
     msg_filter.poll_interval = 600
     # make it equal with the live-time of the message
     filter_id = msg_filter.filter_id
 
     # Obtained from node_1 and assigned here.
-    receiver_pub = "0x04b3b8efbea4fbdcbaee11771a23bb76ec571aee4c0a78e52b0705822146e70a59b8e92eade03393c78b3f6bf6890564abf0ecc664a382cf59c5a59075abc99d6a"
-
     payloads = [web3.toHex(text=public_key), web3.toHex(text="2nd test message")]
 
-    web3.shh.post(
+    web3.geth.shh.post(
         {
             "powTarget": 2,  # 2.5
             "powTime": 5,  # 2

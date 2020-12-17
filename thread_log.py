@@ -43,7 +43,7 @@ def thread_function(name):
     # in *this* thread, only. It needs the current thread id for this:
     thread_handler.addFilter(ThreadFilter(thread_id=threading.get_ident()))
     log.addHandler(thread_handler)
-    time.sleep(.25)
+    time.sleep(0.25)
     hello(name)
 
 

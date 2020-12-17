@@ -30,8 +30,8 @@ An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also avai
 
 ```bash
 $ cd eBlocPOA
-$ eblocPath="$PWD"
-$ geth --datadir="$eblocPath" account new
+$ eBlocPath="$PWD"
+$ geth --datadir="$eBlocPath" account new
 Your new account is locked with a password. Please give a password. Do not forget this password.
 Passphrase:
 Repeat passphrase:

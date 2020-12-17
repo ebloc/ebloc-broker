@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import asyncio
 import os.path
 import sys
+import time
 
 from web3 import HTTPProvider, Web3
 
@@ -12,20 +13,13 @@ from utils import _colorize_traceback, log, read_json
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 
-env.log_filename = env.WHISPER_LOG
+# Obtained from the node_1 and assigned here
+receiver_pub = "0x049714e8e7b1a778e8631f76b1e0ab5ae9d0d7663020050d584b2512c4a67a2011b0c11412373f9ca88274957903863be1b01a6c6fecfc50051d64e7a1aa50b170"
 
 
 def receiver(filter_id, public_key):
     retreived_messages = w3.geth.shh.getMessages(filter_id)
     log(f"==> whisper_id(public key):\n{public_key}", "blue")
-
-    """
-    log('FilterID: ' + filter_id)
-    log('receiverPrivateK: ' + w3.geth.shh.getPrivateKey(key_id));
-    log(w3.geth.shh.hasKeyPair(key_id))
-    log('PubKey: ' + w3.geth.shh.getPublicKey(key_id))
-    """
-    # retreived_messages = w3.geth.shh.getMessages('13723641127bc212ab379100a5d9e05e09b8c34fe1357f51e54cf17b568918cc')
     if len(retreived_messages) > 0:
         log("Received Messages:\n")
         for message in retreived_messages:
@@ -35,13 +29,15 @@ def receiver(filter_id, public_key):
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
-            asyncio.gather(log_loop(filter_id, 2, is_return=False, public_key=public_key, is_reply_sinfo=True))
+            asyncio.gather(log_loop(filter_id, 2, is_return=True, public_key=public_key, is_reply_sinfo=False))
         )
     finally:
         loop.close()
 
 
-def main():
+if __name__ == "__main__":
+    public_key = ""
+    key_id = ""
     if not os.path.isfile(env.WHISPER_INFO):
         log("Please first run:")
         log(f"{env.EBLOCPATH}/whisper/initialize.py", "green")
@@ -59,19 +55,27 @@ def main():
             log("Whisper node's private key of a key pair did not match with the given ID")
             sys.exit(1)
 
-        # my_filter = w3.geth.shh.new_message_filter({'topic': env.WHISPER_TOPIC, 'privateKeyID': key_id, 'recipientPublicKey': public_key})
-        # my_filter.poll_interval = 600; # make it equal with the live-time of the message
         filter_id = data["filter_id"]
+
         log(f"filter_id={filter_id}")
-        # my_filter = w3.eth.filter(filter_id=filter_id)
-        # privateKey = "0xc0995bb51a0a74fcedf972662569849de4b4d0e8ceca8e4e6e8846a5d00f0b0c"
-        # key_id = w3.geth.shh.addPrivateKey(privateKey)
+        log(f"my_pub_key={public_key}")
 
+    msg_filter = w3.geth.shh.new_message_filter(
+        {"topic": env.WHISPER_TOPIC, "privateKeyID": key_id, "recipientPublicKey": public_key}
+    )
+
+    w3.geth.shh.post(
+        {
+            "powTarget": 2.5,
+            "powTime": 2,
+            "ttl": 60,
+            "payload": public_key,
+            "topic": env.WHISPER_TOPIC,
+            "pubKey": receiver_pub,
+        }
+    )
+
+    # ----
     receiver(filter_id, public_key)
-
-
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        main(sys.argv[1])
-    else:
-        main()
+    # time.sleep(4)
+    # print(w3.geth.shh.get_filter_messages(msg_filter))

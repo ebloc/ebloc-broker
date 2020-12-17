@@ -17,4 +17,4 @@ killall python3 2> /dev/null
 
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 
-echo 'killall is done.'
+echo "killall for eBlocBroker test [ SUCCESS ]"

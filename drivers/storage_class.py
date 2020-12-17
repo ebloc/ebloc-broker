@@ -23,8 +23,8 @@ from utils import (
     _colorize_traceback,
     bytes32_to_ipfs,
     cd,
-    create_dir,
     generate_md5sum,
+    mkdir,
     read_json,
     write_to_file,
 )
@@ -74,16 +74,16 @@ class Storage(BaseClass):
         utils.log_files[self.thread_name] = self.drivers_log_path
 
         try:
-            create_dir(self.private_dir)
+            mkdir(self.private_dir)
         except PermissionError:
             give_RWE_access(env.SLURMUSER, self.requester_home)
-            create_dir(self.private_dir)
+            mkdir(self.private_dir)
 
-        create_dir(self.public_dir)
-        create_dir(self.results_folder)
-        create_dir(self.results_data_folder)
-        create_dir(self.results_data_link)
-        create_dir(self.patch_folder)
+        mkdir(self.public_dir)
+        mkdir(self.results_folder)
+        mkdir(self.results_data_folder)
+        mkdir(self.results_data_link)
+        mkdir(self.patch_folder)
 
     def thread_log_setup(self):
         import threading
@@ -101,7 +101,7 @@ class Storage(BaseClass):
         # in *this* thread, only. It needs the current thread id for this:
         thread_handler.addFilter(ThreadFilter(thread_id=threading.get_ident()))
         config.logging.addHandler(thread_handler)
-        time.sleep(.25)
+        time.sleep(0.25)
         # config.logging = logging
         # _log = logging.getLogger()
         # _log.addHandler(thread_handler)
@@ -116,7 +116,7 @@ class Storage(BaseClass):
             self.is_already_cached[source_code_hash] = True
 
     def complete_refund(self) -> str:
-        """Complete refund back to the requester"""
+        """Complete refund back to the requester."""
         try:
             tx_hash = self.Ebb.refund(
                 self.logged_job.args["provider"],
@@ -143,7 +143,7 @@ class Storage(BaseClass):
             self.cache_type[_id] = cache_type
             if cache_type == CacheType.PUBLIC:
                 self.folder_path_to_download[name] = self.public_dir
-                log(f"=> {name} is already cached under the public directory...", "blue")
+                log(f"==> {name} is already cached under the public directory...", "blue")
             elif cache_type == CacheType.PRIVATE:
                 self.folder_path_to_download[name] = self.private_dir
                 log(f"==> {name} is already cached under the private directory")
@@ -214,7 +214,7 @@ class Storage(BaseClass):
             give_RWE_access(env.WHOAMI, self.requester_home)
             self._sbatch_call()
         except Exception:
-            logging.error("Failed to call _sbatch_call() function.")
+            logging.error("E: Failed to call _sbatch_call() function.")
             _colorize_traceback()
             raise
 
@@ -251,8 +251,15 @@ class Storage(BaseClass):
         logging.info("Adding recevied job into mongodb database.")
 
         # adding job_key info along with its cacheDuration into mongodb
-        mongodb.add_item(job_key, self.index, self.source_code_hashes_str,
-                         self.requester_id, timestamp, main_cloud_storage_id, job_info)
+        mongodb.add_item(
+            job_key,
+            self.index,
+            self.source_code_hashes_str,
+            self.requester_id,
+            timestamp,
+            main_cloud_storage_id,
+            job_info,
+        )
 
         # TODO: update as used_dataTransferIn value
         data_transfer_in_json = f"{self.results_folder_prev}/dataTransferIn.json"
@@ -263,7 +270,7 @@ class Storage(BaseClass):
             data["dataTransferIn"] = self.dataTransferIn_to_download
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
-            time.sleep(.25)
+            time.sleep(0.25)
 
         # logging.info(dataTransferIn)
         # seperator character is *
@@ -284,7 +291,7 @@ class Storage(BaseClass):
                 sudo su - $requester_id -c "cd $results_folder &&
                 sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
                 """
-                cmd = f"sbatch -N {job_core_num} \"{sbatch_file_path}\" --mail-type=ALL"
+                cmd = f'sbatch -N {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
                 with cd(self.results_folder):
                     try:
                         job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)

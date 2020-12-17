@@ -13,7 +13,7 @@ from utils import _colorize_traceback, log
 def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerprint, ipfs_address):
     whisper_pub_key = check_whisper()
     account = self.w3.eth.accounts[int(account_id)]  # requester's Ethereum Address
-    log(f"==> registering {account} as requester", c="yellow", is_bold=False)
+    log(f"==> registering {account} as requester", color="yellow", is_bold=False)
 
     if self.does_requester_exist(account):
         log(f"E: Requester {account} is already registered.", "blue")
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except:
         log("E: Run IPFS daemon to detect your ipfs-id", "red")
-        exit(1)
+        sys.exit(1)
 
     if len(sys.argv) == 6:
         account = int(sys.argv[1])

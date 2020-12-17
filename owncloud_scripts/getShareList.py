@@ -29,7 +29,7 @@ print(oc.list("."))
 
 # print(oc.file_info('/3a46cc092e8681212dac00d3564f5a64.tar.gz').attributes['{DAV:}getcontentlength'])
 # f_name='/17JFYbtys56cgrk2AF84qI52nAegTf9cW/17JFYbtys56cgrk2AF84qI52nAegTf9cW.tar.gz'
-# print(eudat.get_size(oc, f_name))
+# print(eudat.get_size(f_name, oc))
 
 
 f_name = "/5c3c4018fbf2e1d1ef2555ede86cf626/5c3c4018fbf2e1d1ef2555ede86cf626.tar.gz"

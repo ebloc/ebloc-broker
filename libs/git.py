@@ -31,6 +31,7 @@ def is_initialized(path) -> bool:
             working_tree_dir = repo.working_tree_dir
         except:
             return False
+
         return path == working_tree_dir
 
 
@@ -69,9 +70,9 @@ def diff_patch(path, source_code_hash, index, target_path):
         except:
             return False
 
-        # file to be uploaded as zip
-        patch_file = f"{target_path}/{patch_name}.gz"
-        logging.info(f"patch_path={patch_name}.gz")
+        patch_upload_name = f"{patch_name}.gz"  # file to be uploaded as zip
+        patch_file = f"{target_path}/{patch_upload_name}"
+        logging.info(f"patch_path={patch_upload_name}")
 
         repo = git.Repo(".", search_parent_directories=True)
         try:
@@ -80,13 +81,13 @@ def diff_patch(path, source_code_hash, index, target_path):
         except:
             return False
 
-    time.sleep(.25)
+    time.sleep(0.25)
     if not getsize(patch_file):
         logging.info("Created patch file is empty, nothing to upload.")
-        is_file_empty = True
         os.remove(patch_file)
+        is_file_empty = True
 
-    return patch_name, patch_file, is_file_empty
+    return patch_upload_name, patch_file, is_file_empty
 
 
 def add_all(repo=None):
@@ -163,13 +164,9 @@ def apply_patch(git_folder, patch_file):
             return False
 
 
-def is_repo(folders) -> bool:
+def is_repo(folders):
     for folder in folders:
         with cd(folder):
             if not is_initialized(folder):
                 logging.warning(f".git does not exits in {folder}. Applying: `git init`")
-                try:
-                    run(["git", "init"])
-                except:
-                    return False
-    return True
+                run(["git", "init"])
