@@ -184,13 +184,14 @@ def run_with_output(cmd):
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             ret += line
-            print(line, end="")  # process line here
-            return line.strip()
+
+        print(line, end="")  # process line here
+        return line.strip()
     if p.returncode != 0:
         raise CalledProcessError(p.returncode, p.args)
 
 
-def popen_communicate(cmd, stdout_file=None, mode="w"):
+def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
     """Acts similir to lib.run(cmd) but also returns the output message captures on
     during the run stdout_file is not None in case of nohup process writes its
     results into a file
@@ -201,7 +202,8 @@ def popen_communicate(cmd, stdout_file=None, mode="w"):
     else:
         with open(stdout_file, mode) as outfile:
             # output written into file, error will be returned
-            p = Popen(cmd, stdout=outfile, stderr=PIPE, universal_newlines=True)
+
+            p = Popen(cmd, stdout=outfile, stderr=PIPE, universal_newlines=True, env=_env)
             output, error = p.communicate()
             p.wait()
             return p, output, error
@@ -242,6 +244,10 @@ def _colorize_traceback(string=None):
 
 def get_time():
     return time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def bytes_to_string(_bytes):
+    return _bytes.decode("utf-8")
 
 
 def bytes32_to_string(bytes_array):
@@ -427,10 +433,13 @@ def log(text="", color=None, filename=None, end=None, is_bold=True):
     if threading.current_thread().name != "MainThread" and env.IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
-        if env.log_filename:
-            filename = env.log_filename
-        else:
-            filename = env.DRIVER_LOG
+        try:
+            if env.log_filename:
+                filename = env.log_filename
+            else:
+                filename = env.DRIVER_LOG
+        except:
+            filename = "program.log"
 
     f = open(filename, "a")
     if color:

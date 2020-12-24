@@ -45,7 +45,7 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-if not config.w3:
+if not config.w3:  # TODO: carry it into a init function based on a request
     from imports import connect_to_web3
 
     connect_to_web3()
@@ -323,3 +323,14 @@ def run_storage_process(storage_class):
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
+
+
+def percent_change(initial, change):
+    change = format(change, ".2f")
+    percent = round((float(change)) / abs(float(initial)) * 100, 8)
+    log(f"from {format(initial, '.2f')} to {format(float(initial) + float(change), '.2f')} => ", end="")
+    _color = "red"
+    if percent > 0:
+        _color = "green"
+    log(f"{change} ({format(float(percent), '.2f')}%)", color=_color, end="")
+    return percent
