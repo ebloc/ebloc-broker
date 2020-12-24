@@ -1,33 +1,29 @@
-# How to Use eBlocBroker
+How to Use eBlocBroker
+======================
 
-## About
-*eBlocBroker* is a blockchain based autonomous computational resource broker.
+## Overview
+eBlocBroker is a blockchain based autonomous computational resource broker.
 
 - **Website:** [http://ebloc.cmpe.boun.edu.tr](http://ebloc.cmpe.boun.edu.tr) or
   [http://ebloc.org](http://ebloc.cmpe.boun.edu.tr)
 - [Documentation](http://ebloc.cmpe.boun.edu.tr:3003/index.html)
 
 ## Build dependencies
-
 - [Geth](https://github.com/ethereum/go-ethereum/wiki/geth)
 - [Slurm](https://github.com/SchedMD/slurm)
 - [IPFS](https://ipfs.io/docs/install/)
 
 ## How to connect into Private Ethereum Blockchain (eBloc)
-
 - Connect into [eBlocPOA](https://github.com/ebloc/eBlocPOA)
 <!-- - Connect into [eBlocPOW](https://github.com/ebloc/eBlocPOW) -->
 
 ## How to use eBlocBroker inside an Amazon EC2 Instance
-
-
 An Amazon image (**AMI Name:** `eBloc`, **AMI ID:** `ami-f5c47f8a`) is also available that contains
 `geth` setup to connect to our Ethereum based private proof-of-authority blockchain network (*eBlocPOA*).
 
 ### Create an Ethereum Account
 
 **Creating an account:**
-
 ```bash
 $ cd eBlocPOA
 $ eBlocPath="$PWD"
@@ -49,7 +45,6 @@ UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
 ```
 
 **On the console, use:**
-
 You can also create your Ethereum account using `geth-client`. Here your
 keystore file will be created with root permission and `eBlocWallet` will not able to unlock it.
 
@@ -93,9 +88,7 @@ $ sudo ./Driver.sh
 ```
 
 ## Running Cluster using eBlocBroker
-
 ### Cluster Side: How to register a cluster
-
 - If you do not have any `Federated Cloud ID` give an empty string: `""`. You can
   use `./registerCluster.py` to submit your jobs.
 
@@ -133,7 +126,6 @@ Submitted batch job 1
 ------------------------------
 
 ### Client Side: How to obtain IPFS Hash of the job:
-
 It is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is
 not running, cluster is not able to get the IPFS object from the client's node.
 

@@ -184,7 +184,7 @@ def add(path: str, is_hidden=False):
     :param is_hidden: boolean if it is true hidden files/foders are included such as .git
     """
     if os.path.isdir(path):
-        cmd = ["ipfs", "add", "-r", "--quiet", "--progress", "--offline", path]
+        cmd = ["ipfs", "add", "-r", "--quieter", "--progress", "--offline", path]
         if is_hidden:
             # include files that are hidden such as .git/.
             # Only takes effect on recursive add
