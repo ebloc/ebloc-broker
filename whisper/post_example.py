@@ -3,7 +3,6 @@
 import asyncio
 import os.path
 import sys
-import time
 
 from web3 import HTTPProvider, Web3
 

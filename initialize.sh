@@ -19,6 +19,7 @@ if [ $setup -eq 1 ]; then
     sudo apt-get update
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt install python3.7
+    sudo apt-get install python3.7-dev
 
     sudo apt-get install python3
     sudo apt-get install python3-venv
@@ -88,8 +89,8 @@ if [ $setup -eq 1 ]; then
     wget -c https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
     # echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
     # or
-    git clone https://github.com/udhos/update-golang
-    cd update-golang
+    sudo rm -rf /usr/local/go /usr/bin/go
+    cd $HOME && git clone https://github.com/udhos/update-golang && cd update-golang
     sudo ./update-golang.sh
     # -------------------------------------------------------------
 

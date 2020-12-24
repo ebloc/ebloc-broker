@@ -127,7 +127,6 @@ if __name__ == "__main__":
     requester = Ebb.account_id_to_address(account_id)
     job_price, _cost = cost(provider, requester, job, eBlocBroker, w3)
     try:
-        breakpoint()  # DEBUG
         tx_receipt = get_tx_status(Ebb.submit_job(provider, key, account_id, job_price, job))
         if tx_receipt["status"] == 1:
             processed_logs = eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)

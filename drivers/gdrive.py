@@ -161,7 +161,11 @@ class GdriveClass(Storage):
             )
         return True
 
-    def get_data_init(self, _id, key, is_job_key=False):
+    def remove_downloaded_file(self, source_code_hash, _id, path):
+        if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][_id]:
+            silent_remove(path)
+
+    def get_data_init(self, key, _id, is_job_key=False):
         try:
             gdrive_info = subprocess_call(["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA], 10)
         except:
@@ -186,12 +190,8 @@ class GdriveClass(Storage):
 
         return mime_type, folder_name
 
-    def remove_downloaded_file(self, source_code_hash, _id, path):
-        if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][_id]:
-            silent_remove(path)
-
     def get_data(self, key, _id, is_job_key=False):
-        mime_type, name, = self.get_data_init(_id, key, is_job_key)
+        mime_type, name, = self.get_data_init(key, _id, is_job_key)
         if is_job_key:
             if self.dataTransferIn_to_download > self.dataTransferIn_requested:
                 logging.error(
@@ -292,16 +292,14 @@ class GdriveClass(Storage):
             self.thread_log_setup()
 
         log(f"[{get_time()}] job's source code has been sent through Google Drive", "cyan")
-        if not os.path.isdir(self.results_folder):
-            self.get_data(self.job_key, 0, True)
-        else:
-            self.get_data_init(0, self.job_key, True)
-            self.get_data(self.job_key, 0, True)
+        if os.path.isdir(self.results_folder):
+            self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 
+        self.get_data(key=self.job_key, _id=0, is_job_key=True)
         if not self.check_run_sh():
             self.complete_refund()
 
-        for idx, (key, value) in enumerate(self.job_key_list.items()):
+        for idx, (_, value) in enumerate(self.job_key_list.items()):
             self.get_data(value, idx + 1)
 
         return self.sbatch_call()

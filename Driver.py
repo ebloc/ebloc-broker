@@ -19,6 +19,7 @@ from contract.scripts.lib import DataStorage
 from drivers.eudat import EudatClass
 from drivers.gdrive import GdriveClass
 from drivers.ipfs import IpfsClass
+from helper import helper
 from lib import (  # noqa
     eblocbroker_function_call,
     job_state_code,
@@ -53,7 +54,8 @@ from utils import (
 
 # from threading import Thread
 # from multiprocessing import Process
-
+args = helper()
+given_block_number = vars(args)["bn"]
 pid = str(os.getpid())
 
 
@@ -135,12 +137,17 @@ def run_driver():
     if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
         write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
 
-    block_number_saved = read_file(env.BLOCK_READ_FROM_FILE)
-    if not block_number_saved.isdigit():
-        logging.warning("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
-        question_yes_no("## Would you like to read from contract's deployed block number? [Y/n]: ", is_terminate=True)
-        block_number_saved = deployed_block_number
-        write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
+    if given_block_number > 0:
+        block_number_saved = int(given_block_number)
+    else:
+        block_number_saved = read_file(env.BLOCK_READ_FROM_FILE)
+        if not block_number_saved.isdigit():
+            logging.warning("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
+            question_yes_no(
+                "## Would you like to read from contract's deployed block number? [Y/n]: ", is_terminate=True
+            )
+            block_number_saved = deployed_block_number
+            write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
 
     tools(block_number_saved)
     try:
