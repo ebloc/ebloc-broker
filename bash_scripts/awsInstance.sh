@@ -2,4 +2,4 @@
 
 eblocServer
 eblocName
-nohup ipfs daemon --mount &
+nohup ipfs daemon &!

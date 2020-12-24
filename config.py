@@ -72,7 +72,7 @@ class ENV:
                     key, value = line.strip().split("=", 1)
                     _env[key] = value.replace('"', "")  # Save to a dict
         except IOError:
-            print("E: File not accessible")
+            print(f"E: File '{env_file}' is not accessible")
             return
 
         load_dotenv(dotenv_path=env_file)

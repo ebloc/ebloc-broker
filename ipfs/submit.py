@@ -111,7 +111,7 @@ if __name__ == "__main__":
         if idx != len(folders) - 1:
             print("--------------")
 
-    # requester inputs for testing
+    # Requester inputs for testing purpose
     job.cores = [1]
     job.execution_durations = [1]
     job.storage_hours = [1, 1]
