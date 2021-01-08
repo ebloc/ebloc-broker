@@ -50,8 +50,8 @@ def get_idle_cores(is_print_flag=True):
                 "green",
             )
     else:
-        logging.error("sinfo is emptry string")
-        idle_cores = None
+        logging.error("E: sinfo is emptry string")
+        return None
     return idle_cores
 
 
@@ -69,7 +69,7 @@ def pending_jobs_check():
 
 def is_on() -> bool:
     """Checks whether Slurm runs on the background or not, if not runs slurm."""
-    log("Checking Slurm... ", end="")
+    log("Checking Slurm... ")
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
 
     for process_name in processes:

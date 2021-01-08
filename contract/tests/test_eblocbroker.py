@@ -8,6 +8,7 @@ import pytest
 
 import brownie
 import config
+import eblocbroker.Contract as Contract
 from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import DataStorage, Job, cost, new_test
@@ -23,8 +24,8 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 whisper_pub_key = "04aec8867369cd4b38ce7c212a6de9b3aceac4303d05e54d0da5991194c1e28d36361e4859b64eaad1f95951d2168e53d46f3620b1d4d2913dbf306437c62683a6"
 cwd = os.getcwd()
 
-provider_email = "provider@gmail.com"
-federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
+provider_email = "provider_test@gmail.com"
+federation_cloud_id = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 
 available_core_num = 128
 price_core_min = 1
@@ -41,7 +42,10 @@ Ebb = None
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    connect()
+    global Ebb
+    # connect()
+    config.ebb = _Ebb
+    config.Ebb = Ebb = Contract.eblocbroker
 
 
 @pytest.fixture(autouse=True)
@@ -96,11 +100,10 @@ def register_provider(price_core_min=1):
     mine(1)
     web3.eth.defaultAccount = accounts[0]
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
-
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_email,
-        federatedCloudID,
+        federation_cloud_id,
         ipfs_address,
         whisper_pub_key,
         available_core_num,
@@ -162,7 +165,8 @@ def register_requester(account):
     assert orc_id == b.decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
-def test_register():
+def test_register(ebb):
+    config.ebb = ebb
     register_provider(100)
     requester = accounts[1]
     register_requester(requester)
@@ -500,9 +504,9 @@ def test_update_provider():
     mine(5)
     provider_registered_bn = register_provider()
 
-    federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
+    federation_cloud_id = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
     Ebb.updateProviderInfo(
-        GPG_FINGERPRINT, provider_email, federatedCloudID, ipfs_address, whisper_pub_key, {"from": accounts[0]}
+        GPG_FINGERPRINT, provider_email, federation_cloud_id, ipfs_address, whisper_pub_key, {"from": accounts[0]}
     )
     print(Ebb.getUpdatedProviderPricesBlocks(accounts[0]))
 
@@ -941,7 +945,8 @@ def test_simple_submit():
     withdraw(requester, refunded_sum)
 
 
-def test_submit_job():
+def test_submit_job(ebb):
+    breakpoint()  # DEBUG
     job = Job()
     provider = accounts[0]
     requester = accounts[1]
@@ -1029,7 +1034,7 @@ def test_submit_job():
             # print('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
             print("job_index=" + str(tx.events["LogJob"]["index"]))
 
-            # print("Contract Balance after: " + str(web3.eth.balanceOf(accounts[0])))
+            # print("Contract Balance after: " + str(web3.eth.balanceOf(accouts[0])))
             # print("Client Balance after: " + str(web3.eth.balanceOf(accounts[8])))
             # sys.stdout.write('jobInfo: ')
             # sys.stdout.flush()

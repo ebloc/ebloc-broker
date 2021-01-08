@@ -7,6 +7,7 @@ import json
 import ntpath
 import os
 import re
+import shlex
 import shutil
 import signal
 import socket
@@ -94,7 +95,8 @@ def utc_to_local(utc_dt):
 
 
 def extract_gzip(filename):
-    run(["gunzip", "--force", filename])
+    args = shlex.split(f"gunzip --force {filename}")
+    run(args)
 
 
 def untar(tar_file, extract_to):
@@ -135,7 +137,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
 
 
 def sleep_timer(sleep_duration):
-    log(f"Sleeping for {sleep_duration} seconds. Called from {[WHERE(1)]}", "blue")
+    log(f"Sleeping for {sleep_duration} seconds, called from {[WHERE(1)]}", color="blue")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -167,10 +169,14 @@ def _try(func):
 
 
 def run(cmd, is_print_trace=True) -> str:
-    cmd = list(map(str, cmd))  # all items should be str
+    if type(cmd) is not str:
+        cmd = list(map(str, cmd))  # all items should be str
+    else:
+        cmd = [cmd]
+
     try:
         return check_output(cmd, stderr=STDOUT).decode("utf-8").strip()
-    except Exception as e:
+    except CalledProcessError as e:
         if is_print_trace:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
             _colorize_traceback()
@@ -179,13 +185,12 @@ def run(cmd, is_print_trace=True) -> str:
 
 def run_with_output(cmd):
     # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
-    cmd = list(map(str, cmd))  # all items should be str
+    cmd = list(map(str, cmd))  # all items should be string
     ret = ""
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             ret += line
-
-        print(line, end="")  # process line here
+        print(line, end="")  # process output
         return line.strip()
     if p.returncode != 0:
         raise CalledProcessError(p.returncode, p.args)
@@ -194,7 +199,7 @@ def run_with_output(cmd):
 def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
     """Acts similir to lib.run(cmd) but also returns the output message captures on
     during the run stdout_file is not None in case of nohup process writes its
-    results into a file
+    results into a file.
     """
     cmd = list(map(str, cmd))  # all items should be str
     if stdout_file is None:
@@ -202,8 +207,7 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
     else:
         with open(stdout_file, mode) as outfile:
             # output written into file, error will be returned
-
-            p = Popen(cmd, stdout=outfile, stderr=PIPE, universal_newlines=True, env=_env)
+            p = Popen(cmd, stdout=outfile, stderr=PIPE, env=_env, universal_newlines=False)
             output, error = p.communicate()
             p.wait()
             return p, output, error
@@ -239,7 +243,7 @@ def _colorize_traceback(string=None):
         log(f"{[WHERE(1)]} ", "blue", None)
     else:
         log(f"[{WHERE(1)} {string}] ", "blue", None, end=False)
-    log(tb_colored)
+    log(tb_colored.rstrip())
 
 
 def get_time():
@@ -361,13 +365,31 @@ def read_json(path, is_dict=True):
         raise
 
 
+def is_gzip_file_empty(filename):
+    """Checks whether the given gzip file is empty or not.
+    *  cmd: gzip -l foo.gz | awk 'NR==2 {print $2}
+    """
+    p1 = subprocess.Popen(["gzip", "-l", filename], stdout=subprocess.PIPE, env={"LC_ALL": "C"})
+    p2 = subprocess.Popen(["awk", "NR==2 {print $2}"], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    size = p2.communicate()[0].decode("utf-8").strip()
+    try:
+        if not bool(int(size)):
+            log(f"==> Created gzip file ({filename}) is empty.")
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+
 def getsize(filename):
     """Return the size of a file, reported by os.stat()."""
     return os.stat(filename).st_size
 
 
 def path_leaf(path):
-    """Return the base name of a path: /<path>/base_name.txt"""
+    """Return the base name of a path: '/<path>/base_name.txt'."""
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
 
@@ -487,9 +509,12 @@ def log(text="", color=None, filename=None, end=None, is_bold=True):
 
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
-    log(f"==> failed_cmd:\n{_cmd}", color="yellow")
     if exc:
-        log(f"\n[{WHERE(back)}] Error:\n{exc}", "red")
+        log(f"[{WHERE(back)}] Error failed command: ", color="red", end="")
+        log(_cmd)
+        log(f"E: {exc}", color="red")
+    else:
+        log(f"==> Failed shell command:\n{_cmd}", color="yellow")
 
 
 def WHERE(back=0):
@@ -571,7 +596,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
-    log(f"{name} is not running on the background", "yellow")
+    log(f"==> {name} is not running on the background")
     return False
 
 

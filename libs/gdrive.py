@@ -8,6 +8,8 @@ from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
 from utils import _colorize_traceback, byte_to_mb, read_json, silent_remove
 
+# TODO: gdrive list --query "sharedWithMe"
+
 
 def _list(tar_hash, is_folder=False):
     if is_folder:
@@ -88,6 +90,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
                 results_folder_prev,
             ]
             output = subprocess_call(cmd, 10)
+            print(output)
             cmd = [
                 "gdrive",
                 "info",
@@ -98,6 +101,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             ]
             gdrive_info = subprocess_call(cmd, 10)
         except:
+            # TODO: gdrive list --query "sharedWithMe"
             return False
 
         md5sum = get_file_info(gdrive_info, "Md5sum")

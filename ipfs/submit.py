@@ -63,9 +63,9 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if main_storage_id == StorageID.IPFS:
-        log("==> Submitting source code through IPFS", "cyan")
+        log("==> Submitting source code through IPFS", color="cyan")
     elif main_storage_id == StorageID.IPFS_GPG:
-        log("==> Submitting source code through IPFS_GPG", "cyan")
+        log("==> Submitting source code through IPFS_GPG", color="cyan")
     else:
         log("E: Please provide IPFS or IPFS_GPG storage type")
         sys.exit(1)

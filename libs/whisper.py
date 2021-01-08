@@ -6,7 +6,7 @@ import pprint
 import sys
 import time
 
-from hexbytes import HexBytes
+# from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 
 from config import env
@@ -29,7 +29,8 @@ def check_whisper():
         key_id = data["key_id"]
         whisper_pub_key = data["public_key"]
         if not w3.geth.shh.hasKeyPair(key_id):
-            log("E: Whisper node's private key of a key pair did not match with the given ID", "red")
+            log("E: Whisper node's private key of a key pair did not match with the given ID")
+            log(f"{env.EBLOCPATH}/whisper/initialize.py", "green")
             raise
     except:
         log("Please first run:")

@@ -4,6 +4,7 @@ import os
 import random
 import subprocess
 from os.path import expanduser
+from subprocess import CalledProcessError
 
 from imports import generate_md5sum
 from utils import compress_folder
@@ -70,7 +71,7 @@ with open(path + "/../nasa.txt") as test:
                     )
                     job_key = output.split(" ")[0]
                     print("job_key=" + job_key)
-                except Exception as e:
+                except CalledProcessError as e:
                     # time.sleep(.25)
                     print(e.output.decode("utf-8").strip())
                 else:
