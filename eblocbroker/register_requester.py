@@ -53,7 +53,7 @@ if __name__ == "__main__":
         account = 1  # requster's Ethereum Address
         email = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"
         federation_cloud_id = "059ab6ba-4030-48bb-b81b-12115f531296"
-        gpg_fingerprint = "0x0359190A05DF2B72729344221D522F92EFA2F330"
+        gpg_fingerprint = "0x1B626A5D0C49D7376F73EEB0A1106434B2696907"  # info: get_gpg_fingerprint.sh
         ipfs_address = client.id()["Addresses"][-1]
 
     try:

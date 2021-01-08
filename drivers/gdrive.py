@@ -168,8 +168,8 @@ class GdriveClass(Storage):
     def get_data_init(self, key, _id, is_job_key=False):
         try:
             gdrive_info = subprocess_call(["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA], 10)
-        except:
-            return False
+        except Exception as e:
+            raise e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
         folder_name = gdrive.get_file_info(gdrive_info, "Name")
@@ -186,12 +186,16 @@ class GdriveClass(Storage):
                 self.is_already_cached,
             )
             if not success:
-                return False
+                raise
 
         return mime_type, folder_name
 
     def get_data(self, key, _id, is_job_key=False):
-        mime_type, name, = self.get_data_init(key, _id, is_job_key)
+        try:
+            mime_type, name, = self.get_data_init(key, _id, is_job_key)
+        except:
+            return False
+
         if is_job_key:
             if self.dataTransferIn_to_download > self.dataTransferIn_requested:
                 logging.error(
@@ -202,8 +206,9 @@ class GdriveClass(Storage):
 
             try:
                 cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
-                gdrive_info = subprocess_call(cmd, 10)
+                gdrive_info = subprocess_call(cmd, 1)
             except:
+                # TODO: gdrive list --query "sharedWithMe"
                 return False
 
             mime_type = gdrive.get_file_info(gdrive_info, "Mime")
@@ -291,7 +296,7 @@ class GdriveClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        log(f"[{get_time()}] job's source code has been sent through Google Drive", "cyan")
+        log(f"[{get_time()}] job's source code has been sent through Google Drive", color="cyan")
         if os.path.isdir(self.results_folder):
             self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 

@@ -39,11 +39,15 @@ ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3U
 
 provider = None
 requester = None
+ebb = None
 
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
+    global ebb
     connect()
+    config.ebb = _Ebb
+    ebb = _Ebb
 
 
 @pytest.fixture(autouse=True)
@@ -52,12 +56,12 @@ def run_around_tests():
 
 
 def check_list(is_print=True):
-    size = config.Ebb.getProviderReceiptSize(provider)
+    size = config.ebb.getProviderReceiptSize(provider)
     if is_print:
         print(f"length={size}")
 
     for idx in range(0, size):
-        value = config.Ebb.getProviderReceiptNode(provider, idx)
+        value = config.ebb.getProviderReceiptNode(provider, idx)
         if is_print:
             print(value)
 
@@ -113,8 +117,8 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
 
-    job_price, _cost = cost(provider, requester, job, config.Ebb, web3)
-    provider_price_block_number = config.Ebb.getProviderSetBlockNumbers(provider)[-1]
+    job_price, _cost = cost(provider, requester, job, config.ebb, web3)
+    provider_price_block_number = config.ebb.getProviderSetBlockNumbers(provider)[-1]
 
     args = [
         provider,
@@ -126,7 +130,7 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
         job.execution_durations,
         job.dataTransferOut,
     ]
-    tx = config.Ebb.submitJob(
+    tx = config.ebb.submitJob(
         job.key,
         job.dataTransferIns,
         args,
@@ -136,7 +140,7 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
     )
 
     jobID = 0
-    tx = config.Ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
+    tx = config.ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
     rpc.sleep(60)
     mine(5)
     dataTransferIn = 0
@@ -144,7 +148,7 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
 
     args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
 
-    tx = config.Ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
+    tx = config.ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
     if is_print:
         print("received_gas_used=" + str(tx.__dict__["gas_used"]))
     # received_sum = tx.events["LogProcessPayment"]["receivedWei"]

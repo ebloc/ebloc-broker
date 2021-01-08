@@ -42,16 +42,16 @@ if __name__ == "__main__":
 
     log("==> Attempt to submit a job")
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
-    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
-    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
+    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
 
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)
 
-    _base = f"{env.HOME}/test_eblocbroker"
-    source_code_dir = f"{_base}/source_code"
-    data_1_dir = f"{_base}/datasets/BL06-camel-sml"
+    base_dir = f"{env.HOME}/_test"
+    source_code_dir = os.path.join(base_dir, "source_code")
+    data_1_dir = os.path.join(base_dir, "datasets/BL06-camel-sml")
 
     # TODO: let user directly provide the IPFS hash instead of the folder
     code_paths = []
@@ -96,8 +96,9 @@ if __name__ == "__main__":
                 sys.exit(1)
 
         try:
+            # TODO: check git init && git commit
             ipfs_hash = ipfs.add(target)
-            # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
+            # ipfs_hash = ipfs.add(folder, is_hidden=True)  # True includes .git/, which changes the overall ipfs-hash
             run(["ipfs", "refs", ipfs_hash])
         except:
             _colorize_traceback()

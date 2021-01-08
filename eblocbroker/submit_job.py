@@ -135,7 +135,7 @@ def submit_job(self, provider, key, account_id, job_price, job):
     ]
     try:
         gas_limit = 4500000
-        log("source_code_hashes:")
+        log("source_code_hashes=")
         source_code_hashes_l = []
         for source_code_hash in job.source_code_hashes:
             source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
