@@ -1,3 +1,7 @@
+is
+
+program.log
+
 slurm-*\.out
 
 contract/report*\.json
@@ -192,7 +196,7 @@ eblocbroker/test/bin/
 
 docs/convert/get-pip\.py
 
-eBlocBroker/
+ebloc-broker/
 
 dd\.txt
 
@@ -209,8 +213,6 @@ generateTest/nasEudat/password\.txt
 generateTest/nasEudat/ipfs/NPB3\.3-SER/
 
 docs/nohup.out
-
-whisper/work/
 
 bootnode\.key
 
@@ -278,7 +280,7 @@ DAG/job\.dot
 
 DAG/dot\.txt
 
-eBlocBroker\.egg-info/
+ebloc-broker\.egg-info/
 
 owncloudScripts/193f45652336791cef640eef9ee9cad9/
 
@@ -286,9 +288,7 @@ contract/reports/coverage-170719\.json
 
 eblocbroker/\.submit_job\.py\.swp
 
-whisper/data.txt
-
-gdrive/exampleFolderToShare/sourceCode/.dataFiles.json
+gdrive/exampleFolderToShare/source_code/.dataFiles.json
 
 gdrive/dataFiles.json
 
@@ -296,9 +296,9 @@ gdrive/exampleFolderToShare/dataFiles.json
 
 todo.txt
 
-gdrive/exampleFolderToShare/sourceCode/dataFiles.json
+gdrive/exampleFolderToShare/source_code/dataFiles.json
 
-._eBlocBroker
+._ebloc-broker
 
 ._README.md
 
@@ -320,4 +320,20 @@ owncloudScripts/base/data_link/
 
 doo.*
 
+alper.gz
+
+base/data/
+
 gdown.py/gdown.*
+
+base/
+
+patch_*
+
+src/
+
+alper.py
+
+get-pip.py
+
+test_1.yaml
