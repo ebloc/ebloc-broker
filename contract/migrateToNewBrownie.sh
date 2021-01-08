@@ -14,4 +14,4 @@ cp -a $HOME/eBlocBroker/contract/scripts/* $HOME/eBlocBroker/token/scripts
 cp -a $HOME/eBlocBroker/contract/files $HOME/eBlocBroker/token
 cp -a $HOME/eBlocBroker/contract/scripts/* $HOME/eBlocBroker/token/scripts
 cp -a $HOME/eBlocBroker/contract/tests/* $HOME/eBlocBroker/token/tests
-cp $HOME/eBlocBroker/contract/* $HOME/eBlocBroker/token/
+cp -a $HOME/eBlocBroker/contract/* $HOME/eBlocBroker/token/

@@ -26,11 +26,16 @@ live:
         id: kovan
         host: https://kovan.infura.io/v3/$WEB3_INFURA_PROJECT_ID
         explorer: https://api-kovan.etherscan.io/api
-      - name: Private (eBlocPOA)
+      - name: eblocpoa
         id: eblocpoa
         host: http://127.0.0.1:8545/
         chainid: 23422
         gas_price: false
+      - name: bloxberg (Bloxberg)
+        id: bloxberg
+        chainid: 8995
+        host: https://core.bloxberg.org
+        explorer: https://blockexplorer.bloxberg.org/api
 
   - name: Ethereum Classic
     networks:
@@ -45,6 +50,11 @@ live:
         host: https://www.ethercluster.com/kotti
         explorer: https://blockscout.com/etc/kotti/api
 
+networks:
+    development:
+        cmd_settings:
+            unlock:
+              - 0x0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49
 development:
   - name: Ganache-CLI
     id: development
