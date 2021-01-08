@@ -69,7 +69,7 @@ library Lib {
          * registered data will be used or not. */
         uint32[] dataPricesSetBlockNum;
         uint16[] core;
-        uint16[] executionDuration;
+        uint16[] runTime;
         uint32 dataTransferOut;
     }
 
@@ -80,7 +80,7 @@ library Lib {
         uint32 dataTransferIn;
         uint32 dataTransferOut;
         uint256[] core;
-        uint256[] executionDuration;
+        uint256[] runTime;
         bool endJob;
     }
 
@@ -107,7 +107,7 @@ library Lib {
     }
 
     struct Job {
-        JobStateCodes jobStateCode; // Assigned by the provider
+        JobStateCodes stateCode; // Assigned by the provider
         uint32 startTime; // Submitted job's starting universal time on the server side. Assigned by the provider
     }
 
@@ -189,6 +189,7 @@ library Lib {
 
     function _recursive(Interval storage self)
         internal
+        view
         returns (
             uint32,
             uint32,

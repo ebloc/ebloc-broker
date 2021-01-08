@@ -118,11 +118,19 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 path,
             )
 
+            provider = None
+            core_list = None
+            run_time = None
+            cloudStorageID = None
+            sourceCodeHash_list = None
+            cacheHour_list = None
+            account_id = None
+            job_price = None
             output = Ebb.submit_job(
                 provider,
                 jobKey,
                 core_list,
-                execution_durations,
+                run_time,
                 dataTransferIn,
                 dataTransferOut,
                 cloudStorageID,
@@ -133,19 +141,19 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 job_price,
             )
 
-            # ret = submit_job(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, account_id)  # delete
-
-            if not success:
-                log(output, path, 0)
-            else:
-                tx_hash = output[0]
-                log("tx_hash:" + tx_hash, path, 0)
-                log("computationalCost:" + output[1], path, 0)
-                log("storageCost:" + output[2], path, 0)
-                log("cacheCost:" + output[3], path, 0)
-                log("dataTransferCost:" + output[4], path, 0)
-                log("job_price:" + output[5], path, 1)
-
+            # # ret = submit_job(providerID, jobKey_, int(coreNum), coreMinuteGas, dataTransferIn, dataTransferOut, cloudStorageID, sourceCodeHash, cacheType, gasStorageHour, account_id)  # delete
+            # success = None
+            # if not success:
+            #     log(output, path, 0)
+            # else:
+            #     tx_hash = output[0]
+            #     log("tx_hash:" + tx_hash, path, 0)
+            #     log("computationalCost:" + output[1], path, 0)
+            #     log("storageCost:" + output[2], path, 0)
+            #     log("cacheCost:" + output[3], path, 0)
+            #     log("dataTransferCost:" + output[4], path, 0)
+            #     log("job_price:" + output[5], path, 1)
+            tx_hash = None
             txFile = open(path + "/" + providerID + ".txt", "a")
             txFile.write(output[0] + " " + str(account_id) + "\n")
             txFile.close()
@@ -153,9 +161,9 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt:
                 output = is_transaction_passed(w3, tx_hash)
-                log(f"Tx status:{output}", path)
+                log(f"tx status:{output}", path)
             else:
-                log("Tx is not deployed yet", path)
+                log("tx is not deployed yet", path)
 
     log("END", path)
     log(".", path)
