@@ -10,7 +10,7 @@ import sys
 import time
 from multiprocessing import Process
 from threading import Thread
-from typing import Tuple
+from typing import Tuple, Union
 
 import config
 from config import env, logging
@@ -45,16 +45,6 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-if not config.w3:  # TODO: carry it into a init function based on a request
-    from imports import connect_to_web3
-
-    connect_to_web3()
-
-if not env.PROVIDER_ID and config.w3:
-    PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
-else:
-    PROVIDER_ID = env.PROVIDER_ID
-
 job_state_code = {}
 
 # add keys to the hashmap # https://slurm.schedmd.com/squeue.html
@@ -79,11 +69,24 @@ job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 inv_job_state_code = {value: key for key, value in job_state_code.items()}
 
 
+def _connect_web3():
+    if not config.w3:
+        from imports import connect_to_web3
+
+        connect_to_web3()
+
+
 def session_start_msg(slurm_user, block_number, pid, columns=104):
+    _connect_web3()
+    if not env.PROVIDER_ID and config.w3:
+        PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+    else:
+        PROVIDER_ID = env.PROVIDER_ID
+
     _columns = int(int(columns) / 2 - 12)
     date_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    log(date_now + " " + "=" * (_columns - 16) + " provider session starts " + "=" * (_columns - 5), "cyan")
-    log(f"This Driver process has the PID {pid}", color="blue")
+    log(date_now + " " + "=" * (_columns - 16) + " provider session starts " + "=" * (_columns - 5), color="cyan")
+    log(f"==> This Driver process has the PID {pid}")
     log(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", color="blue")
 
 
@@ -173,9 +176,12 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
                 print_trace(cmd)
 
             if count + 1 == attempt:
+                log("")
                 raise SystemExit
 
-            logging.info(f"try={count}")
+            if count == 0:
+                log("Trying again...\nAttempts: ", color="green", end="")
+            log(f"{count}  ", end="", color="green")
             time.sleep(0.25)
 
 
@@ -187,6 +193,7 @@ def run_stdout_to_file(cmd, path) -> None:
         logging.error(f"E: scontrol error\n{output}")
         raise
     logging.info(f"\nWriting into path is completed => {path}")
+    run(["sed", "-i", "s/[ \t]*$//", path])  # removes trailing whitespaces with sed
 
 
 def run_command(cmd, my_env=None) -> Tuple[bool, str]:
@@ -222,12 +229,12 @@ def remove_files(filename) -> bool:
     return True
 
 
-def echo_grep_awk(str_data, grep_str, column_num):
+def echo_grep_awk(str_data, grep_str, column):
     """cmd: echo gdrive_info | grep _type | awk \'{print $2}\'"""
     p1 = subprocess.Popen(["echo", str_data], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", grep_str], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(["awk", "{print $" + column_num + "}"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(["awk", "{print $" + column + "}"], stdin=p2.stdout, stdout=subprocess.PIPE)
     p2.stdout.close()
     return p3.communicate()[0].decode("utf-8").strip()
 
@@ -273,7 +280,7 @@ def check_linked_data(path_from, path_to, folders=None, is_continue=False):
     """Generates folder as hard linked of the given folder paths or provider main folder.
 
     :param path_to: linked folders into into given path
-    :param folders: if given, iterate over all folders
+    :param folders: if given, iterates all over the folders
     """
     mkdir(path_to)
     link = Link(path_from, path_to)
@@ -325,12 +332,19 @@ def run_storage_process(storage_class):
         sys.exit(1)
 
 
-def percent_change(initial, change):
-    change = format(change, ".2f")
-    percent = round((float(change)) / abs(float(initial)) * 100, 8)
-    log(f"from {format(initial, '.2f')} to {format(float(initial) + float(change), '.2f')} => ", end="")
-    _color = "red"
-    if percent > 0:
-        _color = "green"
-    log(f"{change} ({format(float(percent), '.2f')}%)", color=_color, end="")
-    return percent
+def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
+    try:
+        initial = float(initial)
+        if final:
+            final = float(final)
+        if change:
+            change = float(change)
+    except ValueError:
+        return None
+    else:
+        if change:
+            initial = abs(initial)
+            return round(change / abs(initial) * 100, decimal)
+        else:
+            change = final - initial
+            return round(change / abs(initial) * 100, decimal)

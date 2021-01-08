@@ -12,8 +12,7 @@ gdown.cached_download(url, output, md5=md5, postprocess=gdown.extractall)
 # https://drive.google.com/file/d/1zo4BkS8wqqbc7gxYQMedhqCiQUb51LAp/view?usp=sharing
 
 gdown.download()
-
-utils.cd("")
+# utils.cd("")
 cmd = [
     "curl",
     "--fail",

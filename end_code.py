@@ -67,10 +67,10 @@ class IpfsGPG(Common):
         pass
 
     def upload(self, *_) -> bool:
+        """Upload files right after all the patchings are completed."""
         try:
-            """Upload files right after all the patchings are completed."""
             target = ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
-            log(f"GPG_file: {target}", "blue")
+            log(f"==> GPG_file: {target}")
         except:
             silent_remove(self.patch_file)
             sys.exit(1)
@@ -196,7 +196,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"~/eBlocBroker/end_code.py {args}", "blue")
         log(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
-            logging.error("E: Key and index are same")
+            logging.error("E: Given key and index are same")
             sys.exit(1)
 
         try:
@@ -274,7 +274,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
     def get_cloud_storage_class(self, _id):
-        """Returns cloud storage used for the id of the data"""
+        """Returns cloud storage used for the id of the data."""
         if self.cloud_storage_ids[_id] == StorageID.IPFS:
             return Ipfs
         if self.cloud_storage_ids[_id] == StorageID.IPFS_GPG:
@@ -333,7 +333,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             f.write(f"processPayment {self.job_key} {self.index} {tx_hash}")
 
     def remove_source_code(self):
-        """Client's initial downloaded files are removed"""
+        """Client's initial downloaded files are removed."""
         timestamp_file = f"{self.results_folder_prev}/timestamp.txt"
         try:
             cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file]
@@ -464,7 +464,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.source_code_hashes = self.job_info["sourceCodeHash"]
         self.set_source_code_hashes_to_process()
 
-        # log jobs' info
+        # log jobs' information
         slurm_log_output_file = f"{self.results_folder}/slurmJobInfo.out"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
@@ -481,7 +481,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         logging.info(f"finalized_elapsed_raw_time={self.elapsed_raw_time}")
 
         _job_info = pprint.pformat(self.job_info)
-        log(f"job_info:\n{_job_info}", "green")
+        log(f"job_info:\n{_job_info}", color="green")
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
@@ -494,7 +494,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
         self.process_payment_tx()
-        log("SUCCESS", color="green")
+        log("SUCCESS")
         # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
 
 
@@ -528,7 +528,7 @@ if __name__ == "__main__":
                 success, self.result_ipfs_hash = run_command(cmd)
                 self.result_ipfs_hash = self.result_ipfs_hash.split(' ')[1]
                 silent_remove(results_folder + '/result.tar.gz')
-# --
+# ---------------
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
 # success, output = run(cmd)
 # logging.info(output)

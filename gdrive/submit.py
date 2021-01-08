@@ -32,7 +32,7 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
     is_already_uploaded = False
     logging.info(f"job_key_flag={job_key_flag}, tar.gz file is inside a folder")
     dir_path = os.path.dirname(folder_to_share)
-    tar_hash, tar_path = compress_folder(folder_to_share)
+    tar_hash, _ = compress_folder(folder_to_share)
     path_to_move = f"{dir_path}/{tar_hash}"
     mkdir(path_to_move)
 
@@ -57,7 +57,6 @@ def gdrive_upload(folder_to_share, job_key_flag=False):
 def share_folder(folder_to_share, provider, job_key_flag=False):
     logging.info(f"folder_to_share={folder_to_share}")
     key, is_already_uploaded, tar_hash = gdrive_upload(folder_to_share, job_key_flag)
-    logging.info(f"job_key={key}")
     cmd = ["gdrive", "share", key, "--role", "writer", "--type", "user", "--email", provider]
     if not is_already_uploaded:
         logging.info(f"share_output={run(cmd)}")
@@ -83,11 +82,10 @@ def gdrive_submit_job(provider, _from):
     Ebb.is_provider_valid(provider)
     Ebb.is_requester_valid(_from)
     provider = Ebb.w3.toChecksumAddress(provider)
-    provider_to_share = "alper01234alper@gmail.com"  # alper.alimoglu@gmail.com
+    provider_to_share = provider_info["email"]
 
     job_keys = {}
     foldername_tar_hash = {}
-
     job.folders_to_share.append(f"{base_folder}/sourceCode")
     job.folders_to_share.append(f"{base_folder}/data/data1")
     # subprocess.run(['sudo', 'chmod', '-R', '777', folder_to_share])
@@ -145,12 +143,11 @@ def gdrive_submit_job(provider, _from):
 
     tar_hash = foldername_tar_hash[job.folders_to_share[0]]
     job_key = job_keys[tar_hash]
-    logging.info(f"job_key={job_key}")
-
+    log(f"==> job_key={job_key}")
     requester = Ebb.w3.toChecksumAddress(Ebb.w3.eth.accounts[account_id])
     try:
         job_price, _cost = cost(provider, requester, job, Ebb.eBlocBroker, Ebb.w3)
-        logging.info("\n==> Submitting the job")
+        log("==> Submitting the job")
         return Ebb.submit_job(provider, job_key, account_id, job_price, job)
     except Exception as e:
         raise e  # re-raises the error

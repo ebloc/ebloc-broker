@@ -50,7 +50,6 @@ class IpfsClass(Storage):
 
         silent_remove(f"{self.results_folder}/{self.job_key}")
         try:
-            breakpoint()  # DEBUG
             self.check_ipfs(self.job_key)
         except:
             return False
