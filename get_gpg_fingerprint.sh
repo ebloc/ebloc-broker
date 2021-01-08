@@ -2,6 +2,10 @@
 
 # gpg --list-secret-keys --keyid-format LONG
 # ./get_gpg_fingerprint.sh 1D522F92EFA2F330
+#
+# keyid=$(gpg --list-secret-keys --keyid-format LONG | sed -n '4p' | tr -d " \t\r")
+# gpg_fingerprint=$(./get_gpg_fingerprint.sh $keyid)
+# echo 0x$gpg_fingerprint
 
 output=$(gpg --list-secret-keys --keyid-format LONG)
 if [[ "$output" == "" ]]; then
@@ -10,7 +14,7 @@ if [[ "$output" == "" ]]; then
 fi
 
 if [[ $# -ne 1 ]]; then
-    echo "Please provide key_id"
+    echo "Please provide keyid"
     exit 2
 fi
 

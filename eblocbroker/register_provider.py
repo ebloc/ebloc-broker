@@ -88,12 +88,12 @@ if __name__ == "__main__":
     client = ipfshttpclient.connect(addr)
 
     available_core = 128
-    email = "alper01234alper@gmail.com"
+    # email = "alper01234alper@gmail.com"
+    email = "alper.alimoglu.research@gmail.com"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
     gpg_fingerprint = "0x0359190A05DF2B72729344221D522F92EFA2F330"
-
     ipfs_id = client.id()["Addresses"][-1]
-    print(f"ipfs_id={ipfs_id}\n")
+    print(f"ipfs_id={ipfs_id}")
 
     price_core_min = 100
     price_data_transfer = 1

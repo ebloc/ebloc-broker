@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 
+import gzip
+import io
 import os
-import subprocess
 import time
+from subprocess import CalledProcessError
 
 import git
 
 from config import env, logging
 from lib import run, run_command
-from utils import cd, getsize, path_leaf
+from libs.ipfs import decrypt_using_gpg
+from utils import cd, is_gzip_file_empty, log, path_leaf
 
 
 def initialize_check(path):
@@ -39,34 +42,45 @@ def extract_gzip():
     pass
 
 
-def diff_zip(filename):
-    f = open(filename, "w")
-    p1 = subprocess.Popen(["git", "diff", "--binary", "HEAD"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["gzip", "-9c"], stdin=p1.stdout, stdout=f)
-    p1.stdout.close()
-    p2.communicate()
-    f.close()
+def diff_and_gzip(filename):
+    repo = git.Repo(".", search_parent_directories=True)
+    with gzip.open(filename, "wb") as output:
+        # We cannot directly write Python objects like strings!
+        # We must first convert them into a bytes format using io.BytesIO() and then write it
+        with io.TextIOWrapper(output, encoding="utf-8") as encode:
+            encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty"))
+
+
+def decompress_gzip(filename):
+    if not is_gzip_file_empty(filename):
+        with gzip.open(filename, "rb") as ip:
+            with io.TextIOWrapper(ip, encoding="utf-8") as decoder:
+                # Let's read the content using read()
+                content = decoder.read()
+                print(content)
 
 
 def diff_patch(path, source_code_hash, index, target_path):
     """
     * "git diff HEAD" for detecting all the changes:
     * Shows all the changes between the working directory and HEAD (which includes changes in the index).
-    * This shows all the changes since the last commit, whether or not they have been staged for commit or not.
+    * This shows all the changes since the last commit, whether or not they have been staged for commit
+    * or not.
     """
     is_file_empty = False
     with cd(path):
-        logging.info(path)
+        log(f"==> Navigate to {path}")
         """TODO
         if not is_initialized(path):
             upload everything, changed files!
         """
+        repo = git.Repo(".", search_parent_directories=True)
         try:
-            run(["git", "config", "core.fileMode", "false"])
+            repo.git.config("core.fileMode", "false")  # git config core.fileMode false
             # first ignore deleted files not to be added into git
             run(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
-            git_head_hash = run(["git", "rev-parse", "HEAD"])
-            patch_name = f"patch_{git_head_hash}_{source_code_hash}_{index}.diff"
+            head_commit_id = repo.rev_parse("HEAD")
+            patch_name = f"patch_{head_commit_id}_{source_code_hash}_{index}.diff"
         except:
             return False
 
@@ -74,16 +88,15 @@ def diff_patch(path, source_code_hash, index, target_path):
         patch_file = f"{target_path}/{patch_upload_name}"
         logging.info(f"patch_path={patch_upload_name}")
 
-        repo = git.Repo(".", search_parent_directories=True)
         try:
             repo.git.add(A=True)
-            diff_zip(patch_file)
+            diff_and_gzip(patch_file)
         except:
             return False
 
     time.sleep(0.25)
-    if not getsize(patch_file):
-        logging.info("Created patch file is empty, nothing to upload.")
+    if is_gzip_file_empty(patch_file):
+        log("==> Created patch file is empty, nothing to upload")
         os.remove(patch_file)
         is_file_empty = True
 
@@ -105,13 +118,12 @@ def add_all(repo=None):
     try:
         repo.git.add(A=True)  # git add -A .
         try:
-            is_diff = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
-            success = True
+            changed_file_len = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
         except:
             # if it is the first commit HEAD might not exist
-            success, is_diff = run_command(["git", "diff", "--cached", "--shortstat"])
+            changed_file_len = len(repo.git.diff("--cached", "--name-only").split("\n"))
 
-        if success and is_diff:
+        if changed_file_len > 0:
             repo.git.commit("-m", "update")  # git commit -m update
         return True
     except:
@@ -135,32 +147,40 @@ def commit_changes(path) -> bool:
                 repo.git.add(A=True)
 
             if len(repo.index.diff("HEAD")) == 0:
-                logging.info(f"{path} is committed with the given changes")
+                log(f"==> {path} is committed with the given changes using git")
                 return True
 
         try:
             add_all(repo)
-        except Exception as error:
-            logging.error(f"E: {error}")
+        except Exception as e:
+            logging.error(f"E: {e}")
             return False
         return True
 
 
-def apply_patch(git_folder, patch_file):
+def apply_patch(git_folder, patch_file, is_gpg=False):
+    """ doc: https://stackoverflow.com/a/15375869/2402577"""
+    if is_gpg:
+        decrypt_using_gpg(patch_file)
+
     with cd(git_folder):
         base_name = path_leaf(patch_file)
-        print(base_name)
-        base_name_split = base_name.split("_")
-        git_hash = base_name_split[1]
+        log(f"==> {base_name}")
         # folder_name = base_name_split[2]
         try:
-            run(["git", "checkout", git_hash])
-            run(["git", "reset", "--hard"])
-            run(["git", "clean", "-f"])
-            logging.info(run(["git", "apply", "--stat", patch_file]))
-            logging.info(run(["git", "apply", "--reject", patch_file]))
+            # base_name_split = base_name.split("_")
+            # git_hash = base_name_split[1]
+            # run(["git", "checkout", git_hash])
+            # run(["git", "reset", "--hard"])
+            # run(["git", "clean", "-f"])
+            with open(patch_file, "a") as myfile:
+                myfile.write(" ")
+
+            # output = repo.git.apply("--reject", "--whitespace=fix", patch_file)
+            logging.info("\n" + run(["git", "apply", "--reject", "--whitespace=fix", "--verbose", patch_file]))
             return True
-        except:
+        except CalledProcessError as e:
+            log(e.output.decode("utf-8").strip(), color="red")
             return False
 
 

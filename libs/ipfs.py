@@ -79,9 +79,9 @@ def pin(ipfs_hash) -> bool:
     return run(["ipfs", "pin", "add", ipfs_hash])
 
 
-def decrypt_using_gpg(gpg_file, extract_target):
+def decrypt_using_gpg(gpg_file, extract_target=None):
     """This function is specific for using on driver.ipfs to decript tar file,
-    specific for "tar.gz" file types
+    specific for "tar.gz" file types.
     """
     if not os.path.isfile(f"{gpg_file}.gpg"):
         os.symlink(gpg_file, f"{gpg_file}.gpg")
@@ -90,9 +90,9 @@ def decrypt_using_gpg(gpg_file, extract_target):
     tar_file = f"{gpg_file}.tar.gz"
 
     """cmd:
-    gpg --output={tar_file} --pinentry-mode loopback \
-        --passphrase-file=f"{env.LOG_PATH}/gpg_pass.txt" \
-        --decrypt {gpg_file_link}
+    *    gpg --output={tar_file} --pinentry-mode loopback \
+    *        --passphrase-file=f"{env.LOG_PATH}/gpg_pass.txt" \
+    *        --decrypt {gpg_file_link}
     """
     cmd = [
         "gpg",
@@ -108,23 +108,24 @@ def decrypt_using_gpg(gpg_file, extract_target):
 
     try:
         run(cmd)
-        log("GPG decrypt is successfull", "green")
+        log("GPG decrypt is successfull", color="green")
+        silent_remove(gpg_file)
     except:
         _colorize_traceback()
         raise
     finally:
         os.unlink(gpg_file_link)
-        silent_remove(gpg_file)  # Downloaded file is removed
 
-    try:
-        untar(tar_file, extract_target)
-    except:
-        logging.error("E: Could not extract the given tar file")
-        raise
-    finally:
-        cmd = None
-        silent_remove(f"{extract_target}/.git")
-        silent_remove(tar_file)
+    if not extract_target:
+        try:
+            untar(tar_file, extract_target)
+        except:
+            logging.error("E: Could not extract the given tar file")
+            raise
+        finally:
+            cmd = None
+            silent_remove(f"{extract_target}/.git")
+            silent_remove(tar_file)
 
 
 def gpg_encrypt(user_gpg_finderprint, target):
@@ -147,7 +148,7 @@ def gpg_encrypt(user_gpg_finderprint, target):
             is_delete = True
 
     if os.path.isfile(encrypted_file_target):
-        log(f"{encrypted_file_target} is already created.", "green")
+        log(f"==> {encrypted_file_target} is already created.")
         return encrypted_file_target
 
     try:
@@ -167,7 +168,7 @@ def gpg_encrypt(user_gpg_finderprint, target):
     except Exception as e:
         _colorize_traceback()
         if "encryption failed: Unusable public key" in str(e.output):
-            log("==> Solution: https://stackoverflow.com/a/34132924/2402577", color="yellow", is_bold=False)
+            log("==> Solution: https://stackoverflow.com/a/34132924/2402577")
         raise e
     finally:
         if is_delete:

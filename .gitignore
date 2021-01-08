@@ -320,4 +320,8 @@ owncloudScripts/base/data_link/
 
 doo.*
 
+alper.gz
+
+base/data/
+
 gdown.py/gdown.*

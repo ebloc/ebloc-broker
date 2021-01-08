@@ -84,7 +84,7 @@ def connect_to_eblocbroker():
 
     try:
         if env.EBLOCPATH is None or env.EBLOCPATH == "":
-            logging.error("E: EBLOCPATH variable is empty", "red")
+            logging.error("E: EBLOCPATH variable is empty")
             raise QuietExit
 
         contract = read_json(f"{env.EBLOCPATH}/eblocbroker/contract.json")

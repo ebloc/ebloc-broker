@@ -73,7 +73,7 @@ def tools(block_number):
     """Checks whether the required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_number, pid)
     if not is_internet_on():
-        terminate("E: Network connection is down")
+        terminate("E: Network connection is down. Please try again")
     try:
         is_geth_on()
         slurm.is_on()
@@ -142,7 +142,7 @@ def run_driver():
     else:
         block_number_saved = read_file(env.BLOCK_READ_FROM_FILE)
         if not block_number_saved.isdigit():
-            logging.warning("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
+            log("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
             question_yes_no(
                 "## Would you like to read from contract's deployed block number? [Y/n]: ", is_terminate=True
             )
@@ -183,19 +183,20 @@ def run_driver():
 
     block_read_from = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
-    logging.info(f"deployed_block_number={deployed_block_number} balance={balance_temp}")
-
+    log(f"==> deployed_block_number={deployed_block_number}")
+    log(f"==> balance={balance_temp}")
     while True:
+        breakpoint()  # DEBUG
         wait_till_idle_core_available()
         time.sleep(0.25)
         if not str(block_read_from).isdigit():
-            terminate(f"block_read_from={block_read_from}")
+            terminate(f"E: block_read_from={block_read_from}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         success, squeue_output = run_command(["squeue"])
         # gets real unfo under the header after the first line
         if not success or "squeue: error:" in str(squeue_output):
-            logging.error("SLURM is not running on the background. Please run:\nsudo ./bash_scripts/run_slurm.sh")
+            logging.error("E: SLURM is not running on the background. Please run:\nsudo ./bash_scripts/run_slurm.sh")
             log(squeue_output, color="red", is_bold=False)
             terminate()
 
@@ -204,13 +205,12 @@ def run_driver():
             log(f"Current slurm running jobs status:\n{squeue_output}")
             log("-" * int(columns), "green")
 
-        log(f"[{get_time()}]", "blue")
+        log(f"==> [{get_time()}]")
         if isinstance(balance, int):
             log(f"==> provider_gained_wei={int(balance) - int(balance_temp)}")
 
         current_block_number = Ebb.get_block_number()
         log(f"==> waiting new job to come since block number={block_read_from}", "blue")
-        log("==> waiting for new block to increment by one", "blue")
         log(f"==> current_block={current_block_number} | sync_from={block_read_from}", "blue")
         log(f"==> is_web3_connected={Ebb.is_web3_connected()}", "blue")
 
@@ -306,7 +306,7 @@ def run_driver():
             job_id = 0
             try:
                 job_info = eblocbroker_function_call(
-                    partial(Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, block_number), 10
+                    partial(Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, block_number), attempt=10
                 )
                 job_info.update({"received_block": received_block})
                 job_info.update({"storageDuration": storageDuration})
@@ -336,7 +336,7 @@ def run_driver():
 
             if mongodb.is_received(str(requester_id), job_key, index):
                 # Preventing to download or submit again
-                log("mongodb> Job is already received", "green")
+                log("mongodb: Job is already received", "green")
                 continue
 
             if job_infos[0]["jobStateCode"] == job_state_code["COMPLETED"]:
@@ -381,7 +381,7 @@ def run_driver():
                 sys.exit(1)
 
         if len(logged_jobs_to_process) > 0 and max_blocknumber > 0:
-            # updates the latest read block-number
+            # updates the latest read block number
             block_read_from = max_blocknumber + 1
             write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
         if not is_provider_received_job:
@@ -395,26 +395,26 @@ def run_driver():
 if __name__ == "__main__":
     try:
         with launch_ipdb_on_exception():
-            # enclose code with the with statement to launch ipdb
-            # if an exception is raised
+            # if an exception is raised, enclose code with the `with` statement
+            # to launch ipdb
             lock = None
             try:
                 is_driver_on(process_count=1)
                 try:
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 except PermissionError:
-                    log("E: PermissionError for the lock file")
+                    log("E: PermissionError is generated for the locked file")
                     _colorize_traceback()
                     give_RWE_access(env.WHOAMI, "/tmp/run")
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 # open(env.DRIVER_LOCKFILE, 'w').close()
                 run_driver()
             except zc.lockfile.LockError:
-                log("E: can't lock the file, the pid file is in use", color="red")
+                log("E: Driver cannot lock the file, the pid file is in use", color="red")
             except config.QuietExit:
                 pass
             except Exception as e:
-                log(f"\nE: {e}", "red")
+                log(f"\nE: {e}", color="red")
                 _colorize_traceback()
             finally:
                 try:
