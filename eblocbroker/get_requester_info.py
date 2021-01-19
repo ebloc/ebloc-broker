@@ -24,14 +24,14 @@ def get_requester_info(self, requester):
             fromBlock=int(blockReadFrom), toBlock=int(blockReadFrom) + 1
         )
         requester_info = {
-            "requester": requester,
-            "blockReadFrom": blockReadFrom,
+            "address": requester,
+            "block_read_from": blockReadFrom,
             "email": event_filter.get_all_entries()[0].args["email"],
-            "gpgFingerprint": event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex(),
-            "ipfsID": event_filter.get_all_entries()[0].args["ipfsID"],
-            "fID": event_filter.get_all_entries()[0].args["fID"],
+            "gpg_fingerprint": event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex(),
+            "ipfs_id": event_filter.get_all_entries()[0].args["ipfsID"],
+            "f_id": event_filter.get_all_entries()[0].args["fID"],
             "orcid": orcid.decode("utf-8"),
-            "orcidVerify": self.eBlocBroker.functions.isOrcIDVerified(requester).call(),
+            "is_orcid_verified": self.eBlocBroker.functions.isOrcIDVerified(requester).call(),
         }
         return requester_info
     except Exception:
@@ -43,17 +43,16 @@ if __name__ == "__main__":
     from eblocbroker.Contract import Contract
 
     contract = Contract()
-
     if len(sys.argv) == 1:
-        requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
+        requester = "0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571"
     elif len(sys.argv) == 2:
         requester = str(sys.argv[1])
 
     try:
         requester_info = contract.get_requester_info(requester)
         for key, value in requester_info.items():
-            if key == "orcidVerify":
-                value = requester_info["orcidVerify"]
-            print("{0: <16}".format(f"{key}:") + str(value))
+            if key == "block_read_from":
+                value = requester_info["block_read_from"]
+            print("{0: <19}".format(f"{key}:") + str(value))
     except Exception:
         sys.exit(1)

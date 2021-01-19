@@ -3,7 +3,7 @@
 import eblocbroker.Contract as Contract
 from config import env
 from imports import connect
-from lib import job_state_code
+from lib import state_code
 
 eBlocBroker, w3 = connect()
 Ebb = Contract.eblocbroker
@@ -31,7 +31,7 @@ with open(fname, "r") as ins:
             + output[3]
             + "|"
             + "{0: <16}".format("status:")
-            + job_state_code[str(job_info["status"])]
+            + state_code[str(job_info["status"])]
             + " "
             + "{0: <16}".format('core"')
             + str(job_info["core"])

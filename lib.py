@@ -45,28 +45,28 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-job_state_code = {}
+state_code = {}
 
 # add keys to the hashmap # https://slurm.schedmd.com/squeue.html
-job_state_code["SUBMITTED"] = 0  # initial state
+state_code["SUBMITTED"] = 0  # initial state
 # indicates when a request is receieved by the provider. The job is waiting
 # for resource allocation. It will eventually run.
-job_state_code["PENDING"] = 1
+state_code["PENDING"] = 1
 # The job currently is allocated to a node and is running. Corresponding data
 # files are downloaded and verified.
-job_state_code["RUNNING"] = 2
+state_code["RUNNING"] = 2
 # indicates if job is refunded
-job_state_code["REFUNDED"] = 3
+state_code["REFUNDED"] = 3
 # Job was explicitly cancelled by the requester or system administrator.
 # The job may or may not have been initiated. Set by the requester
-job_state_code["CANCELLED"] = 4
+state_code["CANCELLED"] = 4
 # The job has completed successfully and deposit is paid to the provider
-job_state_code["COMPLETED"] = 5
+state_code["COMPLETED"] = 5
 # Job terminated upon reaching its time limit.
-job_state_code["TIMEOUT"] = 6
-job_state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
+state_code["TIMEOUT"] = 6
+state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
 
-inv_job_state_code = {value: key for key, value in job_state_code.items()}
+inv_state_code = {value: key for key, value in state_code.items()}
 
 
 def _connect_web3():
@@ -142,7 +142,7 @@ def get_tx_status(tx_hash) -> str:
 
 
 def check_size_of_file_before_download(file_type, key=None):
-    # TODO fill
+    # TODO: fill
     if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
         if not key:
             return False
@@ -330,21 +330,3 @@ def run_storage_process(storage_class):
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
-
-
-def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
-    try:
-        initial = float(initial)
-        if final:
-            final = float(final)
-        if change:
-            change = float(change)
-    except ValueError:
-        return None
-    else:
-        if change:
-            initial = abs(initial)
-            return round(change / abs(initial) * 100, decimal)
-        else:
-            change = final - initial
-            return round(change / abs(initial) * 100, decimal)

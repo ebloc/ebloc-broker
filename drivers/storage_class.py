@@ -44,7 +44,7 @@ class Storage(BaseClass):
         self.job_key = self.logged_job.args["jobKey"]
         self.index = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
-        self.execution_durations = self.logged_job.args["executionDuration"]
+        self.run_time = self.logged_job.args["runTime"]
         self.job_id = 0
         self.cache_type = logged_job.args["cacheType"]
         self.dataTransferIn_requested = job_info[0]["dataTransferIn"]
@@ -125,7 +125,7 @@ class Storage(BaseClass):
                 self.index,
                 self.job_id,
                 self.cores,
-                self.execution_durations,
+                self.run_time,
             )
             log(f"==> refund() tx_hash={tx_hash}")
             return tx_hash
@@ -279,7 +279,8 @@ class Storage(BaseClass):
 
         job_core_num = str(job_info["core"][job_id])
         # client's requested seconds to run his/her job, 1 minute additional given
-        execution_time_second = timedelta(seconds=int((job_info["executionDuration"][job_id] + 1) * 60))
+        execution_time_second = timedelta(seconds=int((job_info["run_time"][job_id] + 1) * 60))
+
         d = datetime(1, 1, 1) + execution_time_second
         time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
         logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")

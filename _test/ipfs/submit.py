@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     # requester inputs for testing
     job.cores = [1]
-    job.execution_durations = [1]
+    job.run_time = [1]
     job.storage_hours = [1, 1]
     job.dataTransferIns = [1, 1]  # TODO: calculate from the file itself
     job.dataTransferOut = 1
