@@ -7,7 +7,7 @@ from typing import Union
 
 import config
 from config import logging
-from lib import inv_job_state_code
+from lib import inv_state_code
 from libs.mongodb import get_job_block_number
 from utils import StorageID, _colorize_traceback, bytes32_to_ipfs, empty_bytes32, log
 
@@ -27,7 +27,7 @@ def update_job_cores(self, job_info, provider, job_key, index, job_id=0, receive
         for logged_job in logged_jobs:
             if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(index):
                 job_info.update({"core": logged_job.args["core"]})
-                job_info.update({"executionDuration": logged_job.args["executionDuration"]})
+                job_info.update({"run_time": logged_job.args["runTime"]})
                 job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 return job_info
         else:
@@ -75,10 +75,10 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
 
         jobPrices = config.ebb.functions.getProviderPricesForJob(provider, job_key, int(index)).call()
         self.job_info = {
-            "jobStateCode": job[0],
+            "stateCode": job[0],
             "startTime": job[1],
             "core": None,
-            "executionDuration": None,
+            "run_time": None,
             "cloudStorageID": None,
             "received": received,
             "jobOwner": job_owner.lower(),
@@ -168,22 +168,19 @@ if __name__ == "__main__":
         else:
             _resultIpfsHash = ""
 
-    real_execution_time = 0
+    elapsed_time = 0
     if job_info["completion_time"]:
-        real_execution_time = int(job_info["completion_time"]) - int(job_info["startTime"])
+        elapsed_time = int(job_info["completion_time"]) - int(job_info["startTime"])
 
     if isinstance(job_info, dict):
-        print(
-            "{0: <25}".format("stateCode:")
-            + f"{inv_job_state_code[job_info['jobStateCode']]} ({job_info['jobStateCode']})"
-        )
+        print("{0: <25}".format("stateCode:") + f"{inv_state_code[job_info['stateCode']]} ({job_info['stateCode']})")
         print("{0: <25}".format("core") + str(job_info["core"]))
         print("{0: <25}".format("startTime") + str(job_info["startTime"]))
         print("{0: <25}".format("completion_time:") + str(job_info["completion_time"]))
-        print("{0: <25}".format("real_execution_time:") + str(real_execution_time) + " seconds")
+        print("{0: <25}".format("elapsed_time:") + str(elapsed_time) + " seconds")
         print("{0: <25}".format("received_wei:") + str(job_info["receivedWei"]))
         print("{0: <25}".format("refunded_wei:") + str(job_info["refundedWei"]))
-        print("{0: <25}".format("expected_execution_time:") + str(job_info["executionDuration"]))
+        print("{0: <25}".format("expected_run_time:") + str(job_info["run_time"]))
         print("{0: <25}".format("job_infoOwner:") + str(job_info["jobOwner"]))
         print("{0: <25}".format("availableCore:") + str(job_info["availableCore"]))
         print("{0: <25}".format("price_core_min:") + str(job_info["price_core_min"]))

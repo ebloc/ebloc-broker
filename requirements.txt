@@ -39,7 +39,7 @@ dbfread==2.0.4
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
--e git+https://github.com/ebloc/eBlocBroker.git@005349f3b17c1c09a976ecdfab516739c298ecb4#egg=eBlocBroker
+-e git+https://github.com/ebloc/eBlocBroker.git@a68339a5f4d93446766f9533077f27b7b11b6ad9#egg=eBlocBroker
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.2
@@ -96,7 +96,7 @@ morphys==1.0
 multiaddr==0.0.9
 multihash==0.1.1
 MultiMapping==4.1
-mypy==0.782
+mypy==0.800
 mypy-extensions==0.4.3
 mythx-models==1.9.1
 netaddr==0.7.19

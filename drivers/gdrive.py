@@ -171,8 +171,9 @@ class GdriveClass(Storage):
         except Exception as e:
             raise e
 
-        mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        folder_name = gdrive.get_file_info(gdrive_info, "Name")
+        mime_type = gdrive.get_file_info(gdrive_info, _type="Mime")
+        folder_name = gdrive.get_file_info(gdrive_info, _type="Name")
+
         logging.info(f"mime_type={mime_type}")
         if is_job_key:
             # key for the sourceCode tar.gz file is obtained

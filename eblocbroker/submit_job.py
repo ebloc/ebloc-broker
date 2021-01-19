@@ -7,7 +7,7 @@ import ipfshttpclient
 import config
 from config import logging
 from lib import StorageID
-from utils import _colorize_traceback, bytes32_to_ipfs, is_ipfs_running, log
+from utils import _colorize_traceback, is_ipfs_running, log  # bytes32_to_ipfs
 
 
 def is_provider_valid(self, provider):
@@ -34,6 +34,12 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     self.is_provider_valid(provider)
     self.is_requester_valid(_from)
     main_storage_id = job.storage_ids[0]
+    is_use_ipfs = False
+    for storage_id in job.storage_ids:
+        if storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
+            is_use_ipfs = True
+            break
+
     if not job.source_code_hashes:
         logging.error("E: sourceCodeHash list is empty")
         raise
@@ -55,8 +61,8 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             logging.error(f"\nE: Requested {core}, which is {core}, is greater than the provider's core number")
             raise
 
-        if job.execution_durations[idx] == 0:
-            logging.error(f"\nE: execution_durations[{idx}] is provided as 0. Please provide non-zero value")
+        if job.run_time[idx] == 0:
+            logging.error(f"\nE: run_time[{idx}] is provided as 0. Please provide non-zero value")
             raise
 
     for storage_id in job.storage_ids:
@@ -68,9 +74,9 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         logging.error("\nE: Length of key is greater than 64, please provide lesser")
         raise
 
-    for core_min in job.execution_durations:
+    for core_min in job.run_time:
         if core_min > 1440:
-            logging.error("\nE: execution_durations provided greater than 1440. Please provide smaller value")
+            logging.error("\nE: run_time provided greater than 1440. Please provide smaller value")
             raise
 
     for cache_type in job.cache_types:
@@ -79,23 +85,22 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             logging.error(f"\nE: cachType ({cache_type}) provided greater than 1. Please provide smaller value")
             raise
 
-    if not is_ipfs_running():
-        sys.exit()
+    if is_use_ipfs:
+        if not is_ipfs_running():
+            sys.exit()
 
-    client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
-    for storage_id in job.storage_ids:
-        if storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
-            # TODO: check is valid IPFS id
-            try:
-                print(f"trying to connect into {provider_info['ipfs_id']}")
-                output = client.swarm.connect(provider_info["ipfs_id"])
-                if ("connect" and "success") in str(output):
-                    log(str(output), "green")
-                    break
-            except:
-                _colorize_traceback()
-                log("E: connection into provider's IPFS node via swarm is not accomplished", "red")
-                sys.exit
+        client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
+        # TODO: check is valid IPFS id
+        try:
+            print(f"trying to connect into {provider_info['ipfs_id']}")
+            output = client.swarm.connect(provider_info["ipfs_id"])
+            if ("connect" and "success") in str(output):
+                log(str(output), "green")
+        except:
+            _colorize_traceback()
+            log("E: connection into provider's IPFS node via swarm is not accomplished")
+            sys.exit
+
     return True
 
     """ TODO: can it be more than 32 characters
@@ -112,8 +117,8 @@ def submit_job(self, provider, key, account_id, job_price, job):
     _from = self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
     try:
         provider_info = self.get_provider_info(provider)
-        print(f"Provider's available_core_num={provider_info['available_core_num']}")
-        print(f"Provider's price_core_min={provider_info['price_core_min']}")
+        log(f"Provider's available_core_num={provider_info['available_core_num']}")
+        log(f"Provider's price_core_min={provider_info['price_core_min']}")
         # my_filter = eBlocBroker.events.LogProviderInfo.createFilter(
         #                                fromBlock=provider_info['block_read_from'],
         #                                toBlock=provider_info['block_read_from'] + 1)
@@ -130,18 +135,15 @@ def submit_job(self, provider, key, account_id, job_price, job):
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
     try:
         gas_limit = 4500000
-        log("source_code_hashes=")
-        source_code_hashes_l = []
-        for source_code_hash in job.source_code_hashes:
-            source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
-
-        log(source_code_hashes_l)
-        log("")
+        # source_code_hashes_l = []
+        # for idx, source_code_hash in job.source_code_hashes:
+        #     source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
+        # log(f"==> source_code_hashes={source_code_hashes_l}")
         tx = self.eBlocBroker.functions.submitJob(
             key, job.dataTransferIns, args, job.storage_hours, job.source_code_hashes
         ).transact({"from": _from, "value": job_price, "gas": gas_limit})

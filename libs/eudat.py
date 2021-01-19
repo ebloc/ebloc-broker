@@ -280,7 +280,7 @@ def _submit(provider, account_id, code_paths):
         time.sleep(0.25)
 
     log("\n==> Submitting the job")
-    job.execution_durations = [60]  # in seconds
+    job.run_time = [60]  # in seconds
     job.cores = [1]
     job.dataTransferIns = [1, 116]
     job.dataTransferOut = 1

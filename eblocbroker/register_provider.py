@@ -7,6 +7,7 @@ import ipfshttpclient
 
 from config import env, logging
 from lib import get_tx_status
+from libs.ipfs import get_ipfs_id
 from utils import _colorize_traceback, log, read_json
 
 
@@ -27,7 +28,7 @@ def register_provider(
     whisper_pub_key = data["public_key"]
 
     if not self.w3.geth.shh.hasKeyPair(key_id):
-        logging.error("\nWhisper node's private key of a key pair did not match with the given ID. Please run:")
+        logging.error("\nE: Whisper node's private key of a key pair did not match with the given ID. Please run:")
         log(f"{env.EBLOCPATH}/whisper/initialize.py \n", "yellow")
         raise
 
@@ -79,7 +80,7 @@ if __name__ == "__main__":
         _colorize_traceback()
         log(
             "E: Connection error to IPFS, please run it on the background.\nPlease run ~/eBlocBroker/daemons/ipfs.py",
-            "red",
+            color="red",
         )
         sys.exit(1)
 
@@ -92,8 +93,7 @@ if __name__ == "__main__":
     email = "alper.alimoglu.research@gmail.com"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
     gpg_fingerprint = "0x0359190A05DF2B72729344221D522F92EFA2F330"
-    ipfs_id = client.id()["Addresses"][-1]
-    print(f"ipfs_id={ipfs_id}")
+    ipfs_id = get_ipfs_id(client, is_print=True)
 
     price_core_min = 100
     price_data_transfer = 1
@@ -101,7 +101,6 @@ if __name__ == "__main__":
     price_cache = 1
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
     commitment_block = 240
-
     try:
         tx_hash = Ebb.register_provider(
             available_core, email, federation_cloud_id, gpg_fingerprint, prices, ipfs_id, commitment_block,

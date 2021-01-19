@@ -102,14 +102,14 @@ def mine(block_number):
     assert web3.eth.blockNumber == height + block_number
 
 
-def submit_receipt(index, cores, startTime, completionTime, execution_time_min, is_print=True):
+def submit_receipt(index, cores, startTime, completionTime, elapsed_time, is_print=True):
     print("==> [" + str(startTime) + ", " + str(completionTime) + "]" + " cores=" + str(cores))
     job = Job()
     job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
     job.key = job.source_code_hashes[0]
     job.index = index
     job.cores = cores
-    job.execution_durations = [1]
+    job.run_time = [1]
     job.dataTransferIns = [1]
     job.dataTransferOut = 1
     job.storage_ids = [StorageID.EUDAT.value]
@@ -127,7 +127,7 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
     tx = config.ebb.submitJob(
@@ -148,7 +148,7 @@ def submit_receipt(index, cores, startTime, completionTime, execution_time_min, 
 
     args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
 
-    tx = config.ebb.processPayment(job.key, args, execution_time_min, "", {"from": provider})
+    tx = config.ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
     if is_print:
         print("received_gas_used=" + str(tx.__dict__["gas_used"]))
     # received_sum = tx.events["LogProcessPayment"]["receivedWei"]
@@ -175,31 +175,30 @@ def test_submitJob_gas():
     completionTime = 20
     cores = [127]
     index = 0
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 10
     completionTime = 25
     cores = [1]
     index = 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 11
     completionTime = 25
     cores = [1]
     index = 2
-    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    tx = submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     gas_base = int(tx.__dict__["gas_used"])
     # -------------------
     startTime = 8
     completionTime = 9
     cores = [65]
     index = 3
-    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    tx = submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
     check_list()
     print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
-
-    # TODO : revert on tx check
+    # TODO: : revert on tx check
 
 
 def test_test1():
@@ -216,31 +215,31 @@ def test_test1():
     completionTime = 20
     cores = [1]
     index = 0
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 27
     completionTime = 35
     cores = [1]
     index = 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 30
     completionTime = 45
     cores = [1]
     index = 2
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 30
     completionTime = 45
     cores = [1]
     index = 3
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 27
     completionTime = 30
     cores = [120]
     index = 4
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
 
 
 def test_test2():
@@ -257,109 +256,109 @@ def test_test2():
     completionTime = 20
     cores = [1]
     index = 0
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 10
     completionTime = 20
     cores = [128]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 9
     completionTime = 19
     cores = [128]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 11
     completionTime = 21
     cores = [128]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 15
     completionTime = 25
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 8
     completionTime = 9
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 40
     completionTime = 45
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 40
     completionTime = 45
     cores = [126]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 41
     completionTime = 45
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 39
     completionTime = 41
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 26
     completionTime = 39
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 20
     completionTime = 38
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 20
     completionTime = 37
     cores = [8]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 39
     completionTime = 40
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 37
     completionTime = 39
     cores = [8]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 45
     completionTime = 50
     cores = [128]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 39
     completionTime = 40
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 40
     completionTime = 41
     cores = [1]
     index += 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
 
 
 def test_test3():
@@ -376,25 +375,25 @@ def test_test3():
     completionTime = 20
     cores = [1]
     index = 0
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 27
     completionTime = 35
     cores = [1]
     index = 1
-    submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     # -------------------
     startTime = 30
     completionTime = 45
     cores = [1]
     index = 2
-    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    tx = submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     gas_base = int(tx.__dict__["gas_used"])
     # -------------------
     startTime = 34
     completionTime = 51
     cores = [1]
     index = 3
-    tx = submit_receipt(index, cores, startTime, completionTime, execution_time_min=1)
+    tx = submit_receipt(index, cores, startTime, completionTime, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
     print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
