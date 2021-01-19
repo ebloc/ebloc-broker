@@ -122,7 +122,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 provider,
                 jobKey,
                 core_list,
-                execution_durations,
+                run_time,
                 dataTransferIn,
                 dataTransferOut,
                 cloudStorageID,

@@ -25,7 +25,7 @@ interface eBlocBrokerInterface {
     );
 
     // Records the updated jobs' information under setJobStatus() method call
-    event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 jobStateCodes);
+    event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 stateCodes);
 
     // Records the submitted jobs' information under submitJob() method call
     event LogJob(
@@ -36,7 +36,7 @@ interface eBlocBrokerInterface {
         bytes32[] sourceCodeHash,
         uint8[] cacheType,
         uint16[] core,
-        uint16[] executionDuration,
+        uint16[] runTime,
         uint256 received,
         uint256 refunded
     );

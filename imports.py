@@ -9,7 +9,7 @@ from web3.providers.rpc import HTTPProvider
 import _utils.colorer  # noqa: F401
 import config
 from config import QuietExit, env, logging
-from utils import _colorize_traceback, is_geth_on, log, read_json, terminate
+from utils import _colorize_traceback, is_geth_on, log, read_json, run, terminate
 
 
 def connect():
@@ -28,10 +28,7 @@ def connect():
     return config.ebb, config.w3
 
 
-def connect_to_web3():
-    if config.w3:
-        return config.w3
-
+def _connect_to_web3():
     if not env.POA_CHAIN:
         """
         Note that you should create only one RPC Provider per process,
@@ -47,20 +44,33 @@ def connect_to_web3():
         # inject the poa compatibility middleware to the innermost layer
         config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-    if not config.w3.isConnected():
-        try:
-            is_geth_on()
-        except Exception as e:
-            if type(e).__name__ != "QuietExit":
-                _colorize_traceback()
-            else:
-                sys.exit(1)
 
-        logging.error(
-            "\nE: If web3 is not connected please start geth server and give permission \n"
-            "to /private/geth.ipc file doing:"
-        )
-        log("sudo chown $(whoami) /private/geth.ipc\n", "green")
+def connect_to_web3():
+    if config.w3:
+        return config.w3
+
+    for attempt in range(2):
+        _connect_to_web3()
+        if not config.w3.isConnected():
+            try:
+                is_geth_on()
+            except Exception as e:
+                if type(e).__name__ != "QuietExit":
+                    _colorize_traceback()
+                else:
+                    sys.exit(1)
+
+            logging.error(
+                "\nE: If web3 is not connected please start geth server and give permission \n"
+                "to /private/geth.ipc file doing:"
+            )
+            log("sudo chown $(whoami) /private/geth.ipc\n", color="green")
+
+            log("## Running sudo chown $(whoami) /private/geth.ipc")
+            run(["sudo", "chown", env.WHOAMI, "/private/geth.ipc"])
+        else:
+            break
+    else:
         terminate(is_traceback=False)
         # raise config.QuietExit()
 

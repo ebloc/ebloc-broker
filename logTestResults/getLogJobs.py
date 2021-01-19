@@ -6,7 +6,7 @@ import sys
 import eblocbroker.Contract as Contract
 from config import env
 from imports import connect
-from lib import inv_job_state_code
+from lib import inv_state_code
 
 eBlocBroker, w3 = connect()
 Ebb = Contract.eblocbroker
@@ -53,7 +53,7 @@ def getLogJobs(provider_address, fromBlock):
         #    print('returned:0')
 
         gained = 0
-        if inv_job_state_code[int(jobInfo["status"])] == "COMPLETED":
+        if inv_state_code[int(jobInfo["status"])] == "COMPLETED":
             # print('gained: ' + str(jobInfo['received'] - returned))
             gained = jobInfo["received"] - returned
             _sum += gained
@@ -63,10 +63,10 @@ def getLogJobs(provider_address, fromBlock):
 
         print(
             f"{idx} | {logged_jobs[i].args['jobKey']} {logged_jobs[i].args['index']}"
-            f" {inv_job_state_code[int(jobInfo['status'])]} {jobInfo['received']} {returned} {gained}"
+            f" {inv_state_code[int(jobInfo['status'])]} {jobInfo['received']} {returned} {gained}"
         )
 
-        if ipfsFlag == 1 and inv_job_state_code[int(jobInfo["status"])] == "COMPLETED":
+        if ipfsFlag == 1 and inv_state_code[int(jobInfo["status"])] == "COMPLETED":
             subprocess.run(
                 ["ipfs", "get", logged_jobs[i].args["jobKey"], "--output=ipfsHashes/" + logged_jobs[i].args["jobKey"],]
             )

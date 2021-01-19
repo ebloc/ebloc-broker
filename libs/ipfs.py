@@ -269,3 +269,10 @@ def connect_to_bootstrap_node():
         log(str(output), "green")
         return True
     return False
+
+
+def get_ipfs_id(client, is_print=False) -> str:
+    ipfs_id = client.id()["Addresses"][-1]
+    if is_print:
+        log(f"ipfs_id={ipfs_id}")
+    return ipfs_id

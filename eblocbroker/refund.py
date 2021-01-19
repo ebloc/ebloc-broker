@@ -11,7 +11,7 @@ from lib import get_tx_status
 from utils import _colorize_traceback, log
 
 
-def refund(self, provider, _from, job_key, index, job_id, cores, execution_durations):
+def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
     provider = self.w3.toChecksumAddress(provider)
     _from = self.w3.toChecksumAddress(_from)
 
@@ -25,7 +25,7 @@ def refund(self, provider, _from, job_key, index, job_id, cores, execution_durat
 
     try:
         gas_limit = 4500000
-        tx = self.eBlocBroker.functions.refund(provider, job_key, index, job_id, cores, execution_durations).transact(
+        tx = self.eBlocBroker.functions.refund(provider, job_key, index, job_id, cores, elapsed_time).transact(
             {"from": _from, "gas": gas_limit}
         )
         return tx.hex()
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         index = int(sys.argv[4])
         job_id = int(sys.argv[5])
         cores = sys.argv[6]  # type: List[str]
-        execution_durations = sys.argv[7]  # type: List[str]
+        elapsed_time = sys.argv[7]  # type: List[str]
     else:
         provider = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
         _from = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
@@ -54,10 +54,10 @@ if __name__ == "__main__":
         index = 0
         job_id = 0
         cores = ["1"]
-        execution_durations = ["5"]
+        elapsed_time = ["5"]
 
     try:
-        tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, execution_durations)
+        tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, elapsed_time)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             processed_logs = Ebb.eBlocBroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
