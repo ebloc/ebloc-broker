@@ -22,12 +22,12 @@ from drivers.ipfs import IpfsClass
 from helper import helper
 from lib import (  # noqa
     eblocbroker_function_call,
-    job_state_code,
     run,
     run_command,
     run_storage_thread,
     run_whisper_state_receiver,
     session_start_msg,
+    state_code,
 )
 from libs import mongodb
 from libs.user_setup import give_RWE_access, user_add
@@ -186,7 +186,6 @@ def run_driver():
     log(f"==> deployed_block_number={deployed_block_number}")
     log(f"==> balance={balance_temp}")
     while True:
-        breakpoint()  # DEBUG
         wait_till_idle_core_available()
         time.sleep(0.25)
         if not str(block_read_from).isdigit():
@@ -324,7 +323,7 @@ def run_driver():
                 except:
                     pass
 
-            if not job_infos[0]["core"] or not job_infos[0]["executionDuration"]:
+            if not job_infos[0]["core"] or not job_infos[0]["run_time"]:
                 logging.error("E: Requested job does not exist")
                 continue
 
@@ -339,15 +338,15 @@ def run_driver():
                 log("mongodb: Job is already received", "green")
                 continue
 
-            if job_infos[0]["jobStateCode"] == job_state_code["COMPLETED"]:
+            if job_infos[0]["stateCode"] == state_code["COMPLETED"]:
                 logging.info("Job is already completed")
                 continue
 
-            if job_infos[0]["jobStateCode"] == job_state_code["REFUNDED"]:
+            if job_infos[0]["stateCode"] == state_code["REFUNDED"]:
                 logging.info("Job is refunded.")
                 continue
 
-            if not job_infos[0]["jobStateCode"] == job_state_code["SUBMITTED"]:
+            if not job_infos[0]["stateCode"] == state_code["SUBMITTED"]:
                 log("Job is already captured or it is in process or completed.", "green")
                 continue
 

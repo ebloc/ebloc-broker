@@ -721,7 +721,7 @@ def json_pretty(json_data):
     print(json.dumps(json_data, indent=4, sort_keys=True))
 
 
-def compress_folder(folder_to_share):
+def compress_folder(folder_path):
     """Compress folder using tar
     - Note that to get fully reproducible tarballs, you should also impose the sort order used by tar
 
@@ -729,38 +729,36 @@ def compress_folder(folder_to_share):
     - https://unix.stackexchange.com/a/438330/198423  == (tar produces different files each time)
     - https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
-    base_name = os.path.basename(folder_to_share)
-    dir_path = os.path.dirname(folder_to_share)
-
+    base_name = os.path.basename(folder_path)
+    dir_path = os.path.dirname(folder_path)
     with cd(dir_path):
         """cmd:
         find . -print0 | LC_ALL=C sort -z | \
-        PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
-                    --no-recursion --null -T - -zcvf $tar_hash.tar.gz
+        PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --absolute-names --no-recursion --null -T - -cvf file.tar.gz
+        # PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
+        #             --no-recursion --null -T - -cvf /tmp/work/output.tar.gz && md5sum /tmp/work/output.tar.gz
         """
         p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
         p1.stdout.close()
-        p3 = subprocess.Popen(
-            [
-                "tar",
-                "-Ipigz",
-                "--mode=a+rwX",
-                "--owner=0",
-                "--group=0",
-                "--numeric-owner",
-                "--absolute-names",
-                "--no-recursion",
-                "--null",
-                "-T",
-                "-",
-                "-cvf",
-                f"{base_name}.tar.gz",
-            ],
-            stdin=p2.stdout,
-            stdout=subprocess.PIPE,
-            env={"PIGZ": "-n"},  # alternative: GZIP
-        )
+
+        cmd = [
+            "tar",
+            "-Ipigz",
+            "--mode=a+rwX",
+            "--owner=0",
+            "--group=0",
+            "--numeric-owner",
+            "--absolute-names",
+            "--no-recursion",
+            "--null",
+            "-T",
+            "-",
+            "-cvf",
+            f"{base_name}.tar.gz",
+        ]
+        print(" ".join(cmd))
+        p3 = subprocess.Popen(cmd, stdin=p2.stdout, stdout=subprocess.PIPE, env={"PIGZ": "-n"},)  # alternative: GZIP
         p2.stdout.close()
         p3.communicate()
 
@@ -768,6 +766,7 @@ def compress_folder(folder_to_share):
         tar_file = f"{tar_hash}.tar.gz"
         shutil.move(f"{base_name}.tar.gz", tar_file)
         log(f"Created tar file={dir_path}/{tar_file}")
+        log(f"==> tar_hash={tar_hash}")
     return tar_hash, f"{dir_path}/{tar_file}"
 
 

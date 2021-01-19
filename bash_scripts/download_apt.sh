@@ -6,7 +6,7 @@ sudo add-apt-repository -y ppa:ethereum/ethereum
 # Then install the stable version of go-ethereum:
 sudo apt-get update
 
-# TODO: list
+# TODO: download from a list
 sudo apt-get install ethereum
 sudo apt-get install git
 sudo apt-get install openssh-server

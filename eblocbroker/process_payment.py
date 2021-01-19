@@ -4,7 +4,7 @@ import sys
 from typing import Any, Union
 
 from config import env, logging
-from lib import StorageID, job_state_code
+from lib import StorageID, state_code
 from utils import _colorize_traceback, ipfs_to_bytes32
 
 
@@ -13,19 +13,19 @@ def process_payment(
     job_key,
     index,
     job_id,
-    execution_time_min,
+    elapsed_time,
     result_ipfs_hash,
     cloud_storage_ids,
     end_time,
     dataTransferIn,
     dataTransferOut,
     core,
-    executionDuration,
+    run_time,
 ):
     logging.info(
-        f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {execution_time_min}"
+        f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {dataTransferIn} {dataTransferOut} '{core}'"
-        f" '{executionDuration}'"
+        f" '{run_time}'"
     )
 
     for cloud_storage_id in cloud_storage_ids:
@@ -34,12 +34,12 @@ def process_payment(
             raise
 
     self.get_job_info(env.PROVIDER_ID, job_key, index, job_id)
-    if self.job_info["jobStateCode"] == job_state_code["COMPLETED"]:
+    if self.job_info["stateCode"] == state_code["COMPLETED"]:
         logging.error("Job is completed and already get paid")
         sys.exit(1)
 
     """
-    if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
+    if self.job_info["stateCode"] == str(state_code["COMPLETED"]):
         logging.error("Job is completed and already get paid")
         sys.exit(1)
     """
@@ -57,12 +57,12 @@ def process_payment(
             int(dataTransferIn),
             int(dataTransferOut),
             core,
-            executionDuration,
+            run_time,
             final_job,
         ]
-        tx = self.eBlocBroker.functions.processPayment(
-            job_key, args, int(execution_time_min), _result_ipfs_hash
-        ).transact({"from": env.PROVIDER_ID, "gas": 4500000})
+        tx = self.eBlocBroker.functions.processPayment(job_key, args, int(elapsed_time), _result_ipfs_hash).transact(
+            {"from": env.PROVIDER_ID, "gas": 4500000}
+        )
     except Exception:
         _colorize_traceback()
         raise
@@ -88,46 +88,46 @@ if __name__ == "__main__":
         job_key = str(my_args[0])
         index = int(my_args[1])
         job_id = int(my_args[2])
-        execution_time_min = int(my_args[3])
+        elapsed_time = int(my_args[3])
         result_ipfs_hash = str(my_args[4])
         cloud_storage_id = my_args[5]
         end_time = int(my_args[6])
         dataTransferIn = float(my_args[7])
         dataTransferOut = float(my_args[8])
         core = my_args[9]
-        executionDuration = my_args[10]
+        run_time = my_args[10]
 
         # convert all strings in a list to int of the following arguments
         cloud_storage_id = list(map(int, cloud_storage_id))
         core = list(map(int, core))
-        executionDuration = list(map(int, executionDuration))
+        run_time = list(map(int, run_time))
 
     else:  # dummy call
         job_key = "cdd786fca7ab7aa0c55bc039c6c68137"
         index = 0
         job_id = 0
-        execution_time_min = 1
+        elapsed_time = 1
         result_ipfs_hash = ""
         cloud_storage_id = 1
         end_time = 1584375940
         dataTransferIn = 0.029152870178222656
         dataTransferOut = 0.0
         core = [1]
-        executionDuration = [5]
+        run_time = [5]
 
     try:
         tx_hash = contract.process_payment(
             job_key,
             index,
             job_id,
-            execution_time_min,
+            elapsed_time,
             result_ipfs_hash,
             cloud_storage_id,
             end_time,
             dataTransferIn,
             dataTransferOut,
             core,
-            executionDuration,
+            run_time,
         )
         print(f"tx_hash={tx_hash}")
     except:

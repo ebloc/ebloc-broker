@@ -1,4 +1,6 @@
-from random import randint
+#!/usr/bin/env python3
+
+# from random import randint
 
 import networkx as nx
 

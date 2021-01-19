@@ -194,7 +194,7 @@ def test_stored_data_usage():
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [1]
-    job.execution_durations = [5]
+    job.run_time = [5]
 
     job.provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
@@ -206,7 +206,7 @@ def test_stored_data_usage():
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
 
@@ -298,7 +298,7 @@ def test_computational_refund():
 
     job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.cores = [1]
-    job.execution_durations = [5]
+    job.run_time = [5]
     job.dataTransferIns = [1, 1]
     job.dataTransferOut = 1
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
@@ -316,7 +316,7 @@ def test_computational_refund():
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
     tx = Ebb.submitJob(
@@ -336,8 +336,8 @@ def test_computational_refund():
     mine(5)
 
     args = [index, jobID, 1579524998, 2, 0, job.cores, [5], True]
-    execution_duration = 1
-    tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_duration, zero_bytes32, {"from": accounts[0]})
+    run_time = 1
+    tx = Ebb.processPayment(job.source_code_hashes[0], args, run_time, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     print(str(received_sum) + " " + str(refunded_sum))
@@ -368,7 +368,7 @@ def test_storage_refund():
     job.data_prices_set_block_numbers = [0, 0]
 
     job.cores = [2]
-    job.execution_durations = [10]
+    job.run_time = [10]
 
     job.provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
@@ -387,7 +387,7 @@ def test_storage_refund():
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
     tx = Ebb.submitJob(
@@ -407,7 +407,7 @@ def test_storage_refund():
 
     index = 0
     jobID = 0
-    tx = Ebb.refund(provider, jobKey, index, jobID, job.cores, job.execution_durations, {"from": provider})
+    tx = Ebb.refund(provider, jobKey, index, jobID, job.cores, job.run_time, {"from": provider})
     print(Ebb.getJobInfo(provider, jobKey, index, jobID))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
     print(f"refundedWei={refundedWei}")
@@ -463,7 +463,7 @@ def test_storage_refund():
 
     index = 1
     jobID = 0
-    tx = Ebb.refund(provider, jobKey, index, jobID, job.cores, job.execution_durations, {"from": provider})
+    tx = Ebb.refund(provider, jobKey, index, jobID, job.cores, job.run_time, {"from": provider})
     print(Ebb.getJobInfo(provider, jobKey, index, jobID))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
     print("refundedWei=" + str(refundedWei))
@@ -560,7 +560,7 @@ def test_multiple_data():
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
-    job.execution_durations = [10]
+    job.run_time = [10]
     provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
@@ -571,7 +571,7 @@ def test_multiple_data():
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
 
@@ -650,7 +650,7 @@ def test_multiple_data():
         sum(job.dataTransferIns),
         job.dataTransferOut,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         False,
     ]
     tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
@@ -676,7 +676,7 @@ def test_multiple_data():
     mine(1)
     end_time = startTime + 15 * 4 * execution_time
 
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, False]
+    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, False]
     tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     # print(tx.events['LogProcessPayment'])
@@ -747,7 +747,7 @@ def test_workflow():
     check_price_keys(job.data_prices_set_block_numbers, provider, source_code_hash1)
 
     job.cores = [2, 4, 2]
-    job.execution_durations = [10, 15, 20]
+    job.run_time = [10, 15, 20]
 
     job.storage_ids = [StorageID.IPFS.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
@@ -758,7 +758,7 @@ def test_workflow():
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
 
@@ -811,7 +811,7 @@ def test_workflow():
     refunded_sums = []
     received_sum = 0
     refunded_sum = 0
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, False]
+    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, False]
     tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     # print(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
@@ -827,7 +827,7 @@ def test_workflow():
     end_time = 39
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
 
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, False]
+    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, False]
     tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
@@ -851,7 +851,7 @@ def test_workflow():
             dataTransfer[0],
             dataTransfer[1],
             job.cores,
-            job.execution_durations,
+            job.run_time,
             False,
         ]
         tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
@@ -861,7 +861,7 @@ def test_workflow():
     startTime = 20
     tx = Ebb.setJobStatusRunning(jobKey, index, jobID, startTime, {"from": accounts[0]})
 
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.execution_durations, True]
+    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, True]
     tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     # print(tx.events['LogProcessPayment'])
@@ -890,7 +890,7 @@ def test_simple_submit():
     job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.key = job.source_code_hashes[0]
     job.cores = [2]
-    job.execution_durations = [1]
+    job.run_time = [1]
     job.dataTransferIns = [1, 1]
     job.dataTransferOut = 1
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
@@ -908,7 +908,7 @@ def test_simple_submit():
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
-        job.execution_durations,
+        job.run_time,
         job.dataTransferOut,
     ]
 
@@ -933,10 +933,10 @@ def test_simple_submit():
     dataTransferIn = 0
     dataTransferOut = 0.01
     args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
-    execution_time_min = 1
+    elapsed_time = 1
     out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
-    tx = Ebb.processPayment(job.key, args, execution_time_min, out_hash, {"from": accounts[0]})
-    # tx = Ebb.processPayment(job.source_code_hashes[0], args, execution_time_min, zero_bytes32, {"from": accounts[0]})
+    tx = Ebb.processPayment(job.key, args, elapsed_time, out_hash, {"from": accounts[0]})
+    # tx = Ebb.processPayment(job.source_code_hashes[0], args, elapsed_time, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     # print(str(received_sum) + " " + str(refunded_sum))
@@ -986,7 +986,7 @@ def test_submit_job(ebb):
             core = int(arguments[2])
 
             job.cores = [core]
-            job.execution_durations = [coreMin]
+            job.run_time = [coreMin]
             # time.sleep(1)
             # rpc.mine(int(arguments[0]))
 
@@ -1013,7 +1013,7 @@ def test_submit_job(ebb):
                 job.cache_types,
                 job.data_prices_set_block_numbers,
                 job.cores,
-                job.execution_durations,
+                job.run_time,
                 job.dataTransferOut,
             ]
 
@@ -1071,7 +1071,7 @@ def test_submit_job(ebb):
             core = int(arguments[2])
 
             job.cores = [core]
-            job.execution_durations = [coreMin]
+            job.run_time = [coreMin]
 
             print("\nContractBalance=" + str(Ebb.getContractBalance()))
             jobID = 0
@@ -1084,7 +1084,7 @@ def test_submit_job(ebb):
                 dataTransferIn_sum,
                 job.dataTransferOut,
                 job.cores,
-                job.execution_durations,
+                job.run_time,
                 True,
             ]
             tx = Ebb.processPayment(jobKey, args, execution_time, result_ipfs_hash, {"from": accounts[0]})

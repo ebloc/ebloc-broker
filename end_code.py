@@ -23,11 +23,11 @@ from lib import (
     calculate_folder_size,
     eblocbroker_function_call,
     is_dir,
-    job_state_code,
     remove_files,
     run,
     run_stdout_to_file,
     silent_remove,
+    state_code,
     subprocess_call,
 )
 from utils import (
@@ -320,7 +320,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.dataTransferIn,
                     self.data_transfer_out,
                     self.job_info["core"],
-                    self.job_info["executionDuration"],
+                    self.job_info["runTime"],
                 ),
                 10,
             )
@@ -412,20 +412,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfsID"], "green")
         log("{0: <17}".format("f_id:") + self.requester_info["fID"], "green")
 
-        if self.job_info["jobStateCode"] == str(job_state_code["COMPLETED"]):
+        if self.job_info["stateCode"] == str(state_code["COMPLETED"]):
             log("==> Job is already completed job and its money is received", "yellow")
             raise QuietExit
 
-        execution_duration = self.job_info["executionDuration"]
-        log(f"==> requested_execution_duration={execution_duration[self.job_id]} minutes")
+        run_time = self.job_info["run_time"]
+        log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         is_print = True
         for attempt in range(10):
-            if self.job_info["jobStateCode"] == job_state_code["RUNNING"]:
+            if self.job_info["stateCode"] == state_code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed
                 logging.warning("Job has been started.")
                 break  # wait until does values updated on the blockchain
 
-            if self.job_info["jobStateCode"] == job_state_code["COMPLETED"]:
+            if self.job_info["stateCode"] == state_code["COMPLETED"]:
                 # detects an error on the slurm side
                 log("==> Job is already completed job and its money is received", "yellow")
                 raise QuietExit
@@ -464,19 +464,24 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.source_code_hashes = self.job_info["sourceCodeHash"]
         self.set_source_code_hashes_to_process()
 
-        # log jobs' information
+        # TODO: carry into slurm lib
+        # CPUTime = NCPUS * Elapsed
+        #
+        # To get stats about real CPU usage you need to look at SystemCPU and
+        # UserCPU, but the docs warns that it only measure CPU time for the
+        # parent process and not for child processes.
         slurm_log_output_file = f"{self.results_folder}/slurmJobInfo.out"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
         run_stdout_to_file(cmd, slurm_log_output_file)
         cmd.pop()
-        cmd.append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End")
+        cmd.append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End,CPUTime,MaxRSS")
         run_stdout_to_file(cmd, slurm_log_output_file)
 
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_raw_time = slurm.get_elapsed_raw_time(self.slurm_job_id)
-        if self.elapsed_raw_time > int(execution_duration[self.job_id]):
-            self.elapsed_raw_time = execution_duration[self.job_id]
+        if self.elapsed_raw_time > int(run_time[self.job_id]):
+            self.elapsed_raw_time = run_time[self.job_id]
 
         logging.info(f"finalized_elapsed_raw_time={self.elapsed_raw_time}")
 

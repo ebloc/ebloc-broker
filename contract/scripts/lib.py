@@ -32,19 +32,19 @@ class Job:
     """Object for the job that will be submitted."""
 
     def __init__(self, **kwargs) -> None:
-        self.execution_durations: List[int] = []
+        self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
         self.storage_hours: List[int] = []
         self.cache_types: List[int] = []
-        self.execution_durations = []
+        self.run_time = []
         self.Ebb = Contract.eblocbroker
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def check(self):
         try:
-            assert len(self.cores) == len(self.execution_durations)
+            assert len(self.cores) == len(self.run_time)
             assert len(self.source_code_hashes) == len(self.storage_hours)
             assert len(self.storage_hours) == len(self.storage_ids)
             assert len(self.cache_types) == len(self.storage_ids)
@@ -123,7 +123,7 @@ class JobPrices:
     def set_computational_cost(self):
         self.computational_cost = 0
         for idx, core in enumerate(self.job.cores):
-            self.computational_cost += int(self.price_core_min * core * self.job.execution_durations[idx])
+            self.computational_cost += int(self.price_core_min * core * self.job.run_time[idx])
 
     def set_storage_cost(self):
         """Calculating the cache cost."""
