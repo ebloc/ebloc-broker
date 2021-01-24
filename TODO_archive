@@ -1,8 +1,5 @@
 #    -*- mode: org -*-
-
-
-Archived entries from file /home/alper/eBlocBroker/TODO
-
+Archived entries from file /home/alper/ebloc-broker/TODO
 
 * DONE pause => suspend  // unpause => resume
   CLOSED: [2020-06-01 Mon 13:24]
@@ -15,8 +12,7 @@ Archived entries from file /home/alper/eBlocBroker/TODO
   :END:
 
 
-Archived entries from file /home/alper/eBlocBroker/TODO
-
+Archived entries from file /home/alper/ebloc-broker/TODO
 
 * DONE docs/ add quickstart
   CLOSED: [2020-05-02 Sat 15:42]
@@ -30,7 +26,7 @@ Archived entries from file /home/alper/eBlocBroker/TODO
 
   CLOSED: [2020-05-02 Sat 15:26]
 
-Archived entries from file /home/alper/eBlocBroker/TODO
+Archived entries from file /home/alper/ebloc-broker/TODO
 
 
 * DONE check refund()
@@ -42,7 +38,7 @@ Archived entries from file /home/alper/eBlocBroker/TODO
   :ARCHIVE_TODO: DONE
   :END:
 
-Archived entries from file /home/alper/eBlocBroker/TODO
+Archived entries from file /home/alper/ebloc-broker/TODO
 
 
 * DONE Comment:
@@ -59,7 +55,7 @@ Archived entries from file /home/alper/eBlocBroker/TODO
   CLOSED: [2020-07-30 Thu 15:59]
   :PROPERTIES:
   :ARCHIVE_TIME: 2020-07-30 Thu 16:00
-  :ARCHIVE_FILE: ~/eBlocBroker/TODO
+  :ARCHIVE_FILE: ~/ebloc-broker/TODO
   :ARCHIVE_OLPATH: TASKS
   :ARCHIVE_CATEGORY: TODO
   :ARCHIVE_TODO: DONE
@@ -133,3 +129,33 @@ Archived entries from file /home/alper/eBlocBroker/TODO
   :END:
 
   CLOSED: [2021-01-19 Tue 21:23]
+
+* DONE _colorize_traceback() <= Remove logging // log
+CLOSED: [2021-08-17 Tue 14:56]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-08-17 Tue 14:56
+:ARCHIVE_FILE: ~/ebloc-broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+* DONE refundStoragePayment into refundStorageDeposit
+CLOSED: [2021-08-17 Tue 14:57]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-08-17 Tue 14:57
+:ARCHIVE_FILE: ~/ebloc-broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+* DONE receiveStoragePayment into receiveStorageDeposity
+CLOSED: [2021-08-17 Tue 14:57]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-08-17 Tue 14:57
+:ARCHIVE_FILE: ~/ebloc-broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:

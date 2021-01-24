@@ -7,9 +7,8 @@ import time
 from os.path import expanduser
 from random import randint
 
-import owncloud
-
 import libs.eudat as eudat
+import owncloud
 
 home = expanduser("~")
 

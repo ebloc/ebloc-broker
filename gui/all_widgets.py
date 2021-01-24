@@ -10,7 +10,17 @@ import PySimpleGUI as sg
 # ------ Menu Definition ------ #
 menu_def = [
     ["&File", ["&Open", "&Save", "E&xit", "Properties"]],
-    ["&Edit", ["Paste", ["Special", "Normal",], "Undo"],],
+    [
+        "&Edit",
+        [
+            "Paste",
+            [
+                "Special",
+                "Normal",
+            ],
+            "Undo",
+        ],
+    ],
     ["&Help", "&About..."],
 ]
 

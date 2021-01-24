@@ -35,7 +35,10 @@ def convert_md_2_rst_process(filename_root):
     filename_source = filename_root + ".md"
     filename_target = filename_root + ".rst"
     print(
-        "Converting", os.path.basename(filename_source), "to", os.path.basename(filename_target),
+        "Converting",
+        os.path.basename(filename_source),
+        "to",
+        os.path.basename(filename_target),
     )
     file_source = open(filename_source)
     lines = file_source.readlines()

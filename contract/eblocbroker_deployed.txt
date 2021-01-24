@@ -1,15 +1,0 @@
-Brownie v1.12.2 - Python development framework for Ethereum
-
-ContractProject is the active project.
-
-Running 'scripts/eBlocBroker.py::main'...
-Transaction sent: 0x91ed56a6fade8bc43593daa71e3c378d6ee3071354272d4099669be69230407c
-  Gas price: 18.0 gwei   Gas limit: 148168   Nonce: 208
-Waiting for confirmation...   Lib.constructor confirmed - Block: 6055206   Gas used: 134699 (90.91%)
-  Lib deployed at: 0x3d09289B387E836D2A81FffCD7FDa89dA3aFC7f5
-
-Transaction sent: 0xf184836dea0efc491c1070852fc7dd7e81e08e0f04971187bf411366ce26c425
-  Gas price: 18.0 gwei   Gas limit: 5590915   Nonce: 209
-Waiting for confirmation...   eBlocBroker.constructor confirmed - Block: 6055207   Gas used: 5082650 (90.91%)
-  eBlocBroker deployed at: 0x8d4d7E157c65096a8e7548F9c3E37C67e84a18ed
-
