@@ -117,7 +117,7 @@ def submit_receipt(index, cores, startTime, completionTime, elapsed_time, is_pri
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
 
-    job_price, _cost = cost(provider, requester, job, config.ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
     provider_price_block_number = config.ebb.getProviderSetBlockNumbers(provider)[-1]
 
     args = [

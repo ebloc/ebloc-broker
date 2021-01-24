@@ -6,7 +6,7 @@ import subprocess
 # import gshell
 from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
-from utils import _colorize_traceback, byte_to_mb, log, read_json, silent_remove
+from utils import _colorize_traceback, byte_to_mb, dump_dict_to_file, log, read_json, silent_remove
 
 # TODO: gdrive list --query "sharedWithMe"
 
@@ -70,6 +70,8 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
     if "folder" in mime_type:
         try:
             output = get_file_id(key)
+            log(f"==> data_id={key}")
+            log(output, color="green")
         except:
             return False
 
@@ -165,3 +167,12 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
         return True, output, data_key_dict, source_code_key
     else:
         return False, 0, [], source_code_key
+
+
+def _dump_dict_to_file(filename, job_keys):
+    try:
+        dump_dict_to_file(filename, job_keys)
+        log("==> meta_data.json file is updated into the parent folder")
+    except Exception as e:
+        _colorize_traceback()
+        raise e

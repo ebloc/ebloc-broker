@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import os
-import pprint
 import sys
 import textwrap
 import time
 from functools import partial
+from pprint import pprint
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
@@ -310,7 +310,7 @@ def run_driver():
                 job_info.update({"received_block": received_block})
                 job_info.update({"storageDuration": storageDuration})
                 job_info.update({"cacheType": logged_job.args["cacheType"]})
-                pprint.pprint(job_info)
+                pprint(job_info)
                 job_infos.append(job_info)
             except:
                 continue

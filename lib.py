@@ -3,12 +3,12 @@
 import datetime
 import glob
 import os
-import pprint
 import signal
 import subprocess
 import sys
 import time
 from multiprocessing import Process
+from pprint import pprint
 from threading import Thread
 from typing import Tuple, Union
 
@@ -125,13 +125,13 @@ def get_tx_status(tx_hash) -> str:
     log(f"tx_hash={tx_hash}")
     tx_receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
     logging.info("Transaction receipt is mined:")
-    pprint.pprint(dict(tx_receipt), depth=1)
+    pprint(dict(tx_receipt), depth=1)
     # logging.info(pformat(receipt))
     # log("")
     # for idx, _log in enumerate(receipt["logs"]):
     #     # All logs fried under the tx
     #     log(f"log {idx}", "blue")
-    #     pprint.pprint(_log.__dict__)
+    #     pprint(_log.__dict__)
 
     log("\n#> Was transaction successful? ", color="white", filename=None)
     if tx_receipt["status"] == 1:
@@ -293,7 +293,7 @@ def check_linked_data(path_from, path_to, folders=None, is_continue=False):
     if not is_continue:
         question_yes_no(
             "\n## Would you like to continue with linked folder path in your run.sh?\n"
-            "If yes, please update your run.sh file [Y/n]: "
+            "If no, please update your run.sh file [Y/n]: "
         )
 
 

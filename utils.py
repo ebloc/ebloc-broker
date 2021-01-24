@@ -116,8 +116,8 @@ def untar(tar_file, extract_to):
             if name not in accept_files:
                 log(f"{tar_file} is already extracted into {extract_to}")
                 return
-
-    cmd = ["tar", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
+    # tar --warning=no-timestamp
+    cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
     run(cmd)
 
 
@@ -706,7 +706,7 @@ def question_yes_no(message, is_terminate=False):
         choice = getch().lower()
         if choice in yes:
             break
-        elif choice in no or choice == "\x04":
+        elif choice in no or choice in ["\x04", "\x03"]:
             if is_terminate:
                 print("\n")
                 terminate()
@@ -734,22 +734,22 @@ def compress_folder(folder_path):
     with cd(dir_path):
         """cmd:
         find . -print0 | LC_ALL=C sort -z | \
-        PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --absolute-names --no-recursion --null -T - -cvf file.tar.gz
-        # PIGZ=-n tar -Ipigz --mode=a+rwX --owner=0 --group=0 --numeric-owner --absolute-names \
-        #             --no-recursion --null -T - -cvf /tmp/work/output.tar.gz && md5sum /tmp/work/output.tar.gz
+          PIGZ=-n tar -Ipigz --mtime='1970-01-01 00:00:00' --mode=a+rwX --owner=0 \
+                      --group=0 --numeric-owner --no-recursion \
+                      --null -T - -cvf /tmp/work/output.tar.gz && md5sum /tmp/work/output.tar.gz
         """
         p1 = subprocess.Popen(["find", base_name, "-print0"], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(["sort", "-z"], stdin=p1.stdout, stdout=subprocess.PIPE, env={"LC_ALL": "C"})
         p1.stdout.close()
-
         cmd = [
             "tar",
             "-Ipigz",
+            "--mtime=1970-01-01 00:00:00",
             "--mode=a+rwX",
             "--owner=0",
             "--group=0",
             "--numeric-owner",
-            "--absolute-names",
+            # "--absolute-names",  # --absolute-names is not needed, since absolute paths are not used
             "--no-recursion",
             "--null",
             "-T",
@@ -757,7 +757,6 @@ def compress_folder(folder_path):
             "-cvf",
             f"{base_name}.tar.gz",
         ]
-        print(" ".join(cmd))
         p3 = subprocess.Popen(cmd, stdin=p2.stdout, stdout=subprocess.PIPE, env={"PIGZ": "-n"},)  # alternative: GZIP
         p2.stdout.close()
         p3.communicate()
@@ -765,9 +764,14 @@ def compress_folder(folder_path):
         tar_hash = generate_md5sum(f"{base_name}.tar.gz")
         tar_file = f"{tar_hash}.tar.gz"
         shutil.move(f"{base_name}.tar.gz", tar_file)
-        log(f"Created tar file={dir_path}/{tar_file}")
+        log(f"==> Created tar file={dir_path}/{tar_file}")
         log(f"==> tar_hash={tar_hash}")
     return tar_hash, f"{dir_path}/{tar_file}"
+
+
+def dump_dict_to_file(filename, job_keys):
+    with open(filename, "w") as f:
+        json.dump(job_keys, f)
 
 
 class Link:

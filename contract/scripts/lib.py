@@ -68,19 +68,19 @@ class Job:
         try:
             _from = _Ebb.account_id_to_address(account_id)
             if is_geth_account_locked(_from):
-                log(f"E: Account({_from}) is locked", "red")
+                log(f"E: Account({_from}) is locked")
                 raise QuietExit
 
             if not _Ebb.eBlocBroker.functions.doesRequesterExist(_from).call():
-                log(f"E: Requester's Ethereum address {_from} is not registered", "red")
+                log(f"E: Requester's Ethereum address {_from} is not registered")
                 sys.exit(1)
 
             *_, orcid = _Ebb.eBlocBroker.functions.getRequesterInfo(_from).call()
             if not _Ebb.eBlocBroker.functions.isOrcIDVerified(_from).call():
                 if orcid != empty_bytes32:
-                    log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified", "red")
+                    log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
                 else:
-                    log(f"E: Requester({_from})'s orcid is not registered", "red")
+                    log(f"E: Requester({_from})'s orcid is not registered")
                 raise QuietExit
         except QuietExit:
             sys.exit(1)
@@ -90,9 +90,9 @@ class Job:
 
 
 class JobPrices:
-    def __init__(self, ebb, w3, job, msg_sender, is_brownie=False):
-        self.ebb = ebb
-        self.w3 = w3
+    def __init__(self, job, msg_sender, is_brownie=False):
+        self.ebb = config.ebb
+        self.w3 = config.w3
         self.msg_sender = msg_sender
         self.is_brownie = is_brownie
         self.computational_cost = 0
@@ -192,14 +192,14 @@ class JobPrices:
             if key == "data_transfer":
                 log(
                     f"\t=> {key}={value} <=> [in:{self.cost['data_transfer_in']} out:{self.cost['data_transfer_out']}]",
-                    "blue",
+                    color="blue",
                 )
             else:
-                if key != "data_transfer_out" and key != "data_transfer_in":
+                if key not in ("data_transfer_out", "data_transfer_in"):
                     log(f"\t=> {key}={value}", "blue")
 
 
-def cost(provider, requester, job, ebb=config.ebb, w3=config.w3, is_brownie=False):
+def cost(provider, requester, job, is_brownie=False):
     called_filename = path.basename(sys._getframe(1).f_code.co_filename)
     if called_filename.startswith("test_"):
         is_brownie = True
@@ -209,7 +209,7 @@ def cost(provider, requester, job, ebb=config.ebb, w3=config.w3, is_brownie=Fals
     job.requester = requester
     job.check()
 
-    jp = JobPrices(ebb, w3, job, provider, is_brownie)
+    jp = JobPrices(job, provider, is_brownie)
     jp.set_computational_cost()
     jp.set_storage_cost()
     jp.set_job_price()

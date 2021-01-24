@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import pprint
 import sys
+from pprint import pprint
 from typing import List
 
 from web3.logs import DISCARD
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             processed_logs = Ebb.eBlocBroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
-            pprint.pprint(vars(processed_logs[0].args))
+            pprint(vars(processed_logs[0].args))
             try:
                 logging.info(f"refunded_wei={processed_logs[0].args['refundedWei']}")
                 log("SUCCESS", "green")

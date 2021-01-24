@@ -30,18 +30,16 @@ cat /dev/null > $HOME/.eBlocBroker/log.txt
 
 killall.sh
 
-# clean some file
-rm -f geth_server.out
-rm -f .node-xmlhttprequest*
-rm -f ipfs.out
-rm -f modified_date.txt
-rm -f package-lock.json
+rm -f $base/geth_server.out
+rm -f $base/.node-xmlhttprequest*
+rm -f $base/ipfs.out
+rm -f $base/modified_date.txt
+rm -f $base/package-lock.json
 # rm -f .oc.pckl
-rm -f base/meta_data.json
+rm -f $HOME/eBlocBroker/base/meta_data.json
 
 rm -rf docs/_build_html/
 rm -rf docs/_build/
-
 
 cp $HOME/eBlocBroker/bash_scripts/slurmScript.sh $base
 # Update block.continue.txt with the current block number

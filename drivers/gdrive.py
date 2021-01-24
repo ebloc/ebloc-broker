@@ -152,7 +152,7 @@ class GdriveClass(Storage):
             filename = f"{self.folder_path_to_download[source_code_hash]}/{name}"
             p1 = subprocess.Popen(["ls", "-ln", filename,], stdout=subprocess.PIPE,)
             p2 = subprocess.Popen(["awk", "{print $5}"], stdin=p1.stdout, stdout=subprocess.PIPE)
-            p1.stdout.close()
+            p1.stdout.close()  # noqa
             # returns downloaded files size in bytes
             self.dataTransferIn_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
             logging.info(

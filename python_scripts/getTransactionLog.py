@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import pprint
 import sys
+from pprint import pprint
 
 from web3.logs import DISCARD
 
@@ -21,10 +21,10 @@ if __name__ == "__main__":
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     if event == "LogJob":
         processed_logs = eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
-        pprint.pprint(vars(processed_logs[0].args))
+        pprint(vars(processed_logs[0].args))
         print("-----------")
 
     if event == "LogReceipt":
         processed_logs = eBlocBroker.events.LogReceipt().processReceipt(tx_receipt, errors=DISCARD)
-        pprint.pprint(vars(processed_logs[0].args))
+        pprint(vars(processed_logs[0].args))
         print("-----------")

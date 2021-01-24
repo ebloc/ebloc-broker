@@ -39,7 +39,7 @@ dbfread==2.0.4
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
--e git+https://github.com/ebloc/eBlocBroker.git@a68339a5f4d93446766f9533077f27b7b11b6ad9#egg=eBlocBroker
+-e git+https://github.com/ebloc/eBlocBroker.git@5d438328d75034759d2e1fa8fce498ae5cf532c7#egg=eBlocBroker
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.2
@@ -79,7 +79,7 @@ ipython==7.16.1
 ipython-genutils==0.2.0
 isort==4.3.21
 itsdangerous==1.1.0
-jedi==0.17.1
+jedi==0.18.0
 jeepney==0.4.3
 Jinja2==2.11.2
 jsonschema==3.2.0
@@ -106,7 +106,7 @@ numpy==1.19.4
 packaging==20.3
 paramiko==2.7.1
 parsimonious==0.8.1
-parso==0.7.0
+parso==0.8.1
 PasteDeploy==2.1.0
 pathspec==0.7.0
 persistent==4.6.4
@@ -124,8 +124,8 @@ py==1.10.0
 py-cid==0.3.0
 py-multicodec==0.2.1
 py-multihash==0.2.3
-py-solc-ast==1.2.6
-py-solc-x==1.0.1
+py-solc-ast==1.2.8
+py-solc-x==1.1.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20

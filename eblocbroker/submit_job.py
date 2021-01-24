@@ -112,9 +112,13 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     """
 
 
-def submit_job(self, provider, key, account_id, job_price, job):
+def submit_job(self, provider, key, job_price, job, requester=None, account_id=None):
     provider = self.w3.toChecksumAddress(provider)
-    _from = self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
+    if not account_id:
+        _from = self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
+    else:
+        _from = requester
+
     try:
         provider_info = self.get_provider_info(provider)
         log(f"Provider's available_core_num={provider_info['available_core_num']}")

@@ -52,5 +52,5 @@ def percent_change(initial, change, _decimal=8, end=None):
         change = " " + change
 
     # log(f"{change} ({format(float(percent), '.2f')}%)", color=_color, end=end)
-    print(f"{change} ({format(float(percent), '.2f')}%)")
+    print(f"{change} ({format(float(percent), '.2f')}%)", end=end)
     return percent

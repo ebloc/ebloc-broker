@@ -3,12 +3,12 @@
 import os
 import os.path
 import pickle
-import pprint
 import shutil
 import subprocess
 import sys
 import time
 import traceback
+from pprint import pprint
 
 import owncloud
 from web3.logs import DISCARD
@@ -226,7 +226,7 @@ def submit(provider, account_id, code_paths):
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             logs = config.ebb.events.LogJob().processReceipt(receipt, errors=DISCARD)
-            pprint.pprint(vars(logs[0].args))
+            pprint(vars(logs[0].args))
             try:
                 log(f"job's index={logs[0].args['index']}")
                 log("SUCCESS")
@@ -279,7 +279,8 @@ def _submit(provider, account_id, code_paths):
 
         time.sleep(0.25)
 
-    log("\n==> Submitting the job")
+    log("")
+    log("==> Submitting the job")
     job.run_time = [60]  # in seconds
     job.cores = [1]
     job.dataTransferIns = [1, 116]

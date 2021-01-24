@@ -4,11 +4,13 @@
 #     pyclean docs/
 # fi
 
-# pyclean () {
-#     find . | grep -E "(.mypy_cache|.pytest_cache|__pycache__|\.pyc|\.pyo$)" | xargs rm -rf &>/dev/null
-# }
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
-# pyclean
+pyclean () {
+    find . | grep -E "(.mypy_cache|.pytest_cache|__pycache__|\.pyc|\.pyo$)" | \
+        xargs rm -rf &>/dev/null
+}
 
 # rm -rf dist build */*.egg-info *.egg-info
 
@@ -37,4 +39,6 @@ rm -f base/meta_data.json
 rm -rf docs/_build_html/
 rm -rf docs/_build/
 
-echo -e "cleaning [ SUCCESS ]"
+# pyclean
+
+printf "cleaning [ ${GREEN}SUCCESS${NC} ]\n"

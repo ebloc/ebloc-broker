@@ -210,7 +210,7 @@ def test_stored_data_usage():
         job.dataTransferOut,
     ]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
 
     # first time job is submitted with the data files
     tx = config.ebb.submitJob(
@@ -228,7 +228,7 @@ def test_stored_data_usage():
     print(tx.events["LogJob"]["jobKey"])
     assert _cost["storage"] == 2
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
 
     print("jobIndex=" + str(tx.events["LogJob"]["index"]))
     print(tx.events["LogJob"]["jobKey"])
@@ -258,7 +258,7 @@ def test_stored_data_usage():
     assert "LogDataStorageRequest" not in tx.events
     mine(240)
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
     # first time job is submitted with the data files
     tx = Ebb.submitJob(
         jobKey,
@@ -306,7 +306,7 @@ def test_computational_refund():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
 
     provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
@@ -377,8 +377,7 @@ def test_storage_refund():
     # provider's registered data won't be used
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
-
+    job_price, _cost = cost(provider, requester, job)
     job_price += 1  # for test 1 wei extra is paid
     args = [
         provider,
@@ -575,7 +574,7 @@ def test_multiple_data():
         job.dataTransferOut,
     ]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
 
     # first time job is submitted with the data files
     tx = Ebb.submitJob(
@@ -592,11 +591,11 @@ def test_multiple_data():
     assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
 
     # second time job is wanted to send by the same user  with the same data files
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job)
     assert _cost["storage"] == 0, "Since cost of storage is already paid by the user it should be 0"
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = cost(provider, requester_1, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester_1, job)
     print(str(_cost))
     assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
 
@@ -608,16 +607,16 @@ def test_multiple_data():
     )
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job)
     assert _cost["storage"] == 0, "Since it is verified torageCost should be 0"
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = cost(provider, requester_1, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester_1, job)
     assert _cost["storage"] == 100, "Since data1 is verified and publis, its cost of storage should be 0"
 
     # ds = scripts.DataStorage(provider, source_code_hashes[1], True)
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job)
 
     assert _cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
     assert _cost["data_transfer"] == job.dataTransferOut, "cost of data_transfer should cover only dataTransferOut"
@@ -762,7 +761,7 @@ def test_workflow():
         job.dataTransferOut,
     ]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3,)
+    job_price, _cost = cost(provider, requester, job)
 
     # first submit
     tx = Ebb.submitJob(
@@ -898,7 +897,7 @@ def test_simple_submit():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
 
-    job_price, _cost = cost(provider, requester, job, Ebb, web3)
+    job_price, _cost = cost(provider, requester, job)
     provider_price_block_number = Ebb.getProviderSetBlockNumbers(accounts[0])[-1]
 
     args = [
@@ -1018,7 +1017,7 @@ def test_submit_job(ebb):
             ]
 
             # print(source_code_hashes[0])
-            job_price, _cost = cost(provider, requester, job, Ebb, web3)
+            job_price, _cost = cost(provider, requester, job)
 
             job_priceSum += job_price
             dataTransferIns = [100]
