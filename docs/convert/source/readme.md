@@ -74,7 +74,7 @@ To give open acccess to the keystore file:
 sudo chown -R $(whoami) private/keystore/UTC--...
 ```
 
-- Afterwards, open the following file: `$HOME/eBlocBroker/.profile` and set `COINBASE` with your
+- Afterwards, open the following file: `$HOME/ebloc-broker/.profile` and set `COINBASE` with your
   created Ethereum Address.
 
 -------
@@ -86,7 +86,7 @@ Later, please do following inside your Amazon instance.
 $ eblocServer
 
 # To run eBlocBroker Driver
-$ cd $HOME/eBlocBroker
+$ cd $HOME/ebloc-broker
 $ bash initialize.sh # do it only once
 $ sudo ./Driver.sh
 ```
@@ -125,7 +125,7 @@ sudo ./bash_scripts/run_slurm.sh
 Following example should successfully submit the job:
 
 ```bash
-cd eBlocBroker/slurmJobExample
+cd ebloc-broker/slurmJobExample
 sbatch -N1 run.sh
 Submitted batch job 1
 ```
@@ -138,7 +138,7 @@ Submitted batch job 1
 It is important that first you should run IPFS daemon on the background: `ipfs daemon &`. If it is
 not running, cluster is not able to get the IPFS object from the client's node.
 
-Example code could be seen under `eBlocBroker/slurmJobExample` directory:
+Example code could be seen under `ebloc-broker/slurmJobExample` directory:
 
 Client should put his Slurm script inside a file called `run.sh`. Please note that you do not have
 to identify `-n` and `-t` parameters, since they will be overwritten with arguments provided by the

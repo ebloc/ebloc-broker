@@ -1,35 +1,27 @@
                                                                  *outline*
-
 * TASKS
 ** TODO Later do, when cache time is completed:
    oc.decline_remote_share(int(<share_id>)) to cancel shared folder at
    end_code or after some time later
 ** TODO /* Sets the job's state (stateCode) which is obtained from Slurm */
    Slurm status should be set on the receiveDeposit call not setJobStatus
-** TODO refundStoragePayment => refundStorageDeposit
-** TODO receiveStoragePayment => receiveStorageDeposity
-** TODO DAS2-fs1-2003-1.swf =>
-   https://www.cse.huji.ac.il/labs/parallel/workload/l_das2/index.html
+** TODO DAS2-fs1-2003-1.swf
    Starting from // 5955  9447070
-
+   __ https://www.cse.huji.ac.il/labs/parallel/workload/l_das2/index.html
 ** TODO oc may have "owncloud.owncloud.HTTPResponseError: HTTP error: 401" error
-** TODO _colorize_traceback() <= Remove logging // log
 ** TODO DAWNNech
-
-  link: https://dawn.cs.stanford.edu/benchmark/
+   __ https://dawn.cs.stanford.edu/benchmark/
 ** TODO gdown setup
 #+BEGIN_SRC python
-  try:
-	./gdown.pl
-	https://drive.google.com/file/d/0B_JzYt91KzCzSm1JaWhrQUk5RmVjWG9YYVhBQXpueFV4ZUJB/edit
+try:
+    ./gdown.pl
+    https://drive.google.com/file/d/0B_JzYt91KzCzSm1JaWhrQUk5RmVjWG9YYVhBQXpueFV4ZUJB/edit
     ~/junk/alper.mp
-    except:
-	gdrive
+except:
+    gdrive
 #+END_SRC
 
 link: https://github.com/wkentar
 ** TODO Some code should go into utils.py
    Some functıons are public that should carried into `utils.py`
-** DONE jobStateCode => stateCode in py files
-   CLOSED: [2021-01-22 Fri 17:26]
-   job_state_code => state_code
+** TODO .git yoksa eudat ve ipfs icin yarat

@@ -24,12 +24,19 @@ class SolidityLexer(RegexLexer):
             (r"/\*\*", Comment.Special, "docstringmulti"),
             (r"/\*.*?\*/", Comment.Multiline),
         ],
-        "natspec": [(r"@author|@dev|@notice|@return|@param|@why3|@title", Keyword), (r".[^@*\n]*?", Comment.Special),],
+        "natspec": [
+            (r"@author|@dev|@notice|@return|@param|@why3|@title", Keyword),
+            (r".[^@*\n]*?", Comment.Special),
+        ],
         "docstringsingle": [(r"\n", Comment.Special, "#pop"), include("natspec")],
         "docstringmulti": [(r"\*/", Comment.Special, "#pop"), include("natspec")],
         "slashstartsregex": [
             include("commentsandwhitespace"),
-            (r"/(\\.|[^[/\\\n]|\[(\\.|[^\]\\\n])*])+/" r"([gim]+\b|\B)", String.Regex, "#pop",),
+            (
+                r"/(\\.|[^[/\\\n]|\[(\\.|[^\]\\\n])*])+/" r"([gim]+\b|\B)",
+                String.Regex,
+                "#pop",
+            ),
             (r"(?=/)", Text, ("#pop", "badregex")),
             (r"", Text, "#pop"),
         ],

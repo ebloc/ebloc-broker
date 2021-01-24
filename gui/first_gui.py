@@ -7,7 +7,17 @@ sg.theme("Dark Blue 3")  # please make your windows colorful
 # ------ Menu Definition ------ #
 menu_def = [
     ["&File", ["&Open", "&Save", "---", "Properties", "E&xit"]],
-    ["&Edit", ["Paste", ["Special", "Normal",], "Undo"],],
+    [
+        "&Edit",
+        [
+            "Paste",
+            [
+                "Special",
+                "Normal",
+            ],
+            "Undo",
+        ],
+    ],
     ["&Help", "&About..."],
 ]
 

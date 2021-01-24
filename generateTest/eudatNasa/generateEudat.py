@@ -6,9 +6,8 @@ import subprocess
 import time
 from os.path import expanduser
 
-import owncloud
-
 import libs.eudat as eudat
+import owncloud
 
 home = expanduser("~")
 path = os.getcwd()
@@ -46,6 +45,7 @@ with open(path + "/../nasa.txt") as test:
             time.sleep(1)
             # after run.sh is update share the ipfs through eudat
             print(eudat.share_single_folder(tarHash, oc))
+            startTimeTemp = None
             if flag == 1:
                 hashesFile.write(" " + str(int(lineIn[0]) - startTimeTemp) + "\n")
 

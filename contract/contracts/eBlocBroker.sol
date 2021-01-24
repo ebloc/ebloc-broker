@@ -339,8 +339,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        of the committed prices.
      * @param ipfsID is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
-     * @param whisperID is a string containing public key for a key pair ID that
-       is generated on Whisper.
      * @return bool
      */
     function registerProvider(
@@ -348,7 +346,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         string memory email,
         string memory federatedCloudID,
         string memory ipfsID,
-        string memory whisperID,
         uint32 availableCore,
         uint32[] memory prices,
         uint32 commitmentBlockDuration
@@ -371,7 +368,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         provider.constructProvider();
         registeredProviders.push(msg.sender);
 
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
 
@@ -379,10 +376,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
-        string memory ipfsID,
-        string memory whisperID
+        string memory ipfsID
     ) public whenProviderRegistered returns (bool) {
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
 
@@ -420,7 +416,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
             if (_committedBlock <= block.number) {
                 _committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;
-
                 // Next price cycle to be considered
                 _committedBlock = _pricesSetBlockNum + _committedBlock * _commitmentBlockDuration;
             }
@@ -462,19 +457,16 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        sharing requester's repository with the provider through EUDAT.
      * @param ipfsID | is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
-     * @param whisperID | is a string containing public key for a key pair ID
-       that is generated on Whisper.
      * @return bool
      */
     function registerRequester(
         bytes32 gpgFingerprint,
         string memory email,
         string memory federatedCloudID,
-        string memory ipfsID,
-        string memory whisperID
+        string memory ipfsID
     ) public returns (bool) {
         requesterCommittedBlock[msg.sender] = uint32(block.number);
-        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID, whisperID);
+        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
 
@@ -1115,7 +1107,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
     function getJobSize(address _provider, string memory key) public view returns (uint256) {
         require(providers[msg.sender].committedBlock > 0);
-
         return providers[_provider].jobStatus[key].length;
     }
 
