@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import pytest
+from utils import ZERO_ADDRESS
 
 from brownie import accounts
-from utils import ZERO_ADDRESS
 
 
 def test_ownership(Ebb):

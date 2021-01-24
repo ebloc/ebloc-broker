@@ -48,8 +48,7 @@ interface eBlocBrokerInterface {
         bytes32 indexed gpgFingerprint,
         string email,
         string fID,
-        string ipfsID,
-        string whisperID
+        string ipfsID
     );
 
     // Records the registered requesters' registered information under
@@ -59,8 +58,7 @@ interface eBlocBrokerInterface {
         bytes32 indexed gpgFingerprint,
         string email,
         string fID,
-        string ipfsID,
-        string whisperID
+        string ipfsID
     );
 
     // Records the refunded jobs' information under refund() method call

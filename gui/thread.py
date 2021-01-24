@@ -3,10 +3,9 @@
 import threading
 import time
 
-import PySimpleGUI as sg
-
 import config
 import eblocbroker.Contract as Contract
+import PySimpleGUI as sg
 
 """
     DESIGN PATTERN - Multithreaded Long Tasks GUI using shared global variables
