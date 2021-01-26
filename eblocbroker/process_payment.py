@@ -17,14 +17,14 @@ def process_payment(
     result_ipfs_hash,
     cloud_storage_ids,
     end_time,
-    dataTransferIn,
-    dataTransferOut,
+    data_transfer_in,
+    data_transfer_out,
     core,
     run_time,
 ):
     logging.info(
-        f"~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
-        f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {dataTransferIn} {dataTransferOut} '{core}'"
+        f"\n~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
+        f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'"
     )
 
@@ -54,8 +54,8 @@ def process_payment(
             int(index),
             int(job_id),
             int(end_time),
-            int(dataTransferIn),
-            int(dataTransferOut),
+            int(data_transfer_in),
+            int(data_transfer_out),
             core,
             run_time,
             final_job,
@@ -92,8 +92,8 @@ if __name__ == "__main__":
         result_ipfs_hash = str(my_args[4])
         cloud_storage_id = my_args[5]
         end_time = int(my_args[6])
-        dataTransferIn = float(my_args[7])
-        dataTransferOut = float(my_args[8])
+        data_transfer_in = float(my_args[7])
+        data_transfer_out = float(my_args[8])
         core = my_args[9]
         run_time = my_args[10]
 
@@ -110,8 +110,8 @@ if __name__ == "__main__":
         result_ipfs_hash = ""
         cloud_storage_id = 1
         end_time = 1584375940
-        dataTransferIn = 0.029152870178222656
-        dataTransferOut = 0.0
+        data_transfer_in = 0.029152870178222656
+        data_transfer_out = 0.0
         core = [1]
         run_time = [5]
 
@@ -124,8 +124,8 @@ if __name__ == "__main__":
             result_ipfs_hash,
             cloud_storage_id,
             end_time,
-            dataTransferIn,
-            dataTransferOut,
+            data_transfer_in,
+            data_transfer_out,
             core,
             run_time,
         )

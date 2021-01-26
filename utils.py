@@ -95,8 +95,15 @@ def utc_to_local(utc_dt):
 
 
 def extract_gzip(filename):
-    args = shlex.split(f"gunzip --force {filename}")
-    run(args)
+    try:
+        args = shlex.split(f"gunzip --force {filename}")
+        run(args, is_print_trace=False)
+    except:
+        breakpoint()  # DEBUG
+        args = shlex.split(f"zcat {filename}")
+        base_dir = os.path.dirname(filename)
+        base_name = os.path.basename(filename).replace(".gz", "")
+        popen_communicate(args, f"{base_dir}/{base_name}")
 
 
 def untar(tar_file, extract_to):
@@ -143,7 +150,7 @@ def sleep_timer(sleep_duration):
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
-    sys.stdout.write("\rSleeping is done!                               \n")
+    sys.stdout.write("\rSleeping is done                                \n")
 
 
 def remove_ansi_escape_sequence(string):
@@ -169,7 +176,7 @@ def _try(func):
 
 
 def run(cmd, is_print_trace=True) -> str:
-    if type(cmd) is not str:
+    if not isinstance(cmd, str):
         cmd = list(map(str, cmd))  # all items should be str
     else:
         cmd = [cmd]
@@ -189,9 +196,9 @@ def run_with_output(cmd):
     ret = ""
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
-            ret += line
-        print(line, end="")  # process output
-        return line.strip()
+            ret += line.strip()
+            print(line, end="")  # process line here
+        return ret
     if p.returncode != 0:
         raise CalledProcessError(p.returncode, p.args)
 
@@ -286,7 +293,7 @@ def ipfs_to_bytes32(ipfs_hash: str) -> str:
     return config.w3.toBytes(hexstr=ipfs_hash_bytes32)
 
 
-def byte_to_mb(size_in_bytes: int) -> int:
+def byte_to_mb(size_in_bytes: float) -> int:
     """Instead of a size divisor of 1024 * 1024 you could use the
     bitwise shifting operator (<<), i.e. 1<<20 to get megabytes."""
     MBFACTOR = float(1 << 20)
@@ -445,12 +452,15 @@ def log(text="", color=None, filename=None, end=None, is_bold=True):
     text = str(text)
     is_arrow = False
     is_error = False
-    if text[:3] == "==>":
-        is_arrow = True
-    elif text[:2] == "E:":
-        is_error = True
-    elif text == "SUCCESS":
-        color = "green"
+    if not color:
+        if text[:3] == "==>":
+            is_arrow = True
+        elif text[:2] == "E:":
+            is_error = True
+        elif text == "SUCCESS":
+            color = "green"
+        elif text == "FAILED":
+            color = "red"
 
     if threading.current_thread().name != "MainThread" and env.IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
@@ -472,9 +482,13 @@ def log(text="", color=None, filename=None, end=None, is_bold=True):
 
         if threading.current_thread().name == "MainThread":
             if is_arrow:
-                print(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + f"{COLOR.BOLD}{text[3:]}{COLOR.END}")
+                print(
+                    colored(f"{COLOR.BOLD}==>{COLOR.END}", color="blue") + f"{COLOR.BOLD}{text[3:]}{COLOR.END}", end=end
+                )
             elif is_error:
-                print(colored(f"{COLOR.BOLD}E:{COLOR.END}", "red") + f"{COLOR.BOLD}{text[2:]}{COLOR.END}")
+                print(
+                    colored(f"{COLOR.BOLD}E:{COLOR.END}", color="red") + f"{COLOR.BOLD}{text[2:]}{COLOR.END}", end=end
+                )
             else:
                 print_color(colored(text, color), color, is_bold, end)
 
@@ -494,9 +508,9 @@ def log(text="", color=None, filename=None, end=None, is_bold=True):
             f.write(colored(_text, color))
     else:
         if is_arrow:
-            print(colored(f"{COLOR.BOLD}==>{COLOR.END}", "blue") + f"{COLOR.BOLD}{text[3:]}{COLOR.END}")
+            print(colored(f"{COLOR.BOLD}==>{COLOR.END}", color="blue") + f"{COLOR.BOLD}{text[3:]}{COLOR.END}", end=end)
         elif is_error:
-            print(colored(f"{COLOR.BOLD}E:{COLOR.END}", "red") + f"{COLOR.BOLD}{text[2:]}{COLOR.END}")
+            print(colored(f"{COLOR.BOLD}E:{COLOR.END}", color="red") + f"{COLOR.BOLD}{text[2:]}{COLOR.END}", end=end)
         else:
             print(text, end=end)
 
@@ -510,9 +524,9 @@ def log(text="", color=None, filename=None, end=None, is_bold=True):
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"[{WHERE(back)}] Error failed command: ", color="red", end="")
-        log(_cmd)
-        log(f"E: {exc}", color="red")
+        log(f"[{WHERE(back)}] Error failed command:", color="red")
+        log(f"$ {_cmd}", color="yellow")
+        log(exc, color="red")
     else:
         log(f"==> Failed shell command:\n{_cmd}", color="yellow")
 
@@ -531,7 +545,6 @@ def silent_remove(path):
     Helpful Links:
     - https://stackoverflow.com/a/10840586/2402577
     """
-
     try:
         if os.path.isfile(path):
             with suppress(FileNotFoundError):
@@ -583,19 +596,20 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             if running_pid in pids:
                 if is_print:
                     if name == "Driver":
-                        print_color(f"==> {name} is already running on the background, its pid={running_pid}", "green")
+                        print_color(f"==> {name} is already running on the background, its pid={running_pid}")
                     else:
-                        log(f"==> {name} is already running on the background, its pid={running_pid}", "green")
+                        log(f"==> {name} is already running on the background, its pid={running_pid}")
                 return True
         else:
             if is_print:
                 if name == "Driver":
-                    print_color(f"==> {name} is already running on the background", "green")
+                    print_color(f"==> {name} is already running on the background")
                 else:
-                    log(f"==> {name} is already running on the background", "green")
+                    log(f"==> {name} is already running on the background")
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
+    log("")
     log(f"==> {name} is not running on the background")
     return False
 
@@ -812,7 +826,7 @@ class Link:
             destination = f"{self.path_to}/{folder_hash}"
 
             run_command(["ln", "-sfn", target, destination])
-            log(f"* '{target}' => ", end="")
+            log(f"* '{target}' =>\n  ")
             log(f"'{destination}'", color="yellow")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"
@@ -825,6 +839,7 @@ class cd:
     """
 
     def __init__(self, new_path):
+        self.saved_path = None
         self.new_path = os.path.expanduser(new_path)
 
     def __enter__(self):

@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Union
 
 from dotenv import load_dotenv
-from web3 import Web3  # noqa: F401
 
+# from web3 import Web3
 import _utils.colored_traceback as colored_traceback
 import _utils.colorer  # noqa
 
@@ -19,7 +19,7 @@ import _utils.colorer  # noqa
 
 
 class ThreadFilter(Filter):
-    """Only accept log records from a specific thread or thread name"""
+    """Only accept log records from a specific thread or thread name."""
 
     def __init__(self, thread_id=None, thread_name=None):
         if thread_id is None and thread_name is None:
@@ -37,7 +37,7 @@ class ThreadFilter(Filter):
 
 
 class IgnoreThreadsFilter(Filter):
-    """Only accepts log records that originated from the main thread"""
+    """Only accepts log records that originated from the main thread."""
 
     def __init__(self):
         self._main_thread_id = threading.main_thread().ident
@@ -125,7 +125,6 @@ class ENV:
     def set_provider_id(self, provider_id=None):
         if not os.getenv("PROVIDER_ID"):
             if provider_id:
-                print(w3)
                 self.PROVIDER_ID = w3.toChecksumAddress(provider_id)
             else:
                 print("E: Please set PROVIDER_ID in ~/.eBlocBroker/.env")
@@ -172,17 +171,19 @@ def setup_logger(log_path="", is_brownie=False):
 
 
 Ebb = None  # eBlocBlock Contract Class
+w3 = None
 ebb = None  # eBlocBroker Contract on the blockchain
-w3: Web3 = None
 contract = None
+
+colored_traceback.add_hook(always=True)
+logger = setup_logger()  # Default initialization
 
 coll = None
 oc = None
 driver_cancel_process = None
 whisper_state_receiver_process = None
-colored_traceback.add_hook(always=True)
+
 env = ENV()
-logger = setup_logger()  # Default initialization
 
 BLOCK_DURATION = 15
 RECONNECT_ATTEMPTS = 5

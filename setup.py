@@ -26,8 +26,8 @@ setup(
     # long_description_content_type="text/markdown",
     author="Alper Alimoglu",
     author_email="alper.alimoglu@gmail.com",
-    url="https://github.com/ebloc/eBlocBroker",
-    keywords=["eblocbroker"],
+    url="https://github.com/eBloc/eBlocBroker",
+    keywords=["eblocbroker", "ethereum"],
     include_package_data=True,
     python_requires=">=3.7,<4",
     classifiers=[

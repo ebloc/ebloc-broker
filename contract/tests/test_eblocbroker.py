@@ -12,7 +12,8 @@ import eblocbroker.Contract as Contract
 from brownie import accounts, rpc, web3
 from config import setup_logger
 from contract.scripts.lib import DataStorage, Job, cost, new_test
-from imports import connect
+
+# from imports import connect
 from utils import CacheType, StorageID, ipfs_to_bytes32, logging, zero_bytes32
 
 # from brownie.test import given, strategy
@@ -188,7 +189,7 @@ def test_stored_data_usage():
     jobKey_2 = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Va"
     job.source_code_hashes.append(ipfs_to_bytes32(jobKey_2))
 
-    job.dataTransferIns = [1, 1]
+    job.data_transfer_ins = [1, 1]
     job.dataTransferOut = 1
     # provider's registered data won't be used
     job.storage_hours = [1, 1]
@@ -215,7 +216,7 @@ def test_stored_data_usage():
     # first time job is submitted with the data files
     tx = config.ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -239,7 +240,7 @@ def test_stored_data_usage():
         job_price_revert = 500  # dataTransferIn cost is ignored
         tx = Ebb.submitJob(
             jobKey,
-            job.dataTransferIns,
+            job.data_transfer_ins,
             args,
             job.storage_hours,
             job.source_code_hashes,
@@ -248,7 +249,7 @@ def test_stored_data_usage():
 
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -262,7 +263,7 @@ def test_stored_data_usage():
     # first time job is submitted with the data files
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -299,7 +300,7 @@ def test_computational_refund():
     job.source_code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.cores = [1]
     job.run_time = [5]
-    job.dataTransferIns = [1, 1]
+    job.data_transfer_ins = [1, 1]
     job.dataTransferOut = 1
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
@@ -321,7 +322,7 @@ def test_computational_refund():
     ]
     tx = Ebb.submitJob(
         job.source_code_hashes[0],
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -363,7 +364,7 @@ def test_storage_refund():
     job.source_code_hashes.append(ipfs_to_bytes32(jobKey_2))
     job.storage_hours.append(1)
 
-    job.dataTransferIns = [100, 100]
+    job.data_transfer_ins = [100, 100]
     job.dataTransferOut = 100
     job.data_prices_set_block_numbers = [0, 0]
 
@@ -391,7 +392,7 @@ def test_storage_refund():
     ]
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -450,7 +451,7 @@ def test_storage_refund():
     print("========= Same Job submitted after full refund =========")
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -553,7 +554,7 @@ def test_multiple_data():
     jobKey_2 = "QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Va"
     job.source_code_hashes.append(ipfs_to_bytes32(jobKey_2))
 
-    job.dataTransferIns = [100, 100]
+    job.data_transfer_ins = [100, 100]
     job.dataTransferOut = 100
     # provider's registered data won't be used
     job.storage_hours = [1, 1]
@@ -579,7 +580,7 @@ def test_multiple_data():
     # first time job is submitted with the data files
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -622,7 +623,7 @@ def test_multiple_data():
     assert _cost["data_transfer"] == job.dataTransferOut, "cost of data_transfer should cover only dataTransferOut"
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -646,7 +647,7 @@ def test_multiple_data():
         index,
         jobID,
         end_time,
-        sum(job.dataTransferIns),
+        sum(job.data_transfer_ins),
         job.dataTransferOut,
         job.cores,
         job.run_time,
@@ -738,7 +739,7 @@ def test_workflow():
     job.source_code_hashes = [source_code_hash, source_code_hash1]  # Hashed of the data file in array
     job.storage_hours = [0, 0]
 
-    job.dataTransferIns = [100, 100]
+    job.data_transfer_ins = [100, 100]
     job.dataTransferOut = 100
 
     # job.data_prices_set_block_numbers = [0, 253]  # TODO: check this ex 253 exists or not
@@ -766,7 +767,7 @@ def test_workflow():
     # first submit
     tx = Ebb.submitJob(
         jobKey,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -890,7 +891,7 @@ def test_simple_submit():
     job.key = job.source_code_hashes[0]
     job.cores = [2]
     job.run_time = [1]
-    job.dataTransferIns = [1, 1]
+    job.data_transfer_ins = [1, 1]
     job.dataTransferOut = 1
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
@@ -913,7 +914,7 @@ def test_simple_submit():
 
     tx = Ebb.submitJob(
         job.key,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -999,7 +1000,7 @@ def test_submit_job(ebb):
             job.source_code_hashes = [source_code_hash]  # Hashed of the
             job.storage_hours = [storageHour]
 
-            job.dataTransferIns = [100]
+            job.data_transfer_ins = [100]
             job.dataTransferOut = 100
             job.data_prices_set_block_numbers = [0]
             job.storage_ids = [StorageID.IPFS.value]
@@ -1020,11 +1021,11 @@ def test_submit_job(ebb):
             job_price, _cost = cost(provider, requester, job)
 
             job_priceSum += job_price
-            dataTransferIns = [100]
+            data_transfer_ins = [100]
 
             tx = Ebb.submitJob(
                 jobKey,
-                dataTransferIns,
+                data_transfer_ins,
                 args,
                 job.storage_hours,
                 job.source_code_hashes,
@@ -1060,10 +1061,10 @@ def test_submit_job(ebb):
         for index, line in enumerate(f):
             arguments = line.rstrip("\n").split(" ")
             if index == 0:
-                dataTransferIn_sum = 90
+                data_transfer_in_sum = 90
                 job.dataTransferOut = 100
             else:
-                dataTransferIn_sum = 0
+                data_transfer_in_sum = 0
                 job.dataTransferOut = 100
 
             coreMin = int(arguments[1]) - int(arguments[0])
@@ -1080,7 +1081,7 @@ def test_submit_job(ebb):
                 index,
                 jobID,
                 end_time,
-                dataTransferIn_sum,
+                data_transfer_in_sum,
                 job.dataTransferOut,
                 job.cores,
                 job.run_time,

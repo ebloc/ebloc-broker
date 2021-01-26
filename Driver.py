@@ -113,7 +113,6 @@ def run_driver():
     columns = 100
     # driver_cancel_process = None
     # whisper_state_receiver_process = None
-
     try:
         from imports import connect
 
@@ -154,7 +153,11 @@ def run_driver():
         Ebb.is_contract_exists()
         contract_file = read_json(f"{env.EBLOCPATH}/eblocbroker/contract.json")
     except:
-        terminate("E: Contract address does not exist on the blockchain, is the blockchain sync?")
+
+        terminate(
+            "E: Contract address does not exist on the blockchain, is the blockchain sync?\n"
+            f"block_number={Ebb.get_block_number()}"
+        )
 
     if env.IS_THREADING_ENABLED:
         log(f"is_threading={env.IS_THREADING_ENABLED}", color="blue")

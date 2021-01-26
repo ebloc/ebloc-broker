@@ -10,7 +10,7 @@ import time
 from multiprocessing import Process
 from pprint import pprint
 from threading import Thread
-from typing import Tuple, Union
+from typing import Tuple
 
 import config
 from config import env, logging
@@ -124,7 +124,7 @@ def run_whisper_state_receiver():
 def get_tx_status(tx_hash) -> str:
     log(f"tx_hash={tx_hash}")
     tx_receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
-    logging.info("Transaction receipt is mined:")
+    log("Transaction receipt is mined:")
     pprint(dict(tx_receipt), depth=1)
     # logging.info(pformat(receipt))
     # log("")
@@ -133,11 +133,11 @@ def get_tx_status(tx_hash) -> str:
     #     log(f"log {idx}", "blue")
     #     pprint(_log.__dict__)
 
-    log("\n#> Was transaction successful? ", color="white", filename=None)
+    log("\n## Was transaction successful? ", color="white", filename=None)
     if tx_receipt["status"] == 1:
-        log("Transaction is deployed", "green")
+        log("Transaction is deployed", color="green")
     else:
-        log("E: Transaction is reverted", "red")
+        raise Exception("E: Transaction is reverted")
     return tx_receipt
 
 
@@ -155,11 +155,11 @@ def check_size_of_file_before_download(file_type, key=None):
 
 def calculate_folder_size(path, _type="mb") -> float:
     """Return the size of the given path in MB, bytes if wanted"""
-    byte_size = 0
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # type: ignore
-    byte_size = p2.communicate()[0].decode("utf-8").strip()
+    byte_size = 0.0
+    byte_size = float(p2.communicate()[0].decode("utf-8").strip())
     if _type == "bytes":
         return byte_size
     else:
@@ -185,8 +185,8 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
             time.sleep(0.25)
 
 
-def run_stdout_to_file(cmd, path) -> None:
-    p, output, error = popen_communicate(cmd, stdout_file=path)
+def run_stdout_to_file(cmd, path, mode="w") -> None:
+    p, output, error = popen_communicate(cmd, stdout_file=path, mode=mode)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", color="red")
@@ -276,15 +276,15 @@ def is_ipfs_running():
     return is_ipfs_on()
 
 
-def check_linked_data(path_from, path_to, folders=None, is_continue=False):
+def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):
     """Generates folder as hard linked of the given folder paths or provider main folder.
 
-    :param path_to: linked folders into into given path
-    :param folders: if given, iterates all over the folders
+    :param path_to: linked folders_to_share into into given path
+    :param folders_to_share: if given, iterates all over the folders_to_share
     """
     mkdir(path_to)
     link = Link(path_from, path_to)
-    link.link_folders(folders)
+    link.link_folders(folders_to_share)
     log("")
     for key, value in link.data_map.items():
         log("*", color="blue", end="")
@@ -295,6 +295,10 @@ def check_linked_data(path_from, path_to, folders=None, is_continue=False):
             "\n## Would you like to continue with linked folder path in your run.sh?\n"
             "If no, please update your run.sh file [Y/n]: "
         )
+    for folder in folders_to_share:
+        if not os.path.isdir(folder):
+            log(f"E: {folder} path does not exist")
+            sys.exit(1)
 
 
 def is_dir(path) -> bool:

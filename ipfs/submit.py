@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # TODO: let user directly provide the IPFS hash instead of the folder
     folders = []  # full paths are provided
-    folders.append(f"{env.EBLOCPATH}/base/sourceCode")
+    folders.append(f"{env.EBLOCPATH}/base/source_code")
     folders.append(f"{env.EBLOCPATH}/base/data/data1")
 
     path_from = f"{env.EBLOCPATH}/base/data"
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     job.cores = [1]
     job.run_time = [1]
     job.storage_hours = [1, 1]
-    job.dataTransferIns = [1, 1]  # TODO: calculate from the file itself
+    job.data_transfer_ins = [1, 1]  # TODO: calculate from the file itself
     job.dataTransferOut = 1
     job.data_prices_set_block_numbers = [0, 0]
 

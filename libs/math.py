@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# from utils import log
+from utils import log
 
 
 def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
@@ -21,7 +21,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return round(change / abs(initial) * 100, decimal)
 
 
-def percent_change(initial, change, _decimal=8, end=None):
+def percent_change(initial, change, _decimal=8, is_color=False, end=None):
     try:
         initial = float(initial)
         change = float(change)
@@ -45,12 +45,16 @@ def percent_change(initial, change, _decimal=8, end=None):
     else:
         change = "{0:.2f}".format(float(change))
 
-    # log(f"{format(initial, '.4f')} => {format(float(initial) + float(change), '.4f')} => ", end="")
-    print(f"{format(initial, '.4f')} => {format(float(initial) + float(change), '.4f')} => ", end="")
+    log(f"{format(initial, '.4f')} => ", end="")
+    log(f"{format(float(initial) + float(change), '.4f')} ", end="", color="blue")
+    # print(f"{format(initial, '.4f')} => {format(float(initial) + float(change), '.4f')} => ", end="")
 
-    if float(change) > 0:
-        change = " " + change
+    if not is_color:
+        if float(change) >= 0:
+            change = " " + change
 
-    # log(f"{change} ({format(float(percent), '.2f')}%)", color=_color, end=end)
-    print(f"{change} ({format(float(percent), '.2f')}%)", end=end)
+        log(f"{change} ({format(float(abs(percent)), '.2f')}%)", color=_color, end=end)
+    else:
+        log(f"{change.replace('-', '')} ({format(float(percent), '.2f')}%)", color=_color, end=end)
+    # print(f"{change} ({format(float(percent), '.2f')}%)", end=end)
     return percent

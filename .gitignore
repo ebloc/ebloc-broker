@@ -288,7 +288,7 @@ eblocbroker/\.submit_job\.py\.swp
 
 whisper/data.txt
 
-gdrive/exampleFolderToShare/sourceCode/.dataFiles.json
+gdrive/exampleFolderToShare/source_code/.dataFiles.json
 
 gdrive/dataFiles.json
 
@@ -296,7 +296,7 @@ gdrive/exampleFolderToShare/dataFiles.json
 
 todo.txt
 
-gdrive/exampleFolderToShare/sourceCode/dataFiles.json
+gdrive/exampleFolderToShare/source_code/dataFiles.json
 
 ._eBlocBroker
 
@@ -327,3 +327,5 @@ base/data/
 gdown.py/gdown.*
 
 base/
+
+patch_*

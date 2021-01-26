@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
 For experiment purposes reqisters 10 users from prc-95
@@ -14,9 +14,6 @@ home = expanduser("~")
 eBlocBroker, w3 = connect()
 Ebb = Contract.eblocbroker
 
-# -------------------------------------------------------
-orcID = "0000-0001-7642-0552"
-
 # registered addresses on PRC-95
 accounts = [
     "0x90Eb5E1ADEe3816c85902FA50a240341Fa7d90f5",
@@ -31,5 +28,18 @@ accounts = [
     "0x496acA2bE0694A1137B05cE7fFDcd982bFb53FAD",
 ]
 
+orc_ids = [
+    "0000-0001-7642-0001",
+    "0000-0001-7642-0002",
+    "0000-0001-7642-0003",
+    "0000-0001-7642-0004",
+    "0000-0001-7642-0005",
+    "0000-0001-7642-0006",
+    "0000-0001-7642-0007",
+    "0000-0001-7642-0008",
+    "0000-0001-7642-0009",
+    "0000-0001-7642-0010",
+]
+
 for idx, account in enumerate(accounts):
-    print(Ebb.authenticate_orc_id(accounts[idx], orcID, _from=0))
+    print(Ebb.authenticate_orc_id(accounts[idx], orc_ids[idx], _from=0))

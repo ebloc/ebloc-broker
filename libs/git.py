@@ -4,7 +4,6 @@ import gzip
 import io
 import os
 import time
-from subprocess import CalledProcessError
 
 import git
 
@@ -12,6 +11,8 @@ from config import env, logging
 from lib import run, run_command
 from libs.ipfs import decrypt_using_gpg
 from utils import cd, is_gzip_file_empty, log, path_leaf
+
+# from subprocess import CalledProcessError
 
 
 def initialize_check(path):
@@ -67,6 +68,7 @@ def diff_patch(path, source_code_hash, index, target_path):
     * This shows all the changes since the last commit, whether or not they have been staged for commit
     * or not.
     """
+    sep = "*"  # separator in between the string infos
     is_file_empty = False
     with cd(path):
         log(f"==> Navigate to {path}")
@@ -80,7 +82,7 @@ def diff_patch(path, source_code_hash, index, target_path):
             # first ignore deleted files not to be added into git
             run(["bash", f"{env.EBLOCPATH}/bash_scripts/git_ignore_deleted.sh"])
             head_commit_id = repo.rev_parse("HEAD")
-            patch_name = f"patch_{head_commit_id}_{source_code_hash}_{index}.diff"
+            patch_name = f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
         except:
             return False
 
@@ -173,14 +175,15 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             # run(["git", "checkout", git_hash])
             # run(["git", "reset", "--hard"])
             # run(["git", "clean", "-f"])
+
+            # echo "\n" >> patch_file.txt seems like fixing it
             with open(patch_file, "a") as myfile:
-                myfile.write(" ")
+                myfile.write("\n")
 
             # output = repo.git.apply("--reject", "--whitespace=fix", patch_file)
-            logging.info("\n" + run(["git", "apply", "--reject", "--whitespace=fix", "--verbose", patch_file]))
+            run(["git", "apply", "--reject", "--whitespace=fix", "--verbose", patch_file])
             return True
-        except CalledProcessError as e:
-            log(e.output.decode("utf-8").strip(), color="red")
+        except Exception:
             return False
 
 
@@ -190,3 +193,14 @@ def is_repo(folders):
             if not is_initialized(folder):
                 logging.warning(f".git does not exits in {folder}. Applying: `git init`")
                 run(["git", "init"])
+
+
+def generate_git_repo(folders):
+    """Create git repositories in the given folders if it does not exist."""
+    for folder in folders:
+        log(folder, color="green")
+        try:
+            initialize_check(folder)
+            commit_changes(folder)
+        except Exception as e:
+            raise e
