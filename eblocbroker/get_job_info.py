@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import sys
 import traceback
 from typing import Union
@@ -53,7 +52,7 @@ def get_job_source_code_hashes(self, job_info, provider, job_key, index, job_id=
         logged_jobs = event_filter.get_all_entries()
         for logged_job in logged_jobs:
             if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(index):
-                job_info.update({"sourceCodeHash": logged_job.args["sourceCodeHash"]})
+                job_info.update({"source_code_hash": logged_job.args["sourceCodeHash"]})
                 return job_info
     except Exception as e:
         logging.error(f"E: Failed to get_Job_source_code_hash: {e}")
@@ -97,10 +96,10 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
             "received_block": None,
             "receivedWei": None,
             "cacheDuration": None,
-            "sourceCodeHash": None,
+            "source_code_hash": None,
             "received_block_number": received_block_number,
-            "dataTransferIn_to_download": None,
-            "dataTransferOut_used": None,
+            "data_transfer_in_to_download": None,
+            "data_transfer_out_used": None,
         }
 
         self.job_info = self.update_job_cores(self.job_info, provider, job_key, index, job_id, received_block_number)
@@ -124,8 +123,8 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
                 self.job_info.update({"completion_time": logged_receipt.args["completionTime"]})
                 self.job_info.update({"receivedWei": logged_receipt.args["receivedWei"]})
                 self.job_info.update({"refundedWei": logged_receipt.args["refundedWei"]})
-                self.job_info.update({"dataTransferIn_to_download": logged_receipt.args["dataTransferIn"]})
-                self.job_info.update({"dataTransferOut_used": logged_receipt.args["dataTransferOut"]})
+                self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
+                self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 break
     except Exception:
         logging.error(f"E: Failed to getJobInfo: {traceback.format_exc()}")
@@ -190,14 +189,14 @@ if __name__ == "__main__":
         print("{0: <25}".format("resultIpfsHash:") + _resultIpfsHash)
         print("{0: <25}".format("dataTransferIn:") + str(job_info["dataTransferIn"]))
         print("{0: <25}".format("dataTransferOut:") + str(job_info["dataTransferOut"]))
-        print("{0: <25}".format("dataTransferIn_to_download:") + str(job_info["dataTransferIn_to_download"]))
-        print("{0: <25}".format("dataTransferOut_used:") + str(job_info["dataTransferOut_used"]))
+        print("{0: <25}".format("data_transfer_in_to_download:") + str(job_info["data_transfer_in_to_download"]))
+        print("{0: <25}".format("data_transfer_out_used:") + str(job_info["data_transfer_out_used"]))
         print("{0: <25}".format("price_commitment_block_duration:") + str(job_info["commitmentBlockDuration"]))
 
         job_info = Ebb.get_job_source_code_hashes(job_info, provider, job_key, index, job_id, received_block_number)
-        # print("{0: <25}".format("source_code_hash:") + str(job_info["sourceCodeHash"]))
+        # print("{0: <25}".format("source_code_hash:") + str(job_info["source_code_hash"]))
         log("source_code_hashes:", "blue")
-        for idx, code_hash in enumerate(job_info["sourceCodeHash"]):
+        for idx, code_hash in enumerate(job_info["source_code_hash"]):
             main_cloud_storage_id = job_info["cloudStorageID"][idx]
             if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
                 _hash = bytes32_to_ipfs(code_hash)

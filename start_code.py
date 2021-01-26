@@ -46,5 +46,4 @@ def start_call(job_key, index, slurm_job_id):
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("E: Wrong number of arguments are provided")
-
     start_call(sys.argv[1], sys.argv[2], sys.argv[3])

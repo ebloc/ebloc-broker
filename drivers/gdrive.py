@@ -131,10 +131,10 @@ class GdriveClass(Storage):
                 logging.error(f"E: Folder ({downloaded_folder_path}) is not downloaded successfully")
                 return False
             else:
-                self.dataTransferIn_requested = calculate_folder_size(downloaded_folder_path)
+                self.data_transfer_in_requested = calculate_folder_size(downloaded_folder_path)
                 logging.info(
-                    f"data_transfer_in_requested={self.dataTransferIn_requested} MB | "
-                    f"Rounded={int(self.dataTransferIn_requested)} MB"
+                    f"data_transfer_in_requested={self.data_transfer_in_requested} MB | "
+                    f"Rounded={int(self.data_transfer_in_requested)} MB"
                 )
         else:
             try:
@@ -152,12 +152,12 @@ class GdriveClass(Storage):
             filename = f"{self.folder_path_to_download[source_code_hash]}/{name}"
             p1 = subprocess.Popen(["ls", "-ln", filename,], stdout=subprocess.PIPE,)
             p2 = subprocess.Popen(["awk", "{print $5}"], stdin=p1.stdout, stdout=subprocess.PIPE)
-            p1.stdout.close()  # noqa
+            p1.stdout.close()  # type: ignore
             # returns downloaded files size in bytes
-            self.dataTransferIn_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
+            self.data_transfer_in_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
             logging.info(
-                f"dataTransferIn_requested={self.dataTransferIn_requested} MB |"
-                f" Rounded={int(self.dataTransferIn_requested)} MB"
+                f"data_transfer_in_requested={self.data_transfer_in_requested} MB |"
+                f" Rounded={int(self.data_transfer_in_requested)} MB"
             )
         return True
 
@@ -177,7 +177,7 @@ class GdriveClass(Storage):
         logging.info(f"mime_type={mime_type}")
         if is_job_key:
             # key for the sourceCode tar.gz file is obtained
-            success, self.dataTransferIn_to_download, self.job_key_list, key = gdrive.size(
+            success, self.data_transfer_in_to_download, self.job_key_list, key = gdrive.size(
                 key,
                 mime_type,
                 folder_name,
@@ -198,7 +198,7 @@ class GdriveClass(Storage):
             return False
 
         if is_job_key:
-            if self.dataTransferIn_to_download > self.dataTransferIn_requested:
+            if self.data_transfer_in_to_download > self.data_transfer_in_requested:
                 logging.error(
                     "E: requested size to download the sourceCode and datafiles is greater that the given amount"
                 )
@@ -261,7 +261,7 @@ class GdriveClass(Storage):
 
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}")
         elif "folder" in mime_type:
-            # recieved job is in folder format
+            # Recieved job is in folder format
             self.folder_type_dict[source_code_hash] = "folder"
             success, ipfs_hash = self.cache(_id, name, source_code_hash, key, is_job_key)
             if not success:

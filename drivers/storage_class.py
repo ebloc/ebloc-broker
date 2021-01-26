@@ -47,8 +47,8 @@ class Storage(BaseClass):
         self.run_time = self.logged_job.args["runTime"]
         self.job_id = 0
         self.cache_type = logged_job.args["cacheType"]
-        self.dataTransferIn_requested = job_info[0]["dataTransferIn"]
-        self.dataTransferIn_to_download = 0  # size_to_download
+        self.data_transfer_in_requested = job_info[0]["dataTransferIn"]
+        self.data_transfer_in_to_download = 0  # size_to_download
         self.is_already_cached = is_already_cached
         self.source_code_hashes: List[bytes] = logged_job.args["sourceCodeHash"]
         self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
@@ -246,9 +246,8 @@ class Storage(BaseClass):
         write_to_file(f"{self.results_folder_prev}/timestamp.txt", timestamp)
 
         logging.info(f"job_received_block_number={job_block_number}")
-        # write_to_file(f"{results_folder_prev}/blockNumber.txt", job_block_number)
-
         logging.info("Adding recevied job into mongodb database.")
+        # write_to_file(f"{results_folder_prev}/blockNumber.txt", job_block_number)
 
         # adding job_key info along with its cacheDuration into mongodb
         mongodb.add_item(
@@ -261,18 +260,17 @@ class Storage(BaseClass):
             job_info,
         )
 
-        # TODO: update as used_dataTransferIn value
-        data_transfer_in_json = f"{self.results_folder_prev}/dataTransferIn.json"
+        # TODO: update as used_data_transfer_in value
+        data_transfer_in_json = f"{self.results_folder_prev}/data_transfer_in.json"
         try:
             data = read_json(data_transfer_in_json)
         except:
             data = dict()
-            data["dataTransferIn"] = self.dataTransferIn_to_download
+            data["data_transfer_in"] = self.data_transfer_in_to_download
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
             time.sleep(0.25)
 
-        # logging.info(dataTransferIn)
         # seperator character is *
         sbatch_file_path = f"{self.results_folder}/{job_key}*{index}*{job_block_number}.sh"
         copyfile(f"{self.results_folder}/run.sh", sbatch_file_path)

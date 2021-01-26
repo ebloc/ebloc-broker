@@ -110,7 +110,7 @@ def submit_receipt(index, cores, startTime, completionTime, elapsed_time, is_pri
     job.index = index
     job.cores = cores
     job.run_time = [1]
-    job.dataTransferIns = [1]
+    job.data_transfer_ins = [1]
     job.dataTransferOut = 1
     job.storage_ids = [StorageID.EUDAT.value]
     job.cache_types = [CacheType.PUBLIC.value]
@@ -132,7 +132,7 @@ def submit_receipt(index, cores, startTime, completionTime, elapsed_time, is_pri
     ]
     tx = config.ebb.submitJob(
         job.key,
-        job.dataTransferIns,
+        job.data_transfer_ins,
         args,
         job.storage_hours,
         job.source_code_hashes,
@@ -143,11 +143,10 @@ def submit_receipt(index, cores, startTime, completionTime, elapsed_time, is_pri
     tx = config.ebb.setJobStatusRunning(job.key, job.index, jobID, startTime, {"from": provider})
     rpc.sleep(60)
     mine(5)
-    dataTransferIn = 0
+    data_transfer_in = 0
     dataTransferOut = 0
 
-    args = [job.index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
-
+    args = [job.index, jobID, completionTime, data_transfer_in, dataTransferOut, job.cores, [1], True]
     tx = config.ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
     if is_print:
         print("received_gas_used=" + str(tx.__dict__["gas_used"]))

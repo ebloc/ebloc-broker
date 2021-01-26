@@ -153,9 +153,9 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             receipt = w3.eth.getTransactionReceipt(tx_hash)
             if receipt:
                 output = is_transaction_passed(w3, tx_hash)
-                log(f"Tx status:{output}", path)
+                log(f"tx status:{output}", path)
             else:
-                log("Tx is not deployed yet", path)
+                log("tx is not deployed yet", path)
 
     log("END", path)
     log(".", path)

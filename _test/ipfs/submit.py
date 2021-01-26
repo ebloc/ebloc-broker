@@ -54,17 +54,13 @@ if __name__ == "__main__":
     data_1_dir = os.path.join(base_dir, "datasets/BL06-camel-sml")
 
     # TODO: let user directly provide the IPFS hash instead of the folder
-    code_paths = []
-    code_paths.append(source_code_dir)
-    code_paths.append(data_1_dir)
+    folders_to_share = []
+    folders_to_share.append(source_code_dir)
+    folders_to_share.append(data_1_dir)
 
     path_from = f"{env.EBLOCPATH}/base/data"
     path_to = f"{env.LINKS}/base/data_link"
-    check_linked_data(path_from, path_to, code_paths[1:])
-    for folder in code_paths:
-        if not os.path.isdir(folder):
-            log(f"E: {folder} path does not exist")
-            sys.exit(1)
+    check_linked_data(path_from, path_to, folders_to_share[1:])
 
     if main_storage_id == StorageID.IPFS:
         log("==> Submitting source code through IPFS", color="cyan")
@@ -75,7 +71,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     targets = []
-    for idx, folder in enumerate(code_paths):
+    for idx, folder in enumerate(folders_to_share):
         try:
             provider_info = Ebb.get_provider_info(provider)
         except:
@@ -114,14 +110,14 @@ if __name__ == "__main__":
             # created .gpg file will be removed since its already in ipfs
             targets.append(target)
 
-        if idx != len(code_paths) - 1:
+        if idx != len(folders_to_share) - 1:
             log("-------------------------------------------------", color="yellow")
 
     # requester inputs for testing
     job.cores = [1]
     job.run_time = [1]
     job.storage_hours = [1, 1]
-    job.dataTransferIns = [1, 1]  # TODO: calculate from the file itself
+    job.data_transfer_in = [1, 1]  # TODO: calculate from the file itself
     job.dataTransferOut = 1
     job.data_prices_set_block_numbers = [0, 0]
 

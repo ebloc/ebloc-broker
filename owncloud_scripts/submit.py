@@ -19,9 +19,9 @@ if __name__ == "__main__":
         # provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"  # netlab
         provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home2-vm
 
-    code_paths = []  # full path of the code or data should be provided
-    source_code_dir = f"{env.EBLOCPATH}/base/sourceCode"
+    folders_to_share = []  # full path of the code or data should be provided
+    source_code_dir = f"{env.EBLOCPATH}/base/source_code"
     data_1_dir = f"{env.EBLOCPATH}/base/data/data1"
-    code_paths.append(source_code_dir)
-    code_paths.append(data_1_dir)
-    eudat.submit(provider, account_id, code_paths)
+    folders_to_share.append(source_code_dir)
+    folders_to_share.append(data_1_dir)
+    eudat.submit(provider, account_id, folders_to_share)

@@ -12,8 +12,7 @@ from utils import _colorize_traceback, is_ipfs_running, log  # bytes32_to_ipfs
 
 def is_provider_valid(self, provider):
     if not self.eBlocBroker.functions.doesProviderExist(provider).call():
-        logging.error(f"\nE: Requested provider's Ethereum address {provider} does not registered")
-        raise
+        raise ValueError(f"E: Requested provider's Ethereum address {provider} does not registered")
 
 
 def is_requester_valid(self, _from):
@@ -113,8 +112,9 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
 
 def submit_job(self, provider, key, job_price, job, requester=None, account_id=None):
+    log("==> Submitting the job")
     provider = self.w3.toChecksumAddress(provider)
-    if not account_id:
+    if account_id and not requester:
         _from = self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
     else:
         _from = requester
@@ -149,7 +149,7 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
         #     source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
         # log(f"==> source_code_hashes={source_code_hashes_l}")
         tx = self.eBlocBroker.functions.submitJob(
-            key, job.dataTransferIns, args, job.storage_hours, job.source_code_hashes
+            key, job.data_transfer_ins, args, job.storage_hours, job.source_code_hashes
         ).transact({"from": _from, "value": job_price, "gas": gas_limit})
         return tx.hex()
     except Exception as e:

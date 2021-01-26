@@ -101,7 +101,7 @@ def is_on() -> bool:
         return True
 
 
-def get_elapsed_raw_time(slurm_job_id) -> int:
+def get_elapsed_time(slurm_job_id) -> int:
     try:
         cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
         elapsed_time = run(cmd)
@@ -118,9 +118,9 @@ def get_elapsed_raw_time(slurm_job_id) -> int:
         elapsed_day = elapsed_hour[0]
         elapsed_hour = elapsed_hour[1]
 
-    elapsed_raw_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
-    logging.info(f"elapsed_raw_time={elapsed_raw_time}")
-    return elapsed_raw_time
+    elapsed_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
+    logging.info(f"elapsed_time={elapsed_time}")
+    return elapsed_time
 
 
 def get_job_end_time(slurm_job_id) -> int:

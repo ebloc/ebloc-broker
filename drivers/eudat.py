@@ -233,13 +233,13 @@ class EudatClass(Storage):
             logging.error("Something is wrong. shareID is empty => {}")
             raise
 
-        self.dataTransferIn_to_download = 0  # size_to_download
+        self.data_transfer_in_to_download = 0  # size_to_download
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
             if not self.is_already_cached[folder_name]:
                 info = config.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
-                self.dataTransferIn_to_download += int(info.attributes["{DAV:}getcontentlength"])
-        log(f"Total size to download={self.dataTransferIn_to_download} bytes", "blue")
+                self.data_transfer_in_to_download += int(info.attributes["{DAV:}getcontentlength"])
+        log(f"Total size to download={self.data_transfer_in_to_download} bytes", "blue")
 
     def run(self) -> bool:
         self.start_time = time.time()
@@ -276,9 +276,9 @@ class EudatClass(Storage):
             _colorize_traceback()
             return False
 
-        if self.dataTransferIn_to_download > self.dataTransferIn_requested:
-            log(f"data_transfer_in_to_download={self.dataTransferIn_to_download}", "red")
-            log(f"data_transfer_in_requested={self.dataTransferIn_requested}", "red")
+        if self.data_transfer_in_to_download > self.data_transfer_in_requested:
+            log(f"data_transfer_in_to_download={self.data_transfer_in_to_download}", "red")
+            log(f"data_transfer_in_requested={self.data_transfer_in_requested}", "red")
             logging.error(
                 "E: Requested size to download the source code and data files is greater that the given amount"
             )
@@ -306,7 +306,7 @@ class EudatClass(Storage):
                     self.complete_refund()
                     return False
 
-        logging.info(f"data_transfer_in_requested={self.dataTransferIn_requested} MB")
+        logging.info(f"data_transfer_in_requested={self.data_transfer_in_requested} MB")
         for folder_name in self.source_code_hashes_to_process:
             try:
                 self.shareID[folder_name]["share_token"]

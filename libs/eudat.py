@@ -220,9 +220,9 @@ def is_oc_mounted() -> bool:
         return True
 
 
-def submit(provider, account_id, code_paths):
+def submit(provider, account_id, folders_to_share):
     try:
-        tx_hash = _submit(provider, account_id, code_paths)
+        tx_hash = _submit(provider, account_id, folders_to_share)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             logs = config.ebb.events.LogJob().processReceipt(receipt, errors=DISCARD)
@@ -237,7 +237,7 @@ def submit(provider, account_id, code_paths):
         sys.exit(1)
 
 
-def _submit(provider, account_id, code_paths):
+def _submit(provider, account_id, folders_to_share):
     job = Job()
     requester = config.w3.toChecksumAddress(config.w3.eth.accounts[account_id])
     job.Ebb.is_requester_valid(requester)
@@ -247,7 +247,7 @@ def _submit(provider, account_id, code_paths):
     provider_info = job.Ebb.get_provider_info(provider)
     print(f"provider[fID]={str(provider_info['f_id'])}")
 
-    job.folders_to_share = code_paths.copy()
+    job.folders_to_share = folders_to_share.copy()
 
     try:
         git.is_repo(job.folders_to_share)
@@ -283,7 +283,7 @@ def _submit(provider, account_id, code_paths):
     log("==> Submitting the job")
     job.run_time = [60]  # in seconds
     job.cores = [1]
-    job.dataTransferIns = [1, 116]
+    job.data_transfer_ins = [1, 116]
     job.dataTransferOut = 1
 
     job.storage_ids = [StorageID.EUDAT, StorageID.EUDAT]

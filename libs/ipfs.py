@@ -128,7 +128,7 @@ def decrypt_using_gpg(gpg_file, extract_target=None):
             silent_remove(tar_file)
 
 
-def gpg_encrypt(user_gpg_finderprint, target):
+def gpg_encrypt(user_gpg_finderprint, target) -> bool:
     is_delete = False
     if os.path.isdir(target):
         try:
@@ -148,8 +148,8 @@ def gpg_encrypt(user_gpg_finderprint, target):
             is_delete = True
 
     if os.path.isfile(encrypted_file_target):
-        log(f"==> {encrypted_file_target} is already created.")
-        return encrypted_file_target
+        log(f"==> GPG_file: {encrypted_file_target} is already created.")
+        return True
 
     try:
         cmd = [
@@ -164,7 +164,8 @@ def gpg_encrypt(user_gpg_finderprint, target):
             encrypt_target,
         ]
         run(cmd)
-        return encrypted_file_target
+        log(f"==> GPG_file: {encrypted_file_target}")
+        return True
     except Exception as e:
         _colorize_traceback()
         if "encryption failed: Unusable public key" in str(e.output):

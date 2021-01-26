@@ -39,7 +39,7 @@ dbfread==2.0.4
 decorator==4.4.2
 distlib==0.3.0
 docutils==0.16
--e git+https://github.com/ebloc/eBlocBroker.git@5d438328d75034759d2e1fa8fce498ae5cf532c7#egg=eBlocBroker
+-e git+https://github.com/ebloc/eBlocBroker.git@0110745aff48e1eedf1d7ba8660accc7e9091550#egg=eBlocBroker
 entrypoints==0.3
 eth-abi==2.1.1
 eth-account==0.5.2

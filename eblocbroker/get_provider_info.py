@@ -22,7 +22,6 @@ def get_provider_info(self, _provider):
             # toBlock=int(block_read_from) + 1,
             argument_filters={"provider": str(provider)},
         )
-
         _event_filter = dict()
         for idx in range(len(event_filter.get_all_entries()) - 1, -1, -1):
             for key in event_filter.get_all_entries()[idx].args:
@@ -45,7 +44,7 @@ def get_provider_info(self, _provider):
             "ipfs_id": _event_filter["ipfsID"],
             "f_id": _event_filter["fID"],
             "is_orcid_verified": self.is_orcid_verified(_provider),
-            "whisper_id": "0x" + _event_filter["whisperID"],
+            "whisper_id": f"0x{_event_filter['whisperID']}",
         }
         return provider_info
     except:
