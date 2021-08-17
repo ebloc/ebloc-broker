@@ -78,7 +78,7 @@ def connect_to_web3():
                     "to /private/geth.ipc file doing: ",
                     end="",
                 )
-                log(f"sudo chown $(whoami) {WEB3_PROVIDER_PATH}", color="green")
+                log(f"sudo chown $(whoami) {WEB3_PROVIDER_PATH}", "green")
                 log(f"#> Running `sudo chown $(whoami) {WEB3_PROVIDER_PATH}`")
                 run(["sudo", "chown", env.WHOAMI, WEB3_PROVIDER_PATH])
         else:

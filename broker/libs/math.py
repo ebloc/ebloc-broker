@@ -54,14 +54,14 @@ def percent_change(initial, change, _decimal=8, is_color=False, end=None, is_arr
 
     if is_arrow_print:
         log(f"{format(initial, '.4f')} => ", end="")
-        log(f"{format(float(initial) + float(change), '.4f')} ", end="", color="blue")
+        log(f"{format(float(initial) + float(change), '.4f')} ", "blue", end="")
 
     if float(change) >= 0:
         change = " " + change
 
     if is_arrow_print:
-        log(f"{change}({format(float(percent), '.2f')}%) ", color=_color, end=end)
+        log(f"{change}({format(float(percent), '.2f')}%) ", _color, end=end)
     else:
-        log(f"({format(float(percent), '.2f')}%) ", color=_color, end=end)
+        log(f"({format(float(percent), '.2f')}%) ", _color, end=end)
 
     return percent

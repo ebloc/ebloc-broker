@@ -29,9 +29,8 @@ from broker.utils import (
 
 
 def enum(*sequential, **named):
-    """Sets reverse mapping for the Enum.
+    """Set reverse mapping for the Enum.
 
-    Helpful Links:
     __ https://stackoverflow.com/a/1695250/2402577
     """
     enums = dict(zip(sequential, range(len(sequential))), **named)
@@ -80,7 +79,7 @@ def session_start_msg(slurm_user, block_number, pid, columns=104):
         PROVIDER_ID = env.PROVIDER_ID
 
     log(f"==> This Driver process has the PID {pid}")
-    log(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", color="blue")
+    log(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", "blue")
 
 
 def run_driver_cancel():
@@ -104,7 +103,7 @@ def get_tx_status(tx_hash) -> str:
     #     pprint(_log.__dict__)
     log("\n## Was transaction successful? ", filename=None)
     if tx_receipt["status"] == 1:
-        log("Transaction is deployed", color="green")
+        log("Transaction is deployed", "green")
     else:
         raise Exception("E: Transaction is reverted")
     return tx_receipt
@@ -149,8 +148,8 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
                 raise SystemExit
 
             if count == 0:
-                log("Trying again...\nAttempts: ", color="green", end="")
-            log(f"{count}  ", end="", color="green")
+                log("Trying again...\nAttempts: ", "green", end="")
+            log(f"{count}  ", "green", end="")
             time.sleep(0.25)
 
 
@@ -158,7 +157,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
     p, output, error = popen_communicate(cmd, stdout_file=path, mode=mode)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
-        log(f"\n{_cmd}", color="red")
+        log(f"\n{_cmd}", "red")
         logging.error(f"E: scontrol error\n{output}")
         raise
     logging.info(f"\nWriting into path is completed => {path}")
