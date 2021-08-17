@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 from pathlib import Path
 
 import ruamel.yaml
@@ -26,14 +24,14 @@ class SubYaml(dict):
 
     def __getitem__(self, key):
         try:
-            res = super().__getitem__(key)
+            super().__getitem__(key)
         except KeyError:
             super().__setitem__(key, SubYaml(self))
             self.updated()
         return super().__getitem__(key)
 
     def __delitem__(self, key):
-        res = super().__delitem__(key)
+        super().__delitem__(key)
         self.updated()
 
     def update(self, *args, **kw):
@@ -97,14 +95,14 @@ class Yaml(dict):
 
     def __getitem__(self, key):
         try:
-            res = super().__getitem__(key)
+            super().__getitem__(key)
         except KeyError:
             super().__setitem__(key, SubYaml(self))
             self.updated()
         return super().__getitem__(key)
 
     def __delitem__(self, key):
-        res = super().__delitem__(key)
+        super().__delitem__(key)
         self.updated()
 
     def update(self, *args, **kw):
@@ -114,52 +112,6 @@ class Yaml(dict):
         for k, v in kw.items():
             self[k] = v
         self.updated()
-
-
-# class Yaml(dict):
-#     def __init__(self, filename, auto_dump=True):  # noqa
-#         self.filename = filename
-#         self.auto_dump = auto_dump
-#         self.changed = False
-#         self.yaml = YAML(typ="safe")
-#         self.yaml.preserve_quotes = True
-#         # uncomment and adapt to your specific indentation
-#         # self.yaml.indent(mapping=4, sequence=4, offset=2)
-#         if os.path.isfile(filename):
-#             with open(filename) as f:
-#                 # use super here to avoid unnecessary write
-#                 super(Yaml, self).update(self.yaml.load(f) or {})
-
-#     def dump(self, force=False):
-#         """Dump yaml object."""
-#         if not self.changed and not force:
-#             return
-#         with open(self.filename, "w") as f:
-#             self.yaml.dump(dict(self), f)
-#         self.changed = False
-
-#     # following methods unchanged from PyYAML example
-#     def updated(self):
-#         """Save yaml object with its updated version."""
-#         if self.auto_dump:
-#             self.dump(force=True)
-#         else:
-#             self.changed = True
-
-#     def __setitem__(self, key, value):
-#         """Update given key's value."""
-#         super(Yaml, self).__setitem__(key, value)
-#         self.updated()
-
-#     def __delitem__(self, key):
-#         super(Yaml, self).__delitem__(key)
-#         self.updated()
-
-#     def update(self, *args, **kw):
-#         for arg in args:
-#             super(Yaml, self).update(arg)
-#         super(Yaml, self).update(**kw)
-#         self.updated()
 
 
 if __name__ == "__main__":

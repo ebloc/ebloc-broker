@@ -1,31 +1,13 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 from pprint import pprint
 
-from web3.logs import DISCARD
-
 import broker.eblocbroker.Contract as Contract
-from broker.config import QuietExit, env, logging
-from broker.lib import check_linked_data, get_tx_status, run
-from broker.libs import ipfs
-from broker.libs.ipfs import gpg_encrypt
-from broker.utils import (
-    CacheType,
-    StorageID,
-    _colorize_traceback,
-    generate_md5sum,
-    ipfs_to_bytes32,
-    is_bin_installed,
-    is_dpkg_installed,
-    log,
-    silent_remove,
-)
-from brownie import accounts, network, project, web3
-from contract.scripts.lib import Job, cost
-
-#!/usr/bin/env python3
+from broker.lib import get_tx_status
+from broker.utils import is_bin_installed, is_dpkg_installed, log
+from brownie import accounts, web3
+from contract.scripts.lib import Job
 
 
 def pre_check():
@@ -47,7 +29,7 @@ def get_tx_status(tx_hash) -> str:
     pprint(dict(tx_receipt), depth=1)
     print("\n## Was transaction successful? ")
     if tx_receipt["status"] == 1:
-        print("Transaction is deployed", color="green")
+        log("Transaction is deployed", "green")
     else:
         raise Exception("E: Transaction is reverted")
     return tx_receipt

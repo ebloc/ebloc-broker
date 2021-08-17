@@ -50,7 +50,7 @@ def get_idle_cores(is_print_flag=True):
                 f"idle_cores={idle_cores} |"
                 f"other_cores={other_cores} |"
                 f"total_number_of_cores={total_cores}",
-                color="green",
+                "green",
             )
     else:
         logging.error("E: sinfo is emptry string")
@@ -76,12 +76,12 @@ def is_on() -> bool:
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
-            log("failed", color="red", is_bold=True)
+            log("failed", "red", is_bold=True)
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             log(
                 f"E: {process_name} is not running in the background. Please run:\n"
                 f"sudo {env.EBLOCPATH}/broker/bash_scripts/run_slurm.sh",
-                color="red",
+                "red",
             )
             raise config.QuietExit
 
@@ -130,7 +130,7 @@ def get_job_end_time(slurm_job_id) -> int:
     """Get the end time of the job in universal time"""
     end_time = run(["sacct", "-n", "-X", "-j", slurm_job_id, "--format=End"])
     if end_time == "":
-        log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.", color="red")
+        log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.", "red")
         raise QuietExit
 
     try:
@@ -140,5 +140,5 @@ def get_job_end_time(slurm_job_id) -> int:
         raise QuietExit
 
     end_time_stamp = end_time_stamp.rstrip().replace("'", "")
-    log(f"end_time_stamp={end_time_stamp}", color="blue")
+    log(f"end_time_stamp={end_time_stamp}", "blue")
     return end_time_stamp
