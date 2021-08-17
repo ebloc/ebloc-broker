@@ -192,7 +192,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         # logging.info(f"==> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id
-        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", color="blue")
+        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "blue")
         log(f"slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             logging.error("E: Given key and index are equal to each other")
@@ -427,12 +427,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        log("job_owner's info", color="green")
-        log("================", color="green")
-        log("{0: <17}".format("email:") + self.requester_info["email"], color="green")
-        log("{0: <17}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, color="green")
-        log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfs_id"], color="green")
-        log("{0: <17}".format("f_id:") + self.requester_info["f_id"], color="green")
+        log("job_owner's info", "green")
+        log("================", "green")
+        log("{0: <17}".format("email:") + self.requester_info["email"], "green")
+        log("{0: <17}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
+        log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfs_id"], "green")
+        log("{0: <17}".format("f_id:") + self.requester_info["f_id"], "green")
 
         if self.job_info["stateCode"] == str(state_code["COMPLETED"]):
             log("==> Job is already completed and its money is received")
@@ -496,7 +496,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         logging.info(f"finalized_elapsed_time={self.elapsed_time}")
         _job_info = pprint.pformat(self.job_info)
-        log(f"## job_info:\n{_job_info}", color="green")
+        log(f"## job_info:\n{_job_info}", "green")
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
