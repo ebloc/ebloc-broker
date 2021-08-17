@@ -76,10 +76,10 @@ class Log(Color):
     def print_color(self, text, color=None, is_bold=True, end=None):
         """Print string in color format."""
         if str(text)[0:3] in ["==>", "#> ", "## "]:
-            print(colored(f"{self.BOLD}{str(text)[0:3]}{self.END}", color="blue"), end="", flush=True)
+            print(colored(f"{self.BOLD}{str(text)[0:3]}{self.END}", "blue"), end="", flush=True)
             text = text[3:]
         elif str(text)[0:2] == "E:":
-            print(colored(f"{self.BOLD}E:{self.END}", color="red"), end="", flush=True)
+            print(colored(f"{self.BOLD}E:{self.END}", "red"), end="", flush=True)
             text = text[2:]
 
         if end is None:
@@ -196,12 +196,12 @@ def _colorize_traceback(message=None, is_print_exc=True):
     formatter = formatters.get_formatter_by_name("terminal")
     tb_colored = highlight(tb_text, lexer, formatter)
     if not message:
-        log(f"{WHERE(1)} ", color="blue")
+        log(f"{WHERE(1)} ", "blue")
     else:
         try:
-            log(f"[{PrintException()}] WHERE={WHERE(1)}", color="blue")
+            log(f"[{PrintException()}] WHERE={WHERE(1)}", "blue")
         except:
-            log(f"WHERE={WHERE(1)}", color="blue")
+            log(f"WHERE={WHERE(1)}", "blue")
 
         log(f"E: {message}")
 
@@ -241,12 +241,12 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
         if not _config.IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
             if is_arrow:
                 print(
-                    colored(f"{ll.BOLD}{text[:_len]}{ll.END}", color=_color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
+                    colored(f"{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
                     end=end,
                     flush=flush,
                 )
             else:
-                ll.print_color(colored(text, color), color=color, is_bold=is_bold, end=end)
+                ll.print_color(colored(text, color), color, is_bold=is_bold, end=end)
 
         if is_bold:
             _text = f"{ll.BOLD}{text[_len:]}{ll.END}"
@@ -254,13 +254,13 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
             _text = text[_len:]
 
         if is_arrow:
-            f.write(colored(f"{ll.BOLD}{text[:_len]}{ll.END}", color=_color) + colored(_text, color))
+            f.write(colored(f"{ll.BOLD}{text[:_len]}{ll.END}", _color) + colored(_text, color))
         else:
             f.write(colored(_text, color))
     else:
         text_write = ""
         if is_arrow:
-            text_write = colored(f"{ll.BOLD}{text[:_len]}{ll.END}", color=_color) + f"{ll.BOLD}{text[_len:]}{ll.END}"
+            text_write = colored(f"{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}"
         else:
             text_write = text
 

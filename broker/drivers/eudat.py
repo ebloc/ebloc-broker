@@ -94,7 +94,7 @@ class EudatClass(Storage):
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(f"{folder_name} is already cached under the public directory", color="blue")
+                    log(f"{folder_name} is already cached under the public directory", "blue")
                     return True
 
                 self.folder_type_dict[folder_name] = "tar.gz"
@@ -267,7 +267,7 @@ class EudatClass(Storage):
         log(
             f"\n[{get_time()}] New job has been received through EUDAT: {self.job_key} {self.index} "
             "---------------------------------------------------------",
-            color="cyan",
+            "cyan",
         )
         log(f"==> Keep track from: tail -f {self.drivers_log_path}")
 

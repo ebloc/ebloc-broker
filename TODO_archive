@@ -1,8 +1,5 @@
 #    -*- mode: org -*-
-
-
 Archived entries from file /home/alper/ebloc-broker/TODO
-
 
 * DONE pause => suspend  // unpause => resume
   CLOSED: [2020-06-01 Mon 13:24]
@@ -132,3 +129,33 @@ Archived entries from file /home/alper/ebloc-broker/TODO
   :END:
 
   CLOSED: [2021-01-19 Tue 21:23]
+
+* DONE _colorize_traceback() <= Remove logging // log
+CLOSED: [2021-08-17 Tue 14:56]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-08-17 Tue 14:56
+:ARCHIVE_FILE: ~/ebloc-broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+* DONE refundStoragePayment into refundStorageDeposit
+CLOSED: [2021-08-17 Tue 14:57]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-08-17 Tue 14:57
+:ARCHIVE_FILE: ~/ebloc-broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+* DONE receiveStoragePayment into receiveStorageDeposity
+CLOSED: [2021-08-17 Tue 14:57]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-08-17 Tue 14:57
+:ARCHIVE_FILE: ~/ebloc-broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:

@@ -76,7 +76,7 @@ def raise_error(error):
 
 def print_ok():
     log("[ ", is_bold=False, end="")
-    log("ok", color="green", end="", is_bold=False)
+    log("ok", "green", end="", is_bold=False)
     log(" ]", is_bold=False)
 
 
@@ -106,7 +106,7 @@ def untar(tar_file, extract_to):
             # if tar itself already exist inside the same directory along with
             # `.git` file
             if name not in accept_files:
-                log(f"==> {tar_file} is already extracted into\n{extract_to}", color="green")
+                log(f"==> {tar_file} is already extracted into\n{extract_to}", "green")
                 return
     # tar --warning=no-timestamp
     cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
@@ -132,7 +132,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
 
 
 def sleep_timer(sleep_duration):
-    log(f"Sleeping for {sleep_duration} seconds, called from {[WHERE(1)]}", color="blue")
+    log(f"Sleeping for {sleep_duration} seconds, called from {[WHERE(1)]}", "blue")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -424,11 +424,11 @@ def remove_empty_files_and_folders(dir_path) -> None:
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"[{WHERE(back)}] Error failed command:", color="red")
-        log(f"$ {_cmd}", color="yellow")
-        log(exc, color="red", is_bold=False)
+        log(f"[{WHERE(back)}] Error failed command:", "red")
+        log(f"$ {_cmd}", "yellow")
+        log(exc, "red", is_bold=False)
     else:
-        log(f"==> Failed shell command:\n{_cmd}", color="yellow")
+        log(f"==> Failed shell command:\n{_cmd}", "yellow")
 
 
 def silent_remove(path: str, is_warning=True):
@@ -494,11 +494,11 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             running_pid = out.strip().split()[1]
             if running_pid in pids:
                 if is_print:
-                    log(f"==> {name} is already running on the background, its pid={running_pid}", color="green")
+                    log(f"==> {name} is already running on the background, its pid={running_pid}", "green")
                 return True
         else:
             if is_print:
-                log(f"==> {name} is already running on the background", color="green")
+                log(f"==> {name} is already running on the background", "green")
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
@@ -555,8 +555,8 @@ def is_ipfs_running():
         output = run(["python3", f"{env.EBLOCPATH}/broker/python_scripts/run_ipfs_daemon.py"])
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read(), color="blue")
-            log(output, color="blue")
+            log(content_file.read(), "blue")
+            log(output, "blue")
         if is_ipfs_on():
             return True
     return is_ipfs_on()
@@ -590,7 +590,7 @@ def is_dpkg_installed(package_name) -> bool:
 def terminate(msg="", is_traceback=True):
     """Terminate Driver python script and all the dependent python programs to it."""
     if msg:
-        log(f"[{WHERE(1)}] Terminated: ", color="red", is_bold=True, end="")
+        log(f"[{WHERE(1)}] Terminated: ", "red", is_bold=True, end="")
         log(msg, is_bold=True)
 
     if is_traceback:
@@ -741,10 +741,9 @@ class Link:
 
             self.data_map[folder_name] = folder_hash
             destination = f"{self.path_to}/{folder_hash}"
-
             run(["ln", "-sfn", target, destination])
             log(f"* '{target}' =>")
-            log(f"'{destination}'", color="yellow")
+            log(f"'{destination}'", "yellow")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"
 
@@ -752,7 +751,7 @@ class Link:
 class cd:
     """Context manager for changing the current working directory.
 
-    - https://stackoverflow.com/a/13197763/2402577
+    __ https://stackoverflow.com/a/13197763/2402577
     """
 
     def __init__(self, new_path):
