@@ -16,10 +16,6 @@ import broker._utils.colored_traceback as colored_traceback
 # from eblocbroker.Contract import Contract
 
 
-class Web3NotConnected(Exception):  # noqa
-    pass
-
-
 class QuietExit(Exception):  # noqa
     pass
 
