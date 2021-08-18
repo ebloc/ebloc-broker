@@ -115,6 +115,7 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
+        self.Ebb = Contract.eblocbroker
         self.logged_jobs_to_process = None
 
     def is_job_received(self, key, index) -> None:
@@ -141,7 +142,7 @@ class Driver:
 
         self.is_job_received(job_key, index)
 
-    def analyze_data(self, key):
+    def analyze_data(self, key, requester):
         """Obtain information related to source-code data."""
         for idx, source_code_hash_byte in enumerate(self.logged_job.args["sourceCodeHash"]):
             if idx > 0:
@@ -155,11 +156,12 @@ class Driver:
             else:
                 source_code_hash = config.w3.toText(source_code_hash_byte)
 
-            # #
-            # received_storage_deposit = self.Ebb.get_received_storage_deposit(self.job.provider, source_code_hash, self.job)
-            # job_storage_time = self.Ebb.get_job_storage_time(self.job.provider, source_code_hash, _from=self.job.provider)
-            # #
-            ds = DataStorage(config.ebb, config.w3, env.PROVIDER_ID, source_code_hash_byte)
+            ##############
+            received_storage_deposit = self.Ebb.get_received_storage_deposit(env.PROVIDER_ID, requester, source_code_hash)
+            job_storage_time = self.Ebb.get_job_storage_time(env.PROVIDER_ID, source_code_hash, _from=env.PROVIDER_ID)
+            ############
+            ds = DataStorage(job_storage_time)
+            ds.received_storage_deposit = received_storage_deposit
             self.received_block.append(ds.received_block)
             self.storage_duration.append(ds.storage_duration)
             self.is_already_cached[source_code_hash] = False  # FIXME double check
@@ -206,7 +208,6 @@ class Driver:
         )
         self.received_block = []
         self.storage_duration = []
-        self.analyze_data(job_key)
         if self.logged_job["blockNumber"] > self.max_blocknumber:
             self.max_blocknumber = self.logged_job["blockNumber"]
 
@@ -216,11 +217,12 @@ class Driver:
             logging.error("E: Filename contains an invalid character")
             return
 
-        job_id = 0
         try:
+            job_id = 0  # main job
             self.job_info = eblocbroker_function_call(
                 partial(config.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
             )
+            self.job_infos.append(self.job_info)
             self.job_info.update({"received_block": self.received_block})
             self.job_info.update({"storageDuration": self.storage_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
@@ -231,7 +233,8 @@ class Driver:
             _colorize_traceback(e)
             return
 
-        for job in range(1, len(self.job_infos[0]["core"])):
+        self.analyze_data(job_key, self.job_info["job_owner"])
+        for job in range(1, len(self.job_info["core"])):
             try:
                 self.job_infos.append(  # if workflow is given then add jobs into list
                     config.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.block_number)
@@ -282,8 +285,7 @@ class Driver:
                 self.process_logged_job(idx)
                 self.sent_job_to_storage_class()
             except Exception as e:
-                _colorize_traceback(e)
-                return
+                raise e
 
 
 def run_driver():
@@ -294,7 +296,6 @@ def run_driver():
     env.IS_THREADING_ENABLED = False
     config.logging = setup_logger(env.DRIVER_LOG)
     columns = 100
-    driver = Driver()
 
     # driver_cancel_process = None
     try:
@@ -302,8 +303,13 @@ def run_driver():
 
         connect()
         Contract.eblocbroker = Contract.Contract()
-        config.Ebb = Ebb = Contract.eblocbroker
+        driver = Driver()
+        Ebb: "Contract.Contract" = Contract.eblocbroker
+        driver.Ebb: "Contract.Contract" = Contract.eblocbroker
+        config.Ebb = Contract.eblocbroker
         Contract.eblocbroker.ebb = config.ebb  # set for global use across files
+        driver.Ebb = Contract.eblocbroker
+        driver.Ebb
     except Exception:
         _colorize_traceback()
         terminate()
@@ -319,8 +325,8 @@ def run_driver():
 
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
-    except Exception:
-        breakpoint()  # DEBUG
+    except Exception as e:
+        raise e
 
     if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
         write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
@@ -426,6 +432,7 @@ def run_driver():
             driver.process_logged_jobs()
         except Exception as e:
             _colorize_traceback(e)
+            breakpoint()  # DEBUG
             sys.exit(1)
 
         if len(driver.logged_jobs_to_process) > 0 and driver.max_blocknumber > 0:

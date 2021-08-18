@@ -127,6 +127,12 @@ class Log(Color):
 ll = Log()
 
 
+def _exit():
+    """Immediate program termination."""
+    log("Exiting", "blue")
+    os._exit(0)
+
+
 def WHERE(back=0):
     try:
         frame = sys._getframe(back + 2)

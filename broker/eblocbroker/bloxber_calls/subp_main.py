@@ -22,7 +22,6 @@ if __name__ == "__main__":
 
     output = run(["python", filename, *[str(arg) for arg in data]])
     print(output)
-    breakpoint()  # DEBUG
     # # in case filename is an executable you don't need "python" before `filename`:
     # try:
     #     # for breakpoint remove , stdout=subprocess.PIPE

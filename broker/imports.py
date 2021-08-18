@@ -9,7 +9,7 @@ from web3.providers.rpc import HTTPProvider
 import broker._config as _config
 import broker.config as config
 from broker._utils.tools import _colorize_traceback, log
-from broker.config import QuietExit, env, logging
+from broker.config import QuietExit, env
 from broker.utils import is_geth_on, read_json, run, terminate
 
 
@@ -107,7 +107,7 @@ def connect_to_eblocbroker() -> None:
 
     try:
         if env.EBLOCPATH is None or env.EBLOCPATH == "":
-            logging.error("E: EBLOCPATH variable is empty")
+            log("E: EBLOCPATH variable is empty")
             raise QuietExit
 
         if env.IS_BLOXBERG:
@@ -121,12 +121,13 @@ def connect_to_eblocbroker() -> None:
         _colorize_traceback(e)
         raise e
 
-    try:  # TODO: add decoder/template for this kind of call
+    try:  # TODO: add decoder/template for this kind of calls
         contract_address = contract["address"]
         abi_file = f"{env.EBLOCPATH}/broker/eblocbroker/abi.json"
         abi = read_json(abi_file, is_dict=False)
     except Exception as e:
-        logging.error(f"E: Couldn't read the abi.json file: {abi_file}")
+        log(f"E: Couldn't read the abi.json file: {abi_file}")
+        _colorize_traceback(e)
         raise e
 
     try:
