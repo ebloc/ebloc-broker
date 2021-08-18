@@ -42,7 +42,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
             logging.error(_colorize_traceback)
             raise
     else:
-        logging.warning(f"\nAddress: {address} that has orc_id: {orc_id} is already authenticated")
+        logging.warning(f"Address: {address} that has orc_id: {orc_id} is already authenticated")
         return None
 
 
