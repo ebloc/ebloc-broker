@@ -47,7 +47,7 @@ def get_tx_status(tx_hash) -> str:
     pprint(dict(tx_receipt), depth=1)
     print("\n## Was transaction successful? ")
     if tx_receipt["status"] == 1:
-        print("Transaction is deployed", color="green")
+        print("Transaction is deployed", "green")
     else:
         raise Exception("E: Transaction is reverted")
     return tx_receipt
@@ -128,13 +128,13 @@ if __name__ == "__main__":
             key = ipfs_hash
 
         job.source_code_hashes.append(ipfs_to_bytes32(ipfs_hash))
-        log(f"==> ipfs_hash: {ipfs_hash}\nmd5sum: {generate_md5sum(target)}", color="yellow")
+        log(f"==> ipfs_hash: {ipfs_hash}\nmd5sum: {generate_md5sum(target)}", "yellow")
         if main_storage_id == StorageID.IPFS_GPG:
             # created .gpg file will be removed since its already in ipfs
             targets.append(target)
 
         if idx != len(folders) - 1:
-            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", color="cyan")
+            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "cyan")
 
     # Requester inputs for testing purpose
     job.cores = [1]

@@ -539,7 +539,7 @@ def is_geth_on():
     process_name = f"geth|{env.RPC_PORT}"
     print(process_name)
     if not is_process_on(process_name, "Geth", process_count=0):
-        log("E: geth is not running on the background. Please run:", color="red")
+        log("E: geth is not running on the background. Please run:")
         log("sudo ~/eBlocPOA/server.sh", "yellow")
         raise config.QuietExit
 

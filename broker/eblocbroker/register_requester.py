@@ -44,7 +44,7 @@ if __name__ == "__main__":
     try:
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except:
-        log("E: Run IPFS daemon to detect your ipfs_id", color="red")
+        log("E: Run IPFS daemon to detect your ipfs_id")
         sys.exit(1)
 
     if len(sys.argv) == 6:

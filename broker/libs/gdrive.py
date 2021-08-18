@@ -60,18 +60,18 @@ def submit(provider, _from, job):
             try:
                 data_json = read_json(data_files_json_path)
                 if job.keys == data_json:
-                    log("## meta_data.json file matches with the given data keys", color="green")
+                    log("## meta_data.json file matches with the given data keys", "green")
                 else:
-                    log("## meta_data.json file does not match with the given data keys", color="blue")
+                    log("## meta_data.json file does not match with the given data keys", "blue")
                     _dump_dict_to_file(data_files_json_path, job.keys)
                     data_json = read_json(data_files_json_path)
             except:
                 _dump_dict_to_file(data_files_json_path, job.keys)
                 data_json = read_json(data_files_json_path)
 
-            log("meta_data------------------------------------------------------------------", color="blue")
+            log("meta_data------------------------------------------------------------------", "blue")
             pprint(str(data_json))
-            log("---------------------------------------------------------------------------", color="blue")
+            log("---------------------------------------------------------------------------", "blue")
 
         folder_to_share = job.folders_to_share[0]
         job_key, tar_hash, job.tar_hashes = share_folder(
@@ -114,10 +114,10 @@ def upload(folder_to_share, base_dir, job_key_flag=False):
     is_file_exist = _list(tar_hash, is_folder=True)
     if not is_file_exist:
         key = _upload(dir_path, tar_hash, is_folder=True)
-        log(f"{_list(tar_hash)}", color="green")
+        log(f"{_list(tar_hash)}", "green")
     else:
-        log(f"==> Requested folder {tar_hash} is already uploaded", color="blue")
-        log(is_file_exist, color="green")
+        log(f"==> Requested folder {tar_hash} is already uploaded", "blue")
+        log(is_file_exist, "green")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
 
@@ -201,7 +201,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
         try:
             output = get_file_id(key)
             log(f"==> data_id={key}")
-            log(output, color="green")
+            log(output, "green")
         except:
             return False
 
@@ -243,7 +243,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             _colorize_traceback()
             return False, 0, [], source_code_key
         else:
-            log(f"SUCCESS on {md5sum} folder", color="green")
+            log(f"SUCCESS on {md5sum} folder", "green")
 
         byte_size = int(get_file_info(gdrive_info, "Size"))
         log(f"==> source_code_hashes[0] == {_source_code_hash} size={byte_size} bytes")
@@ -266,7 +266,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
                 return False
 
             md5sum = get_file_info(gdrive_info, _type="Md5sum")
-            log(gdrive_info, color="yellow")
+            log(gdrive_info, "yellow")
             given_source_code_hash = source_code_hashes[idx].decode("utf-8")
             log(f"==> given_source_code_hash={given_source_code_hash}  idx={idx}")
             if md5sum != given_source_code_hash:
