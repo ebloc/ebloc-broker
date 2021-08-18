@@ -98,6 +98,7 @@ def connect_to_web3():
 
 
 def connect_to_eblocbroker() -> None:
+    """Connect into ebloc-broker."""
     if config.ebb:
         return
 

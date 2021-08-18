@@ -40,7 +40,7 @@ def enum(*sequential, **named):
 
 
 """
-- Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
+__  Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
 """
 state_code = {}
 state_code["SUBMITTED"] = 0  # initial state
@@ -79,7 +79,7 @@ def session_start_msg(slurm_user, block_number, pid, columns=104):
         PROVIDER_ID = env.PROVIDER_ID
 
     log(f"==> This Driver process has the PID {pid}")
-    log(f"slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}", "blue")
+    log(f"==> slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}")
 
 
 def run_driver_cancel():
