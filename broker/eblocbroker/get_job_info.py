@@ -69,7 +69,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
     if is_print:
         log(
             f"~/ebloc-broker/broker/get_job_info.py {provider} {job_key} {index} {job_id} {received_block_number}",
-            color="cyan",
+            "cyan",
         )
     try:
         provider = config.w3.toChecksumAddress(provider)

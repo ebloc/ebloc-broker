@@ -194,7 +194,7 @@ def is_repo(folders):
 
 
 def _generate_git_repo(folder):
-    log(folder, color="green")
+    log(folder, "green")
     try:
         initialize_check(folder)
         commit_changes(folder)
