@@ -6,10 +6,14 @@ import sys
 from pymongo import MongoClient
 
 from broker._utils.tools import _colorize_traceback, log
-from broker.config import Web3NotConnected, env
+from broker.config import env
 from broker.libs.mongodb import MongoBroker
-from broker.utils import read_json, terminate
+from broker.utils import read_json, terminate, ipfs_to_bytes32
 from brownie.network.account import Account
+
+
+class Web3NotConnected(Exception):  # noqa
+    pass
 
 
 class Contract:
@@ -399,6 +403,9 @@ class Contract:
             provider_addr = self.w3.toChecksumAddress(provider_addr)
 
         ops = {"from": _from}
+        if isinstance(source_code_hash, str):
+            source_code_hash = ipfs_to_bytes32(source_code_hash)
+
         if env.IS_BLOXBERG:
             return self.eBlocBroker.getJobStorageTime(provider_addr, source_code_hash, ops)  ################
         else:
@@ -407,6 +414,9 @@ class Contract:
     def get_received_storage_deposit(self, provider, requester, source_code_hash):
         """Return received storage deposit for the corresponding source code hash."""
         ops = {"from": provider}
+        if isinstance(source_code_hash, str):
+            source_code_hash = ipfs_to_bytes32(source_code_hash)
+
         if env.IS_BLOXBERG:
             return self.eBlocBroker.getReceivedStorageDeposit(provider, requester, source_code_hash, ops)
         else:
