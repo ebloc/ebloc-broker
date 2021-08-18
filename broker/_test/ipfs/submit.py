@@ -63,9 +63,9 @@ if __name__ == "__main__":
     check_linked_data(path_from, path_to, folders_to_share[1:])
 
     if main_storage_id == StorageID.IPFS:
-        log("==> Submitting source code through IPFS", color="cyan")
+        log("==> Submitting source code through IPFS", "cyan")
     elif main_storage_id == StorageID.IPFS_GPG:
-        log("==> Submitting source code through IPFS_GPG", color="cyan")
+        log("==> Submitting source code through IPFS_GPG", "cyan")
     else:
         log("E: Please provide IPFS or IPFS_GPG storage type")
         sys.exit(1)
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             targets.append(target)
 
         if idx != len(folders_to_share) - 1:
-            log("-------------------------------------------------", color="yellow")
+            log("-------------------------------------------------", "yellow")
 
     # requester inputs for testing
     job.cores = [1]

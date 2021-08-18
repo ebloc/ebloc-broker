@@ -262,7 +262,7 @@ def _submit(provider, account_id, folders_to_share):
         if idx != 0:
             print("")
 
-        log(f"==> folder_to_share={folder}", color="green")
+        log(f"==> folder_to_share={folder}", "green")
         try:
             git.initialize_check(folder)
             git.commit_changes(folder)
@@ -299,6 +299,6 @@ def _submit(provider, account_id, folders_to_share):
     except Exception as e:
         _colorize_traceback()
         if type(e).__name__ == "QuietExit":
-            log(f"E: Unlock your Ethereum Account(web3.eth.accounts[{account_id}])", color="red")
-            log("In order to unlock an account you can use: ~/eBlocPOA/client.sh", color="yellow")
+            log(f"E: Unlock your Ethereum Account(web3.eth.accounts[{account_id}])", "red")
+            log("In order to unlock an account you can use: ~/eBlocPOA/client.sh", "yellow")
         sys.exit(1)

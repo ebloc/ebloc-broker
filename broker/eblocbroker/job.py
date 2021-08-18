@@ -268,7 +268,7 @@ class JobPrices:
             if key == "data_transfer":
                 log(
                     f"\t=> {key}={value} <=> [in:{self.cost['data_transfer_in']} out:{self.cost['data_transfer_out']}]",
-                    color="blue",
+                    "blue",
                 )
             else:
                 if key not in ("data_transfer_out", "data_transfer_in"):
