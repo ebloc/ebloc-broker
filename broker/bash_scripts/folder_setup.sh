@@ -80,6 +80,7 @@ current_dir=$HOME/ebloc-broker
 # Folder Setup
 # ============
 DIR=/var/ebloc-broker
+mkdir -p $DIR/cache
 if [ ! -d $DIR ]; then
     sudo mkdir -p $DIR
     sudo chown $(whoami) -R $DIR
@@ -94,7 +95,6 @@ mkdir -p $TMP_DIR/drivers_output
 mkdir -p $TMP_DIR/links
 mkdir -p $TMP_DIR/transactions
 mkdir -p $TMP_DIR/end_code_output
-mkdir -p $TMP_DIR/cache
 
 if [ ! -f $TMP_DIR/.env ]; then
     cp $current_dir/.env $TMP_DIR
