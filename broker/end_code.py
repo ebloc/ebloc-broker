@@ -24,7 +24,7 @@ from broker.lib import (
     remove_files,
     run,
     run_stdout_to_file,
-    state_code,
+    state,
     subprocess_call,
 )
 from broker.utils import (
@@ -182,7 +182,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.end_time_stamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
-
         # [https://stackoverflow.com/a/4453495/2402577, https://stackoverflow.com/a/5971326/2402577]
         # my_env = os.environ.copy();
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"
@@ -434,7 +433,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfs_id"], "green")
         log("{0: <17}".format("f_id:") + self.requester_info["f_id"], "green")
 
-        if self.job_info["stateCode"] == str(state_code["COMPLETED"]):
+        if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
             log("==> Job is already completed and its money is received")
             raise QuietExit
 
@@ -442,12 +441,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         is_print = True
         for attempt in range(10):
-            if self.job_info["stateCode"] == state_code["RUNNING"]:
+            if self.job_info["stateCode"] == state.code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed
                 log("==> Job has been started")
                 break  # wait until does values updated on the blockchain
 
-            if self.job_info["stateCode"] == state_code["COMPLETED"]:
+            if self.job_info["stateCode"] == state.code["COMPLETED"]:
                 # detects an error on the slurm side
                 log("==> Job is already completed job and its money is received")
                 raise QuietExit

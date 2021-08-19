@@ -46,7 +46,6 @@ class Color:
         """
         self.BOLD = "\033[1m"
         self.END = "\033[0m"
-        #
         self.red = "red"
         self.green = "green"
         self.yellow = "yellow"
@@ -99,7 +98,7 @@ class Log(Color):
         _len = None
         is_arrow = False
         is_r = ""
-        if text[0] == "\r":
+        if text and text[0] == "\r":
             is_r = "\r"
             text = text[1:]
 
@@ -127,15 +126,6 @@ class Log(Color):
                 color = ll.white
 
         return text, color, _len, is_arrow, is_r
-
-
-ll = Log()
-
-
-def _exit():
-    """Immediate program termination."""
-    log("Exiting", "blue")
-    os._exit(0)
 
 
 def WHERE(back=0):
@@ -287,10 +277,10 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
 def get_decimal_count(value, is_drop_trailing_zeros=True) -> int:
     """Return decimal count.
 
-    https://stackoverflow.com/a/6190291/2402577
-
     See https://stackoverflow.com/a/11227878/2402577
     for drop the trailing zeros from decimal.
+
+    __ https://stackoverflow.com/a/6190291/2402577
     """
     value = str(value)
     if is_drop_trailing_zeros:
@@ -303,8 +293,17 @@ def get_decimal_count(value, is_drop_trailing_zeros=True) -> int:
 def round_float(v, ndigits=2) -> float:
     """Limit floats to two decimal points.
 
-    https://stackoverflow.com/questions/455612/limiting-floats-to-two-decimal-points
+    __ https://stackoverflow.com/questions/455612/limiting-floats-to-two-decimal-points
     """
     d = Decimal(v)
-    v_str = (f"{{0:.{ndigits}f}}").format(round(d, ndigits))  # '{0:.8f}'
+    v_str = (f"{{0:.{ndigits}f}}").format(round(d, ndigits))
     return float(v_str)
+
+
+def _exit(msg):
+    """Immediate program termination."""
+    log(f"{msg}\nExiting...", "red")
+    os._exit(0)
+
+
+ll = Log()

@@ -5,7 +5,7 @@ from typing import Any, Union
 
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import env, logging
-from broker.lib import StorageID, state_code
+from broker.lib import StorageID, state
 from broker.utils import ipfs_to_bytes32
 
 
@@ -36,12 +36,12 @@ def process_payment(
             raise
 
     self.get_job_info(env.PROVIDER_ID, job_key, index, job_id)
-    if self.job_info["stateCode"] == state_code["COMPLETED"]:
+    if self.job_info["stateCode"] == state.code["COMPLETED"]:
         logging.error("Job is completed and already get paid")
         sys.exit(1)
 
     """
-    if self.job_info["stateCode"] == str(state_code["COMPLETED"]):
+    if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
         logging.error("Job is completed and already get paid")
         sys.exit(1)
     """
