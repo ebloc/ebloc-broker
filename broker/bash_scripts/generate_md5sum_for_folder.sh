@@ -25,7 +25,7 @@ target=${1%/}
 if [ ! -d "$target" ]; then
     echo 'E: Requested folder does not exit. Please provide complete path. Path='$target
     exit 64
-nelse
+else
     target=$(realpath $target)
 fi
 

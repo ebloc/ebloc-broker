@@ -98,6 +98,11 @@ class Log(Color):
         text = str(text)
         _len = None
         is_arrow = False
+        is_r = ""
+        if text[0] == "\r":
+            is_r = "\r"
+            text = text[1:]
+
         if text == "[ ok ]":
             text = f"[ {ll.green}ok{ll.END} ]"
 
@@ -121,7 +126,7 @@ class Log(Color):
             elif is_bold:
                 color = ll.white
 
-        return text, color, _len, is_arrow
+        return text, color, _len, is_arrow, is_r
 
 
 ll = Log()
@@ -219,7 +224,7 @@ def _colorize_traceback(message=None, is_print_exc=True):
 
 def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False):
     """Print for own settings."""
-    text, _color, _len, is_arrow = ll.pre_color_check(text, color, is_bold)
+    text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color, is_bold)
     if threading.current_thread().name != "MainThread" and env and env.IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
@@ -247,7 +252,7 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
         if not _config.IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
             if is_arrow:
                 print(
-                    colored(f"{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
+                    colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
                     end=end,
                     flush=flush,
                 )
@@ -260,13 +265,13 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
             _text = text[_len:]
 
         if is_arrow:
-            f.write(colored(f"{ll.BOLD}{text[:_len]}{ll.END}", _color) + colored(_text, color))
+            f.write(colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + colored(_text, color))
         else:
             f.write(colored(_text, color))
     else:
         text_write = ""
         if is_arrow:
-            text_write = colored(f"{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}"
+            text_write = colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}"
         else:
             text_write = text
 
