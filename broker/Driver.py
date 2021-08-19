@@ -250,9 +250,14 @@ class Driver:
         requester_md5_id = eth_address_to_md5(self.requester_id)
         slurm.pending_jobs_check()
         main_cloud_storage_id = self.logged_job.args["cloudStorageID"][0]
-        ops = (self.logged_job, self.job_infos, requester_md5_id, self.is_already_cached)
+        kwargs = {
+            "logged_job": self.logged_job,
+            "job_info": self.job_infos,
+            "requester_id": requester_md5_id,
+            "is_already_cached": self.is_already_cached
+        }
         if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
-            storage_class = IpfsClass(ops)
+            storage_class = IpfsClass(**kwargs)
         elif main_cloud_storage_id == StorageID.EUDAT:
             if not config.oc:
                 try:
@@ -261,10 +266,10 @@ class Driver:
                     _colorize_traceback(e)
                     sys.exit(1)
 
-            storage_class = EudatClass(ops)
+            storage_class = EudatClass(**kwargs)
             # thread.start_new_thread(driverFunc.driver_eudat, (logged_job, jobInfo, requester_md5_id))
         elif main_cloud_storage_id == StorageID.GDRIVE:
-            storage_class = GdriveClass(ops)
+            storage_class = GdriveClass(**kwargs)
 
         # run_storage_process(storage_class)
         if env.IS_THREADING_ENABLED:
