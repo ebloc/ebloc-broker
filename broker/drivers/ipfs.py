@@ -13,8 +13,8 @@ from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, l
 
 
 class IpfsClass(Storage):
-    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached):
-        super().__init__(logged_job, jobInfo, requester_id, is_already_cached)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         # cache_type is always public on IPFS
         self.cache_type = CacheType.PUBLIC
         self.ipfs_hashes = []
