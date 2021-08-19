@@ -12,9 +12,6 @@ from dotenv import load_dotenv
 
 import broker._utils.colored_traceback as colored_traceback
 
-# from web3 import Web3
-# from eblocbroker.Contract import Contract
-
 
 class QuietExit(Exception):  # noqa
     pass
@@ -176,6 +173,7 @@ contract = None
 w3 = None
 chain = None
 w3_ebb = None
+ipfs = None
 
 colored_traceback.add_hook(always=True)
 logger = setup_logger()  # Default initialization

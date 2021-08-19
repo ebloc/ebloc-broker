@@ -7,18 +7,18 @@ from broker.config import logging
 from broker.lib import get_tx_status
 
 
-def update_provider_prices(self, availableCoreNum, commitmentBlockNum, prices):
+def update_provider_prices(self, available_core, commitment_blk, prices):
     """Update provider prices."""
-    if not availableCoreNum:
+    if not available_core:
         logging.error("Please enter positive value for the available core number")
         raise
 
-    if not commitmentBlockNum:
+    if not commitment_blk:
         logging.error("Please enter positive value for the commitment block number")
         raise
 
     try:
-        tx = self._update_provider_prices(availableCoreNum, commitmentBlockNum, prices)
+        tx = self._update_provider_prices(available_core, commitment_blk, prices)
         return self.tx_id(tx)
     except Exception:
         logging.error(_colorize_traceback)
@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     Ebb = Contract.eblocbroker
 
-    availableCoreNum = 128
-    commitmentBlockNum = 10
+    available_core = 128
+    commitment_blk = 10
     price_core_min = 100
     price_data_transfer = 1
     price_storage = 1
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
     try:
-        tx_hash = Ebb.update_provider_prices(availableCoreNum, commitmentBlockNum, prices)
+        tx_hash = Ebb.update_provider_prices(available_core, commitment_blk, prices)
         receipt = get_tx_status(tx_hash)
     except:
         _colorize_traceback()
