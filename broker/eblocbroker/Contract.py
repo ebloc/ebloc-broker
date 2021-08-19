@@ -8,7 +8,7 @@ from pymongo import MongoClient
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
-from broker.utils import read_json, terminate, ipfs_to_bytes32
+from broker.utils import ipfs_to_bytes32, read_json, terminate
 from brownie.network.account import Account
 
 
