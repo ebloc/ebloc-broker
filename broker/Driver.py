@@ -157,7 +157,9 @@ class Driver:
                 source_code_hash = config.w3.toText(source_code_hash_byte)
 
             ##############
-            received_storage_deposit = self.Ebb.get_received_storage_deposit(env.PROVIDER_ID, requester, source_code_hash)
+            received_storage_deposit = self.Ebb.get_received_storage_deposit(
+                env.PROVIDER_ID, requester, source_code_hash
+            )
             job_storage_time = self.Ebb.get_job_storage_time(env.PROVIDER_ID, source_code_hash, _from=env.PROVIDER_ID)
             ############
             ds = DataStorage(job_storage_time)
@@ -254,7 +256,7 @@ class Driver:
             "logged_job": self.logged_job,
             "job_info": self.job_infos,
             "requester_id": requester_md5_id,
-            "is_already_cached": self.is_already_cached
+            "is_already_cached": self.is_already_cached,
         }
         if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             storage_class = IpfsClass(**kwargs)
