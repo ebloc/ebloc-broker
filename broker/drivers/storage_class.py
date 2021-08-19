@@ -35,26 +35,29 @@ class BaseClass:
 
 
 class Storage(BaseClass):
-    def __init__(self, logged_job, job_info, requester_id, is_already_cached) -> None:
+    # def __init__(self, logged_job, job_info, requester_id, is_already_cached) -> None:
+    def __init__(self, **kwargs) -> None:
         self.thread_name = uuid.uuid4().hex  # https://stackoverflow.com/a/44992275/2402577
-        self.requester_id = requester_id
-        self.job_info = job_info
-        self.logged_job = logged_job
+        self.requester_id = kwargs.pop("requester_id")
+        self.job_info = kwargs.pop("job_info")
+        self.logged_job = kwargs.pop("logged_job")
+        self.is_already_cached = kwargs.pop("is_already_cached")
+        #
         self.job_key = self.logged_job.args["jobKey"]
         self.index = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
         self.run_time = self.logged_job.args["runTime"]
         self.job_id = 0
-        self.cache_type = logged_job.args["cacheType"]
-        self.data_transfer_in_requested = job_info[0]["dataTransferIn"]
+        self.cache_type = self.logged_job.args["cacheType"]
+        self.data_transfer_in_requested = self.job_info[0]["dataTransferIn"]
         self.data_transfer_in_to_download = 0  # size_to_download
-        self.is_already_cached = is_already_cached
-        self.source_code_hashes: List[bytes] = logged_job.args["sourceCodeHash"]
+        self.is_already_cached = self.is_already_cached
+        self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
         self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
         self.job_key_list: List[str] = []
         self.md5sum_dict = {}
         self.folder_path_to_download: Dict[str, str] = {}
-        self.cloudStorageID = logged_job.args["cloudStorageID"]
+        self.cloudStorageID = self.logged_job.args["cloudStorageID"]
         self.requester_home = f"{env.PROGRAM_PATH}/{self.requester_id}"
         self.results_folder_prev = f"{self.requester_home}/{self.job_key}_{self.index}"
         self.results_folder = f"{self.results_folder_prev}/JOB_TO_RUN"
