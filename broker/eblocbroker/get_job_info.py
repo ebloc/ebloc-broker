@@ -7,7 +7,7 @@ from typing import Union
 import broker.config as config
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import logging
-from broker.lib import inv_state_code
+from broker.lib import state
 from broker.utils import StorageID, bytes32_to_ipfs, empty_bytes32
 
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
         elapsed_time = int(job_info["completion_time"]) - int(job_info["startTime"])
 
     if isinstance(job_info, dict):
-        print("{0: <25}".format("state_code:") + f"{inv_state_code[job_info['stateCode']]} ({job_info['stateCode']})")
+        print("{0: <25}".format("state_code:") + f"{state.inv_code[job_info['stateCode']]} ({job_info['stateCode']})")
         print("{0: <25}".format("core") + str(job_info["core"]))
         print("{0: <25}".format("start_time") + str(job_info["startTime"]))
         print("{0: <25}".format("completion_time:") + str(job_info["completion_time"]))

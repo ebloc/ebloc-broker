@@ -33,11 +33,6 @@ def connect():
 def _connect_to_web3():
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
-        """
-        Note that you should create only one RPC Provider per process,
-        as it recycles underlying TCP/IP network connections between
-        your process and Ethereum node
-        """
         if env.IS_BLOXBERG:  # https://bloxberg.org
             config.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
@@ -53,7 +48,12 @@ def _connect_to_web3():
 
 
 def connect_to_web3():
-    """Connect into web3."""
+    """Connect into web3.
+
+    Note that you should create only one RPC Provider per process, as it
+    recycles underlying TCP/IP network connections between your process and
+    Ethereum node
+    """
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
     if config.w3:
         return

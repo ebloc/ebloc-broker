@@ -4,7 +4,6 @@ pre-commit run --all-files
 # SKIP=mypy pre-commit run --all-files
 
 ## Files:
-### ~/.config/flake8
 ### ~/.isort.cfg
 
 ## mypy --ignore-missing-imports Driver.py
