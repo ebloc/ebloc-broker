@@ -46,7 +46,6 @@ class Color:
         """
         self.BOLD = "\033[1m"
         self.END = "\033[0m"
-        #
         self.red = "red"
         self.green = "green"
         self.yellow = "yellow"
