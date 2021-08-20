@@ -39,30 +39,46 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-"""
-__  Add keys to the hashmap # https://slurm.schedmd.com/squeue.html
-"""
-state_code = {}
-state_code["SUBMITTED"] = 0  # initial state
-# indicates when a request is receieved by the provider. The job is waiting
-# for resource allocation. It will eventually run.
-state_code["PENDING"] = 1
-# The job currently is allocated to a node and is running. Corresponding data
-# files are downloaded and verified.
-state_code["RUNNING"] = 2
-# indicates if job is refunded
-state_code["REFUNDED"] = 3
-# Job was explicitly cancelled by the requester or system administrator.
-# The job may or may not have been initiated. Set by the requester
-state_code["CANCELLED"] = 4
-# The job has completed successfully and deposit is paid to the provider
-state_code["COMPLETED"] = 5
-# Job terminated upon reaching its time limit.
-state_code["TIMEOUT"] = 6
-state_code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
+class State:
+    """State code of the Slurm jobs, add keys into the hashmap.
 
-inv_state_code = {value: key for key, value in state_code.items()}
+    Hashmap keys:
+    SUBMITTED: Initial state.
 
+    PENDING: Indicates when a request is receieved by the provider. The job is
+    waiting for resource allocation. It will eventually run.
+
+    RUNNING: The job currently is allocated to a node and
+    isrunning. Corresponding data files are downloaded and verified.
+
+    REFUNDED: Indicates if job is refunded
+
+    CANCELLED: Job was explicitly cancelled by the requester or system
+    administrator. The job may or may not have been initiated. Set by the
+    requester.
+
+    COMPLETED: The job has completed successfully and deposit is paid to the
+    provider.
+
+    TIMEOUT: Job terminated upon reaching its time limit.
+
+    __ https://slurm.schedmd.com/squeue.html
+
+    """
+
+    code = {}
+    code["SUBMITTED"] = 0
+    code["PENDING"] = 1
+    code["RUNNING"] = 2
+    code["REFUNDED"] = 3
+    code["CANCELLED"] = 4
+    code["COMPLETED"] = 5
+    code["TIMEOUT"] = 6
+    code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
+    inv_code = {value: key for key, value in code.items()}
+
+
+state = State()
 
 def _connect_web3():
     if not config.w3:

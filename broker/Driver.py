@@ -23,7 +23,7 @@ from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker.job import DataStorage
 from broker.helper import helper
-from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state_code
+from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
 from broker.libs.user_setup import give_RWE_access, user_add
 from broker.utils import (
     CacheType,
@@ -123,13 +123,13 @@ class Driver:
         if config.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
             raise Exception("## [ mongoDB ] Job is already received", "green")
 
-        if self.job_infos[0]["stateCode"] == state_code["COMPLETED"]:
+        if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
             raise Exception("Job is already completed.")
 
-        if self.job_infos[0]["stateCode"] == state_code["REFUNDED"]:
+        if self.job_infos[0]["stateCode"] == state.code["REFUNDED"]:
             raise Exception("Job is refunded.")
 
-        if not self.job_infos[0]["stateCode"] == state_code["SUBMITTED"]:
+        if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
             raise Exception("Warning: Job is already captured and in process or completed.")
 
     def check_requested_job(self, job_key, index) -> None:
