@@ -12,9 +12,6 @@ from dotenv import load_dotenv
 
 import broker._utils.colored_traceback as colored_traceback
 
-# from web3 import Web3
-# from eblocbroker.Contract import Contract
-
 
 class QuietExit(Exception):  # noqa
     pass
