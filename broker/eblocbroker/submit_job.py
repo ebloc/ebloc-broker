@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-
 import broker.config as config
-import broker.libs.ipfs as ipfs
+import broker.cfg as cfg
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import env, logging
 from broker.lib import StorageID
@@ -88,11 +87,11 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             logging.error(f"\nE: cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
             raise
 
-    # if is_use_ipfs:
-    #     if not is_ipfs_running():
-    #         sys.exit()
+    if is_use_ipfs:
+        if not is_ipfs_running():
+            sys.exit()
 
-    #     ipfs.swarm_connect(provider_info["ipfs_id"])
+        cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
 
     return True
 

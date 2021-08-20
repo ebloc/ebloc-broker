@@ -20,7 +20,7 @@ if __name__ == "__main__":
                 daemon_base.start()
             except Exception as e:
                 if type(e).__name__ != "QuietExit":
-                    _colorize_traceback()
+                    _colorize_traceback(e)
                     sys.exit(1)
         elif sys.argv[1] in ["terminate", "t"]:
             daemon_base.terminate()

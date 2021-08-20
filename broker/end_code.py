@@ -182,7 +182,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.end_time_stamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
-
         # [https://stackoverflow.com/a/4453495/2402577, https://stackoverflow.com/a/5971326/2402577]
         # my_env = os.environ.copy();
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"

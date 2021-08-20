@@ -6,16 +6,14 @@ import os
 import time
 
 import git
-
 from broker.config import env, logging
-from broker.libs.ipfs import decrypt_using_gpg
+import broker.cfg as cfg
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, run
 
+
 # from subprocess import CalledProcessError
-
-
 def initialize_check(path):
-    """.git/ folder should exist within the target folder"""
+    """Validate if .git/ folder exist within the target folder."""
     with cd(path):
         if not is_initialized(path):
             try:
@@ -161,7 +159,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
     https://stackoverflow.com/a/15375869/2402577
     """
     if is_gpg:
-        decrypt_using_gpg(patch_file)
+        cfg.ipfs.decrypt_using_gpg(patch_file)
 
     with cd(git_folder):
         base_name = path_leaf(patch_file)

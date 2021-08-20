@@ -7,10 +7,8 @@ import time
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
 import broker.libs.eudat as eudat

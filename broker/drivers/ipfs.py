@@ -5,7 +5,7 @@ import shutil
 import time
 
 import libs.git as git
-import libs.ipfs as ipfs
+import broker.cfg as cfg
 from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, is_ipfs_running
@@ -21,8 +21,7 @@ class IpfsClass(Storage):
         self.cumulative_sizes = {}
 
     def check_ipfs(self, ipfs_hash) -> None:
-        breakpoint()  # DEBUG
-        success, ipfs_stat, cumulative_size = ipfs.is_hash_exists_online(ipfs_hash)
+        success, ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
         if not success or "CumulativeSize" not in ipfs_stat:
             raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
 
@@ -44,7 +43,7 @@ class IpfsClass(Storage):
         if not is_ipfs_running():
             return False
 
-        logging.info(f"is_hash_locally_cached={ipfs.is_hash_locally_cached(self.job_key)}")
+        logging.info(f"is_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -68,7 +67,7 @@ class IpfsClass(Storage):
             # here scripts knows that provided IPFS hashes exists
             is_hashed = False
             logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
-            if ipfs.is_hash_locally_cached(ipfs_hash):
+            if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
                 log(f"==> IPFS file {ipfs_hash} is already cached.", "blue")
 
@@ -80,7 +79,7 @@ class IpfsClass(Storage):
                 mkdir(target)
 
             is_storage_paid = False  # TODO: should be set before by user input
-            ipfs.get(ipfs_hash, target, is_storage_paid)
+            cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
             if idx > 0:
                 # https://stackoverflow.com/a/31814223/2402577
                 dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
@@ -90,7 +89,7 @@ class IpfsClass(Storage):
                 target = dst_filename
 
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
-                ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
+                cfg.ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
 
             if not git.initialize_check(target):
                 return False

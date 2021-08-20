@@ -7,7 +7,7 @@ import ipfshttpclient
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import QuietExit, env
 from broker.lib import get_tx_status
-from broker.libs.ipfs import get_ipfs_id
+import broker.cfg as cfg
 
 
 def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerprint, ipfs_id):
@@ -38,7 +38,6 @@ def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerp
 
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
-
     Contract.eblocbroker = Contract.Contract()
     Ebb = Contract.eblocbroker
     try:
@@ -58,7 +57,7 @@ if __name__ == "__main__":
         email = "alper01234alper@gmail.com"  # "alper.alimoglu@gmail.com"
         federation_cloud_id = "059ab6ba-4030-48bb-b81b-12115f531296"
         gpg_fingerprint = "0x1B626A5D0C49D7376F73EEB0A1106434B2696907"  # info: get_gpg_fingerprint.sh
-        ipfs_id = get_ipfs_id(client, is_print=True)
+        ipfs_id = cfg.ipfs.get_ipfs_id(client, is_print=True)
 
     try:
         tx_hash = Ebb.register_requester(account, email, federation_cloud_id, gpg_fingerprint, ipfs_id)

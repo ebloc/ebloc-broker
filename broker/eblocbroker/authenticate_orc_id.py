@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Authenticate orc_id."""
 
 import sys
