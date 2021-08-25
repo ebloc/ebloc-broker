@@ -100,7 +100,7 @@ ipfs swarm connect /ip4/192.168.1.245/tcp/4001/p2p/12D3KooWEx4tD1xKp4Pr1xUnA3e2Z
 
 ----------------------------------------
 
-# Hepful commands for garbage collection
+# Helpful commands for garbage collection
 
 ```
 ipfs pin ls --type recursive
