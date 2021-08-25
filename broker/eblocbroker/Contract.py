@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import logging
 import sys
 
 from pymongo import MongoClient
@@ -16,7 +15,7 @@ class Web3NotConnected(Exception):  # noqa
     pass
 
 
-class Contract:
+class Contract:  # noqa
     """Object to access smart-contract functions."""
 
     def __init__(self, is_brownie=False) -> None:
@@ -45,10 +44,16 @@ class Contract:
     from broker.eblocbroker.authenticate_orc_id import authenticate_orc_id
     from broker.eblocbroker.get_provider_info import get_provider_info
     from broker.eblocbroker.process_payment import process_payment
-    from broker.eblocbroker.submit_job import submit_job, check_before_submit, is_provider_valid, is_requester_valid
-    from broker.eblocbroker.get_job_info import get_job_info, update_job_cores, get_job_source_code_hashes
+    from broker.eblocbroker.submit_job import submit_job
+    from broker.eblocbroker.submit_job import check_before_submit
+    from broker.eblocbroker.submit_job import is_provider_valid
+    from broker.eblocbroker.submit_job import is_requester_valid
+    from broker.eblocbroker.get_job_info import get_job_info
+    from broker.eblocbroker.get_job_info import update_job_cores
+    from broker.eblocbroker.get_job_info import get_job_source_code_hashes
     from broker.eblocbroker.get_requester_info import get_requester_info
-    from broker.eblocbroker.log_job import run_log_cancel_refund, run_log_job
+    from broker.eblocbroker.log_job import run_log_cancel_refund
+    from broker.eblocbroker.log_job import run_log_job
     from broker.eblocbroker.register_provider import register_provider
     from broker.eblocbroker.refund import refund
     from broker.eblocbroker.register_requester import register_requester
@@ -64,18 +69,19 @@ class Contract:
 
     def is_eth_account_locked(self, addr):
         """Check whether is the ethereum account locked."""
-        pass
         if env.IS_BLOXBERG:
             try:
                 account = self.brownie_load_accounts()
             except:
-                terminate(f"E: PROVIDER_ID({account}) is locked, unlock it for futher use", is_traceback=False)
+                error_msg = f"E: PROVIDER_ID({account}) is locked, unlock it for futher use"
+                terminate(error_msg, is_traceback=False)
         else:
             for account in self.w3.geth.personal.list_wallets():
                 _address = account["accounts"][0]["address"]
                 if _address == addr:
                     if account["status"] == "Locked":
-                        terminate(f"E: PROVIDER_ID({_address}) is locked, unlock it for futher use", is_traceback=False)
+                        error_msg = f"E: PROVIDER_ID({_address}) is locked, unlock it for futher use"
+                        terminate(error_msg, is_traceback=False)
 
     def is_synced(self):
         """Check whether the web3 is synced."""
@@ -114,9 +120,10 @@ class Contract:
         return self.w3.eth.getTransactionReceipt(tx)
 
     def is_web3_connected(self):
+        """Return whether web3 connected or not."""
         return self.w3.isConnected()
 
-    def account_id_to_address(self, address, account_id=None):
+    def account_id_to_address(self, address: str, account_id=None):
         """Convert account id into address."""
         if address:
             return self.w3.toChecksumAddress(address)
@@ -126,9 +133,9 @@ class Contract:
                 account = self.w3.eth.accounts[account_id]
                 return self.w3.toChecksumAddress(account)
             except:
-                logging.error("E: given index account does not exist, check .eblocpoa/keystore")
+                raise Exception("E: Given index account does not exist, check .eblocpoa/keystore")
         else:
-            logging.error(f"E: Invalid account {address} is provided")
+            raise Exception(f"E: Invalid account {address} is provided")
 
     def _get_balance(self, address):
         address = self.w3.toChecksumAddress(address)
@@ -267,9 +274,6 @@ class Contract:
             return self.eBlocBroker.registerRequester(*args, ops)
         else:
             return self.eBlocBroker.functions.registerRequester(*args).transact(ops)
-
-    def foo(self):
-        self.brownie_load_accounts()
 
     def _submit_job(self, requester, job_price, *args):
         ops = {"from": requester, "value": self.w3.toWei(job_price, "wei"), "gas": 4500000}

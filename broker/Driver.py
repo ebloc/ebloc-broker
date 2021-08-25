@@ -28,6 +28,7 @@ from broker.libs.user_setup import give_RWE_access, user_add
 from broker.utils import (
     CacheType,
     StorageID,
+    _run_ipfs_daemon,
     bytes32_to_ipfs,
     check_ubuntu_packages,
     eth_address_to_md5,
@@ -35,7 +36,6 @@ from broker.utils import (
     is_driver_on,
     is_geth_on,
     is_internet_on,
-    is_ipfs_running,
     is_program_valid,
     question_yes_no,
     read_file,
@@ -76,7 +76,7 @@ def tools(block_number):
         slurm.is_on()
     except Exception as e:
         if type(e).__name__ != "QuietExit":
-            _colorize_traceback()
+            _colorize_traceback(e)
         sys.exit(1)
 
     # run_driver_cancel()  # TODO: uncomment
@@ -104,7 +104,7 @@ def tools(block_number):
             log(f"==> provider_email={_email}")
 
     if env.IS_IPFS_USE:
-        is_ipfs_running()
+        _run_ipfs_daemon()
 
     if not check_ubuntu_packages():
         sys.exit(1)
@@ -117,6 +117,8 @@ class Driver:
         """Create new Driver object."""
         self.Ebb = Contract.eblocbroker
         self.logged_jobs_to_process = None
+        #: Indicates Lock check for the received job whether received or not
+        self.is_provider_received_job = False
 
     def is_job_received(self, key, index) -> None:
         """Preventing to download or submit again."""

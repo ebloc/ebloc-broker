@@ -7,7 +7,7 @@ import broker.config as config
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import env, logging
 from broker.lib import StorageID
-from broker.utils import is_ipfs_running  # bytes32_to_ipfs
+from broker.utils import is_ipfs_on  # bytes32_to_ipfs
 
 
 def is_provider_valid(self, provider):
@@ -89,7 +89,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             raise
 
     if is_use_ipfs:
-        if not is_ipfs_running():
+        if not is_ipfs_on():
             sys.exit()
 
         cfg.ipfs.swarm_connect(provider_info["ipfs_id"])

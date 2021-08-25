@@ -2,6 +2,9 @@
 
 """Global variables for all files."""
 
-import broker.libs.ipfs
+from web3 import IPCProvider, Web3  # noqa
 
-ipfs = broker.libs.ipfs.ipfs
+from broker.libs.ipfs import Ipfs
+
+ipfs = Ipfs()
+w3: Web3 = None

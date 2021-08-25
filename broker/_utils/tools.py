@@ -212,6 +212,12 @@ def _colorize_traceback(message=None, is_print_exc=True):
             log(_tb_colored)
 
 
+def delete_last_line():
+    """Delete the last line in the STDOUT."""
+    sys.stdout.write("\x1b[1A")  # cursor up one line
+    sys.stdout.write("\x1b[2K")  # delete last line
+
+
 def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False):
     """Print for own settings."""
     text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color, is_bold)
