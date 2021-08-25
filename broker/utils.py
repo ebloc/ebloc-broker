@@ -106,7 +106,7 @@ def untar(tar_file, extract_to):
             # if tar itself already exist inside the same directory along with
             # `.git` file
             if name not in accept_files:
-                log(f"==> {tar_file} is already extracted into\n{extract_to}", "green")
+                log(f"==> {tar_file} is already extracted into\n{extract_to}")
                 return
     # tar --warning=no-timestamp
     cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
@@ -494,11 +494,11 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             running_pid = out.strip().split()[1]
             if running_pid in pids:
                 if is_print:
-                    log(f"==> {name} is already running on the background, its pid={running_pid}", "green")
+                    log(f"==> {name} is already running on the background, its pid={running_pid}")
                 return True
         else:
             if is_print:
-                log(f"==> {name} is already running on the background", "green")
+                log(f"==> {name} is already running on the background")
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
@@ -544,22 +544,43 @@ def is_geth_on():
         raise config.QuietExit
 
 
-def is_ipfs_running():
-    """Checks that does IPFS run on the background or not."""
+# def is_ipfs_running():
+#     """Check that does IPFS run on the background or not."""
+#     if is_ipfs_on():
+#         return True
+
+#     log("E: IPFS does not work on the background", "blue")
+#     log("## Starting IPFS daemon on the background", "blue")
+#     while True:
+#         output = run(["python3", f"{env.EBLOCPATH}/broker/daemons/ipfs.py"])
+#         log(output, "blue")
+#         time.sleep(1)
+#         if is_ipfs_on():
+#             break
+#         else:
+#             with open(env.IPFS_LOG, "r") as content_file:
+#                 logging.info(content_file.read())
+#         time.sleep(1)
+#     return is_ipfs_on()
+
+
+def _run_ipfs_daemon():
+    """Check that does IPFS run on the background or not."""
     if is_ipfs_on():
         return True
 
     log("Warning: IPFS does not work on the background")
     log("#> Starting IPFS daemon on the background")
+    output = run(["python3", f"{env.EBLOCPATH}/broker/python_scripts/run_ipfs_daemon.py"])
     while True:
-        output = run(["python3", f"{env.EBLOCPATH}/broker/python_scripts/run_ipfs_daemon.py"])
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
             log(content_file.read(), "blue")
             log(output, "blue")
+
         if is_ipfs_on():
             return True
-    return is_ipfs_on()
+    return False
 
 
 def check_ubuntu_packages(packages=None):

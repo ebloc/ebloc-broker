@@ -8,8 +8,8 @@ from web3.providers.rpc import HTTPProvider
 
 import broker._config as _config
 import broker.config as config
-from broker._utils.tools import _colorize_traceback, log
-from broker.config import QuietExit, env
+from broker._utils.tools import _colorize_traceback, log, QuietExit
+from broker.config import env
 from broker.utils import is_geth_on, read_json, run, terminate
 
 
@@ -139,8 +139,7 @@ def connect_to_eblocbroker() -> None:
                 project = project.load("/mnt/hgfs/ebloc-broker/contract")
                 config.ebb = project.eBlocBroker.at(contract_address)
                 config.ebb.contract_address = config.w3.toChecksumAddress(contract_address)
-                # config.w3_ebb = config.w3.eth.contract(contract_address, abi=abi)
-                # for contract events
+                #: For contract events
                 config._eBlocBroker = config.w3.eth.contract(contract_address, abi=abi)
         elif env.IS_EBLOCPOA:
             config.ebb = config.w3.eth.contract(contract_address, abi=abi)

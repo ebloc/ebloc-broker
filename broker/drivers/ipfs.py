@@ -7,10 +7,11 @@ import time
 import libs.git as git
 from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
-from lib import calculate_folder_size, is_ipfs_running
+from lib import calculate_folder_size
 from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir, silent_remove
 
 import broker.cfg as cfg
+from broker.utils import is_ipfs_on
 
 
 class IpfsClass(Storage):
@@ -41,7 +42,7 @@ class IpfsClass(Storage):
         else:
             log(f"[{get_time()}] Job's source code has been sent through IPFS_GPG ", "cyan")
 
-        if not is_ipfs_running():
+        if not is_ipfs_on():
             return False
 
         logging.info(f"is_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")

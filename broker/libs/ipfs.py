@@ -17,6 +17,7 @@ from broker.config import env, logging
 from broker.utils import (
     _try,
     compress_folder,
+    is_ipfs_on,
     popen_communicate,
     raise_error,
     run,
@@ -27,33 +28,29 @@ from broker.utils import (
 )
 
 
+class IpfsNotConnected(Exception):
+    """Ipfs daemon is not online."""
+
+    pass
+
+
 class Ipfs:
     def __init__(self):
-        print("aaaaa============================aaaaaaaaaaa")
         """Initialize ipfshttpclient object."""
-        self.client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
+        self.connect()
 
-    def swarm_connect(self, ipfs_id: str):
-        """Swarm connect into the ipfs node."""
-        # TODO: check is valid IPFS id
-        try:
-            log(f" * trying to connect into {ipfs_id}")
-            # output = client.swarm.connect(provider_info["ipfs_id"])
-            # if ("connect" and "success") in str(output):
-            #     log(str(output), "green")
-            cmd = ["ipfs", "swarm", "connect", ipfs_id]
-            p, output, error = popen_communicate(cmd)
-            if p.returncode != 0 and "failure: dial to self attempted" not in error:
-                _colorize_traceback()
-                logging.error(f"E: sacctmgr remove error: {output}")
-                raise output
+    def connect(self):
+        """Connect ipfs."""
+        if is_ipfs_on():
+            self.client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
 
-            if "failure: dial to self attempted" in error:
-                log(f"Warning: {error.replace('Error: ', '').rstrip()}")
-        except Exception as e:
-            _colorize_traceback(e)
-            log("E: connection into provider's IPFS node via swarm is not accomplished")
-            sys.exit(1)
+    #################
+    # OFFLINE CALLS #
+    #################
+    def handler(self):
+        """Register an handler for the timeout."""
+        _colorize_traceback()
+        raise Exception("E: Forever is over, end of time")
 
     def is_valid(self, ipfs_hash: str) -> bool:
         try:
@@ -61,36 +58,6 @@ class Ipfs:
             return True
         except:
             return False
-
-    def handler(self):
-        """Register an handler for the timeout."""
-        _colorize_traceback()
-        raise Exception("E: Forever is over, end of time")
-
-    def ipfs_stat(self, ipfs_hash):
-        """Return stats of the give IPFS hash.
-
-        This function *may* run for an indetermined time. Returns a dict with the
-        size of the block with the given hash.
-        """
-        # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
-        return self.client.object.stat(ipfs_hash)
-
-    def is_hash_exists_online(self, ipfs_hash: str):
-        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.alarm(300)  # wait max 5 minutes
-        try:
-            output = self.ipfs_stat(ipfs_hash)
-            print(f"CumulativeSize={output}")
-            return True, output, output["CumulativeSize"]
-        except KeyboardInterrupt:
-            terminate("KeyboardInterrupt")
-            return False, None, None
-        except Exception as exc:
-            logging.error(f"E: Failed to find IPFS file: {ipfs_hash}")
-            print(str(exc))
-            return False, None, None
 
     def is_hash_locally_cached(self, ipfs_hash: str) -> bool:
         """Return true if hash locally cached.
@@ -103,15 +70,6 @@ class Ipfs:
             return True
         except Exception:
             return False
-
-    def get(self, ipfs_hash, path, is_storage_paid):
-        output = run_with_output(["ipfs", "get", ipfs_hash, f"--output={path}"])
-        logging.info(output)
-
-        if is_storage_paid:
-            # pin downloaded ipfs hash if storage is paid
-            output = check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
-            logging.info(output)
 
     def pin(self, ipfs_hash: str) -> bool:
         return run(["ipfs", "pin", "add", ipfs_hash])
@@ -139,7 +97,7 @@ class Ipfs:
             f"--output={tar_file}",
             "--pinentry-mode",
             "loopback",
-            f"--passphrase-file={env.LOG_PATH}/.gpg_pass.txt",
+            f"--passphrase-file={env.GPG_PASS_FILE}",
             "--decrypt",
             gpg_file_link,
         ]
@@ -163,6 +121,10 @@ class Ipfs:
                 cmd = None
                 silent_remove(f"{extract_target}/.git")
                 silent_remove(tar_file)
+
+    def remove_lock_files(self):
+        silent_remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
+        silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
 
     def gpg_encrypt(self, user_gpg_finderprint, target) -> bool:
         is_delete = False
@@ -210,8 +172,82 @@ class Ipfs:
             if is_delete:
                 silent_remove(encrypt_target)
 
+    ################
+    # ONLINE CALLS #
+    ################
+    def swarm_connect(self, ipfs_id: str):
+        """Swarm connect into the ipfs node."""
+        if not is_ipfs_on():
+            raise IpfsNotConnected
+
+        # TODO: check is valid IPFS id
+        try:
+            log(f" * trying to connect into {ipfs_id}")
+            # output = client.swarm.connect(provider_info["ipfs_id"])
+            # if ("connect" and "success") in str(output):
+            #     log(str(output), "green")
+            cmd = ["ipfs", "swarm", "connect", ipfs_id]
+            p, output, error = popen_communicate(cmd)
+            if p.returncode != 0 and "failure: dial to self attempted" not in error:
+                _colorize_traceback()
+                logging.error(f"E: sacctmgr remove error: {output}")
+                raise output
+
+            if "failure: dial to self attempted" in error:
+                log(f"Warning: {error.replace('Error: ', '').rstrip()}")
+        except Exception as e:
+            _colorize_traceback(e)
+            log("E: connection into provider's IPFS node via swarm is not accomplished")
+            sys.exit(1)
+
+    def _ipfs_stat(self, ipfs_hash):
+        """Return stats of the give IPFS hash.
+
+        This function *may* run for an indetermined time. Returns a dict with the
+        size of the block with the given hash.
+        """
+        if not is_ipfs_on():
+            raise IpfsNotConnected
+
+        # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
+        return self.client.object.stat(ipfs_hash)
+
+    def is_hash_exists_online(self, ipfs_hash: str):
+        if not is_ipfs_on():
+            raise IpfsNotConnected
+
+        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
+        signal.signal(signal.SIGALRM, self.handler)
+        signal.alarm(300)  # wait max 5 minutes
+        try:
+            output = self._ipfs_stat(ipfs_hash)
+            print(f"CumulativeSize={output}")
+            return True, output, output["CumulativeSize"]
+        except KeyboardInterrupt:
+            terminate("KeyboardInterrupt")
+            return False, None, None
+        except Exception as exc:
+            logging.error(f"E: Failed to find IPFS file: {ipfs_hash}")
+            print(str(exc))
+            return False, None, None
+
+    def get(self, ipfs_hash, path, is_storage_paid):
+        if not is_ipfs_on():
+            raise IpfsNotConnected
+
+        output = run_with_output(["ipfs", "get", ipfs_hash, f"--output={path}"])
+        logging.info(output)
+
+        if is_storage_paid:
+            # pin downloaded ipfs hash if storage is paid
+            output = check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
+            logging.info(output)
+
     def get_cumulative_size(self, ipfs_hash: str):
-        return self.ipfs_stat(ipfs_hash)["CumulativeSize"]
+        if not is_ipfs_on():
+            raise IpfsNotConnected
+
+        return self._ipfs_stat(ipfs_hash)["CumulativeSize"]
 
     def add(self, path: str, is_hidden=False) -> str:
         """Add file or folder into ipfs.
@@ -274,12 +310,11 @@ class Ipfs:
         except Exception as e:
             raise e
 
-    def remove_lock_files(self):
-        silent_remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
-        silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
-
     def connect_to_bootstrap_node(self):
         """Connect into return addresses of the currently connected peers."""
+        if not is_ipfs_on():
+            raise IpfsNotConnected
+
         # cmd = ["ipfs", "bootstrap", "list"]
         # output = run(cmd, is_print_trace=False)
         # s = StringIO(output)
@@ -308,6 +343,3 @@ class Ipfs:
                 return ipfs_address
 
         raise ValueError("No valid ipfs has is found.")
-
-
-ipfs = Ipfs()
