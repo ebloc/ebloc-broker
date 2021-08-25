@@ -71,7 +71,8 @@ $ gcloud compute firewall-rules list | grep 'ipfs'
 default-ipfs            default  INGRESS    1000      tcp:4001
 ```
 - https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578
----------------
+
+----------------------------------------
 
 ```
 killall ipfs
@@ -95,4 +96,14 @@ echo \
 ## From home:
 ```
 ipfs swarm connect /ip4/192.168.1.245/tcp/4001/p2p/12D3KooWEx4tD1xKp4Pr1xUnA3e2Z37QobTG6Qtv2YwySLGKUB9Z"
+```
+
+----------------------------------------
+
+# Helpful commands for garbage collection
+
+```
+ipfs pin ls --type recursive
+ipfs pin rm <ipfs_hash>
+ipfs repo gc
 ```
