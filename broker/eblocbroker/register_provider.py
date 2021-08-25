@@ -5,8 +5,8 @@ import sys
 import ipfshttpclient
 
 import broker.cfg as cfg
-from broker._utils.tools import _colorize_traceback, log
-from broker.config import QuietExit, env
+from broker._utils.tools import _colorize_traceback, log, QuietExit
+from broker.config import env
 from broker.lib import get_tx_status
 
 

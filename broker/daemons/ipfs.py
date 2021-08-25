@@ -5,14 +5,17 @@ from pathlib import Path
 
 import daemon
 
+import broker.cfg as cfg
 import broker.config as config
-import broker.libs.ipfs as ipfs
 from broker._utils.tools import _colorize_traceback
 from broker.utils import is_ipfs_on, log, popen_communicate
 
 
 def run():
-    # https://stackoverflow.com/a/8375012/2402577
+    """Run the daemon.
+
+    __ https://stackoverflow.com/a/8375012/2402577
+    """
     log("==> Running ipfs daemon")
     with daemon.DaemonContext():
         cmd = ["/usr/local/bin/ipfs", "daemon"]  # , "--mount"]
@@ -30,12 +33,11 @@ def run():
 if __name__ == "__main__":
     try:
         config.env = config.ENV()
-        config.env.IPFS_LOG
     except Exception as e:
         _colorize_traceback(e)
         log("E: env.IPFS_LOG is not set")
         sys.exit(1)
 
     if not is_ipfs_on():
-        ipfs.remove_lock_files()
+        cfg.ipfs.remove_lock_files()
         run()
