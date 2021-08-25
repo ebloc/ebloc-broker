@@ -139,8 +139,7 @@ def connect_to_eblocbroker() -> None:
                 project = project.load("/mnt/hgfs/ebloc-broker/contract")
                 config.ebb = project.eBlocBroker.at(contract_address)
                 config.ebb.contract_address = config.w3.toChecksumAddress(contract_address)
-                # config.w3_ebb = config.w3.eth.contract(contract_address, abi=abi)
-                # for contract events
+                #: For contract events
                 config._eBlocBroker = config.w3.eth.contract(contract_address, abi=abi)
         elif env.IS_EBLOCPOA:
             config.ebb = config.w3.eth.contract(contract_address, abi=abi)

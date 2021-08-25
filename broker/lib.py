@@ -226,26 +226,6 @@ def preexec_function():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def is_ipfs_running():
-    """Check that does IPFS run on the background or not."""
-    if is_ipfs_on():
-        return True
-
-    log("E: IPFS does not work on the background", "blue")
-    log("## Starting IPFS daemon on the background", "blue")
-    while True:
-        output = run(["python3", f"{env.EBLOCPATH}/broker/daemons/ipfs.py"])
-        log(output, "blue")
-        time.sleep(1)
-        if is_ipfs_on():
-            break
-        else:
-            with open(env.IPFS_LOG, "r") as content_file:
-                logging.info(content_file.read())
-        time.sleep(1)
-    return is_ipfs_on()
-
-
 def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):
     """Generates folder as hard linked of the given folder paths or provider main folder.
 

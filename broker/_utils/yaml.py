@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from pathlib import Path
 
 import ruamel.yaml
@@ -62,6 +63,7 @@ class Yaml(dict):
 
     def __init__(self, filename, auto_dump=True):
         self.filename = filename if hasattr(filename, "open") else Path(filename)
+        self.filename_temp = f"{self.filename}~"
         self.auto_dump = auto_dump
         self.changed = False
         self.yaml = ruamel.yaml.YAML(typ="safe")
@@ -80,8 +82,13 @@ class Yaml(dict):
         """Dump yaml object."""
         if not self.changed and not force:
             return
-        with open(self.filename, "w") as f:
+
+        with open(self.filename_temp, "w") as f:
+            # write to a temporary file
             self.yaml.dump(dict(self), f)
+
+        # unlink the real filename and rename the temporary to the real
+        os.rename(self.filename_temp, self.filename)
         self.changed = False
 
     def __setitem__(self, key, value):
@@ -155,7 +162,7 @@ if __name__ == "__main__":
     cfg.update(c=dict(b=dict(e=5)))
     assert isinstance(cfg["a"], SubYaml)
     assert isinstance(cfg["c"]["b"], SubYaml)
-    cfg["c"]["b"]["f"] = 22
+    cfg["c"]["b"]["f"] = 222
 
     print(f"{config_file} 5:")
     print(config_file.read_text())
