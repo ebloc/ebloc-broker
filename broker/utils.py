@@ -23,7 +23,7 @@ import base58
 
 import broker.config as config
 from broker._utils._getch import _Getch
-from broker._utils.tools import WHERE, _colorize_traceback, log
+from broker._utils.tools import WHERE, _colorize_traceback, log, print_trace, run
 from broker.config import env, logging
 
 Qm = b"\x12 "
@@ -171,24 +171,6 @@ def is_bin_installed(bin_name):
         run(["which", bin_name], is_print_trace=False)
     except Exception as e:
         log(f"E: {bin_name} is not instelled")
-        raise e
-
-
-def run(cmd, my_env=None, is_print_trace=True) -> str:
-    if not isinstance(cmd, str):
-        cmd = list(map(str, cmd))  # all items should be str
-    else:
-        cmd = [cmd]
-
-    try:
-        if my_env is None:
-            return check_output(cmd).decode("utf-8").strip()
-        else:
-            return check_output(cmd, env=my_env).decode("utf-8").strip()
-    except CalledProcessError as e:
-        if is_print_trace:
-            print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
-            _colorize_traceback(e)
         raise e
 
 
@@ -419,16 +401,6 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     os.rmdir(full_path)
                 except:
                     pass
-
-
-def print_trace(cmd, back=1, exc=""):
-    _cmd = " ".join(cmd)
-    if exc:
-        log(f"[{WHERE(back)}] Error failed command:", "red")
-        log(f"$ {_cmd}", "yellow")
-        log(exc, "red", is_bold=False)
-    else:
-        log(f"==> Failed shell command:\n{_cmd}", "yellow")
 
 
 def silent_remove(path: str, is_warning=True):

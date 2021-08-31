@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import broker.eblocbroker.Contract as Contract
 import broker.libs.git as git
-from broker._utils.tools import _colorize_traceback, log, QuietExit
+from broker._utils.tools import QuietExit, _colorize_traceback, log
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
 from broker.lib import get_tx_status

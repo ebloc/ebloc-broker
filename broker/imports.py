@@ -8,7 +8,7 @@ from web3.providers.rpc import HTTPProvider
 
 import broker._config as _config
 import broker.config as config
-from broker._utils.tools import _colorize_traceback, log, QuietExit
+from broker._utils.tools import QuietExit, _colorize_traceback, log
 from broker.config import env
 from broker.utils import is_geth_on, read_json, run, terminate
 
