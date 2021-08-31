@@ -7,7 +7,7 @@ import subprocess
 
 # import gshell
 from pprint import pprint
-from broker._utils.tools import QuietExit
+
 from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
 from utils import (
@@ -20,6 +20,8 @@ from utils import (
     read_json,
     silent_remove,
 )
+
+from broker._utils.tools import QuietExit
 
 # TODO: gdrive list --query "sharedWithMe"
 

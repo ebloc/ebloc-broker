@@ -9,18 +9,24 @@ import time
 import traceback
 from datetime import datetime
 from decimal import Decimal
+from subprocess import CalledProcessError, check_output
+from typing import Dict
+
 from colorama import init
 from pygments import formatters, highlight, lexers
-from pytz import timezone
+from pytz import timezone, utc
 from rich.traceback import install
 from termcolor import colored
-import broker._config as _config
-from broker.config import env
 
 install()  # for rich
 init(autoreset=True)  # for colorama
 
-log_files = {}
+log_files: Dict[str, str] = {}
+IS_THREADING_ENABLED = False
+IS_THREADING_MODE_PRINT = False
+LOG_FILENAME = None
+DRIVER_LOG = None
+
 
 class QuietExit(Exception):  # noqa
     pass
@@ -129,6 +135,7 @@ class Log(Color):
 
 
 def WHERE(back=0):
+    """Return line number where the command is called."""
     try:
         frame = sys._getframe(back + 2)
     except:
@@ -159,14 +166,14 @@ def get_dt_time(zone="Europe/Istanbul"):
 def timestamp_to_local(posix_time: int, zone="Europe/Istanbul"):
     """Return date in %Y-%m-%d %H:%M:%S format."""
     ts = posix_time / 1000.0
-    tz = pytz.timezone(zone)
+    tz = timezone(zone)
     return datetime.fromtimestamp(ts, tz).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def utc_to_local(utc_dt, zone="Europe/Istanbul"):
     # dt.strftime("%d/%m/%Y") # to get the date
-    local_tz = pytz.timezone(zone)
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    local_tz = timezone(zone)
+    local_dt = utc_dt.replace(tzinfo=utc).astimezone(local_tz)
     return local_tz.normalize(local_dt)
 
 
@@ -221,21 +228,14 @@ def delete_last_line():
 def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False):
     """Print for own settings."""
     text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color, is_bold)
-    if threading.current_thread().name != "MainThread" and env and env.IS_THREADING_ENABLED:
+    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
-        try:
-            if env:
-                if env.log_filename:
-                    filename = env.log_filename
-                else:
-                    filename = env.DRIVER_LOG
-
-            if filename is None:
-                filename = "program.log"
-            elif not os.path.isfile(filename):
-                filename = "program.log"
-        except:
+        if LOG_FILENAME:
+            filename = LOG_FILENAME
+        elif DRIVER_LOG:
+            filename = DRIVER_LOG
+        else:
             filename = "program.log"
 
     if is_bold:
@@ -245,10 +245,13 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
 
     f = open(filename, "a")
     if color:
-        if not _config.IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
+        if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
             if is_arrow:
-                print(colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
-                      end=end, flush=flush)
+                print(
+                    colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
+                    end=end,
+                    flush=flush,
+                )
             else:
                 ll.print_color(colored(text, color), color, is_bold=is_bold, end=end)
 
@@ -307,6 +310,99 @@ def _exit(msg):
     """Immediate program termination."""
     log(f"{msg}\nExiting...", "red")
     os._exit(0)
+
+
+def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
+    try:
+        initial = float(initial)
+        if final:
+            final = float(final)
+        if change:
+            change = float(change)
+    except ValueError:
+        return None
+
+    if change is not None:
+        try:
+            initial = abs(initial)
+            return round(change / abs(initial) * 100, decimal)
+        except:
+            return 0.0
+
+    else:
+        try:
+            change = final - initial
+            return round(change / abs(initial) * 100, decimal)
+        except:
+            return 0.0
+
+
+def percent_change(initial, change, _decimal=8, is_color=False, end=None, is_arrow_print=True):
+    """Calculate percent change."""
+    try:
+        initial = float(initial)
+        change = float(change)
+    except ValueError:
+        return None
+
+    change = "{0:.8f}".format(float(change))
+    # percent = round((float(change)) / abs(float(initial)) * 100, 8)
+    percent = _percent_change(initial=initial, change=change, decimal=_decimal)
+
+    if percent == -0.0:
+        change = 0.0
+        _color = "white"
+    elif percent > 0:
+        _color = "green"
+    else:
+        _color = "red"
+
+    if abs(float(change)) < 0.1:
+        change = "{0:.8f}".format(float(change))
+    else:
+        change = "{0:.2f}".format(float(change))
+
+    if is_arrow_print:
+        log(f"{format(initial, '.4f')} => ", end="")
+        log(f"{format(float(initial) + float(change), '.4f')} ", "blue", end="")
+
+    if float(change) >= 0:
+        change = " " + change
+
+    if is_arrow_print:
+        log(f"{change}({format(float(percent), '.2f')}%) ", _color, end=end)
+    else:
+        log(f"({format(float(percent), '.2f')}%) ", _color, end=end)
+
+    return percent
+
+
+def print_trace(cmd, back=1, exc=""):
+    _cmd = " ".join(cmd)
+    if exc:
+        log(f"[{WHERE(back)}] Error failed command:", "red")
+        log(f"$ {_cmd}", "yellow")
+        log(exc, "red", is_bold=False)
+    else:
+        log(f"==> Failed shell command:\n{_cmd}", "yellow")
+
+
+def run(cmd, my_env=None, is_print_trace=True) -> str:
+    if not isinstance(cmd, str):
+        cmd = list(map(str, cmd))  # all items should be str
+    else:
+        cmd = [cmd]
+
+    try:
+        if my_env is None:
+            return check_output(cmd).decode("utf-8").strip()
+        else:
+            return check_output(cmd, env=my_env).decode("utf-8").strip()
+    except CalledProcessError as e:
+        if is_print_trace:
+            print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
+            _colorize_traceback(e)
+        raise e
 
 
 ll = Log()

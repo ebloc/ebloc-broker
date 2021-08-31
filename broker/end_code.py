@@ -7,13 +7,15 @@ import pprint
 import sys
 import time
 from typing import Dict, List
-import broker.config as config
+
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.gdrive as gdrive
 import libs.git as git
 import libs.ipfs as ipfs
 import libs.slurm as slurm
+
+import broker.config as config
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
 from broker.imports import connect

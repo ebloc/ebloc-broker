@@ -8,10 +8,10 @@ from web3.logs import DISCARD
 
 import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
+from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
 from broker.lib import check_linked_data, get_tx_status, run
-from broker._utils.tools import QuietExit
 from broker.utils import (
     CacheType,
     StorageID,

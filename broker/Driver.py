@@ -107,8 +107,7 @@ def tools(block_continue):
 
     if env.IS_IPFS_USE:
         if not os.path.isfile(env.GPG_PASS_FILE):
-            log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n"
-                "file for decrypting using ipfs.")
+            log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n" "file for decrypting using ipfs.")
             raise config.QuietExit
 
         _run_ipfs_daemon()
@@ -409,8 +408,9 @@ def run_driver():
             if "squeue: error:" in str(squeue_output):
                 raise
         except:
-            raise config.Terminate("E: SLURM is not running on the background. "
-                                   "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh")
+            raise config.Terminate(
+                "E: SLURM is not running on the background. " "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
+            )
 
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
