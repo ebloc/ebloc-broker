@@ -7,8 +7,8 @@ import subprocess
 
 # import gshell
 from pprint import pprint
-
-from config import QuietExit, env, logging
+from broker._utils.tools import QuietExit
+from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
 from utils import (
     _colorize_traceback,

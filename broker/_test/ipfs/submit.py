@@ -5,8 +5,9 @@ import sys
 from pprint import pprint
 
 import eblocbroker.Contract as Contract
-from config import QuietExit, env, logging
+from config import env, logging
 from imports import connect
+from broker._utils.tools import QuietExit
 from lib import check_linked_data, get_tx_status, run
 from libs import ipfs
 from libs.ipfs import gpg_encrypt
@@ -21,8 +22,8 @@ from utils import (
     silent_remove,
 )
 from web3.logs import DISCARD
-
 from contract.scripts.lib import Job, cost
+
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()

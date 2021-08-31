@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# UNIX: enable executable from terminal with: chmod +x filename
+
+"""UNIX: enable executable from terminal with: chmod +x filename."""
 
 if __name__ == "__main__":
-    import time
-    import subprocess
     import call
     from broker.utils import run
 

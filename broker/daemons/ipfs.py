@@ -14,7 +14,7 @@ from broker.utils import is_ipfs_on, log, popen_communicate
 def run():
     """Run the daemon.
 
-    __https://stackoverflow.com/a/8375012/2402577
+    __ https://stackoverflow.com/a/8375012/2402577
     """
     log("==> Running ipfs daemon")
     with daemon.DaemonContext():
@@ -33,7 +33,6 @@ def run():
 if __name__ == "__main__":
     try:
         config.env = config.ENV()
-        config.env.IPFS_LOG
     except Exception as e:
         _colorize_traceback(e)
         log("E: env.IPFS_LOG is not set")

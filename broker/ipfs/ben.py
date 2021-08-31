@@ -7,7 +7,7 @@ from pprint import pprint
 from web3.logs import DISCARD
 
 import broker.eblocbroker.Contract as Contract
-from broker.config import QuietExit, env, logging
+from broker.config import env, logging
 from broker.lib import check_linked_data, get_tx_status, run
 from broker.libs import ipfs
 from broker.libs.ipfs import gpg_encrypt
@@ -158,8 +158,6 @@ if __name__ == "__main__":
                     silent_remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted")
-    except QuietExit:
-        sys.exit(1)
     except Exception as e:
         _colorize_traceback(e)
         sys.exit(1)
