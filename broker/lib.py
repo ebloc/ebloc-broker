@@ -11,7 +11,7 @@ from pprint import pprint
 from threading import Thread
 
 import broker.config as config
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import _colorize_traceback, log, print_trace
 from broker.config import env, logging
 from broker.utils import (
     Link,
@@ -20,7 +20,6 @@ from broker.utils import (
     is_process_on,
     mkdir,
     popen_communicate,
-    print_trace,
     question_yes_no,
     run,
     silent_remove,
@@ -182,7 +181,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
         logging.error(f"E: scontrol error\n{output}")
         raise
     logging.info(f"\nWriting into path is completed => {path}")
-    run(["sed", "-i", "s/[ \t]*$//", path])  # removes trailing whitespaces with sed
+    run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed
 
 
 def remove_files(filename) -> bool:

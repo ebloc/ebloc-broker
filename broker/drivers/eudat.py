@@ -210,7 +210,8 @@ class EudatClass(Storage):
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
             try:
-                output = Ebb.mongo_broker.find_key(Ebb.mongo_broker.mc["eBlocBroker"]["shareID"], folder_name)
+                shared_id = Ebb.mongo_broker.mc["eBlocBroker"]["shareID"]
+                output = Ebb.mongo_broker.find_key(shared_id, folder_name)
                 self.shareID[folder_name] = {
                     "shareID": output["shareID"],
                     "share_token": output["share_token"],
@@ -317,7 +318,8 @@ class EudatClass(Storage):
                 self.shareID[folder_name]["share_token"]
             except KeyError:
                 try:
-                    Ebb.mongo_broker.find_key(Ebb.mongo_broker.mc["eBlocBroker"]["shareID"], folder_name)
+                    shared_id = Ebb.mongo_broker.mc["eBlocBroker"]["shareID"]
+                    Ebb.mongo_broker.find_key(shared_id, folder_name)
                 except:
                     logging.error(f"E: share_id cannot be detected from key: {self.job_key}")
                     return False

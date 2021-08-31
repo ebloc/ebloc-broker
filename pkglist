@@ -1,11 +1,11 @@
 curl
 zsh
 git
+cargo
 python-dev
 python3-pip
 python3-venv
 unixodbc-dev
-cargo
 build-essential
 libgmp3-dev
 golang

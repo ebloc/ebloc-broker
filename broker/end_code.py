@@ -50,7 +50,8 @@ Ebb = Contract.eblocbroker = Contract.Contract()
 
 
 class Common:
-    """Prevents "Class" has no attribute "method" mypy warnings."""
+
+    """Prevent "Class" has no attribute "method" mypy warnings."""
 
     def __init__(self) -> None:
         self.results_folder = ""
@@ -87,6 +88,7 @@ class Ipfs(Common):
 class Eudat(Common):
     def __init__(self) -> None:
         self.encoded_share_tokens = {}  # type: Dict[str, str]
+        self.patch_folder = ""
 
     def initialize(self):
         try:

@@ -33,12 +33,10 @@ class QuietExit(Exception):  # noqa
 
 
 class Color:
-    def __init__(self):
-        """
-        Color class.
+    """Color class."""
 
-        Available text colors:
-        red, green, yellow, blue, magenta, cyan, white.
+    def __init__(self):
+        """Available text colors: red, green, yellow, blue, magenta, cyan, white.
 
         Available text highlights:
         on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white.
@@ -238,7 +236,7 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
         else:
             filename = "program.log"
 
-    if is_bold:
+    if is_bold and not is_arrow:
         _text = f"{ll.BOLD}{text}{ll.END}"
     else:
         _text = text
@@ -267,9 +265,9 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
     else:
         text_write = ""
         if is_arrow:
-            text_write = colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}"
+            text_write = colored(f"{is_r}{ll.BOLD}{_text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{_text[_len:]}{ll.END}"
         else:
-            text_write = text
+            text_write = _text
 
         print(text_write, end=end, flush=flush)
         f.write(text_write)

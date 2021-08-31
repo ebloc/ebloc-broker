@@ -21,9 +21,10 @@ from typing import Dict
 
 import base58
 
+import broker._utils.tools as tools
 import broker.config as config
 from broker._utils._getch import _Getch
-from broker._utils.tools import WHERE, _colorize_traceback, log, print_trace, run
+from broker._utils.tools import WHERE, QuietExit, _colorize_traceback, log, run
 from broker.config import env, logging
 
 Qm = b"\x12 "
@@ -92,7 +93,8 @@ def extract_gzip(filename):
 
 
 def untar(tar_file, extract_to):
-    """untar give tar file
+    """Untar given tar file.
+
     umask can be ignored by using the -p (--preserve) option
         --no-overwrite-dir: preserve metadata of existing directories
 
@@ -151,13 +153,14 @@ def remove_ansi_escape_sequence(string):
 
 
 def _try(func):
-    """Call given function inside try/except.
-
-    Args:
-        f: yield function
+    """Call given function inside try and except.
 
     Example called: _try(lambda: f())
     Returns status and output of the function
+
+    :param func: yield function
+    :raises:
+        Exception: Explanation here.
     """
     try:
         return func()
@@ -188,9 +191,10 @@ def run_with_output(cmd):
 
 
 def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
-    """Act similir to run(cmd) but also returns the output message captures on
-    during the run stdout_file is not None in case of nohup process writes its
-    results into a file.
+    """Act similir to run(cmd).
+
+    But also returns the output message captures on during the run stdout_file
+    is not None in case of nohup process writes its results into a file.
     """
     cmd = list(map(str, cmd))  # all items should be str
     if stdout_file is None:
@@ -497,8 +501,8 @@ def is_driver_on(process_count=0):
     """Check whether driver runs on the background."""
     if is_process_on("python.*[D]river", "Driver", process_count):
         log("Track output using:")
-        log(f"tail -f {env.DRIVER_LOG}", "blue")
-        raise config.QuietExit
+        log(f"tail -f {tools.DRIVER_LOG}", "blue")
+        raise QuietExit
 
 
 def is_ganache_on(port) -> bool:
@@ -513,7 +517,7 @@ def is_geth_on():
     if not is_process_on(process_name, "Geth", process_count=0):
         log("E: geth is not running on the background. Please run:")
         log("sudo ~/eBlocPOA/server.sh", "yellow")
-        raise config.QuietExit
+        raise QuietExit
 
 
 # def is_ipfs_running():
@@ -581,7 +585,7 @@ def is_dpkg_installed(package_name) -> bool:
 
 
 def terminate(msg="", is_traceback=True):
-    """Terminate Driver python script and all the dependent python programs to it."""
+    """Terminate the Driver python script and all the dependent python programs to it."""
     if msg:
         log(f"[{WHERE(1)}] Terminated: ", "red", is_bold=True, end="")
         log(msg, is_bold=True)
@@ -608,7 +612,7 @@ def question_yes_no(message, is_terminate=False):
     while True:
         choice = getch().lower()
         if choice in yes:
-            log("")
+            log(choice)
             break
         elif choice in no or choice in ["\x04", "\x03"]:
             if is_terminate:
@@ -629,18 +633,17 @@ def is_program_valid(cmd):
     try:
         run(cmd)
     except Exception:
-        terminate(f"E: Please install {cmd[0]} or check its path", is_traceback=False)
+        terminate(f"Please install {cmd[0]} or check its path", is_traceback=False)
 
 
 def compress_folder(folder_path, is_exclude_git=False):
-    """Compress folder using tar
+    """Compress folder using tar.
 
     Note that to get fully reproducible tarballs, you should also impose the
     sort order used by tar
     @arg: folder_path should be full path
     __ https://unix.stackexchange.com/a/438330/198423  == (Eac time tar produces different files)
     __ https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
-
     """
     base_name = os.path.basename(folder_path)
     dir_path = os.path.dirname(folder_path)

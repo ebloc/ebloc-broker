@@ -8,6 +8,7 @@ import sys
 import time
 
 import broker.config as config
+from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
 
 
@@ -19,9 +20,9 @@ def log_return(event_filter, poll_interval):
             "\r## [ block_num={:d} ] Waiting logs since {:1d} seconds...".format(block_num, sleep_duration)
         )
         sys.stdout.flush()
-
         logged_jobs = event_filter.get_new_entries()
         if len(logged_jobs) > 0:
+            log("")
             return logged_jobs
         sleep_duration += poll_interval
         time.sleep(poll_interval)

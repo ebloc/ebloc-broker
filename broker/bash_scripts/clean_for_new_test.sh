@@ -6,8 +6,7 @@
 #fi
 
 # Update block.continue.txt with the current block number
-python3 -uB $HOME/ebloc-broker/broker/eblocbroker/get_block_number.py True > \
-        $HOME/.ebloc-broker/block_continue.txt
+python3 -uB $HOME/ebloc-broker/broker/eblocbroker/get_block_number.py True
 
 base="/var/ebloc-broker"
 mkdir -p $base/to_delete

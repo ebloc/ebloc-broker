@@ -92,7 +92,11 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         if not is_ipfs_on():
             sys.exit()
 
-        cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
+        try:
+            cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
+            # TODO
+        except:
+            pass
 
     return True
 

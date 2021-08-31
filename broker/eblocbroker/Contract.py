@@ -15,7 +15,7 @@ class Web3NotConnected(Exception):  # noqa
     pass
 
 
-class Contract:  # noqa
+class Contract:
     """Object to access smart-contract functions."""
 
     def __init__(self, is_brownie=False) -> None:
@@ -24,6 +24,9 @@ class Contract:  # noqa
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         self.gas = 4500000
         self.gas_limit = 300000
+        self._setup(is_brownie)
+
+    def _setup(self, is_brownie=False):
         if is_brownie:
             from brownie import web3
 
@@ -115,7 +118,7 @@ class Contract:  # noqa
         Returns the transaction receipt specified by transactionHash.
         If the transaction has not yet been mined returns 'None'
 
-        https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
+        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
         """
         return self.w3.eth.getTransactionReceipt(tx)
 
@@ -378,6 +381,10 @@ class Contract:  # noqa
             block_read_from, provider_price_info = self.eBlocBroker.functions.getProviderInfo(provider, index).call()
 
         return block_read_from, provider_price_info
+
+    def eth_balance(self, account):
+        """Return account balance."""
+        return self.w3.eth.get_balance(account)
 
     def get_balance(self, address):
         if not isinstance(address, Account):

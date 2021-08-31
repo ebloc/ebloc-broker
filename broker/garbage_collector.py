@@ -11,11 +11,11 @@ from utils import read_json
 load_dotenv(os.path.join(f"{env.HOME}/.ebloc-broker/", ".env"))
 
 
-def add_element(data, key, elementToAdd):
+def addElement(data, key, elementToAdd):
     data[key] = elementToAdd
 
 
-def remove_element(data, elementToRemove):
+def removeElement(data, elementToRemove):
     for element in list(data):
         if elementToRemove in element:
             del data[elementToRemove]
@@ -32,8 +32,8 @@ else:
     except:
         pass
 
-add_element(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
-add_element(data, "ipfsHash", "timestamp")
+addElement(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
+addElement(data, "ipfsHash", "timestamp")
 
 with open("data.json", "w") as outfile:
     json.dump(data, outfile)
@@ -42,6 +42,6 @@ if "jobKey" in data:
     print(data["jobKey"][0])
     print(data["jobKey"])
 
-remove_element(data, "ipfsHash")
+removeElement(data, "ipfsHash")
 with open(f, "w") as data_file:
     data = json.dump(data, data_file)

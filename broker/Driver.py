@@ -13,12 +13,13 @@ from pprint import pprint
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
+import broker._utils.tools as tools
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
 import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import QuietExit, _colorize_traceback, log
 from broker.config import env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -64,56 +65,51 @@ def wait_until_idle_core_available():
             break
 
 
-def tools(block_continue):
+def _tools(block_continue):
     """Check whether the required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_continue, pid)
     if not is_internet_on():
-        terminate("E: Network connection is down. Please try again")
+        terminate("Network connection is down. Please try again")
+
+    if not check_ubuntu_packages():
+        terminate()
 
     try:
         if not env.IS_BLOXBERG:
             is_geth_on()
         else:
             log("Connected into BLOXBERG", "green")
+
         slurm.is_on()
+        # run_driver_cancel()  # TODO: uncomment
+        if env.IS_EUDAT_USE:
+            if not env.OC_USER:
+                terminate(f"OC_USER is not set in {env.LOG_PATH}/.env")
+            else:
+                eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
+
+        if env.IS_GDRIVE_USE:
+            is_program_valid(["gdrive", "version"])
+            provider_info = config.Ebb.get_provider_info(env.PROVIDER_ID)
+            _email = provider_info["email"]
+            output, gdrive_email = gdrive.check_user(_email)
+            if not output:
+                msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
+                terminate(msg)
+            else:
+                log(f"==> provider_email={_email}")
+
+        if env.IS_IPFS_USE:
+            if not os.path.isfile(env.GPG_PASS_FILE):
+                log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n" "file for decrypting using ipfs.")
+                raise QuietExit
+
+            _run_ipfs_daemon()
+
     except Exception as e:
         if type(e).__name__ != "QuietExit":
             _colorize_traceback(e)
-        sys.exit(1)
-
-    # run_driver_cancel()  # TODO: uncomment
-    if env.IS_EUDAT_USE:
-        if not env.OC_USER:
-            terminate(f"E: OC_USER is not set in {env.LOG_PATH}/.env")
-        else:
-            eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
-
-    if env.IS_GDRIVE_USE:
-        is_program_valid(["gdrive", "version"])
-        try:
-            provider_info = config.Ebb.get_provider_info(env.PROVIDER_ID)
-        except Exception as e:
-            raise config.Terminate(e)
-
-        _email = provider_info["email"]
-        output, gdrive_email = gdrive.check_user(_email)
-        if not output:
-            terminate(
-                f"E: Provider's email address ({_email}) does not match\n"
-                f"with the set gdrive address ({gdrive_email})"
-            )
-        else:
-            log(f"==> provider_email={_email}")
-
-    if env.IS_IPFS_USE:
-        if not os.path.isfile(env.GPG_PASS_FILE):
-            log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n" "file for decrypting using ipfs.")
-            raise config.QuietExit
-
-        _run_ipfs_daemon()
-
-    if not check_ubuntu_packages():
-        sys.exit(1)
+        raise config.Terminate(e)
 
 
 class Driver:
@@ -231,11 +227,11 @@ class Driver:
             self.job_info = eblocbroker_function_call(
                 partial(config.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
             )
+            self.requester_id = self.job_info["job_owner"]
             self.job_infos.append(self.job_info)
             self.job_info.update({"received_block": self.received_block})
             self.job_info.update({"storageDuration": self.storage_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
-            self.requester_id = self.job_info["job_owner"]
             log(f"requester={self.requester_id}", "yellow")
             pprint(self.job_info)
         except Exception as e:
@@ -309,7 +305,7 @@ def run_driver():
     # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
     env.IS_THREADING_ENABLED = False
-    config.logging = setup_logger(env.DRIVER_LOG)
+    config.logging = setup_logger(tools.DRIVER_LOG)
     # driver_cancel_process = None
     try:
         from imports import connect
@@ -326,13 +322,13 @@ def run_driver():
         raise config.Terminate(e)
 
     if not env.PROVIDER_ID:
-        terminate(f"E: PROVIDER_ID is None in {env.LOG_PATH}/.env")
+        terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
         terminate(f"Please run: {env.EBLOCPATH}/broker/bash_scripts/folder_setup.sh")
 
     if not env.SLURMUSER:
-        terminate(f"E: SLURMUSER is not set in {env.LOG_PATH}/.env")
+        terminate(f"SLURMUSER is not set in {env.LOG_PATH}/.env")
 
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
@@ -340,7 +336,6 @@ def run_driver():
         raise e
 
     if not env.config["block_continue"]:
-        breakpoint()  # DEBUG
         env.config["block_continue"] = deployed_block_number
 
     if given_block_number > 0:
@@ -356,14 +351,14 @@ def run_driver():
             if deployed_block_number:
                 env.config["block_continue"] = deployed_block_number
             else:
-                terminate(f"E: deployed_block_number={deployed_block_number} is invalid")
+                terminate(f"deployed_block_number={deployed_block_number} is invalid")
 
-    tools(block_number_saved)
+    _tools(block_number_saved)
     try:
         Ebb.is_contract_exists()
     except Exception:
         terminate(
-            "E: Contract address does not exist on the blockchain, is the blockchain sync?\n"
+            "Contract address does not exist on the blockchain, is the blockchain sync?\n"
             f"block_number={Ebb.get_block_number()}",
             is_traceback=False,
         )
@@ -374,14 +369,14 @@ def run_driver():
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
     log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
     log(f"==> whoami={env.WHOAMI}")
-    log(f"==> log_file={env.DRIVER_LOG}")
+    log(f"==> log_file={tools.DRIVER_LOG}")
     log(f"==> rootdir={os.getcwd()}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # Updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
         terminate(
             textwrap.fill(
-                f"E: Your Ethereum address {env.PROVIDER_ID} "
+                f"Your Ethereum address {env.PROVIDER_ID} "
                 "does not match with any provider in eBlocBroker. Please register your "
                 "provider using your Ethereum Address in to the eBlocBroker. You can "
                 "use eblocbroker/register_provider.py script to register your provider."
@@ -390,17 +385,19 @@ def run_driver():
         )
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-        terminate(f"E: Provider's ({env.PROVIDER_ID}) ORCID is not verified")
+        terminate(f"Provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
     block_read_from = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
+    eth_balance = Ebb.eth_balance(env.PROVIDER_ID)
     log(f"==> deployed_block_number={deployed_block_number}")
-    log(f"==> balance={balance_temp}")
+    log(f"==> Account Balance={eth_balance} gwei | {config.w3.fromWei(eth_balance, 'ether')} eth")
+    log(f"==> Ebb balance={balance_temp}")
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
         if not str(block_read_from).isdigit():
-            terminate(f"E: block_read_from={block_read_from}")
+            terminate(f"block_read_from={block_read_from}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         try:
@@ -409,14 +406,14 @@ def run_driver():
                 raise
         except:
             raise config.Terminate(
-                "E: SLURM is not running on the background. " "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
+                "SLURM is not running on the background. " "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
             )
 
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
             # checks if the squeue output's line number is gretaer than 1
             log(f"Current slurm running jobs status:\n{squeue_output}", "yellow")
-            log("-" * int(columns=100), "green")
+            log("-" * 100, "green")
 
         log(f"==> date=[{get_time()}]")
         if isinstance(balance, int):
@@ -481,7 +478,7 @@ if __name__ == "__main__":
                 run_driver()
             except zc.lockfile.LockError:
                 log("E: Driver cannot lock the file, the pid file is in use")
-            except config.QuietExit:
+            except QuietExit:
                 pass
             except config.Terminate as e:
                 terminate(e)

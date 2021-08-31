@@ -58,7 +58,6 @@ if __name__ == "__main__":
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
     job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
-
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)
 

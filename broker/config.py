@@ -48,6 +48,8 @@ class IgnoreThreadsFilter(Filter):
 
 
 class ENV:
+    """ENV class that contains configuration values."""
+
     def __init__(self) -> None:
         try:
             from brownie import accounts
@@ -181,14 +183,12 @@ logger = setup_logger()  # Default initialization
 coll = None
 oc = None
 driver_cancel_process = None
-env: ENV = None
 _eBlocBroker = None
-
 BLOCK_DURATION = 15
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
 IS_THREADING_ENABLED = False
-
+# env: ENV = None
 try:
     env = ENV()
 except:

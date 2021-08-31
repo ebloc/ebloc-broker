@@ -189,9 +189,8 @@ class Ipfs:
             cmd = ["ipfs", "swarm", "connect", ipfs_id]
             p, output, error = popen_communicate(cmd)
             if p.returncode != 0 and "failure: dial to self attempted" not in error:
-                _colorize_traceback()
-                logging.error(f"E: sacctmgr remove error: {output}")
-                raise output
+                _colorize_traceback(output)
+                raise Exception
 
             if "failure: dial to self attempted" in error:
                 log(f"Warning: {error.replace('Error: ', '').rstrip()}")
