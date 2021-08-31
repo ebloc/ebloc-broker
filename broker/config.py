@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from bot._utils.yaml import Yaml
 import logging
 import os
 import threading
@@ -13,7 +14,7 @@ from dotenv import load_dotenv
 import broker._utils.colored_traceback as colored_traceback
 
 
-class QuietExit(Exception):  # noqa
+class Terminate(Exception):  # noqa
     pass
 
 
@@ -67,17 +68,16 @@ class ENV:
         except IOError:
             raise Exception(f"E: File '{env_file}' is not accessible")
 
+        true_set = ("yes", "true", "t", "1")
         load_dotenv(dotenv_path=env_file)
         self.log_filename = None
-
         self.WHOAMI = _env["WHOAMI"]
         self.SLURMUSER = _env["SLURMUSER"]
         self.LOG_PATH = _env["LOG_PATH"]
         self.GDRIVE = _env["GDRIVE"]
         self.OC_USER = _env["OC_USER"]
         self.DATADIR = _env["DATADIR"]
-
-        true_set = ("yes", "true", "t", "1")
+        self.config = Yaml(f"{self.LOG_PATH}/config.yaml")
         self.IS_GETH_TUNNEL = str(_env["IS_GETH_TUNNEL"]).lower() in true_set
         self.IS_IPFS_USE = str(_env["IS_IPFS_USE"]).lower() in true_set
         self.IS_EUDAT_USE = str(_env["IS_EUDAT_USE"]).lower() in true_set
@@ -101,13 +101,14 @@ class ENV:
         self.LINKS = f"{self.LOG_PATH}/links"
         self.JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/test.txt"
         self.CANCEL_JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledJobs.txt"
-        self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
-
+        self.GPG_PASS_FILE = f"{self.LOG_PATH}/.gpg_pass.txt"
         self.CANCEL_BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledBlockReadFrom.txt"
         self.OC_CLIENT = f"{self.LOG_PATH}/.oc_client.pckl"
         self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]
+        # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
+
         if w3:
             self.PROVIDER_ID = w3.toChecksumAddress(_env["PROVIDER_ID"])
 

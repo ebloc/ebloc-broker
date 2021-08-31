@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Driver for ebloc-broker."""
+
 import os
 import sys
 import textwrap
@@ -38,11 +40,9 @@ from broker.utils import (
     is_internet_on,
     is_program_valid,
     question_yes_no,
-    read_file,
     run,
     sleep_timer,
     terminate,
-    write_to_file,
 )
 
 # from threading import Thread
@@ -50,6 +50,7 @@ from broker.utils import (
 args = helper()
 given_block_number = vars(args)["bn"]
 pid = str(os.getpid())
+COLUMN_SIZE = int(104 / 2 - 12)
 
 
 def wait_until_idle_core_available():
@@ -63,11 +64,12 @@ def wait_until_idle_core_available():
             break
 
 
-def tools(block_number):
+def tools(block_continue):
     """Check whether the required functions are in use or not."""
-    session_start_msg(env.SLURMUSER, block_number, pid)
+    session_start_msg(env.SLURMUSER, block_continue, pid)
     if not is_internet_on():
         terminate("E: Network connection is down. Please try again")
+
     try:
         if not env.IS_BLOXBERG:
             is_geth_on()
@@ -91,7 +93,7 @@ def tools(block_number):
         try:
             provider_info = config.Ebb.get_provider_info(env.PROVIDER_ID)
         except Exception as e:
-            terminate(e)
+            raise config.Terminate(e)
 
         _email = provider_info["email"]
         output, gdrive_email = gdrive.check_user(_email)
@@ -104,6 +106,11 @@ def tools(block_number):
             log(f"==> provider_email={_email}")
 
     if env.IS_IPFS_USE:
+        if not os.path.isfile(env.GPG_PASS_FILE):
+            log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n"
+                "file for decrypting using ipfs.")
+            raise config.QuietExit
+
         _run_ipfs_daemon()
 
     if not check_ubuntu_packages():
@@ -194,8 +201,7 @@ class Driver:
         """Process logged job one by one."""
         wait_until_idle_core_available()
         self.is_provider_received_job = True
-        columns_size = int(int(columns) / 2 - 12)
-        log("-" * columns_size + f" {idx} " + "-" * columns_size, "blue")
+        log("-" * COLUMN_SIZE + f" {idx} " + "-" * COLUMN_SIZE, "blue")
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
@@ -294,6 +300,7 @@ class Driver:
                 self.process_logged_job(idx)
                 self.sent_job_to_storage_class()
             except Exception as e:
+                breakpoint()  # DEBUG
                 raise e
 
 
@@ -304,8 +311,6 @@ def run_driver():
     run(["sudo", "printf", "hello"])
     env.IS_THREADING_ENABLED = False
     config.logging = setup_logger(env.DRIVER_LOG)
-    columns = 100
-
     # driver_cancel_process = None
     try:
         from imports import connect
@@ -318,10 +323,8 @@ def run_driver():
         config.Ebb = Contract.eblocbroker
         Contract.eblocbroker.ebb = config.ebb  # set for global use across files
         driver.Ebb = Contract.eblocbroker
-        driver.Ebb
-    except Exception:
-        _colorize_traceback()
-        terminate()
+    except Exception as e:
+        raise config.Terminate(e)
 
     if not env.PROVIDER_ID:
         terminate(f"E: PROVIDER_ID is None in {env.LOG_PATH}/.env")
@@ -337,24 +340,24 @@ def run_driver():
     except Exception as e:
         raise e
 
-    if not os.path.isfile(env.BLOCK_READ_FROM_FILE):
-        write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
+    if not env.config["block_continue"]:
+        breakpoint()  # DEBUG
+        env.config["block_continue"] = deployed_block_number
 
     if given_block_number > 0:
         block_number_saved = int(given_block_number)
     else:
-        block_number_saved = read_file(env.BLOCK_READ_FROM_FILE)
-        if not block_number_saved.isdigit():
-            log("E: BLOCK_READ_FROM_FILE is empty or contains an invalid character")
+        block_number_saved = env.config["block_continue"]
+        if not isinstance(env.config["block_continue"], int):
+            log("E: block_continue variable is empty or contains an invalid character")
             question_yes_no(
                 "## Would you like to read from the contract's deployed block number? [Y/n]: ", is_terminate=True
             )
             block_number_saved = deployed_block_number
             if deployed_block_number:
-                write_to_file(env.BLOCK_READ_FROM_FILE, deployed_block_number)
+                env.config["block_continue"] = deployed_block_number
             else:
-                log(f"E: deployed_block_number={deployed_block_number} is invalid")
-                terminate()
+                terminate(f"E: deployed_block_number={deployed_block_number} is invalid")
 
     tools(block_number_saved)
     try:
@@ -376,7 +379,7 @@ def run_driver():
     log(f"==> rootdir={os.getcwd()}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # Updated since cluster is not registered
-        write_to_file(env.BLOCK_READ_FROM_FILE, Ebb.get_block_number())
+        env.config["block_continue"] = Ebb.get_block_number()
         terminate(
             textwrap.fill(
                 f"E: Your Ethereum address {env.PROVIDER_ID} "
@@ -406,13 +409,14 @@ def run_driver():
             if "squeue: error:" in str(squeue_output):
                 raise
         except:
-            terminate("E: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh")
+            raise config.Terminate("E: SLURM is not running on the background. "
+                                   "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh")
 
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
             # checks if the squeue output's line number is gretaer than 1
             log(f"Current slurm running jobs status:\n{squeue_output}", "yellow")
-            log("-" * int(columns), "green")
+            log("-" * int(columns=100), "green")
 
         log(f"==> date=[{get_time()}]")
         if isinstance(balance, int):
@@ -447,21 +451,19 @@ def run_driver():
         if len(driver.logged_jobs_to_process) > 0 and driver.max_blocknumber > 0:
             # updates the latest read block number
             block_read_from = driver.max_blocknumber + 1
-            write_to_file(env.BLOCK_READ_FROM_FILE, block_read_from)
+            env.config["block_continue"] = block_read_from
         if not driver.is_provider_received_job:
             # If there is no submitted job for the provider, than block start
             # to read from the current block number and updates the latest read
             # block number read from the file
-            write_to_file(env.BLOCK_READ_FROM_FILE, current_block_number)
+            env.config["block_continue"] = current_block_number
             block_read_from = current_block_number
 
 
 if __name__ == "__main__":
     try:
-        columns = 104
-        _columns = int(int(columns) / 2 - 12)
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        log(date_now + " " + "=" * (_columns - 16) + " provider session starts " + "=" * (_columns - 5), "cyan")
+        log(date_now + " " + "=" * (COLUMN_SIZE - 16) + " provider session starts " + "=" * (COLUMN_SIZE - 5), "cyan")
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement
             # to launch ipdb
@@ -478,9 +480,11 @@ if __name__ == "__main__":
                 # open(env.DRIVER_LOCKFILE, 'w').close()
                 run_driver()
             except zc.lockfile.LockError:
-                log("E: Driver cannot lock the file, the pid file is in use", "red")
-            # except config.QuietExit:
-            #     pass
+                log("E: Driver cannot lock the file, the pid file is in use")
+            except config.QuietExit:
+                pass
+            except config.Terminate as e:
+                terminate(e)
             except Exception as e:
                 _colorize_traceback(e)
             finally:

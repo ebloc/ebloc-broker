@@ -97,7 +97,7 @@ class Ipfs:
             f"--output={tar_file}",
             "--pinentry-mode",
             "loopback",
-            f"--passphrase-file={env.LOG_PATH}/.gpg_pass.txt",
+            f"--passphrase-file={env.GPG_PASS_FILE}",
             "--decrypt",
             gpg_file_link,
         ]

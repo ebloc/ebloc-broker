@@ -9,21 +9,21 @@ import time
 import traceback
 from datetime import datetime
 from decimal import Decimal
-
-import pytz
 from colorama import init
 from pygments import formatters, highlight, lexers
 from pytz import timezone
 from rich.traceback import install
 from termcolor import colored
-
 import broker._config as _config
-from broker.config import QuietExit, env
+from broker.config import env
 
 install()  # for rich
 init(autoreset=True)  # for colorama
 
 log_files = {}
+
+class QuietExit(Exception):  # noqa
+    pass
 
 
 class Color:
@@ -247,11 +247,8 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
     if color:
         if not _config.IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
             if is_arrow:
-                print(
-                    colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
-                    end=end,
-                    flush=flush,
-                )
+                print(colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
+                      end=end, flush=flush)
             else:
                 ll.print_color(colored(text, color), color, is_bold=is_bold, end=end)
 

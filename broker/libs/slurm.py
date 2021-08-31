@@ -3,7 +3,8 @@
 import time
 
 import broker.config as config
-from broker.config import QuietExit, env, logging
+from broker._utils.tools import QuietExit
+from broker.config import env, logging
 from broker.lib import run
 from broker.utils import BashCommandsException, _colorize_traceback, is_process_on, log, popen_communicate, print_ok
 

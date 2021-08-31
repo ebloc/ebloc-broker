@@ -8,9 +8,10 @@ from web3.logs import DISCARD
 
 import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
-from broker.config import QuietExit, env, logging
+from broker.config import env, logging
 from broker.eblocbroker.job import Job
 from broker.lib import check_linked_data, get_tx_status, run
+from broker._utils.tools import QuietExit
 from broker.utils import (
     CacheType,
     StorageID,
@@ -52,12 +53,10 @@ if __name__ == "__main__":
 
     log("==> Attemptting to submit a job")
     requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
-
     # Ebb.account_id_to_address(address=requester_addr)
-
-    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
-    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
 
     main_storage_id = job.storage_ids[0]
@@ -67,7 +66,6 @@ if __name__ == "__main__":
     folders = []  # full paths are provided
     folders.append(f"{env.BASE_DATA_PATH}/test_data/base/source_code")
     folders.append(f"{env.BASE_DATA_PATH}/test_data/base/data/data1")
-
     path_from = f"{env.EBLOCPATH}/base/data"
     path_to = f"{env.LINKS}/base/data_link"
     check_linked_data(path_from, path_to, folders[1:])

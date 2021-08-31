@@ -67,10 +67,8 @@ configure_slurm () { # slurm setup
 configure_ipfs () { # ipfs setups
     l=$(logname)
     sudo chown -R "$l:$l" $HOME/.ipfs/
-
     sudo mkdir -p /ipfs
     sudo mkdir -p /ipns
-
     sudo chown $l:root /ipfs
     sudo chown $l:root /ipns
 }
@@ -90,6 +88,7 @@ if [ ! -d $TMP_DIR ]; then
     mkdir -p $TMP_DIR
 fi
 
+touch $TMP_DIR/config.yaml
 mkdir -p $TMP_DIR/private
 mkdir -p $TMP_DIR/drivers_output
 mkdir -p $TMP_DIR/links
@@ -100,22 +99,22 @@ if [ ! -f $TMP_DIR/.env ]; then
     cp $current_dir/.env $TMP_DIR
 fi
 
-# EBLOCPATH Setup
-# ===============
+# EBLOCPATH
+# =========
 venvPath=$HOME"/venv"
 var=$(echo $venvPath | sed 's/\//\\\//g')
 sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh
 rm $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh.bak
 
-# LOG_PATH path setup
-# ===================
+# LOG_PATH
+# ========
 lineNew=$TMP_DIR
 var=$(echo $lineNew | sed 's/\//\\\//g')
 sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-# GDRIVE path setup
-# =================
+# GDRIVE
+# ======
 FILE=$HOME/.gdrive
 if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
@@ -125,29 +124,29 @@ lineNew=$(which gdrive | sed 's/\//\\\//g')
 sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-# EBLOCPATH setup
-# ===============
+# EBLOCPATH
+# =========
 eblocbrokerPath="$HOME/ebloc-broker"
 var=$(echo $eblocbrokerPath | sed 's/\//\\\//g')
 sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" $TMP_DIR/.env
 rm $TMP_DIR/.env.bak
 
-# User Name Setup
-# ===============
+# User Name
+# =========
 lineOld="whoami"
 lineNew=$(logname)
 
 sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-# RPC PORT Setup
-# ==============
+# RPC PORT
+# ========
 lineOld="8545"
 sed -i.bak "s/^\(RPC_PORT=\).*/\1$lineOld/" $TMP_DIR/.env
 rm $TMP_DIR/.env.bak
 
-# PATH Name Setup
-# ===============
+# PATH Name
+# =========
 lineOld="EBLOCBROKER_PATH"
 lineNew=$(echo $current_dir | sed 's/\//\\\//g')
 
