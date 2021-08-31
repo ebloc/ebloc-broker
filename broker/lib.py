@@ -17,7 +17,6 @@ from broker.utils import (
     Link,
     StorageID,
     byte_to_mb,
-    is_ipfs_on,
     is_process_on,
     mkdir,
     popen_communicate,
@@ -88,7 +87,8 @@ def _connect_web3():
         connect_to_web3()
 
 
-def session_start_msg(slurm_user, block_number, pid, columns=104):
+def session_start_msg(slurm_user, block_number, pid):
+    """Print message at the beginning of Driver process and connect into web3."""
     _connect_web3()
     if not env.PROVIDER_ID and config.w3:
         PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
@@ -96,7 +96,9 @@ def session_start_msg(slurm_user, block_number, pid, columns=104):
         PROVIDER_ID = env.PROVIDER_ID
 
     log(f"==> This Driver process has the PID {pid}")
-    log(f"==> slurm_user={slurm_user} | provider_address={PROVIDER_ID} | block_number={block_number}")
+    log(f"==> provider_address={PROVIDER_ID}")
+    log(f"==> slurm_user={slurm_user}")
+    log(f"==> block_number={block_number}")
 
 
 def run_driver_cancel():
@@ -127,8 +129,8 @@ def get_tx_status(tx_hash) -> str:
 
 
 def check_size_of_file_before_download(file_type, key=None):
-    # TODO: fill
-    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
+    """Check size of the file before downloading it."""
+    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):  # TODO: fill
         if not key:
             return False
     elif int(file_type) == StorageID.EUDAT:
@@ -139,7 +141,7 @@ def check_size_of_file_before_download(file_type, key=None):
 
 
 def calculate_folder_size(path, _type="mb") -> float:
-    """Return the size of the given path in MB, bytes if wanted"""
+    """Return the size of the given path in MB, bytes if wanted."""
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # type: ignore
@@ -152,6 +154,7 @@ def calculate_folder_size(path, _type="mb") -> float:
 
 
 def subprocess_call(cmd, attempt=1, print_flag=True):
+    """Run subprocess."""
     cmd = list(map(str, cmd))  # always should be type: str
     for count in range(attempt):
         try:
@@ -171,6 +174,7 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
 
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:
+    """Run command pipe output into give file."""
     p, output, error = popen_communicate(cmd, stdout_file=path, mode=mode)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
@@ -182,6 +186,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
 
 
 def remove_files(filename) -> bool:
+    """Remove give file path."""
     if "*" in filename:
         for f in glob.glob(filename):
             try:
@@ -200,7 +205,10 @@ def remove_files(filename) -> bool:
 
 
 def echo_grep_awk(str_data, grep_str, column):
-    """cmd: echo gdrive_info | grep _type | awk \'{print $2}\'"""
+    """Echo grap awk.
+
+    cmd: echo gdrive_info | grep _type | awk "{print $2}"
+    """
     p1 = subprocess.Popen(["echo", str_data], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", grep_str], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
@@ -227,7 +235,7 @@ def preexec_function():
 
 
 def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):
-    """Generates folder as hard linked of the given folder paths or provider main folder.
+    """Generate folder as hard linked of the given folder paths or provider main folder.
 
     :param path_to: linked folders_to_share into into given path
     :param folders_to_share: if given, iterates all over the folders_to_share

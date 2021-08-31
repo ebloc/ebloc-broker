@@ -7,15 +7,15 @@ import pprint
 import sys
 import time
 from typing import Dict, List
-
+import broker.config as config
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.gdrive as gdrive
 import libs.git as git
 import libs.ipfs as ipfs
 import libs.slurm as slurm
-
-from broker.config import QuietExit, env, logging, setup_logger
+from broker._utils.tools import QuietExit
+from broker.config import env, logging, setup_logger
 from broker.imports import connect
 from broker.lib import (
     calculate_folder_size,
@@ -43,7 +43,7 @@ from broker.utils import (
     silent_remove,
 )
 
-eBlocBroker, w3 = connect()
+connect()
 Ebb = Contract.eblocbroker = Contract.Contract()
 
 
@@ -289,7 +289,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 self.source_code_hashes_to_process.append(ipfs_hash)
             else:
-                self.source_code_hashes_to_process.append(w3.toText(source_code_hash))
+                self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
 
     def ipfs_add_folder(self, folder_path):
         try:
