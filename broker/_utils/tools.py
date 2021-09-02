@@ -3,6 +3,7 @@
 import decimal
 import linecache
 import os
+import pathlib
 import sys
 import threading
 import time
@@ -10,7 +11,7 @@ import traceback
 from datetime import datetime
 from decimal import Decimal
 from subprocess import CalledProcessError, check_output
-from typing import Dict
+from typing import Dict, Union
 
 from colorama import init
 from pygments import formatters, highlight, lexers
@@ -24,7 +25,6 @@ init(autoreset=True)  # for colorama
 log_files: Dict[str, str] = {}
 IS_THREADING_ENABLED = False
 IS_THREADING_MODE_PRINT = False
-LOG_FILENAME = None
 DRIVER_LOG = None
 
 
@@ -75,6 +75,8 @@ class Log(Color):
 
     def __init__(self):  # noqa
         super().__init__()
+        self.IS_PRINT = True
+        self.LOG_FILENAME: Union[str, pathlib.Path] = ""
 
     def print_color(self, text, color=None, is_bold=True, end=None):
         """Print string in color format."""
@@ -229,8 +231,8 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
     if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
-        if LOG_FILENAME:
-            filename = LOG_FILENAME
+        if ll.LOG_FILENAME:
+            filename = ll.LOG_FILENAME
         elif DRIVER_LOG:
             filename = DRIVER_LOG
         else:
@@ -243,15 +245,16 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
 
     f = open(filename, "a")
     if color:
-        if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
-            if is_arrow:
-                print(
-                    colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
-                    end=end,
-                    flush=flush,
-                )
-            else:
-                ll.print_color(colored(text, color), color, is_bold=is_bold, end=end)
+        if ll.IS_PRINT:
+            if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
+                if is_arrow:
+                    print(
+                        colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
+                        end=end,
+                        flush=flush,
+                    )
+                else:
+                    ll.print_color(colored(text, color), color, is_bold=is_bold, end=end)
 
         if is_bold:
             _text = f"{ll.BOLD}{text[_len:]}{ll.END}"
@@ -269,7 +272,9 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
         else:
             text_write = _text
 
-        print(text_write, end=end, flush=flush)
+        if ll.IS_PRINT:
+            print(text_write, end=end, flush=flush)
+
         f.write(text_write)
 
     if end is None:
@@ -335,7 +340,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, is_color=False, end=None, is_arrow_print=True):
+def percent_change(initial, change, _decimal=8, is_arrow_print=True, end=None):
     """Calculate percent change."""
     try:
         initial = float(initial)

@@ -11,7 +11,7 @@ b=$(echo $1)
 c=$(echo $2)
 event=$(echo $c | awk '{print $8}')
 
-msg="\n[$(date)] $a | $b | $c //$event"
+msg="[$(date)] $a | $b | $c //$event"
 echo $msg | mail -s "Message Subject" $EMAIL
 
 echo "--" >> $LOG_FILE

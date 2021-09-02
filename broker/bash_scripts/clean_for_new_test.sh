@@ -44,4 +44,4 @@ rm -rf docs/_build_html/
 rm -rf docs/_build/
 
 cp $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh $base
-$HOME/ebloc-broker/broker/libs/mongodb.py delete
+$HOME/ebloc-broker/broker/libs/mongodb.py --delete-all
