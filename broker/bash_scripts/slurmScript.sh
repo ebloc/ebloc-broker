@@ -1,32 +1,27 @@
 #!/bin/bash
 
-_HOME="/home/alper"
-VENV_PATH="/home/alper/venv"
-EBLOCBROKER_PATH="/home/alper/ebloc-broker"
-LOG_FILE="${_HOME}/.ebloc-broker/slurm_script.log"
 EMAIL="aalimog1@binghamton.edu"
-
+_HOME="/home/alper"
+VENV_PATH="${_HOME}/venv"
+EBLOCBROKER_PATH="${_HOME}/ebloc-broker/broker"
+LOG_FILE="${_HOME}/.ebloc-broker/slurm_script.log"
 a=$(echo $0)
 b=$(echo $1)
 c=$(echo $2)
 event=$(echo $c | awk '{print $8}')
-
-msg="\n[$(date)] $a | $b | $c //$event"
+msg="==> [$(date)] $a $b $c | $event"
 echo $msg | mail -s "Message Subject" $EMAIL
-
-echo "--" >> $LOG_FILE
+echo "------" >> $LOG_FILE
 echo $msg >> $LOG_FILE
-
 slurm_job_id=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
 if [[ $c == *" Began, "* ]]; then
     name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Began)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
-
-    msg="JOB STARTED: $name | $arg0 $arg1 $slurm_job_id"
+    msg="JOB_STARTED fname=$name\n"
+    msg="${msg}start_code.py $arg0 $arg1 $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo $msg >> $LOG_FILE
-
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id
@@ -39,7 +34,6 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
-
     if [[ $event == *"COMPLETED"* ]]; then
         status="COMPLETED"
     fi
@@ -47,11 +41,10 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     if [[ $event == *"FAILED"* ]]; then
         status="FAILED"
     fi
-
-    msg="$status fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
+    msg="$status fname=$name\n"
+    msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo $msg >> $LOG_FILE
-
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
@@ -64,11 +57,10 @@ if [[ $event == *"TIMEOUT"* ]]; then
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
-
-    msg="TIMEOUT fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
+    msg="TIMEOUT fname=$name\n"
+    msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo $msg >> $LOG_FILE
-
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
@@ -81,11 +73,10 @@ if [[ $event == *"CANCELLED"* ]]; then
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
-
-    msg="CANCELLED fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
+    msg="CANCELLED fname=$name\n"
+    msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo $msg >> $LOG_FILE
-
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
@@ -98,11 +89,10 @@ if [[ $event == *"FAILED"* ]]; then
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index
     arg2=$(echo $name | cut -d "*" -f 3)  # received_block_number
-
-    msg="FAILED fileName:$name | $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
+    msg="FAILED fname=$name\n"
+    msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo $msg >> $LOG_FILE
-
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id

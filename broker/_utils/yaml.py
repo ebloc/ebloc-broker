@@ -2,8 +2,7 @@
 
 import os
 from pathlib import Path
-
-import ruamel.yaml
+from ruamel.yaml import YAML, representer
 
 
 class SubYaml(dict):
@@ -35,30 +34,28 @@ class SubYaml(dict):
         super().__delitem__(key)
         self.updated()
 
-    def update(self, *args, **kw):
+    def update(self, *args, **kwargs):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
-        for k, v in kw.items():
+
+        for k, v in kwargs.items():
             self[k] = v
-        self.updated()
-        return
-        for arg in args:
-            super().update(arg)
-        super().update(**kw)
-        self.updated()
 
-
-_SR = ruamel.yaml.representer.SafeRepresenter
-_SR.add_representer(SubYaml, _SR.represent_dict)
+        self.updated()
 
 
 class Yaml(dict):
     """Yaml object.
 
-    __ https://codereview.stackexchange.com/a/210162/127969
-    __ https://stackoverflow.com/a/68685839/2402577
+    How to auto-dump modified values in nested dictionaries using ruamel.yaml?
     __ https://stackoverflow.com/a/68694688/2402577
+
+    ruamel.yaml.representer.RepresenterError: cannot represent an object: {'value': }
+    __ https://stackoverflow.com/a/68685839/2402577
+
+    PyYAML - Saving data to .yaml files
+    __ https://codereview.stackexchange.com/a/210162/127969
     """
 
     def __init__(self, filename, auto_dump=True):
@@ -66,7 +63,7 @@ class Yaml(dict):
         self.filename_temp = f"{self.filename}~"
         self.auto_dump = auto_dump
         self.changed = False
-        self.yaml = ruamel.yaml.YAML(typ="safe")
+        self.yaml = YAML(typ="safe")
         self.yaml.default_flow_style = False
         if self.filename.exists():
             with open(filename) as f:
@@ -97,6 +94,7 @@ class Yaml(dict):
             v = SubYaml(self)
             v.update(value)
             value = v
+
         super().__setitem__(key, value)
         self.updated()
 
@@ -121,16 +119,21 @@ class Yaml(dict):
         self.updated()
 
 
-if __name__ == "__main__":
+_SR = representer.SafeRepresenter
+_SR.add_representer(SubYaml, _SR.represent_dict)
+
+def test_1():  # noqa
     config_file = Path("test.yaml")
     cfg = Yaml(config_file)
-    cfg["setup"]["a"] = 199
-    #
+    cfg["setup"]["a"] = 200
+
+
+def test_2():  # noqa
     config_file = Path("test_1.yaml")
     cfg = Yaml(config_file)
     cfg["a"] = 1
     cfg["b"]["x"] = 2
-    cfg["c"]["y"]["z"] = 42
+    cfg["c"]["y"]["z"] = 45
 
     print(f"{config_file} 1:")
     print(config_file.read_text())
@@ -150,7 +153,7 @@ if __name__ == "__main__":
     # reread config from file
     cfg = Yaml(config_file)
     assert isinstance(cfg["c"]["y"], SubYaml)
-    assert cfg["c"]["y"]["z"] == 42
+    assert cfg["c"]["y"]["z"] == 45
     del cfg["c"]
     print(f"{config_file} 4:")
     print(config_file.read_text())
@@ -162,20 +165,11 @@ if __name__ == "__main__":
     cfg.update(c=dict(b=dict(e=5)))
     assert isinstance(cfg["a"], SubYaml)
     assert isinstance(cfg["c"]["b"], SubYaml)
-    cfg["c"]["b"]["f"] = 222
-
+    cfg["c"]["b"]["f"] = 333
     print(f"{config_file} 5:")
     print(config_file.read_text())
 
-    # cfg = Yaml("test.yaml")
-    # print(cfg)
-    # # cfg["z"] = 110
-    # cfg["setup"]["a"] = 110
-    # cfg.updated()
-    # print(cfg)
-    # # cfg.update({"b": 4})
-    # # cfg.update(c=5)
-    # # del cfg['a']
-    # # print(cfg)
-    # print("------")
-    # print(open(cfg.filename).read())
+
+if __name__ == "__main__":
+    test_1()
+    test_2()

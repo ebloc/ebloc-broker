@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
 from pymongo import MongoClient
-
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
@@ -434,4 +432,4 @@ class Contract:
             return self.eBlocBroker.functions.getReceivedStorageDeposit(provider, requester, source_code_hash).call(ops)
 
 
-eblocbroker: "Contract" = None
+eblocbroker: "Contract" = None  # noqa

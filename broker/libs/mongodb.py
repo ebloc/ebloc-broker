@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse
 from pprint import pprint
 
 from pymongo import MongoClient
@@ -87,14 +87,19 @@ class MongoBroker(BaseMongoClass):
         return True
 
 
-def delete():
+if __name__ == "__main__":
     mc = MongoClient()
     mongo = MongoBroker(mc, mc["ebloc_broker"]["cache"])
-    return mongo.delete_all()
-
-
-if __name__ == "__main__":
-    args = sys.argv[1:]
-    if args[0] == "delete":
-        output = delete()
+    #
+    parser = argparse.ArgumentParser(description="Process MongoDB.")
+    parser.add_argument("--delete-all", dest="is_delete_all", action="store_true", help="Clean job [cache]")
+    parser.add_argument("--no-delete-all", dest="is_delete_all", action="store_false")
+    #: It's very useful in scripting these CLIs to have the flexibility to
+    # declare exactly what behavior you want (then you aren't subject to the
+    # whims of anyone who decides to change the default).
+    # __ https://stackoverflow.com/a/15008806/2402577
+    parser.set_defaults(is_delete=False)
+    args = parser.parse_args()
+    if args.is_delete_all:
+        output = mongo.delete_all()
         print(f"mc['ebloc_broker']['cache']_is_delete={output}")

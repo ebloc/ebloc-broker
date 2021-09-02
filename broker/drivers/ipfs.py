@@ -23,8 +23,11 @@ class IpfsClass(Storage):
         self.cumulative_sizes = {}
 
     def check_ipfs(self, ipfs_hash) -> None:
-        success, ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
-        if not success or "CumulativeSize" not in ipfs_stat:
+        try:
+            ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
+            if "CumulativeSize" not in ipfs_stat:
+                raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
+        except:
             raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
 
         self.ipfs_hashes.append(ipfs_hash)

@@ -10,8 +10,8 @@ from subprocess import DEVNULL, check_output
 import ipfshttpclient
 from cid import make_cid
 
-from broker._utils.tools import _colorize_traceback, log
-
+from broker._utils.tools import _colorize_traceback, log, handler
+import json
 # from io import StringIO
 from broker.config import env, logging
 from broker.utils import (
@@ -29,8 +29,6 @@ from broker.utils import (
 
 
 class IpfsNotConnected(Exception):
-    """Ipfs daemon is not online."""
-
     pass
 
 
@@ -41,17 +39,12 @@ class Ipfs:
 
     def connect(self):
         """Connect ipfs."""
-        if is_ipfs_on():
+        if is_ipfs_on(False):
             self.client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
 
     #################
     # OFFLINE CALLS #
     #################
-    def handler(self):
-        """Register an handler for the timeout."""
-        _colorize_traceback()
-        raise Exception("E: Forever is over, end of time")
-
     def is_valid(self, ipfs_hash: str) -> bool:
         try:
             make_cid(ipfs_hash)
@@ -212,23 +205,22 @@ class Ipfs:
         return self.client.object.stat(ipfs_hash)
 
     def is_hash_exists_online(self, ipfs_hash: str):
+        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.alarm(300)  # wait max 5 minutes
+        # Set the signal handler and a 300-second alarm
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(300)
         try:
             output = self._ipfs_stat(ipfs_hash)
-            print(f"CumulativeSize={output}")
-            return True, output, output["CumulativeSize"]
+            output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
+            log(f"CumulativeSize {output_json}", "green")
+            return output, output["CumulativeSize"]
         except KeyboardInterrupt:
             terminate("KeyboardInterrupt")
-            return False, None, None
-        except Exception as exc:
-            logging.error(f"E: Failed to find IPFS file: {ipfs_hash}")
-            print(str(exc))
-            return False, None, None
+        except Exception as e:
+            raise Exception(f"E: Failed to find IPFS file: {ipfs_hash}. {e}")
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
@@ -236,7 +228,6 @@ class Ipfs:
 
         output = run_with_output(["ipfs", "get", ipfs_hash, f"--output={path}"])
         logging.info(output)
-
         if is_storage_paid:
             # pin downloaded ipfs hash if storage is paid
             output = check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()

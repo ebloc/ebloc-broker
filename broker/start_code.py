@@ -10,7 +10,8 @@ from config import env
 
 
 def start_call(job_key, index, slurm_job_id):
-    Contract.eblocbroker = Contract.Contract()()
+    """Run when slurm job launches."""
+    Contract.eblocbroker = Contract.Contract()
     Ebb = Contract.eblocbroker
     job_id = 0  # TODO: should be obtained from the user's input
     # cmd: scontrol show job slurm_job_id | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'

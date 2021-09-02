@@ -295,7 +295,6 @@ class Driver:
                 self.process_logged_job(idx)
                 self.sent_job_to_storage_class()
             except Exception as e:
-                breakpoint()  # DEBUG
                 raise e
 
 

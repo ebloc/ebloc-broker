@@ -335,7 +335,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, is_color=False, end=None, is_arrow_print=True):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     """Calculate percent change."""
     try:
         initial = float(initial)
@@ -401,6 +401,15 @@ def run(cmd, my_env=None, is_print_trace=True) -> str:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
             _colorize_traceback(e)
         raise e
+
+
+def handler(signum, frame):
+    """Register an handler for the timeout.
+
+    __ https://docs.python.org/3/library/signal.html#example
+    """
+    _colorize_traceback(f"Signal handler called with signal={signum} {frame}")
+    raise Exception("Forever is over, end of time")
 
 
 ll = Log()

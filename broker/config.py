@@ -8,11 +8,11 @@ from os.path import expanduser
 from pathlib import Path
 from typing import Union
 
-from bot._utils.yaml import Yaml
 from dotenv import load_dotenv
 
 import broker._utils.colored_traceback as colored_traceback
 import broker._utils.tools as tools
+from broker._utils.yaml import Yaml
 
 
 class Terminate(Exception):  # noqa
