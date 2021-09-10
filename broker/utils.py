@@ -436,9 +436,9 @@ def silent_remove(path: str, is_warning=True):
             raise e
 
 
-def is_ipfs_on() -> bool:
+def is_ipfs_on(is_print=True) -> bool:
     """Check whether ipfs runs on the background."""
-    return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0)
+    return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0, is_print=is_print)
 
 
 def is_process_on(process_name, name, process_count=0, port=None, is_print=True) -> bool:

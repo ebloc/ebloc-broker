@@ -433,5 +433,8 @@ class Contract:
         else:
             return self.eBlocBroker.functions.getReceivedStorageDeposit(provider, requester, source_code_hash).call(ops)
 
+    def timenow(self) -> int:
+        return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
 
-eblocbroker: "Contract" = None
+
+eblocbroker: "Contract" = None  # noqa
