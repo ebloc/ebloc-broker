@@ -1,12 +1,15 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 
-import libs.ipfs as ipfs
+import broker.cfg as cfg
 
 
 def add_to_ipfs(results_folder):
+    """Add result folder into ipfs repo."""
     try:
-        result_ipfs_hash = ipfs.add(results_folder)
+        result_ipfs_hash = cfg.ipfs.add(results_folder)
         print(result_ipfs_hash)
     except Exception:
         sys.exit()
@@ -17,7 +20,7 @@ def add_to_ipfs(results_folder):
 
     print(filepath)
     print(basename)
-    # shutil.move(results_folder, filepath + '/' + resultIpfsHash)
+    # shutil.move(results_folder, filepath + '/' + result_ipfs_hash)
 
 
 results_folder = "/home/alper/DAG"

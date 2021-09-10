@@ -200,8 +200,8 @@ class Driver:
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
-        self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
         self.block_number = self.logged_job["blockNumber"]
+        self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
         log(f"job_key={job_key} | index={index}", "green")
         log(
             f"received_block_number={self.block_number} \n"
@@ -295,7 +295,6 @@ class Driver:
                 self.process_logged_job(idx)
                 self.sent_job_to_storage_class()
             except Exception as e:
-                breakpoint()  # DEBUG
                 raise e
 
 

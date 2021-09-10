@@ -434,4 +434,4 @@ class Contract:
             return self.eBlocBroker.functions.getReceivedStorageDeposit(provider, requester, source_code_hash).call(ops)
 
 
-eblocbroker: "Contract" = None
+eblocbroker: "Contract" = None  # noqa

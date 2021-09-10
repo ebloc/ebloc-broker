@@ -12,9 +12,9 @@ import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.gdrive as gdrive
 import libs.git as git
-import libs.ipfs as ipfs
 import libs.slurm as slurm
 
+import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
@@ -50,7 +50,6 @@ Ebb = Contract.eblocbroker = Contract.Contract()
 
 
 class Common:
-
     """Prevent "Class" has no attribute "method" mypy warnings."""
 
     def __init__(self) -> None:
@@ -69,7 +68,7 @@ class IpfsGPG(Common):
     def upload(self, *_) -> bool:
         """Upload files right after all the patchings are completed."""
         try:
-            ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
+            cfg.ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
         except:
             silent_remove(self.patch_file)
             sys.exit(1)
@@ -276,7 +275,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
     def get_cloud_storage_class(self, _id):
-        """Returns cloud storage used for the id of the data."""
+        """Return cloud storage used for the id of the data."""
         if self.cloud_storage_ids[_id] == StorageID.IPFS:
             return Ipfs
         if self.cloud_storage_ids[_id] == StorageID.IPFS_GPG:
@@ -295,15 +294,15 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             else:
                 self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
 
-    def ipfs_add_folder(self, folder_path):
+    def _ipfs_add_folder(self, folder_path):
         try:
-            self.result_ipfs_hash = ipfs.add(folder_path)
+            self.result_ipfs_hash = cfg.ipfs.add(folder_path)
             logging.info(f"result_ipfs_hash={self.result_ipfs_hash}")
-            ipfs.pin(self.result_ipfs_hash)
-            data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
-        except:
-            _colorize_traceback()
-            raise
+            cfg.ipfs.pin(self.result_ipfs_hash)
+            data_transfer_out = cfg.ipfs.get_cumulative_size(self.result_ipfs_hash)
+        except Exception as e:
+            _colorize_traceback(e)
+            raise e
 
         data_transfer_out = byte_to_mb(data_transfer_out)
         self.data_transfer_out += data_transfer_out
@@ -394,14 +393,16 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if not is_dir_empty(self.patch_folder_ipfs):
             # it will upload files after all the patchings are completed
             # in case any file is created via ipfs
-            self.ipfs_add_folder(self.patch_folder_ipfs)
+            self._ipfs_add_folder(self.patch_folder_ipfs)
 
     def sacct_result(self):
-        # CPUTime = NCPUS * Elapsed
-        #
-        # To get stats about real CPU usage you need to look at SystemCPU and
-        # UserCPU, but the docs warns that it only measure CPU time for the
-        # parent process and not for child processes.
+        """Return sacct results.
+
+        CPUTime = NCPUS * Elapsed
+        To get stats about real CPU usage you need to look at SystemCPU and
+        UserCPU, but the docs warns that it only measure CPU time for the
+        parent process and not for child processes.
+        """
         slurm_log_output_file = f"{self.results_folder}/slurm_job_info.out"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
@@ -415,34 +416,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         with open(slurm_log_output_file, "a") as myfile:
             myfile.write("\n")
 
-    def run(self):
-        try:
-            data = read_json(f"{self.results_folder_prev}/data_transfer_in.json")
-            self.data_transfer_in = data["data_transfer_in"]
-            log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
-        except:
-            logging.error("E: data_transfer_in.json does not exist")
-
-        try:
-            self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")
-            log(f"==> modified_date={self.modified_date}")
-        except:
-            log("E: modified_date.txt file could not be read")
-
-        self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        log("job_owner's info", "green")
-        log("================", "green")
-        log("{0: <17}".format("email:") + self.requester_info["email"], "green")
-        log("{0: <17}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
-        log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfs_id"], "green")
-        log("{0: <17}".format("f_id:") + self.requester_info["f_id"], "green")
-
-        if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
-            log("==> Job is already completed and its money is received")
-            raise QuietExit
-
-        run_time = self.job_info["run_time"]
-        log(f"==> requested_run_time={run_time[self.job_id]} minutes")
+    def _attemp_get_job_info(self):
         is_print = True
         for attempt in range(10):
             if self.job_info["stateCode"] == state.code["RUNNING"]:
@@ -473,6 +447,34 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         else:  # failed all the attempts, abort
             sys.exit(1)
 
+    def run(self):
+        try:
+            data = read_json(f"{self.results_folder_prev}/data_transfer_in.json")
+            self.data_transfer_in = data["data_transfer_in"]
+            log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
+        except:
+            logging.error("E: data_transfer_in.json does not exist")
+
+        try:
+            self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")
+            log(f"==> modified_date={self.modified_date}")
+        except:
+            log("E: modified_date.txt file could not be read")
+
+        self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
+        log("job_owner's info\n================", "green")
+        log("{0: <17}".format("email:") + self.requester_info["email"], "green")
+        log("{0: <17}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
+        log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfs_id"], "green")
+        log("{0: <17}".format("f_id:") + self.requester_info["f_id"], "green")
+
+        if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
+            log("==> Job is already completed and its money is received")
+            raise QuietExit
+
+        run_time = self.job_info["run_time"]
+        log(f"==> requested_run_time={run_time[self.job_id]} minutes")
+        self._attemp_get_job_info()
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_source_code_hashes(
@@ -480,7 +482,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     env.PROVIDER_ID,
                     self.job_key,
                     self.index,
-                    self.job_id,
+                    # self.job_id,
                     self.received_block_number,
                 ),
                 10,
