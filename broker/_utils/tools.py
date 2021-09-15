@@ -151,6 +151,7 @@ def timenow() -> int:
     epoch = datetime(1970, 1, 1)
     return int((d - epoch).total_seconds())
 
+
 def unix_time_millis(dt) -> int:
     unix_timestamp = dt.timestamp()
     return int(unix_timestamp * 1000)
@@ -290,7 +291,7 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
     f.close()
 
 
-def get_decimal_count(value, is_drop_trailing_zeros=True) -> int:
+def decimal_count(value, is_drop_trailing_zeros=True) -> int:
     """Return decimal count.
 
     See https://stackoverflow.com/a/11227878/2402577
@@ -318,7 +319,7 @@ def round_float(v, ndigits=2) -> float:
 
 def _exit(msg):
     """Immediate program termination."""
-    log(f"{msg}\nExiting...", "red")
+    log(f"{msg}. Exiting", "red")
     os._exit(0)
 
 

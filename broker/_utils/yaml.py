@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 
+from filelock import FileLock
 from ruamel.yaml import YAML, representer
 
 
@@ -67,8 +68,9 @@ class Yaml(dict):
         self.yaml = YAML(typ="safe")
         self.yaml.default_flow_style = False
         if self.filename.exists():
-            with open(filename) as f:
-                self.update(self.yaml.load(f) or {})
+            with FileLock(f"{filename}.lock", timeout=1):
+                with open(filename) as f:
+                    self.update(self.yaml.load(f) or {})
 
     def updated(self):
         if self.auto_dump:
