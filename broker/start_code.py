@@ -10,7 +10,10 @@ from config import env
 
 
 def start_call(job_key, index, slurm_job_id):
-    """Run when slurm job launches."""
+    """Run when slurm job launches.
+
+    cmd: date -d 2018-09-09T18:38:29 +"%s"
+    """
     Contract.eblocbroker = Contract.Contract()
     Ebb = Contract.eblocbroker
     job_id = 0  # TODO: should be obtained from the user's input
@@ -25,7 +28,6 @@ def start_call(job_key, index, slurm_job_id):
     )
     p2.stdout.close()
     date = p3.communicate()[0].decode("utf-8").strip()
-    # cmd: date -d 2018-09-09T18:38:29 +"%s"
     start_time = subprocess.check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
     env.log_filename = f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt"
     f = open(env.log_filename, "a")
@@ -39,7 +41,7 @@ def start_call(job_key, index, slurm_job_id):
             break
         except:
             f.write(f"try={attempt}")
-    else:  # we failed all the attempts - abort
+    else:  # failed at all the attempts - abort
         f.write("\n")
         f.close()
         sys.exit(1)

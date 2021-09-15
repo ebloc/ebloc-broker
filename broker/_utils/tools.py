@@ -144,6 +144,13 @@ def WHERE(back=0):
     return f"{os.path.basename(frame.f_code.co_filename)}:{frame.f_lineno}"
 
 
+def timenow() -> int:
+    """Return UTC timestamp."""
+    d = datetime.utcnow()
+    print(d)
+    epoch = datetime(1970, 1, 1)
+    return int((d - epoch).total_seconds())
+
 def unix_time_millis(dt) -> int:
     unix_timestamp = dt.timestamp()
     return int(unix_timestamp * 1000)
