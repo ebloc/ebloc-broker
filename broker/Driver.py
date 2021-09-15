@@ -307,7 +307,7 @@ def run_driver():
     config.logging = setup_logger(tools.DRIVER_LOG)
     # driver_cancel_process = None
     try:
-        from imports import connect
+       from imports import connect
 
         connect()
         Contract.eblocbroker = Contract.Contract()
