@@ -4,8 +4,6 @@ import os
 import sys
 import time
 from ast import literal_eval as make_tuple
-
-import broker.config as config
 from broker.utils import ipfs_to_bytes32
 
 
@@ -14,10 +12,9 @@ def print_msg(msg):
     print(f"[{time.ctime()}, pid: {os.getpid()}] --- {msg}")
 
 
-def main(function_name, *args):
-    from brownie import network, project, web3
-
-    config.w3 = web3
+def main(*args):
+    print(args)
+    from brownie import network, project
     _args = make_tuple(str(args))
     network.connect("bloxberg")
     project = project.load("/mnt/hgfs/ebloc-broker/contract")
@@ -34,7 +31,5 @@ def main(function_name, *args):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        main(*sys.argv[1:])
-    else:
-        main(*sys.argv[1:])
+    func_name = sys.argv[1]
+    main(*sys.argv[2:])

@@ -3,7 +3,7 @@
 import broker.eblocbroker.Contract as Contract
 from broker.utils import _colorize_traceback
 
-Ebb = Contract.eblocbroker
+Ebb = Contract.ebb()
 
 if __name__ == "__main__":
     try:

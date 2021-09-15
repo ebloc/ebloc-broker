@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-
+from filelock import FileLock
 from ruamel.yaml import YAML, representer
 
 
@@ -67,8 +67,9 @@ class Yaml(dict):
         self.yaml = YAML(typ="safe")
         self.yaml.default_flow_style = False
         if self.filename.exists():
-            with open(filename) as f:
-                self.update(self.yaml.load(f) or {})
+            with FileLock(f"{filename}.lock"):
+                with open(filename) as f:
+                    self.update(self.yaml.load(f) or {})
 
     def updated(self):
         if self.auto_dump:
@@ -85,8 +86,10 @@ class Yaml(dict):
             # write to a temporary file
             self.yaml.dump(dict(self), f)
 
-        # unlink the real filename and rename the temporary to the real
-        os.rename(self.filename_temp, self.filename)
+        if os.path.isfile(self.filename_temp):
+            # unlink the real filename and rename the temporary to the real
+            os.rename(self.filename_temp, self.filename)
+
         self.changed = False
 
     def __setitem__(self, key, value):
@@ -115,8 +118,10 @@ class Yaml(dict):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
+
         for k, v in kw.items():
             self[k] = v
+
         self.updated()
 
 

@@ -5,7 +5,7 @@ import os
 import sys
 import time
 from typing import List
-
+import broker.cfg as cfg
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
 from broker.config import env, logging
@@ -34,7 +34,7 @@ class EudatClass(Storage):
         self.tar_downloaded_path = {}
         self.source_code_hashes_to_process: List[str] = []
         for source_code_hash in self.source_code_hashes:
-            self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
+            self.source_code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
 
         for source_code_hash in self.source_code_hashes_to_process:
             self.check_already_cached(source_code_hash)

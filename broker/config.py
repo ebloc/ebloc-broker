@@ -7,12 +7,12 @@ from logging import Filter
 from os.path import expanduser
 from pathlib import Path
 from typing import Union
-
+from contextlib import suppress
 from dotenv import load_dotenv
-
 import broker._utils.colored_traceback as colored_traceback
 import broker._utils.tools as tools
 from broker._utils.yaml import Yaml
+import broker.cfg as cfg
 
 
 class Terminate(Exception):  # noqa
@@ -110,8 +110,8 @@ class ENV:
         tools.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
 
-        if w3:
-            self.PROVIDER_ID = w3.toChecksumAddress(_env["PROVIDER_ID"])
+        if cfg.w3:
+            self.PROVIDER_ID = cfg.w3.toChecksumAddress(_env["PROVIDER_ID"])
 
         if not os.path.isdir("/tmp/run"):
             os.makedirs("/tmp/run")  # mkdir
@@ -122,12 +122,12 @@ class ENV:
     def set_provider_id(self, provider_id=None):
         if not os.getenv("PROVIDER_ID"):
             if provider_id:
-                self.PROVIDER_ID = w3.toChecksumAddress(provider_id)
+                self.PROVIDER_ID = cfg.w3.toChecksumAddress(provider_id)
             else:
                 print("E: Please set PROVIDER_ID in ~/.ebloc-broker/.env")
                 raise tools.QuietExit
         else:
-            self.PROVIDER_ID = w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+            self.PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
 
 def setup_logger(log_path="", is_brownie=False):
@@ -172,7 +172,6 @@ def setup_logger(log_path="", is_brownie=False):
 Ebb = None  # eBlocBlock Contract Class
 ebb = None  # eBlocBroker Contract on the blockchain
 contract = None
-w3 = None
 chain = None
 w3_ebb = None
 ipfs = None
@@ -188,11 +187,6 @@ BLOCK_DURATION = 15
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
 IS_THREADING_ENABLED = False
-# env: ENV = None
-try:
-    env = ENV()
-except:
-    # print("E: env couldn't be created")
-    pass  # Than no need to use ENV for the program
-    # print(str(e))
-    # sys.exit()
+
+with suppress(Exception):
+    env: ENV = ENV()

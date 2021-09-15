@@ -41,6 +41,7 @@ if __name__ == "__main__":
     Ebb = Contract.eblocbroker = Contract.Contract()
     job = Job()
     pre_check()
+    # cfg.ipfs.connect(force=True)
     # provider = w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")  # netlab
     # requester_addr = w3.toChecksumAddress("0x12ba09353d5c8af8cb362d6ff1d782c1e195b571")
     provider = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")

@@ -12,9 +12,9 @@ from pprint import pprint
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
 import broker._utils.tools as tools
 import broker.config as config
+import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
 import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
@@ -158,7 +158,7 @@ class Driver:
                     log("E: IPFS hash does not match with the given source_code_hash")
                     continue
             else:
-                source_code_hash = config.w3.toText(source_code_hash_byte)
+                source_code_hash = cfg.w3.toText(source_code_hash_byte)
 
             ##############
             received_storage_deposit = self.Ebb.get_received_storage_deposit(
@@ -307,16 +307,12 @@ def run_driver():
     config.logging = setup_logger(tools.DRIVER_LOG)
     # driver_cancel_process = None
     try:
-       from imports import connect
-
+        from imports import connect
         connect()
-        Contract.eblocbroker = Contract.Contract()
+        #: set for global use across files
+        config.Ebb = Ebb = Contract.ebb()
         driver = Driver()
-        Ebb: "Contract.Contract" = Contract.eblocbroker
         driver.Ebb: "Contract.Contract" = Contract.eblocbroker
-        config.Ebb = Contract.eblocbroker
-        Contract.eblocbroker.ebb = config.ebb  # set for global use across files
-        driver.Ebb = Contract.eblocbroker
     except Exception as e:
         raise config.Terminate(e)
 
@@ -390,7 +386,7 @@ def run_driver():
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     eth_balance = Ebb.eth_balance(env.PROVIDER_ID)
     log(f"==> deployed_block_number={deployed_block_number}")
-    log(f"==> Account Balance={eth_balance} gwei | {config.w3.fromWei(eth_balance, 'ether')} eth")
+    log(f"==> Account Balance={eth_balance} gwei | {cfg.w3.fromWei(eth_balance, 'ether')} eth")
     log(f"==> Ebb balance={balance_temp}")
     while True:
         wait_until_idle_core_available()
