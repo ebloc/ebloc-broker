@@ -76,12 +76,6 @@ def raise_error(error):
     raise RuntimeError(error)
 
 
-def print_ok():
-    log("[ ", is_bold=False, end="")
-    log("ok", "green", end="", is_bold=False)
-    log(" ]", is_bold=False)
-
-
 def extract_gzip(filename):
     try:
         args = shlex.split(f"gunzip --force {filename}")

@@ -309,7 +309,6 @@ def run_driver():
     # driver_cancel_process = None
     try:
         from imports import connect
-
         connect()
         #: set for global use across files
         config.Ebb = Ebb = Contract.ebb()
@@ -388,8 +387,8 @@ def run_driver():
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     eth_balance = Ebb.eth_balance(env.PROVIDER_ID)
     log(f"==> deployed_block_number={deployed_block_number}")
-    log(f"==> Account Balance={eth_balance} gwei | {cfg.w3.fromWei(eth_balance, 'ether')} eth")
-    log(f"==> Ebb balance={balance_temp}")
+    log(f"==> account_balance={eth_balance} gwei | {cfg.w3.fromWei(eth_balance, 'ether')} eth")
+    log(f"==> Ebb_balance={balance_temp}")
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)

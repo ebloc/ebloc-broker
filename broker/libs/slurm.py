@@ -6,7 +6,7 @@ import broker.config as config
 from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.lib import run
-from broker.utils import BashCommandsException, _colorize_traceback, is_process_on, log, popen_communicate, print_ok
+from broker.utils import BashCommandsException, _colorize_traceback, is_process_on, log, popen_communicate
 
 
 def add_user_to_slurm(user):
@@ -101,7 +101,7 @@ def is_on() -> bool:
         logging.error(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
         return False
     else:
-        print_ok()
+        log("[ ok ]")
         return True
 
 
