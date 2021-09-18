@@ -71,10 +71,9 @@ def process_payment(
 
 
 if __name__ == "__main__":
-    from broker.eblocbroker.Contract import Contract
+    import broker.eblocbroker.Contract as Contract
 
-    contract = Contract()
-
+    Ebb = Contract.ebb()
     if len(sys.argv) == 12:
         args = sys.argv[1:]
         my_args = []  # type: Union[Any]
@@ -116,7 +115,7 @@ if __name__ == "__main__":
         run_time = [5]
 
     try:
-        tx_hash = contract.process_payment(
+        tx_hash = Ebb.process_payment(
             job_key,
             index,
             job_id,

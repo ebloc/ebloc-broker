@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
+from pathlib import Path
+from typing import Union
 
 from pymongo import MongoClient
 
@@ -156,16 +158,17 @@ class Contract:
             _colorize_traceback()
             raise Web3NotConnected()
 
-    def _get_contract_fname(self) -> str:
+    def _get_contract_fname(self) -> Path:
         if env.IS_BLOXBERG:
-            return f"{env.EBLOCPATH}/broker/eblocbroker/contract_bloxberg.json"
+            return Path(f"{env.EBLOCPATH}/broker/eblocbroker/contract_bloxberg.json")
         elif env.IS_EBLOCPOA:
-            return f"{env.EBLOCPATH}/broker/eblocbroker/contract_eblocpoa.json"
+            return Path(f"{env.EBLOCPATH}/broker/eblocbroker/contract_eblocpoa.json")
+
+        raise Exception("There is no corresponding contract.json file matched.")
 
     def is_contract_exists(self) -> bool:
         try:
-            fname = self._get_contract_fname()
-            contract = read_json(fname)
+            contract = read_json(self._get_contract_fname())
         except Exception as e:
             raise e
 
@@ -437,4 +440,22 @@ class Contract:
         return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
 
 
-eblocbroker: "Contract" = None  # noqa
+eblocbroker: Union["Contract", None] = None
+
+
+class Ebb:
+    def __init__(self):
+        self.eblocbroker: Union["Contract", None] = None
+
+    def set(self):
+        if not self.eblocbroker:
+            self.eblocbroker = Contract()
+
+    def __call__(self):
+        if not self.eblocbroker:
+            self.eblocbroker = Contract()
+
+        return self.eblocbroker
+
+
+ebb = Ebb()

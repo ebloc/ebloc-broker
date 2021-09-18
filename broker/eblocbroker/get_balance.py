@@ -2,12 +2,13 @@
 
 import sys
 
+import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import log
-from broker.eblocbroker.Contract import Contract
 
 if __name__ == "__main__":
+    Ebb = Contract.ebb()
     if len(sys.argv) == 2:
         address = str(sys.argv[1])
-        print(Contract().get_balance(address))
+        print(Ebb.get_balance(address))
     else:
         log("E: Please provide an address as argument")

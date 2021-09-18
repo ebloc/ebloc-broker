@@ -15,20 +15,19 @@ def addElement(data, key, elementToAdd):
     data[key] = elementToAdd
 
 
-def removeElement(data, elementToRemove):
+def remove_element(data, element_to_remove):
     for element in list(data):
-        if elementToRemove in element:
-            del data[elementToRemove]
+        if element_to_remove in element:
+            del data[element_to_remove]
 
 
-f = os.getenv("LOG_PATH") + "/" + "cachingRecord.json"
-print(f)
-
-if not os.path.isfile(f):
+fname = os.getenv("LOG_PATH") + "/" + "cachingRecord.json"
+print(fname)
+if not os.path.isfile(fname):
     data = {}
 else:
     try:
-        data = read_json(f)
+        data = read_json(fname)
     except:
         pass
 
@@ -42,6 +41,6 @@ if "jobKey" in data:
     print(data["jobKey"][0])
     print(data["jobKey"])
 
-removeElement(data, "ipfsHash")
-with open(f, "w") as data_file:
-    data = json.dump(data, data_file)
+remove_element(data, "ipfsHash")
+with open(fname, "w") as data_file:
+    json.dump(data, data_file)

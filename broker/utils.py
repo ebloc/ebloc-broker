@@ -20,7 +20,7 @@ from subprocess import PIPE, CalledProcessError, Popen, check_output
 from typing import Dict
 
 import base58
-
+import broker.cfg as cfg
 import broker._utils.tools as tools
 import broker.config as config
 from broker._utils._getch import _Getch
@@ -73,12 +73,6 @@ class StorageID(BaseEnum):
 def raise_error(error):
     traceback.print_stack()
     raise RuntimeError(error)
-
-
-def print_ok():
-    log("[ ", is_bold=False, end="")
-    log("ok", "green", end="", is_bold=False)
-    log(" ]", is_bold=False)
 
 
 def extract_gzip(filename):
@@ -218,7 +212,8 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
 
 
 def is_transaction_passed(tx_hash) -> bool:
-    receipt = config.w3.eth.getTransactionReceipt(tx_hash)
+    from brownie import web3
+    receipt = web3.eth.getTransactionReceipt(tx_hash)
     try:
         if receipt["status"] == 1:
             return True
@@ -268,7 +263,7 @@ def _ipfs_to_bytes32(hash_str: str):
 
 def ipfs_to_bytes32(ipfs_hash: str) -> bytes:
     ipfs_hash_bytes32 = _ipfs_to_bytes32(ipfs_hash)
-    return config.w3.toBytes(hexstr=ipfs_hash_bytes32)
+    return cfg.w3.toBytes(hexstr=ipfs_hash_bytes32)
 
 
 def byte_to_mb(size_in_bytes: float) -> int:
@@ -487,13 +482,13 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 def is_geth_account_locked(address) -> bool:
     if isinstance(address, int):
         # if given input is an account_id
-        return config.w3.geth.personal.list_wallets()[address]["status"] == "Locked"
+        return cfg.w3.geth.personal.list_wallets()[address]["status"] == "Locked"
     else:
-        address = config.w3.toChecksumAddress(address)
-        for account_idx in range(0, len(config.w3.geth.personal.list_wallets())):
-            _address = config.w3.geth.personal.list_wallets()[account_idx]["accounts"][0]["address"]
+        address = cfg.w3.toChecksumAddress(address)
+        for account_idx in range(0, len(cfg.w3.geth.personal.list_wallets())):
+            _address = cfg.w3.geth.personal.list_wallets()[account_idx]["accounts"][0]["address"]
             if _address == address:
-                return config.w3.geth.personal.list_wallets()[account_idx]["status"] == "Locked"
+                return cfg.w3.geth.personal.list_wallets()[account_idx]["status"] == "Locked"
     return False
 
 

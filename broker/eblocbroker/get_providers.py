@@ -2,14 +2,14 @@
 
 import sys
 
+import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import log
-from broker.eblocbroker.Contract import Contract
 from broker.utils import _colorize_traceback
 
 if __name__ == "__main__":
-    contract = Contract()
+    Ebb = Contract.ebb()
     try:
-        providers = contract.get_providers()
+        providers = Ebb.get_providers()
         if len(providers) == 0:
             log("E: There is no registered provider.")
 
