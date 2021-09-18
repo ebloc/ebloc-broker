@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from rich.console import Console
 import decimal
 import linecache
 import os
@@ -7,19 +8,19 @@ import pathlib
 import sys
 import threading
 import time
+from rich import print, pretty  # noqa
+from rich.traceback import install
 import traceback
 from datetime import datetime
 from decimal import Decimal
 from subprocess import CalledProcessError, check_output
 from typing import Dict, Union
-
 from colorama import init
 from pygments import formatters, highlight, lexers
 from pytz import timezone, utc
-from rich.traceback import install
-from termcolor import colored
 
 install()  # for rich
+pretty.install()
 init(autoreset=True)  # for colorama
 
 log_files: Dict[str, str] = {}
@@ -28,75 +29,66 @@ IS_THREADING_MODE_PRINT = False
 DRIVER_LOG = None
 
 
+
 class QuietExit(Exception):  # noqa
     pass
 
+# from rich.highlighter import RegexHighlighter
+# from rich.theme import Theme
+# class EmailHighlighter(RegexHighlighter):
+#     """Apply style to anything that looks like an email.
+
+#     __ https://github.com/willmcgugan/rich/issues/1498#issuecomment-922339104
+#     """
+
+#     base_style = "example."
+#     highlights = [r"(?P<email>[-\w\.]+@([\w-]+\.)+[\w-]+)"]
+#     highlights = [r"(?P<email>[\w-]+@([\w-]+\.)+[\w-]+)"]
+
+# theme = Theme({"example.email": "magenta"})
+# console = Console(file="report.txt", force_terminal=True)
 
 class Color:
     """Color class."""
 
     def __init__(self):
-        """Available text colors: red, green, yellow, blue, magenta, cyan, white.
-
-        Available text highlights:
-        on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white.
-
-        Available attributes:
-        bold, dark, underline, blink, reverse, concealed.
-
-        Example:
-        colored('Hello, World!', 'red', 'on_grey', ['blue', 'blink'])
-        colored('Hello, World!', 'green')
-        """
-        self.BOLD = "\033[1m"
-        self.END = "\033[0m"
-        self.red = "red"
-        self.green = "green"
-        self.yellow = "yellow"
-        self.blue = "blue"
-        self.magenta = "magenta"
-        self.cyan = "cyan"
-        self.white = "white"
-        # self.DEFAULT = "\033[99m"
-        # self.PURPLE = "\033[95m"
-        # self.BLUE = "\033[94m"
-        # self.RED = "\033[91m"
-        # self.GREY = "\033[90m"
-        # self.YELLOW = "\033[93m"
-        # self.BLACK = "\033[90m"
-        # self.CYAN = "\033[96m"
-        # self.GREEN = "\033[92m"
-        # self.MAGENTA = "\033[95m"
-        # self.WHITE = "'\033[97m"
+        pass
 
 
 class Log(Color):
-    """Color class."""
+    """Color class.
+
+    Find colors from: python -m rich
+    """
 
     def __init__(self):  # noqa
         super().__init__()
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
 
-    def print_color(self, text, color=None, is_bold=True, end=None):
+    def print_color(self, text:str, color=None, is_bold=True, end=None):
         """Print string in color format."""
-        if str(text)[0:3] in ["==>", "#> ", "## "]:
-            print(colored(f"{self.BOLD}{str(text)[0:3]}{self.END}", "blue"), end="", flush=True)
+        if text[0:3] in ["==> ", "#> ", "## "]:
+            if color and text == "==> ":
+                print(f"[bold {color}]{text[0:3]}[/bold {color}]", end="", flush=True)
+            else:
+                print(f"[bold blue]{text[0:3]}[/bold blue]", end="", flush=True)
+
             text = text[3:]
-        elif str(text)[0:2] == "E:":
-            print(colored(f"{self.BOLD}E:{self.END}", "red"), end="", flush=True)
+        elif text[0:2] == "E:":
+            print("[bold red]E:[/bold red]", end="", flush=True)
             text = text[2:]
 
         if end is None:
             if is_bold:
-                print(colored(f"{self.BOLD}{text}{self.END}", color))
+                print(f"[bold {color}]{text}[/bold {color}]")
             else:
-                print(colored(text, color))
+                print(f"[{color}]{text}[/{color}]")
         elif end == "":
             if is_bold:
-                print(colored(f"{self.BOLD}{text}{self.END}", color), end="", flush=True)
+                print(f"[bold {color}]{text}[/bold {color}]", end="", flush=True)
             else:
-                print(colored(text, color), end="")
+                print(f"[{color}]{text}[/{color}]", end="")
 
     def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
@@ -109,27 +101,27 @@ class Log(Color):
             text = text[1:]
 
         if text == "[ ok ]":
-            text = f"[ {ll.green}ok{ll.END} ]"
+            text = "[ [bold green]ok[/bold green] ]"
 
         if not color:
             if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
                 _len = 3
                 is_arrow = True
-                color = ll.blue
+                color = "blue"
             elif text[:8] in ["Warning:", "warning:"]:
                 _len = 8
                 is_arrow = True
-                color = ll.yellow
+                color = "yellow"
             elif text[:2] == "E:":
                 _len = 2
                 is_arrow = True
-                color = ll.red
+                color = "red"
             elif "SUCCESS" in text or "Finalazing..." in text:
-                color = ll.green
+                color = "green"
             elif text in ["FAILED", "ERROR"]:
-                color = ll.red
+                color = "red"
             elif is_bold:
-                color = ll.white
+                color = "white"
 
         return text, color, _len, is_arrow, is_r
 
@@ -247,46 +239,59 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
             filename = "program.log"
 
     if is_bold and not is_arrow:
-        _text = f"{ll.BOLD}{text}{ll.END}"
+        _text = f"[bold]{text}[/bold]"
     else:
         _text = text
 
+    # TODO: https://stackoverflow.com/a/6826099/2402577
     f = open(filename, "a")
+    console = Console(file=f, force_terminal=True)
     if color:
         if ll.IS_PRINT:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_arrow:
                     print(
-                        colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{text[_len:]}{ll.END}",
+                        f"[{_color}]{is_r}[bold]{text[:_len]}[/bold][/{_color}] [bold]{text[_len:]}[/bold]",
                         end=end,
                         flush=flush,
                     )
                 else:
-                    ll.print_color(colored(text, color), color, is_bold=is_bold, end=end)
+                    ll.print_color(str(text), color, is_bold=is_bold, end=end)
 
         if is_bold:
-            _text = f"{ll.BOLD}{text[_len:]}{ll.END}"
+            _text = f"[bold]{text[_len:]}[\bold]"
         else:
             _text = text[_len:]
 
+        _text = text[_len:]
         if is_arrow:
-            f.write(colored(f"{is_r}{ll.BOLD}{text[:_len]}{ll.END}", _color) + colored(_text, color))
+            console.print(
+                f"[{_color}]{is_r}[bold]{_text[:_len]}[/bold][/{_color}][bold {color}]{_text}[/bold {color}]",
+                end=end
+            )
         else:
-            f.write(colored(_text, color))
+            if color:
+                console.print(f"[bold {color}]{_text}[/bold {color}]", end="")
+            else:
+                console.print(_text, end="")
+
     else:
         text_write = ""
         if is_arrow:
-            text_write = colored(f"{is_r}{ll.BOLD}{_text[:_len]}{ll.END}", _color) + f"{ll.BOLD}{_text[_len:]}{ll.END}"
+            text_write = f"[{_color}]{is_r}[bold]{_text[:_len]}[/bold][/{_color}][bold]{_text[_len:]}[/bold]"
         else:
             text_write = _text
 
         if ll.IS_PRINT:
-            print(text_write, end=end, flush=flush)
+            if end == "":
+                print(text_write, end="")
+            else:
+                print(text_write, flush=flush)
 
-        f.write(text_write)
+        console.print(text_write, end=end)
 
     if end is None:
-        f.write("\n")
+        console.print("")
 
     f.close()
 
@@ -362,11 +367,11 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 
     if percent == -0.0:
         change = 0.0
-        _color = "white"
+        color = "white"
     elif percent > 0:
-        _color = "green"
+        color = "green"
     else:
-        _color = "red"
+        color = "red"
 
     if abs(float(change)) < 0.1:
         change = "{0:.8f}".format(float(change))
@@ -381,9 +386,9 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
         change = " " + change
 
     if is_arrow_print:
-        log(f"{change}({format(float(percent), '.2f')}%) ", _color, end=end)
+        log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
     else:
-        log(f"({format(float(percent), '.2f')}%) ", _color, end=end)
+        log(f"({format(float(percent), '.2f')}%) ", color, end=end)
 
     return percent
 

@@ -27,7 +27,6 @@ from broker.utils import (
     compress_folder,
     log,
     popen_communicate,
-    print_ok,
     sleep_timer,
     terminate,
 )
@@ -138,7 +137,7 @@ def login(user, password_path, fname: str) -> None:
         try:
             log(f"## Login into owncloud from the dumped object={fname} ", end="")
             config.oc.get_config()
-            print_ok()
+            log("[ ok ]")
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)

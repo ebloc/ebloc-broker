@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-
 from filelock import FileLock
 from ruamel.yaml import YAML, representer
 
