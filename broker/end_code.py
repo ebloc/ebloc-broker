@@ -231,7 +231,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         mkdir(self.patch_folder)
         mkdir(self.patch_folder_ipfs)
-
         remove_empty_files_and_folders(self.results_folder)
         log(f"whoami: {getpass.getuser()} - {os.getegid()}")
         log(f"home: {env.HOME}")
@@ -292,7 +291,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 self.source_code_hashes_to_process.append(ipfs_hash)
             else:
-                self.source_code_hashes_to_process.append(config.w3.toText(source_code_hash))
+                self.source_code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
 
     def _ipfs_add_folder(self, folder_path):
         try:
@@ -325,9 +324,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 ),
                 10,
             )
-            logging.info(f"tx_hash={tx_hash}")
-        except:
-            _colorize_traceback()
+            log(f"tx_hash={tx_hash}")
+        except Exception as e:
+            _colorize_traceback(e)
             sys.exit(1)
 
         with open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a") as f:
@@ -529,9 +528,10 @@ if __name__ == "__main__":
     cloud_storage = ENDCODE(**kwargs)
     try:
         cloud_storage.run()
+    except QuietExit:
+        sys.exit(1)
     except Exception as e:
-        if type(e).__name__ != "QuietExit":
-            _colorize_traceback(e)
+        _colorize_traceback(e)
         sys.exit(1)
 
 

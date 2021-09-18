@@ -39,8 +39,7 @@ def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerp
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Contract.eblocbroker = Contract.Contract()
-    Ebb = Contract.eblocbroker
+    Ebb = Contract.ebb()
     try:
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except:

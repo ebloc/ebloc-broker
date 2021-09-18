@@ -39,7 +39,7 @@ class Ipfs:
         self.connect()
 
     def connect(self):
-        """Connect ipfs."""
+        """Connect into ipfs."""
         if is_ipfs_on(False):
             self.client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
 

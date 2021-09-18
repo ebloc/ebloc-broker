@@ -39,9 +39,9 @@ def get_requester_info(self, requester):
 
 
 if __name__ == "__main__":
-    from broker.eblocbroker.Contract import Contract
+    import broker.eblocbroker.Contract as Contract
 
-    contract = Contract()
+    Ebb = Contract.ebb()
     if len(sys.argv) == 1:
         requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
         # requester = "0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571"
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         requester = str(sys.argv[1])
 
     try:
-        requester_info = contract.get_requester_info(requester)
+        requester_info = Ebb.get_requester_info(requester)
         for key, value in requester_info.items():
             if key == "block_read_from":
                 value = requester_info["block_read_from"]

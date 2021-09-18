@@ -4,7 +4,7 @@ import sys
 import traceback
 from typing import Union
 
-import broker.config as config
+import broker.cfg as cfg
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import logging
 from broker.lib import state
@@ -76,7 +76,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
         log(f"{fname} {provider} {job_key} {index} {job_id} {received_block_number}", "cyan")
 
     try:
-        provider = config.w3.toChecksumAddress(provider)
+        provider = cfg.w3.toChecksumAddress(provider)
         job, received, job_owner, data_transfer_in, data_transfer_out = self._get_job_info(
             provider, job_key, int(index), int(job_id)
         )
@@ -149,7 +149,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.Contract()
+    Ebb = Contract.ebb()
     if len(sys.argv) == 5 or len(sys.argv) == 6:
         provider = str(sys.argv[1])
         job_key = str(sys.argv[2])
@@ -210,7 +210,7 @@ if __name__ == "__main__":
                 _hash = bytes32_to_ipfs(code_hash)
                 _type = "ipfs_hash"
             else:
-                _hash = config.w3.toText(code_hash)
+                _hash = cfg.w3.toText(code_hash)
                 _type = "md5sum"
 
             log(f"[{idx},{_type}] ", "cyan", end="")

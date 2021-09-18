@@ -7,6 +7,7 @@ from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 
 import broker._config as _config
+import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import QuietExit, _colorize_traceback, log
 from broker.config import env
@@ -15,11 +16,11 @@ from broker.utils import is_geth_on, read_json, run, terminate
 
 def connect():
     """Connect into web3 and ebloc_broker objects."""
-    if config.ebb and config.w3:
-        return config.ebb, config.w3, config._eBlocBroker
+    if config.ebb and cfg.w3:
+        return config.ebb, cfg.w3, config._eBlocBroker
 
     try:
-        if config.w3 is None:
+        if not cfg.w3.isConnected():
             connect_to_web3()
 
         if config.ebb is None:
@@ -27,24 +28,24 @@ def connect():
     except Exception as e:
         _colorize_traceback(e)
 
-    return config.ebb, config.w3, config._eBlocBroker
+    return config.ebb, cfg.w3, config._eBlocBroker
 
 
 def _connect_to_web3():
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:  # https://bloxberg.org
-            config.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
+            cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
-            config.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
+            cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
         #
         # from web3.geth import shh  # does not work on > web3==5.11
-        # config.w3.shh.attach(config.w3, "shh")
-        # shh.attach(config.w3, "shh")
+        # cfg.w3.shh.attach(cfg.w3, "shh")
+        # shh.attach(cfg.w3, "shh")
     else:
-        config.w3 = Web3(IPCProvider(WEB3_PROVIDER_PATH))
+        cfg.w3 = Web3(IPCProvider(WEB3_PROVIDER_PATH))
         # inject the poa compatibility middleware to the innermost layer
-        config.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
 def connect_to_web3():
@@ -55,12 +56,9 @@ def connect_to_web3():
     Ethereum node
     """
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
-    if config.w3:
-        return
-
     for _ in range(2):
         _connect_to_web3()
-        if not config.w3.isConnected():
+        if not cfg.w3.isConnected():
             try:
                 if env.IS_GETH_TUNNEL:
                     raise Exception("Open tunnel: ssh -f -N -L 8545:localhost:8545 username@remote-ip")
@@ -102,8 +100,8 @@ def connect_to_eblocbroker() -> None:
     if config.ebb:
         return
 
-    if not config.w3:
-        config.w3 = connect_to_web3()
+    if not cfg.w3:
+        cfg.w3 = connect_to_web3()
 
     try:
         if env.EBLOCPATH is None or env.EBLOCPATH == "":
@@ -138,13 +136,13 @@ def connect_to_eblocbroker() -> None:
                 network.connect("bloxberg")
                 project = project.load("/mnt/hgfs/ebloc-broker/contract")
                 config.ebb = project.eBlocBroker.at(contract_address)
-                config.ebb.contract_address = config.w3.toChecksumAddress(contract_address)
+                config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
                 #: For contract events
-                config._eBlocBroker = config.w3.eth.contract(contract_address, abi=abi)
+                config._eBlocBroker = cfg.w3.eth.contract(contract_address, abi=abi)
         elif env.IS_EBLOCPOA:
-            config.ebb = config.w3.eth.contract(contract_address, abi=abi)
+            config.ebb = cfg.w3.eth.contract(contract_address, abi=abi)
             config._eBlocBroker = config.ebb
-            config.ebb.contract_address = config.w3.toChecksumAddress(contract_address)
+            config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
     except Exception as e:
         _colorize_traceback(e)
         raise e

@@ -13,6 +13,7 @@ from pprint import pprint
 import owncloud
 from web3.logs import DISCARD
 
+import broker.cfg as cfg
 import broker.config as config
 import broker.libs.git as git
 from broker.config import env, logging
@@ -241,11 +242,11 @@ def submit(provider, account_id, folders_to_share):
 
 def _submit(provider, account_id, folders_to_share):
     job = Job()
-    requester = config.w3.toChecksumAddress(config.w3.eth.accounts[account_id])
+    requester = cfg.w3.toChecksumAddress(cfg.w3.eth.accounts[account_id])
     job.Ebb.is_requester_valid(requester)
     job.Ebb.is_eth_account_locked(requester)
 
-    provider = config.w3.toChecksumAddress(provider)
+    provider = cfg.w3.toChecksumAddress(provider)
     provider_info = job.Ebb.get_provider_info(provider)
     print(f"provider[fID]={str(provider_info['f_id'])}")
 
@@ -275,7 +276,7 @@ def _submit(provider, account_id, folders_to_share):
             job_key = folder_hash
 
         # required to send string as bytes
-        job.source_code_hashes.append(config.w3.toBytes(text=folder_hash))
+        job.source_code_hashes.append(cfg.w3.toBytes(text=folder_hash))
         if not share_single_folder(folder_hash, provider_info["f_id"]):
             sys.exit(1)
 

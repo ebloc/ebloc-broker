@@ -10,6 +10,7 @@ from multiprocessing import Process
 from pprint import pprint
 from threading import Thread
 
+import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import _colorize_traceback, log, print_trace
 from broker.config import env, logging
@@ -80,7 +81,7 @@ state = State()
 
 
 def _connect_web3():
-    if not config.w3:
+    if not cfg.w3:
         from imports import connect_to_web3
 
         connect_to_web3()
@@ -89,8 +90,8 @@ def _connect_web3():
 def session_start_msg(slurm_user, block_number, pid):
     """Print message at the beginning of Driver process and connect into web3."""
     _connect_web3()
-    if not env.PROVIDER_ID and config.w3:
-        PROVIDER_ID = config.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+    if not env.PROVIDER_ID and cfg.w3:
+        PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
     else:
         PROVIDER_ID = env.PROVIDER_ID
 
@@ -110,7 +111,7 @@ def run_driver_cancel():
 def get_tx_status(tx_hash) -> str:
     """Return status of the transaction."""
     log(f"tx_hash={tx_hash}")
-    tx_receipt = config.w3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = cfg.w3.eth.waitForTransactionReceipt(tx_hash)
     log("Transaction receipt is mined:")
     pprint(dict(tx_receipt), depth=1)
     # logging.info(pformat(receipt))

@@ -4,11 +4,12 @@
 
 import sys
 
-from broker.eblocbroker.Contract import Contract
+import broker.eblocbroker.Contract as Contract
 
 if __name__ == "__main__":
+    Ebb = Contract.ebb()
     if len(sys.argv) == 2:
         addr = str(sys.argv[1])
-        print(Contract().is_owner(addr))
+        print(Ebb.is_owner(addr))
     else:
         print("E: Please provide an Ethereum address as an argument.")

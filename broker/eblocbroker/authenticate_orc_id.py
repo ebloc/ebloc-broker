@@ -5,7 +5,7 @@
 import sys
 from typing import Union
 
-import broker.config as config
+import broker.cfg as cfg
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import env, logging
 from broker.lib import get_tx_status
@@ -50,8 +50,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Contract.eblocbroker = Contract.Contract()
-    Ebb = Contract.eblocbroker
+    Ebb = Contract.ebb()
     if len(sys.argv) == 3:
         address = str(sys.argv[1])
         orc_id = str(sys.argv[2])
@@ -64,7 +63,7 @@ if __name__ == "__main__":
         ./authenticate_orc_id.py 0x57b60037B82154eC7149142c606bA024fBb0f991 0000-0001-7642-0552  # netlab-cluster
         """
     try:
-        owner_address = config.w3.eth.accounts[0]
+        owner_address = cfg.w3.eth.accounts[0]
         if env.IS_BLOXBERG:
             accounts = Ebb.brownie_load_accounts()
             owner_address = accounts.address

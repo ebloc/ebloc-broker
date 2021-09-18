@@ -60,16 +60,25 @@ class Yaml(dict):
     __ https://codereview.stackexchange.com/a/210162/127969
     """
 
-    def __init__(self, filename, auto_dump=True):
-        self.filename = filename if hasattr(filename, "open") else Path(filename)
-        self.filename_temp = f"{self.filename}~"
+    def __init__(self, path, auto_dump=True):
+        #: To get the dirname of the absolute path
+        self.dirname = os.path.dirname(os.path.abspath(path))
+        self.filename = os.path.basename(path)
+        if self.filename[0] == ".":
+            self.fp_lock = os.path.join(self.dirname, f"{self.filename}.lock")
+        else:
+            self.fp_lock = os.path.join(self.dirname, f".{self.filename}.lock")
+
+        self.path = path if hasattr(path, "open") else Path(path)
+        self.path_temp = f"{self.path}~"
+        #
         self.auto_dump = auto_dump
         self.changed = False
         self.yaml = YAML(typ="safe")
         self.yaml.default_flow_style = False
-        if self.filename.exists():
-            with FileLock(f"{filename}.lock", timeout=1):
-                with open(filename) as f:
+        if self.path.exists():
+            with FileLock(self.fp_lock, timeout=1):
+                with open(path) as f:
                     self.update(self.yaml.load(f) or {})
 
     def updated(self):
@@ -83,12 +92,14 @@ class Yaml(dict):
         if not self.changed and not force:
             return
 
-        with open(self.filename_temp, "w") as f:
+        with open(self.path_temp, "w") as f:
             # write to a temporary file
             self.yaml.dump(dict(self), f)
 
-        # unlink the real filename and rename the temporary to the real
-        os.rename(self.filename_temp, self.filename)
+        if os.path.isfile(self.path_temp):
+            # unlink the real file path and rename the temporary to the real
+            os.rename(self.path_temp, self.path)
+
         self.changed = False
 
     def __setitem__(self, key, value):
@@ -117,8 +128,10 @@ class Yaml(dict):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
+
         for k, v in kw.items():
             self[k] = v
+
         self.updated()
 
 
