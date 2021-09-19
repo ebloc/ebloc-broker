@@ -7,16 +7,18 @@ import pathlib
 import sys
 import threading
 import time
-from rich import print, pretty  # noqa
-from rich.traceback import install
 import traceback
 from datetime import datetime
 from decimal import Decimal
 from subprocess import CalledProcessError, check_output
 from typing import Dict, Union
+
 from colorama import init
 from pygments import formatters, highlight, lexers
 from pytz import timezone, utc
+from rich import pretty, print  # noqa
+from rich.console import Console
+from rich.traceback import install
 
 install()  # for rich
 pretty.install()
@@ -30,6 +32,22 @@ DRIVER_LOG = None
 
 class QuietExit(Exception):  # noqa
     pass
+
+
+# from rich.highlighter import RegexHighlighter
+# from rich.theme import Theme
+# class EmailHighlighter(RegexHighlighter):
+#     """Apply style to anything that looks like an email.
+
+#     __ https://github.com/willmcgugan/rich/issues/1498#issuecomment-922339104
+#     """
+
+#     base_style = "example."
+#     highlights = [r"(?P<email>[-\w\.]+@([\w-]+\.)+[\w-]+)"]
+#     highlights = [r"(?P<email>[\w-]+@([\w-]+\.)+[\w-]+)"]
+
+# theme = Theme({"example.email": "magenta"})
+# console = Console(file="report.txt", force_terminal=True)
 
 
 class Color:
@@ -50,12 +68,16 @@ class Log(Color):
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
 
-    def print_color(self, text, color=None, is_bold=True, end=None):
+    def print_color(self, text: str, color=None, is_bold=True, end=None):
         """Print string in color format."""
-        if str(text)[0:3] in ["==>", "#> ", "## "]:
-            print(f"[bold blue]{str(text)[0:3]}[/bold blue]", end="", flush=True)
+        if text[0:3] in ["==> ", "#> ", "## "]:
+            if color and text == "==> ":
+                print(f"[bold {color}]{text[0:3]}[/bold {color}]", end="", flush=True)
+            else:
+                print(f"[bold blue]{text[0:3]}[/bold blue]", end="", flush=True)
+
             text = text[3:]
-        elif str(text)[0:2] == "E:":
+        elif text[0:2] == "E:":
             print("[bold red]E:[/bold red]", end="", flush=True)
             text = text[2:]
 
@@ -83,24 +105,29 @@ class Log(Color):
         if text == "[ ok ]":
             text = "[ [bold green]ok[/bold green] ]"
 
-        if not color:
-            if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
-                _len = 3
-                is_arrow = True
+        if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
+            _len = 3
+            is_arrow = True
+            if not color:
                 color = "blue"
-            elif text[:8] in ["Warning:", "warning:"]:
-                _len = 8
-                is_arrow = True
+        elif text[:8] in ["Warning:", "warning:"]:
+            _len = 8
+            is_arrow = True
+            if not color:
                 color = "yellow"
-            elif text[:2] == "E:":
-                _len = 2
-                is_arrow = True
+        elif text[:2] == "E:":
+            _len = 2
+            is_arrow = True
+            if not color:
                 color = "red"
-            elif "SUCCESS" in text or "Finalazing..." in text:
+        elif "SUCCESS" in text or "Finalazing..." in text:
+            if not color:
                 color = "green"
-            elif text in ["FAILED", "ERROR"]:
+        elif text in ["FAILED", "ERROR"]:
+            if not color:
                 color = "red"
-            elif is_bold:
+        elif is_bold:
+            if not color:
                 color = "white"
 
         return text, color, _len, is_arrow, is_r
@@ -205,8 +232,11 @@ def delete_last_line():
     sys.stdout.write("\x1b[2K")  # delete last line
 
 
-def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False):
-    """Print for own settings."""
+def log(text="", color=None, filename=None, end=None, is_bold=False, flush=False, highlight=True):
+    """Print for own settings.
+
+    __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
+    """
     text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color, is_bold)
     if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
@@ -223,18 +253,20 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
     else:
         _text = text
 
+    # TODO: https://stackoverflow.com/a/6826099/2402577
     f = open(filename, "a")
+    console = Console(file=f, force_terminal=True)
     if color:
         if ll.IS_PRINT:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_arrow:
                     print(
-                        f"[{_color}]{is_r}[bold]{text[:_len]}[/bold][/{_color}] [bold]{text[_len:]}[/bold]",
+                        f"[{_color}]{is_r}[bold]{text[:_len]}[/bold][/{_color}][bold]{text[_len:]}[/bold]",
                         end=end,
                         flush=flush,
                     )
                 else:
-                    ll.print_color(text, color, is_bold=is_bold, end=end)
+                    ll.print_color(str(text), color, is_bold=is_bold, end=end)
 
         if is_bold:
             _text = f"[bold]{text[_len:]}[\bold]"
@@ -243,9 +275,15 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
 
         _text = text[_len:]
         if is_arrow:
-            f.write(f"[{_color}]{is_r}[bold]{_text[:_len]}[/bold][/{_color}][bold {color}]{_text}[/bold {color}]")
+            console.print(
+                f"[{_color}]{is_r}[bold]{_text[:_len]}[/bold][/{_color}][bold {color}]{_text}[/bold {color}]", end=end
+            )
         else:
-            f.write(f"[{color}]{_text}[/{color}]")
+            if color:
+                console.print(f"[bold {color}]{_text}[/bold {color}]", end="")
+            else:
+                console.print(_text, end="")
+
     else:
         text_write = ""
         if is_arrow:
@@ -259,11 +297,10 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
             else:
                 print(text_write, flush=flush)
 
-
-        f.write(text_write)
+        console.print(text_write, end=end)
 
     if end is None:
-        f.write("\n")
+        console.print("")
 
     f.close()
 

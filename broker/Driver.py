@@ -98,7 +98,7 @@ def _tools(block_continue):
                 msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
                 terminate(msg)
             else:
-                log(f"==> provider_email={_email}")
+                log(f"==> provider_email=[magenta]{_email}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
@@ -309,6 +309,7 @@ def run_driver():
     # driver_cancel_process = None
     try:
         from imports import connect
+
         connect()
         #: set for global use across files
         config.Ebb = Ebb = Contract.ebb()
