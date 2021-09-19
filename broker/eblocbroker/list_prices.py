@@ -21,8 +21,7 @@ def get_provider_price_info(address, requested_core, core_minute, data_transfer)
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.eblocbroker
-
+    Ebb = Contract.ebb()
     providers = Ebb.get_providers()
     requested_core = 2
     day = 0

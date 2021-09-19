@@ -6,16 +6,13 @@ import os
 import pprint
 import sys
 import time
-from typing import Dict, List
-
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.gdrive as gdrive
 import libs.git as git
 import libs.slurm as slurm
-
 import broker.cfg as cfg
-import broker.config as config
+from typing import Dict, List
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
@@ -46,7 +43,7 @@ from broker.utils import (
 )
 
 connect()
-Ebb = Contract.eblocbroker = Contract.Contract()
+Ebb = Contract.ebb()
 
 
 class Common:
@@ -190,7 +187,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         # my_env["IPFS_PATH"] = HOME + "/.ipfs"
         # print(my_env)
         os.environ["IPFS_PATH"] = f"{env.HOME}/.ipfs"
-        logging = setup_logger(f"{env.LOG_PATH}/end_code_output/{self.job_key}_{self.index}.log")
+        log_filename = f"{env.LOG_PATH}/end_code_output/{self.job_key}_{self.index}.log"
+        logging = setup_logger(log_filename)
         # logging.info(f"==> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id

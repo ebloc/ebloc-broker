@@ -1,35 +1,33 @@
 #!/usr/bin/env python3
 
+import time
 import decimal
 import linecache
 import os
 import pathlib
 import sys
 import threading
-import time
-from rich import print, pretty  # noqa
-from rich.traceback import install
 import traceback
 from datetime import datetime
 from decimal import Decimal
 from subprocess import CalledProcessError, check_output
 from typing import Dict, Union
-from colorama import init
-from pygments import formatters, highlight, lexers
+from rich.console import Console
 from pytz import timezone, utc
-
+from rich import pretty, print  # noqa
+from rich.traceback import install
+install(show_locals=True)
 install()  # for rich
 pretty.install()
-init(autoreset=True)  # for colorama
-
+# console = Console()
 log_files: Dict[str, str] = {}
 IS_THREADING_ENABLED = False
 IS_THREADING_MODE_PRINT = False
 DRIVER_LOG = None
 
 
-class QuietExit(Exception):  # noqa
-    pass
+class QuietExit(Exception):
+    """Trace is not printed."""
 
 
 class Color:
@@ -50,12 +48,16 @@ class Log(Color):
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
 
-    def print_color(self, text, color=None, is_bold=True, end=None):
+    def print_color(self, text: str, color=None, is_bold=True, end=None):
         """Print string in color format."""
-        if str(text)[0:3] in ["==>", "#> ", "## "]:
-            print(f"[bold blue]{str(text)[0:3]}[/bold blue]", end="", flush=True)
+        if text[0:3] in ["==> ", "#> ", "## "]:
+            if color and text == "==> ":
+                print(f"[bold {color}]{text[0:3]}[/bold {color}]", end="", flush=True)
+            else:
+                print(f"[bold blue]{text[0:3]}[/bold blue]", end="", flush=True)
+
             text = text[3:]
-        elif str(text)[0:2] == "E:":
+        elif text[0:2] == "E:":
             print("[bold red]E:[/bold red]", end="", flush=True)
             text = text[2:]
 
@@ -64,13 +66,13 @@ class Log(Color):
                 print(f"[bold {color}]{text}[/bold {color}]")
             else:
                 print(f"[{color}]{text}[/{color}]")
-        elif end == "":
+        else:  # end == "":
             if is_bold:
                 print(f"[bold {color}]{text}[/bold {color}]", end="", flush=True)
             else:
                 print(f"[{color}]{text}[/{color}]", end="")
 
-    def pre_color_check(self, text, color, is_bold):
+    def pre_color_check(self, text, color):
         """Check color for substring."""
         text = str(text)
         _len = None
@@ -83,25 +85,27 @@ class Log(Color):
         if text == "[ ok ]":
             text = "[ [bold green]ok[/bold green] ]"
 
-        if not color:
-            if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
-                _len = 3
-                is_arrow = True
+        if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
+            _len = 3
+            is_arrow = True
+            if not color:
                 color = "blue"
-            elif text[:8] in ["Warning:", "warning:"]:
-                _len = 8
-                is_arrow = True
+        elif text[:8] in ["Warning:", "warning:"]:
+            _len = 8
+            is_arrow = True
+            if not color:
                 color = "yellow"
-            elif text[:2] == "E:":
-                _len = 2
-                is_arrow = True
+        elif text[:2] == "E:":
+            _len = 2
+            is_arrow = True
+            if not color:
                 color = "red"
-            elif "SUCCESS" in text or "Finalazing..." in text:
+        elif "SUCCESS" in text or "Finalazing" in text:
+            if not color:
                 color = "green"
-            elif text in ["FAILED", "ERROR"]:
+        elif text in ["FAILED", "ERROR"]:
+            if not color:
                 color = "red"
-            elif is_bold:
-                color = "white"
 
         return text, color, _len, is_arrow, is_r
 
@@ -167,36 +171,31 @@ def PrintException():
     return '{}:{} "{}"'.format(os.path.basename(filename), lineno, line.strip())
 
 
-def _colorize_traceback(message=None, is_print_exc=True):
+def _colorize_traceback(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
     if isinstance(message, QuietExit):
         if message:
             log(message)
-        return True
+        return
 
     if isinstance(message, BaseException):
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(message).__name__, message.args)
 
     tb_text = "".join(traceback.format_exc())
-    lexer = lexers.get_lexer_by_name("pytb", stripall=True)
-    # to check: print $terminfo[colors]
-    formatter = formatters.get_formatter_by_name("terminal")
-    tb_colored = highlight(tb_text, lexer, formatter)
+    if is_print_exc:
+        log(tb_text)
+
+    # console.print_exception()  #arg: show_locals=True
     if not message:
-        log(f"{WHERE(1)} ", "blue")
+        log(f"{WHERE(1)} ", "blue", is_bold=True)
     else:
         try:
-            log(f"[{PrintException()}] WHERE={WHERE(1)}", "blue")
+            log(f"[{PrintException()}] WHERE={WHERE(1)}", "blue", is_bold=True)
         except:
-            log(f"WHERE={WHERE(1)}", "blue")
+            log(f"WHERE={WHERE(1)}", "blue", is_bold=True)
 
         log(f"E: {message}")
-
-    if is_print_exc:
-        _tb_colored = tb_colored.rstrip()
-        if _tb_colored and _tb_colored != "NoneType: None":
-            log(_tb_colored)
 
 
 def delete_last_line():
@@ -205,9 +204,12 @@ def delete_last_line():
     sys.stdout.write("\x1b[2K")  # delete last line
 
 
-def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False):
-    """Print for own settings."""
-    text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color, is_bold)
+def log(text="", color=None, filename=None, end=None, is_bold: bool = False, flush=False):
+    """Print for own settings.
+
+    __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
+    """
+    text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color)
     if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
         filename = log_files[threading.current_thread().name]
     elif not filename:
@@ -223,18 +225,21 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
     else:
         _text = text
 
+    # TODO: https://stackoverflow.com/a/6826099/2402577
+    #: Indicated rich console to write into file
     f = open(filename, "a")
+    console = Console(file=f, force_terminal=True)
     if color:
         if ll.IS_PRINT:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_arrow:
                     print(
-                        f"[{_color}]{is_r}[bold]{text[:_len]}[/bold][/{_color}] [bold]{text[_len:]}[/bold]",
+                        f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][bold]{text[_len:]}[/bold]",
                         end=end,
                         flush=flush,
                     )
                 else:
-                    ll.print_color(text, color, is_bold=is_bold, end=end)
+                    ll.print_color(str(text), color, is_bold=is_bold, end=end)
 
         if is_bold:
             _text = f"[bold]{text[_len:]}[\bold]"
@@ -243,13 +248,20 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
 
         _text = text[_len:]
         if is_arrow:
-            f.write(f"[{_color}]{is_r}[bold]{_text[:_len]}[/bold][/{_color}][bold {color}]{_text}[/bold {color}]")
+            console.print(
+                f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold {color}]{_text}[/bold {color}]",
+                end=end, soft_wrap=True
+            )
         else:
-            f.write(f"[{color}]{_text}[/{color}]")
+            if color:
+                console.print(f"[bold {color}]{_text}[/bold {color}]", end="", soft_wrap=True)
+            else:
+                console.print(_text, end="", soft_wrap=True)
+
     else:
         text_write = ""
         if is_arrow:
-            text_write = f"[{_color}]{is_r}[bold]{_text[:_len]}[/bold][/{_color}][bold]{_text[_len:]}[/bold]"
+            text_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
         else:
             text_write = _text
 
@@ -259,11 +271,10 @@ def log(text="", color=None, filename=None, end=None, is_bold=True, flush=False)
             else:
                 print(text_write, flush=flush)
 
-
-        f.write(text_write)
+        console.print(text_write, end=end, soft_wrap=True)
 
     if end is None:
-        f.write("\n")
+        console.print("")
 
     f.close()
 
@@ -368,7 +379,7 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"[{WHERE(back)}] Error failed command:", "red")
+        log(f"[{WHERE(back)}] Error failed command:", "red", is_bold=True)
         log(f"$ {_cmd}", "yellow")
         log(exc, "red", is_bold=False)
     else:
@@ -398,8 +409,13 @@ def handler(signum, frame):
 
     __ https://docs.python.org/3/library/signal.html#example
     """
-    _colorize_traceback(f"Signal handler called with signal={signum} {frame}")
-    raise Exception("Forever is over, end of time")
+    if signum == 14 and "log_job" in str(frame):
+        # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
+        # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
+        pass
+    else:
+        _colorize_traceback(f"Signal handler called with signal={signum} {frame}")
+        raise Exception("Forever is over, end of time")
 
 
 ll = Log()

@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+
 from filelock import FileLock
 from ruamel.yaml import YAML, representer
 
@@ -20,6 +21,7 @@ class SubYaml(dict):
             v = SubYaml(self)
             v.update(value)
             value = v
+
         super().__setitem__(key, value)
         self.updated()
 
@@ -64,13 +66,13 @@ class Yaml(dict):
         self.dirname = os.path.dirname(os.path.abspath(path))
         self.filename = os.path.basename(path)
         if self.filename[0] == ".":
-            self.fp_lock = os.path.join(self.dirname, f"{self.filename}.lock")
+            fp_lockname = f"{self.filename}.lock"
         else:
-            self.fp_lock = os.path.join(self.dirname, f".{self.filename}.lock")
+            fp_lockname = f".{self.filename}.lock"
 
+        self.fp_lock = os.path.join(self.dirname, fp_lockname)
         self.path = path if hasattr(path, "open") else Path(path)
         self.path_temp = f"{self.path}~"
-        #
         self.auto_dump = auto_dump
         self.changed = False
         self.yaml = YAML(typ="safe")
@@ -117,6 +119,7 @@ class Yaml(dict):
         except KeyError:
             super().__setitem__(key, SubYaml(self))
             self.updated()
+
         return super().__getitem__(key)
 
     def __delitem__(self, key):
@@ -150,7 +153,6 @@ def test_2():  # noqa
     cfg["a"] = 1
     cfg["b"]["x"] = 2
     cfg["c"]["y"]["z"] = 45
-
     print(f"{config_file} 1:")
     print(config_file.read_text())
 

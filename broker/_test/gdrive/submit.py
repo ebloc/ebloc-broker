@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.eblocbroker.Contract as Contract
 import libs.gdrive as gdrive
 from config import env
 from lib import check_linked_data
@@ -15,8 +15,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb = job.Ebb
-
+    Ebb = Contract.ebb()
     job.base_dir = f"{env.HOME}/test_eblocbroker"
     job.source_code_dir = f"{job.base_dir}/source_code"
     job.data_1_dir = f"{job.base_dir}/datasets/BL06-camel-sml"

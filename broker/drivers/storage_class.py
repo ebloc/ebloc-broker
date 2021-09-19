@@ -68,7 +68,7 @@ class Storage(BaseClass):
         self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.folder_type_dict: Dict[str, str] = {}
-        self.Ebb = Contract.eblocbroker
+        self.Ebb = Contract.ebb()
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.mc = None

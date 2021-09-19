@@ -2,7 +2,6 @@
 
 import glob
 import os
-import signal
 import subprocess
 import sys
 import time
@@ -42,27 +41,27 @@ class State:
     """State code of the Slurm jobs, add keys into the hashmap.
 
     Hashmap keys:
-    SUBMITTED: Initial state.
 
-    PENDING: Indicates when a request is receieved by the provider. The job is
-    waiting for resource allocation. It will eventually run.
+        - SUBMITTED: Initial state.
 
-    RUNNING: The job currently is allocated to a node and
-    isrunning. Corresponding data files are downloaded and verified.
+        - PENDING: Indicates when a request is receieved by the provider.  The
+          job is waiting for resource allocation.  It will eventually run.
 
-    REFUNDED: Indicates if job is refunded
+        - RUNNING: The job currently is allocated to a node and isrunning.
+          Corresponding data files are downloaded and verified.
 
-    CANCELLED: Job was explicitly cancelled by the requester or system
-    administrator. The job may or may not have been initiated. Set by the
-    requester.
+        - REFUNDED: Indicates if job is refunded
 
-    COMPLETED: The job has completed successfully and deposit is paid to the
-    provider.
+        - CANCELLED: Job was explicitly cancelled by the requester or system
+          administrator.  The job may or may not have been initiated.  Set by
+          the requester.
 
-    TIMEOUT: Job terminated upon reaching its time limit.
+        - COMPLETED: The job has completed successfully and deposit is paid to
+          the provider.
+
+        - TIMEOUT: Job terminated upon reaching its time limit.
 
     __ https://slurm.schedmd.com/squeue.html
-
     """
 
     code = {}
@@ -73,7 +72,7 @@ class State:
     code["CANCELLED"] = 4
     code["COMPLETED"] = 5
     code["TIMEOUT"] = 6
-    code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 6
+    code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 7  # TODO: check
     inv_code = {value: key for key, value in code.items()}
 
 
@@ -83,7 +82,6 @@ state = State()
 def _connect_web3():
     if not cfg.w3:
         from imports import connect_to_web3
-
         connect_to_web3()
 
 
@@ -181,6 +179,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
         log(f"\n{_cmd}", "red")
         logging.error(f"E: scontrol error\n{output}")
         raise
+
     logging.info(f"\nWriting into path is completed => {path}")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed
 
@@ -230,10 +229,6 @@ def eblocbroker_function_call(func, attempt):
     raise
 
 
-def preexec_function():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
 def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):
     """Generate folder as hard linked of the given folder paths or provider main folder.
 
@@ -253,6 +248,7 @@ def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=Fal
             "## Would you like to continue with linked folder path in your run.sh?\n"
             "If no, please update your run.sh file [Y/n]: "
         )
+
     for folder in folders_to_share:
         if not os.path.isdir(folder):
             log(f"E: {folder} path does not exist")
@@ -263,6 +259,7 @@ def is_dir(path) -> bool:
     if not os.path.isdir(path):
         logging.error(f"{path} folder does not exist")
         return False
+
     return True
 
 
@@ -272,7 +269,6 @@ def run_storage_thread(storage_class):
     # The thread name does not have to be unique.
     storage_thread = Thread(target=storage_class.run)
     storage_thread.name = storage_class.thread_name
-
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
     log(f"==> thread_log_path={storage_class.drivers_log_path}")
@@ -292,3 +288,6 @@ def run_storage_process(storage_class):
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
+
+# def preexec_function():
+#     signal.signal(signal.SIGINT, signal.SIG_IGN)

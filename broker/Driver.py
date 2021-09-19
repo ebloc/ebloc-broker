@@ -79,7 +79,7 @@ def _tools(block_continue):
         if not env.IS_BLOXBERG:
             is_geth_on()
         else:
-            log("Connected into BLOXBERG", "green")
+            log("Connected into BLOXBERG", "bold green")
 
         slurm.is_on()
         # run_driver_cancel()  # TODO: uncomment
@@ -98,7 +98,7 @@ def _tools(block_continue):
                 msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
                 terminate(msg)
             else:
-                log(f"==> provider_email={_email}")
+                log(f"==> provider_email=[magenta]{_email}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
@@ -118,7 +118,7 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb = Contract.eblocbroker
+        self.Ebb = Contract.ebb()
         self.logged_jobs_to_process = None
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
@@ -309,11 +309,11 @@ def run_driver():
     # driver_cancel_process = None
     try:
         from imports import connect
+
         connect()
         #: set for global use across files
         config.Ebb = Ebb = Contract.ebb()
         driver = Driver()
-        driver.Ebb: "Contract.Contract" = Contract.eblocbroker
     except Exception as e:
         raise config.Terminate(e)
 

@@ -59,7 +59,6 @@ distlib==0.3.1
 distro==1.4.0
 docopt==0.6.2
 docutils==0.16
--e git+https://github.com/ebloc/ebloc-broker@3d10cf6e24f254b983a1a8c79e71670f018fb8c6#egg=ebloc_broker
 eip712==0.1.0
 elpy==1.999
 entrypoints==0.3
@@ -205,8 +204,6 @@ pygogo==0.13.2
 PyHamcrest==2.0.2
 PyJWT==1.7.1
 pylint==2.5.2
-# Editable install with no version control (Pymacs==0.26)
--e /home/alper/venv/lib/python3.8/site-packages
 pymongo==3.11.0
 pymy==0.0.8
 PyMySQL==0.9.3
@@ -285,6 +282,9 @@ transaction==3.0.0
 Twisted==20.3.0
 txaio==20.12.1
 typed-ast==1.4.3
+types-filelock==0.1.5
+types-pytz==2021.1.2
+types-termcolor==1.1.1
 typing-extensions==3.10.0.0
 tzlocal==2.1
 ujson==4.0.2
