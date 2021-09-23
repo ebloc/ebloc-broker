@@ -79,7 +79,7 @@ def _tools(block_continue):
         if not env.IS_BLOXBERG:
             is_geth_on()
         else:
-            log("Connected into BLOXBERG", "green")
+            log("Connected into BLOXBERG", "bold green")
 
         slurm.is_on()
         # run_driver_cancel()  # TODO: uncomment
@@ -118,7 +118,7 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb = Contract.eblocbroker
+        self.Ebb = Contract.ebb()
         self.logged_jobs_to_process = None
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
@@ -314,7 +314,6 @@ def run_driver():
         #: set for global use across files
         config.Ebb = Ebb = Contract.ebb()
         driver = Driver()
-        driver.Ebb: "Contract.Contract" = Contract.eblocbroker
     except Exception as e:
         raise config.Terminate(e)
 

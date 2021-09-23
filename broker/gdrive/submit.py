@@ -3,7 +3,7 @@
 import sys
 
 from config import env
-
+import broker.eblocbroker.Contract as Contract
 import broker.Driverlibs.git as git
 import broker.libs.gdrive as gdrive
 from broker.lib import check_linked_data
@@ -16,7 +16,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb = job.Ebb
+    Ebb = Contract.ebb()
     is_program_valid(["gdrive", "version"])
 
     job.base_dir = f"{env.EBLOCPATH}/base"

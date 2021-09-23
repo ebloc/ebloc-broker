@@ -14,12 +14,10 @@ def print_msg(msg):
 
 
 def main(*args):
-    print(args)
     from brownie import network, project
-
     _args = make_tuple(str(args))
     network.connect("bloxberg")
-    project = project.load("/mnt/hgfs/ebloc-broker/contract")
+    project = project.load("/mnt/hgfs/ebloc-broker/contract")  # TODO read path from config
     ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
     job_provider = _args[0]
     job_requester = _args[1]

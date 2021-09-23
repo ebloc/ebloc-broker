@@ -9,7 +9,7 @@ from broker.lib import StorageID, state
 from broker.utils import ipfs_to_bytes32
 
 
-def process_payment(
+def process_payment(  # noqa
     self,
     job_key,
     index,
@@ -25,7 +25,7 @@ def process_payment(
 ):
     """Process payment of the paid job."""
     log(
-        f"\n~/eBlocBroker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
+        f"\n~/ebloc-broker/broker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'"
     )
@@ -128,6 +128,6 @@ if __name__ == "__main__":
             core,
             run_time,
         )
-        print(f"tx_hash={tx_hash}")
+        log(f"tx_hash={tx_hash}")
     except:
         sys.exit(1)

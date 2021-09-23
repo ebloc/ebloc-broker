@@ -32,13 +32,14 @@ class DataStorage:
         self.storage_duration = args[1]
         self.is_private = args[2]
         self.is_verified_used = args[3]
+        self.received_storage_deposit = 0
 
 
 class Job:
     """Object for the job that will be submitted."""
 
     def __init__(self, **kwargs) -> None:
-        self.Ebb = Contract.eblocbroker
+        self.Ebb = Contract.ebb()
         self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
@@ -147,12 +148,11 @@ class JobPrices:
     """Calcualte job prices for the related provider."""
 
     def __init__(self, job):
-        self.Ebb = Contract.eblocbroker
+        self.Ebb = Contract.ebb()
         self.ebb = self.Ebb.eBlocBroker
         self.w3 = self.Ebb.w3
         self.job = job
         self.is_brownie = job.is_brownie
-        #
         self.cost = {}
         self.computational_cost = 0
         self.job_price = 0

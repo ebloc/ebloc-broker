@@ -182,12 +182,11 @@ class Ipfs:
             #     log(str(output), "green")
             cmd = ["ipfs", "swarm", "connect", ipfs_id]
             p, output, error = popen_communicate(cmd)
-            if p.returncode != 0 and "failure: dial to self attempted" not in error:
-                _colorize_traceback(output)
-                raise Exception
-
-            if "failure: dial to self attempted" in error:
-                log(f"Warning: {error.replace('Error: ', '').rstrip()}")
+            if p.returncode != 0:
+                if "failure: dial to self attempted" in error:
+                    log(f"Warning: {error.replace('Error: ', '').rstrip()}")
+                else:
+                    raise Exception(error)
         except Exception as e:
             _colorize_traceback(e)
             log("E: connection into provider's IPFS node via swarm is not accomplished")
@@ -323,6 +322,7 @@ class Ipfs:
         if ("connect" and "success") in str(output):
             log(str(output), "green")
             return True
+
         return False
 
     def get_ipfs_id(self, client, is_print=False) -> str:

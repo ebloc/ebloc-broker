@@ -23,7 +23,7 @@ from broker.utils import (
     untar,
 )
 
-Ebb = Contract.eblocbroker
+Ebb = Contract.ebb()
 
 
 class EudatClass(Storage):

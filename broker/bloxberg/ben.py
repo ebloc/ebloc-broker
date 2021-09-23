@@ -36,7 +36,7 @@ def get_tx_status(tx_hash) -> str:
 
 
 if __name__ == "__main__":
-    Ebb = Contract.eblocbroker = Contract.Contract()
+    Ebb = Contract.ebb()
     job = Job()
     pre_check()
 

@@ -13,9 +13,11 @@ from dotenv import load_dotenv
 
 import broker._utils.colored_traceback as colored_traceback
 import broker._utils.tools as tools
+import broker._utils._log as _log
 import broker.cfg as cfg
 from broker._utils.yaml import Yaml
 
+logging.getLogger("filelock").setLevel(logging.ERROR)
 
 class Terminate(Exception):  # noqa
     pass
@@ -109,7 +111,7 @@ class ENV:
         self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]
-        tools.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
+        _log.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
 
         if cfg.w3:
@@ -144,7 +146,7 @@ def setup_logger(log_path="", is_brownie=False):
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     elif log_path:
-        tools.LOG_FILENAME = log_path
+        tools.ll.LOG_FILENAME = log_path
         # Attach the IgnoreThreadsFilter to the main root log handler
         # This is responsible for ignoring all log records originating from
         # new threads.

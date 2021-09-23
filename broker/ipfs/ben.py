@@ -25,8 +25,6 @@ from broker.utils import (
 from brownie import accounts, network, project, web3
 from contract.scripts.lib import Job, cost
 
-#!/usr/bin/env python3
-
 
 def pre_check():
     """Pre check jobs to submit."""
@@ -55,7 +53,7 @@ def get_tx_status(tx_hash) -> str:
 
 if __name__ == "__main__":
     log("==> Attemptting to submit a job")
-    Ebb = Contract.eblocbroker = Contract.Contract()
+    Ebb = Contract.ebb()
     job = Job()
     pre_check()
 
