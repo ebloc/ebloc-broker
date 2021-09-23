@@ -10,7 +10,7 @@ cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
 eBlocBroker, w3 = connect()
-Ebb = Contract.eblocbroker
+Ebb = Contract.ebb()
 
 """find_all"""
 block_number = Ebb.get_block_number()

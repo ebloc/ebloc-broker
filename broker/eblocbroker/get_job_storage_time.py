@@ -5,7 +5,7 @@ import sys
 import broker.eblocbroker.Contract as Contract
 
 if __name__ == "__main__":
-    Ebb = Contract.eblocbroker
+    Ebb = Contract.ebb()
     if len(sys.argv) == 3:
         provider_addr = str(sys.argv[1])
         source_code_hash = str(sys.argv[2])

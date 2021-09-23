@@ -3,8 +3,7 @@
 import os
 import sys
 from pprint import pprint
-
-import eblocbroker.Contract as Contract
+import broker.eblocbroker.Contract as Contract
 from config import env, logging
 from imports import connect
 from lib import check_linked_data, get_tx_status, run
@@ -27,7 +26,7 @@ from contract.scripts.lib import Job, cost
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    Ebb = Contract.eblocbroker
+    Ebb =Contract.ebb()
     job = Job()
 
     if not is_dpkg_installed("pigz"):

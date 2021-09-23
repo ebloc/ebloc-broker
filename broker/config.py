@@ -16,6 +16,7 @@ import broker._utils.tools as tools
 import broker.cfg as cfg
 from broker._utils.yaml import Yaml
 
+logging.getLogger("filelock").setLevel(logging.ERROR)
 
 class Terminate(Exception):  # noqa
     pass
@@ -144,7 +145,7 @@ def setup_logger(log_path="", is_brownie=False):
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     elif log_path:
-        tools.LOG_FILENAME = log_path
+        tools.ll.LOG_FILENAME = log_path
         # Attach the IgnoreThreadsFilter to the main root log handler
         # This is responsible for ignoring all log records originating from
         # new threads.

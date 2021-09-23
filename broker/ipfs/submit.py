@@ -38,7 +38,7 @@ def pre_check():
 
 
 if __name__ == "__main__":
-    Ebb = Contract.eblocbroker = Contract.Contract()
+    Ebb = Contract.ebb()
     job = Job()
     pre_check()
     # cfg.ipfs.connect(force=True)
@@ -116,7 +116,8 @@ if __name__ == "__main__":
 
         job.source_code_hashes_str.append(ipfs_hash)
         job.source_code_hashes.append(ipfs_to_bytes32(ipfs_hash))
-        log(f"==> ipfs_hash: {ipfs_hash}\nmd5sum: {generate_md5sum(target)}", "yellow")
+        log(f"==> ipfs_hash={ipfs_hash}")
+        log(f"==> md5sum={generate_md5sum(target)}")
         if main_storage_id == StorageID.IPFS_GPG:
             # created .gpg file will be removed since its already in ipfs
             targets.append(target)

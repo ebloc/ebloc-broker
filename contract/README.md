@@ -38,7 +38,11 @@ cp ~/eBlocBroker/contract/network-config_.yaml ~/.brownie/network-config.yaml
 
 ----------------------------------------------------
 
-```
+# Accounts
+
+- Path: `~/.brownie/accounts`
+
+```bash
 $ brownie console --network bloxberg
 >>> accounts
 >>> acct = accounts.load("alper")

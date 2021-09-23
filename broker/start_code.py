@@ -4,8 +4,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime
-
-import eblocbroker.Contract as Contract
+import broker.eblocbroker.Contract as Contract
 from config import env
 
 
@@ -14,8 +13,7 @@ def start_call(job_key, index, slurm_job_id):
 
     cmd: date -d 2018-09-09T18:38:29 +"%s"
     """
-    Contract.eblocbroker = Contract.Contract()
-    Ebb = Contract.eblocbroker
+    Ebb = Contract.ebb()
     job_id = 0  # TODO: should be obtained from the user's input
     # cmd: scontrol show job slurm_job_id | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
     p1 = subprocess.Popen(["scontrol", "show", "job", slurm_job_id], stdout=subprocess.PIPE)
