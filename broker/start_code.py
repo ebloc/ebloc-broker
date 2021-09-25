@@ -4,8 +4,10 @@ import subprocess
 import sys
 import time
 from datetime import datetime
-import broker.eblocbroker.Contract as Contract
+
 from config import env
+
+import broker.eblocbroker.Contract as Contract
 
 
 def start_call(job_key, index, slurm_job_id):

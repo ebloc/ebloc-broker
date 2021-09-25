@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import os
 import subprocess
@@ -8,7 +10,7 @@ from datetime import datetime, timedelta
 from shutil import copyfile
 from typing import Dict, List
 
-import broker._utils.tools as tools
+import broker._utils._log as _log
 import broker.eblocbroker.Contract as Contract
 import broker.libs.slurm as slurm
 from broker.config import ThreadFilter, env, logging
@@ -73,7 +75,7 @@ class Storage(BaseClass):
         self.start_time = None
         self.mc = None
         self.coll = None
-        tools.log_files[self.thread_name] = self.drivers_log_path
+        _log.thread_log_files[self.thread_name] = self.drivers_log_path
 
         try:
             mkdir(self.private_dir)

@@ -20,7 +20,8 @@ import broker.eblocbroker.Contract as Contract
 import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
-from broker._utils.tools import QuietExit, _colorize_traceback, log
+from broker._utils._log import log
+from broker._utils.tools import QuietExit, _colorize_traceback
 from broker.config import env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass

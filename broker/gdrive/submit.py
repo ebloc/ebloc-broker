@@ -3,8 +3,9 @@
 import sys
 
 from config import env
-import broker.eblocbroker.Contract as Contract
+
 import broker.Driverlibs.git as git
+import broker.eblocbroker.Contract as Contract
 import broker.libs.gdrive as gdrive
 from broker.lib import check_linked_data
 from broker.utils import CacheType, StorageID, _colorize_traceback, is_program_valid, log

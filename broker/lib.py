@@ -82,6 +82,7 @@ state = State()
 def _connect_web3():
     if not cfg.w3:
         from imports import connect_to_web3
+
         connect_to_web3()
 
 
@@ -288,6 +289,7 @@ def run_storage_process(storage_class):
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
+
 
 # def preexec_function():
 #     signal.signal(signal.SIGINT, signal.SIG_IGN)

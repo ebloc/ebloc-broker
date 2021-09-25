@@ -4,11 +4,13 @@
 import subprocess
 import sys
 import time
-import broker.eblocbroker.Contract as Contract
+
 import libs.eudat as eudat
 import owncloud
 from imports import connect
 from utils import _colorize_traceback, generate_md5sum
+
+import broker.eblocbroker.Contract as Contract
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")

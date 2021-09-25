@@ -8,6 +8,7 @@ __ http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-ev
 import sys
 import time
 from contextlib import suppress
+
 import broker.config as config
 from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
@@ -92,6 +93,7 @@ def run_log_cancel_refund(self, from_block, provider):
 
 def main():
     import broker.eblocbroker.Contract as Contract
+
     Ebb = Contract.ebb()
     if len(sys.argv) == 3:
         from_block = int(sys.argv[1])
