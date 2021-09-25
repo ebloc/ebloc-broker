@@ -11,12 +11,14 @@ from typing import Union
 
 from dotenv import load_dotenv
 
+import broker._utils._log as _log
 import broker._utils.colored_traceback as colored_traceback
-import broker._utils.tools as tools
 import broker.cfg as cfg
+from broker._utils.tools import QuietExit
 from broker._utils.yaml import Yaml
 
 logging.getLogger("filelock").setLevel(logging.ERROR)
+
 
 class Terminate(Exception):  # noqa
     pass
@@ -110,7 +112,7 @@ class ENV:
         self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]
-        tools.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
+        _log.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
 
         if cfg.w3:
@@ -128,15 +130,15 @@ class ENV:
                 self.PROVIDER_ID = cfg.w3.toChecksumAddress(provider_id)
             else:
                 print("E: Please set PROVIDER_ID in ~/.ebloc-broker/.env")
-                raise tools.QuietExit
+                raise QuietExit
         else:
             self.PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
 
 def setup_logger(log_path="", is_brownie=False):
-    _log = logging.getLogger()  # root logger
-    for hdlr in _log.handlers[:]:  # remove all old handlers
-        _log.removeHandler(hdlr)
+    logger = logging.getLogger()  # root logger
+    for hdlr in logger.handlers[:]:  # remove all old handlers
+        logger.removeHandler(hdlr)
 
     if is_brownie:
         logging.basicConfig(
@@ -145,7 +147,7 @@ def setup_logger(log_path="", is_brownie=False):
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     elif log_path:
-        tools.ll.LOG_FILENAME = log_path
+        _log.ll.LOG_FILENAME = log_path
         # Attach the IgnoreThreadsFilter to the main root log handler
         # This is responsible for ignoring all log records originating from
         # new threads.

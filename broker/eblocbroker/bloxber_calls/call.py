@@ -15,6 +15,7 @@ def print_msg(msg):
 
 def main(*args):
     from brownie import network, project
+
     _args = make_tuple(str(args))
     network.connect("bloxberg")
     project = project.load("/mnt/hgfs/ebloc-broker/contract")  # TODO read path from config

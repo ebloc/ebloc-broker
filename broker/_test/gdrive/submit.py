@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
-import broker.eblocbroker.Contract as Contract
+
 import libs.gdrive as gdrive
 from config import env
 from lib import check_linked_data
 from utils import CacheType, StorageID, _colorize_traceback, log
 
+import broker.eblocbroker.Contract as Contract
 from contract.scripts.lib import Job, cost
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json

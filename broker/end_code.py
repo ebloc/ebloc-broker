@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 
+from contextlib import suppress
 import base64
 import getpass
 import os
 import pprint
 import sys
 import time
+from typing import Dict, List
+
 import eblocbroker.Contract as Contract
 import libs.eudat as eudat
 import libs.gdrive as gdrive
 import libs.git as git
 import libs.slurm as slurm
+
 import broker.cfg as cfg
-from typing import Dict, List
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
@@ -87,10 +90,8 @@ class Eudat(Common):
         self.patch_folder = ""
 
     def initialize(self):
-        try:
+        with suppress(Exception):
             eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
-        except:
-            pass
 
         try:
             self.get_shared_tokens()
@@ -124,6 +125,11 @@ class Gdrive(Common):
         pass
 
     def upload(self, key, is_job_key) -> bool:
+        """Upload result into gdrive.
+
+        :param key: key of the gdrive file
+        :returns: True if upload is successful
+        """
         try:
             if not is_job_key:
                 success, meta_data = gdrive.get_data_key_ids(self.results_folder_prev)
@@ -226,27 +232,24 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.private_dir = f"{env.PROGRAM_PATH}/{requester_id_address}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.patch_folder_ipfs = f"{self.results_folder_prev}/patch_ipfs"
-
         mkdir(self.patch_folder)
         mkdir(self.patch_folder_ipfs)
         remove_empty_files_and_folders(self.results_folder)
-        log(f"whoami: {getpass.getuser()} - {os.getegid()}")
-        log(f"home: {env.HOME}")
-        log(f"pwd: {os.getcwd()}")
-        log(f"results_folder: {self.results_folder}")
-        log(f"job_key: {self.job_key}")
-        log(f"index: {self.index}")
-        log(f"cloud_storage_ids: {self.cloud_storage_ids}")
-        log(f"folder_name: {self.folder_name}")
-        log(f"provider_id: {env.PROVIDER_ID}")
-        log(f"requester_id_address: {requester_id_address}")
-        log(f"received: {self.job_info['received']}")
+        log(f"==> whoami={getpass.getuser()} - {os.getegid()}")
+        log(f"==> home={env.HOME}")
+        log(f"==> pwd={os.getcwd()}")
+        log(f"==> results_folder={self.results_folder}")
+        log(f"==> job_key={self.job_key}")
+        log(f"==> index={self.index}")
+        log(f"==> cloud_storage_ids={self.cloud_storage_ids}")
+        log(f"==> folder_name={self.folder_name}")
+        log(f"==> provider_id={env.PROVIDER_ID}")
+        log(f"==> requester_id_address={requester_id_address}")
+        log(f"==> received={self.job_info['received']}")
 
     def get_shared_tokens(self):
-        try:
+        with suppress(Exception):
             share_ids = read_json(f"{self.private_dir}/{self.job_key}_shareID.json")
-        except:
-            pass
 
         for source_code_hash in self.source_code_hashes_to_process:
             try:
