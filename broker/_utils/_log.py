@@ -3,10 +3,8 @@
 import pathlib
 import threading
 from typing import Dict, Union
-
 from rich import pretty, print  # noqa
 from rich.console import Console
-
 # from rich.traceback import install
 # install(show_locals=True)
 # install()  # for rich
@@ -93,11 +91,12 @@ class Log:
         return text, color, _len, is_arrow, is_r
 
 
-def log(text="", color=None, filename=None, end=None, is_bold: bool = False, flush=False):
+def log(text="", color=None, filename=None, end=None, flush=False):
     """Print for own settings.
 
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
     """
+    is_bold: bool = False
     if color == "bold":
         is_bold = True
         color = None

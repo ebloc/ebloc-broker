@@ -17,7 +17,7 @@ from utils import (
     ipfs_to_bytes32,
     is_dpkg_installed,
     log,
-    silent_remove,
+    _remove,
 )
 from web3.logs import DISCARD
 
@@ -27,7 +27,7 @@ from contract.scripts.lib import Job, cost
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     job = Job()
 
     if not is_dpkg_installed("pigz"):
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                 log(f"job_index={processed_logs[0].args['index']}")
                 log("SUCCESS")
                 for target in targets:
-                    silent_remove(target)
+                    _remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted")
     except QuietExit:

@@ -440,22 +440,23 @@ class Contract:
         return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
 
 
-eblocbroker: Union["Contract", None] = None
 
-
-class Ebb:
+class EBB:
     def __init__(self):
         self.eblocbroker: Union["Contract", None] = None
 
+    def _set(self):
+        if not self.eblocbroker:
+            self.eblocbroker = Contract()
+
     def set(self):
-        if not self.eblocbroker:
-            self.eblocbroker = Contract()
+        self._set()
 
-    def __call__(self):
-        if not self.eblocbroker:
-            self.eblocbroker = Contract()
-
-        return self.eblocbroker
+    def __getattr__(self, name) -> "Contract":
+        """Return eblocbroker object."""
+        self._set()
+        return getattr(self.eblocbroker, name)
 
 
-ebb = Ebb()
+eblocbroker: Union["Contract", None] = None
+Ebb = EBB()

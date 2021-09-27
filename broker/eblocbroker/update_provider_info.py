@@ -37,7 +37,7 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     gpg_fingerprint = "420E5F7E1928B5E5940FA8D44055CB84FC8DCE5F"
     email = "alper.alimoglu.research@gmail.com"
     # email = "alper.alimoglu@gmail.com"

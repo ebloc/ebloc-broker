@@ -6,7 +6,7 @@ import broker.eblocbroker.Contract as Contract
 from broker.utils import _colorize_traceback
 
 if __name__ == "__main__":
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 5:
         key = str(sys.argv[1])
         index = int(sys.argv[2])

@@ -22,7 +22,7 @@ from broker.utils import (
     popen_communicate,
     question_yes_no,
     run,
-    silent_remove,
+    _remove,
 )
 
 
@@ -190,13 +190,13 @@ def remove_files(filename) -> bool:
     if "*" in filename:
         for f in glob.glob(filename):
             try:
-                silent_remove(f)
+                _remove(f)
             except:
                 _colorize_traceback()
                 return False
     else:
         try:
-            silent_remove(filename)
+            _remove(filename)
         except:
             _colorize_traceback()
             return False

@@ -149,7 +149,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 5 or len(sys.argv) == 6:
         provider = str(sys.argv[1])
         job_key = str(sys.argv[2])

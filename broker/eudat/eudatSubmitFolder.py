@@ -14,7 +14,7 @@ import broker.eblocbroker.Contract as Contract
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
-Ebb = Contract.ebb()
+Ebb: "Contract.Contract" = Contract.EBB()
 
 
 def eudatSubmitJob(tar_hash=None):

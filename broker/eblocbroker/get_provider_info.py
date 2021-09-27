@@ -72,7 +72,7 @@ def get_provider_info(self, provider, index=0):
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 2:
         provider = str(sys.argv[1])
     else:

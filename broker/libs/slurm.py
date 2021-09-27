@@ -51,7 +51,7 @@ def get_idle_cores(is_print_flag=True):
                 f"idle_cores={idle_cores} |"
                 f"other_cores={other_cores} |"
                 f"total_number_of_cores={total_cores}",
-                "green",
+                "bold green",
             )
     else:
         logging.error("E: sinfo is emptry string")
@@ -77,7 +77,7 @@ def is_on() -> bool:
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
-            log("failed", "red", is_bold=True)
+            log("failed", "bold red")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             log(
                 f"E: {process_name} is not running in the background. Please run:\n"

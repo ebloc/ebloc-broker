@@ -7,7 +7,7 @@ from broker.utils import _colorize_traceback
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 2:
         requester = str(sys.argv[1])
     else:

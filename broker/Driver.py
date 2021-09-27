@@ -12,8 +12,6 @@ from pprint import pprint
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
-import broker._utils.tools as tools
 import broker.cfg as cfg
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
@@ -21,8 +19,9 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import log
+import broker._utils._log as _log
 from broker._utils.tools import QuietExit, _colorize_traceback
-from broker.config import env, logging, setup_logger
+from broker.config import env, logging, setup_logger, Terminate
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
@@ -92,7 +91,7 @@ def _tools(block_continue):
 
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
-            provider_info = config.Ebb.get_provider_info(env.PROVIDER_ID)
+            provider_info = Contract.Ebb.get_provider_info(env.PROVIDER_ID)
             _email = provider_info["email"]
             output, gdrive_email = gdrive.check_user(_email)
             if not output:
@@ -111,7 +110,8 @@ def _tools(block_continue):
     except Exception as e:
         if type(e).__name__ != "QuietExit":
             _colorize_traceback(e)
-        raise config.Terminate(e)
+
+        raise Terminate(e)
 
 
 class Driver:
@@ -119,14 +119,16 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb = Contract.ebb()
+        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.block_number: int = 0
+        self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
     def is_job_received(self, key, index) -> None:
         """Preventing to download or submit again."""
-        if config.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
+        if self.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
             raise Exception("## [ mongoDB ] Job is already received", "green")
 
         if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
@@ -143,7 +145,7 @@ class Driver:
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
             raise Exception("E: Requested job does not exist")
 
-        if not config.Ebb.does_requester_exist(self.requester_id):
+        if not self.Ebb.does_requester_exist(self.requester_id):
             raise Exception("E: job owner is not registered")
 
         self.is_job_received(job_key, index)
@@ -185,14 +187,12 @@ class Driver:
                         # requested for cache for the first time
                         self.is_already_cached[source_code_hash] = False
 
-            log(
-                f"source_code_hash[{idx}]={source_code_hash}\n"
-                f"received_block={ds.received_block}\n"
-                f"storage_duration(block_number)={ds.storage_duration}\n"
-                f"cloud_storage_id[{idx}]={StorageID(self.cloud_storage_id[idx]).name}\n"
-                f"cached_type={CacheType(self.logged_job.args['cacheType'][idx]).name}\n"
-                f"is_already_cached={self.is_already_cached[source_code_hash]}"
-            )
+            log(f"==> source_code_hash[{idx}]={source_code_hash}")
+            log(f"==> received_block={ds.received_block}")
+            log(f"==> storage_duration(block_number)={ds.storage_duration}")
+            log(f"==> cloud_storage_id[{idx}]={StorageID(self.cloud_storage_id[idx]).name}")
+            log(f"==> cached_type={CacheType(self.logged_job.args['cacheType'][idx]).name}")
+            log(f"==> is_already_cached={self.is_already_cached[source_code_hash]}")
 
     def process_logged_job(self, idx):
         """Process logged job one by one."""
@@ -215,8 +215,8 @@ class Driver:
         )
         self.received_block = []
         self.storage_duration = []
-        if self.logged_job["blockNumber"] > self.max_blocknumber:
-            self.max_blocknumber = self.logged_job["blockNumber"]
+        if self.logged_job["blockNumber"] > self.latest_block_number:
+            self.latest_block_number = self.logged_job["blockNumber"]
 
         try:
             run(["bash", f"{env.EBLOCPATH}/broker/bash_scripts/is_str_valid.sh", job_key])
@@ -225,9 +225,9 @@ class Driver:
             return
 
         try:
-            job_id = 0  # main job
+            job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
-                partial(config.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
+                partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
             )
             self.requester_id = self.job_info["job_owner"]
             self.job_infos.append(self.job_info)
@@ -244,7 +244,7 @@ class Driver:
         for job in range(1, len(self.job_info["core"])):
             try:
                 self.job_infos.append(  # if workflow is given then add jobs into list
-                    config.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.block_number)
+                    self.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.block_number)
                 )
             except Exception:
                 pass
@@ -286,7 +286,7 @@ class Driver:
 
     def process_logged_jobs(self):
         """Process logged jobs."""
-        self.max_blocknumber = 0
+        self.latest_block_number = 0
         self.is_provider_received_job = False
         self.is_already_cached = {}
         for idx, logged_job in enumerate(self.logged_jobs_to_process):
@@ -306,17 +306,16 @@ def run_driver():
     # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
     env.IS_THREADING_ENABLED = False
-    config.logging = setup_logger(tools.DRIVER_LOG)
+    config.logging = setup_logger(_log.DRIVER_LOG)
     # driver_cancel_process = None
     try:
         from imports import connect
 
         connect()
-        #: set for global use across files
-        config.Ebb = Ebb = Contract.ebb()
+        Ebb: "Contract.Contract" = Contract.EBB()
         driver = Driver()
     except Exception as e:
-        raise config.Terminate(e)
+        raise Terminate(e)
 
     if not env.PROVIDER_ID:
         terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
@@ -366,7 +365,7 @@ def run_driver():
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
     log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
     log(f"==> whoami={env.WHOAMI}")
-    log(f"==> log_file={tools.DRIVER_LOG}")
+    log(f"==> log_file={_log.DRIVER_LOG}")
     log(f"==> rootdir={os.getcwd()}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # Updated since cluster is not registered
@@ -402,7 +401,7 @@ def run_driver():
             if "squeue: error:" in str(squeue_output):
                 raise
         except:
-            raise config.Terminate(
+            raise Terminate(
                 "SLURM is not running on the background. " "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
             )
 
@@ -431,7 +430,7 @@ def run_driver():
             flag = False
             time.sleep(0.25)
 
-        log(f"Passed incremented block number... Watching from block number={block_read_from}", "yellow")
+        log(f"Passed incremented block number... Watching from block number={block_read_from}", "bold yellow")
         block_read_from = str(block_read_from)  # reading event's location has been updated
         slurm.pending_jobs_check()
         driver.logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
@@ -442,9 +441,9 @@ def run_driver():
             breakpoint()  # DEBUG
             sys.exit(1)
 
-        if len(driver.logged_jobs_to_process) > 0 and driver.max_blocknumber > 0:
+        if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
             # updates the latest read block number
-            block_read_from = driver.max_blocknumber + 1
+            block_read_from = driver.latest_block_number + 1
             env.config["block_continue"] = block_read_from
         if not driver.is_provider_received_job:
             # If there is no submitted job for the provider, than block start
@@ -477,7 +476,7 @@ if __name__ == "__main__":
                 log("E: Driver cannot lock the file, the pid file is in use")
             except QuietExit:
                 pass
-            except config.Terminate as e:
+            except Terminate as e:
                 terminate(e)
             except Exception as e:
                 _colorize_traceback(e)
@@ -488,7 +487,8 @@ if __name__ == "__main__":
                         open(env.DRIVER_LOCKFILE, "w").close()
                 except Exception as e:
                     _colorize_traceback(e)
+    except KeyboardInterrupt:
+        sys.exit(1)
     except Exception as e:
-        if type(e).__name__ != "KeyboardInterrupt":
-            _colorize_traceback(e)
+        _colorize_traceback(e)
         sys.exit(1)

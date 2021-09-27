@@ -8,7 +8,7 @@ import libs.git as git
 from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
 from lib import calculate_folder_size
-from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir, silent_remove
+from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir, _remove
 
 import broker.cfg as cfg
 from broker.utils import is_ipfs_on
@@ -52,7 +52,7 @@ class IpfsClass(Storage):
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
-        silent_remove(f"{self.results_folder}/{self.job_key}")
+        _remove(f"{self.results_folder}/{self.job_key}")
         try:
             self.check_ipfs(self.job_key)
         except:
@@ -89,7 +89,7 @@ class IpfsClass(Storage):
                 # https://stackoverflow.com/a/31814223/2402577
                 dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
                 if os.path.exists(dst_filename):
-                    silent_remove(dst_filename)
+                    _remove(dst_filename)
                 shutil.move(target, dst_filename)  # UNIX 'mv' command
                 target = dst_filename
 
