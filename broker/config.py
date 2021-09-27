@@ -136,9 +136,9 @@ class ENV:
 
 
 def setup_logger(log_path="", is_brownie=False):
-    _log = logging.getLogger()  # root logger
-    for hdlr in _log.handlers[:]:  # remove all old handlers
-        _log.removeHandler(hdlr)
+    logger = logging.getLogger()  # root logger
+    for hdlr in logger.handlers[:]:  # remove all old handlers
+        logger.removeHandler(hdlr)
 
     if is_brownie:
         logging.basicConfig(

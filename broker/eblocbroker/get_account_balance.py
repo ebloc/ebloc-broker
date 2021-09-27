@@ -10,5 +10,5 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         address = str(sys.argv[1])
         print(Ebb._get_balance(address))
-    else:
+    else:  # ./get_account_balance.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49
         log("E: Please provide an address as argument")

@@ -14,8 +14,7 @@ from pytz import timezone, utc
 
 try:
     from broker._utils._log import log
-except:
-    # if ebloc_broker used as a submodule
+except:  # if ebloc_broker used as a submodule
     from ebloc_broker.broker._utils._log import log
 
 
@@ -104,7 +103,7 @@ def _colorize_traceback(message=None, is_print_exc=True) -> None:
         log(f"{WHERE(1)} ", "bold blue")
     else:
         try:
-            log(f"[{PrintException()}] WHERE={WHERE(1)}", "blue", is_bold=True)
+            log(f"[{PrintException()}] WHERE={WHERE(1)}", "bold blue")
         except:
             log(f"WHERE={WHERE(1)}", "bold blue")
 
@@ -219,9 +218,9 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"[{WHERE(back)}] Error failed command:", "red", is_bold=True)
+        log(f"[{WHERE(back)}] Error failed command:", "bold red")
         log(f"$ {_cmd}", "yellow")
-        log(exc, "red", is_bold=False)
+        log(exc, "red")
     else:
         log(f"==> Failed shell command:\n{_cmd}", "yellow")
 

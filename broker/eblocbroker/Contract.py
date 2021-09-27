@@ -447,14 +447,15 @@ class Ebb:
     def __init__(self):
         self.eblocbroker: Union["Contract", None] = None
 
-    def set(self):
+    def _set(self):
         if not self.eblocbroker:
             self.eblocbroker = Contract()
+
+    def set(self):
+        self._set()
 
     def __call__(self):
-        if not self.eblocbroker:
-            self.eblocbroker = Contract()
-
+        self._set()
         return self.eblocbroker
 
 

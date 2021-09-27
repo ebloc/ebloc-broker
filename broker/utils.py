@@ -348,7 +348,7 @@ def read_json(path, is_dict=True):
 
 
 def is_gzip_file_empty(filename):
-    """Checks whether the given gzip file is empty or not.
+    """Check whether the given gzip file is empty or not.
 
     cmd: gzip -l filename.gz | awk 'NR==2 {print $2}
     """
@@ -584,8 +584,8 @@ def is_dpkg_installed(package_name) -> bool:
 def terminate(msg="", is_traceback=True):
     """Terminate the Driver python script and all the dependent python programs to it."""
     if msg:
-        log(f"[{WHERE(1)}] Terminated: ", "red", is_bold=True, end="")
-        log(msg, is_bold=True)
+        log(f"[{WHERE(1)}] Terminated: ", "bold red", end="")
+        log(msg, "bold")
 
     if is_traceback:
         _colorize_traceback()
