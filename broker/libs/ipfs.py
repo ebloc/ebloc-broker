@@ -23,7 +23,7 @@ from broker.utils import (
     raise_error,
     run,
     run_with_output,
-    silent_remove,
+    _remove,
     terminate,
     untar,
 )
@@ -98,7 +98,7 @@ class Ipfs:
         try:
             run(cmd)
             log("==> GPG decrypt is successfull")
-            silent_remove(gpg_file)
+            _remove(gpg_file)
         except Exception as e:
             _colorize_traceback(e)
             raise
@@ -113,12 +113,12 @@ class Ipfs:
                 raise
             finally:
                 cmd = None
-                silent_remove(f"{extract_target}/.git")
-                silent_remove(tar_file)
+                _remove(f"{extract_target}/.git")
+                _remove(tar_file)
 
     def remove_lock_files(self):
-        silent_remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
-        silent_remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
+        _remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
+        _remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
 
     def gpg_encrypt(self, user_gpg_finderprint, target) -> bool:
         is_delete = False
@@ -164,7 +164,7 @@ class Ipfs:
                 log("==> Check solution: https://stackoverflow.com/a/34132924/2402577")
         finally:
             if is_delete:
-                silent_remove(encrypt_target)
+                _remove(encrypt_target)
 
     ################
     # ONLINE CALLS #

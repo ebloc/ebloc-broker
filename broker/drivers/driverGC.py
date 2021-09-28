@@ -4,13 +4,13 @@ import eblocbroker.Contract as Contract
 from config import env
 from imports import connect
 from pymongo import MongoClient
-from utils import StorageID, run, silent_remove
+from utils import StorageID, run, _remove
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
 eBlocBroker, w3 = connect()
-Ebb = Contract.ebb()
+Ebb: "Contract.Contract" = Contract.EBB()
 
 """find_all"""
 block_number = Ebb.get_block_number()
@@ -33,10 +33,10 @@ for document in cursor:
                 env.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
             )
             print(cachedFileName)
-            silent_remove(cachedFileName)
+            _remove(cachedFileName)
             cachedFileName = env.PROGRAM_PATH + "/cache/" + document["sourceCodeHash"] + "tar.gz"
             print(cachedFileName)
-            silent_remove(cachedFileName)
+            _remove(cachedFileName)
 
         print(received_block_number)
         output = coll.delete_one({"jobKey": ipfsHash})

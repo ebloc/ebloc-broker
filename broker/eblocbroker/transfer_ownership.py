@@ -32,7 +32,7 @@ def transfer_ownership(self, new_owner):
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 2:
         new_owner = str(sys.argv[1])
     else:

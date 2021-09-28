@@ -28,7 +28,7 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     available_core = 128
     commitment_blk = 10
     price_core_min = 100

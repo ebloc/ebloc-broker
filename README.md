@@ -247,3 +247,18 @@ index     = 0
 
 - Status of the job could be `QUEUED`, `REFUNDED`, `RUNNING`, `PENDING`, or
   `COMPLETED`.
+
+-----------------
+
+## Set Time
+
+System clock can actually go out of synch pretty quickly, in less than 15
+minutes. It can be substituted for a time-synchronizing daemon like ntpd.
+
+
+```bash
+sudo timedatectl set-timezone UTC
+sudo apt install systemd-timesyncd
+sudo systemctl restart systemd-timesyncd.service
+systemctl status systemd-timesyncd
+```

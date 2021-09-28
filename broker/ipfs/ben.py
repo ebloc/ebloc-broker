@@ -20,7 +20,7 @@ from broker.utils import (
     is_bin_installed,
     is_dpkg_installed,
     log,
-    silent_remove,
+    _remove,
 )
 from brownie import accounts, network, project, web3
 from contract.scripts.lib import Job, cost
@@ -53,7 +53,7 @@ def get_tx_status(tx_hash) -> str:
 
 if __name__ == "__main__":
     log("==> Attemptting to submit a job")
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     job = Job()
     pre_check()
 
@@ -153,7 +153,7 @@ if __name__ == "__main__":
                 log(f"job_index={processed_logs[0].args['index']}")
                 log("SUCCESS")
                 for target in targets:
-                    silent_remove(target)
+                    _remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted")
     except Exception as e:

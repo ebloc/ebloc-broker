@@ -1,3 +1,4 @@
+.fuse_*
 *.lock
 completed.txt
 is

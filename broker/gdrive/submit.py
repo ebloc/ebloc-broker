@@ -17,7 +17,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     is_program_valid(["gdrive", "version"])
 
     job.base_dir = f"{env.EBLOCPATH}/base"

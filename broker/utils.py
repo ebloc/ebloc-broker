@@ -404,10 +404,10 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     pass
 
 
-def silent_remove(path: str, is_warning=True):
-    """Removes file or folders based on its the file type.
+def _remove(path: str, is_warning=True):
+    """Remove file or folders based on its the file type.
 
-    https://stackoverflow.com/a/10840586/2402577
+    __ https://stackoverflow.com/a/10840586/2402577
     """
     try:
         if path == "/":

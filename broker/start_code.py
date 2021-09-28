@@ -15,7 +15,7 @@ def start_call(job_key, index, slurm_job_id):
 
     cmd: date -d 2018-09-09T18:38:29 +"%s"
     """
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     job_id = 0  # TODO: should be obtained from the user's input
     # cmd: scontrol show job slurm_job_id | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
     p1 = subprocess.Popen(["scontrol", "show", "job", slurm_job_id], stdout=subprocess.PIPE)

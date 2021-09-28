@@ -19,11 +19,11 @@ from broker.utils import (
     log,
     mkdir,
     read_json,
-    silent_remove,
+    _remove,
     untar,
 )
 
-Ebb = Contract.ebb()
+Ebb: "Contract.Contract" = Contract.EBB()
 
 
 class EudatClass(Storage):
@@ -111,7 +111,7 @@ class EudatClass(Storage):
                 and self.folder_type_dict[folder_name] == "tar.gz"
                 and not self.is_run_exists_in_tar(cached_tar_file)
             ):
-                silent_remove(cached_tar_file)
+                _remove(cached_tar_file)
                 return False
         else:
             # Here we already know that its tar.gz file

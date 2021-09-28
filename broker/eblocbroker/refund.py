@@ -33,7 +33,7 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 7:
         provider = Ebb.w3.toChecksumAddress(str(sys.argv[1]))
         _from = Ebb.w3.toChecksumAddress(str(sys.argv[2]))

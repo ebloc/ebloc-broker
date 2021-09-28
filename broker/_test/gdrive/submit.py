@@ -16,7 +16,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     job.base_dir = f"{env.HOME}/test_eblocbroker"
     job.source_code_dir = f"{job.base_dir}/source_code"
     job.data_1_dir = f"{job.base_dir}/datasets/BL06-camel-sml"
