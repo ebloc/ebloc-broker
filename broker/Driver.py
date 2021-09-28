@@ -21,7 +21,7 @@ import broker.libs.slurm as slurm
 from broker._utils._log import log
 import broker._utils._log as _log
 from broker._utils.tools import QuietExit, _colorize_traceback
-from broker.config import env, logging, setup_logger
+from broker.config import env, logging, setup_logger, Terminate
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
@@ -91,7 +91,7 @@ def _tools(block_continue):
 
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
-            provider_info = config.Ebb.get_provider_info(env.PROVIDER_ID)
+            provider_info = Contract.Ebb.get_provider_info(env.PROVIDER_ID)
             _email = provider_info["email"]
             output, gdrive_email = gdrive.check_user(_email)
             if not output:
@@ -110,7 +110,8 @@ def _tools(block_continue):
     except Exception as e:
         if type(e).__name__ != "QuietExit":
             _colorize_traceback(e)
-        raise config.Terminate(e)
+
+        raise Terminate(e)
 
 
 class Driver:
@@ -118,16 +119,16 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb = Contract.ebb()
-        self.block_number:int = 0
-        self.latest_block_number:int = 0
+        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.block_number: int = 0
+        self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
     def is_job_received(self, key, index) -> None:
         """Preventing to download or submit again."""
-        if config.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
+        if self.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
             raise Exception("## [ mongoDB ] Job is already received", "green")
 
         if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
@@ -144,7 +145,7 @@ class Driver:
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
             raise Exception("E: Requested job does not exist")
 
-        if not config.Ebb.does_requester_exist(self.requester_id):
+        if not self.Ebb.does_requester_exist(self.requester_id):
             raise Exception("E: job owner is not registered")
 
         self.is_job_received(job_key, index)
@@ -226,7 +227,7 @@ class Driver:
         try:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
-                partial(config.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
+                partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
             )
             self.requester_id = self.job_info["job_owner"]
             self.job_infos.append(self.job_info)
@@ -243,7 +244,7 @@ class Driver:
         for job in range(1, len(self.job_info["core"])):
             try:
                 self.job_infos.append(  # if workflow is given then add jobs into list
-                    config.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.block_number)
+                    self.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.block_number)
                 )
             except Exception:
                 pass
@@ -311,11 +312,10 @@ def run_driver():
         from imports import connect
 
         connect()
-        #: set for global use across files
-        config.Ebb = Ebb = Contract.ebb()
+        Ebb: "Contract.Contract" = Contract.EBB()
         driver = Driver()
     except Exception as e:
-        raise config.Terminate(e)
+        raise Terminate(e)
 
     if not env.PROVIDER_ID:
         terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
@@ -401,7 +401,7 @@ def run_driver():
             if "squeue: error:" in str(squeue_output):
                 raise
         except:
-            raise config.Terminate(
+            raise Terminate(
                 "SLURM is not running on the background. " "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
             )
 
@@ -476,7 +476,7 @@ if __name__ == "__main__":
                 log("E: Driver cannot lock the file, the pid file is in use")
             except QuietExit:
                 pass
-            except config.Terminate as e:
+            except Terminate as e:
                 terminate(e)
             except Exception as e:
                 _colorize_traceback(e)
@@ -487,7 +487,8 @@ if __name__ == "__main__":
                         open(env.DRIVER_LOCKFILE, "w").close()
                 except Exception as e:
                     _colorize_traceback(e)
+    except KeyboardInterrupt:
+        sys.exit(1)
     except Exception as e:
-        if type(e).__name__ != "KeyboardInterrupt":
-            _colorize_traceback(e)
+        _colorize_traceback(e)
         sys.exit(1)

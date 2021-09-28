@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
-
-from broker._utils.tools import _time, _timestamp, timenow
+from broker._utils.tools import timenow
 
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
-
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     _timenow = Ebb.timenow()
     t = timenow()
-    print(_timenow)
-    print(t)
-    print(t - _timenow)
+    print(f"==> bloxberg_time={_timenow}")
+    print(f"==> machine_time={t}")
+    print(f"difference_in_seconds={t - _timenow}")

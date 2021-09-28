@@ -19,7 +19,7 @@ from broker.utils import (
     empty_bytes32,
     is_geth_account_locked,
     run,
-    silent_remove,
+    _remove,
 )
 
 
@@ -39,7 +39,7 @@ class Job:
     """Object for the job that will be submitted."""
 
     def __init__(self, **kwargs) -> None:
-        self.Ebb = Contract.ebb()
+        self.Ebb: "Contract.Contract" = Contract.EBB()
         self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
@@ -115,7 +115,7 @@ class Job:
 
     def clean_before_submit(self):
         for folder in self.folders_to_share:
-            silent_remove(os.path.join(folder, ".mypy_cache"), is_warning=False)
+            _remove(os.path.join(folder, ".mypy_cache"), is_warning=False)
 
     def check_account_status(self, _from):
         try:
@@ -148,7 +148,7 @@ class JobPrices:
     """Calcualte job prices for the related provider."""
 
     def __init__(self, job):
-        self.Ebb = Contract.ebb()
+        self.Ebb: "Contract.Contract" = Contract.EBB()
         self.ebb = self.Ebb.eBlocBroker
         self.w3 = self.Ebb.w3
         self.job = job

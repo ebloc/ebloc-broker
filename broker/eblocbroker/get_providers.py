@@ -7,7 +7,7 @@ from broker._utils.tools import log
 from broker.utils import _colorize_traceback
 
 if __name__ == "__main__":
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     try:
         providers = Ebb.get_providers()
         if len(providers) == 0:

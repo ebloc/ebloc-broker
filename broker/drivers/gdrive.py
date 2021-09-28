@@ -17,7 +17,7 @@ from utils import (
     generate_md5sum,
     get_time,
     mkdir,
-    silent_remove,
+    _remove,
     untar,
 )
 
@@ -84,7 +84,7 @@ class GdriveClass(Storage):
                         return False, None
 
                     if is_job_key and not self.is_run_exists_in_tar(cached_tar_file):
-                        silent_remove(cached_tar_file)
+                        _remove(cached_tar_file)
                         return False, None
                 else:
                     output = generate_md5sum(cached_tar_file)
@@ -182,7 +182,7 @@ class GdriveClass(Storage):
 
     def remove_downloaded_file(self, source_code_hash, _id, pathname):
         if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][_id]:
-            silent_remove(pathname)
+            _remove(pathname)
 
     def get_data_init(self, key, _id, is_job_key=False):
         try:
@@ -313,7 +313,7 @@ class GdriveClass(Storage):
             tar_file = f"{self.results_folder}/{name}.tar.gz"
             try:
                 untar(tar_file, self.results_folder)
-                silent_remove(tar_file)
+                _remove(tar_file)
                 return target
             except Exception as e:
                 _colorize_traceback()

@@ -21,7 +21,7 @@ from broker.utils import (
     is_bin_installed,
     is_dpkg_installed,
     log,
-    silent_remove,
+    _remove,
 )
 
 
@@ -38,7 +38,7 @@ def pre_check():
 
 
 if __name__ == "__main__":
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     job = Job()
     pre_check()
     # cfg.ipfs.connect(force=True)
@@ -143,7 +143,7 @@ if __name__ == "__main__":
                 log(f"job_index={processed_logs[0].args['index']}")
                 log("SUCCESS")
                 for target in targets:
-                    silent_remove(target)
+                    _remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted")
     except QuietExit:

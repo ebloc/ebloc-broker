@@ -7,7 +7,7 @@ import pwd
 from config import logging
 from lib import run
 from libs.slurm import add_user_to_slurm
-from utils import log, mkdir, popen_communicate, silent_remove  # noqa: F401
+from utils import log, mkdir, popen_communicate, _remove  # noqa: F401
 
 
 def remove_user(user_name, user_dir):
@@ -23,7 +23,7 @@ def remove_user(user_name, user_dir):
     if p.returncode != 0 and "Nothing deleted" not in output:
         logging.error(f"E: sacctmgr remove error: {output}")
         raise
-    # silent_remove(user_dir)
+    # _remove(user_dir)
     # remove_user(user)
 
 

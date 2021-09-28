@@ -50,7 +50,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 3:
         address = str(sys.argv[1])
         orc_id = str(sys.argv[2])
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     try:
         owner_address = cfg.w3.eth.accounts[0]
         if env.IS_BLOXBERG:
-            accounts = Ebb.brownie_load_accounts()
+            accounts = Ebb.brownie_load_account()
             owner_address = accounts.address
 
         tx_hash = Ebb.authenticate_orc_id(address, orc_id, owner_address)

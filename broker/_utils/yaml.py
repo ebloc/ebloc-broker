@@ -2,9 +2,10 @@
 
 import os
 from pathlib import Path
-
+import filecmp
 from filelock import FileLock
 from ruamel.yaml import YAML, representer
+from broker._utils.tools import _colorize_traceback
 
 
 class SubYaml(dict):
@@ -57,7 +58,7 @@ class Yaml(dict):
     ruamel.yaml.representer.RepresenterError: cannot represent an object: {'value': }
     __ https://stackoverflow.com/a/68685839/2402577
 
-    PyYAML - Saving data to .yaml files
+    PyYAML Saving data to .yaml files
     __ https://codereview.stackexchange.com/a/210162/127969
     """
 
@@ -89,7 +90,11 @@ class Yaml(dict):
             self.changed = True
 
     def dump(self, force=False):
-        """Dump yaml object."""
+        """Dump yaml object.
+
+        If two files have the same content in Python:
+        __ https://stackoverflow.com/a/1072576/2402577
+        """
         if not self.changed and not force:
             return
 
@@ -98,8 +103,15 @@ class Yaml(dict):
             self.yaml.dump(dict(self), f)
 
         if os.path.isfile(self.path_temp):
-            # unlink the real file path and rename the temporary to the real
-            os.rename(self.path_temp, self.path)
+            with open(self.path_temp) as f_temp:
+                content = f_temp.readlines()
+
+            if len(content) == 1 and content[0] == "{}\n":
+                os.remove(self.path_temp)
+            else:
+                if not os.path.isfile(self.path) or not filecmp.cmp(self.path, self.path_temp, shallow=False):
+                    # unlink the real file path and rename the temporary to the real
+                    os.rename(self.path_temp, self.path)
 
         self.changed = False
 
@@ -189,5 +201,8 @@ def test_2():  # noqa
 
 
 if __name__ == "__main__":
-    test_1()
-    test_2()
+    try:
+        test_1()
+        test_2()
+    except Exception as e:
+        _colorize_traceback(e)

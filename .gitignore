@@ -1,3 +1,5 @@
+broker/_utils/config.yaml
+.fuse_*
 *.lock
 completed.txt
 is

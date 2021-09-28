@@ -5,7 +5,7 @@ import sys
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
 
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
         key = str(sys.argv[2])

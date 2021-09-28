@@ -11,7 +11,7 @@ logging = setup_logger()
 
 
 if __name__ == "__main__":
-    Ebb = Contract.ebb()
+    Ebb: "Contract.Contract" = Contract.EBB()
     is_write_to_file = False
     if len(sys.argv) == 2:
         if sys.argv[1] in ("1", "True", "true"):

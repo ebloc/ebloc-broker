@@ -42,11 +42,11 @@ from broker.utils import (
     read_file,
     read_json,
     remove_empty_files_and_folders,
-    silent_remove,
+    _remove,
 )
 
 connect()
-Ebb = Contract.ebb()
+Ebb: "Contract.Contract" = Contract.EBB()
 
 
 class Common:
@@ -70,7 +70,7 @@ class IpfsGPG(Common):
         try:
             cfg.ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
         except:
-            silent_remove(self.patch_file)
+            _remove(self.patch_file)
             sys.exit(1)
         return True
 
@@ -548,7 +548,7 @@ if __name__ == "__main__":
                 cmd = ['ipfs', 'add', results_folder + '/result.tar.gz']
                 self.result_ipfs_hash = run(cmd)
                 self.result_ipfs_hash = self.result_ipfs_hash.split(' ')[1]
-                silent_remove(results_folder + '/result.tar.gz')
+                _remove(results_folder + '/result.tar.gz')
 # ---------------
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
 # success, output = run(cmd)

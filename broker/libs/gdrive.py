@@ -18,7 +18,7 @@ from utils import (
     log,
     mkdir,
     read_json,
-    silent_remove,
+    _remove,
 )
 
 from broker._utils.tools import QuietExit
@@ -123,7 +123,7 @@ def upload(folder_to_share, base_dir, job_key_flag=False):
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
 
-    silent_remove(f"{dir_path}/{tar_hash}")  # created .tar.gz file is removed
+    _remove(f"{dir_path}/{tar_hash}")  # created .tar.gz file is removed
     return key, is_already_uploaded, tar_hash, tar_hashes
 
 
@@ -158,7 +158,7 @@ def _upload(dir_path, tar_hash, is_folder=False):
         file_name_to_upload = f"{tar_hash}.tar.gz"
         tar_file_path = f"{dir_path}/{file_name_to_upload}"
         subprocess.run(["gdrive", "upload", tar_file_path], check=True)
-        silent_remove(tar_file_path)
+        _remove(tar_file_path)
         output = (
             subprocess.check_output(
                 [

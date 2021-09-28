@@ -385,7 +385,7 @@ def is_dir_empty(path) -> bool:
 
 
 def remove_empty_files_and_folders(dir_path) -> None:
-    """Removes empty files and folders if exists."""
+    """Remove empty files and folders if exists."""
     for root, dirnames, files in os.walk(dir_path, topdown=False):
         for f in files:
             full_name = os.path.join(root, f)
@@ -404,10 +404,10 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     pass
 
 
-def silent_remove(path: str, is_warning=True):
-    """Removes file or folders based on its the file type.
+def _remove(path: str, is_warning=True):
+    """Remove file or folders based on its the file type.
 
-    https://stackoverflow.com/a/10840586/2402577
+    __ https://stackoverflow.com/a/10840586/2402577
     """
     try:
         if path == "/":
