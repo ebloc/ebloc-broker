@@ -14,12 +14,12 @@ import libs.eudat as eudat
 import libs.gdrive as gdrive
 import libs.git as git
 import libs.slurm as slurm
-
 import broker.cfg as cfg
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
 from broker.lib import (
+    get_tx_status,
     calculate_folder_size,
     eblocbroker_function_call,
     is_dir,
@@ -235,7 +235,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         mkdir(self.patch_folder)
         mkdir(self.patch_folder_ipfs)
         remove_empty_files_and_folders(self.results_folder)
-        log(f"==> whoami={getpass.getuser()} - {os.getegid()}")
+        log(f"==> whoami={getpass.getuser()} - id={os.getegid()}")
         log(f"==> home={env.HOME}")
         log(f"==> pwd={os.getcwd()}")
         log(f"==> results_folder={self.results_folder}")
@@ -326,6 +326,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 10,
             )
             log(f"tx_hash={tx_hash}")
+            return tx_hash
         except Exception as e:
             _colorize_traceback(e)
             sys.exit(1)
@@ -513,7 +514,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"data_transfer_in={self.data_transfer_in} MB => rounded={int(self.data_transfer_in)} MB")
         log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
-        self.process_payment_tx()
+        tx_hash = self.process_payment_tx()
+        get_tx_status(tx_hash)
         log("SUCCESS")
         # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
 

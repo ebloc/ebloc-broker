@@ -81,9 +81,9 @@ state = State()
 
 def _connect_web3():
     if not cfg.w3:
-        from imports import connect_to_web3
+        from imports import connect_into_web3
 
-        connect_to_web3()
+        connect_into_web3()
 
 
 def session_start_msg(slurm_user, block_number, pid):
@@ -124,6 +124,7 @@ def get_tx_status(tx_hash) -> str:
         log("Transaction is deployed", "green")
     else:
         raise Exception("E: Transaction is reverted")
+
     return tx_receipt
 
 

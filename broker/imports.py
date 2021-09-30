@@ -21,7 +21,7 @@ def connect():
 
     try:
         if not cfg.w3.isConnected():
-            connect_to_web3()
+            connect_into_web3()
 
         if config.ebb is None:
             connect_to_eblocbroker()
@@ -31,7 +31,7 @@ def connect():
     return config.ebb, cfg.w3, config._eBlocBroker
 
 
-def _connect_to_web3():
+def _connect_into_web3():
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:  # https://bloxberg.org
@@ -48,7 +48,7 @@ def _connect_to_web3():
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
-def connect_to_web3():
+def connect_into_web3():
     """Connect into web3.
 
     Note that you should create only one RPC Provider per process, as it
@@ -56,21 +56,24 @@ def connect_to_web3():
     Ethereum node
     """
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
-    for _ in range(2):
-        _connect_to_web3()
+    for _ in range(5):
+        _connect_into_web3()
         if not cfg.w3.isConnected():
             try:
                 if env.IS_GETH_TUNNEL:
                     raise Exception("Open tunnel: ssh -f -N -L 8545:localhost:8545 username@remote-ip")
-                else:
+
+                if not env.IS_BLOXBERG:
                     is_geth_on()
+                else:
+                    log("E: web3 is not connected into BLOXBERG", "red")  # delete_me
             except Exception as e:
                 if type(e).__name__ != "QuietExit":
                     _colorize_traceback(e)
                 else:
                     sys.exit(1)
 
-            if not env.IS_GETH_TUNNEL:
+            if not env.IS_GETH_TUNNEL and not env.IS_BLOXBERG:
                 log(
                     "E: If web3 is not connected please start geth server and give permission \n"
                     "to /private/geth.ipc file doing: ",
@@ -101,7 +104,7 @@ def connect_to_eblocbroker() -> None:
         return
 
     if not cfg.w3:
-        cfg.w3 = connect_to_web3()
+        cfg.w3 = connect_into_web3()
 
     try:
         if env.EBLOCPATH is None or env.EBLOCPATH == "":

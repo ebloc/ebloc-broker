@@ -88,6 +88,10 @@ class Yaml(dict):
                 with open(path) as f:
                     self.update(self.yaml.load(f) or {})
 
+    def compare_files(self, fn1, fn2):
+        with open(fn1, 'r') as file1, open(fn2, 'r') as file2:
+            return file1.read() == file2.read()
+
     def updated(self):
         if self.auto_dump:
             self.dump(force=True)
@@ -114,9 +118,10 @@ class Yaml(dict):
             if len(content) == 1 and content[0] == "{}\n":
                 os.remove(self.path_temp)
             else:
-                if not os.path.isfile(self.path) or not filecmp.cmp(self.path, self.path_temp, shallow=False):
-                    # unlink the real file path and rename the temporary to the real
-                    os.rename(self.path_temp, self.path)
+                if os.path.isfile(self.path_temp):
+                    if not os.path.isfile(self.path) or not self.compare_files(self.path, self.path_temp):
+                        # unlink the real file path and rename the temporary to the real
+                        os.rename(self.path_temp, self.path)
 
         self.changed = False
 
@@ -158,13 +163,22 @@ _SR = representer.SafeRepresenter
 _SR.add_representer(SubYaml, _SR.represent_dict)
 
 
-def test_1():  # noqa
+def test_1():
     config_file = Path("test.yaml")
     cfg = Yaml(config_file)
     cfg["setup"]["a"] = 200
 
 
-def test_2():  # noqa
+def test_2():
+    config_file = Path("test.yaml")
+    cfg = Yaml(config_file)
+    cfg["setup"]["a"] = 201
+    print(cfg["setup"]["a"])
+    cfg_again = Yaml(config_file)
+    assert cfg_again["setup"]["a"] != 200, "setup_a is not changed"
+
+
+def test_3():
     config_file = Path("test_1.yaml")
     cfg = Yaml(config_file)
     cfg["a"] = 1
@@ -209,5 +223,6 @@ if __name__ == "__main__":
     try:
         test_1()
         test_2()
+        test_3()
     except Exception as e:
         _colorize_traceback(e)

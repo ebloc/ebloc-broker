@@ -476,7 +476,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        log(f"==> '{name}' is not running on the background. {[WHERE(1)]}")
+        _colorize_traceback(f"==> '{name}' is not running on the background. {[WHERE(1)]}")
 
     return False
 
@@ -503,17 +503,17 @@ def is_driver_on(process_count=0):
 
 
 def is_ganache_on(port) -> bool:
-    """Checks whether Ganache CLI runs on the background."""
+    """Check whether Ganache CLI runs on the background."""
     return is_process_on("node.*[g]anache-cli", "Ganache CLI", process_count=0, port=port)
 
 
+# TODO: doo
 def is_geth_on():
-    """Checks whether geth runs on the background."""
-    process_name = f"geth|{env.RPC_PORT}"
-    print(process_name)
+    """Check whether geth runs on the background."""
+    process_name = f"geth@{env.RPC_PORT}"
     if not is_process_on(process_name, "Geth", process_count=0):
-        log("E: geth is not running on the background. Please run:")
-        log("sudo ~/eBlocPOA/server.sh", "yellow")
+        log(f"E: geth is not running on the background, {process_name}. Please run:")
+        log("sudo ~/eBlocPOA/server.sh", "bold yellow")
         raise QuietExit
 
 

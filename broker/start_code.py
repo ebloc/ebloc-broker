@@ -4,10 +4,8 @@ import subprocess
 import sys
 import time
 from datetime import datetime
-
+import broker.cfg as cfg
 from config import env
-
-import broker.eblocbroker.Contract as Contract
 
 
 def start_call(job_key, index, slurm_job_id):
@@ -15,7 +13,7 @@ def start_call(job_key, index, slurm_job_id):
 
     cmd: date -d 2018-09-09T18:38:29 +"%s"
     """
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     job_id = 0  # TODO: should be obtained from the user's input
     # cmd: scontrol show job slurm_job_id | grep 'StartTime'| grep -o -P '(?<=StartTime=).*(?= E)'
     p1 = subprocess.Popen(["scontrol", "show", "job", slurm_job_id], stdout=subprocess.PIPE)
@@ -31,8 +29,7 @@ def start_call(job_key, index, slurm_job_id):
     start_time = subprocess.check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
     env.log_filename = f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt"
     f = open(env.log_filename, "a")
-    f.write(f"{env.EBLOCPATH}/eblocbroker/set_job_status_running.py {job_key} {index} {job_id} {start_time}\n\n")
-    time.sleep(0.5)
+    f.write(f"{env.EBLOCPATH}/broker/eblocbroker/set_job_status_running.py {job_key} {index} {job_id} {start_time}\n\n")
     for attempt in range(3):
         if attempt > 0:
             time.sleep(env.BLOCK_DURATION)

@@ -11,4 +11,4 @@ if __name__ == "__main__":
         address = str(sys.argv[1])
         print(Ebb.get_balance(address))
     else:
-        log("E: Please provide an address as argument")
+        log("E: Provide an address as an argument")

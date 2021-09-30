@@ -8,10 +8,9 @@ __ http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-ev
 import sys
 import time
 from contextlib import suppress
-
-import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
+import broker.cfg as cfg
 
 
 def handle_event(logged_jobs):
@@ -53,7 +52,8 @@ def log_loop(event_filter):
     poll_interval = 2
     sleep_duration = 0
     while True:
-        block_num = Contract.Ebb.get_block_number()
+        block_num = cfg.Ebb.get_block_number()
+
         sys.stdout.write(f"\r## [block_num={block_num}] waiting events for jobs since {sleep_duration} seconds...")
         sys.stdout.flush()
         logged_jobs = event_filter.get_new_entries()
@@ -92,9 +92,7 @@ def run_log_cancel_refund(self, from_block, provider):
 
 
 def main():
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 3:
         from_block = int(sys.argv[1])
         provider = str(sys.argv[2])  # Only obtains jobs that are submitted to the provider.

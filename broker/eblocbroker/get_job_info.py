@@ -3,7 +3,6 @@
 import sys
 import traceback
 from typing import Union
-
 import broker.cfg as cfg
 from broker._utils.tools import _colorize_traceback, log
 from broker.config import logging
@@ -70,10 +69,10 @@ def get_job_source_code_hashes(self, job_info, provider, job_key, index, receive
 
 
 def get_job_info(self, provider, job_key, index, job_id, received_block_number=None, is_print=True):
-    """Return the job information."""
+    """Return information of the job."""
     if is_print:
         fname = "~/ebloc-broker/broker/eblocbroker/get_job_info.py"
-        log(f"{fname} {provider} {job_key} {index} {job_id} {received_block_number}", "cyan")
+        log(f"{fname} {provider} \ \n\t{job_key} {index} {job_id} {received_block_number}", "bold cyan")
 
     try:
         provider = cfg.w3.toChecksumAddress(provider)
@@ -146,10 +145,8 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=N
     return self.job_info
 
 
-if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+def main():
+    Ebb = cfg.Ebb
     if len(sys.argv) == 5 or len(sys.argv) == 6:
         provider = str(sys.argv[1])
         job_key = str(sys.argv[2])
@@ -169,41 +166,39 @@ if __name__ == "__main__":
         _colorize_traceback(e)
         sys.exit(1)
 
-    if job_info["result_ipfs_hash"] == empty_bytes32:
-        _result_ipfs_hash = ""
-    else:
-        if job_info["result_ipfs_hash"] != "":
-            _result_ipfs_hash = bytes32_to_ipfs(job_info["result_ipfs_hash"])
-        else:
-            _result_ipfs_hash = ""
-
     elapsed_time = 0
+    result_ipfs_hash = ""
+    if job_info["result_ipfs_hash"] != empty_bytes32 and job_info["result_ipfs_hash"] != "":
+        result_ipfs_hash = bytes32_to_ipfs(job_info["result_ipfs_hash"])
+
     if job_info["completion_time"]:
         elapsed_time = int(job_info["completion_time"]) - int(job_info["start_time"])
 
     if isinstance(job_info, dict):
-        print("{0: <24}".format("state_code:") + f"{state.inv_code[job_info['stateCode']]} ({job_info['stateCode']})")
-        print("{0: <24}".format("core") + str(job_info["core"]))
-        print("{0: <24}".format("start_time") + str(job_info["start_time"]))
-        print("{0: <24}".format("completion_time:") + str(job_info["completion_time"]))
-        print("{0: <24}".format("elapsed_time:") + str(elapsed_time) + " seconds")
-        print("{0: <24}".format("received_wei:") + str(job_info["receivedWei"]))
-        print("{0: <24}".format("refunded_wei:") + str(job_info["refundedWei"]))
-        print("{0: <24}".format("expected_run_time:") + str(job_info["run_time"]))
-        print("{0: <24}".format("job_owner:") + str(job_info["job_owner"]))
-        print("{0: <24}".format("available_core:") + str(job_info["availableCore"]))
-        print("{0: <24}".format("price_core_min:") + str(job_info["price_core_min"]))
-        print("{0: <24}".format("price_data_transfer:") + str(job_info["price_data_transfer"]))
-        print("{0: <24}".format("price_storage:") + str(job_info["price_storage"]))
-        print("{0: <24}".format("price_cache:") + str(job_info["price_cache"]))
-        print("{0: <24}".format("result_ipfs_hash:") + _result_ipfs_hash)
-        print("{0: <24}".format("data_transfer_in:") + str(job_info["dataTransferIn"]))
-        print("{0: <24}".format("data_transfer_out:") + str(job_info["dataTransferOut"]))
-        print("{0: <24}".format("data_transfer_out_used:") + str(job_info["data_transfer_out_used"]))
-        print("{0: <24}".format("data_transfer_in_to_download:") + str(job_info["data_transfer_in_to_download"]))
-        print("{0: <24}".format("price_commitment_block_duration:") + str(job_info["commitmentBlockDuration"]))
+        log("{0: <24}".format("==> state_code=") + f"{state.inv_code[job_info['stateCode']]} ({job_info['stateCode']})")
+        log("{0: <24}".format("==> core=") + str(job_info["core"]))
+        log("{0: <24}".format("==> start_time=") + str(job_info["start_time"]))
+        log("{0: <24}".format("==> completion_time=") + str(job_info["completion_time"]))
+        log("{0: <24}".format("==> elapsed_time=") + str(elapsed_time) + " seconds")
+        log("{0: <24}".format("==> received_wei=") + str(job_info["receivedWei"]))
+        log("{0: <24}".format("==> refunded_wei=") + str(job_info["refundedWei"]))
+        log("{0: <24}".format("==> expected_run_time=") + str(job_info["run_time"]))
+        log("{0: <24}".format("==> job_owner=") + str(job_info["job_owner"]))
+        log("{0: <24}".format("==> available_core=") + str(job_info["availableCore"]))
+        log("{0: <24}".format("==> price_core_min=") + str(job_info["price_core_min"]))
+        log("{0: <24}".format("==> price_data_transfer=") + str(job_info["price_data_transfer"]))
+        log("{0: <24}".format("==> price_storage=") + str(job_info["price_storage"]))
+        log("{0: <24}".format("==> price_cache=") + str(job_info["price_cache"]))
+        if result_ipfs_hash:
+            log("{0: <24}".format("==> result_ipfs_hash=") + result_ipfs_hash)
+
+        log("{0: <24}".format("==> data_transfer_in=") + str(job_info["dataTransferIn"]))
+        log("{0: <24}".format("==> data_transfer_out=") + str(job_info["dataTransferOut"]))
+        log(f"==> data_transfer_out_used={job_info['data_transfer_out_used']}")
+        log(f"==> data_transfer_in_to_download={job_info['data_transfer_in_to_download']}")
+        log(f"==> price_commitment_block_duration={job_info['commitmentBlockDuration']}")
         job_info = Ebb.get_job_source_code_hashes(job_info, provider, job_key, index, received_block_number)
-        log("source_code_hashes:", "blue")
+        log("source_code_hashes:", "bold blue")
         for idx, code_hash in enumerate(job_info["source_code_hash"]):
             main_cloud_storage_id = job_info["cloudStorageID"][idx]
             if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
@@ -213,9 +208,13 @@ if __name__ == "__main__":
                 _hash = cfg.w3.toText(code_hash)
                 _type = "md5sum"
 
-            log(f"[{idx},{_type}] ", "cyan", end="")
-            log(f"{_hash}\n\t{code_hash}")
+            log(f"[{idx}, {_type}] ", "bold cyan", end="")
+            log(f"{_hash}\n\t{code_hash}", "bold")
     else:
         print(job_info)
 
-    assert elapsed_time > 0, "elapsed_time is negative"
+    assert elapsed_time >= 0, "elapsed_time is negative"
+
+
+if __name__ == "__main__":
+    main()

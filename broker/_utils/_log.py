@@ -174,6 +174,8 @@ def log(text="", color=None, filename=None, end=None, flush=False):
 
     if end is None:
         ll.console[filename].print("")
+        if color and is_arrow:
+            print()
 
     # f.close()
 
