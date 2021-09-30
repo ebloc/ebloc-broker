@@ -11,4 +11,3 @@ if __name__ == "__main__":
         print(f"owner={Ebb.get_owner()}")
     except Exception as e:
         _colorize_traceback(e)
-        sys.exit(1)
