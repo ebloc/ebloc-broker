@@ -8,6 +8,7 @@ __ http://web3py.readthedocs.io/en/latest/filters.html#examples-listening-for-ev
 import sys
 import time
 from contextlib import suppress
+
 import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs

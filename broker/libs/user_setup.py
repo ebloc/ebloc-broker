@@ -7,7 +7,7 @@ import pwd
 from config import logging
 from lib import run
 from libs.slurm import add_user_to_slurm
-from utils import log, mkdir, popen_communicate, _remove  # noqa: F401
+from utils import _remove, log, mkdir, popen_communicate  # noqa: F401
 
 
 def remove_user(user_name, user_dir):

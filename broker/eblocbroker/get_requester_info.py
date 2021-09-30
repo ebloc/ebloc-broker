@@ -54,5 +54,5 @@ if __name__ == "__main__":
             if key == "block_read_from":
                 value = requester_info["block_read_from"]
             print("{0: <19}".format(f"{key}:") + str(value))
-    except Exception:
-        sys.exit(1)
+    except Exception as e:
+        _colorize_traceback(e)

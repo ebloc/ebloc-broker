@@ -10,7 +10,7 @@ from broker._utils.tools import _colorize_traceback, log
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, read_json, terminate
-from brownie.network.account import Account
+from brownie.network.account import Account, LocalAccount
 
 
 class Web3NotConnected(Exception):  # noqa
@@ -66,7 +66,7 @@ class Contract:
     from broker.eblocbroker.update_provider_prices import update_provider_prices
     from broker.eblocbroker.transfer_ownership import transfer_ownership
 
-    def brownie_load_accounts(self, fname="alper.json", password="alper"):
+    def brownie_load_account(self, fname="alper.json", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
@@ -76,7 +76,7 @@ class Contract:
         """Check whether is the ethereum account locked."""
         if env.IS_BLOXBERG:
             try:
-                account = self.brownie_load_accounts()
+                account = self.brownie_load_account()
             except:
                 error_msg = f"E: PROVIDER_ID({account}) is locked, unlock it for futher use"
                 terminate(error_msg, is_traceback=False)
@@ -143,7 +143,11 @@ class Contract:
             raise Exception(f"E: Invalid account {address} is provided")
 
     def _get_balance(self, address):
-        address = self.w3.toChecksumAddress(address)
+        if not isinstance(address, (Account, LocalAccount)):
+            address = self.w3.toChecksumAddress(address)
+        else:
+            address = str(address)
+
         balance_wei = self.w3.eth.get_balance(address)
         return self.w3.fromWei(balance_wei, "ether")
 
@@ -190,7 +194,7 @@ class Contract:
     def _process_payment(self, *args):
         ops = {"from": env.PROVIDER_ID, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.processPayment(*args, ops)
         else:
             return self.eBlocBroker.functions.processPayment(*args).transact(ops)
@@ -199,7 +203,7 @@ class Contract:
         """Withdraw payment."""
         ops = {"from": self.w3.toChecksumAddress(account), "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.withdraw(ops)
         else:
             return self.eBlocBroker.functions.withdraw().transact(ops)
@@ -208,7 +212,7 @@ class Contract:
         """Set the job status as running."""
         ops = {"from": self.w3.toChecksumAddress(env.PROVIDER_ID), "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.setJobStatusRunning(key, int(index), int(job_id), int(start_time), ops)
         else:
             return self.eBlocBroker.functions.setJobStatusRunning(
@@ -219,7 +223,7 @@ class Contract:
         """Register the dataset hash."""
         ops = {"from": env.PROVIDER_ID, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.registerData(*args, ops)
         else:
             return self.eBlocBroker.functions.registerData(*args).transact(ops)
@@ -228,7 +232,7 @@ class Contract:
         """Register provider."""
         ops = {"from": env.PROVIDER_ID, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.registerProvider(*args, ops)
         else:
             return self.eBlocBroker.functions.registerProvider(*args).transact(ops)
@@ -236,7 +240,7 @@ class Contract:
     def _update_provider_info(self, *args):
         ops = {"from": env.PROVIDER_ID, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.updateProviderInfo(*args, ops)
         else:
             return self.eBlocBroker.functions.updateProviderInfo(*args).transact(ops)
@@ -244,7 +248,7 @@ class Contract:
     def _update_provider_prices(self, *args):
         ops = {"from": env.PROVIDER_ID, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.updateProviderPrices(*args, ops)
         else:
             return self.eBlocBroker.functions.updateProviderPrices(*args).transact(ops)
@@ -252,7 +256,7 @@ class Contract:
     def _authenticate_orc_id(self, _from, *args):
         ops = {"from": _from, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.authenticateOrcID(*args, ops)
         else:
             return self.eBlocBroker.functions.authenticateOrcID(*args).transact(ops)
@@ -260,7 +264,7 @@ class Contract:
     def _transfer_ownership(self, _from, new_owner):
         ops = {"from": _from, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.transferOwnership(new_owner, ops)
         else:
             return self.eBlocBroker.functions.transferOwnership(new_owner).transact(ops)
@@ -268,7 +272,7 @@ class Contract:
     def _refund(self, _from, *args):
         ops = {"from": _from, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.refund(*args, ops)
         else:
             return self.eBlocBroker.functions.refund(*args).transact(ops)
@@ -276,7 +280,7 @@ class Contract:
     def _register_requester(self, _from, *args):
         ops = {"from": _from, "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.registerRequester(*args, ops)
         else:
             return self.eBlocBroker.functions.registerRequester(*args).transact(ops)
@@ -284,7 +288,7 @@ class Contract:
     def _submit_job(self, requester, job_price, *args):
         ops = {"from": requester, "value": self.w3.toWei(job_price, "wei"), "gas": 4500000}
         if env.IS_BLOXBERG:
-            self.brownie_load_accounts()
+            self.brownie_load_account()
             return self.eBlocBroker.submitJob(*args, ops)
         else:
             return self.eBlocBroker.functions.submitJob(*args).transact(ops)
@@ -336,7 +340,7 @@ class Contract:
 
     def does_requester_exist(self, address):
         """Check whether the given Ethereum address of the requester address is registered."""
-        if not isinstance(address, Account):
+        if not isinstance(address, (Account, LocalAccount)):
             address = self.w3.toChecksumAddress(address)
 
         if env.IS_BLOXBERG:
@@ -346,10 +350,11 @@ class Contract:
 
     def does_provider_exist(self, address) -> bool:
         """Check whether the given provider is registered."""
-        if not isinstance(address, Account):
+        if not isinstance(address, (Account, LocalAccount)):
             address = self.w3.toChecksumAddress(address)
 
         if env.IS_BLOXBERG:
+            print("foo")
             return self.eBlocBroker.doesProviderExist(address)
         else:
             return self.eBlocBroker.functions.doesProviderExist(address).call()
@@ -363,7 +368,7 @@ class Contract:
 
     def get_provider_receipt_size(self, address):
         """Return provider receipt size."""
-        if not isinstance(address, Account):
+        if not isinstance(address, (Account, LocalAccount)):
             address = self.w3.toChecksumAddress(address)
 
         if env.IS_BLOXBERG:
@@ -389,14 +394,14 @@ class Contract:
         """Return account balance."""
         return self.w3.eth.get_balance(account)
 
-    def get_balance(self, address):
-        if not isinstance(address, Account):
-            address = self.w3.toChecksumAddress(address)
+    def get_balance(self, account):
+        if not isinstance(account, (Account, LocalAccount)):
+            account = self.w3.toChecksumAddress(account)
 
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.balanceOf(address)
+            return self.eBlocBroker.balanceOf(account)
         else:
-            return self.eBlocBroker.functions.balanceOf(address).call()
+            return self.eBlocBroker.functions.balanceOf(account).call()
 
     def get_providers(self):
         """Return the providers list."""
@@ -413,7 +418,7 @@ class Contract:
 
     def get_job_storage_time(self, provider_addr, source_code_hash, _from):
         """Return job storage duration time."""
-        if not isinstance(provider_addr, Account):
+        if not isinstance(provider_addr, (Account, LocalAccount)):
             provider_addr = self.w3.toChecksumAddress(provider_addr)
 
         ops = {"from": _from}
@@ -438,7 +443,6 @@ class Contract:
 
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
-
 
 
 class EBB:

@@ -13,7 +13,7 @@ from broker.lib import get_tx_status
 def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerprint, ipfs_id):
     """Register requester into smart contract."""
     if env.IS_BLOXBERG:
-        account = self.brownie_load_accounts().address
+        account = self.brownie_load_account().address
     else:
         account = self.w3.eth.accounts[int(account_id)]  # requester's Ethereum Address
 

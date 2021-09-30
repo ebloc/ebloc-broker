@@ -8,7 +8,7 @@ import libs.git as git
 from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from drivers.storage_class import Storage
 from lib import calculate_folder_size
-from utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir, _remove
+from utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir
 
 import broker.cfg as cfg
 from broker.utils import is_ipfs_on

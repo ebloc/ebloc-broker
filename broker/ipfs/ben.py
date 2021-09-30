@@ -15,12 +15,12 @@ from broker.utils import (
     CacheType,
     StorageID,
     _colorize_traceback,
+    _remove,
     generate_md5sum,
     ipfs_to_bytes32,
     is_bin_installed,
     is_dpkg_installed,
     log,
-    _remove,
 )
 from brownie import accounts, network, project, web3
 from contract.scripts.lib import Job, cost

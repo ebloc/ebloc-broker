@@ -4,6 +4,7 @@ from broker._utils.tools import timenow
 
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
+
     Ebb: "Contract.Contract" = Contract.EBB()
     _timenow = Ebb.timenow()
     t = timenow()

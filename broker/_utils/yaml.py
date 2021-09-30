@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
+import filecmp
 import os
 from pathlib import Path
-import filecmp
+
 from filelock import FileLock
 from ruamel.yaml import YAML, representer
+
+try:
+    from broker._utils.tools import _colorize_traceback
+except:  # if ebloc_broker used as a submodule
+    from ebloc_broker.broker._utils.tools import _colorize_traceback
 
 
 class SubYaml(dict):
@@ -57,7 +63,7 @@ class Yaml(dict):
     ruamel.yaml.representer.RepresenterError: cannot represent an object: {'value': }
     __ https://stackoverflow.com/a/68685839/2402577
 
-    PyYAML - Saving data to .yaml files
+    PyYAML Saving data to .yaml files
     __ https://codereview.stackexchange.com/a/210162/127969
     """
 
@@ -200,5 +206,8 @@ def test_2():  # noqa
 
 
 if __name__ == "__main__":
-    test_1()
-    test_2()
+    try:
+        test_1()
+        test_2()
+    except Exception as e:
+        _colorize_traceback(e)

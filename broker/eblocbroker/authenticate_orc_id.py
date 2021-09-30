@@ -65,7 +65,7 @@ if __name__ == "__main__":
     try:
         owner_address = cfg.w3.eth.accounts[0]
         if env.IS_BLOXBERG:
-            accounts = Ebb.brownie_load_accounts()
+            accounts = Ebb.brownie_load_account()
             owner_address = accounts.address
 
         tx_hash = Ebb.authenticate_orc_id(address, orc_id, owner_address)

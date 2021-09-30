@@ -13,11 +13,11 @@ from utils import (
     CacheType,
     StorageID,
     _colorize_traceback,
+    _remove,
     generate_md5sum,
     ipfs_to_bytes32,
     is_dpkg_installed,
     log,
-    _remove,
 )
 from web3.logs import DISCARD
 

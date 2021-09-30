@@ -8,6 +8,7 @@ import time
 import traceback
 from datetime import datetime
 from decimal import Decimal
+from os import listdir
 from subprocess import CalledProcessError, check_output
 
 from pytz import timezone, utc

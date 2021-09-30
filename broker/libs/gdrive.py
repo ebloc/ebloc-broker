@@ -10,16 +10,7 @@ from pprint import pprint
 
 from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
-from utils import (
-    _colorize_traceback,
-    byte_to_mb,
-    compress_folder,
-    dump_dict_to_file,
-    log,
-    mkdir,
-    read_json,
-    _remove,
-)
+from utils import _colorize_traceback, _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, mkdir, read_json
 
 from broker._utils.tools import QuietExit
 
