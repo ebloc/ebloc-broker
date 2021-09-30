@@ -10,4 +10,4 @@ if __name__ == "__main__":
         provider_address = str(sys.argv[1])
         print(Ebb.does_provider_exist(provider_address))
     else:
-        print("E: Please provide provider address as argument.")
+        print("E: Provide provider address as and argument.")

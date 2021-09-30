@@ -12,15 +12,7 @@ from broker._utils.tools import QuietExit, _colorize_traceback, log
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
 from broker.lib import get_tx_status
-from broker.utils import (
-    CacheType,
-    StorageID,
-    bytes32_to_ipfs,
-    empty_bytes32,
-    is_geth_account_locked,
-    run,
-    _remove,
-)
+from broker.utils import CacheType, StorageID, _remove, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, run
 
 
 class DataStorage:

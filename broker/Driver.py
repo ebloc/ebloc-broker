@@ -12,6 +12,8 @@ from pprint import pprint
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
+
+import broker._utils._log as _log
 import broker.cfg as cfg
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
@@ -19,9 +21,8 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import log
-import broker._utils._log as _log
 from broker._utils.tools import QuietExit, _colorize_traceback
-from broker.config import env, logging, setup_logger, Terminate
+from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass

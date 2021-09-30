@@ -9,17 +9,7 @@ import libs.git as git
 from config import env, logging
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
-from utils import (
-    WHERE,
-    CacheType,
-    _colorize_traceback,
-    byte_to_mb,
-    generate_md5sum,
-    get_time,
-    mkdir,
-    _remove,
-    untar,
-)
+from utils import WHERE, CacheType, _colorize_traceback, _remove, byte_to_mb, generate_md5sum, get_time, mkdir, untar
 
 
 class GdriveClass(Storage):

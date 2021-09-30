@@ -16,6 +16,7 @@ from broker._utils.tools import _colorize_traceback, handler, log
 # from io import StringIO
 from broker.config import env, logging
 from broker.utils import (
+    _remove,
     _try,
     compress_folder,
     is_ipfs_on,
@@ -23,7 +24,6 @@ from broker.utils import (
     raise_error,
     run,
     run_with_output,
-    _remove,
     terminate,
     untar,
 )

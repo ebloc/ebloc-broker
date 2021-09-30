@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from contextlib import suppress
 import base64
 import getpass
 import os
 import pprint
 import sys
 import time
+from contextlib import suppress
 from typing import Dict, List
 
 import eblocbroker.Contract as Contract
@@ -33,6 +33,7 @@ from broker.utils import (
     WHERE,
     StorageID,
     _colorize_traceback,
+    _remove,
     byte_to_mb,
     bytes32_to_ipfs,
     eth_address_to_md5,
@@ -42,7 +43,6 @@ from broker.utils import (
     read_file,
     read_json,
     remove_empty_files_and_folders,
-    _remove,
 )
 
 connect()

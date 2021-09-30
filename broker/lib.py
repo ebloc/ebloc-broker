@@ -16,13 +16,13 @@ from broker.config import env, logging
 from broker.utils import (
     Link,
     StorageID,
+    _remove,
     byte_to_mb,
     is_process_on,
     mkdir,
     popen_communicate,
     question_yes_no,
     run,
-    _remove,
 )
 
 

@@ -14,12 +14,12 @@ from broker.drivers.storage_class import Storage
 from broker.utils import (
     CacheType,
     _colorize_traceback,
+    _remove,
     generate_md5sum,
     get_time,
     log,
     mkdir,
     read_json,
-    _remove,
     untar,
 )
 
