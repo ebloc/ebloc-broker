@@ -7,7 +7,7 @@ import daemon.pidfile
 from daemons.daemon_base import Daemon_base
 
 from broker.config import env
-from broker.utils import _colorize_traceback, is_driver_on
+from broker.utils import is_driver_on, print_tb
 
 if __name__ == "__main__":
     pidfile = daemon.pidfile.PIDLockFile(env.DRIVER_DAEMON_LOCK)
@@ -20,7 +20,7 @@ if __name__ == "__main__":
                 daemon_base.start()
             except Exception as e:
                 if type(e).__name__ != "QuietExit":
-                    _colorize_traceback(e)
+                    print_tb(e)
                     sys.exit(1)
         elif sys.argv[1] in ["terminate", "t"]:
             daemon_base.terminate()

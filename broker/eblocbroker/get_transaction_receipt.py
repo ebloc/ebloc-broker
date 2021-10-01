@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-
-from broker.utils import _colorize_traceback
+import broker.cfg as cfg
+from broker.utils import print_tb
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         tx = str(sys.argv[1])
     else:
@@ -17,5 +15,5 @@ if __name__ == "__main__":
         print(Ebb.get_transaction_receipt(tx))
         # print(getTransactionReceipt(tx)['blockNumber'])
     except:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-
-from broker._utils.tools import _colorize_traceback, log
+import broker.cfg as cfg
+from broker._utils.tools import log, print_tb
 
 
 def get_requester_info(self, requester):
@@ -34,14 +34,12 @@ def get_requester_info(self, requester):
         }
         return requester_info
     except Exception:
-        _colorize_traceback()
+        print_tb()
         raise
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 1:
         requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
         # requester = "0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571"
@@ -55,4 +53,4 @@ if __name__ == "__main__":
                 value = requester_info["block_read_from"]
             print("{0: <19}".format(f"{key}:") + str(value))
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)

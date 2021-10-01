@@ -2,14 +2,14 @@
 
 import subprocess
 import time
-
-import eblocbroker.Contract as Contract
+import broker.cfg as cfg
 from config import env, setup_logger
-from imports import connect_to_web3
+from imports import connect_into_web3
 from utils import eth_address_to_md5
 
-w3 = connect_to_web3()
-Ebb: "Contract.Contract" = Contract.EBB()
+
+Ebb = cfg.Ebb
+w3 = connect_into_web3()
 testFlag = False
 log_dc = setup_logger(f"{env.LOG_PATH}/cancelledJobsLog.out")
 

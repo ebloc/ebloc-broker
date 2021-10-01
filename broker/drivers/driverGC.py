@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import eblocbroker.Contract as Contract
+import broker.cfg as cfg
 from config import env
 from imports import connect
 from pymongo import MongoClient
@@ -10,7 +10,7 @@ cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
 eBlocBroker, w3 = connect()
-Ebb: "Contract.Contract" = Contract.EBB()
+Ebb = cfg.Ebb
 
 """find_all"""
 block_number = Ebb.get_block_number()

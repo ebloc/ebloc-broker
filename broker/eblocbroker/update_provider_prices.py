@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-
-from broker._utils.tools import _colorize_traceback
+import broker.cfg as cfg
+from broker._utils.tools import print_tb
 from broker.config import logging
 from broker.lib import get_tx_status
 
@@ -21,14 +21,12 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
         tx = self._update_provider_prices(available_core, commitment_blk, prices)
         return self.tx_id(tx)
     except Exception:
-        logging.error(_colorize_traceback)
+        logging.error(print_tb)
         raise
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     available_core = 128
     commitment_blk = 10
     price_core_min = 100
@@ -41,5 +39,5 @@ if __name__ == "__main__":
         tx_hash = Ebb.update_provider_prices(available_core, commitment_blk, prices)
         receipt = get_tx_status(tx_hash)
     except:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)

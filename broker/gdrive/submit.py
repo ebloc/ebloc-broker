@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
-
-from config import env
-
-import broker.Driverlibs.git as git
-import broker.eblocbroker.Contract as Contract
+from broker.config import env
+import broker.cfg as cfg
+import broker.libs.git as git
 import broker.libs.gdrive as gdrive
 from broker.lib import check_linked_data
-from broker.utils import CacheType, StorageID, _colorize_traceback, is_program_valid, log
-from contract.scripts.lib import Job, cost
+from broker.utils import CacheType, StorageID, is_program_valid, log, print_tb
+from broker.eblocbroker.job import Job
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
@@ -17,7 +15,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     is_program_valid(["gdrive", "version"])
 
     job.base_dir = f"{env.EBLOCPATH}/base"
@@ -36,7 +34,6 @@ def main():
     account_id = 1
     _from = Ebb.w3.toChecksumAddress(Ebb.w3.eth.accounts[account_id])
     job = gdrive.submit(provider, _from, job)
-
     job.run_time = [5]
     job.cores = [1]
     job.data_transfer_ins = [1, 1]
@@ -55,7 +52,7 @@ def main():
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
     job_key = job.keys[tar_hash]
     try:
-        job_price, _cost = cost(provider, _from, job)
+        job_price, _cost = job.cost(provider, _from, job)
         tx_hash = Ebb.submit_job(provider, job_key, job_price, job, requester=_from)
     except Exception as e:
         raise e
@@ -75,5 +72,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
-            _colorize_traceback()
+            print_tb()
         sys.exit(1)

@@ -9,25 +9,18 @@ from imports import connect
 from lib import check_linked_data, get_tx_status, run
 from libs import ipfs
 from libs.ipfs import gpg_encrypt
-from utils import (
-    CacheType,
-    StorageID,
-    _colorize_traceback,
-    _remove,
-    generate_md5sum,
-    ipfs_to_bytes32,
-    is_dpkg_installed,
-    log,
-)
+from utils import CacheType, StorageID, _remove, generate_md5sum, ipfs_to_bytes32, is_dpkg_installed, log, print_tb
 from web3.logs import DISCARD
 
 import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import QuietExit
 from contract.scripts.lib import Job, cost
+import broker.cfg as cfg
+
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     job = Job()
 
     if not is_dpkg_installed("pigz"):
@@ -98,7 +91,7 @@ if __name__ == "__main__":
             # ipfs_hash = ipfs.add(folder, is_hidden=True)  # True includes .git/, which changes the overall ipfs-hash
             run(["ipfs", "refs", ipfs_hash])
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
         if idx == 0:
@@ -139,7 +132,7 @@ if __name__ == "__main__":
     except QuietExit:
         sys.exit(1)
     except:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)
     finally:
         pass

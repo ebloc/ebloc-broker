@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import broker.eblocbroker.Contract as Contract
-from broker.utils import _colorize_traceback
-
-Ebb: "Contract.Contract" = Contract.EBB()
+import broker.cfg as cfg
+from broker.utils import print_tb
 
 if __name__ == "__main__":
     try:
+        Ebb = cfg.Ebb
         print(f"is_contract_exists={Ebb.is_contract_exists()}")
     except:
-        _colorize_traceback()
-        print("is_contract_exists=False")
+        print_tb()
+        print("E: is_contract_exists=False")

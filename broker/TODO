@@ -22,25 +22,22 @@ w3 = Web3(Web3.HTTPProvider(link))
    Starting from // 5955  9447070
 
 ** TODO oc may have "owncloud.owncloud.HTTPResponseError: HTTP error: 401" error
-** TODO _colorize_traceback() <= Remove logging // log
 ** TODO DAWNNech
   [link](https://dawn.cs.stanford.edu/benchmark/
 ** TODO gdown setup
 
 #+BEGIN_SRC python
-  def foo():
-      try:
-	  if True:
-	      alper = 10 * 20
-		# https://drive.google.com/file/d/0B_JzYt91KzCzSm1JaWhrQUk5RmVjWG9YYVhBQXpueFV4ZUJB/edit
-	      ~/junk/alper.mp
-	except:
-	    gdrive
+def foo():
+    try:
+	if True:
+	    alper = 10 * 20
+	    # https://drive.google.com/file/d/0B_JzYt91KzCzSm1JaWhrQUk5RmVjWG9YYVhBQXpueFV4ZUJB/edit
+	    ~/junk/alper.mp
+    except:
+        gdrive
 #+END_SRC
 
 link: https://github.com/wkentar
 ** TODO Some code should go into utils.py
    Some functıons are public that should carried into `utils.py`
 ** TODO .git yoksa eudat ve ipfs icin yarat
-** DONE Fix slow paste operatin in ZSH
-   CLOSED: [2021-08-07 Sat 03:08]

@@ -129,7 +129,7 @@ class ENV:
             if provider_id:
                 self.PROVIDER_ID = cfg.w3.toChecksumAddress(provider_id)
             else:
-                print("E: Please set PROVIDER_ID in ~/.ebloc-broker/.env")
+                print(f"E: Please set PROVIDER_ID in {self.env_file}")
                 raise QuietExit
         else:
             self.PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))

@@ -5,7 +5,7 @@ import sys
 import ipfshttpclient
 
 import broker.cfg as cfg
-from broker._utils.tools import QuietExit, _colorize_traceback, log
+from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
 
@@ -32,14 +32,12 @@ def register_requester(self, account_id, email, federation_cloud_id, gpg_fingerp
         tx = self._register_requester(account, gpg_fingerprint, email, federation_cloud_id, ipfs_id)
         return self.tx_id(tx)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     try:
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except:
@@ -64,5 +62,5 @@ if __name__ == "__main__":
         receipt = get_tx_status(tx_hash)
     except Exception as e:
         if type(e).__name__ != "QuietExit":
-            _colorize_traceback()
+            print_tb()
         sys.exit(1)

@@ -11,7 +11,7 @@ from threading import Thread
 
 import broker.cfg as cfg
 import broker.config as config
-from broker._utils.tools import _colorize_traceback, log, print_trace
+from broker._utils.tools import log, print_tb, print_trace
 from broker.config import env, logging
 from broker.utils import (
     Link,
@@ -81,9 +81,9 @@ state = State()
 
 def _connect_web3():
     if not cfg.w3:
-        from imports import connect_to_web3
+        from imports import connect_into_web3
 
-        connect_to_web3()
+        connect_into_web3()
 
 
 def session_start_msg(slurm_user, block_number, pid):
@@ -113,17 +113,16 @@ def get_tx_status(tx_hash) -> str:
     tx_receipt = cfg.w3.eth.waitForTransactionReceipt(tx_hash)
     log("Transaction receipt is mined:")
     pprint(dict(tx_receipt), depth=1)
-    # logging.info(pformat(receipt))
-    # log("")
     # for idx, _log in enumerate(receipt["logs"]):
     #     # All logs fried under the tx
     #     log(f"log {idx}", "blue")
     #     pprint(_log.__dict__)
     log("\n## Was transaction successful? ", filename=None)
     if tx_receipt["status"] == 1:
-        log("Transaction is deployed", "green")
+        log("Transaction is deployed", "bold green")
     else:
         raise Exception("E: Transaction is reverted")
+
     return tx_receipt
 
 
@@ -192,13 +191,13 @@ def remove_files(filename) -> bool:
             try:
                 _remove(f)
             except:
-                _colorize_traceback()
+                print_tb()
                 return False
     else:
         try:
             _remove(filename)
         except:
-            _colorize_traceback()
+            print_tb()
             return False
 
     return True
@@ -225,7 +224,7 @@ def eblocbroker_function_call(func, attempt):
             if type(e).__name__ == "Web3NotConnected":
                 time.sleep(1)
             else:
-                _colorize_traceback(e)
+                print_tb(e)
                 raise e
     raise
 

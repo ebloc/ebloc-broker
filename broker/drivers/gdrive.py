@@ -9,7 +9,7 @@ import libs.git as git
 from config import env, logging
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
-from utils import WHERE, CacheType, _colorize_traceback, _remove, byte_to_mb, generate_md5sum, get_time, mkdir, untar
+from utils import WHERE, CacheType, _remove, byte_to_mb, generate_md5sum, get_time, mkdir, print_tb, untar
 
 
 class GdriveClass(Storage):
@@ -207,7 +207,7 @@ class GdriveClass(Storage):
                 name,
             ) = self.get_data_init(key, _id, is_job_key)
         except Exception as e:
-            _colorize_traceback()
+            print_tb()
             raise e
 
         if is_job_key:
@@ -238,7 +238,7 @@ class GdriveClass(Storage):
             try:
                 output = gdrive.get_file_id(key)
             except Exception as e:
-                _colorize_traceback()
+                print_tb()
                 raise e
 
             key = echo_grep_awk(output, name, "1")
@@ -249,7 +249,7 @@ class GdriveClass(Storage):
                 cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
             except Exception as e:
-                _colorize_traceback()
+                print_tb()
                 raise e
 
             source_code_hash = gdrive.get_file_info(gdrive_info, "Md5sum")
@@ -273,7 +273,7 @@ class GdriveClass(Storage):
                 untar(f"{cache_folder}/{name}", target)
                 return target
             except Exception as e:
-                _colorize_traceback()
+                print_tb()
                 raise e
 
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}")
@@ -296,7 +296,7 @@ class GdriveClass(Storage):
             try:
                 output = run(cmd)
             except Exception as e:
-                _colorize_traceback()
+                print_tb()
                 raise e
 
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}/")
@@ -306,7 +306,7 @@ class GdriveClass(Storage):
                 _remove(tar_file)
                 return target
             except Exception as e:
-                _colorize_traceback()
+                print_tb()
                 raise e
         else:
             raise

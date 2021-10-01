@@ -3,11 +3,10 @@
 # Example To run: ./is_owner.py 0x57b60037b82154ec7149142c606ba024fbb0f991
 
 import sys
-
-import broker.eblocbroker.Contract as Contract
+import broker.cfg as cfg
 
 if __name__ == "__main__":
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         addr = str(sys.argv[1])
         print(Ebb.is_owner(addr))

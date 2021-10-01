@@ -6,7 +6,7 @@ import broker.config as config
 from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.lib import run
-from broker.utils import BashCommandsException, _colorize_traceback, is_process_on, log, popen_communicate
+from broker.utils import BashCommandsException, is_process_on, log, popen_communicate, print_tb
 
 
 def add_user_to_slurm(user):
@@ -15,7 +15,7 @@ def add_user_to_slurm(user):
     # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
     if p.returncode != 0 and "Nothing new added" not in output:
-        _colorize_traceback()
+        print_tb()
         logging.error(f"E: sacctmgr remove error: {output}")
         raise
 

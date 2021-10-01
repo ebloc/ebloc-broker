@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-
-import broker.eblocbroker.Contract as Contract
-from broker.utils import _colorize_traceback
+import broker.cfg as cfg
+from broker.utils import print_tb
 
 if __name__ == "__main__":
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 5:
         key = str(sys.argv[1])
         index = int(sys.argv[2])
@@ -19,6 +18,6 @@ if __name__ == "__main__":
     try:
         tx_hash = Ebb.set_job_status_running(key, index, job_id, start_time)
         print(f"tx_hash={tx_hash}")
-    except:
-        _colorize_traceback()
+    except Exception as e:
+        print_tb(e)
         sys.exit(1)

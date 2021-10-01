@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import broker.cfg as cfg
 import base64
 import getpass
 import os
@@ -8,20 +9,17 @@ import sys
 import time
 from contextlib import suppress
 from typing import Dict, List
-
-import eblocbroker.Contract as Contract
-import libs.eudat as eudat
-import libs.gdrive as gdrive
-import libs.git as git
-import libs.slurm as slurm
-
-import broker.cfg as cfg
+import broker.libs.eudat as eudat
+import broker.libs.gdrive as gdrive
+import broker.libs.git as git
+import broker.libs.slurm as slurm
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
 from broker.lib import (
     calculate_folder_size,
     eblocbroker_function_call,
+    get_tx_status,
     is_dir,
     remove_files,
     run,
@@ -32,7 +30,6 @@ from broker.lib import (
 from broker.utils import (
     WHERE,
     StorageID,
-    _colorize_traceback,
     _remove,
     byte_to_mb,
     bytes32_to_ipfs,
@@ -40,13 +37,14 @@ from broker.utils import (
     is_dir_empty,
     log,
     mkdir,
+    print_tb,
     read_file,
     read_json,
     remove_empty_files_and_folders,
 )
 
 connect()
-Ebb: "Contract.Contract" = Contract.EBB()
+Ebb = cfg.Ebb
 
 
 class Common:
@@ -188,18 +186,15 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.end_time_stamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
-        # [https://stackoverflow.com/a/4453495/2402577, https://stackoverflow.com/a/5971326/2402577]
-        # my_env = os.environ.copy();
-        # my_env["IPFS_PATH"] = HOME + "/.ipfs"
-        # print(my_env)
+        #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = f"{env.HOME}/.ipfs"
         log_filename = f"{env.LOG_PATH}/end_code_output/{self.job_key}_{self.index}.log"
         logging = setup_logger(log_filename)
         # logging.info(f"==> Entered into {self.__class__.__name__} case.") # delete
         # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id
-        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "blue")
-        log(f"slurm_job_id={self.slurm_job_id}")
+        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue")
+        log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             logging.error("E: Given key and index are equal to each other")
             sys.exit(1)
@@ -235,14 +230,14 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         mkdir(self.patch_folder)
         mkdir(self.patch_folder_ipfs)
         remove_empty_files_and_folders(self.results_folder)
-        log(f"==> whoami={getpass.getuser()} - {os.getegid()}")
+        log(f"==> whoami={getpass.getuser()} | id={os.getegid()}")
         log(f"==> home={env.HOME}")
         log(f"==> pwd={os.getcwd()}")
         log(f"==> results_folder={self.results_folder}")
         log(f"==> job_key={self.job_key}")
         log(f"==> index={self.index}")
         log(f"==> cloud_storage_ids={self.cloud_storage_ids}")
-        log(f"==> folder_name={self.folder_name}")
+        log(f"==> folder_name=[white]{self.folder_name}")
         log(f"==> provider_id={env.PROVIDER_ID}")
         log(f"==> requester_id_address={requester_id_address}")
         log(f"==> received={self.job_info['received']}")
@@ -301,7 +296,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             cfg.ipfs.pin(self.result_ipfs_hash)
             data_transfer_out = cfg.ipfs.get_cumulative_size(self.result_ipfs_hash)
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             raise e
 
         data_transfer_out = byte_to_mb(data_transfer_out)
@@ -322,16 +317,18 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.data_transfer_out,
                     self.job_info["core"],
                     self.job_info["run_time"],
+                    self.received_block_number,
                 ),
                 10,
             )
-            log(f"tx_hash={tx_hash}")
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             sys.exit(1)
 
         with open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a") as f:
-            f.write(f"processPayment {self.job_key} {self.index} {tx_hash}")
+            f.write(f"processPayment {self.job_key} {self.index} {tx_hash}\n\n")
+
+        return tx_hash
 
     def clean_before_upload(self):
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
@@ -343,7 +340,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file]
             files_to_remove = run(cmd)
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             sys.exit()
 
         if not files_to_remove or files_to_remove:
@@ -416,9 +413,23 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         with open(slurm_log_output_file, "a") as myfile:
             myfile.write("\n")
 
-    def _attemp_get_job_info(self):
+    def log_job(self):
+        self.job_info = eblocbroker_function_call(
+            lambda: Ebb.get_job_info(
+                env.PROVIDER_ID,
+                self.job_key,
+                self.index,
+                self.job_id,
+                self.received_block_number,
+                is_print=False,
+                is_log_print=True,
+            ),
+            1,
+        )
+
+    def attemp_get_job_info(self):
         is_print = True
-        for attempt in range(10):
+        for attempt in range(100):
             if self.job_info["stateCode"] == state.code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed
                 log("==> Job has been started")
@@ -427,6 +438,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             if self.job_info["stateCode"] == state.code["COMPLETED"]:
                 # detects an error on the slurm side
                 log("==> Job is already completed job and its money is received")
+                self.log_job()
                 raise QuietExit
 
             try:
@@ -434,17 +446,22 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     lambda: Ebb.get_job_info(
                         env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
                     ),
-                    10,
+                    1,
                 )
                 is_print = False
-            except:
-                sys.exit(1)
+            except Exception as e:
+                print_tb(e)
+                # sys.exit(1)
 
-            log(f"==> start_code tx of the job is not obtained yet.\nWaiting for {attempt * 15} seconds to pass")
-            # short sleep here so this loop is not keeping CPU busy due to
-            # setJobSuccess may deploy late
-            time.sleep(15)
+            # sleep here so this loop is not keeping CPU busy due to
+            # start_code tx may deploy late into the blockchain.
+            log(
+                f"==> [{attempt}] start_code tx of the job is not obtained yet."
+                f" Waiting for {attempt * 30} seconds to pass."
+            )
+            time.sleep(30)
         else:  # failed all the attempts, abort
+            log("E: failed all the attempts, abort")
             sys.exit(1)
 
     def run(self):
@@ -462,19 +479,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        log("job_owner's info\n================", "green")
-        log("{0: <17}".format("email:") + self.requester_info["email"], "green")
-        log("{0: <17}".format("gpg_fingerprint:") + self.requester_gpg_fingerprint, "green")
-        log("{0: <17}".format("ipfs_id:") + self.requester_info["ipfs_id"], "green")
-        log("{0: <17}".format("f_id:") + self.requester_info["f_id"], "green")
-
+        log("\njob_owner's info\n================", "bold green")
+        log(f"==> email=[white]{self.requester_info['email']}")
+        log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
+        log(f"==> ipfs_id={self.requester_info['ipfs_id']}")
+        log(f"==> f_id={self.requester_info['f_id']}")
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
             log("==> Job is already completed and its money is received")
+            self.log_job()
             raise QuietExit
 
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
-        self._attemp_get_job_info()
+        self.attemp_get_job_info()
+        log("## Received running job status successfully", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_source_code_hashes(
@@ -506,14 +524,27 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
         log(f"data_transfer_in={self.data_transfer_in} MB => rounded={int(self.data_transfer_in)} MB")
         log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
         log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
-        self.process_payment_tx()
+        tx_hash = self.process_payment_tx()
+        get_tx_status(tx_hash)
+        self.job_info = eblocbroker_function_call(
+            lambda: Ebb.get_job_info(
+                env.PROVIDER_ID,
+                self.job_key,
+                self.index,
+                self.job_id,
+                self.received_block_number,
+                is_print=False,
+                is_log_print=True,
+            ),
+            10,
+        )
         log("SUCCESS")
         # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
 
@@ -526,13 +557,13 @@ if __name__ == "__main__":
         "folder_name": sys.argv[4],
         "slurm_job_id": sys.argv[5],
     }
-    cloud_storage = ENDCODE(**kwargs)
     try:
+        cloud_storage = ENDCODE(**kwargs)
         cloud_storage.run()
     except QuietExit:
         sys.exit(1)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)
 
 

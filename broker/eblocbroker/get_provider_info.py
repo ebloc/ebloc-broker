@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-
-from broker._utils.tools import _colorize_traceback, log
+import broker.cfg as cfg
+from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from brownie.network.account import Account
 
@@ -20,7 +20,7 @@ def get_provider_info(self, provider, index=0):
             )
             raise
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         log(
             "Warning: Could not interact with/call the contract function.\n"
             "Is contract deployed correctly and chain synced?"
@@ -70,9 +70,7 @@ def get_provider_info(self, provider, index=0):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         provider = str(sys.argv[1])
     else:
@@ -83,5 +81,5 @@ if __name__ == "__main__":
         for key, value in provider_info.items():
             print("{0: <22}".format(f"{key}:") + str(value))
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 import libs.gdrive as gdrive
 from config import env
 from lib import check_linked_data
-from utils import CacheType, StorageID, _colorize_traceback, log
-
+from utils import CacheType, StorageID, log, print_tb
 import broker.eblocbroker.Contract as Contract
 from contract.scripts.lib import Job, cost
 
@@ -16,7 +15,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb cfg.Ebb
     job.base_dir = f"{env.HOME}/test_eblocbroker"
     job.source_code_dir = f"{job.base_dir}/source_code"
     job.data_1_dir = f"{job.base_dir}/datasets/BL06-camel-sml"
@@ -74,5 +73,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
-            _colorize_traceback()
+            print_tb()
         sys.exit(1)

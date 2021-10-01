@@ -25,7 +25,7 @@ import broker._utils.tools as tools
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils._getch import _Getch
-from broker._utils.tools import WHERE, QuietExit, _colorize_traceback, log, run
+from broker._utils.tools import WHERE, QuietExit, log, print_tb, run
 from broker.config import env, logging
 
 Qm = b"\x12 "
@@ -160,7 +160,7 @@ def _try(func):
     try:
         return func()
     except Exception:
-        _colorize_traceback()
+        print_tb()
         raise
 
 
@@ -321,7 +321,7 @@ def read_file(fname):
         file = open(fname, "r")
         return file.read().rstrip()
     except IOError:
-        _colorize_traceback()
+        print_tb()
         raise
     else:
         # else clause instead of finally for things that
@@ -429,7 +429,7 @@ def _remove(path: str, is_warning=True):
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
         if e.errno != errno.ENOENT:
-            _colorize_traceback()
+            print_tb()
             raise e
 
 
@@ -476,7 +476,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        log(f"==> '{name}' is not running on the background. {[WHERE(1)]}")
+        print_tb(f"Warning: '{name}' is not running on the background. {[WHERE(1)]}")
 
     return False
 
@@ -503,17 +503,17 @@ def is_driver_on(process_count=0):
 
 
 def is_ganache_on(port) -> bool:
-    """Checks whether Ganache CLI runs on the background."""
+    """Check whether Ganache CLI runs on the background."""
     return is_process_on("node.*[g]anache-cli", "Ganache CLI", process_count=0, port=port)
 
 
+# TODO: doo
 def is_geth_on():
-    """Checks whether geth runs on the background."""
-    process_name = f"geth|{env.RPC_PORT}"
-    print(process_name)
+    """Check whether geth runs on the background."""
+    process_name = f"geth@{env.RPC_PORT}"
     if not is_process_on(process_name, "Geth", process_count=0):
-        log("E: geth is not running on the background. Please run:")
-        log("sudo ~/eBlocPOA/server.sh", "yellow")
+        log(f"E: geth is not running on the background, {process_name}. Please run:")
+        log("sudo ~/eBlocPOA/server.sh", "bold yellow")
         raise QuietExit
 
 
@@ -588,7 +588,7 @@ def terminate(msg="", is_traceback=True):
         log(msg, "bold")
 
     if is_traceback:
-        _colorize_traceback()
+        print_tb()
 
     # Following line is added, in case ./killall.sh does not work due to sudo
     # It sends the kill signal to all the process groups

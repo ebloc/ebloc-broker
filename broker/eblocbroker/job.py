@@ -5,10 +5,9 @@ import sys
 from ast import literal_eval as make_tuple
 from pprint import pprint
 from typing import Dict, List
-
-import broker.eblocbroker.Contract as Contract
+import broker.cfg as cfg
 import broker.libs.git as git
-from broker._utils.tools import QuietExit, _colorize_traceback, log
+from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
 from broker.lib import get_tx_status
@@ -31,7 +30,7 @@ class Job:
     """Object for the job that will be submitted."""
 
     def __init__(self, **kwargs) -> None:
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.Ebb = cfg.Ebb
         self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
@@ -78,7 +77,7 @@ class Job:
                 log("E: Transaction is reverted")
             return True
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             return False
 
     def check(self):
@@ -93,7 +92,7 @@ class Job:
                 if storage_id == StorageID.IPFS:
                     assert self.cache_types[idx] == CacheType.PUBLIC
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             raise e
 
     def set_cache_types(self, types) -> None:
@@ -132,7 +131,7 @@ class Job:
         except QuietExit:
             sys.exit(1)
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
 
@@ -140,7 +139,7 @@ class JobPrices:
     """Calcualte job prices for the related provider."""
 
     def __init__(self, job):
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.Ebb = cfg.Ebb
         self.ebb = self.Ebb.eBlocBroker
         self.w3 = self.Ebb.w3
         self.job = job
@@ -209,7 +208,7 @@ class JobPrices:
                 # storage time is completed
                 ds.received_storage_deposit = 0
 
-            print(f"is_private:{ds.is_private}")
+            print(f"==> is_private={ds.is_private}")
             # print(received_block + storage_duration >= self.w3.eth.blockNumber)
             # if ds.received_storage_deposit > 0 or
             if (

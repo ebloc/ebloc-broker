@@ -6,7 +6,7 @@ import sys
 from typing import Union
 
 import broker.cfg as cfg
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import get_tx_status
 
@@ -40,7 +40,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
             tx = self._authenticate_orc_id(_from, address, str.encode(orc_id))
             return self.tx_id(tx)
         except Exception:
-            logging.error(_colorize_traceback)
+            logging.error(print_tb)
             raise
     else:
         logging.warning(f"Address: {address} that has orc_id: {orc_id} is already authenticated")
@@ -48,9 +48,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 3:
         address = str(sys.argv[1])
         orc_id = str(sys.argv[2])
@@ -72,4 +70,4 @@ if __name__ == "__main__":
         if tx_hash:
             receipt = get_tx_status(tx_hash)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from broker.utils import log
+import broker.cfg as cfg
 
 
 def get_provider_price_info(address, requested_core, core_minute, data_transfer):
@@ -19,9 +20,7 @@ def get_provider_price_info(address, requested_core, core_minute, data_transfer)
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     providers = Ebb.get_providers()
     requested_core = 2
     day = 0

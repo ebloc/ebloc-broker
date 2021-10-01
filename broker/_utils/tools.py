@@ -84,7 +84,7 @@ def PrintException():
     return '{}:{} "{}"'.format(os.path.basename(filename), lineno, line.strip())
 
 
-def _colorize_traceback(message=None, is_print_exc=True) -> None:
+def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
     if isinstance(message, QuietExit):
         if message:
@@ -108,7 +108,10 @@ def _colorize_traceback(message=None, is_print_exc=True) -> None:
         except:
             log(f"WHERE={WHERE(1)}", "bold blue")
 
-        log(f"E: {message}")
+        if "Warning:" not in message:
+            log(f"E: {message}")
+        else:
+            log(message)
 
 
 def delete_last_line(n=1):
@@ -240,7 +243,7 @@ def run(cmd, my_env=None, is_print_trace=True) -> str:
     except CalledProcessError as e:
         if is_print_trace:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
-            _colorize_traceback(e)
+            print_tb(e)
         raise e
 
 
@@ -254,5 +257,5 @@ def handler(signum, frame):
         # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
         pass
     else:
-        _colorize_traceback(f"Signal handler called with signal={signum} {frame}")
+        print_tb(f"Signal handler called with signal={signum} {frame}")
         raise Exception("Forever is over, end of time")

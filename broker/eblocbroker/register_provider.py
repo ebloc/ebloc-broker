@@ -5,7 +5,7 @@ import sys
 import ipfshttpclient
 
 import broker.cfg as cfg
-from broker._utils.tools import QuietExit, _colorize_traceback, log
+from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
 
@@ -32,19 +32,17 @@ def register_provider(self, *args, **kwargs):
         tx = self.set_register_provider(*args)
         return self.tx_id(tx)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     try:
         ipfs_addr = "/ip4/127.0.0.1/tcp/5001/http"
         client = ipfshttpclient.connect(ipfs_addr)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         log(
             "E: Connection error to IPFS, please run it on the background.\n"
             "Please run ~/ebloc-broker/broker/daemons/ipfs.py"
@@ -54,7 +52,7 @@ if __name__ == "__main__":
     try:
         ipfs_id = cfg.ipfs.get_ipfs_id(client, is_print=True)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)
 
     available_core = 128
@@ -79,4 +77,4 @@ if __name__ == "__main__":
         receipt = get_tx_status(tx_hash)
     except Exception as e:
         if type(e).__name__ != "QuietExit":
-            _colorize_traceback(e)
+            print_tb(e)
