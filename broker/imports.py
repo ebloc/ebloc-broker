@@ -9,7 +9,7 @@ from web3.providers.rpc import HTTPProvider
 import broker._config as _config
 import broker.cfg as cfg
 import broker.config as config
-from broker._utils.tools import QuietExit, _colorize_traceback, log
+from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.utils import is_geth_on, read_json, run, terminate
 
@@ -21,17 +21,17 @@ def connect():
 
     try:
         if not cfg.w3.isConnected():
-            connect_to_web3()
+            connect_into_web3()
 
         if config.ebb is None:
             connect_to_eblocbroker()
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
 
     return config.ebb, cfg.w3, config._eBlocBroker
 
 
-def _connect_to_web3():
+def _connect_into_web3():
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:  # https://bloxberg.org
@@ -48,7 +48,7 @@ def _connect_to_web3():
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
-def connect_to_web3():
+def connect_into_web3():
     """Connect into web3.
 
     Note that you should create only one RPC Provider per process, as it
@@ -56,21 +56,24 @@ def connect_to_web3():
     Ethereum node
     """
     WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
-    for _ in range(2):
-        _connect_to_web3()
+    for _ in range(5):
+        _connect_into_web3()
         if not cfg.w3.isConnected():
             try:
                 if env.IS_GETH_TUNNEL:
                     raise Exception("Open tunnel: ssh -f -N -L 8545:localhost:8545 username@remote-ip")
-                else:
+
+                if not env.IS_BLOXBERG:
                     is_geth_on()
+                else:
+                    log("E: web3 is not connected into BLOXBERG", "red")  # delete_me
             except Exception as e:
                 if type(e).__name__ != "QuietExit":
-                    _colorize_traceback(e)
+                    print_tb(e)
                 else:
                     sys.exit(1)
 
-            if not env.IS_GETH_TUNNEL:
+            if not env.IS_GETH_TUNNEL and not env.IS_BLOXBERG:
                 log(
                     "E: If web3 is not connected please start geth server and give permission \n"
                     "to /private/geth.ipc file doing: ",
@@ -91,7 +94,7 @@ def connect_to_web3():
         except Exception as e:
             log(f"E' {e}")
             if type(e).__name__ != "QuietExit":
-                _colorize_traceback()
+                print_tb()
             sys.exit(1)
 
 
@@ -101,7 +104,7 @@ def connect_to_eblocbroker() -> None:
         return
 
     if not cfg.w3:
-        cfg.w3 = connect_to_web3()
+        cfg.w3 = connect_into_web3()
 
     try:
         if env.EBLOCPATH is None or env.EBLOCPATH == "":
@@ -116,7 +119,7 @@ def connect_to_eblocbroker() -> None:
         contract = read_json(json_file)
     except Exception as e:
         log(f"E: Couldn't read the contract.json file: {json_file}")
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
     try:  # TODO: add decoder/template for this kind of calls
@@ -125,7 +128,7 @@ def connect_to_eblocbroker() -> None:
         abi = read_json(abi_file, is_dict=False)
     except Exception as e:
         log(f"E: Couldn't read the abi.json file: {abi_file}")
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
     try:
@@ -144,7 +147,7 @@ def connect_to_eblocbroker() -> None:
             config._eBlocBroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
 

@@ -7,7 +7,7 @@ import daemon
 
 import broker.cfg as cfg
 import broker.config as config
-from broker._utils.tools import _colorize_traceback
+from broker._utils.tools import print_tb
 from broker.utils import is_ipfs_on, log, popen_communicate
 
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     try:
         config.env = config.ENV()
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         log("E: env.IPFS_LOG is not set")
         sys.exit(1)
 

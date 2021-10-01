@@ -6,6 +6,22 @@ __ https://stackoverflow.com/a/12413139/2402577
 """
 
 
+class EBB:
+    def __init__(self):
+        self.eblocbroker = None
+
+    def __getattr__(self, name):
+        """Return Contract object."""
+        if not self.eblocbroker:
+            from broker.eblocbroker.Contract import Contract
+
+            global Ebb  # noqa
+            self.eblocbroker: "Contract" = Contract()
+            Ebb = self.eblocbroker
+
+        return getattr(self.eblocbroker, name)
+
+
 class _Ipfs:
     def __init__(self):
         self.ipfs = None
@@ -15,7 +31,9 @@ class _Ipfs:
         if not self.ipfs:
             from broker.libs.ipfs import Ipfs
 
-            self.ipfs = Ipfs()
+            global ipfs
+            self.ipfs: "Ipfs" = Ipfs()
+            ipfs = self.ipfs
 
         return getattr(self.ipfs, name)
 
@@ -29,10 +47,13 @@ class W3:
         if not self.w3:
             from brownie import web3
 
+            global w3
             self.w3: "web3" = web3
+            w3 = web3
 
         return getattr(self.w3, name)
 
 
+Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()

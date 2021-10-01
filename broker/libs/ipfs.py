@@ -11,7 +11,7 @@ from subprocess import DEVNULL, check_output
 import ipfshttpclient
 from cid import make_cid
 
-from broker._utils.tools import _colorize_traceback, handler, log
+from broker._utils.tools import handler, log, print_tb
 
 # from io import StringIO
 from broker.config import env, logging
@@ -100,7 +100,7 @@ class Ipfs:
             log("==> GPG decrypt is successfull")
             _remove(gpg_file)
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             raise
         finally:
             os.unlink(gpg_file_link)
@@ -128,7 +128,7 @@ class Ipfs:
                 encrypted_file_target = f"{encrypt_target}.gpg"
                 is_delete = True
             except:
-                _colorize_traceback()
+                print_tb()
                 sys.exit(1)
         else:
             if not os.path.isfile(target):
@@ -159,7 +159,7 @@ class Ipfs:
             log(f"==> GPG_file: {encrypted_file_target}")
             return encrypted_file_target
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             if "encryption failed: Unusable public key" in str(e):
                 log("==> Check solution: https://stackoverflow.com/a/34132924/2402577")
         finally:
@@ -188,7 +188,7 @@ class Ipfs:
                 else:
                     raise Exception(error)
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             log("E: connection into provider's IPFS node via swarm is not accomplished")
             sys.exit(1)
 

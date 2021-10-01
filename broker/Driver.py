@@ -21,7 +21,7 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import log
-from broker._utils.tools import QuietExit, _colorize_traceback
+from broker._utils.tools import QuietExit, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -110,7 +110,7 @@ def _tools(block_continue):
 
     except Exception as e:
         if type(e).__name__ != "QuietExit":
-            _colorize_traceback(e)
+            print_tb(e)
 
         raise Terminate(e)
 
@@ -160,7 +160,7 @@ class Driver:
             if self.cloud_storage_id[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
                 source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
                 if idx == 0 and key != source_code_hash:
-                    log("E: IPFS hash does not match with the given source_code_hash")
+                    log(f"E: IPFS hash does not match with the given source_code_hash.\n\t{key} != {source_code_hash}")
                     continue
             else:
                 source_code_hash = cfg.w3.toText(source_code_hash_byte)
@@ -238,7 +238,7 @@ class Driver:
             log(f"requester={self.requester_id}", "yellow")
             pprint(self.job_info)
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             return
 
         self.analyze_data(job_key, self.job_info["job_owner"])
@@ -271,7 +271,7 @@ class Driver:
                 try:
                     eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
                 except Exception as e:
-                    _colorize_traceback(e)
+                    print_tb(e)
                     sys.exit(1)
 
             storage_class = EudatClass(**kwargs)
@@ -438,7 +438,7 @@ def run_driver():
         try:
             driver.process_logged_jobs()
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             breakpoint()  # DEBUG
             sys.exit(1)
 
@@ -468,7 +468,7 @@ if __name__ == "__main__":
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 except PermissionError:
                     log("E: PermissionError is generated for the locked file")
-                    _colorize_traceback()
+                    print_tb()
                     give_RWE_access(env.WHOAMI, "/tmp/run")
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 # open(env.DRIVER_LOCKFILE, 'w').close()
@@ -480,16 +480,16 @@ if __name__ == "__main__":
             except Terminate as e:
                 terminate(e)
             except Exception as e:
-                _colorize_traceback(e)
+                print_tb(e)
             finally:
                 try:
                     if lock:
                         lock.close()
                         open(env.DRIVER_LOCKFILE, "w").close()
                 except Exception as e:
-                    _colorize_traceback(e)
+                    print_tb(e)
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)

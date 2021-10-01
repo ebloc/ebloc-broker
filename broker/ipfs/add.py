@@ -4,7 +4,7 @@ import sys
 
 from config import env
 from libs import ipfs
-from utils import _colorize_traceback
+from utils import print_tb
 
 if __name__ == "__main__":
     base_dir = f"{env.EBLOCPATH}/base"
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         try:
             ipfs_hash = ipfs.add(path)  # ipfs.add(path, True)
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
         ipfs_hashes[path] = ipfs_hash

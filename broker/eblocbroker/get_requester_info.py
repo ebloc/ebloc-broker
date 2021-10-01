@@ -2,7 +2,7 @@
 
 import sys
 
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 
 
 def get_requester_info(self, requester):
@@ -34,7 +34,7 @@ def get_requester_info(self, requester):
         }
         return requester_info
     except Exception:
-        _colorize_traceback()
+        print_tb()
         raise
 
 
@@ -55,4 +55,4 @@ if __name__ == "__main__":
                 value = requester_info["block_read_from"]
             print("{0: <19}".format(f"{key}:") + str(value))
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)

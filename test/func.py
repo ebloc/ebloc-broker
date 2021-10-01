@@ -6,11 +6,11 @@ from os.path import expanduser
 from random import randint
 
 import eblocbroker.Contract as Contract
-from imports import connect_to_web3
+from imports import connect_into_web3
 from utils import is_transaction_passed, sleep_timer
 
 home = expanduser("~")
-w3 = connect_to_web3()
+w3 = connect_into_web3()
 Ebb = Contract.eblocbroker
 
 

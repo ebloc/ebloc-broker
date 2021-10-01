@@ -3,7 +3,7 @@
 import sys
 
 from broker.lib import get_tx_status
-from broker.utils import _colorize_traceback
+from broker.utils import print_tb
 
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
@@ -14,5 +14,5 @@ if __name__ == "__main__":
         tx_hash = Ebb.register_data(source_code_hash, 20, 240)
         tx_receipt = get_tx_status(tx_hash)
     except:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)

@@ -5,7 +5,7 @@ import sys
 import libs.eudat as eudat
 from config import env
 from imports import connect
-from utils import _colorize_traceback
+from utils import print_tb
 
 
 def main():
@@ -31,5 +31,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
-            _colorize_traceback()
+            print_tb()
         sys.exit(1)

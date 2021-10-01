@@ -10,7 +10,7 @@ from pprint import pprint
 
 from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
-from utils import _colorize_traceback, _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, mkdir, read_json
+from utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, mkdir, print_tb, read_json
 
 from broker._utils.tools import QuietExit
 
@@ -74,7 +74,7 @@ def submit(provider, _from, job):
         job.keys[tar_hash] = job_key
         return job
     except Exception as e:
-        _colorize_traceback()
+        print_tb()
         raise e
 
 
@@ -181,7 +181,7 @@ def get_data_key_ids(results_folder_prev):
     try:
         meta_data = read_json(filename)
     except:
-        _colorize_traceback()
+        print_tb()
         return False, ""
 
     return True, meta_data
@@ -233,7 +233,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
         if md5sum != _source_code_hash:
             # checks md5sum obtained from gdrive and given by the user
             logging.error(f"E: md5sum does not match with the provided data {source_code_key}")
-            _colorize_traceback()
+            print_tb()
             return False, 0, [], source_code_key
         else:
             log(f"SUCCESS on {md5sum} folder", "green")
@@ -297,5 +297,5 @@ def _dump_dict_to_file(filename, job_keys):
         dump_dict_to_file(filename, job_keys)
         log("==> meta_data.json file is updated into the parent folder")
     except Exception as e:
-        _colorize_traceback()
+        print_tb()
         raise e

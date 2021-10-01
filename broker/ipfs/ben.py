@@ -14,13 +14,13 @@ from broker.libs.ipfs import gpg_encrypt
 from broker.utils import (
     CacheType,
     StorageID,
-    _colorize_traceback,
     _remove,
     generate_md5sum,
     ipfs_to_bytes32,
     is_bin_installed,
     is_dpkg_installed,
     log,
+    print_tb,
 )
 from brownie import accounts, network, project, web3
 from contract.scripts.lib import Job, cost
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     try:
         job.check_account_status(requester_addr)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
 
     # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
@@ -119,7 +119,7 @@ if __name__ == "__main__":
             # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
             run(["ipfs", "refs", ipfs_hash])  # TODO use ipfs python
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
         if idx == 0:
@@ -157,7 +157,7 @@ if __name__ == "__main__":
             except IndexError:
                 logging.error("E: Transaction is reverted")
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)
     finally:
         pass
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     # # try:
     # #     job.check_account_status(requester_addr)
     # # except Exception as e:
-    # #     _colorize_traceback(e)
+    # #     print_tb(e)
     # #     raise e
 
     # # network.connect("bloxberg")

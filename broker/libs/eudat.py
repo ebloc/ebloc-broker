@@ -22,11 +22,11 @@ from broker.lib import get_tx_status, run
 from broker.utils import (
     CacheType,
     StorageID,
-    _colorize_traceback,
     cd,
     compress_folder,
     log,
     popen_communicate,
+    print_tb,
     sleep_timer,
     terminate,
 )
@@ -113,7 +113,7 @@ def _login(fname, user, password_path):
             log("[ ok ]")
         except Exception:
             _traceback = traceback.format_exc()
-            _colorize_traceback()
+            print_tb()
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
                 logging.warning(f"Sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
@@ -157,7 +157,7 @@ def share_single_folder(folder_name, f_id) -> bool:
         log("==> Requester folder is already shared")
         return True
     except Exception:
-        _colorize_traceback()
+        print_tb()
         return False
 
 
@@ -235,7 +235,7 @@ def submit(provider, account_id, folders_to_share):
             except IndexError:
                 log("E: Transaction is reverted")
     except Exception:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)
 
 
@@ -254,7 +254,7 @@ def _submit(provider, account_id, folders_to_share):
     try:
         git.is_repo(job.folders_to_share)
     except:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)
 
     log("")
@@ -268,7 +268,7 @@ def _submit(provider, account_id, folders_to_share):
             git.commit_changes(folder)
             folder_hash = initialize_folder(folder)
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
         if idx == 0:
@@ -297,7 +297,7 @@ def _submit(provider, account_id, folders_to_share):
     try:
         return job.Ebb.submit_job(provider, job_key, account_id, job_price, job)
     except Exception as e:
-        _colorize_traceback()
+        print_tb()
         if type(e).__name__ == "QuietExit":
             log(f"E: Unlock your Ethereum Account(web3.eth.accounts[{account_id}])", "red")
             log("In order to unlock an account you can use: ~/eBlocPOA/client.sh", "yellow")

@@ -2,7 +2,7 @@
 
 import sys
 
-from broker.utils import _colorize_traceback
+from broker.utils import print_tb
 
 if __name__ == "__main__":
     import broker.eblocbroker.Contract as Contract
@@ -16,4 +16,4 @@ if __name__ == "__main__":
     try:
         print(Ebb.is_orcid_verified(requester))
     except:
-        _colorize_traceback()
+        print_tb()

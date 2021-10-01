@@ -55,7 +55,7 @@ class Log:
             else:
                 print(f"[{color}]{text}[/{color}]", end="")
 
-    def pre_color_check(self, text, color):
+    def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
         text = str(text)
         _len = None
@@ -86,11 +86,12 @@ class Log:
         elif "SUCCESS" in text or "Finalazing" in text:
             if not color:
                 color = "green"
+                is_bold = True
         elif text in ["FAILED", "ERROR"]:
             if not color:
                 color = "red"
 
-        return text, color, _len, is_arrow, is_r
+        return text, color, _len, is_arrow, is_r, is_bold
 
 
 def log(text="", color=None, filename=None, end=None, flush=False):
@@ -103,7 +104,7 @@ def log(text="", color=None, filename=None, end=None, flush=False):
         is_bold = True
         color = None
 
-    text, _color, _len, is_arrow, is_r = ll.pre_color_check(text, color)
+    text, _color, _len, is_arrow, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
         filename = thread_log_files[threading.current_thread().name]
     elif not filename:
@@ -174,6 +175,8 @@ def log(text="", color=None, filename=None, end=None, flush=False):
 
     if end is None:
         ll.console[filename].print("")
+        if color and is_arrow:
+            print()
 
     # f.close()
 

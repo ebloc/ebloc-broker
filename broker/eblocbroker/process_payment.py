@@ -3,7 +3,7 @@
 import sys
 from typing import Any, Union
 
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import StorageID, state
 from broker.utils import ipfs_to_bytes32
@@ -22,12 +22,14 @@ def process_payment(  # noqa
     data_transfer_out,
     core,
     run_time,
+    received_block_number=0,
 ):
     """Process payment of the paid job."""
     log(
-        f"\n~/ebloc-broker/broker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
+        f"~/ebloc-broker/broker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {data_transfer_in} {data_transfer_out} '{core}'"
-        f" '{run_time}'"
+        f" '{run_time}'",
+        "bold white",
     )
 
     for cloud_storage_id in cloud_storage_ids:
@@ -35,7 +37,7 @@ def process_payment(  # noqa
             logging.error("E: Result ipfs's length does not match with its original length. Please check your job_key")
             raise
 
-    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id)
+    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:
         logging.error("Job is completed and already get paid")
         sys.exit(1)
@@ -64,7 +66,7 @@ def process_payment(  # noqa
         ]
         tx = self._process_payment(job_key, args, int(elapsed_time), _result_ipfs_hash)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
     return self.tx_id(tx)

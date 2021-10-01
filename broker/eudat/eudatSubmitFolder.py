@@ -8,7 +8,7 @@ import time
 import libs.eudat as eudat
 import owncloud
 from imports import connect
-from utils import _colorize_traceback, generate_md5sum
+from utils import generate_md5sum, print_tb
 
 import broker.eblocbroker.Contract as Contract
 
@@ -74,7 +74,7 @@ def eudatSubmitJob(tar_hash=None):
         )
         print(tx_hash)
     except:
-        _colorize_traceback()
+        print_tb()
         sys.exit(1)
 
 

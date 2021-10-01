@@ -5,7 +5,7 @@ import sys
 import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import log
 from broker.config import env, setup_logger
-from broker.utils import _colorize_traceback
+from broker.utils import print_tb
 
 logging = setup_logger()
 
@@ -24,6 +24,6 @@ if __name__ == "__main__":
         else:
             log(f"block_number={output}")
     except Exception:
-        _colorize_traceback()
+        print_tb()
 
     sys.exit(0)

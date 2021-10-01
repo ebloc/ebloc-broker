@@ -4,7 +4,7 @@ import sys
 
 from config import env
 from lib import check_linked_data
-from utils import _colorize_traceback
+from utils import print_tb
 
 if __name__ == "__main__":
     path_from = f"{env.HOME}/test_eblocbroker/datasets/"
@@ -13,6 +13,6 @@ if __name__ == "__main__":
     try:
         check_linked_data(path_from, link_path_to, is_continue=True)
     except:
-        _colorize_traceback()
+        print_tb()
 
     sys.exit(0)

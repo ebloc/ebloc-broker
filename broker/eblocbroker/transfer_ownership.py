@@ -2,7 +2,7 @@
 
 import sys
 
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
 from broker.utils import ZERO_ADDRESS
@@ -25,7 +25,7 @@ def transfer_ownership(self, new_owner):
         tx = self._transfer_ownership(_from, new_owner)
         return self.tx_id(tx)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
 
@@ -43,5 +43,5 @@ if __name__ == "__main__":
         tx_hash = Ebb.transfer_ownership(new_owner)
         receipt = get_tx_status(tx_hash)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)

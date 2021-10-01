@@ -21,11 +21,11 @@ from broker.libs.user_setup import add_user_to_slurm, give_RWE_access
 from broker.utils import (
     CacheType,
     Link,
-    _colorize_traceback,
     bytes32_to_ipfs,
     cd,
     generate_md5sum,
     mkdir,
+    print_tb,
     read_json,
     write_to_file,
 )
@@ -134,7 +134,7 @@ class Storage(BaseClass):
             log(f"==> refund() tx_hash={tx_hash}")
             return tx_hash
         except:
-            _colorize_traceback()
+            print_tb()
             raise
 
     def is_md5sum_matches(self, path, name, _id, folder_type, cache_type) -> bool:
@@ -221,7 +221,7 @@ class Storage(BaseClass):
             self._sbatch_call()
         except Exception:
             logging.error("E: Failed to call _sbatch_call() function")
-            _colorize_traceback()
+            print_tb()
             raise
 
     def _sbatch_call(self):
@@ -306,7 +306,7 @@ class Storage(BaseClass):
                             job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
                 time.sleep(1)  # wait 1 second for slurm idle core to be updated
             except Exception:
-                _colorize_traceback()
+                print_tb()
                 slurm.remove_user(self.requester_id)
                 slurm.add_user_to_slurm(self.requester_id)
             else:
@@ -320,7 +320,7 @@ class Storage(BaseClass):
             run(["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"])
             # subprocess.run(cmd, stderr=subprocess.STDOUT)
         except Exception:
-            _colorize_traceback()
+            print_tb()
 
         if not slurm_job_id.isdigit():
             logging.error("E: Detects an error on the SLURM side. slurm_job_id is not a digit")

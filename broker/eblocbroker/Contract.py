@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
+from os.path import expanduser
 from pathlib import Path
 from typing import Union
 
 from pymongo import MongoClient
 
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, read_json, terminate
@@ -39,7 +40,7 @@ class Contract:
 
                 self.eBlocBroker, self.w3, self._eBlocBroker = connect()
             except Exception as e:
-                _colorize_traceback(e)
+                print_tb(e)
                 sys.exit(1)
 
     ebb = None  # contract object
@@ -70,6 +71,11 @@ class Contract:
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
+        home = expanduser("~")
+        full_path = f"{home}/.brownie/accounts/{fname}"
+        if not full_path:
+            raise Exception(f"{full_path} does not exist")
+
         return accounts.load(fname, password=password)
 
     def is_eth_account_locked(self, addr):
@@ -77,9 +83,9 @@ class Contract:
         if env.IS_BLOXBERG:
             try:
                 account = self.brownie_load_account()
-            except:
-                error_msg = f"E: PROVIDER_ID({account}) is locked, unlock it for futher use"
-                terminate(error_msg, is_traceback=False)
+            except Exception as e:
+                error_msg = f"E: PROVIDER_ID({env.PROVIDER_ID}) is locked, unlock it for futher use. \n{e}"
+                terminate(error_msg, is_traceback=True)
         else:
             for account in self.w3.geth.personal.list_wallets():
                 _address = account["accounts"][0]["address"]
@@ -105,7 +111,7 @@ class Contract:
             fname = self._get_contract_fname()
             contract = read_json(fname)
         except Exception as e:
-            _colorize_traceback(e)
+            print_tb(e)
             return False
 
         block_number = self.w3.eth.getTransaction(contract["txHash"]).blockNumber
@@ -159,7 +165,7 @@ class Contract:
         try:
             return self.w3.isAddress(addr)
         except:
-            _colorize_traceback()
+            print_tb()
             raise Web3NotConnected()
 
     def _get_contract_fname(self) -> Path:
@@ -354,7 +360,6 @@ class Contract:
             address = self.w3.toChecksumAddress(address)
 
         if env.IS_BLOXBERG:
-            print("foo")
             return self.eBlocBroker.doesProviderExist(address)
         else:
             return self.eBlocBroker.functions.doesProviderExist(address).call()
@@ -447,7 +452,7 @@ class Contract:
 
 class EBB:
     def __init__(self):
-        self.eblocbroker: Union["Contract", None] = None
+        self.eblocbroker: Union[Contract, None] = None
 
     def _set(self):
         if not self.eblocbroker:
@@ -456,11 +461,11 @@ class EBB:
     def set(self):
         self._set()
 
-    def __getattr__(self, name) -> "Contract":
+    def __getattr__(self, name) -> Contract:
         """Return eblocbroker object."""
         self._set()
         return getattr(self.eblocbroker, name)
 
 
-eblocbroker: Union["Contract", None] = None
+# eblocbroker: Union["Contract", None] = None
 Ebb = EBB()

@@ -4,7 +4,7 @@ import sys
 
 import broker.cfg as cfg
 import broker.config as config
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import StorageID
 from broker.utils import is_ipfs_on  # bytes32_to_ipfs
@@ -129,7 +129,7 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
         log(f"Provider's available_core_num={provider_info['available_core_num']}")
         log(f"Provider's price_core_min={provider_info['price_core_min']}")
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
     self.check_before_submit(provider, _from, provider_info, key, job)

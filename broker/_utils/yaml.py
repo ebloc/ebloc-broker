@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import filecmp
 import os
 from pathlib import Path
 
@@ -8,9 +7,9 @@ from filelock import FileLock
 from ruamel.yaml import YAML, representer
 
 try:
-    from broker._utils.tools import _colorize_traceback
+    from broker._utils.tools import print_tb
 except:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils.tools import _colorize_traceback
+    from ebloc_broker.broker._utils.tools import print_tb
 
 
 class SubYaml(dict):
@@ -88,6 +87,10 @@ class Yaml(dict):
                 with open(path) as f:
                     self.update(self.yaml.load(f) or {})
 
+    def compare_files(self, fn1, fn2):
+        with open(fn1, "r") as file1, open(fn2, "r") as file2:
+            return file1.read() == file2.read()
+
     def updated(self):
         if self.auto_dump:
             self.dump(force=True)
@@ -114,9 +117,13 @@ class Yaml(dict):
             if len(content) == 1 and content[0] == "{}\n":
                 os.remove(self.path_temp)
             else:
-                if not os.path.isfile(self.path) or not filecmp.cmp(self.path, self.path_temp, shallow=False):
-                    # unlink the real file path and rename the temporary to the real
-                    os.rename(self.path_temp, self.path)
+                if os.path.isfile(self.path_temp):
+                    if os.path.isfile(self.path):
+                        if not self.compare_files(self.path, self.path_temp):
+                            # rename the temporary to the real one
+                            os.rename(self.path_temp, self.path)
+                    else:
+                        os.rename(self.path_temp, self.path)
 
         self.changed = False
 
@@ -158,13 +165,32 @@ _SR = representer.SafeRepresenter
 _SR.add_representer(SubYaml, _SR.represent_dict)
 
 
-def test_1():  # noqa
+def test_1():
     config_file = Path("test.yaml")
     cfg = Yaml(config_file)
+
     cfg["setup"]["a"] = 200
+    cfg["setup2"]["c"] = 1
+    try:
+        del cfg["setup1"]
+    except:
+        pass
+
+    cfg["setup1"]["b"] = 999
+    cfg_again = Yaml(config_file)
+    assert cfg_again["setup"]["a"] == 200, "setup_a is not 200"
+    assert cfg_again["setup1"]["b"] == 999, "setup1_b is not 999"
 
 
-def test_2():  # noqa
+def test_2():
+    config_file = Path("test.yaml")
+    cfg = Yaml(config_file)
+    cfg["setup"]["a"] = 201
+    cfg_again = Yaml(config_file)
+    assert cfg_again["setup"]["a"] == 201, "setup_a is not changed"
+
+
+def test_3():
     config_file = Path("test_1.yaml")
     cfg = Yaml(config_file)
     cfg["a"] = 1
@@ -172,7 +198,6 @@ def test_2():  # noqa
     cfg["c"]["y"]["z"] = 45
     print(f"{config_file} 1:")
     print(config_file.read_text())
-
     cfg["b"]["x"] = 3
     cfg["a"] = 4
 
@@ -203,11 +228,14 @@ def test_2():  # noqa
     cfg["c"]["b"]["f"] = 333
     print(f"{config_file} 5:")
     print(config_file.read_text())
+    cfg_again = Yaml(config_file)
+    assert cfg_again["c"]["b"]["f"] == 333, "cfg['c']['b']['f'] is not 333"
 
 
 if __name__ == "__main__":
     try:
         test_1()
         test_2()
+        test_3()
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)

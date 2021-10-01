@@ -11,17 +11,7 @@ import broker.config as config
 import broker.eblocbroker.Contract as Contract
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
-from broker.utils import (
-    CacheType,
-    _colorize_traceback,
-    _remove,
-    generate_md5sum,
-    get_time,
-    log,
-    mkdir,
-    read_json,
-    untar,
-)
+from broker.utils import CacheType, _remove, generate_md5sum, get_time, log, mkdir, print_tb, read_json, untar
 
 Ebb: "Contract.Contract" = Contract.EBB()
 
@@ -142,7 +132,7 @@ class EudatClass(Storage):
                     return False
             except Exception:
                 logging.error("Failed to download eudat file")
-                _colorize_traceback()
+                print_tb()
                 log("Waiting for 5 seconds...")
                 time.sleep(5)
             else:
@@ -199,7 +189,7 @@ class EudatClass(Storage):
                 share_list = config.oc.list_open_remote_share()
             except Exception:
                 logging.error(f"E: Failed to list_open_remote_share eudat [attempt={attempt}]")
-                _colorize_traceback()
+                print_tb()
                 time.sleep(1)
             else:
                 break
@@ -260,7 +250,7 @@ class EudatClass(Storage):
             # self.thread_log_setup()
             return True
         except Exception:
-            _colorize_traceback(f"{self.job_key}_{self.index}")
+            print_tb(f"{self.job_key}_{self.index}")
             sys.exit(1)
         finally:
             time.sleep(0.25)
@@ -280,7 +270,7 @@ class EudatClass(Storage):
             self.eudat_get_share_token(provider_info["f_id"])
         except:
             logging.error("E: could not get the share id")
-            _colorize_traceback()
+            print_tb()
             return False
 
         if self.data_transfer_in_to_download > self.data_transfer_in_requested:

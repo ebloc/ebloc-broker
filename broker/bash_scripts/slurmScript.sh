@@ -21,7 +21,7 @@ if [[ $c == *" Began, "* ]]; then
     msg="JOB_STARTED fname=$name\n"
     msg="${msg}start_code.py $arg0 $arg1 $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
-    echo $msg >> $LOG_FILE
+    echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id
@@ -44,7 +44,7 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     msg="$status fname=$name\n"
     msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
-    echo $msg >> $LOG_FILE
+    echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
@@ -60,7 +60,7 @@ if [[ $event == *"TIMEOUT"* ]]; then
     msg="TIMEOUT fname=$name\n"
     msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
-    echo $msg >> $LOG_FILE
+    echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
@@ -76,7 +76,7 @@ if [[ $event == *"CANCELLED"* ]]; then
     msg="CANCELLED fname=$name\n"
     msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
-    echo $msg >> $LOG_FILE
+    echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
@@ -92,7 +92,7 @@ if [[ $event == *"FAILED"* ]]; then
     msg="FAILED fname=$name\n"
     msg="${msg}end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
-    echo $msg >> $LOG_FILE
+    echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
         python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id

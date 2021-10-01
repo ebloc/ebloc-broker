@@ -257,8 +257,22 @@ minutes. It can be substituted for a time-synchronizing daemon like ntpd.
 
 
 ```bash
+sudo timedatectl set-ntp true
+$ cat /etc/systemd/timesyncd.conf
+[Time]
+NTP=pool.ntp.org
+
 sudo timedatectl set-timezone UTC
-sudo apt install systemd-timesyncd
 sudo systemctl restart systemd-timesyncd.service
 systemctl status systemd-timesyncd
+timedatectl
+timedatectl timesync-status
+
+# https://serverfault.com/a/949069/395276
+sudo apt install chrony
+sudo systemctl enable chrony
+sudo systemctl start chronyd
+
+chronyc tracking
+chronyc makestep
 ```

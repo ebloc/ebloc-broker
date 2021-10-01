@@ -15,13 +15,13 @@ from broker.lib import check_linked_data, get_tx_status, run
 from broker.utils import (
     CacheType,
     StorageID,
-    _colorize_traceback,
     _remove,
     generate_md5sum,
     ipfs_to_bytes32,
     is_bin_installed,
     is_dpkg_installed,
     log,
+    print_tb,
 )
 
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     try:
         job.check_account_status(requester_addr)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         raise e
 
     log("==> Attemptting to submit a job")
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
             run(["ipfs", "refs", ipfs_hash])  # TODO use ipfs python
         except:
-            _colorize_traceback()
+            print_tb()
             sys.exit(1)
 
         if idx == 0:
@@ -140,7 +140,7 @@ if __name__ == "__main__":
             processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             pprint(vars(processed_logs[0].args))
             try:
-                log(f"job_index={processed_logs[0].args['index']}")
+                log(f"==> job_index={processed_logs[0].args['index']}", "bold")
                 log("SUCCESS")
                 for target in targets:
                     _remove(target)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     except QuietExit:
         sys.exit(1)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)
     finally:
         pass

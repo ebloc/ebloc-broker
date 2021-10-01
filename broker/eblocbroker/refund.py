@@ -6,7 +6,7 @@ from typing import List
 
 from web3.logs import DISCARD
 
-from broker._utils.tools import _colorize_traceback, log
+from broker._utils.tools import log, print_tb
 from broker.config import env, logging  # noqa: F401
 from broker.lib import get_tx_status
 
@@ -26,7 +26,7 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
         tx = self._refund(provider, job_key, index, job_id, cores, elapsed_time)
         return self.tx_id(tx)
     except Exception:
-        _colorize_traceback()
+        print_tb()
         raise
 
 
@@ -64,5 +64,5 @@ if __name__ == "__main__":
                 logging.error("E: Transaction is reverted")
     except Exception as e:
         if type(e).__name__ != "QuietExit":
-            _colorize_traceback()
+            print_tb()
         sys.exit(1)

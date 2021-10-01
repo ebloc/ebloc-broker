@@ -2,7 +2,7 @@
 
 import sys
 
-from broker._utils.tools import QuietExit, _colorize_traceback, log
+from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
 
@@ -47,5 +47,5 @@ if __name__ == "__main__":
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, email, federation_cloud_id, ipfs_id)
         receipt = get_tx_status(tx_hash)
     except Exception as e:
-        _colorize_traceback(e)
+        print_tb(e)
         sys.exit(1)

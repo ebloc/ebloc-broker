@@ -5,7 +5,7 @@ import sys
 import libs.gdrive as gdrive
 from config import env
 from lib import check_linked_data
-from utils import CacheType, StorageID, _colorize_traceback, log
+from utils import CacheType, StorageID, log, print_tb
 
 import broker.eblocbroker.Contract as Contract
 from contract.scripts.lib import Job, cost
@@ -74,5 +74,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         if type(e).__name__ != "KeyboardInterrupt":
-            _colorize_traceback()
+            print_tb()
         sys.exit(1)
