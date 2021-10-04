@@ -5,10 +5,11 @@ from pprint import pprint
 from typing import List
 
 from web3.logs import DISCARD
-
-from broker._utils.tools import log, print_tb
+import broker.cfg as cfg
+from broker._utils.tools import print_tb
 from broker.config import env, logging  # noqa: F401
 from broker.lib import get_tx_status
+from broker._utils._log import log
 
 
 def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
@@ -31,17 +32,15 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 7:
         provider = Ebb.w3.toChecksumAddress(str(sys.argv[1]))
         _from = Ebb.w3.toChecksumAddress(str(sys.argv[2]))
         job_key = str(sys.argv[3])
         index = int(sys.argv[4])
         job_id = int(sys.argv[5])
-        cores = sys.argv[6]  # type: List[str]
-        elapsed_time = sys.argv[7]  # type: List[str]
+        cores = sys.argv[6]  # type: List[str]  # noqa
+        elapsed_time = sys.argv[7]  # type: List[str]  # noqa
     else:
         provider = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)
         _from = Ebb.w3.toChecksumAddress(env.PROVIDER_ID)

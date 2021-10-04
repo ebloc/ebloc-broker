@@ -48,9 +48,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 3:
         address = str(sys.argv[1])
         orc_id = str(sys.argv[2])

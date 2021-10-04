@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 from broker._utils.tools import timenow
+import broker.cfg as cfg
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     _timenow = Ebb.timenow()
     system_time = timenow()
     print(f"==> bloxberg_time={_timenow}")

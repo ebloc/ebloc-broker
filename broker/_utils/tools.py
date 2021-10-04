@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import decimal
 import linecache
 import os
@@ -30,7 +31,8 @@ def WHERE(back=0):
     except:
         frame = sys._getframe(1)
 
-    return f"{os.path.basename(frame.f_code.co_filename)}:{frame.f_lineno}"
+    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
+    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
 
 
 def timenow() -> int:
@@ -97,7 +99,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
         message = template.format(type(message).__name__, message.args)
 
     tb_text = "".join(traceback.format_exc())
-    if is_print_exc:
+    if is_print_exc and tb_text != "NoneType: None\n":
         log(tb_text)
 
     # console.print_exception()  #arg: show_locals=True
@@ -105,7 +107,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
         log(f"{WHERE(1)} ", "bold blue")
     else:
         try:
-            log(f"[{PrintException()}] WHERE={WHERE(1)}", "bold blue")
+            log(f"{br(PrintException())} {WHERE(1)}", "bold blue")
         except:
             log(f"WHERE={WHERE(1)}", "bold blue")
 
@@ -223,7 +225,7 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"[{WHERE(back)}] Error failed command:", "bold red")
+        log(f"{WHERE(back)} Error failed command:", "bold red")
         log(f"$ {_cmd}", "yellow")
         log(exc, "red")
     else:
@@ -253,6 +255,7 @@ def handler(signum, frame):
 
     __ https://docs.python.org/3/library/signal.html#example
     """
+    breakpoint()  # DEBUG
     if signum == 14 and "log_job" in str(frame):
         # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
         # '/broker/eblocbroker/log_job.py', line 28, code log_loop>

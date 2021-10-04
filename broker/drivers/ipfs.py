@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import os
 import shutil
 import time
@@ -41,9 +42,9 @@ class IpfsClass(Storage):
             self.thread_log_setup()
 
         if self.cloudStorageID[0] == StorageID.IPFS:
-            log(f"[{get_time()}] Job's source code has been sent through IPFS ", "cyan")
+            log(f"{br(get_time())} Job's source code has been sent through IPFS ", "bold cyan")
         else:
-            log(f"[{get_time()}] Job's source code has been sent through IPFS_GPG ", "cyan")
+            log(f"{br(get_time())} Job's source code has been sent through IPFS_GPG ", "bold cyan")
 
         if not is_ipfs_on():
             return False

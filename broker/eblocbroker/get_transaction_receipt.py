@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 from broker.utils import print_tb
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         tx = str(sys.argv[1])
     else:

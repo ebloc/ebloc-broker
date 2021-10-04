@@ -120,7 +120,7 @@ class Ipfs:
         _remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
         _remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
 
-    def gpg_encrypt(self, user_gpg_finderprint, target) -> bool:
+    def gpg_encrypt(self, user_gpg_finderprint, target) -> str:
         is_delete = False
         if os.path.isdir(target):
             try:
@@ -215,7 +215,7 @@ class Ipfs:
         try:
             output = self._ipfs_stat(ipfs_hash)
             output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
-            log(f"CumulativeSize {output_json}", "green")
+            log(f"CumulativeSize {output_json}", "bold green")
             return output, output["CumulativeSize"]
         except KeyboardInterrupt:
             terminate("KeyboardInterrupt")
@@ -320,12 +320,12 @@ class Ipfs:
         print(f"==> Trying to connect into {peer_address} using swarm connect")
         output = self.client.swarm.connect(peer_address)
         if ("connect" and "success") in str(output):
-            log(str(output), "green")
+            log(str(output), "bold green")
             return True
 
         return False
 
-    def get_ipfs_id(self, client, is_print=False) -> str:
+    def get_ipfs_id(self, client) -> str:
         """Return public ipfs id."""
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):

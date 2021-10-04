@@ -38,7 +38,7 @@ def pre_check():
 
 
 if __name__ == "__main__":
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     job = Job()
     pre_check()
     # cfg.ipfs.connect(force=True)

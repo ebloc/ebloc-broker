@@ -5,7 +5,8 @@ import traceback
 from typing import Union
 
 import broker.cfg as cfg
-from broker._utils.tools import log, print_tb
+from broker._utils._log import log, br
+from broker._utils.tools import print_tb
 from broker.config import logging
 from broker.lib import state
 from broker.utils import StorageID, bytes32_to_ipfs, empty_bytes32
@@ -113,7 +114,7 @@ def get_job_info_print(job_info, provider, job_key, index, received_block_number
                 _hash = cfg.w3.toText(code_hash)
                 _type = "md5sum"
 
-            log(f"[{idx}, {_type}] ", "bold cyan", end="")
+            log(br(f"{idx},{_type}"), "bold cyan", end="")
             log(f"{_hash}\n\t{code_hash}", "bold")
     else:
         print(job_info)
@@ -192,7 +193,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
         raise e
 
     if str(self.job_info["core"]) == "0":
-        logging.error("E: Failed to getJobInfo: Out of index")
+        log("E: Failed to get_job_info: Out of index")
         raise
 
     if is_log_print:
@@ -202,7 +203,6 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
 
 
 def main():
-    Ebb = cfg.Ebb
     if len(sys.argv) == 5 or len(sys.argv) == 6:
         provider = str(sys.argv[1])
         job_key = str(sys.argv[2])
@@ -213,14 +213,14 @@ def main():
         else:
             received_block_number = None
     else:
-        print("Please provide [provider, job_key, index, and job_id] as arguments")
+        print("E: Please provide [provider, job_key, index, and job_id] as arguments")
         sys.exit(1)
 
     try:
-        job_info = Ebb.get_job_info(provider, job_key, index, job_id, received_block_number, is_log_print=True)
+        Ebb = cfg.Ebb
+        Ebb.get_job_info(provider, job_key, index, job_id, received_block_number, is_log_print=True)
     except Exception as e:
-        print_tb(e)
-        sys.exit(1)
+        raise e
 
 
 if __name__ == "__main__":

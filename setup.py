@@ -24,7 +24,7 @@ setup(
     author="Alper Alimoglu",
     author_email="alper.alimoglu@gmail.com",
     url="https://github.com/eBloc/ebloc-broker",
-    keywords=["eblocbroker", "ethereum"],
+    keywords=["broker", "ethereum"],
     install_requires=requirements,
     include_package_data=True,
     python_requires=">=3.6,<4",

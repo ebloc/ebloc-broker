@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from brownie.network.account import Account
@@ -70,9 +70,7 @@ def get_provider_info(self, provider, index=0):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         provider = str(sys.argv[1])
     else:

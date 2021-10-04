@@ -32,7 +32,7 @@ def connect():
 
 
 def _connect_into_web3():
-    WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
+    web3_provider_path = f"{env.DATADIR}/geth.ipc"
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:  # https://bloxberg.org
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
@@ -43,7 +43,7 @@ def _connect_into_web3():
         # cfg.w3.shh.attach(cfg.w3, "shh")
         # shh.attach(cfg.w3, "shh")
     else:
-        cfg.w3 = Web3(IPCProvider(WEB3_PROVIDER_PATH))
+        cfg.w3 = Web3(IPCProvider(web3_provider_path))
         # inject the poa compatibility middleware to the innermost layer
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -55,7 +55,7 @@ def connect_into_web3():
     recycles underlying TCP/IP network connections between your process and
     Ethereum node
     """
-    WEB3_PROVIDER_PATH = f"{env.DATADIR}/geth.ipc"
+    web3_provider_path = f"{env.DATADIR}/geth.ipc"
     for _ in range(5):
         _connect_into_web3()
         if not cfg.w3.isConnected():
@@ -79,9 +79,9 @@ def connect_into_web3():
                     "to /private/geth.ipc file doing: ",
                     end="",
                 )
-                log(f"sudo chown $(whoami) {WEB3_PROVIDER_PATH}", "green")
-                log(f"#> Running `sudo chown $(whoami) {WEB3_PROVIDER_PATH}`")
-                run(["sudo", "chown", env.WHOAMI, WEB3_PROVIDER_PATH])
+                log(f"sudo chown $(whoami) {web3_provider_path}", "green")
+                log(f"#> Running `sudo chown $(whoami) {web3_provider_path}`")
+                run(["sudo", "chown", env.WHOAMI, web3_provider_path])
         else:
             break
     else:

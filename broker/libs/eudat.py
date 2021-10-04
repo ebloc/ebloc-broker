@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import os
 import os.path
 import pickle
@@ -89,7 +90,7 @@ def upload_results(encoded_share_token, output_file_name, path, attempt_count=1)
 
             if p.returncode != 0 or "<d:error" in output:
                 logging.error("E: EUDAT repository did not successfully uploaded")
-                logging.error(f"E: curl is failed. {p.returncode} => [{error}] {output}")
+                logging.error(f"E: curl is failed. {p.returncode} => {br(error)} {output}")
                 time.sleep(1)  # wait 1 second for next step retry to upload
             else:  # success on upload
                 return True

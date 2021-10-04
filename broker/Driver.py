@@ -9,10 +9,8 @@ import time
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
 import broker._utils._log as _log
 import broker.cfg as cfg
 import broker.config as config
@@ -20,7 +18,7 @@ import broker.eblocbroker.Contract as Contract
 import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
-from broker._utils._log import log
+from broker._utils._log import log, br
 from broker._utils.tools import QuietExit, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
@@ -120,7 +118,8 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+
+        self.Ebb: "Contract.Contract" = cfg.Ebb
         self.block_number: int = 0
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
@@ -176,7 +175,8 @@ class Driver:
             self.received_block.append(ds.received_block)
             self.storage_duration.append(ds.storage_duration)
             self.is_already_cached[source_code_hash] = False  # FIXME double check
-            # if remaining time to cache is 0, then caching is requested for the related source_code_hash
+            # if remaining time to cache is 0, then caching is requested for the
+            # related source_code_hash
             if ds.received_block + ds.storage_duration >= self.block_number:
                 if ds.received_block < self.block_number:
                     self.is_already_cached[source_code_hash] = True
@@ -188,10 +188,10 @@ class Driver:
                         # requested for cache for the first time
                         self.is_already_cached[source_code_hash] = False
 
-            log(f"==> source_code_hash[{idx}]={source_code_hash}")
+            log(f"==> source_code_hash{br(idx)}={source_code_hash}")
             log(f"==> received_block={ds.received_block}")
             log(f"==> storage_duration(block_number)={ds.storage_duration}")
-            log(f"==> cloud_storage_id[{idx}]={StorageID(self.cloud_storage_id[idx]).name}")
+            log(f"==> cloud_storage_id{br(idx)}={StorageID(self.cloud_storage_id[idx]).name}")
             log(f"==> cached_type={CacheType(self.logged_job.args['cacheType'][idx]).name}")
             log(f"==> is_already_cached={self.is_already_cached[source_code_hash]}")
 
@@ -313,7 +313,7 @@ def run_driver():
         from imports import connect
 
         connect()
-        Ebb: "Contract.Contract" = Contract.EBB()
+        Ebb: "Contract.Contract" = cfg.Ebb
         driver = Driver()
     except Exception as e:
         raise Terminate(e)
@@ -412,7 +412,7 @@ def run_driver():
             log(f"Current slurm running jobs status:\n{squeue_output}", "yellow")
             log("-" * 100, "green")
 
-        log(f"==> date=[{get_time()}]")
+        log(f"==> date={get_time()}")
         if isinstance(balance, int):
             log(f"==> provider_gained_wei={int(balance) - int(balance_temp)}")
 
@@ -463,7 +463,7 @@ if __name__ == "__main__":
             # to launch ipdb
             lock = None
             try:
-                is_driver_on(process_count=1)
+                is_driver_on(process_count=1, is_print=False)
                 try:
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 except PermissionError:

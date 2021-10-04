@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import json
 import os
 import shutil
@@ -265,14 +266,14 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             if md5sum != given_source_code_hash:
                 # checks md5sum obtained from gdrive and given by the user
                 logging.error(
-                    f"\nE: md5sum does not match with the provided data[{idx}]\n"
+                    f"\nE: md5sum does not match with the provided data{br(idx)}\n"
                     f"md5sum={md5sum} | given={given_source_code_hash} \n"
                 )
                 return False, 0, [], source_code_key
 
             data_key_dict[md5sum] = data_key
             _size = int(get_file_info(gdrive_info, "Size"))
-            log(f"==> source_code_hashes[{idx}] == {source_code_hashes[idx].decode('utf-8')} size={_size} bytes")
+            log(f"==> source_code_hashes{br(idx)} == {source_code_hashes[idx].decode('utf-8')} size={_size} bytes")
             byte_size += _size
             if not is_cached[source_code_hashes[idx].decode("utf-8")]:
                 size_to_download += _size

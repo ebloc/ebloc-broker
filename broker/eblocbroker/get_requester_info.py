@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
 
 
@@ -39,9 +39,7 @@ def get_requester_info(self, requester):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 1:
         requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
         # requester = "0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571"

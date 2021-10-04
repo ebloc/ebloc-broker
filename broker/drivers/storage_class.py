@@ -11,7 +11,7 @@ from shutil import copyfile
 from typing import Dict, List
 
 import broker._utils._log as _log
-import broker.eblocbroker.Contract as Contract
+import broker.cfg as cfg
 import broker.libs.slurm as slurm
 from broker.config import ThreadFilter, env, logging
 from broker.lib import log, run
@@ -70,7 +70,7 @@ class Storage(BaseClass):
         self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.folder_type_dict: Dict[str, str] = {}
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.Ebb = cfg.Ebb
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.mc = None

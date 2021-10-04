@@ -1,0 +1,28 @@
+* Chrony configuration
+
+#+begin_src python
+sudo apt-get install chrony -y
+
+sudo mkdir /etc/chrony
+sudo cp ~/ebloc-broker/broker/bloxberg/chrony.conf /etc/chrony/chrony.conf
+sudo systemctl restart chronyd.service  # sudo service chrony restart
+sudo systemctl enable chrony
+#+end_src
+
+--------------------------------
+
+#+begin_src python
+sudo systemctl status chrony
+
+# Allow chrony ntp
+sudo ufw allow 123/udp
+
+# To see the source of synchronization data
+chronyc sources
+
+# To view the current status of chrony
+chronyc tracking
+
+# To pick your timezone run the following command
+sudo dpkg-reconfigure tzdata
+#+end_src

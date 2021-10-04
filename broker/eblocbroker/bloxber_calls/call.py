@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br, log
 import os
 import sys
 import time
@@ -10,7 +11,7 @@ from broker.utils import ipfs_to_bytes32
 
 def print_msg(msg):
     """Print arguments."""
-    print(f"[{time.ctime()}, pid: {os.getpid()}] --- {msg}")
+    log(f"{br(time.ctime())}, pid: {os.getpid()}] --- {msg}")
 
 
 def main(*args):

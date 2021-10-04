@@ -8,7 +8,6 @@ import time
 from multiprocessing import Process
 from pprint import pprint
 from threading import Thread
-
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import log, print_tb, print_trace
@@ -226,6 +225,8 @@ def eblocbroker_function_call(func, attempt):
             else:
                 print_tb(e)
                 raise e
+
+    print_tb("E: eblocbroker_function_call completed all the attempts.")
     raise
 
 
