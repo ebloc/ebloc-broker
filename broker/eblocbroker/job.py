@@ -5,8 +5,7 @@ import sys
 from ast import literal_eval as make_tuple
 from pprint import pprint
 from typing import Dict, List
-
-import broker.eblocbroker.Contract as Contract
+import broker.cfg as cfg
 import broker.libs.git as git
 from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
@@ -31,7 +30,7 @@ class Job:
     """Object for the job that will be submitted."""
 
     def __init__(self, **kwargs) -> None:
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.Ebb = cfg.Ebb
         self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
@@ -140,7 +139,7 @@ class JobPrices:
     """Calcualte job prices for the related provider."""
 
     def __init__(self, job):
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+        self.Ebb = cfg.Ebb
         self.ebb = self.Ebb.eBlocBroker
         self.w3 = self.Ebb.w3
         self.job = job

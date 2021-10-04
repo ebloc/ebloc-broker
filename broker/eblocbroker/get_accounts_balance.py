@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 from os import listdir
-
-import broker.eblocbroker.Contract as Contract
+import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
 from brownie import accounts
 
 
 def main():
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     path = "/home/alper/.brownie/accounts"
     dirlist = listdir(path)
     for fname in dirlist:

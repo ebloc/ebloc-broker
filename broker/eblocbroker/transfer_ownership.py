@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
@@ -30,9 +30,7 @@ def transfer_ownership(self, new_owner):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         new_owner = str(sys.argv[1])
     else:

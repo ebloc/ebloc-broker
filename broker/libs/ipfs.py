@@ -120,7 +120,7 @@ class Ipfs:
         _remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
         _remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
 
-    def gpg_encrypt(self, user_gpg_finderprint, target) -> bool:
+    def gpg_encrypt(self, user_gpg_finderprint, target) -> str:
         is_delete = False
         if os.path.isdir(target):
             try:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 from broker._utils.tools import print_tb
 from broker.config import logging
 from broker.lib import get_tx_status
@@ -26,9 +26,7 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     available_core = 128
     commitment_blk = 10
     price_core_min = 100

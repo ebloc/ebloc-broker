@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-
+import broker.cfg as cfg
 from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
@@ -35,9 +35,7 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     gpg_fingerprint = "420E5F7E1928B5E5940FA8D44055CB84FC8DCE5F"
     email = "alper.alimoglu.research@gmail.com"
     # email = "alper.alimoglu@gmail.com"

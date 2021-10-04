@@ -15,10 +15,12 @@ from web3.logs import DISCARD
 import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import QuietExit
 from contract.scripts.lib import Job, cost
+import broker.cfg as cfg
+
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     job = Job()
 
     if not is_dpkg_installed("pigz"):

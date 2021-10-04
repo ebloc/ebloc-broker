@@ -2,7 +2,7 @@
 
 import sys
 from typing import Any, Union
-
+import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import StorageID, state
@@ -73,9 +73,7 @@ def process_payment(  # noqa
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     if len(sys.argv) == 12:
         args = sys.argv[1:]
         my_args = []  # type: Union[Any]

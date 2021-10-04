@@ -37,9 +37,7 @@ def register_provider(self, *args, **kwargs):
 
 
 if __name__ == "__main__":
-    import broker.eblocbroker.Contract as Contract
-
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     try:
         ipfs_addr = "/ip4/127.0.0.1/tcp/5001/http"
         client = ipfshttpclient.connect(ipfs_addr)

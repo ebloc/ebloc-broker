@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import broker.cfg as cfg
 import base64
 import getpass
 import os
@@ -8,14 +9,10 @@ import sys
 import time
 from contextlib import suppress
 from typing import Dict, List
-
-import eblocbroker.Contract as Contract
-import libs.eudat as eudat
-import libs.gdrive as gdrive
-import libs.git as git
-import libs.slurm as slurm
-
-import broker.cfg as cfg
+import broker.libs.eudat as eudat
+import broker.libs.gdrive as gdrive
+import broker.libs.git as git
+import broker.libs.slurm as slurm
 from broker._utils.tools import QuietExit
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
@@ -47,7 +44,7 @@ from broker.utils import (
 )
 
 connect()
-Ebb: "Contract.Contract" = Contract.EBB()
+Ebb = cfg.Ebb
 
 
 class Common:
@@ -495,7 +492,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         self.attemp_get_job_info()
-        log("Received running job status successfully", "bold green")
+        log("## Received running job status successfully", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_source_code_hashes(

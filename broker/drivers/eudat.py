@@ -8,12 +8,11 @@ from typing import List
 
 import broker.cfg as cfg
 import broker.config as config
-import broker.eblocbroker.Contract as Contract
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
 from broker.utils import CacheType, _remove, generate_md5sum, get_time, log, mkdir, print_tb, read_json, untar
 
-Ebb: "Contract.Contract" = Contract.EBB()
+Ebb = cfg.Ebb
 
 
 class EudatClass(Storage):

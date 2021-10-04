@@ -9,10 +9,8 @@ import time
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
 import broker._utils._log as _log
 import broker.cfg as cfg
 import broker.config as config
@@ -120,7 +118,8 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb: "Contract.Contract" = Contract.EBB()
+
+        self.Ebb: "Contract.Contract" = cfg.Ebb
         self.block_number: int = 0
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
@@ -313,7 +312,7 @@ def run_driver():
         from imports import connect
 
         connect()
-        Ebb: "Contract.Contract" = Contract.EBB()
+        Ebb: "Contract.Contract" = cfg.Ebb
         driver = Driver()
     except Exception as e:
         raise Terminate(e)

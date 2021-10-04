@@ -2,12 +2,11 @@
 
 import sys
 from pprint import pprint
-
-import broker.eblocbroker.Contract as Contract
 from broker.lib import get_tx_status
 from broker.utils import is_bin_installed, is_dpkg_installed, log
 from brownie import accounts, web3
-from contract.scripts.lib import Job
+from broker.eblocbroker.job import Job
+import broker.cfg as cfg
 
 
 def pre_check():
@@ -36,7 +35,7 @@ def get_tx_status(tx_hash) -> str:
 
 
 if __name__ == "__main__":
-    Ebb: "Contract.Contract" = Contract.EBB()
+    Ebb = cfg.Ebb
     job = Job()
     pre_check()
 
@@ -68,6 +67,5 @@ if __name__ == "__main__":
         storage_hours,
         source_code_hashes,
     )
-
     print(tx_hash.txid)
     receipt = get_tx_status(tx_hash.txid)
