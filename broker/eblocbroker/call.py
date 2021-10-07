@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # UNIX: enable executable from terminal with: chmod +x filename
+
+from broker._utils._log import br, log
 import os
 import sys
 import time
@@ -10,7 +12,8 @@ from brownie import network, project
 
 
 def print_msg(msg):
-    print(f"[{time.ctime()}, pid: {os.getpid()}] --- {msg}")
+    string = f"{time.ctime()},pid={os.getpid()}"
+    log(f"{br(string)} {msg}")
 
 
 def calculate(data, *args):

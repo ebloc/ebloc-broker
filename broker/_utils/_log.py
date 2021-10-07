@@ -3,7 +3,7 @@
 import pathlib
 import threading
 from typing import Dict, Union
-
+from rich.markup import escape
 from rich import pretty, print  # noqa
 from rich.console import Console
 
@@ -31,7 +31,7 @@ class Log:
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
         self.console: Dict[str, Console] = {}
 
-    def print_color(self, text: str, color=None, is_bold=True, end=None):
+    def print_color(self, text: str, color=None, is_bold=True, end=None) -> None:
         """Print string in color format."""
         if text[0:3] in ["==> ", "#> ", "## "]:
             if color and text == "==> ":
@@ -83,7 +83,7 @@ class Log:
             is_arrow = True
             if not color:
                 color = "red"
-        elif "SUCCESS" in text or "Finalazing" in text:
+        elif "SUCCESS" in text or "Finalazing" in text or text == "END":
             if not color:
                 color = "green"
                 is_bold = True
@@ -92,6 +92,10 @@ class Log:
                 color = "red"
 
         return text, color, _len, is_arrow, is_r, is_bold
+
+
+def br(text):
+    return escape(f"[{text}]")
 
 
 def log(text="", color=None, filename=None, end=None, flush=False):

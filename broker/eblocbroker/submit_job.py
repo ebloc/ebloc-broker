@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import sys
-
+from brownie.exceptions import TransactionError
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import log, print_tb
@@ -74,7 +75,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             raise
 
         if job.run_time[idx] == 0:
-            logging.error(f"\nE: run_time[{idx}] is provided as 0. Please provide non-zero value")
+            logging.error(f"\nE: run_time{br(idx)} is provided as 0. Please provide non-zero value")
             raise
 
     for core_min in job.run_time:
@@ -153,6 +154,11 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
             _from, job_price, key, job.data_transfer_ins, args, job.storage_hours, job.source_code_hashes
         )
         return self.tx_id(tx)
+    except TransactionError as e:
+        print_tb(e)
+        tx_hash = str(e).replace("Tx dropped without known replacement: ", "")
+        print(tx_hash)
+        breakpoint()  # DEBUG
     except Exception as e:
         if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
             # https://stackoverflow.com/a/45532289/2402577, https://stackoverflow.com/a/24065533/2402577

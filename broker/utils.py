@@ -129,7 +129,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
 
 
 def sleep_timer(sleep_duration):
-    log(f"Sleeping for {sleep_duration} seconds, called from {[WHERE(1)]}", "blue")
+    log(f"Sleeping for {sleep_duration} seconds, called from {WHERE(1)}", "blue")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -421,10 +421,10 @@ def _remove(path: str, is_warning=True):
             shutil.rmtree(path)
         else:
             if is_warning:
-                log(f"Warning: [ {WHERE(1)} ] Given path '{path}' does not exists. Nothing is removed.")
+                log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
             return
 
-        log(f"==> [{WHERE(1)}]\n{path} is removed", "yellow")
+        log(f"==> {WHERE(1)}\n{path} is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -468,15 +468,17 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             if running_pid in pids:
                 if is_print:
                     log(f"==> {name} is already running on the background, its pid={running_pid}")
+
                 return True
         else:
             if is_print:
                 log(f"==> {name} is already running on the background")
+
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"Warning: '{name}' is not running on the background. {[WHERE(1)]}")
+        print_tb(f"Warning: '{name}' is not running on the background. {WHERE(1)}")
 
     return False
 
@@ -494,9 +496,9 @@ def is_geth_account_locked(address) -> bool:
     return False
 
 
-def is_driver_on(process_count=0):
+def is_driver_on(process_count=0, is_print=True):
     """Check whether driver runs on the background."""
-    if is_process_on("python.*[D]river", "Driver", process_count):
+    if is_process_on("python.*[D]river", "Driver", process_count, is_print=is_print):
         log("Track output using:")
         log(f"tail -f {tools.DRIVER_LOG}", "blue")
         raise QuietExit
@@ -584,7 +586,7 @@ def is_dpkg_installed(package_name) -> bool:
 def terminate(msg="", is_traceback=True):
     """Terminate the Driver python script and all the dependent python programs to it."""
     if msg:
-        log(f"[{WHERE(1)}] Terminated: ", "bold red", end="")
+        log(f"{WHERE(1)} Terminated: ", "bold red", end="")
         log(msg, "bold")
 
     if is_traceback:

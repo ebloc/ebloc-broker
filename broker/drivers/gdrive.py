@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import os
 import subprocess
 import time
@@ -104,7 +105,7 @@ class GdriveClass(Storage):
         return True, None
 
     def gdrive_download_folder(self, name, key, source_code_hash, _id, cache_folder) -> bool:
-        log(f"[{WHERE(1)}] called from", "blue")
+        log(f"{WHERE(1)}")
         success = self.is_cached(source_code_hash, _id)
         if success:
             return True
@@ -148,7 +149,7 @@ class GdriveClass(Storage):
 
             file_path = f"{self.folder_path_to_download[source_code_hash]}/{name}"
             if not os.path.isfile(file_path):
-                logging.error(f"[{WHERE(1)}] E: File {file_path} is not downloaded successfully")
+                logging.error(f"{WHERE(1)} E: File {file_path} is not downloaded successfully")
                 return False
 
             filename = f"{self.folder_path_to_download[source_code_hash]}/{name}"
@@ -316,7 +317,7 @@ class GdriveClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        log(f"[{get_time()}] job's source code has been sent through Google Drive", "cyan")
+        log(f"{br(get_time())} job's source code has been sent through Google Drive", "cyan")
         if os.path.isdir(self.results_folder):
             self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 
