@@ -31,6 +31,7 @@ class Job:
 
     def __init__(self, **kwargs) -> None:
         self.Ebb = cfg.Ebb
+        self.w3 = self.Ebb.w3
         self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
@@ -59,7 +60,6 @@ class Job:
         self.provider = provider
         self.requester = requester
         self.check()
-
         jp = JobPrices(self)
         jp.set_computational_cost()
         jp.set_storage_cost()  # burda patliyor sanki DELETE
@@ -208,7 +208,7 @@ class JobPrices:
                 # storage time is completed
                 ds.received_storage_deposit = 0
 
-            print(f"==> is_private={ds.is_private}")
+            log(f"==> is_private={ds.is_private}")
             # print(received_block + storage_duration >= self.w3.eth.blockNumber)
             # if ds.received_storage_deposit > 0 or
             if (
@@ -218,7 +218,7 @@ class JobPrices:
                 and not ds.is_private
                 and ds.is_verified_used
             ):
-                print(f"==> For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
+                log(f"==> For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0:
                     # if true, registered data's price should be considered for storage
@@ -248,7 +248,7 @@ class JobPrices:
     def set_job_price(self):
         """Set job price in the object."""
         self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
-        log(f"job_price={self.job_price}", "blue")
+        log(f"job_price={self.job_price}", "bold blue")
         self.cost["computational"] = self.computational_cost
         self.cost["cache"] = self.cache_cost
         self.cost["storage"] = self.storage_cost
@@ -256,11 +256,9 @@ class JobPrices:
         self.cost["data_transfer_out"] = self.data_transfer_out_cost
         self.cost["data_transfer"] = self.data_transfer_cost
         for key, value in self.cost.items():
+            if key not in ("data_transfer_out", "data_transfer_in"):
+                log(f"\t==> {key}={value}", "bold blue")
+
             if key == "data_transfer":
-                log(
-                    f"\t=> {key}={value} <=> [in:{self.cost['data_transfer_in']} out:{self.cost['data_transfer_out']}]",
-                    "blue",
-                )
-            else:
-                if key not in ("data_transfer_out", "data_transfer_in"):
-                    log(f"\t=> {key}={value}", "blue")
+                log(f"\t\t==> in={self.cost['data_transfer_in']}", "bold yellow")
+                log(f"\t\t==> out={self.cost['data_transfer_out']}", "bold yellow")

@@ -30,7 +30,6 @@ w3 = Web3(Web3.HTTPProvider(link))
 def foo():
     try:
 	if True:
-	    alper = 10 * 20
 	    # https://drive.google.com/file/d/0B_JzYt91KzCzSm1JaWhrQUk5RmVjWG9YYVhBQXpueFV4ZUJB/edit
 	    ~/junk/alper.mp
     except:

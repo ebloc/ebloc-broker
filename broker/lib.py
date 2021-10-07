@@ -8,7 +8,6 @@ import time
 from multiprocessing import Process
 from pprint import pprint
 from threading import Thread
-
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import log, print_tb, print_trace
@@ -81,8 +80,7 @@ state = State()
 
 def _connect_web3():
     if not cfg.w3:
-        from imports import connect_into_web3
-
+        from broker.imports import connect_into_web3
         connect_into_web3()
 
 
@@ -111,7 +109,7 @@ def get_tx_status(tx_hash) -> str:
     """Return status of the transaction."""
     log(f"tx_hash={tx_hash}")
     tx_receipt = cfg.w3.eth.waitForTransactionReceipt(tx_hash)
-    log("Transaction receipt is mined:")
+    log("Transaction receipt is deployed:")
     pprint(dict(tx_receipt), depth=1)
     # for idx, _log in enumerate(receipt["logs"]):
     #     # All logs fried under the tx
@@ -226,6 +224,8 @@ def eblocbroker_function_call(func, attempt):
             else:
                 print_tb(e)
                 raise e
+
+    print_tb("E: eblocbroker_function_call completed all the attempts.")
     raise
 
 

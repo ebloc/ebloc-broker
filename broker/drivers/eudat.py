@@ -5,12 +5,12 @@ import os
 import sys
 import time
 from typing import List
-
 import broker.cfg as cfg
 import broker.config as config
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
-from broker.utils import CacheType, _remove, generate_md5sum, get_time, log, mkdir, print_tb, read_json, untar
+from broker.utils import CacheType, _remove, generate_md5sum, get_time, mkdir, print_tb, read_json, untar
+from broker._utils._log import log, br
 
 Ebb = cfg.Ebb
 
@@ -169,7 +169,7 @@ class EudatClass(Storage):
                 logging.info("Shared folder is already accepted")
                 size = info.attributes["{DAV:}getcontentlength"]
                 folder_token_flag[folder_name] = True
-                logging.info(f"index=[{idx}]: /{folder_name}/{folder_name}.tar.gz => {size} bytes")
+                logging.info(f"index={br(idx)}: /{folder_name}/{folder_name}.tar.gz => {size} bytes")
                 # accept_flag += 1  # TODO: delete it seems unneeded
             except Exception:
                 logging.warning("E: Shared folder did not accepted yet")
@@ -256,7 +256,7 @@ class EudatClass(Storage):
 
     def _run(self) -> bool:
         log(
-            f"\n[{get_time()}] New job has been received through EUDAT: {self.job_key} {self.index} "
+            f"{br(get_time())} New job has been received through EUDAT: {self.job_key} {self.index} "
             "---------------------------------------------------------",
             "cyan",
         )

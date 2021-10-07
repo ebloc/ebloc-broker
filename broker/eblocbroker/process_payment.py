@@ -4,12 +4,12 @@ import sys
 from typing import Any, Union
 import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
-from broker.config import env, logging
+from broker.config import env
 from broker.lib import StorageID, state
 from broker.utils import ipfs_to_bytes32
 
 
-def process_payment(  # noqa
+def process_payment(
     self,
     job_key,
     index,
@@ -34,12 +34,12 @@ def process_payment(  # noqa
 
     for cloud_storage_id in cloud_storage_ids:
         if len(result_ipfs_hash) != 46 and cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
-            logging.error("E: Result ipfs's length does not match with its original length. Please check your job_key")
+            log("E: Result ipfs's length does not match with its original length. Please check your job_key")
             raise
 
-    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number)
+    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number, is_print=False)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:
-        logging.error("Job is completed and already get paid")
+        log("Warning: Job is completed and already get paid")
         sys.exit(1)
 
     """
@@ -48,10 +48,11 @@ def process_payment(  # noqa
         sys.exit(1)
     """
     try:
+        log("her")
         if result_ipfs_hash == b"" or not result_ipfs_hash:
-            _result_ipfs_hash = ""
+            result_ipfs_hash = ""
         else:
-            _result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
+            result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
 
         final_job = True  # true only for the final job
         args = [
@@ -64,11 +65,15 @@ def process_payment(  # noqa
             run_time,
             final_job,
         ]
-        tx = self._process_payment(job_key, args, int(elapsed_time), _result_ipfs_hash)
+        log("hereeeeeeeeeee")
+        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)  # tx is not returned
+        log("hereeeeeeeeeee2")
     except Exception as e:
+        log("hereeeeeeeeeee3")
         print_tb(e)
         raise e
 
+    log(tx)
     return self.tx_id(tx)
 
 

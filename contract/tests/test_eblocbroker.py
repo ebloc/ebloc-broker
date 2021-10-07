@@ -9,6 +9,7 @@ import pytest
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
 import brownie
+
 from broker.config import setup_logger
 from broker.eblocbroker.job import DataStorage, Job
 from broker.utils import CacheType, StorageID, ipfs_to_bytes32, logging, zero_bytes32

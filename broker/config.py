@@ -78,6 +78,7 @@ class ENV:
 
         true_set = ("yes", "true", "t", "1")
         load_dotenv(dotenv_path=env_file)
+        self.BLOCK_DURATION = 15
         self.WHOAMI = _env["WHOAMI"]
         self.SLURMUSER = _env["SLURMUSER"]
         self.LOG_PATH = _env["LOG_PATH"]
@@ -136,6 +137,7 @@ class ENV:
 
 
 def setup_logger(log_path="", is_brownie=False):
+    """Set logger path also for the log() function."""
     logger = logging.getLogger()  # root logger
     for hdlr in logger.handlers[:]:  # remove all old handlers
         logger.removeHandler(hdlr)
@@ -153,7 +155,6 @@ def setup_logger(log_path="", is_brownie=False):
         # new threads.
         main_handler = logging.FileHandler(log_path, "a")
         main_handler.addFilter(IgnoreThreadsFilter())
-
         logging.basicConfig(
             handlers=[logging.StreamHandler(), main_handler],
             level=logging.INFO,
@@ -164,7 +165,6 @@ def setup_logger(log_path="", is_brownie=False):
             datefmt="%H:%M:%S",
             # datefmt="%Y-%m-%d %H:%M:%S",
         )
-        # logger.info("Log_path => %s", log_path)
     else:  # only stdout
         logging.basicConfig(
             level=logging.INFO,
@@ -178,8 +178,8 @@ Ebb = None  # eBlocBlock Contract Class
 ebb = None  # eBlocBroker Contract on the blockchain
 contract = None
 chain = None
-w3_ebb = None
 ipfs = None
+w3_ebb = None
 
 colored_traceback.add_hook(always=True)
 logger = setup_logger()  # Default initialization
@@ -188,7 +188,6 @@ coll = None
 oc = None
 driver_cancel_process = None
 _eBlocBroker = None
-BLOCK_DURATION = 15
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
 IS_THREADING_ENABLED = False

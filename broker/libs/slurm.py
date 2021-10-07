@@ -84,7 +84,7 @@ def is_on() -> bool:
                 f"sudo {env.EBLOCPATH}/broker/bash_scripts/run_slurm.sh",
                 "red",
             )
-            raise config.QuietExit
+            raise QuietExit
 
     output = run(["sinfo"])
     if "PARTITION" not in output:

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import re
+from contextlib import suppress
 import binascii
 import errno
 import hashlib
 import json
 import ntpath
 import os
-import re
 import shlex
 import shutil
 import signal
@@ -14,7 +15,6 @@ import socket
 import sys
 import time
 import traceback
-from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 from typing import Dict
@@ -129,7 +129,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
 
 
 def sleep_timer(sleep_duration):
-    log(f"Sleeping for {sleep_duration} seconds, called from {[WHERE(1)]}", "blue")
+    log(f"Sleeping for {sleep_duration} seconds, called from {WHERE(1)}", "blue")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -212,15 +212,17 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
     return p, output, error
 
 
-def is_transaction_passed(tx_hash) -> bool:
-    from brownie import web3
+def is_transaction_valid(tx_hash) -> bool:
+    pattern = re.compile(r"^0x[a-fA-F0-9]{64}")
+    return bool(re.fullmatch(pattern, tx_hash))
 
-    receipt = web3.eth.getTransactionReceipt(tx_hash)
-    try:
+
+def is_transaction_passed(tx_hash) -> bool:
+    receipt = cfg.w3.eth.getTransactionReceipt(tx_hash)
+    with suppress(Exception):
         if receipt["status"] == 1:
             return True
-    except:
-        pass
+
     return False
 
 
@@ -421,10 +423,10 @@ def _remove(path: str, is_warning=True):
             shutil.rmtree(path)
         else:
             if is_warning:
-                log(f"Warning: [ {WHERE(1)} ] Given path '{path}' does not exists. Nothing is removed.")
+                log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
             return
 
-        log(f"==> [{WHERE(1)}]\n{path} is removed", "yellow")
+        log(f"==> {WHERE(1)}\n{path} is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -468,15 +470,17 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             if running_pid in pids:
                 if is_print:
                     log(f"==> {name} is already running on the background, its pid={running_pid}")
+
                 return True
         else:
             if is_print:
                 log(f"==> {name} is already running on the background")
+
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"Warning: '{name}' is not running on the background. {[WHERE(1)]}")
+        print_tb(f"Warning: '{name}' is not running on the background. {WHERE(1)}")
 
     return False
 
@@ -494,9 +498,9 @@ def is_geth_account_locked(address) -> bool:
     return False
 
 
-def is_driver_on(process_count=0):
+def is_driver_on(process_count=0, is_print=True):
     """Check whether driver runs on the background."""
-    if is_process_on("python.*[D]river", "Driver", process_count):
+    if is_process_on("python.*[D]river", "Driver", process_count, is_print=is_print):
         log("Track output using:")
         log(f"tail -f {tools.DRIVER_LOG}", "blue")
         raise QuietExit
@@ -584,7 +588,7 @@ def is_dpkg_installed(package_name) -> bool:
 def terminate(msg="", is_traceback=True):
     """Terminate the Driver python script and all the dependent python programs to it."""
     if msg:
-        log(f"[{WHERE(1)}] Terminated: ", "bold red", end="")
+        log(f"{WHERE(1)} Terminated: ", "bold red", end="")
         log(msg, "bold")
 
     if is_traceback:

@@ -6,7 +6,7 @@ import getpass
 import os
 import pprint
 import sys
-import time
+from time import sleep
 from contextlib import suppress
 from typing import Dict, List
 import broker.libs.eudat as eudat
@@ -27,6 +27,7 @@ from broker.lib import (
     state,
     subprocess_call,
 )
+from broker._utils._log import log, br
 from broker.utils import (
     WHERE,
     StorageID,
@@ -35,7 +36,6 @@ from broker.utils import (
     bytes32_to_ipfs,
     eth_address_to_md5,
     is_dir_empty,
-    log,
     mkdir,
     print_tb,
     read_file,
@@ -107,15 +107,15 @@ class Eudat(Common):
             pass
 
         _data_transfer_out = calculate_folder_size(self.patch_file)
-        logging.info(f"[{source_code_hash}]'s data_transfer_out => {_data_transfer_out} MB")
+        logging.info(f"{br(source_code_hash)}.data_transfer_out={_data_transfer_out} MB")
         self.data_transfer_out += _data_transfer_out
-        success = eudat.upload_results(
+        output = eudat.upload_results(
             self.encoded_share_tokens[source_code_hash],
             self.patch_upload_name,
             self.patch_folder,
             5,
         )
-        return success
+        return output
 
 
 class Gdrive(Common):
@@ -137,13 +137,13 @@ class Gdrive(Common):
                 try:
                     key = meta_data[key]
                 except:
-                    logging.error(f"[{WHERE(1)}] E: {key} does not have a match in meta_data.json")
+                    logging.error(f"{WHERE(1)} E: {key} does not have a match in meta_data.json")
                     return False
 
             cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
             gdrive_info = subprocess_call(cmd, 5)
         except:
-            logging.error(f"[{WHERE(1)}] E: {key} does not have a match. meta_data={meta_data}")
+            logging.error(f"{WHERE(1)} E: {key} does not have a match. meta_data={meta_data}")
             return False
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
@@ -161,7 +161,7 @@ class Gdrive(Common):
         try:
             logging.info(subprocess_call(cmd, 5))
         except:
-            logging.error(f"[{WHERE(1)}] E: gdrive could not upload the file")
+            logging.error(f"{WHERE(1)} E: gdrive could not upload the file")
             return False
 
         return True
@@ -190,8 +190,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         os.environ["IPFS_PATH"] = f"{env.HOME}/.ipfs"
         log_filename = f"{env.LOG_PATH}/end_code_output/{self.job_key}_{self.index}.log"
         logging = setup_logger(log_filename)
-        # logging.info(f"==> Entered into {self.__class__.__name__} case.") # delete
-        # logging.info(f"START: {datetime.datetime.now()}") # delete
         self.job_id = 0  # TODO: should be mapped slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue")
         log(f"==> slurm_job_id={self.slurm_job_id}")
@@ -214,7 +212,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             requester_id = self.job_info["job_owner"]
             requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
-        except:
+        except Exception as e:
+            log(e)
             sys.exit(1)
 
         self.results_folder_prev = f"{env.PROGRAM_PATH}/{requester_id_address}/{self.job_key}_{self.index}"
@@ -325,8 +324,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        with open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}.txt", "a") as f:
-            f.write(f"processPayment {self.job_key} {self.index} {tx_hash}\n\n")
+        log(tx_hash)
+        log(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{self.index}.txt")
+        with open(f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{self.index}.txt", "a") as f:
+            f.write(f"==> process_payment {self.job_key} {self.index} {tx_hash}\n")
 
         return tx_hash
 
@@ -350,10 +351,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
     def git_diff_patch_and_upload(self, source, name, storage_class, is_job_key):
         if is_job_key:
-            log(f"==> patch_base={self.patch_folder}")
-            log(f"==> Patch for the source code {name}")
+            log(f"==> base_patch={self.patch_folder}")
+            log(f"==> sourcecode_patch={name}")
         else:
-            log(f"==> Patch for the data file {name}")
+            log(f"==> datafile_patch={name}")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
@@ -385,6 +386,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             try:
                 self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
             except Exception as e:
+                print_tb(e)
                 raise Exception("E: Problem on git_diff_patch_and_upload()") from e
 
         if not is_dir_empty(self.patch_folder_ipfs):
@@ -402,7 +404,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         """
         slurm_log_output_file = f"{self.results_folder}/slurm_job_info.out"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
-        cmd.append("JobID,jobname,User,Account,Group,Cluster,AllocCPUS,REQMEM,TotalCPU,Elapsed")
+        cmd.append("jobID,jobname,user,account,group,cluster,allocCPUS,REQMEM,TotalCPU,elapsed")
         run_stdout_to_file(cmd, slurm_log_output_file)
         with open(slurm_log_output_file, "a") as myfile:
             myfile.write("\n\n")
@@ -430,24 +432,31 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def attemp_get_job_info(self):
         is_print = True
         for attempt in range(100):
+            log(attempt)
+            log(self.job_info)
             if self.job_info["stateCode"] == state.code["RUNNING"]:
-                # it will come here eventually, when setJob() is deployed
-                log("==> Job has been started")
-                break  # wait until does values updated on the blockchain
+                # it will come here eventually, when setJob() is deployed. Wait
+                # until does values updated on the blockchain
+                log("## Job has been started")
+                return
 
             if self.job_info["stateCode"] == state.code["COMPLETED"]:
                 # detects an error on the slurm side
-                log("==> Job is already completed job and its money is received")
+                log("Warning: Job is already completed and its money is received")
                 self.log_job()
                 raise QuietExit
 
             try:
-                self.job_info = eblocbroker_function_call(
-                    lambda: Ebb.get_job_info(
-                        env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
-                    ),
-                    1,
+                self.job_info = Ebb.get_job_info(
+                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
                 )
+                log(attempt)
+                # self.job_info = eblocbroker_function_call(
+                #     lambda: Ebb.get_job_info(
+                #         env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
+                #     ),
+                #     1,
+                # )
                 is_print = False
             except Exception as e:
                 print_tb(e)
@@ -456,13 +465,14 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             # sleep here so this loop is not keeping CPU busy due to
             # start_code tx may deploy late into the blockchain.
             log(
-                f"==> [{attempt}] start_code tx of the job is not obtained yet."
-                f" Waiting for {attempt * 30} seconds to pass."
+                f"==> {br(attempt)} start_code tx of the job is not obtained yet."
+                f" Waiting for {30} seconds to pass ", end=""
             )
-            time.sleep(30)
-        else:  # failed all the attempts, abort
-            log("E: failed all the attempts, abort")
-            sys.exit(1)
+            sleep(30)  # TODO: exits randomly
+            log(br("sleep ended"))
+
+        log("E: failed all the attempts, abort")
+        sys.exit(1)
 
     def run(self):
         try:
@@ -491,7 +501,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
-        self.attemp_get_job_info()
+        try:
+            self.attemp_get_job_info()
+        except Exception as e:
+            print_tb(e)
+            raise e
+
         log("## Received running job status successfully", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
@@ -505,13 +520,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 ),
                 10,
             )
-        except:
+        except Exception as e:
+            print_tb(e)
             sys.exit(1)
 
         self.source_code_hashes = self.job_info["source_code_hash"]
         self.set_source_code_hashes_to_process()
         self.sacct_result()
-
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_time = slurm.get_elapsed_time(self.slurm_job_id)
         if self.elapsed_time > int(run_time[self.job_id]):
@@ -528,9 +543,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             sys.exit(1)
 
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
-        log(f"data_transfer_in={self.data_transfer_in} MB => rounded={int(self.data_transfer_in)} MB")
-        log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
-        log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB")
+        log(f"data_transfer_in={self.data_transfer_in} MB => rounded={int(self.data_transfer_in)} MB", "bold")
+        log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB", "bold")
+        log(f"data_transfer_sum={data_transfer_sum} MB => rounded={int(data_transfer_sum)} MB", "bold")
         tx_hash = self.process_payment_tx()
         get_tx_status(tx_hash)
         self.job_info = eblocbroker_function_call(
@@ -560,7 +575,8 @@ if __name__ == "__main__":
     try:
         cloud_storage = ENDCODE(**kwargs)
         cloud_storage.run()
-    except QuietExit:
+    except QuietExit as e:
+        print_tb(e)
         sys.exit(1)
     except Exception as e:
         print_tb(e)
