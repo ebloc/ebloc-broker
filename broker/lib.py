@@ -80,8 +80,7 @@ state = State()
 
 def _connect_web3():
     if not cfg.w3:
-        from imports import connect_into_web3
-
+        from broker.imports import connect_into_web3
         connect_into_web3()
 
 
@@ -110,7 +109,7 @@ def get_tx_status(tx_hash) -> str:
     """Return status of the transaction."""
     log(f"tx_hash={tx_hash}")
     tx_receipt = cfg.w3.eth.waitForTransactionReceipt(tx_hash)
-    log("Transaction receipt is mined:")
+    log("Transaction receipt is deployed:")
     pprint(dict(tx_receipt), depth=1)
     # for idx, _log in enumerate(receipt["logs"]):
     #     # All logs fried under the tx

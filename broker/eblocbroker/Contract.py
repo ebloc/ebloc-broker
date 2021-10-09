@@ -198,7 +198,7 @@ class Contract:
     # Transactions #
     ################
     def _process_payment(self, *args) -> "TransactionReceipt":
-        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True}
+        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True, "required_confs": 0}
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.processPayment(*args, ops)

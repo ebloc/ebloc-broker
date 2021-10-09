@@ -6,7 +6,7 @@ from subprocess import PIPE, Popen, check_output
 import sys
 import time
 from datetime import datetime
-from config import env
+from broker.config import env
 import broker.cfg as cfg
 
 
@@ -21,7 +21,7 @@ def start_call(job_key, index, slurm_job_id):
     Ebb = cfg.Ebb
     _log.ll.LOG_FILENAME = f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{index}.txt"
     _log.ll.IS_PRINT = False
-    log(f"./start_code.py {job_key} {index} {slurm_job_id}")
+    log(f"~/ebloc-broker/broker/start_code.py {job_key} {index} {slurm_job_id}")
     job_id = 0  # TODO: should be obtained from the user's input
     p1 = Popen(["scontrol", "show", "job", slurm_job_id], stdout=PIPE)
     p2 = Popen(["grep", "StartTime"], stdin=p1.stdout, stdout=PIPE)

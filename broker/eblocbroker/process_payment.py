@@ -66,9 +66,10 @@ def process_payment(
             final_job,
         ]
         log("hereeeeeeeeeee")
-        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)
+        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)  # tx is not returned
         log("hereeeeeeeeeee2")
     except Exception as e:
+        log("hereeeeeeeeeee3")
         print_tb(e)
         raise e
 

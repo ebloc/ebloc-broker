@@ -457,7 +457,8 @@ def run_driver():
 if __name__ == "__main__":
     try:
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        log(date_now + " " + "=" * (COLUMN_SIZE - 16) + " provider session starts " + "=" * (COLUMN_SIZE - 5), "cyan")
+        msg = " provider session starts "
+        log(date_now + " " + "=" * (COLUMN_SIZE - 16) + msg + "=" * (COLUMN_SIZE - 5), "bold cyan")
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement
             # to launch ipdb
@@ -467,8 +468,7 @@ if __name__ == "__main__":
                 try:
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 except PermissionError:
-                    log("E: PermissionError is generated for the locked file")
-                    print_tb()
+                    print_tb("E: PermissionError is generated for the locked file")
                     give_RWE_access(env.WHOAMI, "/tmp/run")
                     lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
                 # open(env.DRIVER_LOCKFILE, 'w').close()

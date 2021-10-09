@@ -20,6 +20,10 @@ except:  # if ebloc_broker used as a submodule
     from ebloc_broker.broker._utils._log import log
 
 
+class HandlerException(Exception):
+    """Generate HandlerException."""
+
+
 class QuietExit(Exception):
     """Trace is not printed."""
 
@@ -109,7 +113,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
         try:
             log(f"{br(PrintException())} {WHERE(1)}", "bold blue")
         except:
-            log(f"WHERE={WHERE(1)}", "bold blue")
+            log(f"WHERE={WHERE(1)}")
 
         if "Warning:" not in message:
             log(f"E: {message}")
@@ -229,7 +233,7 @@ def print_trace(cmd, back=1, exc=""):
         log(f"$ {_cmd}", "yellow")
         log(exc, "red")
     else:
-        log(f"==> Failed shell command:\n{_cmd}", "yellow")
+        log(f"==> Failed shell command:\n[yellow]{_cmd}")
 
 
 def run(cmd, my_env=None, is_print_trace=True) -> str:
@@ -247,6 +251,7 @@ def run(cmd, my_env=None, is_print_trace=True) -> str:
         if is_print_trace:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
             print_tb(e)
+
         raise e
 
 
@@ -255,11 +260,11 @@ def handler(signum, frame):
 
     __ https://docs.python.org/3/library/signal.html#example
     """
-    breakpoint()  # DEBUG
-    if signum == 14 and "log_job" in str(frame):
+    if signum == 14 and ("log_job" in str(frame) or "subprocess.py" in str(frame)):
         # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
         # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
         pass
     else:
-        print_tb(f"Signal handler called with signal={signum} {frame}")
-        raise Exception("Forever is over, end of time")
+        print_tb(f"Signal handler called with signum={signum} frame={frame}")
+        breakpoint()  # DEBUG
+        raise HandlerException("Forever is over, end of time")

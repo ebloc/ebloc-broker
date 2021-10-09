@@ -6,7 +6,7 @@ import getpass
 import os
 import pprint
 import sys
-import time
+from time import sleep
 from contextlib import suppress
 from typing import Dict, List
 import broker.libs.eudat as eudat
@@ -432,10 +432,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def attemp_get_job_info(self):
         is_print = True
         for attempt in range(100):
+            log(attempt)
+            log(self.job_info)
             if self.job_info["stateCode"] == state.code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed. Wait
                 # until does values updated on the blockchain
-                log("==> Job has been started")
+                log("## Job has been started")
                 return
 
             if self.job_info["stateCode"] == state.code["COMPLETED"]:
@@ -448,13 +450,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 self.job_info = Ebb.get_job_info(
                     env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
                 )
-
-                self.job_info = eblocbroker_function_call(
-                    lambda: Ebb.get_job_info(
-                        env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
-                    ),
-                    1,
-                )
+                log(attempt)
+                # self.job_info = eblocbroker_function_call(
+                #     lambda: Ebb.get_job_info(
+                #         env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
+                #     ),
+                #     1,
+                # )
                 is_print = False
             except Exception as e:
                 print_tb(e)
@@ -464,9 +466,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             # start_code tx may deploy late into the blockchain.
             log(
                 f"==> {br(attempt)} start_code tx of the job is not obtained yet."
-                f" Waiting for {attempt * 30} seconds to pass."
+                f" Waiting for {30} seconds to pass ", end=""
             )
-            time.sleep(30)  # TODO: exits randomly
+            sleep(30)  # TODO: exits randomly
+            log(br("sleep ended"))
 
         log("E: failed all the attempts, abort")
         sys.exit(1)

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import re
+from contextlib import suppress
 import binascii
 import errno
 import hashlib
 import json
 import ntpath
 import os
-import re
 import shlex
 import shutil
 import signal
@@ -14,7 +15,6 @@ import socket
 import sys
 import time
 import traceback
-from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 from typing import Dict
@@ -212,15 +212,17 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
     return p, output, error
 
 
-def is_transaction_passed(tx_hash) -> bool:
-    from brownie import web3
+def is_transaction_valid(tx_hash) -> bool:
+    pattern = re.compile(r"^0x[a-fA-F0-9]{64}")
+    return bool(re.fullmatch(pattern, tx_hash))
 
-    receipt = web3.eth.getTransactionReceipt(tx_hash)
-    try:
+
+def is_transaction_passed(tx_hash) -> bool:
+    receipt = cfg.w3.eth.getTransactionReceipt(tx_hash)
+    with suppress(Exception):
         if receipt["status"] == 1:
             return True
-    except:
-        pass
+
     return False
 
 
