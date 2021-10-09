@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import os
 import os.path
 import pickle
@@ -9,6 +8,7 @@ import subprocess
 import sys
 import time
 import traceback
+from pathlib import Path
 from pprint import pprint
 
 import owncloud
@@ -17,6 +17,7 @@ from web3.logs import DISCARD
 import broker.cfg as cfg
 import broker.config as config
 import broker.libs.git as git
+from broker._utils._log import br
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
 from broker.lib import get_tx_status, run
@@ -127,7 +128,7 @@ def _login(fname, user, password_path):
     terminate()
 
 
-def login(user, password_path, fname: str) -> None:
+def login(user, password_path: Path, fname: str) -> None:
     if not user:
         logging.error("E: User is empty")
         terminate()
@@ -138,7 +139,7 @@ def login(user, password_path, fname: str) -> None:
         try:
             log(f"## Login into owncloud from the dumped object={fname} ", end="")
             config.oc.get_config()
-            log("[ ok ]")
+            log(br(" ok "))
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)
@@ -258,7 +259,7 @@ def _submit(provider, account_id, folders_to_share):
         print_tb()
         sys.exit(1)
 
-    log("")
+    log()
     for idx, folder in enumerate(job.folders_to_share):
         if idx != 0:
             print("")
@@ -282,7 +283,7 @@ def _submit(provider, account_id, folders_to_share):
 
         time.sleep(0.25)
 
-    log("")
+    log()
     log("==> Submitting the job")
     job.run_time = [60]  # in seconds
     job.cores = [1]

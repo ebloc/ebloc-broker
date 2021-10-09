@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from broker.utils import log
 import broker.cfg as cfg
+from broker.utils import log
 
 
 def get_provider_price_info(address, requested_core, core_minute, data_transfer):

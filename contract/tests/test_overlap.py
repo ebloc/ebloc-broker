@@ -9,6 +9,7 @@ import pytest
 import broker._config as _config
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
+from broker._utils._log import br, log
 from broker.config import setup_logger
 from broker.eblocbroker.job import Job
 from broker.utils import CacheType, StorageID
@@ -100,7 +101,8 @@ def check_price_keys(price_keys, provider, source_code_hash1):
 
 
 def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_print=True):
-    print(f"==> [{start_time}, {completion_time}] cores={cores}")
+    text = f"{start_time},{completion_time}"
+    log(f"==> {br(text)} cores={cores}")
     job = Job()
     job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
     job.key = job.source_code_hashes[0]
@@ -114,7 +116,6 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
     job.cache_types = [CacheType.PUBLIC.value]
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
-
     job_price, _cost = job.cost(provider, requester)
     provider_price_block_number = config.ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [

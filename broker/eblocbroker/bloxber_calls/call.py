@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br, log
 import os
 import sys
 import time
 from ast import literal_eval as make_tuple
 
+from broker._utils._log import br, log
 from broker.utils import ipfs_to_bytes32
 
 

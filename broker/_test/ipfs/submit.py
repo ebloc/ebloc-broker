@@ -4,19 +4,27 @@ import os
 import sys
 from pprint import pprint
 
-from config import env, logging
-from imports import connect
-from lib import check_linked_data, get_tx_status, run
-from libs import ipfs
-from libs.ipfs import gpg_encrypt
-from utils import CacheType, StorageID, _remove, generate_md5sum, ipfs_to_bytes32, is_dpkg_installed, log, print_tb
 from web3.logs import DISCARD
 
+import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import QuietExit
+from broker.config import env, logging
+from broker.imports import connect
+from broker.lib import check_linked_data, get_tx_status, run
+from broker.libs import ipfs
+from broker.libs.ipfs import gpg_encrypt
+from broker.utils import (
+    CacheType,
+    StorageID,
+    _remove,
+    generate_md5sum,
+    ipfs_to_bytes32,
+    is_dpkg_installed,
+    log,
+    print_tb,
+)
 from contract.scripts.lib import Job, cost
-import broker.cfg as cfg
-
 
 if __name__ == "__main__":
     eBlocBroker, w3 = connect()
@@ -53,7 +61,7 @@ if __name__ == "__main__":
     folders_to_share.append(data_1_dir)
 
     path_from = f"{env.EBLOCPATH}/base/data"
-    path_to = f"{env.LINKS}/base/data_link"
+    path_to = f"{env.LINK_PATH}/base/data_link"
     check_linked_data(path_from, path_to, folders_to_share[1:])
 
     if main_storage_id == StorageID.IPFS:

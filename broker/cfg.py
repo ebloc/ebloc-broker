@@ -49,7 +49,7 @@ class W3:
 
             global w3
             self.w3: "web3" = web3
-            w3 = web3
+            w3 = self.w3
 
         return getattr(self.w3, name)
 
@@ -57,3 +57,4 @@ class W3:
 Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()
+TX_TIMEOUT = 1800

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-EMAIL="aalimog1@binghamton.edu"
 _HOME="/home/alper"
+EMAIL="aalimog1@binghamton.edu"
 VENV_PATH="${_HOME}/venv"
 EBLOCBROKER_PATH="${_HOME}/ebloc-broker/broker"
 LOG_FILE="${_HOME}/.ebloc-broker/slurm_script.log"
@@ -24,7 +24,7 @@ if [[ $c == *" Began, "* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
-        python3 -uB $EBLOCBROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id
+        nohup python3 -uB $EBLOCBROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id >/dev/null 2>&1
     fi
 fi
 
@@ -47,7 +47,7 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
-        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        nohup python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id >/dev/null 2>&1
     fi
 fi
 
@@ -79,7 +79,7 @@ if [[ $event == *"CANCELLED"* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
-        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        nohup python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id >/dev/null 2>&1
     fi
 fi
 
@@ -95,6 +95,6 @@ if [[ $event == *"FAILED"* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then # job_key and index should not be same
         source $VENV_PATH/bin/activate
-        python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
+        nohup python3 -uB $EBLOCBROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id >/dev/null 2>&1
     fi
 fi

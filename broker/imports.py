@@ -32,7 +32,7 @@ def connect():
 
 
 def _connect_into_web3():
-    web3_provider_path = f"{env.DATADIR}/geth.ipc"
+    web3_provider_path = env.DATADIR.joinpath("geth.ipc")
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:  # https://bloxberg.org
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
@@ -55,7 +55,7 @@ def connect_into_web3():
     recycles underlying TCP/IP network connections between your process and
     Ethereum node
     """
-    web3_provider_path = f"{env.DATADIR}/geth.ipc"
+    web3_provider_path = env.DATADIR.joinpath("geth.ipc")
     for _ in range(5):
         _connect_into_web3()
         if not cfg.w3.isConnected():
@@ -66,7 +66,7 @@ def connect_into_web3():
                 if not env.IS_BLOXBERG:
                     is_geth_on()
                 else:
-                    log("E: web3 is not connected into BLOXBERG", "red")  # delete_me
+                    log("E: web3 is not connected into BLOXBERG", "bold red")
             except Exception as e:
                 if type(e).__name__ != "QuietExit":
                     print_tb(e)

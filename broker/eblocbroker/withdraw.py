@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+
 import broker.cfg as cfg
 from broker.lib import get_tx_status
 

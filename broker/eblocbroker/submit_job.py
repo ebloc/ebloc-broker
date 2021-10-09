@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import sys
-from brownie.exceptions import TransactionError
+
 import broker.cfg as cfg
 import broker.config as config
+from broker._utils._log import br
 from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import StorageID
-from broker.utils import is_ipfs_on  # bytes32_to_ipfs
+from broker.utils import is_ipfs_on, is_transaction_valid  # bytes32_to_ipfs,
+from brownie.exceptions import TransactionError
 
 
 def is_provider_valid(self, provider):
@@ -155,12 +156,15 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
         )
         return self.tx_id(tx)
     except TransactionError as e:
-        print_tb(e)
+        log(f"Warning: {e}")
         tx_hash = str(e).replace("Tx dropped without known replacement: ", "")
-        print(tx_hash)
-        breakpoint()  # DEBUG
+        if is_transaction_valid(tx_hash):
+            return tx_hash
+        else:
+            raise Exception(f"E: tx_hash={tx_hash} is not a valid transaction hash.")
     except Exception as e:
         if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
             # https://stackoverflow.com/a/45532289/2402577, https://stackoverflow.com/a/24065533/2402577
             raise config.QuietExit
+
         raise e

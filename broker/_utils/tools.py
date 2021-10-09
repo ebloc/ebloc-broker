@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import decimal
 import linecache
 import os
 import sys
 import time
 import traceback
+from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from os import listdir
@@ -14,10 +14,16 @@ from subprocess import CalledProcessError, check_output
 
 from pytz import timezone, utc
 
+from broker._utils._log import br
+
 try:
     from broker._utils._log import log
 except:  # if ebloc_broker used as a submodule
     from ebloc_broker.broker._utils._log import log
+
+
+class HandlerException(Exception):
+    """Generate HandlerException."""
 
 
 class QuietExit(Exception):
@@ -33,6 +39,16 @@ def WHERE(back=0):
 
     text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
     return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+
+
+def merge_two_dicts(x, y):
+    """Given two dictionaries, merge them into a new dict as a shallow copy.
+
+    __https://stackoverflow.com/a/26853961/2402577
+    """
+    z = x.copy()
+    z.update(y)
+    return z
 
 
 def timenow() -> int:
@@ -89,7 +105,7 @@ def PrintException():
 def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
     if isinstance(message, QuietExit):
-        if message:
+        if str(message):
             log(message, "bold")
 
         return
@@ -106,11 +122,10 @@ def print_tb(message=None, is_print_exc=True) -> None:
     if not message:
         log(f"{WHERE(1)} ", "bold blue")
     else:
-        try:
-            log(f"{br(PrintException())} {WHERE(1)}", "bold blue")
-        except:
-            log(f"WHERE={WHERE(1)}", "bold blue")
+        with suppress(Exception):
+            log(f"{br(PrintException())} ", "bold blue", end="")
 
+        log(f"{WHERE(1)}", "bold blue")
         if "Warning:" not in message:
             log(f"E: {message}")
         else:
@@ -229,7 +244,7 @@ def print_trace(cmd, back=1, exc=""):
         log(f"$ {_cmd}", "yellow")
         log(exc, "red")
     else:
-        log(f"==> Failed shell command:\n{_cmd}", "yellow")
+        log(f"==> Failed shell command:\n[yellow]{_cmd}")
 
 
 def run(cmd, my_env=None, is_print_trace=True) -> str:
@@ -247,6 +262,7 @@ def run(cmd, my_env=None, is_print_trace=True) -> str:
         if is_print_trace:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
             print_tb(e)
+
         raise e
 
 
@@ -255,11 +271,11 @@ def handler(signum, frame):
 
     __ https://docs.python.org/3/library/signal.html#example
     """
-    breakpoint()  # DEBUG
-    if signum == 14 and "log_job" in str(frame):
+    if any(x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py"]):
         # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
         # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
         pass
     else:
-        print_tb(f"Signal handler called with signal={signum} {frame}")
-        raise Exception("Forever is over, end of time")
+        print_tb(f"Signal handler called with signum={signum} frame={frame}")
+        # breakpoint()  # DEBUG
+        raise HandlerException("Forever is over, end of time")
