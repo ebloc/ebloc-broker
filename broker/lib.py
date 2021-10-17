@@ -6,7 +6,6 @@ import subprocess
 import sys
 import time
 from multiprocessing import Process
-from pprint import pprint
 from threading import Thread
 
 from web3._utils.threads import Timeout

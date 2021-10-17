@@ -26,6 +26,7 @@ repos:
     hooks:
       - id: black
         name: black
+        exclude: ^.old_work/
 
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.3
