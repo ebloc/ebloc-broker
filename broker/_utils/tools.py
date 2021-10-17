@@ -120,7 +120,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
 
     tb_text = "".join(traceback.format_exc())
     if is_print_exc and tb_text != "NoneType: None\n":
-        log(tb_text)
+        log(tb_text, "bold")
 
     # console.print_exception()  #arg: show_locals=True
     if not message:
@@ -245,8 +245,8 @@ def print_trace(cmd, back=1, exc=""):
     _cmd = " ".join(cmd)
     if exc:
         log(f"{WHERE(back)} Error failed command:", "bold red")
-        log(f"$ {_cmd}", "yellow")
-        log(exc, "red")
+        log(f"$ {_cmd}", "bold yellow")
+        log(exc, "bold red")
     else:
         log(f"==> Failed shell command:\n[yellow]{_cmd}")
 

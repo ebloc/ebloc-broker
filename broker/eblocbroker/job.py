@@ -243,7 +243,7 @@ class JobPrices:
                         self.cache_cost += self.price_cache * self.job.data_transfer_ins[idx]
 
         self.data_transfer_in_cost = self.price_data_transfer * self.data_transfer_in_sum
-        self.data_transfer_out_cost = self.price_data_transfer * self.job.dataTransferOut
+        self.data_transfer_out_cost = self.price_data_transfer * self.job.data_transfer_out
         self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
 
     def set_job_price(self):

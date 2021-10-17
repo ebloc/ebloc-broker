@@ -128,8 +128,8 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
 
     try:
         provider_info = self.get_provider_info(provider)
-        log(f"Provider's available_core_num={provider_info['available_core_num']}")
-        log(f"Provider's price_core_min={provider_info['price_core_min']}")
+        log(f"Provider's available_core_num={provider_info['available_core_num']}", "bold")
+        log(f"Provider's price_core_min={provider_info['price_core_min']}", "bold")
     except Exception as e:
         print_tb(e)
         raise e
@@ -144,7 +144,7 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
     try:
         # source_code_hashes_l = []

@@ -139,7 +139,7 @@ if __name__ == "__main__":
     job.run_time = [1]
     job.storage_hours = [1, 1]
     job.data_transfer_ins = [1, 1]  # TODO: calculate from the file itself
-    job.dataTransferOut = 1
+    job.data_transfer_out = 1
     job.data_prices_set_block_numbers = [0, 0]
     job_price, _cost = cost(provider, requester_addr, job)  # <============
 

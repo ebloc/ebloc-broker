@@ -108,12 +108,13 @@ def _tools(block_continue):
                 raise QuietExit
 
             _run_ipfs_daemon()
-
+    except QuietExit as e:
+        raise e
     except Exception as e:
         if type(e).__name__ != "QuietExit":
             print_tb(e)
 
-        raise Terminate(e)
+        raise Terminate(str(e))
 
 
 class Driver:
@@ -471,8 +472,8 @@ def main():
     except Terminate as e:
         terminate(e, lock)
     except Exception as e:
-        print_tb(e)
         breakpoint()  # DEBUG
+        print_tb(e)
     finally:
         with suppress(Exception):
             if lock:
