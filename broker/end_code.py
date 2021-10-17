@@ -177,8 +177,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.elapsed_time = 0
         self.source_code_hashes_to_process: List[str] = []
         self.source_code_hashes: List[str] = []
-        self.result_ipfs_hash = ""
-        self.requester_gpg_fingerprint = ""
+        self.result_ipfs_hash: str = ""
+        self.requester_gpg_fingerprint: str = ""
         self.end_time_stamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
@@ -276,6 +276,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             return Eudat
         if self.cloud_storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
+
         return None
 
     def set_source_code_hashes_to_process(self):
@@ -344,7 +345,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
-    def git_diff_patch_and_upload(self, source, name, storage_class, is_job_key):
+    def git_diff_patch_and_upload(self, source: Path, name, storage_class, is_job_key):
         if is_job_key:
             log(f"==> base_patch={self.patch_folder}")
             log(f"==> sourcecode_patch={name}")
@@ -376,7 +377,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         for idx, name in enumerate(self.source_code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
-            source = f"{self.results_data_folder}/{name}"
+            source = self.results_data_folder / name
             storage_class = self.get_cloud_storage_class(idx)
             try:
                 self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)

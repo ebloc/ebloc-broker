@@ -10,6 +10,7 @@ from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from pprint import pprint
+from subprocess import CalledProcessError
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
@@ -108,12 +109,13 @@ def _tools(block_continue):
                 raise QuietExit
 
             _run_ipfs_daemon()
-
+    except QuietExit as e:
+        raise e
     except Exception as e:
         if type(e).__name__ != "QuietExit":
             print_tb(e)
 
-        raise Terminate(e)
+        raise Terminate(str(e))
 
 
 class Driver:
@@ -202,7 +204,7 @@ class Driver:
         """Process logged job one by one."""
         wait_until_idle_core_available()
         self.is_provider_received_job = True
-        log("-" * COLUMN_SIZE + f" {idx} " + "-" * COLUMN_SIZE, "blue")
+        log("-" * COLUMN_SIZE + f" {idx} " + "-" * COLUMN_SIZE, "bold blue")
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
@@ -472,8 +474,8 @@ def main():
         terminate(e, lock)
     except Exception as e:
         print_tb(e)
-        breakpoint()  # DEBUG
     finally:
+        breakpoint()  # DEBUG
         with suppress(Exception):
             if lock:
                 lock.close()

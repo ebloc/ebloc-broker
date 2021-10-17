@@ -6,7 +6,7 @@ import re
 import signal
 import sys
 import time
-from subprocess import DEVNULL, check_output
+from subprocess import DEVNULL, CalledProcessError, check_output
 
 import ipfshttpclient
 from cid import make_cid
@@ -73,6 +73,7 @@ class Ipfs:
 
         This function is specific for using on driver.ipfs to decript tar file,
         specific for "tar.gz" file types.
+
         cmd:
         gpg --verbose --output={tar_file} --pinentry-mode loopback \
             --passphrase-file=f"{env.LOG_PATH}/gpg_pass.txt" \
@@ -99,11 +100,13 @@ class Ipfs:
             run(cmd)
             log("==> GPG decrypt is successfull")
             _remove(gpg_file)
-        except Exception as e:
-            print_tb(e)
-            raise
-        finally:
             os.unlink(gpg_file_link)
+        except Exception as e:
+            # print_tb(e)
+            # breakpoint()  # DEBUG
+            raise e
+        # finally:
+        #     os.unlink(gpg_file_link)
 
         if not extract_target:
             try:

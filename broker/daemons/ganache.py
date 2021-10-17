@@ -40,7 +40,7 @@ if __name__ == "__main__":
     hardfork_name = "istanbul"
     npm_package = "ganache-cli"
     if not is_npm_installed(npm_package):
-        log(f"E: {npm_package} is not installed within npm", "red")
+        log(f"E: {npm_package} is not installed within npm")
         sys.exit()
 
     if not is_ganache_on(port):

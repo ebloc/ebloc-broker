@@ -80,9 +80,9 @@ def is_on() -> bool:
             log("failed", "bold red")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             log(
-                f"E: {process_name} is not running in the background. Please run:\n"
-                f"sudo {env.EBLOCPATH}/broker/bash_scripts/run_slurm.sh",
-                "red",
+                f"E: [green]{process_name}[/green] is not running in the background. Please run:\n"
+                f"[yellow]sudo {env.EBLOCPATH}/broker/bash_scripts/run_slurm.sh",
+                "bold red",
             )
             raise QuietExit
 

@@ -93,8 +93,8 @@ class ENV:
         self.IS_EBLOCPOA = str(_env["IS_EBLOCPOA"]).lower() in true_set
         self.IS_DRIVER = False
         self.RPC_PORT = _env["RPC_PORT"]
-        self.EBLOCPATH = _env["EBLOCPATH"]
-        self.BASE_DATA_PATH = _env["BASE_DATA_PATH"]
+        self.EBLOCPATH = Path(_env["EBLOCPATH"])
+        self.BASE_DATA_PATH = Path(_env["BASE_DATA_PATH"])
 
         # self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self._HOME = Path("/home") / self.WHOAMI

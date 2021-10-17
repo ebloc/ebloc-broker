@@ -4,15 +4,13 @@ import os
 import shutil
 import time
 
-import libs.git as git
-from config import ThreadFilter, env, logging, setup_logger  # noqa: F401
-from drivers.storage_class import Storage
-from lib import calculate_folder_size
-from utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir
-
 import broker.cfg as cfg
+import broker.libs.git as git
 from broker._utils._log import br
-from broker.utils import is_ipfs_on
+from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
+from broker.drivers.storage_class import Storage
+from broker.lib import calculate_folder_size
+from broker.utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log, mkdir
 
 
 class IpfsClass(Storage):
@@ -34,7 +32,7 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
-        logging.info(f"dataTransferOut={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
+        logging.info(f"data_transfer_out={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
 
     def run(self) -> bool:
         self.start_time = time.time()
@@ -91,7 +89,8 @@ class IpfsClass(Storage):
                 dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
                 if os.path.exists(dst_filename):
                     _remove(dst_filename)
-                shutil.move(target, dst_filename)  # UNIX 'mv' command
+
+                shutil.move(target, dst_filename)
                 target = dst_filename
 
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:

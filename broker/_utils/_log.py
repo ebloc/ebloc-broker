@@ -172,7 +172,7 @@ def log(text="", color=None, filename=None, end=None, flush=False):
         is_bold = True
         color = None
 
-    if "-=-=" in text:
+    if "-=-=" in str(text):
         is_bold = True
 
     if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:

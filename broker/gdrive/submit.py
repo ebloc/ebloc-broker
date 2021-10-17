@@ -38,8 +38,7 @@ def main():
     job.run_time = [5]
     job.cores = [1]
     job.data_transfer_ins = [1, 1]
-    job.dataTransferOut = 1
-
+    job.data_transfer_out = 1
     job.storage_ids = [StorageID.GDRIVE, StorageID.GDRIVE]
     job.cache_types = [CacheType.PRIVATE, CacheType.PUBLIC]
     job.storage_hours = [1, 1]

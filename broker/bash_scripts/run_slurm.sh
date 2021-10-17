@@ -8,9 +8,8 @@ sudo $DIR/run_munge.sh
 sudo /usr/local/sbin/slurmd
 sudo /usr/local/sbin/slurmdbd &
 sleep 1.0
-sudo -u $(logname) mkdir -p /tmp/slurmstate
-sudo chown -R $(logname) /tmp/slurmstate
-#
+sudo -u $_LOGNAME mkdir -p /tmp/slurmstate
+sudo chown -R $_LOGNAME /tmp/slurmstate
 sudo -u $_LOGNAME /usr/local/sbin/slurmctld # -cDvvvvvv
 # sudo -u $(logname) /usr/local/sbin/slurmctld # -cDvvvvvv
 #

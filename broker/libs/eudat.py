@@ -288,8 +288,7 @@ def _submit(provider, account_id, folders_to_share):
     job.run_time = [60]  # in seconds
     job.cores = [1]
     job.data_transfer_ins = [1, 116]
-    job.dataTransferOut = 1
-
+    job.data_transfer_out = 1
     job.storage_ids = [StorageID.EUDAT, StorageID.EUDAT]
     job.cache_types = [CacheType.PRIVATE, CacheType.PUBLIC]
     job.storage_hours = [1, 1]

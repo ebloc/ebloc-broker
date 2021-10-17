@@ -98,8 +98,8 @@ def get_job_info_print(job_info, provider, job_key, index, received_block_number
         if result_ipfs_hash:
             log("{0: <24}".format("==> result_ipfs_hash=") + result_ipfs_hash)
 
-        log("{0: <24}".format("==> data_transfer_in=") + str(job_info["dataTransferIn"]))
-        log("{0: <24}".format("==> data_transfer_out=") + str(job_info["dataTransferOut"]))
+        log("{0: <24}".format("==> data_transfer_in=") + str(job_info["data_transfer_in"]))
+        log("{0: <24}".format("==> data_transfer_out=") + str(job_info["data_transfer_out"]))
         log(f"==> data_transfer_out_used={job_info['data_transfer_out_used']}")
         log(f"==> data_transfer_in_to_download={job_info['data_transfer_in_to_download']}")
         log(f"==> price_commitment_block_duration={job_info['commitmentBlockDuration']}")
@@ -139,8 +139,8 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             "start_time": job[1],
             "received": received,
             "job_owner": job_owner.lower(),
-            "dataTransferIn": data_transfer_in,
-            "dataTransferOut": data_transfer_out,
+            "data_transfer_in": data_transfer_in,
+            "data_transfer_out": data_transfer_out,
             "availableCore": job_prices[0],
             "commitmentBlockDuration": job_prices[1],
             "price_core_min": job_prices[2],
