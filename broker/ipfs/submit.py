@@ -2,13 +2,11 @@
 
 import os
 import sys
-from pathlib import Path
 from pprint import pprint
 
 from web3.logs import DISCARD
 
 import broker.cfg as cfg
-import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
@@ -66,10 +64,10 @@ if __name__ == "__main__":
     # TODO: let user directly provide the IPFS hash instead of the folder
     #: full paths are provided
     folders = []
-    folders.append(Path(env.BASE_DATA_PATH) / "test_data" / "base" / "source_code")
-    folders.append(Path(env.BASE_DATA_PATH) / "test_data" / "base" / "data" / "data1")
-    path_from = Path(env.EBLOCPATH) / "base" / "data"
-    path_to = Path(env.LINK_PATH) / "base" / "data_link"
+    folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "source_code")
+    folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
+    path_from = env.EBLOCPATH / "base" / "data"
+    path_to = env.LINK_PATH / "base" / "data_link"
     check_linked_data(path_from, path_to, folders[1:])
     for folder in folders:
         if not os.path.isdir(folder):
@@ -111,8 +109,8 @@ if __name__ == "__main__":
             ipfs_hash = cfg.ipfs.add(target)
             # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
             run(["ipfs", "refs", ipfs_hash])  # TODO use ipfs python
-        except:
-            print_tb()
+        except Exception as e:
+            print_tb(e)
             sys.exit(1)
 
         if idx == 0:
@@ -134,7 +132,7 @@ if __name__ == "__main__":
     job.run_time = [1]
     job.storage_hours = [1, 1]
     job.data_transfer_ins = [1, 1]  # TODO: calculate from the file itself
-    job.dataTransferOut = 1
+    job.data_transfer_out = 1
     job.data_prices_set_block_numbers = [0, 0]
     job_price, _cost = job.cost(provider, requester)
     try:

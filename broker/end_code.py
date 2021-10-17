@@ -177,8 +177,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.elapsed_time = 0
         self.source_code_hashes_to_process: List[str] = []
         self.source_code_hashes: List[str] = []
-        self.result_ipfs_hash = ""
-        self.requester_gpg_fingerprint = ""
+        self.result_ipfs_hash: str = ""
+        self.requester_gpg_fingerprint: str = ""
         self.end_time_stamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]

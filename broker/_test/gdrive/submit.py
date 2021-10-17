@@ -2,13 +2,12 @@
 
 import sys
 
-import libs.gdrive as gdrive
-from config import env
-from lib import check_linked_data
-from utils import CacheType, StorageID, log, print_tb
-
 import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
+import broker.libs.gdrive as gdrive
+from broker.config import env
+from broker.lib import check_linked_data
+from broker.utils import CacheType, StorageID, log, print_tb
 from contract.scripts.lib import Job, cost
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
@@ -40,7 +39,7 @@ def main():
     job.run_time = [5]
     job.cores = [1]
     job.data_transfer_ins = [1, 1]
-    job.dataTransferOut = 1
+    job.data_transfer_out = 1
 
     job.storage_ids = [StorageID.GDRIVE, StorageID.GDRIVE]
     job.cache_types = [CacheType.PRIVATE, CacheType.PUBLIC]

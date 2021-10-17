@@ -542,8 +542,8 @@ def _run_ipfs_daemon():
     if is_ipfs_on():
         return True
 
-    log("Warning: IPFS does not work on the background")
-    log("#> Starting IPFS daemon on the background")
+    log("Warning: [green]IPFS[/green] does not work on the background")
+    log("#> Starting [green]IPFS daemon[/green] on the background")
     output = run(["python3", f"{env.EBLOCPATH}/broker/python_scripts/run_ipfs_daemon.py"])
     while True:
         time.sleep(1)
@@ -568,9 +568,7 @@ def check_ubuntu_packages(packages=None):
 
 def is_npm_installed(package_name) -> bool:
     output = run(["npm", "list", "-g", "--depth=0"])
-    if package_name in output:
-        return True
-    return False
+    return package_name in output
 
 
 def is_dpkg_installed(package_name) -> bool:
@@ -603,7 +601,7 @@ def terminate(msg="", is_traceback=True, lock=None):
 
     try:
         # kill all the dependent processes and exit
-        run(["bash", f"{env.EBLOCPATH}/broker/bash_scripts/killall.sh"])
+        run(["bash", env.EBLOCPATH / "broker" / "bash_scripts" / "killall.sh"])
     except:
         sys.exit(1)
 

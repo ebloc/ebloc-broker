@@ -181,7 +181,7 @@ def test_stored_data_usage():
     job.source_code_hashes.append(ipfs_to_bytes32(job_key_2))
 
     job.data_transfer_ins = [1, 1]
-    job.dataTransferOut = 1
+    job.data_transfer_out = 1
     # provider's registered data won't be used
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
@@ -199,7 +199,7 @@ def test_stored_data_usage():
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
 
     job_price, _cost = job.cost(provider, requester)
@@ -228,7 +228,7 @@ def test_stored_data_usage():
     assert _cost["data_transfer"] == 1
 
     with brownie.reverts():
-        job_price_revert = 500  # dataTransferIn cost is ignored
+        job_price_revert = 500  # data_transfer_in cost is ignored
         tx = Ebb.submitJob(
             job_key,
             job.data_transfer_ins,
@@ -292,7 +292,7 @@ def test_computational_refund():
     job.cores = [1]
     job.run_time = [5]
     job.data_transfer_ins = [1, 1]
-    job.dataTransferOut = 1
+    job.data_transfer_out = 1
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
@@ -308,7 +308,7 @@ def test_computational_refund():
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
     tx = Ebb.submitJob(
         job.source_code_hashes[0],
@@ -355,7 +355,7 @@ def test_storage_refund():
     job.storage_hours.append(1)
 
     job.data_transfer_ins = [100, 100]
-    job.dataTransferOut = 100
+    job.data_transfer_out = 100
     job.data_prices_set_block_numbers = [0, 0]
 
     job.cores = [2]
@@ -378,7 +378,7 @@ def test_storage_refund():
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
     tx = Ebb.submitJob(
         job_key,
@@ -541,7 +541,7 @@ def test_multiple_data():
     job.source_code_hashes.append(ipfs_to_bytes32(job_key_2))
 
     job.data_transfer_ins = [100, 100]
-    job.dataTransferOut = 100
+    job.data_transfer_out = 100
     # provider's registered data won't be used
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
@@ -558,7 +558,7 @@ def test_multiple_data():
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
 
     job_price, _cost = job.cost(provider, requester)
@@ -606,7 +606,7 @@ def test_multiple_data():
     job_price, _cost = job.cost(provider, requester)
 
     assert _cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
-    assert _cost["data_transfer"] == job.dataTransferOut, "cost of data_transfer should cover only dataTransferOut"
+    assert _cost["data_transfer"] == job.data_transfer_out, "cost of data_transfer should cover only data_transfer_out"
     tx = Ebb.submitJob(
         job_key,
         job.data_transfer_ins,
@@ -634,7 +634,7 @@ def test_multiple_data():
         jobID,
         end_time,
         sum(job.data_transfer_ins),
-        job.dataTransferOut,
+        job.data_transfer_out,
         job.cores,
         job.run_time,
         False,
@@ -647,9 +647,9 @@ def test_multiple_data():
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
 
-    dataTransferIn = 0  # already requested on index==0
-    dataTransferOut = 100
-    dataTransfer = [dataTransferIn, dataTransferOut]
+    data_transfer_in = 0  # already requested on index==0
+    data_transfer_out = 100
+    data_transfer = [data_transfer_in, data_transfer_out]
 
     index = 1
     jobID = 0
@@ -662,7 +662,7 @@ def test_multiple_data():
     mine(1)
     end_time = startTime + 15 * 4 * execution_time
 
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, False]
+    args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = Ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     # print(tx.events['LogProcessPayment'])
@@ -726,7 +726,7 @@ def test_workflow():
     job.storage_hours = [0, 0]
 
     job.data_transfer_ins = [100, 100]
-    job.dataTransferOut = 100
+    job.data_transfer_out = 100
 
     # job.data_prices_set_block_numbers = [0, 253]  # TODO: check this ex 253 exists or not
     job.data_prices_set_block_numbers = [0, data_block_numbers[1]]  # TODO: check this ex 253 exists or not
@@ -745,7 +745,7 @@ def test_workflow():
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
 
     job_price, _cost = job.cost(provider, requester)
@@ -789,7 +789,7 @@ def test_workflow():
     index = 0
     jobID = 0
     execution_time = 10
-    dataTransfer = [100, 0]
+    data_transfer = [100, 0]
     end_time = 20
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
 
@@ -797,7 +797,7 @@ def test_workflow():
     refunded_sums = []
     received_sum = 0
     refunded_sum = 0
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, False]
+    args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = Ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     # print(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
@@ -809,11 +809,11 @@ def test_workflow():
     index = 0
     jobID = 1
     execution_time = 15
-    dataTransfer = [0, 0]
+    data_transfer = [0, 0]
     end_time = 39
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
 
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, False]
+    args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = Ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
@@ -825,7 +825,7 @@ def test_workflow():
     index = 0
     jobID = 2
     execution_time = 20
-    dataTransfer = [0, 100]
+    data_transfer = [0, 100]
     end_time = 39
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
 
@@ -834,8 +834,8 @@ def test_workflow():
             index,
             jobID,
             end_time,
-            dataTransfer[0],
-            dataTransfer[1],
+            data_transfer[0],
+            data_transfer[1],
             job.cores,
             job.run_time,
             False,
@@ -847,7 +847,7 @@ def test_workflow():
     startTime = 20
     tx = Ebb.setJobStatusRunning(job_key, index, jobID, startTime, {"from": accounts[0]})
 
-    args = [index, jobID, end_time, dataTransfer[0], dataTransfer[1], job.cores, job.run_time, True]
+    args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, True]
     tx = Ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
     # print(tx.events['LogProcessPayment'])
@@ -878,7 +878,7 @@ def test_simple_submit():
     job.cores = [2]
     job.run_time = [1]
     job.data_transfer_ins = [1, 1]
-    job.dataTransferOut = 1
+    job.data_transfer_out = 1
     job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
@@ -895,7 +895,7 @@ def test_simple_submit():
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
-        job.dataTransferOut,
+        job.data_transfer_out,
     ]
 
     tx = Ebb.submitJob(
@@ -916,9 +916,9 @@ def test_simple_submit():
     mine(5)
 
     completionTime = 1579524998
-    dataTransferIn = 0
-    dataTransferOut = 0.01
-    args = [index, jobID, completionTime, dataTransferIn, dataTransferOut, job.cores, [1], True]
+    data_transfer_in = 0
+    data_transfer_out = 0.01
+    args = [index, jobID, completionTime, data_transfer_in, data_transfer_out, job.cores, [1], True]
     elapsed_time = 1
     out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
     tx = Ebb.processPayment(job.key, args, elapsed_time, out_hash, {"from": accounts[0]})
@@ -986,7 +986,7 @@ def test_submit_job(ebb):
             job.storage_hours = [storageHour]
 
             job.data_transfer_ins = [100]
-            job.dataTransferOut = 100
+            job.data_transfer_out = 100
             job.data_prices_set_block_numbers = [0]
             job.storage_ids = [StorageID.IPFS.value]
             job.cache_types = [CacheType.PUBLIC.value]
@@ -999,7 +999,7 @@ def test_submit_job(ebb):
                 job.data_prices_set_block_numbers,
                 job.cores,
                 job.run_time,
-                job.dataTransferOut,
+                job.data_transfer_out,
             ]
 
             # print(source_code_hashes[0])
@@ -1045,10 +1045,10 @@ def test_submit_job(ebb):
             arguments = line.rstrip("\n").split(" ")
             if index == 0:
                 data_transfer_in_sum = 90
-                job.dataTransferOut = 100
+                job.data_transfer_out = 100
             else:
                 data_transfer_in_sum = 0
-                job.dataTransferOut = 100
+                job.data_transfer_out = 100
 
             coreMin = int(arguments[1]) - int(arguments[0])
             core = int(arguments[2])
@@ -1065,7 +1065,7 @@ def test_submit_job(ebb):
                 jobID,
                 end_time,
                 data_transfer_in_sum,
-                job.dataTransferOut,
+                job.data_transfer_out,
                 job.cores,
                 job.run_time,
                 True,

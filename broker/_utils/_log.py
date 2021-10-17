@@ -172,6 +172,9 @@ def log(text="", color=None, filename=None, end=None, flush=False):
         is_bold = True
         color = None
 
+    if "-=-=" in str(text):
+        is_bold = True
+
     if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
         filename = thread_log_files[threading.current_thread().name]
     elif not filename:
