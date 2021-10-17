@@ -59,7 +59,7 @@ def log_loop(event_filter):
         sys.stdout.flush()
         logged_jobs = event_filter.get_new_entries()
         if len(logged_jobs) > 0:
-            log("")
+            log()
             return logged_jobs
 
         sleep_duration += poll_interval

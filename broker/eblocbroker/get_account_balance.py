@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-from broker._utils.tools import log
+
 import broker.cfg as cfg
+from broker._utils.tools import log
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb

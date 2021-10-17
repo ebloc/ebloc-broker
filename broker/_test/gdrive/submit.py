@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
-import broker.cfg as cfg
+
 import libs.gdrive as gdrive
 from config import env
 from lib import check_linked_data
 from utils import CacheType, StorageID, log, print_tb
+
+import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
 from contract.scripts.lib import Job, cost
 
@@ -15,7 +17,7 @@ from contract.scripts.lib import Job, cost
 
 def main():
     job = Job()
-    Ebb cfg.Ebb
+    Ebb = cfg.Ebb
     job.base_dir = f"{env.HOME}/test_eblocbroker"
     job.source_code_dir = f"{job.base_dir}/source_code"
     job.data_1_dir = f"{job.base_dir}/datasets/BL06-camel-sml"
@@ -24,7 +26,7 @@ def main():
     job.folders_to_share.append(job.data_1_dir)
 
     path_from = f"{job.base_dir}/datasets"
-    path_to = f"{env.LINKS}/base/data_link"
+    path_to = f"{env.LINK_PATH}/base/data_link"
     check_linked_data(path_from, path_to, job.folders_to_share[1:])
 
     # IMPORTANT: consider ignoring to push .git into the submitted folder

@@ -5,7 +5,6 @@ import os
 import threading
 from contextlib import suppress
 from logging import Filter
-from os.path import expanduser
 from pathlib import Path
 from typing import Union
 
@@ -63,8 +62,8 @@ class ENV:
         except:
             pass
 
-        self.HOME = expanduser("~")
-        env_file = Path(f"{self.HOME}/.ebloc-broker/") / ".env"
+        self.HOME: Path = Path.home()
+        env_file = self.HOME / ".ebloc-broker" / ".env"
         _env = dict()
         try:
             with open(env_file) as f:
@@ -81,11 +80,11 @@ class ENV:
         self.BLOCK_DURATION = 15
         self.WHOAMI = _env["WHOAMI"]
         self.SLURMUSER = _env["SLURMUSER"]
-        self.LOG_PATH = _env["LOG_PATH"]
         self.GDRIVE = _env["GDRIVE"]
         self.OC_USER = _env["OC_USER"]
-        self.DATADIR = _env["DATADIR"]
-        self.config = Yaml(f"{self.LOG_PATH}/config.yaml")
+        self.DATADIR = Path(_env["DATADIR"])
+        self.LOG_PATH = Path(_env["LOG_PATH"])
+        self.config = Yaml(self.LOG_PATH.joinpath("config.yaml"))
         self.IS_GETH_TUNNEL = str(_env["IS_GETH_TUNNEL"]).lower() in true_set
         self.IS_IPFS_USE = str(_env["IS_IPFS_USE"]).lower() in true_set
         self.IS_EUDAT_USE = str(_env["IS_EUDAT_USE"]).lower() in true_set
@@ -98,22 +97,23 @@ class ENV:
         self.BASE_DATA_PATH = _env["BASE_DATA_PATH"]
 
         # self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
-        self.GDRIVE_METADATA = f"/home/{self.WHOAMI}/.gdrive"
-        self.IPFS_REPO = f"/home/{self.WHOAMI}/.ipfs"
-        self.IPFS_LOG = f"{self.LOG_PATH}/ipfs.out"
-        self.GANACHE_LOG = f"{self.LOG_PATH}/ganache.out"
-        self.OWNCLOUD_PATH = "/oc"
-        self.PROGRAM_PATH = "/var/ebloc-broker"
-        self.LINKS = f"{self.LOG_PATH}/links"
-        self.JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/test.txt"
-        self.CANCEL_JOBS_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledJobs.txt"
-        self.GPG_PASS_FILE = f"{self.LOG_PATH}/.gpg_pass.txt"
-        self.CANCEL_BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/cancelledBlockReadFrom.txt"
-        self.OC_CLIENT = f"{self.LOG_PATH}/.oc_client.pckl"
-        self.OC_CLIENT_REQUESTER = f"{self.LOG_PATH}/.oc_client_requester.pckl"
+        self._HOME = Path("/home") / self.WHOAMI
+        self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
+        self.IPFS_REPO = self._HOME.joinpath(".ipfs")
+        self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")
+        self.GANACHE_LOG = self.LOG_PATH.joinpath("ganache.out")
+        self.OWNCLOUD_PATH = Path("/oc")
+        self.PROGRAM_PATH = Path("/var") / "ebloc-broker"
+        self.LINK_PATH = self.LOG_PATH.joinpath("links")
+        self.JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("test.txt")
+        self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelledJobs.txt")
+        self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")
+        self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
+        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
+        self.OC_CLIENT_REQUESTER = self.LOG_PATH.joinpath(".oc_client_requester.pckl")
+        _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]
-        _log.DRIVER_LOG = f"{self.LOG_PATH}/provider.log"
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
 
         if cfg.w3:

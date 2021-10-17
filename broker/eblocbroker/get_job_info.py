@@ -5,7 +5,7 @@ import traceback
 from typing import Union
 
 import broker.cfg as cfg
-from broker._utils._log import log, br
+from broker._utils._log import br, log
 from broker._utils.tools import print_tb
 from broker.config import logging
 from broker.lib import state
@@ -115,7 +115,7 @@ def get_job_info_print(job_info, provider, job_key, index, received_block_number
                 _type = "md5sum"
 
             log(br(f"{idx},{_type}"), "bold cyan", end="")
-            log(f"{_hash}\n\t{code_hash}", "bold")
+            log(f" {_hash}\n\t{code_hash}", "bold")
     else:
         print(job_info)
 
@@ -126,7 +126,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
     """Return information of the job."""
     if is_print:
         fname = "~/ebloc-broker/broker/eblocbroker/get_job_info.py"
-        log(f"{fname} {provider} \ \n\t{job_key} {index} {job_id} {received_block_number}", "bold cyan")
+        log(f"{fname} {provider} \ \n\t\t{job_key} {index} {job_id} {received_block_number}", "bold cyan")
 
     try:
         provider = cfg.w3.toChecksumAddress(provider)

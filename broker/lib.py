@@ -8,6 +8,9 @@ import time
 from multiprocessing import Process
 from pprint import pprint
 from threading import Thread
+
+from web3._utils.threads import Timeout
+
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils.tools import log, print_tb, print_trace
@@ -81,6 +84,7 @@ state = State()
 def _connect_web3():
     if not cfg.w3:
         from broker.imports import connect_into_web3
+
         connect_into_web3()
 
 
@@ -107,21 +111,28 @@ def run_driver_cancel():
 
 def get_tx_status(tx_hash) -> str:
     """Return status of the transaction."""
-    log(f"tx_hash={tx_hash}")
-    tx_receipt = cfg.w3.eth.waitForTransactionReceipt(tx_hash)
-    log("Transaction receipt is deployed:")
-    pprint(dict(tx_receipt), depth=1)
-    # for idx, _log in enumerate(receipt["logs"]):
-    #     # All logs fried under the tx
-    #     log(f"log {idx}", "blue")
-    #     pprint(_log.__dict__)
-    log("\n## Was transaction successful? ", filename=None)
-    if tx_receipt["status"] == 1:
-        log("Transaction is deployed", "bold green")
-    else:
-        raise Exception("E: Transaction is reverted")
+    log(f"tx_hash={tx_hash}", "bold")
+    try:
+        tx_receipt = cfg.Ebb._wait_for_transaction_receipt(tx_hash)
+        log("tx=", "bold", end="")
+        log(tx_receipt)
+        # pprint(dict(tx_receipt), depth=1)
+        # for idx, _log in enumerate(receipt["logs"]):
+        #     # All logs fried under the tx
+        #     log(f"log {idx}", "blue")
+        #     pprint(_log.__dict__)
+        log("## Was transaction successful? ")
+        if tx_receipt["status"] == 1:
+            log("Transaction is deployed", "bold green")
+        else:
+            raise Exception("E: Transaction is reverted")
 
-    return tx_receipt
+        return tx_receipt
+    except Timeout as e:
+        log(str(e))
+        raise e
+    except Exception as e:
+        raise e
 
 
 def check_size_of_file_before_download(file_type, key=None):
@@ -160,7 +171,7 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
                 print_trace(cmd)
 
             if count + 1 == attempt:
-                log("")
+                log()
                 raise SystemExit
 
             if count == 0:
@@ -238,7 +249,7 @@ def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=Fal
     mkdir(path_to)
     link = Link(path_from, path_to)
     link.link_folders(folders_to_share)
-    log("")
+    log()
     for key, value in link.data_map.items():
         log(f" * {key} ==> data_link/{value}")
 

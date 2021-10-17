@@ -2,6 +2,7 @@
 
 import sys
 from typing import Any, Union
+
 import broker.cfg as cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
@@ -29,7 +30,7 @@ def process_payment(
         f"~/ebloc-broker/broker/eblocbroker/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'",
-        "bold white",
+        "bold blue",
     )
 
     for cloud_storage_id in cloud_storage_ids:
@@ -48,7 +49,6 @@ def process_payment(
         sys.exit(1)
     """
     try:
-        log("her")
         if result_ipfs_hash == b"" or not result_ipfs_hash:
             result_ipfs_hash = ""
         else:
@@ -65,15 +65,11 @@ def process_payment(
             run_time,
             final_job,
         ]
-        log("hereeeeeeeeeee")
         tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)  # tx is not returned
-        log("hereeeeeeeeeee2")
     except Exception as e:
-        log("hereeeeeeeeeee3")
         print_tb(e)
         raise e
 
-    log(tx)
     return self.tx_id(tx)
 
 

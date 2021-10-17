@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import decimal
 import linecache
 import os
 import sys
 import time
 import traceback
+from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from os import listdir
 from subprocess import CalledProcessError, check_output
 
 from pytz import timezone, utc
+
+from broker._utils._log import br
 
 try:
     from broker._utils._log import log
@@ -37,6 +39,16 @@ def WHERE(back=0):
 
     text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
     return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+
+
+def merge_two_dicts(x, y):
+    """Given two dictionaries, merge them into a new dict as a shallow copy.
+
+    __https://stackoverflow.com/a/26853961/2402577
+    """
+    z = x.copy()
+    z.update(y)
+    return z
 
 
 def timenow() -> int:
@@ -93,7 +105,7 @@ def PrintException():
 def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
     if isinstance(message, QuietExit):
-        if message:
+        if str(message):
             log(message, "bold")
 
         return
@@ -110,11 +122,10 @@ def print_tb(message=None, is_print_exc=True) -> None:
     if not message:
         log(f"{WHERE(1)} ", "bold blue")
     else:
-        try:
-            log(f"{br(PrintException())} {WHERE(1)}", "bold blue")
-        except:
-            log(f"WHERE={WHERE(1)}")
+        with suppress(Exception):
+            log(f"{br(PrintException())} ", "bold blue", end="")
 
+        log(f"{WHERE(1)}", "bold blue")
         if "Warning:" not in message:
             log(f"E: {message}")
         else:
@@ -260,11 +271,11 @@ def handler(signum, frame):
 
     __ https://docs.python.org/3/library/signal.html#example
     """
-    if signum == 14 and ("log_job" in str(frame) or "subprocess.py" in str(frame)):
+    if any(x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py"]):
         # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
         # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
         pass
     else:
         print_tb(f"Signal handler called with signum={signum} frame={frame}")
-        breakpoint()  # DEBUG
+        # breakpoint()  # DEBUG
         raise HandlerException("Forever is over, end of time")

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import os
 import subprocess
 import time
@@ -11,6 +10,8 @@ from config import env, logging
 from drivers.storage_class import Storage
 from lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
 from utils import WHERE, CacheType, _remove, byte_to_mb, generate_md5sum, get_time, mkdir, print_tb, untar
+
+from broker._utils._log import br
 
 
 class GdriveClass(Storage):

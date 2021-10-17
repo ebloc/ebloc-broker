@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import sys
-from brownie.exceptions import TransactionError
+
 import broker.cfg as cfg
 import broker.config as config
+from broker._utils._log import br
 from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import StorageID
 from broker.utils import is_ipfs_on, is_transaction_valid  # bytes32_to_ipfs,
+from brownie.exceptions import TransactionError
 
 
 def is_provider_valid(self, provider):

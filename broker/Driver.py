@@ -6,11 +6,14 @@ import os
 import sys
 import textwrap
 import time
+from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from pprint import pprint
+
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
+
 import broker._utils._log as _log
 import broker.cfg as cfg
 import broker.config as config
@@ -18,8 +21,8 @@ import broker.eblocbroker.Contract as Contract
 import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
-from broker._utils._log import log, br
-from broker._utils.tools import QuietExit, print_tb
+from broker._utils._log import br, log
+from broker._utils.tools import HandlerException, QuietExit, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -27,7 +30,7 @@ from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker.job import DataStorage
 from broker.helper import helper
 from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
-from broker.libs.user_setup import give_RWE_access, user_add
+from broker.libs.user_setup import give_rwe_access, user_add
 from broker.utils import (
     CacheType,
     StorageID,
@@ -78,7 +81,7 @@ def _tools(block_continue):
         if not env.IS_BLOXBERG:
             is_geth_on()
         else:
-            log("Connected into BLOXBERG", "bold green")
+            log(":beer: Connected into BLOXBERG", "bold green")
 
         slurm.is_on()
         # run_driver_cancel()  # TODO: uncomment
@@ -154,7 +157,7 @@ class Driver:
         """Obtain information related to source-code data."""
         for idx, source_code_hash_byte in enumerate(self.logged_job.args["sourceCodeHash"]):
             if idx > 0:
-                log("")
+                log()
 
             if self.cloud_storage_id[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
                 source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
@@ -310,7 +313,7 @@ def run_driver():
     config.logging = setup_logger(_log.DRIVER_LOG)
     # driver_cancel_process = None
     try:
-        from imports import connect
+        from broker.imports import connect
 
         connect()
         Ebb: "Contract.Contract" = cfg.Ebb
@@ -409,25 +412,23 @@ def run_driver():
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
             # checks if the squeue output's line number is gretaer than 1
-            log(f"Current slurm running jobs status:\n{squeue_output}", "yellow")
+            log(f"Current slurm running jobs status:\n{squeue_output}", "bold yellow")
             log("-" * 100, "green")
 
         log(f"==> date={get_time()}")
         if isinstance(balance, int):
             log(f"==> provider_gained_wei={int(balance) - int(balance_temp)}")
 
-        current_block_number = Ebb.get_block_number()
+        current_block_num = Ebb.get_block_number()
         log(f"==> waiting new job to come since block number={block_read_from}")
-        log(f"==> current_block={current_block_number} | sync_from={block_read_from}")
+        log(f"==> current_block={current_block_num} | sync_from={block_read_from}")
         # log(f"block_read_from={block_read_from}")
         flag = True
-        while current_block_number < int(block_read_from):
-            current_block_number = Ebb.get_block_number()
+        while current_block_num < int(block_read_from):
+            current_block_num = Ebb.get_block_number()
             if flag:
-                log(
-                    f"## Waiting block number to be updated, it remains constant at {current_block_number}...",
-                    "blue",
-                )
+                log(f"## Waiting block number to be updated. It remains constant at {current_block_num}...", "blue")
+
             flag = False
             time.sleep(0.25)
 
@@ -435,13 +436,7 @@ def run_driver():
         block_read_from = str(block_read_from)  # reading event's location has been updated
         slurm.pending_jobs_check()
         driver.logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
-        try:
-            driver.process_logged_jobs()
-        except Exception as e:
-            print_tb(e)
-            breakpoint()  # DEBUG
-            sys.exit(1)
-
+        driver.process_logged_jobs()
         if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
             # updates the latest read block number
             block_read_from = driver.latest_block_number + 1
@@ -450,8 +445,39 @@ def run_driver():
             # If there is no submitted job for the provider, than block start
             # to read from the current block number and updates the latest read
             # block number read from the file
-            env.config["block_continue"] = current_block_number
-            block_read_from = current_block_number
+            env.config["block_continue"] = current_block_num
+            block_read_from = current_block_num
+
+
+def main():
+    lock = None
+    try:
+        is_driver_on(process_count=1, is_print=False)
+        try:
+            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
+        except PermissionError:
+            print_tb("E: PermissionError is generated for the locked file")
+            give_rwe_access(env.WHOAMI, "/tmp/run")
+            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
+
+        # open(env.DRIVER_LOCKFILE, 'w').close()
+        run_driver()
+    except HandlerException:
+        pass
+    except QuietExit:
+        pass
+    except zc.lockfile.LockError:
+        log("E: Driver cannot lock the file, the pid file is in use")
+    except Terminate as e:
+        terminate(e, lock)
+    except Exception as e:
+        print_tb(e)
+        breakpoint()  # DEBUG
+    finally:
+        with suppress(Exception):
+            if lock:
+                lock.close()
+                open(env.DRIVER_LOCKFILE, "w").close()
 
 
 if __name__ == "__main__":
@@ -462,32 +488,7 @@ if __name__ == "__main__":
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement
             # to launch ipdb
-            lock = None
-            try:
-                is_driver_on(process_count=1, is_print=False)
-                try:
-                    lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
-                except PermissionError:
-                    print_tb("E: PermissionError is generated for the locked file")
-                    give_RWE_access(env.WHOAMI, "/tmp/run")
-                    lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
-                # open(env.DRIVER_LOCKFILE, 'w').close()
-                run_driver()
-            except zc.lockfile.LockError:
-                log("E: Driver cannot lock the file, the pid file is in use")
-            except QuietExit:
-                pass
-            except Terminate as e:
-                terminate(e)
-            except Exception as e:
-                print_tb(e)
-            finally:
-                try:
-                    if lock:
-                        lock.close()
-                        open(env.DRIVER_LOCKFILE, "w").close()
-                except Exception as e:
-                    print_tb(e)
+            main()
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import json
 import os
 import shutil
@@ -13,6 +12,7 @@ from config import env, logging
 from lib import echo_grep_awk, run, subprocess_call
 from utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, mkdir, print_tb, read_json
 
+from broker._utils._log import br
 from broker._utils.tools import QuietExit
 
 # TODO: gdrive list --query "sharedWithMe"

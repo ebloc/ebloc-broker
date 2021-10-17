@@ -2,6 +2,7 @@
 
 import os
 import sys
+from pathlib import Path
 from pprint import pprint
 
 from web3.logs import DISCARD
@@ -63,11 +64,12 @@ if __name__ == "__main__":
     job.set_cache_types(_types)
 
     # TODO: let user directly provide the IPFS hash instead of the folder
-    folders = []  # full paths are provided
-    folders.append(f"{env.BASE_DATA_PATH}/test_data/base/source_code")
-    folders.append(f"{env.BASE_DATA_PATH}/test_data/base/data/data1")
-    path_from = f"{env.EBLOCPATH}/base/data"
-    path_to = f"{env.LINKS}/base/data_link"
+    #: full paths are provided
+    folders = []
+    folders.append(Path(env.BASE_DATA_PATH) / "test_data" / "base" / "source_code")
+    folders.append(Path(env.BASE_DATA_PATH) / "test_data" / "base" / "data" / "data1")
+    path_from = Path(env.EBLOCPATH) / "base" / "data"
+    path_to = Path(env.LINK_PATH) / "base" / "data_link"
     check_linked_data(path_from, path_to, folders[1:])
     for folder in folders:
         if not os.path.isdir(folder):
@@ -86,7 +88,8 @@ if __name__ == "__main__":
     for idx, folder in enumerate(folders):
         try:
             provider_info = Ebb.get_provider_info(provider)
-        except:
+        except Exception as e:
+            print_tb(e)
             sys.exit()
 
         target = folder
@@ -100,7 +103,8 @@ if __name__ == "__main__":
                 # target is updated
                 target = cfg.ipfs.gpg_encrypt(provider_gpg_finderprint, target)
                 log(f"==> GPG_file={target}")
-            except:
+            except Exception as e:
+                print_tb(e)
                 sys.exit(1)
 
         try:
