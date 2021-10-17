@@ -19,7 +19,7 @@ from broker._utils.yaml import Yaml
 logging.getLogger("filelock").setLevel(logging.ERROR)
 
 
-class Terminate(Exception):  # noqa
+class Terminate(Exception):
     pass
 
 

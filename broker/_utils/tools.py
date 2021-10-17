@@ -9,12 +9,16 @@ import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
-from os import listdir
+
+# from os import listdir
 from subprocess import CalledProcessError, check_output
 
 from pytz import timezone, utc
 
-from broker._utils._log import br
+try:
+    from broker._utils._log import br
+except:  # if ebloc_broker used as a submodule
+    from ebloc_broker.broker._utils._log import br
 
 try:
     from broker._utils._log import log
