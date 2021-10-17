@@ -17,7 +17,7 @@ from broker.config import ThreadFilter, env, logging
 from broker.lib import log, run
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
-from broker.libs.user_setup import add_user_to_slurm, give_RWE_access
+from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.utils import (
     CacheType,
     Link,
@@ -80,7 +80,7 @@ class Storage(BaseClass):
         try:
             mkdir(self.private_dir)
         except PermissionError:
-            give_RWE_access(env.SLURMUSER, self.requester_home)
+            give_rwe_access(env.SLURMUSER, self.requester_home)
             mkdir(self.private_dir)
 
         mkdir(self.public_dir)
@@ -216,8 +216,8 @@ class Storage(BaseClass):
             link = Link(self.results_data_folder, self.results_data_link)
             link.link_folders()
             # file permission for the requester's foders should be reset
-            give_RWE_access(self.requester_id, self.requester_home)
-            give_RWE_access(env.WHOAMI, self.requester_home)
+            give_rwe_access(self.requester_id, self.requester_home)
+            give_rwe_access(env.WHOAMI, self.requester_home)
             self._sbatch_call()
         except Exception:
             logging.error("E: Failed to call _sbatch_call() function")

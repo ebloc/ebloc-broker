@@ -2,11 +2,12 @@
 
 import subprocess
 import time
-import broker.cfg as cfg
+
 from config import env, setup_logger
 from imports import connect_into_web3
 from utils import eth_address_to_md5
 
+import broker.cfg as cfg
 
 Ebb = cfg.Ebb
 w3 = connect_into_web3()

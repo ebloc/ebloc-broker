@@ -2,11 +2,12 @@
 
 import sys
 from pprint import pprint
+
+import broker.cfg as cfg
+from broker.eblocbroker.job import Job
 from broker.lib import get_tx_status
 from broker.utils import is_bin_installed, is_dpkg_installed, log
 from brownie import accounts, web3
-from broker.eblocbroker.job import Job
-import broker.cfg as cfg
 
 
 def pre_check():
@@ -23,7 +24,7 @@ def pre_check():
 
 def get_tx_status(tx_hash) -> str:
     print(f"tx_hash={tx_hash}")
-    tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
     print("Transaction receipt is mined:")
     pprint(dict(tx_receipt), depth=1)
     print("\n## Was transaction successful? ")

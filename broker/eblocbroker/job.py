@@ -5,6 +5,7 @@ import sys
 from ast import literal_eval as make_tuple
 from pprint import pprint
 from typing import Dict, List
+
 import broker.cfg as cfg
 import broker.libs.git as git
 from broker._utils.tools import QuietExit, log, print_tb

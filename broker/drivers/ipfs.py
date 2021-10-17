@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import os
 import shutil
 import time
@@ -12,6 +11,7 @@ from lib import calculate_folder_size
 from utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, log, mkdir
 
 import broker.cfg as cfg
+from broker._utils._log import br
 from broker.utils import is_ipfs_on
 
 
@@ -75,7 +75,7 @@ class IpfsClass(Storage):
             logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
             if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
-                log(f"==> IPFS file {ipfs_hash} is already cached.", "blue")
+                log(f"==> IPFS file {ipfs_hash} is already cached.", "bold blue")
 
             if idx == 0:
                 target = self.results_folder

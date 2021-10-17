@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # UNIX: enable executable from terminal with: chmod +x filename
 
-from broker._utils._log import br, log
 import os
 import sys
 import time
 
 import psutil  # 3rd party for demo
 
+from broker._utils._log import br, log
 from brownie import network, project
 
 

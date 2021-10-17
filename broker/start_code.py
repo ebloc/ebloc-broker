@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import log
-import broker._utils._log as _log
-from subprocess import PIPE, Popen, check_output
 import sys
 import time
 from datetime import datetime
-from broker.config import env
+from subprocess import PIPE, Popen, check_output
+
+import broker._utils._log as _log
 import broker.cfg as cfg
+from broker._utils._log import br, log
+from broker.config import env
 
 
 def start_call(job_key, index, slurm_job_id):
@@ -34,8 +35,7 @@ def start_call(job_key, index, slurm_job_id):
     p2.stdout.close()
     date = p3.communicate()[0].decode("utf-8").strip()
     start_time = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
-    log(f"{env.EBLOCPATH}/broker/eblocbroker/set_job_status_running.py "
-        f"{job_key} {index} {job_id} {start_time}")
+    log(f"{env.EBLOCPATH}/broker/eblocbroker/set_job_status_running.py " f"{job_key} {index} {job_id} {start_time}")
     for attempt in range(10):
         if attempt > 0:
             log(f"Warning: sleeping for {env.BLOCK_DURATION * 2}...")
@@ -44,12 +44,19 @@ def start_call(job_key, index, slurm_job_id):
         try:
             tx = Ebb.set_job_status_running(job_key, index, job_id, start_time)
             tx_hash = Ebb.tx_id(tx)
-            d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log(f"tx_hash={tx_hash}", "bold")
+            d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log(f"==> set_job_status_running_started {start_time} | attempt_date={d}")
+            log("## mongo.set_job_status_running_tx ", end="")
+            output = Ebb.mongo_broker.set_job_status_running_tx(str(job_key), int(index), str(tx_hash))
+            if output:
+                log(br("SUCCESS"))
+            else:
+                log(br("FAILED"))
+
             return
         except Exception as e:
-            log(f"attempt={attempt} {e}")
+            log(f"attempt={attempt}: {e}", "bold")
             if "Execution reverted" in str(e):
                 log(f"Warning: {e}")
                 sys.exit(1)

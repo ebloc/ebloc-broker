@@ -3,9 +3,10 @@
 import pathlib
 import threading
 from typing import Dict, Union
-from rich.markup import escape
-from rich import pretty, print  # noqa
+
+from rich import pretty, print, print_json  # noqa
 from rich.console import Console
+from rich.pretty import pprint
 
 # from rich.traceback import install
 # install(show_locals=True)
@@ -95,46 +96,22 @@ class Log:
 
 
 def br(text):
-    return escape(f"[{text}]")
+    return f"[bold][[/bold]{text}[bold]][/bold]"
 
 
-def log(text="", color=None, filename=None, end=None, flush=False):
-    """Print for own settings.
-
-    __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
-    """
-    is_bold: bool = False
-    if color == "bold":
-        is_bold = True
-        color = None
-
+def _log(text, color, is_bold, flush, filename, end):
     text, _color, _len, is_arrow, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
-    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
-        filename = thread_log_files[threading.current_thread().name]
-    elif not filename:
-        if ll.LOG_FILENAME:
-            filename = ll.LOG_FILENAME
-        elif DRIVER_LOG:
-            filename = DRIVER_LOG
-        else:
-            filename = "program.log"
-
     if is_bold and not is_arrow:
         _text = f"[bold]{text}[/bold]"
     else:
         _text = text
-
-    if filename not in ll.console:
-        #: Indicated rich console to write into given filename
-        # __ https://stackoverflow.com/a/6826099/2402577
-        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
 
     if color:
         if ll.IS_PRINT:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_arrow:
                     print(
-                        f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][bold]{text[_len:]}[/bold]",
+                        f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{text[_len:]}[/{color}]",
                         end=end,
                         flush=flush,
                     )
@@ -149,7 +126,7 @@ def log(text="", color=None, filename=None, end=None, flush=False):
         _text = text[_len:]
         if is_arrow:
             ll.console[filename].print(
-                f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold {color}]{_text}[/bold {color}]",
+                f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
                 end=end,
                 soft_wrap=True,
             )
@@ -183,6 +160,38 @@ def log(text="", color=None, filename=None, end=None, flush=False):
             print()
 
     # f.close()
+
+
+def log(text="", color=None, filename=None, end=None, flush=False):
+    """Print for own settings.
+
+    __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
+    """
+    is_bold: bool = False
+    if color == "bold":
+        is_bold = True
+        color = None
+
+    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
+        filename = thread_log_files[threading.current_thread().name]
+    elif not filename:
+        if ll.LOG_FILENAME:
+            filename = ll.LOG_FILENAME
+        elif DRIVER_LOG:
+            filename = DRIVER_LOG
+        else:
+            filename = "program.log"
+
+    if filename not in ll.console:
+        #: Indicated rich console to write into given filename
+        # __ https://stackoverflow.com/a/6826099/2402577
+        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+
+    if isinstance(text, dict):
+        pprint(text)
+        ll.console[filename].print(text)
+    else:
+        _log(text, color, is_bold, flush, filename, end)
 
 
 ll = Log()

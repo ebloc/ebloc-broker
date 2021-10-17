@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import sys
-from broker.config import env
+
 import broker.cfg as cfg
-import broker.libs.git as git
 import broker.libs.gdrive as gdrive
+import broker.libs.git as git
+from broker.config import env
+from broker.eblocbroker.job import Job
 from broker.lib import check_linked_data
 from broker.utils import CacheType, StorageID, is_program_valid, log, print_tb
-from broker.eblocbroker.job import Job
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
@@ -23,7 +24,7 @@ def main():
     job.folders_to_share.append(f"{job.base_dir}/data/data1")
 
     path_from = f"{env.EBLOCPATH}/base/data"
-    path_to = f"{env.LINKS}/base/data_link"
+    path_to = f"{env.LINK_PATH}/base/data_link"
     check_linked_data(path_from, path_to, job.folders_to_share[1:])
 
     # # IMPORTANT: consider ignoring to push .git into the submitted folder

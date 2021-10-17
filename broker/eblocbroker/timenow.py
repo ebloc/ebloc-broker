@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from broker._utils.tools import timenow
 import broker.cfg as cfg
+from broker._utils.tools import timenow
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb

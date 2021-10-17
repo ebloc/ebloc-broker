@@ -5,6 +5,7 @@ import sys
 from pprint import pprint
 
 from web3.logs import DISCARD
+
 import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
 from broker.config import env, logging
@@ -39,7 +40,7 @@ def pre_check():
 
 def get_tx_status(tx_hash) -> str:
     print(f"tx_hash={tx_hash}")
-    tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
     print("Transaction receipt is mined:")
     pprint(dict(tx_receipt), depth=1)
     print("\n## Was transaction successful? ")
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     folders.append(f"{env.BASE_DATA_PATH}/test_data/base/data/data1")
 
     path_from = f"{env.EBLOCPATH}/base/data"
-    path_to = f"{env.LINKS}/base/data_link"
+    path_to = f"{env.LINK_PATH}/base/data_link"
     check_linked_data(path_from, path_to, folders[1:])
     for folder in folders:
         if not os.path.isdir(folder):

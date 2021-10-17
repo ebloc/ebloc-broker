@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 
 import sys
+import time
 from os.path import expanduser
 from pathlib import Path
 from typing import Union
 
 from pymongo import MongoClient
-from brownie.network.transaction import TransactionReceipt
-from broker._utils.tools import log, print_tb
+from web3.types import TxReceipt
+
+import broker.cfg as cfg
+from broker._utils._log import br
+from broker._utils.tools import log, merge_two_dicts, print_tb
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, read_json, terminate
 from brownie.network.account import Account, LocalAccount
+from brownie.network.transaction import TransactionReceipt
 
 
 class Web3NotConnected(Exception):  # noqa
@@ -25,8 +30,8 @@ class Contract:
         """Create a new Contrect."""
         mc = MongoClient()
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
-        self.gas = 4500000
-        self.gas_limit = 300000
+        self.gas_limit = "max"  # 300000
+        self.gas_params = {"gas_price": "1 gwei", "gas": 10000000}
         self._setup(is_brownie)
 
     def _setup(self, is_brownie=False):
@@ -97,6 +102,26 @@ class Contract:
     def is_synced(self):
         """Check whether the web3 is synced."""
         return self.w3.eth.syncing
+
+    def _wait_for_transaction_receipt(self, tx_hash) -> TxReceipt:
+        """Wait till the tx is deployed."""
+        poll_latency = 1
+        log(f"## Waiting for the transaction({tx_hash}) receipt... ", end="")
+        while True:
+            try:
+                tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
+            except Exception as e:
+                print_tb(e)
+                tx_receipt = None
+
+            if tx_receipt is not None and tx_receipt["blockHash"] is not None:
+                break
+
+            log(f"{poll_latency} ", end="")
+            time.sleep(poll_latency)
+
+        log(br(" ok "))
+        return tx_receipt
 
     def tx_id(self, tx):
         """Return transaction id."""
@@ -198,7 +223,8 @@ class Contract:
     # Transactions #
     ################
     def _process_payment(self, *args) -> "TransactionReceipt":
-        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True, "required_confs": 0}
+        ops = {"from": env.PROVIDER_ID, "allow_revert": True, "required_confs": 0}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.processPayment(*args, ops)
@@ -207,7 +233,8 @@ class Contract:
 
     def withdraw(self, account) -> "TransactionReceipt":
         """Withdraw payment."""
-        ops = {"from": self.w3.toChecksumAddress(account), "gas": 4500000, "allow_revert": True}
+        ops = {"from": self.w3.toChecksumAddress(account), "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.withdraw(ops)
@@ -216,7 +243,9 @@ class Contract:
 
     def set_job_status_running(self, key, index, job_id, start_time) -> "TransactionReceipt":
         """Set the job status as running."""
-        ops = {"from": self.w3.toChecksumAddress(env.PROVIDER_ID), "gas": 4500000, "allow_revert": True}
+        _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
+        ops = {"from": _from, "allow_revert": True, "required_confs": 0}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.setJobStatusRunning(key, int(index), int(job_id), int(start_time), ops)
@@ -227,7 +256,8 @@ class Contract:
 
     def register_data(self, *args) -> "TransactionReceipt":
         """Register the dataset hash."""
-        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True}
+        ops = {"from": env.PROVIDER_ID, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.registerData(*args, ops)
@@ -236,7 +266,8 @@ class Contract:
 
     def set_register_provider(self, *args) -> "TransactionReceipt":
         """Register provider."""
-        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True}
+        ops = {"from": env.PROVIDER_ID, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.registerProvider(*args, ops)
@@ -244,7 +275,8 @@ class Contract:
             return self.eBlocBroker.functions.registerProvider(*args).transact(ops)
 
     def _update_provider_info(self, *args) -> "TransactionReceipt":
-        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True}
+        ops = {"from": env.PROVIDER_ID, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.updateProviderInfo(*args, ops)
@@ -252,7 +284,8 @@ class Contract:
             return self.eBlocBroker.functions.updateProviderInfo(*args).transact(ops)
 
     def _update_provider_prices(self, *args) -> "TransactionReceipt":
-        ops = {"from": env.PROVIDER_ID, "gas": 4500000, "allow_revert": True}
+        ops = {"from": env.PROVIDER_ID, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.updateProviderPrices(*args, ops)
@@ -260,7 +293,8 @@ class Contract:
             return self.eBlocBroker.functions.updateProviderPrices(*args).transact(ops)
 
     def _authenticate_orc_id(self, _from, *args) -> "TransactionReceipt":
-        ops = {"from": _from, "gas": 4500000, "allow_revert": True}
+        ops = {"from": _from, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.authenticateOrcID(*args, ops)
@@ -268,7 +302,8 @@ class Contract:
             return self.eBlocBroker.functions.authenticateOrcID(*args).transact(ops)
 
     def _transfer_ownership(self, _from, new_owner) -> "TransactionReceipt":
-        ops = {"from": _from, "gas": 4500000, "allow_revert": True}
+        ops = {"from": _from, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.transferOwnership(new_owner, ops)
@@ -276,7 +311,8 @@ class Contract:
             return self.eBlocBroker.functions.transferOwnership(new_owner).transact(ops)
 
     def _refund(self, _from, *args) -> "TransactionReceipt":
-        ops = {"from": _from, "gas": 4500000, "allow_revert": True}
+        ops = {"from": _from, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.refund(*args, ops)
@@ -284,7 +320,8 @@ class Contract:
             return self.eBlocBroker.functions.refund(*args).transact(ops)
 
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
-        ops = {"from": _from, "gas": 4500000, "allow_revert": True}
+        ops = {"from": _from, "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.registerRequester(*args, ops)
@@ -292,7 +329,8 @@ class Contract:
             return self.eBlocBroker.functions.registerRequester(*args).transact(ops)
 
     def _submit_job(self, requester, job_price, *args) -> "TransactionReceipt":
-        ops = {"from": requester, "value": self.w3.toWei(job_price, "wei"), "gas": 4500000, "allow_revert": True}
+        ops = {"from": requester, "value": self.w3.toWei(job_price, "wei"), "allow_revert": True}
+        ops = merge_two_dicts(ops, self.gas_params)
         if env.IS_BLOXBERG:
             self.brownie_load_account()
             return self.eBlocBroker.submitJob(*args, ops)

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br, log
 import os
 import sys
 from os import path
+
 import pytest
+
 import broker._config as _config
 import broker.config as config
 import broker.eblocbroker.Contract as Contract
+from broker._utils._log import br, log
 from broker.config import setup_logger
 from broker.eblocbroker.job import Job
 from broker.utils import CacheType, StorageID

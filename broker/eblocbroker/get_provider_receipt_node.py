@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+
 import broker.cfg as cfg
 
 if __name__ == "__main__":

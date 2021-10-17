@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import re
-from contextlib import suppress
 import binascii
 import errno
 import hashlib
 import json
 import ntpath
 import os
+import re
 import shlex
 import shutil
 import signal
@@ -15,6 +14,7 @@ import socket
 import sys
 import time
 import traceback
+from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 from typing import Dict
@@ -392,18 +392,14 @@ def remove_empty_files_and_folders(dir_path) -> None:
         for f in files:
             full_name = os.path.join(root, f)
             if os.path.getsize(full_name) == 0:
-                try:
+                with suppress(Exception):
                     os.remove(full_name)
-                except:
-                    pass
 
         for dirname in dirnames:
             full_path = os.path.realpath(os.path.join(root, dirname))
             if is_dir_empty(full_path):
-                try:
+                with suppress(Exception):
                     os.rmdir(full_path)
-                except:
-                    pass
 
 
 def _remove(path: str, is_warning=True):
@@ -480,7 +476,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"Warning: '{name}' is not running on the background. {WHERE(1)}")
+        print_tb(f"Warning: [green]{name}[/green] is not running on the background. {WHERE(1)}")
 
     return False
 
@@ -585,7 +581,7 @@ def is_dpkg_installed(package_name) -> bool:
         return False
 
 
-def terminate(msg="", is_traceback=True):
+def terminate(msg="", is_traceback=True, lock=None):
     """Terminate the Driver python script and all the dependent python programs to it."""
     if msg:
         log(f"{WHERE(1)} Terminated: ", "bold red", end="")
@@ -594,9 +590,14 @@ def terminate(msg="", is_traceback=True):
     if is_traceback:
         print_tb()
 
-    # Following line is added, in case ./killall.sh does not work due to sudo
-    # It sends the kill signal to all the process groups
+    if lock:
+        with suppress(Exception):
+            lock.close()
+            open(env.DRIVER_LOCKFILE, "w").close()
+
     if config.driver_cancel_process:
+        # Following line is added, in case ./killall.sh does not work due to
+        # sudo It sends the kill signal to all the process groups, pid is
         # obtained from the global variable
         os.killpg(os.getpgid(config.driver_cancel_process.pid), signal.SIGTERM)
 
@@ -706,11 +707,8 @@ def dump_dict_to_file(filename, job_keys):
 class Link:
     def __init__(self, path_from, path_to) -> None:
         self.data_map = {}  # type: Dict[str, str]
-        if path_from:
-            self.path_from = path_from.rstrip("\/")  # in case if its ending with "/" char
-
-        if path_to:
-            self.path_to = path_to.rstrip("\/")
+        self.path_from = path_from  # Path automatically removes / at the end if there is
+        self.path_to = path_to
 
     def link_folders(self, paths=None):
         """Creates linked folders under the data_link/ folder"""

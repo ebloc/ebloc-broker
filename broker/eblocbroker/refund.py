@@ -5,11 +5,12 @@ from pprint import pprint
 from typing import List
 
 from web3.logs import DISCARD
+
 import broker.cfg as cfg
+from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.config import env, logging  # noqa: F401
 from broker.lib import get_tx_status
-from broker._utils._log import log
 
 
 def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):

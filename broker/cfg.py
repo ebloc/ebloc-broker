@@ -57,3 +57,4 @@ class W3:
 Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()
+TX_TIMEOUT = 1800

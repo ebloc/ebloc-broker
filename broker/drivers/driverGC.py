@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import broker.cfg as cfg
 from config import env
 from imports import connect
 from pymongo import MongoClient
 from utils import StorageID, _remove, run
+
+import broker.cfg as cfg
 
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
