@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
 import broker.cfg as cfg
 from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
@@ -18,18 +16,27 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
         log("E: e-mail should be less than 128")
         raise
 
-    # if (len(gpg_fingerprint) == 0 or len(gpg_fingerprint) == 42):
+    if gpg_fingerprint[:2] == "0x":
+        log(f"E: gpg_fingerprint={gpg_fingerprint} should not start with 0x")
+        raise QuietExit
+
+    if len(gpg_fingerprint) != 40:
+        log(f"E: gpg_fingerprint={gpg_fingerprint} length should be 40")
+        raise QuietExit
+
     try:
         provider_info = self.get_provider_info(env.PROVIDER_ID)
         if (
-            provider_info["gpg_fingerprint"][24:].lower() == gpg_fingerprint.lower()
+            # TODO: control does gpg_finderprint starts with 0x
+            provider_info["gpg_fingerprint"] == gpg_fingerprint.lower()
             and provider_info["email"] == email
             and provider_info["f_id"] == federation_cloud_id
             and provider_info["ipfs_id"] == ipfs_id
         ):
+            log(provider_info)
             raise QuietExit("Warning: Given information is same with the cluster's saved info. Nothing to do.")
 
-        tx = self._update_provider_info(gpg_fingerprint, email, federation_cloud_id, ipfs_id)
+        tx = self._update_provider_info(f"0x{gpg_fingerprint}", email, federation_cloud_id, ipfs_id)
         return self.tx_id(tx)
     except Exception as e:
         raise e
@@ -37,9 +44,9 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb
-    gpg_fingerprint = "420E5F7E1928B5E5940FA8D44055CB84FC8DCE5F"
     email = "alper.alimoglu.research@gmail.com"
     # email = "alper.alimoglu@gmail.com"
+    gpg_fingerprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
     ipfs_id = "/ip4/85.96.79.178/tcp/4001/p2p/12D3KooW9s3zzzafmoZ79dRLX3TBFGYHiADPDtxoo4SeiN8B1qGs"  # TODO: delete
     try:
@@ -47,4 +54,3 @@ if __name__ == "__main__":
         receipt = get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)
-        sys.exit(1)

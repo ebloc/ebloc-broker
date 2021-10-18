@@ -17,7 +17,7 @@ from web3.logs import DISCARD
 import broker.cfg as cfg
 import broker.config as config
 import broker.libs.git as git
-from broker._utils._log import br
+from broker._utils._log import br, ok
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
 from broker.lib import get_tx_status, run
@@ -112,7 +112,7 @@ def _login(fname, user, password_path):
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log("[ ok ]")
+            log(ok())
         except Exception:
             _traceback = traceback.format_exc()
             print_tb()
@@ -139,7 +139,7 @@ def login(user, password_path: Path, fname: str) -> None:
         try:
             log(f"## Login into owncloud from the dumped object={fname} ", end="")
             config.oc.get_config()
-            log(br(" ok "))
+            log(ok())
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)
@@ -153,7 +153,7 @@ def share_single_folder(folder_name, f_id) -> bool:
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
         if not config.oc.is_shared(folder_name):
             config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-            print("* Sharing [ ok ]")
+            log(f"{ok()} Sharing")
             return True
 
         log("==> Requester folder is already shared")

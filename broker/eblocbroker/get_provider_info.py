@@ -50,6 +50,8 @@ def get_provider_info(self, provider, index=0):
             except:
                 _event_filter[key] = ""
 
+        #: removes padding 24 zeros at the beginning
+        gpg_fingerprint = _event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].lower()
         provider_info = {
             "address": provider,
             "block_read_from": block_read_from,
@@ -61,7 +63,7 @@ def get_provider_info(self, provider, index=0):
             "price_cache": provider_price_info[5],
             "is_orcid_verified": self.is_orcid_verified(provider),
             "email": _event_filter["email"],
-            "gpg_fingerprint": _event_filter["gpgFingerprint"].rstrip(b"\x00").hex(),
+            "gpg_fingerprint": gpg_fingerprint,
             "f_id": _event_filter["fID"],
             "ipfs_id": _event_filter["ipfsID"],
         }
