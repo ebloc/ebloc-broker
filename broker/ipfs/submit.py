@@ -32,7 +32,7 @@ def pre_check():
             log("E: Install pigz:\nsudo apt-get install -y pigz")
             sys.exit()
     except Exception as e:
-        print(str(e))
+        print_tb(e)
         sys.exit()
 
 
@@ -54,9 +54,9 @@ if __name__ == "__main__":
     log("==> Attemptting to submit a job")
     requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
     # Ebb.account_id_to_address(address=requester_addr)
-    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
+    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
-    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]
+    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]  #: works
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)

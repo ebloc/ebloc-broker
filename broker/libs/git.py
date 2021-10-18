@@ -4,6 +4,7 @@ import gzip
 import io
 import os
 import time
+from pathlib import Path
 
 import git
 
@@ -12,8 +13,7 @@ from broker.config import env, logging
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, run
 
 
-# from subprocess import CalledProcessError
-def initialize_check(path):
+def initialize_check(path) -> bool:
     """Validate if .git/ folder exist within the target folder."""
     with cd(path):
         if not is_initialized(path):
@@ -50,17 +50,17 @@ def decompress_gzip(filename):
     if not is_gzip_file_empty(filename):
         with gzip.open(filename, "rb") as ip:
             with io.TextIOWrapper(ip, encoding="utf-8") as decoder:
-                # Let's read the content using read()
                 content = decoder.read()
-                print(content)
+                log(content)
 
 
-def diff_patch(path, source_code_hash, index, target_path):
-    """
-    * "git diff HEAD" for detecting all the changes:
-    * Shows all the changes between the working directory and HEAD (which includes changes in the index).
-    * This shows all the changes since the last commit, whether or not they have been staged for commit
-    * or not.
+def diff_patch(path: Path, source_code_hash, index, target_path):
+    """Apply diff patch.
+
+    "git diff HEAD" for detecting all the changes:
+    Shows all the changes between the working directory and HEAD (which includes changes in the index).
+    This shows all the changes since the last commit, whether or not they have been staged for commit
+    or not.
     """
     sep = "*"  # separator in between the string infos
     is_file_empty = False
@@ -151,6 +151,7 @@ def commit_changes(path) -> bool:
         except Exception as e:
             logging.error(f"E: {e}")
             return False
+
         return True
 
 
@@ -172,7 +173,6 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             # run(["git", "checkout", git_hash])
             # run(["git", "reset", "--hard"])
             # run(["git", "clean", "-f"])
-
             # echo "\n" >> patch_file.txt seems like fixing it
             with open(patch_file, "a") as myfile:
                 myfile.write("\n")

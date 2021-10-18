@@ -39,6 +39,8 @@ class BaseClass:
 class Storage(BaseClass):
     # def __init__(self, logged_job, job_info, requester_id, is_already_cached) -> None:
     def __init__(self, **kwargs) -> None:
+        self.Ebb = cfg.Ebb
+        #
         self.thread_name = uuid.uuid4().hex  # https://stackoverflow.com/a/44992275/2402577
         self.requester_id = kwargs.pop("requester_id")
         self.job_info = kwargs.pop("job_info")
@@ -51,7 +53,7 @@ class Storage(BaseClass):
         self.run_time = self.logged_job.args["runTime"]
         self.job_id = 0
         self.cache_type = self.logged_job.args["cacheType"]
-        self.data_transfer_in_requested = self.job_info[0]["dataTransferIn"]
+        self.data_transfer_in_requested = self.job_info[0]["data_transfer_in"]
         self.data_transfer_in_to_download = 0  # size_to_download
         self.is_already_cached = self.is_already_cached
         self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
@@ -70,7 +72,6 @@ class Storage(BaseClass):
         self.public_dir = f"{env.PROGRAM_PATH}/cache"
         self.patch_folder = f"{self.results_folder_prev}/patch"
         self.folder_type_dict: Dict[str, str] = {}
-        self.Ebb = cfg.Ebb
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.mc = None
