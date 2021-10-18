@@ -89,7 +89,8 @@ class IpfsClass(Storage):
                 dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
                 if os.path.exists(dst_filename):
                     _remove(dst_filename)
-                shutil.move(target, dst_filename)  # UNIX 'mv' command
+
+                shutil.move(target, dst_filename)
                 target = dst_filename
 
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:

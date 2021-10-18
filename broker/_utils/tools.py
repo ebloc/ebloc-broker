@@ -130,10 +130,11 @@ def print_tb(message=None, is_print_exc=True) -> None:
             log(f"{br(PrintException())} ", "bold blue", end="")
 
         log(f"{WHERE(1)}", "bold blue")
-        if "Warning:" not in message:
-            log(f"E: {message}")
-        else:
-            log(message)
+        if "An exception of type CalledProcessError occurred" not in message:
+            if "Warning:" not in message:
+                log(f"E: {message}")
+            else:
+                log(message)
 
 
 def delete_last_line(n=1):
@@ -241,17 +242,21 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     return percent
 
 
-def print_trace(cmd, back=1, exc=""):
+def print_trace(cmd, back=1, exc="", returncode=""):
     _cmd = " ".join(cmd)
     if exc:
         log(f"{WHERE(back)} Error failed command:", "bold red")
         log(f"$ {_cmd}", "bold yellow")
         log(exc, "bold red")
     else:
-        log(f"==> Failed shell command:\n[yellow]{_cmd}")
+        if returncode:
+            return_code_msg = f"returned non-zero exit status {returncode}"
+            log(f"==> Failed shell command {br(return_code_msg)}:\n[yellow]{_cmd}\n")
+        else:
+            log(f"==> Failed shell command:\n[yellow]{_cmd}\n")
 
 
-def run(cmd, my_env=None, is_print_trace=True) -> str:
+def run(cmd, my_env=None) -> str:
     if not isinstance(cmd, str):
         cmd = list(map(str, cmd))  # all items should be str
     else:
@@ -263,10 +268,9 @@ def run(cmd, my_env=None, is_print_trace=True) -> str:
         else:
             return check_output(cmd, env=my_env).decode("utf-8").strip()
     except CalledProcessError as e:
-        if is_print_trace:
-            print_trace(cmd, back=2, exc=e.output.decode("utf-8"))
-            print_tb(e)
-
+        print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
+        raise Exception(f"CalledProcessError: {cmd[0]}") from None
+    except Exception as e:
         raise e
 
 

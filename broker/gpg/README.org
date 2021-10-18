@@ -1,17 +1,20 @@
-# Provider
+* GNU Privacy
+** Provider
 
-```
+#+begin_src bash
 gpg --keyserver hkp://pgp.mit.edu --send-keys <key_id>
-```
+#+end_src
 
-# Requester
+----------------------------------------------------------------------
+
+** Requester
 
 See https://stackoverflow.com/a/34132924/2402577 for more info.
 
-```
+#+begin_src bash
 KEY_ID="11FBA2D03D3CFED18FC71D033B127BC747AADC1C"
 gpg --keyserver pgp.mit.edu --search-keys $KEY_ID
 gpg --edit-key $KEY_ID
 > trust
 > quit
-```
+#+end_src

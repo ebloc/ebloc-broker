@@ -311,7 +311,9 @@ class EudatClass(Storage):
                 try:
                     shared_id = Ebb.mongo_broker.mc["eBlocBroker"]["shareID"]
                     Ebb.mongo_broker.find_key(shared_id, folder_name)
-                except:
-                    logging.error(f"E: share_id cannot be detected from key: {self.job_key}")
+                except Exception as e:
+                    print_tb(e)
+                    log(f"E: [yellow]share_id[/yellow] cannot be detected from key: {self.job_key}.")
                     return False
+
         return self.sbatch_call()
