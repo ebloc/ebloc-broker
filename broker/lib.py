@@ -250,7 +250,7 @@ def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=Fal
     link.link_folders(folders_to_share)
     log()
     for key, value in link.data_map.items():
-        log(f" * {key} ==> data_link/{value}")
+        log(f" * [green]{key}[/green] => [yellow]data_link/{value}[/yellow]")
 
     if not is_continue:
         print("")
@@ -259,10 +259,11 @@ def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=Fal
             "If no, please update your run.sh file [Y/n]: "
         )
 
-    for folder in folders_to_share:
-        if not os.path.isdir(folder):
-            log(f"E: {folder} path does not exist")
-            sys.exit(1)
+    if folders_to_share:
+        for folder in folders_to_share:
+            if not os.path.isdir(folder):
+                log(f"E: {folder} path does not exist")
+                sys.exit(1)
 
 
 def is_dir(path) -> bool:

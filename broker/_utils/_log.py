@@ -84,7 +84,7 @@ class Log:
             is_arrow = True
             if not color:
                 color = "red"
-        elif "SUCCESS" in text or "Finalazing" in text or text == "END":
+        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN"]:
             if not color:
                 color = "green"
                 is_bold = True
@@ -97,6 +97,10 @@ class Log:
 
 def br(text):
     return f"[bold][[/bold]{text}[bold]][/bold]"
+
+
+def ok():
+    return br("  [green]OK[/green]  ")
 
 
 def _log(text, color, is_bold, flush, filename, end):

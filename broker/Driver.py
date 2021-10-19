@@ -10,11 +10,8 @@ from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-from subprocess import CalledProcessError
-
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
 import broker._utils._log as _log
 import broker.cfg as cfg
 import broker.config as config

@@ -32,7 +32,6 @@ Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 zero_bytes32 = "0x00"
-
 yes = set(["yes", "y", "ye", "ys", "yy"])
 no = set(["no", "n", "nn"])
 EXIT_FAILURE = 1
@@ -79,7 +78,7 @@ def raise_error(error):
 def extract_gzip(filename):
     try:
         args = shlex.split(f"gunzip --force {filename}")
-        run(args, is_print_trace=False)
+        run(args)
     except:
         args = shlex.split(f"zcat {filename}")
         base_dir = os.path.dirname(filename)
@@ -166,9 +165,9 @@ def _try(func):
 
 def is_bin_installed(bin_name):
     try:
-        run(["which", bin_name], is_print_trace=False)
+        run(["which", bin_name])
     except Exception as e:
-        log(f"E: {bin_name} is not instelled")
+        log(f"E: [green]{bin_name}[/green] is not instelled")
         raise e
 
 
@@ -286,7 +285,7 @@ def generate_md5sum(path: str) -> str:
         tar_hash = check_output(["md5sum", path]).decode("utf-8").strip()
         return tar_hash.split(" ", 1)[0]
     else:
-        logging.error(f"\nE: {path} does not exist")
+        logging.error(f"E: {path} does not exist")
         raise
 
 
@@ -709,7 +708,7 @@ class Link:
         self.path_to = path_to
 
     def link_folders(self, paths=None):
-        """Creates linked folders under the data_link/ folder"""
+        """Create linked folders under the data_link folder."""
         from os import listdir
         from os.path import isdir, join
 
@@ -735,13 +734,13 @@ class Link:
             self.data_map[folder_name] = folder_hash
             destination = f"{self.path_to}/{folder_hash}"
             run(["ln", "-sfn", target, destination])
-            log(f"* '{target}' =>")
-            log(f"'{destination}'", "yellow")
+            log(f" *   [bold green]{target}[/bold green]", "bold yellow")
+            log(f" └─> {destination}", "bold yellow")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"
 
 
-class cd:
+class Cd:
     """Context manager for changing the current working directory.
 
     __ https://stackoverflow.com/a/13197763/2402577

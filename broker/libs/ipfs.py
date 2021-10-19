@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import ok
 import json
 import os
 import re
@@ -98,7 +99,7 @@ class Ipfs:
         ]
         try:
             run(cmd)
-            log("==> GPG decrypt is successfull")
+            log(f"{ok()} GPG decrypt is successfull")
             _remove(gpg_file)
             os.unlink(gpg_file_link)
         except Exception as e:
@@ -123,7 +124,7 @@ class Ipfs:
         _remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
         _remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
 
-    def gpg_encrypt(self, user_gpg_finderprint, target) -> str:
+    def gpg_encrypt(self, user_gpg_finderprint, target):
         is_delete = False
         if os.path.isdir(target):
             try:
@@ -206,6 +207,7 @@ class Ipfs:
 
         # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
         return self.client.object.stat(ipfs_hash)
+
 
     def is_hash_exists_online(self, ipfs_hash: str):
         logging.info(f"Attempting to check IPFS file {ipfs_hash}")
@@ -309,7 +311,7 @@ class Ipfs:
             raise IpfsNotConnected
 
         # cmd = ["ipfs", "bootstrap", "list"]
-        # output = run(cmd, is_print_trace=False)
+        # output = run(cmd)
         # s = StringIO(output)
         peers = self.client.bootstrap.list()["Peers"]
         peer_address = None
