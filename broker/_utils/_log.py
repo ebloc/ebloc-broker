@@ -99,6 +99,10 @@ def br(text):
     return f"[bold][[/bold]{text}[bold]][/bold]"
 
 
+def ok():
+    return br("  [green]OK[/green]  ")
+
+
 def _log(text, color, is_bold, flush, filename, end):
     text, _color, _len, is_arrow, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_arrow:

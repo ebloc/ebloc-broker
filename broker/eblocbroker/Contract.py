@@ -120,7 +120,7 @@ class Contract:
             log(f"{poll_latency} ", end="")
             time.sleep(poll_latency)
 
-        log(br(" ok "))
+        log(br("  OK  "))
         return tx_receipt
 
     def tx_id(self, tx):

@@ -59,7 +59,8 @@ if __name__ == "__main__":
     # email = "alper01234alper@gmail.com"
     email = "alper.alimoglu.research@gmail.com"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
-    gpg_fingerprint = "0x11FBA2D03D3CFED18FC71D033B127BC747AADC1C"
+    #: key_id=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
+    gpg_fingerprint = "0x2AF4FEB13EA98C83D94150B675D5530929E05CEB"
     commitment_blk = 240
     price_core_min = 100
     price_data_transfer = 1

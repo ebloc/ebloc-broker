@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         target = folder
         if job.storage_ids[idx] == StorageID.IPFS_GPG:
-            provider_gpg_finderprint = "11FBA2D03D3CFED18FC71D033B127BC747AADC1C"  # provider_info["gpg_fingerprint"]
+            provider_gpg_finderprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"  # provider_info["gpg_fingerprint"]
             if not provider_gpg_finderprint:
                 log("E: Provider did not register any GPG fingerprint")
                 sys.exit(1)
