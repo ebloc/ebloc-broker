@@ -40,3 +40,4 @@ link: https://github.com/wkentar
 ** TODO Some code should go into utils.py
    Some functıons are public that should carried into `utils.py`
 ** TODO .git yoksa eudat ve ipfs icin yarat
+** TODO client.ping("QmTzQ1JRkWErjk39mryYw2WVaphAZNAREyMchXzYQ7c15n")

@@ -7,6 +7,7 @@ from pprint import pprint
 from web3.logs import DISCARD
 
 import broker.cfg as cfg
+from broker._utils._log import ok
 from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
@@ -29,7 +30,7 @@ def pre_check():
     try:
         is_bin_installed("ipfs")
         if not is_dpkg_installed("pigz"):
-            log("E: Install pigz:\nsudo apt-get install -y pigz")
+            log("E: Install [green]pigz[/green].\nsudo apt install -y pigz")
             sys.exit()
     except Exception as e:
         print_tb(e)
@@ -62,8 +63,7 @@ if __name__ == "__main__":
     job.set_cache_types(_types)
 
     # TODO: let user directly provide the IPFS hash instead of the folder
-    #: full paths are provided
-    folders = []
+    folders = []  #: full paths are provided
     folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "source_code")
     folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
     path_from = env.EBLOCPATH / "base" / "data"
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     elif main_storage_id == StorageID.IPFS_GPG:
         log("==> Submitting source code through IPFS_GPG")
     else:
-        log("E: Please provide IPFS or IPFS_GPG storage type")
+        log("E: Please provide IPFS or IPFS_GPG storage type for the source code")
         sys.exit(1)
 
     targets = []
@@ -92,7 +92,8 @@ if __name__ == "__main__":
 
         target = folder
         if job.storage_ids[idx] == StorageID.IPFS_GPG:
-            provider_gpg_finderprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"  # provider_info["gpg_fingerprint"]
+            # provider_gpg_finderprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"
+            provider_gpg_finderprint = provider_info["gpg_fingerprint"]
             if not provider_gpg_finderprint:
                 log("E: Provider did not register any GPG fingerprint")
                 sys.exit(1)
@@ -100,7 +101,7 @@ if __name__ == "__main__":
             try:
                 # target is updated
                 target = cfg.ipfs.gpg_encrypt(provider_gpg_finderprint, target)
-                log(f"==> GPG_file={target}")
+                log(f"==> gpg_file={target}")
             except Exception as e:
                 print_tb(e)
                 sys.exit(1)
@@ -121,7 +122,7 @@ if __name__ == "__main__":
         log(f"==> ipfs_hash={ipfs_hash}")
         log(f"==> md5sum={generate_md5sum(target)}")
         if main_storage_id == StorageID.IPFS_GPG:
-            # created .gpg file will be removed since its already in ipfs
+            # created gpg file will be removed since its already in ipfs
             targets.append(target)
 
         if idx != len(folders) - 1:
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     job.data_transfer_ins = [1, 1]  # TODO: calculate from the file itself
     job.data_transfer_out = 1
     job.data_prices_set_block_numbers = [0, 0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     try:
         tx_hash = Ebb.submit_job(provider, key, 105, job, requester=requester_addr)
         tx_receipt = get_tx_status(tx_hash)
@@ -142,16 +143,12 @@ if __name__ == "__main__":
             processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             pprint(vars(processed_logs[0].args))
             try:
-                log(f"==> job_index={processed_logs[0].args['index']}", "bold")
-                log("SUCCESS")
+                log(f"{ok()} job_index={processed_logs[0].args['index']}")
                 for target in targets:
                     _remove(target)
             except IndexError:
                 logging.error("E: Transaction is reverted")
     except QuietExit:
-        sys.exit(1)
+        pass
     except Exception as e:
         print_tb(e)
-        sys.exit(1)
-    finally:
-        pass

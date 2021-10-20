@@ -40,6 +40,7 @@ class Job:
         self.storage_hours: List[int] = []
         self.storage_ids: List[int] = []
         self.cache_types: List[int] = []
+        self.cores: List[int] = []
         self.run_time = []
         self.keys = {}  # type: Dict[str, str]
         self.foldername_tar_hash = {}  # type: Dict[str, str]

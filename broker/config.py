@@ -95,7 +95,8 @@ class ENV:
         self.RPC_PORT = _env["RPC_PORT"]
         self.EBLOCPATH = Path(_env["EBLOCPATH"])
         self.BASE_DATA_PATH = Path(_env["BASE_DATA_PATH"])
-
+        self.BASH_SCRIPTS_PATH = Path(_env["EBLOCPATH"]) / "broker" / "bash_scripts"
+        #
         # self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self._HOME = Path("/home") / self.WHOAMI
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")

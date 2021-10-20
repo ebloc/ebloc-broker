@@ -10,7 +10,6 @@ from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-from subprocess import CalledProcessError
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
@@ -225,7 +224,7 @@ class Driver:
             self.latest_block_number = self.logged_job["blockNumber"]
 
         try:
-            run(["bash", f"{env.EBLOCPATH}/broker/bash_scripts/is_str_valid.sh", job_key])
+            run(["bash", env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
         except Exception:
             logging.error("E: Filename contains an invalid character")
             return
@@ -327,7 +326,7 @@ def run_driver():
         terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
-        terminate(f"Please run: {env.EBLOCPATH}/broker/bash_scripts/folder_setup.sh")
+        terminate(f"Please run: {env.BASH_SCRIPTS_PATH}/folder_setup.sh")
 
     if not env.SLURMUSER:
         terminate(f"SLURMUSER is not set in {env.LOG_PATH}/.env")
