@@ -76,6 +76,7 @@ if __name__ == "__main__":
     try:
         tx_hash = Ebb.register_provider(*args, **kwargs)
         receipt = get_tx_status(tx_hash)
+    except QuietExit:
+        pass
     except Exception as e:
-        if type(e).__name__ != "QuietExit":
-            print_tb(e)
+        print_tb(e)

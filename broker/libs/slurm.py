@@ -81,7 +81,7 @@ def is_on() -> bool:
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             log(
                 f"E: [green]{process_name}[/green] is not running in the background. Please run:\n"
-                f"[yellow]sudo {env.EBLOCPATH}/broker/bash_scripts/run_slurm.sh",
+                f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh",
                 "bold red",
             )
             raise QuietExit
@@ -93,7 +93,7 @@ def is_on() -> bool:
             logging.error(f"E: {output}")
         try:
             logging.info("Starting Slurm... \n")
-            run(["sudo", "bash", "bash_scripts/run_slurm.sh"])
+            run(["sudo", "bash", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
             return True
         except:
             return False

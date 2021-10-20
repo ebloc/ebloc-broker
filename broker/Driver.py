@@ -10,7 +10,6 @@ from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-from subprocess import CalledProcessError
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
@@ -52,8 +51,14 @@ from broker.utils import (
 
 # from threading import Thread
 # from multiprocessing import Process
+
 args = helper()
-given_block_number = vars(args)["bn"]
+
+if vars(args)["latest"]:
+    given_block_number = cfg.Ebb.get_block_number()
+else:
+    given_block_number = vars(args)["bn"]
+
 pid = str(os.getpid())
 COLUMN_SIZE = int(104 / 2 - 12)
 
@@ -82,7 +87,7 @@ def _tools(block_continue):
         if not env.IS_BLOXBERG:
             is_geth_on()
         else:
-            log(":beer: Connected into BLOXBERG", "bold green")
+            log(":beer: Connected into [green]BLOXBERG[/green]", "bold")
 
         slurm.is_on()
         # run_driver_cancel()  # TODO: uncomment
@@ -225,7 +230,7 @@ class Driver:
             self.latest_block_number = self.logged_job["blockNumber"]
 
         try:
-            run(["bash", f"{env.EBLOCPATH}/broker/bash_scripts/is_str_valid.sh", job_key])
+            run(["bash", env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
         except Exception:
             logging.error("E: Filename contains an invalid character")
             return
@@ -327,7 +332,7 @@ def run_driver():
         terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
-        terminate(f"Please run: {env.EBLOCPATH}/broker/bash_scripts/folder_setup.sh")
+        terminate(f"Please run: {env.BASH_SCRIPTS_PATH}/folder_setup.sh")
 
     if not env.SLURMUSER:
         terminate(f"SLURMUSER is not set in {env.LOG_PATH}/.env")
@@ -419,7 +424,9 @@ def run_driver():
 
         log(f"==> date={get_time()}")
         if isinstance(balance, int):
-            log(f"==> provider_gained_wei={int(balance) - int(balance_temp)}")
+            value = int(balance) - int(balance_temp)
+            if value > 0:
+                log(f"==> Since Driver start provider_gained_wei ={value}")
 
         current_block_num = Ebb.get_block_number()
         log(f"==> waiting new job to come since block number={block_read_from}")
@@ -483,6 +490,9 @@ def main():
 
 
 if __name__ == "__main__":
+    from broker.helper import helper
+    args = helper()
+
     try:
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
         msg = " provider session starts "
