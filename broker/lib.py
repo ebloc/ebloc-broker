@@ -98,7 +98,8 @@ def session_start_msg(slurm_user, block_number, pid):
     log(f"==> This Driver process has the PID {pid}")
     log(f"==> provider_address={PROVIDER_ID}")
     log(f"==> slurm_user={slurm_user}")
-    log(f"==> block_number={block_number}")
+    log(f"==> left_of_block_number={block_number}")
+    log(f"==>  latest_block_number={cfg.Ebb.get_block_number()}")
 
 
 def run_driver_cancel():

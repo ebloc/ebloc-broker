@@ -55,9 +55,9 @@ if __name__ == "__main__":
     log("==> Attemptting to submit a job")
     requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
     # Ebb.account_id_to_address(address=requester_addr)
-    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
+    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
-    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]  #: works
+    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]  #: works
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 for target in targets:
                     _remove(target)
             except IndexError:
-                logging.error("E: Transaction is reverted")
+                logging.error("E: Tx is reverted")
     except QuietExit:
         pass
     except Exception as e:

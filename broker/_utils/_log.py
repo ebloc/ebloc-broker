@@ -103,7 +103,7 @@ def ok():
     return br("  [green]OK[/green]  ")
 
 
-def _log(text, color, is_bold, flush, filename, end):
+def _log(text, color, is_bold, flush, filename, end, is_log=True):
     text, _color, _len, is_arrow, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_arrow:
         _text = f"[bold]{text}[/bold]"
@@ -128,18 +128,18 @@ def _log(text, color, is_bold, flush, filename, end):
             _text = text[_len:]
 
         _text = text[_len:]
-        if is_arrow:
-            ll.console[filename].print(
-                f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
-                end=end,
-                soft_wrap=True,
-            )
-        else:
-            if color:
-                ll.console[filename].print(f"[bold {color}]{_text}[/bold {color}]", end="", soft_wrap=True)
+        if is_log:
+            if is_arrow:
+                ll.console[filename].print(
+                    f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
+                    end=end,
+                    soft_wrap=True,
+                )
             else:
-                ll.console[filename].print(_text, end="", soft_wrap=True)
-
+                if color:
+                    ll.console[filename].print(f"[bold {color}]{_text}[/bold {color}]", end="", soft_wrap=True)
+                else:
+                    ll.console[filename].print(_text, end="", soft_wrap=True)
     else:
         text_write = ""
         if is_arrow:
@@ -156,17 +156,20 @@ def _log(text, color, is_bold, flush, filename, end):
             else:
                 print(text_write, flush=flush)
 
-        ll.console[filename].print(text_write, end=end, soft_wrap=True)
+        if is_log:
+            ll.console[filename].print(text_write, end=end, soft_wrap=True)
 
     if end is None:
-        ll.console[filename].print("")
+        if is_log:
+            ll.console[filename].print("")
+
         if color and is_arrow:
             print()
 
     # f.close()
 
 
-def log(text="", color=None, filename=None, end=None, flush=False):
+def log(text="", color=None, filename=None, end=None, flush=False, is_log=True):
     """Print for own settings.
 
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
@@ -179,26 +182,28 @@ def log(text="", color=None, filename=None, end=None, flush=False):
     if "-=-=" in str(text):
         is_bold = True
 
-    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
-        filename = thread_log_files[threading.current_thread().name]
-    elif not filename:
-        if ll.LOG_FILENAME:
-            filename = ll.LOG_FILENAME
-        elif DRIVER_LOG:
-            filename = DRIVER_LOG
-        else:
-            filename = "program.log"
+    if is_log:
+        if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
+            filename = thread_log_files[threading.current_thread().name]
+        elif not filename:
+            if ll.LOG_FILENAME:
+                filename = ll.LOG_FILENAME
+            elif DRIVER_LOG:
+                filename = DRIVER_LOG
+            else:
+                filename = "program.log"
 
-    if filename not in ll.console:
-        #: Indicated rich console to write into given filename
-        # __ https://stackoverflow.com/a/6826099/2402577
-        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+        if filename not in ll.console:
+            #: Indicated rich console to write into given filename
+            # __ https://stackoverflow.com/a/6826099/2402577
+            ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
 
     if isinstance(text, dict):
         pprint(text)
-        ll.console[filename].print(text)
+        if is_log:
+            ll.console[filename].print(text)
     else:
-        _log(text, color, is_bold, flush, filename, end)
+        _log(text, color, is_bold, flush, filename, end, is_log)
 
 
 ll = Log()
