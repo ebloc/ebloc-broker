@@ -70,6 +70,31 @@ class StorageID(BaseEnum):
     NONE = 5
 
 
+class cd:
+    """Context manager for changing the current working directory.
+
+    # enter the directory like this:
+    with cd("~/Library"):
+        # we are in ~/Library
+        subprocess.call("ls")
+
+    # outside the context manager we are back wherever we started.
+
+    __ https://stackoverflow.com/a/13197763/2402577
+    """
+
+    def __init__(self, new_path):
+        self.saved_path = None
+        self.new_path = os.path.expanduser(new_path)
+
+    def __enter__(self):
+        self.saved_path = os.getcwd()
+        os.chdir(self.new_path)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.saved_path)
+
+
 def raise_error(error):
     traceback.print_stack()
     raise RuntimeError(error)
@@ -738,21 +763,3 @@ class Link:
             log(f" └─> {destination}", "bold yellow")
             folder_new_hash = generate_md5sum(destination)
             assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"
-
-
-class Cd:
-    """Context manager for changing the current working directory.
-
-    __ https://stackoverflow.com/a/13197763/2402577
-    """
-
-    def __init__(self, new_path):
-        self.saved_path = None
-        self.new_path = os.path.expanduser(new_path)
-
-    def __enter__(self):
-        self.saved_path = os.getcwd()
-        os.chdir(self.new_path)
-
-    def __exit__(self, etype, value, traceback):
-        os.chdir(self.saved_path)

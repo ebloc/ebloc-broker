@@ -23,7 +23,7 @@ def connect():
         if not cfg.w3.isConnected():
             connect_into_web3()
 
-        if config.ebb is None:
+        if not config.ebb:
             connect_to_eblocbroker()
     except Exception as e:
         print_tb(e)
@@ -38,10 +38,6 @@ def _connect_into_web3():
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
             cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
-        #
-        # from web3.geth import shh  # does not work on > web3==5.11
-        # cfg.w3.shh.attach(cfg.w3, "shh")
-        # shh.attach(cfg.w3, "shh")
     else:
         cfg.w3 = Web3(IPCProvider(web3_provider_path))
         # inject the poa compatibility middleware to the innermost layer
@@ -140,7 +136,7 @@ def connect_to_eblocbroker() -> None:
                 project = project.load("/mnt/hgfs/ebloc-broker/contract")
                 config.ebb = project.eBlocBroker.at(contract_address)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
-                #: For contract events
+                #: For the contract events
                 config._eBlocBroker = cfg.w3.eth.contract(contract_address, abi=abi)
         elif env.IS_EBLOCPOA:
             config.ebb = cfg.w3.eth.contract(contract_address, abi=abi)
