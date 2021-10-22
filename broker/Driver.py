@@ -458,7 +458,7 @@ def run_driver():
             block_read_from = current_block_num
 
 
-def main():
+def _main():
     lock = None
     try:
         is_driver_on(process_count=1, is_print=False)
@@ -489,11 +489,7 @@ def main():
                 open(env.DRIVER_LOCKFILE, "w").close()
 
 
-if __name__ == "__main__":
-    from broker.helper import helper
-
-    args = helper()
-
+def main():
     try:
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
         msg = " provider session starts "
@@ -501,7 +497,7 @@ if __name__ == "__main__":
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement
             # to launch ipdb
-            main()
+            _main()
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

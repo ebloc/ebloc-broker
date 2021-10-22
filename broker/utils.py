@@ -28,9 +28,10 @@ from broker._utils._getch import _Getch
 from broker._utils.tools import WHERE, QuietExit, log, print_tb, run
 from broker.config import env, logging
 
+ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 zero_bytes32 = "0x00"
 yes = set(["yes", "y", "ye", "ys", "yy"])
 no = set(["no", "n", "nn"])
