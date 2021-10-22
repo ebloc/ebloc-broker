@@ -103,7 +103,7 @@ def ok():
     return br("  [green]OK[/green]  ")
 
 
-def _log(text, color, is_bold, flush, filename, end, is_log=True):
+def _log(text, color, is_bold, flush, filename, end, is_write=True):
     text, _color, _len, is_arrow, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_arrow:
         _text = f"[bold]{text}[/bold]"
@@ -128,7 +128,7 @@ def _log(text, color, is_bold, flush, filename, end, is_log=True):
             _text = text[_len:]
 
         _text = text[_len:]
-        if is_log:
+        if is_write:
             if is_arrow:
                 ll.console[filename].print(
                     f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
@@ -156,11 +156,11 @@ def _log(text, color, is_bold, flush, filename, end, is_log=True):
             else:
                 print(text_write, flush=flush)
 
-        if is_log:
+        if is_write:
             ll.console[filename].print(text_write, end=end, soft_wrap=True)
 
     if end is None:
-        if is_log:
+        if is_write:
             ll.console[filename].print("")
 
         if color and is_arrow:
@@ -169,7 +169,7 @@ def _log(text, color, is_bold, flush, filename, end, is_log=True):
     # f.close()
 
 
-def log(text="", color=None, filename=None, end=None, flush=False, is_log=True):
+def log(text="", color=None, filename=None, end=None, flush=False, is_write=True):
     """Print for own settings.
 
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
@@ -182,7 +182,7 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_log=True):
     if "-=-=" in str(text):
         is_bold = True
 
-    if is_log:
+    if is_write:
         if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
             filename = thread_log_files[threading.current_thread().name]
         elif not filename:
@@ -200,10 +200,10 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_log=True):
 
     if isinstance(text, dict):
         pprint(text)
-        if is_log:
+        if is_write:
             ll.console[filename].print(text)
     else:
-        _log(text, color, is_bold, flush, filename, end, is_log)
+        _log(text, color, is_bold, flush, filename, end, is_write)
 
 
 ll = Log()

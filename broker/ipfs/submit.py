@@ -143,7 +143,7 @@ if __name__ == "__main__":
             processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             pprint(vars(processed_logs[0].args))
             try:
-                log(f"{ok()} job_index={processed_logs[0].args['index']}")
+                log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
                 for target in targets:
                     _remove(target)
             except IndexError:

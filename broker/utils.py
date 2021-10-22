@@ -25,12 +25,13 @@ import broker._utils.tools as tools
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils._getch import _Getch
-from broker._utils.tools import WHERE, QuietExit, log, print_tb, run
+from broker._utils.tools import WHERE, QuietExit, log, print_tb, run, is_process_on
 from broker.config import env, logging
 
+ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 zero_bytes32 = "0x00"
 yes = set(["yes", "y", "ye", "ys", "yy"])
 no = set(["no", "n", "nn"])
@@ -303,8 +304,7 @@ def byte_to_mb(size_in_bytes: float) -> int:
 
 def generate_md5sum(path: str) -> str:
     if os.path.isdir(path):
-        script = env.BASH_SCRIPTS_PATH / "generate_md5sum_for_folder.sh"
-        return run(["bash", script, path])
+        return run([env.BASH_SCRIPTS_PATH / "generate_md5sum_for_folder.sh", path])
 
     if os.path.isfile(path):
         tar_hash = check_output(["md5sum", path]).decode("utf-8").strip()
@@ -460,51 +460,6 @@ def is_ipfs_on(is_print=True) -> bool:
     return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0, is_print=is_print)
 
 
-def is_process_on(process_name, name, process_count=0, port=None, is_print=True) -> bool:
-    """Check wheather the process runs on the background.
-
-    https://stackoverflow.com/a/6482230/2402577
-    """
-    p1 = Popen(["ps", "aux"], stdout=PIPE)
-    p2 = Popen(["grep", "-v", "flycheck_"], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()  # type: ignore
-    p3 = Popen(["grep", "-v", "grep"], stdin=p2.stdout, stdout=PIPE)
-    p2.stdout.close()  # type: ignore
-    p4 = Popen(["grep", "-E", process_name], stdin=p3.stdout, stdout=PIPE)
-    p3.stdout.close()  # type: ignore
-    output = p4.communicate()[0].decode("utf-8").strip().splitlines()
-    pids = []
-    for line in output:
-        fields = line.strip().split()
-        # Array indices start at 0 unlike awk, 1 indice points the port number
-        pids.append(fields[1])
-
-    if len(pids) > process_count:
-        if port:
-            # How to find processes based on port and kill them all?
-            # https://stackoverflow.com/a/5043907/2402577
-            p1 = Popen(["lsof", "-i", f"tcp:{port}"], stdout=PIPE)
-            p2 = Popen(["grep", "LISTEN"], stdin=p1.stdout, stdout=PIPE)
-            out = p2.communicate()[0].decode("utf-8").strip()
-            running_pid = out.strip().split()[1]
-            if running_pid in pids:
-                if is_print:
-                    log(f"==> {name} is already running on the background, its pid={running_pid}")
-
-                return True
-        else:
-            if is_print:
-                log(f"==> {name} is already running on the background")
-
-            return True
-
-    name = name.replace("\\", "").replace(">", "").replace("<", "")
-    if is_print:
-        print_tb(f"Warning: [green]{name}[/green] is not running on the background. {WHERE(1)}")
-
-    return False
-
-
 def is_geth_account_locked(address) -> bool:
     if isinstance(address, int):
         # if given input is an account_id
@@ -625,7 +580,7 @@ def terminate(msg="", is_traceback=True, lock=None):
 
     try:
         # kill all the dependent processes and exit
-        run(["bash", env.BASH_SCRIPTS_PATH / "killall.sh"])
+        run([env.BASH_SCRIPTS_PATH / "killall.sh"])
     except:
         sys.exit(1)
 

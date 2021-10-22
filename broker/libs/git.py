@@ -74,7 +74,7 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
         try:
             repo.git.config("core.fileMode", "false")  # git config core.fileMode false
             # first ignore deleted files not to be added into git
-            run(["bash", env.BASH_SCRIPTS_PATH / "git_ignore_deleted.sh"])
+            run([env.BASH_SCRIPTS_PATH / "git_ignore_deleted.sh"])
             head_commit_id = repo.rev_parse("HEAD")
             patch_name = f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
         except:

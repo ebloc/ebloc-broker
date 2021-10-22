@@ -93,7 +93,7 @@ def is_on() -> bool:
             logging.error(f"E: {output}")
         try:
             logging.info("Starting Slurm... \n")
-            run(["sudo", "bash", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
+            run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
             return True
         except:
             return False
