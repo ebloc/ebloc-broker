@@ -9,7 +9,6 @@ from contextlib import suppress
 from pathlib import Path
 from time import sleep
 from typing import Dict, List
-
 import broker.cfg as cfg
 import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
@@ -121,7 +120,7 @@ class Gdrive(Common):
     def upload(self, key, is_job_key) -> bool:
         """Upload result into gdrive.
 
-        :param key: key of the gdrive file
+        :param key: key of the shared gdrive file
         :returns: True if upload is successful
         """
         try:
