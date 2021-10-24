@@ -279,14 +279,12 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 
     https://stackoverflow.com/a/6482230/2402577
     """
-    p1 = Popen(["ps", "aux"], stdout=PIPE)
-    p2 = Popen(["grep", "-v", "flycheck_"], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()  # type: ignore
-    p3 = Popen(["grep", "-v", "grep"], stdin=p2.stdout, stdout=PIPE)
+    p1 = Popen(["ps", "auxww"], stdout=PIPE)
+    p2 = Popen(["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"], stdin=p1.stdout, stdout=PIPE)
+    p1.stdout.close()  # noqa
+    p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()  # type: ignore
-    p4 = Popen(["grep", "-E", process_name], stdin=p3.stdout, stdout=PIPE)
-    p3.stdout.close()  # type: ignore
-    output = p4.communicate()[0].decode("utf-8").strip().splitlines()
+    output = p3.communicate()[0].decode("utf-8").strip().splitlines()
     pids = []
     for line in output:
         fields = line.strip().split()
