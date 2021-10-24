@@ -8,7 +8,7 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 from time import sleep
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import broker.cfg as cfg
 import broker.libs.eudat as eudat
@@ -121,7 +121,7 @@ class Gdrive(Common):
     def upload(self, key, is_job_key) -> bool:
         """Upload result into gdrive.
 
-        :param key: key of the gdrive file
+        :param key: key of the shared gdrive file
         :returns: True if upload is successful
         """
         try:
@@ -258,7 +258,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                         (f"{share_token}:").encode("utf-8")
                     ).decode("utf-8")
                 except:
-                    logging.error(f"E: share_id cannot detected from key: {self.job_key}")
+                    logging.error(f"E: share_id cannot detected from key={self.job_key}")
                     raise
 
         for key in share_ids:
@@ -266,7 +266,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             encoded_value = self.encoded_share_tokens[key]
             logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
-    def get_cloud_storage_class(self, _id):
+    def get_cloud_storage_class(self, _id) -> Any[Ipfs, IpfsGPG, Eudat, Gdrive]:
         """Return cloud storage used for the id of the data."""
         if self.cloud_storage_ids[_id] == StorageID.IPFS:
             return Ipfs
@@ -277,7 +277,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.cloud_storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 
-        return None
+        raise Exception(f"E: Corresponding storage_id_class={self.cloud_storage_ids[_id]} does not exist")
 
     def set_source_code_hashes_to_process(self):
         for idx, source_code_hash in enumerate(self.source_code_hashes):
@@ -378,8 +378,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         for idx, name in enumerate(self.source_code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
             source = self.results_data_folder / name
-            storage_class = self.get_cloud_storage_class(idx)
             try:
+                storage_class = self.get_cloud_storage_class(idx)
                 self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
             except Exception as e:
                 print_tb(e)
