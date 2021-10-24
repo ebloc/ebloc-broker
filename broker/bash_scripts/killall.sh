@@ -10,10 +10,10 @@
 
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
-kill -9 $(ps aux | grep -E "python.*[e]ndCode"      | awk '{print $2}') > /dev/null 2>&1
-kill -9 $(ps aux | grep -E "python.*[s]tartCode"    | awk '{print $2}') > /dev/null 2>&1
-kill -9 $(ps aux | grep -E "python.*[d]riverCancel" | awk '{print $2}') > /dev/null 2>&1
-kill -9 $(ps aux | grep -E "python.*[D]river.py"    | awk '{print $2}') > /dev/null 2>&1
+kill -9 $(ps auxww | grep -E "python.*[e]ndCode"      | awk '{print $2}') > /dev/null 2>&1
+kill -9 $(ps auxww | grep -E "python.*[s]tartCode"    | awk '{print $2}') > /dev/null 2>&1
+kill -9 $(ps auxww | grep -E "python.*[d]riverCancel" | awk '{print $2}') > /dev/null 2>&1
+kill -9 $(ps auxww | grep -E "python.*[D]river.py"    | awk '{print $2}') > /dev/null 2>&1
 
 killall python3 2> /dev/null
 

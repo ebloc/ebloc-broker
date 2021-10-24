@@ -60,7 +60,7 @@ class Log:
         """Check color for substring."""
         text = str(text)
         _len = None
-        is_arrow = False
+        is_bullet = False
         is_r = ""
         if text and text[0] == "\r":
             is_r = "\r"
@@ -71,17 +71,17 @@ class Log:
 
         if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
             _len = 3
-            is_arrow = True
+            is_bullet = True
             if not color:
                 color = "blue"
         elif text[:8] in ["Warning:", "warning:"]:
             _len = 8
-            is_arrow = True
+            is_bullet = True
             if not color:
                 color = "yellow"
         elif text[:2] == "E:":
             _len = 2
-            is_arrow = True
+            is_bullet = True
             if not color:
                 color = "red"
         elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN"]:
@@ -92,7 +92,7 @@ class Log:
             if not color:
                 color = "red"
 
-        return text, color, _len, is_arrow, is_r, is_bold
+        return text, color, _len, is_bullet, is_r, is_bold
 
 
 def br(text):
@@ -104,8 +104,8 @@ def ok():
 
 
 def _log(text, color, is_bold, flush, filename, end, is_write=True):
-    text, _color, _len, is_arrow, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
-    if is_bold and not is_arrow:
+    text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
+    if is_bold and not is_bullet:
         _text = f"[bold]{text}[/bold]"
     else:
         _text = text
@@ -113,7 +113,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
     if color:
         if ll.IS_PRINT:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
-                if is_arrow:
+                if is_bullet:
                     print(
                         f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{text[_len:]}[/{color}]",
                         end=end,
@@ -129,7 +129,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
 
         _text = text[_len:]
         if is_write:
-            if is_arrow:
+            if is_bullet:
                 ll.console[filename].print(
                     f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
                     end=end,
@@ -142,7 +142,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
                     ll.console[filename].print(_text, end="", soft_wrap=True)
     else:
         text_write = ""
-        if is_arrow:
+        if is_bullet:
             text_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
         else:
             if _color:
@@ -163,7 +163,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
         if is_write:
             ll.console[filename].print("")
 
-        if color and is_arrow:
+        if color and is_bullet:
             print()
 
     # f.close()

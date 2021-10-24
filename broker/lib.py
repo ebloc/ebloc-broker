@@ -12,19 +12,9 @@ from web3._utils.threads import Timeout
 
 import broker.cfg as cfg
 import broker.config as config
-from broker._utils.tools import log, print_tb, print_trace
+from broker._utils.tools import is_process_on, log, print_tb, print_trace
 from broker.config import env, logging
-from broker.utils import (
-    Link,
-    StorageID,
-    _remove,
-    byte_to_mb,
-    is_process_on,
-    mkdir,
-    popen_communicate,
-    question_yes_no,
-    run,
-)
+from broker.utils import Link, StorageID, _remove, byte_to_mb, mkdir, popen_communicate, question_yes_no, run
 
 
 def enum(*sequential, **named):

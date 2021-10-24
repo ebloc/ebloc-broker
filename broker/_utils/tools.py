@@ -11,7 +11,7 @@ from datetime import datetime
 from decimal import Decimal
 
 # from os import listdir
-from subprocess import CalledProcessError, check_output
+from subprocess import PIPE, CalledProcessError, Popen, check_output
 
 from pytz import timezone, utc
 
@@ -245,9 +245,9 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 def print_trace(cmd, back=1, exc="", returncode=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"{WHERE(back)} Error failed command:", "bold red")
-        log(f"$ {_cmd}", "bold yellow")
-        log(exc, "bold red")
+        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "red")
+        log(f"[yellow]Command: [/yellow][white]{_cmd}", "bold")
+        log(exc.rstrip(), "bold red")
     else:
         if returncode:
             return_code_msg = f"returned non-zero exit status {returncode}"
@@ -269,9 +269,52 @@ def run(cmd, my_env=None) -> str:
             return check_output(cmd, env=my_env).decode("utf-8").strip()
     except CalledProcessError as e:
         print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
-        raise Exception(f"CalledProcessError: {cmd[0]}") from None
+        raise Exception from None
     except Exception as e:
         raise e
+
+
+def is_process_on(process_name, name, process_count=0, port=None, is_print=True) -> bool:
+    """Check wheather the process runs on the background.
+
+    https://stackoverflow.com/a/6482230/2402577
+    """
+    p1 = Popen(["ps", "auxww"], stdout=PIPE)
+    p2 = Popen(["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"], stdin=p1.stdout, stdout=PIPE)
+    p1.stdout.close()  # noqa
+    p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
+    p2.stdout.close()  # type: ignore
+    output = p3.communicate()[0].decode("utf-8").strip().splitlines()
+    pids = []
+    for line in output:
+        fields = line.strip().split()
+        # Array indices start at 0 unlike awk, 1 indice points the port number
+        pids.append(fields[1])
+
+    if len(pids) > process_count:
+        if port:
+            # How to find processes based on port and kill them all?
+            # https://stackoverflow.com/a/5043907/2402577
+            p1 = Popen(["lsof", "-i", f"tcp:{port}"], stdout=PIPE)
+            p2 = Popen(["grep", "LISTEN"], stdin=p1.stdout, stdout=PIPE)
+            out = p2.communicate()[0].decode("utf-8").strip()
+            running_pid = out.strip().split()[1]
+            if running_pid in pids:
+                if is_print:
+                    log(f"==> {name} is already running on the background, its pid={running_pid}")
+
+                return True
+        else:
+            if is_print:
+                log(f"==> {name} is already running on the background")
+
+            return True
+
+    name = name.replace("\\", "").replace(">", "").replace("<", "")
+    if is_print:
+        print_tb(f"Warning: [green]{name}[/green] is not running on the background. {WHERE(1)}")
+
+    return False
 
 
 def handler(signum, frame):
@@ -284,6 +327,5 @@ def handler(signum, frame):
         # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
         pass
     else:
-        print_tb(f"Signal handler called with signum={signum} frame={frame}")
-        # breakpoint()  # DEBUG
+        print_tb(f"E: Signal handler called with signum={signum} frame={frame}")
         raise HandlerException("Forever is over, end of time")
