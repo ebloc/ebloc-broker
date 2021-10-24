@@ -150,7 +150,7 @@ class Driver:
         if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
             raise Exception("Warning: Job is already captured and in process or completed.")
 
-    def check_requested_job(self, job_key, index) -> None:
+    def check_requested_job(self, key, index) -> None:
         """Check status of the job."""
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
             raise Exception("E: Requested job does not exist")
@@ -158,7 +158,7 @@ class Driver:
         if not self.Ebb.does_requester_exist(self.requester_id):
             raise Exception("E: job owner is not registered")
 
-        self.is_job_received(job_key, index)
+        self.is_job_received(key, index)
 
     def analyze_data(self, key, requester):
         """Obtain information related to source-code data."""
@@ -207,6 +207,8 @@ class Driver:
 
     def process_logged_job(self, idx):
         """Process logged job one by one."""
+        self.received_block = []
+        self.storage_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
         log("-" * COLUMN_SIZE + f" {idx} " + "-" * COLUMN_SIZE, "bold blue")
@@ -222,15 +224,13 @@ class Driver:
             f"log_index={self.logged_job['logIndex']} \n"
             f"provider={self.logged_job.args['provider']} \n"
             f"received={self.logged_job.args['received']}",
-            "yellow",
+            "bold yellow",
         )
-        self.received_block = []
-        self.storage_duration = []
         if self.logged_job["blockNumber"] > self.latest_block_number:
             self.latest_block_number = self.logged_job["blockNumber"]
 
         try:
-            run(["bash", env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
+            run([env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
         except Exception:
             logging.error("E: Filename contains an invalid character")
             return

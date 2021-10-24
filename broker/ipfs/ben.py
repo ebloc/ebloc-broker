@@ -8,6 +8,7 @@ from web3.logs import DISCARD
 
 import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
+from broker._utils._log import ok
 from broker.config import env, logging
 from broker.lib import check_linked_data, get_tx_status, run
 from broker.libs import ipfs
@@ -150,8 +151,7 @@ if __name__ == "__main__":
             processed_logs = Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             pprint(vars(processed_logs[0].args))
             try:
-                log(f"job_index={processed_logs[0].args['index']}")
-                log("SUCCESS")
+                log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
                 for target in targets:
                     _remove(target)
             except IndexError:

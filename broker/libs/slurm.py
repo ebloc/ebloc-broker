@@ -3,10 +3,10 @@
 import time
 
 import broker.config as config
-from broker._utils.tools import QuietExit
+from broker._utils.tools import QuietExit, is_process_on
 from broker.config import env, logging
 from broker.lib import run
-from broker.utils import BashCommandsException, is_process_on, log, popen_communicate, print_tb
+from broker.utils import BashCommandsException, log, popen_communicate, print_tb
 
 
 def add_user_to_slurm(user):
@@ -93,7 +93,7 @@ def is_on() -> bool:
             logging.error(f"E: {output}")
         try:
             logging.info("Starting Slurm... \n")
-            run(["sudo", "bash", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
+            run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
             return True
         except:
             return False

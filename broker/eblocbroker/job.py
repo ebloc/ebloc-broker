@@ -74,7 +74,7 @@ class Job:
             try:
                 processed_logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
                 pprint(vars(processed_logs[0].args))
-                log(f"==> job_index={processed_logs[0].args['index']}")
+                log(f"==> job_index={processed_logs[0].args['index']}", "bold")
             except IndexError:
                 log("E: Transaction is reverted")
             return True
