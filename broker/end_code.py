@@ -108,13 +108,11 @@ class Eudat(Common):
         _data_transfer_out = calculate_folder_size(self.patch_file)
         logging.info(f"{br(source_code_hash)}.data_transfer_out={_data_transfer_out} MB")
         self.data_transfer_out += _data_transfer_out
-        output = eudat.upload_results(
+        return eudat.upload_results(
             self.encoded_share_tokens[source_code_hash],
             self.patch_upload_name,
             self.patch_folder,
-            5,
-        )
-        return output
+            attempt_count=5)
 
 
 class Gdrive(Common):

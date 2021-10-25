@@ -67,9 +67,6 @@ class State:
     inv_code = {value: key for key, value in code.items()}
 
 
-state = State()
-
-
 def _connect_web3():
     if not cfg.w3:
         from broker.imports import connect_into_web3
@@ -166,6 +163,7 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
 
             if count == 0:
                 log("Trying again...\nAttempts: ", "green", end="")
+
             log(f"{count}  ", "green", end="")
             time.sleep(0.25)
 
@@ -215,8 +213,8 @@ def echo_grep_awk(str_data, grep_str, column):
     return p3.communicate()[0].decode("utf-8").strip()
 
 
-def eblocbroker_function_call(func, attempt):
-    for _attempt in range(attempt):
+def eblocbroker_function_call(func, attempt_count):
+    for _attempt in range(attempt_count):
         try:
             return func()
         except Exception as e:
@@ -261,7 +259,6 @@ def is_dir(path) -> bool:
     if not os.path.isdir(path):
         logging.error(f"{path} folder does not exist")
         return False
-
     return True
 
 
@@ -294,3 +291,5 @@ def run_storage_process(storage_class):
 
 # def preexec_function():
 #     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+state = State()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from contextlib import suppress
 import os
 from pathlib import Path
 
@@ -171,10 +172,8 @@ def test_1():
 
     cfg["setup"]["a"] = 200
     cfg["setup2"]["c"] = 1
-    try:
+    with suppress(Exception):
         del cfg["setup1"]
-    except:
-        pass
 
     cfg["setup1"]["b"] = 999
     cfg_again = Yaml(config_file)

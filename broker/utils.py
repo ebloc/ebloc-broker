@@ -413,11 +413,11 @@ def is_dir_empty(path) -> bool:
 def remove_empty_files_and_folders(dir_path) -> None:
     """Remove empty files and folders if exists."""
     for root, dirnames, files in os.walk(dir_path, topdown=False):
-        for f in files:
-            full_name = os.path.join(root, f)
-            if os.path.getsize(full_name) == 0:
+        for _file in files:
+            full_path = os.path.join(root, _file)
+            if os.path.getsize(full_path) == 0:
                 with suppress(Exception):
-                    os.remove(full_name)
+                    os.remove(full_path)
 
         for dirname in dirnames:
             full_path = os.path.realpath(os.path.join(root, dirname))
@@ -451,7 +451,7 @@ def _remove(path: str, is_warning=True):
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
         if e.errno != errno.ENOENT:
-            print_tb()
+            print_tb(e)
             raise e
 
 
@@ -665,7 +665,7 @@ def compress_folder(folder_path, is_exclude_git=False):
             stdin=p2.stdout,
             stdout=PIPE,
             env={"PIGZ": "-n"},
-        )  # alternative: "GZIP"
+        )  # __  "GZIP" alternative
         p2.stdout.close()
         p3.communicate()
         tar_hash = generate_md5sum(tar_base)
