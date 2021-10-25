@@ -51,7 +51,6 @@ from broker.utils import (
 
 # from threading import Thread
 # from multiprocessing import Process
-
 args = helper()
 
 if vars(args)["latest"]:
@@ -110,16 +109,14 @@ def _tools(block_continue):
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
-                log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n" "file for decrypting using ipfs.")
+                log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n" "file for decrypting using ipfs")
                 raise QuietExit
 
             _run_ipfs_daemon()
     except QuietExit as e:
         raise e
     except Exception as e:
-        if type(e).__name__ != "QuietExit":
-            print_tb(e)
-
+        print_tb(e)
         raise Terminate(str(e))
 
 
@@ -429,7 +426,7 @@ def run_driver():
                 log(f"==> Since Driver start provider_gained_wei ={value}")
 
         current_block_num = Ebb.get_block_number()
-        log(f"==> waiting new job to come since block number={block_read_from}")
+        log(f"==> waiting new job to come since block_number={block_read_from}")
         log(f"==> current_block={current_block_num} | sync_from={block_read_from}")
         # log(f"block_read_from={block_read_from}")
         flag = True
