@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from contextlib import suppress
 from pathlib import Path
 
 from filelock import FileLock
@@ -171,10 +172,8 @@ def test_1():
 
     cfg["setup"]["a"] = 200
     cfg["setup2"]["c"] = 1
-    try:
+    with suppress(Exception):
         del cfg["setup1"]
-    except:
-        pass
 
     cfg["setup1"]["b"] = 999
     cfg_again = Yaml(config_file)

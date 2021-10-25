@@ -5,9 +5,8 @@ import io
 import os
 import time
 from pathlib import Path
-
+from contextlib import suppress
 import git
-
 import broker.cfg as cfg
 from broker.config import env, logging
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, run
@@ -99,17 +98,15 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     return patch_upload_name, patch_file, is_file_empty
 
 
-def add_all(repo=None):
+def add_all(repo=None) -> bool:
     if not repo:
         repo = git.Repo(".", search_parent_directories=True)
 
-    try:
+    with suppress(Exception):
         # subprocess.run(["chmod", "-R", "755", "."])
         # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
         # required for files to be access on the cluster side due to permission issues
         run(["sudo", "chmod", "-R", "775", "."])  # changes folder's hash
-    except:
-        pass
 
     try:
         repo.git.add(A=True)  # git add -A .
