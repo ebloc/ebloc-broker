@@ -77,10 +77,10 @@ def _tools(block_continue):
     """Check whether the required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_continue, pid)
     if not is_internet_on():
-        terminate("Network connection is down. Please try again")
+        raise Terminate("Network connection is down. Please try again")
 
     if not check_ubuntu_packages():
-        terminate()
+        raise Terminate()
 
     try:
         if not env.IS_BLOXBERG:
@@ -92,7 +92,7 @@ def _tools(block_continue):
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_EUDAT_USE:
             if not env.OC_USER:
-                terminate(f"OC_USER is not set in {env.LOG_PATH}/.env")
+                raise Terminate(f"OC_USER is not set in {env.LOG_PATH}/.env")
             else:
                 eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
 
@@ -103,7 +103,7 @@ def _tools(block_continue):
             output, gdrive_email = gdrive.check_user(_email)
             if not output:
                 msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
-                terminate(msg)
+                raise Terminate(msg)
             else:
                 log(f"==> provider_email=[magenta]{_email}")
 
@@ -326,13 +326,13 @@ def run_driver():
         raise Terminate(e)
 
     if not env.PROVIDER_ID:
-        terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
+        raise Terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
-        terminate(f"Please run: {env.BASH_SCRIPTS_PATH}/folder_setup.sh")
+        raise Terminate(f"Please run: {env.BASH_SCRIPTS_PATH}/folder_setup.sh")
 
     if not env.SLURMUSER:
-        terminate(f"SLURMUSER is not set in {env.LOG_PATH}/.env")
+        raise Terminate(f"SLURMUSER is not set in {env.LOG_PATH}/.env")
 
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
@@ -355,7 +355,7 @@ def run_driver():
             if deployed_block_number:
                 env.config["block_continue"] = deployed_block_number
             else:
-                terminate(f"deployed_block_number={deployed_block_number} is invalid")
+                raise Terminate(f"deployed_block_number={deployed_block_number} is invalid")
 
     _tools(block_number_saved)
     try:
@@ -389,7 +389,7 @@ def run_driver():
         )
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-        terminate(f"Provider's ({env.PROVIDER_ID}) ORCID is not verified")
+        raise Terminate(f"Provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
     block_read_from = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
@@ -401,7 +401,7 @@ def run_driver():
         wait_until_idle_core_available()
         time.sleep(0.2)
         if not str(block_read_from).isdigit():
-            terminate(f"block_read_from={block_read_from}")
+            raise Terminate(f"block_read_from={block_read_from}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         try:
@@ -410,7 +410,8 @@ def run_driver():
                 raise
         except:
             raise Terminate(
-                "SLURM is not running on the background. " "Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
+                "Warning: SLURM is not running on the background. Please run:\n"
+                "sudo ./broker/bash_scripts/run_slurm.sh"
             )
 
         # Gets real info under the header after the first line
@@ -423,7 +424,7 @@ def run_driver():
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:
-                log(f"==> Since Driver start provider_gained_wei ={value}")
+                log(f"==> Since Driver start provider_gained_wei={value}")
 
         current_block_num = Ebb.get_block_number()
         log(f"==> waiting new job to come since block_number={block_read_from}")
@@ -492,8 +493,7 @@ def main():
         msg = " provider session starts "
         log(date_now + " " + "=" * (COLUMN_SIZE - 16) + msg + "=" * (COLUMN_SIZE - 5), "bold cyan")
         with launch_ipdb_on_exception():
-            # if an exception is raised, enclose code with the `with` statement
-            # to launch ipdb
+            # if an exception is raised, enclose code with the `with` statement to launch ipdb
             _main()
     except KeyboardInterrupt:
         sys.exit(1)

@@ -131,8 +131,8 @@ class Ipfs:
                 *_, encrypt_target = compress_folder(target)
                 encrypted_file_target = f"{encrypt_target}.gpg"
                 is_delete = True
-            except:
-                print_tb()
+            except Exception as e:
+                print_tb(e)
                 sys.exit(1)
         else:
             if not os.path.isfile(target):

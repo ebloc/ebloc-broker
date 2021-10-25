@@ -193,7 +193,6 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return round(change / abs(initial) * 100, decimal)
         except:
             return 0.0
-
     else:
         try:
             change = final - initial
@@ -213,7 +212,6 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     change = "{0:.8f}".format(float(change))
     # percent = round((float(change)) / abs(float(initial)) * 100, 8)
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
-
     if percent == -0.0:
         change = 0.0
         color = "white"
@@ -251,9 +249,9 @@ def print_trace(cmd, back=1, exc="", returncode=""):
     else:
         if returncode:
             return_code_msg = f"returned non-zero exit status {returncode}"
-            log(f"==> Failed shell command {br(return_code_msg)}:\n[yellow]{_cmd}\n")
+            log(f"E: Failed shell command {br(return_code_msg)}:\n[yellow]{_cmd}")
         else:
-            log(f"==> Failed shell command:\n[yellow]{_cmd}\n")
+            log(f"E: Failed shell command:\n[yellow]{_cmd}")
 
 
 def run(cmd, my_env=None) -> str:

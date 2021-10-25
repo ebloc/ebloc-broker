@@ -55,12 +55,10 @@ class ENV:
     """ENV class that contains configuration values."""
 
     def __init__(self) -> None:
-        try:
+        with suppress(Exception):
             from brownie import accounts
 
             accounts.load("alpy.json", "alper")
-        except:
-            pass
 
         self.HOME: Path = Path.home()
         env_file = self.HOME / ".ebloc-broker" / ".env"
