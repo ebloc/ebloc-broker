@@ -8,12 +8,11 @@ import subprocess
 # import gshell
 from pprint import pprint
 
-from config import env, logging
-from lib import echo_grep_awk, run, subprocess_call
-from utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, mkdir, print_tb, read_json
-
 from broker._utils._log import br
 from broker._utils.tools import QuietExit
+from broker.config import env, logging
+from broker.lib import echo_grep_awk, run, subprocess_call
+from broker.utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, mkdir, print_tb, read_json
 
 # TODO: gdrive list --query "sharedWithMe"
 
@@ -34,10 +33,10 @@ def submit(provider, _from, job):
 
     try:
         provider_info = job.Ebb.get_provider_info(provider)
-        print(f"Provider's available_core_num={provider_info['available_core_num']}")
-        print(f"Provider's price_core_min={provider_info['price_core_min']}")
-    except:
-        raise QuietExit
+        log(f"==> Provider's available_core_num={provider_info['available_core_num']}")
+        log(f"==> Provider's price_core_min={provider_info['price_core_min']}")
+    except Exception as e:
+        raise QuietExit from e
 
     provider = job.Ebb.w3.toChecksumAddress(provider)
     provider_to_share = provider_info["email"]
@@ -63,9 +62,9 @@ def submit(provider, _from, job):
                 _dump_dict_to_file(data_files_json_path, job.keys)
                 data_json = read_json(data_files_json_path)
 
-            log("meta_data------------------------------------------------------------------", "blue")
-            pprint(str(data_json))
-            log("---------------------------------------------------------------------------", "blue")
+            log("meta_data-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "blue")
+            log(data_json)
+            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "blue")
 
         folder_to_share = job.folders_to_share[0]
         job_key, tar_hash, job.tar_hashes = share_folder(
@@ -85,6 +84,7 @@ def share_folder(folder_to_share, provider_to_share, base_dir, job_key_flag=Fals
     cmd = ["gdrive", "share", key, "--role", "writer", "--type", "user", "--email", provider_to_share]
     if not is_already_uploaded:
         log(f"share_output={run(cmd)}")
+
     return key, tar_hash, tar_hashes
 
 

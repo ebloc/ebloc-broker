@@ -2,7 +2,6 @@
 
 import time
 
-import broker.config as config
 from broker._utils.tools import QuietExit, is_process_on
 from broker.config import env, logging
 from broker.lib import run
@@ -72,19 +71,17 @@ def pending_jobs_check():
 
 
 def is_on() -> bool:
-    """Checks whether Slurm runs on the background or not, if not runs slurm."""
+    """Check whether Slurm runs on the background or not, if not runs slurm."""
     log("## Checking Slurm... ", end="")
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
             log("failed", "bold red")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
-            log(
+            raise QuietExit(
                 f"E: [green]{process_name}[/green] is not running in the background. Please run:\n"
-                f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh",
-                "bold red",
+                f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
-            raise QuietExit
 
     output = run(["sinfo"])
     if "PARTITION" not in output:
@@ -109,8 +106,8 @@ def get_elapsed_time(slurm_job_id) -> int:
     try:
         cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
         elapsed_time = run(cmd)
-    except:
-        raise QuietExit
+    except Exception as e:
+        raise QuietExit from e
 
     logging.info(f"elapsed_time={elapsed_time}")
     elapsed_time = elapsed_time.split(":")
