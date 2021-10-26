@@ -187,14 +187,14 @@ def remove_files(filename) -> bool:
         for f in glob.glob(filename):
             try:
                 _remove(f)
-            except:
-                print_tb()
+            except Exception as e:
+                print_tb(str(e))
                 return False
     else:
         try:
             _remove(filename)
-        except:
-            print_tb()
+        except Exception as e:
+            print_tb(str(e))
             return False
 
     return True
