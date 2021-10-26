@@ -7,7 +7,7 @@ cd ~/.brownie/accounts/
 for f in *; do
     if [[ $f != *.json ]]; then
         # Convert "." into "_"
-        rename -vf "s/\./_/g" "$f"
+        rename -v -f "s/\./_/g" "$f"
     fi
 done
 

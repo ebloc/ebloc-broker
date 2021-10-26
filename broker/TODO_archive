@@ -31,3 +31,20 @@ CLOSED: [2021-10-03 Sun 11:07]
 :ARCHIVE_CATEGORY: TODO
 :ARCHIVE_TODO: DONE
 :END:
+
+* DONE //bloxberg
+CLOSED: [2021-10-27 Wed 16:42]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-10-27 Wed 16:42
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+- https://bloxberg.org
+- https://core.bloxberg.org
+
+#+BEGIN_SRC python
+link = "https://core.bloxberg.org"
+w3 = Web3(Web3.HTTPProvider(link))
+#+END_SRC

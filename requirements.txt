@@ -4,6 +4,7 @@ aiodns==2.0.0
 aiohttp==3.7.4.post0
 apipkg==1.5
 appdirs==1.4.4
+APScheduler==3.8.0
 aspy.refactor-imports==2.1.1
 astroid==2.5
 asttokens==2.0.4
@@ -22,6 +23,7 @@ bitarray==1.2.2
 black==21.9b0
 bleach==4.0.0
 blinker==1.4
+bpyutils==0.2.0
 bs4==0.0.1
 BTrees==4.7.2
 cached-property==1.5.1
@@ -176,6 +178,7 @@ pi==0.1.2
 pickleshare==0.7.5
 Pillow==8.0.1
 pipenv==2020.11.15
+pipupgrade==1.10.1
 pkginfo==1.5.0.1
 platformdirs==2.4.0
 pluggy==1.0.0
