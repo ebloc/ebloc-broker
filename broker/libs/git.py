@@ -166,21 +166,18 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
         base_name = path_leaf(patch_file)
         log(f"==> {base_name}")
         # folder_name = base_name_split[2]
-        try:
-            # base_name_split = base_name.split("_")
-            # git_hash = base_name_split[1]
-            # run(["git", "checkout", git_hash])
-            # run(["git", "reset", "--hard"])
-            # run(["git", "clean", "-f"])
-            # echo "\n" >> patch_file.txt seems like fixing it
-            with open(patch_file, "a") as myfile:
-                myfile.write("\n")
+        #
+        # base_name_split = base_name.split("_")
+        # git_hash = base_name_split[1]
+        # run(["git", "checkout", git_hash])
+        # run(["git", "reset", "--hard"])
+        # run(["git", "clean", "-f"])
+        # echo "\n" >> patch_file.txt seems like fixing it
+        with open(patch_file, "a") as myfile:
+            myfile.write("\n")
 
-            # output = repo.git.apply("--reject", "--whitespace=fix", patch_file)
-            run(["git", "apply", "--reject", "--whitespace=fix", "--verbose", patch_file])
-            return True
-        except:
-            return False
+        # output = repo.git.apply("--reject", "--whitespace=fix", patch_file)
+        run(["git", "apply", "--reject", "--whitespace=fix", "--verbose", patch_file])
 
 
 def is_repo(folders):
