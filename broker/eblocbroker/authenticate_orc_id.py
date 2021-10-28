@@ -39,9 +39,9 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         try:
             tx = self._authenticate_orc_id(_from, address, str.encode(orc_id))
             return self.tx_id(tx)
-        except Exception:
-            logging.error(print_tb)
-            raise
+        except Exception as e:
+            print_tb(e)
+            raise e
     else:
         logging.warning(f"Address: {address} that has orc_id: {orc_id} is already authenticated")
         return None

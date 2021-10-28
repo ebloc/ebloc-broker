@@ -12,7 +12,6 @@ class BaseMongoClass:
     def __init__(self, mc, collection) -> None:
         self.mc = mc
         self.collection = collection
-        self.share_id_coll = self.mc["ebloc_broker"]["shareID"]
 
     def delete_all(self):
         return self.collection.delete_many({}).acknowledged
@@ -46,6 +45,9 @@ class BaseMongoClass:
 
 class MongoBroker(BaseMongoClass):
     """Create MongoBroker class."""
+    def __init__(self, mc, collection) -> None:
+        super().__init__(mc, collection)
+        self.share_id_coll = self.mc["ebloc_broker"]["shareID"]
 
     def add_item(self, job_key, index, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info):
         """Adding job_key info along with its cache_duration into mongoDB."""

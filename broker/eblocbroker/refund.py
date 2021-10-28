@@ -8,7 +8,7 @@ from web3.logs import DISCARD
 
 import broker.cfg as cfg
 from broker._utils._log import log
-from broker._utils.tools import print_tb
+from broker._utils.tools import QuietExit, print_tb
 from broker.config import env, logging  # noqa: F401
 from broker.lib import get_tx_status
 
@@ -27,9 +27,9 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
     try:
         tx = self._refund(provider, job_key, index, job_id, cores, elapsed_time)
         return self.tx_id(tx)
-    except Exception:
-        print_tb()
-        raise
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
 if __name__ == "__main__":
@@ -60,9 +60,10 @@ if __name__ == "__main__":
             try:
                 logging.info(f"refunded_wei={processed_logs[0].args['refundedWei']}")
                 log("SUCCESS", "green")
-            except Exception:
-                logging.error("E: Transaction is reverted")
+            except Exception as e:
+                logging.error(f"E: Transaction is reverted. {e}")
+    except QuietExit:
+        pass
     except Exception as e:
-        if type(e).__name__ != "QuietExit":
-            print_tb()
+        print_tb(e)
         sys.exit(1)

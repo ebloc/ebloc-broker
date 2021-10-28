@@ -1,15 +1,6 @@
 ﻿                                                                 *outline*
 * TASKS
 ** TODO Firejail: https://firejail.wordpress.com
-** TODO //bloxberg
-- https://bloxberg.org
-- https://core.bloxberg.org
-
-#+BEGIN_SRC python
-link = "https://core.bloxberg.org"
-w3 = Web3(Web3.HTTPProvider(link))
-#+END_SRC
-
 ** TODO Later do, when cache time is completed:
    oc.decline_remote_share(int(<share_id>)) to cancel shared folder at
    end_code or after some time later
@@ -25,17 +16,6 @@ w3 = Web3(Web3.HTTPProvider(link))
 ** TODO DAWNNech
   [link](https://dawn.cs.stanford.edu/benchmark/
 ** TODO gdown setup
-
-#+BEGIN_SRC python
-def foo():
-    try:
-	if True:
-	    # https://drive.google.com/file/d/0B_JzYt91KzCzSm1JaWhrQUk5RmVjWG9YYVhBQXpueFV4ZUJB/edit
-	    ~/junk/alper.mp
-    except:
-        gdrive
-#+END_SRC
-
 link: https://github.com/wkentar
 ** TODO Some code should go into utils.py
    Some functıons are public that should carried into `utils.py`

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils.tools import print_tb
 import os
 import sys
 
@@ -11,7 +12,8 @@ def add_to_ipfs(results_folder):
     try:
         result_ipfs_hash = cfg.ipfs.add(results_folder)
         print(result_ipfs_hash)
-    except Exception:
+    except Exception as e:
+        print_tb(e)
         sys.exit()
 
     if os.path.isdir(results_folder):

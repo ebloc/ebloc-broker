@@ -4,8 +4,7 @@ import os
 import random
 import subprocess
 from os.path import expanduser
-
-from utils import generate_md5sum
+from broker.utils import generate_md5sum
 
 home = expanduser("~")
 

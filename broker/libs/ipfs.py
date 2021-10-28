@@ -6,7 +6,7 @@ import re
 import signal
 import sys
 import time
-from subprocess import DEVNULL, CalledProcessError, check_output
+from subprocess import DEVNULL, check_output
 
 import ipfshttpclient
 from cid import make_cid
@@ -63,7 +63,8 @@ class Ipfs:
         try:
             check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=DEVNULL)
             return True
-        except Exception:
+        except Exception as e:
+            log(f"E: {e}")
             return False
 
     def pin(self, ipfs_hash: str) -> bool:

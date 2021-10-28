@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-from config import env
-from imports import connect
-from pymongo import MongoClient
-from utils import StorageID, _remove, run
-
 import broker.cfg as cfg
+from pymongo import MongoClient
+from broker.config import env
+from broker.utils import StorageID, _remove, run
 
+
+Ebb = cfg.Ebb
 cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
-eBlocBroker, w3 = connect()
-Ebb = cfg.Ebb
 
 """find_all"""
 block_number = Ebb.get_block_number()

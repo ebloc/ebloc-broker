@@ -5,12 +5,10 @@ import time
 from os.path import expanduser
 from random import randint
 
-import eblocbroker.Contract as Contract
-from imports import connect_into_web3
-from utils import is_transaction_passed, sleep_timer
+import broker.eblocbroker.Contract as Contract
+from broker.utils import is_transaction_passed, sleep_timer
 
 home = expanduser("~")
-w3 = connect_into_web3()
 Ebb = Contract.eblocbroker
 
 
@@ -32,7 +30,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
     with open(path + "/" + readTest) as test:
         for idx, line in enumerate(test):
             if idx != 0:
-                log("\n------------------------------------------", path)
+                log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", path)
 
             eudatFlag = 0
             if testType == "eudat-nasa":
@@ -72,11 +70,11 @@ def testFunc(path, readTest, testType, providerID, cacheType):
                 coreMinuteGas = 360  # 6 hours for nasEUDAT simulation test.
 
             account_id = randint(0, 9)
-            output = w3.personal.unlockAccount(
-                w3.eth.accounts[account_id], accountPassword
+            output = Ebb.w3.personal.unlockAccount(
+                Eb.w3.eth.accounts[account_id], accountPassword
             )  # unlocks the selected account in case if unlocks over time
             log(
-                "AccountID:" + str(account_id) + " (" + w3.eth.accounts[account_id] + ") is unlocked=>" + str(output),
+                "AccountID:" + str(account_id) + " (" + Ebb.w3.eth.accounts[account_id] + ") is unlocked=>" + str(output),
                 path,
             )
             log(
@@ -158,9 +156,9 @@ def testFunc(path, readTest, testType, providerID, cacheType):
             txFile.write(output[0] + " " + str(account_id) + "\n")
             txFile.close()
             sleep_timer(int(sleepTime))
-            receipt = w3.eth.getTransactionReceipt(tx_hash)
+            receipt = Ebb.w3.eth.getTransactionReceipt(tx_hash)
             if receipt:
-                output = is_transaction_passed(w3, tx_hash)
+                output = is_transaction_passed(tx_hash)
                 log(f"tx status:{output}", path)
             else:
                 log("tx is not deployed yet", path)

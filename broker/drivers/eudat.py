@@ -130,9 +130,8 @@ class EudatClass(Storage):
                 else:
                     logging.error(f"E: Something is wrong; oc could not retrieve the file [attempt:{attempt}]")
                     return False
-            except Exception:
-                logging.error("Failed to download eudat file")
-                print_tb()
+            except Exception as e:
+                print_tb(f"Failed to download eudat file. {e}")
                 log("Waiting for 5 seconds...")
                 time.sleep(5)
             else:
@@ -172,8 +171,8 @@ class EudatClass(Storage):
                 folder_token_flag[folder_name] = True
                 logging.info(f"index={br(idx)}: /{folder_name}/{folder_name}.tar.gz => {size} bytes")
                 # accept_flag += 1  # TODO: delete it seems unneeded
-            except Exception:
-                logging.warning("E: Shared folder did not accepted yet")
+            except Exception as e:
+                logging.warning(f"E: Shared folder did not accepted yet. {e}")
                 folder_token_flag[folder_name] = False
 
         try:  # TODO: pass on template'i ekle
@@ -187,9 +186,9 @@ class EudatClass(Storage):
         for attempt in range(config.RECONNECT_ATTEMPTS):
             try:
                 share_list = config.oc.list_open_remote_share()
-            except Exception:
-                logging.error(f"E: Failed to list_open_remote_share eudat [attempt={attempt}]")
-                print_tb()
+            except Exception as e:
+                log(f"E: Failed to list_open_remote_share eudat [attempt={attempt}]")
+                print_tb(e)
                 time.sleep(1)
             else:
                 break
@@ -249,8 +248,8 @@ class EudatClass(Storage):
             self._run()
             # self.thread_log_setup()
             return True
-        except Exception:
-            print_tb(f"{self.job_key}_{self.index}")
+        except Exception as e:
+            print_tb(f"{self.job_key}_{self.index} {e}")
             sys.exit(1)
         finally:
             time.sleep(0.25)
@@ -268,9 +267,9 @@ class EudatClass(Storage):
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
             self.eudat_get_share_token(provider_info["f_id"])
-        except:
-            logging.error("E: could not get the share id")
-            print_tb()
+        except Exception as e:
+            log("E: could not get the share id")
+            print_tb(e)
             return False
 
         if self.data_transfer_in_to_download > self.data_transfer_in_requested:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.utils import print_tb
 import sys
 
 import broker.cfg as cfg
@@ -16,5 +17,5 @@ if __name__ == "__main__":
     try:
         tx_hash = Ebb.withdraw(account)
         receipt = get_tx_status(tx_hash)
-    except:
-        sys.exit(1)
+    except Exception as e:
+        print_tb(e)

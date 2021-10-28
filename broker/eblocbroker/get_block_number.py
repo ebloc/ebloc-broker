@@ -23,7 +23,5 @@ if __name__ == "__main__":
             env.config["block_continue"] = output
         else:
             log(f"block_number={output}")
-    except Exception:
-        print_tb()
-
-    sys.exit(0)
+    except Exception as e:
+        print_tb(e)

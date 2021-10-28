@@ -4,6 +4,7 @@ import os
 import sys
 
 import broker.libs.git as git
+from broker._utils.tools import print_tb
 from broker.utils import extract_gzip, log
 
 
@@ -26,7 +27,10 @@ def main():
     else:
         log(f"==> {diff_file_name} exists")
 
-    git.apply_patch(base_dir, patch_file.replace(".gz", ""), is_gpg=False)
+    try:
+        git.apply_patch(base_dir, patch_file.replace(".gz", ""), is_gpg=False)
+    except Exception as e:
+        print_tb(e)
 
 
 if __name__ == "__main__":

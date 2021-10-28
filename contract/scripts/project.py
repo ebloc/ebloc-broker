@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import pytest  # noqa: F401
-from tests import test_eblocbroker  # noqa: F401
-from utils import ZERO_ADDRESS
-
-import contract.scripts.lib  # noqa: F401
 from brownie import *  # noqa
+import pytest  # noqa: F401
+from contract.tests import test_eblocbroker  # noqa: F401
+from broker.utils import ZERO_ADDRESS
+import contract.scripts.lib  # noqa: F401
 
 
 def project():
@@ -20,4 +19,4 @@ def project():
         tx = history[-1]  # noqa
         print(tx.revert_msg)
 
-    print("END")
+    print("FIN")
