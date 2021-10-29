@@ -315,6 +315,16 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
     return False
 
 
+def mkdir(path) -> None:
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
+def mkdirs(paths) -> None:
+    for path in paths:
+        mkdir(path)
+
+
 def handler(signum, frame):
     """Register an handler for the timeout.
 

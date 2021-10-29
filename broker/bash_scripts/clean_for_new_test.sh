@@ -23,8 +23,8 @@ mkdir -p $base/cache
 find $HOME/.ebloc-broker/*/* -mindepth 1 ! \
      -regex '^./private\(/.*\)?' -delete 2> /dev/null
 
+rm -rf $HOME/.ebloc-broker/transactions/*
 rm -f $HOME/.ebloc-broker/end_code_output/*
-rm -f $HOME/.ebloc-broker/transactions/*
 rm -f $HOME/.ebloc-broker/drivers_output/*
 rm -f $HOME/.ebloc-broker/my-app.pid
 

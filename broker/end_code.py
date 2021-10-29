@@ -16,7 +16,7 @@ import broker.libs.gdrive as gdrive
 import broker.libs.git as git
 import broker.libs.slurm as slurm
 from broker._utils._log import br, log
-from broker._utils.tools import QuietExit
+from broker._utils.tools import QuietExit, mkdir
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
 from broker.lib import (
@@ -38,7 +38,6 @@ from broker.utils import (
     bytes32_to_ipfs,
     eth_address_to_md5,
     is_dir_empty,
-    mkdir,
     print_tb,
     read_file,
     read_json,
@@ -125,7 +124,7 @@ class Gdrive(Common):
                 try:
                     key = meta_data[key]
                 except:
-                    logging.error(f"{WHERE(1)} E: {key} does not have a match in meta_data.json")
+                    logging.error(f"E: {key} does not have a match in meta_data.json {WHERE(1)}")
                     return False
 
             cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
@@ -258,7 +257,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             encoded_value = self.encoded_share_tokens[key]
             logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
-    def get_cloud_storage_class(self, _id) -> Any[Ipfs, IpfsGPG, Eudat, Gdrive]:
+    def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""
         if self.cloud_storage_ids[_id] == StorageID.IPFS:
             return Ipfs
@@ -269,7 +268,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.cloud_storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 
-        raise Exception(f"E: Corresponding storage_id_class={self.cloud_storage_ids[_id]} does not exist")
+        raise Exception(f"Corresponding storage_id_class={self.cloud_storage_ids[_id]} does not exist")
 
     def set_source_code_hashes_to_process(self):
         for idx, source_code_hash in enumerate(self.source_code_hashes):
@@ -315,7 +314,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        log(f"==> log_file={env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{self.index}.txt")
+        log_file = env.LOG_PATH / "transactions" / env.PROVIDER_ID / f"{self.job_key}_{self.index}.txt"
+        log(f"==> log_file={log_file}")
         log(f"==> process_payment {self.job_key} {self.index}")
         return tx_hash
 

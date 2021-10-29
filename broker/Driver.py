@@ -129,6 +129,7 @@ class Driver:
         self.block_number: int = 0
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
+        self.job_info = None
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
@@ -159,9 +160,6 @@ class Driver:
     def analyze_data(self, key, requester):
         """Obtain information related to source-code data."""
         for idx, source_code_hash_byte in enumerate(self.logged_job.args["sourceCodeHash"]):
-            if idx > 0:
-                log()
-
             if self.cloud_storage_id[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
                 source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
                 if idx == 0 and key != source_code_hash:
@@ -194,9 +192,9 @@ class Driver:
                         # requested for cache for the first time
                         self.is_already_cached[source_code_hash] = False
 
-            log(f"==> source_code_hash{br(idx)}={source_code_hash}")
+            log(f" * source_code_hash{br(idx)}={source_code_hash}")
             log(f"==> received_block={ds.received_block}")
-            log(f"==> storage_duration(block_number)={ds.storage_duration}")
+            log(f"==> storage_duration{br(self.block_number)}={ds.storage_duration}")
             log(f"==> cloud_storage_id{br(idx)}={StorageID(self.cloud_storage_id[idx]).name}")
             log(f"==> cached_type={CacheType(self.logged_job.args['cacheType'][idx]).name}")
             log(f"==> is_already_cached={self.is_already_cached[source_code_hash]}")
@@ -234,7 +232,8 @@ class Driver:
         try:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
-                partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number), attempt=10
+                partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number),
+                attempt_count=10,
             )
             self.requester_id = self.job_info["job_owner"]
             self.job_infos.append(self.job_info)
@@ -496,4 +495,5 @@ def main():
         sys.exit(1)
 
 
-log("Please run: [magenta]./run.py")
+if __name__ == "__main__":
+    log("Please run: [magenta]./run.py")

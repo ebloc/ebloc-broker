@@ -27,9 +27,13 @@ class BaseMongoClass:
             self.find_all()
             raise Exception("E: Coudn't find key")
 
-    def find_all(self):
+    def find_all(self, sort_str=""):
         """Find all records."""
-        cursor = self.collection.find({})
+        if not sort_str:
+            cursor = self.collection.find({})
+        else:
+            cursor = self.collection.find({}).sort(sort_str)
+
         for document in cursor:
             log(document)
             # log(document)
@@ -72,8 +76,8 @@ class MongoBroker(BaseMongoClass):
             raise Exception(f"E: Coudn't find id. key={key} index={index}")
 
     def delete_one(self, job_key, index: int):
-        res = self.collection.delete_one({"job_key": job_key, "index": index})
-        return res.acknowledged
+        output = self.collection.delete_one({"job_key": job_key, "index": index})
+        return output.acknowledged
 
     def get_job_status_running_tx(self, key: str, index: int):
         """Get tx hash of the job.status as running."""

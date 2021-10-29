@@ -19,7 +19,7 @@ def run():
     log("==> Running ipfs daemon")
     with daemon.DaemonContext():
         cmd = ["/usr/local/bin/ipfs", "daemon"]  # , "--mount"]
-        _env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": f"{Path.home()}/.ipfs"}
+        _env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": Path.home().joinpath(".ipfs")}
         p, output, error = popen_communicate(cmd=cmd, stdout_file=config.env.IPFS_LOG, _env=_env)
 
     # ipfs mounted at: /ipfs
