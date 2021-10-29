@@ -40,8 +40,9 @@ if __name__ == "__main__":
     Ebb = cfg.Ebb
     try:
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
-    except:
+    except Exception as e:
         log("E: Run IPFS daemon to detect your ipfs_id")
+        print_tb(e)
         sys.exit(1)
 
     if len(sys.argv) == 6:

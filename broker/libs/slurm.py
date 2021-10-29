@@ -33,7 +33,7 @@ def remove_user(user):
         raise BashCommandsException(p.returncode, output, error_msg, str(cmd))
 
 
-def get_idle_cores(is_print_flag=True):
+def get_idle_cores(is_print=True):
     """Return idle cores.
 
     https://stackoverflow.com/a/50095154/2402577
@@ -44,7 +44,7 @@ def get_idle_cores(is_print_flag=True):
         idle_cores = core_info[1]
         other_cores = core_info[2]
         total_cores = core_info[3]
-        if is_print_flag:
+        if is_print:
             log(
                 f"allocated_cores={allocated_cores} |"
                 f"idle_cores={idle_cores} |"
@@ -61,12 +61,12 @@ def get_idle_cores(is_print_flag=True):
 def pending_jobs_check():
     """If there is no idle cores, waits for idle cores to be emerged."""
     idle_cores = get_idle_cores()
-    is_print_flag = 0
+    is_print = 0
     while idle_cores is None:
-        if not is_print_flag:
+        if not is_print:
             logging.info("Waiting running jobs to be completed...")
-            is_print_flag = 1
-        idle_cores = get_idle_cores(is_print_flag=False)
+            is_print = 1
+        idle_cores = get_idle_cores(is_print=False)
         time.sleep(10)
 
 

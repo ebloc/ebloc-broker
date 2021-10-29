@@ -6,8 +6,7 @@ import subprocess
 from os.path import expanduser
 from subprocess import CalledProcessError
 
-from imports import generate_md5sum
-from utils import compress_folder
+from broker.utils import compress_folder, generate_md5sum
 
 home = expanduser("~")
 path = os.getcwd()

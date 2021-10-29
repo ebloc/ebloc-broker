@@ -2,9 +2,9 @@
 
 import sys
 
-from config import env
-from libs import ipfs
-from utils import print_tb
+from broker.config import env
+from broker.libs import ipfs
+from broker.utils import print_tb
 
 if __name__ == "__main__":
     base_dir = f"{env.EBLOCPATH}/base"

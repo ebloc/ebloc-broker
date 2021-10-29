@@ -5,25 +5,21 @@ import subprocess
 import sys
 import time
 
-import libs.eudat as eudat
 import owncloud
-from imports import connect
-from utils import generate_md5sum, print_tb
 
 import broker.cfg as cfg
+import broker.libs.eudat as eudat
+from broker.imports import connect
+from broker.utils import generate_md5sum, print_tb
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
 oc.login("059ab6ba-4030-48bb-b81b-12115f531296", "qPzE2-An4Dz-zdLeK-7Cx4w-iKJm9")
 Ebb = cfg.Ebb
 
 
-def eudatSubmitJob(tar_hash=None):
-    eBlocBroker, w3 = connect()
-    if eBlocBroker is None or w3 is None:
-        return False, "web3 is not connected"
-
+def eudat_submit_job(tar_hash=None):
     provider = "0x4e4a0750350796164D8DefC442a712B7557BF282"
-    providerAddress = w3.toChecksumAddress(provider)
+    providerAddress = Ebb.w3.toChecksumAddress(provider)
 
     (
         blockReadFrom,
@@ -57,30 +53,27 @@ def eudatSubmitJob(tar_hash=None):
     print("\nSubmitting Job...")
     coreNum = 1
     coreMinuteGas = 5
-    jobDescription = "science"
     cloudStorageID = 1
     account_id = 0
-
     try:
         tx_hash = Ebb.submit_job(
             str(provider),
             str(tar_hash),
             coreNum,
             coreMinuteGas,
-            str(jobDescription),
             cloudStorageID,
             str(tar_hash),
             account_id,
         )
         print(tx_hash)
-    except:
-        print_tb()
+    except Exception as e:
+        print_tb(e)
         sys.exit(1)
 
 
 if __name__ == " __main__":
     if len(sys.argv) == 2:
         print("Provided hash=" + sys.argv[1])  # tar_hash = '656e8fca04058356f180ae4ff26c33a8'
-        success, output = eudatSubmitJob(sys.argv[1])
+        eudat_submit_job(sys.argv[1])
     else:
-        success, output = eudatSubmitJob()
+        eudat_submit_job()

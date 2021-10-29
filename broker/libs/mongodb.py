@@ -5,25 +5,19 @@ import argparse
 from pymongo import MongoClient
 from rich.pretty import pprint
 
-from broker._utils._log import log
+try:
+    from broker._utils._log import log
+except:
+    from ebloc_broker.broker._utils._log import log
 
 
 class BaseMongoClass:
     def __init__(self, mc, collection) -> None:
         self.mc = mc
         self.collection = collection
-        self.share_id_coll = self.mc["ebloc_broker"]["shareID"]
 
     def delete_all(self):
         return self.collection.delete_many({}).acknowledged
-
-    def find_id(self, key: str, index: int):
-        output = self.collection.find_one({"job_key": key, "index": index})
-        if bool(output):
-            return output
-        else:
-            self.find_all()
-            raise Exception(f"E: Coudn't find id. key={key} index={index}")
 
     def find_key(self, key, _key):
         output = self.collection.find_one({key: _key})
@@ -47,6 +41,10 @@ class BaseMongoClass:
 class MongoBroker(BaseMongoClass):
     """Create MongoBroker class."""
 
+    def __init__(self, mc, collection) -> None:
+        super().__init__(mc, collection)
+        self.share_id_coll = self.mc["ebloc_broker"]["shareID"]
+
     def add_item(self, job_key, index, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info):
         """Adding job_key info along with its cache_duration into mongoDB."""
         item = {
@@ -64,6 +62,14 @@ class MongoBroker(BaseMongoClass):
         }
         res = self.collection.replace_one({"job_key": job_key, "index": index}, item, True)
         return res.acknowledged
+
+    def find_id(self, key: str, index: int):
+        output = self.collection.find_one({"job_key": key, "index": index})
+        if bool(output):
+            return output
+        else:
+            self.find_all()
+            raise Exception(f"E: Coudn't find id. key={key} index={index}")
 
     def delete_one(self, job_key, index: int):
         res = self.collection.delete_one({"job_key": job_key, "index": index})

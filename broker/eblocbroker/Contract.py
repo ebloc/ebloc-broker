@@ -189,8 +189,8 @@ class Contract:
     def is_address(self, addr):
         try:
             return self.w3.isAddress(addr)
-        except:
-            print_tb()
+        except Exception as e:
+            print_tb(e)
             raise Web3NotConnected()
 
     def _get_contract_fname(self) -> Path:

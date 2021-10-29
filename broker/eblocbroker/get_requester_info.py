@@ -34,9 +34,9 @@ def get_requester_info(self, requester):
             "is_orcid_verified": self.is_orcid_verified(requester),
         }
         return requester_info
-    except Exception:
-        print_tb()
-        raise
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
 if __name__ == "__main__":

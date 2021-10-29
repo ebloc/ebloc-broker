@@ -65,7 +65,7 @@ COLUMN_SIZE = int(104 / 2 - 12)
 def wait_until_idle_core_available():
     """Wait until an idle core become available."""
     while True:
-        idle_cores = slurm.get_idle_cores(is_print_flag=False)
+        idle_cores = slurm.get_idle_cores(is_print=False)
         # log(f"idle_cores={idle_cores}", "blue")
         if idle_cores == 0:
             sleep_timer(sleep_duration=60)
@@ -93,8 +93,8 @@ def _tools(block_continue):
         if env.IS_EUDAT_USE:
             if not env.OC_USER:
                 raise Terminate(f"OC_USER is not set in {env.LOG_PATH}/.env")
-            else:
-                eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
+
+            eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
 
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
@@ -104,8 +104,8 @@ def _tools(block_continue):
             if not output:
                 msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
                 raise Terminate(msg)
-            else:
-                log(f"==> provider_email=[magenta]{_email}")
+
+            log(f"==> provider_email=[magenta]{_email}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
@@ -125,7 +125,6 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-
         self.Ebb: "Contract.Contract" = cfg.Ebb
         self.block_number: int = 0
         self.latest_block_number: int = 0
@@ -228,7 +227,7 @@ class Driver:
 
         try:
             run([env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
-        except Exception:
+        except:
             logging.error("E: Filename contains an invalid character")
             return
 
@@ -250,12 +249,10 @@ class Driver:
 
         self.analyze_data(job_key, self.job_info["job_owner"])
         for job in range(1, len(self.job_info["core"])):
-            try:
+            with suppress(Exception):
                 self.job_infos.append(  # if workflow is given then add jobs into list
                     self.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.block_number)
                 )
-            except Exception:
-                pass
 
         self.check_requested_job(job_key, index)
 
@@ -360,7 +357,7 @@ def run_driver():
     _tools(block_number_saved)
     try:
         Ebb.is_contract_exists()
-    except Exception:
+    except:
         terminate(
             "Contract address does not exist on the blockchain, is the blockchain sync?\n"
             f"block_number={Ebb.get_block_number()}",
@@ -497,6 +494,6 @@ def main():
             _main()
     except KeyboardInterrupt:
         sys.exit(1)
-    except Exception as e:
-        print_tb(e)
-        sys.exit(1)
+
+
+log("Please run: [magenta]./run.py")

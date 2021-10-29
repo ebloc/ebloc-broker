@@ -4,26 +4,23 @@ import sys
 
 import broker.cfg as cfg
 from broker._utils.tools import print_tb
-from broker.config import logging
 from broker.lib import get_tx_status
 
 
 def update_provider_prices(self, available_core, commitment_blk, prices):
     """Update provider prices."""
     if not available_core:
-        logging.error("Please enter positive value for the available core number")
-        raise
+        raise Exception("Please enter positive value for the available core number")
 
     if not commitment_blk:
-        logging.error("Please enter positive value for the commitment block number")
-        raise
+        raise Exception("Please enter positive value for the commitment block number")
 
     try:
         tx = self._update_provider_prices(available_core, commitment_blk, prices)
         return self.tx_id(tx)
-    except Exception:
-        logging.error(print_tb)
-        raise
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
 if __name__ == "__main__":
@@ -35,10 +32,9 @@ if __name__ == "__main__":
     price_storage = 1
     price_cache = 1
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
-
     try:
         tx_hash = Ebb.update_provider_prices(available_core, commitment_blk, prices)
         receipt = get_tx_status(tx_hash)
-    except:
-        print_tb()
+    except Exception as e:
+        print_tb(e)
         sys.exit(1)

@@ -113,9 +113,9 @@ def _login(fname, user, password_path):
             pickle.dump(config.oc, f)
             f.close()
             log(ok())
-        except Exception:
+        except Exception as e:
+            print_tb(e)
             _traceback = traceback.format_exc()
-            print_tb()
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
                 logging.warning(f"Sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
@@ -156,10 +156,10 @@ def share_single_folder(folder_name, f_id) -> bool:
             log(f"{ok()} Sharing")
             return True
 
-        log("==> Requester folder is already shared")
+        log("## Requester folder is already shared")
         return True
-    except Exception:
-        print_tb()
+    except Exception as e:
+        print_tb(e)
         return False
 
 
@@ -232,12 +232,12 @@ def submit(provider, account_id, folders_to_share):
             logs = config.ebb.events.LogJob().processReceipt(receipt, errors=DISCARD)
             pprint(vars(logs[0].args))
             try:
-                log(f"job's index={logs[0].args['index']}")
+                log(f"==> job's index={logs[0].args['index']}")
                 log("SUCCESS")
             except IndexError:
                 log("E: Transaction is reverted")
-    except Exception:
-        print_tb()
+    except Exception as e:
+        print_tb(e)
         sys.exit(1)
 
 

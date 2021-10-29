@@ -166,7 +166,7 @@ def sleep_timer(sleep_duration):
 def remove_ansi_escape_sequence(string):
     """Remove ansi escape sequence.
 
-    https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+    __ https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
     """
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", string)
@@ -184,9 +184,9 @@ def _try(func):
     """
     try:
         return func()
-    except Exception:
-        print_tb()
-        raise
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
 def is_bin_installed(bin_name):
@@ -327,7 +327,7 @@ def mkdirs(paths) -> None:
 def getcwd():
     try:
         cwd = os.path.dirnamegetcwd(os.path.abspath(__file__))
-    except Exception:
+    except:
         cwd = os.getcwd()
     return cwd
 
@@ -346,9 +346,9 @@ def read_file(fname):
     try:
         file = open(fname, "r")
         return file.read().rstrip()
-    except IOError:
-        print_tb()
-        raise
+    except IOError as e:
+        print_tb(e)
+        raise e
     else:
         # else clause instead of finally for things that
         # only happen if there was no exception
@@ -382,14 +382,11 @@ def is_gzip_file_empty(filename):
     p2 = Popen(["awk", "NR==2 {print $2}"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
     size = p2.communicate()[0].decode("utf-8").strip()
-    try:
-        if not bool(int(size)):
-            log(f"==> Created gzip file ({filename}) is empty.")
-            return True
-        else:
-            return False
-    except Exception:
+    if bool(int(size)):
         return False
+
+    log(f"==> Created gzip file ({filename}) is empty.")
+    return True
 
 
 def getsize(filename):
@@ -476,8 +473,7 @@ def is_geth_account_locked(address) -> bool:
 def is_driver_on(process_count=0, is_print=True):
     """Check whether driver runs on the background."""
     if is_process_on("python.*[D]river", "Driver", process_count, is_print=is_print):
-        log("Track output using:")
-        log(f"tail -f {tools.DRIVER_LOG}", "blue")
+        log(f"## Track output using:\n[blue]tail -f {tools.DRIVER_LOG}")
         raise QuietExit
 
 
@@ -486,7 +482,6 @@ def is_ganache_on(port) -> bool:
     return is_process_on("node.*[g]anache-cli", "Ganache CLI", process_count=0, port=port)
 
 
-# TODO: doo
 def is_geth_on():
     """Check whether geth runs on the background."""
     process_name = f"geth@{env.RPC_PORT}"
@@ -611,16 +606,18 @@ def json_pretty(json_data):
 def is_program_valid(cmd):
     try:
         run(cmd)
-    except Exception:
-        terminate(f"Please install {cmd[0]} or check its path", is_traceback=False)
+    except Exception as e:
+        terminate(f"Please install {cmd[0]} or check its path.\n{e}", is_traceback=False)
 
 
 def compress_folder(folder_path, is_exclude_git=False):
     """Compress folder using tar.
 
+    :param folder_path: should be full path
+
     Note that to get fully reproducible tarballs, you should also impose the
     sort order used by tar
-    @arg: folder_path should be full path
+
     __ https://unix.stackexchange.com/a/438330/198423  == (Eac time tar produces different files)
     __ https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
