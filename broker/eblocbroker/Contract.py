@@ -10,7 +10,7 @@ from pymongo import MongoClient
 from web3.types import TxReceipt
 
 import broker.cfg as cfg
-from broker._utils._log import br
+from broker._utils._log import ok
 from broker._utils.tools import log, merge_two_dicts, print_tb
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
@@ -105,7 +105,7 @@ class Contract:
 
     def _wait_for_transaction_receipt(self, tx_hash) -> TxReceipt:
         """Wait till the tx is deployed."""
-        poll_latency = 1
+        poll_latency = 2
         log(f"## Waiting for the transaction({tx_hash}) receipt... ", end="")
         while True:
             try:
@@ -120,7 +120,7 @@ class Contract:
             log(f"{poll_latency} ", end="")
             time.sleep(poll_latency)
 
-        log(br("  OK  "))
+        log(ok())
         return tx_receipt
 
     def tx_id(self, tx):

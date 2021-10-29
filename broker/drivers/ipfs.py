@@ -7,10 +7,11 @@ import time
 import broker.cfg as cfg
 import broker.libs.git as git
 from broker._utils._log import br
+from broker._utils.tools import mkdir
 from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_folder_size
-from broker.utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log, mkdir
+from broker.utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log
 
 
 class IpfsClass(Storage):

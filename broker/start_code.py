@@ -7,8 +7,9 @@ from subprocess import PIPE, Popen, check_output
 
 import broker._utils._log as _log
 import broker.cfg as cfg
-from broker._utils._log import br, log
+from broker._utils._log import br, log, ok
 from broker.config import env
+from broker.utils import popen_communicate
 
 
 def start_call(job_key, index, slurm_job_id):
@@ -20,10 +21,15 @@ def start_call(job_key, index, slurm_job_id):
     cmd2: date -d 2018-09-09T18:38:29 +"%s"
     """
     Ebb = cfg.Ebb
-    _log.ll.LOG_FILENAME = f"{env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{index}.txt"
+    _log.ll.LOG_FILENAME = env.LOG_PATH / "transactions" / env.PROVIDER_ID / f"{job_key}_{index}.txt"
     _log.ll.IS_PRINT = False
     log(f"~/ebloc-broker/broker/start_code.py {job_key} {index} {slurm_job_id}")
     job_id = 0  # TODO: should be obtained from the user's input
+    _, _, error = popen_communicate(["scontrol", "show", "job", slurm_job_id])
+    if "slurm_load_jobs error: Invalid job id specified" in str(error):
+        log(f"E: {error}")
+        sys.exit(1)
+
     p1 = Popen(["scontrol", "show", "job", slurm_job_id], stdout=PIPE)
     p2 = Popen(["grep", "StartTime"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
@@ -50,7 +56,7 @@ def start_call(job_key, index, slurm_job_id):
             log("## mongo.set_job_status_running_tx ", end="")
             output = Ebb.mongo_broker.set_job_status_running_tx(str(job_key), int(index), str(tx_hash))
             if output:
-                log(br("SUCCESS"))
+                log(ok())
             else:
                 log(br("FAILED"))
 

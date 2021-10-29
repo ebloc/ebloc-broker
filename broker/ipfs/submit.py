@@ -9,7 +9,7 @@ from web3.logs import DISCARD
 import broker.cfg as cfg
 from broker._utils._log import ok
 from broker._utils.tools import QuietExit
-from broker.config import env, logging
+from broker.config import env
 from broker.eblocbroker.job import Job
 from broker.lib import check_linked_data, get_tx_status, run
 from broker.utils import (
@@ -45,15 +45,14 @@ if __name__ == "__main__":
     # provider = w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")  # netlab
     # requester_addr = w3.toChecksumAddress("0x12ba09353d5c8af8cb362d6ff1d782c1e195b571")
     provider = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
-    requester_addr = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
+    requester = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
     try:
-        job.check_account_status(requester_addr)
+        job.check_account_status(requester)
     except Exception as e:
         print_tb(e)
         raise e
 
     log("==> Attemptting to submit a job")
-    requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
     # Ebb.account_id_to_address(address=requester_addr)
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
@@ -88,7 +87,7 @@ if __name__ == "__main__":
             provider_info = Ebb.get_provider_info(provider)
         except Exception as e:
             print_tb(e)
-            sys.exit()
+            sys.exit(1)
 
         target = folder
         if job.storage_ids[idx] == StorageID.IPFS_GPG:
@@ -137,7 +136,7 @@ if __name__ == "__main__":
     job.data_prices_set_block_numbers = [0, 0]
     job_price, cost = job.cost(provider, requester)
     try:
-        tx_hash = Ebb.submit_job(provider, key, 105, job, requester=requester_addr)
+        tx_hash = Ebb.submit_job(provider, key, job_price, job, requester=requester)
         tx_receipt = get_tx_status(tx_hash)
         if tx_receipt["status"] == 1:
             processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
@@ -147,7 +146,7 @@ if __name__ == "__main__":
                 for target in targets:
                     _remove(target)
             except IndexError:
-                logging.error("E: Tx is reverted")
+                log(f"E: Tx({tx_hash}) is reverted")
     except QuietExit:
         pass
     except Exception as e:

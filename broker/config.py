@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 import broker._utils._log as _log
 import broker._utils.colored_traceback as colored_traceback
 import broker.cfg as cfg
-from broker._utils.tools import QuietExit
+from broker._utils.tools import QuietExit, mkdir
 from broker._utils.yaml import Yaml
 
 logging.getLogger("filelock").setLevel(logging.ERROR)
@@ -117,10 +117,9 @@ class ENV:
 
         if cfg.w3:
             self.PROVIDER_ID = cfg.w3.toChecksumAddress(_env["PROVIDER_ID"])
+            mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID)
 
-        if not os.path.isdir("/tmp/run"):
-            os.makedirs("/tmp/run")  # mkdir
-
+        mkdir("/tmp/run")
         self.DRIVER_LOCKFILE = "/tmp/run/driver_popen.pid"
         self.DRIVER_DAEMON_LOCK = "/tmp/run/driverdaemon.pid"
 
@@ -190,6 +189,5 @@ _eBlocBroker = None
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
 IS_THREADING_ENABLED = False
-
 with suppress(Exception):
     env: ENV = ENV()

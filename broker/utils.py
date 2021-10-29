@@ -189,11 +189,11 @@ def _try(func):
         raise e
 
 
-def is_bin_installed(bin_name):
+def is_bin_installed(name):
     try:
-        run(["which", bin_name])
+        run(["which", name])
     except Exception as e:
-        log(f"E: [green]{bin_name}[/green] is not instelled")
+        log(f"E: [green]{name}[/green] is not instelled")
         raise e
 
 
@@ -206,6 +206,7 @@ def run_with_output(cmd):
             ret += line.strip()
             print(line, end="")  # process line here
         return ret
+
     if p.returncode != 0:
         raise CalledProcessError(p.returncode, p.args)
 
@@ -225,7 +226,7 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
             p = Popen(cmd, stdout=outfile, stderr=PIPE, env=_env, universal_newlines=False)
             output, error = p.communicate()
             p.wait()
-            return p, output, error
+            return p, output, error.rstrip()
 
     output, error = p.communicate()
     if output:
@@ -234,7 +235,7 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
     if error:
         error = error.decode("utf-8")
 
-    return p, output, error
+    return p, output, error.rstrip()
 
 
 def is_transaction_valid(tx_hash) -> bool:
@@ -312,16 +313,6 @@ def generate_md5sum(path: str) -> str:
     else:
         logging.error(f"E: {path} does not exist")
         raise
-
-
-def mkdir(path: str) -> None:
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
-def mkdirs(paths) -> None:
-    for path in paths:
-        mkdir(path)
 
 
 def getcwd():

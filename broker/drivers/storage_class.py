@@ -13,22 +13,13 @@ from typing import Dict, List
 import broker._utils._log as _log
 import broker.cfg as cfg
 import broker.libs.slurm as slurm
+from broker._utils.tools import mkdir
 from broker.config import ThreadFilter, env, logging
 from broker.lib import log, run
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
-from broker.utils import (
-    CacheType,
-    Link,
-    bytes32_to_ipfs,
-    cd,
-    generate_md5sum,
-    mkdir,
-    print_tb,
-    read_json,
-    write_to_file,
-)
+from broker.utils import CacheType, Link, bytes32_to_ipfs, cd, generate_md5sum, print_tb, read_json, write_to_file
 
 
 class BaseClass:

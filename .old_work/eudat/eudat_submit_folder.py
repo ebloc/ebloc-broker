@@ -4,12 +4,9 @@
 import subprocess
 import sys
 import time
-
 import owncloud
-
 import broker.cfg as cfg
 import broker.libs.eudat as eudat
-from broker.imports import connect
 from broker.utils import generate_md5sum, print_tb
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")
@@ -28,8 +25,8 @@ def eudat_submit_job(tar_hash=None):
         price_data_transfer,
         price_storage,
         price_cache,
-    ) = eBlocBroker.functions.getProviderInfo(providerAddress).call()
-    my_filter = eBlocBroker.eventFilter(
+    ) = Ebb.eBlocBroker.functions.getProviderInfo(providerAddress).call()
+    my_filter = Ebb.eBlocBroker.eventFilter(
         "LogProvider",
         {"fromBlock": int(blockReadFrom), "toBlock": int(blockReadFrom) + 1},
     )
@@ -52,7 +49,7 @@ def eudat_submit_job(tar_hash=None):
     # subprocess.run(['python', 'eudat.share_single_folder.py', tar_hash])
     print("\nSubmitting Job...")
     coreNum = 1
-    coreMinuteGas = 5
+    core_minute = 5
     cloudStorageID = 1
     account_id = 0
     try:
@@ -60,7 +57,7 @@ def eudat_submit_job(tar_hash=None):
             str(provider),
             str(tar_hash),
             coreNum,
-            coreMinuteGas,
+            core_minute,
             cloudStorageID,
             str(tar_hash),
             account_id,
