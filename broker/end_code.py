@@ -96,17 +96,16 @@ class Eudat(Common):
             sys.exit(1)
 
     def upload(self, source_code_hash, *_) -> bool:
-        try:
+        with suppress(Exception):
+            # first time uploading
             uploaded_file_size = eudat.get_size(f_name=f"{source_code_hash}/{self.patch_upload_name}")
             size_in_bytes = calculate_folder_size(self.patch_file, _type="bytes")
             if uploaded_file_size == float(size_in_bytes):
                 log(f"==> {self.patch_file} is already uploaded")
                 return True
-        except Exception:  # First time uploading
-            pass
 
         _data_transfer_out = calculate_folder_size(self.patch_file)
-        logging.info(f"{br(source_code_hash)}.data_transfer_out={_data_transfer_out} MB")
+        log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
         self.data_transfer_out += _data_transfer_out
         return eudat.upload_results(
             self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, attempt_count=5
@@ -122,10 +121,7 @@ class Gdrive(Common):
         """
         try:
             if not is_job_key:
-                success, meta_data = gdrive.get_data_key_ids(self.results_folder_prev)
-                if not success:
-                    return False
-
+                meta_data = gdrive.get_data_key_ids(self.results_folder_prev)
                 try:
                     key = meta_data[key]
                 except:
@@ -134,8 +130,8 @@ class Gdrive(Common):
 
             cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
             gdrive_info = subprocess_call(cmd, 5)
-        except:
-            logging.error(f"{WHERE(1)} E: {key} does not have a match. meta_data={meta_data}")
+        except Exception as e:
+            logging.error(f"{WHERE(1)} E: {key} does not have a match. meta_data={meta_data}. {e}")
             return False
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
@@ -319,7 +315,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        log(f"log_file={env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{self.index}.txt", "bold")
+        log(f"==> log_file={env.LOG_PATH}/transactions/{env.PROVIDER_ID}_{self.index}.txt")
         log(f"==> process_payment {self.job_key} {self.index}")
         return tx_hash
 
@@ -561,7 +557,7 @@ if __name__ == "__main__":
 
 
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", self.output_file_name] + glob.glob("*")
-# success, output = run(cmd)
+# output = run(cmd)
 # self.output_file_name = f"result-{PROVIDER_ID}-{self.job_key}-{self.index}.tar.gz"
 """Approach to upload as .tar.gz. Currently not used.
                 remove_source_code()
@@ -575,13 +571,13 @@ if __name__ == "__main__":
                 _remove(results_folder + '/result.tar.gz')
 # ---------------
 # cmd = ["tar", "-N", self.modified_date, "-jcvf", patch_file] + glob.glob("*")
-# success, output = run(cmd)
+# output = run(cmd)
 # logging.info(output)
 
 # self.remove_source_code()
 # cmd: tar -jcvf result-$providerID-$index.tar.gz *
 # cmd = ['tar', '-jcvf', self.output_file_name] + glob.glob("*")
 # cmd = ["tar", "-N", self.modified_date, "-czfj", self.output_file_name] + glob.glob("*")
-# success, output = run(cmd)
+# output = run(cmd)
 # logging.info(f"Files to be archived using tar: \n {output}")
 """

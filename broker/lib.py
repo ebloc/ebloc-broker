@@ -153,13 +153,13 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
     for count in range(attempt):
         try:
             return subprocess.check_output(cmd).decode("utf-8").strip()
-        except Exception:
+        except Exception as e:
             if not count and print_flag:
                 print_trace(cmd)
 
             if count + 1 == attempt:
                 log()
-                raise SystemExit
+                raise SystemExit from e
 
             if count == 0:
                 log("Trying again...\nAttempts: ", "green", end="")

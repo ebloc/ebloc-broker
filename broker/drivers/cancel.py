@@ -3,15 +3,11 @@
 import subprocess
 import time
 
-from config import env, setup_logger
-from imports import connect_into_web3
-from utils import eth_address_to_md5
-
 import broker.cfg as cfg
+from broker.config import env, setup_logger
+from broker.utils import eth_address_to_md5
 
 Ebb = cfg.Ebb
-w3 = connect_into_web3()
-testFlag = False
 log_dc = setup_logger(f"{env.LOG_PATH}/cancelledJobsLog.out")
 
 
@@ -31,7 +27,7 @@ while True:
     logged_jobs_to_process = Ebb.LogJob.run_log_cancel_refund(cancel_block_read_from_local, env.PROVIDER_ID)
 
     for logged_job in logged_jobs_to_process:
-        msg_sender = w3.eth.getTransactionReceipt(logged_job["transactionHash"].hex())["from"].lower()
+        msg_sender = Ebb.w3.eth.getTransactionReceipt(logged_job["transactionHash"].hex())["from"].lower()
         user_name = eth_address_to_md5(msg_sender)
         # print(msg_sender)
         # print(logged_job)

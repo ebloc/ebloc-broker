@@ -3,9 +3,10 @@
 import json
 import os
 
-from config import env
 from dotenv import load_dotenv
-from utils import read_json
+
+from broker.config import env
+from broker.utils import read_json
 
 # load .env from the given path
 load_dotenv(os.path.join(f"{env.HOME}/.ebloc-broker/", ".env"))

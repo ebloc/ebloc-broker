@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import pytest
-from utils import ZERO_ADDRESS
 
+from broker.utils import ZERO_ADDRESS
 from brownie import accounts
 
 

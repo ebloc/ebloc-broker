@@ -40,13 +40,11 @@ class Storage(BaseClass):
     # def __init__(self, logged_job, job_info, requester_id, is_already_cached) -> None:
     def __init__(self, **kwargs) -> None:
         self.Ebb = cfg.Ebb
-        #
         self.thread_name = uuid.uuid4().hex  # https://stackoverflow.com/a/44992275/2402577
         self.requester_id = kwargs.pop("requester_id")
         self.job_info = kwargs.pop("job_info")
         self.logged_job = kwargs.pop("logged_job")
         self.is_already_cached = kwargs.pop("is_already_cached")
-        #
         self.job_key = self.logged_job.args["jobKey"]
         self.index = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
@@ -98,7 +96,7 @@ class Storage(BaseClass):
         for hdlr in _log.handlers[:]:  # remove all old handlers
             _log.removeHandler(hdlr)
 
-        # A dedicated per-thread handler
+        #: dedicated per-thread handler
         thread_handler = logging.FileHandler(self.drivers_log_path, "a")
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         thread_handler.setFormatter(formatter)
@@ -114,10 +112,10 @@ class Storage(BaseClass):
 
     def check_already_cached(self, source_code_hash):
         if os.path.isfile(f"{self.private_dir}/{source_code_hash}.tar.gz"):
-            log(f"==> {source_code_hash} is already cached in {self.private_dir}", "blue")
+            log(f"==> {source_code_hash} is already cached in {self.private_dir}")
             self.is_already_cached[source_code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{source_code_hash}.tar.gz"):
-            log(f"==> {source_code_hash} is already cached in {self.public_dir}", "blue")
+            log(f"==> {source_code_hash} is already cached in {self.public_dir}")
             self.is_already_cached[source_code_hash] = True
 
     def complete_refund(self) -> str:
@@ -134,9 +132,9 @@ class Storage(BaseClass):
             )
             log(f"==> refund() tx_hash={tx_hash}")
             return tx_hash
-        except:
-            print_tb()
-            raise
+        except Exception as e:
+            print_tb(e)
+            raise e
 
     def is_md5sum_matches(self, path, name, _id, folder_type, cache_type) -> bool:
         output = generate_md5sum(path)
@@ -220,10 +218,9 @@ class Storage(BaseClass):
             give_rwe_access(self.requester_id, self.requester_home)
             give_rwe_access(env.WHOAMI, self.requester_home)
             self._sbatch_call()
-        except Exception:
-            logging.error("E: Failed to call _sbatch_call() function")
-            print_tb()
-            raise
+        except Exception as e:
+            print_tb(f"E: Failed to call _sbatch_call() function. {e}")
+            raise e
 
     def _sbatch_call(self):
         job_key = self.logged_job.args["jobKey"]
@@ -306,8 +303,8 @@ class Storage(BaseClass):
                             add_user_to_slurm(env.SLURMUSER)
                             job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
                 time.sleep(1)  # wait 1 second for slurm idle core to be updated
-            except Exception:
-                print_tb()
+            except Exception as e:
+                print_tb(e)
                 slurm.remove_user(self.requester_id)
                 slurm.add_user_to_slurm(self.requester_id)
             else:
@@ -315,13 +312,13 @@ class Storage(BaseClass):
         else:
             sys.exit(1)
 
-        slurm_job_id = job_id.split()[3]  # "Submitted batch job N"
-        logging.info(f"slurm_job_id={slurm_job_id}")
         try:
+            slurm_job_id = job_id.split()[3]  # submitted batch job N
+            log(f"==> slurm_job_id={slurm_job_id}")
             run(["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"])
             # subprocess.run(cmd, stderr=subprocess.STDOUT)
-        except Exception:
-            print_tb()
+        except Exception as e:
+            print_tb(e)
 
         if not slurm_job_id.isdigit():
             logging.error("E: Detects an error on the SLURM side. slurm_job_id is not a digit")

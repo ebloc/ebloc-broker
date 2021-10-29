@@ -164,7 +164,8 @@ def _upload(dir_path, tar_hash, is_folder=False):
             .decode("utf-8")
             .strip()
         )
-        # output = subprocess.check_output(['gdrive', 'list', '--query', 'name contains \'' + tar_hash + '.tar.gz' + '\'', '--no-header']).decode('utf-8').strip()
+        # cmd = ['gdrive', 'list', '--query', 'name contains \'' + tar_hash + '.tar.gz' + '\'', '--no-header']
+        # output = subprocess.check_output(cmd).decode('utf-8').strip()
     return output.split(" ")[0]
 
 
@@ -176,16 +177,15 @@ def get_file_id(key):
     return run(["gdrive", "list", "--query", f"'{key}' in parents"])
 
 
-def get_data_key_ids(results_folder_prev):
+def get_data_key_ids(results_folder_prev) -> bool:
     filename = f"{results_folder_prev}/meta_data.json"
     log(f"==> meta_data_path={filename}")
     try:
         meta_data = read_json(filename)
-    except:
-        print_tb()
-        return False, ""
+    except Exception as e:
+        print_tb(e)
 
-    return True, meta_data
+    return meta_data
 
 
 def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_code_hashes, is_cached):
@@ -196,15 +196,16 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             output = get_file_id(key)
             log(f"==> data_id={key}")
             log(output, "green")
-        except:
-            return False
+        except Exception as e:
+            raise e
 
         data_files_id = echo_grep_awk(output, "meta_data.json", "1")
         # key for the sourceCode elimination output*.tar.gz files
         source_code_key = echo_grep_awk(output, f"{folder_name}.tar.gz", "1")
         try:
             if not data_files_id:
-                return False
+                raise
+
             cmd = [
                 "gdrive",
                 "download",
@@ -225,28 +226,27 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
                 env.GDRIVE_METADATA,
             ]
             gdrive_info = subprocess_call(cmd, 10)
-        except:
+        except Exception as e:
             # TODO: gdrive list --query "sharedWithMe"
-            return False
+            raise e
 
         md5sum = get_file_info(gdrive_info, "Md5sum")
         _source_code_hash = source_code_hashes[0].decode("utf-8")
         if md5sum != _source_code_hash:
             # checks md5sum obtained from gdrive and given by the user
-            logging.error(f"E: md5sum does not match with the provided data {source_code_key}")
-            print_tb()
-            return False, 0, [], source_code_key
-        else:
-            log(f"SUCCESS on {md5sum} folder", "green")
+            print_tb(f"E: md5sum does not match with the provided data {source_code_key}")
+            raise
 
+        log(f"SUCCESS on {md5sum} folder", "green")
         byte_size = int(get_file_info(gdrive_info, "Size"))
         log(f"==> source_code_hashes[0] == {_source_code_hash} size={byte_size} bytes")
         if not is_cached[source_code_hashes[0].decode("utf-8")]:
             size_to_download += byte_size
 
-        success, meta_data = get_data_key_ids(results_folder_prev)
-        if not success:
-            return False
+        try:
+            meta_data = get_data_key_ids(results_folder_prev)
+        except Exception as e:
+            raise e
 
         data_key_dict = {}
         for idx, (k, v) in enumerate(meta_data.items(), start=1):
@@ -256,8 +256,8 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
                 data_key = echo_grep_awk(output, f"{k}.tar.gz", "1")
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
-            except:
-                return False
+            except Exception as e:
+                raise e
 
             md5sum = get_file_info(gdrive_info, _type="Md5sum")
             log(gdrive_info, "yellow")
@@ -265,11 +265,10 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             log(f"==> given_source_code_hash={given_source_code_hash}  idx={idx}")
             if md5sum != given_source_code_hash:
                 # checks md5sum obtained from gdrive and given by the user
-                logging.error(
+                raise Exception(
                     f"\nE: md5sum does not match with the provided data{br(idx)}\n"
-                    f"md5sum={md5sum} | given={given_source_code_hash} \n"
+                    f"md5sum={md5sum} | given={given_source_code_hash}"
                 )
-                return False, 0, [], source_code_key
 
             data_key_dict[md5sum] = data_key
             _size = int(get_file_info(gdrive_info, "Size"))
@@ -283,14 +282,13 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             with open(data_link_file, "w") as f:
                 json.dump(data_key_dict, f)
         else:
-            logging.error("E: Something is wrong. data_key_dict is {}")
-            return False, 0, [], source_code_key
+            raise Exception("E: Something is wrong. data_key_dict is empty")
 
         output = byte_to_mb(size_to_download)
         logging.info(f"Total_size={byte_size} bytes | size to download={size_to_download} bytes => {output} MB")
-        return True, output, data_key_dict, source_code_key
+        return output, data_key_dict, source_code_key
     else:
-        return False, 0, [], source_code_key
+        raise
 
 
 def _dump_dict_to_file(filename, job_keys):

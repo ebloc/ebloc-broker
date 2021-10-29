@@ -2,8 +2,7 @@
 
 import sys
 
-from imports import connect_into_web3
-from utils import is_transaction_passed
+from broker.utils import is_transaction_passed
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
@@ -12,8 +11,4 @@ if __name__ == "__main__":
         print("Please provide transaction hash as an argument")
         sys.exit(1)
 
-    w3 = connect_into_web3()
-    if w3 is None:
-        sys.exit(1)
-
-    print(f"is_transaction_passed={is_transaction_passed(tx_hash)}")
+    print(f"==> is_transaction_passed={is_transaction_passed(tx_hash)}")

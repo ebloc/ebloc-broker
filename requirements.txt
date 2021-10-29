@@ -80,9 +80,9 @@ ExtensionClass==4.5.1
 ezenv==0.91
 fasteners==0.14.1
 filelock==3.0.12
-flake8==3.9.2
+flake8==4.0.1
 flake8-mypy==17.8.0
-flake8-noqa==1.1.0
+flake8-noqa==1.2.0
 Flask==1.1.2
 forex-python==1.5
 gdown==3.12.2
@@ -199,11 +199,11 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycairo==1.20.0
 pycares==4.0.0
-pycodestyle==2.7.0
+pycodestyle==2.8.0
 pycparser==2.20
 pycryptodome==3.11.0
 pydocstyle==6.1.1
-pyflakes==2.3.1
+pyflakes==2.4.0
 Pygments==2.10.0
 pygments-lexer-solidity==0.7.0
 PyGObject==3.36.0
@@ -291,6 +291,7 @@ txaio==20.12.1
 typed-ast==1.4.3
 types-filelock==0.1.5
 types-pytz==2021.1.2
+types-PyYAML==6.0.0
 types-termcolor==1.1.1
 typing-extensions==3.10.0.2
 tzlocal==2.1
