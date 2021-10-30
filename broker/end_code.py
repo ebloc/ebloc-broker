@@ -8,7 +8,7 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 from time import sleep
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import broker.cfg as cfg
 import broker.libs.eudat as eudat
@@ -146,9 +146,10 @@ class Gdrive(Common):
             return False
 
         try:
-            logging.info(subprocess_call(cmd, 5))
-        except:
-            logging.error(f"{WHERE(1)} E: gdrive could not upload the file")
+            log(subprocess_call(cmd, 5))
+        except Exception as e:
+            print_tb(e)
+            log("E: gdrive could not upload the file")
             return False
 
         return True
@@ -200,7 +201,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
         except Exception as e:
-            log(e)
+            log(f"E: {e}")
             sys.exit(1)
 
         self.results_folder_prev: Path = env.PROGRAM_PATH / requester_id_address / f"{self.job_key}_{self.index}"
@@ -248,9 +249,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.encoded_share_tokens[source_code_hash] = base64.b64encode(
                         (f"{share_token}:").encode("utf-8")
                     ).decode("utf-8")
-                except:
+                except Exception as e:
                     logging.error(f"E: share_id cannot detected from key={self.job_key}")
-                    raise
+                    raise e
 
         for key in share_ids:
             value = share_ids[key]
@@ -281,7 +282,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def _ipfs_add_folder(self, folder_path):
         try:
             self.result_ipfs_hash = cfg.ipfs.add(folder_path)
-            logging.info(f"result_ipfs_hash={self.result_ipfs_hash}")
+            logging.info(f"==> result_ipfs_hash={self.result_ipfs_hash}")
             cfg.ipfs.pin(self.result_ipfs_hash)
             data_transfer_out = cfg.ipfs.get_cumulative_size(self.result_ipfs_hash)
         except Exception as e:
@@ -314,8 +315,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        log_file = env.LOG_PATH / "transactions" / env.PROVIDER_ID / f"{self.job_key}_{self.index}.txt"
-        log(f"==> log_file={log_file}")
         log(f"==> process_payment {self.job_key} {self.index}")
         return tx_hash
 
@@ -328,12 +327,11 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         try:
             cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file]
             files_to_remove = run(cmd)
+            if files_to_remove:
+                log(f"## Files to be removed: \n{files_to_remove}\n")
         except Exception as e:
             print_tb(e)
             sys.exit()
-
-        if not files_to_remove or files_to_remove:
-            logging.info(f"Files to be removed: \n{files_to_remove}\n")
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
@@ -357,7 +355,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 if not storage_class.upload(self, name, is_job_key):
                     raise
         except Exception as e:
-            raise Exception("E: Problem on git_diff_patch_and_upload()") from e
+            raise Exception("E: Problem on the git_diff_patch_and_upload() function") from e
 
     def upload_driver(self):
         self.clean_before_upload()
@@ -365,7 +363,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             storage_class = self.get_cloud_storage_class(0)
             self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
         except Exception as e:
-            raise Exception("E: Problem on git_diff_patch_and_upload()") from e
+            raise e
 
         for idx, name in enumerate(self.source_code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
@@ -375,7 +373,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
             except Exception as e:
                 print_tb(e)
-                raise Exception("E: Problem on git_diff_patch_and_upload()") from e
+                raise e
 
         if not is_dir_empty(self.patch_folder_ipfs):
             # it will upload files after all the patchings are completed
@@ -425,12 +423,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             if self.job_info["stateCode"] == state.code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed. Wait
                 # until does values updated on the blockchain
-                log("## Job has been started")
+                log("## job has been started")
                 return
 
             if self.job_info["stateCode"] == state.code["COMPLETED"]:
                 # detects an error on the slurm side
-                log("Warning: Job is already completed and its money is received")
+                log("warning: job is already completed and its money is received")
                 self.get_job_info()
                 raise QuietExit
 
@@ -452,7 +450,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 end="",
             )
             sleep(sleep_time)  # TODO: exits randomly
-            log(br("sleep ended"))
+            log(br(f"sleep ended for {sleep_time}"))
 
         log("E: failed all the attempts, abort")
         sys.exit(1)
@@ -463,7 +461,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.data_transfer_in = data["data_transfer_in"]
             log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
         except:
-            logging.error("E: data_transfer_in.json does not exist")
+            log("E: data_transfer_in.json does not exist")
 
         try:
             self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")
@@ -478,7 +476,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> ipfs_id={self.requester_info['ipfs_id']}")
         log(f"==> f_id={self.requester_info['f_id']}")
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
-            log("==> Job is already completed and its money is received")
+            log("## job is already completed and its money is received")
             raise QuietExit
 
         run_time = self.job_info["run_time"]
@@ -523,8 +521,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
-        except:
-            print_tb()
+        except Exception as e:
+            print_tb(e)
             sys.exit(1)
 
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
@@ -549,10 +547,9 @@ if __name__ == "__main__":
     try:
         cloud_storage = ENDCODE(**kwargs)
         cloud_storage.run()
-    except QuietExit as e:
-        print_tb(e)
+    except QuietExit:
+        pass
     except Exception as e:
-        log(f"E: {e}")
         print_tb(e)
 
 

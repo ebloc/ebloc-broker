@@ -189,11 +189,11 @@ def _try(func):
         raise e
 
 
-def is_bin_installed(bin_name):
+def is_bin_installed(name):
     try:
-        run(["which", bin_name])
+        run(["which", name])
     except Exception as e:
-        log(f"E: [green]{bin_name}[/green] is not instelled")
+        log(f"E: [green]{name}[/green] is not instelled")
         raise e
 
 
