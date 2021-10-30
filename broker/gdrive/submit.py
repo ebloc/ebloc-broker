@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
 import broker.cfg as cfg
 import broker.libs.gdrive as gdrive
 import broker.libs.git as git
@@ -10,24 +8,25 @@ from broker.eblocbroker.job import Job
 from broker.lib import check_linked_data
 from broker.utils import CacheType, StorageID, is_program_valid, log, print_tb
 
+
+Ebb = cfg.Ebb
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
 
 
 def main():
     job = Job()
-    Ebb = cfg.Ebb
     is_program_valid(["gdrive", "version"])
 
     job.base_dir = f"{env.EBLOCPATH}/base"
     job.folders_to_share.append(f"{job.base_dir}/source_code")
     job.folders_to_share.append(f"{job.base_dir}/data/data1")
 
-    path_from = f"{env.EBLOCPATH}/base/data"
-    path_to = f"{env.LINK_PATH}/base/data_link"
+    path_from = env.EBLOCPATH / "base" / "data"
+    path_to = env.LINK_PATH / "base" / "data_link"
     check_linked_data(path_from, path_to, job.folders_to_share[1:])
 
-    # # IMPORTANT: consider ignoring to push .git into the submitted folder
+    # IMPORTANT: consider ignoring to push .git into the submitted folder
     git.generate_git_repo(job.folders_to_share)
     job.clean_before_submit()
 
@@ -43,7 +42,6 @@ def main():
     job.cache_types = [CacheType.PRIVATE, CacheType.PUBLIC]
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
-
     for folder_to_share in job.folders_to_share:
         tar_hash = job.foldername_tar_hash[folder_to_share]
         # required to send string as bytes == str_data.encode('utf-8')
@@ -70,7 +68,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
-        if type(e).__name__ != "KeyboardInterrupt":
-            print_tb()
-        sys.exit(1)
+        print_tb(e)

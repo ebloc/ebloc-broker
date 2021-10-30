@@ -470,6 +470,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
+        breakpoint()  # DEBUG
         log("\njob_owner's info\n================", "bold green")
         log(f"==> email=[white]{self.requester_info['email']}")
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")

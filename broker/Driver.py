@@ -10,7 +10,6 @@ from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from pprint import pprint
-
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
@@ -22,7 +21,7 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import br, log
-from broker._utils.tools import HandlerException, QuietExit, print_tb
+from broker._utils.tools import HandlerException, QuietExit, print_tb, kill_process_by_name
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -48,7 +47,6 @@ from broker.utils import (
     sleep_timer,
     terminate,
 )
-
 # from threading import Thread
 # from multiprocessing import Process
 args = helper()
@@ -309,6 +307,7 @@ def run_driver():
     # dummy sudo command to get the password when session starts for only to
     # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
+    kill_process_by_name("gpg-agent")
     env.IS_THREADING_ENABLED = False
     config.logging = setup_logger(_log.DRIVER_LOG)
     # driver_cancel_process = None
