@@ -249,8 +249,7 @@ def _submit(provider, account_id, folders_to_share):
 
     provider = cfg.w3.toChecksumAddress(provider)
     provider_info = job.Ebb.get_provider_info(provider)
-    print(f"provider[fID]={str(provider_info['f_id'])}")
-
+    print(f"provider.f_id={provider_info['f_id']}")
     job.folders_to_share = folders_to_share.copy()
 
     try:
