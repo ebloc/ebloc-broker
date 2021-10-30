@@ -1,12 +1,12 @@
-# Installation
+* Installation
 
 link:
 https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-blocked-from-logging-in-with-your-google-accou/65507155#65507155
 
+~@tellowkrinkle's [comment][1] help me to solve the issue~
 
-@tellowkrinkle's [comment][1] help me to solve the issue.
 
-
+#+begin_src markdown
 > Probably yes. I have the old binary and Google blocks it from authenticating,
 > saying that it's dangerous and they blocked it for my safety (thanks a
 > lot). It looks like Google now requires you to let them review applications
@@ -25,21 +25,22 @@ https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-bl
 > goes and gets theirs reviewed by Google)
 > 4. Click Credentials on the left, then Create Credentials, then OAuth client ID. The application type is Desktop app
 > 5. Copy the Client ID and Secret into handlers_drive.go lines 17 and 18 and compile the application
+#+end_src
 
--------
+--------------------------------
 
-```
+#+begin_src bash
 cd ~/
 git clone https://github.com/prasmussen/gdrive.git && cd gdrive
-```
+#+end_src
 
 Copy the Client ID and Secret into handlers_drive.go lines 17 and 18 and compile the application
 
-```
+#+begin_src bash
 $ emacs -nw handlers_drive.go
-```
+#+end_src
 
-```
+#+begin_src bash
 FILE=~/.gdrive/token_v2.json
 if [ -f "$FILE" ]; then
 	mv ~/.gdrive/token_v2.json ~/.gdrive/token_v2.json.old
@@ -48,15 +49,14 @@ go get github.com/prasmussen/gdrive
 go build -ldflags "-w -s"
 cp gdrive $GOPATH/bin/gdrive
 gdrive about
-```
+#+end_src
 
 Go to the following url in your browser:
-https://accounts.google.com/o/oauth2/auth?access_type=.....
+https://accounts.google.com/o/oauth2/auth?access_type=...
 
-Enter verification code:
+~Enter verification code:~
 
-
-# Guide
+** Guide
 
 - [TUTORIAL: How to get rid of 403 Errors][2]
 - https://github.com/prasmussen/gdrive/issues/426#issuecomment-459150627
@@ -65,3 +65,51 @@ Enter verification code:
 
   [1]: https://github.com/prasmussen/gdrive/commit/31d0829c180795d17e00b7a354fffe4d72be712b#commitcomment-45165924
   [2]: https://github.com/prasmussen/gdrive/issues/426
+
+
+* Headless Usage & Authorization
+
+#+begin_src bash
+$ google-drive-ocamlfuse -headless -label me -id ##yourClientID##.apps.googleusercontent.com -secret ###yoursecret#####
+#+end_src
+
+doc: https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization
+
+
+Set ~shared_with_me=true~ in the config file to have read-only access to all your "Shared with me" files under ./.shared.
+
+#+begin_src bash
+$ cat ~/.gdfuse/me/config | grep shared_with_me
+shared_with_me=true
+#+end_src
+
+
+** Load:
+
+#+begin_src bash
+folderName='ipfs'
+providerToShare='aalimog1@binghamton.edu' //'alper01234alper@gmail.com'
+
+gdrive upload --recursive $folderName
+jobKey=$(gdrive list | grep $folderName | awk '{print $1}')
+echo jobKey=$jobKey
+gdrive share $jobKey  --role writer --type user --email $providerToShare
+#+end_src
+
+---------------
+
+** Save
+
+#+begin_src bash
+cd folder
+shareId='1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'
+
+folderName=$(gdrive info $shareId | grep 'Name' | awk '{print $2}')
+
+mimeType=$(gdrive info 1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG | grep 'Mime' | awk '{print $2}')
+
+gdrive download --recursive  $shareId --force
+
+gdrive upload --parent $shareId README.md
+gdrive upload --parent --recursive $shareId folder  # upload folder
+#+end_src

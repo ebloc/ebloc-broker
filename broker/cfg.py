@@ -5,13 +5,15 @@
 __ https://stackoverflow.com/a/12413139/2402577
 """
 
+TX_TIMEOUT = 1800
+
 
 class EBB:
     def __init__(self):
         self.eblocbroker = None
 
     def __getattr__(self, name):
-        """Return Contract object."""
+        """Return the `Contract` object."""
         if not self.eblocbroker:
             from broker.eblocbroker.Contract import Contract
 
@@ -27,7 +29,7 @@ class _Ipfs:
         self.ipfs = None
 
     def __getattr__(self, name):
-        """Return Ipfs object."""
+        """Return the `Ipfs` object."""
         if not self.ipfs:
             from broker.libs.ipfs import Ipfs
 
@@ -43,7 +45,7 @@ class W3:
         self.w3 = None
 
     def __getattr__(self, name):
-        """Return web3 object."""
+        """Return the `web3` object."""
         if not self.w3:
             from brownie import web3
 
@@ -57,4 +59,3 @@ class W3:
 Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()
-TX_TIMEOUT = 1800

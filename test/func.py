@@ -71,7 +71,7 @@ def testFunc(path, readTest, testType, providerID, cacheType):
 
             account_id = randint(0, 9)
             output = Ebb.w3.personal.unlockAccount(
-                Eb.w3.eth.accounts[account_id], accountPassword
+                Ebb.w3.eth.accounts[account_id], accountPassword
             )  # unlocks the selected account in case if unlocks over time
             log(
                 "AccountID:"
