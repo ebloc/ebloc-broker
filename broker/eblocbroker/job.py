@@ -200,6 +200,7 @@ class JobPrices:
         self.storage_cost = 0
         self.cache_cost = 0
         self.data_transfer_in_sum = 0
+        # breakpoint()  # DEBUG
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
             if self.is_brownie:
                 ds = self.create_data_storage(source_code_hash)

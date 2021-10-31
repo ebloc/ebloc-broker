@@ -23,7 +23,12 @@ def main(*args):
     ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
     job_provider = _args[0]
     job_requester = _args[1]
-    source_code_hash = ipfs_to_bytes32(_args[2])
+
+    try:
+        source_code_hash = ipfs_to_bytes32(_args[2])
+    except:
+        source_code_hash = _args[2].encode("utf-8")
+
     ops = {"from": job_provider}
     output = ebb.getReceivedStorageDeposit(job_provider, job_requester, source_code_hash, ops)
     print(output)

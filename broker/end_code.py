@@ -461,7 +461,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.data_transfer_in = data["data_transfer_in"]
             log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
         except:
-            log("E: data_transfer_in.json does not exist")
+            log("E: data_transfer_in.json file does not exist")
 
         try:
             self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")
@@ -470,7 +470,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        breakpoint()  # DEBUG
         log("\njob_owner's info\n================", "bold green")
         log(f"==> email=[white]{self.requester_info['email']}")
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")

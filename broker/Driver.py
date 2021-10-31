@@ -22,7 +22,7 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import br, log
-from broker._utils.tools import HandlerException, QuietExit, kill_process_by_name, print_tb
+from broker._utils.tools import HandlerException, QuietExit, kill_process_by_name, print_tb, JobException
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -92,20 +92,20 @@ def _tools(block_continue):
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_EUDAT_USE:
             if not env.OC_USER:
-                raise Terminate(f"OC_USER is not set in {env.LOG_PATH}/.env")
+                raise Terminate(f"OC_USER is not set in {env.LOG_PATH.joinpath('.env')}")
 
-            eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_provider.txt"), env.OC_CLIENT)
 
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             provider_info = Contract.Ebb.get_provider_info(env.PROVIDER_ID)
-            _email = provider_info["email"]
-            output, gdrive_email = gdrive.check_user(_email)
+            email = provider_info["email"]
+            output, gdrive_email = gdrive.check_user(email)
             if not output:
-                msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
+                msg = f"Provider's email address ({email}) does not match with the set gdrive's ({gdrive_email})"
                 raise Terminate(msg)
 
-            log(f"==> provider_email=[magenta]{_email}")
+            log(f"==> provider_email=[magenta]{email}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
@@ -136,24 +136,24 @@ class Driver:
     def is_job_received(self, key, index) -> None:
         """Preventing to download or submit again."""
         if self.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
-            raise Exception("## [ mongoDB ] Job is already received", "green")
+            raise JobException("## [ mongoDB ] Job is already received")
 
         if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
-            raise Exception("Job is already completed.")
+            raise JobException("Job is already completed.")
 
         if self.job_infos[0]["stateCode"] == state.code["REFUNDED"]:
-            raise Exception("Job is refunded.")
+            raise JobException("Job is refunded.")
 
         if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
-            raise Exception("Warning: Job is already captured and in process or completed.")
+            raise JobException("Warning: Job is already captured and in process or completed.")
 
     def check_requested_job(self, key, index) -> None:
         """Check status of the job."""
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
-            raise Exception("E: Requested job does not exist")
+            raise JobException("E: Requested job does not exist")
 
         if not self.Ebb.does_requester_exist(self.requester_id):
-            raise Exception("E: job owner is not registered")
+            raise JobException("E: job owner is not registered")
 
         self.is_job_received(key, index)
 
@@ -300,6 +300,8 @@ class Driver:
             try:
                 self.process_logged_job(idx)
                 self.sent_job_to_storage_class()
+            except JobException as e:
+                log(str(e))
             except Exception as e:
                 raise e
 
@@ -477,11 +479,12 @@ def _main():
     except Exception as e:
         print_tb(e)
     finally:
-        breakpoint()  # DEBUG
         with suppress(Exception):
             if lock:
                 lock.close()
                 open(env.DRIVER_LOCKFILE, "w").close()
+
+        breakpoint()  # DEBUG
 
 
 def main():

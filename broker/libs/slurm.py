@@ -138,5 +138,5 @@ def get_job_end_time(slurm_job_id) -> int:
         raise QuietExit
 
     end_time_stamp = end_time_stamp.rstrip().replace("'", "")
-    log(f"end_time_stamp={end_time_stamp}", "blue")
+    log(f"==> end_time_stamp={end_time_stamp}")
     return end_time_stamp
