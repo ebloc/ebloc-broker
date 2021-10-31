@@ -447,7 +447,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Registers and updates a requester's (msg.sender's) information to
+     * @dev Register or update a requester's (msg.sender's) information to
      * eBlocBroker.
      *
      * @param gpgFingerprint | is a bytes8 containing a gpg key ID that is used by the

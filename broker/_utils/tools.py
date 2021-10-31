@@ -3,6 +3,7 @@
 import decimal
 import linecache
 import os
+import signal
 import sys
 import time
 import traceback
@@ -323,6 +324,19 @@ def mkdir(path) -> None:
 def mkdirs(paths) -> None:
     for path in paths:
         mkdir(path)
+
+
+def kill_process_by_name(process_name):
+    p1 = Popen(["ps", "auxww"], stdout=PIPE)
+    p2 = Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=PIPE)
+    p1.stdout.close()  # noqa
+    p3 = Popen(["awk", "{print $2}"], stdin=p2.stdout, stdout=PIPE)
+    p2.stdout.close()
+    output = p3.communicate()[0].decode("utf-8").strip()
+    lines = output.splitlines()
+    for pid in lines:
+        if pid.isnumeric():
+            os.kill(int(pid), signal.SIGKILL)
 
 
 def handler(signum, frame):

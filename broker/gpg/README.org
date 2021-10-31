@@ -1,9 +1,10 @@
 * GNU Privacy
+
 ** Provider
 
 #+begin_src bash
 key_id=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
-gpg --keyserver hkp://pgp.mit.edu --send-keys <key_id>
+gpg --keyserver hkp://pgp.mit.edu --send-keys $key_id
 #+end_src
 
 ----------------------------------------------------------------------
@@ -28,4 +29,12 @@ Your decision? 5
 Do you really want to set this key to ultimate trust? (y/N) y
 
 > quit
+#+end_src
+
+** Change the passphrase of the secret key
+
+#+begin_src bash
+gpg --edit-key Your-Key-ID-Here
+gpg> passwd
+gpg> save
 #+end_src

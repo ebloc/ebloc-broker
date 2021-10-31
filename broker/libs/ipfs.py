@@ -100,22 +100,20 @@ class Ipfs:
         ]
         try:
             run(cmd)
-            log(f"{ok()} GPG decrypt is successfull")
+            log(f"==> GPG decrypt {ok()}")
             _remove(gpg_file)
             os.unlink(gpg_file_link)
         except Exception as e:
-            # print_tb(e)
-            # breakpoint()  # DEBUG
+            print_tb(e)
             raise e
+            # breakpoint()  # DEBUG
         # finally:
         #     os.unlink(gpg_file_link)
-
-        if not extract_target:
+        if extract_target:
             try:
                 untar(tar_file, extract_target)
             except:
-                logging.error("E: Could not extract the given tar file")
-                raise
+                raise Exception("E: Could not extract the given tar file")
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
@@ -145,7 +143,7 @@ class Ipfs:
                 is_delete = True
 
         if os.path.isfile(encrypted_file_target):
-            log(f"==> GPG_file: {encrypted_file_target} is already created.")
+            log(f"==> gpg_file: {encrypted_file_target} is already created.")
             return encrypted_file_target
 
         try:
@@ -161,7 +159,7 @@ class Ipfs:
                 encrypt_target,
             ]
             run(cmd)
-            log(f"==> GPG_file: {encrypted_file_target}")
+            log(f"==> gpg_file={encrypted_file_target}")
             return encrypted_file_target
         except Exception as e:
             print_tb(e)

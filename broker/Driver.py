@@ -22,7 +22,7 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import br, log
-from broker._utils.tools import HandlerException, QuietExit, print_tb
+from broker._utils.tools import HandlerException, QuietExit, kill_process_by_name, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -309,6 +309,7 @@ def run_driver():
     # dummy sudo command to get the password when session starts for only to
     # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
+    kill_process_by_name("gpg-agent")
     env.IS_THREADING_ENABLED = False
     config.logging = setup_logger(_log.DRIVER_LOG)
     # driver_cancel_process = None
