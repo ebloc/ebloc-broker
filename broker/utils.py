@@ -376,7 +376,7 @@ def is_gzip_file_empty(filename):
     if bool(int(size)):
         return False
 
-    log(f"==> Created gzip file ({filename}) is empty.")
+    log(f"==> Created gzip file ({filename}) is empty")
     return True
 
 

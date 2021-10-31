@@ -92,20 +92,20 @@ def _tools(block_continue):
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_EUDAT_USE:
             if not env.OC_USER:
-                raise Terminate(f"OC_USER is not set in {env.LOG_PATH}/.env")
+                raise Terminate(f"OC_USER is not set in {env.LOG_PATH.joinpath('.env')}")
 
-            eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_provider.txt", env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_provider.txt"), env.OC_CLIENT)
 
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             provider_info = Contract.Ebb.get_provider_info(env.PROVIDER_ID)
-            _email = provider_info["email"]
-            output, gdrive_email = gdrive.check_user(_email)
+            email = provider_info["email"]
+            output, gdrive_email = gdrive.check_user(email)
             if not output:
-                msg = f"Provider's email address ({_email}) does not match with the set gdrive's ({gdrive_email})"
+                msg = f"Provider's email address ({email}) does not match with the set gdrive's ({gdrive_email})"
                 raise Terminate(msg)
 
-            log(f"==> provider_email=[magenta]{_email}")
+            log(f"==> provider_email=[magenta]{email}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
