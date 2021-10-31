@@ -44,8 +44,8 @@ if __name__ == "__main__":
     # cfg.ipfs.connect(force=True)
     # provider = w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")  # netlab
     # requester_addr = w3.toChecksumAddress("0x12ba09353d5c8af8cb362d6ff1d782c1e195b571")
-    provider = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
     requester = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
+    provider = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
     try:
         job.check_account_status(requester)
     except Exception as e:
@@ -55,8 +55,8 @@ if __name__ == "__main__":
     log("==> Attemptting to submit a job")
     # Ebb.account_id_to_address(address=requester_addr)
     # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS]
-    # job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
-    job.storage_ids = [StorageID.IPFS, StorageID.IPFS]  #: works
+    job.storage_ids = [StorageID.IPFS_GPG, StorageID.IPFS_GPG]
+    # job.storage_ids = [StorageID.IPFS, StorageID.IPFS]  #: works
     _types = [CacheType.PUBLIC, CacheType.PUBLIC]
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)
@@ -65,6 +65,7 @@ if __name__ == "__main__":
     folders = []  #: full paths are provided
     folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "source_code")
     folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
+    ##
     path_from = env.EBLOCPATH / "base" / "data"
     path_to = env.LINK_PATH / "base" / "data_link"
     check_linked_data(path_from, path_to, folders[1:])
@@ -91,12 +92,12 @@ if __name__ == "__main__":
 
         target = folder
         if job.storage_ids[idx] == StorageID.IPFS_GPG:
-            # provider_gpg_finderprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"
             provider_gpg_finderprint = provider_info["gpg_fingerprint"]
             if not provider_gpg_finderprint:
                 log("E: Provider did not register any GPG fingerprint")
                 sys.exit(1)
 
+            log(f"==> provider_gpg_finderprint={provider_gpg_finderprint}")
             try:
                 # target is updated
                 target = cfg.ipfs.gpg_encrypt(provider_gpg_finderprint, target)

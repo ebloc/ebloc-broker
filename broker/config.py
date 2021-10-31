@@ -108,8 +108,8 @@ class ENV:
         self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelledJobs.txt")
         self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")
         self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
-        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
-        self.OC_CLIENT_REQUESTER = self.LOG_PATH.joinpath(".oc_client_requester.pckl")
+        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_provider.pckl")
+        self.OC_CLIENT_REQUESTER = self.LOG_PATH.joinpath(".oc_requester.pckl")
         _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
         self.IS_THREADING_ENABLED = False
         self.PROVIDER_ID = None  # type: Union[str, None]

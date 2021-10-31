@@ -17,6 +17,8 @@ from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, read_json, terminate
 from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
+from brownie.network.gas.strategies import LinearScalingStrategy
+from web3.exceptions import TransactionNotFound
 
 
 class Web3NotConnected(Exception):  # noqa
@@ -31,7 +33,8 @@ class Contract:
         mc = MongoClient()
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         self.gas_limit = "max"  # 300000
-        self.gas_params = {"gas_price": "1 gwei", "gas": 10000000}
+        self.gas_strategy = LinearScalingStrategy("1 gwei", "10 gwei", 1.13, time_duration=10)
+        self.gas_params = {"gas_price": self.gas_strategy, "gas": 10000000}
         self._setup(is_brownie)
 
     def _setup(self, is_brownie=False):
@@ -105,13 +108,15 @@ class Contract:
 
     def _wait_for_transaction_receipt(self, tx_hash) -> TxReceipt:
         """Wait till the tx is deployed."""
-        poll_latency = 2
+        poll_latency = 3
         log(f"## Waiting for the transaction({tx_hash}) receipt... ", end="")
         while True:
             try:
                 tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
+            except TransactionNotFound as e:
+                log(str(e))
             except Exception as e:
-                print_tb(e)
+                print_tb(str(e))
                 tx_receipt = None
 
             if tx_receipt is not None and tx_receipt["blockHash"] is not None:
@@ -466,7 +471,10 @@ class Contract:
 
         ops = {"from": _from}
         if isinstance(source_code_hash, str):
-            source_code_hash = ipfs_to_bytes32(source_code_hash)
+            try:
+                source_code_hash = ipfs_to_bytes32(source_code_hash)
+            except:
+                pass
 
         if env.IS_BLOXBERG:
             return self.eBlocBroker.getJobStorageTime(provider_addr, source_code_hash, ops)  # FIXME
@@ -477,7 +485,10 @@ class Contract:
         """Return received storage deposit for the corresponding source code hash."""
         ops = {"from": provider}
         if isinstance(source_code_hash, str):
-            source_code_hash = ipfs_to_bytes32(source_code_hash)
+            try:
+                source_code_hash = ipfs_to_bytes32(source_code_hash)
+            except:
+                pass
 
         if env.IS_BLOXBERG:
             return self.eBlocBroker.getReceivedStorageDeposit(provider, requester, source_code_hash, ops)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils.tools import QuietExit
 import os
 import os.path
 import pickle
@@ -13,7 +14,7 @@ from pprint import pprint
 
 import owncloud
 from web3.logs import DISCARD
-
+import broker.cfg as cfg
 import broker.cfg as cfg
 import broker.config as config
 import broker.libs.git as git
@@ -33,6 +34,8 @@ from broker.utils import (
     terminate,
 )
 
+
+Ebb = cfg.Ebb
 
 def _upload_results(encoded_share_token, output_file_name):
     """Upload results into Eudat using curl.
@@ -224,34 +227,31 @@ def is_oc_mounted() -> bool:
         return True
 
 
-def submit(provider, account_id, folders_to_share):
+def submit(provider, requester, folders_to_share):
     try:
-        tx_hash = _submit(provider, account_id, folders_to_share)
-        receipt = get_tx_status(tx_hash)
-        if receipt["status"] == 1:
-            logs = config.ebb.events.LogJob().processReceipt(receipt, errors=DISCARD)
-            pprint(vars(logs[0].args))
+        tx_hash = _submit(provider, requester, folders_to_share)
+        tx_receipt = get_tx_status(tx_hash)
+        if tx_receipt["status"] == 1:
+            processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+            pprint(vars(processed_logs[0].args))
             try:
-                log(f"==> job's index={logs[0].args['index']}")
-                log("SUCCESS")
+                log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
             except IndexError:
-                log("E: Transaction is reverted")
+                log(f"E: Tx({tx_hash}) is reverted")
+    except QuietExit:
+        pass
     except Exception as e:
         print_tb(e)
-        sys.exit(1)
 
 
-def _submit(provider, account_id, folders_to_share):
+def _submit(provider, requester, folders_to_share):
     job = Job()
-    requester = cfg.w3.toChecksumAddress(cfg.w3.eth.accounts[account_id])
     job.Ebb.is_requester_valid(requester)
     job.Ebb.is_eth_account_locked(requester)
-
     provider = cfg.w3.toChecksumAddress(provider)
     provider_info = job.Ebb.get_provider_info(provider)
-    print(f"provider.f_id={provider_info['f_id']}")
+    log(f"==> provider.f_id={provider_info['f_id']}")
     job.folders_to_share = folders_to_share.copy()
-
     try:
         git.is_repo(job.folders_to_share)
     except:
@@ -263,7 +263,7 @@ def _submit(provider, account_id, folders_to_share):
         if idx != 0:
             print("")
 
-        log(f"==> folder_to_share={folder}", "green")
+        log(f"==> folder_to_share={folder}")
         try:
             git.initialize_check(folder)
             git.commit_changes(folder)
@@ -276,7 +276,9 @@ def _submit(provider, account_id, folders_to_share):
             job_key = folder_hash
 
         # required to send string as bytes
-        job.source_code_hashes.append(cfg.w3.toBytes(text=folder_hash))
+        value = cfg.w3.toBytes(text=folder_hash)
+        job.source_code_hashes.append(value)
+        job.source_code_hashes_str.append(value.decode("utf-8"))
         if not share_single_folder(folder_hash, provider_info["f_id"]):
             sys.exit(1)
 
@@ -295,10 +297,11 @@ def _submit(provider, account_id, folders_to_share):
     print(job.source_code_hashes)
     job_price, _cost = job.cost(provider, requester)
     try:
-        return job.Ebb.submit_job(provider, job_key, account_id, job_price, job)
+        return job.Ebb.submit_job(provider, job_key, job_price, job, requester)
+    except QuietExit:
+        pass
     except Exception as e:
-        print_tb()
-        if type(e).__name__ == "QuietExit":
-            log(f"E: Unlock your Ethereum Account(web3.eth.accounts[{account_id}])", "red")
-            log("In order to unlock an account you can use: ~/eBlocPOA/client.sh", "yellow")
+        print_tb(e)
+        log(f"E: Unlock your Ethereum Account({requester})")
+        log("In order to unlock an account you can use: ~/eBlocPOA/client.sh", "yellow")
         sys.exit(1)

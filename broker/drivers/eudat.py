@@ -18,8 +18,8 @@ Ebb = cfg.Ebb
 
 
 class EudatClass(Storage):
-    def __init__(self, logged_job, jobInfo, requester_id, is_already_cached):
-        super().__init__(logged_job, jobInfo, requester_id, is_already_cached)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.share_token = None
         self.accept_flag = 0
         self.shareID = {}
@@ -258,7 +258,7 @@ class EudatClass(Storage):
     def _run(self) -> bool:
         log(
             f"{br(get_time())} New job has been received through EUDAT: {self.job_key} {self.index} "
-            "---------------------------------------------------------",
+            "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
             "cyan",
         )
         log(f"==> Keep track from: tail -f {self.drivers_log_path}")
@@ -270,14 +270,14 @@ class EudatClass(Storage):
             self.eudat_get_share_token(provider_info["f_id"])
         except Exception as e:
             log("E: could not get the share id")
-            print_tb(e)
+            print_tb(str(e))
             return False
 
         if self.data_transfer_in_to_download > self.data_transfer_in_requested:
-            log(f"data_transfer_in_to_download={self.data_transfer_in_to_download}")
-            log(f"data_transfer_in_requested={self.data_transfer_in_requested}")
+            log(f"==> data_transfer_in_to_download={self.data_transfer_in_to_download}")
+            log(f"==> data_transfer_in_requested={self.data_transfer_in_requested}")
             logging.error(
-                "E: Requested size to download the source code and data files is greater that the given amount"
+                "E: Requested size to download the source code and data files is greater than the given amount"
             )
             return self.complete_refund()
 

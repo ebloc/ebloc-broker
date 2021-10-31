@@ -6,7 +6,7 @@ import os
 import time
 from contextlib import suppress
 from pathlib import Path
-
+from contextlib import suppress
 import git
 
 import broker.cfg as cfg
@@ -44,7 +44,7 @@ def diff_and_gzip(filename):
         # We cannot directly write Python objects like strings!
         # We must first convert them into a bytes format using io.BytesIO() and then write it
         with io.TextIOWrapper(output, encoding="utf-8") as encode:
-            encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty"))
+            encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty", "--color=never"))
 
 
 def decompress_gzip(filename):
@@ -84,7 +84,6 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
         patch_upload_name = f"{patch_name}.gz"  # file to be uploaded as zip
         patch_file = f"{target_path}/{patch_upload_name}"
         logging.info(f"patch_path={patch_upload_name}")
-
         try:
             repo.git.add(A=True)
             diff_and_gzip(patch_file)
@@ -94,6 +93,9 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     time.sleep(0.25)
     if is_gzip_file_empty(patch_file):
         log("==> Created patch file is empty, nothing to upload")
+        with suppress(Exception):
+            os.remove(patch_upload_name)
+
         os.remove(patch_file)
         is_file_empty = True
 
@@ -177,7 +179,8 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             myfile.write("\n")
 
         # output = repo.git.apply("--reject", "--whitespace=fix", patch_file)
-        run(["git", "apply", "--reject", "--whitespace=fix", "--verbose", patch_file])
+        run(["git", "apply", "--reject", "--whitespace=fix", "--ignore-space-change",
+             "--ignore-whitespace", "--verbose", patch_file])
 
 
 def is_repo(folders):

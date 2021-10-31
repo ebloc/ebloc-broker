@@ -214,7 +214,7 @@ class GdriveClass(Storage):
         if is_job_key:
             if self.data_transfer_in_to_download > self.data_transfer_in_requested:
                 logging.error(
-                    "E: requested size to download the sourceCode and datafiles is greater that the given amount"
+                    "E: requested size to download the sourceCode and datafiles is greater than the given amount"
                 )
                 # TODO: full refund
                 raise
