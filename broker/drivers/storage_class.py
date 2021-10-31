@@ -43,7 +43,7 @@ class Storage(BaseClass):
         self.job_id = 0
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_info[0]["data_transfer_in"]
-        self.data_transfer_in_to_download = 0  # size_to_download
+        self.data_transfer_in_to_download_mb = 0  # total size in MB to download
         self.is_already_cached = self.is_already_cached
         self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
         self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
@@ -259,9 +259,10 @@ class Storage(BaseClass):
             data = read_json(data_transfer_in_json)
         except:
             data = dict()
-            data["data_transfer_in"] = self.data_transfer_in_to_download
+            data["data_transfer_in"] = self.data_transfer_in_to_download_mb
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
+
             time.sleep(0.25)
 
         # seperator character is *

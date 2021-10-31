@@ -461,7 +461,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.data_transfer_in = data["data_transfer_in"]
             log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
         except:
-            log("E: data_transfer_in.json does not exist")
+            log("E: data_transfer_in.json file does not exist")
 
         try:
             self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")

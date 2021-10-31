@@ -32,9 +32,10 @@ class Contract:
         """Create a new Contrect."""
         mc = MongoClient()
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
-        self.gas_limit = "max"  # 300000
-        self.gas_strategy = LinearScalingStrategy("1 gwei", "10 gwei", 1.13, time_duration=10)
-        self.gas_params = {"gas_price": self.gas_strategy, "gas": 10000000}
+        # self.gas_limit = "max"  # 300000
+        self.gas = 10000000
+        self.gas_strategy = LinearScalingStrategy("1 gwei", "10 gwei", 1.13, time_duration=6)
+        self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
         self._setup(is_brownie)
 
     def _setup(self, is_brownie=False):

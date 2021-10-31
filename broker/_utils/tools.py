@@ -31,6 +31,10 @@ class HandlerException(Exception):
     """Generate HandlerException."""
 
 
+class JobException(Exception):
+    """Trace is not printed."""
+
+
 class QuietExit(Exception):
     """Trace is not printed."""
 
@@ -351,3 +355,11 @@ def handler(signum, frame):
     else:
         print_tb(f"E: Signal handler called with signum={signum} frame={frame}")
         raise HandlerException("Forever is over, end of time")
+
+
+def bytes_to_mb(B) -> float:
+    """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
+    B = float(B)
+    KB = float(1024)
+    MB = float(KB ** 2)  # 1,048,576
+    return float("{0:.5f}".format(B / MB))
