@@ -74,7 +74,6 @@ def _upload_results(encoded_share_token, output_file_name):
     cmd_temp[5] = f'"{cmd[5]}" \ \n    '
     cmd_temp[7] = f'"{cmd[7]}" \ \n    '
     cmd_temp[9] = f'"{cmd[9]}" \ \n    '
-
     cmd_str = " ".join(cmd_temp)
     log(f"==> cmd:\n{cmd_str}\n")  # used for test purposes
     return popen_communicate(cmd)
@@ -288,14 +287,14 @@ def _submit(provider, requester, folders_to_share):
     log("==> Submitting the job")
     job.run_time = [60]  # in seconds
     job.cores = [1]
-    job.data_transfer_ins = [1, 116]
+    job.data_transfer_ins = [1, 100]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.EUDAT, StorageID.EUDAT]
     job.cache_types = [CacheType.PRIVATE, CacheType.PUBLIC]
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
     print(job.source_code_hashes)
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     try:
         return job.Ebb.submit_job(provider, job_key, job_price, job, requester)
     except QuietExit:

@@ -4,9 +4,7 @@ import json
 import os
 import shutil
 import subprocess
-
-# import gshell
-from pprint import pprint
+import sys
 
 from broker._utils._log import br
 from broker._utils.tools import QuietExit, mkdir
@@ -49,7 +47,11 @@ def submit(provider, _from, job):
                 job.foldername_tar_hash[folder_to_share] = tar_hash
                 job.keys[tar_hash] = job_key
 
-            data_files_json_path = f"{job.base_dir}/meta_data.json"
+            if job.base_dir == "":
+                print_tb("job.base_dir is empty")
+                sys.exit()
+
+            data_files_json_path = f"{job.base_dir}/meta_data.json"  #
             try:
                 data_json = read_json(data_files_json_path)
                 if job.keys == data_json:

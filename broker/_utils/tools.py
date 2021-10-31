@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-
+# from os import listdir
 import decimal
 import linecache
 import os
 import signal
 import sys
+import threading
 import time
 import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
-
-# from os import listdir
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
 from pytz import timezone, utc
+
+try:
+    import thread
+except ImportError:
+    import _thread as thread  # noqa
 
 try:
     from broker._utils._log import br
@@ -31,8 +35,16 @@ class HandlerException(Exception):
     """Generate HandlerException."""
 
 
+class JobException(Exception):
+    """Trace is not printed."""
+
+
 class QuietExit(Exception):
     """Trace is not printed."""
+
+
+class Web3NotConnected(Exception):  # noqa
+    """Web3 is not connected"""
 
 
 def WHERE(back=0):
@@ -132,7 +144,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
 
         log(f"{WHERE(1)}", "bold blue")
         if "An exception of type CalledProcessError occurred" not in message:
-            if "Warning:" not in message:
+            if "Warning: " not in message or "E: " not in message:
                 log(f"E: {message}")
             else:
                 log(message)
@@ -255,7 +267,7 @@ def print_trace(cmd, back=1, exc="", returncode=""):
             log(f"E: Failed shell command:\n[yellow]{_cmd}")
 
 
-def run(cmd, my_env=None) -> str:
+def run(cmd, my_env=None, is_quiet=False) -> str:
     if not isinstance(cmd, str):
         cmd = list(map(str, cmd))  # all items should be str
     else:
@@ -267,7 +279,9 @@ def run(cmd, my_env=None) -> str:
         else:
             return check_output(cmd, env=my_env).decode("utf-8").strip()
     except CalledProcessError as e:
-        print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
+        if not is_quiet:
+            print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
+
         raise Exception from None
     except Exception as e:
         raise e
@@ -351,3 +365,36 @@ def handler(signum, frame):
     else:
         print_tb(f"E: Signal handler called with signum={signum} frame={frame}")
         raise HandlerException("Forever is over, end of time")
+
+
+def bytes_to_mb(B) -> float:
+    """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
+    B = float(B)
+    KB = float(1024)
+    MB = float(KB ** 2)  # 1,048,576
+    return float("{0:.5f}".format(B / MB))
+
+
+def quit_function(fn_name):
+    # print to stderr, unbuffered in Python 2.
+    print("{0} took too long".format(fn_name), file=sys.stderr)
+    sys.stderr.flush()  # python 3 stderr is likely buffered.
+    thread.interrupt_main()  # raises KeyboardInterrupt
+
+
+def exit_after(s):
+    """Use as decorator to exit process if function takes longer than s seconds."""
+
+    def outer(fn):
+        def inner(*args, **kwargs):
+            timer = threading.Timer(s, quit_function, args=[fn.__name__])
+            timer.start()
+            try:
+                result = fn(*args, **kwargs)
+            finally:
+                timer.cancel()
+            return result
+
+        return inner
+
+    return outer

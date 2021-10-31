@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 from pprint import pprint
 
@@ -11,7 +10,8 @@ from broker._utils._log import ok
 from broker._utils.tools import QuietExit
 from broker.config import env
 from broker.eblocbroker.job import Job
-from broker.lib import check_linked_data, get_tx_status, run
+from broker.lib import get_tx_status, run
+from broker.submit_base import SubmitBase
 from broker.utils import (
     CacheType,
     StorageID,
@@ -37,8 +37,9 @@ def pre_check():
         sys.exit()
 
 
-if __name__ == "__main__":
+def main():
     Ebb = cfg.Ebb
+    submit_base = SubmitBase()
     job = Job()
     pre_check()
     # cfg.ipfs.connect(force=True)
@@ -62,18 +63,11 @@ if __name__ == "__main__":
     job.set_cache_types(_types)
 
     # TODO: let user directly provide the IPFS hash instead of the folder
-    folders = []  #: full paths are provided
-    folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "source_code")
-    folders.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
-    ##
-    path_from = env.EBLOCPATH / "base" / "data"
-    path_to = env.LINK_PATH / "base" / "data_link"
-    check_linked_data(path_from, path_to, folders[1:])
-    for folder in folders:
-        if not os.path.isdir(folder):
-            log(f"E: {folder} path does not exist")
-            sys.exit(1)
-
+    #: full paths are provided
+    folders_to_share = []
+    folders_to_share.append(env.BASE_DATA_PATH / "test_data" / "base" / "source_code")
+    folders_to_share.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
+    submit_base.check_link_folders(folders_to_share)
     if main_storage_id == StorageID.IPFS:
         log("==> Submitting source code through IPFS")
     elif main_storage_id == StorageID.IPFS_GPG:
@@ -83,7 +77,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     targets = []
-    for idx, folder in enumerate(folders):
+    for idx, folder in enumerate(folders_to_share):
         try:
             provider_info = Ebb.get_provider_info(provider)
         except Exception as e:
@@ -125,7 +119,7 @@ if __name__ == "__main__":
             # created gpg file will be removed since its already in ipfs
             targets.append(target)
 
-        if idx != len(folders) - 1:
+        if idx != len(folders_to_share) - 1:
             log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "cyan")
 
     # Requester inputs for testing purpose
@@ -135,7 +129,7 @@ if __name__ == "__main__":
     job.data_transfer_ins = [1, 1]  # TODO: calculate from the file itself
     job.data_transfer_out = 1
     job.data_prices_set_block_numbers = [0, 0]
-    job_price, cost = job.cost(provider, requester)
+    job_price, *_ = job.cost(provider, requester)
     try:
         tx_hash = Ebb.submit_job(provider, key, job_price, job, requester=requester)
         tx_receipt = get_tx_status(tx_hash)
@@ -152,3 +146,7 @@ if __name__ == "__main__":
         pass
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

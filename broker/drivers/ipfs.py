@@ -102,16 +102,16 @@ class IpfsClass(Storage):
 
             if not is_hashed:
                 folder_size = calculate_folder_size(self.results_folder)
-                self.data_transfer_in_to_download += folder_size - initial_folder_size
+                self.data_transfer_in_to_download_mb += folder_size - initial_folder_size
                 initial_folder_size = folder_size
-                # self.data_transfer_in_to_download += byte_to_mb(cumulative_size)
 
             if idx == 0 and not self.check_run_sh():
                 self.complete_refund()
                 return False
 
         log(
-            f"data_transfer_in={self.data_transfer_in_to_download} MB |"
-            f" rounded={int(self.data_transfer_in_to_download)} MB"
+            f"data_transfer_in={self.data_transfer_in_to_download_mb} MB |"
+            f" rounded={int(self.data_transfer_in_to_download_mb)} MB",
+            "bold",
         )
         return self.sbatch_call()

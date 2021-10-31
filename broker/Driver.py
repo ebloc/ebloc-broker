@@ -22,7 +22,7 @@ import broker.libs.eudat as eudat
 import broker.libs.gdrive as gdrive
 import broker.libs.slurm as slurm
 from broker._utils._log import br, log
-from broker._utils.tools import HandlerException, QuietExit, kill_process_by_name, print_tb
+from broker._utils.tools import HandlerException, JobException, QuietExit, kill_process_by_name, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -136,24 +136,24 @@ class Driver:
     def is_job_received(self, key, index) -> None:
         """Preventing to download or submit again."""
         if self.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
-            raise Exception("## [ mongoDB ] Job is already received", "green")
+            raise JobException("## [ mongoDB ] Job is already received")
 
         if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
-            raise Exception("Job is already completed.")
+            raise JobException("Job is already completed.")
 
         if self.job_infos[0]["stateCode"] == state.code["REFUNDED"]:
-            raise Exception("Job is refunded.")
+            raise JobException("Job is refunded.")
 
         if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
-            raise Exception("Warning: Job is already captured and in process or completed.")
+            raise JobException("Warning: Job is already captured and in process or completed.")
 
     def check_requested_job(self, key, index) -> None:
         """Check status of the job."""
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
-            raise Exception("E: Requested job does not exist")
+            raise JobException("E: Requested job does not exist")
 
         if not self.Ebb.does_requester_exist(self.requester_id):
-            raise Exception("E: job owner is not registered")
+            raise JobException("E: job owner is not registered")
 
         self.is_job_received(key, index)
 
@@ -233,7 +233,7 @@ class Driver:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
                 partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number),
-                attempt_count=10,
+                max_retries=10,
             )
             self.requester_id = self.job_info["job_owner"]
             self.job_infos.append(self.job_info)
@@ -300,6 +300,8 @@ class Driver:
             try:
                 self.process_logged_job(idx)
                 self.sent_job_to_storage_class()
+            except JobException as e:
+                log(str(e))
             except Exception as e:
                 raise e
 
@@ -477,11 +479,12 @@ def _main():
     except Exception as e:
         print_tb(e)
     finally:
-        breakpoint()  # DEBUG
         with suppress(Exception):
             if lock:
                 lock.close()
                 open(env.DRIVER_LOCKFILE, "w").close()
+
+        breakpoint()  # DEBUG
 
 
 def main():

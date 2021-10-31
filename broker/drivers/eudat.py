@@ -9,7 +9,7 @@ from typing import List
 import broker.cfg as cfg
 import broker.config as config
 from broker._utils._log import br, log
-from broker._utils.tools import mkdir
+from broker._utils.tools import bytes_to_mb, mkdir
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
 from broker.utils import CacheType, _remove, generate_md5sum, get_time, print_tb, read_json, untar
@@ -55,7 +55,7 @@ class EudatClass(Storage):
                 }
                 # adding into mongoDB for future usage
                 if Ebb.mongo_broker.add_item_share_id(folder_name, share_id, self.share_token):
-                    logging.info("Added into mongoDB [ SUCCESS ]")
+                    log("Added into mongoDB [ SUCCESS ]")
                 else:
                     logging.error("E: Something is wrong, Not added into mongoDB")
 
@@ -86,7 +86,7 @@ class EudatClass(Storage):
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(f"{folder_name} is already cached under the public directory", "blue")
+                    log(f"==> {folder_name} is already cached under the public directory", "bold blue")
                     return True
 
                 self.folder_type_dict[folder_name] = "tar.gz"
@@ -129,7 +129,7 @@ class EudatClass(Storage):
                     self.tar_downloaded_path[folder_name] = cached_tar_file
                     logging.info("Done")
                 else:
-                    logging.error(f"E: Something is wrong; oc could not retrieve the file [attempt:{attempt}]")
+                    logging.error(f"E: Something is wrong, oc could not retrieve the file [attempt:{attempt}]")
                     return False
             except Exception as e:
                 print_tb(f"Failed to download eudat file. {e}")
@@ -231,13 +231,20 @@ class EudatClass(Storage):
             logging.error("Something is wrong. shareID is empty => {}")
             raise
 
-        self.data_transfer_in_to_download = 0  # size_to_download
+        #: total size to download in bytes
+        data_transfer_in_to_download = 0
         for source_code_hash_text in self.source_code_hashes_to_process:
             folder_name = source_code_hash_text
             if not self.is_already_cached[folder_name]:
                 info = config.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
-                self.data_transfer_in_to_download += int(info.attributes["{DAV:}getcontentlength"])
-        log(f"Total size to download={self.data_transfer_in_to_download} bytes", "blue")
+                #: DAV/Properties/getcontentlength the number of bytes of a resource
+                data_transfer_in_to_download += info.get_size()
+
+        self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
+        log(
+            f"## Total size to download {data_transfer_in_to_download} bytes == "
+            f"{self.data_transfer_in_to_download_mb} MB"
+        )
 
     def run(self) -> bool:
         self.start_time = time.time()
@@ -273,12 +280,10 @@ class EudatClass(Storage):
             print_tb(str(e))
             return False
 
-        if self.data_transfer_in_to_download > self.data_transfer_in_requested:
-            log(f"==> data_transfer_in_to_download={self.data_transfer_in_to_download}")
+        if self.data_transfer_in_to_download_mb > self.data_transfer_in_requested:
+            log(f"==> data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")
             log(f"==> data_transfer_in_requested={self.data_transfer_in_requested}")
-            logging.error(
-                "E: Requested size to download the source code and data files is greater than the given amount"
-            )
+            log("E: Requested size to download the source code and data files is greater than the given amount")
             return self.complete_refund()
 
         if not self.cache_wrapper():
