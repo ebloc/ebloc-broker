@@ -9,12 +9,11 @@ from contextlib import suppress
 from pathlib import Path
 from time import sleep
 from typing import Dict, List
-
-import broker.cfg as cfg
-import broker.libs.eudat as eudat
-import broker.libs.gdrive as gdrive
-import broker.libs.git as git
-import broker.libs.slurm as slurm
+from broker import cfg
+from broker.libs import eudat
+from broker.libs import gdrive
+from broker.libs import git
+from broker.libs import slurm
 from broker._utils._log import br, log
 from broker._utils.tools import QuietExit, mkdir
 from broker.config import env, logging, setup_logger
@@ -68,7 +67,8 @@ class IpfsGPG(Common):
         """Upload files right after all the patchings are completed."""
         try:
             cfg.ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
-        except:
+        except Exception as e:
+            print_tb(e)
             _remove(self.patch_file)
             sys.exit(1)
         return True
@@ -107,7 +107,7 @@ class Eudat(Common):
         log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
         self.data_transfer_out += _data_transfer_out
         return eudat.upload_results(
-            self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, attempt_count=5
+            self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, max_retries=5
         )
 
 
@@ -194,7 +194,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.job_id,
                     self.received_block_number,
                 ),
-                10,
+                max_retries=10,
             )
             self.cloud_storage_ids = self.job_info["cloudStorageID"]
             requester_id = self.job_info["job_owner"]
@@ -256,7 +256,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         for key in share_ids:
             value = share_ids[key]
             encoded_value = self.encoded_share_tokens[key]
-            logging.info("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
+            log("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
 
     def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""
@@ -309,7 +309,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.job_info["run_time"],
                     self.received_block_number,
                 ),
-                10,
+                max_retries=10,
             )
         except Exception as e:
             print_tb(e)
@@ -388,18 +388,18 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         UserCPU, but the docs warns that it only measure CPU time for the
         parent process and not for child processes.
         """
-        slurm_log_output_file = f"{self.results_folder}/slurm_job_info.out"
+        slurm_log_output_fn = f"{self.results_folder}/slurm_job_info.out"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("jobID,jobname,user,account,group,cluster,allocCPUS,REQMEM,TotalCPU,elapsed")
-        run_stdout_to_file(cmd, slurm_log_output_file)
-        with open(slurm_log_output_file, "a") as myfile:
-            myfile.write("\n\n")
+        run_stdout_to_file(cmd, slurm_log_output_fn)
+        with open(slurm_log_output_fn, "a") as f:
+            f.write("\n\n")
 
         cmd.pop()
         cmd.append("NNodes,NTasks,ncpus,CPUTime,State,ExitCode,End,CPUTime,MaxRSS")
-        run_stdout_to_file(cmd, slurm_log_output_file, mode="a")
-        with open(slurm_log_output_file, "a") as myfile:
-            myfile.write("\n")
+        run_stdout_to_file(cmd, slurm_log_output_fn, mode="a")
+        with open(slurm_log_output_fn, "a") as f:
+            f.write("\n")
 
     def get_job_info(self, is_print=False, is_log_print=True):
         self.job_info = eblocbroker_function_call(
@@ -412,7 +412,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 is_print=is_print,
                 is_log_print=is_log_print,
             ),
-            1,
+            max_retries=1,
         )
 
     def attemp_get_job_info(self):
@@ -500,7 +500,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     # self.job_id,
                     self.received_block_number,
                 ),
-                10,
+                max_retries=10,
             )
         except Exception as e:
             print_tb(e)
@@ -526,9 +526,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             sys.exit(1)
 
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
-        log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB", "bold")
-        log(f"==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB", "bold")
-        log(f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB", "bold")
+        log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
+        log(f"==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
+        log(f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB")
         tx_hash = self.process_payment_tx()
         get_tx_status(tx_hash)
         self.get_job_info()

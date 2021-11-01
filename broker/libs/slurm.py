@@ -2,6 +2,7 @@
 
 import time
 
+from broker._utils._log import ok
 from broker._utils.tools import QuietExit, is_process_on
 from broker.config import env, logging
 from broker.lib import run
@@ -98,7 +99,7 @@ def is_on() -> bool:
         logging.error(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
         return False
     else:
-        log("[ ok ]")
+        log(ok())
         return True
 
 

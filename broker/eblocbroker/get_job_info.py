@@ -114,8 +114,11 @@ def get_job_info_print(job_info, provider, job_key, index, received_block_number
                 _hash = cfg.w3.toText(code_hash)
                 _type = "md5sum"
 
-            log(br(f"{idx},{_type}"), "bold cyan", end="")
-            log(f" {_hash}\n\t{code_hash}", "bold")
+            log(br(f"{idx}, {_type}"), "bold cyan", end="")
+            if len(code_hash) <= 32:
+                log(f" {_hash} bytes={code_hash}", "bold")
+            else:
+                log(f" {_hash}\n\t{code_hash}", "bold")
     else:
         print(job_info)
 
@@ -189,7 +192,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 break
     except Exception as e:
-        logging.error(f"E: Failed to getJobInfo: {traceback.format_exc()}")
+        log(f"E: Failed to get_job_info: {traceback.format_exc()}")
         raise e
 
     if str(self.job_info["core"]) == "0":

@@ -6,7 +6,7 @@ apipkg==1.5
 appdirs==1.4.4
 APScheduler==3.8.0
 aspy.refactor-imports==2.1.1
-astroid==2.5
+astroid==2.8.4
 asttokens==2.0.4
 async-timeout==3.0.1
 attrdict==2.0.1
@@ -210,7 +210,7 @@ PyGObject==3.36.0
 pygogo==0.13.2
 PyHamcrest==2.0.2
 PyJWT==1.7.1
-pylint==2.5.2
+pylint==2.11.1
 pymongo==3.11.0
 pymy==0.0.8
 PyMySQL==0.9.3

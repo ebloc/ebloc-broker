@@ -7,12 +7,10 @@ from contextlib import suppress
 from logging import Filter
 from pathlib import Path
 from typing import Union
-
 from dotenv import load_dotenv
-
-import broker._utils._log as _log
-import broker._utils.colored_traceback as colored_traceback
-import broker.cfg as cfg
+from broker._utils import _log
+from broker._utils import colored_traceback
+from broker import cfg
 from broker._utils.tools import QuietExit, mkdir
 from broker._utils.yaml import Yaml
 
@@ -60,9 +58,9 @@ class ENV:
 
             accounts.load("alpy.json", "alper")
 
+        _env = {}
         self.HOME: Path = Path.home()
         env_file = self.HOME / ".ebloc-broker" / ".env"
-        _env = dict()
         try:
             with open(env_file) as f:
                 for line in f:
@@ -70,8 +68,8 @@ class ENV:
                         continue
                     key, value = line.strip().split("=", 1)
                     _env[key] = value.replace('"', "").split("#", 1)[0].rstrip()
-        except IOError:
-            raise Exception(f"E: File '{env_file}' is not accessible")
+        except IOError as e:
+            raise Exception(f"E: File '{env_file}' is not accessible") from e
 
         true_set = ("yes", "true", "t", "1")
         load_dotenv(dotenv_path=env_file)

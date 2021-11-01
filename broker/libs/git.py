@@ -11,7 +11,7 @@ import git
 
 import broker.cfg as cfg
 from broker.config import env, logging
-from broker.utils import cd, is_gzip_file_empty, log, path_leaf, run
+from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, run
 
 
 def initialize_check(path) -> bool:
@@ -28,14 +28,18 @@ def initialize_check(path) -> bool:
 
 
 def is_initialized(path) -> bool:
+    """Check whether repo is initialized via git.
+
+    __ https://stackoverflow.com/a/16925062/2402577
+    """
     with cd(path):
         try:
-            repo = git.Repo(".", search_parent_directories=True)
-            working_tree_dir = repo.working_tree_dir
-        except:
+            *_, output, err = popen_communicate(["git", "rev-parse", "--is-inside-work-tree"])  # noqa
+        except Exception as e:
+            log(f"E: {e}")
             return False
 
-        return path == working_tree_dir
+        return output == "true"
 
 
 def diff_and_gzip(filename):

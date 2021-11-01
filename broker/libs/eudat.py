@@ -79,10 +79,10 @@ def _upload_results(encoded_share_token, output_file_name):
     return popen_communicate(cmd)
 
 
-def upload_results(encoded_share_token, output_file_name, path, attempt_count=1):
-    """Wrapper for the _upload_results() function."""
+def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
+    """Implement wrapper for the _upload_results() function."""
     with cd(path):
-        for _ in range(attempt_count):
+        for _ in range(max_retries):
             p, output, error = _upload_results(encoded_share_token, output_file_name)
             if error:
                 log(error)

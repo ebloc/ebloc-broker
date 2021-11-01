@@ -1,38 +1,39 @@
 #!/usr/bin/env python3
 
+from pprint import pprint
+
+from web3.logs import DISCARD
+
 import broker.cfg as cfg
 import broker.libs.gdrive as gdrive
 import broker.libs.git as git
+from broker._utils._log import ok
+from broker._utils.tools import QuietExit
 from broker.config import env
 from broker.eblocbroker.job import Job
-from broker.lib import check_linked_data
+from broker.lib import get_tx_status
+from broker.submit_base import SubmitBase
 from broker.utils import CacheType, StorageID, is_program_valid, log, print_tb
 
-Ebb = cfg.Ebb
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
 
 
 def main():
+    Ebb = cfg.Ebb
+    submit_base = SubmitBase()
     job = Job()
     is_program_valid(["gdrive", "version"])
-
-    job.base_dir = f"{env.EBLOCPATH}/base"
-    job.folders_to_share.append(f"{job.base_dir}/source_code")
-    job.folders_to_share.append(f"{job.base_dir}/data/data1")
-
-    path_from = env.EBLOCPATH / "base" / "data"
-    path_to = env.LINK_PATH / "base" / "data_link"
-    check_linked_data(path_from, path_to, job.folders_to_share[1:])
-
+    job.base_dir = env.BASE_DATA_PATH
+    job.folders_to_share.append(env.BASE_DATA_PATH / "test_data" / "base" / "source_code")
+    job.folders_to_share.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
+    submit_base.check_link_folders(job.folders_to_share)
     # IMPORTANT: consider ignoring to push .git into the submitted folder
     git.generate_git_repo(job.folders_to_share)
     job.clean_before_submit()
-
+    requester = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
     provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home2-vm
-    account_id = 1
-    _from = Ebb.w3.toChecksumAddress(Ebb.w3.eth.accounts[account_id])
-    job = gdrive.submit(provider, _from, job)
+    job = gdrive.submit(provider, requester, job)
     job.run_time = [5]
     job.cores = [1]
     job.data_transfer_ins = [1, 1]
@@ -43,25 +44,32 @@ def main():
     job.data_prices_set_block_numbers = [0, 0]
     for folder_to_share in job.folders_to_share:
         tar_hash = job.foldername_tar_hash[folder_to_share]
-        # required to send string as bytes == str_data.encode('utf-8')
-        job.source_code_hashes.append(Ebb.w3.toBytes(text=tar_hash))
+        #: required to send string as bytes == str_data.encode('utf-8')
+        value = Ebb.w3.toBytes(text=tar_hash)
+        job.source_code_hashes.append(value)
+        job.source_code_hashes_str.append(value.decode("utf-8"))
 
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
-    job_key = job.keys[tar_hash]
+    key = job.keys[tar_hash]
+    job_price, *_ = job.cost(provider, requester)
     try:
-        job_price, _cost = job.cost(provider, _from, job)
-        tx_hash = Ebb.submit_job(provider, job_key, job_price, job, requester=_from)
+        tx_hash = Ebb.submit_job(provider, key, job_price, job, requester=requester)
+        tx_receipt = get_tx_status(tx_hash)
+        if tx_receipt["status"] == 1:
+            processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+            pprint(vars(processed_logs[0].args))
+            try:
+                log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
+            except IndexError:
+                log(f"E: Tx({tx_hash}) is reverted")
+    except QuietExit:
+        pass
     except Exception as e:
-        raise e
+        print_tb(e)
 
+    log()
     for k, v in job.tar_hashes.items():
         log(f"{k} => {v}")
-
-    log(f"==> source_code_hashes={job.source_code_hashes}")
-    if job.analyze_tx_status(tx_hash):
-        log("SUCCESS")
-    else:
-        log("FAILED")
 
 
 if __name__ == "__main__":

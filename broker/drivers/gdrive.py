@@ -3,9 +3,8 @@
 import os
 import subprocess
 import time
-
-import broker.libs.gdrive as gdrive
-import broker.libs.git as git
+from broker.libs import gdrive
+from broker.libs import git
 from broker._utils._log import br
 from broker._utils.tools import mkdir
 from broker.config import env, logging
@@ -109,8 +108,8 @@ class GdriveClass(Storage):
         if success:
             return True
 
-        if not self.is_already_cached[source_code_hash] and not self.jobInfo[0]["storageDuration"][_id]:
-            log("Downloaded as temporary data file", "yellow")
+        if not self.is_already_cached[source_code_hash] and not self.job_info[0]["storageDuration"][_id]:
+            log("Downloaded as temporary data file", "bold yellow")
             self.folder_path_to_download[source_code_hash] = self.results_folder_prev
         else:
             self.folder_path_to_download[source_code_hash] = cache_folder
@@ -171,7 +170,7 @@ class GdriveClass(Storage):
         return True
 
     def remove_downloaded_file(self, source_code_hash, _id, pathname):
-        if not self.is_already_cached[source_code_hash] and self.jobInfo[0]["storageDuration"][_id]:
+        if not self.is_already_cached[source_code_hash] and self.job_info[0]["storageDuration"][_id]:
             _remove(pathname)
 
     def get_data_init(self, key, _id, is_job_key=False):
@@ -197,6 +196,7 @@ class GdriveClass(Storage):
                     self.is_already_cached,
                 )
             except Exception as e:
+                print_tb(e)
                 raise e
 
         return mime_type, folder_name
@@ -224,6 +224,7 @@ class GdriveClass(Storage):
                 gdrive_info = subprocess_call(cmd, 1)
             except Exception as e:
                 # TODO: gdrive list --query "sharedWithMe"
+                print_tb(e)
                 raise e
 
             mime_type = gdrive.get_file_info(gdrive_info, "Mime")
@@ -239,7 +240,7 @@ class GdriveClass(Storage):
             try:
                 output = gdrive.get_file_id(key)
             except Exception as e:
-                print_tb()
+                print_tb(e)
                 raise e
 
             key = echo_grep_awk(output, name, "1")
@@ -250,7 +251,7 @@ class GdriveClass(Storage):
                 cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
             except Exception as e:
-                print_tb()
+                print_tb(e)
                 raise e
 
             source_code_hash = gdrive.get_file_info(gdrive_info, "Md5sum")
@@ -262,6 +263,7 @@ class GdriveClass(Storage):
             try:
                 self.cache(_id, name, source_code_hash, key, is_job_key)
             except Exception as e:
+                print_tb(e)
                 raise e
 
             if is_job_key:
@@ -299,7 +301,7 @@ class GdriveClass(Storage):
             try:
                 output = run(cmd)
             except Exception as e:
-                print_tb()
+                print_tb(e)
                 raise e
 
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}/")
@@ -309,7 +311,7 @@ class GdriveClass(Storage):
                 _remove(tar_file)
                 return target
             except Exception as e:
-                print_tb()
+                print_tb(e)
                 raise e
         else:
             raise
@@ -319,7 +321,7 @@ class GdriveClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        log(f"{br(get_time())} job's source code has been sent through Google Drive", "cyan")
+        log(f"{br(get_time())} job's source code has been sent through Google Drive", "bold cyan")
         if os.path.isdir(self.results_folder):
             self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 

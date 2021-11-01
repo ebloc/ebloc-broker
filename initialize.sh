@@ -10,7 +10,7 @@ if [ "$MACHINE_OS" == "Mac" ]; then
     CFLAGS="-Wno-error=implicit-function-declaration" pip install -e .
     return
 else
-    sudo apt -y install $(cat pkglist)
+    grep -vE '^#' package.list | xargs -n1 sudo apt install -yfpackage.list
 fi
 
 mkdir -p /tmp/run

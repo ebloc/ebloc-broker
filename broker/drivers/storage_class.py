@@ -81,7 +81,7 @@ class Storage(BaseClass):
 
     def thread_log_setup(self):
         import threading
-        import broker.config as config
+        from broker import config
 
         _log = logging.getLogger()  # root logger
         for hdlr in _log.handlers[:]:  # remove all old handlers
@@ -239,7 +239,6 @@ class Storage(BaseClass):
         timestamp = p2.communicate()[0].decode("utf-8").strip()
         log(f"==> timestamp={timestamp}")
         write_to_file(f"{self.results_folder_prev}/timestamp.txt", timestamp)
-
         log(f"==> job_received_block_number={job_block_number}")
         logging.info("Adding recevied job into the mongoDB database.")
         # write_to_file(f"{results_folder_prev}/blockNumber.txt", job_block_number)
@@ -258,7 +257,7 @@ class Storage(BaseClass):
         try:
             data = read_json(data_transfer_in_json)
         except:
-            data = dict()
+            data = {}
             data["data_transfer_in"] = self.data_transfer_in_to_download_mb
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
@@ -266,13 +265,22 @@ class Storage(BaseClass):
             time.sleep(0.25)
 
         # seperator character is *
+        run_file = f"{self.results_folder}/run.sh"
         sbatch_file_path = f"{self.results_folder}/{job_key}*{index}*{job_block_number}.sh"
-        copyfile(f"{self.results_folder}/run.sh", sbatch_file_path)
+        with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write("#SBATCH -o slurm.out  # STDOUT\n")
+            f.write("#SBATCH -e slurm.err  # STDERR\n")
+            f.write("#SBATCH --mail-type=ALL\n")
+            # _cmd = f"firejail --noprofile --net=none --disable-mnt --noblacklist={self.requester_home} bash {run_file}"
+            _cmd = f"bash {run_file}"
+            f.write(_cmd)
 
+        # copyfile(f"{self.results_folder}/run.sh", sbatch_file_path)
+        copyfile(f"{self.results_folder}/run_wrapper.sh", sbatch_file_path)
         job_core_num = str(job_info["core"][job_id])
         # client's requested seconds to run his/her job, 1 minute additional given
         execution_time_second = timedelta(seconds=int((job_info["run_time"][job_id] + 1) * 60))
-
         d = datetime(1, 1, 1) + execution_time_second
         time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
         logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")
@@ -282,8 +290,8 @@ class Storage(BaseClass):
             try:
                 """Slurm submits job
                 * Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
-                * cmd: sudo su - $requester_id -c "cd $results_folder &&
-                       sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
+                * cmd: sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
+                        sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
                 """
                 cmd = f'sbatch -N {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
                 with cd(self.results_folder):
@@ -308,7 +316,6 @@ class Storage(BaseClass):
             slurm_job_id = job_id.split()[3]  # submitted batch job N
             log(f"==> slurm_job_id={slurm_job_id}")
             run(["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"])
-            # subprocess.run(cmd, stderr=subprocess.STDOUT)
         except Exception as e:
             print_tb(e)
 
