@@ -12,7 +12,7 @@ from web3._utils.threads import Timeout
 
 import broker.cfg as cfg
 import broker.config as config
-from broker._utils.tools import is_process_on, log, mkdir, print_tb, print_trace
+from broker._utils.tools import Web3NotConnected, is_process_on, log, mkdir, print_tb, print_trace
 from broker.config import env, logging
 from broker.utils import Link, StorageID, _remove, byte_to_mb, popen_communicate, question_yes_no, run
 
@@ -134,7 +134,7 @@ def check_size_of_file_before_download(file_type, key=None):
     return True
 
 
-def calculate_folder_size(path, _type="mb") -> float:
+def calculate_folder_size(path, _type="MB") -> float:
     """Return the size of the given path in MB, bytes if wanted."""
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -213,19 +213,17 @@ def echo_grep_awk(str_data, grep_str, column):
     return p3.communicate()[0].decode("utf-8").strip()
 
 
-def eblocbroker_function_call(func, attempt_count):
-    for _attempt in range(attempt_count):
+def eblocbroker_function_call(func, max_retries):
+    for _ in range(max_retries):
         try:
             return func()
+        except Web3NotConnected:
+            time.sleep(1)
         except Exception as e:
-            if type(e).__name__ == "Web3NotConnected":
-                time.sleep(1)
-            else:
-                print_tb(e)
-                raise e
+            print_tb(e)
+            raise e
 
-    print_tb("E: eblocbroker_function_call completed all the attempts.")
-    raise
+    raise Exception("E: eblocbroker_function_call completed all the attempts.")
 
 
 def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):

@@ -72,6 +72,9 @@ class Job:
         try:
             tx_receipt = get_tx_status(tx_hash)
             try:
+                if not self.Ebb:
+                    log("Warning: self.Ebb is empty object")
+
                 processed_logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
                 pprint(vars(processed_logs[0].args))
                 log(f"==> job_index={processed_logs[0].args['index']}", "bold")

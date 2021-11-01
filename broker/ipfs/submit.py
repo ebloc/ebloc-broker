@@ -10,7 +10,7 @@ from broker._utils._log import ok
 from broker._utils.tools import QuietExit
 from broker.config import env
 from broker.eblocbroker.job import Job
-from broker.lib import check_linked_data, get_tx_status, run
+from broker.lib import get_tx_status, run
 from broker.submit_base import SubmitBase
 from broker.utils import (
     CacheType,
@@ -129,7 +129,7 @@ def main():
     job.data_transfer_ins = [1, 1]  # TODO: calculate from the file itself
     job.data_transfer_out = 1
     job.data_prices_set_block_numbers = [0, 0]
-    job_price, cost = job.cost(provider, requester)
+    job_price, *_ = job.cost(provider, requester)
     try:
         tx_hash = Ebb.submit_job(provider, key, job_price, job, requester=requester)
         tx_receipt = get_tx_status(tx_hash)

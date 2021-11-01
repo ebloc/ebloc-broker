@@ -233,7 +233,7 @@ class Driver:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
                 partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.block_number),
-                attempt_count=10,
+                max_retries=10,
             )
             self.requester_id = self.job_info["job_owner"]
             self.job_infos.append(self.job_info)

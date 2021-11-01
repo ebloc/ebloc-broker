@@ -194,7 +194,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.job_id,
                     self.received_block_number,
                 ),
-                10,
+                max_retries=10,
             )
             self.cloud_storage_ids = self.job_info["cloudStorageID"]
             requester_id = self.job_info["job_owner"]
@@ -309,7 +309,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.job_info["run_time"],
                     self.received_block_number,
                 ),
-                10,
+                max_retries=10,
             )
         except Exception as e:
             print_tb(e)
@@ -412,7 +412,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 is_print=is_print,
                 is_log_print=is_log_print,
             ),
-            1,
+            max_retries=1,
         )
 
     def attemp_get_job_info(self):
@@ -500,7 +500,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     # self.job_id,
                     self.received_block_number,
                 ),
-                10,
+                max_retries=10,
             )
         except Exception as e:
             print_tb(e)
