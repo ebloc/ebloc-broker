@@ -1,30 +1,7 @@
 #!/bin/bash
 
-setup=0
-RPC_PORT="8545" # Please change it if you have different RPC_PORT number.
-MACHINE_OS=$(bash $HOME/ebloc-broker/broker/bash_scripts/machine.sh)
-
-if [ "$MACHINE_OS" == "Mac" ]; then
-    brew install coreutils
-    CFLAGS="-Wno-error=implicit-function-declaration" pip install reportlab
-    CFLAGS="-Wno-error=implicit-function-declaration" pip install -e .
-    return
-else
-    sudo apt -y install $(cat pkglist)
-fi
-
-mkdir -p /tmp/run
-sudo groupadd eblocbroker
-
-# pre-installation
-# ================
-if [ $setup -eq 0 ]; then
-    return
-fi
-
 # What are correct permissions for /tmp ? I unintentionally set it
 # all public recursively. https://unix.stackexchange.com/a/71625/198423
-# =====================================================================
 sudo chmod 1777 /tmp
 sudo find /tmp -mindepth 1 -name '.*-unix' -exec chmod 1777 {} + -prune -o -exec chmod go-rwx {} +
 
@@ -99,3 +76,9 @@ cd ~/
 git clone https://github.com/ipfs/py-ipfs-http-client.git
 cd py-ipfs-http-client
 flit install --pth-file  # Link ipfs-api-client into your Python Path
+
+# - name: bloxberg (Bloxberg)
+#   id: bloxberg
+#   chainid: 8995
+#   host: https://core.bloxberg.org
+#   explorer: https://blockexplorer.bloxberg.org/api

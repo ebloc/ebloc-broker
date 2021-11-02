@@ -354,7 +354,7 @@ def read_json(path, is_dict=True):
                 if isinstance(data, dict):
                     return data
                 else:
-                    return dict()
+                    return {}
             else:
                 if data:
                     return data

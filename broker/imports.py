@@ -6,9 +6,7 @@ from web3 import IPCProvider, Web3
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 
-import broker._config as _config
-import broker.cfg as cfg
-import broker.config as config
+from broker import _config, cfg, config
 from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.utils import is_geth_on, read_json, run, terminate
@@ -133,7 +131,7 @@ def connect_to_eblocbroker() -> None:
                 from brownie import network, project
 
                 network.connect("bloxberg")
-                project = project.load("/mnt/hgfs/ebloc-broker/contract")
+                project = project.load(env.CONTRACT_PROJECT_PATH)
                 config.ebb = project.eBlocBroker.at(contract_address)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
                 #: For the contract events

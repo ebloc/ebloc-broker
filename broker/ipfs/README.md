@@ -15,7 +15,6 @@
 - default
 - Off
 - Targets => `All instances in the network`
-
 - Open instance, Edit, network tags => add `default-ipfs`
 - `sudo service network-manager restart` or reboot in case
 
@@ -33,7 +32,6 @@ fi
 
 go get github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen
 ipfs-swarm-key-gen > ~/.ipfs/swarm.key && cat ~/.ipfs/swarm.key && echo ""
-
 export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon
 ipfs swarm addrs
 ```
@@ -43,7 +41,7 @@ ipfs swarm addrs
 ```
 $ sudo firewall-cmd --add-port=4001/tcp --permanent
 $ sudo firewall-cmd --reload
-$ sudo firewall-cmd --list-all
+$ sudo firewall-cmd --list-all --zone=docker
 public
   target: default
   icmp-block-inversion: no

@@ -43,5 +43,5 @@ rm -f $base/package-lock.json
 rm -rf docs/_build_html/
 rm -rf docs/_build/
 
-cp $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh $base
+cp $HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh $base
 $HOME/ebloc-broker/broker/libs/mongodb.py --delete-all

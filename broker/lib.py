@@ -41,7 +41,7 @@ class State:
         - RUNNING: The job currently is allocated to a node and isrunning.
           Corresponding data files are downloaded and verified.
 
-        - REFUNDED: Indicates if job is refunded
+        - REFUNDED: Indicates if job is refunded.
 
         - CANCELLED: Job was explicitly cancelled by the requester or system
           administrator.  The job may or may not have been initiated.  Set by

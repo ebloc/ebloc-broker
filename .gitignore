@@ -9,7 +9,7 @@ base/data_link/*
 base/data/*tar.gz
 base/meta_data\.json
 base/*.tar.gz
-bash_scripts/\.#slurmScript\.sh
+bash_scripts/\.#slurm_mail_prog\.sh
 bootnode\.key
 broker/_utils/config.yaml
 clusterDriver\.out
@@ -161,3 +161,6 @@ venv/bin/python3
 venv/lib64
 venv/pyvenv\.cfg
 workflow/\.pytest_cache/
+slurm.out
+slurm.err
+*.*.bak

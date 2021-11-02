@@ -6,11 +6,10 @@ from os import path
 
 import pytest
 
-import broker._config as _config
-import broker.config as config
-import broker.eblocbroker.Contract as Contract
+from broker import _config, config
 from broker._utils._log import br, log
 from broker.config import setup_logger
+from broker.eblocbroker import Contract
 from broker.eblocbroker.job import Job
 from broker.utils import CacheType, StorageID
 from brownie import accounts, rpc, web3

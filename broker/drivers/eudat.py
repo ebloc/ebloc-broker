@@ -146,7 +146,7 @@ class EudatClass(Storage):
 
     def eudat_get_share_token(self, f_id):
         """Checks already shared or not."""
-        folder_token_flag = dict()
+        folder_token_flag = {}
         if not os.path.isdir(self.private_dir):
             logging.error(f"{self.private_dir} does not exist")
             raise

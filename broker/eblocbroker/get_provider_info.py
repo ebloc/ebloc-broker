@@ -35,7 +35,7 @@ def get_provider_info(self, provider, index=0):
             # toBlock=int(block_read_from) + 1,
             argument_filters={"provider": provider},
         )
-        _event_filter = dict()
+        _event_filter = {}
         for idx in range(len(event_filter.get_all_entries()) - 1, -1, -1):
             # In lists [-1] indicated the most recent emitted event
             for key in event_filter.get_all_entries()[idx].args:

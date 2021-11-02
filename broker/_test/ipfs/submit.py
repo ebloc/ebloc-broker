@@ -7,7 +7,6 @@ from pprint import pprint
 from web3.logs import DISCARD
 
 import broker.cfg as cfg
-import broker.eblocbroker.Contract as Contract
 from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.imports import connect

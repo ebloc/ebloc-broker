@@ -10,9 +10,8 @@ from typing import Union
 
 from dotenv import load_dotenv
 
-import broker._utils._log as _log
-import broker._utils.colored_traceback as colored_traceback
-import broker.cfg as cfg
+from broker import cfg
+from broker._utils import _log, colored_traceback
 from broker._utils.tools import QuietExit, mkdir
 from broker._utils.yaml import Yaml
 
@@ -60,9 +59,9 @@ class ENV:
 
             accounts.load("alpy.json", "alper")
 
+        _env = {}
         self.HOME: Path = Path.home()
         env_file = self.HOME / ".ebloc-broker" / ".env"
-        _env = dict()
         try:
             with open(env_file) as f:
                 for line in f:
@@ -70,8 +69,8 @@ class ENV:
                         continue
                     key, value = line.strip().split("=", 1)
                     _env[key] = value.replace('"', "").split("#", 1)[0].rstrip()
-        except IOError:
-            raise Exception(f"E: File '{env_file}' is not accessible")
+        except IOError as e:
+            raise Exception(f"E: File '{env_file}' is not accessible") from e
 
         true_set = ("yes", "true", "t", "1")
         load_dotenv(dotenv_path=env_file)
@@ -95,8 +94,8 @@ class ENV:
         self.BASE_DATA_PATH = Path(_env["BASE_DATA_PATH"])
         self.BASH_SCRIPTS_PATH = Path(_env["EBLOCPATH"]) / "broker" / "bash_scripts"
         #
-        # self.GDRIVE_CLOUD_PATH = f"/home/{self.WHOAMI}/foo"
         self._HOME = Path("/home") / self.WHOAMI
+        self.CONTRACT_PROJECT_PATH = self._HOME / "ebloc-broker" / "contract"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
         self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")

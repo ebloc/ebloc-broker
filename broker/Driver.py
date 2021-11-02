@@ -117,7 +117,7 @@ def _tools(block_continue):
         raise e
     except Exception as e:
         print_tb(e)
-        raise Terminate(str(e))
+        raise Terminate from e
 
 
 class Driver:
@@ -322,7 +322,7 @@ def run_driver():
         Ebb: "Contract.Contract" = cfg.Ebb
         driver = Driver()
     except Exception as e:
-        raise Terminate(e)
+        raise Terminate from e
 
     if not env.PROVIDER_ID:
         raise Terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
@@ -407,11 +407,11 @@ def run_driver():
             squeue_output = run(["squeue"])
             if "squeue: error:" in str(squeue_output):
                 raise
-        except:
+        except Exception as e:
             raise Terminate(
                 "Warning: SLURM is not running on the background. Please run:\n"
                 "sudo ./broker/bash_scripts/run_slurm.sh"
-            )
+            ) from e
 
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
@@ -482,7 +482,7 @@ def _main():
         with suppress(Exception):
             if lock:
                 lock.close()
-                open(env.DRIVER_LOCKFILE, "w").close()
+                # open(env.DRIVER_LOCKFILE, "w").close()
 
         breakpoint()  # DEBUG
 

@@ -8,7 +8,7 @@ import time
 import psutil  # 3rd party for demo
 
 from broker._utils._log import br, log
-from brownie import network, project
+from broker.config import env
 
 
 def print_msg(msg):
@@ -17,9 +17,11 @@ def print_msg(msg):
 
 
 def calculate(data, *args):
+    from brownie import network, project
+
     print_msg(f"parent pid: {psutil.Process().parent().pid}, start calculate()")
     network.connect("bloxberg")
-    project = project.load("/mnt/hgfs/ebloc-broker/contract")
+    project = project.load(env.CONTRACT_PROJECT_PATH)
     ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
     print(ebb.getOwner())
     print_msg(f"parent pid: {psutil.Process().parent().pid}, end calculate()")
