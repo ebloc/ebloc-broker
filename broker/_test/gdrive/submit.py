@@ -3,7 +3,6 @@
 import sys
 
 import broker.cfg as cfg
-import broker.eblocbroker.Contract as Contract
 import broker.libs.gdrive as gdrive
 from broker.config import env
 from broker.lib import check_linked_data

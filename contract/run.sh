@@ -2,9 +2,8 @@
 
 PORT=8547
 source $HOME/venv/bin/activate
-
 brownie compile
-$HOME/ebloc-broker/broker/daemons/ganache.py $PORT
+$HOME/ebloc-broker/broker/_daemons/ganache.py $PORT
 
 pytest tests/test_overlap.py -s -x -v --disable-pytest-warnings --log-level=INFO  # test all
 # pytest tests -s -x -v --disable-pytest-warnings --log-level=INFO  # test all

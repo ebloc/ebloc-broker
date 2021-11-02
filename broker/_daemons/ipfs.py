@@ -5,8 +5,7 @@ from pathlib import Path
 
 import daemon
 
-import broker.cfg as cfg
-import broker.config as config
+from broker import cfg, config
 from broker._utils.tools import print_tb
 from broker.utils import is_ipfs_on, log, popen_communicate
 

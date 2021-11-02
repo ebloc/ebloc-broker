@@ -1,6 +1,6 @@
 #!/bin/bash
 
-_HOME="/home/alper"
+_HOME="/home/avatar_doo_avatar"  # may differ for each provider
 EMAIL="aalimog1@binghamton.edu"
 VENV_PATH="${_HOME}/venv"
 EBLOCBROKER_PATH="${_HOME}/ebloc-broker/broker"

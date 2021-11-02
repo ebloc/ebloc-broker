@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
-"""
-https://bloxberg.org
-w3 = Web3(Web3.HTTPProvider("https://core.bloxberg.org"))
-"""
 import sys
 
 import dill as pickle
 
+from broker.config import env
 from brownie import project
 
 is_load = False
@@ -16,7 +13,7 @@ if not is_load:
     from brownie import network
 
     network.connect("bloxberg")
-    project = project.load("/mnt/hgfs/ebloc-broker/contract")
+    project = project.load(env.CONTRACT_PROJECT_PATH)
     ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
 else:
     sys.setrecursionlimit(10_000)
@@ -26,7 +23,7 @@ else:
         from brownie import network
 
         network.connect("bloxberg")
-        project = project.load("/mnt/hgfs/ebloc-broker/contract")
+        project = project.load(env.CONTRACT_PROJECT_PATH)
         ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
         pickle.save(ebb, ".network.pk")
 

@@ -54,7 +54,7 @@ configure_slurm () { # slurm setup
     sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/" /usr/local/etc/slurm.conf
     sudo rm -f /usr/local/etc/slurm.conf.bak
 
-    sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurmScript.sh/" /usr/local/etc/slurm.conf
+    sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurm_mail_prog.sh/" /usr/local/etc/slurm.conf
     sudo rm -f /usr/local/etc/slurm.conf.bak
 
     # MinJobAge assingned to '1' day,
@@ -78,11 +78,11 @@ current_dir=$HOME/ebloc-broker
 # Folder Setup
 # ============
 DIR=/var/ebloc-broker
-mkdir -p $DIR/cache
 if [ ! -d $DIR ]; then
     sudo mkdir -p $DIR
     sudo chown $(whoami) -R $DIR
 fi
+mkdir -p $DIR/cache
 
 if [ ! -d $TMP_DIR ]; then
     mkdir -p $TMP_DIR
@@ -98,13 +98,6 @@ mkdir -p $TMP_DIR/end_code_output
 if [ ! -f $TMP_DIR/.env ]; then
     cp $current_dir/.env $TMP_DIR
 fi
-
-# EBLOCPATH
-# =========
-venvPath=$HOME"/venv"
-var=$(echo $venvPath | sed 's/\//\\\//g')
-sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh
-rm $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh.bak
 
 # LOG_PATH
 # ========
@@ -153,8 +146,9 @@ lineNew=$(echo $current_dir | sed 's/\//\\\//g')
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh
-rm -f $HOME/ebloc-broker/broker/bash_scripts/slurmScript.sh.bak
+FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
+sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" $FILE
+rm -f $FILE.bak
 
 # configure_coinbase
 # configure_oc
@@ -169,3 +163,10 @@ eudat_password.txt'"
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node
 # sudo chmod 700 /home/*
+
+# EBLOCPATH
+# =========
+# venvPath=$HOME"/venv"
+# var=$(echo $venvPath | sed 's/\//\\\//g')
+# sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
+# rm $HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh.bak

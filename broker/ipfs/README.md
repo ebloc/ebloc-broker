@@ -15,7 +15,6 @@
 - default
 - Off
 - Targets => `All instances in the network`
-
 - Open instance, Edit, network tags => add `default-ipfs`
 - `sudo service network-manager restart` or reboot in case
 
@@ -33,7 +32,6 @@ fi
 
 go get github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen
 ipfs-swarm-key-gen > ~/.ipfs/swarm.key && cat ~/.ipfs/swarm.key && echo ""
-
 export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon
 ipfs swarm addrs
 ```
@@ -43,7 +41,7 @@ ipfs swarm addrs
 ```
 $ sudo firewall-cmd --add-port=4001/tcp --permanent
 $ sudo firewall-cmd --reload
-$ sudo firewall-cmd --list-all
+$ sudo firewall-cmd --list-all --zone=docker
 public
   target: default
   icmp-block-inversion: no
@@ -84,7 +82,12 @@ ipfs bootstrap rm --all
 ipfs config show | grep "PeerID"
 ipfs bootstrap add /ip4/35.240.104.228/tcp/4001/p2p/12D3KooWLqjUfi8fjz5tncRJXet4gUiK75VRJnB5E16Z8mVJ9c8N
 
-$ cat ~/.ipfs/swarm.key && echo ""  # obtained from the main node
+
+# Copy output of following from the main node
+$ cat ~/.ipfs/swarm.key && echo ""
+
+# paste into `~/.ipfs/swarm.key` file on the other nodes
+
 echo \
 "/key/swarm/psk/1.0.0/
 /base16/

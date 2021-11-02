@@ -18,12 +18,10 @@ from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 from typing import Dict
-
 import base58
-
-import broker._utils.tools as tools
-import broker.cfg as cfg
-import broker.config as config
+from broker import cfg
+from broker import config
+from broker._utils import _log
 from broker._utils._getch import _Getch
 from broker._utils.tools import WHERE, QuietExit, is_process_on, log, print_tb, run
 from broker.config import env, logging
@@ -33,7 +31,7 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 zero_bytes32 = "0x00"
-yes = set(["yes", "y", "ye", "ys", "yy"])
+yes = set(["yes", "y", "ye", "ys", "yy", "yey"])
 no = set(["no", "n", "nn"])
 EXIT_FAILURE = 1
 
@@ -69,6 +67,19 @@ class StorageID(BaseEnum):
     GITHUB = 3
     GDRIVE = 4
     NONE = 5
+
+
+STORAGE_IDs = {
+    "ipfs": StorageID.IPFS,
+    "eudat": StorageID.EUDAT,
+    "ipfs_gpg": StorageID.IPFS_GPG,
+    "gdrive": StorageID.GDRIVE,
+}
+
+CACHE_TYPES = {
+    "public": CacheType.PUBLIC,
+    "private": CacheType.PRIVATE,
+}
 
 
 class cd:
@@ -354,7 +365,7 @@ def read_json(path, is_dict=True):
                 if isinstance(data, dict):
                     return data
                 else:
-                    return dict()
+                    return {}
             else:
                 if data:
                     return data
@@ -464,7 +475,7 @@ def is_geth_account_locked(address) -> bool:
 def is_driver_on(process_count=0, is_print=True):
     """Check whether driver runs on the background."""
     if is_process_on("python.*[D]river", "Driver", process_count, is_print=is_print):
-        log(f"## Track output using:\n[blue]tail -f {tools.DRIVER_LOG}")
+        log(f"## Track output using:\n[blue]tail -f {_log.DRIVER_LOG}")
         raise QuietExit
 
 
@@ -482,39 +493,19 @@ def is_geth_on():
         raise QuietExit
 
 
-# def is_ipfs_running():
-#     """Check that does IPFS run on the background or not."""
-#     if is_ipfs_on():
-#         return True
-
-#     log("E: IPFS does not work on the background", "blue")
-#     log("## Starting IPFS daemon on the background", "blue")
-#     while True:
-#         output = run(["python3", f"{env.EBLOCPATH}/broker/daemons/ipfs.py"])
-#         log(output, "blue")
-#         time.sleep(1)
-#         if is_ipfs_on():
-#             break
-#         else:
-#             with open(env.IPFS_LOG, "r") as content_file:
-#                 logging.info(content_file.read())
-#         time.sleep(1)
-#     return is_ipfs_on()
-
-
-def _run_ipfs_daemon():
+def run_ipfs_daemon():
     """Check that does IPFS run on the background or not."""
     if is_ipfs_on():
         return True
 
     log("Warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
-    output = run(["python3", f"{env.EBLOCPATH}/broker/python_scripts/run_ipfs_daemon.py"])
+    output = run(["python3", env.EBLOCPATH / "broker" / "python_scripts" / "run_ipfs_daemon.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read(), "blue")
-            log(output, "blue")
+            log(content_file.read(), "bold blue")
+            log(output, "bold blue")
 
         if is_ipfs_on():
             return True
@@ -556,7 +547,6 @@ def terminate(msg="", is_traceback=True, lock=None):
     if lock:
         with suppress(Exception):
             lock.close()
-            open(env.DRIVER_LOCKFILE, "w").close()
 
     if config.driver_cancel_process:
         # Following line is added, in case ./killall.sh does not work due to
@@ -586,11 +576,11 @@ def question_yes_no(message, is_terminate=False):
             else:
                 sys.exit(1)
         else:
-            log("Please respond with [green]yes[/green] or [green]no[/green]: ", end="", flush=True)
+            log("Please respond with [green]yes[/green] or [green]no[/green]: ")
 
 
 def json_pretty(json_data):
-    """Prints json in readeable clean format."""
+    """Print json in readeable clean format."""
     print(json.dumps(json_data, indent=4, sort_keys=True))
 
 

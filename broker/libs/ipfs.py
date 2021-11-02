@@ -41,7 +41,7 @@ class Ipfs:
 
     def connect(self):
         """Connect into ipfs."""
-        if is_ipfs_on(False):
+        if is_ipfs_on(is_print=False):
             self.client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
 
     #################
@@ -179,17 +179,20 @@ class Ipfs:
 
         # TODO: check is valid IPFS id
         try:
-            log(f" * trying to connect into {ipfs_id}")
+            log(f" * trying to connect into {ipfs_id} ", end="")
             # output = client.swarm.connect(provider_info["ipfs_id"])
             # if ("connect" and "success") in str(output):
             #     log(str(output), "green")
             cmd = ["ipfs", "swarm", "connect", ipfs_id]
             p, output, error = popen_communicate(cmd)
             if p.returncode != 0:
+                log()
                 if "failure: dial to self attempted" in error:
                     log(f"Warning: {error.replace('Error: ', '').rstrip()}")
                 else:
                     raise Exception(error)
+
+            log(ok())
         except Exception as e:
             print_tb(e)
             log("E: connection into provider's IPFS node via swarm is not accomplished")
@@ -332,8 +335,11 @@ class Ipfs:
         """Return public ipfs id."""
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
-            if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address:
-                log(f"==> ipfs_id={ipfs_address}")
-                return ipfs_address
+            if "::" not in ipfs_address:
+                if "127.0.0.1" in ipfs_address:
+                    log(f"==> {ipfs_address}")
+                else:
+                    log(f"==> ipfs_id={ipfs_address}")
+                    return ipfs_address
 
-        raise ValueError("No valid ipfs has is found.")
+        raise ValueError("No valid ipfs has is found")

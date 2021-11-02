@@ -197,7 +197,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
         try:
             output = get_file_id(key)
             log(f"==> data_id={key}")
-            log(output, "green")
+            log(output, "bold green")
         except Exception as e:
             raise e
 

@@ -6,13 +6,24 @@ from ast import literal_eval as make_tuple
 from pprint import pprint
 from typing import Dict, List
 
-import broker.cfg as cfg
-import broker.libs.git as git
+from broker import cfg
 from broker._utils.tools import QuietExit, log, print_tb
+from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
 from broker.lib import get_tx_status
-from broker.utils import CacheType, StorageID, _remove, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, run
+from broker.libs import git
+from broker.utils import (
+    CACHE_TYPES,
+    CacheType,
+    STORAGE_IDs,
+    StorageID,
+    _remove,
+    bytes32_to_ipfs,
+    empty_bytes32,
+    is_geth_account_locked,
+    run,
+)
 
 
 class DataStorage:
@@ -25,6 +36,50 @@ class DataStorage:
         self.is_private = args[2]
         self.is_verified_used = args[3]
         self.received_storage_deposit = 0
+
+
+class JobConfig:
+    """Read from job.yaml."""
+
+    def __init__(self, fn) -> None:
+        self.cfg = Yaml(fn)
+        self.provider_addr = self.cfg["config"]["provider"]["address"]
+        self.paths = []
+        self.storage_ids = []
+        self.cache_types = []
+        self.data_transfer_ins = []
+        self.storage_hours = []
+        self.data_prices_set_block_numbers = []
+
+        storage_id = self.cfg["config"]["_source_code"]["storage_id"]
+        self.storage_ids.append(STORAGE_IDs[storage_id])
+
+        cache_type = self.cfg["config"]["_source_code"]["cache_type"]
+        self.cache_types.append(CACHE_TYPES[cache_type])
+
+        self.paths.append(self.cfg["config"]["_source_code"]["path"])
+        self.data_transfer_ins.append(self.cfg["config"]["_source_code"]["size_mb"])
+        self.storage_hours.append(self.cfg["config"]["_source_code"]["storage_hours"])
+        self.data_prices_set_block_numbers.append(self.cfg["config"]["_source_code"]["data_prices_set_block_numbers"])
+        for key in self.cfg["config"]["data"]:
+            storage_id = self.cfg["config"]["data"][key]["storage_id"]
+            self.storage_ids.append(STORAGE_IDs[storage_id])
+
+            cache_type = self.cfg["config"]["data"][key]["cache_type"]
+            self.cache_types.append(CACHE_TYPES[cache_type])
+
+            self.paths.append(self.cfg["config"]["data"][key]["path"])
+            self.data_transfer_ins.append(self.cfg["config"]["data"][key]["size_mb"])
+            self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
+            self.data_prices_set_block_numbers.append(self.cfg["config"]["data"][key]["data_prices_set_block_numbers"])
+
+        self.cores = []
+        self.run_time = []
+        for key in self.cfg["config"]["jobs"]:
+            self.cores.append(self.cfg["config"]["jobs"][key]["cores"])
+            self.run_time.append(self.cfg["config"]["jobs"][key]["run_time"])
+
+        self.data_transfer_out = self.cfg["config"]["data_transfer_out"]
 
 
 class Job:

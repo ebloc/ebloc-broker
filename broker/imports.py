@@ -6,9 +6,7 @@ from web3 import IPCProvider, Web3
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 
-import broker._config as _config
-import broker.cfg as cfg
-import broker.config as config
+from broker import _config, cfg, config
 from broker._utils.tools import QuietExit, log, print_tb
 from broker.config import env
 from broker.utils import is_geth_on, read_json, run, terminate
@@ -44,7 +42,7 @@ def _connect_into_web3():
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
-def connect_into_web3():
+def connect_into_web3() -> None:
     """Connect into web3.
 
     Note that you should create only one RPC Provider per process, as it
@@ -62,12 +60,12 @@ def connect_into_web3():
                 if not env.IS_BLOXBERG:
                     is_geth_on()
                 else:
-                    log("E: web3 is not connected into BLOXBERG", "bold red")
+                    log("E: web3 is not connected into BLOXBERG")
+            except QuietExit:
+                pass
             except Exception as e:
-                if type(e).__name__ != "QuietExit":
-                    print_tb(e)
-                else:
-                    sys.exit(1)
+                print_tb(e)
+                sys.exit(1)
 
             if not env.IS_GETH_TUNNEL and not env.IS_BLOXBERG:
                 log(
@@ -87,10 +85,10 @@ def connect_into_web3():
     if not env.PROVIDER_ID:
         try:
             env.set_provider_id()
+        except QuietExit:
+            sys.exit(1)
         except Exception as e:
-            log(f"E' {e}")
-            if type(e).__name__ != "QuietExit":
-                print_tb()
+            print_tb(e)
             sys.exit(1)
 
 
@@ -100,7 +98,7 @@ def connect_to_eblocbroker() -> None:
         return
 
     if not cfg.w3:
-        cfg.w3 = connect_into_web3()
+        connect_into_web3()
 
     try:
         if env.EBLOCPATH is None or env.EBLOCPATH == "":
@@ -133,7 +131,7 @@ def connect_to_eblocbroker() -> None:
                 from brownie import network, project
 
                 network.connect("bloxberg")
-                project = project.load("/mnt/hgfs/ebloc-broker/contract")
+                project = project.load(env.CONTRACT_PROJECT_PATH)
                 config.ebb = project.eBlocBroker.at(contract_address)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
                 #: For the contract events

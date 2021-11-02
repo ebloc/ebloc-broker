@@ -1,14 +1,15 @@
 AccessControl==4.2
 Acquisition==4.6
 aiodns==2.0.0
-aiohttp==3.7.4.post0
+aiohttp==3.8.0
+aiosignal==1.2.0
 apipkg==1.5
 appdirs==1.4.4
 APScheduler==3.8.0
 aspy.refactor-imports==2.1.1
-astroid==2.5
+astroid==2.8.4
 asttokens==2.0.4
-async-timeout==3.0.1
+async-timeout==4.0.0
 attrdict==2.0.1
 attrs==21.2.0
 AuthEncoding==4.1
@@ -49,6 +50,7 @@ cryptography==3.2.1
 cycler==0.10.0
 cytoolz==0.11.0
 daemon==1.2
+daemons==1.3.2
 dataclassy==0.11.0
 dateparser==1.0.0
 DateTime==4.3
@@ -85,6 +87,7 @@ flake8-mypy==17.8.0
 flake8-noqa==1.2.0
 Flask==1.1.2
 forex-python==1.5
+frozenlist==1.2.0
 gdown==3.12.2
 git-filter-repo==2.32.0
 gitdb==4.0.2
@@ -210,7 +213,7 @@ PyGObject==3.36.0
 pygogo==0.13.2
 PyHamcrest==2.0.2
 PyJWT==1.7.1
-pylint==2.5.2
+pylint==2.11.1
 pymongo==3.11.0
 pymy==0.0.8
 PyMySQL==0.9.3
@@ -319,7 +322,7 @@ WSGIProxy2==0.4.6
 WTForms==2.3.1
 xlrd==1.2.0
 yapf==0.31.0
-yarl==1.7.0
+yarl==1.7.2
 yfinance==0.1.63
 z3c.pt==3.3.0
 zc.lockfile==2.0

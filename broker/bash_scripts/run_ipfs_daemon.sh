@@ -1,6 +1,6 @@
 #!/bin/bash
 
-~/ebloc-broker/broker/daemons/ipfs.py
+~/ebloc-broker/broker/_daemons/ipfs.py
 echo -e "# Sleeping for 5 seconds for ipfs to be on"
 sleep 5
 ipfs bootstrap list

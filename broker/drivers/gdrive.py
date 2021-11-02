@@ -3,14 +3,12 @@
 import os
 import subprocess
 import time
-
-import broker.libs.gdrive as gdrive
-import broker.libs.git as git
 from broker._utils._log import br
 from broker._utils.tools import mkdir
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
+from broker.libs import gdrive, git
 from broker.utils import WHERE, CacheType, _remove, byte_to_mb, generate_md5sum, get_time, print_tb, untar
 
 
@@ -214,9 +212,7 @@ class GdriveClass(Storage):
 
         if is_job_key:
             if self.data_transfer_in_to_download > self.data_transfer_in_requested:
-                logging.error(
-                    "E: requested size to download the sourceCode and datafiles is greater than the given amount"
-                )
+                log("E: requested size to download the sourceCode and datafiles is greater than the given amount")
                 # TODO: full refund
                 raise
 

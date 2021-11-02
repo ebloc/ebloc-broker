@@ -10,7 +10,7 @@ from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils._log import ok
 from broker._utils.tools import Web3NotConnected, exit_after, log, print_tb
 from broker.config import env
@@ -112,21 +112,25 @@ class Contract:
 
     def _wait_for_transaction_receipt(self, tx_hash) -> TxReceipt:
         """Wait till the tx is deployed."""
+        tx_receipt = None
+        attempt = 0
         poll_latency = 3
         log(f"## Waiting for the transaction({tx_hash}) receipt... ", end="")
         while True:
             try:
                 tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
             except TransactionNotFound as e:
-                log(str(e))
+                log(f"warning: {e}")
             except Exception as e:
                 print_tb(str(e))
                 tx_receipt = None
 
-            if tx_receipt is not None and tx_receipt["blockHash"] is not None:
+            if tx_receipt and tx_receipt["blockHash"]:
                 break
 
-            log(f"{poll_latency} ", end="")
+            log()
+            log(f"## attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
+            attempt += 1
             time.sleep(poll_latency)
 
         log(ok())
@@ -200,7 +204,7 @@ class Contract:
             return self.w3.isAddress(addr)
         except Exception as e:
             print_tb(e)
-            raise Web3NotConnected()
+            raise Web3NotConnected from e
 
     def _get_contract_fname(self) -> Path:
         if env.IS_BLOXBERG:
@@ -343,12 +347,16 @@ class Contract:
             try:
                 return self._submit_job_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+            except KeyboardInterrupt as e:
+                if "Awaiting Transaction in the mempool" in str(e):
+                    log("warning: Timeout Awaiting Transaction in the mempool")
+                    gas_price *= 1.13
 
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
         gas_price = GAS_PRICE
@@ -357,7 +365,10 @@ class Contract:
             try:
                 return self._register_requester_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -371,7 +382,10 @@ class Contract:
             try:
                 return self._refund_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -385,7 +399,10 @@ class Contract:
             try:
                 return self._transfer_ownership_timeout(new_owner)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -399,7 +416,10 @@ class Contract:
             try:
                 return self._authenticate_orc_id_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -418,7 +438,10 @@ class Contract:
             try:
                 return self._update_provider_prices_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -437,7 +460,10 @@ class Contract:
             try:
                 return self._update_provider_info_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -457,7 +483,10 @@ class Contract:
             try:
                 return self.set_register_provider_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -477,7 +506,10 @@ class Contract:
             try:
                 return self.register_data_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -499,7 +531,10 @@ class Contract:
             try:
                 return self.set_job_status_running_timeout(key, int(index), int(job_id), int(start_time))
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -519,7 +554,10 @@ class Contract:
             try:
                 return self.process_payment_timeout(*args)
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
@@ -539,7 +577,10 @@ class Contract:
             try:
                 return self.withdraw_timeout()
             except ValueError as e:
-                log(str(e))
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
+
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:

@@ -3,9 +3,8 @@
 import os
 import shutil
 import time
-
-import broker.cfg as cfg
-import broker.libs.git as git
+from broker import cfg
+from broker.libs import git
 from broker._utils._log import br
 from broker._utils.tools import mkdir
 from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
@@ -27,8 +26,8 @@ class IpfsClass(Storage):
             ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
             if "CumulativeSize" not in ipfs_stat:
                 raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
-        except:
-            raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
+        except Exception as e:
+            raise e
 
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
@@ -40,10 +39,11 @@ class IpfsClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
+        log(f"{br(get_time())} Job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
-            log(f"{br(get_time())} Job's source code has been sent through IPFS ", "bold cyan")
+            log("IPFS ", "bold cyan")
         else:
-            log(f"{br(get_time())} Job's source code has been sent through IPFS_GPG ", "bold cyan")
+            log("IPFS_GPG ", "bold cyan")
 
         if not is_ipfs_on():
             return False

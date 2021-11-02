@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
 from pprint import pprint
-
 from web3.logs import DISCARD
-
-import broker.cfg as cfg
-import broker.libs.gdrive as gdrive
-import broker.libs.git as git
+from broker import cfg
+from broker.libs import gdrive
+from broker.libs import git
 from broker._utils._log import ok
 from broker._utils.tools import QuietExit
 from broker.config import env
@@ -69,7 +67,7 @@ def main():
 
     log()
     for k, v in job.tar_hashes.items():
-        log(f"{k} => {v}")
+        log(f"{k} [blue]=>[/blue] {v}")
 
 
 if __name__ == "__main__":

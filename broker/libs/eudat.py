@@ -14,9 +14,9 @@ from pprint import pprint
 import owncloud
 from web3.logs import DISCARD
 
-import broker.cfg as cfg
 import broker.config as config
 import broker.libs.git as git
+from broker import cfg
 from broker._utils._log import br, ok
 from broker._utils.tools import QuietExit
 from broker.config import env, logging
@@ -74,15 +74,16 @@ def _upload_results(encoded_share_token, output_file_name):
     cmd_temp[5] = f'"{cmd[5]}" \ \n    '
     cmd_temp[7] = f'"{cmd[7]}" \ \n    '
     cmd_temp[9] = f'"{cmd[9]}" \ \n    '
+    cmd_temp[10] = f'"{cmd[10]}" \ \n    '
     cmd_str = " ".join(cmd_temp)
-    log(f"==> cmd:\n{cmd_str}\n")  # used for test purposes
+    log(f"==> cmd:\n{cmd_str}")
     return popen_communicate(cmd)
 
 
-def upload_results(encoded_share_token, output_file_name, path, attempt_count=1):
-    """Wrapper for the _upload_results() function."""
+def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
+    """Implement wrapper for the _upload_results() function."""
     with cd(path):
-        for _ in range(attempt_count):
+        for _ in range(max_retries):
             p, output, error = _upload_results(encoded_share_token, output_file_name)
             if error:
                 log(error)

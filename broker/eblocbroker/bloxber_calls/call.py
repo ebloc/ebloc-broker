@@ -6,6 +6,7 @@ import time
 from ast import literal_eval as make_tuple
 
 from broker._utils._log import br, log
+from broker.config import env
 from broker.utils import ipfs_to_bytes32
 
 
@@ -19,7 +20,7 @@ def main(*args):
 
     _args = make_tuple(str(args))
     network.connect("bloxberg")
-    project = project.load("/mnt/hgfs/ebloc-broker/contract")  # TODO read path from config
+    project = project.load(env.CONTRACT_PROJECT_PATH)
     ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
     job_provider = _args[0]
     job_requester = _args[1]

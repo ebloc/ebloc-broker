@@ -39,20 +39,19 @@ def register_provider(self, *args, **kwargs):
 if __name__ == "__main__":
     Ebb = cfg.Ebb
     try:
-        ipfs_addr = "/ip4/127.0.0.1/tcp/5001/http"
-        client = ipfshttpclient.connect(ipfs_addr)
+        client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except Exception as e:
         print_tb(e)
         log(
             "E: Connection error to IPFS, please run it on the background.\n"
-            "Please run ~/ebloc-broker/broker/daemons/ipfs.py"
+            "Please run ~/ebloc-broker/broker/_daemons/ipfs.py"
         )
         sys.exit(1)
 
     try:
-        ipfs_id = cfg.ipfs.get_ipfs_id(client, is_print=True)
+        ipfs_id = cfg.ipfs.get_ipfs_id(client)
     except Exception as e:
-        print_tb(e)
+        print_tb(str(e))
         sys.exit(1)
 
     # email = "alper01234alper@gmail.com"

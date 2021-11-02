@@ -169,7 +169,6 @@ _SR.add_representer(SubYaml, _SR.represent_dict)
 def test_1():
     config_file = Path("test.yaml")
     cfg = Yaml(config_file)
-
     cfg["setup"]["a"] = 200
     cfg["setup2"]["c"] = 1
     with suppress(Exception):

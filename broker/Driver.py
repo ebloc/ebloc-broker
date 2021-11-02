@@ -14,27 +14,24 @@ from pprint import pprint
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
-import broker._utils._log as _log
-import broker.cfg as cfg
-import broker.config as config
-import broker.eblocbroker.Contract as Contract
-import broker.libs.eudat as eudat
-import broker.libs.gdrive as gdrive
-import broker.libs.slurm as slurm
+from broker import cfg, config
+from broker._utils import _log
 from broker._utils._log import br, log
 from broker._utils.tools import HandlerException, JobException, QuietExit, kill_process_by_name, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
+from broker.eblocbroker import Contract
 from broker.eblocbroker.job import DataStorage
 from broker.helper import helper
 from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
+from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
 from broker.utils import (
     CacheType,
     StorageID,
-    _run_ipfs_daemon,
+    run_ipfs_daemon,
     bytes32_to_ipfs,
     check_ubuntu_packages,
     eth_address_to_md5,
@@ -98,6 +95,9 @@ def _tools(block_continue):
 
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
+            if env.GDRIVE == "":
+                raise Terminate(f"E: Path for gdrive='{env.GDRIVE}' please set a valid path in the .env file")
+
             provider_info = Contract.Ebb.get_provider_info(env.PROVIDER_ID)
             email = provider_info["email"]
             output, gdrive_email = gdrive.check_user(email)
@@ -109,15 +109,17 @@ def _tools(block_continue):
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
-                log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\n" "file for decrypting using ipfs")
+                log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
                 raise QuietExit
 
-            _run_ipfs_daemon()
+            run_ipfs_daemon()
     except QuietExit as e:
+        raise e
+    except Terminate as e:
         raise e
     except Exception as e:
         print_tb(e)
-        raise Terminate(str(e))
+        raise Terminate from e
 
 
 class Driver:
@@ -130,6 +132,7 @@ class Driver:
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
         self.job_info = None
+        self.requester_id: str = ""
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
@@ -139,13 +142,13 @@ class Driver:
             raise JobException("## [ mongoDB ] Job is already received")
 
         if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
-            raise JobException("Job is already completed.")
+            raise JobException("## Job is already completed.")
 
         if self.job_infos[0]["stateCode"] == state.code["REFUNDED"]:
-            raise JobException("Job is refunded.")
+            raise JobException("## Job is refunded.")
 
         if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
-            raise JobException("Warning: Job is already captured and in process or completed.")
+            raise JobException("warning: Job is already captured and in process or completed.")
 
     def check_requested_job(self, key, index) -> None:
         """Check status of the job."""
@@ -168,12 +171,10 @@ class Driver:
             else:
                 source_code_hash = cfg.w3.toText(source_code_hash_byte)
 
-            ##############
             received_storage_deposit = self.Ebb.get_received_storage_deposit(
                 env.PROVIDER_ID, requester, source_code_hash
             )
             job_storage_time = self.Ebb.get_job_storage_time(env.PROVIDER_ID, source_code_hash, _from=env.PROVIDER_ID)
-            ############
             ds = DataStorage(job_storage_time)
             ds.received_storage_deposit = received_storage_deposit
             self.received_block.append(ds.received_block)
@@ -211,7 +212,7 @@ class Driver:
         index = self.logged_job.args["index"]
         self.block_number = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
-        log(f"job_key={job_key} | index={index}", "green")
+        log(f"job_key={job_key} | index={index}", "bold green")
         log(
             f"received_block_number={self.block_number} \n"
             f"transactionHash={self.logged_job['transactionHash'].hex()} | "
@@ -322,7 +323,7 @@ def run_driver():
         Ebb: "Contract.Contract" = cfg.Ebb
         driver = Driver()
     except Exception as e:
-        raise Terminate(e)
+        raise Terminate from e
 
     if not env.PROVIDER_ID:
         raise Terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
@@ -407,17 +408,17 @@ def run_driver():
             squeue_output = run(["squeue"])
             if "squeue: error:" in str(squeue_output):
                 raise
-        except:
+        except Exception as e:
             raise Terminate(
                 "Warning: SLURM is not running on the background. Please run:\n"
                 "sudo ./broker/bash_scripts/run_slurm.sh"
-            )
+            ) from e
 
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
             # checks if the squeue output's line number is gretaer than 1
             log(f"Current slurm running jobs status:\n{squeue_output}", "bold yellow")
-            log("-" * 100, "green")
+            log("-" * 100, "bold green")
 
         log(f"==> date={get_time()}")
         if isinstance(balance, int):
@@ -475,16 +476,16 @@ def _main():
     except zc.lockfile.LockError:
         log("E: Driver cannot lock the file, the pid file is in use")
     except Terminate as e:
-        terminate(e, lock)
+        terminate(str(e), lock)
     except Exception as e:
         print_tb(e)
     finally:
         with suppress(Exception):
             if lock:
                 lock.close()
-                open(env.DRIVER_LOCKFILE, "w").close()
+                # open(env.DRIVER_LOCKFILE, "w").close()
 
-        breakpoint()  # DEBUG
+        breakpoint()  # DEBUG: end of program
 
 
 def main():
@@ -499,5 +500,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == "__main__":
-    log("Please run: [magenta]./run.py")
+# if __name__ == "__main__":
+#     log("Please run: [magenta]./run.py")

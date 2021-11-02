@@ -6,10 +6,12 @@ import daemon
 import daemon.pidfile
 from daemons.daemon_base import Daemon_base
 
+from broker._utils.tools import QuietExit
 from broker.config import env
 from broker.utils import is_driver_on, print_tb
 
-if __name__ == "__main__":
+
+def main():
     pidfile = daemon.pidfile.PIDLockFile(env.DRIVER_DAEMON_LOCK)
     cmd = ["python3", "Driver.py"]
     daemon_base = Daemon_base(pidfile, env.EBLOCPATH, cmd)
@@ -18,10 +20,11 @@ if __name__ == "__main__":
             try:
                 is_driver_on()
                 daemon_base.start()
+            except QuietExit:
+                pass
             except Exception as e:
-                if type(e).__name__ != "QuietExit":
-                    print_tb(e)
-                    sys.exit(1)
+                print_tb(e)
+                sys.exit(1)
         elif sys.argv[1] in ["terminate", "t"]:
             daemon_base.terminate()
         elif sys.argv[1] in ["reload", "r"]:
@@ -33,3 +36,6 @@ if __name__ == "__main__":
     else:
         print("usage: %s [s]tart|[t]erminate|[r]eload" % sys.argv[0])
         sys.exit(2)
+
+if __name__ == "__main__":
+    main()

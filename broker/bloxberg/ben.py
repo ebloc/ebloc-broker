@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-from pprint import pprint
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.eblocbroker.job import Job
 from broker.lib import get_tx_status
 from broker.utils import is_bin_installed, is_dpkg_installed, log
@@ -22,26 +21,13 @@ def pre_check():
         sys.exit()
 
 
-def get_tx_status(tx_hash) -> str:
-    print(f"tx_hash={tx_hash}")
-    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
-    print("Transaction receipt is mined:")
-    pprint(dict(tx_receipt), depth=1)
-    print("\n## Was transaction successful? ")
-    if tx_receipt["status"] == 1:
-        log("Transaction is deployed", "green")
-    else:
-        raise Exception("E: Transaction is reverted")
-    return tx_receipt
-
-
 if __name__ == "__main__":
     Ebb = cfg.Ebb
     job = Job()
     pre_check()
 
     # network.connect("bloxberg")
-    # project = project.load("/mnt/hgfs/ebloc-broker/contract")
+    # project = project.load(env.CONTRACT_PROJECT_PATH)
     # ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
     # print(ebb.getOwner())
     #
