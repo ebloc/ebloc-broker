@@ -7,12 +7,11 @@ from contextlib import suppress
 from logging import Filter
 from pathlib import Path
 from typing import Union
-
 from dotenv import load_dotenv
-
 from broker import cfg
 from broker._utils import _log, colored_traceback
-from broker._utils.tools import QuietExit, mkdir
+from broker.errors import QuietExit
+from broker._utils.tools import mkdir
 from broker._utils.yaml import Yaml
 
 logging.getLogger("filelock").setLevel(logging.ERROR)

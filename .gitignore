@@ -165,3 +165,4 @@ slurm.out
 slurm.err
 *.*.bak
 password.secret
+rm slurm-*.out

@@ -13,7 +13,8 @@ from typing import Dict, List
 
 from broker import cfg
 from broker._utils._log import br, log
-from broker._utils.tools import QuietExit, mkdir
+from broker.errors import QuietExit
+from broker._utils.tools import mkdir
 from broker.config import env, logging, setup_logger
 from broker.imports import connect
 from broker.lib import (

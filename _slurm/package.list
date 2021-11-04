@@ -1,3 +1,4 @@
+software-properties-common
 build-essential
 gcc
 libmunge-dev
@@ -6,5 +7,5 @@ munge
 mysql-server
 mysql-client
 libmysqlclient-dev
-default-lib
-mysqlclient-dev
+libmariadbd-dev
+libmariadb-dev

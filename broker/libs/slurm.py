@@ -3,10 +3,12 @@
 import time
 
 from broker._utils._log import ok
-from broker._utils.tools import QuietExit, is_process_on
+from broker.errors import QuietExit
+from broker._utils.tools import is_process_on
 from broker.config import env, logging
 from broker.lib import run
-from broker.utils import BashCommandsException, log, popen_communicate, print_tb
+from broker.errors import BashCommandsException
+from broker.utils import log, popen_communicate, print_tb
 
 
 def add_user_to_slurm(user):
@@ -84,7 +86,7 @@ def is_on() -> bool:
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 
-    output = run(["sinfo"])
+    output = run(["sinfo", "-N", "-l"])
     if "PARTITION" not in output:
         logging.error("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")
         if not output:

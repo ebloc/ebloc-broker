@@ -71,10 +71,12 @@ class IpfsClass(Storage):
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists
             is_hashed = False
-            logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
+            log(f"## Attempting to get IPFS file: {ipfs_hash}...", end="")
             if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
-                log(f"==> IPFS file {ipfs_hash} is already cached.", "bold blue")
+                log("already cached.", "bold blue")
+            else:
+                log()
 
             if idx == 0:
                 target = self.results_folder

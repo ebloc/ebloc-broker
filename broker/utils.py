@@ -23,7 +23,9 @@ from broker import cfg
 from broker import config
 from broker._utils import _log
 from broker._utils._getch import _Getch
-from broker._utils.tools import WHERE, QuietExit, is_process_on, log, print_tb, run
+from broker.errors import QuietExit
+from broker.errors import QuietExit
+from broker._utils.tools import WHERE, is_process_on, log, print_tb, run
 from broker.config import env, logging
 
 ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
@@ -34,14 +36,6 @@ zero_bytes32 = "0x00"
 yes = set(["yes", "y", "ye", "ys", "yy", "yey"])
 no = set(["no", "n", "nn"])
 EXIT_FAILURE = 1
-
-
-class BashCommandsException(Exception):
-    def __init__(self, returncode, output, error_msg):
-        self.returncode = returncode
-        self.output = output
-        self.error_msg = error_msg
-        Exception.__init__("Error in the executed command")
 
 
 class BaseEnum(IntEnum):
@@ -64,9 +58,8 @@ class StorageID(BaseEnum):
     IPFS = 0
     EUDAT = 1
     IPFS_GPG = 2
-    GITHUB = 3
-    GDRIVE = 4
-    NONE = 5
+    GDRIVE = 3
+    NONE = 4
 
 
 STORAGE_IDs = {
@@ -74,6 +67,7 @@ STORAGE_IDs = {
     "eudat": StorageID.EUDAT,
     "ipfs_gpg": StorageID.IPFS_GPG,
     "gdrive": StorageID.GDRIVE,
+    "none": StorageID.NONE,
 }
 
 CACHE_TYPES = {

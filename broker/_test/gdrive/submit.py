@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
-
-import broker.cfg as cfg
-import broker.libs.gdrive as gdrive
+from broker import cfg
+from broker.libs import gdrive
 from broker.config import env
 from broker.lib import check_linked_data
 from broker.utils import CacheType, StorageID, log, print_tb
-from contract.scripts.lib import Job, cost
+from broker.eblocbroker.job import Job
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version

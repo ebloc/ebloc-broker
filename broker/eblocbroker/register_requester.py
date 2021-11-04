@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import sys
-
 import ipfshttpclient
-
-import broker.cfg as cfg
-from broker._utils.tools import QuietExit, log, print_tb
+from broker import cfg
+from broker.errors import QuietExit
+from broker._utils.tools import log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status, run
 

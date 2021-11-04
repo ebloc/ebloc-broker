@@ -3,6 +3,8 @@
 #SBATCH -e slurm.err        # STDERR
 #SBATCH --mail-type=ALL
 
-hostname > completed.txt
-uptime >> completed.txt
-echo "completed" >> completed.txt
+OMP_NUM_THREADS=1
+sleep 10
+# hostname > completed.txt
+# uptime >> completed.txt
+# echo "completed" >> completed.txt

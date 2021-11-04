@@ -17,7 +17,8 @@ from ipdb import launch_ipdb_on_exception
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._log import br, log
-from broker._utils.tools import HandlerException, JobException, QuietExit, kill_process_by_name, print_tb
+from broker.errors import HandlerException, JobException, QuietExit
+from broker._utils.tools import kill_process_by_name, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass

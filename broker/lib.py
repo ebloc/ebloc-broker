@@ -7,12 +7,11 @@ import sys
 import time
 from multiprocessing import Process
 from threading import Thread
-
 from web3._utils.threads import Timeout
-
-import broker.cfg as cfg
-import broker.config as config
-from broker._utils.tools import Web3NotConnected, is_process_on, log, mkdir, print_tb, print_trace
+from broker import cfg
+from broker import config
+from broker.errors import Web3NotConnected
+from broker._utils.tools import is_process_on, log, mkdir, print_tb, print_trace
 from broker.config import env, logging
 from broker.utils import Link, StorageID, _remove, byte_to_mb, popen_communicate, question_yes_no, run
 

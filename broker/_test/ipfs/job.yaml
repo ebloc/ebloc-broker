@@ -13,7 +13,7 @@ config:
       path: /home/alper/test_eblocbroker/datasets/BL06-camel-sml
       size_mb: 2
       storage_hours: 1
-      storage_id: ipfs_gpg
+      storage_id: ipfs
   data_transfer_out: 1
   jobs:
     job1:

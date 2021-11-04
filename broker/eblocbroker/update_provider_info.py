@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import broker.cfg as cfg
-from broker._utils.tools import QuietExit, log, print_tb
+from broker import cfg
+from broker.errors import QuietExit
+from broker._utils.tools import log, print_tb
 from broker.config import env
 from broker.lib import get_tx_status
 
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     # email = "alper.alimoglu@gmail.com"
     gpg_fingerprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
-    ipfs_id = "/ip4/35.195.168.157/tcp/4001/p2p/12D3KooWAj27UK4PnEbWY5hLUTQtWU97asYGiq2PcnF9J8csxtHS"  # TODO: delete
+    ipfs_id = "/ip4/34.76.46.114/tcp/4001/p2p/12D3KooWAj27UK4PnEbWY5hLUTQtWU97asYGiq2PcnF9J8csxtHS"  # TODO: delete
     try:
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, email, federation_cloud_id, ipfs_id)
         receipt = get_tx_status(tx_hash)

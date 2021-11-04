@@ -13,15 +13,14 @@ from pprint import pprint
 
 import owncloud
 from web3.logs import DISCARD
-
-import broker.config as config
-import broker.libs.git as git
+from broker import config
+from broker.libs import git
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import QuietExit
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
 from broker.lib import get_tx_status, run
+from broker.errors import QuietExit
 from broker.utils import (
     CacheType,
     StorageID,

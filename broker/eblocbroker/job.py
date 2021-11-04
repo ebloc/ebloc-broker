@@ -7,7 +7,9 @@ from pprint import pprint
 from typing import Dict, List
 
 from broker import cfg
-from broker._utils.tools import QuietExit, log, print_tb
+
+from broker.errors import QuietExit
+from broker._utils.tools import log, print_tb
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call

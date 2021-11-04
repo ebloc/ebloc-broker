@@ -5,14 +5,13 @@ import time
 from os.path import expanduser
 from pathlib import Path
 from typing import Union
-
 from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
-
 from broker import cfg
 from broker._utils._log import ok
-from broker._utils.tools import Web3NotConnected, exit_after, log, print_tb
+from broker.errors import Web3NotConnected
+from broker._utils.tools import exit_after, log, print_tb
 from broker.config import env
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, read_json, terminate

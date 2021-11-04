@@ -17,10 +17,9 @@ library Lib {
     enum CloudStorageID {
         IPFS, /* 0 */
         EUDAT, /* 1 */
-        IPFS_MINILOCK, /* 2 */
-        GITHUB, /* 3 */
-        GDRIVE, /* 4 */
-        NONE /* 5 Requested to use from registered data */
+        IPFS_GPG, /* 2 */
+        GDRIVE, /* 3 */
+        NONE /* 4 Requested to use from registered data */
     }
 
     /* Status of the submitted job Enum */
@@ -56,7 +55,7 @@ library Lib {
          * provider set its prices most recent. */
         uint32 providerPriceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
-           stored and shared using either IPFS, EUDAT, IPFS (with MiniLock
+           stored and shared using either IPFS, EUDAT, IPFS (with GPG
            encryption), or Google Drive. */
         uint8[] cloudStorageID;
         /* An array of uint8 values that denote whether the requester’s data

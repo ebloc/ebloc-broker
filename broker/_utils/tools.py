@@ -12,7 +12,7 @@ from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from subprocess import PIPE, CalledProcessError, Popen, check_output
-
+from broker.errors import QuietExit
 from pytz import timezone, utc
 
 try:
@@ -29,22 +29,6 @@ try:
     from broker._utils._log import log
 except:  # if ebloc_broker used as a submodule
     from ebloc_broker.broker._utils._log import log
-
-
-class HandlerException(Exception):
-    """Generate HandlerException."""
-
-
-class JobException(Exception):
-    """Trace is not printed."""
-
-
-class QuietExit(Exception):
-    """Trace is not printed."""
-
-
-class Web3NotConnected(Exception):  # noqa
-    """Web3 is not connected"""
 
 
 def WHERE(back=0):

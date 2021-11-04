@@ -9,12 +9,11 @@ from web3.logs import DISCARD
 
 from broker import cfg
 from broker._utils._log import ok
-from broker._utils.tools import QuietExit
 from broker.eblocbroker.job import Job, JobConfig
 from broker.lib import get_tx_status, run
 from broker.submit_base import SubmitBase
+from broker.errors import QuietExit
 from broker.utils import (
-    CacheType,
     run_ipfs_daemon,
     StorageID,
     _remove,
@@ -64,13 +63,15 @@ def submit_ipfs(job_config_fn):
         raise e
 
     log("==> Attemptting to submit a job")
-    # job.storage_ids = job_config.storage_ids
-    # _types = job_config.cache_types
+    if job_config.storage_ids[0] == StorageID.IPFS:
+        for storage_id in job_config.storage_ids[1:]:
+            if storage_id == StorageID.IPFS_GPG:
+                raise Exception(
+                    "If source code is submitted via IPFS other data files should be submitted via IPFS as well"
+                )
 
-    job.storage_ids = [StorageID.IPFS, StorageID.IPFS_GPG]
-    _types = [CacheType.PUBLIC, CacheType.PUBLIC]
-
-    breakpoint()  # DEBUG
+    job.storage_ids = job_config.storage_ids
+    _types = job_config.cache_types
     main_storage_id = job.storage_ids[0]
     job.set_cache_types(_types)
     folders_to_share = job_config.paths

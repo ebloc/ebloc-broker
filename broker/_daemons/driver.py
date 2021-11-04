@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-
 from daemons.prefab import run
-
 from broker._utils import tools
-from broker._utils.tools import QuietExit
+from broker.errors import QuietExit
 from broker.config import env
 from broker.utils import is_driver_on, print_tb
 
