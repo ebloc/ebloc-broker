@@ -184,7 +184,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         );
 
         Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
-
         uint256 amountToGain;
         uint256 amountToRefund;
         uint256 core = args.core[args.jobID];
@@ -247,7 +246,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         _interval.completionTime = uint32(args.completionTime);
         _interval.availableCore = int32(info.availableCore);
         _interval.core = int32(core);
-
         if (provider.receiptList.checkIfOverlapExists(_interval) == 0) {
             // Important to check already refunded job or not, prevents double spending
             job.stateCode = Lib.JobStateCodes.REFUNDED;
@@ -351,7 +349,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32 commitmentBlockDuration
     ) public whenProviderNotRegistered returns (bool) {
         Lib.Provider storage provider = providers[msg.sender];
-
         require(
             availableCore > 0 &&
                 prices[0] > 0 &&
@@ -410,7 +407,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             _setProviderPrices(provider, _pricesSetBlockNum, availableCore, prices, commitmentBlockDuration);
         } else {
             uint256 _commitmentBlockDuration = provider.info[_pricesSetBlockNum].commitmentBlockDuration;
-            //future block number
+            //: future block number
             uint256 _committedBlock = _pricesSetBlockNum + _commitmentBlockDuration;
 
             if (_committedBlock <= block.number) {
@@ -601,7 +598,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.Provider storage provider = providers[args.provider];
 
         require(
-            provider.isRunning && // Provider must be running
+            provider.isRunning && // provider must be running
                 sourceCodeHash.length > 0 &&
                 storageDuration.length == args.dataPricesSetBlockNum.length &&
                 storageDuration.length == sourceCodeHash.length &&
@@ -611,7 +608,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 args.cloudStorageID[0] <= 4 &&
                 args.core.length == args.runTime.length &&
                 doesRequesterExist(msg.sender) &&
-                bytes(key).length <= 255 && // Maximum key length is 255 that will be used as folder name
+                bytes(key).length <= 255 && // maximum key length is 255 that will be used as folder name
                 orcID[msg.sender].length > 0 &&
                 orcID[args.provider].length > 0
         );
@@ -631,7 +628,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         require(args.providerPriceBlockIndex == _providerPriceBlockIndex);
         Lib.ProviderInfo memory info = provider.info[_providerPriceBlockIndex];
-
         uint256 totalCost;
         uint256 storageCost;
         // Here "storageDuration[0]" => block.timestamp stores the calcualted cacheCost
@@ -763,7 +759,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return true;
     }
 
-    /* --------------------------------------------INTERNAL_FUNCTIONS-------------------------------------------- */
+    /* ===============================================INTERNAL_FUNCTIONS=============================================== */
     function _setProviderPrices(
         Lib.Provider storage provider,
         uint256 mapBlock,
@@ -974,7 +970,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         );
     }
 
-    /* -----------------------------------------------PUBLIC_GETTERS----------------------------------------------- */
+    /* ===============================================PUBLIC_GETTERS=============================================== */
 
     /**
      * @dev Get balance on eBlocBroker
@@ -1002,9 +998,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Get balance on eBlocBroker.
      *
-     * - If `_pricesSetBlockNum` is 0, it will return the current price at the
-         current block-number that is called
-     * - If mappings does not valid, then it will return (0, 0)
+     * If `_pricesSetBlockNum` is 0, it will return the current price at the
+     * current block-number that is called
+     * If mappings does not valid, then it will return (0, 0)
     */
     function getRegisteredDataPrice(
         address provider,
@@ -1082,7 +1078,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     {
         Lib.Status storage jobInfo = providers[provider].jobStatus[key][index];
         Lib.Job storage job = jobInfo.jobs[jobID];
-
         return (job, jobInfo.received, jobInfo.jobOwner, jobInfo.dataTransferIn, jobInfo.dataTransferOut);
     }
 
@@ -1156,28 +1151,28 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     function getReceivedStorageDeposit(
-        address _provider,
+        address provider,
         address requester,
         bytes32 sourceCodeHash
     ) external view whenProviderRegistered returns (uint256) {
-        return providers[_provider].storageInfo[requester][sourceCodeHash].received;
+        return providers[provider].storageInfo[requester][sourceCodeHash].received;
     }
 
     /**
      * @dev Returns block numbers where provider's prices are set
-     * @param _provider The address of the provider
+     * @param provider The address of the provider
      */
-    function getProviderSetBlockNumbers(address _provider) external view returns (uint32[] memory) {
-        return pricesSetBlockNum[_provider];
+    function getProviderSetBlockNumbers(address provider) external view returns (uint32[] memory) {
+        return pricesSetBlockNum[provider];
     }
 
     // Used for tests
-    function getProviderReceiptSize(address _provider) external view returns (uint32) {
-        return providers[_provider].receiptList.getReceiptListSize();
+    function getProviderReceiptSize(address provider) external view returns (uint32) {
+        return providers[provider].receiptList.getReceiptListSize();
     }
 
     // Used for tests
-    function getProviderReceiptNode(address _provider, uint32 index) external view returns (uint256, int32) {
-        return providers[_provider].receiptList.printIndex(index);
+    function getProviderReceiptNode(address provider, uint32 index) external view returns (uint256, int32) {
+        return providers[provider].receiptList.printIndex(index);
     }
 }

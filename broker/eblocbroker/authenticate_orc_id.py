@@ -7,7 +7,6 @@ from typing import Union
 
 from broker import cfg
 from broker._utils.tools import log, print_tb
-from broker.config import env, logging
 from broker.lib import get_tx_status
 
 
@@ -19,6 +18,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         raise
 
     if not self.is_owner(_from):
+        breakpoint()  # DEBUG
         log(f"E: Account: {_from} that will call the transaction is not the owner of the contract")
         raise
 
@@ -59,10 +59,6 @@ if __name__ == "__main__":
         """
     try:
         owner_address = Ebb.get_owner()
-        if env.IS_BLOXBERG:
-            accounts = Ebb.brownie_load_account()
-            owner_address = accounts.address
-
         tx_hash = Ebb.authenticate_orc_id(address, orc_id, owner_address)
         if tx_hash:
             receipt = get_tx_status(tx_hash)

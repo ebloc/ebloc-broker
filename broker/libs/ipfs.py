@@ -6,14 +6,13 @@ import re
 import signal
 import sys
 import time
-from subprocess import DEVNULL, check_output
+from subprocess import check_output
 
 import ipfshttpclient
 from cid import make_cid
 
 from broker._utils._log import ok
 from broker._utils.tools import handler, log, print_tb
-from broker.utils import question_yes_no
 
 # from io import StringIO
 from broker.config import env, logging
@@ -23,6 +22,7 @@ from broker.utils import (
     compress_folder,
     is_ipfs_on,
     popen_communicate,
+    question_yes_no,
     raise_error,
     run,
     run_with_output,
@@ -48,6 +48,30 @@ class Ipfs:
     #################
     # OFFLINE CALLS #
     #################
+    def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
+        """Get only chunk and hash of a given path, do not write to disk.
+
+        Args:
+            path: Path of a folder or file
+
+        Returns string that contains the ouput of the run commad.
+        """
+        if os.path.isdir(path):
+            cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
+            if is_hidden:
+                # include files that are hidden such as .git/.
+                # Only takes effect on recursive add
+                cmd.insert(3, "--hidden")
+        elif os.path.isfile(path):
+            cmd = ["ipfs", "add", "--quieter", "--only-hash", path]
+        else:
+            raise Exception("Requested path does not exist")
+
+        try:
+            return _try(lambda: run(cmd))
+        except Exception as e:
+            raise e
+
     def is_valid(self, ipfs_hash: str) -> bool:
         try:
             make_cid(ipfs_hash)
@@ -55,18 +79,28 @@ class Ipfs:
         except:
             return False
 
-    def is_hash_locally_cached(self, ipfs_hash: str) -> bool:
+    def is_hash_locally_cached(self, ipfs_hash: str, ipfs_refs_local=None) -> bool:
         """Return true if hash locally cached.
 
         Run `ipfs --offline refs -r` or `ipfs --offline block stat` etc even if your normal daemon is running.
         With that you can check if something is available locally or no.
         """
-        try:
-            check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=DEVNULL)
-            return True
-        except Exception as e:
-            log(f"E: {e}")
-            return False
+        if not ipfs_refs_local:
+            ipfs_refs_local = run(["ipfs", "refs", "local"]).split("\n")
+
+        for _hash in ipfs_refs_local:
+            if ipfs_hash == _hash:
+                return True
+
+        return False
+
+        # try:
+        #     check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=DEVNULL)
+        #     return True
+        # except:
+        #     # log(f"E: {e}")
+        #     return False
+        # TODO: check may return true even its not exist
 
     def pin(self, ipfs_hash: str) -> bool:
         return run(["ipfs", "pin", "add", ipfs_hash])
@@ -113,8 +147,8 @@ class Ipfs:
         if extract_target:
             try:
                 untar(tar_file, extract_target)
-            except:
-                raise Exception("E: Could not extract the given tar file")
+            except Exception as e:
+                raise Exception("E: Could not extract the given tar file") from e
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
@@ -213,7 +247,7 @@ class Ipfs:
         return self.client.object.stat(ipfs_hash)
 
     def is_hash_exists_online(self, ipfs_hash: str):
-        logging.info(f"Attempting to check IPFS file {ipfs_hash}")
+        log(f"#> Attempting to check IPFS file {ipfs_hash}")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
@@ -223,12 +257,12 @@ class Ipfs:
         try:
             output = self._ipfs_stat(ipfs_hash)
             output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
-            log(f"CumulativeSize {output_json}", "bold green")
+            log(f"==> cumulative_size={output_json}", "bold green")
             return output, output["CumulativeSize"]
         except KeyboardInterrupt:
             terminate("KeyboardInterrupt")
         except Exception as e:
-            raise Exception(f"E: Failed to find IPFS file: {ipfs_hash}. {e}")
+            raise Exception(f"E: Failed to find IPFS file: {ipfs_hash}") from e
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
@@ -282,31 +316,6 @@ class Ipfs:
         else:  # failed all the attempts - abort
             sys.exit(1)
         return result_ipfs_hash
-
-    def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
-        """Get only chunk and hash of a given path, do not write to disk.
-
-        Args:
-            path: Path of a folder or file
-
-        Returns string that contains the ouput of the run commad.
-        """
-        if os.path.isdir(path):
-            cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
-            if is_hidden:
-                # include files that are hidden such as .git/.
-                # Only takes effect on recursive add
-                cmd.insert(3, "--hidden")
-        elif os.path.isfile(path):
-            cmd = ["ipfs", "add", "--quieter", "--only-hash", path]
-        else:
-            logging.error("E: Requested path does not exist")
-            raise
-
-        try:
-            return _try(lambda: run(cmd))
-        except Exception as e:
-            raise e
 
     def connect_to_bootstrap_node(self):
         """Connect into return addresses of the currently connected peers."""

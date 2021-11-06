@@ -48,11 +48,10 @@ def get_idle_cores(is_print=True):
         total_cores = core_info[3]
         if is_print:
             log(
-                f"allocated_cores={allocated_cores} |"
-                f"idle_cores={idle_cores} |"
-                f"other_cores={other_cores} |"
-                f"total_number_of_cores={total_cores}",
-                "bold green",
+                f"==> [green]allocated_cores=[/green]{allocated_cores} | "
+                f"[green]idle_cores=[/green]{idle_cores} | "
+                f"[green]other_cores=[/green]{other_cores} | "
+                f"[green]total_number_of_cores=[/green]{total_cores}"
             )
     else:
         logging.error("E: sinfo is emptry string")

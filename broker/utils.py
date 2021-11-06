@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker._utils._log import br
 import binascii
 import errno
 import hashlib
@@ -25,6 +24,7 @@ import base58
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
+from broker._utils._log import br
 from broker._utils.tools import WHERE, is_process_on, log, print_tb, run
 from broker.config import env, logging
 from broker.errors import QuietExit
@@ -40,11 +40,11 @@ EXIT_FAILURE = 1
 
 
 class BaseEnum(IntEnum):
-    def __str__(self):
-        return str(self.value)
-
     def __int__(self):
         return int(self.value)
+
+    def __str__(self):
+        return str(self.value)
 
     def __eq__(self, other):
         return int(self.value) == other
@@ -154,8 +154,8 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
-    except socket.error as ex:
-        print(ex)
+    except socket.error as e:
+        print(e)
         return False
 
 
@@ -253,7 +253,7 @@ def is_transaction_valid(tx_hash) -> bool:
 
 
 def is_transaction_passed(tx_hash) -> bool:
-    receipt = cfg.w3.eth.getTransactionReceipt(tx_hash)
+    receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
     with suppress(Exception):
         if receipt["status"] == 1:
             return True
@@ -355,24 +355,6 @@ def read_file(fname):
         file.close()
 
 
-def read_json(path, is_dict=True):
-    if os.path.isfile(path) and os.path.getsize(path) > 0:
-        with open(path) as json_file:
-            data = json.load(json_file)
-            if is_dict:
-                if isinstance(data, dict):
-                    return data
-                else:
-                    return {}
-            else:
-                if data:
-                    return data
-                else:
-                    return None
-    else:
-        raise
-
-
 def is_gzip_file_empty(filename):
     """Check whether the given gzip file is empty or not.
 
@@ -430,7 +412,7 @@ def _remove(path: str, is_warning=True):
     """
     try:
         if path == "/":
-            raise ValueError("E: Attempting to remove /")
+            raise ValueError("E: Attempting to remove root(/)")
 
         if os.path.isfile(path):
             with suppress(FileNotFoundError):
@@ -441,9 +423,10 @@ def _remove(path: str, is_warning=True):
         else:
             if is_warning:
                 log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
+
             return
 
-        log(f"==> {WHERE(1)}\n{path} is removed")
+        log(f"==> {WHERE(1)} {path} is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -452,7 +435,7 @@ def _remove(path: str, is_warning=True):
             raise e
 
 
-def is_ipfs_on(is_print=True) -> bool:
+def is_ipfs_on(is_print=False) -> bool:
     """Check whether ipfs runs on the background."""
     return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0, is_print=is_print)
 
@@ -507,7 +490,7 @@ def run_ipfs_daemon():
             if output:
                 log(output.rstrip(), "bold blue")
 
-        if is_ipfs_on():
+        if is_ipfs_on(is_print=True):
             return True
     return False
 
@@ -519,6 +502,7 @@ def check_ubuntu_packages(packages=None):
     for package in packages:
         if not is_dpkg_installed(package):
             return False
+
     return True
 
 
@@ -664,42 +648,3 @@ def compress_folder(folder_path, is_exclude_git=False):
 def dump_dict_to_file(filename, job_keys):
     with open(filename, "w") as f:
         json.dump(job_keys, f)
-
-
-class Link:
-    def __init__(self, path_from, path_to) -> None:
-        self.data_map = {}  # type: Dict[str, str]
-        self.path_from = path_from  # Path automatically removes / at the end if there is
-        self.path_to = path_to
-
-    def link_folders(self, paths=None):
-        """Create linked folders under the data_link folder."""
-        from os import listdir
-        from os.path import isdir, join
-
-        if not paths:
-            # instead of full path only returns folder names
-            paths = [f for f in listdir(self.path_from) if isdir(join(self.path_from, f))]
-            is_only_folder_names = True
-        else:
-            is_only_folder_names = False
-
-        for target in paths:
-            if is_only_folder_names:
-                folder_name = target
-                target = f"{self.path_from}/{target}"
-            else:
-                folder_name = path_leaf(target)
-
-            try:
-                folder_hash = generate_md5sum(target)
-            except Exception as e:
-                raise e
-
-            self.data_map[folder_name] = folder_hash
-            destination = f"{self.path_to}/{folder_hash}"
-            run(["ln", "-sfn", target, destination])
-            log(f" *   [bold green]{target}[/bold green]", "bold yellow")
-            log(f" └─> {destination}", "bold yellow")
-            folder_new_hash = generate_md5sum(destination)
-            assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"

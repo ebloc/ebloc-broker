@@ -2,13 +2,12 @@
 
 """Useful function for Brownie test."""
 
+import datetime
 from os import popen
 
-import broker.config as config
+from broker import cfg, config
 from broker._utils.tools import log
 from brownie import web3 as w3
-
-# sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 
 def new_test():
@@ -25,17 +24,17 @@ def new_test():
 def mine(block_number):
     """Mine give block number in the brownie testing.
 
-    https://stackoverflow.com/a/775075/2402577
+    __ https://stackoverflow.com/a/775075/2402577
+    __ https://stackoverflow.com/a/775095/2402577
     """
-    m, s = divmod(block_number * 15, 60)
-    h, m = divmod(m, 60)
+    seconds = block_number * cfg.BLOCK_DURATION
     height = w3.eth.blockNumber
     timestamp_temp = w3.eth.getBlock(height)["timestamp"]
-    timedelta = 15 * block_number
-    config.chain.mine(blocks=block_number, timedelta=timedelta)
+    timedelta = cfg.BLOCK_DURATION * block_number
+    config.chain.mine(blocks=int(block_number), timedelta=timedelta)
     timestamp_after = w3.eth.getBlock(w3.eth.blockNumber)["timestamp"]
     log(
-        f"==> Mined {block_number} empty blocks | {h:d}:{m:02d}:{s:02d} (h/m/s) | "
+        f"==> Mined {block_number} empty blocks | {datetime.timedelta(seconds=seconds)} | "
         f"{height} => {w3.eth.blockNumber} | "
         f"{timestamp_temp} => {timestamp_after} diff={timestamp_after - timestamp_temp}"
     )

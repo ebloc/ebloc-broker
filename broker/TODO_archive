@@ -48,3 +48,31 @@ CLOSED: [2021-10-27 Wed 16:42]
 link = "https://core.bloxberg.org"
 w3 = Web3(Web3.HTTPProvider(link))
 #+END_SRC
+
+* DONE Firejail: https://firejail.wordpress.com
+CLOSED: [2021-11-17 Wed 00:14]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-11-17 Wed 00:14
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+* DONE submit_job.py , pre_check()
+CLOSED: [2021-11-17 Wed 00:20]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-11-17 Wed 00:20
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+#+begin_src python
+# TODO: can it be more than 32 characters
+print(source_code_hashes[0].encode('utf-8'))
+for i in range(len(source_code_hashes)):
+    source_code_hashes[i] = source_code_hashes[i]
+    if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
+	return False, 'source_code_hashes should be 32 characters.'
+#+end_src

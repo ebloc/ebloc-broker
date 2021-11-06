@@ -5,8 +5,8 @@ import time
 from datetime import datetime
 from subprocess import PIPE, Popen, check_output
 
-import broker._utils._log as _log
 from broker import cfg
+from broker._utils import _log
 from broker._utils._log import br, log, ok
 from broker.config import env
 from broker.utils import popen_communicate
@@ -44,8 +44,8 @@ def start_call(job_key, index, slurm_job_id):
     log(f"{env.EBLOCPATH}/broker/eblocbroker/set_job_status_running.py " f"{job_key} {index} {job_id} {start_time}")
     for attempt in range(10):
         if attempt > 0:
-            log(f"Warning: sleeping for {env.BLOCK_DURATION * 2}...")
-            time.sleep(env.BLOCK_DURATION * 2)
+            log(f"Warning: sleeping for {cfg.BLOCK_DURATION * 2}...")
+            time.sleep(cfg.BLOCK_DURATION * 2)
 
         try:
             tx = Ebb.set_job_status_running(job_key, index, job_id, start_time)

@@ -26,19 +26,6 @@ wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -
 sudo npm install -g n # npm install --save
 sudo n latest
 sudo npm install -g --unsafe-perm=true --allow-root ganache-cli  # npm install -g ganache-cli
-# npm install dotenv
-
-# mongodb guide => https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
-# sudo mkdir /var/lib/mongodb
-# sudo mkdir /var/log/mongodb
-# sudo mkdir -p /data/db
-#
-# sudo chown -R mongodb:mongodb /var/lib/mongodb
-# sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
-#
-# sudo service mongod start
-# service mongod status | systemctl status mongodb
-# ----------------------------------------------------------
 
 ## gdfuse
 # https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization
@@ -62,3 +49,18 @@ flit install --pth-file  # Link ipfs-api-client into your Python Path
 #   chainid: 8995
 #   host: https://core.bloxberg.org
 #   explorer: https://blockexplorer.bloxberg.org/api
+#
+#
+# npm install dotenv
+#
+# mongodb guide => https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
+# sudo mkdir /var/lib/mongodb
+# sudo mkdir /var/log/mongodb
+# sudo mkdir -p /data/db
+#
+# sudo chown -R mongodb:mongodb /var/lib/mongodb
+# sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
+#
+# sudo service mongod start
+# service mongod status | systemctl status mongodb
+# ----------------------------------------------------------

@@ -6,8 +6,8 @@ from pprint import pprint
 
 from web3.logs import DISCARD
 
-from broker import cfg
 import broker.eblocbroker.Contract as Contract
+from broker import cfg
 from broker._utils._log import ok
 from broker.config import env, logging
 from broker.lib import check_linked_data, get_tx_status, run

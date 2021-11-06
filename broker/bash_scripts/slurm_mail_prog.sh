@@ -1,6 +1,6 @@
 #!/bin/bash
 
-_HOME="/home/alper"  # may differ for each providerget from the file name
+_HOME="/home/avatar_doo_avatar"  # may differ for each providerget from the file name
 EMAIL="aalimog1@binghamton.edu"
 VENV_PATH="${_HOME}/venv"
 EBLOCBROKER_PATH="${_HOME}/ebloc-broker/broker"

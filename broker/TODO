@@ -1,6 +1,5 @@
 ﻿                                                                 *outline*
 * TASKS
-** TODO Firejail: https://firejail.wordpress.com
 ** TODO Later do, when cache time is completed:
    oc.decline_remote_share(int(<share_id>)) to cancel shared folder at
    end_code or after some time later

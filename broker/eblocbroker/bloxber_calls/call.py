@@ -6,7 +6,7 @@ import time
 from ast import literal_eval as make_tuple
 
 from broker._utils._log import br, log
-from broker.config import env
+from broker.env import ENV_BASE
 from broker.utils import ipfs_to_bytes32
 
 
@@ -16,13 +16,14 @@ def print_msg(msg):
 
 
 def main(*args):
+    env = ENV_BASE()
     from brownie import network, project
 
     _args = make_tuple(str(args))
     network.connect("bloxberg")
     project = project.load(env.CONTRACT_PROJECT_PATH)
-    ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
-    job_provider = _args[0]
+    ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
+    provider = _args[0]
     job_requester = _args[1]
 
     try:
@@ -30,10 +31,10 @@ def main(*args):
     except:
         source_code_hash = _args[2].encode("utf-8")
 
-    ops = {"from": job_provider}
-    output = ebb.getReceivedStorageDeposit(job_provider, job_requester, source_code_hash, ops)
+    ops = {"from": job_requester}
+    output = ebb.getReceivedStorageDeposit(provider, job_requester, source_code_hash, ops)
     print(output)
-    output = ebb.getJobStorageTime(job_provider, source_code_hash, ops)
+    output = ebb.getJobStorageTime(provider, source_code_hash, ops)
     print(output)
     sys.exit(0)
 

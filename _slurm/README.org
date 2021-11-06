@@ -138,3 +138,16 @@ id -u username
 pkill -U UID
 sudo usermod -u 1000 username
 #+end_src
+
+
+-------------
+
+* From: https://stackoverflow.com/a/47009930/2402577
+
+#+begin_src markdown
+Should I compile slurm with --enable-front-end fiag in order to emulate a larger cluster? –
+alper
+
+@alper According to the current version of the FAQ (slurm.schedmd.com/faq.html,
+question Can Slurm emulate a larger cluster?), it appears so – damienfrancois
+#+end_src

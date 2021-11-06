@@ -2,6 +2,7 @@
 
 import sys
 import time
+from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
 from typing import Union
@@ -12,11 +13,11 @@ from web3.types import TxReceipt
 
 from broker import cfg
 from broker._utils._log import ok
-from broker._utils.tools import exit_after, log, print_tb
+from broker._utils.tools import exit_after, log, print_tb, read_json, without_keys
 from broker.config import env
 from broker.errors import Web3NotConnected
 from broker.libs.mongodb import MongoBroker
-from broker.utils import ipfs_to_bytes32, read_json, terminate
+from broker.utils import ipfs_to_bytes32, terminate
 from brownie.network.account import Account, LocalAccount
 from brownie.network.gas.strategies import LinearScalingStrategy
 from brownie.network.transaction import TransactionReceipt
@@ -39,8 +40,12 @@ class Contract:
         #  10000000. Try decreasing supplied gas.
         self.gas = 9980000
         self.gas_strategy = LinearScalingStrategy(f"{GAS_PRICE} gwei", "10 gwei", 1.1, time_duration=15)
+        self.gas_price = GAS_PRICE
         self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
         self._setup(is_brownie)
+        self.invalid = {"logs", "logsBloom"}
+        with suppress(Exception):
+            self.deployed_block_number = self.get_deployed_block_number()
 
     def _setup(self, is_brownie=False):
         if is_brownie:
@@ -68,7 +73,10 @@ class Contract:
     from broker.eblocbroker.submit_job import is_provider_valid
     from broker.eblocbroker.submit_job import is_requester_valid
     from broker.eblocbroker.get_job_info import get_job_info
+    from broker.eblocbroker.get_job_info import get_job_info_print
+    from broker.eblocbroker.get_job_info import set_job_received_block_number
     from broker.eblocbroker.get_job_info import update_job_cores
+    from broker.eblocbroker.get_job_info import analyze_data
     from broker.eblocbroker.get_job_info import get_job_source_code_hashes
     from broker.eblocbroker.get_requester_info import get_requester_info
     from broker.eblocbroker.log_job import run_log_cancel_refund
@@ -79,16 +87,19 @@ class Contract:
     from broker.eblocbroker.update_provider_info import update_provider_info
     from broker.eblocbroker.update_provider_prices import update_provider_prices
     from broker.eblocbroker.transfer_ownership import transfer_ownership
+    from broker.eblocbroker.data import get_data_info
 
     def brownie_load_account(self, fname="alper.json", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
         home = expanduser("~")
+        fname = "UTC--2021-09-22T20-08-52.242348460Z--3e6ffc5ede9ee6d782303b2dc5f13afeee277aea.json"
         full_path = f"{home}/.brownie/accounts/{fname}"
         if not full_path:
             raise Exception(f"{full_path} does not exist")
 
+        accounts.load("alper.json", password="alper")  # DELETE
         return accounts.load(fname, password=password)
 
     def is_eth_account_locked(self, addr):
@@ -111,7 +122,10 @@ class Contract:
         """Check whether the web3 is synced."""
         return self.w3.eth.syncing
 
-    def _wait_for_transaction_receipt(self, tx_hash) -> TxReceipt:
+    def timenow(self) -> int:
+        return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
+
+    def _wait_for_transaction_receipt(self, tx_hash, compact=False) -> TxReceipt:
         """Wait till the tx is deployed."""
         tx_receipt = None
         attempt = 0
@@ -135,7 +149,10 @@ class Contract:
             time.sleep(poll_latency)
 
         log(ok())
-        return tx_receipt
+        if not compact:
+            return tx_receipt
+        else:
+            return without_keys(tx_receipt, self.invalid)
 
     def tx_id(self, tx):
         """Return transaction id."""
@@ -153,21 +170,25 @@ class Contract:
             print_tb(e)
             return False
 
-        block_number = self.w3.eth.getTransaction(contract["txHash"]).blockNumber
+        block_number = self.w3.eth.get_transaction(contract["txHash"]).blockNumber
         if block_number is None:
             raise Exception("E: Contract is not available on the blockchain, is it synced?")
 
-        return self.w3.eth.getTransaction(contract["txHash"]).blockNumber
+        return self.w3.eth.get_transaction(contract["txHash"]).blockNumber
 
-    def get_transaction_receipt(self, tx):
+    def get_transaction_receipt(self, tx, compact=False):
         """Get transactioon receipt.
 
         Returns the transaction receipt specified by transactionHash.
         If the transaction has not yet been mined returns 'None'
 
-        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.getTransactionReceipt
+        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_receipt
         """
-        return self.w3.eth.getTransactionReceipt(tx)
+        tx_receipt = self.w3.eth.get_transaction_receipt(tx)
+        if not compact:
+            return tx_receipt
+        else:
+            return without_keys(tx_receipt, self.invalid)
 
     def is_web3_connected(self):
         """Return whether web3 connected or not."""
@@ -182,8 +203,8 @@ class Contract:
             try:
                 account = self.w3.eth.accounts[account_id]
                 return self.w3.toChecksumAddress(account)
-            except:
-                raise Exception("E: Given index account does not exist, check .eblocpoa/keystore")
+            except Exception as e:
+                raise Exception("E: Given index account does not exist, check .eblocpoa/keystore") from e
         else:
             raise Exception(f"E: Invalid account {address} is provided")
 
@@ -198,7 +219,7 @@ class Contract:
 
     def get_block_number(self):
         """Retrun block number."""
-        return self.w3.eth.blockNumber
+        return self.w3.eth.block_number
 
     def is_address(self, addr):
         try:
@@ -222,7 +243,7 @@ class Contract:
             raise e
 
         contract_address = self.w3.toChecksumAddress(contract["address"])
-        if self.w3.eth.getCode(contract_address) == "0x" or self.w3.eth.getCode(contract_address) == b"":
+        if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise
 
         log(f"==> contract_address={contract_address}")
@@ -237,116 +258,63 @@ class Contract:
     # Timeout Tx #
     ##############
     @exit_after(EXIT_AFTER)
-    def set_job_status_running_timeout(self, key, index, job_id, start_time) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.setJobStatusRunning(key, index, job_id, start_time, self.ops)
-        else:
-            return self.eBlocBroker.functions.setJobStatusRunning(key, index, job_id, start_time).transact(self.ops)
+    def timeout(self, func, *args):
+        """Timeout deploy contract's functions.
 
-    @exit_after(EXIT_AFTER)
-    def process_payment_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.processPayment(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.processPayment(*args).transact(self.ops)
+        brownie:
+        self.eBlocBroker.submitJob(*args, self.ops)
 
-    @exit_after(EXIT_AFTER)
-    def withdraw_timeout(self) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.withdraw(self.ops)
-        else:
-            return self.eBlocBroker.functions.withdraw().transact(self.ops)
+        geth:
+        self.eBlocBroker.functions.submitJob(*args).transact(self.ops)
+        """
+        method = None
+        try:
+            if env.IS_BLOXBERG:
+                self.brownie_load_account()
+                method = getattr(self.eBlocBroker, func)
+                return method(*args, self.ops)
+            else:
+                method = getattr(self.eBlocBroker.functions, func)
+                return method(*args).transact(self.ops)
+        except AttributeError as e:
+            raise Exception(f"Method {method} not implemented") from e
 
-    @exit_after(EXIT_AFTER)
-    def register_data_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.registerData(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.registerData(*args).transact(self.ops)
+    def timeout_wrapper(self, method, *args):
+        for _ in range(self.max_retries):
+            self.ops = {
+                "gas": self.gas,
+                "gas_price": f"{self.gas_price} gwei",
+                "from": self._from,
+                "allow_revert": True,
+            }
+            try:
+                return self.timeout(method, *args)
+            except ValueError as e:
+                log(f"E: {e}")
+                if "Execution reverted" in str(e):
+                    raise e
 
-    @exit_after(EXIT_AFTER)
-    def set_register_provider_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.registerProvider(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.registerProvider(*args).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _update_provider_info_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.updateProviderInfo(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.updateProviderInfo(*args).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _update_provider_prices_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.updateProviderPrices(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.updateProviderPrices(*args).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _authenticate_orc_id_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.authenticateOrcID(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.authenticateOrcID(*args).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _transfer_ownership_timeout(self, new_owner) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.transferOwnership(new_owner, self.ops)
-        else:
-            return self.eBlocBroker.functions.transferOwnership(new_owner).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _refund_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.refund(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.refund(*args).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _register_requester_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.registerRequester(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.registerRequester(*args).transact(self.ops)
-
-    @exit_after(EXIT_AFTER)
-    def _submit_job_timeout(self, *args) -> "TransactionReceipt":
-        if env.IS_BLOXBERG:
-            self.brownie_load_account()
-            return self.eBlocBroker.submitJob(*args, self.ops)
-        else:
-            return self.eBlocBroker.functions.submitJob(*args).transact(self.ops)
+                if "Transaction cost exceeds current gas limit" in str(e):
+                    self.gas -= 10000
+            except KeyboardInterrupt:
+                log("warning: Timeout Awaiting Transaction in the mempool")
+                self.gas_price *= 1.13
 
     ################
     # Transactions #
     ################
     def _submit_job(self, requester, job_price, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
                 "value": self.w3.toWei(job_price, "wei"),
                 "allow_revert": True,
             }
             try:
-                return self._submit_job_timeout(*args)
+                return self.timeout("submitJob", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -357,14 +325,17 @@ class Contract:
             except KeyboardInterrupt as e:
                 if "Awaiting Transaction in the mempool" in str(e):
                     log("warning: Timeout Awaiting Transaction in the mempool")
-                    gas_price *= 1.13
+                    self.gas_price *= 1.13
 
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
+        self._from = _from
+        return self.timeout_wrapper("registerRequester", *args)
+
         for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{gas_price} gwei", "from": _from, "allow_revert": True}
+            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
             try:
-                return self._register_requester_timeout(*args)
+                return self.timeout("registerRequester", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -374,14 +345,14 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def _refund(self, _from, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{gas_price} gwei", "from": _from, "allow_revert": True}
+            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
             try:
-                return self._refund_timeout(*args)
+                return self.timeout("refund", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -391,14 +362,14 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def _transfer_ownership(self, _from, new_owner) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{gas_price} gwei", "from": _from, "allow_revert": True}
+            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
             try:
-                return self._transfer_ownership_timeout(new_owner)
+                return self.timeout("refund", new_owner)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -408,19 +379,15 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def _authenticate_orc_id(self, _from, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{gas_price} gwei", "from": _from, "allow_revert": True}
+            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
             try:
-                tx = self._authenticate_orc_id_timeout(*args)
-                return tx
+                return self.timeout("authenticateOrcID", *args)
             except ValueError as e:
-                if tx:
-                    breakpoint()  # DEBUG
-
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
                     raise e
@@ -429,19 +396,19 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def _update_provider_prices(self, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": env.PROVIDER_ID,
                 "allow_revert": True,
             }
             try:
-                return self._update_provider_prices_timeout(*args)
+                return self.timeout("updateProviderPrices", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -451,19 +418,19 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def _update_provider_info(self, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": env.PROVIDER_ID,
                 "allow_revert": True,
             }
             try:
-                return self._update_provider_info_timeout(*args)
+                return self.timeout("updateProviderInfo", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -473,20 +440,20 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def set_register_provider(self, *args) -> "TransactionReceipt":
         """Register provider."""
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": env.PROVIDER_ID,
                 "allow_revert": True,
             }
             try:
-                return self.set_register_provider_timeout(*args)
+                return self.timeout("registerProvider", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -496,20 +463,20 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def register_data(self, *args) -> "TransactionReceipt":
         """Register the dataset hash."""
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": env.PROVIDER_ID,
                 "allow_revert": True,
             }
             try:
-                return self.register_data_timeout(*args)
+                return self.timeout("registerData", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -519,22 +486,22 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def set_job_status_running(self, key, index, job_id, start_time) -> "TransactionReceipt":
         """Set the job status as running."""
         _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "allow_revert": True,
                 "required_confs": 0,
                 "from": _from,
             }
             try:
-                return self.set_job_status_running_timeout(key, int(index), int(job_id), int(start_time))
+                return self.timeout("setJobStatusRunning", key, int(index), int(job_id), int(start_time))
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -544,20 +511,20 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def _process_payment(self, *args) -> "TransactionReceipt":
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": env.PROVIDER_ID,
                 "allow_revert": True,
                 "required_confs": 0,
             }
             try:
-                return self.process_payment_timeout(*args)
+                return self.timeout("processPayment", *args)
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -567,20 +534,20 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
 
     def withdraw(self, account) -> "TransactionReceipt":
         """Withdraw payment."""
-        gas_price = GAS_PRICE
+        self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
                 "gas": self.gas,
-                "gas_price": f"{gas_price} gwei",
+                "gas_price": f"{self.gas_price} gwei",
                 "from": self.w3.toChecksumAddress(account),
                 "allow_revert": True,
             }
             try:
-                return self.withdraw_timeout()
+                return self.timeout("withdraw")
             except ValueError as e:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
@@ -590,11 +557,33 @@ class Contract:
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
-                gas_price *= 1.13
+                self.gas_price *= 1.13
+
+    def remove_registered_data(self) -> "TransactionReceipt":
+        """Remove registered data"""
+        pass
 
     ###########
     # GETTERS #
     ###########
+    def get_registred_data_prices(self, *args):
+        if env.IS_BLOXBERG:
+            return self.eBlocBroker.getRegisteredDataPrice(*args)
+        else:
+            return self.eBlocBroker.functions.getRegisteredDataPrice(*args).call()
+
+    def get_provider_prices_blocks(self, account):
+        """Return block numbers where provider info is changed.
+
+        First one is the most recent and latest one is the latest block number where
+        provider info is changed.
+        Ex: (12878247, 12950247, 12952047, 12988647)
+        """
+        if env.IS_BLOXBERG:
+            return self.eBlocBroker.getUpdatedProviderPricesBlocks(account)
+        else:
+            return self.eBlocBroker.functions.getUpdatedProviderPricesBlocks(account).call()
+
     def is_owner(self, address) -> bool:
         """Check if the given address is the owner of the contract."""
         return address.lower() == self.get_owner().lower()
@@ -680,11 +669,13 @@ class Contract:
         else:
             return self.eBlocBroker.functions.isOrcIDVerified(address).call()
 
-    def _get_provider_info(self, provider, index=0):
+    def _get_provider_info(self, provider, prices_set_block_number=0):
         if env.IS_BLOXBERG:
-            block_read_from, provider_price_info = self.eBlocBroker.getProviderInfo(provider, index)
+            block_read_from, provider_price_info = self.eBlocBroker.getProviderInfo(provider, prices_set_block_number)
         else:
-            block_read_from, provider_price_info = self.eBlocBroker.functions.getProviderInfo(provider, index).call()
+            block_read_from, provider_price_info = self.eBlocBroker.functions.getProviderInfo(
+                provider, prices_set_block_number
+            ).call()
 
         return block_read_from, provider_price_info
 
@@ -714,12 +705,11 @@ class Contract:
         else:
             return self.eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
 
-    def get_job_storage_time(self, provider_addr, source_code_hash, _from):
+    def get_job_storage_time(self, provider_addr, source_code_hash):
         """Return job storage duration time."""
         if not isinstance(provider_addr, (Account, LocalAccount)):
             provider_addr = self.w3.toChecksumAddress(provider_addr)
 
-        ops = {"from": _from}
         if isinstance(source_code_hash, str):
             try:
                 source_code_hash = ipfs_to_bytes32(source_code_hash)
@@ -727,9 +717,9 @@ class Contract:
                 pass
 
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.getJobStorageTime(provider_addr, source_code_hash, ops)  # FIXME
+            return self.eBlocBroker.getJobStorageTime(provider_addr, source_code_hash)
         else:
-            return self.eBlocBroker.functions.getJobStorageTime(provider_addr, source_code_hash).call(ops)
+            return self.eBlocBroker.functions.getJobStorageTime(provider_addr, source_code_hash).call()
 
     def get_received_storage_deposit(self, provider, requester, source_code_hash):
         """Return received storage deposit for the corresponding source code hash."""
@@ -744,9 +734,6 @@ class Contract:
             return self.eBlocBroker.getReceivedStorageDeposit(provider, requester, source_code_hash, ops)
         else:
             return self.eBlocBroker.functions.getReceivedStorageDeposit(provider, requester, source_code_hash).call(ops)
-
-    def timenow(self) -> int:
-        return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
 
 
 class EBB:

@@ -65,6 +65,9 @@ class Yaml(dict):
 
     PyYAML Saving data to .yaml files
     __ https://codereview.stackexchange.com/a/210162/127969
+
+    Yaml format
+    __ https://stackoverflow.com/a/70034493/2402577
     """
 
     def __init__(self, path, auto_dump=True):
@@ -81,7 +84,9 @@ class Yaml(dict):
         self.path_temp = f"{self.path}~"
         self.auto_dump = auto_dump
         self.changed = False
-        self.yaml = YAML(typ="safe")
+        self.yaml = YAML()
+        # self.yaml = YAML(typ="safe")
+        self.yaml.indent(mapping=4, sequence=4, offset=2)
         self.yaml.default_flow_style = False
         if self.path.exists():
             with FileLock(self.fp_lock, timeout=1):
@@ -162,7 +167,8 @@ class Yaml(dict):
         self.updated()
 
 
-_SR = representer.SafeRepresenter
+_SR = representer.RoundTripRepresenter
+# _SR = representer.SafeRepresenter
 _SR.add_representer(SubYaml, _SR.represent_dict)
 
 

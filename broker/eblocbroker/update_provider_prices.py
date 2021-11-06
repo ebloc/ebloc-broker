@@ -9,6 +9,9 @@ from broker.lib import get_tx_status
 
 def update_provider_prices(self, available_core, commitment_blk, prices):
     """Update provider prices."""
+    if commitment_blk < cfg.BLOCK_DURATION_1_HOUR:
+        raise Exception(f"E: Commitment block number should be greater than {cfg.BLOCK_DURATION_1_HOUR}")
+
     if not available_core:
         raise Exception("Please enter positive value for the available core number")
 
@@ -25,8 +28,8 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb
-    available_core = 128
-    commitment_blk = 10
+    available_core = 16
+    commitment_blk = 600
     price_core_min = 100
     price_data_transfer = 1
     price_storage = 1

@@ -6,8 +6,10 @@ __ https://stackoverflow.com/a/12413139/2402577
 """
 from rich.console import Console
 
+IS_BROWNIE_TEST = False
 TX_TIMEOUT = 1800
-BLOCK_DURATION_1_HOUR = 600
+BLOCK_DURATION = 6
+BLOCK_DURATION_1_HOUR = 3600 / BLOCK_DURATION
 
 
 class EBB:
@@ -15,7 +17,7 @@ class EBB:
         self.eblocbroker = None
 
     def __getattr__(self, name):
-        """Return the `Contract` object."""
+        """Return the 'Contract' object."""
         if not self.eblocbroker:
             from broker.eblocbroker.Contract import Contract
 

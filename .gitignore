@@ -1,3 +1,6 @@
+ebloc_broker.egg-info/
+\.mypy_cache/
+contract/build/
 good.patch
 *.*~
 *~
@@ -15,7 +18,6 @@ broker/_utils/config.yaml
 clusterDriver\.out
 completed.txt
 contract/abi.json
-contract/build/
 contract/build/contracts\.json
 contract/\.cache/v/cache/lastfailed
 contract/\.cache/v/populus/project/

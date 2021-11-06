@@ -12,20 +12,19 @@ from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
 from broker.config import env, logging
-from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, run
+from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
 
 
-def initialize_check(path) -> bool:
+def initialize_check(path):
     """Validate if .git/ folder exist within the target folder."""
     with cd(path):
         if not is_initialized(path):
             try:
                 run(["git", "init", "--initial-branch=master"])
                 add_all()
-            except Exception as error:
-                logging.error(f"E: {error}")
-                return False
-        return True
+            except Exception as e:
+                log(f"E: {e}")
+                raise e
 
 
 def is_initialized(path) -> bool:
@@ -114,33 +113,30 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     return patch_upload_name, patch_file, is_file_empty
 
 
-def add_all(repo=None) -> bool:
+def add_all(repo=None):
+    """Add all into git."""
     if not repo:
         repo = git.Repo(".", search_parent_directories=True)
 
-    with suppress(Exception):
-        # subprocess.run(["chmod", "-R", "755", "."])
-        # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
-        # required for files to be access on the cluster side due to permission issues
-        #: if `chmod -R 775 .` is not applied its source_code hash may change user to user
-        run(["sudo", "chmod", "-R", "775", "."])
-
     try:
-        repo.git.add(A=True)  # git add -A .
+        repo.git.add(A=True)
         try:
-            changed_file_len = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
+            #: git diff HEAD --name-only | wc -l
+            changed_file_len = len(repo.index.diff("HEAD", ignore_blank_lines=True, ignore_space_at_eol=True))
         except:
             # if it is the first commit HEAD might not exist
-            changed_file_len = len(repo.git.diff("--cached", "--name-only").split("\n"))
+            changed_file_len = len(
+                repo.git.diff("--cached", "--ignore-blank-lines", "--ignore-space-at-eol", "--name-only").split("\n")
+            )
 
         if changed_file_len > 0:
-            repo.git.commit("-m", "update")  # git commit -m update
-        return True
-    except:
-        return False
+            repo.git.commit("-m", "update")
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
-def commit_changes(path) -> bool:
+def commit_changes(path):
     with cd(path):
         repo = git.Repo(".", search_parent_directories=True)
         try:
@@ -158,15 +154,12 @@ def commit_changes(path) -> bool:
 
             if len(repo.index.diff("HEAD")) == 0:
                 log(f"==> {path} is committed with the given changes using git")
-                return True
 
         try:
             add_all(repo)
         except Exception as e:
-            logging.error(f"E: {e}")
-            return False
-
-        return True
+            log(f"E: {e}")
+            raise e
 
 
 def apply_patch(git_folder, patch_file, is_gpg=False):

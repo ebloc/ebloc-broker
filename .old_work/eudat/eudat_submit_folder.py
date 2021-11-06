@@ -7,8 +7,8 @@ import time
 
 import owncloud
 
-from broker import cfg
 import broker.libs.eudat as eudat
+from broker import cfg
 from broker.utils import generate_md5sum, print_tb
 
 oc = owncloud.Client("https://b2drop.eudat.eu/")

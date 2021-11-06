@@ -13,7 +13,7 @@ from typing import Dict, List
 
 from broker import cfg
 from broker._utils._log import br, log
-from broker._utils.tools import mkdir
+from broker._utils.tools import mkdir, read_json
 from broker.config import env, logging, setup_logger
 from broker.errors import QuietExit
 from broker.imports import connect
@@ -28,7 +28,7 @@ from broker.lib import (
     state,
     subprocess_call,
 )
-from broker.libs import eudat, gdrive, _git, slurm
+from broker.libs import _git, eudat, gdrive, slurm
 from broker.utils import (
     WHERE,
     StorageID,
@@ -39,7 +39,6 @@ from broker.utils import (
     is_dir_empty,
     print_tb,
     read_file,
-    read_json,
     remove_empty_files_and_folders,
 )
 
@@ -62,6 +61,12 @@ class Common:
         pass
 
 
+class Ipfs(Common):
+    def upload(self, *_) -> bool:
+        """Upload files after all the patchings are completed."""
+        return True
+
+
 class IpfsGPG(Common):
     def upload(self, *_) -> bool:
         """Upload files right after all the patchings are completed."""
@@ -71,12 +76,6 @@ class IpfsGPG(Common):
             print_tb(e)
             _remove(self.patch_file)
             sys.exit(1)
-        return True
-
-
-class Ipfs(Common):
-    def upload(self, *_) -> bool:
-        """Upload files after all the patchings are completed."""
         return True
 
 
@@ -256,7 +255,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         for key in share_ids:
             value = share_ids[key]
             encoded_value = self.encoded_share_tokens[key]
-            log("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
+            log(f"shared_tokens: ({key}) => ({value['share_token']}), encoded={encoded_value}")
 
     def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""
@@ -476,14 +475,15 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> ipfs_id={self.requester_info['ipfs_id']}")
         log(f"==> f_id={self.requester_info['f_id']}")
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
-            log("## job is already completed and its money is received")
+            self.get_job_info()
+            log(":beer: job is already completed and its money is received", "bold green")
             raise QuietExit
 
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         try:
             Ebb._wait_for_transaction_receipt(self.job_status_running_tx)
-            self.get_job_info(is_log_print=False)  # fetch jon info again
+            self.get_job_info(is_log_print=False)  # re-fetch job info
             self.attemp_get_job_info()
         except Exception as e:
             print_tb(e)
@@ -493,7 +493,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_source_code_hashes(
-                    self.job_info,
                     env.PROVIDER_ID,
                     self.job_key,
                     self.index,
@@ -506,7 +505,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        self.source_code_hashes = self.job_info["source_code_hash"]
+        self.source_code_hashes = self.job_info["code_hashes"]
         self.set_source_code_hashes_to_process()
         self.sacct_result()
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)

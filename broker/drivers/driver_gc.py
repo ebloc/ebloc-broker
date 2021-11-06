@@ -11,9 +11,7 @@ cl = MongoClient()
 coll = cl["eBlocBroker"]["cache"]
 
 
-"""find_all"""
 block_number = Ebb.get_block_number()
-print(block_number)
 
 storageID = None
 cursor = coll.find({})
@@ -28,14 +26,14 @@ for document in cursor:
             print(run(["ipfs", "pin", "rm", ipfsHash]))
             print(run(["ipfs", "repo", "gc"]))
         else:
-            cachedFileName = (
-                env.PROGRAM_PATH + "/" + document["requesterID"] + "/cache/" + document["sourceCodeHash"] + "tar.gz"
+            cached_file_name = (
+                env.PROGRAM_PATH / document["requesterID"] / "cache" / document["sourceCodeHash"] + "tar.gz"
             )
-            print(cachedFileName)
-            _remove(cachedFileName)
-            cachedFileName = env.PROGRAM_PATH + "/cache/" + document["sourceCodeHash"] + "tar.gz"
-            print(cachedFileName)
-            _remove(cachedFileName)
+            print(cached_file_name)
+            _remove(cached_file_name)
+            cached_file_name = env.PROGRAM_PATH / "cache" / document["sourceCodeHash"] + "tar.gz"
+            print(cached_file_name)
+            _remove(cached_file_name)
 
         print(received_block_number)
         output = coll.delete_one({"jobKey": ipfsHash})

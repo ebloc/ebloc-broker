@@ -6,11 +6,11 @@ from web3 import IPCProvider, Web3
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 
-from broker import _config, cfg, config
-from broker._utils.tools import log, print_tb
+from broker import cfg, config
+from broker._utils.tools import log, print_tb, read_json
 from broker.config import env
 from broker.errors import QuietExit
-from broker.utils import is_geth_on, read_json, run, terminate
+from broker.utils import is_geth_on, run, terminate
 
 
 def connect():
@@ -31,14 +31,14 @@ def connect():
 
 
 def _connect_into_web3():
-    web3_provider_path = env.DATADIR.joinpath("geth.ipc")
+    web3_ipc_path = env.DATADIR.joinpath("geth.ipc")
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:  # https://bloxberg.org
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
             cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
     else:
-        cfg.w3 = Web3(IPCProvider(web3_provider_path))
+        cfg.w3 = Web3(IPCProvider(web3_ipc_path))
         # inject the poa compatibility middleware to the innermost layer
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -50,7 +50,7 @@ def connect_into_web3() -> None:
     recycles underlying TCP/IP network connections between your process and
     Ethereum node
     """
-    web3_provider_path = env.DATADIR.joinpath("geth.ipc")
+    web3_ipc_path = env.DATADIR.joinpath("geth.ipc")
     for _ in range(5):
         _connect_into_web3()
         if not cfg.w3.isConnected():
@@ -74,78 +74,48 @@ def connect_into_web3() -> None:
                     "to /private/geth.ipc file doing: ",
                     end="",
                 )
-                log(f"sudo chown $(whoami) {web3_provider_path}", "green")
-                log(f"#> Running `sudo chown $(whoami) {web3_provider_path}`")
-                run(["sudo", "chown", env.WHOAMI, web3_provider_path])
+                log(f"sudo chown $(whoami) {web3_ipc_path}", "green")
+                log(f"#> Running `sudo chown $(whoami) {web3_ipc_path}`")
+                run(["sudo", "chown", env.WHOAMI, web3_ipc_path])
         else:
             break
     else:
         terminate(is_traceback=False)
-        # raise config.QuietExit()
-
-    if not env.PROVIDER_ID:
-        try:
-            env.set_provider_id()
-        except QuietExit:
-            sys.exit(1)
-        except Exception as e:
-            print_tb(e)
-            sys.exit(1)
 
 
 def connect_to_eblocbroker() -> None:
-    """Connect into ebloc-broker."""
+    """Connect into ebloc-broker contract in the given blockchain."""
     if config.ebb:
         return
 
     if not cfg.w3:
         connect_into_web3()
 
+    if not env.EBLOCPATH:
+        log("E: EBLOCPATH variable is empty")
+        raise QuietExit
+
     try:
-        if env.EBLOCPATH is None or env.EBLOCPATH == "":
-            log("E: EBLOCPATH variable is empty")
-            raise QuietExit
-
-        if env.IS_BLOXBERG:
-            json_file = f"{env.EBLOCPATH}/broker/eblocbroker/contract_bloxberg.json"
-        elif env.IS_EBLOCPOA:
-            json_file = f"{env.EBLOCPATH}/broker/eblocbroker/contract_eblocpoa.json"
-
-        contract = read_json(json_file)
-    except Exception as e:
-        log(f"E: Couldn't read the contract.json file: {json_file}")
-        print_tb(e)
-        raise e
-
-    try:  # TODO: add decoder/template for this kind of calls
-        contract_address = contract["address"]
-        abi_file = f"{env.EBLOCPATH}/broker/eblocbroker/abi.json"
+        abi_file = env.EBLOCPATH / "broker" / "eblocbroker" / "abi.json"
         abi = read_json(abi_file, is_dict=False)
     except Exception as e:
-        log(f"E: Couldn't read the abi.json file: {abi_file}")
-        print_tb(e)
-        raise e
+        raise Exception(f"E: Couldn't read the abi.json file: {abi_file}") from e
 
     try:
         if env.IS_BLOXBERG:
-            if not _config.IS_BROWNIE_TEST:
+            if not cfg.IS_BROWNIE_TEST:
                 from brownie import network, project
 
                 network.connect("bloxberg")
                 project = project.load(env.CONTRACT_PROJECT_PATH)
-                config.ebb = project.eBlocBroker.at(contract_address)
-                config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
+                config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
+                config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
                 #: For the contract events
-                config._eBlocBroker = cfg.w3.eth.contract(contract_address, abi=abi)
+                config._eBlocBroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
         elif env.IS_EBLOCPOA:
-            config.ebb = cfg.w3.eth.contract(contract_address, abi=abi)
+            config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
             config._eBlocBroker = config.ebb
-            config.ebb.contract_address = cfg.w3.toChecksumAddress(contract_address)
+            config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
     except Exception as e:
         print_tb(e)
         raise e
-
-
-# requests.exceptions.ConnectionError:
-# [Errno 111] Connection refused => w3 is not connected (class.name: ConnectionRefusedError)
-# Exception: w3.exceptions.BadFunctionCallOutput => wrong mapping input is give (class.name: BadFunctionCallOutput)

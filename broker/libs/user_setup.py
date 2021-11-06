@@ -60,12 +60,11 @@ def set_folder_permission(path, user_name, slurm_user):
 
 
 def user_add(user_address, basedir, slurm_user):
-    logging.info("adding user")
+    log("#> adding user")
     # convert ethereum user address into 32-bits
     user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
     user_dir = f"{basedir}/{user_name}"
     add_user_to_slurm(user_name)
-
     if username_check(user_name):
         run(["sudo", "useradd", "-d", user_dir, "-m", user_name, "--shell", "/bin/bash"])
         log(f"{user_address} => {user_name}) is added as user", "yellow")

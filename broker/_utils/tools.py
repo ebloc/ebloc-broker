@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # from os import listdir
 import decimal
+import json
 import linecache
 import os
 import signal
@@ -8,14 +9,10 @@ import sys
 import threading
 import time
 import traceback
-from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from subprocess import PIPE, CalledProcessError, Popen, check_output
-
 from pytz import timezone, utc
-
-from broker.errors import HandlerException, QuietExit
 
 try:
     import thread
@@ -23,13 +20,12 @@ except ImportError:
     import _thread as thread  # noqa
 
 try:
+    from broker.errors import HandlerException, QuietExit
     from broker._utils._log import br
-except:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils._log import br
-
-try:
     from broker._utils._log import log
-except:  # if ebloc_broker used as a submodule
+except ImportError:  # if ebloc_broker used as a submodule
+    from ebloc_broker.broker.errors import HandlerException, QuietExit
+    from ebloc_broker.broker._utils._log import br
     from ebloc_broker.broker._utils._log import log
 
 
@@ -96,7 +92,7 @@ def utc_to_local(utc_dt, zone="Europe/Istanbul"):
 
 
 def PrintException():
-    exc_type, exc_obj, tb = sys.exc_info()
+    exc_type, exc_obj, tb = sys.exc_info()  # noqa
     f = tb.tb_frame
     lineno = tb.tb_lineno
     filename = f.f_code.co_filename
@@ -119,28 +115,32 @@ def print_tb(message=None, is_print_exc=True) -> None:
 
     tb_text = "".join(traceback.format_exc())
     if is_print_exc and tb_text != "NoneType: None\n":
-        log(tb_text, "bold")
+        log(tb_text.rstrip(), "bold", where_back=1)
 
+    if "An exception of type Exception occurred" not in message:
+        log(message, where_back=1)
     # console.print_exception()  #arg: show_locals=True
-    if not message:
-        log(f"{WHERE(1)} ", "bold blue")
-    else:
-        with suppress(Exception):
-            log(f"{br(PrintException())} ", "bold blue", end="")
+    # if not message:
+    #     log(f"{WHERE(1)} ", "bold blue", where_back=1)
+    # else:
+    #     with suppress(Exception):
+    #         log(f"{br(PrintException())} ", "bold blue", end="", where_back=1)
 
-        log(f"{WHERE(1)}", "bold blue")
-        if "An exception of type CalledProcessError occurred" not in message:
-            if "Warning: " not in message or "E: " not in message:
-                log(f"E: {message}")
-            else:
-                log(message)
+    #     if "An exception of type CalledProcessError occurred" not in message:
+    #         log()
+    #         if "Warning: " not in message or "E: " not in message:
+    #             message = str(message).replace("\n", "")
+    #             log(f"E: {message}", where_back=1)
+    #         else:
+    #             message = str(message).replace("\n", "")
+    #             log(message, where_back=1)
 
 
 def delete_last_line(n=1):
     """Delete the last line in the STDOUT."""
     for _ in range(n):
         sys.stdout.write("\x1b[1A")  # cursor up one line
-        sys.stdout.write("\x1b[2K")  # delete last line
+        sys.stdout.write("\x1b[2K")  # delete the last line
 
 
 def decimal_count(value, is_drop_trailing_zeros=True) -> int:
@@ -280,7 +280,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
     """
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()  # noqa
+    p1.stdout.close()  # type: ignore
     p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()  # type: ignore
     output = p3.communicate()[0].decode("utf-8").strip().splitlines()
@@ -329,7 +329,7 @@ def mkdirs(paths) -> None:
 def kill_process_by_name(process_name):
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()  # noqa
+    p1.stdout.close()  # type: ignore
     p3 = Popen(["awk", "{print $2}"], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()
     output = p3.communicate()[0].decode("utf-8").strip()
@@ -339,26 +339,20 @@ def kill_process_by_name(process_name):
             os.kill(int(pid), signal.SIGKILL)
 
 
-def handler(signum, frame):
-    """Register an handler for the timeout.
-
-    __ https://docs.python.org/3/library/signal.html#example
-    """
-    if any(x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py"]):
-        # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
-        # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
-        pass
-    else:
-        print_tb(f"E: Signal handler called with signum={signum} frame={frame}")
-        raise HandlerException("Forever is over, end of time")
-
-
 def bytes_to_mb(B) -> float:
     """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
     B = float(B)
     KB = float(1024)
     MB = float(KB ** 2)  # 1,048,576
     return float("{0:.5f}".format(B / MB))
+
+
+def without_keys(d, keys):
+    """Return dict without the given keys.
+
+    __ https://stackoverflow.com/a/31434038/2402577
+    """
+    return {x: d[x] for x in d if x not in keys}
 
 
 def quit_function(fn_name):
@@ -384,3 +378,36 @@ def exit_after(s):
         return inner
 
     return outer
+
+
+def read_json(path, is_dict=True):
+    if os.path.isfile(path) and os.path.getsize(path) == 0:
+        raise Exception("File size is empty")
+
+    with open(path) as json_file:
+        data = json.load(json_file)
+        if is_dict:
+            if isinstance(data, dict):
+                return data
+            else:
+                return {}
+        else:
+            if data:
+                return data
+            else:
+                return None
+
+
+def handler(signum, frame):
+    """Register an handler for the timeout.
+
+    Example error: Signal handler called with signum=14 frame=<frame at
+    0x7f2fb1cece40, file '/usr/lib/python3.8/threading.py', line 1027
+
+    __  https://docs.python.org/3/library/signal.html#example
+    """
+    if any(x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py", "threading.py"]):
+        pass
+    else:
+        print_tb(f"E: Signal handler called with signum={signum} frame={frame}")
+        raise HandlerException("Forever is over, end of time")
