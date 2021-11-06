@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils._log import br
 import binascii
 import errno
 import hashlib
@@ -18,15 +19,15 @@ from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 from typing import Dict
+
 import base58
-from broker import cfg
-from broker import config
+
+from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
-from broker.errors import QuietExit
-from broker.errors import QuietExit
 from broker._utils.tools import WHERE, is_process_on, log, print_tb, run
 from broker.config import env, logging
+from broker.errors import QuietExit
 
 ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
@@ -56,23 +57,23 @@ class CacheType(BaseEnum):
 
 class StorageID(BaseEnum):
     IPFS = 0
-    EUDAT = 1
-    IPFS_GPG = 2
-    GDRIVE = 3
-    NONE = 4
+    IPFS_GPG = 1
+    NONE = 2
+    EUDAT = 3
+    GDRIVE = 4
 
-
-STORAGE_IDs = {
-    "ipfs": StorageID.IPFS,
-    "eudat": StorageID.EUDAT,
-    "ipfs_gpg": StorageID.IPFS_GPG,
-    "gdrive": StorageID.GDRIVE,
-    "none": StorageID.NONE,
-}
 
 CACHE_TYPES = {
     "public": CacheType.PUBLIC,
     "private": CacheType.PRIVATE,
+}
+
+STORAGE_IDs = {
+    "ipfs": StorageID.IPFS,
+    "ipfs_gpg": StorageID.IPFS_GPG,
+    "none": StorageID.NONE,
+    "eudat": StorageID.EUDAT,
+    "gdrive": StorageID.GDRIVE,
 }
 
 
@@ -147,7 +148,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
     OpenPort: 53/tcp
     Service: domain (DNS/TCP)
 
-    https://stackoverflow.com/a/33117579/2402577
+    __ https://stackoverflow.com/a/33117579/2402577
     """
     try:
         socket.setdefaulttimeout(timeout)
@@ -203,7 +204,10 @@ def is_bin_installed(name):
 
 
 def run_with_output(cmd):
-    # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    """Run command and return its output.
+
+    __ https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    """
     cmd = list(map(str, cmd))  # all items should be string
     ret = ""
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
@@ -498,8 +502,10 @@ def run_ipfs_daemon():
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read(), "bold blue")
-            log(output, "bold blue")
+            log(content_file.read().rstrip(), "bold blue")
+            time.sleep(5)  # in case sleep for 5 seconds
+            if output:
+                log(output.rstrip(), "bold blue")
 
         if is_ipfs_on():
             return True
@@ -556,6 +562,9 @@ def terminate(msg="", is_traceback=True, lock=None):
 
 
 def question_yes_no(message, is_terminate=False):
+    if "[Y/n]:" not in message:
+        message = f"{message} [Y/n]: "
+
     log(text=message, end="", flush=True)
     getch = _Getch()
     while True:
@@ -570,7 +579,11 @@ def question_yes_no(message, is_terminate=False):
             else:
                 sys.exit(1)
         else:
-            log("Please respond with [green]yes[/green] or [green]no[/green]: ")
+            log()
+            log(
+                f"#> Please respond with [bold green]{br('y')}es[/bold green] or [bold green]{br('n')}o[/bold green]: ",
+                end="",
+            )
 
 
 def json_pretty(json_data):
@@ -643,7 +656,7 @@ def compress_folder(folder_path, is_exclude_git=False):
         tar_hash = generate_md5sum(tar_base)
         tar_file = f"{tar_hash}.tar.gz"
         shutil.move(tar_base, tar_file)
-        log(f"==> Created tar file={dir_path}/{tar_file}")
+        log(f"==> created_tar_file={dir_path}/{tar_file}")
         log(f"==> tar_hash={tar_hash}")
     return tar_hash, f"{dir_path}/{tar_file}"
 

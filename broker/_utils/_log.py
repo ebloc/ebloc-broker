@@ -3,7 +3,6 @@
 import pathlib
 import threading
 from typing import Dict, Union
-
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
@@ -13,7 +12,7 @@ from rich.pretty import pprint
 # install()  # for rich
 # pretty.install()
 
-
+console = Console()
 IS_THREADING_ENABLED = False
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
@@ -103,6 +102,26 @@ def ok():
     return br("  [green]OK[/green]  ")
 
 
+def _console_ruler(msg, filename=""):
+    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
+        filename = thread_log_files[threading.current_thread().name]
+    elif not filename:
+        if ll.LOG_FILENAME:
+            filename = ll.LOG_FILENAME
+        elif DRIVER_LOG:
+            filename = DRIVER_LOG
+        else:
+            filename = "program.log"
+
+    if filename not in ll.console:
+        #: Indicated rich console to write into given filename
+        # __ https://stackoverflow.com/a/6826099/2402577
+        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+
+    console.rule(f"[bold cyan]{msg}", characters="=")
+    ll.console[filename].rule(f"[bold cyan]{msg}", characters="=")
+
+
 def _log(text, color, is_bold, flush, filename, end, is_write=True):
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_bullet:
@@ -173,6 +192,9 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_write=True
     """Print for own settings.
 
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
+
+    * colors:
+    __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
     """
     is_bold: bool = False
     if color == "bold":

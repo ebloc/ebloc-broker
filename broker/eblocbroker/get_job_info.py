@@ -4,7 +4,7 @@ import sys
 import traceback
 from typing import Union
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils._log import br, log
 from broker._utils.tools import print_tb
 from broker.config import logging

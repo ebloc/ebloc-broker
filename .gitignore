@@ -166,3 +166,4 @@ slurm.err
 *.*.bak
 password.secret
 rm slurm-*.out
+eblocbroker_bloxberg_deployed.txt

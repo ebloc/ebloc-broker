@@ -7,14 +7,13 @@ from pprint import pprint
 from typing import Dict, List
 
 from broker import cfg
-
-from broker.errors import QuietExit
 from broker._utils.tools import log, print_tb
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
+from broker.errors import QuietExit
 from broker.lib import get_tx_status
-from broker.libs import git
+from broker.libs import _git
 from broker.utils import (
     CACHE_TYPES,
     CacheType,
@@ -55,25 +54,28 @@ class JobConfig:
 
         storage_id = self.cfg["config"]["_source_code"]["storage_id"]
         self.storage_ids.append(STORAGE_IDs[storage_id])
+        if storage_id == StorageID.NONE:
+            self.add_register_data_info()
+        else:
+            cache_type = self.cfg["config"]["_source_code"]["cache_type"]
+            self.cache_types.append(CACHE_TYPES[cache_type])
+            self.paths.append(self.cfg["config"]["_source_code"]["path"])
+            self.data_transfer_ins.append(self.cfg["config"]["_source_code"]["size_mb"])
+            self.storage_hours.append(self.cfg["config"]["_source_code"]["storage_hours"])
+            self.data_prices_set_block_numbers.append(0)
 
-        cache_type = self.cfg["config"]["_source_code"]["cache_type"]
-        self.cache_types.append(CACHE_TYPES[cache_type])
-
-        self.paths.append(self.cfg["config"]["_source_code"]["path"])
-        self.data_transfer_ins.append(self.cfg["config"]["_source_code"]["size_mb"])
-        self.storage_hours.append(self.cfg["config"]["_source_code"]["storage_hours"])
-        self.data_prices_set_block_numbers.append(self.cfg["config"]["_source_code"]["data_prices_set_block_numbers"])
         for key in self.cfg["config"]["data"]:
             storage_id = self.cfg["config"]["data"][key]["storage_id"]
             self.storage_ids.append(STORAGE_IDs[storage_id])
-
-            cache_type = self.cfg["config"]["data"][key]["cache_type"]
-            self.cache_types.append(CACHE_TYPES[cache_type])
-
-            self.paths.append(self.cfg["config"]["data"][key]["path"])
-            self.data_transfer_ins.append(self.cfg["config"]["data"][key]["size_mb"])
-            self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
-            self.data_prices_set_block_numbers.append(self.cfg["config"]["data"][key]["data_prices_set_block_numbers"])
+            if storage_id == StorageID.NONE:
+                self.add_register_data_info()
+            else:
+                cache_type = self.cfg["config"]["data"][key]["cache_type"]
+                self.cache_types.append(CACHE_TYPES[cache_type])
+                self.paths.append(self.cfg["config"]["data"][key]["path"])
+                self.data_transfer_ins.append(self.cfg["config"]["data"][key]["size_mb"])
+                self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
+                self.data_prices_set_block_numbers.append(0)
 
         self.cores = []
         self.run_time = []
@@ -82,6 +84,14 @@ class JobConfig:
             self.run_time.append(self.cfg["config"]["jobs"][key]["run_time"])
 
         self.data_transfer_out = self.cfg["config"]["data_transfer_out"]
+
+    def add_register_data_info(self):
+        """Set registered data info as empty value for other variables."""
+        self.cache_types.append(0)
+        self.paths.append("")
+        self.storage_hours.append(0)
+        self.data_transfer_ins.append(0)
+        self.data_prices_set_block_numbers.append(0)  # TODO: calculate from the contract
 
 
 class Job:
@@ -103,6 +113,8 @@ class Job:
         self.foldername_tar_hash = {}  # type: Dict[str, str]
         self.tar_hashes = {}  # type: Dict[str, str]
         self.base_dir = ""
+        self.provider = ""
+        self.requester = ""
         self._id = None  # must be set 0 or greater than 0 values
         called_filename = os.path.basename(sys._getframe(1).f_code.co_filename)
         if called_filename.startswith("test_"):

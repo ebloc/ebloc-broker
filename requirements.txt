@@ -28,7 +28,6 @@ bpyutils==0.2.0
 bs4==0.0.1
 BTrees==4.7.2
 cached-property==1.5.1
-ccxt==1.55.14
 certifi==2021.10.8
 cffi==1.14.0
 cfgv==3.1.0
@@ -187,7 +186,6 @@ platformdirs==2.4.0
 pluggy==1.0.0
 ppi==0.0.4
 pre-commit==2.5.1
-prompt-toolkit==3.0.20
 protobuf==3.18.1
 psutil==5.8.0
 ptyprocess==0.7.0
@@ -352,3 +350,4 @@ zope.security==5.1.1
 zope.tales==5.1
 zope.testing==4.9
 zope.traversing==4.4.1
+vulcano==0.5.3

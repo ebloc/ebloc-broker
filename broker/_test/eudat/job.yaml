@@ -1,17 +1,17 @@
 config:
   _source_code:
     cache_type: public
-    path: /home/alper/test_eblocbroker/test_data/base/source_code
-    size_mb: 1
+    path: /home/alper/test_eblocbroker/source_code
+    size_mb: 2
     storage_hours: 1
-    storage_id: ipfs
+    storage_id: eudat
   data:
     data1:
       cache_type: public
-      path: /home/alper/test_eblocbroker/test_data/base/data/data1
-      size_mb: 1
+      path: /home/alper/test_eblocbroker/datasets/BL06-camel-sml
+      size_mb: 2
       storage_hours: 1
-      storage_id: ipfs
+      storage_id: eudat
   data_transfer_out: 1
   jobs:
     job1:

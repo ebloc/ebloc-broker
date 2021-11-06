@@ -7,12 +7,14 @@ from contextlib import suppress
 from logging import Filter
 from pathlib import Path
 from typing import Union
+
 from dotenv import load_dotenv
+
 from broker import cfg
 from broker._utils import _log, colored_traceback
-from broker.errors import QuietExit
 from broker._utils.tools import mkdir
 from broker._utils.yaml import Yaml
+from broker.errors import QuietExit
 
 logging.getLogger("filelock").setLevel(logging.ERROR)
 
@@ -187,5 +189,6 @@ _eBlocBroker = None
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
 IS_THREADING_ENABLED = False
+env: ENV = ENV()
 with suppress(Exception):
     env: ENV = ENV()

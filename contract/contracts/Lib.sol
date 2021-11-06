@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 
 library Lib {
     enum CacheType {
@@ -16,10 +16,10 @@ library Lib {
 
     enum CloudStorageID {
         IPFS, /* 0 */
-        EUDAT, /* 1 */
-        IPFS_GPG, /* 2 */
-        GDRIVE, /* 3 */
-        NONE /* 4 Requested to use from registered data */
+        IPFS_GPG, /* 1 */
+        NONE, /* 2 Request to use from registered/cached data */
+        EUDAT, /* 3 */
+        GDRIVE /* 4 */
     }
 
     /* Status of the submitted job Enum */

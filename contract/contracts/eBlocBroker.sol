@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity 0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 import "./Lib.sol";
@@ -367,7 +367,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         pricesSetBlockNum[msg.sender].push(uint32(block.number));
         provider.constructProvider();
         registeredProviders.push(msg.sender);
-
         emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
         return true;
     }
@@ -471,12 +470,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Registers a given data's sourceCodeHash registiration by the cluster
+     * @dev Registers a given data's sourceCodeHash by the cluster
      *
-     * @param sourceCodeHash Source code hashe of the provided data
+     * @param sourceCodeHash source code hash of the provided data
      * @param price Price in wei of the data
      * @param commitmentBlockDuration | Commitment duration of the given price
-       in block length
+       in block duration
        */
     function registerData(
         bytes32 sourceCodeHash,
@@ -484,7 +483,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32 commitmentBlockDuration
     ) public whenProviderRegistered {
         Lib.RegisteredData storage registeredData = providers[msg.sender].registeredData[sourceCodeHash];
-
         require(
             registeredData.committedBlock.length == 0 && // In order to register, is shouldn't be already registered
                 commitmentBlockDuration >= ONE_HOUR_BLOCK_DURATION
@@ -514,10 +512,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Updated a given data's sourceCodeHash registiration by the cluster
      *
-     * @param sourceCodeHash | Source code hashe of the provided data
-     * @param price | Price in wei of the data
-     * @param commitmentBlockDuration | Commitment duration of the given price
-         in block length
+     * @param sourceCodeHash: Source code hashe of the provided data
+     * @param price: Price in wei of the data
+     * @param commitmentBlockDuration: Commitment duration of the given price
+         in block duration
        */
     function updataDataPrice(
         bytes32 sourceCodeHash,
@@ -622,7 +620,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             for (uint256 i = 1; i < args.cloudStorageID.length; i++)
                 require(
                     args.cloudStorageID[0] == args.cloudStorageID[i] ||
-                        args.cloudStorageID[i] == uint8(Lib.CloudStorageID.IPFS)
+                    args.cloudStorageID[i] <= uint8(Lib.CloudStorageID.NONE)  // IPFS or IPFS_GPG or NONE
                 );
 
         uint32[] memory providerInfo = pricesSetBlockNum[args.provider];
@@ -632,7 +630,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (_providerPriceBlockIndex > block.number) _providerPriceBlockIndex = providerInfo[providerInfo.length - 2];
 
         require(args.providerPriceBlockIndex == _providerPriceBlockIndex);
-
         Lib.ProviderInfo memory info = provider.info[_providerPriceBlockIndex];
 
         uint256 totalCost;
@@ -668,7 +665,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             // Transfers extra payment (msg.value - sum), if any, back to requester (msg.sender)
             balances[msg.sender] += refunded;
         }
-
         _logJobEvent(key, uint32(_providerPriceBlockIndex), sourceCodeHash, args, refunded);
         return;
     }
@@ -835,7 +831,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 require(_dataPriceSetBlockNum == _dataPriceSetBlockNum);
                 // Data is provided by the provider with its own price
                 uint32 _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price;
-                if (_dataPrice > 1) cacheCost = cacheCost.add(_dataPrice);
+                if (_dataPrice > 1)
+                    cacheCost = cacheCost.add(_dataPrice);
 
                 return (1, cacheCost);
             }

@@ -3,7 +3,7 @@
 import time
 from contextlib import suppress
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.config import env
 from broker.lib import run
 

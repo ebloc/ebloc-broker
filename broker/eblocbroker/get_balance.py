@@ -2,7 +2,7 @@
 
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import log
 
 if __name__ == "__main__":

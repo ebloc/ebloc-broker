@@ -24,9 +24,11 @@ brownie console --network eblocpoa
 
 Paste following to get abi into console (`brownie console`):
 
+`cd ~/ebloc-broker/contract`
+
 ```
 import json
-with open('../eblocbroker/abi.json','w') as fp:
+with open('../broker/eblocbroker/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 ```
 

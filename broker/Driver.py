@@ -16,8 +16,7 @@ from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
 from broker._utils import _log
-from broker._utils._log import br, log
-from broker.errors import HandlerException, JobException, QuietExit
+from broker._utils._log import br, log, _console_ruler
 from broker._utils.tools import kill_process_by_name, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
@@ -25,6 +24,7 @@ from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker import Contract
 from broker.eblocbroker.job import DataStorage
+from broker.errors import HandlerException, JobException, QuietExit
 from broker.helper import helper
 from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
@@ -32,7 +32,6 @@ from broker.libs.user_setup import give_rwe_access, user_add
 from broker.utils import (
     CacheType,
     StorageID,
-    run_ipfs_daemon,
     bytes32_to_ipfs,
     check_ubuntu_packages,
     eth_address_to_md5,
@@ -43,6 +42,7 @@ from broker.utils import (
     is_program_valid,
     question_yes_no,
     run,
+    run_ipfs_daemon,
     sleep_timer,
     terminate,
 )
@@ -57,7 +57,6 @@ else:
     given_block_number = vars(args)["bn"]
 
 pid = str(os.getpid())
-COLUMN_SIZE = int(104 / 2 - 12)
 
 
 def wait_until_idle_core_available():
@@ -207,7 +206,7 @@ class Driver:
         self.storage_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
-        log("-" * COLUMN_SIZE + f" {idx} " + "-" * COLUMN_SIZE, "bold blue")
+        _console_ruler(f" {idx} " + "-")
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
@@ -349,9 +348,7 @@ def run_driver():
         block_number_saved = env.config["block_continue"]
         if not isinstance(env.config["block_continue"], int):
             log("E: block_continue variable is empty or contains an invalid character")
-            question_yes_no(
-                "## Would you like to read from the contract's deployed block number? [Y/n]: ", is_terminate=True
-            )
+            question_yes_no("#> Would you like to read from the contract's deployed block number?", is_terminate=True)
             block_number_saved = deployed_block_number
             if deployed_block_number:
                 env.config["block_continue"] = deployed_block_number
@@ -435,7 +432,9 @@ def run_driver():
         while current_block_num < int(block_read_from):
             current_block_num = Ebb.get_block_number()
             if flag:
-                log(f"## Waiting block number to be updated. It remains constant at {current_block_num}...", "blue")
+                log(
+                    f"## Waiting block number to be updated. It remains constant at {current_block_num}...", "bold blue"
+                )
 
             flag = False
             time.sleep(0.25)
@@ -492,14 +491,10 @@ def _main():
 def main():
     try:
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        msg = " provider session starts "
-        log(date_now + " " + "=" * (COLUMN_SIZE - 16) + msg + "=" * (COLUMN_SIZE - 5), "bold cyan")
+        _console_ruler("provider session starts")
+        log(f"==> date={date_now}")
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement to launch ipdb
             _main()
     except KeyboardInterrupt:
         sys.exit(1)
-
-
-# if __name__ == "__main__":
-#     log("Please run: [magenta]./run.py")

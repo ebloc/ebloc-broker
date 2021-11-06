@@ -7,9 +7,9 @@ import subprocess
 import sys
 
 from broker._utils._log import br
-from broker.errors import QuietExit
 from broker._utils.tools import mkdir
 from broker.config import env, logging
+from broker.errors import QuietExit
 from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb, read_json
 

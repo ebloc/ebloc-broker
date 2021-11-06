@@ -2,8 +2,8 @@
 
 import sys
 
-import broker.cfg as cfg
-import broker.libs.eudat as eudat
+from broker import cfg
+from broker.libs import eudat
 from broker.config import env
 from broker.eblocbroker.job import Job
 from broker.imports import connect
@@ -13,7 +13,7 @@ from broker.utils import print_tb
 Ebb = cfg.Ebb
 
 
-def main():
+def eudat_submit():
     connect()
     job = Job()
     submit_base = SubmitBase()
@@ -46,7 +46,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        eudat_submit()
     except KeyboardInterrupt:
         pass
     except Exception as e:

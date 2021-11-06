@@ -3,12 +3,13 @@
 import os
 import subprocess
 import time
+
 from broker._utils._log import br
 from broker._utils.tools import mkdir
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_folder_size, echo_grep_awk, log, run, subprocess_call
-from broker.libs import gdrive, git
+from broker.libs import gdrive, _git
 from broker.utils import WHERE, CacheType, _remove, byte_to_mb, generate_md5sum, get_time, print_tb, untar
 
 
@@ -200,37 +201,36 @@ class GdriveClass(Storage):
 
         return mime_type, folder_name
 
+    def pre_data_check(self, key):
+        if self.data_transfer_in_to_download > self.data_transfer_in_requested:
+            log("E: requested size to download the source_code and data files is greater than the given amount")
+            # TODO: full refund
+            raise
+
+        try:
+            cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
+            return subprocess_call(cmd, 1)
+        except Exception as e:
+            # TODO: gdrive list --query "sharedWithMe"
+            print_tb(e)
+            raise e
+
     def get_data(self, key, _id, is_job_key=False):
         try:
-            (
-                mime_type,
-                name,
-            ) = self.get_data_init(key, _id, is_job_key)
+            mime_type, name = self.get_data_init(key, _id, is_job_key)
         except Exception as e:
             print_tb(e)
             raise e
 
         if is_job_key:
-            if self.data_transfer_in_to_download > self.data_transfer_in_requested:
-                log("E: requested size to download the sourceCode and datafiles is greater than the given amount")
-                # TODO: full refund
-                raise
-
-            try:
-                cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
-                gdrive_info = subprocess_call(cmd, 1)
-            except Exception as e:
-                # TODO: gdrive list --query "sharedWithMe"
-                print_tb(e)
-                raise e
-
-            mime_type = gdrive.get_file_info(gdrive_info, "Mime")
+            gdrive_info = self.pre_data_check(key)
             name = gdrive.get_file_info(gdrive_info, "Name")
+            mime_type = gdrive.get_file_info(gdrive_info, "Mime")
 
         # folder is already stored by its source_code_hash
         source_code_hash = name.replace(".tar.gz", "")
-        logging.info(f"name={name}")
-        logging.info(f"mime_type={mime_type}")
+        log(f"==> name={name}")
+        log(f"==> mime_type={mime_type}")
         if _id == 0:
             # source code folder, ignore downloading result-*
             name = f"{name}.tar.gz"
@@ -253,7 +253,7 @@ class GdriveClass(Storage):
 
             source_code_hash = gdrive.get_file_info(gdrive_info, "Md5sum")
             self.md5sum_dict[key] = source_code_hash
-            logging.info(f"md5sum={self.md5sum_dict[key]}")
+            log(f"==> md5sum={self.md5sum_dict[key]}")
 
             # recieved job is in folder tar.gz
             self.folder_type_dict[source_code_hash] = "gzip"
@@ -327,7 +327,7 @@ class GdriveClass(Storage):
             target = self.get_data(key=self.job_key, _id=0, is_job_key=True)
             if not os.path.isdir(f"{target}/.git"):
                 log(f"Warning: .git folder does not exist within {target}")
-                git.generate_git_repo(target)
+                _git.generate_git_repo(target)
         except:
             return False
 
@@ -339,7 +339,7 @@ class GdriveClass(Storage):
                 target = self.get_data(value, idx + 1)
                 if not os.path.isdir(f"{target}/.git"):
                     log(f"warning: .git folder does not exist within {target}")
-                    git.generate_git_repo(target)
+                    _git.generate_git_repo(target)
             except:
                 return False
 

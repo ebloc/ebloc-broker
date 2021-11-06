@@ -8,8 +8,9 @@ from contextlib import suppress
 from pathlib import Path
 
 import git
+from git.exc import InvalidGitRepositoryError
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.config import env, logging
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, run
 
@@ -28,15 +29,22 @@ def initialize_check(path) -> bool:
 
 
 def is_initialized(path) -> bool:
-    """Check whether repo is initialized via git.
+    """Check whether given the path is initialized with git.
 
     __ https://stackoverflow.com/a/16925062/2402577
     """
     with cd(path):
         try:
             *_, output, err = popen_communicate(["git", "rev-parse", "--is-inside-work-tree"])  # noqa
+            if output == "true":
+                #: checks is the give path top git folder
+                git.Repo(".", search_parent_directories=False)
+                return True
+        except InvalidGitRepositoryError as e:
+            log(f"warning: InvalidGitRepositoryError at path {e}")
+            return False
         except Exception as e:
-            log(f"E: {e}")
+            log(f"warning: {e}")
             return False
 
         return output == "true"
@@ -114,7 +122,8 @@ def add_all(repo=None) -> bool:
         # subprocess.run(["chmod", "-R", "755", "."])
         # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
         # required for files to be access on the cluster side due to permission issues
-        run(["sudo", "chmod", "-R", "775", "."])  # changes folder's hash
+        #: if `chmod -R 775 .` is not applied its source_code hash may change user to user
+        run(["sudo", "chmod", "-R", "775", "."])
 
     try:
         repo.git.add(A=True)  # git add -A .

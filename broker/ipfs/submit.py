@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker.config import env
 import os
 import sys
 from pprint import pprint
@@ -9,12 +8,12 @@ from web3.logs import DISCARD
 
 from broker import cfg
 from broker._utils._log import ok
+from broker.config import env
 from broker.eblocbroker.job import Job, JobConfig
+from broker.errors import QuietExit
 from broker.lib import get_tx_status, run
 from broker.submit_base import SubmitBase
-from broker.errors import QuietExit
 from broker.utils import (
-    run_ipfs_daemon,
     StorageID,
     _remove,
     generate_md5sum,
@@ -23,6 +22,7 @@ from broker.utils import (
     is_dpkg_installed,
     log,
     print_tb,
+    run_ipfs_daemon,
 )
 
 # TODO: folders_to_share let user directly provide the IPFS hash instead of the folder
@@ -37,7 +37,7 @@ def pre_check():
             sys.exit()
 
         if not os.path.isfile(env.GPG_PASS_FILE):
-            log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
+            log(f"E: Please store your gpg password in the [magenta]{env.GPG_PASS_FILE}[/magenta]\nfile for decrypting")
             raise QuietExit
 
         run_ipfs_daemon()
@@ -52,9 +52,7 @@ def submit_ipfs(job_config_fn):
     job = Job()
     job_config = JobConfig(job_config_fn)
     pre_check()
-    # cfg.ipfs.connect()
     requester = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
-    # provider = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
     provider = Ebb.w3.toChecksumAddress(job_config.provider_addr)
     try:
         job.check_account_status(requester)
@@ -65,9 +63,9 @@ def submit_ipfs(job_config_fn):
     log("==> Attemptting to submit a job")
     if job_config.storage_ids[0] == StorageID.IPFS:
         for storage_id in job_config.storage_ids[1:]:
-            if storage_id == StorageID.IPFS_GPG:
+            if storage_id in (StorageID.GDRIVE, StorageID.EUDAT):
                 raise Exception(
-                    "If source code is submitted via IPFS other data files should be submitted via IPFS as well"
+                    "If source code is submitted via IPFS, data files should be submitted via IPFS or IPFS_GPG"
                 )
 
     job.storage_ids = job_config.storage_ids
@@ -147,7 +145,8 @@ def submit_ipfs(job_config_fn):
             try:
                 log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
                 for target in targets:
-                    _remove(target)
+                    if ".tar.gz.gpg" in target:
+                        _remove(target)
             except IndexError:
                 log(f"E: Tx({tx_hash}) is reverted")
     except QuietExit:

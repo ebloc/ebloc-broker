@@ -2,13 +2,12 @@
 
 import sys
 
-import broker.cfg as cfg
-import broker.config as config
+from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import log, print_tb
 from broker.config import env, logging
 from broker.lib import StorageID
-from broker.utils import is_ipfs_on, is_transaction_valid  # bytes32_to_ipfs,
+from broker.utils import is_ipfs_on, is_transaction_valid, question_yes_no
 from brownie.exceptions import TransactionError
 
 
@@ -96,9 +95,10 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
         try:
             cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
-            # TODO
-        except:
-            pass
+        except Exception as e:
+            log(f"E: {e}")
+            question_yes_no("#> Would you like to continue?")
+            # breakpoint()  # DEBUG
 
     return True
 

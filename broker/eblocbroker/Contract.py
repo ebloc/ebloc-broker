@@ -5,14 +5,16 @@ import time
 from os.path import expanduser
 from pathlib import Path
 from typing import Union
+
 from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
+
 from broker import cfg
 from broker._utils._log import ok
-from broker.errors import Web3NotConnected
 from broker._utils.tools import exit_after, log, print_tb
 from broker.config import env
+from broker.errors import Web3NotConnected
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, read_json, terminate
 from brownie.network.account import Account, LocalAccount
@@ -20,7 +22,7 @@ from brownie.network.gas.strategies import LinearScalingStrategy
 from brownie.network.transaction import TransactionReceipt
 
 GAS_PRICE = 1.0
-EXIT_AFTER = 15
+EXIT_AFTER = 120
 
 
 class Contract:
@@ -413,8 +415,12 @@ class Contract:
         for _ in range(self.max_retries):
             self.ops = {"gas": self.gas, "gas_price": f"{gas_price} gwei", "from": _from, "allow_revert": True}
             try:
-                return self._authenticate_orc_id_timeout(*args)
+                tx = self._authenticate_orc_id_timeout(*args)
+                return tx
             except ValueError as e:
+                if tx:
+                    breakpoint()  # DEBUG
+
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
                     raise e

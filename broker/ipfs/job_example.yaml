@@ -12,6 +12,9 @@ config:
       size_mb: 1
       storage_hours: 1
       storage_id: ipfs
+    data2:
+      hash: "0x12345"
+      storage_id: none
   data_transfer_out: 1
   jobs:
     job1:

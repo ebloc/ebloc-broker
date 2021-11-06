@@ -13,9 +13,9 @@ from typing import Dict, List
 
 from broker import cfg
 from broker._utils._log import br, log
-from broker.errors import QuietExit
 from broker._utils.tools import mkdir
 from broker.config import env, logging, setup_logger
+from broker.errors import QuietExit
 from broker.imports import connect
 from broker.lib import (
     calculate_folder_size,
@@ -28,7 +28,7 @@ from broker.lib import (
     state,
     subprocess_call,
 )
-from broker.libs import eudat, gdrive, git, slurm
+from broker.libs import eudat, gdrive, _git, slurm
 from broker.utils import (
     WHERE,
     StorageID,
@@ -348,7 +348,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             else:
                 target_path = self.patch_folder
 
-            self.patch_upload_name, self.patch_file, is_file_empty = git.diff_patch(
+            self.patch_upload_name, self.patch_file, is_file_empty = _git.diff_patch(
                 source, name, self.index, target_path
             )
             if not is_file_empty:

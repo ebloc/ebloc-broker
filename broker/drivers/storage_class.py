@@ -9,12 +9,13 @@ import uuid
 from datetime import datetime, timedelta
 from shutil import copyfile
 from typing import Dict, List
-from broker._utils import _log
+
 from broker import cfg
-from broker.libs import slurm
+from broker._utils import _log
 from broker._utils.tools import mkdir
 from broker.config import ThreadFilter, env, logging
 from broker.lib import log, run
+from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
@@ -214,6 +215,13 @@ class Storage(BaseClass):
             raise e
 
     def _sbatch_call(self):
+        """Run sbatch on the cluster.
+
+        unshare. Seems to work fine for terminal programs.
+        `unshare -r -n ping google.com`
+
+        __ https://askubuntu.com/a/600996/660555
+        """
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
         source_code_idx = 0  # 0 indicated maps to source_sode
@@ -271,9 +279,10 @@ class Storage(BaseClass):
             f.write("#!/bin/bash\n")
             f.write("#SBATCH -o slurm.out  # STDOUT\n")
             f.write("#SBATCH -e slurm.err  # STDERR\n")
-            f.write("#SBATCH --mail-type=ALL\n")
-            # _cmd = f"firejail --noprofile --net=none --disable-mnt --noblacklist={self.requester_home} bash {run_file}"
-            _cmd = f"bash {run_file}"
+            f.write("#SBATCH --mail-type=ALL\n\n")
+            # _cmd = f"\nfirejail --net=none --disable-mnt --quiet \ \n\t{run_file}"
+            # _cmd = f"\n{run_file}"
+            _cmd = f"/usr/bin/unshare -r -n {run_file}"
             f.write(_cmd)
 
         # copyfile(f"{self.results_folder}/run.sh", sbatch_file_path)
@@ -284,16 +293,17 @@ class Storage(BaseClass):
         d = datetime(1, 1, 1) + execution_time_second
         time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
         logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")
-        # give permission to user that will send jobs to Slurm.
+        # give permission to user that will send jobs to Slurm
         subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
         for _attempt in range(10):
             try:
                 """Slurm submits job
-                * Real mode -N is used. For Emulator-mode -N use 'sbatch -c'
+                * Real mode -n is used.
+                * For Emulator-mode -N use 'sbatch -c'
                 * cmd: sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
                         sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
                 """
-                cmd = f'sbatch -N {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
+                cmd = f'sbatch -n {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
                 with cd(self.results_folder):
                     try:
                         job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)

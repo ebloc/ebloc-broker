@@ -7,7 +7,7 @@ import time
 
 import owncloud
 
-import broker.cfg as cfg
+from broker import cfg
 import broker.libs.eudat as eudat
 from broker.utils import generate_md5sum, print_tb
 

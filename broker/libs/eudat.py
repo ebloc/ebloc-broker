@@ -13,14 +13,14 @@ from pprint import pprint
 
 import owncloud
 from web3.logs import DISCARD
-from broker import config
-from broker.libs import git
-from broker import cfg
+
+from broker import cfg, config
 from broker._utils._log import br, ok
 from broker.config import env, logging
 from broker.eblocbroker.job import Job
-from broker.lib import get_tx_status, run
 from broker.errors import QuietExit
+from broker.lib import get_tx_status, run
+from broker.libs import _git
 from broker.utils import (
     CacheType,
     StorageID,
@@ -155,7 +155,7 @@ def share_single_folder(folder_name, f_id) -> bool:
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
         if not config.oc.is_shared(folder_name):
             config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-            log(f"{ok()} Sharing")
+            log(f"sharing {ok()}")
             return True
 
         log("## Requester folder is already shared")
@@ -249,23 +249,22 @@ def _submit(provider, requester, folders_to_share):
     job.Ebb.is_eth_account_locked(requester)
     provider = cfg.w3.toChecksumAddress(provider)
     provider_info = job.Ebb.get_provider_info(provider)
-    log(f"==> provider.f_id={provider_info['f_id']}")
+    log(f"==> provider_fId={provider_info['f_id']}")
     job.folders_to_share = folders_to_share.copy()
     try:
-        git.is_repo(job.folders_to_share)
+        _git.is_repo(job.folders_to_share)
     except:
         print_tb()
         sys.exit(1)
 
-    log()
     for idx, folder in enumerate(job.folders_to_share):
         if idx != 0:
             print("")
 
         log(f"==> folder_to_share={folder}")
         try:
-            git.initialize_check(folder)
-            git.commit_changes(folder)
+            _git.initialize_check(folder)
+            _git.commit_changes(folder)
             folder_hash = initialize_folder(folder)
         except:
             print_tb()

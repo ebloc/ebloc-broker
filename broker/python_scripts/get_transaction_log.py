@@ -5,7 +5,7 @@ from pprint import pprint
 
 from web3.logs import DISCARD
 
-import broker.cfg as cfg
+from broker import cfg
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:

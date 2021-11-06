@@ -5,10 +5,11 @@ import sys
 from web3 import IPCProvider, Web3
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
+
 from broker import _config, cfg, config
-from broker.errors import QuietExit
 from broker._utils.tools import log, print_tb
 from broker.config import env
+from broker.errors import QuietExit
 from broker.utils import is_geth_on, read_json, run, terminate
 
 

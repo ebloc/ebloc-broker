@@ -13,6 +13,7 @@ from cid import make_cid
 
 from broker._utils._log import ok
 from broker._utils.tools import handler, log, print_tb
+from broker.utils import question_yes_no
 
 # from io import StringIO
 from broker.config import env, logging
@@ -143,7 +144,7 @@ class Ipfs:
                 is_delete = True
 
         if os.path.isfile(encrypted_file_target):
-            log(f"==> gpg_file: {encrypted_file_target} is already created.")
+            log(f"## gpg_file: {encrypted_file_target} is already created")
             return encrypted_file_target
 
         try:
@@ -189,10 +190,11 @@ class Ipfs:
                 log()
                 if "failure: dial to self attempted" in error:
                     log(f"Warning: {error.replace('Error: ', '').rstrip()}")
+                    question_yes_no("#> Would you like to continue?")
                 else:
                     raise Exception(error)
-
-            log(ok())
+            else:
+                log(ok())
         except Exception as e:
             print_tb(e)
             log("E: connection into provider's IPFS node via swarm is not accomplished")

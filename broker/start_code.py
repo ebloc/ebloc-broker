@@ -6,7 +6,7 @@ from datetime import datetime
 from subprocess import PIPE, Popen, check_output
 
 import broker._utils._log as _log
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils._log import br, log, ok
 from broker.config import env
 from broker.utils import popen_communicate

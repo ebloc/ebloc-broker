@@ -6,7 +6,7 @@ import sys
 import time
 from typing import List
 
-import broker.cfg as cfg
+from broker import cfg
 import broker.config as config
 from broker._utils._log import br, log
 from broker._utils.tools import bytes_to_mb, mkdir

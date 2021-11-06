@@ -16,26 +16,10 @@ sudo apt install unixodbc-dev
 sudo apt install python-dev
 
 VENV_PATH=$HOME/venv
-python3 -m venv $VENV_PATH  # python3.7 -m venv --without-pip $VENV_PATH
+python3 -m venv $VENV_PATH
 source $VENV_PATH/bin/activate
-
-pip install --upgrade pip
-pip install --upgrade pip --user
-pip3 install --upgrade pip
-
-# Recover pip:
-# ===========
-# sudo python3 -m pip uninstall pip
-# sudo apt install python3-pip --reinstall
-
-pip install wheel
-pip install -r requirements.txt
-pip install -e . --use-deprecated=legacy-resolver  # sudo -H
-
-# This is must:
-# https://stackoverflow.com/questions/714063/importing-modules-from-parent-folder
-# pip install -e .[doc,dev]
-# pip install -U matplotlib google-colab sphinx_rtd_theme
+~/venv/bin/python3 -m pip install --upgrade pip
+pip install -e . --use-deprecated=legacy-resolver
 
 ## npm
 wget -qO- https://deb.nodesource.com/setup_7.x | sudo bash -

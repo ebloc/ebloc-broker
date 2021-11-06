@@ -3,13 +3,14 @@
 import os
 import shutil
 import time
+
 from broker import cfg
-from broker.libs import git
 from broker._utils._log import br
 from broker._utils.tools import mkdir
 from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_folder_size
+from broker.libs import _git
 from broker.utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log
 
 
@@ -99,7 +100,7 @@ class IpfsClass(Storage):
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
                 cfg.ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
 
-            if not git.initialize_check(target):
+            if not _git.initialize_check(target):
                 return False
 
             if not is_hashed:

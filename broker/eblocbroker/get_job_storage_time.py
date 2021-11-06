@@ -2,7 +2,7 @@
 
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb
@@ -16,5 +16,5 @@ if __name__ == "__main__":
     received_block_num, storage_time = Ebb.getJobStorageTime(provider_addr, source_code_hash)
     print(
         f"received_block_num={received_block_num}; storage_time={storage_time};"
-        f" endBlockTime={received_block_num + storage_time * 240}"
+        f" end_block_time={received_block_num + storage_time * cfg.BLOCK_DURATION_1_HOUR}"
     )

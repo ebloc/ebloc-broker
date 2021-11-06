@@ -35,7 +35,6 @@ price_data_transfer = 1
 price_storage = 1
 price_cache = 1
 prices = [price_core_min, price_data_transfer, price_storage, price_cache]
-commitmentBlockNum = 240
 
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
 ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"

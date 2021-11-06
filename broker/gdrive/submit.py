@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
 from pprint import pprint
+
 from web3.logs import DISCARD
+
 from broker import cfg
-from broker.libs import gdrive
-from broker.libs import git
 from broker._utils._log import ok
 from broker._utils.tools import QuietExit
 from broker.config import env
 from broker.eblocbroker.job import Job
 from broker.lib import get_tx_status
+from broker.libs import gdrive, _git
 from broker.submit_base import SubmitBase
 from broker.utils import CacheType, StorageID, is_program_valid, log, print_tb
 
@@ -27,7 +28,7 @@ def main():
     job.folders_to_share.append(env.BASE_DATA_PATH / "test_data" / "base" / "data" / "data1")
     submit_base.check_link_folders(job.folders_to_share)
     # IMPORTANT: consider ignoring to push .git into the submitted folder
-    git.generate_git_repo(job.folders_to_share)
+    _git.generate_git_repo(job.folders_to_share)
     job.clean_before_submit()
     requester = Ebb.w3.toChecksumAddress("0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49")
     provider = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"  # home2-vm

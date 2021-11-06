@@ -5,11 +5,12 @@ from pprint import pprint
 from typing import List
 
 from web3.logs import DISCARD
+
 from broker import cfg
 from broker._utils._log import log
-from broker.errors import QuietExit
 from broker._utils.tools import print_tb
 from broker.config import env, logging  # noqa: F401
+from broker.errors import QuietExit
 from broker.lib import get_tx_status
 
 

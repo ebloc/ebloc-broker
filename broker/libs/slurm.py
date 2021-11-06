@@ -3,11 +3,10 @@
 import time
 
 from broker._utils._log import ok
-from broker.errors import QuietExit
 from broker._utils.tools import is_process_on
 from broker.config import env, logging
+from broker.errors import BashCommandsException, QuietExit
 from broker.lib import run
-from broker.errors import BashCommandsException
 from broker.utils import log, popen_communicate, print_tb
 
 

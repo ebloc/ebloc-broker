@@ -7,12 +7,13 @@ import sys
 import time
 from multiprocessing import Process
 from threading import Thread
+
 from web3._utils.threads import Timeout
-from broker import cfg
-from broker import config
-from broker.errors import Web3NotConnected
+
+from broker import cfg, config
 from broker._utils.tools import is_process_on, log, mkdir, print_tb, print_trace
 from broker.config import env, logging
+from broker.errors import Web3NotConnected
 from broker.utils import Link, StorageID, _remove, byte_to_mb, popen_communicate, question_yes_no, run
 
 
@@ -54,15 +55,16 @@ class State:
     __ https://slurm.schedmd.com/squeue.html
     """
 
-    code = {}
-    code["SUBMITTED"] = 0
-    code["PENDING"] = 1
-    code["RUNNING"] = 2
-    code["REFUNDED"] = 3
-    code["CANCELLED"] = 4
-    code["COMPLETED"] = 5
-    code["TIMEOUT"] = 6
-    code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 7  # TODO: check
+    code = {
+        "SUBMITTED": 0,
+        "PENDING": 1,
+        "RUNNING": 2,
+        "REFUNDED": 3,
+        "CANCELLED": 4,
+        "COMPLETED": 5,
+        "TIMEOUT": 6,
+        "COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
+    }
     inv_code = {value: key for key, value in code.items()}
 
 
@@ -107,7 +109,7 @@ def get_tx_status(tx_hash) -> str:
         #     # All logs fried under the tx
         #     log(f"log {idx}", "blue")
         #     pprint(_log.__dict__)
-        log("## Was transaction successful? ")
+        log("#> Was transaction successful? ")
         if tx_receipt["status"] == 1:
             log("Transaction is deployed", "bold green")
         else:

@@ -2,7 +2,7 @@
 
 from pymongo import MongoClient
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.config import env
 from broker.utils import StorageID, _remove, run
 

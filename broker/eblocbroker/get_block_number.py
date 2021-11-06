@@ -2,7 +2,7 @@
 
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import log
 from broker.config import env, setup_logger
 from broker.utils import print_tb
@@ -22,6 +22,6 @@ if __name__ == "__main__":
         if is_write_to_file:
             env.config["block_continue"] = output
         else:
-            log(f"block_number={output}")
+            log(f"block_number={output}", "bold")
     except Exception as e:
         print_tb(e)

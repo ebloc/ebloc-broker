@@ -9,7 +9,7 @@ import sys
 import time
 from contextlib import suppress
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
 

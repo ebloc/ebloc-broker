@@ -12,8 +12,10 @@ from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from subprocess import PIPE, CalledProcessError, Popen, check_output
-from broker.errors import QuietExit
+
 from pytz import timezone, utc
+
+from broker.errors import HandlerException, QuietExit
 
 try:
     import thread
@@ -309,7 +311,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"Warning: [green]{name}[/green] is not running on the background. {WHERE(1)}")
+        print_tb(f"[green]{name}[/green] is not running on the background {WHERE(1)}")
 
     return False
 

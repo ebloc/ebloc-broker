@@ -114,9 +114,11 @@ not running, cluster is not able to get the IPFS object from the client's node.
 
 Example code could be seen under `eBlocBroker/slurmJobExample` directory:
 
-Client should put his Slurm script inside a file called `run.sh`. Please note that you do not have
-to identify `-n` and `-t` parameters, since they will be overwritten with arguments provided by the
-client on the cluster end
+Client should put his Slurm script inside a file called `run.sh`. It should be
+created executable using `chmod + run.sh` command. Please note that you do not
+have to identify `-n` and `-t` parameters, since they will be overwritten with
+arguments provided by the client on the cluster end.
+
 
 Target into the folder you want to submit and do: `ipfs add -r .` You will see something similiar with following output:
 

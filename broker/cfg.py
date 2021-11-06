@@ -4,8 +4,10 @@
 
 __ https://stackoverflow.com/a/12413139/2402577
 """
+from rich.console import Console
 
 TX_TIMEOUT = 1800
+BLOCK_DURATION_1_HOUR = 600
 
 
 class EBB:
@@ -59,3 +61,4 @@ class W3:
 Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()
+console = Console()
