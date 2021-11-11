@@ -12,11 +12,11 @@ base="/var/ebloc-broker"
 mkdir -p $base/to_delete
 
 mv $base/* $base/to_delete 2>/dev/null
+DIR=$base/to_delete/public
+[ -d $DIR ] && mv $base/to_delete/public $base/
 
-if [ -d "$base/to_delete/public" ]; then
-    mv $base/to_delete/public $base/
-fi
-
+DIR=$base/to_delete/cache
+[ -d $DIR ] && mv $base/to_delete/cache $base/
 rm -rf $base/to_delete
 mkdir -p $base/cache
 

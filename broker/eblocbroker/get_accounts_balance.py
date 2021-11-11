@@ -2,7 +2,7 @@
 
 from os import listdir
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import log, print_tb
 from brownie import accounts
 

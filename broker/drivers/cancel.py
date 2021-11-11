@@ -3,12 +3,12 @@
 import subprocess
 import time
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.config import env, setup_logger
 from broker.utils import eth_address_to_md5
 
 Ebb = cfg.Ebb
-log_dc = setup_logger(f"{env.LOG_PATH}/cancelledJobsLog.out")
+log_dc = setup_logger(env.LOG_PATH / "cancelled_jobs_log.out")
 
 
 with open(env.CANCEL_BLOCK_READ_FROM_FILE, "r") as content_file:
@@ -22,12 +22,10 @@ max_val = 0
 while True:
     time.sleep(0.25)
     # cancel_block_read_from_local = 2000000 # for test purposes
-
     # waits here until new job cancelled into the provider
     logged_jobs_to_process = Ebb.LogJob.run_log_cancel_refund(cancel_block_read_from_local, env.PROVIDER_ID)
-
     for logged_job in logged_jobs_to_process:
-        msg_sender = Ebb.w3.eth.getTransactionReceipt(logged_job["transactionHash"].hex())["from"].lower()
+        msg_sender = Ebb.w3.eth.get_transaction_receipt(logged_job["transactionHash"].hex())["from"].lower()
         user_name = eth_address_to_md5(msg_sender)
         # print(msg_sender)
         # print(logged_job)
@@ -42,8 +40,10 @@ while True:
             max_val = block_number
 
         """
-        cmd: sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c 'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | xargs -n 1 basename); sacct -n -X --format jobid --name $jobName'
-        output: 51           231555615+      debug cc6b74f19+          1  COMPLETED      0:0
+        cmd: sudo su - c6cec9ebdb49fa85449c49251f4a0b9d -c \
+              'jobName=$(echo 200376512531615951349171797788434913951_0/JOB_TO_RUN/200376512531615951349171797788434913951\*0*sh | \
+               xargs -n 1 basename); sacct -n -X --format jobid --name $jobName' output: 51  \
+               231555615+      debug cc6b74f19+          1  COMPLETED      0:0
         """
         output = (
             subprocess.check_output(
@@ -84,12 +84,12 @@ while True:
         f_blockReadFrom.write(f"{value}")
         f_blockReadFrom.close()
         cancel_block_read_from_local = str(value)
-        log_dc("---------------------------------------------")
+        log_dc("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
         log_dc(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
     else:
         currentBlockNumber = block_number()
         f_blockReadFrom = open(env.CANCEL_BLOCK_READ_FROM_FILE, "w")  # updates the latest read block number
         f_blockReadFrom.write(f"{currentBlockNumber}")
         f_blockReadFrom.close()
-        log_dc("---------------------------------------------")
+        log_dc("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
         log_dc(f"Waiting cancelled jobs from: {currentBlockNumber}")

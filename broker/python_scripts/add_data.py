@@ -3,7 +3,7 @@
 import os
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import print_tb
 
 

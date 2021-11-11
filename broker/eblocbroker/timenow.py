@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import timenow
 
 if __name__ == "__main__":

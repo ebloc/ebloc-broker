@@ -2,7 +2,7 @@
 
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb

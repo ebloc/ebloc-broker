@@ -21,37 +21,30 @@ from typing import Dict
 
 import base58
 
-import broker._utils.tools as tools
-import broker.cfg as cfg
-import broker.config as config
+from broker import cfg, config
+from broker._utils import _log
 from broker._utils._getch import _Getch
-from broker._utils.tools import WHERE, QuietExit, is_process_on, log, print_tb, run
+from broker._utils._log import br
+from broker._utils.tools import WHERE, is_process_on, log, print_tb, run
 from broker.config import env, logging
+from broker.errors import QuietExit
 
 ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 Qm = b"\x12 "
 empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 zero_bytes32 = "0x00"
-yes = set(["yes", "y", "ye", "ys", "yy"])
+yes = set(["yes", "y", "ye", "ys", "yy", "yey"])
 no = set(["no", "n", "nn"])
 EXIT_FAILURE = 1
 
 
-class BashCommandsException(Exception):
-    def __init__(self, returncode, output, error_msg):
-        self.returncode = returncode
-        self.output = output
-        self.error_msg = error_msg
-        Exception.__init__("Error in the executed command")
-
-
 class BaseEnum(IntEnum):
-    def __str__(self):
-        return str(self.value)
-
     def __int__(self):
         return int(self.value)
+
+    def __str__(self):
+        return str(self.value)
 
     def __eq__(self, other):
         return int(self.value) == other
@@ -64,11 +57,24 @@ class CacheType(BaseEnum):
 
 class StorageID(BaseEnum):
     IPFS = 0
-    EUDAT = 1
-    IPFS_GPG = 2
-    GITHUB = 3
+    IPFS_GPG = 1
+    NONE = 2
+    EUDAT = 3
     GDRIVE = 4
-    NONE = 5
+
+
+CACHE_TYPES = {
+    "public": CacheType.PUBLIC,
+    "private": CacheType.PRIVATE,
+}
+
+STORAGE_IDs = {
+    "ipfs": StorageID.IPFS,
+    "ipfs_gpg": StorageID.IPFS_GPG,
+    "none": StorageID.NONE,
+    "eudat": StorageID.EUDAT,
+    "gdrive": StorageID.GDRIVE,
+}
 
 
 class cd:
@@ -142,14 +148,14 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
     OpenPort: 53/tcp
     Service: domain (DNS/TCP)
 
-    https://stackoverflow.com/a/33117579/2402577
+    __ https://stackoverflow.com/a/33117579/2402577
     """
     try:
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
-    except socket.error as ex:
-        print(ex)
+    except socket.error as e:
+        print(e)
         return False
 
 
@@ -198,7 +204,10 @@ def is_bin_installed(name):
 
 
 def run_with_output(cmd):
-    # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    """Run command and return its output.
+
+    __ https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    """
     cmd = list(map(str, cmd))  # all items should be string
     ret = ""
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
@@ -244,7 +253,7 @@ def is_transaction_valid(tx_hash) -> bool:
 
 
 def is_transaction_passed(tx_hash) -> bool:
-    receipt = cfg.w3.eth.getTransactionReceipt(tx_hash)
+    receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
     with suppress(Exception):
         if receipt["status"] == 1:
             return True
@@ -346,24 +355,6 @@ def read_file(fname):
         file.close()
 
 
-def read_json(path, is_dict=True):
-    if os.path.isfile(path) and os.path.getsize(path) > 0:
-        with open(path) as json_file:
-            data = json.load(json_file)
-            if is_dict:
-                if isinstance(data, dict):
-                    return data
-                else:
-                    return {}
-            else:
-                if data:
-                    return data
-                else:
-                    return None
-    else:
-        raise
-
-
 def is_gzip_file_empty(filename):
     """Check whether the given gzip file is empty or not.
 
@@ -421,7 +412,7 @@ def _remove(path: str, is_warning=True):
     """
     try:
         if path == "/":
-            raise ValueError("E: Attempting to remove /")
+            raise ValueError("E: Attempting to remove root(/)")
 
         if os.path.isfile(path):
             with suppress(FileNotFoundError):
@@ -432,9 +423,10 @@ def _remove(path: str, is_warning=True):
         else:
             if is_warning:
                 log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
+
             return
 
-        log(f"==> {WHERE(1)}\n{path} is removed")
+        log(f"==> {WHERE(1)} {path} is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -443,7 +435,7 @@ def _remove(path: str, is_warning=True):
             raise e
 
 
-def is_ipfs_on(is_print=True) -> bool:
+def is_ipfs_on(is_print=False) -> bool:
     """Check whether ipfs runs on the background."""
     return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0, is_print=is_print)
 
@@ -464,7 +456,7 @@ def is_geth_account_locked(address) -> bool:
 def is_driver_on(process_count=0, is_print=True):
     """Check whether driver runs on the background."""
     if is_process_on("python.*[D]river", "Driver", process_count, is_print=is_print):
-        log(f"## Track output using:\n[blue]tail -f {tools.DRIVER_LOG}")
+        log(f"## Track output using:\n[blue]tail -f {_log.DRIVER_LOG}")
         raise QuietExit
 
 
@@ -482,41 +474,23 @@ def is_geth_on():
         raise QuietExit
 
 
-# def is_ipfs_running():
-#     """Check that does IPFS run on the background or not."""
-#     if is_ipfs_on():
-#         return True
-
-#     log("E: IPFS does not work on the background", "blue")
-#     log("## Starting IPFS daemon on the background", "blue")
-#     while True:
-#         output = run(["python3", f"{env.EBLOCPATH}/broker/daemons/ipfs.py"])
-#         log(output, "blue")
-#         time.sleep(1)
-#         if is_ipfs_on():
-#             break
-#         else:
-#             with open(env.IPFS_LOG, "r") as content_file:
-#                 logging.info(content_file.read())
-#         time.sleep(1)
-#     return is_ipfs_on()
-
-
-def _run_ipfs_daemon():
+def run_ipfs_daemon():
     """Check that does IPFS run on the background or not."""
     if is_ipfs_on():
         return True
 
     log("Warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
-    output = run(["python3", f"{env.EBLOCPATH}/broker/python_scripts/run_ipfs_daemon.py"])
+    output = run(["python3", env.EBLOCPATH / "broker" / "python_scripts" / "run_ipfs_daemon.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read(), "blue")
-            log(output, "blue")
+            log(content_file.read().rstrip(), "bold blue")
+            time.sleep(5)  # in case sleep for 5 seconds
+            if output:
+                log(output.rstrip(), "bold blue")
 
-        if is_ipfs_on():
+        if is_ipfs_on(is_print=True):
             return True
     return False
 
@@ -528,6 +502,7 @@ def check_ubuntu_packages(packages=None):
     for package in packages:
         if not is_dpkg_installed(package):
             return False
+
     return True
 
 
@@ -556,7 +531,6 @@ def terminate(msg="", is_traceback=True, lock=None):
     if lock:
         with suppress(Exception):
             lock.close()
-            open(env.DRIVER_LOCKFILE, "w").close()
 
     if config.driver_cancel_process:
         # Following line is added, in case ./killall.sh does not work due to
@@ -572,6 +546,9 @@ def terminate(msg="", is_traceback=True, lock=None):
 
 
 def question_yes_no(message, is_terminate=False):
+    if "[Y/n]:" not in message:
+        message = f"{message} [Y/n]: "
+
     log(text=message, end="", flush=True)
     getch = _Getch()
     while True:
@@ -586,11 +563,15 @@ def question_yes_no(message, is_terminate=False):
             else:
                 sys.exit(1)
         else:
-            log("Please respond with [green]yes[/green] or [green]no[/green]: ", end="", flush=True)
+            log()
+            log(
+                f"#> Please respond with [bold green]{br('y')}es[/bold green] or [bold green]{br('n')}o[/bold green]: ",
+                end="",
+            )
 
 
 def json_pretty(json_data):
-    """Prints json in readeable clean format."""
+    """Print json in readeable clean format."""
     print(json.dumps(json_data, indent=4, sort_keys=True))
 
 
@@ -659,7 +640,7 @@ def compress_folder(folder_path, is_exclude_git=False):
         tar_hash = generate_md5sum(tar_base)
         tar_file = f"{tar_hash}.tar.gz"
         shutil.move(tar_base, tar_file)
-        log(f"==> Created tar file={dir_path}/{tar_file}")
+        log(f"==> created_tar_file={dir_path}/{tar_file}")
         log(f"==> tar_hash={tar_hash}")
     return tar_hash, f"{dir_path}/{tar_file}"
 
@@ -667,42 +648,3 @@ def compress_folder(folder_path, is_exclude_git=False):
 def dump_dict_to_file(filename, job_keys):
     with open(filename, "w") as f:
         json.dump(job_keys, f)
-
-
-class Link:
-    def __init__(self, path_from, path_to) -> None:
-        self.data_map = {}  # type: Dict[str, str]
-        self.path_from = path_from  # Path automatically removes / at the end if there is
-        self.path_to = path_to
-
-    def link_folders(self, paths=None):
-        """Create linked folders under the data_link folder."""
-        from os import listdir
-        from os.path import isdir, join
-
-        if not paths:
-            # instead of full path only returns folder names
-            paths = [f for f in listdir(self.path_from) if isdir(join(self.path_from, f))]
-            is_only_folder_names = True
-        else:
-            is_only_folder_names = False
-
-        for target in paths:
-            if is_only_folder_names:
-                folder_name = target
-                target = f"{self.path_from}/{target}"
-            else:
-                folder_name = path_leaf(target)
-
-            try:
-                folder_hash = generate_md5sum(target)
-            except Exception as e:
-                raise e
-
-            self.data_map[folder_name] = folder_hash
-            destination = f"{self.path_to}/{folder_hash}"
-            run(["ln", "-sfn", target, destination])
-            log(f" *   [bold green]{target}[/bold green]", "bold yellow")
-            log(f" └─> {destination}", "bold yellow")
-            folder_new_hash = generate_md5sum(destination)
-            assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"

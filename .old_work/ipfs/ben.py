@@ -6,8 +6,8 @@ from pprint import pprint
 
 from web3.logs import DISCARD
 
-import broker.cfg as cfg
 import broker.eblocbroker.Contract as Contract
+from broker import cfg
 from broker._utils._log import ok
 from broker.config import env, logging
 from broker.lib import check_linked_data, get_tx_status, run
@@ -44,7 +44,7 @@ def get_tx_status(tx_hash) -> str:
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
     print("Transaction receipt is mined:")
     pprint(dict(tx_receipt), depth=1)
-    print("\n## Was transaction successful? ")
+    print("\n#> Was transaction successful? ")
     if tx_receipt["status"] == 1:
         print("Transaction is deployed", "green")
     else:

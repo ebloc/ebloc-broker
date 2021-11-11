@@ -16,7 +16,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    breakpoint()  # DEBUG
     from broker.Driver import main
 
     main()

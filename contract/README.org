@@ -1,0 +1,53 @@
+* How to do some upgrades
+
+** MAC solc upgrade
+
+#+begin_src bash
+brew update
+brew upgrade
+brew tap ethereum/ethereum
+brew install solidity
+#+end_src
+
+* Brownie
+
+#+begin_src bash
+source $HOME/venv/bin/activate
+brownie console --network development
+brownie console --network eblocpoa
+>>> web3.eth.blockNumber
+#+end_src
+
+** Get API
+
+Paste following to get abi into console (~brownie console~):
+
+~cd ~/ebloc-broker/contract~
+
+#+begin_src bash
+import json
+with open('../broker/eblocbroker/abi.json','w') as fp:
+    json.dump(eBlocBroker.abi, fp)
+#+end_src
+
+#+begin_src bash
+cp ~/eBlocBroker/contract/network-config_.yaml ~/.brownie/network-config.yaml
+#+end_src
+
+* Accounts
+
+- Path: ~$HOME/.brownie/accounts~
+
+#+begin_src bash
+$ brownie console --network bloxberg
+>>> accounts
+>>> acct = accounts.load("alper")
+>>> acct.deploy(Lib)
+>>> ebb = acct.deploy(eBlocBroker)
+#+end_src
+
+* Extract private key
+
+#+begin_src bash
+brownie accounts import alper /home/alper/.eblocpoa/keystore/UTC--2020-03-18T13-02-58.306094822Z--d118b6ef83ccf11b34331f1e7285542ddf70bc49
+#+end_src

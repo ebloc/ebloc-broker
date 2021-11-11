@@ -4,23 +4,25 @@ import sys
 
 import ipfshttpclient
 
-import broker.cfg as cfg
-from broker._utils.tools import QuietExit, log, print_tb
+from broker import cfg
+from broker._utils.tools import log, print_tb
 from broker.config import env
+from broker.errors import QuietExit
 from broker.lib import get_tx_status
 
 
-def register_provider(self, *args, **kwargs):
+def _register_provider(self, *args, **kwargs):
     """Register provider."""
     if self.does_provider_exist(env.PROVIDER_ID):
         log(
             f"Warning: Provider {env.PROVIDER_ID} is already registered.\n"
-            "Please call the updateProvider() function for an update."
+            "Please call the [blue]update_provider_info.py[/blue] or "
+            "[blue]update_provider_prices.py[/blue] script for an update."
         )
         raise QuietExit
 
-    if kwargs["commitment_blk"] < 240:
-        raise Exception("E: Commitment block number should be greater than 240")
+    if kwargs["commitment_blk"] < cfg.BLOCK_DURATION_1_HOUR:
+        raise Exception(f"E: Commitment block number should be greater than {cfg.BLOCK_DURATION_1_HOUR}")
 
     if len(kwargs["federation_cloud_id"]) >= 128:
         raise Exception("E: federation_cloud_id hould be lesser than 128")
@@ -29,39 +31,37 @@ def register_provider(self, *args, **kwargs):
         raise Exception("E: e-mail should be less than 128")
 
     try:
-        tx = self.set_register_provider(*args)
+        tx = self.register_provider(*args)
         return self.tx_id(tx)
     except Exception as e:
-        print_tb(e)
         raise e
 
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb
     try:
-        ipfs_addr = "/ip4/127.0.0.1/tcp/5001/http"
-        client = ipfshttpclient.connect(ipfs_addr)
+        client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except Exception as e:
         print_tb(e)
         log(
             "E: Connection error to IPFS, please run it on the background.\n"
-            "Please run ~/ebloc-broker/broker/daemons/ipfs.py"
+            "Please run ~/ebloc-broker/broker/_daemons/ipfs.py"
         )
         sys.exit(1)
 
     try:
-        ipfs_id = cfg.ipfs.get_ipfs_id(client, is_print=True)
+        ipfs_id = cfg.ipfs.get_ipfs_id(client)
     except Exception as e:
-        print_tb(e)
+        print_tb(str(e))
         sys.exit(1)
 
     # email = "alper01234alper@gmail.com"
     email = "alper.alimoglu.research@gmail.com"
     federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
-    #: key_id=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
+    #: gpg_fingerprint=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
     gpg_fingerprint = "0x2AF4FEB13EA98C83D94150B675D5530929E05CEB"
     available_core = 128
-    commitment_blk = 240
+    commitment_blk = 600
     price_core_min = 100
     price_data_transfer = 2
     price_storage = 1
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "commitment_blk": commitment_blk,
     }
     try:
-        tx_hash = Ebb.register_provider(*args, **kwargs)
+        tx_hash = Ebb._register_provider(*args, **kwargs)
         receipt = get_tx_status(tx_hash)
     except QuietExit:
         pass

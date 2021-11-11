@@ -82,7 +82,12 @@ ipfs bootstrap rm --all
 ipfs config show | grep "PeerID"
 ipfs bootstrap add /ip4/35.240.104.228/tcp/4001/p2p/12D3KooWLqjUfi8fjz5tncRJXet4gUiK75VRJnB5E16Z8mVJ9c8N
 
-$ cat ~/.ipfs/swarm.key && echo ""  # obtained from the main node
+
+# Copy output of following from the main node
+$ cat ~/.ipfs/swarm.key && echo ""
+
+# paste into `~/.ipfs/swarm.key` file on the other nodes
+
 echo \
 "/key/swarm/psk/1.0.0/
 /base16/

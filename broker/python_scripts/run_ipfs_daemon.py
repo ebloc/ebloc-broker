@@ -4,7 +4,7 @@ from broker.config import env
 from broker.lib import run
 
 if __name__ == "__main__":
-    run(["python3", f"{env.EBLOCPATH}/broker/daemons/ipfs.py"])
+    run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     # import time
     # from contextlib import suppress
     # from broker.libs.ipfs import Ipfs

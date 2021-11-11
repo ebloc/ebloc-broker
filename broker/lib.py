@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
+import hashlib
 import os
 import subprocess
 import sys
@@ -10,11 +11,11 @@ from threading import Thread
 
 from web3._utils.threads import Timeout
 
-import broker.cfg as cfg
-import broker.config as config
-from broker._utils.tools import Web3NotConnected, is_process_on, log, mkdir, print_tb, print_trace
+from broker import cfg, config
+from broker._utils.tools import is_process_on, log, print_tb, print_trace
 from broker.config import env, logging
-from broker.utils import Link, StorageID, _remove, byte_to_mb, popen_communicate, question_yes_no, run
+from broker.errors import Web3NotConnected
+from broker.utils import StorageID, _remove, byte_to_mb, popen_communicate, run
 
 
 def enum(*sequential, **named):
@@ -32,7 +33,6 @@ class State:
     """State code of the Slurm jobs, add keys into the hashmap.
 
     Hashmap keys:
-
         - SUBMITTED: Initial state.
 
         - PENDING: Indicates when a request is receieved by the provider.  The
@@ -55,15 +55,16 @@ class State:
     __ https://slurm.schedmd.com/squeue.html
     """
 
-    code = {}
-    code["SUBMITTED"] = 0
-    code["PENDING"] = 1
-    code["RUNNING"] = 2
-    code["REFUNDED"] = 3
-    code["CANCELLED"] = 4
-    code["COMPLETED"] = 5
-    code["TIMEOUT"] = 6
-    code["COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT"] = 7  # TODO: check
+    code = {
+        "SUBMITTED": 0,
+        "PENDING": 1,
+        "RUNNING": 2,
+        "REFUNDED": 3,
+        "CANCELLED": 4,
+        "COMPLETED": 5,
+        "TIMEOUT": 6,
+        "COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
+    }
     inv_code = {value: key for key, value in code.items()}
 
 
@@ -91,7 +92,7 @@ def session_start_msg(slurm_user, block_number, pid):
 
 def run_driver_cancel():
     """Run driver_cancel daemon on the background."""
-    if not is_process_on("python.*[d]riverCancel", "driverCancel"):
+    if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
         # Running driver_cancel.py on the background if it is not already
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
@@ -108,7 +109,7 @@ def get_tx_status(tx_hash) -> str:
         #     # All logs fried under the tx
         #     log(f"log {idx}", "blue")
         #     pprint(_log.__dict__)
-        log("## Was transaction successful? ")
+        log("#> Was transaction successful? ")
         if tx_receipt["status"] == 1:
             log("Transaction is deployed", "bold green")
         else:
@@ -123,14 +124,16 @@ def get_tx_status(tx_hash) -> str:
 
 
 def check_size_of_file_before_download(file_type, key=None):
+    # TODO: fill
     """Check size of the file before downloading it."""
-    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):  # TODO: fill
+    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
         if not key:
             return False
     elif int(file_type) == StorageID.EUDAT:
         pass
     elif int(file_type) == StorageID.GDRIVE:
         pass
+
     return True
 
 
@@ -164,7 +167,7 @@ def subprocess_call(cmd, attempt=1, print_flag=True):
             if count == 0:
                 log("Trying again...\nAttempts: ", "green", end="")
 
-            log(f"{count}  ", "green", end="")
+            log(f"{count}  ", "bold blue", end="")
             time.sleep(0.25)
 
 
@@ -174,10 +177,10 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", "red")
-        logging.error(f"E: scontrol error\n{output}")
+        log(f"E: scontrol error\n{output}")
         raise
 
-    logging.info(f"\nWriting into path is completed => {path}")
+    log(f"\nWriting into path({path}) is completed")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed
 
 
@@ -224,33 +227,6 @@ def eblocbroker_function_call(func, max_retries):
             raise e
 
     raise Exception("E: eblocbroker_function_call completed all the attempts.")
-
-
-def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):
-    """Generate folder as hard linked of the given folder paths or provider main folder.
-
-    :param path_to: linked folders_to_share into into given path
-    :param folders_to_share: if given, iterates all over the folders_to_share
-    """
-    mkdir(path_to)
-    link = Link(path_from, path_to)
-    link.link_folders(folders_to_share)
-    log()
-    for key, value in link.data_map.items():
-        log(f" * [green]{key}[/green] => [yellow]data_link/{value}[/yellow]")
-
-    if not is_continue:
-        print("")
-        question_yes_no(
-            "## Would you like to continue with linked folder path in your run.sh?\n"
-            "If no, please update your run.sh file [Y/n]: "
-        )
-
-    if folders_to_share:
-        for folder in folders_to_share:
-            if not os.path.isdir(folder):
-                log(f"E: {folder} path does not exist")
-                sys.exit(1)
 
 
 def is_dir(path) -> bool:

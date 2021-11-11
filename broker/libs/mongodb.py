@@ -60,7 +60,7 @@ class MongoBroker(BaseMongoClass):
             "received_block_number": job_info["received_block_number"],
             "timestamp": timestamp,
             "cloudStorageID": cloud_storage_id,
-            "cacheDuration": job_info["cacheDuration"],
+            "storage_duration": job_info["storage_duration"],
             "receieved": False,
             "set_job_status_running_tx": "",
         }
@@ -132,11 +132,11 @@ if __name__ == "__main__":
     if args.is_delete_all:
         output = ebb_mongo.delete_all()
         print(f"mc['ebloc_broker']['cache'] is_deleted={output}")
-
-    # ebb_mongo.find_all()
-    output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
-    print(output)
-    # Ebb = cfg.Ebb
-    # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
-    # output = ebb_mongo.set_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
-    # ebb_mongo.find_all()
+    else:
+        # ebb_mongo.find_all()
+        output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
+        print(output)
+        # Ebb = cfg.Ebb
+        # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
+        # output = ebb_mongo.set_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
+        # ebb_mongo.find_all()

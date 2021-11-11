@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-
-from broker.config import env
-from broker.lib import check_linked_data, log
+from broker.eblocbroker.job import Job
+from broker.eudat.submit import eudat_submit
+from broker.gdrive.submit import submit_gdrive
+from broker.ipfs.submit import submit_ipfs
 
 
 class SubmitBase:
     def __init__(self):
-        pass
+        self.job = Job()
+        self.job.set_config("/home/alper/ebloc-broker/broker/ipfs/job.yaml")
+        self.submit()
 
-    def check_link_folders(self, folders_to_share):
-        path_from = env.EBLOCPATH / "base" / "data"
-        path_to = env.LINK_PATH / "base" / "data_link"
-        check_linked_data(path_from, path_to, folders_to_share[1:])
-        for folder in folders_to_share:
-            if not os.path.isdir(folder):
-                log(f"E: {folder} path does not exist")
-                sys.exit(1)
+    def submit(self):
+        if self.job.source_code_storage_id in ["ipfs", "ipfs_gpg"]:
+            submit_ipfs(self.job)
+        elif self.job.source_code_storage_id == "eudat":
+            eudat_submit(self.job)
+        elif self.job.source_code_storage_id == "gdrive":
+            submit_gdrive(self.job)
+
+
+def main():
+    SubmitBase()
+
+
+if __name__ == "__main__":
+    main()

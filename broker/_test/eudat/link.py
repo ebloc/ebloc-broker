@@ -3,7 +3,7 @@
 import sys
 
 from broker.config import env
-from broker.lib import check_linked_data
+from broker.link import check_linked_data
 from broker.utils import print_tb
 
 if __name__ == "__main__":

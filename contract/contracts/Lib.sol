@@ -6,7 +6,7 @@
   email:  alper.alimoglu AT gmail.com
 */
 
-pragma solidity ^0.7.0;
+pragma solidity >=0.7.0 <0.9.0;
 
 library Lib {
     enum CacheType {
@@ -16,11 +16,10 @@ library Lib {
 
     enum CloudStorageID {
         IPFS, /* 0 */
-        EUDAT, /* 1 */
-        IPFS_MINILOCK, /* 2 */
-        GITHUB, /* 3 */
-        GDRIVE, /* 4 */
-        NONE /* 5 Requested to use from registered data */
+        IPFS_GPG, /* 1 */
+        NONE, /* 2 Request to use from registered/cached data */
+        EUDAT, /* 3 */
+        GDRIVE /* 4 */
     }
 
     /* Status of the submitted job Enum */
@@ -56,7 +55,7 @@ library Lib {
          * provider set its prices most recent. */
         uint32 providerPriceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
-           stored and shared using either IPFS, EUDAT, IPFS (with MiniLock
+           stored and shared using either IPFS, EUDAT, IPFS (with GPG
            encryption), or Google Drive. */
         uint8[] cloudStorageID;
         /* An array of uint8 values that denote whether the requester’s data
@@ -147,21 +146,21 @@ library Lib {
     }
 
     struct Interval {
-        int32 core; // Job's requested core number
-        uint32 next; // Points to next the node
+        int32 core; // job's requested core number
+        uint32 next; // points to next the node
         uint32 endpoint;
     }
 
     struct IntervalArg {
         uint32 startTime;
         uint32 completionTime;
-        int32 core; // Job's requested core number
+        int32 core; // job's requested core number
         int256 availableCore;
     }
 
     struct LL {
         uint32 length;
-        uint32 tail; // Tail of the linked list
+        uint32 tail; // tail of the linked list
         mapping(uint256 => Interval) items;
     }
 
@@ -172,7 +171,7 @@ library Lib {
     function constructProvider(Provider storage self) internal {
         self.isRunning = true;
         self.committedBlock = uint32(block.number);
-        self.receiptList.length = 1; // Trick to show mapped index 0's values as zero
+        self.receiptList.length = 1; // trick to show mapped index(0)'s values as zero
     }
 
     function push(
@@ -324,11 +323,10 @@ library Lib {
         }
         uint256 _length = self.length;
         if (flag <= 1) {
-            /* Inserted while keeping sorted order */
+            /* inserted while keeps sorted order */
             push(self, addr, _interval.completionTime, _interval.core, uint32(_length));
             _length += 1;
             carriedSum = _interval.core;
-
             if (flag == 0) {
                 addrTemp = addr;
                 prevNode_index = self.tail = uint32(_length - 1);
@@ -348,7 +346,6 @@ library Lib {
         } else {
             if (flag <= 1) {
                 delete self.items[uint32(_length - 1)];
-
                 if (prevNode_index == self.tail) {
                     self.tail = uint32(addrTemp);
                 } else {
@@ -361,12 +358,12 @@ library Lib {
         }
     }
 
-    /* Used for tests */
+    /* used for tests */
     function getReceiptListSize(LL storage self) external view returns (uint32) {
         return self.length;
     }
 
-    /* Used for test */
+    /* used for test */
     function printIndex(LL storage self, uint32 index) external view returns (uint256 _index, int32) {
         _index = self.tail;
         for (uint256 i = 0; i < index; i++) {

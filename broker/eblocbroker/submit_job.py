@@ -2,13 +2,11 @@
 
 import sys
 
-import broker.cfg as cfg
-import broker.config as config
+from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import log, print_tb
-from broker.config import env, logging
-from broker.lib import StorageID
-from broker.utils import is_ipfs_on, is_transaction_valid  # bytes32_to_ipfs,
+from broker.config import env
+from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
 from brownie.exceptions import TransactionError
 
 
@@ -41,54 +39,47 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     is_use_ipfs = False
     for storage_id in job.storage_ids:
         if storage_id > 4:
-            logging.error("\nE: Wrong storage_ids value is given. Please provide from 0 to 4")
-            raise
+            raise Exception("Wrong storage_ids value is given. Please provide from 0 to 4")
 
         if storage_id in [StorageID.IPFS, StorageID.IPFS_GPG]:
             is_use_ipfs = True
             break
 
     if not job.source_code_hashes:
-        logging.error("E: source_code_hash list is empty")
-        raise
+        raise Exception("source_code_hash list is empty")
 
     if len(key) >= 64:
-        logging.error("\nE: Length of key is greater than 64, please provide lesser")
-        raise
+        raise Exception("Length of key is greater than 64, please provide lesser")
 
     key_len = 46
     if len(key) != key_len and main_storage_id in [StorageID.IPFS, StorageID.IPFS_GPG]:
-        logging.error(
-            f"\nE: key's length does not match with its original length, it should be {key_len}. Please check your key length"
+        raise Exception(
+            f"E: key's length does not match with its original length, it should be {key_len}. "
+            "Please check your key length"
         )
-        raise
 
     key_len = 33
     if len(key) != 33 and main_storage_id == StorageID.GDRIVE:
-        logging.error(
-            f"\nE: key's length does not match with its original length, it should be {key_len}. Please check your key length"
+        raise Exception(
+            f"E: key's length does not match with its original length, it should be {key_len}. "
+            "Please check your key length"
         )
-        raise
 
     for idx, core in enumerate(job.cores):
         if core > provider_info["available_core_num"]:
-            logging.error(f"\nE: Requested {core}, which is {core}, is greater than the provider's core number")
-            raise
+            raise Exception(f"Requested {core}, which is {core}, is greater than the provider's core number")
 
         if job.run_time[idx] == 0:
-            logging.error(f"\nE: run_time{br(idx)} is provided as 0. Please provide non-zero value")
-            raise
+            raise Exception(f"run_time{br(idx)} is provided as 0. Please provide non-zero value")
 
     for core_min in job.run_time:
         if core_min > 1440:
-            logging.error("\nE: run_time provided greater than 1440. Please provide smaller value")
-            raise
+            raise Exception("E: run_time provided greater than 1440. Please provide smaller value")
 
     for cache_type in job.cache_types:
         if cache_type > 1:
             # cache_type = {0: private, 1: public}
-            logging.error(f"\nE: cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
-            raise
+            raise Exception(f"E: cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
 
     if is_use_ipfs:
         if not is_ipfs_on():
@@ -96,22 +87,16 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
         try:
             cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
-            # TODO
-        except:
-            pass
+        except Exception as e:
+            log(f"E: {e}")
+            question_yes_no("#> Would you like to continue?")
 
-    return True
-
-    """ TODO: can it be more than 32 characters
-    print(source_code_hashes[0].encode('utf-8'))
-    for i in range(len(source_code_hashes)):
-        source_code_hashes[i] = source_code_hashes[i]
-        if len(source_code_hashes[i]) != 32 and len(source_code_hashes[i]) != 0:
-            return False, 'source_code_hashes should be 32 characters.'
-    """
+    for idx, source_code_hash in enumerate(job.source_code_hashes_str):
+        if source_code_hash == "":
+            raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
 
-def submit_job(self, provider, key, job_price, job, requester=None, account_id=None):
+def submit_job(self, provider, key, job, requester=None, account_id=None):
     """Submit job."""
     if not requester and not account_id:
         raise Exception("E: Not valid msg.sender address is provided.")
@@ -146,13 +131,14 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
         job.run_time,
         job.data_transfer_out,
     ]
+    job.print_before_submit()
     try:
         # source_code_hashes_l = []
         # for idx, source_code_hash in job.source_code_hashes:
         #     source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
         # log(f"==> source_code_hashes={source_code_hashes_l}")
         tx = self._submit_job(
-            _from, job_price, key, job.data_transfer_ins, args, job.storage_hours, job.source_code_hashes
+            _from, job.price, key, job.data_transfer_ins, args, job.storage_hours, job.source_code_hashes
         )
         return self.tx_id(tx)
     except TransactionError as e:
@@ -161,7 +147,7 @@ def submit_job(self, provider, key, job_price, job, requester=None, account_id=N
         if is_transaction_valid(tx_hash):
             return tx_hash
         else:
-            raise Exception(f"E: tx_hash={tx_hash} is not a valid transaction hash.")
+            raise Exception(f"E: tx_hash={tx_hash} is not a valid transaction hash.") from e
     except Exception as e:
         if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
             # https://stackoverflow.com/a/45532289/2402577, https://stackoverflow.com/a/24065533/2402577

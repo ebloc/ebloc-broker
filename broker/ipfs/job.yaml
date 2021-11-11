@@ -1,10 +1,26 @@
-job:
-    cores: 1
-    run_time: 1
-    storage_hours: [1, 1]
-    data_transfer_ins: [1, 1]
+config:
+    _base_dir: /home/alper/test_eblocbroker/test_data/base/
+    _source_code:
+        cache_type: public
+        path: /home/alper/test_eblocbroker/source_code
+        storage_hours: 0
+        storage_id: ipfs
+    base_data_path: /home/alper/test_eblocbroker/test_data/base/
+    data:
+        data1:
+            cache_type: public
+            path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+            storage_hours: 0
+            storage_id: ipfs
+        data2:
+            cache_type: public
+            path: /home/alper/test_eblocbroker/test_data/base/data/data1
+            storage_hours: 0
+            storage_id: ipfs
     data_transfer_out: 1
-    data_prices_set_block_numbers: [0, 0]
-    folders:
-      - /home/alper/test_eblocbroker/test_data/base/source_code
-      - /home/alper/test_eblocbroker/test_data/base/data/data1
+    jobs:
+        job1:
+            cores: 1
+            run_time: 1
+    provider:
+        address: '0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA'

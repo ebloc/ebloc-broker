@@ -3,16 +3,27 @@
 import os
 import sys
 from ast import literal_eval as make_tuple
-from pprint import pprint
 from typing import Dict, List
 
-import broker.cfg as cfg
-import broker.libs.git as git
-from broker._utils.tools import QuietExit, log, print_tb
+from broker import cfg
+from broker._utils.tools import log, print_tb
+from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
-from broker.lib import get_tx_status
-from broker.utils import CacheType, StorageID, _remove, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, run
+from broker.errors import QuietExit
+from broker.lib import calculate_folder_size, get_tx_status
+from broker.libs import _git
+from broker.utils import (
+    CACHE_TYPES,
+    CacheType,
+    STORAGE_IDs,
+    StorageID,
+    _remove,
+    bytes32_to_ipfs,
+    empty_bytes32,
+    is_geth_account_locked,
+    run,
+)
 
 
 class DataStorage:
@@ -24,13 +35,14 @@ class DataStorage:
         self.storage_duration = args[1]
         self.is_private = args[2]
         self.is_verified_used = args[3]
-        self.received_storage_deposit = 0
+        self.received_storage_deposit: int = 0
 
 
 class Job:
     """Object for the job that will be submitted."""
 
     def __init__(self, **kwargs) -> None:
+        self.cfg = None
         self.Ebb = cfg.Ebb
         self.w3 = self.Ebb.w3
         self.run_time: List[int] = []
@@ -45,8 +57,16 @@ class Job:
         self.keys = {}  # type: Dict[str, str]
         self.foldername_tar_hash = {}  # type: Dict[str, str]
         self.tar_hashes = {}  # type: Dict[str, str]
+        self.source_code_storage_id: str = ""
         self.base_dir = ""
+        self.provider = ""
+        self.requester = ""
         self._id = None  # must be set 0 or greater than 0 values
+        self.provider_addr: str = ""
+        self.paths = []
+        self.data_transfer_ins = []  # TODO: calculate from the file itself
+        self.data_prices_set_block_numbers = []
+        self.data_transfer_out: int = 0
         called_filename = os.path.basename(sys._getframe(1).f_code.co_filename)
         if called_filename.startswith("test_"):
             self.is_brownie = True
@@ -76,7 +96,7 @@ class Job:
                     log("Warning: self.Ebb is empty object")
 
                 processed_logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
-                pprint(vars(processed_logs[0].args))
+                log(vars(processed_logs[0].args))
                 log(f"==> job_index={processed_logs[0].args['index']}", "bold")
             except IndexError:
                 log("E: Transaction is reverted")
@@ -107,7 +127,7 @@ class Job:
                 self.cache_types[idx] = CacheType.PRIVATE
 
     def generate_git_repos(self):
-        git.generate_git_repo(self.folders_to_share)
+        _git.generate_git_repo(self.folders_to_share)
 
     def clean_before_submit(self):
         for folder in self.folders_to_share:
@@ -138,6 +158,70 @@ class Job:
         except:
             print_tb()
             sys.exit(1)
+
+    def set_config(self, fn=None):
+        if fn:
+            self.cfg = Yaml(fn)
+
+        self.provider_addr = self.cfg["config"]["provider"]["address"]
+        self.source_code_storage_id = storage_id = self.cfg["config"]["_source_code"]["storage_id"]
+        self.storage_ids.append(STORAGE_IDs[storage_id])
+        if storage_id == StorageID.NONE:
+            self.add_register_data_info()
+        else:
+            cache_type = self.cfg["config"]["_source_code"]["cache_type"]
+            self.cache_types.append(CACHE_TYPES[cache_type])
+            _path = self.cfg["config"]["_source_code"]["path"]
+            size_mb = calculate_folder_size(_path)
+            self.paths.append(_path)
+            self.data_transfer_ins.append(size_mb)
+            self.storage_hours.append(self.cfg["config"]["_source_code"]["storage_hours"])
+            self.data_prices_set_block_numbers.append(0)
+
+        for key in self.cfg["config"]["data"]:
+            storage_id = self.cfg["config"]["data"][key]["storage_id"]
+            self.storage_ids.append(STORAGE_IDs[storage_id])
+            if storage_id == StorageID.NONE:
+                self.add_register_data_info()
+            else:
+                cache_type = self.cfg["config"]["data"][key]["cache_type"]
+                self.cache_types.append(CACHE_TYPES[cache_type])
+                _path = self.cfg["config"]["data"][key]["path"]
+                size_mb = calculate_folder_size(_path)
+                self.paths.append(_path)
+                self.data_transfer_ins.append(size_mb)
+                self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
+                self.data_prices_set_block_numbers.append(0)
+
+        self.cores = []
+        self.run_time = []
+        for key in self.cfg["config"]["jobs"]:
+            self.cores.append(self.cfg["config"]["jobs"][key]["cores"])
+            self.run_time.append(self.cfg["config"]["jobs"][key]["run_time"])
+
+        self.data_transfer_out = self.cfg["config"]["data_transfer_out"]
+        self.base_dir = self.cfg["config"]["_base_dir"]
+        self.set_cache_types(self.cache_types)
+
+    def add_register_data_info(self):
+        """Set registered data info as empty value for other variables."""
+        self.cache_types.append(0)
+        self.paths.append("")
+        self.storage_hours.append(0)
+        self.data_transfer_ins.append(0)
+        self.data_prices_set_block_numbers.append(0)  # TODO: calculate from the contract
+
+    def print_before_submit(self):
+        for idx, source_code_hash in enumerate(self.source_code_hashes_str):
+            print_temp = {
+                "path": self.paths[idx],
+                "source_code_hash": source_code_hash,
+                "folder_size_mb": self.data_transfer_ins[idx],
+                "storage_ids": StorageID(self.storage_ids[idx]).name,
+                "cache_type": CacheType(self.cache_types[idx]).name,
+            }
+            log(print_temp)
+            log()
 
 
 class JobPrices:
@@ -183,12 +267,10 @@ class JobPrices:
             received_storage_deposit = self.Ebb.get_received_storage_deposit(
                 self.job.provider, self.job.requester, source_code_hash
             )
-            job_storage_time = self.Ebb.get_job_storage_time(
-                self.job.provider, source_code_hash, _from=self.job.provider
-            )
-        else:  #
+            job_storage_time = self.Ebb.get_job_storage_time(self.job.provider, source_code_hash)
+        else:
             filename = call.__file__
-            data = ("", self.job.provider, self.job.requester, source_code_hash)
+            data = ("func", self.job.provider, self.job.requester, source_code_hash)
             output = run(["python", filename, *[str(arg) for arg in data]])
             output = output.split("\n")
             received_storage_deposit = float(output[0])
@@ -203,24 +285,23 @@ class JobPrices:
         self.storage_cost = 0
         self.cache_cost = 0
         self.data_transfer_in_sum = 0
-        # breakpoint()  # DEBUG
         for idx, source_code_hash in enumerate(self.job.source_code_hashes):
             if self.is_brownie:
                 ds = self.create_data_storage(source_code_hash)
             else:
                 ds = self.create_data_storage(self.job.source_code_hashes_str[idx])
 
-            if ds.received_block + ds.storage_duration < self.w3.eth.blockNumber:
+            if ds.received_block + ds.storage_duration < self.w3.eth.block_number:
                 # storage time is completed
                 ds.received_storage_deposit = 0
 
             log(f"==> is_private={ds.is_private}")
-            # print(received_block + storage_duration >= self.w3.eth.blockNumber)
+            # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_storage_deposit > 0 or
             if (
-                ds.received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber
+                ds.received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.block_number
             ) or (
-                ds.received_block + ds.storage_duration >= self.w3.eth.blockNumber
+                ds.received_block + ds.storage_duration >= self.w3.eth.block_number
                 and not ds.is_private
                 and ds.is_verified_used
             ):
@@ -237,7 +318,7 @@ class JobPrices:
                     self.storage_cost += data_price
                     break
 
-                #  if not ds.received_storage_deposit and (received_block + storage_duration < w3.eth.blockNumber):
+                #  if not ds.received_storage_deposit and (received_block + storage_duration < w3.eth.block_number):
                 if not ds.received_storage_deposit:
                     self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
                     if self.job.storage_hours[idx] > 0:
@@ -254,6 +335,11 @@ class JobPrices:
     def set_job_price(self):
         """Set job price in the object."""
         self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
+        log(f"==> price_core_min={self.price_core_min}")
+        log(f"==> price_data_transfer={self.price_data_transfer}")
+        log(f"==> price_storage={self.price_storage}")
+        log(f"==> price_cache={self.price_cache}")
+        #
         log(f"job_price={self.job_price}", "bold blue")
         self.cost["computational"] = self.computational_cost
         self.cost["cache"] = self.cache_cost

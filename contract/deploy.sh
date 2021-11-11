@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# NETWORK="eblocpoa"
-NETWORK="bloxberg"
-filename="eblocbroker_"$NETWORK"_deployed.txt"
-# rm -rf build/
+# network="eblocpoa"
+network="bloxberg"
+filename="eblocbroker_"$network"_deployed.txt"
+echo "==> network="$network
+rm -rf build/
 brownie compile
-brownie run eBlocBroker --network $NETWORK | \
-    tee |  sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' > $filename
-cat $filename
+brownie run eBlocBroker --network $network
+
+#     | \
+#     tee |  sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' > $filename
+# cat $filename

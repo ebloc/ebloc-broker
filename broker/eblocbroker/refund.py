@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 import sys
-from pprint import pprint
 from typing import List
 
 from web3.logs import DISCARD
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils._log import log
-from broker._utils.tools import QuietExit, print_tb
+from broker._utils.tools import print_tb
 from broker.config import env, logging  # noqa: F401
+from broker.errors import QuietExit
 from broker.lib import get_tx_status
 
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
             processed_logs = Ebb._eBlocBroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
-            pprint(vars(processed_logs[0].args))
+            log(vars(processed_logs[0].args))
             try:
                 logging.info(f"refunded_wei={processed_logs[0].args['refundedWei']}")
                 log("SUCCESS", "green")

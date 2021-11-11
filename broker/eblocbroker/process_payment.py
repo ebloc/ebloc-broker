@@ -3,7 +3,7 @@
 import sys
 from typing import Any, Union
 
-import broker.cfg as cfg
+from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
 from broker.lib import StorageID, state

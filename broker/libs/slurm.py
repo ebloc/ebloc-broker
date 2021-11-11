@@ -3,10 +3,11 @@
 import time
 
 from broker._utils._log import ok
-from broker._utils.tools import QuietExit, is_process_on
+from broker._utils.tools import is_process_on
 from broker.config import env, logging
+from broker.errors import BashCommandsException, QuietExit
 from broker.lib import run
-from broker.utils import BashCommandsException, log, popen_communicate, print_tb
+from broker.utils import log, popen_communicate, print_tb
 
 
 def add_user_to_slurm(user):
@@ -47,11 +48,10 @@ def get_idle_cores(is_print=True):
         total_cores = core_info[3]
         if is_print:
             log(
-                f"allocated_cores={allocated_cores} |"
-                f"idle_cores={idle_cores} |"
-                f"other_cores={other_cores} |"
-                f"total_number_of_cores={total_cores}",
-                "bold green",
+                f"==> [green]allocated_cores=[/green]{allocated_cores} | "
+                f"[green]idle_cores=[/green]{idle_cores} | "
+                f"[green]other_cores=[/green]{other_cores} | "
+                f"[green]total_number_of_cores=[/green]{total_cores}"
             )
     else:
         logging.error("E: sinfo is emptry string")
@@ -84,7 +84,7 @@ def is_on() -> bool:
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 
-    output = run(["sinfo"])
+    output = run(["sinfo", "-N", "-l"])
     if "PARTITION" not in output:
         logging.error("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")
         if not output:

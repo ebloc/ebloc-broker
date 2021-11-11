@@ -2,7 +2,8 @@
 
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
+from broker._utils.tools import log
 from broker.utils import print_tb
 
 if __name__ == "__main__":
@@ -13,8 +14,7 @@ if __name__ == "__main__":
         tx = "0xfa65c8516e81f972d1bdf801e0524aad1b2a9c54bb8e746613fb7316034f3e3e"
 
     try:
-        print(Ebb.get_transaction_receipt(tx))
-        # print(getTransactionReceipt(tx)['blockNumber'])
+        log(Ebb.get_transaction_receipt(tx))
     except:
         print_tb()
         sys.exit(1)

@@ -4,20 +4,20 @@ import os
 import shutil
 import time
 
-import broker.cfg as cfg
-import broker.libs.git as git
+from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import mkdir
 from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_folder_size
+from broker.libs import _git
 from broker.utils import CacheType, StorageID, _remove, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log
 
 
 class IpfsClass(Storage):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # cache_type is always public on IPFS
+        #: cache_type is always public if storage class is IPFS
         self.cache_type = CacheType.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
@@ -26,9 +26,9 @@ class IpfsClass(Storage):
         try:
             ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
             if "CumulativeSize" not in ipfs_stat:
-                raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
-        except:
-            raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve.")
+                raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve")
+        except Exception as e:
+            raise e
 
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
@@ -40,15 +40,16 @@ class IpfsClass(Storage):
         if env.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
+        log(f"{br(get_time())} Job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
-            log(f"{br(get_time())} Job's source code has been sent through IPFS ", "bold cyan")
+            log("[bold green]IPFS")
         else:
-            log(f"{br(get_time())} Job's source code has been sent through IPFS_GPG ", "bold cyan")
+            log("[bold green]IPFS_GPG")
 
         if not is_ipfs_on():
             return False
 
-        logging.info(f"is_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
+        log(f"==> is_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -69,12 +70,14 @@ class IpfsClass(Storage):
 
         initial_folder_size = calculate_folder_size(self.results_folder)
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
-            # here scripts knows that provided IPFS hashes exists
+            # here scripts knows that provided IPFS hashes exists online
             is_hashed = False
-            logging.info(f"Attempting to get IPFS file: {ipfs_hash}")
+            log(f"## attempting to get IPFS file: {ipfs_hash}...", end="")
             if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
-                log(f"==> IPFS file {ipfs_hash} is already cached.", "bold blue")
+                log("already cached", "bold blue")
+            else:
+                log()
 
             if idx == 0:
                 target = self.results_folder
@@ -97,8 +100,10 @@ class IpfsClass(Storage):
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
                 cfg.ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
 
-            if not git.initialize_check(target):
-                return False
+            try:
+                _git.initialize_check(target)
+            except Exception as e:
+                raise e
 
             if not is_hashed:
                 folder_size = calculate_folder_size(self.results_folder)
@@ -110,8 +115,7 @@ class IpfsClass(Storage):
                 return False
 
         log(
-            f"data_transfer_in={self.data_transfer_in_to_download_mb} MB |"
-            f" rounded={int(self.data_transfer_in_to_download_mb)} MB",
-            "bold",
+            f"==> data_transfer_in={self.data_transfer_in_to_download_mb} MB | "
+            f"rounded={int(self.data_transfer_in_to_download_mb)} MB"
         )
         return self.sbatch_call()

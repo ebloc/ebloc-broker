@@ -1,6 +1,6 @@
 #!/bin/bash
 
-_HOME="/home/alper"
+_HOME="/home/avatar_doo_avatar"  # may differ for each providerget from the file name
 EMAIL="aalimog1@binghamton.edu"
 VENV_PATH="${_HOME}/venv"
 EBLOCBROKER_PATH="${_HOME}/ebloc-broker/broker"
@@ -11,7 +11,7 @@ c=$(echo $2)
 event=$(echo $c | awk '{print $8}')
 msg="==> [$(date)] $a $b $c | $event"
 echo $msg | mail -s "Message Subject" $EMAIL
-echo "------" >> $LOG_FILE
+echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-" >> $LOG_FILE
 echo $msg >> $LOG_FILE
 slurm_job_id=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
 if [[ $c == *" Began, "* ]]; then
@@ -29,7 +29,7 @@ if [[ $c == *" Began, "* ]]; then
 fi
 
 if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
-    # COMPLETED or FILEDslurm jobs are catched here
+    # COMPLETED or FILLED slurm jobs are catched here
     name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     arg0=$(echo $name | cut -d "*" -f 1)  # job_key
     arg1=$(echo $name | cut -d "*" -f 2)  # index

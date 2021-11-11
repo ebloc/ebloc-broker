@@ -7,10 +7,11 @@ import subprocess
 import sys
 
 from broker._utils._log import br
-from broker._utils.tools import QuietExit, mkdir
+from broker._utils.tools import mkdir, read_json
 from broker.config import env, logging
+from broker.errors import QuietExit
 from broker.lib import echo_grep_awk, run, subprocess_call
-from broker.utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb, read_json
+from broker.utils import _remove, byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
 
 # TODO: gdrive list --query "sharedWithMe"
 
@@ -55,9 +56,9 @@ def submit(provider, _from, job):
             try:
                 data_json = read_json(data_files_json_path)
                 if job.keys == data_json:
-                    log("## meta_data.json file matches with the given data keys", "green")
+                    log("#> meta_data.json file matches with the given data keys", "bold green")
                 else:
-                    log("## meta_data.json file does not match with the given data keys", "blue")
+                    log("#> meta_data.json file does not match with the given data keys", "bold blue")
                     _dump_dict_to_file(data_files_json_path, job.keys)
                     data_json = read_json(data_files_json_path)
             except:
@@ -197,7 +198,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
         try:
             output = get_file_id(key)
             log(f"==> data_id={key}")
-            log(output, "green")
+            log(output, "bold green")
         except Exception as e:
             raise e
 
@@ -239,7 +240,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, source_c
             print_tb(f"E: md5sum does not match with the provided data {source_code_key}")
             raise
 
-        log(f"SUCCESS on {md5sum} folder", "green")
+        log(f"SUCCESS on {md5sum} folder", "bold green")
         byte_size = int(get_file_info(gdrive_info, "Size"))
         log(f"==> source_code_hashes[0] == {_source_code_hash} size={byte_size} bytes")
         if not is_cached[source_code_hashes[0].decode("utf-8")]:

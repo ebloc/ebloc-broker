@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.utils import print_tb
 
 if __name__ == "__main__":

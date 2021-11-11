@@ -2,12 +2,12 @@
 
 import sys
 
-import broker.cfg as cfg
-import broker.libs.gdrive as gdrive
+from broker import cfg
 from broker.config import env
-from broker.lib import check_linked_data
+from broker.eblocbroker.job import Job
+from broker.libs import gdrive
+from broker.link import check_linked_data
 from broker.utils import CacheType, StorageID, log, print_tb
-from contract.scripts.lib import Job, cost
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
@@ -53,7 +53,7 @@ def main():
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
     job_key = job.keys[tar_hash]
     try:
-        job_price, _cost = cost(provider, _from, job)
+        job_price, _cost = job.cost(provider, _from, job)
         tx_hash = Ebb.submit_job(provider, job_key, job_price, job, requester=_from)
     except Exception as e:
         raise e

@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 
+import os
 import pathlib
+import sys
 import threading
 from typing import Dict, Union
 
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
+from rich.traceback import install
 
-# from rich.traceback import install
-# install(show_locals=True)
+install(show_locals=True)
 # install()  # for rich
 # pretty.install()
 
-
+console = Console()
 IS_THREADING_ENABLED = False
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
@@ -103,6 +105,30 @@ def ok():
     return br("  [green]OK[/green]  ")
 
 
+def _console_ruler(msg="", character="=", color="cyan", filename=""):
+    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
+        filename = thread_log_files[threading.current_thread().name]
+    elif not filename:
+        if ll.LOG_FILENAME:
+            filename = ll.LOG_FILENAME
+        elif DRIVER_LOG:
+            filename = DRIVER_LOG
+        else:
+            filename = "program.log"
+
+    if filename not in ll.console:
+        #: Indicated rich console to write into given filename
+        # __ https://stackoverflow.com/a/6826099/2402577
+        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+
+    if msg:
+        console.rule(f"[bold {color}]{msg}", characters=character)
+        ll.console[filename].rule(f"[bold {color}]{msg}", characters=character)
+    else:
+        console.rule(characters=character)
+        ll.console[filename].rule(characters=character)
+
+
 def _log(text, color, is_bold, flush, filename, end, is_write=True):
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_bullet:
@@ -169,15 +195,30 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
     # f.close()
 
 
-def log(text="", color=None, filename=None, end=None, flush=False, is_write=True):
+def WHERE(back=0):
+    """Return line number where the command is called."""
+    try:
+        frame = sys._getframe(back + 2)
+    except:
+        frame = sys._getframe(1)
+
+    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
+    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+
+
+def log(text="", color=None, filename=None, end=None, flush=False, is_write=True, where_back=0):
     """Print for own settings.
 
-    __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
+    * colors:
+    __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
     """
     is_bold: bool = False
     if color == "bold":
         is_bold = True
         color = None
+
+    if isinstance(text, str) and "E: " in text[3:]:
+        text = f"{WHERE(where_back)}[bold red] E:[/bold red] {text.replace('E: ', '')}"
 
     if "-=-=" in str(text):
         is_bold = True

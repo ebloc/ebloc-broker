@@ -2,7 +2,7 @@
 
 import sys
 
-import broker.cfg as cfg
+from broker import cfg
 from broker.lib import get_tx_status
 from broker.utils import print_tb
 
