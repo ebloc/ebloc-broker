@@ -36,6 +36,8 @@ class Contract:
         # self.gas_limit = "max"  # 300000
         self.ops = {}
         self.max_retries = 10
+        self.required_confs = 1
+        self._from = ""
         #: Transaction cost exceeds current gas limit. Limit: 9990226, got:
         #  10000000. Try decreasing supplied gas.
         self.gas = 9980000
@@ -81,7 +83,7 @@ class Contract:
     from broker.eblocbroker.get_requester_info import get_requester_info
     from broker.eblocbroker.log_job import run_log_cancel_refund
     from broker.eblocbroker.log_job import run_log_job
-    from broker.eblocbroker.register_provider import register_provider
+    from broker.eblocbroker.register_provider import _register_provider
     from broker.eblocbroker.refund import refund
     from broker.eblocbroker.register_requester import register_requester
     from broker.eblocbroker.update_provider_info import update_provider_info
@@ -125,7 +127,7 @@ class Contract:
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
 
-    def _wait_for_transaction_receipt(self, tx_hash, compact=False) -> TxReceipt:
+    def _wait_for_transaction_receipt(self, tx_hash: str, compact=False) -> TxReceipt:
         """Wait till the tx is deployed."""
         tx_receipt = None
         attempt = 0
@@ -286,6 +288,7 @@ class Contract:
                 "gas_price": f"{self.gas_price} gwei",
                 "from": self._from,
                 "allow_revert": True,
+                "required_confs": self.required_confs,
             }
             try:
                 return self.timeout(method, *args)
@@ -310,8 +313,8 @@ class Contract:
                 "gas": self.gas,
                 "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
-                "value": self.w3.toWei(job_price, "wei"),
                 "allow_revert": True,
+                "value": self.w3.toWei(job_price, "wei"),
             }
             try:
                 return self.timeout("submitJob", *args)
@@ -327,241 +330,82 @@ class Contract:
                     log("warning: Timeout Awaiting Transaction in the mempool")
                     self.gas_price *= 1.13
 
+    def withdraw(self, account) -> "TransactionReceipt":
+        """Withdraw payment."""
+        self.gas_price = GAS_PRICE
+        self._from = self.w3.toChecksumAddress(account)
+        self.required_confs = 1
+        return self.timeout_wrapper("withdraw", *args)
+
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from
+        self.required_confs = 1
         return self.timeout_wrapper("registerRequester", *args)
-
-        for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
-            try:
-                return self.timeout("registerRequester", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
 
     def _refund(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
-            try:
-                return self.timeout("refund", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = _from
+        self.required_confs = 1
+        return self.timeout_wrapper("refund", *args)
 
     def _transfer_ownership(self, _from, new_owner) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
-            try:
-                return self.timeout("refund", new_owner)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = _from
+        self.required_confs = 1
+        return self.timeout_wrapper("transferOwnership", new_owner)
 
     def _authenticate_orc_id(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {"gas": self.gas, "gas_price": f"{self.gas_price} gwei", "from": _from, "allow_revert": True}
-            try:
-                return self.timeout("authenticateOrcID", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = _from
+        self.required_confs = 1
+        return self.timeout_wrapper("authenticateOrcID", *args)
 
     def _update_provider_prices(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": env.PROVIDER_ID,
-                "allow_revert": True,
-            }
-            try:
-                return self.timeout("updateProviderPrices", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = env.PROVIDER_ID
+        self.required_confs = 1
+        return self.timeout_wrapper("updateProviderPrices", *args)
 
     def _update_provider_info(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": env.PROVIDER_ID,
-                "allow_revert": True,
-            }
-            try:
-                return self.timeout("updateProviderInfo", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
+        self._from = env.PROVIDER_ID
+        self.required_confs = 1
+        return self.timeout_wrapper("updateProviderInfo", *args)
 
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
-
-    def set_register_provider(self, *args) -> "TransactionReceipt":
+    def register_provider(self, *args) -> "TransactionReceipt":
         """Register provider."""
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": env.PROVIDER_ID,
-                "allow_revert": True,
-            }
-            try:
-                return self.timeout("registerProvider", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = env.PROVIDER_ID
+        self.required_confs = 1
+        return self.timeout_wrapper("registerProvider", *args)
 
     def register_data(self, *args) -> "TransactionReceipt":
         """Register the dataset hash."""
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": env.PROVIDER_ID,
-                "allow_revert": True,
-            }
-            try:
-                return self.timeout("registerData", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = env.PROVIDER_ID
+        self.required_confs = 1
+        return self.timeout_wrapper("registerData", *args)
 
     def set_job_status_running(self, key, index, job_id, start_time) -> "TransactionReceipt":
         """Set the job status as running."""
         _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
-        self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "allow_revert": True,
-                "required_confs": 0,
-                "from": _from,
-            }
-            try:
-                return self.timeout("setJobStatusRunning", key, int(index), int(job_id), int(start_time))
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+        self._from = _from
+        self.required_confs = 0
+        return self.timeout_wrapper("setJobStatusRunning", key, int(index), int(job_id), int(start_time))
 
     def _process_payment(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": env.PROVIDER_ID,
-                "allow_revert": True,
-                "required_confs": 0,
-            }
-            try:
-                return self.timeout("processPayment", *args)
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
+        self._from = env.PROVIDER_ID
+        self.required_confs = 0
+        return self.timeout_wrapper("processPayment", *args)
 
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
-
-    def withdraw(self, account) -> "TransactionReceipt":
-        """Withdraw payment."""
-        self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": self.w3.toChecksumAddress(account),
-                "allow_revert": True,
-            }
-            try:
-                return self.timeout("withdraw")
-            except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
-                    raise e
-
-                if "Transaction cost exceeds current gas limit" in str(e):
-                    self.gas -= 10000
-            except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
-
-    def remove_registered_data(self) -> "TransactionReceipt":
+    def remove_registered_data(self, *args) -> "TransactionReceipt":
         """Remove registered data"""
-        pass
+        self.gas_price = GAS_PRICE
+        self._from = env.PROVIDER_ID
+        self.required_confs = 0
+        return self.timeout_wrapper("removeRegisteredData", *args)
 
     ###########
     # GETTERS #

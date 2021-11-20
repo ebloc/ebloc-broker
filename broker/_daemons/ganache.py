@@ -32,6 +32,7 @@ def run(port=8545, hardfork_name="istanbul"):
 
 
 if __name__ == "__main__":
+    port = 8545
     if len(sys.argv) == 2:
         port = int(sys.argv[1])
 

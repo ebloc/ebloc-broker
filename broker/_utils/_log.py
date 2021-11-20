@@ -9,7 +9,6 @@ from typing import Dict, Union
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
-
 from rich.traceback import install
 
 install(show_locals=True)
@@ -72,7 +71,7 @@ class Log:
         if text == "[ ok ]":
             text = "[ [bold green]ok[/bold green] ]"
 
-        if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
+        if text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
             _len = 3
             is_bullet = True
             if not color:

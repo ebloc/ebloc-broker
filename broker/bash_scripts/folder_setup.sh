@@ -1,6 +1,43 @@
 #!/bin/bash
 
 TMP_DIR=$HOME/.ebloc-broker
+
+set_email () {
+    echo "Type your email-address, followed by [ENTER]:"
+    read EMAIL
+    lineOld="EMAIL="
+    lineNew=$EMAIL
+    sed -i.bak "s/^\(EMAIL=\).*/\1\"$lineNew\"/" $TMP_DIR/slurm_mail_prog.sh
+    rm -f $TMP_DIR/slurm_mail_prog.sh.bak
+
+}
+
+provider_setup () {
+    ## configure_slurm
+    FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
+    [ ! -f $FILE ] && cp $FILE $TMP_DIR/
+    sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" $TMP_DIR/slurm_mail_prog.sh
+    rm -f $TMP_DIR/slurm_mail_prog.sh.bak
+
+    lineOld="_HOME"
+    lineNew=$(echo $HOME | sed 's/\//\\\//g')
+    sed -i.bak "s/^\(_HOME=\).*/\1\"$lineNew\"/" $TMP_DIR/slurm_mail_prog.sh
+    rm -f $TMP_DIR/slurm_mail_prog.sh.bak
+
+    email=$(cat $TMP_DIR/slurm_mail_prog.sh| grep EMAIL=)
+    yes_or_no "Do you want to change your email" $email && set_email
+}
+
+yes_or_no () {
+    while true; do
+        read -p "$* [y/n]: " yn
+        case $yn in
+            [Yy]*) return 0  ;;
+            [Nn]*) echo "end" ; return  1 ;;
+        esac
+    done
+}
+
 configure_coinbase () { # coinbase address setup
     COINBASE=$(echo $COINBASE)
     if [[ ! -v COINBASE ]]; then
@@ -47,19 +84,17 @@ configure_oc () { # OC_USER address setup
 
 configure_slurm () { # slurm setup
     sudo killall slurmctld slurmdbd slurmd
-    var=$(echo $current_dir | sed 's/\//\\\//g')
-    var=$var"/bash_scripts"
+    var=$(echo $TMP_DIR/slurm_mail_prog.sh | sed 's/\//\\\//g')
+    # var=$var"/bash_scripts"
     # With JobRequeue=0 or --no-requeue,
     # the job will not restart automatically, please see https://stackoverflow.com/a/43366542/2402577
     sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/" /usr/local/etc/slurm.conf
     sudo rm -f /usr/local/etc/slurm.conf.bak
-
-    sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurm_mail_prog.sh/" /usr/local/etc/slurm.conf
+    sudo sed -i.bak "s/^\(MailProg=\).*/\1$var/" /usr/local/etc/slurm.conf
     sudo rm -f /usr/local/etc/slurm.conf.bak
-
     # MinJobAge assingned to '1' day,
     # The minimum age of a completed job before its record is purged from Slurm's active database.
-    sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\186400/" /usr/local/etc/slurm.conf
+    sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\172800/" /usr/local/etc/slurm.conf
     sudo rm /usr/local/etc/slurm.conf.bak
     grep "MailProg" /usr/local/etc/slurm.conf
 }
@@ -106,7 +141,7 @@ var=$(echo $lineNew | sed 's/\//\\\//g')
 sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-# GDRIVE
+# gdrive
 # ======
 FILE=$HOME/.gdrive
 if [ -f "$FILE" ]; then
@@ -146,19 +181,15 @@ lineNew=$(echo $current_dir | sed 's/\//\\\//g')
 sed -i.bak 's/'$lineOld'/'$lineNew'/' $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
-sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" $FILE
-rm -f $FILE.bak
-
 # configure_coinbase
 # configure_oc
 # configure_ipfs
-## configure_slurm
-
-echo -e "Note: Update the following file "$TMP_DIR"/.eudat_provider.txt' with
+echo -e "Warning: Update the following file "$TMP_DIR"/.eudat_provider.txt' with
 your EUDAT account's password. Best to make sure the file is not readable or
-even listable for anyone but you. You achieve this with: 'chmod 700
-eudat_password.txt'"
+even listable for anyone but you. You achieve this with:
+'chmod 700 eudat_password.txt'"
+
+yes_or_no "Are you are provider" && provider_setup
 
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node

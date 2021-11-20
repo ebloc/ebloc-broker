@@ -28,7 +28,7 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb
-    available_core = 16
+    available_core = 4
     commitment_blk = 600
     price_core_min = 100
     price_data_transfer = 1

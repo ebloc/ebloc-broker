@@ -6,7 +6,7 @@ from os import path
 
 import pytest
 
-from broker import _config, cfg, config
+from broker import cfg, config
 from broker._utils._log import _console_ruler, br, log
 from broker.config import setup_logger
 from broker.eblocbroker import Contract
@@ -47,7 +47,7 @@ chain = None
 def my_own_session_run_at_beginning(_Ebb):
     global ebb
     global chain
-    _config.IS_BROWNIE_TEST = True
+    cfg.IS_BROWNIE_TEST = True
     config.w3 = web3
     ebb = Contract.eblocbroker.eBlocBroker = config.ebb = _Ebb
     if not config.chain:
@@ -192,7 +192,7 @@ def test_submit_job_gas():
     tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
     check_list()
-    print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
+    log(f"==> gas_cost_for_iteration={gas_end - gas_base}")
     # TODO: : revert on tx check
 
 
@@ -391,4 +391,4 @@ def test_test3():
     index = 3
     tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
-    print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
+    log(f"==> gas_cost_for_iteration={gas_end - gas_base}")

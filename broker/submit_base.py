@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 from broker.eblocbroker.job import Job
-from broker.ipfs.submit import submit_ipfs
 from broker.eudat.submit import eudat_submit
 from broker.gdrive.submit import submit_gdrive
+from broker.ipfs.submit import submit_ipfs
 
 
 class SubmitBase:

@@ -110,7 +110,7 @@ def connect_to_eblocbroker() -> None:
                 project = project.load(env.CONTRACT_PROJECT_PATH)
                 config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
-                #: For the contract events
+                #: for the contract events
                 config._eBlocBroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
         elif env.IS_EBLOCPOA:
             config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)

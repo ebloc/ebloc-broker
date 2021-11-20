@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import json
 import os
 import sys
 import time
+from pathlib import Path
 from typing import List
 
 from broker import cfg, config

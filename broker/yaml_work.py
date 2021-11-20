@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-from broker._utils.yaml import Yaml
-from pathlib import Path
-from broker._utils._log import log
 from collections import OrderedDict
+from pathlib import Path
+
 import yaml
+
+from broker._utils._log import log
+from broker._utils.yaml import Yaml
 
 
 class YamlUpdate:

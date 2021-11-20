@@ -22,7 +22,7 @@ make clean
 sudo make && sudo make install
 sudo cp ~/ebloc-broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
 sudo cp ~/ebloc-broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
-
+#
 sudo chmod 0600 /usr/local/etc/slurmdbd.conf
 sudo chmod 0600 /usr/local/etc/slurm.conf
 sudo chown $(whoami) /usr/local/etc/slurmdbd.conf

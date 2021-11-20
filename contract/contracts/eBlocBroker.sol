@@ -39,7 +39,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender.
      */
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -163,7 +163,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 resultIpfsHash
     ) public whenProviderRunning {
         require(args.completionTime <= block.timestamp, "Ahead now");
-
         /* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
            is not mapped to a job, this will throw automatically and revert all changes */
         Lib.Provider storage provider = providers[msg.sender];
@@ -500,7 +499,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Registers a given data's sourceCodeHash removal by the cluster
      *
-     * @param sourceCodeHash | Source code hashe of the already registered data
+     * @param sourceCodeHash: source code hashe of the already registered data
      */
     function removeRegisteredData(bytes32 sourceCodeHash) public whenProviderRegistered {
         delete providers[msg.sender].registeredData[sourceCodeHash];
@@ -650,7 +649,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         st.dataTransferOut = args.dataTransferOut;
         st.pricesSetBlockNum = uint32(_providerPriceBlockIndex);
         st.received = totalCost.sub(storageCost);
-        st.jobOwner = msg.sender;
+        st.jobOwner = payable(msg.sender);
         st.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
         st.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
 

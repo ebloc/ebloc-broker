@@ -60,7 +60,7 @@ class W3:
         return getattr(self.w3, name)
 
 
+console = Console()
 Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()
-console = Console()

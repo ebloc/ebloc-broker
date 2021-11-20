@@ -11,7 +11,7 @@ from broker.errors import QuietExit
 from broker.lib import get_tx_status
 
 
-def register_provider(self, *args, **kwargs):
+def _register_provider(self, *args, **kwargs):
     """Register provider."""
     if self.does_provider_exist(env.PROVIDER_ID):
         log(
@@ -31,7 +31,7 @@ def register_provider(self, *args, **kwargs):
         raise Exception("E: e-mail should be less than 128")
 
     try:
-        tx = self.set_register_provider(*args)
+        tx = self.register_provider(*args)
         return self.tx_id(tx)
     except Exception as e:
         raise e
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "commitment_blk": commitment_blk,
     }
     try:
-        tx_hash = Ebb.register_provider(*args, **kwargs)
+        tx_hash = Ebb._register_provider(*args, **kwargs)
         receipt = get_tx_status(tx_hash)
     except QuietExit:
         pass

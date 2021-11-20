@@ -2,6 +2,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 from web3.logs import DISCARD
 
@@ -13,7 +14,6 @@ from broker.eblocbroker.job import Job
 from broker.errors import QuietExit
 from broker.lib import get_tx_status, run
 from broker.link import check_link_folders
-from pathlib import Path
 from broker.utils import (
     StorageID,
     _remove,
@@ -62,7 +62,7 @@ def submit_ipfs(job: Job):
     log("==> Attemptting to submit a job")
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
-    check_link_folders(job.folders_to_share)
+    check_link_folders(job.data_paths)
     if main_storage_id == StorageID.IPFS:
         log("==> Submitting source code through IPFS")
     elif main_storage_id == StorageID.IPFS_GPG:
@@ -138,7 +138,14 @@ def submit_ipfs(job: Job):
         print_tb(e)
 
 
-if __name__ == "__main__":
+def main():
     job = Job()
     job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml")
     submit_ipfs(job)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print_tb(e)

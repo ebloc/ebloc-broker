@@ -1,0 +1,15 @@
+build-essential
+curl
+pigz
+coreutils
+ssh
+zsh
+unixodbc-dev
+libgmp3-dev
+golang
+xauth
+xorg
+silversearcher-ag
+ripgrep
+bc
+acl

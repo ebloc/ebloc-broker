@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+from web3.types import TxReceipt
 import glob
+import hashlib
 import os
 import subprocess
 import sys
@@ -15,7 +17,6 @@ from broker._utils.tools import is_process_on, log, print_tb, print_trace
 from broker.config import env, logging
 from broker.errors import Web3NotConnected
 from broker.utils import StorageID, _remove, byte_to_mb, popen_communicate, run
-import hashlib
 
 
 def enum(*sequential, **named):
@@ -97,7 +98,7 @@ def run_driver_cancel():
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
-def get_tx_status(tx_hash) -> str:
+def get_tx_status(tx_hash: str) -> TxReceipt:
     """Return status of the transaction."""
     log(f"tx_hash={tx_hash}", "bold")
     try:

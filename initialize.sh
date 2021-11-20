@@ -36,21 +36,12 @@ sed -i.bak "s/^\(download_docs=\).*/\1false/" $HOME/.gdfuse/me/config
 # download_docs=false
 sed -i.bak "s/^\(shared_with_me=\).*/\1true/" $HOME/.gdfuse/me/config
 
-sudo apt-get install mailutils -y
-
 # Clone the source repository
 cd ~/
 git clone https://github.com/ipfs/py-ipfs-http-client.git
 cd py-ipfs-http-client
 flit install --pth-file  # Link ipfs-api-client into your Python Path
 
-# - name: bloxberg (Bloxberg)
-#   id: bloxberg
-#   chainid: 8995
-#   host: https://core.bloxberg.org
-#   explorer: https://blockexplorer.bloxberg.org/api
-#
-#
 # npm install dotenv
 #
 # mongodb guide => https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/

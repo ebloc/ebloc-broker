@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker.link import check_link_folders
 import sys
 
 from broker import cfg
@@ -9,6 +8,7 @@ from broker.config import env
 from broker.eblocbroker.job import Job
 from broker.imports import connect
 from broker.libs import eudat
+from broker.link import check_link_folders
 from broker.utils import print_tb
 
 

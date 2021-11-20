@@ -12,6 +12,7 @@ import traceback
 from datetime import datetime
 from decimal import Decimal
 from subprocess import PIPE, CalledProcessError, Popen, check_output
+
 from pytz import timezone, utc
 
 try:
@@ -68,7 +69,10 @@ def _timestamp(zone="Europe/Istanbul") -> int:
     return int(time.mktime(datetime.now(timezone(zone)).timetuple()))
 
 
-def _time(zone="Europe/Istanbul"):
+def _time(zone="Europe/Istanbul", _type=""):
+    if _type == "hour":
+        return datetime.now(timezone(zone)).strftime("%H:%M:%S")
+
     return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -136,7 +140,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
     #             log(message, where_back=1)
 
 
-def delete_last_line(n=1):
+def delete_multiple_lines(n=1):
     """Delete the last line in the STDOUT."""
     for _ in range(n):
         sys.stdout.write("\x1b[1A")  # cursor up one line
@@ -396,6 +400,10 @@ def read_json(path, is_dict=True):
                 return data
             else:
                 return None
+
+
+def remove_trailing_zeros(number):
+    return ("%f" % float(number)).rstrip("0").rstrip(".")
 
 
 def handler(signum, frame):

@@ -12,8 +12,8 @@ def main():
     data_price = 20
     commitment_block_duration = 600
     try:
-        tx_hash = Ebb.register_data(source_code_hash_bytes, data_price, commitment_block_duration)
-        get_tx_status(tx_hash)
+        tx = Ebb.register_data(source_code_hash_bytes, data_price, commitment_block_duration)
+        get_tx_status(Ebb.tx_id(tx))
     except Exception as e:
         print_tb(e)
 

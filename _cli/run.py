@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
+
 from vulcano.app import VulcanoApp
 from vulcano.app.lexer import MonokaiTheme
-from broker._utils._log import log
+
 from broker import cfg
+from broker._utils._log import log
 
 # from broker._utils.tools import log, print_tb
 

@@ -10,7 +10,7 @@ from broker.utils import print_tb
 logging = setup_logger()
 
 
-if __name__ == "__main__":
+def main():
     Ebb = cfg.Ebb
     is_write_to_file = False
     if len(sys.argv) == 2:
@@ -25,3 +25,7 @@ if __name__ == "__main__":
             log(f"block_number={output}", "bold")
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

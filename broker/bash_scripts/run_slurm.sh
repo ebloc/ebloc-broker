@@ -8,9 +8,10 @@ if [[ $(whoami) == "root" ]] ; then
 fi
 
 verbose=false
-# verbose=true
+verbose=true
 sudo killall slurmd slurmdbd slurmctld > /dev/null 2>&1
 sudo rm -f /var/run/slurmdbd.pid
+sudo chown $USER /var/run/slurmctld.pid
 sudo chown $USER -R /var/log/slurm/
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 sudo $DIR/run_munge.sh
