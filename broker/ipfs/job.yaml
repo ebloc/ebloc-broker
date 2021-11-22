@@ -17,6 +17,8 @@ config:
             path: /home/alper/test_eblocbroker/test_data/base/data/data1
             storage_hours: 0
             storage_id: ipfs
+        data3:
+            hash: f13d75bc60898f0823566347e380a34b
     data_transfer_out: 1
     jobs:
         job1:

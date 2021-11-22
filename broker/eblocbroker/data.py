@@ -23,36 +23,42 @@ def pre_check_data(provider):
         )
 
 
-def remove_data_info(provider, _hash):
-    pre_check_data(provider)
-    Ebb.remove_registered_data(_hash)
+def is_data_registered(provider, registered_data_hash) -> bool:
+    if not isinstance(registered_data_hash, bytes):
+        raise Exception(f"registered_data_hash {registered_data_hash} is not in bytes")
+
+    with suppress(Exception):
+        cfg.Ebb.get_registred_data_prices(provider, registered_data_hash, 0)
+        return True
+
+    return False
 
 
 def get_data_info(self, provider):
     pre_check_data(provider)
     try:
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
-        genesis_block = int(prices_set_block_numbers[0])
         event_filter = self._eBlocBroker.events.LogRegisterData.createFilter(
-            fromBlock=genesis_block,
+            fromBlock=int(prices_set_block_numbers[0]),
             toBlock="latest",
             argument_filters={"provider": provider},
         )
         provider_data = {}
         for entry in event_filter.get_all_entries():
             registered_data_hash = entry.args["registeredDataHash"]
-            with suppress(Exception):
-                # ignores removed data
+            with suppress(Exception):  # ignores removed data hashes
                 (price, commitment_block_duration) = cfg.Ebb.get_registred_data_prices(
                     provider, registered_data_hash, 0
                 )
-                log(f" * registered_data_hash={registered_data_hash}")
                 provider_data[registered_data_hash] = {
-                    "price": price,
                     "commitment_block_duration": commitment_block_duration,
+                    "price": price,
+                    "registered_block_number": entry["blockNumber"],
                 }
-                log(provider_data[registered_data_hash])
-                log()
+
+        for k, v in provider_data.items():
+            log(f" * registered_data_hash={k.decode('utf-8')}")
+            log(f"\t{v}")
     except Exception as e:
         raise e
 
@@ -65,7 +71,6 @@ if __name__ == "__main__":
 
     try:
         data = Ebb.get_data_info(provider)
-        # remove_data_info(provider, b"f13d75bc60898f0823566347e380a34d")
     except Exception as e:
         print_tb(e)
         sys.exit(1)

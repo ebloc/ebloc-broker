@@ -70,6 +70,7 @@ class ENV(ENV_BASE):
         self.IS_GDRIVE_USE = str(self._env["IS_GDRIVE_USE"]).lower() in self.true_set
         self.IS_DRIVER = False
         self.RPC_PORT = self._env["RPC_PORT"]
+        self.BASE_DATA_PATH = Path(self._env["BASE_DATA_PATH"])
         self.BASH_SCRIPTS_PATH = Path(self._env["EBLOCPATH"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")

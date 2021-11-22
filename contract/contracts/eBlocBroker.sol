@@ -39,7 +39,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender.
      */
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -163,7 +163,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 resultIpfsHash
     ) public whenProviderRunning {
         require(args.completionTime <= block.timestamp, "Ahead now");
-
         /* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
            is not mapped to a job, this will throw automatically and revert all changes */
         Lib.Provider storage provider = providers[msg.sender];
@@ -489,8 +488,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
            if price == 0, data does not exist.  If price == 1, it's an existing
            data that costs nothing. If price > 1, it's an existing data that
            costs give price. */
-        if (price == 0) price = price + 1;
-
+        if (price == 0) {
+            price = price + 1;
+        }
         registeredData.dataInfo[block.number].price = price;
         registeredData.dataInfo[block.number].commitmentBlockDuration = commitmentBlockDuration;
         registeredData.committedBlock.push(uint32(block.number));
@@ -500,7 +500,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Registers a given data's sourceCodeHash removal by the cluster
      *
-     * @param sourceCodeHash | Source code hashe of the already registered data
+     * @param sourceCodeHash: source code hashe of the already registered data
      */
     function removeRegisteredData(bytes32 sourceCodeHash) public whenProviderRegistered {
         delete providers[msg.sender].registeredData[sourceCodeHash];
@@ -533,12 +533,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         } else {
             uint256 _commitmentBlockDuration = registeredData.dataInfo[_pricesSetBlockNum].commitmentBlockDuration;
             uint256 _committedBlock = _pricesSetBlockNum + _commitmentBlockDuration; //future block number
-
             if (_committedBlock <= block.number) {
                 _committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;
                 _committedBlock = _pricesSetBlockNum + _committedBlock * _commitmentBlockDuration;
             }
-
             registeredData.dataInfo[_committedBlock].price = price;
             registeredData.dataInfo[_committedBlock].commitmentBlockDuration = commitmentBlockDuration;
             registeredData.committedBlock.push(uint32(_committedBlock));
@@ -596,7 +594,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32[] memory sourceCodeHash
     ) public payable {
         Lib.Provider storage provider = providers[args.provider];
-
         require(
             provider.isRunning && // provider must be running
                 sourceCodeHash.length > 0 &&
@@ -612,12 +609,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 orcID[msg.sender].length > 0 &&
                 orcID[args.provider].length > 0
         );
-
         if (args.cloudStorageID.length > 0)
             for (uint256 i = 1; i < args.cloudStorageID.length; i++)
                 require(
                     args.cloudStorageID[0] == args.cloudStorageID[i] ||
-                    args.cloudStorageID[i] <= uint8(Lib.CloudStorageID.NONE)  // IPFS or IPFS_GPG or NONE
+                        args.cloudStorageID[i] <= uint8(Lib.CloudStorageID.NONE) // IPFS or IPFS_GPG or NONE
                 );
 
         uint32[] memory providerInfo = pricesSetBlockNum[args.provider];
@@ -641,7 +637,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             info
         );
         totalCost = totalCost.add(_calculateComputationalCost(info, args.core, args.runTime));
-
         require(msg.value >= totalCost);
         // Here returned "_providerPriceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage st = provider.jobStatus[key].push();
@@ -650,7 +645,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         st.dataTransferOut = args.dataTransferOut;
         st.pricesSetBlockNum = uint32(_providerPriceBlockIndex);
         st.received = totalCost.sub(storageCost);
-        st.jobOwner = msg.sender;
+        st.jobOwner = payable(msg.sender);
         st.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
         st.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
 
@@ -744,7 +739,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     ) public whenBehindNow(startTime) returns (bool) {
         /* Used as a pointer to a storage */
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
-
         /* Provider can sets job's status as RUNNING and its startTime only one time
            job.stateCode should be {SUBMITTED (0), PENDING(1)} */
         require(job.stateCode <= Lib.JobStateCodes.PENDING, "Not permitted");
@@ -817,7 +811,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (dataPricesSetBlockNum > 0) {
             if (registeredData.committedBlock.length > 0) {
                 uint32[] memory dataCommittedBlocks = registeredData.committedBlock;
-
                 uint32 _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 1];
                 if (_dataPriceSetBlockNum > block.number) {
                     // Obtain the committed prices before the block number
@@ -1001,7 +994,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * If `_pricesSetBlockNum` is 0, it will return the current price at the
      * current block-number that is called
      * If mappings does not valid, then it will return (0, 0)
-    */
+     */
     function getRegisteredDataPrice(
         address provider,
         bytes32 sourceCodeHash,

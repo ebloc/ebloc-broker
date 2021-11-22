@@ -127,7 +127,7 @@ class Contract:
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
 
-    def _wait_for_transaction_receipt(self, tx_hash, compact=False) -> TxReceipt:
+    def _wait_for_transaction_receipt(self, tx_hash: str, compact=False) -> TxReceipt:
         """Wait till the tx is deployed."""
         tx_receipt = None
         attempt = 0

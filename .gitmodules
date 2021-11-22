@@ -4,9 +4,3 @@
 [submodule "_gdown"]
 	path = _gdown
 	url = https://github.com/wkentaro/gdown
-[submodule "gdown"]
-	path = gdown
-	url = https://github.com/wkentaro/gdown
-[submodule "gdown_pl"]
-	path = gdown_pl
-	url = https://github.com/circulosmeos/gdown.pl

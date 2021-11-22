@@ -1,7 +1,7 @@
 #!/bin/bash
 
-_HOME="/home/avatar_doo_avatar"  # may differ for each providerget from the file name
-EMAIL="aalimog1@binghamton.edu"
+_HOME="/home/user"  # may differ for each providerget from the file name
+EMAIL=""
 VENV_PATH="${_HOME}/venv"
 EBLOCBROKER_PATH="${_HOME}/ebloc-broker/broker"
 LOG_FILE="${_HOME}/.ebloc-broker/slurm_script.log"

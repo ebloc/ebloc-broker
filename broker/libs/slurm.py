@@ -80,7 +80,7 @@ def is_on() -> bool:
             log("failed", "bold red")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             raise QuietExit(
-                f"E: [green]{process_name}[/green] is not running in the background. Please run:\n"
+                f"E: [bold green]{process_name}[/bold green] is not running in the background. Please run:\n"
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 

@@ -10,6 +10,7 @@ from multiprocessing import Process
 from threading import Thread
 
 from web3._utils.threads import Timeout
+from web3.types import TxReceipt
 
 from broker import cfg, config
 from broker._utils.tools import is_process_on, log, print_tb, print_trace
@@ -97,7 +98,7 @@ def run_driver_cancel():
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
-def get_tx_status(tx_hash) -> str:
+def get_tx_status(tx_hash: str) -> TxReceipt:
     """Return status of the transaction."""
     log(f"tx_hash={tx_hash}", "bold")
     try:

@@ -2,7 +2,7 @@
 
 from setuptools import find_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.org", "r") as fh:
     long_description = fh.read()
 
 requirements_filename = "requirements.txt"

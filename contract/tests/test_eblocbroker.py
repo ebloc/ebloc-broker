@@ -76,7 +76,7 @@ def remove_zeros_gpg_fingerprint(_gpg_fingerprint):
 
 
 def get_block_number():
-    log(f"block_number={web3.eth.blockNumber} | block_number on contractTx={web3.eth.blockNumber + 1}")
+    log(f"block_number={web3.eth.blockNumber} | block_number on contract_tx={web3.eth.blockNumber + 1}")
     return web3.eth.blockNumber
 
 
@@ -601,7 +601,6 @@ def test_multiple_data():
     assert _cost["storage"] == 100, "Since data1 is verified and publis, its cost of storage should be 0"
 
     # ds = scripts.DataStorage(provider, source_code_hashes[1], True)
-
     job_price, _cost = job.cost(provider, requester)
 
     assert _cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
@@ -624,10 +623,11 @@ def test_multiple_data():
     execution_time = 10
     result_ipfs_hash = "0xabcd"
     tx = ebb.setJobStatusRunning(job_key, index, jobID, start_time, {"from": accounts[0]})
-
-    rpc.sleep(cfg.BLOCK_DURATION * 4 * execution_time)
+    #: you can only advance the time by whole seconds.
+    rpc.sleep(60 * execution_time + cfg.BLOCK_DURATION)
     mine(1)
-    end_time = start_time + cfg.BLOCK_DURATION * 4 * execution_time
+    end_time = start_time + 60 * execution_time + cfg.BLOCK_DURATION
+    assert end_time <= get_block_timestamp(), "block timestamp is ahead of completion time"
     args = [
         index,
         jobID,
@@ -645,22 +645,18 @@ def test_multiple_data():
     assert received_sum == 320 and refunded_sum == 0
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
-
     data_transfer_in = 0  # already requested on index==0
     data_transfer_out = 100
     data_transfer = [data_transfer_in, data_transfer_out]
-
     index = 1
     jobID = 0
     start_time = get_block_timestamp()
     execution_time = 10
     result_ipfs_hash = "0xabcd"
     tx = ebb.setJobStatusRunning(job_key, index, jobID, start_time, {"from": accounts[0]})
-
-    rpc.sleep(cfg.BLOCK_DURATION * 4 * execution_time)
+    rpc.sleep(60 * execution_time + cfg.BLOCK_DURATION)
     mine(1)
-    end_time = start_time + cfg.BLOCK_DURATION * 4 * execution_time
-
+    end_time = start_time + 60 * execution_time + cfg.BLOCK_DURATION
     args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 

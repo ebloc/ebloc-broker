@@ -23,7 +23,7 @@ contract EBlocBrokerBase {
     /**
      * @dev Throws if called by any account other than the owner.
      */
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(msg.sender == owner); // dev: Sender must be owner
         _;
     }
@@ -39,7 +39,7 @@ contract EBlocBrokerBase {
     /**
      * @dev Modifier to make a function callable only when caller is registered as provider.
      */
-    modifier whenProviderRegistered {
+    modifier whenProviderRegistered() {
         require(providers[msg.sender].committedBlock > 0); // dev: Not registered
         _;
     }
@@ -47,7 +47,7 @@ contract EBlocBrokerBase {
     /**
      * @dev Modifier to make a function callable only when the provider is not registered.
      */
-    modifier whenProviderNotRegistered {
+    modifier whenProviderNotRegistered() {
         require(providers[msg.sender].committedBlock == 0); // dev: Registered
         _;
     }
@@ -63,7 +63,7 @@ contract EBlocBrokerBase {
     /**
      * @dev Modifier to make a function callable only when the provider in running.
      */
-    modifier whenProviderRunning {
+    modifier whenProviderRunning() {
         require(providers[msg.sender].isRunning); // dev: Provider is not running
         _;
     }
@@ -71,7 +71,7 @@ contract EBlocBrokerBase {
     /**
      * @dev Modifier to make a function callable only when the provider is suspended.
      */
-    modifier whenProviderSuspended {
+    modifier whenProviderSuspended() {
         require(!providers[msg.sender].isRunning); // dev: Provider is not suspended
         _;
     }

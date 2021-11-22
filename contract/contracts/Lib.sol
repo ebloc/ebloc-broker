@@ -235,8 +235,9 @@ library Lib {
             /* Inside while loop carriedSum is updated. If enters into if statement it
             means revert() is catched and all the previous operations are reverted back */
             carriedSum += currentNode_core;
-            if (carriedSum > _interval.availableCore) return false;
-
+            if (carriedSum > _interval.availableCore) {
+                return false;
+            }
             prevNode_index = currentNode_index;
             currentNode_index = currentNode_next; // already in the memory, cheaper
             currentNode_endpoint = self.items[currentNode_index].endpoint; // read from the storage
@@ -291,8 +292,9 @@ library Lib {
                 return (flag, _addr, prevNode_index, carriedSum, prevNode_index_next_temp, temp);
             }
             carriedSum += currentNode_core;
-            if (carriedSum > _interval.availableCore) return (0, _addr, 0, 0, 0, 0);
-
+            if (carriedSum > _interval.availableCore) {
+                return (0, _addr, 0, 0, 0, 0);
+            }
             prevNode_index = currentNode_index;
             currentNode_index = currentNode_next;
             currentNode_endpoint = self.items[currentNode_index].endpoint;
@@ -309,7 +311,6 @@ library Lib {
         uint256 prevNode_index_next_temp;
         int32 carriedSum;
         int32 updatedCoreVal;
-
         if (_interval.completionTime <= self.items[addr].endpoint) {
             /* Current node points index of previous tail-node right after the insert operation */
             currentNode_index = prevNode_index = addr;
@@ -319,7 +320,9 @@ library Lib {
                 currentNode_index,
                 _interval
             );
-            if (flag == 0) return 0; // false
+            if (flag == 0) {
+                return 0; // false
+            }
         }
         uint256 _length = self.length;
         if (flag <= 1) {
@@ -336,21 +339,20 @@ library Lib {
                 prevNode_index = uint32(_length - 1);
             }
         }
-        if (flag > 1) addrTemp = self.items[prevNode_index].next;
-
+        if (flag > 1) {
+            addrTemp = self.items[prevNode_index].next;
+        }
         currentNode_index = addrTemp; //self.items[prevNode_index].next;
         if (_iterate(self, currentNode_index, prevNode_index, uint32(_length), carriedSum, _interval)) {
-            if (flag == 2) self.items[addr].core = updatedCoreVal;
-
+            if (flag == 2) {
+                self.items[addr].core = updatedCoreVal;
+            }
             return 1; // true
         } else {
             if (flag <= 1) {
                 delete self.items[uint32(_length - 1)];
-                if (prevNode_index == self.tail) {
-                    self.tail = uint32(addrTemp);
-                } else {
-                    self.items[prevNode_index].next = uint32(addrTemp); // change on storage
-                }
+                if (prevNode_index == self.tail) self.tail = uint32(addrTemp);
+                else self.items[prevNode_index].next = uint32(addrTemp); // change on storage
             } else if (flag == 3) {
                 self.items[prevNode_index].next = uint32(prevNode_index_next_temp);
             }

@@ -71,7 +71,7 @@ class Log:
         if text == "[ ok ]":
             text = "[ [bold green]ok[/bold green] ]"
 
-        if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
+        if text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
             _len = 3
             is_bullet = True
             if not color:

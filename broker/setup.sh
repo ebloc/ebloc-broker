@@ -16,3 +16,6 @@ grep -vE '^#' package.list | xargs -n1 sudo apt install -yf package.list
 
 mkdir -p /tmp/run
 sudo groupadd eblocbroker
+
+# yaml check in brownie network config file
+~/ebloc-broker/broker/python_scripts/add_bloxberg_into_network-config.py

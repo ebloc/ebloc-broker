@@ -10,6 +10,7 @@ from broker._utils.tools import log, print_tb
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
+from broker.eblocbroker.data import is_data_registered
 from broker.errors import QuietExit
 from broker.lib import calculate_folder_size, get_tx_status
 from broker.libs import _git
@@ -66,6 +67,7 @@ class Job:
         self.paths = []
         self.data_transfer_ins = []  # TODO: calculate from the file itself
         self.data_prices_set_block_numbers = []
+        self.data_paths = []
         self.data_transfer_out: int = 0
         called_filename = os.path.basename(sys._getframe(1).f_code.co_filename)
         if called_filename.startswith("test_"):
@@ -171,27 +173,41 @@ class Job:
         else:
             cache_type = self.cfg["config"]["_source_code"]["cache_type"]
             self.cache_types.append(CACHE_TYPES[cache_type])
-            _path = self.cfg["config"]["_source_code"]["path"]
-            size_mb = calculate_folder_size(_path)
-            self.paths.append(_path)
+            path = self.cfg["config"]["_source_code"]["path"]
+            size_mb = calculate_folder_size(path)
+            self.paths.append(path)
             self.data_transfer_ins.append(size_mb)
             self.storage_hours.append(self.cfg["config"]["_source_code"]["storage_hours"])
             self.data_prices_set_block_numbers.append(0)
 
         for key in self.cfg["config"]["data"]:
-            storage_id = self.cfg["config"]["data"][key]["storage_id"]
-            self.storage_ids.append(STORAGE_IDs[storage_id])
-            if storage_id == StorageID.NONE:
-                self.add_register_data_info()
+            is_data_hash = False
+
+            # process on the registered data of the provider
+            if "hash" in self.cfg["config"]["data"][key]:
+                data_hash = self.cfg["config"]["data"][key]["hash"]
+                if len(data_hash) == 32:
+                    data_hash = data_hash.encode()
+
+                is_data_hash = True
             else:
-                cache_type = self.cfg["config"]["data"][key]["cache_type"]
-                self.cache_types.append(CACHE_TYPES[cache_type])
-                _path = self.cfg["config"]["data"][key]["path"]
-                size_mb = calculate_folder_size(_path)
-                self.paths.append(_path)
-                self.data_transfer_ins.append(size_mb)
-                self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
-                self.data_prices_set_block_numbers.append(0)
+                storage_id = self.cfg["config"]["data"][key]["storage_id"]
+                self.storage_ids.append(STORAGE_IDs[storage_id])
+                if storage_id == StorageID.NONE:
+                    self.add_register_data_info()
+                else:
+                    cache_type = self.cfg["config"]["data"][key]["cache_type"]
+                    self.cache_types.append(CACHE_TYPES[cache_type])
+                    path = self.cfg["config"]["data"][key]["path"]
+                    size_mb = calculate_folder_size(path)
+                    self.paths.append(path)
+                    self.data_paths.append(path)
+                    self.data_transfer_ins.append(size_mb)
+                    self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
+                    self.data_prices_set_block_numbers.append(0)
+
+            if is_data_hash and not is_data_registered(self.provider_addr, data_hash):
+                raise Exception(f"## requested({data_hash}) data is not registered into provider")
 
         self.cores = []
         self.run_time = []
@@ -205,8 +221,8 @@ class Job:
 
     def add_register_data_info(self):
         """Set registered data info as empty value for other variables."""
-        self.cache_types.append(0)
         self.paths.append("")
+        self.cache_types.append(0)
         self.storage_hours.append(0)
         self.data_transfer_ins.append(0)
         self.data_prices_set_block_numbers.append(0)  # TODO: calculate from the contract

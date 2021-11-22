@@ -53,26 +53,25 @@ class Link:
 
 
 def check_link_folders(folders_to_share):
-    path_from = env.EBLOCPATH / "base" / "data"
     path_to = env.LINK_PATH / "base" / "data_link"
-    check_linked_data(path_from, path_to, folders_to_share[1:])
+    check_linked_data(folders_to_share, path_to)
     for folder in folders_to_share:
         if not os.path.isdir(folder):
             log(f"E: {folder} path does not exist")
 
 
-def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=False):
+def check_linked_data(paths_from, path_to, is_continue=False):
     """Generate folder as hard linked of the given folder paths or provider main folder.
 
+    :param paths_from: iterates all over the given folders
     :param path_to: linked folders_to_share into into given path
-    :param folders_to_share: if given, iterates all over the folders_to_share
     """
     mkdir(path_to)
-    link = Link(path_from, path_to)
-    link.link_folders(folders_to_share)
+    link = Link(paths_from, path_to)
+    link.link_folders(paths_from)
     log()
     for key, value in link.data_map.items():
-        log(f"[green] * {key}[/green] => [yellow]../data_link/{value}[/yellow]")
+        log(f"[bold green] * {key}[/bold green] => [bold yellow]../data_link/{value}[/bold yellow]")
 
     if not is_continue:
         print("")
@@ -81,11 +80,10 @@ def check_linked_data(path_from, path_to, folders_to_share=None, is_continue=Fal
             "If no, please feel free to update your run.sh file and continue"
         )
 
-    if folders_to_share:
-        for folder in folders_to_share:
-            if not os.path.isdir(folder):
-                log(f"E: {folder} path does not exist")
-                sys.exit(1)
+    for folder in paths_from:
+        if not os.path.isdir(folder):
+            log(f"E: {folder} path does not exist")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -140,7 +140,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
     #             log(message, where_back=1)
 
 
-def delete_last_line(n=1):
+def delete_multiple_lines(n=1):
     """Delete the last line in the STDOUT."""
     for _ in range(n):
         sys.stdout.write("\x1b[1A")  # cursor up one line
