@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from web3.types import TxReceipt
 import glob
 import hashlib
 import os
@@ -11,6 +10,7 @@ from multiprocessing import Process
 from threading import Thread
 
 from web3._utils.threads import Timeout
+from web3.types import TxReceipt
 
 from broker import cfg, config
 from broker._utils.tools import is_process_on, log, print_tb, print_trace

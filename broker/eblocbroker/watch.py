@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 
-from broker.config import env
 import os
 import time
 
 from broker import cfg
-from broker._utils.tools import delete_multiple_lines, log
-from broker._utils.tools import _time
-from broker._utils._log import (
-    _console_ruler,
-)
-
+from broker._utils._log import _console_ruler
+from broker._utils.tools import _time, delete_multiple_lines, log
+from broker.config import env
 
 Ebb = cfg.Ebb
 

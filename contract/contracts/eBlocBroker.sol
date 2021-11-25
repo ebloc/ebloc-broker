@@ -488,8 +488,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
            if price == 0, data does not exist.  If price == 1, it's an existing
            data that costs nothing. If price > 1, it's an existing data that
            costs give price. */
-        if (price == 0) price = price + 1;
-
+        if (price == 0) {
+            price = price + 1;
+        }
         registeredData.dataInfo[block.number].price = price;
         registeredData.dataInfo[block.number].commitmentBlockDuration = commitmentBlockDuration;
         registeredData.committedBlock.push(uint32(block.number));
@@ -532,12 +533,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         } else {
             uint256 _commitmentBlockDuration = registeredData.dataInfo[_pricesSetBlockNum].commitmentBlockDuration;
             uint256 _committedBlock = _pricesSetBlockNum + _commitmentBlockDuration; //future block number
-
             if (_committedBlock <= block.number) {
                 _committedBlock = (block.number - _pricesSetBlockNum) / _commitmentBlockDuration + 1;
                 _committedBlock = _pricesSetBlockNum + _committedBlock * _commitmentBlockDuration;
             }
-
             registeredData.dataInfo[_committedBlock].price = price;
             registeredData.dataInfo[_committedBlock].commitmentBlockDuration = commitmentBlockDuration;
             registeredData.committedBlock.push(uint32(_committedBlock));
@@ -595,7 +594,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32[] memory sourceCodeHash
     ) public payable {
         Lib.Provider storage provider = providers[args.provider];
-
         require(
             provider.isRunning && // provider must be running
                 sourceCodeHash.length > 0 &&
@@ -611,12 +609,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 orcID[msg.sender].length > 0 &&
                 orcID[args.provider].length > 0
         );
-
         if (args.cloudStorageID.length > 0)
             for (uint256 i = 1; i < args.cloudStorageID.length; i++)
                 require(
                     args.cloudStorageID[0] == args.cloudStorageID[i] ||
-                    args.cloudStorageID[i] <= uint8(Lib.CloudStorageID.NONE)  // IPFS or IPFS_GPG or NONE
+                        args.cloudStorageID[i] <= uint8(Lib.CloudStorageID.NONE) // IPFS or IPFS_GPG or NONE
                 );
 
         uint32[] memory providerInfo = pricesSetBlockNum[args.provider];
@@ -640,7 +637,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             info
         );
         totalCost = totalCost.add(_calculateComputationalCost(info, args.core, args.runTime));
-
         require(msg.value >= totalCost);
         // Here returned "_providerPriceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage st = provider.jobStatus[key].push();
@@ -743,7 +739,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     ) public whenBehindNow(startTime) returns (bool) {
         /* Used as a pointer to a storage */
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
-
         /* Provider can sets job's status as RUNNING and its startTime only one time
            job.stateCode should be {SUBMITTED (0), PENDING(1)} */
         require(job.stateCode <= Lib.JobStateCodes.PENDING, "Not permitted");
@@ -816,7 +811,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (dataPricesSetBlockNum > 0) {
             if (registeredData.committedBlock.length > 0) {
                 uint32[] memory dataCommittedBlocks = registeredData.committedBlock;
-
                 uint32 _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 1];
                 if (_dataPriceSetBlockNum > block.number) {
                     // Obtain the committed prices before the block number
@@ -826,9 +820,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 require(_dataPriceSetBlockNum == _dataPriceSetBlockNum);
                 // Data is provided by the provider with its own price
                 uint32 _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price;
-                if (_dataPrice > 1)
+                if (_dataPrice > 1) {
                     cacheCost = cacheCost.add(_dataPrice);
-
+                }
                 return (1, cacheCost);
             }
         }
@@ -1000,7 +994,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * If `_pricesSetBlockNum` is 0, it will return the current price at the
      * current block-number that is called
      * If mappings does not valid, then it will return (0, 0)
-    */
+     */
     function getRegisteredDataPrice(
         address provider,
         bytes32 sourceCodeHash,
