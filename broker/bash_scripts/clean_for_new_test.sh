@@ -5,21 +5,36 @@
 #    exit
 #fi
 
-# Update block.continue.txt with the current block number
-python3 -uB $HOME/ebloc-broker/broker/eblocbroker/get_block_number.py True
+# update block.continue.txt with the current block number
+python3 -uB $HOME/ebloc-broker/broker/eblocbroker_scripts/get_block_number.py True
+
+# remove created users users
+for user in $(members eblocbroker | tr " " "\n")
+do
+    echo $user will be deleted
+    sudo userdel -f $user
+done
 
 base="/var/ebloc-broker"
 mkdir -p $base/to_delete
 
 mv $base/* $base/to_delete 2>/dev/null
+DIR=$base/to_delete/public
+[ -d $DIR ] && mv $base/to_delete/public $base/
 
-if [ -d "$base/to_delete/public" ]; then
-    mv $base/to_delete/public $base/
-fi
+DIR=$base/to_delete/cache  # do not delete files in /var/ebloc-broker/cache/
+[ -d $DIR ] && mv $DIR $base/
 
-rm -rf $base/to_delete
+FILE=$base/to_delete/slurm_mail_prog.sh # recover slurm_mail_prog.sh
+[ -f $FILE ] && mv $FILE $base/
+
+find /var/ebloc-broker/to_delete -name "*data_link*" | while read -r i
+do
+    sudo umount -f $i/*
+done
+sudo rm -rf $base/to_delete
+rm -f /var/ebloc-broker/cache/*.tar.gz
 mkdir -p $base/cache
-
 find $HOME/.ebloc-broker/*/* -mindepth 1 ! \
      -regex '^./private\(/.*\)?' -delete 2> /dev/null
 
@@ -39,9 +54,14 @@ rm -f $base/ipfs.out
 rm -f $base/modified_date.txt
 rm -f $base/package-lock.json
 # rm -f .oc.pckl
-
 rm -rf docs/_build_html/
 rm -rf docs/_build/
 
-cp $HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh $base
+# unpin and remove all IPFS content from my machine
+ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm
+ipfs repo gc
+
 $HOME/ebloc-broker/broker/libs/mongodb.py --delete-all
+
+echo -e "\n$ ls /var/ebloc-broker"
+ls /var/ebloc-broker

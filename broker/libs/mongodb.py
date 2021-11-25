@@ -25,7 +25,11 @@ class BaseMongoClass:
             return output
         else:
             self.find_all()
-            raise Exception("E: Coudn't find key")
+            raise Exception("E: could not find key")
+
+    def add_item(self, key, item):
+        res = self.collection.replace_one({"key": key}, item, True)
+        return res.acknowledged
 
     def find_all(self, sort_str=""):
         """Find all records."""
@@ -36,10 +40,6 @@ class BaseMongoClass:
 
         for document in cursor:
             log(document)
-            # log(document)
-        # coll = mc["ebloc_broker"]["shareID"]
-        # print(document['_id'])
-        # print(document['timestamp'])
 
 
 class MongoBroker(BaseMongoClass):
@@ -47,7 +47,7 @@ class MongoBroker(BaseMongoClass):
 
     def __init__(self, mc, collection) -> None:
         super().__init__(mc, collection)
-        self.share_id_coll = self.mc["ebloc_broker"]["shareID"]
+        self.share_id_coll = self.mc["ebloc_broker"]["share_id"]
 
     def add_item(self, job_key, index, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info):
         """Adding job_key info along with its cache_duration into mongoDB."""
@@ -67,12 +67,19 @@ class MongoBroker(BaseMongoClass):
         res = self.collection.replace_one({"job_key": job_key, "index": index}, item, True)
         return res.acknowledged
 
+    def find_shareid_item(self, key):
+        output = self.share_id_coll.find_one({"job_key": key})
+        if bool(output):
+            return output
+        else:
+            raise Exception(f"warning: could not find id in MongoBroker, key={key}")
+
     def find_id(self, key: str, index: int):
         output = self.collection.find_one({"job_key": key, "index": index})
         if bool(output):
             return output
         else:
-            self.find_all()
+            # self.find_all()
             raise Exception(f"E: Coudn't find id. key={key} index={index}")
 
     def delete_one(self, job_key, index: int):
@@ -94,7 +101,7 @@ class MongoBroker(BaseMongoClass):
 
     def add_item_share_id(self, key, share_id, share_token):
         # TODO: check
-        item = {"job_key": key, "shareID": share_id, "share_token": share_token}
+        item = {"job_key": key, "share_id": share_id, "share_token": share_token}
         res = self.share_id_coll.replace_one({"job_key": key}, item, True)  # , "index": 0
         return res.acknowledged
 
@@ -117,7 +124,7 @@ class MongoBroker(BaseMongoClass):
         return True
 
 
-if __name__ == "__main__":
+def main():
     mc = MongoClient()
     ebb_mongo = MongoBroker(mc, mc["ebloc_broker"]["cache"])
     parser = argparse.ArgumentParser(description="Process MongoDB.")
@@ -131,12 +138,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.is_delete_all:
         output = ebb_mongo.delete_all()
-        print(f"mc['ebloc_broker']['cache'] is_deleted={output}")
+        log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
+    else:
+        # ebb_mongo.find_all()
+        output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
+        log(output)
+        # Ebb = cfg.Ebb
+        # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
+        # output = ebb_mongo.set_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
+        # ebb_mongo.find_all()
 
-    # ebb_mongo.find_all()
-    output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
-    print(output)
-    # Ebb = cfg.Ebb
-    # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
-    # output = ebb_mongo.set_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
-    # ebb_mongo.find_all()
+
+if __name__ == "__main__":
+    main()

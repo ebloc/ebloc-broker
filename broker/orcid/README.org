@@ -1,0 +1,34 @@
+# ORCID
+
+* Setup
+
+#+BEGIN_SRC bash
+sudo chmod 700 /eBloc
+sudo setfacl -R -m user:alper:rwx    /eBloc
+sudo setfacl -R -m user:www-data:rwx /eBloc
+#+END_SRC
+
+----------------------------
+
+#+BEGIN_SRC bash
+sudo killall cat
+tmux new -s pipe1
+
+# tmux list-keys | grep send-prefix  # C-z
+bash ~/ebloc-broker/broker/orcid/orcid_pipe_in.sh &
+cntrl-B then D  # exit tmux window without quitting the terminal program
+exit  # to close
+
+tmux new -s pipe2
+bash ~/ebloc-broker/broker/orcid/orcid_pipe_out.sh &
+cntrl-B then D # exit tmux window without quitting the terminal program
+exit # to close
+
+To connect to tmux session:
+tmux attach  # pipe2
+tmux attach  # pipe2
+#+END_SRC
+
+* Guide:
+- [[https://superuser.com/a/714465/723632][tmux]]
+- [[https://gist.github.com/henrik/1967800][tmux_cheat_sheat]]

@@ -1,0 +1,14 @@
+config:
+    requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
+    provider_address: '0x765508fc8f78a465f518ae79897d0e4b249e82dc'
+    source_code:
+        storage_id: gdrive
+        cache_type: public
+        path: ~/test_eblocbroker/NPB3.3-SER_source_code
+        storage_hours: 0
+    data_transfer_out: 1
+    jobs:
+        job1:
+            cores: 1
+            run_time: 60
+    data: {}

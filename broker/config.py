@@ -1,26 +1,18 @@
 #!/usr/bin/env python3
 
 import logging
-import os
 import threading
 from contextlib import suppress
 from logging import Filter
 from pathlib import Path
-from typing import Union
-
-from dotenv import load_dotenv
 
 from broker import cfg
 from broker._utils import _log, colored_traceback
 from broker._utils.tools import mkdir
 from broker._utils.yaml import Yaml
-from broker.errors import QuietExit
+from broker.env import ENV_BASE
 
 logging.getLogger("filelock").setLevel(logging.ERROR)
-
-
-class Terminate(Exception):
-    pass
 
 
 class ThreadFilter(Filter):
@@ -51,50 +43,35 @@ class IgnoreThreadsFilter(Filter):
         return record.thread == self._main_thread_id
 
 
-class ENV:
+class ENV(ENV_BASE):
     """ENV class that contains configuration values."""
 
     def __init__(self) -> None:
+        super().__init__()
         with suppress(Exception):
             from brownie import accounts
 
             accounts.load("alpy.json", "alper")
 
-        _env = {}
-        self.HOME: Path = Path.home()
-        env_file = self.HOME / ".ebloc-broker" / ".env"
-        try:
-            with open(env_file) as f:
-                for line in f:
-                    if line.startswith("#") or not line.strip():
-                        continue
-                    key, value = line.strip().split("=", 1)
-                    _env[key] = value.replace('"', "").split("#", 1)[0].rstrip()
-        except IOError as e:
-            raise Exception(f"E: File '{env_file}' is not accessible") from e
+        # load_dotenv(dotenv_path=self.env_file)
 
-        true_set = ("yes", "true", "t", "1")
-        load_dotenv(dotenv_path=env_file)
-        self.BLOCK_DURATION = 15
-        self.WHOAMI = _env["WHOAMI"]
-        self.SLURMUSER = _env["SLURMUSER"]
-        self.GDRIVE = _env["GDRIVE"]
-        self.OC_USER = _env["OC_USER"]
-        self.DATADIR = Path(_env["DATADIR"])
-        self.LOG_PATH = Path(_env["LOG_PATH"])
+        self.SLURMUSER = self.cfg["provider"]["slurmuser"]
+        self.GDRIVE = self.cfg["gdrive"]
+        self.OC_USER = self.cfg["oc_user"]
+        if "@b2drop.eudat.eu" not in self.OC_USER:
+            self.F_ID = f"{self.OC_USER}@b2drop.eudat.eu"
+        else:
+            self.F_ID = self.OC_USER
+
+        self.DATADIR = Path(self.cfg["datadir"])
+        self.LOG_PATH = Path(self.cfg["log_path"])
         self.config = Yaml(self.LOG_PATH.joinpath("config.yaml"))
-        self.IS_GETH_TUNNEL = str(_env["IS_GETH_TUNNEL"]).lower() in true_set
-        self.IS_IPFS_USE = str(_env["IS_IPFS_USE"]).lower() in true_set
-        self.IS_EUDAT_USE = str(_env["IS_EUDAT_USE"]).lower() in true_set
-        self.IS_GDRIVE_USE = str(_env["IS_GDRIVE_USE"]).lower() in true_set
-        self.IS_BLOXBERG = str(_env["IS_BLOXBERG"]).lower() in true_set
-        self.IS_EBLOCPOA = str(_env["IS_EBLOCPOA"]).lower() in true_set
-        self.IS_DRIVER = False
-        self.RPC_PORT = _env["RPC_PORT"]
-        self.EBLOCPATH = Path(_env["EBLOCPATH"])
-        self.BASH_SCRIPTS_PATH = Path(_env["EBLOCPATH"]) / "broker" / "bash_scripts"
-        self._HOME = Path("/home") / self.WHOAMI
-        self.CONTRACT_PROJECT_PATH = self._HOME / "ebloc-broker" / "contract"
+        self.IS_GETH_TUNNEL = self.cfg["provider"]["is_geth_tunnel"]
+        self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
+        self.IS_EUDAT_USE = self.cfg["provider"]["is_eudat_use"]
+        self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
+        self.RPC_PORT = self.cfg["rpc_port"]
+        self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
         self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")
@@ -106,30 +83,20 @@ class ENV:
         self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelledJobs.txt")
         self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")
         self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
-        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_provider.pckl")
-        self.OC_CLIENT_REQUESTER = self.LOG_PATH.joinpath(".oc_requester.pckl")
+        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
+        self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"])
         _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
-        self.IS_THREADING_ENABLED = False
-        self.PROVIDER_ID = None  # type: Union[str, None]
+        mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID)
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
-
-        if cfg.w3:
-            self.PROVIDER_ID = cfg.w3.toChecksumAddress(_env["PROVIDER_ID"])
-            mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID)
-
         mkdir("/tmp/run")
         self.DRIVER_LOCKFILE = "/tmp/run/driver_popen.pid"
         self.DRIVER_DAEMON_LOCK = "/tmp/run/driverdaemon.pid"
-
-    def set_provider_id(self, provider_id=None):
-        if not os.getenv("PROVIDER_ID"):
-            if provider_id:
-                self.PROVIDER_ID = cfg.w3.toChecksumAddress(provider_id)
-            else:
-                print(f"E: Please set PROVIDER_ID in {self.env_file}")
-                raise QuietExit
+        if isinstance(self.cfg["provider"]["is_thread"], bool):
+            cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]
         else:
-            self.PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
+            raise Exception("is_thead should be bool variable")
+
+        self.GMAIL = self.cfg["gmail"]
 
 
 def setup_logger(log_path="", is_brownie=False):
@@ -170,23 +137,20 @@ def setup_logger(log_path="", is_brownie=False):
     return logging.getLogger()
 
 
+RECONNECT_ATTEMPTS = 5
+RECONNECT_SLEEP = 15
 Ebb = None  # eBlocBlock Contract Class
 ebb = None  # eBlocBroker Contract on the blockchain
 contract = None
 chain = None
 ipfs = None
 w3_ebb = None
-
 colored_traceback.add_hook(always=True)
 logger = setup_logger()  # Default initialization
-
 coll = None
 oc = None
 driver_cancel_process = None
 _eBlocBroker = None
-RECONNECT_ATTEMPTS = 5
-RECONNECT_SLEEP = 15
-IS_THREADING_ENABLED = False
 env: ENV = ENV()
 with suppress(Exception):
     env: ENV = ENV()

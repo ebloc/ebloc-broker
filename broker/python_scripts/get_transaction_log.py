@@ -15,7 +15,7 @@ if __name__ == "__main__":
         tx_hash = "0xe7f0bdc249458d36105120cf1a0fa5036a9368c5fd13aa37448dae5993d92a33"
         event = "LogReceipt"
 
-    tx_receipt = cfg.w3.eth.getTransactionReceipt(tx_hash)
+    tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
     if event == "LogJob":
         processed_logs = cfg.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
         log(vars(processed_logs[0].args))

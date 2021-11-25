@@ -7,7 +7,6 @@ def _run_as_sudo(sudo_user, cmd_str, shell=False):
     sudo_args = ["sudo", "-u", sudo_user]
     cmd_array = sudo_args + cmd_str.split()
     p, output, error = _popen_communicate(" ".join(cmd_array), shell=shell)
-
     if p.returncode != 0 or "error" in error:
         raise Exception(error)
     return output

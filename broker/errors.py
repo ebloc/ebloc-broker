@@ -11,12 +11,20 @@ class HandlerException(Exception):
 
 
 class JobException(Exception):
-    """Trace is not printed."""
+    """Job info exception to prevent trace to be printed."""
+
+
+class Terminate(Exception):
+    """Terminate the process."""
+
+
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""
 
 
 class QuietExit(Exception):
     """Trace is not printed."""
 
 
-class Web3NotConnected(Exception):  # noqa
-    """Web3 is not connected"""
+class IpfsNotConnected(Exception):
+    pass

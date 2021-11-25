@@ -1,23 +1,61 @@
 #!/usr/bin/env python3
 
+import os
 import pathlib
+import sys
+import textwrap
 import threading
 from typing import Dict, Union
 
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
+from rich.theme import Theme
+from rich.traceback import install
 
-# from rich.traceback import install
-# install(show_locals=True)
-# install()  # for rich
+try:
+    from broker import cfg
+except:
+    from ebloc_broker.broker import cfg
+
+install()  # for rich, show_locals=True
 # pretty.install()
 
 console = Console()
-IS_THREADING_ENABLED = False
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
+custom_theme = Theme(
+    {
+        "info": "dim cyan",
+        "warning": "magenta",
+        "danger": "bold red",
+        "b": "bold",
+        "magenta": "#ff79c6",
+    }
+)
+
+
+class Colors:
+    red = "#ff5555"
+    pink = "#ff79c6"
+
+
+class Style:
+    B = BOLD = "\033[1m"
+    E = END = "\033[0m"
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    GREENB = f"\033[32m{BOLD}"
+    YELLOW = "\033[33m"
+    YELLOWB = f"\033[33m{BOLD}"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    CYANB = f"\033[36m{BOLD}"
+    WHITE = "\033[37m"
+    UNDERLINE = "\033[4m"
 
 
 class Log:
@@ -69,7 +107,7 @@ class Log:
         if text == "[ ok ]":
             text = "[ [bold green]ok[/bold green] ]"
 
-        if text[:3] in ["==>", "#> ", "## ", " * ", "###"]:
+        if text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
             _len = 3
             is_bullet = True
             if not color:
@@ -95,16 +133,23 @@ class Log:
         return text, color, _len, is_bullet, is_r, is_bold
 
 
-def br(text):
-    return f"[bold][[/bold]{text}[bold]][/bold]"
+def br(text, color="white"):
+    if color != "white":
+        return f"[bold][[/bold][{color}]{text}[/{color}][bold]][/bold]"
+    else:
+        return f"[bold][[/bold]{text}[bold]][/bold]"
 
 
-def ok():
-    return br("  [green]OK[/green]  ")
+def ok(text="OK"):
+    return br(f"  [green]{text}[/green]  ")
 
 
-def _console_ruler(msg, filename=""):
-    if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
+def _console_clear():
+    console.clear()
+
+
+def console_ruler(msg="", character="=", color="cyan", filename=""):
+    if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
         filename = thread_log_files[threading.current_thread().name]
     elif not filename:
         if ll.LOG_FILENAME:
@@ -119,11 +164,24 @@ def _console_ruler(msg, filename=""):
         # __ https://stackoverflow.com/a/6826099/2402577
         ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
 
-    console.rule(f"[bold cyan]{msg}", characters="=")
-    ll.console[filename].rule(f"[bold cyan]{msg}", characters="=")
+    if msg:
+        console.rule(f"[bold {color}]{msg}", characters=character)
+        ll.console[filename].rule(f"[bold {color}]{msg}", characters=character)
+    else:
+        console.rule(characters=character)
+        ll.console[filename].rule(characters=character)
 
 
-def _log(text, color, is_bold, flush, filename, end, is_write=True):
+def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=True):
+    if not is_output:
+        is_print = is_output
+    else:
+        is_print = ll.IS_PRINT
+
+    if threading.current_thread().name != "MainThread":
+        # prevent writing Thread's output into provider.log
+        is_print = False
+
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_bullet:
         _text = f"[bold]{text}[/bold]"
@@ -131,7 +189,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
         _text = text
 
     if color:
-        if ll.IS_PRINT:
+        if is_print:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_bullet:
                     print(
@@ -170,7 +228,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
             else:
                 text_write = _text
 
-        if ll.IS_PRINT:
+        if is_print:
             if end == "":
                 print(text_write, end="")
             else:
@@ -189,10 +247,30 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
     # f.close()
 
 
-def log(text="", color=None, filename=None, end=None, flush=False, is_write=True):
-    """Print for own settings.
+def WHERE(back=0):
+    """Return line number where the command is called."""
+    try:
+        frame = sys._getframe(back + 2)
+    except:
+        frame = sys._getframe(1)
 
-    __ https://rich.readthedocs.io/en/latest/appendix/colors.html?highlight=colors
+    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
+    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+
+
+def log(
+    text="",
+    color=None,
+    filename=None,
+    end=None,
+    flush=False,
+    is_write=True,
+    where_back=0,
+    is_code=False,
+    is_err=False,
+    is_output=True,
+):
+    """Print for own settings.
 
     * colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
@@ -202,11 +280,25 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_write=True
         is_bold = True
         color = None
 
+    if is_err:
+        text = str(text)
+        if str(text):
+            if "E: " not in text[3]:
+                text = f"E: {text}"
+        else:
+            return
+
+    if isinstance(text, str) and "E: " in text[3:]:
+        text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] {text.replace('E: ', '')}"
+
     if "-=-=" in str(text):
         is_bold = True
 
+    if is_code:
+        text = " \ \n  ".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
+
     if is_write:
-        if threading.current_thread().name != "MainThread" and IS_THREADING_ENABLED:
+        if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
             filename = thread_log_files[threading.current_thread().name]
         elif not filename:
             if ll.LOG_FILENAME:
@@ -226,7 +318,8 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_write=True
         if is_write:
             ll.console[filename].print(text)
     else:
-        _log(text, color, is_bold, flush, filename, end, is_write)
+        _log(text, color, is_bold, flush, filename, end, is_write, is_output)
 
 
 ll = Log()
+c = Colors()

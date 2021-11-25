@@ -1,34 +1,35 @@
 {
-   "name": "eBlocBroker",
-   "version": "1.0.6",
-   "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
-   "license": "UNLICENSED",
-   "main": "Driver.py",
-   "directories": {
-      "doc": "docs"
-   },
-   "dependencies": {
-      "binstring": "*",
-      "bs58": "*",
-      "dotenv": "^6.0.0",
-      "require": "^2.4.20",
-      "scrypt": "^6.0.3",
-      "sleep": "^5.1.1",
-      "web3": "^1.0.0-beta.35",
-      "web3_ipc": "*",
-      "web3-eth-personal": "^1.0.0-beta.31"
-   },
-   "devDependencies": {
-      "prettier": "^2.1.2",
-      "prettier-plugin-solidity": "^1.0.0-alpha.58"
-   },
-   "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-   },
-   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/ebloc/eBlocBroker.git"
-   },
-   "author": "",
-   "homepage": "http://ebloc.cmpe.boun.edu.tr:3003"
+    "name": "eBlocBroker",
+    "version": "1.0.6",
+    "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
+    "license": "UNLICENSED",
+    "main": "Driver.py",
+    "directories": {
+        "doc": "docs"
+    },
+    "dependencies": {
+        "binstring": "*",
+        "bs58": "*",
+        "dotenv": "^10.0.0",
+        "require": "^2.4.20",
+        "scrypt": "^6.0.3",
+        "web3": "^1.6.1",
+        "web3_ipc": "*",
+        "web3-eth-personal": "^1.6.1",
+        "ethlint": "*",
+        "ganache-cli": "*"
+    },
+    "devDependencies": {
+        "prettier": "^2.4.1",
+        "prettier-plugin-solidity": "^1.0.0-beta.19"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ebloc/eBlocBroker.git"
+    },
+    "author": "",
+    "homepage": "http://ebloc.cmpe.boun.edu.tr:3003"
 }

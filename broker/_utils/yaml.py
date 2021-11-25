@@ -8,9 +8,9 @@ from filelock import FileLock
 from ruamel.yaml import YAML, representer
 
 try:
-    from broker._utils.tools import print_tb
+    from broker._utils.tools import print_tb, _remove
 except:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils.tools import print_tb
+    from ebloc_broker.broker._utils.tools import print_tb, _remove
 
 
 class SubYaml(dict):
@@ -65,10 +65,14 @@ class Yaml(dict):
 
     PyYAML Saving data to .yaml files
     __ https://codereview.stackexchange.com/a/210162/127969
+
+    Yaml format
+    __ https://stackoverflow.com/a/70034493/2402577
     """
 
     def __init__(self, path, auto_dump=True):
         #: To get the dirname of the absolute path
+        path = os.path.expanduser(path)
         self.dirname = os.path.dirname(os.path.abspath(path))
         self.filename = os.path.basename(path)
         if self.filename[0] == ".":
@@ -81,12 +85,17 @@ class Yaml(dict):
         self.path_temp = f"{self.path}~"
         self.auto_dump = auto_dump
         self.changed = False
-        self.yaml = YAML(typ="safe")
+        self.yaml = YAML()
+        # self.yaml = YAML(typ="safe")
+        self.yaml.indent(mapping=4, sequence=4, offset=2)
         self.yaml.default_flow_style = False
         if self.path.exists():
             with FileLock(self.fp_lock, timeout=1):
                 with open(path) as f:
                     self.update(self.yaml.load(f) or {})
+
+    def remove_temp(self):
+        _remove(self.path_temp)
 
     def compare_files(self, fn1, fn2):
         with open(fn1, "r") as file1, open(fn2, "r") as file2:
@@ -162,7 +171,8 @@ class Yaml(dict):
         self.updated()
 
 
-_SR = representer.SafeRepresenter
+_SR = representer.RoundTripRepresenter
+# _SR = representer.SafeRepresenter
 _SR.add_representer(SubYaml, _SR.represent_dict)
 
 

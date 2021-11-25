@@ -1,0 +1,18 @@
+config:
+    requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
+    provider_address: '0xeab50158e8e51de21616307a99c9604c1c453a02'
+    source_code:
+        storage_id: ipfs_gpg
+        cache_type: public
+        path: ~/test_eblocbroker/run_cppr
+        storage_hours: 0
+    data:
+        data1:
+            hash: eaf488aea87a13a0bea5b83a41f3d49a
+        data2:
+            hash: dd0fbccccf7a198681ab838c67b68fbf
+    data_transfer_out: 1
+    jobs:
+        job1:
+            cores: 1
+            run_time: 60

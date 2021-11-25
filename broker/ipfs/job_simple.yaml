@@ -1,22 +1,21 @@
 config:
-  _base_dir: /home/alper/test_eblocbroker/test_data/base/
-  _source_code:
-    cache_type: public
-    path: /home/alper/test_eblocbroker/test_data/base/source_code
-    size_mb: 1
-    storage_hours: 1
-    storage_id: ipfs
-  data:
-    data1:
-      cache_type: public
-      path: /home/alper/test_eblocbroker/test_data/base/data/data1
-      size_mb: 370
-      storage_hours: 1
-      storage_id: ipfs
-  data_transfer_out: 1
-  jobs:
-    job1:
-      cores: 1
-      run_time: 1
-  provider:
-    address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
+    requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
+    provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+    source_code:
+        cache_type: public
+        path: ~/test_eblocbroker/test_data/base/source_code
+        size_mb: 1
+        storage_hours: 0
+        storage_id: ipfs
+    data:
+        data1:
+            cache_type: public
+            path: ~/test_eblocbroker/test_data/base/data/data1
+            size_mb: 1
+            storage_hours: 0
+            storage_id: ipfs
+    data_transfer_out: 1
+    jobs:
+        job1:
+            cores: 1
+            run_time: 1

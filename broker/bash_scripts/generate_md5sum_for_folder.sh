@@ -1,13 +1,13 @@
 #!/bin/bash
 
 if [ "$#" -ne 1 ]; then
-    echo "Illegal number of parameters. Please add folder path as an argument."
+    echo "Illegal number of parameters. Please add folder path as an argument"
     exit;
 fi
 
 if [[ $1 = *".tar.gz" ]]; then
     if [ ! -f $1 ]; then
-        echo "File not found! Path="$1
+        echo "File not found! path="$1
         exit
     fi
     md5sum $1 | awk '{print $1}'
@@ -15,7 +15,7 @@ if [[ $1 = *".tar.gz" ]]; then
 fi
 
 if [[ $1 = *"//"* ]]; then
-    echo "E: Please do not use // on your folder path."
+    echo "E: Please do not use // in your folder path"
     exit 64
 fi
 
@@ -23,7 +23,7 @@ target=${1%/}
 
 # Control will enter here if $DIRECTORY doesn't exist.
 if [ ! -d "$target" ]; then
-    echo 'E: Requested folder does not exit. Please provide complete path. Path='$target
+    echo 'E: Requested folder does not exit. Please provide complete path, given path='$target
     exit 64
 else
     target=$(realpath $target)

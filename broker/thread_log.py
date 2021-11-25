@@ -4,7 +4,7 @@ import logging
 import threading
 import time
 
-from config import IgnoreThreadsFilter, ThreadFilter
+from broker.config import IgnoreThreadsFilter, ThreadFilter
 
 # Attach the IgnoreThreadsFilter to the main root log handler
 # This is responsible for ignoring all log records originating from

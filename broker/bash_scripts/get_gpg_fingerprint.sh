@@ -9,11 +9,10 @@
 # keyid=$(gpg --list-secret-keys --keyid-format LONG | sed -n '4p' | tr -d " \t\r")
 # gpg_fingerprint=$(./get_gpg_fingerprint.sh $keyid)
 # echo 0x$gpg_fingerprint
-
 output=$(gpg --list-secret-keys --keyid-format LONG)
 if [[ "$output" == "" ]]; then
-    echo "E: gpg --list-secret-keys --keyid-format LONG  :returns empty"
-    exit 0
+    echo -e "E: \`gpg --list-secret-keys --keyid-format LONG\` returns empty. Please run: gpg --gen-key"
+    exit 1
 fi
 
 if [[ $# -ne 1 ]]; then

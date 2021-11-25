@@ -30,6 +30,7 @@ interface eBlocBrokerInterface {
     // Records the submitted jobs' information under submitJob() method call
     event LogJob(
         address indexed provider,
+        address indexed owner,
         string jobKey,
         uint32 index,
         uint8[] cloudStorageID,

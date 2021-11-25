@@ -11,7 +11,7 @@ The service is completely trustless, meaning that the entire broke service opera
 as smart contracts on the Ethereum private blockchain, with no priviledged access given
 to any party.
 
-Code can be viewed on the `github repository`_.  
+Code can be viewed on the `github repository`_.
 
 If you are a smart contract developer and would like to start submitting
 jobs now then check out the :doc:`./quickstart`.
@@ -21,7 +21,6 @@ Contents:
 .. toctree::
 
    connect
-   eblocPOW
    quickstart
 
 .. _github repository: https://github.com/ebloc/eBlocBroker

@@ -26,14 +26,13 @@ https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-bl
 > 5. Copy the Client ID and Secret into handlers_drive.go lines 17 and 18 and compile the application
 #+end_src
 
---------------------------------
-
 #+begin_src bash
-mkdir -p ~/tools && cd ~/tools
+mkdir -p ~/tools
+cd ~/tools
 git clone https://github.com/prasmussen/gdrive.git && cd gdrive
 #+end_src
 
-Copy the Client ID and Secret into handlers_drive.go lines 17 and 18 and compile the application
+Copy the ~Client ID~ and ~Secret~ into ~handlers_drive.go~ lines 17 and 18 and compile the application
 
 #+begin_src bash
 $ emacs -nw handlers_drive.go
@@ -47,12 +46,12 @@ rm -f ~/.gdrive/token_v2.json
 
 ** Build
 
-Open terminal and go to the folder where the "handerls_drive.go" is.
+Open terminal and go to the folder where the ~handerls_drive.go~ is.
 
 #+begin_src bash
-go get github.com/prasmussen/gdrive
+go install github.com/prasmussen/gdrive@latest
 go build -ldflags "-w -s"
-cp gdrive $GOPATH/bin/gdrive
+sudo cp gdrive /usr/local/bin/gdrive
 gdrive about
 #+end_src
 
@@ -63,13 +62,12 @@ https://accounts.google.com/o/oauth2/auth?access_type=...
 
 ** Guide
 
-- [TUTORIAL: How to get rid of 403 Errors][2]
+- [[https://github.com/prasmussen/gdrive/issues/426][TUTORIAL: How to get rid of 403 Errors]]
 - https://github.com/prasmussen/gdrive/issues/426#issuecomment-459150627
 - https://github.com/marufshidiq/gdrive-cli-builder
-- [stackoverflow Answer](https://stackoverflow.com/a/65507155/2402577)
+- [[https://stackoverflow.com/a/65507155/2402577][stackoverflow answer]]
 
-  [1]: https://github.com/prasmussen/gdrive/commit/31d0829c180795d17e00b7a354fffe4d72be712b#commitcomment-45165924
-  [2]: https://github.com/prasmussen/gdrive/issues/426
+  [1]: [[https://github.com/prasmussen/gdrive/commit/31d0829c180795d17e00b7a354fffe4d72be712b#commitcomment-45165924]]
 
 
 * Headless Usage & Authorization
@@ -78,16 +76,15 @@ https://accounts.google.com/o/oauth2/auth?access_type=...
 $ google-drive-ocamlfuse -headless -label me -id ##yourClientID##.apps.googleusercontent.com -secret ###yoursecret#####
 #+end_src
 
-doc: https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization
+[[https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization][doc]]
 
 
-Set ~shared_with_me=true~ in the config file to have read-only access to all your "Shared with me" files under ./.shared.
+Set ~shared_with_me=true~ in the config file to have read-only access to all your ~"Shared with me"~ files under ~./.shared~.
 
 #+begin_src bash
 $ cat ~/.gdfuse/me/config | grep shared_with_me
 shared_with_me=true
 #+end_src
-
 
 ** Load:
 
@@ -101,14 +98,13 @@ echo jobKey=$jobKey
 gdrive share $jobKey  --role writer --type user --email $providerToShare
 #+end_src
 
----------------
+--------------------------------------------------------------------------------
 
 ** Save
 
 #+begin_src bash
 cd folder
 shareId='1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'
-
 folderName=$(gdrive info $shareId | grep 'Name' | awk '{print $2}')
 
 mimeType=$(gdrive info 1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG | grep 'Mime' | awk '{print $2}')

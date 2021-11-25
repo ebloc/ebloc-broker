@@ -2,7 +2,7 @@
 
 from setuptools import find_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.org", "r") as fh:
     long_description = fh.read()
 
 requirements_filename = "requirements.txt"
@@ -24,8 +24,11 @@ setup(
     author="Alper Alimoglu",
     author_email="alper.alimoglu@gmail.com",
     url="https://github.com/ebloc/ebloc-broker",
-    keywords=["broker", "ethereum", "broker"],
+    keywords=["eblocbroker"],
     install_requires=requirements,
+    entry_points={
+        "console_scripts": ["eblocbroker=broker._cli.__main__:main"],
+    },
     include_package_data=True,
     python_requires=">=3.6,<4",
     classifiers=[

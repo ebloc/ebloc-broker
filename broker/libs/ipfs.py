@@ -6,18 +6,17 @@ import re
 import signal
 import sys
 import time
-from subprocess import DEVNULL, PIPE, Popen, check_output
+from subprocess import check_output
 
 import ipfshttpclient
 from cid import make_cid
 
+from broker import cfg
 from broker._utils._log import ok
-from broker._utils.tools import handler, log, print_tb
-
-# from io import StringIO
+from broker._utils.tools import _remove, exit_after, handler, log, print_tb
 from broker.config import env, logging
+from broker.errors import IpfsNotConnected, QuietExit
 from broker.utils import (
-    _remove,
     _try,
     compress_folder,
     is_ipfs_on,
@@ -29,10 +28,6 @@ from broker.utils import (
     terminate,
     untar,
 )
-
-
-class IpfsNotConnected(Exception):
-    pass
 
 
 class Ipfs:
@@ -48,6 +43,30 @@ class Ipfs:
     #################
     # OFFLINE CALLS #
     #################
+    def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
+        """Get only chunk and hash of a given path, do not write to disk.
+
+        Args:
+            path: Path of a folder or file
+
+        Return string that contains the ouput of the run commad.
+        """
+        if os.path.isdir(path):
+            cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
+            if is_hidden:
+                # include files that are hidden such as .git/
+                # Only takes effect on recursive add
+                cmd.insert(3, "--hidden")
+        elif os.path.isfile(path):
+            cmd = ["ipfs", "add", "--quieter", "--only-hash", path]
+        else:
+            raise Exception("Requested path does not exist")
+
+        try:
+            return _try(lambda: run(cmd))
+        except Exception as e:
+            raise e
+
     def is_valid(self, ipfs_hash: str) -> bool:
         try:
             make_cid(ipfs_hash)
@@ -123,16 +142,16 @@ class Ipfs:
         if extract_target:
             try:
                 untar(tar_file, extract_target)
-            except:
-                raise Exception("E: Could not extract the given tar file")
+            except Exception as e:
+                raise Exception("E: Could not extract the given tar file") from e
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
                 _remove(tar_file)
 
     def remove_lock_files(self):
-        _remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
-        _remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
+        _remove(f"{env.HOME}/.ipfs/repo.lock")
+        _remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 
     def gpg_encrypt(self, user_gpg_finderprint, target):
         is_delete = False
@@ -158,12 +177,15 @@ class Ipfs:
             return encrypted_file_target
 
         try:
+            run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
             cmd = [
                 "gpg",
                 "--batch",
                 "--yes",
                 "--recipient",
                 user_gpg_finderprint,
+                "--trust-model",
+                "always",
                 "--output",
                 encrypted_file_target,
                 "--encrypt",
@@ -175,7 +197,7 @@ class Ipfs:
         except Exception as e:
             print_tb(e)
             if "encryption failed: Unusable public key" in str(e):
-                log("==> Check solution: https://stackoverflow.com/a/34132924/2402577")
+                log("## Check solution: https://stackoverflow.com/a/34132924/2402577")
         finally:
             if is_delete:
                 _remove(encrypt_target)
@@ -190,50 +212,54 @@ class Ipfs:
 
         # TODO: check is valid IPFS id
         try:
-            log(f" * trying to connect into {ipfs_id} ", end="")
-            # output = client.swarm.connect(provider_info["ipfs_id"])
-            # if ("connect" and "success") in str(output):
-            #     log(str(output), "green")
-            cmd = ["ipfs", "swarm", "connect", ipfs_id]
+            log(f" * trying to connect into {ipfs_id}")
+            cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_id]
             p, output, error = popen_communicate(cmd)
             if p.returncode != 0:
                 log()
+                error = error.replace("[/", "/").replace("]", "").replace("Error: ", "").rstrip()
                 if "failure: dial to self attempted" in error:
-                    log(f"Warning: {error.replace('Error: ', '').rstrip()}")
-                    question_yes_no("#> Would you like to continue?")
+                    log(f"E: {error}")
+                    if not question_yes_no("#> Would you like to continue?"):
+                        raise QuietExit
                 else:
                     raise Exception(error)
             else:
+                log(output, end="")
                 log(ok())
+
         except Exception as e:
             print_tb(e)
             log("E: connection into provider's IPFS node via swarm is not accomplished")
             sys.exit(1)
 
-    def _ipfs_stat(self, ipfs_hash):
+    def _ipfs_stat(self, ipfs_hash, _is_ipfs_on=True):
         """Return stats of the give IPFS hash.
 
         This function *may* run for an indetermined time. Returns a dict with the
         size of the block with the given hash.
         """
-        if not is_ipfs_on():
+        if _is_ipfs_on and not is_ipfs_on():
             raise IpfsNotConnected
 
         # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
         return self.client.object.stat(ipfs_hash)
 
+    @exit_after(900)
     def is_hash_exists_online(self, ipfs_hash: str):
-        log(f"#> Attempting to check IPFS file {ipfs_hash}")
+        log(f"## attempting to check IPFS file {ipfs_hash} ", end="")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        # Set the signal handler and a 300-second alarm
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(300)
+        if not cfg.IS_THREADING_ENABLED:
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(300)  # Set the signal handler and a 300-second alarm
+
         try:
-            output = self._ipfs_stat(ipfs_hash)
+            output = self._ipfs_stat(ipfs_hash, _is_ipfs_on=False)
+            log(ok())
             output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
-            log(f"==> cumulative_size={output_json}", "bold green")
+            log(f"cumulative_size={output_json}", "bold")
             return output, output["CumulativeSize"]
         except KeyboardInterrupt:
             terminate("KeyboardInterrupt")
@@ -293,31 +319,6 @@ class Ipfs:
             sys.exit(1)
         return result_ipfs_hash
 
-    def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
-        """Get only chunk and hash of a given path, do not write to disk.
-
-        Args:
-            path: Path of a folder or file
-
-        Returns string that contains the ouput of the run commad.
-        """
-        if os.path.isdir(path):
-            cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
-            if is_hidden:
-                # include files that are hidden such as .git/.
-                # Only takes effect on recursive add
-                cmd.insert(3, "--hidden")
-        elif os.path.isfile(path):
-            cmd = ["ipfs", "add", "--quieter", "--only-hash", path]
-        else:
-            logging.error("E: Requested path does not exist")
-            raise
-
-        try:
-            return _try(lambda: run(cmd))
-        except Exception as e:
-            raise e
-
     def connect_to_bootstrap_node(self):
         """Connect into return addresses of the currently connected peers."""
         if not is_ipfs_on():
@@ -348,10 +349,8 @@ class Ipfs:
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if "::" not in ipfs_address:
-                if "127.0.0.1" in ipfs_address:
-                    log(f"==> {ipfs_address}")
-                else:
-                    log(f"==> ipfs_id={ipfs_address}")
+                if "127.0.0.1" not in ipfs_address:
+                    # log(f"==> ipfs_address={ipfs_address}")
                     return ipfs_address
 
         raise ValueError("No valid ipfs has is found")

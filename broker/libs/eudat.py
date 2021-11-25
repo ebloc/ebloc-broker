@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import traceback
+from contextlib import suppress
 from pathlib import Path
 
 import owncloud
@@ -15,22 +16,12 @@ from web3.logs import DISCARD
 
 from broker import cfg, config
 from broker._utils._log import br, ok
+from broker._utils.web3_tools import get_tx_status
 from broker.config import env, logging
-from broker.eblocbroker.job import Job
 from broker.errors import QuietExit
-from broker.lib import get_tx_status, run
+from broker.lib import calculate_size, run
 from broker.libs import _git
-from broker.utils import (
-    CacheType,
-    StorageID,
-    cd,
-    compress_folder,
-    log,
-    popen_communicate,
-    print_tb,
-    sleep_timer,
-    terminate,
-)
+from broker.utils import cd, compress_folder, log, popen_communicate, print_tb, sleep_timer, terminate
 
 Ebb = cfg.Ebb
 
@@ -79,7 +70,7 @@ def _upload_results(encoded_share_token, output_file_name):
 
 
 def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
-    """Implement wrapper for the _upload_results() function."""
+    """Implement wrapper for the _upload_results function."""
     with cd(path):
         for _ in range(max_retries):
             p, output, error = _upload_results(encoded_share_token, output_file_name)
@@ -107,13 +98,16 @@ def _login(fname, user, password_path):
 
     for _ in range(config.RECONNECT_ATTEMPTS):
         try:
-            log("==> Trying to login into owncloud ", end="")
-            config.oc.login(user, password)  # May take long time to connect
+            status_str = "Trying to login into owncloud..."
+            with cfg.console.status(status_str):
+                # may take few minutes to connect
+                config.oc.login(user, password)
+
             password = ""
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(ok())
+            log(f"{status_str} {ok()}")
         except Exception as e:
             print_tb(e)
             _traceback = traceback.format_exc()
@@ -121,7 +115,7 @@ def _login(fname, user, password_path):
                 logging.warning(f"Sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
             else:
-                logging.error("E: Could not connect into Eudat")
+                logging.error("E: Could not connect into [blue]eudat[/blue]")
                 terminate()
         else:
             return False
@@ -132,16 +126,20 @@ def _login(fname, user, password_path):
 
 def login(user, password_path: Path, fname: str) -> None:
     if not user:
-        logging.error("E: User is empty")
+        log("E: Given user is empty string")
         terminate()
 
     if os.path.isfile(fname):
         f = open(fname, "rb")
         config.oc = pickle.load(f)
         try:
-            log(f"## Login into owncloud from the dumped object={fname} ", end="")
-            config.oc.get_config()
-            log(ok())
+            status_str = (
+                f"[bold]Login into owncloud from the dumped_object=[magenta]{fname}[/magenta] [yellow]...[/yellow] "
+            )
+            with cfg.console.status(status_str):
+                config.oc.get_config()
+
+            log(f"{status_str}{ok()}")
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)
@@ -179,14 +177,27 @@ def initialize_folder(folder_to_share) -> str:
                 except Exception as e:
                     raise e
             else:
-                log("==> Folder is already created")
+                log("==> folder is already created")
         else:
-            log("==> Folder is already created")
-
-    tar_dst = f"{tar_hash}/{tar_hash}.tar.gz"
+            log("==> folder is already created")
 
     try:
-        config.oc.put_file(f"./{tar_dst}", tar_source)
+        tar_dst = f"{tar_hash}/{tar_hash}.tar.gz"
+        log("## uploading into [green]EUDAT B2DROP[/green] this may take some time depending on the file size...")
+        is_already_uploaded = False
+        with suppress(Exception):
+            # File is first time created
+            file_info = config.oc.file_info(f"./{tar_dst}")
+            size = calculate_size(tar_source, _type="bytes")
+            log(file_info, "bold")
+            if float(file_info.attributes["{DAV:}getcontentlength"]) == size:
+                # check is it already uploaded or not via its file size
+                log(f"## {tar_source} is already uploaded into [green]EUDAT B2DROP")
+                is_already_uploaded = True
+
+        if not is_already_uploaded:
+            config.oc.put_file(f"./{tar_dst}", tar_source)
+
         os.remove(tar_source)
     except Exception as e:
         if type(e).__name__ == "HTTPResponseError":
@@ -195,7 +206,7 @@ def initialize_folder(folder_to_share) -> str:
             except Exception as e:
                 raise e
         else:
-            raise Exception("oc could not connected in order to upload the file")
+            raise Exception("oc could not connected in order to upload the file")  # noqa
 
     return tar_hash
 
@@ -203,6 +214,7 @@ def initialize_folder(folder_to_share) -> str:
 def get_size(f_name, oc=None) -> int:
     if oc is None:
         oc = config.oc
+
     return int(oc.file_info(f_name).attributes["{DAV:}getcontentlength"])
 
 
@@ -225,29 +237,34 @@ def is_oc_mounted() -> bool:
         return True
 
 
-def submit(provider, requester, job):
+def submit(provider, requester, job, required_confs=1):
     try:
-        tx_hash = _submit(provider, requester, job)
-        tx_receipt = get_tx_status(tx_hash)
-        if tx_receipt["status"] == 1:
-            processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
-            log(vars(processed_logs[0].args))
-            try:
-                log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
-            except IndexError:
-                log(f"E: Tx({tx_hash}) is reverted")
+        tx_hash = _submit(provider, requester, job, required_confs)
+        if required_confs >= 1:
+            tx_receipt = get_tx_status(tx_hash)
+            if tx_receipt["status"] == 1:
+                processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                log(vars(processed_logs[0].args))
+                try:
+                    log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
+                except IndexError:
+                    log(f"E: Tx({tx_hash}) is reverted")
+        else:
+            log(f"tx_hash={tx_hash}", "bold")
     except QuietExit:
         pass
     except Exception as e:
         print_tb(e)
 
+    return tx_hash
 
-def _submit(provider, requester, job):
+
+def _submit(provider, requester, job, required_confs=1):
     job.Ebb.is_requester_valid(requester)
     job.Ebb.is_eth_account_locked(requester)
     provider = cfg.w3.toChecksumAddress(provider)
     provider_info = job.Ebb.get_provider_info(provider)
-    log(f"==> provider_fId={provider_info['f_id']}")
+    log(f"==> provider_fid=[magenta]{provider_info['f_id']}")
     try:
         _git.is_repo(job.folders_to_share)
     except:
@@ -255,40 +272,43 @@ def _submit(provider, requester, job):
         sys.exit(1)
 
     for idx, folder in enumerate(job.folders_to_share):
-        if idx != 0:
-            print("")
+        if not isinstance(folder, bytes):
+            if idx != 0:
+                print("")
 
-        log(f"==> folder_to_share={folder}")
-        try:
-            _git.initialize_check(folder)
-            _git.commit_changes(folder)
-            folder_hash = initialize_folder(folder)
-        except Exception as e:
-            print_tb(e)
-            sys.exit(1)
+            log(f"==> folder_to_share={folder}")
+            try:
+                _git.initialize_check(folder)
+                _git.commit_changes(folder)
+                folder_hash = initialize_folder(folder)
+            except Exception as e:
+                print_tb(e)
+                sys.exit(1)
 
-        if idx == 0:
-            job_key = folder_hash
+            if idx == 0:
+                job_key = folder_hash
 
-        # required to send string as bytes
-        value = cfg.w3.toBytes(text=folder_hash)
-        job.source_code_hashes.append(value)
-        job.source_code_hashes_str.append(value.decode("utf-8"))
-        if not share_single_folder(folder_hash, provider_info["f_id"]):
-            sys.exit(1)
+            # required to send string as bytes
+            value = cfg.w3.toBytes(text=folder_hash)
+            job.source_code_hashes.append(value)
+            job.source_code_hashes_str.append(value.decode("utf-8"))
+            if not share_single_folder(folder_hash, provider_info["f_id"]):
+                sys.exit(1)
 
-        time.sleep(0.25)
+            time.sleep(0.25)
+        else:
+            code_hash = folder
+            job.source_code_hashes.append(code_hash)
+            job.source_code_hashes_str.append(code_hash.decode("utf-8"))
 
-    log()
     job.price, *_ = job.cost(provider, requester)
-    log("==> Submitting the job")
     # print(job.source_code_hashes)
     try:
-        return job.Ebb.submit_job(provider, job_key, job, requester)
+        return job.Ebb.submit_job(provider, job_key, job, requester, required_confs=required_confs)
     except QuietExit:
         sys.exit(1)
     except Exception as e:
         print_tb(e)
-        log(f"E: Unlock your Ethereum Account({requester})")
-        log("#> In order to unlock an account you can use: ~/eBlocPOA/client.sh", "yellow")
+        # log(f"E: Unlock your Ethereum Account({requester})")
+        # log("#> In order to unlock an account you can use: ~/eBlocPOA/client.sh")
         sys.exit(1)

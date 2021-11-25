@@ -1,0 +1,45 @@
+* NAS Parallel Benchmarks
+
+site: [[https://www.nas.nasa.gov/software/npb.html]]
+
+#+BEGIN_SRC bash
+wget https://www.nas.nasa.gov/assets/npb/NPB3.3.1.tar.gz
+tar -xvf NPB3.3.1.tar.gz
+cd NPB3.3.1/NPB3.3-SER
+cp config/make.def.template config/make.def
+
+make bt CLASS=B
+/usr/bin/time -v bin/bt.B.x inputbt.data
+
+make sp CLASS=B
+/usr/bin/time -v bin/sp.B.x inputsp.data
+
+make ua CLASS=B
+/usr/bin/time -v bin/ua.B.x inputua.data
+
+make lu CLASS=B
+/usr/bin/time -v bin/lu.B.x inputlu.data
+#+END_SRC
+
+~(/usr/bin/time -v bin/lu.B.x inputlu.data) >> output_.txt 2>&1~
+
+~CLASSES: [A and B], [C]~
+
+#+BEGIN_SRC markdown
+To make a NAS benchmark type
+
+      make <benchmark-name> CLASS=<class>
+
+where <benchmark-name> is "bt", "cg", "ep", "ft", "is", "lu",
+                          "lu-hp", "mg", "sp", or "ua"
+      <class>          is "S", "W", "A", "B", "C" or "D"
+#+END_SRC
+
+** Requirements
+
+#+begin_src bash
+sudo apt-get install -y openmpi-bin
+sudo apt-get install -y libopenmpi-dev
+sudo apt-get install -y fort77
+sudo apt-get install -y gfortran
+#+end_src
