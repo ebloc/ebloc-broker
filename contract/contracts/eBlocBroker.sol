@@ -820,9 +820,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 require(_dataPriceSetBlockNum == _dataPriceSetBlockNum);
                 // Data is provided by the provider with its own price
                 uint32 _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price;
-                if (_dataPrice > 1)
+                if (_dataPrice > 1) {
                     cacheCost = cacheCost.add(_dataPrice);
-
+                }
                 return (1, cacheCost);
             }
         }

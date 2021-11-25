@@ -9,7 +9,7 @@ APScheduler==3.8.0
 aspy.refactor-imports==2.1.1
 astroid==2.8.4
 asttokens==2.0.4
-async-timeout==4.0.0
+async-timeout==3.0.1
 attrdict==2.0.1
 attrs==21.2.0
 AuthEncoding==4.1
@@ -322,7 +322,7 @@ WSGIProxy2==0.4.6
 WTForms==2.3.1
 xlrd==1.2.0
 yapf==0.31.0
-yarl==1.6.3
+yarl==1.7.0
 yfinance==0.1.63
 z3c.pt==3.3.0
 zc.lockfile==2.0
@@ -352,4 +352,3 @@ zope.security==5.1.1
 zope.tales==5.1
 zope.testing==4.9
 zope.traversing==4.4.1
-vulcano==0.5.3
