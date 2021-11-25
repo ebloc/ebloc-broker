@@ -1,45 +1,49 @@
 * How to Use eBlocBroker
 
-
 ** Overview
 eBlocBroker is a blockchain based autonomous computational resource broker.
 
-** Website: [[http://ebloc.cmpe.boun.edu.tr]] or [[http://ebloc.cmpe.boun.edu.tr]]
-
+** Website: [[http://ebloc.cmpe.boun.edu.tr]]
 # http://ebloc.org
+
 - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
 
 ** Build dependencies
-- [[https://github.com/SchedMD/slurm][Slurm]]
-- [[https://github.com/ethereum/go-ethereum/wiki/geth][Geth]]
-- [[https://ipfs.io/docs/install/][IPFS]]
+- [[https://github.com/SchedMD/slurm][Slurm]], [[https://github.com/ethereum/go-ethereum/wiki/geth][Geth]], [[https://ipfs.io/docs/install/][IPFS]]
 
 ** How to install required packages
+Setup is done using [[setup.sh]] file.
 
 ~$ source setup.sh~
 
-** Submit Job
+** Requester
 
-~$ ~/ebloc-broker/broker/submit_base.py yaml_file.yaml~
+*** Submit Job
+
+~$ broker/submit_base.py yaml_file.yaml~
+
+Example ~yaml~ file:
+
+Exmaple yaml file:
 
 #+begin_src yaml
 config:
-    _base_dir: /home/alper/test_eblocbroker/test_data/base/
+    _base_dir: /home/user/test_eblocbroker/test_data/base/
     _source_code:
         cache_type: public
-        path: ~/test_eblocbroker/source_code
+        path: /home/user/test_eblocbroker/source_code
         storage_hours: 0
         storage_id: ipfs
-    base_data_path: ~/test_eblocbroker/test_data/base/
+    base_data_path: /home/user/test_eblocbroker/test_data/base/
     data:
         data1:
             cache_type: public
-            path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+            path: /home/user/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
             storage_hours: 0
             storage_id: ipfs
         data2:
             cache_type: public
-            path: ~/test_eblocbroker/test_data/base/data/data1
+            path: /home/user/test_eblocbroker/test_data/base/data/data1
             storage_hours: 0
             storage_id: ipfs
         # data3:
@@ -53,10 +57,17 @@ config:
         address: '0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA'
 #+end_src
 
-
-- ~cache_type~ should be variable from [ ~public~, ~private~ ]
+- ~path~ should represented as full path of the corresponding folder.
+- ~cache_type~ should be variable from [​~public~,~private~​]
 - ~storaage_id~ should be variable from [ ~ipfs~, ~ipfs_gpg~, ~none~, ~eudat~, ~gdrive~ ]
 
+------------
+
+** Provider
+
+*** Screenshot of provider GUI:
+
+[[file:/docs/gui1.png]]
 
 # ## How to connect into Private Ethereum Blockchain (eBloc)
 # - Connect into [eBlocPOA](https://github.com/ebloc/eBlocPOA)

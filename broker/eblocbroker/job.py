@@ -4,12 +4,13 @@ import os
 import sys
 from ast import literal_eval as make_tuple
 from typing import Dict, List
-from broker.eblocbroker.data import is_data_registered
+
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker.bloxber_calls import call
+from broker.eblocbroker.data import is_data_registered
 from broker.errors import QuietExit
 from broker.lib import calculate_folder_size, get_tx_status
 from broker.libs import _git

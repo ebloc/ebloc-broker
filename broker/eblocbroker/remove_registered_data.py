@@ -2,10 +2,10 @@
 
 from broker import cfg
 from broker._utils.tools import log
+from broker.config import env
+from broker.eblocbroker.data import is_data_registered, pre_check_data
 from broker.lib import get_tx_status
 from broker.utils import print_tb
-from broker.config import env
-from broker.eblocbroker.data import pre_check_data, is_data_registered
 
 
 def main():

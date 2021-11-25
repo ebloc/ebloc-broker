@@ -84,16 +84,6 @@ sudo npm install -g ganache-cli
 # npm i --package-lock-only
 # npm audit fix
 
-# slurm
-# =====
-sudo apt update
-sudo apt install -y mysql-server
-sudo apt-get install -y libmunge-dev libmunge2 munge
-sudo apt-get install -y mysql-client libmysqlclient-dev default-libmysqlclient-dev
-
-# systemctl setup
-sudo timedatectl set-ntp true
-
 # python
 # ======
 sudo apt install software-properties-common -y
@@ -155,6 +145,7 @@ cd ~
 # Required for sync with Bloxberg blockchain
 sudo apt install systemd-timesyncd
 sudo timedatectl set-timezone UTC
+sudo timedatectl set-ntp true
 sudo systemctl restart systemd-timesyncd.service
 systemctl status systemd-timesyncd
 timedatectl status
@@ -197,6 +188,13 @@ provider_setup () {
     sudo systemctl enable slurmdbd
     sudo systemctl enable munge
     sudo systemctl start munge
+
+    # mysql
+    # =====
+    sudo apt update
+    sudo apt install -y mysql-server
+    sudo apt-get install -y libmunge-dev libmunge2 munge
+    sudo apt-get install -y mysql-client libmysqlclient-dev default-libmysqlclient-dev
 
     mkdir -p /tmp/run
     sudo groupadd eblocbroker
