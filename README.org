@@ -65,6 +65,10 @@ config:
 
 ** Provider
 
+Provider should run: [[./broker/run.py]] Python script.
+
+~$ ./broker/run.py~
+
 *** Screenshot of provider GUI:
 
 [[file:/docs/gui1.png]]
