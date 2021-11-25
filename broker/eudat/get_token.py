@@ -4,10 +4,7 @@ from os.path import expanduser
 
 import owncloud
 
-home = expanduser("~")
-
-# password read from the file
-f = open(home + "/.ebloc-broker/eudat_password.txt", "r")
+f = open(expanduser("~/.ebloc-broker/eudat_password.txt"), "r")
 password = f.read().rstrip().strip(" ")
 f.close()
 

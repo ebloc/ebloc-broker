@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import binascii
-import errno
 import hashlib
 import json
 import ntpath
@@ -17,7 +16,6 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
-from typing import Dict
 
 import base58
 
@@ -25,26 +23,25 @@ from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
 from broker._utils._log import br
-from broker._utils.tools import WHERE, is_process_on, log, print_tb, run
+from broker._utils.tools import WHERE, _exit, is_process_on, log, print_tb, run
 from broker.config import env, logging
 from broker.errors import QuietExit
 
-ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 Qm = b"\x12 "
-empty_bytes32 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+empty_bytes32 = (
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+)
 zero_bytes32 = "0x00"
-yes = set(["yes", "y", "ye", "ys", "yy", "yey"])
-no = set(["no", "n", "nn"])
-EXIT_FAILURE = 1
 
 
 class BaseEnum(IntEnum):
-    def __str__(self):
-        return str(self.value)
-
     def __int__(self):
         return int(self.value)
+
+    def __str__(self):
+        return str(self.value)
 
     def __eq__(self, other):
         return int(self.value) == other
@@ -134,7 +131,7 @@ def untar(tar_file, extract_to):
             # if tar itself already exist inside the same directory along with
             # `.git` file
             if name not in accept_files:
-                log(f"==> {tar_file} is already extracted into\n{extract_to}")
+                log(f"==> {tar_file} is already extracted into\n    {extract_to}")
                 return
     # tar --warning=no-timestamp
     cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
@@ -154,8 +151,8 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
-    except socket.error as ex:
-        print(ex)
+    except socket.error as e:
+        print(e)
         return False
 
 
@@ -253,7 +250,7 @@ def is_transaction_valid(tx_hash) -> bool:
 
 
 def is_transaction_passed(tx_hash) -> bool:
-    receipt = cfg.w3.eth.getTransactionReceipt(tx_hash)
+    receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
     with suppress(Exception):
         if receipt["status"] == 1:
             return True
@@ -294,7 +291,7 @@ def bytes32_to_ipfs(bytes_array):
 
 
 def _ipfs_to_bytes32(hash_str: str):
-    """Ipfs hash is converted into bytes32 format."""
+    """Convert ipfs hash into bytes32 format."""
     bytes_array = base58.b58decode(hash_str)
     b = bytes_array[2:]
     return binascii.hexlify(b).decode("utf-8")
@@ -306,8 +303,11 @@ def ipfs_to_bytes32(ipfs_hash: str) -> bytes:
 
 
 def byte_to_mb(size_in_bytes: float) -> int:
-    """Instead of a size divisor of 1024 * 1024 you could use the
-    bitwise shifting operator (<<), i.e. 1<<20 to get megabytes."""
+    """Convert byte into MB.
+
+    Instead of a size divisor of 1024 * 1024 you could use the
+    bitwise shifting operator (<<), i.e. 1<<20 to get megabytes.
+    """
     MBFACTOR = float(1 << 20)
     return int(int(size_in_bytes) / MBFACTOR)
 
@@ -353,24 +353,6 @@ def read_file(fname):
         # else clause instead of finally for things that
         # only happen if there was no exception
         file.close()
-
-
-def read_json(path, is_dict=True):
-    if os.path.isfile(path) and os.path.getsize(path) > 0:
-        with open(path) as json_file:
-            data = json.load(json_file)
-            if is_dict:
-                if isinstance(data, dict):
-                    return data
-                else:
-                    return {}
-            else:
-                if data:
-                    return data
-                else:
-                    return None
-    else:
-        raise
 
 
 def is_gzip_file_empty(filename):
@@ -423,36 +405,7 @@ def remove_empty_files_and_folders(dir_path) -> None:
                     os.rmdir(full_path)
 
 
-def _remove(path: str, is_warning=True):
-    """Remove file or folders based on its the file type.
-
-    __ https://stackoverflow.com/a/10840586/2402577
-    """
-    try:
-        if path == "/":
-            raise ValueError("E: Attempting to remove /")
-
-        if os.path.isfile(path):
-            with suppress(FileNotFoundError):
-                os.remove(path)
-        elif os.path.isdir(path):
-            # deletes a directory and all its contents
-            shutil.rmtree(path)
-        else:
-            if is_warning:
-                log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
-            return
-
-        log(f"==> {WHERE(1)}\n{path} is removed")
-    except OSError as e:
-        # Suppress the exception if it is a file not found error.
-        # Otherwise, re-raise the exception.
-        if e.errno != errno.ENOENT:
-            print_tb(e)
-            raise e
-
-
-def is_ipfs_on(is_print=True) -> bool:
+def is_ipfs_on(is_print=False) -> bool:
     """Check whether ipfs runs on the background."""
     return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0, is_print=is_print)
 
@@ -507,7 +460,7 @@ def run_ipfs_daemon():
             if output:
                 log(output.rstrip(), "bold blue")
 
-        if is_ipfs_on():
+        if is_ipfs_on(is_print=True):
             return True
     return False
 
@@ -519,6 +472,7 @@ def check_ubuntu_packages(packages=None):
     for package in packages:
         if not is_dpkg_installed(package):
             return False
+
     return True
 
 
@@ -536,6 +490,25 @@ def is_dpkg_installed(package_name) -> bool:
 
 
 def terminate(msg="", is_traceback=True, lock=None):
+    """Exit."""
+    if msg:
+        log(f"{WHERE(1)} Terminated: ", "bold red", end="")
+        if msg[:3] == "E: ":
+            log(msg[3:], "bold")
+        else:
+            log(msg, "bold")
+
+    if is_traceback:
+        print_tb()
+
+    if lock:
+        with suppress(Exception):
+            lock.close()
+
+    _exit()
+
+
+def terminate_killall(msg="", is_traceback=True, lock=None):
     """Terminate the Driver python script and all the dependent python programs to it."""
     if msg:
         log(f"{WHERE(1)} Terminated: ", "bold red", end="")
@@ -561,7 +534,7 @@ def terminate(msg="", is_traceback=True, lock=None):
         sys.exit(1)
 
 
-def question_yes_no(message, is_terminate=False):
+def question_yes_no(message, is_exit=False):
     if "[Y/n]:" not in message:
         message = f"{message} [Y/n]: "
 
@@ -569,15 +542,17 @@ def question_yes_no(message, is_terminate=False):
     getch = _Getch()
     while True:
         choice = getch().lower()
-        if choice in yes:
+        if choice in set(["yes", "y", "ye", "ys", "yy", "yey"]):
             log(choice)
-            break
-        elif choice in no or choice in ["\x04", "\x03"]:
-            if is_terminate:
-                log("\n")
-                terminate()
+            return True
+        elif choice in set(["no", "n", "nn"]) or choice in ["\x04", "\x03"]:
+            if is_exit:
+                log()
+                _exit()
+                # terminate(is_traceback=False)
             else:
-                sys.exit(1)
+                return False
+                # sys.exit(1)
         else:
             log()
             log(
@@ -664,42 +639,3 @@ def compress_folder(folder_path, is_exclude_git=False):
 def dump_dict_to_file(filename, job_keys):
     with open(filename, "w") as f:
         json.dump(job_keys, f)
-
-
-class Link:
-    def __init__(self, path_from, path_to) -> None:
-        self.data_map = {}  # type: Dict[str, str]
-        self.path_from = path_from  # Path automatically removes / at the end if there is
-        self.path_to = path_to
-
-    def link_folders(self, paths=None):
-        """Create linked folders under the data_link folder."""
-        from os import listdir
-        from os.path import isdir, join
-
-        if not paths:
-            # instead of full path only returns folder names
-            paths = [f for f in listdir(self.path_from) if isdir(join(self.path_from, f))]
-            is_only_folder_names = True
-        else:
-            is_only_folder_names = False
-
-        for target in paths:
-            if is_only_folder_names:
-                folder_name = target
-                target = f"{self.path_from}/{target}"
-            else:
-                folder_name = path_leaf(target)
-
-            try:
-                folder_hash = generate_md5sum(target)
-            except Exception as e:
-                raise e
-
-            self.data_map[folder_name] = folder_hash
-            destination = f"{self.path_to}/{folder_hash}"
-            run(["ln", "-sfn", target, destination])
-            log(f" *   [bold green]{target}[/bold green]", "bold yellow")
-            log(f" └─> {destination}", "bold yellow")
-            folder_new_hash = generate_md5sum(destination)
-            assert folder_hash == folder_new_hash, "Hash does not match original and linked folder"

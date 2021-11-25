@@ -5,8 +5,8 @@ import os
 
 from dotenv import load_dotenv
 
+from broker._utils.tools import read_json
 from broker.config import env
-from broker.utils import read_json
 
 # load .env from the given path
 load_dotenv(os.path.join(f"{env.HOME}/.ebloc-broker/", ".env"))
@@ -22,13 +22,13 @@ def remove_element(data, element_to_remove):
             del data[element_to_remove]
 
 
-fname = os.getenv("LOG_PATH") + "/" + "cachingRecord.json"
-print(fname)
-if not os.path.isfile(fname):
+fn = env.LOG_PATH + "/" + "cachingRecord.json"
+print(fn)
+if not os.path.isfile(fn):
     data = {}
 else:
     try:
-        data = read_json(fname)
+        data = read_json(fn)
     except:
         pass
 
@@ -43,5 +43,5 @@ if "jobKey" in data:
     print(data["jobKey"])
 
 remove_element(data, "ipfsHash")
-with open(fname, "w") as data_file:
+with open(fn, "w") as data_file:
     json.dump(data, data_file)

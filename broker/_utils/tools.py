@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # from os import listdir
 import decimal
+import errno
+import json
 import linecache
 import os
+import shutil
 import signal
 import sys
 import threading
@@ -15,21 +18,18 @@ from subprocess import PIPE, CalledProcessError, Popen, check_output
 
 from pytz import timezone, utc
 
-from broker.errors import HandlerException, QuietExit
-
 try:
     import thread
 except ImportError:
     import _thread as thread  # noqa
 
 try:
-    from broker._utils._log import br
-except:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils._log import br
-
-try:
+    from broker.errors import HandlerException, QuietExit
+    from broker._utils._log import br, ok
     from broker._utils._log import log
-except:  # if ebloc_broker used as a submodule
+except ImportError:  # if ebloc_broker used as a submodule
+    from ebloc_broker.broker.errors import HandlerException, QuietExit
+    from ebloc_broker.broker._utils._log import br, ok
     from ebloc_broker.broker._utils._log import log
 
 
@@ -54,10 +54,20 @@ def merge_two_dicts(x, y):
     return z
 
 
+def countdown(seconds: int):
+    log(f"## sleep_time={seconds}")
+    while seconds:
+        mins, secs = divmod(seconds, 60)
+        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
+        print(f" * {_time()} | {timer}", end="\r")
+        time.sleep(1)
+        seconds -= 1
+
+
 def timenow() -> int:
     """Return UTC timestamp."""
     d = datetime.utcnow()
-    print(d)
+    log(f"UTC_timestamp={d}", "bold")
     epoch = datetime(1970, 1, 1)
     return int((d - epoch).total_seconds())
 
@@ -72,7 +82,10 @@ def _timestamp(zone="Europe/Istanbul") -> int:
     return int(time.mktime(datetime.now(timezone(zone)).timetuple()))
 
 
-def _time(zone="Europe/Istanbul"):
+def _time(zone="Europe/Istanbul", _type=""):
+    if _type == "hour":
+        return datetime.now(timezone(zone)).strftime("%H:%M:%S")
+
     return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -96,7 +109,7 @@ def utc_to_local(utc_dt, zone="Europe/Istanbul"):
 
 
 def PrintException():
-    exc_type, exc_obj, tb = sys.exc_info()
+    exc_type, exc_obj, tb = sys.exc_info()  # noqa
     f = tb.tb_frame
     lineno = tb.tb_lineno
     filename = f.f_code.co_filename
@@ -107,40 +120,76 @@ def PrintException():
 
 def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
-    if isinstance(message, QuietExit):
-        if str(message):
-            log(message, "bold")
+    if message:
+        if isinstance(message, QuietExit):
+            if str(message):
+                log(message, "bold")
 
-        return
+            return
 
-    if isinstance(message, BaseException):
-        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-        message = template.format(type(message).__name__, message.args)
+        if isinstance(message, BaseException):
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(message).__name__, message.args)
 
     tb_text = "".join(traceback.format_exc())
     if is_print_exc and tb_text != "NoneType: None\n":
-        log(tb_text, "bold")
+        log(tb_text.rstrip(), "bold", where_back=1)
 
+    if message and "An exception of type Exception occurred" not in message:
+        log(message, where_back=1)
     # console.print_exception()  #arg: show_locals=True
-    if not message:
-        log(f"{WHERE(1)} ", "bold blue")
-    else:
-        with suppress(Exception):
-            log(f"{br(PrintException())} ", "bold blue", end="")
+    # if not message:
+    #     log(f"{WHERE(1)} ", "bold blue", where_back=1)
+    # else:
+    #     with suppress(Exception):
+    #         log(f"{br(PrintException())} ", "bold blue", end="", where_back=1)
 
-        log(f"{WHERE(1)}", "bold blue")
-        if "An exception of type CalledProcessError occurred" not in message:
-            if "Warning: " not in message or "E: " not in message:
-                log(f"E: {message}")
-            else:
-                log(message)
+    #     if "An exception of type CalledProcessError occurred" not in message:
+    #         log()
+    #         if "Warning: " not in message or "E: " not in message:
+    #             message = str(message).replace("\n", "")
+    #             log(f"E: {message}", where_back=1)
+    #         else:
+    #             message = str(message).replace("\n", "")
+    #             log(message, where_back=1)
 
 
-def delete_last_line(n=1):
+def _remove(path: str, is_warning=True):
+    """Remove file or folders based on its the file type.
+
+    __ https://stackoverflow.com/a/10840586/2402577
+    """
+    try:
+        if path == "/":
+            raise ValueError("E: Attempting to remove root(/)")
+
+        if os.path.isfile(path):
+            with suppress(FileNotFoundError):
+                os.remove(path)
+        elif os.path.isdir(path):
+            # deletes a directory and all its contents
+            shutil.rmtree(path)
+        else:
+            if is_warning:
+                log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
+
+            return
+
+        if is_warning:
+            log(f"==> {WHERE(1)} {path} is removed")
+    except OSError as e:
+        # Suppress the exception if it is a file not found error.
+        # Otherwise, re-raise the exception.
+        if e.errno != errno.ENOENT:
+            print_tb(e)
+            raise e
+
+
+def delete_multiple_lines(n=1):
     """Delete the last line in the STDOUT."""
     for _ in range(n):
         sys.stdout.write("\x1b[1A")  # cursor up one line
-        sys.stdout.write("\x1b[2K")  # delete last line
+        sys.stdout.write("\x1b[2K")  # delete the last line
 
 
 def decimal_count(value, is_drop_trailing_zeros=True) -> int:
@@ -169,10 +218,15 @@ def round_float(v, ndigits=2) -> float:
     return float(v_str)
 
 
-def _exit(msg):
+def _exit(msg=""):
     """Immediate program termination."""
-    log(msg)
-    log("## Exiting")
+    if msg:
+        if msg[:2] != "E:":
+            log(f"E: {msg}")
+        else:
+            log(msg)
+
+        log("## Exiting")
     os._exit(0)
 
 
@@ -280,7 +334,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
     """
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()  # noqa
+    p1.stdout.close()  # type: ignore
     p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()  # type: ignore
     output = p3.communicate()[0].decode("utf-8").strip().splitlines()
@@ -300,7 +354,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
             running_pid = out.strip().split()[1]
             if running_pid in pids:
                 if is_print:
-                    log(f"==> {name} is already running on the background, its pid={running_pid}")
+                    log(f"==> [green]{name}[/green] is already running on the background, its pid={running_pid}")
 
                 return True
         else:
@@ -326,10 +380,10 @@ def mkdirs(paths) -> None:
         mkdir(path)
 
 
-def kill_process_by_name(process_name):
+def kill_process_by_name(process_name: str):
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()  # noqa
+    p1.stdout.close()  # type: ignore
     p3 = Popen(["awk", "{print $2}"], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()
     output = p3.communicate()[0].decode("utf-8").strip()
@@ -337,20 +391,6 @@ def kill_process_by_name(process_name):
     for pid in lines:
         if pid.isnumeric():
             os.kill(int(pid), signal.SIGKILL)
-
-
-def handler(signum, frame):
-    """Register an handler for the timeout.
-
-    __ https://docs.python.org/3/library/signal.html#example
-    """
-    if any(x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py"]):
-        # Signal handler called with signal=14 <frame at 0x7f9f3d4ff840, file
-        # '/broker/eblocbroker/log_job.py', line 28, code log_loop>
-        pass
-    else:
-        print_tb(f"E: Signal handler called with signum={signum} frame={frame}")
-        raise HandlerException("Forever is over, end of time")
 
 
 def bytes_to_mb(B) -> float:
@@ -392,3 +432,43 @@ def exit_after(s):
         return inner
 
     return outer
+
+
+def read_json(path, is_dict=True):
+    if os.path.isfile(path) and os.path.getsize(path) == 0:
+        raise Exception("File size is empty")
+
+    with open(path) as json_file:
+        data = json.load(json_file)
+        if is_dict:
+            if isinstance(data, dict):
+                return data
+            else:
+                return {}
+        else:
+            if data:
+                return data
+            else:
+                return None
+
+
+def remove_trailing_zeros(number):
+    return ("%f" % float(number)).rstrip("0").rstrip(".")
+
+
+def handler(signum, frame):
+    """Register an handler for the timeout.
+
+    Example error: Signal handler called with signum=14 frame=<frame at
+    0x7f2fb1cece40, file '/usr/lib/python3.8/threading.py', line 1027
+
+    __  https://docs.python.org/3/library/signal.html#example
+    """
+    if any(
+        x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py", "threading.py", "utils.py"]
+    ):
+        pass
+    else:
+        log(f"E: Signal handler called with signum={signum} frame={frame}")
+        traceback.print_stack()
+        raise HandlerException("Forever is over, end of time")

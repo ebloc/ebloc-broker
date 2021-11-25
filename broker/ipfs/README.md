@@ -1,9 +1,6 @@
 # Enable Port Google-Instance:
 
-
 - `Navigation Menu` => `VPN Network` => `Firewall` => `Create Firewall Rule`
-
-
 - Name: `default-ipfs`
 - Logs: `Off`
 - Type: `Ingress`
@@ -33,6 +30,7 @@ fi
 go get github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen
 ipfs-swarm-key-gen > ~/.ipfs/swarm.key && cat ~/.ipfs/swarm.key && echo ""
 export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon
+
 ipfs swarm addrs
 ```
 
@@ -57,14 +55,13 @@ public
   rich rules:
 ```
 
-
 # All other nodes:
 
 - Port check: `nc -v <ip> 4001`
 
 ```
-sudo netstat -lptn | grep 4001
-ipfs config Addresses
+# sudo netstat -lptn | grep 4001
+# ipfs config Addresses
 $ gcloud compute firewall-rules list | grep 'ipfs'
 default-ipfs            default  INGRESS    1000      tcp:4001
 ```
@@ -79,7 +76,7 @@ if [[ ! -d "$DIR" ]]; then
 	ipfs init
 fi
 ipfs bootstrap rm --all
-ipfs config show | grep "PeerID"
+ipfs config show | grep "PeerID" | awk '{print $2}' | tr -d \"
 ipfs bootstrap add /ip4/35.240.104.228/tcp/4001/p2p/12D3KooWLqjUfi8fjz5tncRJXet4gUiK75VRJnB5E16Z8mVJ9c8N
 
 

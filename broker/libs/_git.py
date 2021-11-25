@@ -11,21 +11,24 @@ import git
 from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
+from broker._utils._log import ok
 from broker.config import env, logging
-from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, run
+from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
 
 
-def initialize_check(path) -> bool:
+def initialize_check(path):
     """Validate if .git/ folder exist within the target folder."""
     with cd(path):
         if not is_initialized(path):
             try:
+                log(f"## git_repo={path}")
+                log("Creating an empty Git repository ", end="")
                 run(["git", "init", "--initial-branch=master"])
+                log(ok())
                 add_all()
-            except Exception as error:
-                logging.error(f"E: {error}")
-                return False
-        return True
+            except Exception as e:
+                log(f"E: {e}")
+                raise e
 
 
 def is_initialized(path) -> bool:
@@ -114,33 +117,34 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     return patch_upload_name, patch_file, is_file_empty
 
 
-def add_all(repo=None) -> bool:
-    if not repo:
-        repo = git.Repo(".", search_parent_directories=True)
-
-    with suppress(Exception):
-        # subprocess.run(["chmod", "-R", "755", "."])
-        # subprocess.run(["chmod", "-R", "775", ".git"])  # https://stackoverflow.com/a/28159309/2402577
-        # required for files to be access on the cluster side due to permission issues
-        #: if `chmod -R 775 .` is not applied its source_code hash may change user to user
-        run(["sudo", "chmod", "-R", "775", "."])
-
+def add_all(repo=None):
+    """Add all into git."""
     try:
-        repo.git.add(A=True)  # git add -A .
+        if not repo:
+            repo = git.Repo(".", search_parent_directories=True)
+
+        log("all files in the entire working tree are updated in the Git repository ", end="")
+        repo.git.add(A=True)
+        log(ok())
         try:
-            changed_file_len = len(repo.index.diff("HEAD"))  # git diff HEAD --name-only | wc -l
+            #: git diff HEAD --name-only | wc -l
+            changed_file_len = len(repo.index.diff("HEAD", ignore_blank_lines=True, ignore_space_at_eol=True))
         except:
             # if it is the first commit HEAD might not exist
-            changed_file_len = len(repo.git.diff("--cached", "--name-only").split("\n"))
+            changed_file_len = len(
+                repo.git.diff("--cached", "--ignore-blank-lines", "--ignore-space-at-eol", "--name-only").split("\n")
+            )
 
         if changed_file_len > 0:
-            repo.git.commit("-m", "update")  # git commit -m update
-        return True
-    except:
-        return False
+            log("Record changes to the repository ", end="")
+            repo.git.commit("-m", "update")
+            log(ok())
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
-def commit_changes(path) -> bool:
+def commit_changes(path):
     with cd(path):
         repo = git.Repo(".", search_parent_directories=True)
         try:
@@ -153,26 +157,29 @@ def commit_changes(path) -> bool:
         else:
             changed_files = [item.a_path for item in repo.index.diff(None)]
             if len(changed_files) > 0:
-                logging.info(f"Adding changed files:\{changed_files}")
+                log("==> adding changed files:")
+                for _file in changed_files:
+                    log(_file, "bold")
+
                 repo.git.add(A=True)
 
             if len(repo.index.diff("HEAD")) == 0:
-                log(f"==> {path} is committed with the given changes using git")
-                return True
+                log(f"==> {path}\n\tis committed with the given changes using git")
 
         try:
             add_all(repo)
         except Exception as e:
-            logging.error(f"E: {e}")
-            return False
-
-        return True
+            log(f"E: {e}")
+            raise e
 
 
 def apply_patch(git_folder, patch_file, is_gpg=False):
     """Apply git patch.
 
-    https://stackoverflow.com/a/15375869/2402577
+    output = repo.git.apply("--reject", "--whitespace=fix",
+               "--ignore-space-change", "--ignore-whitespace", "--verbose", patch_file)
+
+    __ https://stackoverflow.com/a/15375869/2402577
     """
     if is_gpg:
         cfg.ipfs.decrypt_using_gpg(patch_file)
@@ -191,7 +198,6 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
         with open(patch_file, "a") as myfile:
             myfile.write("\n")
 
-        # output = repo.git.apply("--reject", "--whitespace=fix", patch_file)
         run(
             [
                 "git",
@@ -208,10 +214,12 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
 
 def is_repo(folders):
     for folder in folders:
-        with cd(folder):
-            if not is_initialized(folder):
-                logging.warning(f".git does not exits in {folder}. Applying: `git init`")
-                run(["git", "init", "--initial-branch=master"])
+        if not isinstance(folder, bytes):
+            with cd(folder):
+                if not is_initialized(folder):
+                    log(f"warning: .git does not exits in {folder}. Applying: git init ", end="")
+                    run(["git", "init", "--initial-branch=master"])
+                    log(ok())
 
 
 def _generate_git_repo(folder):
@@ -224,12 +232,17 @@ def _generate_git_repo(folder):
 
 
 def generate_git_repo(folders):
-    """Create git repositories in the given folders if it does not exist."""
+    """Create git repositories in the given folders if it does not exist.
+
+    IMPORTANT NOTE: consider ignoring to push .git into the submitted folder
+    """
     if isinstance(folders, list):
         for folder in folders:
-            _generate_git_repo(folder)
-    else:  # if string given "/home/user/folder" retreive string instead of "/" with for above
-        _generate_git_repo(folders)
+            if not isinstance(folder, bytes):
+                _generate_git_repo(folder)
+    else:
+        if not isinstance(folders, bytes):
+            _generate_git_repo(folders)
 
 
 # def extract_gzip():

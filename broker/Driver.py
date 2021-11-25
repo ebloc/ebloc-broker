@@ -9,30 +9,26 @@ import time
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-from pprint import pprint
 
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
 from broker._utils import _log
-from broker._utils._log import _console_ruler, br, log
+from broker._utils._log import _console_ruler, log
 from broker._utils.tools import kill_process_by_name, print_tb
 from broker.config import Terminate, env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker import Contract
-from broker.eblocbroker.job import DataStorage
 from broker.errors import HandlerException, JobException, QuietExit
 from broker.helper import helper
 from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
 from broker.utils import (
-    CacheType,
     StorageID,
-    bytes32_to_ipfs,
     check_ubuntu_packages,
     eth_address_to_md5,
     get_time,
@@ -47,16 +43,11 @@ from broker.utils import (
     terminate,
 )
 
-# from threading import Thread
-# from multiprocessing import Process
-args = helper()
+pid = os.getpid()
+given_block_number = 0
 
-if vars(args)["latest"]:
-    given_block_number = cfg.Ebb.get_block_number()
-else:
-    given_block_number = vars(args)["bn"]
-
-pid = str(os.getpid())
+# # from threading import Thread
+# # from multiprocessing import Process
 
 
 def wait_until_idle_core_available():
@@ -65,7 +56,7 @@ def wait_until_idle_core_available():
         idle_cores = slurm.get_idle_cores(is_print=False)
         # log(f"idle_cores={idle_cores}", "blue")
         if idle_cores == 0:
-            sleep_timer(sleep_duration=60)
+            sleep_timer(60)
         else:
             break
 
@@ -73,13 +64,13 @@ def wait_until_idle_core_available():
 def _tools(block_continue):
     """Check whether the required functions are in use or not."""
     session_start_msg(env.SLURMUSER, block_continue, pid)
-    if not is_internet_on():
-        raise Terminate("Network connection is down. Please try again")
-
-    if not check_ubuntu_packages():
-        raise Terminate()
-
     try:
+        if not is_internet_on():
+            raise Terminate("Network connection is down. Please try again")
+
+        if not check_ubuntu_packages():
+            raise Terminate()
+
         if not env.IS_BLOXBERG:
             is_geth_on()
         else:
@@ -115,8 +106,6 @@ def _tools(block_continue):
             run_ipfs_daemon()
     except QuietExit as e:
         raise e
-    except Terminate as e:
-        raise e
     except Exception as e:
         print_tb(e)
         raise Terminate from e
@@ -132,74 +121,35 @@ class Driver:
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
         self.job_info = None
+        self.job_infos = {}
         self.requester_id: str = ""
         #: Indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
-    def is_job_received(self, key, index) -> None:
-        """Preventing to download or submit again."""
+    def set_job_recevied_mongodb(self, key, index) -> None:
         if self.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
-            raise JobException("## [ mongoDB ] Job is already received")
+            raise JobException("## [ mongo_db ] job is already received")
 
+    def is_job_received(self) -> None:
+        """Preventing to download or submit again."""
         if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
-            raise JobException("## Job is already completed.")
+            raise JobException("## job is already completed")
 
         if self.job_infos[0]["stateCode"] == state.code["REFUNDED"]:
-            raise JobException("## Job is refunded.")
+            raise JobException("## job is refunded")
 
         if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
-            raise JobException("warning: Job is already captured and in process or completed.")
+            raise JobException("warning: job is already captured and in process or completed")
 
-    def check_requested_job(self, key, index) -> None:
+    def check_requested_job(self) -> None:
         """Check status of the job."""
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
-            raise JobException("E: Requested job does not exist")
+            raise JobException("E: requested job does not exist")
 
         if not self.Ebb.does_requester_exist(self.requester_id):
             raise JobException("E: job owner is not registered")
 
-        self.is_job_received(key, index)
-
-    # def analyze_data(self, key, requester):
-    #     """Obtain information related to source-code data."""
-    #     for idx, source_code_hash_byte in enumerate(self.logged_job.args["sourceCodeHash"]):
-    #         if self.cloud_storage_id[idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
-    #             source_code_hash = bytes32_to_ipfs(source_code_hash_byte)
-    #             if idx == 0 and key != source_code_hash:
-    #                 log(f"E: IPFS hash does not match with the given source_code_hash.\n\t{key} != {source_code_hash}")
-    #                 continue
-    #         else:
-    #             source_code_hash = cfg.w3.toText(source_code_hash_byte)
-
-    #         received_storage_deposit = self.Ebb.get_received_storage_deposit(
-    #             env.PROVIDER_ID, requester, source_code_hash
-    #         )
-    #         job_storage_time = self.Ebb.get_job_storage_time(env.PROVIDER_ID, source_code_hash, _from=env.PROVIDER_ID)
-    #         # TODO bos donuyor sanki
-    #         ds = DataStorage(job_storage_time)
-    #         ds.received_storage_deposit = received_storage_deposit
-    #         self.received_block.append(ds.received_block)
-    #         self.storage_duration.append(ds.storage_duration)
-    #         self.is_already_cached[source_code_hash] = False  # FIXME double check
-    #         # if remaining time to cache is 0, then caching is requested for the
-    #         # related source_code_hash
-    #         if ds.received_block + ds.storage_duration >= self.block_number:
-    #             if ds.received_block < self.block_number:
-    #                 self.is_already_cached[source_code_hash] = True
-    #             elif ds.received_block == self.block_number:
-    #                 if source_code_hash in self.is_already_cached:
-    #                     self.is_already_cached[source_code_hash] = True
-    #                 else:
-    #                     # for the first job should be False since it is
-    #                     # requested for cache for the first time
-    #                     self.is_already_cached[source_code_hash] = False
-
-    #         log(f" * source_code_hash{br(idx)}={source_code_hash}")
-    #         log(f"==> received_block={ds.received_block}")
-    #         log(f"==> storage_duration{br(self.block_number)}={ds.storage_duration}")
-    #         log(f"==> cloud_storage_id{br(idx)}={StorageID(self.cloud_storage_id[idx]).name}")
-    #         log(f"==> cached_type={CacheType(self.logged_job.args['cacheType'][idx]).name}")
-    #         log(f"==> is_already_cached={self.is_already_cached[source_code_hash]}")
+        self.is_job_received()
 
     def process_logged_job(self, idx):
         """Process logged job one by one."""
@@ -207,7 +157,7 @@ class Driver:
         self.storage_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
-        _console_ruler(f" {idx} " + "-")
+        _console_ruler(idx, character="-")
         # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
@@ -239,13 +189,13 @@ class Driver:
             )
             cfg.Ebb.get_job_source_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
-
             self.job_info.update({"received_block": self.received_block})
             self.job_info.update({"storage_duration": self.storage_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
             cfg.Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)
-            log(f"requester={self.requester_id}", "bold yellow")
+            log(f"==> requester={self.requester_id}")
+            log("==> [yellow]job_info:", "bold")
             log(self.job_info)
         except Exception as e:
             print_tb(e)
@@ -257,7 +207,8 @@ class Driver:
                     self.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.job_block_number)
                 )
 
-        self.check_requested_job(job_key, index)
+        self.check_requested_job()
+        # self.set_job_recevied_mongodb(key, index)
 
     def sent_job_to_storage_class(self):
         """Submit job's information into related thread."""
@@ -287,7 +238,7 @@ class Driver:
             storage_class = GdriveClass(**kwargs)
 
         # run_storage_process(storage_class)
-        if env.IS_THREADING_ENABLED:
+        if cfg.IS_THREADING_ENABLED:
             run_storage_thread(storage_class)
         else:
             storage_class.run()
@@ -316,7 +267,7 @@ def run_driver():
     # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
     kill_process_by_name("gpg-agent")
-    env.IS_THREADING_ENABLED = False
+    cfg.IS_THREADING_ENABLED = False
     config.logging = setup_logger(_log.DRIVER_LOG)
     # driver_cancel_process = None
     try:
@@ -351,7 +302,9 @@ def run_driver():
         block_number_saved = env.config["block_continue"]
         if not isinstance(env.config["block_continue"], int):
             log("E: block_continue variable is empty or contains an invalid character")
-            question_yes_no("#> Would you like to read from the contract's deployed block number?", is_terminate=True)
+            if not question_yes_no("#> Would you like to read from the contract's deployed block number?"):
+                terminate()
+
             block_number_saved = deployed_block_number
             if deployed_block_number:
                 env.config["block_continue"] = deployed_block_number
@@ -368,8 +321,8 @@ def run_driver():
             is_traceback=False,
         )
 
-    if env.IS_THREADING_ENABLED:
-        log(f"is_threading={env.IS_THREADING_ENABLED}", "blue")
+    if cfg.IS_THREADING_ENABLED:
+        log(f"## is_threading={cfg.IS_THREADING_ENABLED}")
 
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
     log(f"==> whoami={env.WHOAMI}")
@@ -418,45 +371,48 @@ def run_driver():
         # Gets real info under the header after the first line
         if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
             # checks if the squeue output's line number is gretaer than 1
-            log(f"Current slurm running jobs status:\n{squeue_output}", "bold yellow")
-            log("-" * 100, "bold green")
+            log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
+            log(squeue_output, "bold")
+            _console_ruler()
 
-        log(f"==> date={get_time()}")
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:
                 log(f"==> Since Driver started provider_gained_wei={value}")
 
         current_block_num = Ebb.get_block_number()
-        log(f"==> waiting new job to come since block_number={block_read_from}")
+        log(f" * {get_time()} Waiting new job to come since block_number={block_read_from}")
         log(f"==> current_block={current_block_num} | sync_from={block_read_from}")
         # log(f"block_read_from={block_read_from}")
         flag = True
         while current_block_num < int(block_read_from):
             current_block_num = Ebb.get_block_number()
             if flag:
-                log(
-                    f"## Waiting block number to be updated. It remains constant at {current_block_num}...", "bold blue"
-                )
+                log(f"## Waiting block number to be updated, it remains constant at {current_block_num}")
 
             flag = False
-            time.sleep(0.25)
+            time.sleep(2)
 
-        log(f"Passed incremented block number... Watching from block number={block_read_from}", "bold yellow")
-        block_read_from = str(block_read_from)  # reading event's location has been updated
+        log(f"#> [bold yellow]Passed incremented block number... Watching from block_number=[cyan]{block_read_from}")
+        block_read_from = str(block_read_from)  # reading events' block number has been updated
         slurm.pending_jobs_check()
-        driver.logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
-        driver.process_logged_jobs()
-        if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
-            # updates the latest read block number
-            block_read_from = driver.latest_block_number + 1
-            env.config["block_continue"] = block_read_from
-        if not driver.is_provider_received_job:
-            # If there is no submitted job for the provider, than block start
-            # to read from the current block number and updates the latest read
-            # block number read from the file
-            env.config["block_continue"] = current_block_num
-            block_read_from = current_block_num
+        try:
+            driver.logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
+            driver.process_logged_jobs()
+            if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
+                # updates the latest read block number
+                block_read_from = driver.latest_block_number + 1
+                env.config["block_continue"] = block_read_from
+            if not driver.is_provider_received_job:
+                # If there is no submitted job for the provider, than block start
+                # to read from the current block number and updates the latest read
+                # block number read from the file
+                env.config["block_continue"] = current_block_num
+                block_read_from = current_block_num
+        except Exception as e:
+            log(str(e))
+            if "Filter not found" in str(e):
+                time.sleep(15)
 
 
 def _main():
@@ -464,11 +420,11 @@ def _main():
     try:
         is_driver_on(process_count=1, is_print=False)
         try:
-            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
+            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
         except PermissionError:
             print_tb("E: PermissionError is generated for the locked file")
             give_rwe_access(env.WHOAMI, "/tmp/run")
-            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=pid)
+            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
 
         run_driver()
     except HandlerException:
@@ -481,19 +437,24 @@ def _main():
         terminate(str(e), lock)
     except Exception as e:
         print_tb(e)
+        breakpoint()  # DEBUG: end of program press c
     finally:
         with suppress(Exception):
             if lock:
                 lock.close()
 
-        breakpoint()  # DEBUG: end of program
 
-
-def main():
+def main(args):
     try:
+        global given_block_number
+        if args.bn:
+            given_block_number = args.bn
+        else:
+            given_block_number = cfg.Ebb.get_block_number()
+
         _console_ruler("provider session starts")
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        log(f"==> date={date_now}")
+        log(f" * {date_now}")
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement to launch ipdb
             _main()

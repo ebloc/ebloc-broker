@@ -1,5 +1,5 @@
 config:
-  _source_code:
+  source_code:
     cache_type: public
     path: /home/alper/test_eblocbroker/source_code
     size_mb: 2

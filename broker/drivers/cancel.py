@@ -25,7 +25,7 @@ while True:
     # waits here until new job cancelled into the provider
     logged_jobs_to_process = Ebb.LogJob.run_log_cancel_refund(cancel_block_read_from_local, env.PROVIDER_ID)
     for logged_job in logged_jobs_to_process:
-        msg_sender = Ebb.w3.eth.getTransactionReceipt(logged_job["transactionHash"].hex())["from"].lower()
+        msg_sender = Ebb.w3.eth.get_transaction_receipt(logged_job["transactionHash"].hex())["from"].lower()
         user_name = eth_address_to_md5(msg_sender)
         # print(msg_sender)
         # print(logged_job)

@@ -1,0 +1,4 @@
+config:
+  source_code_hash: "b6aaf03752dc68d625fc57b451faa2bf"
+  data_price: 20
+  commitment_block_duration: 600

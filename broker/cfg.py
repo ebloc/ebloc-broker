@@ -6,8 +6,12 @@ __ https://stackoverflow.com/a/12413139/2402577
 """
 from rich.console import Console
 
+IS_BROWNIE_TEST = False
+IS_THREADING_ENABLED = False
 TX_TIMEOUT = 1800
-BLOCK_DURATION_1_HOUR = 600
+BLOCK_DURATION = 6
+BLOCK_DURATION_1_HOUR = 3600 / BLOCK_DURATION
+BLOCK_DURATION_1_DAY = BLOCK_DURATION_1_HOUR * 24
 
 
 class EBB:
@@ -15,9 +19,9 @@ class EBB:
         self.eblocbroker = None
 
     def __getattr__(self, name):
-        """Return the `Contract` object."""
+        """Return the 'Contract' object."""
         if not self.eblocbroker:
-            from broker.eblocbroker.Contract import Contract
+            from broker.eblocbroker_scripts.Contract import Contract
 
             global Ebb  # noqa
             self.eblocbroker: "Contract" = Contract()
@@ -58,7 +62,7 @@ class W3:
         return getattr(self.w3, name)
 
 
+console = Console()
 Ebb = EBB()
 ipfs = _Ipfs()
 w3 = W3()
-console = Console()

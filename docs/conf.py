@@ -32,7 +32,7 @@ import sphinx_rtd_theme
 # add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = ["sphinx_rtd_dark_mode"]
 
 # add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -237,3 +237,6 @@ doctest_default_flags = (
     | doctest.IGNORE_EXCEPTION_DETAIL
     | doctest.NORMALIZE_WHITESPACE
 )
+
+# user starts in dark mode
+default_dark_mode = True

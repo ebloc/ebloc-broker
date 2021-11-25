@@ -12,15 +12,15 @@ from time import sleep
 from typing import Dict, List
 
 from broker import cfg
-from broker._utils._log import br, log
-from broker._utils.tools import mkdir
+from broker._utils._log import br, log, ok
+from broker._utils.tools import _remove, mkdir, read_json
+from broker._utils.web3_tools import get_tx_status
 from broker.config import env, logging, setup_logger
 from broker.errors import QuietExit
 from broker.imports import connect
 from broker.lib import (
-    calculate_folder_size,
+    calculate_size,
     eblocbroker_function_call,
-    get_tx_status,
     is_dir,
     remove_files,
     run,
@@ -32,23 +32,21 @@ from broker.libs import _git, eudat, gdrive, slurm
 from broker.utils import (
     WHERE,
     StorageID,
-    _remove,
     byte_to_mb,
     bytes32_to_ipfs,
     eth_address_to_md5,
     is_dir_empty,
     print_tb,
     read_file,
-    read_json,
     remove_empty_files_and_folders,
 )
 
-connect()
 Ebb = cfg.Ebb
+connect()
 
 
 class Common:
-    """Prevent "Class" has no attribute "method" mypy warnings."""
+    """Prevent "Class" to have attribute "method" mypy warnings."""
 
     def __init__(self) -> None:
         self.results_folder: Path = Path("")
@@ -62,6 +60,12 @@ class Common:
         pass
 
 
+class Ipfs(Common):
+    def upload(self, *_) -> bool:
+        """Upload files after all the patchings are completed."""
+        return True
+
+
 class IpfsGPG(Common):
     def upload(self, *_) -> bool:
         """Upload files right after all the patchings are completed."""
@@ -71,12 +75,6 @@ class IpfsGPG(Common):
             print_tb(e)
             _remove(self.patch_file)
             sys.exit(1)
-        return True
-
-
-class Ipfs(Common):
-    def upload(self, *_) -> bool:
-        """Upload files after all the patchings are completed."""
         return True
 
 
@@ -98,12 +96,12 @@ class Eudat(Common):
         with suppress(Exception):
             # first time uploading
             uploaded_file_size = eudat.get_size(f_name=f"{source_code_hash}/{self.patch_upload_name}")
-            size_in_bytes = calculate_folder_size(self.patch_file, _type="bytes")
+            size_in_bytes = calculate_size(self.patch_file, _type="bytes")
             if uploaded_file_size == float(size_in_bytes):
                 log(f"==> {self.patch_file} is already uploaded")
                 return True
 
-        _data_transfer_out = calculate_folder_size(self.patch_file)
+        _data_transfer_out = calculate_size(self.patch_file)
         log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
         self.data_transfer_out += _data_transfer_out
         return eudat.upload_results(
@@ -135,7 +133,7 @@ class Gdrive(Common):
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
         logging.info(f"mime_type={mime_type}")
-        self.data_transfer_out += calculate_folder_size(self.patch_file)
+        self.data_transfer_out += calculate_size(self.patch_file)
         logging.info(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
@@ -178,7 +176,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
         log_filename = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         logging = setup_logger(log_filename)
-        self.job_id = 0  # TODO: should be mapped slurm_job_id
+        self.job_id = 0  # TODO: should be mapped to slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue")
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -256,7 +254,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         for key in share_ids:
             value = share_ids[key]
             encoded_value = self.encoded_share_tokens[key]
-            log("shared_tokens: ({}) => ({}) encoded:({})".format(key, value["share_token"], encoded_value))
+            log(f"shared_tokens: ({key}) => ({value['share_token']}), encoded={encoded_value}")
 
     def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""
@@ -369,8 +367,11 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             # starting from 1st index for data files
             source = self.results_data_folder / name
             try:
-                storage_class = self.get_cloud_storage_class(idx)
-                self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
+                if not self.cloud_storage_ids[idx] == StorageID.NONE:
+                    storage_class = self.get_cloud_storage_class(idx)
+                    self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
+                else:
+                    pass
             except Exception as e:
                 print_tb(e)
                 raise e
@@ -418,7 +419,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def attemp_get_job_info(self):
         is_print = True
         sleep_time = 30
-        for attempt in range(20):
+        for attempt in range(10):
             # log(self.job_info)
             if self.job_info["stateCode"] == state.code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed. Wait
@@ -436,7 +437,6 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 self.job_info = Ebb.get_job_info(
                     env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
                 )
-                log(attempt)
                 is_print = False
             except Exception as e:
                 print_tb(e)
@@ -445,12 +445,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             # sleep here so this loop is not keeping CPU busy due to
             # start_code tx may deploy late into the blockchain.
             log(
-                f"==> {br(attempt)} start_code tx of the job is not obtained yet."
-                f" Waiting for {sleep_time} seconds to pass... ",
+                f"==> {br(attempt)} start_code tx of the job is not obtained yet, "
+                f"waiting for {sleep_time} seconds to pass... ",
                 end="",
             )
-            sleep(sleep_time)  # TODO: exits randomly
-            log(br(f"sleep ended for {sleep_time}"))
+            sleep(sleep_time)
+            log(ok())
 
         log("E: failed all the attempts, abort")
         sys.exit(1)
@@ -483,7 +483,11 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         try:
-            Ebb._wait_for_transaction_receipt(self.job_status_running_tx)
+            if self.job_status_running_tx:
+                Ebb._wait_for_transaction_receipt(self.job_status_running_tx)
+            else:
+                log("warning: job_status_running_tx is empty")
+
             self.get_job_info(is_log_print=False)  # re-fetch job info
             self.attemp_get_job_info()
         except Exception as e:

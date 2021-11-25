@@ -17,12 +17,11 @@ class DriverDaemon(run.RunDaemon):  # pylint: disable=too-many-ancestors
 
 def main():
     pidfile = env.DRIVER_DAEMON_LOCK
-
+    d = DriverDaemon(pidfile=pidfile)
     # pidfile = daemon.pidfile.PIDLockFile(env.DRIVER_DAEMON_LOCK)
     # logfile = os.path.join(os.getcwd(), "sleepy.log")
     # pidfile = os.path.join(os.getcwd(), "sleepy.pid")
     # logging.basicConfig(filename=logfile, level=logging.DEBUG)
-    d = DriverDaemon(pidfile=pidfile)
     # d = Daemon_base(pidfile, env.EBLOCPATH, cmd)
     if len(sys.argv) == 2:
         if sys.argv[1] in ["start", "s"]:

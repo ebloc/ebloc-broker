@@ -192,7 +192,7 @@ sudo ./server.sh
 ```
 
 - If you want to kill your server please do: `sudo killall geth`
-- You can keep track of output of your `geth-server` by running following: `sudo tail -f gethServer.out` 
+- You can keep track of output of your `geth-server` by running following: `sudo tail -f gethServer.out`
 
 ```bash
 $ sudo tail -f gethServer.out

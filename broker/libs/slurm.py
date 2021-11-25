@@ -48,14 +48,15 @@ def get_idle_cores(is_print=True):
         total_cores = core_info[3]
         if is_print:
             log(
-                f"==> [bold green]allocated_cores={allocated_cores} |"
-                f"idle_cores={idle_cores} |"
-                f"other_cores={other_cores} |"
-                f"total_number_of_cores={total_cores}"
+                f"==> [green]allocated_cores=[/green]{allocated_cores} | "
+                f"[green]idle_cores=[/green]{idle_cores} | "
+                f"[green]other_cores=[/green]{other_cores} | "
+                f"[green]total_number_of_cores=[/green]{total_cores}"
             )
     else:
         logging.error("E: sinfo is emptry string")
         return None
+
     return idle_cores
 
 
@@ -80,7 +81,7 @@ def is_on() -> bool:
             log("failed", "bold red")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             raise QuietExit(
-                f"E: [green]{process_name}[/green] is not running in the background. Please run:\n"
+                f"E: [bold green]{process_name}[/bold green] is not running in the background. Please run:\n"
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 
@@ -129,14 +130,13 @@ def get_job_end_time(slurm_job_id) -> int:
     """Get the end time of the job in universal time"""
     end_time = run(["sacct", "-n", "-X", "-j", slurm_job_id, "--format=End"])
     if end_time == "":
-        log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.", "red")
+        log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.")
         raise QuietExit
 
-    try:
-        # cmd: date -d 2018-09-09T21:50:51 +"%s"
+    try:  # cmd: date -d 2018-09-09T21:50:51 +"%s"
         end_time_stamp = run(["date", "-d", end_time, "+'%s'"])
-    except:
-        raise QuietExit
+    except Exception as e:
+        raise QuietExit from e
 
     end_time_stamp = end_time_stamp.rstrip().replace("'", "")
     log(f"==> end_time_stamp={end_time_stamp}")

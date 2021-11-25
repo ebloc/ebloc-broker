@@ -11,7 +11,6 @@ EOF
 )"
 
 printf "Setting ABI\n"
-
 echo "$input"
-echo "$input" | brownie console --network eblocpoa
-mv abi.json $HOME/eBlocBroker/eblocbroker/abi.json
+echo "$input" | brownie console --network bloxberg
+mv abi.json $HOME/ebloc-broker/broker/eblocbroker/abi.json

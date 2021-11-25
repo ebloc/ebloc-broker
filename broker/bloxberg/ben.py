@@ -3,7 +3,7 @@
 import sys
 
 from broker import cfg
-from broker.eblocbroker.job import Job
+from broker.eblocbroker_scripts.job import Job
 from broker.lib import get_tx_status
 from broker.utils import is_bin_installed, is_dpkg_installed, log
 from brownie import accounts, web3

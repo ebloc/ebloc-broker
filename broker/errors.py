@@ -14,9 +14,9 @@ class JobException(Exception):
     """Trace is not printed."""
 
 
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""
+
+
 class QuietExit(Exception):
     """Trace is not printed."""
-
-
-class Web3NotConnected(Exception):  # noqa
-    """Web3 is not connected"""

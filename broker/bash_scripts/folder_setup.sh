@@ -1,6 +1,50 @@
 #!/bin/bash
 
+GREEN="\033[1;32m"
+NC="\033[0m" # no Color
 TMP_DIR=$HOME/.ebloc-broker
+DIR=/var/ebloc-broker
+
+yes_or_no () {
+    while true; do
+        string="$GREEN#>$NC $* [Y/n]:"
+        read -p "$(echo -e $string) " yn
+        case $yn in
+            [Yy]*) return 0  ;;
+            [Nn]*) echo "end" ; return  1 ;;
+            * ) echo "Please answer yes or no";;
+        esac
+    done
+}
+
+set_email () {
+    echo "Type your email-address, followed by [ENTER]:"
+    read EMAIL
+    line_old="EMAIL="
+    line_new=$EMAIL
+    sed -i.bak "s/^\(EMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
+    rm -f $DIR/slurm_mail_prog.sh.bak
+
+}
+
+provider_setup () {
+    ## configure_slurm
+    FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
+    [ ! -f $FILE ] && cp $FILE $DIR/
+    line_old="_HOME"
+    line_new=$(echo $HOME | sed 's/\//\\\//g')
+    sed -i.bak "s/^\(_HOME=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
+    rm -f $DIR/slurm_mail_prog.sh.bak
+
+    venv_path=$HOME"/venv"
+    var=$(echo $venv_path | sed 's/\//\\\//g')
+    sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $DIR/slurm_mail_prog.sh
+    rm $DIR/slurm_mail_prog.sh.bak
+
+    email=$(cat $DIR/slurm_mail_prog.sh| grep EMAIL=)
+    yes_or_no "Do you want to change your email" $email && set_email
+}
+
 configure_coinbase () { # coinbase address setup
     COINBASE=$(echo $COINBASE)
     if [[ ! -v COINBASE ]]; then
@@ -47,19 +91,17 @@ configure_oc () { # OC_USER address setup
 
 configure_slurm () { # slurm setup
     sudo killall slurmctld slurmdbd slurmd
-    var=$(echo $current_dir | sed 's/\//\\\//g')
-    var=$var"/bash_scripts"
+    var=$(echo $TMP_DIR/slurm_mail_prog.sh | sed 's/\//\\\//g')
+    # var=$var"/bash_scripts"
     # With JobRequeue=0 or --no-requeue,
     # the job will not restart automatically, please see https://stackoverflow.com/a/43366542/2402577
     sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/" /usr/local/etc/slurm.conf
     sudo rm -f /usr/local/etc/slurm.conf.bak
-
-    sudo sed -i.bak "s/^\(MailProg=\).*/\1$var\/slurm_mail_prog.sh/" /usr/local/etc/slurm.conf
+    sudo sed -i.bak "s/^\(MailProg=\).*/\1$var/" /usr/local/etc/slurm.conf
     sudo rm -f /usr/local/etc/slurm.conf.bak
-
     # MinJobAge assingned to '1' day,
     # The minimum age of a completed job before its record is purged from Slurm's active database.
-    sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\186400/" /usr/local/etc/slurm.conf
+    sudo sed -i.bak "s/^\(.*MinJobAge=\).*/\172800/" /usr/local/etc/slurm.conf
     sudo rm /usr/local/etc/slurm.conf.bak
     grep "MailProg" /usr/local/etc/slurm.conf
 }
@@ -94,27 +136,27 @@ mkdir -p $TMP_DIR/drivers_output
 mkdir -p $TMP_DIR/links
 mkdir -p $TMP_DIR/transactions
 mkdir -p $TMP_DIR/end_code_output
-
+mkdir -p $TMP_DIR/tmp
 if [ ! -f $TMP_DIR/.env ]; then
     cp $current_dir/.env $TMP_DIR
 fi
 
 # LOG_PATH
 # ========
-lineNew=$TMP_DIR
-var=$(echo $lineNew | sed 's/\//\\\//g')
+line_new=$TMP_DIR
+var=$(echo $line_new | sed 's/\//\\\//g')
 sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
-# GDRIVE
+# gdrive
 # ======
 FILE=$HOME/.gdrive
 if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
 fi
 
-lineNew=$(which gdrive | sed 's/\//\\\//g')
-sed -i.bak "s/^\(GDRIVE=\).*/\1\"$lineNew\"/" $TMP_DIR/.env
+line_new=$(which gdrive | sed 's/\//\\\//g')
+sed -i.bak "s/^\(GDRIVE=\).*/\1\"$line_new\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
 # EBLOCPATH
@@ -126,47 +168,38 @@ rm $TMP_DIR/.env.bak
 
 # User Name
 # =========
-lineOld="whoami"
-lineNew=$(logname)
+line_old="whoami"
+line_new=$(logname)
 
-sed -i.bak "s/^\(WHOAMI=\).*/\1\"$lineNew\"/" $TMP_DIR/.env
+sed -i.bak "s/^\(WHOAMI=\).*/\1\"$line_new\"/" $TMP_DIR/.env
 rm -f $TMP_DIR/.env.bak
 
 # RPC PORT
 # ========
-lineOld="8545"
-sed -i.bak "s/^\(RPC_PORT=\).*/\1$lineOld/" $TMP_DIR/.env
+line_old="8545"
+sed -i.bak "s/^\(RPC_PORT=\).*/\1$line_old/" $TMP_DIR/.env
 rm $TMP_DIR/.env.bak
-
-# PATH Name
-# =========
-lineOld="EBLOCBROKER_PATH"
-lineNew=$(echo $current_dir | sed 's/\//\\\//g')
-
-sed -i.bak 's/'$lineOld'/'$lineNew'/' $TMP_DIR/.env
-rm -f $TMP_DIR/.env.bak
-
-FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
-sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$lineNew\"/" $FILE
-rm -f $FILE.bak
 
 # configure_coinbase
 # configure_oc
 # configure_ipfs
-## configure_slurm
-
-echo -e "Note: Update the following file "$TMP_DIR"/.eudat_provider.txt' with
+echo -e "Warning: Update the following file "$TMP_DIR"/.eudat_provider.txt' with
 your EUDAT account's password. Best to make sure the file is not readable or
-even listable for anyone but you. You achieve this with: 'chmod 700
-eudat_password.txt'"
+even listable for anyone but you. You achieve this with:
+'chmod 700 eudat_password.txt'"
+
+echo ""
+yes_or_no "Are you are a provider" && provider_setup
 
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node
 # sudo chmod 700 /home/*
 
-# EBLOCPATH
+# PATH Name
 # =========
-# venvPath=$HOME"/venv"
-# var=$(echo $venvPath | sed 's/\//\\\//g')
-# sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
-# rm $HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh.bak
+# line_old="EBLOCBROKER_PATH"
+# line_new=$(echo $current_dir | sed 's/\//\\\//g')
+# sed -i.bak 's/'$line_old'/'$line_new'/' $TMP_DIR/.env
+# rm -f $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
+# rm -f $DIR/slurm_mail_prog.sh.bak

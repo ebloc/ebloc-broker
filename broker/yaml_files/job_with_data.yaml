@@ -1,0 +1,17 @@
+config:
+    requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
+    provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+    source_code:
+        storage_id: ipfs
+        cache_type: public
+        path: ~/test_eblocbroker/source_code
+        storage_hours: 1
+    base_data_path: ~/test_eblocbroker/test_data/base/
+    data:
+        data1:
+            hash: b6aaf03752dc68d625fc57b451faa2bf
+    data_transfer_out: 1
+    jobs:
+        job1:
+            cores: 1
+            run_time: 60

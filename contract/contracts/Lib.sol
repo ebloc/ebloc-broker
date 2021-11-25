@@ -146,21 +146,21 @@ library Lib {
     }
 
     struct Interval {
-        int32 core; // Job's requested core number
-        uint32 next; // Points to next the node
+        int32 core; // job's requested core number
+        uint32 next; // points to next the node
         uint32 endpoint;
     }
 
     struct IntervalArg {
         uint32 startTime;
         uint32 completionTime;
-        int32 core; // Job's requested core number
+        int32 core; // job's requested core number
         int256 availableCore;
     }
 
     struct LL {
         uint32 length;
-        uint32 tail; // Tail of the linked list
+        uint32 tail; // tail of the linked list
         mapping(uint256 => Interval) items;
     }
 
@@ -171,7 +171,7 @@ library Lib {
     function constructProvider(Provider storage self) internal {
         self.isRunning = true;
         self.committedBlock = uint32(block.number);
-        self.receiptList.length = 1; // Trick to show mapped index 0's values as zero
+        self.receiptList.length = 1; // trick to show mapped index(0)'s values as zero
     }
 
     function push(
@@ -235,8 +235,9 @@ library Lib {
             /* Inside while loop carriedSum is updated. If enters into if statement it
             means revert() is catched and all the previous operations are reverted back */
             carriedSum += currentNode_core;
-            if (carriedSum > _interval.availableCore) return false;
-
+            if (carriedSum > _interval.availableCore) {
+                return false;
+            }
             prevNode_index = currentNode_index;
             currentNode_index = currentNode_next; // already in the memory, cheaper
             currentNode_endpoint = self.items[currentNode_index].endpoint; // read from the storage
@@ -291,8 +292,9 @@ library Lib {
                 return (flag, _addr, prevNode_index, carriedSum, prevNode_index_next_temp, temp);
             }
             carriedSum += currentNode_core;
-            if (carriedSum > _interval.availableCore) return (0, _addr, 0, 0, 0, 0);
-
+            if (carriedSum > _interval.availableCore) {
+                return (0, _addr, 0, 0, 0, 0);
+            }
             prevNode_index = currentNode_index;
             currentNode_index = currentNode_next;
             currentNode_endpoint = self.items[currentNode_index].endpoint;
@@ -309,7 +311,6 @@ library Lib {
         uint256 prevNode_index_next_temp;
         int32 carriedSum;
         int32 updatedCoreVal;
-
         if (_interval.completionTime <= self.items[addr].endpoint) {
             /* Current node points index of previous tail-node right after the insert operation */
             currentNode_index = prevNode_index = addr;
@@ -319,15 +320,16 @@ library Lib {
                 currentNode_index,
                 _interval
             );
-            if (flag == 0) return 0; // false
+            if (flag == 0) {
+                return 0; // false
+            }
         }
         uint256 _length = self.length;
         if (flag <= 1) {
-            /* Inserted while keeping sorted order */
+            /* inserted while keeps sorted order */
             push(self, addr, _interval.completionTime, _interval.core, uint32(_length));
             _length += 1;
             carriedSum = _interval.core;
-
             if (flag == 0) {
                 addrTemp = addr;
                 prevNode_index = self.tail = uint32(_length - 1);
@@ -337,22 +339,20 @@ library Lib {
                 prevNode_index = uint32(_length - 1);
             }
         }
-        if (flag > 1) addrTemp = self.items[prevNode_index].next;
-
+        if (flag > 1) {
+            addrTemp = self.items[prevNode_index].next;
+        }
         currentNode_index = addrTemp; //self.items[prevNode_index].next;
         if (_iterate(self, currentNode_index, prevNode_index, uint32(_length), carriedSum, _interval)) {
-            if (flag == 2) self.items[addr].core = updatedCoreVal;
-
+            if (flag == 2) {
+                self.items[addr].core = updatedCoreVal;
+            }
             return 1; // true
         } else {
             if (flag <= 1) {
                 delete self.items[uint32(_length - 1)];
-
-                if (prevNode_index == self.tail) {
-                    self.tail = uint32(addrTemp);
-                } else {
-                    self.items[prevNode_index].next = uint32(addrTemp); // change on storage
-                }
+                if (prevNode_index == self.tail) self.tail = uint32(addrTemp);
+                else self.items[prevNode_index].next = uint32(addrTemp); // change on storage
             } else if (flag == 3) {
                 self.items[prevNode_index].next = uint32(prevNode_index_next_temp);
             }
@@ -360,12 +360,12 @@ library Lib {
         }
     }
 
-    /* Used for tests */
+    /* used for tests */
     function getReceiptListSize(LL storage self) external view returns (uint32) {
         return self.length;
     }
 
-    /* Used for test */
+    /* used for test */
     function printIndex(LL storage self, uint32 index) external view returns (uint256 _index, int32) {
         _index = self.tail;
         for (uint256 i = 0; i < index; i++) {

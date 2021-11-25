@@ -1,0 +1,10 @@
+config:
+    account: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
+    email: alper.alimoglu.research@gmail.com
+    federation_cloud_id: 5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu
+    available_core: 128
+    commitment_blk: 600
+    price_core_min: 100
+    price_data_transfer: 2
+    price_storage: 1
+    price_cache: 1

@@ -1,3 +1,8 @@
+watch.out
+__pycache__/
+ebloc_broker.egg-info/
+\.mypy_cache/
+contract/build/
 good.patch
 *.*~
 *~
@@ -15,7 +20,6 @@ broker/_utils/config.yaml
 clusterDriver\.out
 completed.txt
 contract/abi.json
-contract/build/
 contract/build/contracts\.json
 contract/\.cache/v/cache/lastfailed
 contract/\.cache/v/populus/project/
@@ -161,9 +165,10 @@ venv/bin/python3
 venv/lib64
 venv/pyvenv\.cfg
 workflow/\.pytest_cache/
-slurm.out
-slurm.err
 *.*.bak
 password.secret
-rm slurm-*.out
 eblocbroker_bloxberg_deployed.txt
+slurm.out
+slurm.err
+slurm-*.out
+README.html

@@ -6,18 +6,16 @@ import re
 import signal
 import sys
 import time
-from subprocess import DEVNULL, PIPE, Popen, check_output
+from subprocess import check_output
 
 import ipfshttpclient
 from cid import make_cid
 
 from broker._utils._log import ok
-from broker._utils.tools import handler, log, print_tb
-
-# from io import StringIO
+from broker._utils.tools import _remove, handler, log, print_tb
 from broker.config import env, logging
+from broker.errors import QuietExit
 from broker.utils import (
-    _remove,
     _try,
     compress_folder,
     is_ipfs_on,
@@ -48,6 +46,30 @@ class Ipfs:
     #################
     # OFFLINE CALLS #
     #################
+    def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
+        """Get only chunk and hash of a given path, do not write to disk.
+
+        Args:
+            path: Path of a folder or file
+
+        Returns string that contains the ouput of the run commad.
+        """
+        if os.path.isdir(path):
+            cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
+            if is_hidden:
+                # include files that are hidden such as .git/.
+                # Only takes effect on recursive add
+                cmd.insert(3, "--hidden")
+        elif os.path.isfile(path):
+            cmd = ["ipfs", "add", "--quieter", "--only-hash", path]
+        else:
+            raise Exception("Requested path does not exist")
+
+        try:
+            return _try(lambda: run(cmd))
+        except Exception as e:
+            raise e
+
     def is_valid(self, ipfs_hash: str) -> bool:
         try:
             make_cid(ipfs_hash)
@@ -123,8 +145,8 @@ class Ipfs:
         if extract_target:
             try:
                 untar(tar_file, extract_target)
-            except:
-                raise Exception("E: Could not extract the given tar file")
+            except Exception as e:
+                raise Exception("E: Could not extract the given tar file") from e
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
@@ -198,9 +220,11 @@ class Ipfs:
             p, output, error = popen_communicate(cmd)
             if p.returncode != 0:
                 log()
+                error = error.replace("[/", "/").replace("]", "").replace("Error: ", "").rstrip()
                 if "failure: dial to self attempted" in error:
-                    log(f"Warning: {error.replace('Error: ', '').rstrip()}")
-                    question_yes_no("#> Would you like to continue?")
+                    log(f"E: {error}")
+                    if not question_yes_no("#> Would you like to continue?"):
+                        raise QuietExit
                 else:
                     raise Exception(error)
             else:
@@ -223,7 +247,7 @@ class Ipfs:
         return self.client.object.stat(ipfs_hash)
 
     def is_hash_exists_online(self, ipfs_hash: str):
-        log(f"#> Attempting to check IPFS file {ipfs_hash}")
+        logging.info(f"attempting to check IPFS file {ipfs_hash}")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
@@ -233,7 +257,7 @@ class Ipfs:
         try:
             output = self._ipfs_stat(ipfs_hash)
             output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
-            log(f"==> cumulative_size={output_json}", "bold green")
+            log(f"cumulative_size={output_json}", "bold")
             return output, output["CumulativeSize"]
         except KeyboardInterrupt:
             terminate("KeyboardInterrupt")
@@ -292,31 +316,6 @@ class Ipfs:
         else:  # failed all the attempts - abort
             sys.exit(1)
         return result_ipfs_hash
-
-    def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
-        """Get only chunk and hash of a given path, do not write to disk.
-
-        Args:
-            path: Path of a folder or file
-
-        Returns string that contains the ouput of the run commad.
-        """
-        if os.path.isdir(path):
-            cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
-            if is_hidden:
-                # include files that are hidden such as .git/.
-                # Only takes effect on recursive add
-                cmd.insert(3, "--hidden")
-        elif os.path.isfile(path):
-            cmd = ["ipfs", "add", "--quieter", "--only-hash", path]
-        else:
-            logging.error("E: Requested path does not exist")
-            raise
-
-        try:
-            return _try(lambda: run(cmd))
-        except Exception as e:
-            raise e
 
     def connect_to_bootstrap_node(self):
         """Connect into return addresses of the currently connected peers."""

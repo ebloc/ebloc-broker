@@ -6,8 +6,8 @@ from os import path
 
 import pytest
 
-from broker import _config, config
-from broker._utils._log import br, log
+from broker import cfg, config
+from broker._utils._log import _console_ruler, br, log
 from broker.config import setup_logger
 from broker.eblocbroker import Contract
 from broker.eblocbroker.job import Job
@@ -17,7 +17,7 @@ from brownie.network.state import Chain
 from contract.scripts.lib import mine, new_test
 from contract.tests.test_eblocbroker import register_provider, register_requester
 
-Contract.eblocbroker = Contract.Contract(is_brownie=True)
+cfg.Ebb = Contract.eblocbroker = Contract.Contract(is_brownie=True)
 
 # from brownie.test import given, strategy
 setup_logger("", True)
@@ -27,8 +27,6 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
 
 provider_email = "provider@gmail.com"
-federatedCloudID = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-
 available_core_num = 128
 price_core_min = 1
 price_data_transfer = 1
@@ -49,10 +47,9 @@ chain = None
 def my_own_session_run_at_beginning(_Ebb):
     global ebb
     global chain
-    _config.IS_BROWNIE_TEST = True
+    cfg.IS_BROWNIE_TEST = True
     config.w3 = web3
-    Contract.eblocbroker.eBlocBroker = config.ebb = _Ebb
-    ebb = _Ebb
+    ebb = Contract.eblocbroker.eBlocBroker = config.ebb = _Ebb
     if not config.chain:
         config.chain = Chain()
 
@@ -65,19 +62,19 @@ def run_around_tests():
 
 
 def check_list(is_print=True):
-    size = config.ebb.getProviderReceiptSize(provider)
+    size = ebb.getProviderReceiptSize(provider)
     if is_print:
         print(f"length={size}")
 
     for idx in range(0, size):
-        value = config.ebb.getProviderReceiptNode(provider, idx)
+        value = ebb.getProviderReceiptNode(provider, idx)
         if is_print:
             print(value)
 
     _list = []
     carried_sum = 0
     for idx in range(0, size):
-        value = config.ebb.getProviderReceiptNode(provider, idx)
+        value = ebb.getProviderReceiptNode(provider, idx)
         if value[0] != 0:
             carried_sum += value[1]
 
@@ -92,7 +89,7 @@ def check_list(is_print=True):
 
 
 def check_price_keys(price_keys, provider, source_code_hash1):
-    res = config.ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
+    res = ebb.getRegisteredDataBlockNumbers(provider, source_code_hash1)
     for key in price_keys:
         if key > 0:
             assert key in res, f"{key} does no exist in price keys({res}) for the registered data{source_code_hash1}"
@@ -115,7 +112,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, _cost = job.cost(provider, requester)
-    provider_price_block_number = config.ebb.getProviderSetBlockNumbers(provider)[-1]
+    provider_price_block_number = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_block_number,
@@ -126,7 +123,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
         job.run_time,
         job.data_transfer_out,
     ]
-    tx = config.ebb.submitJob(
+    tx = ebb.submitJob(
         job.key,
         job.data_transfer_ins,
         args,
@@ -135,7 +132,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 
-    tx = config.ebb.setJobStatusRunning(job.key, job.index, job._id, start_time, {"from": provider})
+    tx = ebb.setJobStatusRunning(job.key, job.index, job._id, start_time, {"from": provider})
     rpc.sleep(60)
 
     mine(5)
@@ -143,20 +140,21 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
     data_transfer_out = 0
 
     args = [job.index, job._id, completion_time, data_transfer_in, data_transfer_out, job.cores, [1], True]
-    tx = config.ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
+    tx = ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
     if is_print:
-        print("processPayment received_gas_used=" + str(tx.__dict__["gas_used"]))
+        log(f"==> process_payment received_gas_used={tx.__dict__['gas_used']}")
     # received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     # refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
     # withdraw(provider, received_sum)
     # withdraw(requester, refunded_sum)
     check_list(is_print)
     if is_print:
-        print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+        _console_ruler(character="-=")
+
     return tx
 
 
-def test_submitJob_gas():
+def test_submit_job_gas():
     global provider
     global requester
     mine(1)
@@ -194,7 +192,7 @@ def test_submitJob_gas():
     tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
     check_list()
-    print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
+    log(f"==> gas_cost_for_iteration={gas_end - gas_base}")
     # TODO: : revert on tx check
 
 
@@ -393,4 +391,4 @@ def test_test3():
     index = 3
     tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
-    print("==> gas_cost_for_iteration=" + str(gas_end - gas_base))
+    log(f"==> gas_cost_for_iteration={gas_end - gas_base}")
