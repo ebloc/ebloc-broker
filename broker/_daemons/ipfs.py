@@ -29,7 +29,7 @@ def run():
         else:
             _env = {"IPFS_PATH": Path.home().joinpath(".ipfs")}
 
-        popen_communicate([IPFS_BIN, "daemon"], stdout_file=config.env.IPFS_LOG, _env=_env)
+        popen_communicate([IPFS_BIN, "daemon", "--routing=none"], stdout_file=config.env.IPFS_LOG, _env=_env)
 
     # ipfs mounted at: /ipfs
     # output = run(["sudo", "ipfs", "mount", "-f", "/ipfs"])

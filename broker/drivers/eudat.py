@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+import fnmatch
 import json
 import os
+import shutil
 import sys
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import List
 
@@ -12,6 +15,7 @@ from broker._utils._log import br, log, ok
 from broker._utils.tools import _remove, bytes_to_mb, mkdir, read_json
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
+from broker.lib import run
 from broker.utils import CacheType, StorageID, generate_md5sum, get_time, print_tb, untar
 
 Ebb = cfg.Ebb
@@ -39,15 +43,16 @@ class EudatClass(Storage):
                 return False
         return True
 
-    def search_token(self, f_id, share_list, folder_name):
-        log("## Searching share tokens for the related source code folder...")
+    def search_token(self, f_id, share_list, folder_name, is_silent=False) -> bool:
+        if not is_silent:
+            log(f"## searching share tokens for the related source_code_folder={folder_name}")
+
         for idx in range(len(share_list) - 1, -1, -1):
             # starts iterating from last item to the first one
             input_folder_name = share_list[idx]["name"]
-            # removes '/' on the beginning of the string
-            input_folder_name = input_folder_name[1:]
+            input_folder_name = input_folder_name[1:]  # removes '/' at the beginning
             share_id = share_list[idx]["id"]
-            # inputOwner = share_list[i]['owner']
+            # input_owner = share_list[i]['owner']
             input_user = f"{share_list[idx]['user']}@b2drop.eudat.eu"
             if input_folder_name == folder_name and input_user == f_id:
                 self.share_token = str(share_list[idx]["share_token"])
@@ -59,13 +64,19 @@ class EudatClass(Storage):
                     # adding into mongoDB for future usage
                     log(f"#> Added into mongoDB {ok()}")
                 else:
-                    logging.error("E: Something is wrong, Not added into mongoDB")
+                    logging.error("E: Something is wrong, not added into mongoDB")
 
-                log(f"==> {br('found')} name={folder_name} | share_id={share_id} | share_token={self.share_token}")
-                config.oc.accept_remote_share(int(share_id))
-                logging.info("share_id is accepted.")
+                log(f"==> name={folder_name} | share_id={share_id} | share_token={self.share_token} {ok()}")
+                try:
+                    config.oc.accept_remote_share(int(share_id))
+                    log(f"## share_id={share_id} is accepted")
+                except Exception as e:
+                    print_tb(e)
+
                 self.accept_flag += 1
-                break
+                return True
+
+        return False
 
     def cache(self, folder_name, _id) -> bool:
         success = self.is_cached(folder_name, _id)
@@ -146,6 +157,34 @@ class EudatClass(Storage):
         # TODO: check hash of the downloaded file is correct or not
         return True
 
+    def get_file_size(self, fn, folder_name):
+        try:
+            log(f"## trying to get {fn} info at EUDAT")
+            #: DAV/Properties/getcontentlength the number of bytes of a resource
+            info = config.oc.file_info(fn)
+            return info.get_size()
+        except Exception as e:
+            if "HTTP error: 404" in str(e):
+                log(f"warning: {e}")
+                try:
+                    for _dir in fnmatch.filter(os.listdir(env.OWNCLOUD_PATH), f"{folder_name} *"):
+                        shutil.move(f"{env.OWNCLOUD_PATH}/{_dir}", f"{env.OWNCLOUD_PATH}/{folder_name}")
+
+                    info = config.oc.file_info(fn)
+                    return info.get_size()
+                except Exception as e:
+                    log(f"E: {e}")
+                    _list = config.oc.list(".")
+                    for path in _list:
+                        if folder_name in path.get_name() and folder_name != path.get_name:
+                            config.oc.move(path.get_name(), folder_name)
+
+                info = config.oc.file_info(fn)
+                return info.get_size()
+
+            log(str(e))
+            raise Exception("E: failed all the attempts to get file info at Eudat") from e
+
     def eudat_get_share_token(self, f_id):
         """Check key is already shared or not."""
         folder_token_flag = {}
@@ -164,7 +203,7 @@ class EudatClass(Storage):
                         f"## eudat shared folder({folder_name}) is already accepted and "
                         "exists on the eudat's mounted folder"
                     )
-                    if os.path.isfile(f"{env.OWNLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
+                    if os.path.isfile(f"{env.OWNCLOUD_PATH}/{folder_name}/{folder_name}.tar.gz"):
                         self.folder_type_dict[folder_name] = "tar.gz"
                     else:
                         self.folder_type_dict[folder_name] = "folder"
@@ -176,7 +215,8 @@ class EudatClass(Storage):
                     folder_token_flag[folder_name] = True
                     log(f"==> index={br(idx)}: /{folder_name}/{folder_name}.tar.gz => {size} bytes")
                     # accept_flag += 1  # TODO: delete it seems unneeded
-                except Exception:
+                except Exception as e:
+                    # print_tb(e)
                     log(f"warning: shared_folder{br(source_code_hash_text)} is not accepted yet")
                     folder_token_flag[folder_name] = False
 
@@ -188,7 +228,8 @@ class EudatClass(Storage):
             pass
 
         if self.share_id:
-            log(f"==> share_id={self.share_id}")
+            log("==> share_id:")
+            log(self.share_id, "bold")
 
         for key, value in self.share_id.items():  # there is only single item
             try:
@@ -219,23 +260,25 @@ class EudatClass(Storage):
             else:
                 # folder should not be registered data on the provider
                 folder_name = source_code_hash_text
-                try:
-                    shared_id = Ebb.mongo_broker.find_shareid_item(key=folder_name)
-                    self.share_id[folder_name] = {
-                        "share_id": shared_id["share_id"],
-                        "share_token": shared_id["share_token"],
-                    }
-                    self.accept_flag += 1
-                except Exception as e:
-                    if "warning: " not in str(e):
-                        log(f"E: {e}")
-                    else:
-                        log(str(e))
-
-                    if folder_token_flag[folder_name] and bool(self.share_id):
+                #: search_token is priority
+                if not self.search_token(f_id, share_list, folder_name):
+                    try:
+                        shared_id = Ebb.mongo_broker.find_shareid_item(key=folder_name)
+                        self.share_id[folder_name] = {
+                            "share_id": shared_id["share_id"],
+                            "share_token": shared_id["share_token"],
+                        }
                         self.accept_flag += 1
-                    else:
-                        self.search_token(f_id, share_list, folder_name)
+                    except Exception as e:
+                        if "warning: " not in str(e):
+                            log(f"E: {e}")
+                        else:
+                            log(str(e))
+
+                        if folder_token_flag[folder_name] and bool(self.share_id):
+                            self.accept_flag += 1
+                        else:
+                            self.search_token(f_id, share_list, folder_name)
 
                 if self.accept_flag is len(self.source_code_hashes):
                     break
@@ -243,24 +286,28 @@ class EudatClass(Storage):
             if self.accept_flag is len(self.source_code_hashes):
                 logging.info("shared token already exists on mongoDB")
             else:
-                raise Exception(f"E: could not find a shared file. Found ones are: {self.share_id}")
+                raise Exception(f"E: could not find a shared file. Found ones are:\n{self.share_id}")
 
         if bool(self.share_id):
             with open(share_id_file, "w") as f:
                 json.dump(self.share_id, f)
         else:
-            logging.error("Something is wrong. share_id is empty => {}")
-            raise
+            raise Exception(f"E: share_id={self.share_id} is empty")
 
-        #: total size to download in bytes
-        data_transfer_in_to_download = 0
+        # for *_, v in self.share_id.items():
+        #     try:
+        #         config.oc.accept_remote_share(int(v["share_id"]))
+        #     except Exception as e:
+        #         print_tb(e)
+
+        data_transfer_in_to_download = 0  # total size to download in bytes
         for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 folder_name = source_code_hash_text
                 if folder_name not in self.is_already_cached:
-                    info = config.oc.file_info(f"/{folder_name}/{folder_name}.tar.gz")
-                    #: DAV/Properties/getcontentlength the number of bytes of a resource
-                    data_transfer_in_to_download += info.get_size()
+                    data_transfer_in_to_download += self.get_file_size(
+                        f"/{folder_name}/{folder_name}.tar.gz", folder_name
+                    )
 
         self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
         log(
@@ -293,7 +340,7 @@ class EudatClass(Storage):
             self.eudat_get_share_token(provider_info["f_id"])
         except Exception as e:
             print_tb(f"E: could not get the share id. {e}")
-            return False
+            return False ###
 
         if int(self.data_transfer_in_to_download_mb) > int(self.data_transfer_in_requested):
             log(f"==> data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")

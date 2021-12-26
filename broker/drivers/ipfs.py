@@ -76,7 +76,7 @@ class IpfsClass(Storage):
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists online
             is_hashed = False
-            log(f"## attempting to get IPFS file: {ipfs_hash}... ", end="")
+            log(f"## attempting to get IPFS file: {ipfs_hash} ... ", end="")
             if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
                 log(ok("already cached"))

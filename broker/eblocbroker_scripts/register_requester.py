@@ -12,7 +12,6 @@ from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
-from broker.lib import run
 from broker.utils import question_yes_no, run_ipfs_daemon
 
 Ebb = cfg.Ebb
@@ -42,7 +41,7 @@ def register_requester(self, yaml_fn):
     except Exception as e:
         raise e
 
-    account = args["config"]["account"]
+    account = args["config"]["account"].lower()
     email = args["config"]["email"]
     federation_cloud_id = args["config"]["federation_cloud_id"]
     args.remove_temp()
@@ -64,26 +63,29 @@ def register_requester(self, yaml_fn):
         raise Exception("E: gpg_fingerprint should be 40 characters")
 
     if self.does_requester_exist(account):
-        log(f"warning: Requester {account} is already registered")
+        log(f"warning: requester {account} is already registered")
         requester_info = Ebb.get_requester_info(account)
         if (
             requester_info["email"] == email
-            and requester_info["gpg_fingerprint"] == gpg_fingerprint.lower()
+            and requester_info["gpg_fingerprint"] == gpg_fingerprint
             and requester_info["ipfs_id"] == ipfs_id
             and requester_info["f_id"] == federation_cloud_id
         ):
+            log(requester_info)
             log("## Same requester information is provided, nothing to do")
             raise QuietExit
 
-        requester_info = {
+        log("==> [bold yellow]registered_requester_info:")
+        log(requester_info)
+        _requester_info = {
             "email": email,
             "federation_cloud_id": federation_cloud_id,
             "gpg_fingerprint": gpg_fingerprint,
             "ipfs_id": ipfs_id,
         }
         log("==> [bold yellow]new_requester_info:")
-        log(requester_info)
-        if not question_yes_no("#> Would you like to update provider info?"):
+        log(_requester_info)
+        if not question_yes_no("#> Would you like to update requester info?"):
             return
 
     try:

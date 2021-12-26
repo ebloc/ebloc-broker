@@ -61,6 +61,7 @@ def set_folder_permission(path, user_name, slurm_user):
 
 
 def user_add(user_address, basedir, slurm_user):
+    user_address = user_address.lower()
     log(f"#> adding user={user_address}")
     try:  # convert ethereum user address into 32-bits
         user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()

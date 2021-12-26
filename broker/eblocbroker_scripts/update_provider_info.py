@@ -3,7 +3,7 @@
 import re
 
 from broker import cfg
-from broker._utils.tools import get_ip, is_gpg_published, log, print_tb, get_gpg_fingerprint
+from broker._utils.tools import get_gpg_fingerprint, get_ip, is_gpg_published, log, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.eblocbroker_scripts.register_provider import get_ipfs_id
@@ -31,7 +31,7 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
         provider_info = self.get_provider_info(env.PROVIDER_ID)
         if (
             # TODO: control does gpg_finderprint starts with 0x
-            provider_info["gpg_fingerprint"] == gpg_fingerprint.lower()
+            provider_info["gpg_fingerprint"] == gpg_fingerprint.upper()
             and provider_info["email"] == email
             and provider_info["f_id"] == federation_cloud_id
             and provider_info["ipfs_id"] == ipfs_id
@@ -58,6 +58,7 @@ if __name__ == "__main__":
     log(f"## gmail=[magenta]{env.GMAIL}")
     log(f"## gpg_fingerprint={gpg_fingerprint}")
     log(f"## ipfs_id=[magenta]{ipfs_id}")
+    log(f"## fid=[magenta]{federation_cloud_id}")
     try:
         is_gpg_published(gpg_fingerprint)
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, federation_cloud_id, ipfs_id)

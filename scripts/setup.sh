@@ -72,18 +72,10 @@ install_ipfs () {
 }
 install_ipfs
 
-## ipfs private network
-# =====================
-connect_private_ipfs () {
-    export IPFS_PATH=~/.ipfs
-    cat ~/ebloc-broker/scripts/ipfs_swarm.key | tr -d ' ' > $IPFS_PATH"/swarm.key"
-    ipfs bootstrap rm --all
-    ipfs bootstrap add $(cat ~/ebloc-broker/scripts/ipfs_bootstrap.txt)
-    # ipfs cat QmbuTPCg9MY5hYJZ7ft5S8dJ7RbgfrxiuNwnttdUNscsvp  # should return OK
-}
-go install github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen@latest
-ipfs init
-connect_private_ipfs
+# https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
+# https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
+ipfs init --profile=server,badgerds
+ipfs config Reprovider.Strategy roots
 
 # go-geth
 # =======
@@ -189,8 +181,11 @@ cd
 gpg --gen-key
 gpg --list-keys
 
-sudo apt-get install davfs2
-mkdir ~/oc
+sudo apt-get install davfs2 -y
+sudo mkdir /oc
+sudo chown $(whoami) /oc
+sudo chown -R $(whoami) /oc
+# sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
 #------------------------------------------------------------------------------
 # Provider
 #------------------------------------------------------------------------------

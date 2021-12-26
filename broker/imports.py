@@ -23,7 +23,7 @@ def connect():
             connect_into_web3()
 
         if not config.ebb:
-            connect_to_eblocbroker()
+            connect_into_eblocbroker()
     except Exception as e:
         print_tb(e)
 
@@ -88,7 +88,7 @@ def connect_into_web3() -> None:
         terminate(is_traceback=False)
 
 
-def connect_to_eblocbroker() -> None:
+def connect_into_eblocbroker() -> None:
     """Connect into ebloc-broker contract in the given blockchain."""
     if config.ebb:
         return

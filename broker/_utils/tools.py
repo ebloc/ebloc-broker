@@ -26,11 +26,11 @@ except ImportError:
 
 try:
     from broker.errors import HandlerException, QuietExit
-    from broker._utils._log import br, ok
+    from broker._utils._log import br
     from broker._utils._log import log
 except ImportError:  # if ebloc_broker used as a submodule
     from ebloc_broker.broker.errors import HandlerException, QuietExit
-    from ebloc_broker.broker._utils._log import br, ok
+    from ebloc_broker.broker._utils._log import br
     from ebloc_broker.broker._utils._log import log
 
 
@@ -502,4 +502,4 @@ def is_gpg_published(gpg_fingerprint):
 
 def get_gpg_fingerprint(email) -> str:
     output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
-    return output.split("\n")[1].replace(" ", "")
+    return output.split("\n")[1].replace(" ", "").upper()

@@ -5,5 +5,5 @@ from broker.libs import eudat
 
 eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
 oc = config.oc
-oc.list(".")
+print(oc.list("."))
 breakpoint()  # DEBUG

@@ -177,7 +177,7 @@ class Ipfs:
             return encrypted_file_target
 
         try:
-            run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
+            run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
             cmd = [
                 "gpg",
                 "--batch",
@@ -196,6 +196,7 @@ class Ipfs:
             return encrypted_file_target
         except Exception as e:
             print_tb(e)
+            breakpoint()  # DEBUG
             if "encryption failed: Unusable public key" in str(e):
                 log("## Check solution: https://stackoverflow.com/a/34132924/2402577")
         finally:
@@ -347,9 +348,7 @@ class Ipfs:
         """Return public ipfs id."""
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
-            if "::" not in ipfs_address:
-                if "127.0.0.1" not in ipfs_address:
-                    # log(f"==> ipfs_address={ipfs_address}")
-                    return ipfs_address
+            if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
+                return ipfs_address
 
         raise ValueError("No valid ipfs has is found")

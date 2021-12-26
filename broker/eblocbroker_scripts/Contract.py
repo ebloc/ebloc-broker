@@ -268,7 +268,7 @@ class Contract:
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise
 
-        log(f"==> contract_address={contract_address}")
+        log(f"==> contract_address={contract_address.lower()}")
         return True
 
     def print_contract_info(self):

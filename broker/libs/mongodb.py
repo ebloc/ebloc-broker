@@ -112,6 +112,12 @@ class MongoBroker(BaseMongoClass):
 
         return 0
 
+    def delete_shared_ids(self):
+        return self.share_id_coll.delete_many({}).acknowledged
+
+    def delete_all(self):
+        return self.collection.delete_many({}).acknowledged
+
     def is_received(self, requester_addr, key, index, is_print=False) -> bool:
         cursor = self.collection.find({"requester_addr": requester_addr.lower(), "job_key": key, "index": index})
         if is_print:
@@ -137,6 +143,7 @@ def main():
     parser.set_defaults(is_delete=False)
     args = parser.parse_args()
     if args.is_delete_all:
+        # ebb_mongo.delete_shared_ids()
         output = ebb_mongo.delete_all()
         log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
     else:

@@ -1,20 +1,17 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 from os.path import expanduser
-
+from broker.config import env
 import owncloud
 
-f = open(expanduser("~/.ebloc-broker/eudat_password.txt"), "r")
+f = open(expanduser("~/.ebloc-broker/.eudat_client.txt"), "r")
 password = f.read().rstrip().strip(" ")
 f.close()
-
 oc = owncloud.Client("https://b2drop.eudat.eu/")
-
-# 5f0db7e4-3078-4988-8fa5-f066984a8a97 == aalimog1@@boun.edu.tr
-oc.login("5f0db7e4-3078-4988-8fa5-f066984a8a97", password)  # user
+oc.login(env.OC_USER, password)
 share_list = globals()["oc"].list_open_remote_share()
 # print(share_list[0])
-# print(share_list)
+print(share_list)
 
 for i in range(len(share_list) - 1, -1, -1):
     input_folder_name = share_list[i]["name"]
@@ -24,3 +21,5 @@ for i in range(len(share_list) - 1, -1, -1):
     if input_folder_name == "doo":
         print(share_list[i])
         print(input_owner)
+
+breakpoint()  # DEBUG

@@ -98,7 +98,7 @@ def _login(fname, user, password_path):
 
     for _ in range(config.RECONNECT_ATTEMPTS):
         try:
-            status_str = "Trying to login into owncloud..."
+            status_str = f"Trying to login into owncloud, user={user} ..."
             with cfg.console.status(status_str):
                 # may take few minutes to connect
                 config.oc.login(user, password)

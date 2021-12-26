@@ -23,10 +23,9 @@ def get_requester_info(self, requester):
         event_filter = self._eBlocBroker.events.LogRequester.createFilter(
             fromBlock=int(block_read_from), toBlock=int(block_read_from) + 1
         )
-        gpg_fingerprint = event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].lower()
-        gpg_fingerprint = "2af4feb13ea98c83d94150b675d5530929e05ceb"
+        gpg_fingerprint = event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
         requester_info = {
-            "address": requester,
+            "address": requester.lower(),
             "block_read_from": block_read_from,
             "email": event_filter.get_all_entries()[0].args["email"],
             "gpg_fingerprint": gpg_fingerprint,

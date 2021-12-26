@@ -99,10 +99,12 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
     requester_info = self.get_requester_info(_from)
-    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL)
-    registered_gpg_fingerprint = gpg_fingerprint.lower()
-    if requester_info["gpg_fingerprint"] != registered_gpg_fingerprint:
-        raise Exception(f"E: gpg_fingerprint does not match {gpg_fingerprint} != {registered_gpg_fingerprint}")
+    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL).upper()
+    if requester_info["gpg_fingerprint"].upper() != gpg_fingerprint:
+        raise Exception(
+            f"E: gpg_fingerprint does not match {requester_info['gpg_fingerprint'].upper()} "
+            f"with registered gpg_fingerprint={gpg_fingerprint}"
+        )
 
     try:
         is_gpg_published(gpg_fingerprint)

@@ -11,8 +11,12 @@ from broker._utils.web3_tools import get_tx_status
 
 
 def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
-    """Authenticate orc_id."""
+    """Authenticate orc_id.
+
+    cmd: ./authenticate_orc_id.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 0000-0001-7642-0552
+    """
     address = self.w3.toChecksumAddress(address)
+    log(f"## authenticating user={address}")
     if not self.w3.isAddress(_from):
         log(f"E: Account: {_from} is not a valid address")
         raise
@@ -46,21 +50,24 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         return None
 
 
-if __name__ == "__main__":
+def main():
     Ebb = cfg.Ebb
     if len(sys.argv) == 3:
         address = str(sys.argv[1])
         orc_id = str(sys.argv[2])
     else:
-        log("E: Please provide the address and its orc_id as argument.\n./authenticate_orc_id.py <address> <orc_id>")
+        log("E: Please provide the address and its orc_id as argument")
+        log("   ./authenticate_orc_id.py <address> <orc_id>", "bold mangenta")
         sys.exit(1)
-        """
-        ./authenticate_orc_id.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 0000-0001-7642-0552  # home-1
-        """
+
     try:
         owner_address = Ebb.get_owner()
         tx_hash = Ebb.authenticate_orc_id(address, orc_id, owner_address)
         if tx_hash:
-            receipt = get_tx_status(tx_hash)
+            get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

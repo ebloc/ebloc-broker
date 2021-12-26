@@ -111,10 +111,10 @@ def upload(folder_to_share, tmp_dir, job_key_flag=False):
     is_file_exist = _list(tar_hash, is_folder=True)
     if not is_file_exist:
         key = _upload(dir_path, tar_hash, is_folder=True)
-        log(f"{_list(tar_hash)}", "green")
+        log(f"{_list(tar_hash)}", "bold green")
     else:
-        log(f"==> Requested folder {tar_hash} is already uploaded", "blue")
-        log(is_file_exist, "green")
+        log(f"## requested folder {tar_hash} is already uploaded", "bold blue")
+        log(is_file_exist, "bold green")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
 

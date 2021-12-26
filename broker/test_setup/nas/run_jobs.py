@@ -14,6 +14,7 @@ from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
+from broker.test_setup._users import users
 
 yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
@@ -160,7 +161,8 @@ def pre_submit(storage_ids, provider_address):
 def main():
     mc = MongoClient()
     ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
-    storage_ids = ["eudat", "ipfs_gpg", "ipfs", "gdrive"]
+    storage_ids = ["eudat", "ipfs", "gdrive"]
+    ipfs_ids = ["ipfs_gpg", "ipfs"]
     # for provider_address in provider_addresses:
     #     pre_submit(storage_ids, provider_address)
 
@@ -170,33 +172,41 @@ def main():
     cppr_yam_fn = test_dir / "job_cppr.yaml"
     counter = 0
     yaml_cfg = None
+    # storage = None
     for _ in range(25):
         for _ in range(2):  # submitted as batch is faster
             for idx, provider_address in enumerate(provider_addresses):
                 # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
                 storage_id = (idx + counter) % len(storage_ids)
                 selected_benchmark = random.choice(benchmarks)
+                storage = storage_ids[storage_id]
+                if storage == "ipfs":
+                    storage = random.choice(ipfs_ids)
+
                 if selected_benchmark == "nas":
-                    log(" [magenta]*[/magenta] [bold blue]Sending job from NAS Benchmark")
+                    log(f" * Submitting job from NAS Benchmark to [green]{provider_address}", "bold blue")
                     yaml_cfg = Yaml(nas_yaml_fn)
                     benchmark_name = create_nas_job_script()
                 elif selected_benchmark == "cppr":
-                    log(" [magenta]*[/magenta] [bold blue]Sending job from cppr datasets")
+                    log(f" * Submitting job with cppr datasets to [green]{provider_address}", "bold blue")
                     yaml_cfg = Yaml(cppr_yam_fn)
                     hash_small_data, hash_medium_data = create_cppr_job_script()
                     yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
                     yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
-                    yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage_ids[storage_id]
+                    yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
                     small_datasets = Path.home() / "test_eblocbroker" / "dataset_zip" / "small"
                     dirs = [d for d in os.listdir(small_datasets) if os.path.isdir(os.path.join(small_datasets, d))]
                     dir_name = random.choice(dirs)
                     yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets / dir_name)
 
+                yaml_cfg["config"]["source_code"]["storage_id"] = storage
                 yaml_cfg["config"]["provider_address"] = provider_address
-                yaml_cfg["config"]["source_code"]["storage_id"] = storage_ids[storage_id]
                 submit_base = SubmitBase(yaml_cfg.path)
                 submission_date = _time()
                 submission_timestamp = _timestamp()
+                requester_address = random.choice(users)
+                yaml_cfg["config"]["requester_address"] = requester_address
+                log(f"requester={requester_address}", "bold")
                 tx_hash = submit_base.submit(is_pass=True)
                 log(f"tx_hash={tx_hash}", "bold")
                 tx_receipt = get_tx_status(tx_hash, is_silent=True)
@@ -217,7 +227,7 @@ def main():
                 countdown(seconds=5, is_silent=True)
 
             counter += 1
-        sleep_time = randint(600, 900)
+        sleep_time = randint(300, 500)
         countdown(sleep_time)
 
 

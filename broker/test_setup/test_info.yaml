@@ -5,7 +5,8 @@ config:
       ip: 34.65.171.36
       hostname: instance-3
       name: instance-6
-      federation_cloud_id: "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
+      eudat: alper.alimoglu.research2@gmail.com
+      federation_cloud_id: "dbae8f40-20da-4f6f-b466-d434793320be"
     provider_2:
       address: "0x765508fc8f78a465f518ae79897d0e4b249e82dc"
       gmail: alper.alimoglu.test.1@gmail.com
@@ -25,6 +26,7 @@ config:
 
 users:
   address: "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
+  eudat: aalimog1@binghamton.edu
   oc_user: "059ab6ba-4030-48bb-b81b-12115f531296"
   b2drop_user_name: alper.alimoglu
   gmail: alper.alimoglu@gmai.com

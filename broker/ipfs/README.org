@@ -105,3 +105,28 @@ ipfs pin ls --type recursive
 ipfs pin rm <ipfs_hash>
 ipfs repo gc
 #+end_src
+
+** Private IPFS setup:
+
+#+begin_src bash
+## ipfs private network
+# =====================
+connect_private_ipfs () {
+    export IPFS_PATH=~/.ipfs
+    cat ~/ebloc-broker/scripts/ipfs_swarm.key | tr -d ' ' > $IPFS_PATH"/swarm.key"
+    ipfs bootstrap rm --all
+    ipfs bootstrap add $(cat ~/ebloc-broker/scripts/ipfs_bootstrap.txt)
+    # ipfs cat QmbuTPCg9MY5hYJZ7ft5S8dJ7RbgfrxiuNwnttdUNscsvp  # should return OK
+}
+go install github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen@latest
+ipfs init
+connect_private_ipfs
+#+end_src
+
+--------------------------------
+
+#+begin_src bash
+ipfs daemon --routing=none &
+ipfs repo gc
+time ipfs cat QmaSSwsS2nAjExnxrqwKtmK5rLLhmqpju1HCsnPSigtHmV > /dev/null
+#+end_src

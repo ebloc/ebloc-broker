@@ -39,7 +39,7 @@ def get_provider_info(self, provider):
                 event_filter[key] = ""
 
         #: removes padding 24 zeros at the beginning
-        gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].lower()
+        gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
         provider_info = {
             "available_core_num": provider_price_info[0],
             "commitment_block_num": provider_price_info[1],
