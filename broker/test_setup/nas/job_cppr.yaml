@@ -1,6 +1,6 @@
 config:
     requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
-    provider_address: '0xeab50158e8e51de21616307a99c9604c1c453a02'
+    provider_address: '0x765508fc8f78a465f518ae79897d0e4b249e82dc'
     source_code:
         storage_id: ipfs_gpg
         cache_type: public
@@ -8,10 +8,15 @@ config:
         storage_hours: 0
     data:
         data1:
-            hash: eaf488aea87a13a0bea5b83a41f3d49a
+            hash: 03919732a417cb1d14049844b9de0f47
         data2:
-            hash: dd0fbccccf7a198681ab838c67b68fbf
-    data_transfer_out: 1
+            hash: 9d5d892a63b5758090258300a59eb389
+        data3:
+            cache_type: public
+            path: /home/alper/test_eblocbroker/dataset_zip/small/liver.n6c100
+            storage_hours: 1
+            storage_id: ipfs_gpg
+    data_transfer_out: 5
     jobs:
         job1:
             cores: 1

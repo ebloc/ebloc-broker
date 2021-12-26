@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.lib import run
 import os
 import re
 import sys
@@ -9,12 +10,11 @@ import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import c, log
-from broker._utils.tools import get_ip, is_byte_str_zero, is_gpg_published, print_tb
+from broker._utils.tools import get_gpg_fingerprint, get_ip, is_byte_str_zero, is_gpg_published, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
-from broker.lib import run
 from broker.utils import popen_communicate, run_ipfs_daemon
 
 Ebb = cfg.Ebb
@@ -99,14 +99,9 @@ def register_provider_wrapper(yaml_fn):
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_id, flags=re.DOTALL)
         log(f"==> ipfs_address={ipfs_address}")
 
-    _p, output, *_ = popen_communicate([env.BASH_SCRIPTS_PATH / "get_gpg_fingerprint.sh"])
-    if _p.returncode != 0 or "E: " in output:
-        log(output)
-        sys.exit(1)
-    else:
-        gpg_fingerprint = output
-
     try:
+        email = env.GMAIL
+        gpg_fingerprint = get_gpg_fingerprint(email)
         is_gpg_published(gpg_fingerprint)
     except Exception as e:
         raise e

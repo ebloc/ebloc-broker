@@ -498,3 +498,8 @@ def is_gpg_published(gpg_fingerprint):
             run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
         except:
             raise e  # noqa
+
+
+def get_gpg_fingerprint(email) -> str:
+    output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
+    return output.split("\n")[1].replace(" ", "")

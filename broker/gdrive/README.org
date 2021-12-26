@@ -73,11 +73,10 @@ https://accounts.google.com/o/oauth2/auth?access_type=...
 * Headless Usage & Authorization
 
 #+begin_src bash
-$ google-drive-ocamlfuse -headless -label me -id ##yourClientID##.apps.googleusercontent.com -secret ###yoursecret#####
+$ google-drive-ocamlfuse -headless -label me -id  ##your_client_id##.apps.googleusercontent.com -secret ###yoursecret#####
 #+end_src
 
 [[https://github.com/astrada/google-drive-ocamlfuse/wiki/Headless-Usage-&-Authorization][doc]]
-
 
 Set ~shared_with_me=true~ in the config file to have read-only access to all your ~"Shared with me"~ files under ~./.shared~.
 

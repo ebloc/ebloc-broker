@@ -5,8 +5,9 @@
 ** TODO check before submitting job for the requester
 
 #+begin_src bash
-key_id=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
-echo $key_id
+# key_id=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
+key_id=$(gpg --list-secret-keys --keyid-format LONG <email>)
+echo $key_id && gpg --list-keys $key_id
 gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key_id
 #+end_src
 
@@ -44,3 +45,5 @@ gpg --edit-key <your_key_id_here>
 gpg> passwd
 gpg> save
 #+end_src
+
+~gpg --delete-secret-key <key_id>~

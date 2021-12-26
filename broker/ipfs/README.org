@@ -36,9 +36,10 @@ ipfs swarm addrs
 * Google node
 
 #+begin_src bash
-$ sudo firewall-cmd --add-port=4001/tcp --permanent
-$ sudo firewall-cmd --reload
-$ sudo firewall-cmd --list-all --zone=docker
+sudo firewall-cmd --add-port=4001/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
+
 public
   target: default
   icmp-block-inversion: no

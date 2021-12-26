@@ -178,9 +178,9 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=Tr
     else:
         is_print = ll.IS_PRINT
 
-    if threading.current_thread().name != "MainThread":
-        # prevent writing Thread's output into provider.log
-        is_print = False
+    # if threading.current_thread().name != "MainThread":
+    #     # prevent writing Thread's output into provider.log
+    #     is_print = False
 
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_bullet:

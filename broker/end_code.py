@@ -248,7 +248,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         for key in share_ids:
             value = share_ids[key]
-            encoded_value = self.encoded_share_tokens[key]
+            try:
+                encoded_value = self.encoded_share_tokens[key]
+            except:
+                _share_token = share_ids[key]["share_token"]
+                encoded_value = base64.b64encode((f"{_share_token}:").encode("utf-8")).decode("utf-8")
+
             log(f"## shared_tokens: {key} => {value['share_token']} | encoded={encoded_value}")
 
     def get_cloud_storage_class(self, _id):

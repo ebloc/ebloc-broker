@@ -61,9 +61,14 @@ def set_folder_permission(path, user_name, slurm_user):
 
 
 def user_add(user_address, basedir, slurm_user):
-    log("#> adding user")
-    # convert ethereum user address into 32-bits
-    user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
+    log(f"#> adding user={user_address}")
+    try:  # convert ethereum user address into 32-bits
+        user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
+        log(f"   user_name={user_name}", "bold")
+    except Exception as e:
+        log(f"warning: user_address={user_address}")
+        raise e
+
     user_dir = f"{basedir}/{user_name}"
     add_user_to_slurm(user_name)
     if username_check(user_name):

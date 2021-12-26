@@ -263,9 +263,9 @@ class Driver:
             except JobException as e:
                 log(str(e))
             except Exception as e:
+                print_tb(e)
                 log(str(e))
                 breakpoint()  # DEBUG
-                pass
                 # raise e
 
 
@@ -365,23 +365,23 @@ def run_driver():
             raise Terminate(f"block_read_from={block_read_from}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
-        try:
-            squeue_output = run(["squeue"])
-            if "squeue: error:" in str(squeue_output):
-                raise
-        except Exception as e:
-            raise Terminate(
-                "Warning: SLURM is not running on the background. Please run:\n"
-                "sudo ./broker/bash_scripts/run_slurm.sh"
-            ) from e
+        # try:
+        #     squeue_output = run(["squeue"])
+        #     if "squeue: error:" in str(squeue_output):
+        #         raise
+        # except Exception as e:
+        #     raise Terminate(
+        #         "Warning: SLURM is not running on the background. Please run:\n"
+        #         "sudo ./broker/bash_scripts/run_slurm.sh"
+        #     ) from e
 
-        # Gets real info under the header after the first line
-        if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
-            # checks if the squeue output's line number is gretaer than 1
-            log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-            log(squeue_output, "bold")
-            console_ruler()
+        # # Gets real info under the header after the first line
+        # if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
+        #     # checks if the squeue output's line number is gretaer than 1
+        #     log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
+        #     log(squeue_output, "bold")
 
+        console_ruler()
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:

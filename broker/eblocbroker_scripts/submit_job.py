@@ -4,7 +4,7 @@ import sys
 
 from broker import cfg
 from broker._utils._log import br
-from broker._utils.tools import is_gpg_published, log, print_tb
+from broker._utils.tools import get_gpg_fingerprint, is_gpg_published, log, print_tb
 from broker.config import env
 from broker.errors import QuietExit
 from broker.lib import run
@@ -99,7 +99,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
     requester_info = self.get_requester_info(_from)
-    gpg_fingerprint = run([env.BASH_SCRIPTS_PATH / "get_gpg_fingerprint.sh"])
+    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL)
     registered_gpg_fingerprint = gpg_fingerprint.lower()
     if requester_info["gpg_fingerprint"] != registered_gpg_fingerprint:
         raise Exception(f"E: gpg_fingerprint does not match {gpg_fingerprint} != {registered_gpg_fingerprint}")

@@ -7,7 +7,7 @@ import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import c, log
-from broker._utils.tools import is_byte_str_zero, is_gpg_published, print_tb
+from broker._utils.tools import get_gpg_fingerprint, is_byte_str_zero, is_gpg_published, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
@@ -35,7 +35,8 @@ def register_requester(self, yaml_fn):
 
     args = Yaml(yaml_fn)
     ipfs_id = cfg.ipfs.get_ipfs_id(client)
-    gpg_fingerprint = run([env.BASH_SCRIPTS_PATH / "get_gpg_fingerprint.sh"])
+    email = env.GMAIL
+    gpg_fingerprint = get_gpg_fingerprint(email)
     try:
         is_gpg_published(gpg_fingerprint)
     except Exception as e:

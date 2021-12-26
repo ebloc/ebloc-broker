@@ -3,12 +3,11 @@
 import re
 
 from broker import cfg
-from broker._utils.tools import get_ip, is_gpg_published, log, print_tb
+from broker._utils.tools import get_ip, is_gpg_published, log, print_tb, get_gpg_fingerprint
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.eblocbroker_scripts.register_provider import get_ipfs_id
 from broker.errors import QuietExit
-from broker.lib import run
 
 
 def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs_id):
@@ -54,15 +53,14 @@ if __name__ == "__main__":
         # public IP should exists in the ipfs id
         ipfs_id = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_id, flags=re.DOTALL)
 
-    email = env.GMAIL
+    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL)
     federation_cloud_id = env.F_ID
-    log(f"## gmail=[magenta]{email}")
-    gpg_fingerprint = run([env.BASH_SCRIPTS_PATH / "get_gpg_fingerprint.sh"])
+    log(f"## gmail=[magenta]{env.GMAIL}")
     log(f"## gpg_fingerprint={gpg_fingerprint}")
     log(f"## ipfs_id=[magenta]{ipfs_id}")
     try:
         is_gpg_published(gpg_fingerprint)
-        tx_hash = Ebb.update_provider_info(gpg_fingerprint, email, federation_cloud_id, ipfs_id)
+        tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, federation_cloud_id, ipfs_id)
         receipt = get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)

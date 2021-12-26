@@ -223,15 +223,14 @@ class Ipfs:
                     if not question_yes_no("#> Would you like to continue?"):
                         raise QuietExit
                 else:
+                    log("E: connection into provider's IPFS node via swarm is not accomplished")
                     raise Exception(error)
             else:
                 log(output, end="")
                 log(ok())
-
         except Exception as e:
             print_tb(e)
-            log("E: connection into provider's IPFS node via swarm is not accomplished")
-            sys.exit(1)
+            raise e
 
     def _ipfs_stat(self, ipfs_hash, _is_ipfs_on=True):
         """Return stats of the give IPFS hash.

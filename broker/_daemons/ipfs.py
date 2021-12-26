@@ -15,6 +15,7 @@ from broker.utils import is_ipfs_on, log, popen_communicate
 def run():
     """Run ipfs daemon.
 
+    cmd: ipfs daemon  # --mount
     __ https://stackoverflow.com/a/8375012/2402577
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
@@ -23,9 +24,12 @@ def run():
         open(config.env.IPFS_LOG, "a").close()
 
     with daemon.DaemonContext():
-        cmd = [IPFS_BIN, "daemon"]  # , "--mount"]
-        _env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": Path.home().joinpath(".ipfs")}
-        popen_communicate(cmd=cmd, stdout_file=config.env.IPFS_LOG, _env=_env)
+        if cfg.IS_PRIVATE_IPFS:
+            _env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": Path.home().joinpath(".ipfs")}
+        else:
+            _env = {"IPFS_PATH": Path.home().joinpath(".ipfs")}
+
+        popen_communicate([IPFS_BIN, "daemon"], stdout_file=config.env.IPFS_LOG, _env=_env)
 
     # ipfs mounted at: /ipfs
     # output = run(["sudo", "ipfs", "mount", "-f", "/ipfs"])

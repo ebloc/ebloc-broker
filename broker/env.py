@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+
 from broker._utils.yaml import Yaml
 
 

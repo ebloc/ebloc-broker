@@ -17,14 +17,13 @@ from broker._utils import _log
 from broker._utils._log import ok
 from broker._utils.tools import mkdir, read_json
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, run
+from broker.lib import calculate_size, log, run, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.link import Link
 from broker.utils import CacheType, bytes32_to_ipfs, cd, generate_md5sum, print_tb, write_to_file
-from broker.lib import subprocess_call
 
 
 class BaseClass:
@@ -264,7 +263,7 @@ class Storage(BaseClass):
             print_tb(f"E: Failed to call _sbatch_call() function. {e}")
             raise e
 
-    def scontrol_update(self, job_core_num, sbatch_file_path, time_limit) -> int:
+    def scontrol_update(self, job_core_num, sbatch_file_path, time_limit):
         """Prevent scontrol update locked exception.
 
         scontrol generates: Job update not available right now, the DB index is being

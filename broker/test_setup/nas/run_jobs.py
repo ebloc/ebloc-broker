@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os.path
 import random
 from pathlib import Path
 from random import randint
@@ -86,6 +87,17 @@ def create_cppr_job_script():
     f.write("    echo $file >> output.log\n")
     f.write("    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("done\n")
+    #
+    f.write("DATA_HASH='change_folder_hash'\n")
+    f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
+    f.write("    DATA3_DIR='../data_link/'$DATA_HASH'/'\n")
+    f.write("    echo ' * '$current_date >> output.log\n")
+    f.write("    find $DATA3_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
+    f.write("    do\n")
+    f.write("        echo $file >> output.log\n")
+    f.write("        (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
+    f.write("    done\n")
+    f.write("fi\n")
     f.write("echo '  [  DONE  ]  ' >> output.log\n")
     f.close()
     run(["sed", "-i", r"s/\x0//g", fn])  # remove NULL characters from the SBATCH file
@@ -156,24 +168,32 @@ def main():
     test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
     nas_yaml_fn = test_dir / "job_nas.yaml"
     cppr_yam_fn = test_dir / "job_cppr.yaml"
+    counter = 0
     yaml_cfg = None
     for _ in range(25):
         for _ in range(2):  # submitted as batch is faster
-            for provider_address in provider_addresses:
+            for idx, provider_address in enumerate(provider_addresses):
+                # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
+                storage_id = (idx + counter) % len(storage_ids)
                 selected_benchmark = random.choice(benchmarks)
                 if selected_benchmark == "nas":
-                    log(" * Sending job from NAS Benchmark", "bold blue")
+                    log(" [magenta]*[/magenta] [bold blue]Sending job from NAS Benchmark")
                     yaml_cfg = Yaml(nas_yaml_fn)
                     benchmark_name = create_nas_job_script()
                 elif selected_benchmark == "cppr":
-                    log(" * Sending job from cppr datasets", "bold blue")
+                    log(" [magenta]*[/magenta] [bold blue]Sending job from cppr datasets")
                     yaml_cfg = Yaml(cppr_yam_fn)
                     hash_small_data, hash_medium_data = create_cppr_job_script()
                     yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
                     yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
+                    yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage_ids[storage_id]
+                    small_datasets = Path.home() / "test_eblocbroker" / "dataset_zip" / "small"
+                    dirs = [d for d in os.listdir(small_datasets) if os.path.isdir(os.path.join(small_datasets, d))]
+                    dir_name = random.choice(dirs)
+                    yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets / dir_name)
 
                 yaml_cfg["config"]["provider_address"] = provider_address
-                yaml_cfg["config"]["source_code"]["storage_id"] = random.choice(storage_ids)
+                yaml_cfg["config"]["source_code"]["storage_id"] = storage_ids[storage_id]
                 submit_base = SubmitBase(yaml_cfg.path)
                 submission_date = _time()
                 submission_timestamp = _timestamp()
@@ -196,6 +216,7 @@ def main():
 
                 countdown(seconds=5, is_silent=True)
 
+            counter += 1
         sleep_time = randint(600, 900)
         countdown(sleep_time)
 
