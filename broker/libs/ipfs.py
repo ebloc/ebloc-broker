@@ -12,7 +12,7 @@ import ipfshttpclient
 from cid import make_cid
 
 from broker import cfg
-from broker._utils._log import ok
+from broker._utils._log import br, ok
 from broker._utils.tools import _remove, exit_after, handler, log, print_tb
 from broker.config import env, logging
 from broker.errors import IpfsNotConnected, QuietExit
@@ -176,8 +176,14 @@ class Ipfs:
             log(f"## gpg_file: {encrypted_file_target} is already created")
             return encrypted_file_target
 
+        for attempt in range(5):
+            try:
+                log(f"==> {br(attempt)} cmd: gpg --keyserver hkps://keyserver.ubuntu.com --recv-key <key_id>")
+                # This may not work if it is requested too much for a while
+                run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
+            except:
+                time.sleep(30)
         try:
-            run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
             cmd = [
                 "gpg",
                 "--batch",
@@ -192,13 +198,12 @@ class Ipfs:
                 encrypt_target,
             ]
             run(cmd)
-            log(f"==> gpg_file={encrypted_file_target}")
+            log(f"==> gpg_file=[magenta]{encrypted_file_target}")
             return encrypted_file_target
         except Exception as e:
             print_tb(e)
-            breakpoint()  # DEBUG
             if "encryption failed: Unusable public key" in str(e):
-                log("## Check solution: https://stackoverflow.com/a/34132924/2402577")
+                log("#> Check solution: https://stackoverflow.com/a/34132924/2402577")
         finally:
             if is_delete:
                 _remove(encrypt_target)
@@ -215,20 +220,19 @@ class Ipfs:
         try:
             log(f" * trying to connect into {ipfs_id}")
             cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_id]
-            p, output, error = popen_communicate(cmd)
+            p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
                 log()
-                error = error.replace("[/", "/").replace("]", "").replace("Error: ", "").rstrip()
-                if "failure: dial to self attempted" in error:
-                    log(f"E: {error}")
-                    if not question_yes_no("#> Would you like to continue?"):
+                e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
+                if "failure: dial to self attempted" in e:
+                    log(f"E: {e}")
+                    if not cfg.IS_TEST and not question_yes_no("#> Would you like to continue?"):
                         raise QuietExit
                 else:
                     log("E: connection into provider's IPFS node via swarm is not accomplished")
-                    raise Exception(error)
+                    raise Exception(e)
             else:
-                log(output, end="")
-                log(ok())
+                log(f"{output} {ok()}")
         except Exception as e:
             print_tb(e)
             raise e

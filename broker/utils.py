@@ -222,8 +222,11 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
 
     But also returns the output message captures on during the run stdout_file
     is not None in case of nohup process writes its results into a file.
+
+    * How to catch exception output from Python subprocess.check_output()?:
+    __ https://stackoverflow.com/a/24972004/2402577
     """
-    cmd = list(map(str, cmd))  # all items should be str
+    cmd = list(map(str, cmd))  # all items should be string
     if stdout_file is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
@@ -633,6 +636,7 @@ def compress_folder(folder_path, is_exclude_git=False):
         shutil.move(tar_base, tar_file)
         log(f"==> created_tar_file={dir_path}/{tar_file}")
         log(f"==> tar_hash={tar_hash}")
+
     return tar_hash, f"{dir_path}/{tar_file}"
 
 

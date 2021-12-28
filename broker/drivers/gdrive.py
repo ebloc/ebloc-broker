@@ -212,7 +212,7 @@ class GdriveClass(Storage):
                     gdrive_output,
                     self.results_folder_prev,
                     self.source_code_hashes,
-                    self.job_infos[0]["is_already_cached"],
+                    self.job_infos[0]["is_already_cached"]
                 )
             except Exception as e:
                 print_tb(e)
@@ -338,12 +338,14 @@ class GdriveClass(Storage):
             self.thread_log_setup()
 
         log(f"{br(get_time())} job's source code has been sent through Google Drive", "bold cyan")
-        if os.path.isdir(self.results_folder):
-            self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
+
+        # self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 
         try:
-            # attempt to download the source code
-            target = self.get_data(key=self.job_key, _id=0, is_job_key=True)
+            if os.path.isdir(self.results_folder):
+                # attempt to download the source code
+                target = self.get_data(key=self.job_key, _id=0, is_job_key=True)
+
             if not os.path.isdir(f"{target}/.git"):
                 log(f"warning: .git folder does not exist within {target}")
                 _git.generate_git_repo(target)

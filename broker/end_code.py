@@ -156,6 +156,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.folder_name = kwargs.pop("folder_name")
         self.slurm_job_id = kwargs.pop("slurm_job_id")
         self.share_tokens = {}  # type: Dict[str, str]
+        self.requester_id_address = ""
         self.data_transfer_in = 0
         self.data_transfer_out = 0.0
         self.elapsed_time = 0
@@ -190,20 +191,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             )
             self.storage_ids = self.job_info["cloudStorageID"]
             requester_id = self.job_info["job_owner"]
-            requester_id_address = eth_address_to_md5(requester_id)
+            self.requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
         except Exception as e:
             log(f"E: {e}")
             sys.exit(1)
 
-        self.results_folder_prev: Path = env.PROGRAM_PATH / requester_id_address / f"{self.job_key}_{self.index}"
+        self.results_folder_prev: Path = env.PROGRAM_PATH / self.requester_id_address / f"{self.job_key}_{self.index}"
         self.results_folder = self.results_folder_prev / "JOB_TO_RUN"
         if not is_dir(self.results_folder) and not is_dir(self.results_folder_prev):
             sys.exit(1)
 
         self.results_data_link = Path(self.results_folder_prev) / "data_link"
         self.results_data_folder = Path(self.results_folder_prev) / "data"
-        self.private_dir = Path(env.PROGRAM_PATH) / requester_id_address / "cache"
+        self.private_dir = Path(env.PROGRAM_PATH) / self.requester_id_address / "cache"
         self.patch_folder = Path(self.results_folder_prev) / "patch"
         self.patch_folder_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
         self.job_status_running_tx = Ebb.mongo_broker.get_job_status_running_tx(self.job_key, self.index)
@@ -219,7 +220,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> storage_ids={self.storage_ids}")
         log(f"==> folder_name=[white]{self.folder_name}")
         log(f"==> provider_id={env.PROVIDER_ID}")
-        log(f"==> requester_id_address={requester_id_address}")
+        log(f"==> requester_id_address={self.requester_id_address}")
         log(f"==> received={self.job_info['received']}")
         log(f"==> job_status_running_tx={self.job_status_running_tx}")
 
@@ -236,7 +237,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 ).decode("utf-8")
             except KeyError:
                 try:
-                    shared_id = Ebb.mongo_broker.find_shareid_item(self.job_key)
+                    shared_id = Ebb.mongo_broker.find_shareid_item(f"{self.job_key}_{self.requester_id_address[:16]}")
                     share_token = shared_id["share_token"]
                     self.share_tokens[source_code_hash] = share_token
                     self.encoded_share_tokens[source_code_hash] = base64.b64encode(

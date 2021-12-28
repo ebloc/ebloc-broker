@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from pathlib import Path
-
 from web3.logs import DISCARD
-
 from broker import cfg
 from broker._utils._log import ok
 from broker._utils.web3_tools import get_tx_status

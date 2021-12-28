@@ -33,7 +33,7 @@ def username_check(check):
     """Check if username exists."""
     try:
         pwd.getpwnam(check)
-        log("user %s exists" % (check))
+        log("## user %s exists" % (check))
         return False
     except KeyError:
         log("user %s does not exist. Continuing... %s" % (check, check))

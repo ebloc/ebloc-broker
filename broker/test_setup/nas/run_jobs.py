@@ -9,15 +9,18 @@ from pymongo import MongoClient
 from web3.logs import DISCARD
 
 from broker import cfg
+from broker._utils._log import console_ruler
 from broker._utils.tools import _time, _timestamp, countdown, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
 from broker.test_setup._users import users
+from broker.utils import print_tb
 
 yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
+cfg.IS_TEST = True
 
 provider_addresses = [
     "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
@@ -63,7 +66,7 @@ def create_cppr_job_script():
     ]
 
     hash_small_data = random.choice(registered_data_hashes_small)
-    hash_medium_data = random.choice(registered_data_hashes_medium)
+    hash_med_data = random.choice(registered_data_hashes_medium)
     fn = Path.home() / "test_eblocbroker" / "run_cppr" / "run.sh"
     f = open(fn, "w+")
     f.write("#!/bin/bash\n")
@@ -80,7 +83,7 @@ def create_cppr_job_script():
     f.write("    echo $file >> output.log\n")
     f.write("    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("done\n")
-    f.write(f"DATA_HASH='{hash_medium_data}'\n")
+    f.write(f"DATA_HASH='{hash_med_data}'\n")
     f.write("DATA2_DIR='../data_link/'$DATA_HASH'/'\n")
     f.write("echo ' * '$current_date >> output.log\n")
     f.write("find $DATA2_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
@@ -102,7 +105,7 @@ def create_cppr_job_script():
     f.write("echo '  [  DONE  ]  ' >> output.log\n")
     f.close()
     run(["sed", "-i", r"s/\x0//g", fn])  # remove NULL characters from the SBATCH file
-    return hash_small_data, hash_medium_data
+    return hash_small_data, hash_med_data
 
 
 def create_nas_job_script(is_small=False):
@@ -159,21 +162,23 @@ def pre_submit(storage_ids, provider_address):
 
 
 def main():
+    console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
     mc = MongoClient()
     ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
-    storage_ids = ["eudat", "ipfs", "gdrive"]
+    storage_ids = ["gdrive", "eudat", "ipfs"]
     ipfs_ids = ["ipfs_gpg", "ipfs"]
     # for provider_address in provider_addresses:
     #     pre_submit(storage_ids, provider_address)
 
     benchmarks = ["nas", "cppr"]
+    benchmarks = ["cppr"]  # delete_me
     test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
     nas_yaml_fn = test_dir / "job_nas.yaml"
     cppr_yam_fn = test_dir / "job_cppr.yaml"
     counter = 0
     yaml_cfg = None
     # storage = None
-    for _ in range(25):
+    for _ in range(50):
         for _ in range(2):  # submitted as batch is faster
             for idx, provider_address in enumerate(provider_addresses):
                 # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
@@ -190,9 +195,9 @@ def main():
                 elif selected_benchmark == "cppr":
                     log(f" * Submitting job with cppr datasets to [green]{provider_address}", "bold blue")
                     yaml_cfg = Yaml(cppr_yam_fn)
-                    hash_small_data, hash_medium_data = create_cppr_job_script()
+                    hash_small_data, hash_med_data = create_cppr_job_script()
                     yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
-                    yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
+                    yaml_cfg["config"]["data"]["data2"]["hash"] = hash_med_data
                     yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
                     small_datasets = Path.home() / "test_eblocbroker" / "dataset_zip" / "small"
                     dirs = [d for d in os.listdir(small_datasets) if os.path.isdir(os.path.join(small_datasets, d))]
@@ -201,30 +206,35 @@ def main():
 
                 yaml_cfg["config"]["source_code"]["storage_id"] = storage
                 yaml_cfg["config"]["provider_address"] = provider_address
-                submit_base = SubmitBase(yaml_cfg.path)
-                submission_date = _time()
-                submission_timestamp = _timestamp()
-                requester_address = random.choice(users)
-                yaml_cfg["config"]["requester_address"] = requester_address
-                log(f"requester={requester_address}", "bold")
-                tx_hash = submit_base.submit(is_pass=True)
-                log(f"tx_hash={tx_hash}", "bold")
-                tx_receipt = get_tx_status(tx_hash, is_silent=True)
-                if tx_receipt["status"] == 1:
-                    processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
-                    job_result = vars(processed_logs[0].args)
-                    job_result["submit_date"] = submission_date
-                    job_result["submit_timestamp"] = submission_timestamp
-                    job_result["tx_hash"] = tx_hash
-                    if selected_benchmark == "nas":
-                        job_result["submitted_job_kind"] = f"{selected_benchmark}_{benchmark_name}"
-                    elif selected_benchmark == "cppr":
-                        job_result["submitted_job_kind"] = f"{selected_benchmark}_{hash_small_data}_{hash_medium_data}"
+                try:
+                    submit_base = SubmitBase(yaml_cfg.path)
+                    submission_date = _time()
+                    submission_timestamp = _timestamp()
+                    requester_address = random.choice(users).lower()
+                    yaml_cfg["config"]["requester_address"] = requester_address
+                    log(f"requester={requester_address}", "bold")
+                    tx_hash = submit_base.submit(is_pass=True)
+                    log(f"tx_hash={tx_hash}", "bold")
+                    tx_receipt = get_tx_status(tx_hash, is_silent=True)
+                    if tx_receipt["status"] == 1:
+                        processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                        job_result = vars(processed_logs[0].args)
+                        job_result["submit_date"] = submission_date
+                        job_result["submit_timestamp"] = submission_timestamp
+                        job_result["tx_hash"] = tx_hash
+                        if selected_benchmark == "nas":
+                            job_result["submitted_job_kind"] = f"{selected_benchmark}_{benchmark_name}"
+                        elif selected_benchmark == "cppr":
+                            job_result["submitted_job_kind"] = f"{selected_benchmark}_{hash_small_data}_{hash_med_data}"
 
-                    ebb_mongo.add_item(tx_hash, job_result)
-                    log(job_result)
+                        ebb_mongo.add_item(tx_hash, job_result)
+                        log(job_result)
 
-                countdown(seconds=5, is_silent=True)
+                    import sys
+                    sys.exit()
+                    countdown(seconds=5, is_silent=True)
+                except Exception as e:
+                    print_tb(e)
 
             counter += 1
         sleep_time = randint(300, 500)

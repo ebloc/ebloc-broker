@@ -59,6 +59,7 @@ class Job:
         self.cores: List[int] = []
         self.run_time = []
         self.keys = {}  # type: Dict[str, str]
+        self.keys_final = {}  # type: Dict[str, str]
         self.foldername_tar_hash = {}  # type: Dict[str, str]
         self.tar_hashes = {}  # type: Dict[str, str]
         self.source_code_storage_id: str = ""

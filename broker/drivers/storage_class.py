@@ -228,7 +228,8 @@ class Storage(BaseClass):
                 log("E: run.sh does not exist under the parent folder")
                 return False
         except:
-            log("E: run.sh does not exist under the parent folder")
+            breakpoint()  # DEBUG
+            log(f"E: run.sh does not exist under the tar={tar_path}")
             return False
 
     def check_run_sh(self) -> bool:
@@ -322,7 +323,6 @@ class Storage(BaseClass):
             main_cloud_storage_id,
             job_info,
         )
-
         # TODO: update as used_data_transfer_in value
         data_transfer_in_json = self.results_folder_prev / "data_transfer_in.json"
         try:

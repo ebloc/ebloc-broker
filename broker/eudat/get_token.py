@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 from os.path import expanduser
-from broker.config import env
+
 import owncloud
+
+from broker.config import env
 
 f = open(expanduser("~/.ebloc-broker/.eudat_client.txt"), "r")
 password = f.read().rstrip().strip(" ")

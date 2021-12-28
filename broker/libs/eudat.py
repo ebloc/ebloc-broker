@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import hashlib
 import os
 import os.path
 import pickle
@@ -29,10 +30,8 @@ Ebb = cfg.Ebb
 def _upload_results(encoded_share_token, output_file_name):
     r"""Upload results into Eudat using curl.
 
-    - (How to upload files into shared b2drop.eudat(owncloud) repository using
-      curl?)[https://stackoverflow.com/a/44556541/2402577]
-
-    __ https://stackoverflow.com/a/24972004/2402577
+    * How to upload files into shared b2drop.eudat(owncloud) repository using curl?
+    __ https://stackoverflow.com/a/44556541/2402577
 
     cmd:
     curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encoded_share_token\'==\' \
@@ -60,9 +59,9 @@ def _upload_results(encoded_share_token, output_file_name):
 
     # some arguments requires "" for curl to work
     cmd_temp = cmd.copy()
-    cmd_temp[5] = f'"{cmd[5]}" \ \n    '
-    cmd_temp[7] = f'"{cmd[7]}" \ \n    '
-    cmd_temp[9] = f'"{cmd[9]}" \ \n    '
+    cmd_temp[5] = f'"{cmd[5]}" \   \n    '
+    cmd_temp[7] = f'"{cmd[7]}" \   \n    '
+    cmd_temp[9] = f'"{cmd[9]}" \   \n    '
     cmd_temp[10] = f'"{cmd[10]}" \ \n    '
     cmd_str = " ".join(cmd_temp)
     log(f"==> cmd:\n{cmd_str}")
@@ -112,7 +111,7 @@ def _login(fname, user, password_path):
             print_tb(e)
             _traceback = traceback.format_exc()
             if "Errno 110" in _traceback or "Connection timed out" in _traceback:
-                logging.warning(f"Sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
+                log(f"warning: sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
             else:
                 logging.error("E: Could not connect into [blue]eudat[/blue]")
@@ -163,17 +162,17 @@ def share_single_folder(folder_name, f_id) -> bool:
         return False
 
 
-def initialize_folder(folder_to_share) -> str:
+def initialize_folder(folder_to_share, requester_name) -> str:
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, *_ = compress_folder(folder_to_share)
     tar_source = f"{dir_path}/{tar_hash}.tar.gz"
     try:
-        config.oc.mkdir(tar_hash)
+        config.oc.mkdir(f"{tar_hash}_{requester_name}")
     except Exception as e:
         if "405" not in str(e):
-            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}"):
+            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}_{requester_name}"):
                 try:
-                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}")
+                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}_{requester_name}")
                 except Exception as e:
                     raise e
             else:
@@ -182,7 +181,7 @@ def initialize_folder(folder_to_share) -> str:
             log("==> folder is already created")
 
     try:
-        tar_dst = f"{tar_hash}/{tar_hash}.tar.gz"
+        tar_dst = f"{tar_hash}_{requester_name}/{tar_hash}.tar.gz"
         log("## uploading into [green]EUDAT B2DROP[/green] this may take some time depending on the file size...")
         is_already_uploaded = False
         with suppress(Exception):
@@ -229,7 +228,7 @@ def is_oc_mounted() -> bool:
         print(
             "Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n"
             "Please do: \n"
-            "mkdir -p /oc \n"
+            "sudo mkdir -p /oc \n"
             "sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc"
         )
         return False
@@ -264,6 +263,7 @@ def _submit(provider, requester, job, required_confs=1):
     job.Ebb.is_eth_account_locked(requester)
     provider = cfg.w3.toChecksumAddress(provider)
     provider_info = job.Ebb.get_provider_info(provider)
+    requester_name = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
     log(f"==> provider_fid=[magenta]{provider_info['f_id']}")
     try:
         _git.is_repo(job.folders_to_share)
@@ -280,7 +280,7 @@ def _submit(provider, requester, job, required_confs=1):
             try:
                 _git.initialize_check(folder)
                 _git.commit_changes(folder)
-                folder_hash = initialize_folder(folder)
+                folder_hash = initialize_folder(folder, requester_name)
             except Exception as e:
                 print_tb(e)
                 sys.exit(1)
@@ -292,7 +292,8 @@ def _submit(provider, requester, job, required_confs=1):
             value = cfg.w3.toBytes(text=folder_hash)
             job.source_code_hashes.append(value)
             job.source_code_hashes_str.append(value.decode("utf-8"))
-            if not share_single_folder(folder_hash, provider_info["f_id"]):
+            _folder = f"{folder_hash}_{requester_name}"
+            if not share_single_folder(_folder, provider_info["f_id"]):
                 sys.exit(1)
 
             time.sleep(0.25)

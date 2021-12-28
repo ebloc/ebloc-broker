@@ -169,7 +169,7 @@ class Driver:
         index = self.logged_job.args["index"]
         self.job_block_number = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
-        log(f"## job_key={job_key} | index={index}")
+        log(f"## job_key=[magenta]{job_key}[/magenta] | index={index}")
         log(
             f"received_block_number={self.job_block_number} \n"
             f"transactionHash={self.logged_job['transactionHash'].hex()} | "
