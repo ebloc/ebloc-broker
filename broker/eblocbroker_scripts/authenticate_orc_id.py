@@ -18,26 +18,21 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
     address = self.w3.toChecksumAddress(address)
     log(f"## authenticating user={address}")
     if not self.w3.isAddress(_from):
-        log(f"E: Account: {_from} is not a valid address")
-        raise
+        raise Exception(f"E: Account: {_from} is not a valid address")
 
     if not self.is_owner(_from):
         breakpoint()  # DEBUG
-        log(f"E: Account: {_from} that will call the transaction is not the owner of the contract")
-        raise
+        raise Exception(f"E: Account: {_from} that will call the transaction is not the owner of the contract")
 
     output = self.does_provider_exist(address)
     if not self.does_requester_exist(address) and not output:
-        log(f"E: Address: {address} is not registered")
-        raise
+        raise Exception(f"E: Address: {address} is not registered")
 
     if len(orc_id) != 19:
-        log("E: orc_id length is not 19")
-        raise
+        raise Exception("E: orc_id length is not 19")
 
     if not orc_id.replace("-", "").isdigit():
-        log("E: orc_id contains characters")
-        raise
+        raise Exception("E: orc_id contains characters")
 
     if not self._is_orc_id_verified(address):
         try:
