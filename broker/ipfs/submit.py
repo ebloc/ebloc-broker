@@ -61,7 +61,6 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
     log("==> Attemptting to submit a job")
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
-
     check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
     if main_storage_id == StorageID.IPFS:
         log("==> Submitting source code through [blue]IPFS[/blue]")

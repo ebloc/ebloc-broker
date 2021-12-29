@@ -67,6 +67,11 @@ class MongoBroker(BaseMongoClass):
         res = self.collection.replace_one({"job_key": job_key, "index": index}, item, True)
         return res.acknowledged
 
+    def find_all_shareid(self):
+        cursor = self.share_id_coll.find({})
+        for document in cursor:
+            log(document)
+
     def find_shareid_item(self, key):
         output = self.share_id_coll.find_one({"job_key": key})
         if bool(output):
@@ -143,13 +148,14 @@ def main():
     parser.set_defaults(is_delete=False)
     args = parser.parse_args()
     if args.is_delete_all:
-        # ebb_mongo.delete_shared_ids()
+        ebb_mongo.delete_shared_ids()
         output = ebb_mongo.delete_all()
         log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
     else:
+        ebb_mongo.find_all_shareid()
+        # output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
+        # log(output)
         # ebb_mongo.find_all()
-        output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
-        log(output)
         # Ebb = cfg.Ebb
         # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
         # output = ebb_mongo.set_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")

@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 import time
-import traceback
 from contextlib import suppress
 from pathlib import Path
 
@@ -89,7 +88,7 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
         return False
 
 
-def _login(fname, user, password_path):
+def _login(fname, user, password_path) -> None:
     sleep_duration = 15
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     with open(password_path, "r") as content_file:
@@ -97,7 +96,7 @@ def _login(fname, user, password_path):
 
     for _ in range(config.RECONNECT_ATTEMPTS):
         try:
-            status_str = f"Trying to login into owncloud, user={user} ..."
+            status_str = f"Trying to login into owncloud user={user} ..."
             with cfg.console.status(status_str):
                 # may take few minutes to connect
                 config.oc.login(user, password)
@@ -106,18 +105,15 @@ def _login(fname, user, password_path):
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(f"{status_str} {ok()}")
+            log(f"  {status_str} {ok()}")
+            return
         except Exception as e:
-            print_tb(e)
-            _traceback = traceback.format_exc()
-            if "Errno 110" in _traceback or "Connection timed out" in _traceback:
+            log(str(e))
+            if "Errno 110" in str(e) or "Connection timed out" in str(e):
                 log(f"warning: sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
             else:
-                logging.error("E: Could not connect into [blue]eudat[/blue]")
-                terminate()
-        else:
-            return False
+                terminate("Could not connect into [blue]eudat using config.oc.login()[/blue]")
 
     logging.error("E: user is None object")
     terminate()
@@ -138,7 +134,7 @@ def login(user, password_path: Path, fname: str) -> None:
             with cfg.console.status(status_str):
                 config.oc.get_config()
 
-            log(f"{status_str}{ok()}")
+            log(f" {status_str} {ok()}")
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)

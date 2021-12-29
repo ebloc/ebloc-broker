@@ -22,7 +22,7 @@ config:
       gmail: alper.alimoglu.test.3@gmail.com
       b2drop_user_name: alper.alimoglu.test.3
       b2drop_api_user: 3e3c90b7-0e2c-4967-957f-0df518529157@b2drop.eudat.eu
-      hostname: opera-instance-2
+      hostname: instance-9  # @tomasina
 
 users:
   address: "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"

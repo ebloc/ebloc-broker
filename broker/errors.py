@@ -27,4 +27,8 @@ class QuietExit(Exception):
 
 
 class IpfsNotConnected(Exception):
-    pass
+    """Connect to ipfs is failed"""
+
+
+class Timeout(Exception):
+    """Timeout"""

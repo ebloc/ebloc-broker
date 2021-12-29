@@ -3,15 +3,15 @@
 import os
 import shutil
 import time
-
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import _remove, mkdir
+from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size
 from broker.libs import _git
 from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log
+from broker.utils import run_ipfs_daemon
 
 
 class IpfsClass(Storage):
@@ -29,6 +29,7 @@ class IpfsClass(Storage):
             if "CumulativeSize" not in ipfs_stat:
                 raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve")
         except Exception as e:
+            print_tb(e)
             raise e
 
         self.ipfs_hashes.append(ipfs_hash)
@@ -41,6 +42,7 @@ class IpfsClass(Storage):
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
+        run_ipfs_daemon()
         log(f"{br(get_time())} Job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
             log("[bold green]IPFS")

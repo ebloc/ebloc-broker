@@ -2,17 +2,19 @@
 
 import os.path
 import random
+import sys
 from pathlib import Path
 from random import randint
-
+from datetime import datetime
 from pymongo import MongoClient
 from web3.logs import DISCARD
-
 from broker import cfg
+from broker._utils import _log
 from broker._utils._log import console_ruler
-from broker._utils.tools import _time, _timestamp, countdown, log, run
+from broker._utils.tools import _time, _timestamp, countdown, is_process_on, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
+from broker.libs import gdrive
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
 from broker.test_setup._users import users
@@ -20,7 +22,9 @@ from broker.utils import print_tb
 
 yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
-cfg.IS_TEST = True
+cfg.IS_FULL_TEST = True
+
+_log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 provider_addresses = [
     "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
@@ -162,23 +166,32 @@ def pre_submit(storage_ids, provider_address):
 
 
 def main():
+    try:
+        gdrive.check_user("alper.alimoglu.research2@gmail.com")
+    except Exception as e:
+        print_tb(e)
+        sys.exit(1)
+
     console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
+    log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    if not is_process_on("mongod", "mongod"):
+        raise Exception("mongodb is not running in the background")
+
     mc = MongoClient()
     ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
-    storage_ids = ["gdrive", "eudat", "ipfs"]
+    storage_ids = ["eudat", "gdrive", "ipfs"]
     ipfs_ids = ["ipfs_gpg", "ipfs"]
     # for provider_address in provider_addresses:
     #     pre_submit(storage_ids, provider_address)
 
     benchmarks = ["nas", "cppr"]
-    benchmarks = ["cppr"]  # delete_me
     test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
     nas_yaml_fn = test_dir / "job_nas.yaml"
     cppr_yam_fn = test_dir / "job_cppr.yaml"
     counter = 0
     yaml_cfg = None
     # storage = None
-    for _ in range(50):
+    for _ in range(60):
         for _ in range(2):  # submitted as batch is faster
             for idx, provider_address in enumerate(provider_addresses):
                 # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
@@ -230,14 +243,12 @@ def main():
                         ebb_mongo.add_item(tx_hash, job_result)
                         log(job_result)
 
-                    import sys
-                    sys.exit()
                     countdown(seconds=5, is_silent=True)
                 except Exception as e:
                     print_tb(e)
 
             counter += 1
-        sleep_time = randint(300, 500)
+        sleep_time = randint(200, 400)
         countdown(sleep_time)
 
 

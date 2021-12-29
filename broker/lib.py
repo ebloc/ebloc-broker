@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 from multiprocessing import Process
 from threading import Thread
 
@@ -110,27 +111,33 @@ def calculate_size(path, _type="MB") -> float:
         return byte_to_mb(byte_size)
 
 
-def subprocess_call(cmd, attempt=1, print_flag=True, sleep_time=1):
+def subprocess_call(cmd, attempt=1, sleep_time=1):
     """Run subprocess."""
     cmd = list(map(str, cmd))  # always should be type: str
     for count in range(attempt):
         try:
-            return subprocess.check_output(cmd).decode("utf-8").strip()
+            p, output, error_msg = popen_communicate(cmd)
+            if p.returncode != 0:
+                if count == 0:
+                    _cmd = " ".join(cmd)
+                    log(f"\n$ {_cmd}", "bold red")
+                    log(f"{error_msg} ", "bold", end="")
+                    log(WHERE())
+
+                if count + 1 == attempt:
+                    raise Exception(error_msg)
+
+                if attempt > 1:
+                    log(f"{br(f'attempt={count}')} ", end="")
+                    time.sleep(sleep_time)
+            else:
+                return output
         except Exception as e:
-            if count + 1 == attempt:
-                log()
-                print_tb(e)
-                raise SystemExit from e
+            # https://stackoverflow.com/a/1156048/2402577
+            for line in traceback.format_stack():
+                log(line.strip())
 
-            if count > 0 and print_flag:
-                print_tb(e)
-                log(WHERE())
-
-            if count == 0:
-                log("Trying again...\nAttempts: ", "green", end="")
-
-            log(f"{br(f'attempt={count}')} ", end="")
-            time.sleep(sleep_time)
+            raise e
 
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:
@@ -200,20 +207,24 @@ def is_dir(path) -> bool:
 
 
 def run_storage_thread(storage_class):
-    # consider giving the thread a name (add name=...), then you could
-    # use ThreadFilter(threadname=...) to select on all messages with that name
-    # The thread name does not have to be unique.
+    """Run storage driver as thread.
+
+    Consider giving the thread a name (add name=...), then you could
+    use ThreadFilter(threadname=...) to select on all messages with that name
+    The thread name does not have to be unique.
+    """
     storage_thread = Thread(target=storage_class.run)
     storage_thread.name = storage_class.thread_name
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
     log(f"==> thread_log_path={storage_class.drivers_log_path}")
     storage_thread.start()
-    try:
-        storage_thread.join()  # waits until the job is completed
-    except (KeyboardInterrupt, SystemExit):
-        sys.stdout.flush()
-        sys.exit(1)
+    if cfg.IS_THREAD_JOIN:
+        try:
+            storage_thread.join()  # waits until the job is completed
+        except (KeyboardInterrupt, SystemExit):
+            sys.stdout.flush()
+            sys.exit(1)
 
 
 def run_storage_process(storage_class):

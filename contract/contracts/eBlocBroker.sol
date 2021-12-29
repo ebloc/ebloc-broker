@@ -168,7 +168,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.runTime)));
 
         Lib.Job storage job = jobInfo.jobs[args.jobID]; /* Used as a pointer to a storage */
-
         require(
             job.stateCode != Lib.JobStateCodes.COMPLETED &&
                 job.stateCode != Lib.JobStateCodes.REFUNDED &&
@@ -253,20 +252,21 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, amountToRefund);
             return;
         }
-
-        // Setting job.stateCode into REFUNDED or COMPLETED prevents double
-        // spending used as a Reentrancy Guard
-        if (job.stateCode == Lib.JobStateCodes.CANCELLED) job.stateCode = Lib.JobStateCodes.REFUNDED;
-        else job.stateCode = Lib.JobStateCodes.COMPLETED;
-
+        if (job.stateCode == Lib.JobStateCodes.CANCELLED) {
+            // prevents double spending used as a reentrancy guard
+            job.stateCode = Lib.JobStateCodes.REFUNDED;
+        }
+        else {
+            // prevents double spending used as a reentrancy guard
+            job.stateCode = Lib.JobStateCodes.COMPLETED;
+        }
         jobInfo.received = jobInfo.received.sub(amountToGain.add(amountToRefund));
-
-        // Unused core and bandwidth is refunded back to the client
-        if (amountToRefund > 0) balances[jobInfo.jobOwner] += amountToRefund;
-
+        // unused core and bandwidth is refunded back to the client
+        if (amountToRefund > 0) {
+            balances[jobInfo.jobOwner] += amountToRefund;
+        }
         // Gained amount is transferred to the provider
         balances[msg.sender] += amountToGain;
-
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, amountToGain, amountToRefund);
         return;
     }
@@ -281,9 +281,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         uint256 payment = storageInfo.received;
         storageInfo.received = 0;
-
         require(payment > 0 && !provider.jobSt[sourceCodeHash].isVerifiedUsed);
-
         Lib.JobStorageTime storage jobSt = provider.jobSt[sourceCodeHash];
         // Required remaining time to cache should be 0
         require(jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
