@@ -363,6 +363,4 @@ class Storage(BaseClass):
             if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
                 # checks if the squeue output's line number is gretaer than 1
                 log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-                log(f"{squeue_output}  ", "bold", end="")
-
-        log(ok())
+                log(f"{squeue_output}  {ok()}", "bold")

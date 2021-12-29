@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
+import traceback
 
 # import hashlib
 import os
@@ -110,27 +111,33 @@ def calculate_size(path, _type="MB") -> float:
         return byte_to_mb(byte_size)
 
 
-def subprocess_call(cmd, attempt=1, print_flag=True, sleep_time=1):
+def subprocess_call(cmd, attempt=1, sleep_time=1):
     """Run subprocess."""
     cmd = list(map(str, cmd))  # always should be type: str
     for count in range(attempt):
         try:
-            return subprocess.check_output(cmd).decode("utf-8").strip()
+            p, output, error_msg = popen_communicate(cmd)
+            if p.returncode != 0:
+                if count == 0:
+                    _cmd = " ".join(cmd)
+                    log(f"\n$ {_cmd}", "bold red")
+                    log(f"{error_msg} ", "bold", end="")
+                    log(WHERE())
+
+                if count + 1 == attempt:
+                    raise Exception(error_msg)
+
+                if attempt > 1:
+                    log(f"{br(f'attempt={count}')} ", end="")
+                    time.sleep(sleep_time)
+            else:
+                return output
         except Exception as e:
-            if count + 1 == attempt:
-                log()
-                print_tb(e)
-                raise SystemExit from e
+            # https://stackoverflow.com/a/1156048/2402577
+            for line in traceback.format_stack():
+                log(line.strip())
 
-            if count > 0 and print_flag:
-                print_tb(e)
-                log(WHERE())
-
-            if count == 0:
-                log("Trying again...\nAttempts: ", "green", end="")
-
-            log(f"{br(f'attempt={count}')} ", end="")
-            time.sleep(sleep_time)
+            raise e
 
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:

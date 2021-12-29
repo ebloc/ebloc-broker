@@ -1,4 +1,4 @@
-watch.out
+watch*.out
 __pycache__/
 ebloc_broker.egg-info/
 \.mypy_cache/
@@ -172,3 +172,4 @@ slurm.out
 slurm.err
 slurm-*.out
 README.html
+_slurm/example/hello

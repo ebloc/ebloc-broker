@@ -9,19 +9,21 @@ import time
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
-
 from broker import cfg, config
 from broker._utils import _log
-from broker._utils._log import console_ruler, log
-from broker._utils.tools import kill_process_by_name, print_tb
+from broker._utils._log import console_ruler, log, ok
+from broker._utils.tools import is_process_on, kill_process_by_name, print_tb
 from broker.config import env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
-from broker.eblocbroker_scripts import Contract
+try:
+    from broker.eblocbroker_scripts import Contract
+except:
+    pass
+
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
 from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
@@ -42,12 +44,14 @@ from broker.utils import (
     terminate,
 )
 
+# from threading import Thread
+# from multiprocessing import Process
 pid = os.getpid()
 given_block_number = 0
-# os.environ["PYTHONBREAKPOINT"] = "0"
+cfg.IS_FULL_TEST = True
 
-# # from threading import Thread
-# # from multiprocessing import Process
+# if cfg.IS_FULL_TEST:
+#     os.environ["PYTHONBREAKPOINT"] = "0"
 
 
 def wait_until_idle_core_available():
@@ -80,6 +84,9 @@ def _tools(block_continue):
             log(":beer:  Connected into [green]BLOXBERG[/green]", "bold")
 
         slurm.is_on()
+        if not is_process_on("mongod", "mongod"):
+            raise Exception("mongodb is not running in the background")
+
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_EUDAT_USE:
             if not env.OC_USER:
@@ -266,7 +273,6 @@ class Driver:
                 print_tb(e)
                 log(str(e))
                 breakpoint()  # DEBUG
-                # raise e
 
 
 def run_driver():
@@ -417,10 +423,15 @@ def run_driver():
                 env.config["block_continue"] = current_block_num
                 block_read_from = current_block_num
         except Exception as e:
+
+            log()
             log(f"E: {e}")
-            if "Filter not found" in str(e):
-                time.sleep(15)
-            else:
+            if "Filter not found" in str(e) or "Read timed out" in str(e):
+                # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
+                log("## Sleeping for 60 seconds...", end="")
+                time.sleep(60)
+                log(ok())
+            elif not cfg.IS_FULL_TEST:
                 breakpoint()  # DEBUG
 
 
@@ -441,7 +452,7 @@ def _main():
     except QuietExit as e:
         log(e, is_err=True)
     except zc.lockfile.LockError:
-        log("E: Driver cannot lock the file, the pid file is in use")
+        log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
     except Terminate as e:
         terminate(str(e), lock)
     except Exception as e:
@@ -458,6 +469,7 @@ def main(args):
         global given_block_number
         if args.bn:
             given_block_number = args.bn
+            cfg.IS_FULL_TEST = False
         elif args.latest:
             given_block_number = cfg.Ebb.get_block_number()
 

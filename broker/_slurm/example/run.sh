@@ -19,5 +19,6 @@ sleep 10
 hostname > completed.txt
 uptime >> completed.txt
 nproc >> completed.txt
-firejail --allusers --noroot --net=none --disable-mnt --quiet ./run_me.sh # >> completed.txt
+# firejail --allusers --noroot --net=none --disable-mnt --quiet ./run_me.sh # >> completed.txt
+./run_me.sh
 echo "fin" >> completed.txt

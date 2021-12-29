@@ -28,6 +28,7 @@ from broker.utils import (
     terminate,
     untar,
 )
+from broker.lib import subprocess_call
 
 
 class Ipfs:
@@ -226,7 +227,7 @@ class Ipfs:
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
                 if "failure: dial to self attempted" in e:
                     log(f"E: {e}")
-                    if not cfg.IS_TEST and not question_yes_no("#> Would you like to continue?"):
+                    if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                         raise QuietExit
                 else:
                     log("E: connection into provider's IPFS node via swarm is not accomplished")
@@ -246,18 +247,17 @@ class Ipfs:
         if _is_ipfs_on and not is_ipfs_on():
             raise IpfsNotConnected
 
-        # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
-        return self.client.object.stat(ipfs_hash)
+        with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
+            return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-    @exit_after(900)
     def is_hash_exists_online(self, ipfs_hash: str):
-        log(f"## attempting to check IPFS file {ipfs_hash} ", end="")
+        log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ", end="")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         if not cfg.IS_THREADING_ENABLED:
             signal.signal(signal.SIGALRM, handler)
-            signal.alarm(300)  # Set the signal handler and a 300-second alarm
+            signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
 
         try:
             output = self._ipfs_stat(ipfs_hash, _is_ipfs_on=False)
@@ -265,10 +265,8 @@ class Ipfs:
             output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
             log(f"cumulative_size={output_json}", "bold")
             return output, output["CumulativeSize"]
-        except KeyboardInterrupt:
-            terminate("KeyboardInterrupt")
         except Exception as e:
-            raise Exception(f"E: Failed to find IPFS file: {ipfs_hash}") from e
+            raise Exception(f"E: Timeout, failed to find IPFS file: {ipfs_hash}") from e
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
@@ -353,6 +351,10 @@ class Ipfs:
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
+                return ipfs_address
+
+        for ipfs_address in reversed(ipfs_addresses):
+            if "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
                 return ipfs_address
 
         raise ValueError("No valid ipfs has is found")

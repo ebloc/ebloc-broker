@@ -42,9 +42,15 @@ rm -rf $HOME/.ebloc-broker/transactions/*
 rm -f $HOME/.ebloc-broker/end_code_output/*
 rm -f $HOME/.ebloc-broker/drivers_output/*
 rm -f $HOME/.ebloc-broker/my-app.pid
+rm -f $HOME/.ebloc-broker/test.log
 
 cat /dev/null > $HOME/.ebloc-broker/provider.log
-cat /dev/null > $HOME/.ebloc-broker/log.txt
+rm -f $HOME/.ebloc-broker/log.txt
+rm -f $HOME/.ebloc-broker/test.log
+rm -f $HOME/.ebloc-broker/watch_0x*.out
+rm -f $HOME/.ebloc-broker/ipfs.out
+rm -f $HOME/.ebloc-broker/ganache.out
+rm -f $HOME/.ebloc-broker/*.yaml~
 
 killall.sh
 
@@ -56,12 +62,16 @@ rm -f $base/package-lock.json
 # rm -f .oc.pckl
 rm -rf docs/_build_html/
 rm -rf docs/_build/
+rm /tmp/run/driver_popen.pid
+rm -f ~/.ebloc-broker/.oc_client.pckl
 
 # unpin and remove all IPFS content from my machine
-ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm
+ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm
 ipfs repo gc
 
 $HOME/ebloc-broker/broker/libs/mongodb.py --delete-all
 
 echo -e "\n$ ls /var/ebloc-broker"
-ls /var/ebloc-broker
+ls /var/ebloc-broker/
+
+# command rm -rf ~/.local/share/Trash/files/*

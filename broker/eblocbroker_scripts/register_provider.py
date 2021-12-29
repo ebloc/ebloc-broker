@@ -53,6 +53,7 @@ def _register_provider(self, *args, **kwargs):
 def get_ipfs_id() -> str:
     run_ipfs_daemon()
     try:
+        # may create error
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except ipfshttpclient.exceptions.ConnectionError:
         log(

@@ -1,6 +1,6 @@
 config:
-    requester_address: '0x6d00e4661e8407f24b2942149ea4a9d445d10038'
-    provider_address: '0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA'
+    requester_address: '0x1926b36af775e1312fdebcc46303ecae50d945af'
+    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
     source_code:
         storage_id: gdrive
         cache_type: public
@@ -8,12 +8,12 @@ config:
         storage_hours: 0
     data:
         data1:
-            hash: 983b9fe8a85b543dd5a4a75d031f1091
+            hash: 03919732a417cb1d14049844b9de0f47
         data2:
-            hash: fe801973c5b22ef6861f2ea79dc1eb9c
+            hash: 4613abc322e8f2fdeae9a5dd10f17540
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/BL06-camel-sml
+            path: /home/alper/test_eblocbroker/dataset_zip/small/liver.n6c10
             storage_hours: 1
             storage_id: gdrive
     data_transfer_out: 5
