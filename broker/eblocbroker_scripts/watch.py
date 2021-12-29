@@ -2,6 +2,7 @@
 
 import sys
 import time
+from pathlib import Path
 
 from broker import cfg
 from broker._utils import _log
@@ -11,12 +12,15 @@ from broker.config import env
 from broker.lib import state
 
 Ebb = cfg.Ebb
-ETH_ADDRESS = "0xa61bb920ef738eab3d296c0c983a660f6492e1af"
-_log.ll.LOG_FILENAME = "watch.out"
 watch_only_jobs = True
 
 
-def main():
+def watch(eth_address=""):
+    if not eth_address:
+        eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
+
+    watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
+    _log.ll.LOG_FILENAME = watch_fn
     # open("watch.out", "w").close()
     _console_clear()
     log(" * s t a r t i n g")
@@ -29,10 +33,10 @@ def main():
                 providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
         from_block = cfg.Ebb.get_block_number() - cfg.BLOCK_DURATION_1_DAY
-        from_block = 13599212
+        from_block = 13615463
         event_filter = cfg.Ebb._eBlocBroker.events.LogJob.createFilter(
             fromBlock=int(from_block),
-            argument_filters={"owner": ETH_ADDRESS},
+            argument_filters={"provider": eth_address},
             toBlock="latest",
         )
         logged_jobs = event_filter.get_all_entries()
@@ -69,9 +73,9 @@ def main():
 
         is_connected = Ebb.is_web3_connected()
         _console_clear()
-        open("watch.out", "w").close()
+        open(watch_fn, "w").close()
         log(
-            f"\r * {_time() } latest_block_number={block_number} | is_web3_connected={is_connected}",
+            f"\r * {_time() } latest_block_number={block_number} | is_web3_connected={is_connected} | address={eth_address}",
             "bold",
             end="",
         )
@@ -95,7 +99,11 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        eth_address = None
+        if len(sys.argv) == 2:
+            eth_address = sys.argv[1]
+
+        watch(eth_address)
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

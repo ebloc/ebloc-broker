@@ -9,6 +9,7 @@ from pymongo import MongoClient
 from web3.logs import DISCARD
 
 from broker import cfg
+from broker._utils import _log
 from broker._utils._log import console_ruler
 from broker._utils.tools import _time, _timestamp, countdown, log, run
 from broker._utils.web3_tools import get_tx_status
@@ -21,6 +22,8 @@ from broker.utils import print_tb
 yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
 cfg.IS_TEST = True
+
+_log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 provider_addresses = [
     "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
@@ -165,13 +168,12 @@ def main():
     console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
     mc = MongoClient()
     ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
-    storage_ids = ["gdrive", "eudat", "ipfs"]
+    storage_ids = ["eudat", "gdrive", "ipfs"]
     ipfs_ids = ["ipfs_gpg", "ipfs"]
     # for provider_address in provider_addresses:
     #     pre_submit(storage_ids, provider_address)
 
     benchmarks = ["nas", "cppr"]
-    benchmarks = ["cppr"]  # delete_me
     test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
     nas_yaml_fn = test_dir / "job_nas.yaml"
     cppr_yam_fn = test_dir / "job_cppr.yaml"
@@ -230,8 +232,6 @@ def main():
                         ebb_mongo.add_item(tx_hash, job_result)
                         log(job_result)
 
-                    import sys
-                    sys.exit()
                     countdown(seconds=5, is_silent=True)
                 except Exception as e:
                     print_tb(e)

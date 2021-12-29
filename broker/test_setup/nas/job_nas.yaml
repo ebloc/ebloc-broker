@@ -1,8 +1,8 @@
 config:
-    requester_address: '0x4cd57387cc4414be8cece4e6ab84a7dd641eab25'
-    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
+    requester_address: '0x76f47f566845d7499c058c3a36ccd2fe5695c9f7'
+    provider_address: '0x765508fc8f78a465f518ae79897d0e4b249e82dc'
     source_code:
-        storage_id: eudat
+        storage_id: gdrive
         cache_type: public
         path: ~/test_eblocbroker/NPB3.3-SER_source_code
         storage_hours: 0

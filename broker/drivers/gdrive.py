@@ -212,7 +212,7 @@ class GdriveClass(Storage):
                     gdrive_output,
                     self.results_folder_prev,
                     self.source_code_hashes,
-                    self.job_infos[0]["is_already_cached"]
+                    self.job_infos[0]["is_already_cached"],
                 )
             except Exception as e:
                 print_tb(e)

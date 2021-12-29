@@ -1,4 +1,4 @@
-watch.out
+watch*.out
 __pycache__/
 ebloc_broker.egg-info/
 \.mypy_cache/

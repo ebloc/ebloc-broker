@@ -76,6 +76,7 @@ install_ipfs
 # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
 ipfs init --profile=server,badgerds
 ipfs config Reprovider.Strategy roots
+sudo sysctl -w net.core.rmem_max=26214400
 
 # go-geth
 # =======
