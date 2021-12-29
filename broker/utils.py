@@ -370,7 +370,7 @@ def is_gzip_file_empty(filename):
     if bool(int(size)):
         return False
 
-    log(f"==> Created gzip file ({filename}) is empty")
+    log(f"==> Created gzip file is empty:\n    [magenta]{filename}[/magenta]")
     return True
 
 
@@ -492,7 +492,7 @@ def is_dpkg_installed(package_name) -> bool:
         return False
 
 
-def terminate(msg="", is_traceback=True, lock=None):
+def terminate(msg="", is_traceback=False, lock=None):
     """Exit."""
     if msg:
         log(f"{WHERE(1)} Terminated: ", "bold red", end="")

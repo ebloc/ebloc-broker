@@ -8,13 +8,10 @@ import shutil
 import subprocess
 import sys
 import time
-import traceback
 from contextlib import suppress
 from pathlib import Path
-
 import owncloud
 from web3.logs import DISCARD
-
 from broker import cfg, config
 from broker._utils._log import br, ok
 from broker._utils.web3_tools import get_tx_status
@@ -97,7 +94,7 @@ def _login(fname, user, password_path):
 
     for _ in range(config.RECONNECT_ATTEMPTS):
         try:
-            status_str = f"Trying to login into owncloud, user={user} ..."
+            status_str = f"Trying to login into owncloud user={user} ..."
             with cfg.console.status(status_str):
                 # may take few minutes to connect
                 config.oc.login(user, password)
@@ -106,16 +103,14 @@ def _login(fname, user, password_path):
             f = open(fname, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(f"{status_str} {ok()}")
+            log(f"  {status_str} {ok()}")
         except Exception as e:
-            print_tb(e)
-            _traceback = traceback.format_exc()
-            if "Errno 110" in _traceback or "Connection timed out" in _traceback:
+            log(str(e))
+            if "Errno 110" in str(e) or "Connection timed out" in str(e):
                 log(f"warning: sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
                 sleep_timer(sleep_duration)
             else:
-                logging.error("E: Could not connect into [blue]eudat[/blue]")
-                terminate()
+                terminate("Could not connect into [blue]eudat using config.oc.login()[/blue]")
         else:
             return False
 
@@ -138,7 +133,7 @@ def login(user, password_path: Path, fname: str) -> None:
             with cfg.console.status(status_str):
                 config.oc.get_config()
 
-            log(f"{status_str}{ok()}")
+            log(f" {status_str} {ok()}")
         except subprocess.CalledProcessError as e:
             logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fname, user, password_path)

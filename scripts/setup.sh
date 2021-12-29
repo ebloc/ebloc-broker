@@ -76,6 +76,14 @@ install_ipfs
 # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
 ipfs init --profile=server,badgerds
 ipfs config Reprovider.Strategy roots
+sudo sysctl -w net.core.rmem_max=262144
+
+# echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+# sudo sysctl -p
+
+sudo firewall-cmd --add-port=4001/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
 
 # go-geth
 # =======

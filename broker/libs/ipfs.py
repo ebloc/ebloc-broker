@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import os
 import re
 import signal
@@ -13,7 +12,7 @@ from cid import make_cid
 
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import _remove, exit_after, handler, log, print_tb
+from broker._utils.tools import _remove, handler, log, print_tb
 from broker.config import env, logging
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.utils import (
@@ -25,9 +24,9 @@ from broker.utils import (
     raise_error,
     run,
     run_with_output,
-    terminate,
     untar,
 )
+from broker.lib import subprocess_call
 
 
 class Ipfs:
@@ -136,7 +135,6 @@ class Ipfs:
         except Exception as e:
             print_tb(e)
             raise e
-            # breakpoint()  # DEBUG
         # finally:
         #     os.unlink(gpg_file_link)
         if extract_target:
@@ -178,10 +176,14 @@ class Ipfs:
 
         for attempt in range(5):
             try:
-                log(f"==> {br(attempt)} cmd: gpg --keyserver hkps://keyserver.ubuntu.com --recv-key <key_id>")
+                log(
+                    f"{br(attempt)} cmd: gpg --keyserver hkps://keyserver.ubuntu.com --recv-key {user_gpg_finderprint}",
+                    "bold",
+                )
                 # This may not work if it is requested too much for a while
                 run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
-            except:
+            except Exception as e:
+                log(f"warning: {e}")
                 time.sleep(30)
         try:
             cmd = [
@@ -226,7 +228,7 @@ class Ipfs:
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
                 if "failure: dial to self attempted" in e:
                     log(f"E: {e}")
-                    if not cfg.IS_TEST and not question_yes_no("#> Would you like to continue?"):
+                    if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                         raise QuietExit
                 else:
                     log("E: connection into provider's IPFS node via swarm is not accomplished")
@@ -246,29 +248,30 @@ class Ipfs:
         if _is_ipfs_on and not is_ipfs_on():
             raise IpfsNotConnected
 
-        # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
-        return self.client.object.stat(ipfs_hash)
+        with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
+            return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-    @exit_after(900)
     def is_hash_exists_online(self, ipfs_hash: str):
-        log(f"## attempting to check IPFS file {ipfs_hash} ", end="")
+        log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         if not cfg.IS_THREADING_ENABLED:
             signal.signal(signal.SIGALRM, handler)
-            signal.alarm(300)  # Set the signal handler and a 300-second alarm
+            signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
 
         try:
             output = self._ipfs_stat(ipfs_hash, _is_ipfs_on=False)
-            log(ok())
-            output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
-            log(f"cumulative_size={output_json}", "bold")
-            return output, output["CumulativeSize"]
-        except KeyboardInterrupt:
-            terminate("KeyboardInterrupt")
+            for line in output.split("\n"):
+                if "CumulativeSize" not in line:
+                    log(line)
+
+            # output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
+            cumulative_size = int(output.split("\n")[4].split(":")[1].replace(" ", ""))
+            log(f"cumulative_size={cumulative_size}", "bold")
+            return output, cumulative_size
         except Exception as e:
-            raise Exception(f"E: Failed to find IPFS file: {ipfs_hash}") from e
+            raise Exception(f"E: Timeout, failed to find IPFS file: {ipfs_hash}") from e
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
@@ -285,7 +288,11 @@ class Ipfs:
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        return self._ipfs_stat(ipfs_hash)["CumulativeSize"]
+        output = self._ipfs_stat(ipfs_hash)
+        if output:
+            return int(output.split("\n")[4].split(":")[1].replace(" ", ""))
+        else:
+            raise Exception(f"CumulativeSize could not found for {ipfs_hash}")
 
     def add(self, path: str, is_hidden=False) -> str:
         """Add file or folder into ipfs.
@@ -353,6 +360,10 @@ class Ipfs:
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
+                return ipfs_address
+
+        for ipfs_address in reversed(ipfs_addresses):
+            if "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
                 return ipfs_address
 
         raise ValueError("No valid ipfs has is found")

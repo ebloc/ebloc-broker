@@ -15,6 +15,7 @@ from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from subprocess import PIPE, CalledProcessError, Popen, check_output
+from broker.errors import Timeout
 
 import requests
 from pytz import timezone, utc
@@ -42,7 +43,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+    return f"[bold green][[/bold green]  [bold blue]{text}  [bold green]][/bold green]"
 
 
 def merge_two_dicts(x, y):
@@ -335,7 +336,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
     pids = []
     for line in output:
         fields = line.strip().split()
-        # Array indices start at 0 unlike awk, 1 indice points the port number
+        # array indices start at 0 unlike awk, 1 indice points the port number
         pids.append(fields[1])
 
     if len(pids) > process_count:
@@ -404,15 +405,15 @@ def without_keys(d, keys):
 
 
 def quit_function(fn_name):
-    # print to stderr, unbuffered in Python 2.
+    print("\nwarning: ", end="")
     print("{0} took too long".format(fn_name), file=sys.stderr)
+    breakpoint()  # DEBUG
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
 
 
 def exit_after(s):
     """Use as decorator to exit process if function takes longer than s seconds."""
-
     def outer(fn):
         def inner(*args, **kwargs):
             timer = threading.Timer(s, quit_function, args=[fn.__name__])

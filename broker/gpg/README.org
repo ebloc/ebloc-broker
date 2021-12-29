@@ -47,3 +47,14 @@ gpg> save
 #+end_src
 
 ~gpg --delete-secret-key <key_id>~
+
+#+begin_src bash
+gpg --list-keys
+gpg --batch --delete-key <key_id>
+
+gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'
+
+for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
+    gpg --batch --delete-key "$i"
+done
+#+end_src

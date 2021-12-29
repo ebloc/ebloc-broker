@@ -13,6 +13,6 @@ is_internet () {
 }
 
 is_internet
-echo is_internet=$(is_internet) > completed.txt
+echo is_internet=$(is_internet) >> completed.txt
 g++ helloworld.cpp -o hello
 ./hello

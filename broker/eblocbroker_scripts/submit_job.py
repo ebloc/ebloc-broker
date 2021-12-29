@@ -7,7 +7,6 @@ from broker._utils._log import br
 from broker._utils.tools import get_gpg_fingerprint, is_gpg_published, log, print_tb
 from broker.config import env
 from broker.errors import QuietExit
-from broker.lib import run
 from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
 from brownie.exceptions import TransactionError
 
@@ -80,7 +79,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     for cache_type in job.cache_types:
         if cache_type > 1:
-            # cache_type = {0: private, 1: public}
+            # cache_type should be {0: private, 1: public}
             raise Exception(f"E: cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
 
     if is_use_ipfs:
@@ -91,7 +90,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
         except Exception as e:
             log(f"E: {e}")
-            if not cfg.IS_TEST and not question_yes_no("#> Would you like to continue?"):
+            if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                 raise QuietExit from e
 
     for idx, source_code_hash in enumerate(job.source_code_hashes_str):
