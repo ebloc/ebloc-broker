@@ -44,7 +44,7 @@ def start_call(job_key, index, slurm_job_id):
     log(f"{env.EBLOCPATH}/broker/eblocbroker_scripts/set_job_status_running.py {job_key} {index} {job_id} {start_time}")
     for attempt in range(10):
         if attempt > 0:
-            log(f"Warning: sleeping for {cfg.BLOCK_DURATION * 2}...")
+            log(f"warning: sleeping for {cfg.BLOCK_DURATION * 2}...")
             time.sleep(cfg.BLOCK_DURATION * 2)
 
         try:

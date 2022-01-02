@@ -7,10 +7,10 @@ from os import path
 import pytest
 
 from broker import cfg, config
-from broker._utils._log import _console_ruler, br, log
+from broker._utils._log import br, console_ruler, log
 from broker.config import setup_logger
-from broker.eblocbroker import Contract
-from broker.eblocbroker.job import Job
+from broker.eblocbroker_scripts import Contract
+from broker.eblocbroker_scripts.job import Job
 from broker.utils import CacheType, StorageID
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
@@ -149,7 +149,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
     # withdraw(requester, refunded_sum)
     check_list(is_print)
     if is_print:
-        _console_ruler(character="-=")
+        console_ruler(character="-=")
 
     return tx
 

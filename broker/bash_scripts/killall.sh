@@ -16,5 +16,6 @@ kill -9 $(ps auxww | grep -E "python.*[d]river_cancel" | awk '{print $2}') > /de
 kill -9 $(ps auxww | grep -E "python.*[D]river.py"     | awk '{print $2}') > /dev/null 2>&1
 
 killall python3 2> /dev/null
+echo "## killall all jobs in squeue"
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 printf "killall for ebloc-broker test [ ${GREEN}OK${NC} ]\n"

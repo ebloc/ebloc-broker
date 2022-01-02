@@ -4,7 +4,7 @@ import sys
 
 from broker import cfg
 from broker._utils.tools import print_tb
-from broker.lib import get_tx_status
+from broker._utils.web3_tools import get_tx_status
 
 
 def update_provider_prices(self, available_core, commitment_blk, prices):

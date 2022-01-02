@@ -3,6 +3,7 @@
 import os
 import pathlib
 import sys
+import textwrap
 import threading
 from typing import Dict, Union
 
@@ -24,7 +25,6 @@ console = Console()
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
-
 custom_theme = Theme(
     {
         "info": "dim cyan",
@@ -37,8 +37,8 @@ custom_theme = Theme(
 
 
 class Colors:
-    pink = "#ff79c6"
     red = "#ff5555"
+    pink = "#ff79c6"
 
 
 class Style:
@@ -133,8 +133,11 @@ class Log:
         return text, color, _len, is_bullet, is_r, is_bold
 
 
-def br(text):
-    return f"[bold][[/bold]{text}[bold]][/bold]"
+def br(text, color="white"):
+    if color != "white":
+        return f"[bold][[/bold][{color}]{text}[/{color}][bold]][/bold]"
+    else:
+        return f"[bold][[/bold]{text}[bold]][/bold]"
 
 
 def ok(text="OK"):
@@ -145,7 +148,7 @@ def _console_clear():
     console.clear()
 
 
-def _console_ruler(msg="", character="=", color="cyan", filename=""):
+def console_ruler(msg="", character="=", color="cyan", filename=""):
     if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
         filename = thread_log_files[threading.current_thread().name]
     elif not filename:
@@ -169,7 +172,16 @@ def _console_ruler(msg="", character="=", color="cyan", filename=""):
         ll.console[filename].rule(characters=character)
 
 
-def _log(text, color, is_bold, flush, filename, end, is_write=True):
+def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=True):
+    if not is_output:
+        is_print = is_output
+    else:
+        is_print = ll.IS_PRINT
+
+    # if threading.current_thread().name != "MainThread":
+    #     # prevent writing Thread's output into provider.log
+    #     is_print = False
+
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_bullet:
         _text = f"[bold]{text}[/bold]"
@@ -177,7 +189,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
         _text = text
 
     if color:
-        if ll.IS_PRINT:
+        if is_print:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_bullet:
                     print(
@@ -216,7 +228,7 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True):
             else:
                 text_write = _text
 
-        if ll.IS_PRINT:
+        if is_print:
             if end == "":
                 print(text_write, end="")
             else:
@@ -246,7 +258,18 @@ def WHERE(back=0):
     return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
 
 
-def log(text="", color=None, filename=None, end=None, flush=False, is_write=True, where_back=0):
+def log(
+    text="",
+    color=None,
+    filename=None,
+    end=None,
+    flush=False,
+    is_write=True,
+    where_back=0,
+    is_code=False,
+    is_err=False,
+    is_output=True,
+):
     """Print for own settings.
 
     * colors:
@@ -257,11 +280,22 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_write=True
         is_bold = True
         color = None
 
+    if is_err:
+        text = str(text)
+        if str(text):
+            if "E: " not in text[3]:
+                text = f"E: {text}"
+        else:
+            return
+
     if isinstance(text, str) and "E: " in text[3:]:
         text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] {text.replace('E: ', '')}"
 
     if "-=-=" in str(text):
         is_bold = True
+
+    if is_code:
+        text = " \ \n  ".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
 
     if is_write:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
@@ -284,7 +318,7 @@ def log(text="", color=None, filename=None, end=None, flush=False, is_write=True
         if is_write:
             ll.console[filename].print(text)
     else:
-        _log(text, color, is_bold, flush, filename, end, is_write)
+        _log(text, color, is_bold, flush, filename, end, is_write, is_output)
 
 
 ll = Log()

@@ -8,10 +8,10 @@ import pytest
 
 import brownie
 from broker import cfg, config
-from broker._utils._log import _console_ruler
+from broker._utils._log import console_ruler
 from broker.config import setup_logger
-from broker.eblocbroker import Contract
-from broker.eblocbroker.job import DataStorage, Job
+from broker.eblocbroker_scripts import Contract
+from broker.eblocbroker_scripts.job import DataStorage, Job
 from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log, logging, zero_bytes32
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
@@ -755,7 +755,7 @@ def test_workflow():
     log(ebb.getJobInfo(provider, job_key, 0, 0))
     log(ebb.getJobInfo(provider, job_key, 0, 1))
     log(ebb.getJobInfo(provider, job_key, 0, 2))
-    _console_ruler(character="-=")
+    console_ruler(character="-=")
     assert (
         tx.events["LogRegisteredDataRequestToUse"][0]["registeredDataHash"]
         == "0x0000000000000000000000000000000068b8d8218e730fc2957bcb12119cb204"
@@ -1019,7 +1019,7 @@ def test_submit_job():
                 with brownie.reverts():
                     tx = ebb.setJobStatusRunning(job_key, index, jobID, int(arguments[0]) + 1, {"from": accounts[0]})
 
-    _console_ruler()
+    console_ruler()
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
     with open(fname) as f:
         for index, line in enumerate(f):
@@ -1065,7 +1065,7 @@ def test_submit_job():
     for idx in range(0, size):
         log(ebb.getProviderReceiptNode(provider, idx))
 
-    _console_ruler()
+    console_ruler()
     log(f"==> storage_time for job={job_key}")
     job_storage_time = ebb.getJobStorageTime(provider, source_code_hash)
     ds = DataStorage(job_storage_time)
@@ -1079,7 +1079,7 @@ def test_submit_job():
         "received_storage_deposit="
         + str(ebb.getReceivedStorageDeposit(provider, requester, source_code_hash, {"from": provider}))
     )
-    _console_ruler("DONE")
+    console_ruler("DONE")
 
     """
     mine(cfg.BLOCK_DURATION_1_HOUR)

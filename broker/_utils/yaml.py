@@ -94,8 +94,8 @@ class Yaml(dict):
                 with open(path) as f:
                     self.update(self.yaml.load(f) or {})
 
-    def remove_temp(self, is_warning=False):
-        _remove(self.path_temp, is_warning)
+    def remove_temp(self):
+        _remove(self.path_temp)
 
     def compare_files(self, fn1, fn2):
         with open(fn1, "r") as file1, open(fn2, "r") as file2:

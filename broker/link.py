@@ -3,6 +3,7 @@
 
 import os
 import sys
+from contextlib import suppress
 from pathlib import Path
 from typing import Dict
 
@@ -24,7 +25,8 @@ class Link:
 
             destination = f"{self.path_to}/{data_hash}"
             if os.path.isdir(destination):
-                run(["sudo", "umount", destination])
+                with suppress(Exception):
+                    run(["sudo", "umount", "-f", destination], is_quiet=True)
 
     def link(self, path, destination, is_read_only=False):
         """Make links between folders.
@@ -89,7 +91,7 @@ class Link:
                 assert folder_hash == folder_new_hash, "Hash does not match for original and linked folder"
 
 
-def check_link_folders(folders_to_share, registered_data_files):
+def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
     is_continue = False
     if registered_data_files:
         is_continue = True
@@ -102,21 +104,32 @@ def check_link_folders(folders_to_share, registered_data_files):
     if folders_to_share:
         is_continue = True
         path_to = env.LINK_PATH / "base" / "data_link"
-        check_linked_data(folders_to_share, path_to)
+        check_linked_data(folders_to_share, path_to, is_pass)
         for folder in folders_to_share:
             if not os.path.isdir(folder):
                 log(f"E: {folder} path does not exist")
     else:
         if is_continue:
             print("")
-            question_yes_no(
-                "#> Would you like to continue with linked folder path in your run.sh?\n"
-                "If no, please feel free to update your run.sh file and continue",
-                is_exit=True,
-            )
+            if not is_pass:
+                question_yes_no(
+                    "#> Would you like to continue with linked folder path in your run.sh?\n"
+                    "If no, please feel free to update your run.sh file and continue",
+                    is_exit=True,
+                )
 
 
-def check_linked_data(paths_from, path_to, is_continue=False):
+def test_with_small_data(value):
+    fn = "/home/alper/test_eblocbroker/run_cppr/run.sh"
+    with open(fn, "r") as file:
+        filedata = file.read()
+        filedata = filedata.replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
+
+    with open(fn, "w") as file:
+        file.write(filedata)
+
+
+def check_linked_data(paths_from, path_to, is_pass=False):
     """Generate folder as hard linked of the given folder paths or provider main folder.
 
     :param paths_from: iterates all over the given folders
@@ -127,9 +140,10 @@ def check_linked_data(paths_from, path_to, is_continue=False):
     link.link_folders(paths_from)
     log()
     for key, value in link.data_map.items():
+        test_with_small_data(value)
         log(f"[bold green] * {key}[/bold green] => [bold yellow]../data_link/{value}[/bold yellow]")
 
-    if not is_continue:
+    if not is_pass:
         print("")
         question_yes_no(
             "#> Would you like to continue with linked folder path in your run.sh?\n"

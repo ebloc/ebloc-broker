@@ -52,7 +52,7 @@ def analyze_data(self, key, provider=None):
                     # requested for cache for the first time
                     self.job_info["is_already_cached"][source_code_hash_str] = False
 
-        log(f" * source_code_hash{br(idx)}={source_code_hash_str}")
+        log(f" * source_code_hash{br(idx)}=[green]{source_code_hash_str}")
         log(f"==> received_block={ds.received_block}")
         log(f"==> storage_duration{br(self.job_info['received_block_number'])}={ds.storage_duration}")
         log(f"==> cloud_storage_id{br(idx)}={StorageID(self.job_info['cloudStorageID'][idx]).name}")
@@ -171,7 +171,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
     """Return information of the job."""
     if is_print:
         fname = "~/ebloc-broker/broker/eblocbroker_scripts/get_job_info.py"
-        log(f"{fname} {provider} \ \n\t\t{job_key} {index} {job_id} {received_block_number}", "bold cyan")
+        log(f"{fname} {provider} {job_key} {index} {job_id} {received_block_number}", "bold cyan", is_code=True)
 
     try:
         provider = cfg.w3.toChecksumAddress(provider)

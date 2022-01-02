@@ -623,8 +623,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.ProviderInfo memory info = provider.info[_providerPriceBlockIndex];
         uint256 totalCost;
         uint256 storageCost;
-        // Here "storageDuration[0]" => block.timestamp stores the calcualted cacheCost
-        // Here "dataTransferIn[0]"  => block.timestamp stores the overall dataTransferIn value, decreased if there is caching for specific block
+        // "storageDuration[0]" => block.timestamp stores the calcualted cacheCost
+        // "dataTransferIn[0]"  => block.timestamp stores the overall dataTransferIn value,
+        //                         decreased if there is caching for specific block
         (totalCost, dataTransferIn[0], storageCost, storageDuration[0]) = _calculateCacheCost(
             provider,
             args,
@@ -683,7 +684,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     ) public {
         Lib.Provider storage provider = providers[msg.sender];
         Lib.Status storage jobInfo = provider.jobStatus[key][index];
-
         // List of provide sourceCodeHashes should be same as with the ones that
         // are provided along with the job
         require(

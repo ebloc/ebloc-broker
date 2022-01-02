@@ -1,0 +1,13 @@
+config:
+    requester_address: '0x13fe0b65bdd902d252d0b431aec6acf02a0b2f41'
+    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
+    source_code:
+        storage_id: ipfs_gpg
+        cache_type: public
+        path: ~/test_eblocbroker/NPB3.3-SER_source_code
+        storage_hours: 0
+    data_transfer_out: 5
+    jobs:
+        job1:
+            cores: 1
+            run_time: 60

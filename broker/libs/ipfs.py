@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import os
 import re
 import signal
@@ -11,10 +10,12 @@ from subprocess import check_output
 import ipfshttpclient
 from cid import make_cid
 
-from broker._utils._log import ok
+from broker import cfg
+from broker._utils._log import br, ok
 from broker._utils.tools import _remove, handler, log, print_tb
 from broker.config import env, logging
-from broker.errors import QuietExit
+from broker.errors import IpfsNotConnected, QuietExit
+from broker.lib import subprocess_call
 from broker.utils import (
     _try,
     compress_folder,
@@ -24,13 +25,8 @@ from broker.utils import (
     raise_error,
     run,
     run_with_output,
-    terminate,
     untar,
 )
-
-
-class IpfsNotConnected(Exception):
-    pass
 
 
 class Ipfs:
@@ -52,12 +48,12 @@ class Ipfs:
         Args:
             path: Path of a folder or file
 
-        Returns string that contains the ouput of the run commad.
+        Return string that contains the ouput of the run commad.
         """
         if os.path.isdir(path):
             cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
             if is_hidden:
-                # include files that are hidden such as .git/.
+                # include files that are hidden such as .git/
                 # Only takes effect on recursive add
                 cmd.insert(3, "--hidden")
         elif os.path.isfile(path):
@@ -139,7 +135,6 @@ class Ipfs:
         except Exception as e:
             print_tb(e)
             raise e
-            # breakpoint()  # DEBUG
         # finally:
         #     os.unlink(gpg_file_link)
         if extract_target:
@@ -153,8 +148,8 @@ class Ipfs:
                 _remove(tar_file)
 
     def remove_lock_files(self):
-        _remove(f"{env.HOME}/.ipfs/repo.lock", is_warning=True)
-        _remove(f"{env.HOME}/.ipfs/datastore/LOCK", is_warning=True)
+        _remove(f"{env.HOME}/.ipfs/repo.lock")
+        _remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 
     def gpg_encrypt(self, user_gpg_finderprint, target):
         is_delete = False
@@ -179,6 +174,17 @@ class Ipfs:
             log(f"## gpg_file: {encrypted_file_target} is already created")
             return encrypted_file_target
 
+        for attempt in range(5):
+            try:
+                log(
+                    f"{br(attempt)} cmd: gpg --keyserver hkps://keyserver.ubuntu.com --recv-key {user_gpg_finderprint}",
+                    "bold",
+                )
+                # This may not work if it is requested too much for a while
+                run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
+            except Exception as e:
+                log(f"warning: {e}")
+                time.sleep(30)
         try:
             cmd = [
                 "gpg",
@@ -186,18 +192,20 @@ class Ipfs:
                 "--yes",
                 "--recipient",
                 user_gpg_finderprint,
+                "--trust-model",
+                "always",
                 "--output",
                 encrypted_file_target,
                 "--encrypt",
                 encrypt_target,
             ]
             run(cmd)
-            log(f"==> gpg_file={encrypted_file_target}")
+            log(f"==> gpg_file=[magenta]{encrypted_file_target}")
             return encrypted_file_target
         except Exception as e:
             print_tb(e)
             if "encryption failed: Unusable public key" in str(e):
-                log("==> Check solution: https://stackoverflow.com/a/34132924/2402577")
+                log("#> Check solution: https://stackoverflow.com/a/34132924/2402577")
         finally:
             if is_delete:
                 _remove(encrypt_target)
@@ -212,57 +220,58 @@ class Ipfs:
 
         # TODO: check is valid IPFS id
         try:
-            log(f" * trying to connect into {ipfs_id} ", end="")
-            # output = client.swarm.connect(provider_info["ipfs_id"])
-            # if ("connect" and "success") in str(output):
-            #     log(str(output), "green")
-            cmd = ["ipfs", "swarm", "connect", ipfs_id]
-            p, output, error = popen_communicate(cmd)
+            log(f" * trying to connect into {ipfs_id}")
+            cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_id]
+            p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
                 log()
-                error = error.replace("[/", "/").replace("]", "").replace("Error: ", "").rstrip()
-                if "failure: dial to self attempted" in error:
-                    log(f"E: {error}")
-                    if not question_yes_no("#> Would you like to continue?"):
+                e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
+                if "failure: dial to self attempted" in e:
+                    log(f"E: {e}")
+                    if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                         raise QuietExit
                 else:
-                    raise Exception(error)
+                    log("E: connection into provider's IPFS node via swarm is not accomplished")
+                    raise Exception(e)
             else:
-                log(ok())
+                log(f"{output} {ok()}")
         except Exception as e:
             print_tb(e)
-            log("E: connection into provider's IPFS node via swarm is not accomplished")
-            sys.exit(1)
+            raise e
 
-    def _ipfs_stat(self, ipfs_hash):
+    def _ipfs_stat(self, ipfs_hash, _is_ipfs_on=True):
         """Return stats of the give IPFS hash.
 
         This function *may* run for an indetermined time. Returns a dict with the
         size of the block with the given hash.
         """
-        if not is_ipfs_on():
+        if _is_ipfs_on and not is_ipfs_on():
             raise IpfsNotConnected
 
-        # run(["timeout", 300, "ipfs", "object", "stat", ipfs_hash])
-        return self.client.object.stat(ipfs_hash)
+        with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
+            return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
     def is_hash_exists_online(self, ipfs_hash: str):
-        logging.info(f"attempting to check IPFS file {ipfs_hash}")
+        log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        # Set the signal handler and a 300-second alarm
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(300)
+        if not cfg.IS_THREADING_ENABLED:
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
+
         try:
-            output = self._ipfs_stat(ipfs_hash)
-            output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
-            log(f"cumulative_size={output_json}", "bold")
-            return output, output["CumulativeSize"]
-        except KeyboardInterrupt:
-            terminate("KeyboardInterrupt")
+            output = self._ipfs_stat(ipfs_hash, _is_ipfs_on=False)
+            for line in output.split("\n"):
+                if "CumulativeSize" not in line:
+                    log(line)
+
+            # output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
+            cumulative_size = int(output.split("\n")[4].split(":")[1].replace(" ", ""))
+            log(f"cumulative_size={cumulative_size}", "bold")
+            return output, cumulative_size
         except Exception as e:
-            raise Exception(f"E: Failed to find IPFS file: {ipfs_hash}") from e
+            raise Exception(f"E: Timeout, failed to find IPFS file: {ipfs_hash}") from e
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
@@ -279,7 +288,11 @@ class Ipfs:
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        return self._ipfs_stat(ipfs_hash)["CumulativeSize"]
+        output = self._ipfs_stat(ipfs_hash)
+        if output:
+            return int(output.split("\n")[4].split(":")[1].replace(" ", ""))
+        else:
+            raise Exception(f"CumulativeSize could not found for {ipfs_hash}")
 
     def add(self, path: str, is_hidden=False) -> str:
         """Add file or folder into ipfs.
@@ -346,11 +359,11 @@ class Ipfs:
         """Return public ipfs id."""
         ipfs_addresses = client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
-            if "::" not in ipfs_address:
-                if "127.0.0.1" in ipfs_address:
-                    log(f"==> {ipfs_address}")
-                else:
-                    log(f"==> ipfs_id={ipfs_address}")
-                    return ipfs_address
+            if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
+                return ipfs_address
+
+        for ipfs_address in reversed(ipfs_addresses):
+            if "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
+                return ipfs_address
 
         raise ValueError("No valid ipfs has is found")

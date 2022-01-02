@@ -164,7 +164,7 @@ def commit_changes(path):
                 repo.git.add(A=True)
 
             if len(repo.index.diff("HEAD")) == 0:
-                log(f"==> {path}\n\tis committed with the given changes using git")
+                log(f"==> {path}\n    is committed with the given changes using git")
 
         try:
             add_all(repo)

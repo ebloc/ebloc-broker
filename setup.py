@@ -27,7 +27,7 @@ setup(
     keywords=["eblocbroker"],
     install_requires=requirements,
     entry_points={
-        "console_scripts": ["eblocbroker=broker.__main__:main"],
+        "console_scripts": ["eblocbroker=broker._cli.__main__:main"],
     },
     include_package_data=True,
     python_requires=">=3.6,<4",

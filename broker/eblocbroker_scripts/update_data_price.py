@@ -2,9 +2,9 @@
 
 from broker import cfg
 from broker._utils.tools import log
+from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.errors import QuietExit
-from broker.lib import get_tx_status
 from broker.utils import print_tb
 
 

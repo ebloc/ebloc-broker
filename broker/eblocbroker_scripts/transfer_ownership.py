@@ -4,8 +4,8 @@ import sys
 
 from broker import cfg
 from broker._utils.tools import log, print_tb
+from broker._utils.web3_tools import get_tx_status
 from broker.config import env
-from broker.lib import get_tx_status
 from broker.utils import ZERO_ADDRESS
 
 

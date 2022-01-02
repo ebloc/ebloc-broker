@@ -2,13 +2,16 @@ config:
     requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
     provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
     source_code:
-        cache_type: public
-        path: ~/test_eblocbroker/source_code
-        storage_hours: 1
         storage_id: ipfs
-    base_data_path: ~/test_eblocbroker/test_data/base/
+        cache_type: public
+        path: ~/test_eblocbroker/run_cppr
+        storage_hours: 0
     data:
         data1:
+            hash: e62593609805db0cd3a028194afb43b1
+        data2:
+            hash: 8f6faf6cfd245cae1b5feb11ae9eb3cf
+        data3:
             cache_type: public
             path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
             storage_hours: 1

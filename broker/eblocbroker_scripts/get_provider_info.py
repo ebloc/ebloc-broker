@@ -3,7 +3,7 @@
 import sys
 
 from broker import cfg
-from broker._utils.tools import log, print_tb
+from broker._utils.tools import is_byte_str_zero, log, print_tb
 from broker.config import env
 from brownie.network.account import Account
 
@@ -34,13 +34,12 @@ def get_provider_info(self, provider):
                 if key not in event_filter:
                     event_filter[key] = _event_filter.get_all_entries()[idx].args[key]
 
-        keys = ["email", "ipfsID", "fID", "gpgFingerprint"]
-        for key in keys:
+        for key in ["email", "ipfsID", "fID", "gpgFingerprint"]:
             if key not in event_filter:
                 event_filter[key] = ""
 
         #: removes padding 24 zeros at the beginning
-        gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].lower()
+        gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
         provider_info = {
             "available_core_num": provider_price_info[0],
             "commitment_block_num": provider_price_info[1],
@@ -57,7 +56,7 @@ def get_provider_info(self, provider):
             "ipfs_id": event_filter["ipfsID"],
         }
         orc_id = self.get_user_orcid(provider)
-        if orc_id != "0x0000000000000000000000000000000000000000000000000000000000000000":
+        if not is_byte_str_zero(orc_id):
             provider_info["orc_id"] = orc_id.decode("utf-8").replace("\x00", "")
 
         return provider_info

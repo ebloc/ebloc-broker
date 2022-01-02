@@ -7,15 +7,16 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 from multiprocessing import Process
 from threading import Thread
 
 from broker import cfg, config
-from broker._utils.tools import _remove, is_process_on, log, print_tb, print_trace
-from broker._utils.web3_tools import get_tx_status
+from broker._utils._log import br
+from broker._utils.tools import _remove, is_process_on, log, print_tb
 from broker.config import env, logging
 from broker.errors import Web3NotConnected
-from broker.utils import StorageID, byte_to_mb, popen_communicate, run
+from broker.utils import WHERE, byte_to_mb, popen_communicate, run
 
 
 def enum(*sequential, **named):
@@ -35,7 +36,7 @@ class State:
     Hashmap keys:
         - SUBMITTED: Initial state.
 
-        - PENDING: Indicates when a request is receieved by the provider.  The
+        - PENDING: Indicates when a request is receieved by the provider. The
           job is waiting for resource allocation.  It will eventually run.
 
         - RUNNING: The job currently is allocated to a node and isrunning.
@@ -83,11 +84,11 @@ def session_start_msg(slurm_user, block_number, pid):
     else:
         PROVIDER_ID = env.PROVIDER_ID
 
-    log(f"==> This Driver process has the PID {pid}")
+    log(f"==> Driver process has the PID={pid}")
     log(f"==> provider_address={PROVIDER_ID}")
     log(f"==> slurm_user={slurm_user}")
     log(f"==> left_of_block_number={block_number}")
-    log(f"==>  latest_block_number={cfg.Ebb.get_block_number()}")
+    log(f"==> latest__block_number={cfg.Ebb.get_block_number()}")
 
 
 def run_driver_cancel():
@@ -95,20 +96,6 @@ def run_driver_cancel():
     if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
         # Running driver_cancel.py on the background if it is not already
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
-
-
-def check_size_of_file_before_download(file_type, key=None):
-    # TODO: fill
-    """Check size of the file before downloading it."""
-    if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
-        if not key:
-            return False
-    elif int(file_type) == StorageID.EUDAT:
-        pass
-    elif int(file_type) == StorageID.GDRIVE:
-        pass
-
-    return True
 
 
 def calculate_size(path, _type="MB") -> float:
@@ -124,25 +111,33 @@ def calculate_size(path, _type="MB") -> float:
         return byte_to_mb(byte_size)
 
 
-def subprocess_call(cmd, attempt=1, print_flag=True):
+def subprocess_call(cmd, attempt=1, sleep_time=1):
     """Run subprocess."""
     cmd = list(map(str, cmd))  # always should be type: str
     for count in range(attempt):
         try:
-            return subprocess.check_output(cmd).decode("utf-8").strip()
+            p, output, error_msg = popen_communicate(cmd)
+            if p.returncode != 0:
+                if count == 0:
+                    _cmd = " ".join(cmd)
+                    log(f"\n$ {_cmd}", "bold red")
+                    log(f"{error_msg} ", "bold", end="")
+                    log(WHERE())
+
+                if count + 1 == attempt:
+                    raise Exception(error_msg)
+
+                if attempt > 1:
+                    log(f"{br(f'attempt={count}')} ", end="")
+                    time.sleep(sleep_time)
+            else:
+                return output
         except Exception as e:
-            if not count and print_flag:
-                print_trace(cmd)
+            # https://stackoverflow.com/a/1156048/2402577
+            for line in traceback.format_stack():
+                log(line.strip())
 
-            if count + 1 == attempt:
-                log()
-                raise SystemExit from e
-
-            if count == 0:
-                log("Trying again...\nAttempts: ", "green", end="")
-
-            log(f"{count}  ", "bold blue", end="")
-            time.sleep(0.25)
+            raise e
 
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:
@@ -154,7 +149,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
         log(f"E: scontrol error\n{output}")
         raise
 
-    log(f"\nWriting into path({path}) is completed")
+    # log(f"## writing into path({path}) is completed")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed
 
 
@@ -236,6 +231,21 @@ def run_storage_process(storage_class):
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
+
+
+# from broker.utils StorageID
+#
+# def check_size_of_file_before_download(file_type, key=None):
+#     """Check size of the file before downloading it."""
+#     # TODO: fill
+#     if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
+#         if not key:
+#             return False
+#     elif int(file_type) == StorageID.EUDAT:
+#         pass
+#     elif int(file_type) == StorageID.GDRIVE:
+#         pass
+#     return True
 
 
 # def preexec_function():

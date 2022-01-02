@@ -8,7 +8,7 @@ sudo setfacl -R -m user:alper:rwx    /eBloc
 sudo setfacl -R -m user:www-data:rwx /eBloc
 #+END_SRC
 
---------------------------
+----------------------------
 
 #+BEGIN_SRC bash
 sudo killall cat

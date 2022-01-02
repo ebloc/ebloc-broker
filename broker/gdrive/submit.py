@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import sys
-from pathlib import Path
 
 from web3.logs import DISCARD
 
 from broker import cfg
 from broker._utils._log import ok
+from broker._utils.web3_tools import get_tx_status
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
-from broker.lib import get_tx_status
 from broker.libs import _git, gdrive
 from broker.link import check_link_folders
 from broker.utils import is_program_valid, log, print_tb
@@ -22,11 +21,11 @@ def pre_check():
     is_program_valid(["gdrive", "version"])
 
 
-def submit_gdrive(job: Job):
+def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     pre_check()
     Ebb = cfg.Ebb
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files)
+    check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
     _git.generate_git_repo(job.folders_to_share)
     job.clean_before_submit()
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
@@ -48,7 +47,7 @@ def submit_gdrive(job: Job):
     key = job.keys[tar_hash]
     job.price, *_ = job.cost(provider, requester)
     try:
-        tx_hash = Ebb.submit_job(provider, key, job, requester=requester)
+        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=1)
         tx_receipt = get_tx_status(tx_hash)
         if tx_receipt["status"] == 1:
             processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)

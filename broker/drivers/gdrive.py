@@ -12,7 +12,17 @@ from broker.config import env, logging
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size, echo_grep_awk, log, run, subprocess_call
 from broker.libs import _git, gdrive
-from broker.utils import WHERE, CacheType, StorageID, byte_to_mb, generate_md5sum, get_time, print_tb, untar
+from broker.utils import (
+    WHERE,
+    CacheType,
+    StorageID,
+    byte_to_mb,
+    generate_md5sum,
+    get_time,
+    popen_communicate,
+    print_tb,
+    untar,
+)
 
 
 class GdriveClass(Storage):
@@ -42,7 +52,7 @@ class GdriveClass(Storage):
 
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
-                        log(f"==> {name} is already cached within private cache directory")
+                        log(f"==> {name} is already cached within the private cache directory")
                         self.cache_type[_id] = CacheType.PRIVATE
                         return
                 else:
@@ -83,7 +93,7 @@ class GdriveClass(Storage):
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[source_code_hash] = self.public_dir
-                        log(f"==> {name} is already cached within public cache directory")
+                        log(f"==> {name} is already cached within the public cache directory")
                     else:
                         if not self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder):
                             raise
@@ -94,7 +104,7 @@ class GdriveClass(Storage):
                     if output == source_code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[source_code_hash] = self.public_dir
-                        log(f"==> {name} is already cached within public cache directory")
+                        log(f"==> {name} is already cached within the public cache directory")
                     else:
                         if not self.gdrive_download_folder(
                             name, key, source_code_hash, _id, f"{self.public_dir}/{name}"
@@ -182,12 +192,15 @@ class GdriveClass(Storage):
 
     def get_data_init(self, key, _id, is_job_key=False):
         try:
-            gdrive_info = subprocess_call(["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA], 10)
+            cmd = ["gdrive", "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
+            _p, gdrive_output, *_ = popen_communicate(cmd)
+            if _p.returncode != 0:
+                raise Exception(gdrive_output)
         except Exception as e:
             raise e
 
-        mime_type = gdrive.get_file_info(gdrive_info, _type="Mime")
-        folder_name = gdrive.get_file_info(gdrive_info, _type="Name")
+        mime_type = gdrive.get_file_info(gdrive_output, _type="Mime")
+        folder_name = gdrive.get_file_info(gdrive_output, _type="Name")
         log(f"==> mime_type=[magenta]{mime_type}")
         if is_job_key:
             # key for the sourceCode tar.gz file is obtained
@@ -196,7 +209,7 @@ class GdriveClass(Storage):
                     key,
                     mime_type,
                     folder_name,
-                    gdrive_info,
+                    gdrive_output,
                     self.results_folder_prev,
                     self.source_code_hashes,
                     self.job_infos[0]["is_already_cached"],
@@ -236,7 +249,7 @@ class GdriveClass(Storage):
         # folder is already stored by its source_code_hash
         source_code_hash = name.replace(".tar.gz", "")
         log(f"==> name={name}")
-        log(f"==> mime_type={mime_type}")
+        log(f"==> mime_type=[magenta]{mime_type}")
         if _id == 0:
             # source code folder, ignore downloading result-*
             name = f"{name}.tar.gz"
@@ -285,7 +298,7 @@ class GdriveClass(Storage):
 
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}")
         elif "folder" in mime_type:
-            # Recieved job is in folder format
+            #: received job is in folder format
             self.folder_type_dict[source_code_hash] = "folder"
             try:
                 self.cache(_id, name, source_code_hash, key, is_job_key)
@@ -325,12 +338,14 @@ class GdriveClass(Storage):
             self.thread_log_setup()
 
         log(f"{br(get_time())} job's source code has been sent through Google Drive", "bold cyan")
-        if os.path.isdir(self.results_folder):
-            self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
+
+        # self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 
         try:
-            # attempt to download the source code
-            target = self.get_data(key=self.job_key, _id=0, is_job_key=True)
+            if os.path.isdir(self.results_folder):
+                # attempt to download the source code
+                target = self.get_data(key=self.job_key, _id=0, is_job_key=True)
+
             if not os.path.isdir(f"{target}/.git"):
                 log(f"warning: .git folder does not exist within {target}")
                 _git.generate_git_repo(target)

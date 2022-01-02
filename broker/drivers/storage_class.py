@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 import uuid
+from contextlib import suppress
 from datetime import datetime, timedelta
 from pathlib import Path
 from shutil import copyfile
@@ -16,7 +17,7 @@ from broker._utils import _log
 from broker._utils._log import ok
 from broker._utils.tools import mkdir, read_json
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, run
+from broker.lib import calculate_size, log, run, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
@@ -68,10 +69,8 @@ class Storage(BaseClass):
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.mc = None
-        self.coll = None
         self.data_transfer_in_to_download: int = 0
         _log.thread_log_files[self.thread_name] = self.drivers_log_path
-
         try:
             mkdir(self.private_dir)
         except PermissionError:
@@ -223,13 +222,14 @@ class Storage(BaseClass):
             )
             if output.count("/") == 1:
                 # main folder should contain the 'run.sh' file
-                log(f"[magenta]./run.sh[/magenta] exists under the parent folder {ok()}", "bold")
+                log(f"[magenta]./run.sh[/magenta] exists under the parent folder{ok()}", "bold")
                 return True
             else:
                 log("E: run.sh does not exist under the parent folder")
                 return False
         except:
-            log("E: run.sh does not exist under the parent folder")
+            breakpoint()  # DEBUG
+            log(f"E: run.sh does not exist under the tar={tar_path}")
             return False
 
     def check_run_sh(self) -> bool:
@@ -262,6 +262,22 @@ class Storage(BaseClass):
             self._sbatch_call()
         except Exception as e:
             print_tb(f"E: Failed to call _sbatch_call() function. {e}")
+            raise e
+
+    def scontrol_update(self, job_core_num, sbatch_file_path, time_limit):
+        """Prevent scontrol update locked exception.
+
+        scontrol generates: Job update not available right now, the DB index is being
+        set, try again in a bit for job 5.
+        """
+        try:
+            _slurm_job_id = self.submit_slurm_job(job_core_num, sbatch_file_path)
+            slurm_job_id = _slurm_job_id.split()[3]
+            cmd = ["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"]
+            subprocess_call(cmd, attempt=10, sleep_time=10)
+            return slurm_job_id
+        except Exception as e:
+            print_tb(e)
             raise e
 
     def _sbatch_call(self) -> None:
@@ -297,7 +313,7 @@ class Storage(BaseClass):
         log(f"timestamp={timestamp}, ", "bold", end="")
         write_to_file(self.results_folder_prev / "timestamp.txt", timestamp)
         log(f"job_received_block_number={job_block_number}", "bold")
-        logging.info("Adding recevied job into the mongoDB database")
+        log("## Adding recevied job into the mongoDB database")
         self.Ebb.mongo_broker.add_item(
             job_key,
             self.index,
@@ -307,7 +323,6 @@ class Storage(BaseClass):
             main_cloud_storage_id,
             job_info,
         )
-
         # TODO: update as used_data_transfer_in value
         data_transfer_in_json = self.results_folder_prev / "data_transfer_in.json"
         try:
@@ -336,17 +351,16 @@ class Storage(BaseClass):
         execution_time_second = timedelta(seconds=int((job_info["run_time"][job_id] + 1) * 60))
         d = datetime(1, 1, 1) + execution_time_second
         time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-        logging.info(f"time_limit={time_limit} | requested_core_num={job_core_num}")
+        log(f"## time_limit={time_limit} | requested_core_num={job_core_num}")
         # give permission to user that will send jobs to Slurm
         subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
-        try:
-            _slurm_job_id = self.submit_slurm_job(job_core_num, sbatch_file_path)
-            slurm_job_id = _slurm_job_id.split()[3]
-            run(["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"])
-        except Exception as e:
-            print_tb(e)
-            breakpoint()  # DEBUG
-            raise e
-
+        slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
         if not slurm_job_id.isdigit():
             log("E: Detects an error on the sbatch. slurm_job_id is not a digit")
+
+        with suppress(Exception):
+            squeue_output = run(["squeue"])
+            if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
+                # checks if the squeue output's line number is gretaer than 1
+                log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
+                log(f"{squeue_output}  {ok()}", "bold")

@@ -34,7 +34,7 @@ def is_data_registered(provider, registered_data_hash) -> bool:
     return False
 
 
-def get_data_info(self, provider):
+def get_data_info(self, provider) -> None:
     pre_check_data(provider)
     try:
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         provider = env.PROVIDER_ID
 
     try:
-        data = Ebb.get_data_info(provider)
+        Ebb.get_data_info(provider)
     except Exception as e:
         print_tb(e)
         sys.exit(1)

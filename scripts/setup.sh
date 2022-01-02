@@ -55,7 +55,7 @@ install_ipfs () {
     version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
     echo "version_to_download=v"$version
     if [[ "$ipfs_current_version" == "$version" ]]; then
-        echo "## Latest version is already downloaded"
+        echo "$GREEN##$NC Latest version is already downloaded"
     else
         arch=$(dpkg --print-architecture)
         wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
@@ -67,21 +67,23 @@ install_ipfs () {
         rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
         rm -rf go-ipfs/
         ipfs version
+        cd
     fi
 }
 install_ipfs
 
-## ipfs private network
-# =====================
-go install github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen@latest
-export IPFS_PATH=~/.ipfs
-ipfs init
-echo \
-"/key/swarm/psk/1.0.0/
-/base16/
-05d7e2e3c1eeab6dfd055d1daf2d64a960ea8487f0938a4d064ae701f746ba0a" > $IPFS_PATH"/swarm.key"
-ipfs bootstrap rm --all
-ipfs bootstrap add $(cat ~/ebloc-broker/scripts/ipfs_bootstrap.txt)
+# https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
+# https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
+ipfs init --profile=server,badgerds
+ipfs config Reprovider.Strategy roots
+sudo sysctl -w net.core.rmem_max=262144
+
+# echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+# sudo sysctl -p
+
+sudo firewall-cmd --add-port=4001/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
 
 # go-geth
 # =======
@@ -150,8 +152,9 @@ if [ "$(uname -i)" == "aarch64" ]; then
     sudo apt install -y g++-9
     ~/ebloc-broker/scripts/install_solc_0.7.6_deps.sh
     cd ~/.solcx
-    wget https://github.com/ebloc/ebloc-broker/raw/dev/scripts/binaries/solc-v0.7.6-aarch64
+    wget https://github.com/ebloc/ebloc-helpful-binaries/raw/master/binaries/solc-v0.7.6-aarch64
     chmod +x solc-v0.7.6-aarch64
+    solc-v0.7.6-aarch64 --version
     mv solc-v0.7.6-aarch64 solc-v0.7.6
 else
     cd ~/.solcx
@@ -184,6 +187,13 @@ brownie compile
 
 cd
 gpg --gen-key
+gpg --list-keys
+
+sudo apt-get install davfs2 -y
+sudo mkdir /oc
+sudo chown $(whoami) /oc
+sudo chown -R $(whoami) /oc
+# sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
 #------------------------------------------------------------------------------
 # Provider
 #------------------------------------------------------------------------------

@@ -14,15 +14,14 @@ cl = MongoClient()
 def main():
     coll = cl["eBlocBroker"]["cache"]
     block_number = Ebb.get_block_number()
-
     storageID = None
     cursor = coll.find({})
     for document in cursor:
         # print(document)
         received_block_number, storage_time = Ebb.get_job_storage_time(env.PROVIDER_ID, document["sourceCodeHash"])
-        endBlockTime = received_block_number + storage_time * 240
+        end_block_time = received_block_number + storage_time * cfg.BLOCK_DURATION_1_HOUR
         storageID = document["storageID"]
-        if endBlockTime < block_number and received_block_number != 0:
+        if end_block_time < block_number and received_block_number != 0:
             if storageID in (StorageID.IPFS, StorageID.IPFS_GPG):
                 ipfsHash = document["jobKey"]
                 print(run(["ipfs", "pin", "rm", ipfsHash]))

@@ -1,26 +1,28 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
+from os.path import expanduser
 
 import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import c, log
-from broker._utils.tools import print_tb
+from broker._utils.tools import get_gpg_fingerprint, get_ip, is_byte_str_zero, is_gpg_published, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
 from broker.lib import run
-from broker.utils import run_ipfs_daemon
+from broker.utils import popen_communicate, run_ipfs_daemon
 
 Ebb = cfg.Ebb
 
 
 def _register_provider(self, *args, **kwargs):
     """Register provider."""
-    if env.PROVIDER_ID == "0x0000000000000000000000000000000000000000":
+    if is_byte_str_zero(env.PROVIDER_ID):
         log(f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [{c.pink}]~/.ebloc-broker/.env")
         raise QuietExit
 
@@ -51,6 +53,7 @@ def _register_provider(self, *args, **kwargs):
 def get_ipfs_id() -> str:
     run_ipfs_daemon()
     try:
+        # may create error
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except ipfshttpclient.exceptions.ConnectionError:
         log(
@@ -88,12 +91,30 @@ def register_provider_wrapper(yaml_fn):
     price_data_transfer = args["config"]["price_data_transfer"]
     price_storage = args["config"]["price_storage"]
     price_cache = args["config"]["price_cache"]
-    email = args["config"]["emal"]
+    email = args["config"]["email"]
     args.remove_temp()
     ipfs_id = get_ipfs_id()
-    gpg_fingerprint = run([env.BASH_SCRIPTS_PATH / "get_gpg_fingerprint.sh"])
+    ip_address = get_ip()
+    if ip_address not in ipfs_id:
+        # public IP should exists in the ipfs id
+        ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_id, flags=re.DOTALL)
+        log(f"==> ipfs_address={ipfs_address}")
+    else:
+        ipfs_address = ipfs_id
+
+    try:
+        email = env.GMAIL
+        gpg_fingerprint = get_gpg_fingerprint(email)
+        is_gpg_published(gpg_fingerprint)
+    except Exception as e:
+        raise e
+
+    if not email:
+        log("E: Please provide a valid e-mail")
+        sys.exit(1)
+
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
-    args = (gpg_fingerprint, email, federation_cloud_id, ipfs_id, available_core, prices, commitment_blk)
+    args = (gpg_fingerprint, email, federation_cloud_id, ipfs_address, available_core, prices, commitment_blk)
     kwargs = {
         "email": email,
         "federation_cloud_id": federation_cloud_id,
@@ -112,8 +133,8 @@ def register_provider_wrapper(yaml_fn):
 
 
 if __name__ == "__main__":
-    yaml_fn = "/home/alper/ebloc-broker/broker/yaml_files/register_provider.yaml"
     try:
+        yaml_fn = expanduser("~/ebloc-broker/broker/yaml_files/register_provider.yaml")
         register_provider_wrapper(yaml_fn)
     except Exception as e:
         print_tb(e)

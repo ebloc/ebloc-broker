@@ -3,7 +3,7 @@
 import os
 import sys
 
-import broker.libs.git as git
+import broker.libs._git as git
 from broker._utils.tools import print_tb
 from broker.utils import extract_gzip, log, popen_communicate
 

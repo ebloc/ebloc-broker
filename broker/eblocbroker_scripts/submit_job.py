@@ -2,9 +2,9 @@
 
 import sys
 
-from broker import cfg, config
+from broker import cfg
 from broker._utils._log import br
-from broker._utils.tools import log, print_tb
+from broker._utils.tools import get_gpg_fingerprint, is_gpg_published, log, print_tb
 from broker.config import env
 from broker.errors import QuietExit
 from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
@@ -79,7 +79,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     for cache_type in job.cache_types:
         if cache_type > 1:
-            # cache_type = {0: private, 1: public}
+            # cache_type should be {0: private, 1: public}
             raise Exception(f"E: cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
 
     if is_use_ipfs:
@@ -90,15 +90,28 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
         except Exception as e:
             log(f"E: {e}")
-            if not question_yes_no("#> Would you like to continue?"):
+            if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                 raise QuietExit from e
 
     for idx, source_code_hash in enumerate(job.source_code_hashes_str):
         if source_code_hash == "":
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
+    requester_info = self.get_requester_info(_from)
+    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL).upper()
+    if requester_info["gpg_fingerprint"].upper() != gpg_fingerprint:
+        raise Exception(
+            f"E: gpg_fingerprint does not match {requester_info['gpg_fingerprint'].upper()} "
+            f"with registered gpg_fingerprint={gpg_fingerprint}"
+        )
 
-def submit_job(self, provider, key, job, requester=None, account_id=None):
+    try:
+        is_gpg_published(gpg_fingerprint)
+    except Exception as e:
+        raise e
+
+
+def submit_job(self, provider, key, job, requester=None, account_id=None, required_confs=1):
     """Submit job.
 
     How to get exception message in Python properly:
@@ -145,7 +158,14 @@ def submit_job(self, provider, key, job, requester=None, account_id=None):
         #     source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
         # log(f"==> source_code_hashes={source_code_hashes_l}")
         tx = self._submit_job(
-            _from, job.price, key, job.data_transfer_ins, args, job.storage_hours, job.source_code_hashes
+            required_confs,
+            _from,
+            job.price,
+            key,
+            job.data_transfer_ins,
+            args,
+            job.storage_hours,
+            job.source_code_hashes,
         )
         return self.tx_id(tx)
     except TransactionError as e:

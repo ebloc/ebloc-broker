@@ -1,0 +1,21 @@
+cfg:
+    eth_address: '0x0000000000000000000000000000000000000000'
+    home_dir: /home/avatar_doo_avatar
+    whoami: avatar_doo_avatar
+    datadir: /home/avatar_doo_avatar/.eblocpoa
+    log_path: /home/avatar_doo_avatar/.ebloc-broker
+    rpc_port: 8545
+    ebloc_path: /home/avatar_doo_avatar/ebloc-broker
+    base_data_path: /home/avatar_doo_avatar/test_eblocbroker
+    oc_user: 5f0db7e4-3078-4988-8fa5-f066984a8a97
+    gmail: alper.alimoglu.research@gmail.com
+    gdrive: /usr/local/bin/gdrive
+    provider:
+        slurmuser: avatar_doo_avatar
+        is_bloxberg: true
+        is_thread: true
+        is_ipfs_use: true
+        is_eudat_use: true
+        is_gdrive_use: true
+        is_eblocpoa: false
+        is_geth_tunnel: false

@@ -15,10 +15,6 @@ from broker.env import ENV_BASE
 logging.getLogger("filelock").setLevel(logging.ERROR)
 
 
-class Terminate(Exception):
-    pass
-
-
 class ThreadFilter(Filter):
     """Only accept log records from a specific thread or thread name."""
 
@@ -58,19 +54,24 @@ class ENV(ENV_BASE):
             accounts.load("alpy.json", "alper")
 
         # load_dotenv(dotenv_path=self.env_file)
-        self.SLURMUSER = self._env["SLURMUSER"]
-        self.GDRIVE = self._env["GDRIVE"]
-        self.OC_USER = self._env["OC_USER"]
-        self.DATADIR = Path(self._env["DATADIR"])
-        self.LOG_PATH = Path(self._env["LOG_PATH"])
+
+        self.SLURMUSER = self.cfg["provider"]["slurmuser"]
+        self.GDRIVE = self.cfg["gdrive"]
+        self.OC_USER = self.cfg["oc_user"]
+        if "@b2drop.eudat.eu" not in self.OC_USER:
+            self.F_ID = f"{self.OC_USER}@b2drop.eudat.eu"
+        else:
+            self.F_ID = self.OC_USER
+
+        self.DATADIR = Path(self.cfg["datadir"])
+        self.LOG_PATH = Path(self.cfg["log_path"])
         self.config = Yaml(self.LOG_PATH.joinpath("config.yaml"))
-        self.IS_GETH_TUNNEL = str(self._env["IS_GETH_TUNNEL"]).lower() in self.true_set
-        self.IS_IPFS_USE = str(self._env["IS_IPFS_USE"]).lower() in self.true_set
-        self.IS_EUDAT_USE = str(self._env["IS_EUDAT_USE"]).lower() in self.true_set
-        self.IS_GDRIVE_USE = str(self._env["IS_GDRIVE_USE"]).lower() in self.true_set
-        self.IS_DRIVER = False
-        self.RPC_PORT = self._env["RPC_PORT"]
-        self.BASH_SCRIPTS_PATH = Path(self._env["EBLOCPATH"]) / "broker" / "bash_scripts"
+        self.IS_GETH_TUNNEL = self.cfg["provider"]["is_geth_tunnel"]
+        self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
+        self.IS_EUDAT_USE = self.cfg["provider"]["is_eudat_use"]
+        self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
+        self.RPC_PORT = self.cfg["rpc_port"]
+        self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
         self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")
@@ -82,15 +83,20 @@ class ENV(ENV_BASE):
         self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelledJobs.txt")
         self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")
         self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
-        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_provider.pckl")
-        self.OC_CLIENT_REQUESTER = self.LOG_PATH.joinpath(".oc_requester.pckl")
-        self.PROVIDER_ID = cfg.w3.toChecksumAddress(self._env["PROVIDER_ID"])
+        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
+        self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"])
         _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
         mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID)
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
         mkdir("/tmp/run")
         self.DRIVER_LOCKFILE = "/tmp/run/driver_popen.pid"
         self.DRIVER_DAEMON_LOCK = "/tmp/run/driverdaemon.pid"
+        if isinstance(self.cfg["provider"]["is_thread"], bool):
+            cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]
+        else:
+            raise Exception("is_thead should be bool variable")
+
+        self.GMAIL = self.cfg["gmail"]
 
 
 def setup_logger(log_path="", is_brownie=False):

@@ -11,7 +11,7 @@ from broker.utils import log, popen_communicate, print_tb
 
 
 def add_user_to_slurm(user):
-    # remove__user(user)
+    #: remove__user(user)
     cmd = ["sacctmgr", "add", "user", user, f"account={user}", "--immediate"]
     # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
@@ -74,7 +74,7 @@ def pending_jobs_check():
 
 def is_on() -> bool:
     """Check whether Slurm runs on the background or not, if not runs slurm."""
-    log("## Checking Slurm... ", end="")
+    log("## checking Slurm... ", end="")
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):

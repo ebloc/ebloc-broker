@@ -16,6 +16,22 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
   [[https://github.com/trufflesuite/ganache][ganache-cli]]
 
 
+** Cloud Storages
+
+*** EUDAT
+
+**** Create B2ACCESS user account and login into B2DROP:
+
+First, from [[https://b2access.eudat.eu/home/][B2ACCESS home page]]
+
+~No account? Signup~ => ~Create B2ACCESS user account (username) only~
+
+- [[b2drop.eudat.eu][B2DROP login site]]
+
+**** Create app password
+
+=Settings= => ~Security~ => ~Create new app password~ and save it.
+
 ** How to install required packages
 
 We have a helper script, which you can use to install all required external dependencies:

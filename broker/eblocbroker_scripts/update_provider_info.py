@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import re
+
 from broker import cfg
-from broker._utils.tools import log, print_tb
+from broker._utils.tools import get_gpg_fingerprint, get_ip, is_gpg_published, log, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.eblocbroker_scripts.register_provider import get_ipfs_id
@@ -29,7 +31,7 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
         provider_info = self.get_provider_info(env.PROVIDER_ID)
         if (
             # TODO: control does gpg_finderprint starts with 0x
-            provider_info["gpg_fingerprint"] == gpg_fingerprint.lower()
+            provider_info["gpg_fingerprint"] == gpg_fingerprint.upper()
             and provider_info["email"] == email
             and provider_info["f_id"] == federation_cloud_id
             and provider_info["ipfs_id"] == ipfs_id
@@ -46,11 +48,20 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
 if __name__ == "__main__":
     Ebb = cfg.Ebb
     ipfs_id = get_ipfs_id()
-    email = "alper.alimoglu.research@gmail.com"
-    gpg_fingerprint = "2AF4FEB13EA98C83D94150B675D5530929E05CEB"
-    federation_cloud_id = "5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu"
+    ip_address = get_ip()
+    if ip_address not in ipfs_id:
+        # public IP should exists in the ipfs id
+        ipfs_id = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_id, flags=re.DOTALL)
+
+    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL)
+    federation_cloud_id = env.F_ID
+    log(f"## gmail=[magenta]{env.GMAIL}")
+    log(f"## gpg_fingerprint={gpg_fingerprint}")
+    log(f"## ipfs_id=[magenta]{ipfs_id}")
+    log(f"## fid=[magenta]{federation_cloud_id}")
     try:
-        tx_hash = Ebb.update_provider_info(gpg_fingerprint, email, federation_cloud_id, ipfs_id)
+        is_gpg_published(gpg_fingerprint)
+        tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, federation_cloud_id, ipfs_id)
         receipt = get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)

@@ -157,7 +157,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
 
 
 def sleep_timer(sleep_duration):
-    log(f"Sleeping for {sleep_duration} seconds, called from {WHERE(1)}", "blue")
+    log(f"## Sleeping for {sleep_duration} seconds, called from {WHERE(1)}")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -222,8 +222,11 @@ def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
 
     But also returns the output message captures on during the run stdout_file
     is not None in case of nohup process writes its results into a file.
+
+    * How to catch exception output from Python subprocess.check_output()?:
+    __ https://stackoverflow.com/a/24972004/2402577
     """
-    cmd = list(map(str, cmd))  # all items should be str
+    cmd = list(map(str, cmd))  # all items should be string
     if stdout_file is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
@@ -367,7 +370,7 @@ def is_gzip_file_empty(filename):
     if bool(int(size)):
         return False
 
-    log(f"==> Created gzip file ({filename}) is empty")
+    log(f"==> Created gzip file is empty:\n    [magenta]{filename}[/magenta]")
     return True
 
 
@@ -489,7 +492,7 @@ def is_dpkg_installed(package_name) -> bool:
         return False
 
 
-def terminate(msg="", is_traceback=True, lock=None):
+def terminate(msg="", is_traceback=False, lock=None):
     """Exit."""
     if msg:
         log(f"{WHERE(1)} Terminated: ", "bold red", end="")
@@ -633,6 +636,7 @@ def compress_folder(folder_path, is_exclude_git=False):
         shutil.move(tar_base, tar_file)
         log(f"==> created_tar_file={dir_path}/{tar_file}")
         log(f"==> tar_hash={tar_hash}")
+
     return tar_hash, f"{dir_path}/{tar_file}"
 
 

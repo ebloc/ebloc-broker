@@ -13,15 +13,16 @@ from web3.types import TxReceipt
 
 from broker import cfg
 from broker._utils._log import ok
-from broker._utils.tools import exit_after, log, print_tb, read_json, without_keys
+from broker._utils.tools import exit_after, log, print_tb, without_keys
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import Web3NotConnected
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, terminate
 from brownie.network.account import Account, LocalAccount
-from brownie.network.gas.strategies import LinearScalingStrategy
 from brownie.network.transaction import TransactionReceipt
+
+# from brownie.network.gas.strategies import LinearScalingStrategy
 
 GAS_PRICE = 1.0
 EXIT_AFTER = 120
@@ -42,9 +43,9 @@ class Contract:
         #: Transaction cost exceeds current gas limit. Limit: 9990226, got:
         #  10000000. Try decreasing supplied gas.
         self.gas = 9980000
-        self.gas_strategy = LinearScalingStrategy(f"{GAS_PRICE} gwei", "10 gwei", 1.1, time_duration=15)
         self.gas_price = GAS_PRICE
-        self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
+        # self.gas_strategy = LinearScalingStrategy(f"{GAS_PRICE} gwei", "10 gwei", 1.1, time_duration=15)
+        # self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
         self._setup(is_brownie)
         self.invalid = {"logs", "logsBloom"}
         with suppress(Exception):
@@ -112,7 +113,7 @@ class Contract:
         return accounts.load(fname, password=password)
 
     def is_eth_account_locked(self, addr):
-        """Check whether is the ethereum account locked."""
+        """Check whether the ethereum account is locked."""
         if env.IS_BLOXBERG:
             try:
                 account = self.brownie_load_account()
@@ -146,6 +147,7 @@ class Contract:
             try:
                 tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
             except TransactionNotFound as e:
+                log()
                 log(f"warning: {e}")
             except Exception as e:
                 print_tb(str(e))
@@ -222,14 +224,18 @@ class Contract:
         else:
             raise Exception(f"E: Invalid account {address} is provided")
 
-    def _get_balance(self, address):
-        if not isinstance(address, (Account, LocalAccount)):
-            address = self.w3.toChecksumAddress(address)
+    def _get_balance(self, account, _type="ether"):
+        if not isinstance(account, (Account, LocalAccount)):
+            account = self.w3.toChecksumAddress(account)
         else:
-            address = str(address)
+            account = str(account)
 
-        balance_wei = self.w3.eth.get_balance(address)
-        return self.w3.fromWei(balance_wei, "ether")
+        balance_wei = self.w3.eth.get_balance(account)
+        return self.w3.fromWei(balance_wei, _type)
+
+    def transfer(self, amount, from_account, to_account, required_confs=1):
+        tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
+        return self.tx_id(tx)
 
     def get_block_number(self):
         """Retrun block number."""
@@ -262,7 +268,7 @@ class Contract:
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise
 
-        log(f"==> contract_address={contract_address}")
+        log(f"==> contract_address={contract_address.lower()}")
         return True
 
     def print_contract_info(self):
@@ -321,7 +327,7 @@ class Contract:
     ################
     # Transactions #
     ################
-    def _submit_job(self, requester, job_price, *args) -> "TransactionReceipt":
+    def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         for _ in range(self.max_retries):
             self.ops = {
@@ -330,6 +336,7 @@ class Contract:
                 "from": requester,
                 "allow_revert": True,
                 "value": self.w3.toWei(job_price, "wei"),
+                "required_confs": required_confs,
             }
             try:
                 return self.timeout("submitJob", *args)
@@ -423,7 +430,7 @@ class Contract:
         return self.timeout_wrapper("processPayment", *args)
 
     def remove_registered_data(self, *args) -> "TransactionReceipt":
-        """Remove registered data"""
+        """Remove registered data."""
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 0

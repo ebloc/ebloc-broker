@@ -6,8 +6,8 @@ from typing import Any, Union
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
-from broker.lib import StorageID, state
-from broker.utils import ipfs_to_bytes32
+from broker.lib import state
+from broker.utils import StorageID, ipfs_to_bytes32
 
 
 def process_payment(

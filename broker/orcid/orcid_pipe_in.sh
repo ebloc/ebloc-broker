@@ -1,7 +1,7 @@
-#!bin/bash 
+#!bin/bash
 
 # sudo killall cat
-while [ 1 ]
+while true
 do
     cat > /eBloc/fifo
 done

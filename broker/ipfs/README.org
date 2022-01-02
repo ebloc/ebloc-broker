@@ -1,0 +1,132 @@
+* Enable Port Google-Instance
+
+- ~Navigation Menu~ => ~VPN Network~ => ~Firewall~ => ~Create Firewall Rule~
+- Name: ~ipfs~
+- Logs: ~Off~
+- Type: ~Ingress~
+- Priority: ~1000~
+- Targets => ~All instances in the network~
+- Source IP ranges: ~0.0.0.0/0~
+- TCP: ~4001~
+- Action: ~Allow~
+- default
+- Off
+- Open instance, Edit, network tags => add ~ipfs~
+- ~sudo service network-manager restart~ or reboot in case
+
+* Setup Private Network
+
+- [[https://github.com/ipfs/go-ipfs/blob/master/docs/experimental-features.md#private-networks][Guide]]
+- [[https://www.geekdecoder.com/setting-up-a-private-ipfs-network-with-ipfs-and-ipfs-cluster][Guide_1]]
+
+- For the main node:
+
+#+begin_src bash
+DIR=~/.ipfs
+if [ ! -d "DIR" ]; then
+	IPFS_PATH=~/.ipfs ipfs init --profile server
+fi
+go get github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen
+ipfs-swarm-key-gen > ~/.ipfs/swarm.key && cat ~/.ipfs/swarm.key && echo ""
+export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon
+
+ipfs swarm addrs
+#+end_src
+
+* Google node
+
+#+begin_src bash
+sudo firewall-cmd --add-port=4001/tcp --permanent
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
+
+public
+  target: default
+  icmp-block-inversion: no
+  interfaces:
+  sources:
+  services: dhcpv6-client ssh
+  ports: 4001/tcp
+  protocols:
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+#+end_src
+
+* All other nodes
+
+- Port check: ~nc -v <ip> 4001~
+
+#+begin_src bash
+# sudo netstat -lptn | grep 4001
+# ipfs config Addresses
+$ gcloud compute firewall-rules list | grep 'ipfs'
+default-ipfs            default  INGRESS    1000      tcp:4001
+#+end_src
+
+- https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578
+
+--------------------------
+
+#+begin_src bash
+killall ipfs
+DIR=~/.ipfs
+if [[ ! -d "$DIR" ]]; then
+	ipfs init
+fi
+ipfs bootstrap rm --all
+ipfs config show | grep "PeerID" | awk '{print $2}' | tr -d \"
+ipfs bootstrap add /ip4/35.240.104.228/tcp/4001/p2p/12D3KooWLqjUfi8fjz5tncRJXet4gUiK75VRJnB5E16Z8mVJ9c8N
+
+# Copy output of following from the main node
+$ cat ~/.ipfs/swarm.key && echo ""
+# paste into ~~/.ipfs/swarm.key~ file on the other nodes
+
+echo \
+"/key/swarm/psk/1.0.0/
+/base16/
+549e385990141a4b4c703aa873a0064e4cfeb8e6b6cc184a4fa6e44e480dce8a" > ~/.ipfs/swarm.key
+#+end_src
+
+# for home and home2 to make the connect to each other
+# from home
+#+begin_src bash
+ipfs swarm connect /ip4/192.168.1.245/tcp/4001/p2p/12D3KooWEx4tD1xKp4Pr1xUnA3e2Z37QobTG6Qtv2YwySLGKUB9Z"
+#+end_src
+
+----------------------------------------
+
+# Helpful commands for garbage collection
+
+#+begin_src bash
+ipfs pin ls --type recursive
+ipfs pin rm <ipfs_hash>
+ipfs repo gc
+#+end_src
+
+** Private IPFS setup:
+
+#+begin_src bash
+## ipfs private network
+# =====================
+connect_private_ipfs () {
+    export IPFS_PATH=~/.ipfs
+    cat ~/ebloc-broker/scripts/ipfs_swarm.key | tr -d ' ' > $IPFS_PATH"/swarm.key"
+    ipfs bootstrap rm --all
+    ipfs bootstrap add $(cat ~/ebloc-broker/scripts/ipfs_bootstrap.txt)
+    # ipfs cat QmbuTPCg9MY5hYJZ7ft5S8dJ7RbgfrxiuNwnttdUNscsvp  # should return OK
+}
+go install github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen@latest
+ipfs init
+connect_private_ipfs
+#+end_src
+
+--------------------------------
+
+#+begin_src bash
+ipfs daemon --routing=none &
+ipfs repo gc
+time ipfs cat QmaSSwsS2nAjExnxrqwKtmK5rLLhmqpju1HCsnPSigtHmV > /dev/null
+#+end_src

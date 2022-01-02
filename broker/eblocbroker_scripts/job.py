@@ -10,12 +10,13 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import _exit, _remove, log, print_tb
+from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker_scripts.bloxber_calls import call
 from broker.eblocbroker_scripts.data import is_data_registered
 from broker.errors import QuietExit
-from broker.lib import calculate_size, get_tx_status
+from broker.lib import calculate_size
 from broker.libs import _git
 from broker.utils import (
     CACHE_TYPES,
@@ -58,6 +59,7 @@ class Job:
         self.cores: List[int] = []
         self.run_time = []
         self.keys = {}  # type: Dict[str, str]
+        self.keys_final = {}  # type: Dict[str, str]
         self.foldername_tar_hash = {}  # type: Dict[str, str]
         self.tar_hashes = {}  # type: Dict[str, str]
         self.source_code_storage_id: str = ""
@@ -138,7 +140,7 @@ class Job:
     def clean_before_submit(self):
         for folder in self.folders_to_share:
             if not isinstance(folder, bytes):
-                _remove(os.path.join(folder, ".mypy_cache"), is_warning=False)
+                _remove(os.path.join(folder, ".mypy_cache"))
 
     def check_account_status(self, _from):
         try:
@@ -354,7 +356,7 @@ class JobPrices:
             except:
                 _source_code_hash = bytes32_to_ipfs(source_code_hash)
 
-            log(f"==> is_private[blue]{br(_source_code_hash)}[/blue]={ds.is_private}")
+            log(f"==> is_private{br(_source_code_hash, 'blue')}={ds.is_private}")
             # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_storage_deposit > 0 or
             if (

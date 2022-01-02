@@ -23,7 +23,7 @@ def connect():
             connect_into_web3()
 
         if not config.ebb:
-            connect_to_eblocbroker()
+            connect_into_eblocbroker()
     except Exception as e:
         print_tb(e)
 
@@ -36,13 +36,13 @@ def _connect_into_web3():
     Bloxberg:
     __ https://bloxberg.org
     """
-    web3_ipc_path = env.DATADIR.joinpath("geth.ipc")
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
         if env.IS_BLOXBERG:
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
             cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
     else:
+        web3_ipc_path = env.DATADIR.joinpath("geth.ipc")
         cfg.w3 = Web3(IPCProvider(web3_ipc_path))
         # inject the poa compatibility middleware to the innermost layer
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
@@ -88,7 +88,7 @@ def connect_into_web3() -> None:
         terminate(is_traceback=False)
 
 
-def connect_to_eblocbroker() -> None:
+def connect_into_eblocbroker() -> None:
     """Connect into ebloc-broker contract in the given blockchain."""
     if config.ebb:
         return
@@ -104,7 +104,7 @@ def connect_to_eblocbroker() -> None:
         abi_file = env.EBLOCPATH / "broker" / "eblocbroker_scripts" / "abi.json"
         abi = read_json(abi_file, is_dict=False)
     except Exception as e:
-        raise Exception(f"E: Could not read the abi.json file: {abi_file}") from e
+        raise Exception(f"E: could not read the abi.json file: {abi_file}") from e
 
     try:
         if env.IS_BLOXBERG:

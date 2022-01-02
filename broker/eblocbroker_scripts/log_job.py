@@ -11,7 +11,7 @@ import time
 from contextlib import suppress
 
 from broker import cfg
-from broker._utils._log import Style, _console_ruler, br
+from broker._utils._log import Style, br, console_ruler
 from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
 
@@ -37,7 +37,7 @@ def handle_event(logged_jobs):
             sourceCodeHash = job.args["sourceCodeHash"][value]
             log(f"source_code_hash{br(value)} => {bytes32_to_ipfs(sourceCodeHash)}")
 
-        _console_ruler()
+        console_ruler()
 
 
 def log_loop(event_filter, poll_interval: int = 2):

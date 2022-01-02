@@ -20,6 +20,10 @@ sudo /usr/local/sbin/slurmdbd &
 sleep 2.0
 sudo -u $USER mkdir -p /tmp/slurmstate
 sudo chown -R $USER /tmp/slurmstate
+
+sudo systemctl --no-pager status --full mongod
+sudo systemctl --no-pager status --full systemd-journald
+
 if [ "$verbose" = true ] ; then
     sudo /usr/local/sbin/slurmctld -cDvvvvvv  # verbose
     # sudo -u $(logname) /usr/local/sbin/slurmctld -cDvvvvvv

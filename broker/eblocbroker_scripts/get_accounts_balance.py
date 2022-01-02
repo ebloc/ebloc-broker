@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from contextlib import suppress
 from os import listdir
 from os.path import expanduser
 
@@ -15,14 +16,16 @@ def main():
     for fname in dirlist:
         account_path = f"{path}/{fname}"
         print(account_path)
-        Ebb.brownie_load_account(str(fname), "alper")
+        with suppress(Exception):
+            Ebb.brownie_load_account(str(fname), "alper")
 
     sum_balance = 0
     for account in accounts:
         try:
             if str(account) != "0x3e7C819690A79eCB1A5Babf5F9CDe57e3ECA2A22":
                 balance = Ebb._get_balance(account)
-                log(f"==> [yellow]{str(account).lower()}[/yellow]={balance} eth")
+                # log(f'\"{str(account).lower()}\",')
+                log(f"[yellow]{str(account).lower()}[/yellow]={balance} eth")
                 sum_balance += balance
         except Exception as e:
             print_tb(e)

@@ -6,7 +6,7 @@ import time
 
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import _remove, mkdir
+from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size
@@ -29,6 +29,7 @@ class IpfsClass(Storage):
             if "CumulativeSize" not in ipfs_stat:
                 raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve")
         except Exception as e:
+            print_tb(e)
             raise e
 
         self.ipfs_hashes.append(ipfs_hash)
@@ -76,7 +77,7 @@ class IpfsClass(Storage):
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists online
             is_hashed = False
-            log(f"## attempting to get IPFS file: {ipfs_hash}... ", end="")
+            log(f"## attempting to get IPFS file: {ipfs_hash} ... ", end="")
             if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
                 is_hashed = True
                 log(ok("already cached"))

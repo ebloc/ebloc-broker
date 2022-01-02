@@ -64,8 +64,8 @@ configure_coinbase () { # coinbase address setup
             echo "Ethereum address is not valid, please use a valid one."
             exit
         fi
-        sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $TMP_DIR/.env
-        rm $TMP_DIR/.env.bak
+        # sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $TMP_DIR/.env
+        # rm $TMP_DIR/.env.bak
     fi
 }
 
@@ -80,8 +80,8 @@ configure_oc () { # OC_USER address setup
         echo "Type your OC_USER, followed by [ENTER]:"
         read OC_USER
     fi
-    sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $TMP_DIR/.env
-    rm -f $TMP_DIR/.env.bak
+    # sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $TMP_DIR/.env
+    # rm -f $TMP_DIR/.env.bak
 
     if ! grep -q "export OC_USER=" $HOME/.profile; then
         echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
@@ -137,16 +137,9 @@ mkdir -p $TMP_DIR/links
 mkdir -p $TMP_DIR/transactions
 mkdir -p $TMP_DIR/end_code_output
 mkdir -p $TMP_DIR/tmp
-if [ ! -f $TMP_DIR/.env ]; then
-    cp $current_dir/.env $TMP_DIR
+if [ ! -f $TMP_DIR/cfg.yaml ]; then
+    cp $current_dir/cfg_temp.yaml $TMP_DIR
 fi
-
-# LOG_PATH
-# ========
-line_new=$TMP_DIR
-var=$(echo $line_new | sed 's/\//\\\//g')
-sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $TMP_DIR/.env
-rm -f $TMP_DIR/.env.bak
 
 # gdrive
 # ======
@@ -155,39 +148,46 @@ if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
 fi
 
-line_new=$(which gdrive | sed 's/\//\\\//g')
-sed -i.bak "s/^\(GDRIVE=\).*/\1\"$line_new\"/" $TMP_DIR/.env
-rm -f $TMP_DIR/.env.bak
+# LOG_PATH
+# ========
+# line_new=$TMP_DIR
+# var=$(echo $line_new | sed 's/\//\\\//g')
+# sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $TMP_DIR/.env
+# rm -f $TMP_DIR/.env.bak
+
+
+# line_new=$(which gdrive | sed 's/\//\\\//g')
+# sed -i.bak "s/^\(GDRIVE=\).*/\1\"$line_new\"/" $TMP_DIR/.env
+# rm -f $TMP_DIR/.env.bak
 
 # EBLOCPATH
 # =========
-eblocbrokerPath="$HOME/ebloc-broker"
-var=$(echo $eblocbrokerPath | sed 's/\//\\\//g')
-sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" $TMP_DIR/.env
-rm $TMP_DIR/.env.bak
+# eblocbrokerPath="$HOME/ebloc-broker"
+# var=$(echo $eblocbrokerPath | sed 's/\//\\\//g')
+# sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" $TMP_DIR/.env
+# rm $TMP_DIR/.env.bak
 
 # User Name
 # =========
-line_old="whoami"
-line_new=$(logname)
+# line_old="whoami"
+# line_new=$(logname)
 
-sed -i.bak "s/^\(WHOAMI=\).*/\1\"$line_new\"/" $TMP_DIR/.env
-rm -f $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(WHOAMI=\).*/\1\"$line_new\"/" $TMP_DIR/.env
+# rm -f $TMP_DIR/.env.bak
 
 # RPC PORT
 # ========
-line_old="8545"
-sed -i.bak "s/^\(RPC_PORT=\).*/\1$line_old/" $TMP_DIR/.env
-rm $TMP_DIR/.env.bak
+# line_old="8545"
+# sed -i.bak "s/^\(RPC_PORT=\).*/\1$line_old/" $TMP_DIR/.env
+# rm $TMP_DIR/.env.bak
 
 # configure_coinbase
 # configure_oc
 # configure_ipfs
-echo -e "Warning: Update the following file "$TMP_DIR"/.eudat_provider.txt' with
+echo -e "Warning: Update the following file "$TMP_DIR"/.eudat_client.txt' with
 your EUDAT account's password. Best to make sure the file is not readable or
 even listable for anyone but you. You achieve this with:
 'chmod 700 eudat_password.txt'"
-
 echo ""
 yes_or_no "Are you are a provider" && provider_setup
 

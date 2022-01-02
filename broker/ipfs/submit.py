@@ -53,7 +53,7 @@ def pre_check(job, requester):
         sys.exit()
 
 
-def submit_ipfs(job: Job):
+def submit_ipfs(job: Job, is_pass=False, required_confs=1):
     Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     provider = Ebb.w3.toChecksumAddress(job.provider_addr)
@@ -61,7 +61,7 @@ def submit_ipfs(job: Job):
     log("==> Attemptting to submit a job")
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files)
+    check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
     if main_storage_id == StorageID.IPFS:
         log("==> Submitting source code through [blue]IPFS[/blue]")
     elif main_storage_id == StorageID.IPFS_GPG:
@@ -131,25 +131,29 @@ def submit_ipfs(job: Job):
             #     job.source_code_hashes.append(ipfs_to_bytes32(code_hash))
             #     job.source_code_hashes_str.append(code_hash)
 
-        if idx != len(job.folders_to_share) - 1:
-            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "cyan")
+        # if idx != len(job.folders_to_share) - 1:
+        #     log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "cyan")
 
-    # Requester inputs for testing purpose
+    # requester inputs for testing purpose
     job.price, *_ = job.cost(provider, requester)
     try:
-        tx_hash = Ebb.submit_job(provider, key, job, requester=requester)
-        tx_receipt = get_tx_status(tx_hash)
-        if tx_receipt["status"] == 1:
-            processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
-            try:
-                if processed_logs:
-                    log("job_info:", "bold yellow")
-                    log(vars(processed_logs[0].args))
-                for target in targets:
-                    if ".tar.gz.gpg" in str(target):
-                        _remove(target)
-            except IndexError:
-                log(f"E: Tx({tx_hash}) is reverted")
+        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
+        if required_confs >= 1:
+            tx_receipt = get_tx_status(tx_hash)
+            if tx_receipt["status"] == 1:
+                processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                try:
+                    if processed_logs:
+                        log("job_info:", "bold yellow")
+                        log(vars(processed_logs[0].args))
+
+                    for target in targets:
+                        if ".tar.gz.gpg" in str(target):
+                            _remove(target)
+                except IndexError:
+                    log(f"E: Tx({tx_hash}) is reverted")
+        else:
+            pass
     except QuietExit:
         pass
     except Exception as e:

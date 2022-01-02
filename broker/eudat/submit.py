@@ -7,15 +7,15 @@ from broker._utils._log import log
 from broker.config import env
 from broker.eblocbroker_scripts.job import Job
 from broker.imports import connect
-from broker.libs import eudat
+from broker.libs.eudat import login, submit
 from broker.link import check_link_folders
 from broker.utils import print_tb
 
 
-def eudat_submit(job: Job):
+def eudat_submit(job: Job, is_pass=False, required_confs=1):
     Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
-    oc_requester = "059ab6ba-4030-48bb-b81b-12115f531296"
+    oc_client = "059ab6ba-4030-48bb-b81b-12115f531296"
     connect()
     try:
         job.check_account_status(requester)
@@ -23,7 +23,7 @@ def eudat_submit(job: Job):
         print_tb(e)
         raise e
 
-    eudat.login(oc_requester, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT_REQUESTER)
+    login(oc_client, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
         tar_hash = sys.argv[2]
@@ -32,8 +32,8 @@ def eudat_submit(job: Job):
         provider = Ebb.w3.toChecksumAddress(job.provider_addr)
 
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files)
-    return eudat.submit(provider, requester, job)
+    check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
+    return submit(provider, requester, job, required_confs=required_confs)
 
 
 if __name__ == "__main__":

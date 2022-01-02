@@ -3,7 +3,7 @@
 import sys
 
 from broker import cfg
-from broker.lib import get_tx_status
+from broker._utils.web3_tools import get_tx_status
 from broker.utils import print_tb
 
 if __name__ == "__main__":

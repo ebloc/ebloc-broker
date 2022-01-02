@@ -1,8 +1,8 @@
 * SLURM Emulator Mode Setup
 
-__ http://wildflower.diablonet.net/~scaron/slurmsetup.html
-__ https://slurm.schedmd.com/faq.html#multi_slurmd
-__ https://stackoverflow.com/a/40707189/2402577
+__ [[http://wildflower.diablonet.net/~scaron/slurmsetup.html]]
+__ [[https://slurm.schedmd.com/faq.html#multi_slurmd]]
+__ [[https://stackoverflow.com/a/40707189/2402577]]
 
 ** Package install
 
@@ -23,8 +23,8 @@ sudo make && sudo make install
 sudo cp ~/ebloc-broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
 sudo cp ~/ebloc-broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
 
-sudo chmod 0600 /usr/local/etc/slurmdbd.conf
-sudo chmod 0600 /usr/local/etc/slurm.conf
+sudo chmod 755 /usr/local/etc/slurmdbd.conf
+sudo chmod 755 /usr/local/etc/slurm.conf
 sudo chown $(whoami) /usr/local/etc/slurmdbd.conf
 sudo chown munge:munge /etc/munge/munge.key
 sudo chmod 400 /etc/munge/munge.key
@@ -64,7 +64,7 @@ PartitionName=production Default=YES Nodes=cn[01-02]
 NodeName=ebloc[1-2] NodeHostName=localhost NodeAddr=127.0.0.1 CPUs=2
 PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
 
-# Emulator mode 128 nodes---------------------------------------------------
+# Emulator mode 128 nodes
 NodeName=ebloc[1-2] NodeHostName=ebloc NodeAddr=79.123.177.145 CPUs=1
 PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
 

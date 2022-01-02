@@ -16,7 +16,10 @@ from datetime import datetime
 from decimal import Decimal
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
+import requests
 from pytz import timezone, utc
+
+from broker.errors import Timeout
 
 try:
     import thread
@@ -25,11 +28,11 @@ except ImportError:
 
 try:
     from broker.errors import HandlerException, QuietExit
-    from broker._utils._log import br, ok
+    from broker._utils._log import br
     from broker._utils._log import log
 except ImportError:  # if ebloc_broker used as a submodule
     from ebloc_broker.broker.errors import HandlerException, QuietExit
-    from ebloc_broker.broker._utils._log import br, ok
+    from ebloc_broker.broker._utils._log import br
     from ebloc_broker.broker._utils._log import log
 
 
@@ -41,7 +44,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+    return f"[bold green][[/bold green]  [bold blue]{text}  [bold green]][/bold green]"
 
 
 def merge_two_dicts(x, y):
@@ -54,8 +57,10 @@ def merge_two_dicts(x, y):
     return z
 
 
-def countdown(seconds: int):
-    log(f"## sleep_time={seconds}")
+def countdown(seconds: int, is_silent=False):
+    if not is_silent:
+        log(f"## sleep_time={seconds} seconds")
+
     while seconds:
         mins, secs = divmod(seconds, 60)
         timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
@@ -131,30 +136,19 @@ def print_tb(message=None, is_print_exc=True) -> None:
             template = "An exception of type {0} occurred. Arguments:\n{1!r}"
             message = template.format(type(message).__name__, message.args)
 
+    sep_terminate = "raise Terminate"
     tb_text = "".join(traceback.format_exc())
+    if sep_terminate in tb_text:
+        tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [magenta]Terminate[/magenta]()"
+
     if is_print_exc and tb_text != "NoneType: None\n":
         log(tb_text.rstrip(), "bold", where_back=1)
 
     if message and "An exception of type Exception occurred" not in message:
         log(message, where_back=1)
-    # console.print_exception()  #arg: show_locals=True
-    # if not message:
-    #     log(f"{WHERE(1)} ", "bold blue", where_back=1)
-    # else:
-    #     with suppress(Exception):
-    #         log(f"{br(PrintException())} ", "bold blue", end="", where_back=1)
-
-    #     if "An exception of type CalledProcessError occurred" not in message:
-    #         log()
-    #         if "Warning: " not in message or "E: " not in message:
-    #             message = str(message).replace("\n", "")
-    #             log(f"E: {message}", where_back=1)
-    #         else:
-    #             message = str(message).replace("\n", "")
-    #             log(message, where_back=1)
 
 
-def _remove(path: str, is_warning=True):
+def _remove(path: str, is_verbose=False):
     """Remove file or folders based on its the file type.
 
     __ https://stackoverflow.com/a/10840586/2402577
@@ -170,13 +164,13 @@ def _remove(path: str, is_warning=True):
             # deletes a directory and all its contents
             shutil.rmtree(path)
         else:
-            if is_warning:
-                log(f"Warning: {WHERE(1)} Given path '{path}' does not exists. Nothing is removed.")
+            if is_verbose:
+                log(f"warning: {WHERE(1)} Nothing is removed, following path does not exist:\n[magenta]{path}")
 
             return
 
-        if is_warning:
-            log(f"==> {WHERE(1)} {path} is removed")
+        if is_verbose:
+            log(f"==> {WHERE(1)} remove following path:\n[magenta]{path}")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -297,14 +291,16 @@ def print_trace(cmd, back=1, exc="", returncode=""):
     _cmd = " ".join(cmd)
     if exc:
         log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "red")
-        log(f"[yellow]Command: [/yellow][white]{_cmd}", "bold")
+        log(f"[yellow]command: [/yellow][white]{_cmd}", "bold")
         log(exc.rstrip(), "bold red")
     else:
         if returncode:
             return_code_msg = f"returned non-zero exit status {returncode}"
-            log(f"E: Failed shell command {br(return_code_msg)}:\n[yellow]{_cmd}")
+            log(f"E: Failed shell command {br(return_code_msg)}:")
         else:
-            log(f"E: Failed shell command:\n[yellow]{_cmd}")
+            log("E: Failed shell command:")
+
+        log(_cmd, "bold yellow", is_code=True)
 
 
 def run(cmd, my_env=None, is_quiet=False) -> str:
@@ -322,7 +318,7 @@ def run(cmd, my_env=None, is_quiet=False) -> str:
         if not is_quiet:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
 
-        raise Exception from None
+        raise Exception from None  # prevent tree of trace
     except Exception as e:
         raise e
 
@@ -341,7 +337,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
     pids = []
     for line in output:
         fields = line.strip().split()
-        # Array indices start at 0 unlike awk, 1 indice points the port number
+        # array indices start at 0 unlike awk, 1 indice points the port number
         pids.append(fields[1])
 
     if len(pids) > process_count:
@@ -359,7 +355,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
                 return True
         else:
             if is_print:
-                log(f"==> {name} is already running on the background")
+                log(f"==> [green]{name}[/green] is already running on the background")
 
             return True
 
@@ -410,8 +406,9 @@ def without_keys(d, keys):
 
 
 def quit_function(fn_name):
-    # print to stderr, unbuffered in Python 2.
+    print("\nwarning: ", end="")
     print("{0} took too long".format(fn_name), file=sys.stderr)
+    breakpoint()  # DEBUG
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
 
@@ -472,3 +469,40 @@ def handler(signum, frame):
         log(f"E: Signal handler called with signum={signum} frame={frame}")
         traceback.print_stack()
         raise HandlerException("Forever is over, end of time")
+
+
+def is_byte_str_zero(value: str) -> bool:
+    if len(value) >= 2:
+        if value[1] == "x":
+            value = value.replace("x", "", 1)
+
+    try:
+        return not int(value)
+    except:
+        return False
+
+
+def get_ip():
+    endpoint = "https://ipinfo.io/json"
+    response = requests.get(endpoint, verify=True)
+    if response.status_code != 200:
+        raise Exception(f"Status:{response.status_code}, problem with the request.")
+
+    data = response.json()
+    return data["ip"]
+
+
+def is_gpg_published(gpg_fingerprint):
+    try:
+        run(["gpg", "--list-keys", gpg_fingerprint])
+    except Exception as e:
+        log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
+        try:
+            run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+        except:
+            raise e  # noqa
+
+
+def get_gpg_fingerprint(email) -> str:
+    output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
+    return output.split("\n")[1].replace(" ", "").upper()

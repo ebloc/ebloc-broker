@@ -19,3 +19,10 @@ git diff > ../patch.txt
 git apply ../patch.txt
 git checkout .  # => undo changes
 #+end_src
+
+
+
+
+[[https://b2access.eudat.eu/saml-idp/saml2idp-web-entry?signInId=4cadb9de-1d0e-4548-ab9b-2a3654066aac][Sign up into B2ACESS EUDAT]]
+
+Note:
