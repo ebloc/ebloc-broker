@@ -3,11 +3,13 @@
 import os.path
 import random
 import sys
+from datetime import datetime
 from pathlib import Path
 from random import randint
-from datetime import datetime
+
 from pymongo import MongoClient
 from web3.logs import DISCARD
+
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import console_ruler

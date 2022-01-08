@@ -1,10 +1,10 @@
 config:
-    account: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
-    email: alper.alimoglu.test.2@gmail.com
-    federation_cloud_id: 5dd71484-1ae2-4188-98e7-536123582716@b2drop.eudat.eu
-    available_core: 4
-    commitment_blk: 600
-    price_core_min: 100
-    price_data_transfer: 1
-    price_storage: 1
-    price_cache: 1
+  account: "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a"
+  email: alper.alimoglu.test.2@gmail.com
+  federation_cloud_id: 5dd71484-1ae2-4188-98e7-536123582716@b2drop.eudat.eu
+  available_core: 4
+  commitment_blk: 600
+  price_core_min: 100
+  price_data_transfer: 1
+  price_storage: 1
+  price_cache: 1

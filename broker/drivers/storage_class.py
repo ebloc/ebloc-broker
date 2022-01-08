@@ -112,7 +112,6 @@ class Storage(BaseClass):
 
         raise Exception("E: sbatch could not submit the job")
 
-
     def thread_log_setup(self):
         import threading
         from broker import config

@@ -9,8 +9,10 @@ import time
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
+
 import zc.lockfile
 from ipdb import launch_ipdb_on_exception
+
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._log import console_ruler, log, ok
@@ -39,10 +41,8 @@ from broker.utils import (
     terminate,
 )
 
-try:
+with suppress(Exception):
     from broker.eblocbroker_scripts import Contract
-except:
-    pass
 
 
 # from threading import Thread
@@ -475,8 +475,8 @@ def _main():
 
 
 def main(args):
+    global given_block_number
     try:
-        global given_block_number
         if args.bn:
             given_block_number = args.bn
             cfg.IS_FULL_TEST = False

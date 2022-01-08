@@ -14,8 +14,7 @@ from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
-from broker.lib import run
-from broker.utils import popen_communicate, run_ipfs_daemon
+from broker.utils import run_ipfs_daemon
 
 Ebb = cfg.Ebb
 
@@ -58,14 +57,14 @@ def get_ipfs_id() -> str:
     except ipfshttpclient.exceptions.ConnectionError:
         log(
             "E: Failed to establish a new connection to IPFS, please run it on the background.\n"
-            "Please run ~/ebloc-broker/broker/_daemons/ipfs.py"
+            "Please run [magenta]~/ebloc-broker/broker/_daemons/ipfs.py"
         )
         sys.exit(1)
     except Exception as e:
         print_tb(e)
         log(
             "E: Failed to establish a new connection to IPFS, please run it on the background.\n"
-            "Please run ~/ebloc-broker/broker/_daemons/ipfs.py"
+            "Please run [magenta]~/ebloc-broker/broker/_daemons/ipfs.py"
         )
         sys.exit(1)
 

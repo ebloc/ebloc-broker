@@ -13,8 +13,7 @@ from broker.errors import QuietExit
 def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs_id):
     """Update provider info."""
     if len(federation_cloud_id) >= 128:
-        log("E: federation_cloud_id could be lesser than 128")
-        raise
+        raise Exception("E: federation_cloud_id could be lesser than 128")
 
     if len(email) >= 128:
         raise Exception("E: e-mail should be less than 128")

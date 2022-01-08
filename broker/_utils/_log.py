@@ -258,6 +258,7 @@ def log(
     is_code=False,
     is_err=False,
     is_output=True,
+    max_depth=None,
 ):
     """Print for own settings.
 
@@ -303,7 +304,11 @@ def log(
             ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
 
     if isinstance(text, dict):
-        pprint(text)
+        if max_depth:
+            pprint(text, max_depth=max_depth)
+        else:
+            pprint(text)
+
         if is_write:
             ll.console[filename].print(text)
     else:

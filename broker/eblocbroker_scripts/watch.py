@@ -79,10 +79,7 @@ def watch(eth_address="", from_block=None):
         is_connected = Ebb.is_web3_connected()
         _console_clear()
         open(watch_fn, "w").close()
-        log(
-            f"\r==> {_time() } bn={block_number} | web3={is_connected} | address={eth_address}",
-            "bold"
-        )
+        log(f"\r==> {_time() } bn={block_number} | web3={is_connected} | address={eth_address}", "bold")
         if not watch_only_jobs:
             providers = Ebb.get_providers()
             columns_size = int(int(columns) / 2 - 12)
