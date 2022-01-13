@@ -67,7 +67,7 @@ def wait_until_idle_core_available():
 
 
 def _tools(block_continue):
-    """Check whether the required functions are in use or not.
+    """Check whether the required functions are running or not.
 
     :param block_continue: Continue from given block number
     """

@@ -72,32 +72,32 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * the blockchain, which will be caught by the provider in order to cancel
      * the job.
      *
-     * @param _provider Ethereum Address of the provider.
+     * @param provider Ethereum Address of the provider.
      * @param key Uniqu ID for the given job.
      * @param index The index of the job.
      * @param jobID ID of the job to identify under workflow.
      * @return bool
      */
     function refund(
-        address _provider,
+        address provider,
         string memory key,
         uint32 index,
         uint32 jobID,
         uint256[] memory core,
         uint256[] memory elapsedTime
     ) public returns (bool) {
-        Lib.Provider storage provider = providers[_provider];
+        Lib.Provider storage _provider = providers[provider];
         /*
-          If 'provider' is not mapped on 'provider' array  or its 'key' and 'index'
+          If 'provider' is not mapped on '_provider' map  or its 'key' and 'index'
           is not mapped to a job , this will throw automatically and revert all changes
         */
-        Lib.Status storage jobInfo = provider.jobStatus[key][index];
+        Lib.Status storage jobInfo = _provider.jobStatus[key][index];
         require(jobInfo.jobInfo == keccak256(abi.encodePacked(core, elapsedTime)));
 
         Lib.Job storage job = jobInfo.jobs[jobID];
 
         require(
-            (msg.sender == jobInfo.jobOwner || msg.sender == _provider) &&
+            (msg.sender == jobInfo.jobOwner || msg.sender == provider) &&
                 job.stateCode != Lib.JobStateCodes.COMPLETED &&
                 job.stateCode != Lib.JobStateCodes.REFUNDED &&
                 job.stateCode != Lib.JobStateCodes.CANCELLED
@@ -105,7 +105,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         uint256 amount;
         if (
-            !provider.isRunning || // If provider stop running
+            !_provider.isRunning || // If provider stop running
             job.stateCode <= Lib.JobStateCodes.PENDING || // If job' state is SUBMITTED(0) or PENDING(1)
             (job.stateCode == Lib.JobStateCodes.RUNNING &&
                 (block.timestamp - job.startTime) > elapsedTime[jobID] * 60 + 1 hours)
@@ -118,7 +118,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         } else if (job.stateCode == Lib.JobStateCodes.RUNNING) job.stateCode = Lib.JobStateCodes.CANCELLED;
         else revert();
 
-        emit LogRefundRequest(_provider, key, index, jobID, amount); /* scancel log */
+        emit LogRefundRequest(provider, key, index, jobID, amount); /* scancel log */
         return true;
     }
 
@@ -174,7 +174,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 // Provider cannot request more execution time of the job that is already requested
                 elapsedTime <= args.runTime[args.jobID] &&
                 // Provider cannot request more than the job's given dataTransferIn or dataTransferOut
-                (args.dataTransferIn <= jobInfo.dataTransferIn || args.dataTransferOut <= jobInfo.dataTransferOut) &&
+                (args.dataTransferIn <= jobInfo.dataTransferIn && args.dataTransferOut <= jobInfo.dataTransferOut) &&
                 // Job should be in running state if positive execution duration is provided
                 (elapsedTime > 0 && job.stateCode == Lib.JobStateCodes.RUNNING)
         );
@@ -318,7 +318,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @param gpgFingerprint is a bytes8 containing a gpg key ID that is used by GNU
        Privacy Guard to encrypt or decrypt files.
      * @param email is a string containing an email
-     * @param federatedCloudID is a string containing a Federated Cloud ID for
+     * @param fcID is a string containing a Federated Cloud ID for
        sharing requester's repository with the provider through EUDAT.
      * @param availableCore is a uint32 value containing the number of available
        cores.
@@ -336,7 +336,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     function registerProvider(
         bytes32 gpgFingerprint,
         string memory email,
-        string memory federatedCloudID,
+        string memory fcID,
         string memory ipfsID,
         uint32 availableCore,
         uint32[] memory prices,
@@ -358,17 +358,17 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         pricesSetBlockNum[msg.sender].push(uint32(block.number));
         provider.constructProvider();
         registeredProviders.push(msg.sender);
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, email, fcID, ipfsID);
         return true;
     }
 
     function updateProviderInfo(
         bytes32 gpgFingerprint,
         string memory email,
-        string memory federatedCloudID,
+        string memory fcID,
         string memory ipfsID
     ) public whenProviderRegistered returns (bool) {
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, email, fcID, ipfsID);
         return true;
     }
 
@@ -443,7 +443,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @param gpgFingerprint | is a bytes8 containing a gpg key ID that is used by the
        GNU Privacy Guard to encrypt or decrypt files.
      * @param email is a string containing an email
-     * @param federatedCloudID is a string containing a Federated Cloud ID for
+     * @param fcID is a string containing a Federated Cloud ID for
        sharing requester's repository with the provider through EUDAT.
      * @param ipfsID | is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
@@ -452,11 +452,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     function registerRequester(
         bytes32 gpgFingerprint,
         string memory email,
-        string memory federatedCloudID,
+        string memory fcID,
         string memory ipfsID
     ) public returns (bool) {
         requesterCommittedBlock[msg.sender] = uint32(block.number);
-        emit LogRequester(msg.sender, gpgFingerprint, email, federatedCloudID, ipfsID);
+        emit LogRequester(msg.sender, gpgFingerprint, email, fcID, ipfsID);
         return true;
     }
 
@@ -688,7 +688,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             isVerified.length == sourceCodeHash.length &&
                 jobInfo.sourceCodeHash == keccak256(abi.encodePacked(sourceCodeHash, cacheType))
         );
-
         for (uint256 i = 0; i < sourceCodeHash.length; i++) {
             bytes32 _sourceCodeHash = sourceCodeHash[i];
             //Only provider can update receied job only to itself
@@ -712,11 +711,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return true;
     }
 
-    function setJobStatusPending(
-        string memory key,
-        uint32 index,
-        uint32 jobID
-    ) public returns (bool) {
+    function setJobStatusPending(string memory key, uint32 index, uint32 jobID) public returns (bool) {
         /* Used as a pointer to a storage */
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
         // job.stateCode should be {SUBMITTED (0)}

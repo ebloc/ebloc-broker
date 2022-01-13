@@ -624,8 +624,11 @@ def test_multiple_data():
     #: you can only advance the time by whole seconds.
     rpc.sleep(60 * execution_time + cfg.BLOCK_DURATION)
     mine(1)
-    end_time = start_time + 60 * execution_time + cfg.BLOCK_DURATION
-    assert end_time <= get_block_timestamp(), "block timestamp is ahead of completion time"
+    end_time = start_time + 60 * execution_time
+    block_timestamp = get_block_timestamp() + cfg.BLOCK_DURATION
+    assert (
+        end_time <= block_timestamp
+    ), f"block timestamp is ahead of completion time, difference={block_timestamp - end_time}"
     args = [
         index,
         jobID,

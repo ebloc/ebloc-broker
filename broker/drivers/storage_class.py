@@ -3,7 +3,6 @@
 import json
 import os
 import subprocess
-import sys
 import time
 import uuid
 from contextlib import suppress
@@ -114,6 +113,7 @@ class Storage(BaseClass):
 
     def thread_log_setup(self):
         import threading
+
         from broker import config
 
         _log = logging.getLogger()  # root logger

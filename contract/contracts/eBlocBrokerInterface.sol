@@ -24,7 +24,7 @@ interface eBlocBrokerInterface {
         uint256 dataTransferOut
     );
 
-    // Records the updated jobs' information under setJobStatus() method call
+    // Records the updated jobs' information under setJobStatus*() method calls
     event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 stateCodes);
 
     // Records the submitted jobs' information under submitJob() method call

@@ -34,6 +34,7 @@ node -v
 
 # ganache-cli
 # ===========
+export NODE_OPTIONS=--openssl-legacy-provider
 sudo npm install -g ganache-cli --unsafe-perm
 
 # go
