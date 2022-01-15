@@ -154,6 +154,7 @@ configobj==5.0.6
 configparser==5.0.2
     # via
     #   webdriver-manager
+consoledraw==2.3.13
 constantly==15.1.0
     # via
     #   twisted
@@ -509,6 +510,7 @@ netaddr==0.8.0
     #   eth-brownie
     #   multiaddr
 netifaces==0.10.4
+networkx==2.6.3
 neurotools==0.3.1
     # via
     #   slip
@@ -821,7 +823,7 @@ rlp==2.0.1
     #   eth-brownie
     #   eth-rlp
 roman==3.3
-rope==0.22.1
+rope==0.22.0
 ruamel.yaml==0.17.10
 ruamel.yaml.clib==0.2.6
     # via
@@ -1076,7 +1078,7 @@ webtest==2.0.35
 werkzeug==2.0.2
     # via
     #   flask
-wheel==0.37.0
+wheel==0.37.1
     # via
     #   pip-tools
     #   pypandoc
@@ -1230,8 +1232,7 @@ zope.testing==4.9
 zope.traversing==4.4.1
     # via
     #   z3c.pt
-networkx==2.6.3
-consoledraw==2.3.13
+
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools

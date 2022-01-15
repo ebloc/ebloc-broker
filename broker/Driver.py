@@ -173,7 +173,7 @@ class Driver:
     def process_logged_job(self, idx):
         """Process logged job one by one."""
         self.received_block = []
-        self.storage_duration = []
+        self.store_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
         console_ruler(idx, character="-")
@@ -209,7 +209,7 @@ class Driver:
             cfg.Ebb.get_job_source_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
-            self.job_info.update({"storage_duration": self.storage_duration})
+            self.job_info.update({"store_duration": self.store_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
             cfg.Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)

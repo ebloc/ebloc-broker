@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 from broker import cfg, config
@@ -124,7 +123,7 @@ def register_provider(price_core_min=1):
     with brownie.reverts():
         ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
 
-    _orc_id = ebb.getUserOrcID(accounts[0])
+    _orc_id = ebb.getOrcID(accounts[0])
     assert orc_id == _orc_id.decode("utf-8").replace("\x00", ""), "orc_id set false"
     return provider_registered_bn
 
@@ -158,7 +157,7 @@ def register_requester(account):
     with brownie.reverts():  # orc_id should only set once for the same user
         ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": accounts[0]})
 
-    _orc_id = ebb.getUserOrcID(account)
+    _orc_id = ebb.getOrcID(account)
     assert orc_id == _orc_id.decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
@@ -412,7 +411,7 @@ def test_storage_refund():
     mine(cfg.BLOCK_DURATION_1_HOUR)
 
     tx = ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000})
-    refundedWei = tx.events["LogStorageDeposit"]["payment"]
+    refundedWei = tx.events["LogStoreDeposit"]["payment"]
     log("refundedWei=" + str(refundedWei))
     withdraw(requester, refundedWei)
     with brownie.reverts():  # refundStorageDeposit should revert
@@ -420,8 +419,8 @@ def test_storage_refund():
             provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000}
         )
     tx = ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[1], {"from": requester, "gas": 4500000})
-    refundedWei = tx.events["LogStorageDeposit"]["payment"]
-    paid_address = tx.events["LogStorageDeposit"]["paidAddress"]
+    refundedWei = tx.events["LogStoreDeposit"]["payment"]
+    paid_address = tx.events["LogStoreDeposit"]["paidAddress"]
     withdraw(requester, refundedWei)
     with brownie.reverts():  # refundStorageDeposit should revert
         tx = ebb.refundStorageDeposit(
@@ -464,20 +463,20 @@ def test_storage_refund():
     )
 
     for source_code_hash in job.source_code_hashes:
-        log(ebb.getJobStorageTime(provider, source_code_hash))
+        log(ebb.getDataStoreDuration(provider, source_code_hash))
 
     with brownie.reverts():  # refundStorageDeposit should revert, because it is already used by the provider
         for source_code_hash in job.source_code_hashes:
             tx = ebb.refundStorageDeposit(provider, requester, source_code_hash, {"from": requester, "gas": 4500000})
 
     with brownie.reverts():
-        tx = ebb.receiveStorageDeposit(requester, job.source_code_hashes[0], {"from": provider, "gas": 4500000})
+        tx = ebb.receiveStoreDeposit(requester, job.source_code_hashes[0], {"from": provider, "gas": 4500000})
 
     mine(cfg.BLOCK_DURATION_1_HOUR)
     # after deadline (1 hr) is completed to store the data, provider could obtain the money
     for idx, source_code_hash in enumerate(job.source_code_hashes):
-        tx = ebb.receiveStorageDeposit(requester, source_code_hash, {"from": provider, "gas": 4500000})
-        amount = tx.events["LogStorageDeposit"]["payment"]
+        tx = ebb.receiveStoreDeposit(requester, source_code_hash, {"from": provider, "gas": 4500000})
+        amount = tx.events["LogStoreDeposit"]["payment"]
         withdraw(provider, amount)
         assert storage_payment[idx] == amount
 
@@ -611,21 +610,17 @@ def test_multiple_data():
         job.source_code_hashes,
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
-
     log("job_index=" + str(tx.events["LogJob"]["index"]))
-
-    # provider side:
+    # provider side
     index = 0
     jobID = 0
     start_time = get_block_timestamp()
     execution_time = 10
     result_ipfs_hash = "0xabcd"
     tx = ebb.setJobStatusRunning(job_key, index, jobID, start_time, {"from": accounts[0]})
-    #: you can only advance the time by whole seconds.
-    rpc.sleep(60 * execution_time + cfg.BLOCK_DURATION)
-    mine(1)
+    mine(60 * execution_time / cfg.BLOCK_DURATION)
     end_time = start_time + 60 * execution_time
-    block_timestamp = get_block_timestamp() + cfg.BLOCK_DURATION
+    block_timestamp = get_block_timestamp()
     assert (
         end_time <= block_timestamp
     ), f"block timestamp is ahead of completion time, difference={block_timestamp - end_time}"
@@ -655,9 +650,8 @@ def test_multiple_data():
     execution_time = 10
     result_ipfs_hash = "0xabcd"
     tx = ebb.setJobStatusRunning(job_key, index, jobID, start_time, {"from": accounts[0]})
-    rpc.sleep(60 * execution_time + cfg.BLOCK_DURATION)
-    mine(1)
-    end_time = start_time + 60 * execution_time + cfg.BLOCK_DURATION
+    mine(60 * execution_time / cfg.BLOCK_DURATION)
+    end_time = start_time + 60 * execution_time
     args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
 
@@ -1040,7 +1034,7 @@ def test_submit_job():
             job.cores = [core]
             job.run_time = [coreMin]
 
-            log("\nContractBalance=" + str(ebb.getContractBalance()))
+            log("\ncontract_balance=" + str(ebb.getcontract_balance()))
             jobID = 0
             execution_time = int(arguments[1]) - int(arguments[0])
             end_time = int(arguments[1])
@@ -1062,19 +1056,19 @@ def test_submit_job():
             withdraw(requester, refunded)
             log(f"received={received} | refunded={refunded}")
 
-    log("\ncontract_balance=" + str(ebb.getContractBalance()), "bold")
+    log("\ncontract_balance=" + str(ebb.getcontract_balance()), "bold")
     # prints finalize version of the linked list.
     size = ebb.getProviderReceiptSize(provider)
     for idx in range(0, size):
         log(ebb.getProviderReceiptNode(provider, idx))
 
     console_ruler()
-    log(f"==> storage_time for job={job_key}")
-    job_storage_time = ebb.getJobStorageTime(provider, source_code_hash)
-    ds = DataStorage(job_storage_time)
+    log(f"==> store_duration for job={job_key}")
+    job_store_duration = ebb.getDataStoreDuration(provider, source_code_hash)
+    ds = DataStorage(job_store_duration)
     log(
         f"receivedBlockNumber={ds.received_block} |"
-        f"storage_duration(block numbers)={ds.storage_duration} | "
+        f"store_duration(block numbers)={ds.store_duration} | "
         f"is_private={ds.is_private} |"
         f"isVerified_Used={ds.is_verified_used}"
     )
@@ -1086,7 +1080,7 @@ def test_submit_job():
 
     """
     mine(cfg.BLOCK_DURATION_1_HOUR)
-    tx = ebb.receiveStorageDeposit(requester, source_code_hash, {"from": provider});
-    log('receiveStorageDeposit => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
+    tx = ebb.receiveStoreDeposit(requester, source_code_hash, {"from": provider});
+    log('receiveStoreDeposit => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     log(ebb.getReceivedStorageDeposit(requester, source_code_hash, {"from": }))
     """

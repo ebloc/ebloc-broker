@@ -4,6 +4,7 @@
 
 if __name__ == "__main__":
     import call
+
     from broker.utils import run
 
     # import logging
@@ -11,7 +12,7 @@ if __name__ == "__main__":
     # mp.log_to_stderr(logging.DEBUG)
 
     filename = call.__file__
-    func_name = "getJobStorageTime"
+    func_name = "getDataStoreDuration"
     data = (
         "",
         "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49",

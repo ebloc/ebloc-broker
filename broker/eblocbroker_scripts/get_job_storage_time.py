@@ -13,8 +13,8 @@ if __name__ == "__main__":
         provider_addr = "0x57b60037b82154ec7149142c606ba024fbb0f991"
         source_code_hash = "acfd2fd8a1e9ccf031db0a93a861f6eb"
 
-    received_block_num, storage_time = Ebb.getJobStorageTime(provider_addr, source_code_hash)
+    received_block_num, store_duration = Ebb.getDataStoreDuration(provider_addr, source_code_hash)
     print(
-        f"received_block_num={received_block_num}; storage_time={storage_time};"
-        f" end_block_time={received_block_num + storage_time * cfg.BLOCK_DURATION_1_HOUR}"
+        f"received_block_num={received_block_num}; store_duration={store_duration};"
+        f" end_block_time={received_block_num + store_duration * cfg.BLOCK_DURATION_1_HOUR}"
     )

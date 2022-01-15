@@ -5,7 +5,7 @@ from pathlib import Path
 
 from broker import cfg
 from broker._utils.tools import log
-from broker.test_setup._users import users  # , extra_users
+from broker.test_setup.user_set import users  # , extra_users
 
 collect_account = "0xfd0ebcd42d4c4c2a2281adfdb48177454838c433".lower()
 
@@ -18,10 +18,9 @@ providers = [
 
 Ebb = cfg.Ebb
 _collect_account = collect_account.replace("0x", "")
-fname = Path(expanduser("~/.brownie/accounts")) / _collect_account
-_collect_account = Ebb.brownie_load_account(str(fname), "alper")
+fname = str(Path(expanduser("~/.brownie/accounts")) / _collect_account)
+_collect_account = Ebb.brownie_load_account(fname, "alper")
 log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
-breakpoint()  # DEBUG
 
 
 def collect_all_into_base():
@@ -34,8 +33,7 @@ def collect_all_into_base():
         log(balance_to_transfer)
         log(Ebb._get_balance(collect_account, "wei"))
         if balance_to_transfer > 21000:
-            tx = Ebb.transfer(balance_to_transfer - 21000, account, collect_account, required_confs=0)
-            log(tx)
+            log(Ebb.transfer(balance_to_transfer - 21000, account, collect_account, required_confs=0))
             log(Ebb._get_balance(account))
             log(Ebb._get_balance(collect_account))
 
@@ -47,8 +45,7 @@ def send_eth_to_users(accounts, value):
         print(fname)
         account = Ebb.brownie_load_account(str(fname), "alper")
         log(Ebb._get_balance(collect_account, "wei"))
-        tx = Ebb.transfer(value, _collect_account, account, required_confs=0)
-        log(tx)
+        log(Ebb.transfer(value, _collect_account, account, required_confs=0))
         log(Ebb._get_balance(account))
         log(Ebb._get_balance(collect_account))
         # breakpoint()  # DEBUG

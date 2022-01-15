@@ -1,5 +1,6 @@
-* Small size datasets
+* Small size data-sets
 
+#+begin_src bash
 b6aaf03752dc68d625fc57b451faa2bf  BL06-gargoyle-sml.tbz2
 f1de03edab51f281815c3c1e5ecb88c6  babyface.n6c100.tbz2
 082d2a71d86a64250f06be14c55ca27e  babyface.n6c10.tbz2
@@ -17,9 +18,11 @@ ebe53bd498a9f6446cd77d9252a9847c  LB07-bunny-med.tbz2
 f82aa511f8631bfc9a82fe6fa30f4b52  LB07-bunny-sml.tbz2
 761691119cedfb9836a78a08742b14cc  liver.n6c100.tbz2
 f93b9a9f63447e0e086322b8416d4a39  liver.n6c10.tbz2
+#+end_src
 
-* Medium size datasets
+* Medium size data-sets
 
+#+begin_src bash
 050e6cc8dd7e889bf7874689f1e1ead6  adhead.n6c100.tbz2
 9d5d892a63b5758090258300a59eb389  adhead.n6c10.tbz2
 779745f315060d1bc0cd44b7266fb4da  babyface.n26c100.tbz2
@@ -31,3 +34,4 @@ dd0fbccccf7a198681ab838c67b68fbf  bone.n6c100.tbz2
 fa64e96bcee96dbc480a1495bddbf53c  LB07-bunny-lrg.tbz2
 8f6faf6cfd245cae1b5feb11ae9eb3cf  liver.n26c100.tbz2
 1bfca57fe54bc46ba948023f754521d6  liver.n26c10.tbz2
+#+end_src

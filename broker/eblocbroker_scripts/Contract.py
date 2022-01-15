@@ -70,29 +70,32 @@ class Contract:
     # Imported methods
     # ================
     from broker.eblocbroker_scripts.authenticate_orc_id import authenticate_orc_id
+    from broker.eblocbroker_scripts.data import get_data_info
+    from broker.eblocbroker_scripts.get_job_info import (
+        analyze_data,
+        get_job_info,
+        get_job_info_print,
+        get_job_owner,
+        get_job_source_code_hashes,
+        set_job_received_block_number,
+        update_job_cores,
+    )
     from broker.eblocbroker_scripts.get_provider_info import get_provider_info
-    from broker.eblocbroker_scripts.process_payment import process_payment
-    from broker.eblocbroker_scripts.submit_job import submit_job
-    from broker.eblocbroker_scripts.submit_job import check_before_submit
-    from broker.eblocbroker_scripts.submit_job import is_provider_valid
-    from broker.eblocbroker_scripts.submit_job import is_requester_valid
-    from broker.eblocbroker_scripts.get_job_info import get_job_owner
-    from broker.eblocbroker_scripts.get_job_info import get_job_info
-    from broker.eblocbroker_scripts.get_job_info import get_job_info_print
-    from broker.eblocbroker_scripts.get_job_info import set_job_received_block_number
-    from broker.eblocbroker_scripts.get_job_info import update_job_cores
-    from broker.eblocbroker_scripts.get_job_info import analyze_data
-    from broker.eblocbroker_scripts.get_job_info import get_job_source_code_hashes
     from broker.eblocbroker_scripts.get_requester_info import get_requester_info
-    from broker.eblocbroker_scripts.log_job import run_log_cancel_refund
-    from broker.eblocbroker_scripts.log_job import run_log_job
-    from broker.eblocbroker_scripts.register_provider import _register_provider
+    from broker.eblocbroker_scripts.log_job import run_log_cancel_refund, run_log_job
+    from broker.eblocbroker_scripts.process_payment import process_payment
     from broker.eblocbroker_scripts.refund import refund
+    from broker.eblocbroker_scripts.register_provider import _register_provider
     from broker.eblocbroker_scripts.register_requester import register_requester
+    from broker.eblocbroker_scripts.submit_job import (
+        check_before_submit,
+        is_provider_valid,
+        is_requester_valid,
+        submit_job,
+    )
+    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership
     from broker.eblocbroker_scripts.update_provider_info import update_provider_info
     from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
-    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership
-    from broker.eblocbroker_scripts.data import get_data_info
 
     def brownie_load_account(self, fname="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
@@ -463,9 +466,9 @@ class Contract:
 
     def _get_provider_prices_for_job(self, *args):
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.getProviderPricesForJob(*args)
+            return self.eBlocBroker.getJobProviderPrices(*args)
         else:
-            return self.eBlocBroker.functions.getProviderPricesForJob(*args).call()
+            return self.eBlocBroker.functions.getJobProviderPrices(*args).call()
 
     def _get_job_info(self, *args):
         if env.IS_BLOXBERG:
@@ -475,9 +478,9 @@ class Contract:
 
     def get_user_orcid(self, user):
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.getUserOrcID(user)
+            return self.eBlocBroker.getOrcID(user)
         else:
-            return self.eBlocBroker.functions.getUserOrcID(user).call()
+            return self.eBlocBroker.functions.getOrcID(user).call()
 
     def _get_requester_info(self, requester):
         if env.IS_BLOXBERG:
@@ -586,7 +589,7 @@ class Contract:
         else:
             return self.eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
 
-    def get_job_storage_time(self, provider_addr, source_code_hash):
+    def get_job_store_duration(self, provider_addr, source_code_hash):
         """Return job storage duration time."""
         if not isinstance(provider_addr, (Account, LocalAccount)):
             provider_addr = self.w3.toChecksumAddress(provider_addr)
@@ -598,9 +601,9 @@ class Contract:
                 pass
 
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.getJobStorageTime(provider_addr, source_code_hash)
+            return self.eBlocBroker.getDataStoreDuration(provider_addr, source_code_hash)
         else:
-            return self.eBlocBroker.functions.getJobStorageTime(provider_addr, source_code_hash).call()
+            return self.eBlocBroker.functions.getDataStoreDuration(provider_addr, source_code_hash).call()
 
     def get_received_storage_deposit(self, provider, requester, source_code_hash):
         """Return received storage deposit for the corresponding source code hash."""
