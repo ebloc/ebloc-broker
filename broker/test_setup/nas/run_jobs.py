@@ -5,8 +5,9 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
-from pymongo import MongoClient
 from random import randint
+
+from pymongo import MongoClient
 from web3.logs import DISCARD
 
 from broker import cfg

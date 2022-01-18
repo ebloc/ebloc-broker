@@ -133,7 +133,8 @@ def register_provider_wrapper(yaml_fn):
 
 if __name__ == "__main__":
     try:
-        yaml_fn = expanduser("~/ebloc-broker/broker/yaml_files/register_provider.yaml")
+        # yaml_fn = expanduser("~/ebloc-broker/broker/yaml_files/register_provider.yaml")
+        yaml_fn = expanduser("~/.ebloc-broker/cfg.yaml")  # setup for the provider
         register_provider_wrapper(yaml_fn)
     except Exception as e:
         print_tb(e)

@@ -144,11 +144,11 @@ def login(user, password_path: Path, fname: str) -> None:
 
 def share_single_folder(folder_name, f_id) -> bool:
     try:
-        # folder_names = os.listdir('/oc')
+        # folder_names = os.listdir(env.OWNCLOUD_PATH)
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
         if not config.oc.is_shared(folder_name):
             config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-            log(f"sharing {ok()}")
+            log(f"sharing with [yellow]{f_id}[/yellow] {ok()}", "bold")
             return True
 
         log("## Requester folder is already shared")

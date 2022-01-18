@@ -13,7 +13,11 @@ def _register_data(source_code_hash, data_price, commitment_blk_duration):
     is_exit = False
     price = None
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
-        log(f"warning: Provider [green]{env.PROVIDER_ID}[/green] is not registered")
+        log(f"warning: provider [green]{env.PROVIDER_ID}[/green] is not registered")
+        raise QuietExit
+
+    if not Ebb.is_orcid_verified(env.PROVIDER_ID):
+        log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
         raise QuietExit
 
     source_code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)

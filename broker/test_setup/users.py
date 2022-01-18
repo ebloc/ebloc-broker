@@ -23,6 +23,15 @@ _collect_account = Ebb.brownie_load_account(fname, "alper")
 log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
 
 
+def balances():
+    for account in users:
+        _account = account.lower().replace("0x", "")
+        fname = Path(expanduser("~/.brownie/accounts")) / _account
+        print(fname)
+        account = Ebb.brownie_load_account(str(fname), "alper")
+        log(Ebb._get_balance(account))
+
+
 def collect_all_into_base():
     for account in users:
         _account = account.lower().replace("0x", "")
@@ -52,7 +61,8 @@ def send_eth_to_users(accounts, value):
 
 
 def main():
-    collect_all_into_base()
+    balances()
+    # collect_all_into_base()
     # send_eth_to_users(providers, "0.5 ether")
     # send_eth_to_users(users, "0.2 ether")
 

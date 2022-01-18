@@ -166,14 +166,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.Provider storage provider = providers[msg.sender];
         Lib.Status storage jobInfo = provider.jobStatus[key][args.index];
         require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.runTime)));
-        Lib.Job storage job = jobInfo.jobs[args.jobID]; /* Used as a pointer to a storage */
+        Lib.Job storage job = jobInfo.jobs[args.jobID]; /* used as a pointer to a storage */
         require(
             job.stateCode != Lib.JobStateCodes.COMPLETED &&
                 job.stateCode != Lib.JobStateCodes.REFUNDED &&
-                elapsedTime <= args.runTime[args.jobID] &&  // provider cannot request more execution time of the job that is already requested
-                args.dataTransferIn <= jobInfo.dataTransferIn &&  // provider cannot request more than the job's given dataTransferIn
-                args.dataTransferOut <= jobInfo.dataTransferOut &&  // provider cannot request more than the job's given dataTransferOut
-                (elapsedTime > 0 && job.stateCode == Lib.JobStateCodes.RUNNING)  // job should be in running state if positive execution duration is provided
+                elapsedTime <= args.runTime[args.jobID] && // provider cannot request more execution time of the job that is already requested
+                args.dataTransferIn <= jobInfo.dataTransferIn && // provider cannot request more than the job's given dataTransferIn
+                args.dataTransferOut <= jobInfo.dataTransferOut && // provider cannot request more than the job's given dataTransferOut
+                (elapsedTime > 0 && job.stateCode == Lib.JobStateCodes.RUNNING) // job should be in running state if positive execution duration is provided
         );
         Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
         uint256 amountToGain;
@@ -249,8 +249,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (job.stateCode == Lib.JobStateCodes.CANCELLED) {
             // prevents double spending used as a reentrancy guard
             job.stateCode = Lib.JobStateCodes.REFUNDED;
-        }
-        else {
+        } else {
             // prevents double spending used as a reentrancy guard
             job.stateCode = Lib.JobStateCodes.COMPLETED;
         }
@@ -287,11 +286,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return true;
     }
 
-    function receiveStoreDeposit(address dataOwner, bytes32 sourceCodeHash)
-        public
-        whenProviderRunning
-        returns (bool)
-    {
+    function receiveStoreDeposit(address dataOwner, bytes32 sourceCodeHash) public whenProviderRunning returns (bool) {
         Lib.Provider storage provider = providers[msg.sender];
         Lib.Storage storage storageInfo = provider.storageInfo[dataOwner][sourceCodeHash];
         Lib.JobStorageTime storage jobSt = provider.jobSt[sourceCodeHash];
@@ -469,7 +464,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     ) public whenProviderRegistered {
         Lib.RegisteredData storage registeredData = providers[msg.sender].registeredData[sourceCodeHash];
         require(
-            registeredData.committedBlock.length == 0 && // In order to register, is shouldn't be already registered
+            registeredData.committedBlock.length == 0 && // in order to register, is shouldn't be already registered
                 commitmentBlockDuration >= ONE_HOUR_BLOCK_DURATION
         );
 
@@ -705,7 +700,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return true;
     }
 
-    function setJobStatusPending(string memory key, uint32 index, uint32 jobID) public returns (bool) {
+    function setJobStatusPending(
+        string memory key,
+        uint32 index,
+        uint32 jobID
+    ) public returns (bool) {
         /* Used as a pointer to a storage */
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
         // job.stateCode should be {SUBMITTED (0)}

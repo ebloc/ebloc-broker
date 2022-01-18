@@ -1,8 +1,8 @@
 config:
-    requester_address: '0x2c73a80956516ba9e6005030faed2f8212bc10a3'
-    provider_address: '0xeab50158e8e51de21616307a99c9604c1c453a02'
+    requester_address: '0x67613da8568ae0b0e76796ec8c45b50c469e3f30'
+    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
     source_code:
-        storage_id: eudat
+        storage_id: ipfs
         cache_type: public
         path: ~/test_eblocbroker/NPB3.3-SER_source_code
         storage_hours: 0

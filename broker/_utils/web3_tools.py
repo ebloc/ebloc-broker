@@ -31,7 +31,7 @@ def get_tx_status(tx_hash: str, is_silent=False) -> TxReceipt:
                 with suppress(Exception):
                     del _log["data"]
 
-                log(f"log_{idx}", "bold blue", end="")
+                log(f"log_{idx}=", "bold blue", end="")
                 log(_log)
 
             log("#> Was transaction successfully deployed? ", end="")

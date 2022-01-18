@@ -15,7 +15,7 @@ watch_only_jobs = True
 
 
 def watch(eth_address="", from_block=None):
-    from_block = 13683776
+    from_block = 13895443
     if not eth_address:
         eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
 
@@ -44,20 +44,21 @@ def watch(eth_address="", from_block=None):
         columns = 80
         columns_size = int(int(columns) / 2 - 9)
         job_full = ""
-        # limit = 10
-        for idx, job in enumerate(logged_jobs):
-            # if idx == 10:
-            #     break
+        for job in enumerate(logged_jobs):
+            try:
+                _args = job["args"]
+            except:
+                job = job[1]
+                _args = job["args"]
 
             _job = cfg.Ebb.get_job_info(
-                job["args"]["provider"],
-                job["args"]["jobKey"],
-                job["args"]["index"],
+                _args["provider"],
+                _args["jobKey"],
+                _args["index"],
                 0,
                 job["blockNumber"],
                 is_print=False,
             )
-
             state_val = state.inv_code[_job["stateCode"]]
             _color = "magenta"
             if state_val == "COMPLETED":

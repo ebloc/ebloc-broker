@@ -6,11 +6,10 @@ import os
 import sys
 import textwrap
 import time
+import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-
-import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
@@ -84,6 +83,10 @@ def _tools(block_continue):
         else:
             log(":beer:  Connected into [green]BLOXBERG[/green]", "bold")
 
+        if not Contract.Ebb.is_orcid_verified(env.PROVIDER_ID):
+            log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
+            raise QuietExit
+
         slurm.is_on()
         if not is_process_on("mongod", "mongod"):
             raise Exception("mongodb is not running in the background")
@@ -110,8 +113,8 @@ def _tools(block_continue):
 
             if not output:
                 log(
-                    f"E: Provider's registered email ([magenta]{email}[/magenta]) does not match\n"
-                    f"   with the set gdrive's email ([magenta]{gdrive_email}[/magenta])."
+                    f"E: Provider's registered email=[magenta]{email}[/magenta] does not match\n"
+                    f"   with the set gdrive's email=[magenta]{gdrive_email}[/magenta]"
                 )
                 raise QuietExit
 
@@ -120,6 +123,10 @@ def _tools(block_continue):
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
                 log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
+                raise QuietExit
+
+            if not os.path.isdir(env.IPFS_REPO):
+                log(f"E: {env.IPFS_REPO} does not exist")
                 raise QuietExit
 
             run_ipfs_daemon()
@@ -482,6 +489,9 @@ def main(args):
             cfg.IS_FULL_TEST = False
         elif args.latest:
             given_block_number = cfg.Ebb.get_block_number()
+
+        if args.is_thread is False:
+            cfg.IS_THREADING_ENABLED = False
 
         console_ruler("provider session starts")
         log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
