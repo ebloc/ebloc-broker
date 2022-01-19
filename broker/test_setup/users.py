@@ -5,7 +5,7 @@ from pathlib import Path
 
 from broker import cfg
 from broker._utils.tools import log
-from broker.test_setup.user_set import users  # , extra_users
+from broker.test_setup.user_set import extra_users, users
 
 collect_account = "0xfd0ebcd42d4c4c2a2281adfdb48177454838c433".lower()
 
@@ -24,6 +24,7 @@ log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
 
 
 def balances():
+    """Prints balance of all the users located under ~/.brownie/accounts."""
     for account in users:
         _account = account.lower().replace("0x", "")
         fname = Path(expanduser("~/.brownie/accounts")) / _account
@@ -36,7 +37,7 @@ def collect_all_into_base():
     for account in users:
         _account = account.lower().replace("0x", "")
         fname = Path(expanduser("~/.brownie/accounts")) / _account
-        print(fname)
+        log(fname)
         account = Ebb.brownie_load_account(str(fname), "alper")
         balance_to_transfer = Ebb._get_balance(account, "wei")
         log(balance_to_transfer)
@@ -65,6 +66,7 @@ def main():
     # collect_all_into_base()
     # send_eth_to_users(providers, "0.5 ether")
     # send_eth_to_users(users, "0.2 ether")
+    # send_eth_to_users(extra_users, "0.1 ether")
 
 
 if __name__ == "__main__":

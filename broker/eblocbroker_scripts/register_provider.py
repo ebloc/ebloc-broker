@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import sys
 from os.path import expanduser
-
-import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import c, log
@@ -29,7 +28,7 @@ def _register_provider(self, *args, **kwargs):
         log(
             f"Warning: Provider {env.PROVIDER_ID} is already registered.\n"
             "Please call the [blue]update_provider_info.py[/blue] or "
-            "[blue]update_provider_prices.py[/blue] script for update."
+            "[blue]update_provider_prices.py[/blue] script for an update."
         )
         raise QuietExit
 
@@ -83,14 +82,53 @@ def register_provider_wrapper(yaml_fn):
         raise QuietExit
 
     args = Yaml(yaml_fn)
-    federation_cloud_id = args["config"]["federation_cloud_id"]
-    available_core = args["config"]["available_core"]
-    commitment_blk = args["config"]["commitment_blk"]
-    price_core_min = args["config"]["price_core_min"]
-    price_data_transfer = args["config"]["price_data_transfer"]
-    price_storage = args["config"]["price_storage"]
-    price_cache = args["config"]["price_cache"]
-    email = args["config"]["email"]
+    # @b2drop.eudat.eu
+
+    federation_cloud_id = args["cfg"]["oc_user"]
+    email = args["cfg"]["gmail"]
+    available_core = args["cfg"]["provider"]["available_core"]
+    commitment_blk = args["cfg"]["provider"]["prices"]["commitment_blk"]
+    price_core_min = args["cfg"]["provider"]["prices"]["price_core_min"]
+    price_data_transfer = args["cfg"]["provider"]["prices"]["price_data_transfer"]
+    price_storage = args["cfg"]["provider"]["prices"]["price_storage"]
+    price_cache = args["cfg"]["provider"]["prices"]["price_cache"]
+    exit_flag = False
+
+    if not federation_cloud_id:
+        log(f"E: [blue]federation_cloud_id[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not available_core:
+        log(f"E: [blue]available_core[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not commitment_blk:
+        log(f"E: [blue]commitment_blk[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_core_min:
+        log(f"E: [blue]price_core_min[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_data_transfer:
+        log(f"E: [blue]price_data_transfer[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_storage:
+        log(f"E: [blue]price_storage[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_cache:
+        log(f"E: [blue]price_cache[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not email:
+        log(f"E: [blue]email[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if exit_flag:
+        sys.exit(1)
+
     args.remove_temp()
     ipfs_id = get_ipfs_id()
     ip_address = get_ip()

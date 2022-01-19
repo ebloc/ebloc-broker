@@ -10,6 +10,24 @@ from broker.eblocbroker_scripts.register_provider import get_ipfs_id
 from broker.errors import QuietExit
 
 
+def is_provider_info_match(self, email, ipfs_id):
+    try:
+        provider_info = self.get_provider_info(env.PROVIDER_ID)
+        if (
+            provider_info["gpg_fingerprint"] == gpg_fingerprint.upper()
+            and provider_info["email"] == email
+            and provider_info["f_id"] == federation_cloud_id
+            and provider_info["ipfs_id"] == ipfs_id
+        ):
+            log(provider_info)
+            raise QuietExit("warning: Given information is same with the cluster's saved info. Nothing to do.")
+
+        tx = self._update_provider_info(f"0x{gpg_fingerprint}", email, federation_cloud_id, ipfs_id)
+        return self.tx_id(tx)
+    except Exception as e:
+        raise e
+
+
 def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs_id):
     """Update provider info."""
     if len(federation_cloud_id) >= 128:
@@ -26,22 +44,7 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
         log(f"E: gpg_fingerprint={gpg_fingerprint} length should be 40")
         raise QuietExit
 
-    try:
-        provider_info = self.get_provider_info(env.PROVIDER_ID)
-        if (
-            # TODO: control does gpg_finderprint starts with 0x
-            provider_info["gpg_fingerprint"] == gpg_fingerprint.upper()
-            and provider_info["email"] == email
-            and provider_info["f_id"] == federation_cloud_id
-            and provider_info["ipfs_id"] == ipfs_id
-        ):
-            log(provider_info)
-            raise QuietExit("Warning: Given information is same with the cluster's saved info. Nothing to do.")
-
-        tx = self._update_provider_info(f"0x{gpg_fingerprint}", email, federation_cloud_id, ipfs_id)
-        return self.tx_id(tx)
-    except Exception as e:
-        raise e
+    return self.is_provider_info_match(email, ipfs_id)
 
 
 if __name__ == "__main__":

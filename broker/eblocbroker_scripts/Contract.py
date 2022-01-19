@@ -16,7 +16,7 @@ from broker._utils._log import ok
 from broker._utils.tools import exit_after, log, print_tb, without_keys
 from broker._utils.yaml import Yaml
 from broker.config import env
-from broker.errors import Web3NotConnected
+from broker.errors import QuietExit, Web3NotConnected
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, terminate
 from brownie.network.account import Account, LocalAccount
@@ -320,6 +320,9 @@ class Contract:
                 log(f"E: {e}")
                 if "Execution reverted" in str(e):
                     raise e
+
+                if "Insufficient funds" in str(e):
+                    raise QuietExit from e
 
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000

@@ -189,7 +189,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 require(amountToGain.add(amountToRefund) <= jobInfo.cacheCost);
                 delete jobInfo.cacheCost; // Prevents additional cacheCost to be requested, can request cache cost only one time
             }
-
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {
                 // Checking data transferring cost
                 amountToRefund = amountToRefund.add( // dataTransferRefund
@@ -798,7 +797,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                     // Obtain the committed prices before the block number
                     _dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 2];
                 }
-
                 require(_dataPriceSetBlockNum == _dataPriceSetBlockNum);
                 // Data is provided by the provider with its own price
                 uint32 _dataPrice = registeredData.dataInfo[_dataPriceSetBlockNum].price;
@@ -849,7 +847,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                         jobSt.isVerifiedUsed))
             ) {
                 Lib.RegisteredData storage registeredData = provider.registeredData[_sourceCodeHash];
-
                 // _temp used for returned bool value True or False
                 (_temp, cacheCost) = _checkRegisteredData(args.dataPricesSetBlockNum[i], registeredData, cacheCost);
                 if (_temp == 0) {
@@ -860,12 +857,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                             // Hour is converted into block time, 15 seconds of block time is
                             // fixed and set only one time till the storage time expires
                             jobSt.storeDuration = storeDuration[i].mul(ONE_HOUR_BLOCK_DURATION);
-
                             // _temp used for storageCostTemp variable
                             _temp = info.priceStorage.mul(dataTransferIn[i].mul(storeDuration[i]));
                             storageInfo.received = uint248(_temp);
                             storageCost = storageCost.add(_temp); //storageCost
-
                             if (args.cacheType[i] == uint8(Lib.CacheType.PRIVATE)) {
                                 jobSt.isPrivate = true; // Set by the data owner
                             }

@@ -4,6 +4,7 @@ import sys
 
 from broker import cfg
 from broker._utils.tools import log
+from broker.errors import QuietExit
 from broker.utils import print_tb
 
 if __name__ == "__main__":
@@ -13,8 +14,14 @@ if __name__ == "__main__":
         if len(providers) == 0:
             log("E: There is no registered provider")
 
+        if len(providers) > 0:
+            log("providers:", "bold green")
+
         for provider in providers:
-            print(provider.lower())
+            log(provider.lower())
+
+    except QuietExit:
+        sys.exit(1)
     except Exception as e:
         print_tb(e)
         sys.exit(1)

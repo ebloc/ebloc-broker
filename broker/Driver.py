@@ -109,7 +109,7 @@ def _tools(block_continue):
                 output, gdrive_email = gdrive.check_user(email)
             except Exception as e:
                 print_tb(e)
-                raise QuietExit  # noqa
+                raise QuietExit from e
 
             if not output:
                 log(

@@ -50,7 +50,7 @@ def register_requester(self, yaml_fn, is_question=True):
 
     log(f"==> registering {account} as requester")
     if is_byte_str_zero(account):
-        log(f"E: account={account} is not valid, change it in [{c.pink}]~/.ebloc-broker/.env")
+        log(f"E: account={account} is not valid, change it in [{c.pink}]~/.ebloc-broker/cfg.yaml")
         raise QuietExit
 
     if len(federation_cloud_id) >= 128:

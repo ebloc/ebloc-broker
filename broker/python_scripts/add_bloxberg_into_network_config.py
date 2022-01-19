@@ -43,5 +43,10 @@ def add_bloxberg_config(fname):
         yaml.dump(data, fp)
 
 
-fname = Path.home() / ".brownie" / "network-config.yaml"
-add_bloxberg_config(fname)
+def main():
+    fname = Path.home() / ".brownie" / "network-config.yaml"
+    add_bloxberg_config(fname)
+
+
+if __name__ == "__main__":
+    main()
