@@ -5,13 +5,12 @@ import pathlib
 import sys
 import textwrap
 import threading
-from typing import Dict, Union
-
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
 from rich.traceback import install
+from typing import Dict, Union
 
 try:
     from broker import cfg
@@ -259,6 +258,7 @@ def log(
     is_err=False,
     is_output=True,
     max_depth=None,
+    is_console_out=False,
 ):
     """Print for own settings.
 
@@ -273,7 +273,7 @@ def log(
     if is_err:
         text = str(text)
         if str(text):
-            if "E: " not in text[3]:
+            if "E: " not in text[3] and "warning:" not in text.lower():
                 text = f"E: {text}"
         else:
             return

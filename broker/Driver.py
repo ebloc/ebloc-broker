@@ -6,17 +6,16 @@ import os
 import sys
 import textwrap
 import time
+import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-
-import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._log import console_ruler, log, ok
-from broker._utils.tools import is_process_on, kill_process_by_name, print_tb
+from broker._utils.tools import _squeue, is_process_on, kill_process_by_name, print_tb
 from broker.config import env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -45,14 +44,12 @@ with suppress(Exception):
     from broker.eblocbroker_scripts import Contract
 
 
-# from threading import Thread
-# from multiprocessing import Process
 pid = os.getpid()
 given_block_number = 0
-cfg.IS_FULL_TEST = True
+cfg.IS_BREAKPOINT = True
 
-# if cfg.IS_FULL_TEST:
-#     os.environ["PYTHONBREAKPOINT"] = "0"
+if not cfg.IS_BREAKPOINT:
+    os.environ["PYTHONBREAKPOINT"] = "0"
 
 
 def wait_until_idle_core_available():
@@ -89,7 +86,7 @@ def _tools(block_continue):
             raise QuietExit
 
         slurm.is_on()
-        if not is_process_on("mongod", "mongod"):
+        if not is_process_on("mongod"):
             raise Exception("mongodb is not running in the background")
 
         # run_driver_cancel()  # TODO: uncomment
@@ -271,9 +268,9 @@ class Driver:
 
     def process_logged_jobs(self):
         """Process logged jobs."""
+        self.is_already_cached = {}
         self.latest_block_number = 0
         self.is_provider_received_job = False
-        self.is_already_cached = {}
         for idx, logged_job in enumerate(self.logged_jobs_to_process):
             self.job_infos = []
             self.logged_job = logged_job
@@ -287,23 +284,6 @@ class Driver:
                 print_tb(e)
                 log(str(e))
                 breakpoint()  # DEBUG
-
-
-def print_squeue():
-    try:
-        squeue_output = run(["squeue"])
-        if "squeue: error:" in str(squeue_output):
-            raise Exception("squeue: error")
-    except Exception as e:
-        raise Terminate(
-            "Warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
-        ) from e
-
-    # Gets real info under the header after the first line
-    if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
-        # checks if the squeue output's line number is gretaer than 1
-        log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-        log(squeue_output, "bold")
 
 
 def run_driver():
@@ -369,11 +349,10 @@ def run_driver():
         log(f"## is_threading={cfg.IS_THREADING_ENABLED}")
 
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
-    log(f"==> whoami={env.WHOAMI}")
     log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
+    log(f"==> whoami={env.WHOAMI}")
     log(f"==> log_file={_log.DRIVER_LOG}")
     log(f"==> rootdir={os.getcwd()}")
-    log(f"==> is_full_test={cfg.IS_FULL_TEST}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
@@ -403,7 +382,9 @@ def run_driver():
             raise Terminate(f"block_read_from={block_read_from}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
-        print_squeue()
+        if cfg.IS_THREADING_ENABLED:
+            _squeue()
+
         console_ruler()
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
@@ -447,8 +428,6 @@ def run_driver():
                 log("## Sleeping for 60 seconds...", end="")
                 time.sleep(60)
                 log(ok())
-            elif not cfg.IS_FULL_TEST:
-                breakpoint()  # DEBUG
             else:
                 print_tb(e)
 
@@ -487,7 +466,6 @@ def main(args):
     try:
         if args.bn:
             given_block_number = args.bn
-            cfg.IS_FULL_TEST = False
         elif args.latest:
             given_block_number = cfg.Ebb.get_block_number()
 

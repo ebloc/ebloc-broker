@@ -4,15 +4,15 @@ import hashlib
 import os
 import pwd
 
-from broker._utils.tools import mkdir
-from broker.config import logging
+from broker._utils.tools import _remove, mkdir
 from broker.lib import run
 from broker.libs.slurm import add_user_to_slurm
 from broker.utils import log, popen_communicate  # noqa: F401
 
 
-def remove_user(user_name, user_dir):
-    """
+def remove_user(user_name, user_dir=None):
+    """Remove user from Slurm.
+
     # for test purposes
     sudo userdel $USERNAME
     sudo rm -rf $BASEDIR/$USERNAME
@@ -22,11 +22,11 @@ def remove_user(user_name, user_dir):
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user_name}", "--immediate"]
     p, output, *_ = popen_communicate(cmd)
     if p.returncode != 0 and "Nothing deleted" not in output:
-        logging.error(f"E: sacctmgr remove error: {output}")
-        raise
+        raise Exception(f"E: sacctmgr remove error: {output}")
 
-    # _remove(user_dir)
     # remove_user(user)
+    if user_dir:
+        _remove(user_dir)
 
 
 def username_check(check):
@@ -62,11 +62,12 @@ def set_folder_permission(path, user_name, slurm_user):
 
 def user_add(user_address, basedir, slurm_user):
     user_address = user_address.lower()
-    log(f"#> adding user={user_address}")
+    log(f"#> adding user=[magenta]{user_address}[/magenta]", end="")
     try:  # convert ethereum user address into 32-bits
         user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
-        log(f"   user_name={user_name}", "bold")
+        log(f" | user_name={user_name}", "bold")
     except Exception as e:
+        log()
         log(f"warning: user_address={user_address}")
         raise e
 
@@ -94,7 +95,11 @@ def user_add(user_address, basedir, slurm_user):
             log(f"{user_address} => {user_name} has already been created", "bold yellow")
 
 
-if __name__ == "__main__":
+def main():
     # 0xabd4f78b6a005bdf7543bc2d39edf07b53c926f4
     user_add("0xabd4fs8b6a005bdf7543bc2d39eds08b53c926q0", "/var/eBlocBroker", "netlab")
     log("FIN")
+
+
+if __name__ == "__main__":
+    main()

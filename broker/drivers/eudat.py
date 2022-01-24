@@ -278,7 +278,7 @@ class EudatClass(Storage):
                     log(f"==> index={br(idx)}: /{source_fn} => {size} bytes")
                     # accept_flag += 1  # TODO: delete it seems unneeded
                 except:
-                    log(f"warning: shared_folder{br(source_code_hash_text)} is not accepted yet")
+                    log(f"warning: shared_folder{br(source_code_hash_text, 'green')} is not accepted yet")
                     folder_token_flag[folder_name] = False
 
         try:  # TODO: add pass on template

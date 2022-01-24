@@ -94,7 +94,7 @@ class Contract:
         submit_job,
     )
     from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership
-    from broker.eblocbroker_scripts.update_provider_info import update_provider_info
+    from broker.eblocbroker_scripts.update_provider_info import is_provider_info_match, update_provider_info
     from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
 
     def brownie_load_account(self, fname="", password="alper"):

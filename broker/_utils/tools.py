@@ -5,6 +5,7 @@ import errno
 import json
 import linecache
 import os
+import requests
 import shutil
 import signal
 import sys
@@ -14,12 +15,10 @@ import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
+from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
-import requests
-from pytz import timezone, utc
-
-from broker.errors import Timeout
+from broker.errors import Terminate
 
 try:
     import thread
@@ -27,13 +26,11 @@ except ImportError:
     import _thread as thread  # noqa
 
 try:
+    from broker._utils._log import br, log, ok
     from broker.errors import HandlerException, QuietExit
-    from broker._utils._log import br
-    from broker._utils._log import log
 except ImportError:  # if ebloc_broker used as a submodule
+    from ebloc_broker.broker._utils._log import br, log, ok
     from ebloc_broker.broker.errors import HandlerException, QuietExit
-    from ebloc_broker.broker._utils._log import br
-    from ebloc_broker.broker._utils._log import log
 
 
 def WHERE(back=0):
@@ -149,7 +146,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
 
 
 def _remove(path: str, is_verbose=False):
-    """Remove file or folders based on its the file type.
+    """Remove file or folders based on its type.
 
     __ https://stackoverflow.com/a/10840586/2402577
     """
@@ -248,8 +245,8 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
-    """Calculate percent change."""
+def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True, filename=None):
+    """Calculate the changed percent."""
     try:
         initial = float(initial)
         change = float(change)
@@ -290,22 +287,22 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 def print_trace(cmd, back=1, exc="", returncode=""):
     _cmd = " ".join(cmd)
     if exc:
-        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "red")
-        log(f"[yellow]command: [/yellow][white]{_cmd}", "bold")
+        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "bold red")
+        log(f"[yellow]$ [/yellow][white]{_cmd}", "bold")
         log(exc.rstrip(), "bold red")
     else:
         if returncode:
             return_code_msg = f"returned non-zero exit status {returncode}"
-            log(f"E: Failed shell command {br(return_code_msg)}:")
+            log(f"E: Failed command {br(return_code_msg)}:")
         else:
-            log("E: Failed shell command:")
+            log("E: Failed command:")
 
         log(_cmd, "bold yellow", is_code=True)
 
 
 def run(cmd, my_env=None, is_quiet=False) -> str:
     if not isinstance(cmd, str):
-        cmd = list(map(str, cmd))  # all items should be str
+        cmd = list(map(str, cmd))  # all items should be string
     else:
         cmd = [cmd]
 
@@ -323,11 +320,14 @@ def run(cmd, my_env=None, is_quiet=False) -> str:
         raise e
 
 
-def is_process_on(process_name, name, process_count=0, port=None, is_print=True) -> bool:
+def is_process_on(process_name, name="", process_count=0, port=None, is_print=True) -> bool:
     """Check wheather the process runs on the background.
 
     https://stackoverflow.com/a/6482230/2402577
     """
+    if not name:
+        name = process_name
+
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()  # type: ignore
@@ -361,7 +361,7 @@ def is_process_on(process_name, name, process_count=0, port=None, is_print=True)
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"[green]{name}[/green] is not running on the background {WHERE(1)}")
+        print_tb(f"[bold green]{name}[/bold green] is not running on the background {WHERE(1)}")
 
     return False
 
@@ -506,3 +506,20 @@ def is_gpg_published(gpg_fingerprint):
 def get_gpg_fingerprint(email) -> str:
     output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
     return output.split("\n")[1].replace(" ", "").upper()
+
+
+def _squeue():
+    try:
+        squeue_output = run(["squeue"])
+        if "squeue: error:" in str(squeue_output):
+            raise Exception("squeue: error")
+    except Exception as e:
+        raise Terminate(
+            "Warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
+        ) from e
+
+    # Get real info under the header after the first line
+    if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
+        # checks if the squeue output's line number is gretaer than 1
+        log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
+        log(f"{squeue_output}  {ok()}", "bold")

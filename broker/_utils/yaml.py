@@ -2,17 +2,20 @@
 
 import os
 from contextlib import suppress
-from pathlib import Path
-
 from filelock import FileLock
-from ruamel.yaml import YAML, representer
+from pathlib import Path
+from ruamel.yaml import YAML, comments, representer
 
 try:
-    from broker._utils.tools import print_tb, _remove
+    from broker._utils.tools import _remove, print_tb
 except:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils.tools import print_tb, _remove
+    from ebloc_broker.broker._utils.tools import _remove, print_tb
 
 
+# TODO: https://stackoverflow.com/a/71000545/2402577
+
+
+# class SubYaml(ruamel.yaml.comments.CommentedMap):
 class SubYaml(dict):
     """SubYaml object."""
 
@@ -54,6 +57,7 @@ class SubYaml(dict):
         self.updated()
 
 
+# class Yaml(ruamel.yaml.comments.CommentedMap):
 class Yaml(dict):
     """Yaml object.
 
@@ -86,7 +90,6 @@ class Yaml(dict):
         self.auto_dump = auto_dump
         self.changed = False
         self.yaml = YAML()
-        # self.yaml = YAML(typ="safe")
         self.yaml.indent(mapping=4, sequence=4, offset=2)
         self.yaml.default_flow_style = False
         if self.path.exists():
@@ -172,7 +175,6 @@ class Yaml(dict):
 
 
 _SR = representer.RoundTripRepresenter
-# _SR = representer.SafeRepresenter
 _SR.add_representer(SubYaml, _SR.represent_dict)
 
 
@@ -208,13 +210,11 @@ def test_3():
     print(config_file.read_text())
     cfg["b"]["x"] = 3
     cfg["a"] = 4
-
     print(f"{config_file} 2:")
     print(config_file.read_text())
 
     cfg.update(a=9, d=196)
     cfg["c"]["y"].update(k=11, l=12)
-
     print(f"{config_file} 3:")
     print(config_file.read_text())
 
@@ -240,10 +240,14 @@ def test_3():
     assert cfg_again["c"]["b"]["f"] == 333, "cfg['c']['b']['f'] is not 333"
 
 
-if __name__ == "__main__":
+def main():
     try:
         test_1()
         test_2()
         test_3()
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

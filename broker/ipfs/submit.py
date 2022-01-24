@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -164,7 +163,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_with_data.yaml")
+    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_simple.yaml")
     submit_ipfs(job)
 
 

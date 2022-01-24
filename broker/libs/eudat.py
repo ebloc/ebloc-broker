@@ -3,6 +3,7 @@
 import hashlib
 import os
 import os.path
+import owncloud
 import pickle
 import shutil
 import subprocess
@@ -10,8 +11,6 @@ import sys
 import time
 from contextlib import suppress
 from pathlib import Path
-
-import owncloud
 from web3.logs import DISCARD
 
 from broker import cfg, config
@@ -32,12 +31,14 @@ def _upload_results(encoded_share_token, output_file_name):
     * How to upload files into shared b2drop.eudat(owncloud) repository using curl?
     __ https://stackoverflow.com/a/44556541/2402577
 
-    cmd:
+    * commands(s):
     curl -X PUT -H \'Content-Type: text/plain\' -H \'Authorization: Basic \'$encoded_share_token\'==\' \
-            --data-binary \'@result-\'$providerID\'-\'$index\'.tar.gz\' https://b2drop.eudat.eu/public.php/webdav/result-$providerID-$index.tar.gz
+        --data-binary \'@result-\'$providerID\'-\'$index\'.tar.gz\' \
+        https://b2drop.eudat.eu/public.php/webdav/result-$providerID-$index.tar.gz
 
-    curl --fail -X PUT -H 'Content-Type: text/plain' -H 'Authorization: Basic 'SjQzd05XM2NNcFoybk.Write'==' --data-binary
-    '@0b2fe6dd7d8e080e84f1aa14ad4c9a0f_0.txt' https://b2drop.eudat.eu/public.php/webdav/result.txt
+    curl --fail -X PUT -H 'Content-Type: text/plain' -H 'Authorization: Basic \
+        'SjQzd05XM2NNcFoybk.Write'==' --data-binary '@0b2fe6dd7d8e080e84f1aa14ad4c9a0f_0.txt' \
+        https://b2drop.eudat.eu/public.php/webdav/result.txt
     """
     cmd = [
         "curl",
@@ -76,16 +77,16 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
                 log(error)
 
             if "Warning: Couldn't read data from file" in error:
-                logging.error("E: EUDAT repository did not successfully uploaded")
-                return False
+                raise Exception("E: EUDAT repository did not successfully uploaded")
 
             if p.returncode != 0 or "<d:error" in output:
-                logging.error("E: EUDAT repository did not successfully uploaded")
-                logging.error(f"E: curl is failed. {p.returncode} => {br(error)} {output}")
+                log("E: EUDAT repository did not successfully uploaded")
+                log(f"   curl is failed. {p.returncode} => {br(error)} {output}")
                 time.sleep(1)  # wait 1 second for next step retry to upload
             else:  # success on upload
                 return True
-        return False
+
+        raise Exception(f"Upload results into cloud failed after {max_retries} tries")
 
 
 def _login(fname, user, password_path) -> None:

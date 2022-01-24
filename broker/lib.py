@@ -103,7 +103,6 @@ def calculate_size(path, _type="MB") -> float:
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # type: ignore
-    byte_size = 0.0
     byte_size = float(p2.communicate()[0].decode("utf-8").strip())
     if _type == "bytes":
         return byte_size
@@ -146,8 +145,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", "red")
-        log(f"E: scontrol error\n{output}")
-        raise
+        raise Exception(f"E: scontrol error:\n{output}")
 
     # log(f"## writing into path({path}) is completed")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed

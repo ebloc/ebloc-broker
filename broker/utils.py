@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import base58
 import binascii
 import hashlib
 import json
@@ -16,8 +17,6 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
-
-import base58
 
 from broker import cfg, config
 from broker._utils import _log
@@ -323,8 +322,7 @@ def generate_md5sum(path: str) -> str:
         tar_hash = check_output(["md5sum", path]).decode("utf-8").strip()
         return tar_hash.split(" ", 1)[0]
     else:
-        logging.error(f"E: {path} does not exist")
-        raise
+        raise Exception(f"{path} does not exist")
 
 
 def getcwd():
@@ -465,6 +463,7 @@ def run_ipfs_daemon():
 
         if is_ipfs_on(is_print=True):
             return True
+
     return False
 
 
@@ -627,8 +626,8 @@ def compress_folder(folder_path, is_exclude_git=False):
             cmd,
             stdin=p2.stdout,
             stdout=PIPE,
-            env={"PIGZ": "-n"},
-        )  # __  "GZIP" alternative
+            env={"PIGZ": "-n"},  # env={"GZIP": "-n"},  # alternative
+        )
         p2.stdout.close()
         p3.communicate()
         tar_hash = generate_md5sum(tar_base)

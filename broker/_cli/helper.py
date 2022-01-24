@@ -20,7 +20,6 @@ def helper():
     )
     driver.add_argument("--bn", type=int, default=0, help="Block number to start fetch blocks from")
     driver.add_argument("--latest", action="store_true", help="Block number to start fetch blocks from latest")
-    #
     driver.add_argument("--thread", dest="is_thread", action="store_true", help="Enables threading")
     driver.add_argument("--no-thread", dest="is_thread", action="store_false", help="Disables threading")
     driver.set_defaults(is_thread=None)
@@ -31,6 +30,14 @@ def helper():
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     subparsers.add_parser("console", help="Load the console")
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    register_provider = subparsers.add_parser("register_provider", help="Register provider")
+    register_provider.add_argument("path", type=str, help="Full file path of Yaml file that contains the provider info")
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    register_requester = subparsers.add_parser("register_requester", help="Register requester")
+    register_requester.add_argument(
+        "path", type=str, help="Full file path of Yaml file that contains the requester info"
+    )
+
     data = subparsers.add_parser("data", help="List registered data files of the provider")
     data.add_argument("eth_address", type=str, help="Ethereum address of the provider")
 

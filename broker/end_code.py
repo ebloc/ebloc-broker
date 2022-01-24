@@ -4,6 +4,7 @@ import base64
 import getpass
 import os
 import pprint
+import shutil
 import sys
 import time
 from contextlib import suppress
@@ -103,13 +104,15 @@ class Eudat(Common):
                 log(f"==> {self.patch_file} is already uploaded")
                 return
 
-        _data_transfer_out = calculate_size(self.patch_file)
-        log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
-        self.data_transfer_out += _data_transfer_out
-        if not eudat.upload_results(
-            self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, max_retries=5
-        ):
-            raise
+        try:
+            _data_transfer_out = calculate_size(self.patch_file)
+            log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
+            self.data_transfer_out += _data_transfer_out
+            eudat.upload_results(
+                self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, max_retries=5
+            )
+        except Exception as e:
+            raise e
 
 
 class Gdrive(Common):
@@ -221,8 +224,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> folder_name=[white]{self.folder_name}")
         log(f"==> provider_id={env.PROVIDER_ID}")
         log(f"==> requester_id_address={self.requester_id_address}")
-        log(f"==> received={self.job_info['received']}")
         log(f"==> job_status_running_tx={self.job_status_running_tx}")
+        log(f"==> received={self.job_info['received']}")
 
     def get_shared_tokens(self):
         with suppress(Exception):
@@ -268,7 +271,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 
-        raise Exception(f"Corresponding storage_id_class={self.storage_ids[_id]} does not exist")
+        raise Exception(f"corresponding storage_id_class={self.storage_ids[_id]} does not exist")
 
     def set_source_code_hashes_to_process(self):
         for idx, source_code_hash in enumerate(self.source_code_hashes):
@@ -394,6 +397,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         parent process and not for child processes.
         """
         slurm_log_output_fn = f"{self.results_folder}/slurm_job_info.out"
+        slurm_log_output_fn_temp = f"{self.results_folder}/slurm_job_info.out~"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("jobID,jobname,user,account,group,cluster,allocCPUS,REQMEM,TotalCPU,elapsed")
         run_stdout_to_file(cmd, slurm_log_output_fn)
@@ -405,6 +409,17 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         run_stdout_to_file(cmd, slurm_log_output_fn, mode="a")
         with open(slurm_log_output_fn, "a") as f:
             f.write("\n")
+
+        shutil.move(slurm_log_output_fn, slurm_log_output_fn_temp)
+        open(slurm_log_output_fn, "w").close()
+        with open(slurm_log_output_fn_temp) as f1, open(slurm_log_output_fn, "w") as f2:
+            line = f1.read().strip()
+            if "--" in line:
+                line = line.replace("-", "=")
+
+            f2.write(line)
+
+        os.remove(slurm_log_output_fn_temp)
 
     def get_job_info(self, is_print=False, is_log_print=True):
         self.job_info = eblocbroker_function_call(

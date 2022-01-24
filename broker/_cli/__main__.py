@@ -33,6 +33,16 @@ def main():
             cfg.Ebb.get_data_info(args.eth_address)
         except Exception as e:
             print_tb(e)
+    elif args.command == "register_provider":
+        try:
+            cfg.Ebb.register_provider(args.path)
+        except Exception as e:
+            print_tb(e)
+    elif args.command == "register_requester":
+        try:
+            cfg.Ebb.register_requester(args.path)
+        except Exception as e:
+            print_tb(e)
     elif args.command == "console":
         import subprocess
 
