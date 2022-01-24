@@ -26,7 +26,7 @@ Paste following to get abi into console (~brownie console~):
 
 #+begin_src bash
 import json
-with open('../broker/eblocbroker/abi.json','w') as fp:
+with open('../broker/eblocbroker_scripts/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 #+end_src
 

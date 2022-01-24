@@ -1,11 +1,9 @@
 #!/bin/bash
 
 # source $HOME/v/bin/activate
-
-cd ~/eBlocBroker/contract
+cd ~/ebloc-broker/contract/
 cat <<EOF | brownie console --network bloxberg
 import json
-with open('abi.json','w') as fp: json.dump(eBlocBroker.abi, fp)
+with open('../broker/eblocbroker_scripts/abi.json','w') as fp:
+    json.dump(eBlocBroker.abi, fp)
 EOF
-
-# mv abi.json $HOME/ebloc-broker/broker/eblocbroker/abi.json

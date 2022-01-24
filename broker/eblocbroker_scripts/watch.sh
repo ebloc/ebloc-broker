@@ -13,7 +13,7 @@ else
     ./watch.py 0xeab50158e8e51de21616307a99c9604c1c453a02 >/dev/null &
 fi
 
-watch --color \cat \
+watch --color head -n 15 \
       ~/.ebloc-broker/watch_0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA.out \
       ~/.ebloc-broker/watch_0x765508fc8f78a465f518ae79897d0e4b249e82dc.out \
       ~/.ebloc-broker/watch_0x38cc03c7e2a7d2acce50045141633ecdcf477e9a.out \

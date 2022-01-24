@@ -17,6 +17,7 @@ def run():
 
     cmd: ipfs daemon  # --mount
     __ https://stackoverflow.com/a/8375012/2402577
+    __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
     log("==> Running [green]IPFS[/green] daemon")

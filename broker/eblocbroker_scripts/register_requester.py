@@ -17,7 +17,7 @@ from broker.utils import question_yes_no, run_ipfs_daemon
 Ebb = cfg.Ebb
 
 
-def register_requester(self, yaml_fn):
+def register_requester(self, yaml_fn, is_question=True):
     """Register or update requester into smart contract."""
     yaml_fn = os.path.expanduser(yaml_fn)
     try:
@@ -50,7 +50,7 @@ def register_requester(self, yaml_fn):
 
     log(f"==> registering {account} as requester")
     if is_byte_str_zero(account):
-        log(f"E: account={account} is not valid, change it in [{c.pink}]~/.ebloc-broker/.env")
+        log(f"E: account={account} is not valid, change it in [{c.pink}]~/.ebloc-broker/cfg.yaml")
         raise QuietExit
 
     if len(federation_cloud_id) >= 128:
@@ -85,7 +85,7 @@ def register_requester(self, yaml_fn):
         }
         log("==> [bold yellow]new_requester_info:")
         log(_requester_info)
-        if not question_yes_no("#> Would you like to update requester info?"):
+        if is_question and not question_yes_no("#> Would you like to update requester info?"):
             return
 
     try:

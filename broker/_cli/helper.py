@@ -20,7 +20,10 @@ def helper():
     )
     driver.add_argument("--bn", type=int, default=0, help="Block number to start fetch blocks from")
     driver.add_argument("--latest", action="store_true", help="Block number to start fetch blocks from latest")
-
+    #
+    driver.add_argument("--thread", dest="is_thread", action="store_true", help="Enables threading")
+    driver.add_argument("--no-thread", dest="is_thread", action="store_false", help="Disables threading")
+    driver.set_defaults(is_thread=None)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     submit = subparsers.add_parser("submit", help="Submit job")
     submit.add_argument("path", type=str, help="Full file path of Yaml file that contains the job info")

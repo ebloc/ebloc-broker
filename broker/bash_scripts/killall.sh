@@ -13,7 +13,8 @@ NC='\033[0m' # No Color
 kill -9 $(ps auxww | grep -E "python.*[e]nd_code"      | awk '{print $2}') > /dev/null 2>&1
 kill -9 $(ps auxww | grep -E "python.*[s]tart_code"    | awk '{print $2}') > /dev/null 2>&1
 kill -9 $(ps auxww | grep -E "python.*[d]river_cancel" | awk '{print $2}') > /dev/null 2>&1
-kill -9 $(ps auxww | grep -E "python.*[D]river.py"     | awk '{print $2}') > /dev/null 2>&1
+kill -9 $(ps auxww | grep -E "python.*[e]blocbroker"   | awk '{print $2}') > /dev/null 2>&1
+kill -9 $(ps auxww | grep -E "ipfs"                    | awk '{print $2}') > /dev/null 2>&1
 
 killall python3 2> /dev/null
 echo "## killall all jobs in squeue"

@@ -34,6 +34,7 @@ node -v
 
 # ganache-cli
 # ===========
+export NODE_OPTIONS=--openssl-legacy-provider
 sudo npm install -g ganache-cli --unsafe-perm
 
 # go
@@ -76,6 +77,7 @@ install_ipfs
 # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
 ipfs init --profile=server,badgerds
 ipfs config Reprovider.Strategy roots
+ipfs config Routing.Type none
 sudo sysctl -w net.core.rmem_max=262144
 
 # echo "vm.max_map_count=262144" >> /etc/sysctl.conf
@@ -95,16 +97,16 @@ sudo apt-get -y install ethereum
 sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt-get update
-sudo apt install -y python-dev
-sudo apt install -y python2
-sudo apt install -y python-psutil
-sudo apt install -y python3-dev
-sudo apt install -y python3-pip
-sudo apt install -y python3-venv
-sudo apt install -y python3-virtualenv
-sudo apt install -y python3.7
-sudo apt install -y python3.8-dev
-sudo apt install -y python3.8-venv
+sudo apt install python-dev -y
+sudo apt install python2 -y
+sudo apt install python-psutil -y
+sudo apt install python3-dev -y
+sudo apt install python3-pip -y
+sudo apt install python3-venv -y
+sudo apt install python3-virtualenv -y
+sudo apt install python3.7 -y
+sudo apt install python3.8-dev -y
+sudo apt install python3.8-venv -y
 
 # mongodb
 # =======
@@ -130,11 +132,11 @@ python3.8 -m venv $VENV
 source $VENV/bin/activate
 $VENV/bin/python3.8 -m pip install --upgrade pip
 sudo apt-get install -y libssl-dev zlib1g-dev gcc g++ make
+sudo apt install libgirepository1.0-dev
+python3 -m pip install --no-use-pep517 cm-rgb
 pip install wheel
-# pip install pycairo
-# pip install dbus-python
-cd ~/ebloc-broker
-pip install -e . --use-deprecated=legacy-resolver
+pip install pycairo  # dbus-python
+cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver
 
 sudo chown $(logname) -R $HOME/.cache/black
 black_version=$(pip freeze | grep black | sed 's|black==||g')
@@ -144,6 +146,7 @@ if [ "$black_version" != "" ]; then
 fi
 
 # solc
+# ====
 mkdir -p ~/.solcx
 if [ "$(uname -i)" == "aarch64" ]; then
     sudo apt install -y libz3-dev

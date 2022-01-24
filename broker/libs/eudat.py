@@ -88,7 +88,7 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
         return False
 
 
-def _login(fname, user, password_path):
+def _login(fname, user, password_path) -> None:
     sleep_duration = 15
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     with open(password_path, "r") as content_file:
@@ -106,6 +106,7 @@ def _login(fname, user, password_path):
             pickle.dump(config.oc, f)
             f.close()
             log(f"  {status_str} {ok()}")
+            return
         except Exception as e:
             log(str(e))
             if "Errno 110" in str(e) or "Connection timed out" in str(e):
@@ -113,8 +114,6 @@ def _login(fname, user, password_path):
                 sleep_timer(sleep_duration)
             else:
                 terminate("Could not connect into [blue]eudat using config.oc.login()[/blue]")
-        else:
-            return False
 
     logging.error("E: user is None object")
     terminate()
@@ -145,11 +144,11 @@ def login(user, password_path: Path, fname: str) -> None:
 
 def share_single_folder(folder_name, f_id) -> bool:
     try:
-        # folder_names = os.listdir('/oc')
+        # folder_names = os.listdir(env.OWNCLOUD_PATH)
         # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
         if not config.oc.is_shared(folder_name):
             config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-            log(f"sharing {ok()}")
+            log(f"sharing with [yellow]{f_id}[/yellow] {ok()}", "bold")
             return True
 
         log("## Requester folder is already shared")

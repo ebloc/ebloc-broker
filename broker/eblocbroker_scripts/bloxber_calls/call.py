@@ -38,7 +38,7 @@ def main(*args):
         print("0")  # if its the first submitted job for the user
 
     try:
-        output = ebb.getJobStorageTime(provider, source_code_hash)
+        output = ebb.getDataStoreDuration(provider, source_code_hash)
         print(output)
     except:
         print("(0, 0, False, False)")

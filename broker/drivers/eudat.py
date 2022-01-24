@@ -173,6 +173,7 @@ class EudatClass(Storage):
                         "--show-progres",
                         "--progress=bar:force",
                     ]
+                    log(" ".join(cmd), is_code=True, color="yellow")
                     run(cmd)
                     with cd(results_folder_prev):
                         run(["unzip", "-o", "-j", download_fn])
@@ -250,8 +251,7 @@ class EudatClass(Storage):
         """Check key is already shared or not."""
         folder_token_flag = {}
         if not os.path.isdir(self.private_dir):
-            logging.error(f"{self.private_dir} does not exist")
-            raise
+            raise Exception(f"{self.private_dir} does not exist")
 
         share_id_file = f"{self.private_dir}/{self.job_key}_share_id.json"
         # accept_flag = 0 # TODO: delete it seems unneeded
@@ -305,6 +305,7 @@ class EudatClass(Storage):
         for attempt in range(config.RECONNECT_ATTEMPTS):
             try:
                 share_list = config.oc.list_open_remote_share()
+                break
             except Exception as e:
                 log(f"E: Failed to list_open_remote_share eudat [attempt={attempt}]")
                 print_tb(e)

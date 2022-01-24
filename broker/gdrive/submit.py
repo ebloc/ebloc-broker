@@ -22,6 +22,7 @@ def pre_check():
 
 
 def submit_gdrive(job: Job, is_pass=False, required_confs=1):
+    log("==> Submitting source code through [blue]GDRIVE[/blue]")
     pre_check()
     Ebb = cfg.Ebb
     job.folders_to_share = job.paths
@@ -47,7 +48,7 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     key = job.keys[tar_hash]
     job.price, *_ = job.cost(provider, requester)
     try:
-        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=1)
+        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
         tx_receipt = get_tx_status(tx_hash)
         if tx_receipt["status"] == 1:
             processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)

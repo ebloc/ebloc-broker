@@ -3,7 +3,6 @@
 import json
 import os
 import subprocess
-import sys
 import time
 import uuid
 from contextlib import suppress
@@ -97,6 +96,7 @@ class Storage(BaseClass):
                 with cd(self.results_folder):
                     try:
                         job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
+                        return job_id
                     except Exception as e:
                         if "Invalid account" in str(e):
                             remove_user(env.SLURMUSER)
@@ -108,15 +108,12 @@ class Storage(BaseClass):
                 print_tb(e)
                 slurm.remove_user(self.requester_id)
                 slurm.add_user_to_slurm(self.requester_id)
-            else:
-                break
-        else:
-            sys.exit(1)
 
-        return job_id
+        raise Exception("E: sbatch could not submit the job")
 
     def thread_log_setup(self):
         import threading
+
         from broker import config
 
         _log = logging.getLogger()  # root logger

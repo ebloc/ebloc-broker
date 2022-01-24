@@ -2,6 +2,8 @@
 
 import os.path
 import random
+import sys
+from datetime import datetime
 from pathlib import Path
 from random import randint
 
@@ -14,15 +16,18 @@ from broker._utils._log import console_ruler
 from broker._utils.tools import _time, _timestamp, countdown, is_process_on, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
+from broker.libs import gdrive
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
-from broker.test_setup._users import users
+from broker.test_setup.user_set import users
 from broker.utils import print_tb
 
 yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 
+mc = MongoClient()
+ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 provider_addresses = [
@@ -94,7 +99,7 @@ def create_cppr_job_script():
     f.write("    echo $file >> output.log\n")
     f.write("    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("done\n")
-    #
+    # adding cppr to run with data hashes
     f.write("DATA_HASH='change_folder_hash'\n")
     f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
     f.write("    DATA3_DIR='../data_link/'$DATA_HASH'/'\n")
@@ -164,13 +169,21 @@ def pre_submit(storage_ids, provider_address):
         # breakpoint()  # DEBUG
 
 
+def check_gdrive_user():
+    try:
+        gdrive.check_user("alper.alimoglu.research2@gmail.com")
+    except Exception as e:
+        print_tb(e)
+        sys.exit(1)
+
+
 def main():
+    check_gdrive_user()
     console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
+    log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     if not is_process_on("mongod", "mongod"):
         raise Exception("mongodb is not running in the background")
 
-    mc = MongoClient()
-    ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
     storage_ids = ["eudat", "gdrive", "ipfs"]
     ipfs_ids = ["ipfs_gpg", "ipfs"]
     # for provider_address in provider_addresses:
@@ -180,9 +193,8 @@ def main():
     test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
     nas_yaml_fn = test_dir / "job_nas.yaml"
     cppr_yam_fn = test_dir / "job_cppr.yaml"
-    counter = 0
     yaml_cfg = None
-    # storage = None
+    counter = 0
     for _ in range(60):
         for _ in range(2):  # submitted as batch is faster
             for idx, provider_address in enumerate(provider_addresses):
@@ -240,6 +252,7 @@ def main():
                     print_tb(e)
 
             counter += 1
+
         sleep_time = randint(200, 400)
         countdown(sleep_time)
 

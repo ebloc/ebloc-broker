@@ -176,12 +176,10 @@ class Ipfs:
 
         for attempt in range(5):
             try:
-                log(
-                    f"{br(attempt)} cmd: gpg --keyserver hkps://keyserver.ubuntu.com --recv-key {user_gpg_finderprint}",
-                    "bold",
-                )
-                # This may not work if it is requested too much for a while
-                run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint])
+                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint]
+                log(f"{br(attempt)} cmd: [magenta]{' '.join(cmd)}", "bold")
+                run(cmd)  # this may not work if it is requested too much in a short time
+                break
             except Exception as e:
                 log(f"warning: {e}")
                 time.sleep(30)
@@ -319,15 +317,14 @@ class Ipfs:
                 elif not self.is_valid(result_ipfs_hash):
                     logging.error(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
                     time.sleep(5)
-                else:
-                    break
+
+                break
             except:
                 logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
                 time.sleep(5)
-            else:  # success
-                break
-        else:  # failed all the attempts - abort
-            sys.exit(1)
+        else:
+            raise Exception("Failed all the attempts to generate ipfs hash")
+
         return result_ipfs_hash
 
     def connect_to_bootstrap_node(self):
