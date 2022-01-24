@@ -207,20 +207,24 @@ def is_dir(path) -> bool:
 
 
 def run_storage_thread(storage_class):
-    # consider giving the thread a name (add name=...), then you could
-    # use ThreadFilter(threadname=...) to select on all messages with that name
-    # The thread name does not have to be unique.
+    """Run storage driver as thread.
+
+    Consider giving the thread a name (add name=...), then you could
+    use ThreadFilter(threadname=...) to select on all messages with that name
+    The thread name does not have to be unique.
+    """
     storage_thread = Thread(target=storage_class.run)
     storage_thread.name = storage_class.thread_name
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
     log(f"==> thread_log_path={storage_class.drivers_log_path}")
     storage_thread.start()
-    try:
-        storage_thread.join()  # waits until the job is completed
-    except (KeyboardInterrupt, SystemExit):
-        sys.stdout.flush()
-        sys.exit(1)
+    if cfg.IS_THREAD_JOIN:
+        try:
+            storage_thread.join()  # waits until the job is completed
+        except (KeyboardInterrupt, SystemExit):
+            sys.stdout.flush()
+            sys.exit(1)
 
 
 def run_storage_process(storage_class):

@@ -24,6 +24,8 @@ def new_test():
 def mine(block_number):
     """Mine give block number in the brownie testing.
 
+    You can only advance the time by whole seconds.
+
     __ https://stackoverflow.com/a/775075/2402577
     __ https://stackoverflow.com/a/775095/2402577
     """
@@ -36,6 +38,7 @@ def mine(block_number):
     log(
         f"==> Mined {block_number} empty blocks | {datetime.timedelta(seconds=seconds)} | "
         f"{height} => {w3.eth.blockNumber} | "
-        f"{timestamp_temp} => {timestamp_after} diff={timestamp_after - timestamp_temp}"
+        f"{timestamp_temp} => {timestamp_after} diff={timestamp_after - timestamp_temp}",
+        "bold",
     )
     assert w3.eth.blockNumber == height + block_number and (timestamp_after - timestamp_temp) + 1 >= timedelta

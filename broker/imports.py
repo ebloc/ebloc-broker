@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import importlib
 import sys
 
 from web3 import IPCProvider, Web3
@@ -10,6 +11,7 @@ from broker import cfg, config
 from broker._utils.tools import log, print_tb, read_json
 from broker.config import env
 from broker.errors import QuietExit
+from broker.python_scripts import add_bloxberg_into_network_config
 from broker.utils import is_geth_on, run, terminate
 
 
@@ -111,7 +113,20 @@ def connect_into_eblocbroker() -> None:
             if not cfg.IS_BROWNIE_TEST:
                 from brownie import network, project
 
-                network.connect("bloxberg")
+                try:
+                    network.connect("bloxberg")
+                except Exception as e:
+                    print_tb(e)
+                    add_bloxberg_into_network_config.main()
+                    # network.connect("bloxberg")
+                    try:
+                        log(
+                            "warning: 'bloxberg' key is added into the [magenta]~/.brownie/network-config.yaml[/magenta] yaml file. Please try again"
+                        )
+                        network.connect("bloxberg")
+                    except KeyError:
+                        sys.exit(1)
+
                 project = project.load(env.CONTRACT_PROJECT_PATH)
                 config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)

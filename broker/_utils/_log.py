@@ -178,9 +178,9 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=Tr
     else:
         is_print = ll.IS_PRINT
 
-    # if threading.current_thread().name != "MainThread":
-    #     # prevent writing Thread's output into provider.log
-    #     is_print = False
+    if threading.current_thread().name != "MainThread":
+        # prevent writing Thread's output into console
+        is_print = False
 
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
     if is_bold and not is_bullet:
@@ -247,17 +247,6 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=Tr
     # f.close()
 
 
-def WHERE(back=0):
-    """Return line number where the command is called."""
-    try:
-        frame = sys._getframe(back + 2)
-    except:
-        frame = sys._getframe(1)
-
-    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
-
-
 def log(
     text="",
     color=None,
@@ -269,6 +258,7 @@ def log(
     is_code=False,
     is_err=False,
     is_output=True,
+    max_depth=None,
 ):
     """Print for own settings.
 
@@ -314,11 +304,26 @@ def log(
             ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
 
     if isinstance(text, dict):
-        pprint(text)
+        if max_depth:
+            pprint(text, max_depth=max_depth)
+        else:
+            pprint(text)
+
         if is_write:
             ll.console[filename].print(text)
     else:
         _log(text, color, is_bold, flush, filename, end, is_write, is_output)
+
+
+def WHERE(back=0):
+    """Return line number where the command is called."""
+    try:
+        frame = sys._getframe(back + 2)
+    except:
+        frame = sys._getframe(1)
+
+    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
+    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
 
 
 ll = Log()

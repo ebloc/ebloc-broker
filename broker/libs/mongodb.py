@@ -60,7 +60,7 @@ class MongoBroker(BaseMongoClass):
             "received_block_number": job_info["received_block_number"],
             "timestamp": timestamp,
             "cloudStorageID": cloud_storage_id,
-            "storage_duration": job_info["storage_duration"],
+            "store_duration": job_info["store_duration"],
             "receieved": False,
             "set_job_status_running_tx": "",
         }

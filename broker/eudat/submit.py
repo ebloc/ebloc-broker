@@ -13,6 +13,7 @@ from broker.utils import print_tb
 
 
 def eudat_submit(job: Job, is_pass=False, required_confs=1):
+    log("==> Submitting source code through [blue]EUDAT[/blue]")
     Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     oc_client = "059ab6ba-4030-48bb-b81b-12115f531296"

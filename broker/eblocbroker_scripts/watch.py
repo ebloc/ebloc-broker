@@ -8,7 +8,6 @@ from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear
 from broker._utils.tools import _time, log, print_tb
-from broker.config import env
 from broker.lib import state
 
 Ebb = cfg.Ebb
@@ -16,7 +15,7 @@ watch_only_jobs = True
 
 
 def watch(eth_address="", from_block=None):
-    from_block = 13657405
+    from_block = 13895443
     if not eth_address:
         eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
 
@@ -45,23 +44,28 @@ def watch(eth_address="", from_block=None):
         columns = 80
         columns_size = int(int(columns) / 2 - 9)
         job_full = ""
-        for job in logged_jobs:
+        for job in enumerate(logged_jobs):
+            try:
+                _args = job["args"]
+            except:
+                job = job[1]
+                _args = job["args"]
+
             _job = cfg.Ebb.get_job_info(
-                job["args"]["provider"],
-                job["args"]["jobKey"],
-                job["args"]["index"],
+                _args["provider"],
+                _args["jobKey"],
+                _args["index"],
                 0,
                 job["blockNumber"],
                 is_print=False,
             )
-
             state_val = state.inv_code[_job["stateCode"]]
             _color = "magenta"
             if state_val == "COMPLETED":
                 _color = "green"
 
             job_full = (
-                f"[bold blue]==>[/bold blue] [bold]{_job['job_key']}[/bold] {_job['index']} {_job['provider']} "
+                f" [bold blue]*[/bold blue] [bold]{_job['job_key']}[/bold] {_job['index']} {_job['provider']} "
                 f"[bold {_color}]{state_val}[/bold {_color}]\n{job_full}"
             )
 
@@ -76,17 +80,7 @@ def watch(eth_address="", from_block=None):
         is_connected = Ebb.is_web3_connected()
         _console_clear()
         open(watch_fn, "w").close()
-        log(
-            f"\r * {_time() } latest_block_number={block_number} | is_web3_connected={is_connected} | address={eth_address}",
-            "bold",
-            end="",
-        )
-        if env.IS_BLOXBERG:
-            if watch_only_jobs:
-                log(" | network=[blue]BLOXBERG", "bold")
-            else:
-                log(f" | network=[blue]BLOXBERG\n{providers}", "bold")
-
+        log(f"\r==> {_time() } bn={block_number} | web3={is_connected} | address={eth_address}", "bold")
         if not watch_only_jobs:
             providers = Ebb.get_providers()
             columns_size = int(int(columns) / 2 - 12)
@@ -96,6 +90,7 @@ def watch(eth_address="", from_block=None):
                 log(v, end="\r")
 
         log(job_full, is_output=False)
+        log()
         time.sleep(2)
 
 

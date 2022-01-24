@@ -2,5 +2,10 @@
 
 from broker import cfg
 
-if __name__ == "__main__":
+
+def main():
     print(cfg.Ebb.get_deployed_block_number())
+
+
+if __name__ == "__main__":
+    main()

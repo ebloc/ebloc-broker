@@ -1,6 +1,6 @@
 config:
-    requester_address: '0x78bc08e70dce53f7823456e34610bc55828373af'
-    provider_address: '0xeab50158e8e51de21616307a99c9604c1c453a02'
+    requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
+    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
     source_code:
         storage_id: eudat
         cache_type: public
@@ -8,12 +8,12 @@ config:
         storage_hours: 0
     data:
         data1:
-            hash: c0fee5472f3c956ba759fd54f1fe843e
+            hash: 03919732a417cb1d14049844b9de0f47
         data2:
-            hash: dd0fbccccf7a198681ab838c67b68fbf
+            hash: fa64e96bcee96dbc480a1495bddbf53c
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/BVZ-tsukuba
+            path: /home/alper/test_eblocbroker/dataset_zip/small/LB07-bunny-sml
             storage_hours: 1
             storage_id: eudat
     data_transfer_out: 5

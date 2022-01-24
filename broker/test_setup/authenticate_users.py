@@ -3,7 +3,7 @@
 from broker import cfg
 from broker._utils.tools import print_tb
 from broker._utils.web3_tools import get_tx_status
-from broker.test_setup._users import users
+from broker.test_setup.user_set import users
 
 Ebb = cfg.Ebb
 

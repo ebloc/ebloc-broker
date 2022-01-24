@@ -18,8 +18,8 @@ def main():
     cursor = coll.find({})
     for document in cursor:
         # print(document)
-        received_block_number, storage_time = Ebb.get_job_storage_time(env.PROVIDER_ID, document["sourceCodeHash"])
-        end_block_time = received_block_number + storage_time * cfg.BLOCK_DURATION_1_HOUR
+        received_block_number, store_duration = Ebb.get_job_store_duration(env.PROVIDER_ID, document["sourceCodeHash"])
+        end_block_time = received_block_number + store_duration * cfg.BLOCK_DURATION_1_HOUR
         storageID = document["storageID"]
         if end_block_time < block_number and received_block_number != 0:
             if storageID in (StorageID.IPFS, StorageID.IPFS_GPG):

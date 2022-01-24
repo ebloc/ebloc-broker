@@ -122,7 +122,7 @@ class GdriveClass(Storage):
 
         is_continue = False
         with suppress(Exception):
-            output = self.job_infos[0]["storage_duration"][_id]
+            output = self.job_infos[0]["store_duration"][_id]
             is_continue = True
 
         if is_continue and not self.job_infos[0]["is_already_cached"][source_code_hash] and not output:
@@ -187,7 +187,7 @@ class GdriveClass(Storage):
         return True
 
     def remove_downloaded_file(self, source_code_hash, _id, pathname):
-        if not self.job_infos[0]["is_already_cached"][source_code_hash] and self.job_infos[0]["storage_duration"][_id]:
+        if not self.job_infos[0]["is_already_cached"][source_code_hash] and self.job_infos[0]["store_duration"][_id]:
             _remove(pathname)
 
     def get_data_init(self, key, _id, is_job_key=False):

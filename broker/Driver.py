@@ -41,10 +41,8 @@ from broker.utils import (
     terminate,
 )
 
-try:
+with suppress(Exception):
     from broker.eblocbroker_scripts import Contract
-except:
-    pass
 
 
 # from threading import Thread
@@ -69,7 +67,7 @@ def wait_until_idle_core_available():
 
 
 def _tools(block_continue):
-    """Check whether the required functions are in use or not.
+    """Check whether the required functions are running or not.
 
     :param block_continue: Continue from given block number
     """
@@ -85,6 +83,10 @@ def _tools(block_continue):
             is_geth_on()
         else:
             log(":beer:  Connected into [green]BLOXBERG[/green]", "bold")
+
+        if not Contract.Ebb.is_orcid_verified(env.PROVIDER_ID):
+            log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
+            raise QuietExit
 
         slurm.is_on()
         if not is_process_on("mongod", "mongod"):
@@ -104,11 +106,16 @@ def _tools(block_continue):
 
             provider_info = Contract.Ebb.get_provider_info(env.PROVIDER_ID)
             email = provider_info["email"]
-            output, gdrive_email = gdrive.check_user(email)
+            try:
+                output, gdrive_email = gdrive.check_user(email)
+            except Exception as e:
+                print_tb(e)
+                raise QuietExit from e
+
             if not output:
                 log(
-                    f"E: Provider's registered email ([magenta]{email}[/magenta]) does not match\n"
-                    f"   with the set gdrive's email ([magenta]{gdrive_email}[/magenta])."
+                    f"E: Provider's registered email=[magenta]{email}[/magenta] does not match\n"
+                    f"   with the set gdrive's email=[magenta]{gdrive_email}[/magenta]"
                 )
                 raise QuietExit
 
@@ -117,6 +124,10 @@ def _tools(block_continue):
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
                 log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
+                raise QuietExit
+
+            if not os.path.isdir(env.IPFS_REPO):
+                log(f"E: {env.IPFS_REPO} does not exist")
                 raise QuietExit
 
             run_ipfs_daemon()
@@ -170,7 +181,7 @@ class Driver:
     def process_logged_job(self, idx):
         """Process logged job one by one."""
         self.received_block = []
-        self.storage_duration = []
+        self.store_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
         console_ruler(idx, character="-")
@@ -206,7 +217,7 @@ class Driver:
             cfg.Ebb.get_job_source_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
-            self.job_info.update({"storage_duration": self.storage_duration})
+            self.job_info.update({"store_duration": self.store_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
             cfg.Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)
@@ -276,6 +287,23 @@ class Driver:
                 print_tb(e)
                 log(str(e))
                 breakpoint()  # DEBUG
+
+
+def print_squeue():
+    try:
+        squeue_output = run(["squeue"])
+        if "squeue: error:" in str(squeue_output):
+            raise Exception("squeue: error")
+    except Exception as e:
+        raise Terminate(
+            "Warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
+        ) from e
+
+    # Gets real info under the header after the first line
+    if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
+        # checks if the squeue output's line number is gretaer than 1
+        log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
+        log(squeue_output, "bold")
 
 
 def run_driver():
@@ -375,22 +403,7 @@ def run_driver():
             raise Terminate(f"block_read_from={block_read_from}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
-        # try:
-        #     squeue_output = run(["squeue"])
-        #     if "squeue: error:" in str(squeue_output):
-        #         raise
-        # except Exception as e:
-        #     raise Terminate(
-        #         "Warning: SLURM is not running on the background. Please run:\n"
-        #         "sudo ./broker/bash_scripts/run_slurm.sh"
-        #     ) from e
-
-        # # Gets real info under the header after the first line
-        # if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
-        #     # checks if the squeue output's line number is gretaer than 1
-        #     log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-        #     log(squeue_output, "bold")
-
+        print_squeue()
         console_ruler()
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
@@ -470,17 +483,19 @@ def _main():
 
 
 def main(args):
+    global given_block_number
     try:
-        global given_block_number
         if args.bn:
             given_block_number = args.bn
             cfg.IS_FULL_TEST = False
         elif args.latest:
             given_block_number = cfg.Ebb.get_block_number()
 
+        if args.is_thread is False:
+            cfg.IS_THREADING_ENABLED = False
+
         console_ruler("provider session starts")
-        date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        log(f" * {date_now}")
+        log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         with launch_ipdb_on_exception():
             # if an exception is raised, enclose code with the `with` statement to launch ipdb
             _main()

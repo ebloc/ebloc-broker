@@ -14,8 +14,7 @@ from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
-from broker.lib import run
-from broker.utils import popen_communicate, run_ipfs_daemon
+from broker.utils import run_ipfs_daemon
 
 Ebb = cfg.Ebb
 
@@ -30,7 +29,7 @@ def _register_provider(self, *args, **kwargs):
         log(
             f"Warning: Provider {env.PROVIDER_ID} is already registered.\n"
             "Please call the [blue]update_provider_info.py[/blue] or "
-            "[blue]update_provider_prices.py[/blue] script for update."
+            "[blue]update_provider_prices.py[/blue] script for an update."
         )
         raise QuietExit
 
@@ -58,14 +57,14 @@ def get_ipfs_id() -> str:
     except ipfshttpclient.exceptions.ConnectionError:
         log(
             "E: Failed to establish a new connection to IPFS, please run it on the background.\n"
-            "Please run ~/ebloc-broker/broker/_daemons/ipfs.py"
+            "Please run [magenta]~/ebloc-broker/broker/_daemons/ipfs.py"
         )
         sys.exit(1)
     except Exception as e:
         print_tb(e)
         log(
             "E: Failed to establish a new connection to IPFS, please run it on the background.\n"
-            "Please run ~/ebloc-broker/broker/_daemons/ipfs.py"
+            "Please run [magenta]~/ebloc-broker/broker/_daemons/ipfs.py"
         )
         sys.exit(1)
 
@@ -84,14 +83,53 @@ def register_provider_wrapper(yaml_fn):
         raise QuietExit
 
     args = Yaml(yaml_fn)
-    federation_cloud_id = args["config"]["federation_cloud_id"]
-    available_core = args["config"]["available_core"]
-    commitment_blk = args["config"]["commitment_blk"]
-    price_core_min = args["config"]["price_core_min"]
-    price_data_transfer = args["config"]["price_data_transfer"]
-    price_storage = args["config"]["price_storage"]
-    price_cache = args["config"]["price_cache"]
-    email = args["config"]["email"]
+    # @b2drop.eudat.eu
+
+    federation_cloud_id = args["cfg"]["oc_user"]
+    email = args["cfg"]["gmail"]
+    available_core = args["cfg"]["provider"]["available_core"]
+    commitment_blk = args["cfg"]["provider"]["prices"]["commitment_blk"]
+    price_core_min = args["cfg"]["provider"]["prices"]["price_core_min"]
+    price_data_transfer = args["cfg"]["provider"]["prices"]["price_data_transfer"]
+    price_storage = args["cfg"]["provider"]["prices"]["price_storage"]
+    price_cache = args["cfg"]["provider"]["prices"]["price_cache"]
+    exit_flag = False
+
+    if not federation_cloud_id:
+        log(f"E: [blue]federation_cloud_id[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not available_core:
+        log(f"E: [blue]available_core[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not commitment_blk:
+        log(f"E: [blue]commitment_blk[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_core_min:
+        log(f"E: [blue]price_core_min[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_data_transfer:
+        log(f"E: [blue]price_data_transfer[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_storage:
+        log(f"E: [blue]price_storage[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not price_cache:
+        log(f"E: [blue]price_cache[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if not email:
+        log(f"E: [blue]email[/blue] is empty in [magenta]{yaml_fn}")
+        exit_flag = True
+
+    if exit_flag:
+        sys.exit(1)
+
     args.remove_temp()
     ipfs_id = get_ipfs_id()
     ip_address = get_ip()
@@ -134,7 +172,8 @@ def register_provider_wrapper(yaml_fn):
 
 if __name__ == "__main__":
     try:
-        yaml_fn = expanduser("~/ebloc-broker/broker/yaml_files/register_provider.yaml")
+        # yaml_fn = expanduser("~/ebloc-broker/broker/yaml_files/register_provider.yaml")
+        yaml_fn = expanduser("~/.ebloc-broker/cfg.yaml")  # setup for the provider
         register_provider_wrapper(yaml_fn)
     except Exception as e:
         print_tb(e)
