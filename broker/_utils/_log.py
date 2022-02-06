@@ -104,7 +104,7 @@ class Log:
             text = text[1:]
 
         if text == "[ ok ]":
-            text = "[ [bold green]ok[/bold green] ]"
+            text = "[  [bold green]OK[/bold green]  ]"
 
         if text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
             _len = 3
@@ -258,9 +258,8 @@ def log(
     is_err=False,
     is_output=True,
     max_depth=None,
-    is_console_out=False,
 ):
-    """Print for own settings.
+    """Log output with own settings.
 
     * colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
@@ -272,14 +271,23 @@ def log(
 
     if is_err:
         text = str(text)
-        if str(text):
+        if text:
             if "E: " not in text[3] and "warning:" not in text.lower():
                 text = f"E: {text}"
         else:
             return
 
+        text = text.replace("E: warning:", "warning:")
+
     if isinstance(text, str) and "E: " in text[3:]:
-        text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] {text.replace('E: ', '')}"
+        _text = text.replace("warning: ", "").replace("E: ", "")
+        if "E: warning: " not in text:
+            if "warning:" in text:
+                text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+            else:
+                text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] [bold]{_text}"
+        else:
+            text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
 
     if "-=-=" in str(text):
         is_bold = True
@@ -323,7 +331,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+    return f"[bold green][[/bold green][bold blue] {text} [bold green]][/bold green]"
 
 
 ll = Log()

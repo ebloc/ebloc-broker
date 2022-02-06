@@ -8,19 +8,19 @@ from ruamel.yaml import YAML, comments, representer
 
 try:
     from broker._utils.tools import _remove, print_tb
-except:  # if ebloc_broker used as a submodule
+except:
     from ebloc_broker.broker._utils.tools import _remove, print_tb
 
 
-# TODO: https://stackoverflow.com/a/71000545/2402577
+_SR = representer.RoundTripRepresenter
 
 
-# class SubYaml(ruamel.yaml.comments.CommentedMap):
-class SubYaml(dict):
+class SubYaml(comments.CommentedMap):
     """SubYaml object."""
 
     def __init__(self, parent):
         self.parent = parent
+        super().__init__(self)
 
     def updated(self):
         self.parent.updated()
@@ -30,41 +30,45 @@ class SubYaml(dict):
             v = SubYaml(self)
             v.update(value)
             value = v
-
         super().__setitem__(key, value)
         self.updated()
 
     def __getitem__(self, key):
         try:
-            super().__getitem__(key)
+            res = super().__getitem__(key)
         except KeyError:
             super().__setitem__(key, SubYaml(self))
             self.updated()
-        return super().__getitem__(key)
+            return super().__getitem__(key)
+        return res
 
     def __delitem__(self, key):
         super().__delitem__(key)
         self.updated()
 
-    def update(self, *args, **kwargs):
+    def update(self, *args, **kw):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
-
-        for k, v in kwargs.items():
+            for attr in [comments.Comment.attrib, comments.Format.attrib]:
+                if hasattr(arg, attr):
+                    setattr(self, attr, getattr(arg, attr))
+        for k, v in kw.items():
             self[k] = v
 
         self.updated()
 
 
-# class Yaml(ruamel.yaml.comments.CommentedMap):
-class Yaml(dict):
+_SR.add_representer(SubYaml, _SR.represent_dict)
+
+
+class Yaml(comments.CommentedMap):
     """Yaml object.
 
     How to auto-dump modified values in nested dictionaries using ruamel.yaml?
     __ https://stackoverflow.com/a/68694688/2402577
 
-    ruamel.yaml.representer.RepresenterError: cannot represent an object: {'value': }
+    representer.RepresenterError: cannot represent an object: {'value': }
     __ https://stackoverflow.com/a/68685839/2402577
 
     PyYAML Saving data to .yaml files
@@ -72,11 +76,14 @@ class Yaml(dict):
 
     Yaml format
     __ https://stackoverflow.com/a/70034493/2402577
+
+    Keep comments of a yaml file when modify its values in nested dictionaries
+    __ https://stackoverflow.com/a/71000545/2402577
     """
 
     def __init__(self, path, auto_dump=True):
-        #: To get the dirname of the absolute path
-        path = os.path.expanduser(path)
+        super().__init__(self)
+        path = os.path.expanduser(path)  # To get the dirname of the absolute path
         self.dirname = os.path.dirname(os.path.abspath(path))
         self.filename = os.path.basename(path)
         if self.filename[0] == ".":
@@ -91,7 +98,7 @@ class Yaml(dict):
         self.changed = False
         self.yaml = YAML()
         self.yaml.indent(mapping=4, sequence=4, offset=2)
-        self.yaml.default_flow_style = False
+        # self.yaml.default_flow_style = False
         if self.path.exists():
             with FileLock(self.fp_lock, timeout=1):
                 with open(path) as f:
@@ -167,15 +174,17 @@ class Yaml(dict):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
-
+            for attr in [comments.Comment.attrib, comments.Format.attrib]:
+                if hasattr(arg, attr):
+                    setattr(self, attr, getattr(arg, attr))
         for k, v in kw.items():
             self[k] = v
-
         self.updated()
 
 
-_SR = representer.RoundTripRepresenter
-_SR.add_representer(SubYaml, _SR.represent_dict)
+_SR.add_representer(Yaml, _SR.represent_dict)
+
+cfg = Yaml(Path("config.yaml"))
 
 
 def test_1():
@@ -240,11 +249,29 @@ def test_3():
     assert cfg_again["c"]["b"]["f"] == 333, "cfg['c']['b']['f'] is not 333"
 
 
+def test_4():
+    fn = Path("config.yaml")
+    fn.write_text(
+        """
+    c:  # my comment
+      b:
+         f: 5
+      x: {g: 6}
+    a:
+      z: 4
+      b: 4  # my comment
+    """
+    )
+    Yaml(fn)
+    print(Path(fn).read_text())
+
+
 def main():
     try:
         test_1()
         test_2()
         test_3()
+        test_4()
     except Exception as e:
         print_tb(e)
 

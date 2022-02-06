@@ -3,17 +3,18 @@
 import sys
 
 from broker import cfg
-from broker._cli.helper import helper
+from broker._cli.helper import Helper
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
 
-__version__ = "1.0.4"
-parser = helper()
+__version__ = "2.0.0"
+
+parser = Helper().get_parser()
 args = parser.parse_args()
 console_fn = __file__.replace("__main__", "console")
 
 
-def main():
+def main():  # noqa
     if args.command == "driver":
         from broker.Driver import main
 
@@ -28,6 +29,16 @@ def main():
             pass
         except Exception as e:
             print_tb(e)
+    elif args.command == "daemon":
+        if args.daemon_type[0] == "ipfs":
+            from broker.utils import run_ipfs_daemon
+
+            run_ipfs_daemon(_is_print=True)
+        if args.daemon_type[0] == "slurm":
+            from broker.config import env
+            from broker.utils import run
+
+            run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
     elif args.command == "data":
         try:
             cfg.Ebb.get_data_info(args.eth_address)

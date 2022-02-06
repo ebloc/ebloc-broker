@@ -63,7 +63,7 @@ def wait_until_idle_core_available():
             break
 
 
-def _tools(block_continue):
+def _tools(block_continue):  # noqa
     """Check whether the required functions are running or not.
 
     :param block_continue: Continue from given block number

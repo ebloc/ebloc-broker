@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import sys
 from os.path import expanduser
-
-import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import c, log
@@ -27,7 +26,7 @@ def _register_provider(self, *args, **kwargs):
 
     if self.does_provider_exist(env.PROVIDER_ID):
         log(
-            f"Warning: Provider {env.PROVIDER_ID} is already registered.\n"
+            f"warning: Provider {env.PROVIDER_ID} is already registered.\n"
             "Please call the [blue]update_provider_info.py[/blue] or "
             "[blue]update_provider_prices.py[/blue] script for an update."
         )

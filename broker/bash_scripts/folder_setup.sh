@@ -189,7 +189,7 @@ fi
 # configure_coinbase
 # configure_oc
 # configure_ipfs
-echo -e "Warning: Update the following file "$TMP_DIR"/.eudat_client.txt' with
+echo -e "warning: Update the following file "$TMP_DIR"/.eudat_client.txt' with
 your EUDAT account's password. Best to make sure the file is not readable or
 even listable for anyone but you. You achieve this with:
 'chmod 700 eudat_password.txt'"

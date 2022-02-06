@@ -169,7 +169,7 @@ def submit_job(self, provider, key, job, requester=None, account_id=None, requir
         )
         return self.tx_id(tx)
     except TransactionError as e:
-        log(f"Warning: {e}")
+        log(f"warning: {e}")
         tx_hash = str(e).replace("Tx dropped without known replacement: ", "")
         if is_transaction_valid(tx_hash):
             return tx_hash

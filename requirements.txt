@@ -764,7 +764,7 @@ python-language-server==0.36.2
 python-lsp-jsonrpc==1.0.0
     # via
     #   python-lsp-server
-python-lsp-server==1.2.1
+python-lsp-server==1.3.3
 python-slugify==1.2.6
 pythx==1.6.1
     # via
@@ -816,7 +816,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==11.0.0
+rich==11.1.0
 rlp==2.0.1
     # via
     #   eth-account
@@ -1233,6 +1233,7 @@ zope.testing==4.9
 zope.traversing==4.4.1
     # via
     #   z3c.pt
+argcomplete==2.0.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

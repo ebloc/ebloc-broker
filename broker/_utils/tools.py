@@ -515,7 +515,7 @@ def _squeue():
             raise Exception("squeue: error")
     except Exception as e:
         raise Terminate(
-            "Warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
+            "warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
         ) from e
 
     # Get real info under the header after the first line

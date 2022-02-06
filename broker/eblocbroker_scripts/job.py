@@ -102,7 +102,7 @@ class Job:
             tx_receipt = get_tx_status(tx_hash)
             try:
                 if not self.Ebb:
-                    log("Warning: self.Ebb is empty object")
+                    log("warning: self.Ebb is empty object")
 
                 processed_logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
                 log(vars(processed_logs[0].args))

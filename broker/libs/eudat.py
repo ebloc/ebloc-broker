@@ -76,7 +76,7 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
             if error:
                 log(error)
 
-            if "Warning: Couldn't read data from file" in error:
+            if "warning: Couldn't read data from file" in error:
                 raise Exception("E: EUDAT repository did not successfully uploaded")
 
             if p.returncode != 0 or "<d:error" in output:
