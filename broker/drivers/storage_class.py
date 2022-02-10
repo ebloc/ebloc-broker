@@ -37,7 +37,7 @@ class Storage(BaseClass):
         self.requester_id = kwargs.pop("requester_id")
         self.job_infos = kwargs.pop("job_infos")
         self.logged_job = kwargs.pop("logged_job")
-        self.is_already_cached = kwargs.pop("is_already_cached")
+        self.is_cached = kwargs.pop("is_cached")
         self.job_key = self.logged_job.args["jobKey"]
         self.index = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
@@ -46,7 +46,7 @@ class Storage(BaseClass):
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]
         self.data_transfer_in_to_download_mb = 0  # total size in MB to download
-        self.is_already_cached = self.is_already_cached
+        self.is_cached = self.is_cached
         self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
         self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
         self.registered_data_hashes = []  # noqa
@@ -137,10 +137,10 @@ class Storage(BaseClass):
     def check_already_cached(self, source_code_hash):
         if os.path.isfile(f"{self.private_dir}/{source_code_hash}.tar.gz"):
             log(f":beer:  [green]{source_code_hash}[/green] is already cached in {self.private_dir}", "bold")
-            self.is_already_cached[source_code_hash] = True
+            self.is_cached[source_code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{source_code_hash}.tar.gz"):
             log(f":beer:  [green]{source_code_hash}[/green] is already cached in {self.public_dir}", "bold")
-            self.is_already_cached[source_code_hash] = True
+            self.is_cached[source_code_hash] = True
 
     def complete_refund(self) -> str:
         """Complete refund back to the requester."""

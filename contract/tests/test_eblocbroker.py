@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 from broker import cfg, config
@@ -1064,12 +1063,12 @@ def test_submit_job():
         log(ebb.getProviderReceiptNode(provider, idx))
 
     console_ruler()
-    log(f"==> store_duration for job={job_key}")
-    job_store_duration = ebb.getDataStoreDuration(provider, source_code_hash)
-    ds = DataStorage(job_store_duration)
+    log(f"==> storage_duration for job={job_key}")
+    job_storage_duration = ebb.getDataStoreDuration(provider, source_code_hash)
+    ds = DataStorage(job_storage_duration)
     log(
         f"receivedBlockNumber={ds.received_block} |"
-        f"store_duration(block numbers)={ds.store_duration} | "
+        f"storage_duration(block numbers)={ds.storage_duration} | "
         f"is_private={ds.is_private} |"
         f"isVerified_Used={ds.is_verified_used}"
     )

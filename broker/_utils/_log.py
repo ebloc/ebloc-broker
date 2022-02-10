@@ -12,10 +12,7 @@ from rich.theme import Theme
 from rich.traceback import install
 from typing import Dict, Union
 
-try:
-    from broker import cfg
-except:
-    from ebloc_broker.broker import cfg
+from broker import cfg
 
 install()  # for rich, show_locals=True
 # pretty.install()

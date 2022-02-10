@@ -5,15 +5,14 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
-from random import randint
-
 from pymongo import MongoClient
+from random import randint
 from web3.logs import DISCARD
 
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import console_ruler
-from broker._utils.tools import _time, _timestamp, countdown, is_process_on, log, run
+from broker._utils.tools import _date, _timestamp, countdown, is_process_on, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.libs import gdrive
@@ -225,7 +224,7 @@ def main():
                 yaml_cfg["config"]["provider_address"] = provider_address
                 try:
                     submit_base = SubmitBase(yaml_cfg.path)
-                    submission_date = _time()
+                    submission_date = _date()
                     submission_timestamp = _timestamp()
                     requester_address = random.choice(users).lower()
                     yaml_cfg["config"]["requester_address"] = requester_address

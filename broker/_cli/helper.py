@@ -22,6 +22,7 @@ class Helper:
         self.parser._positionals.title = "Commands"
         self.parser._optionals.title = "Options"
         self.subparsers = self.parser.add_subparsers(dest="command", metavar="command [<options>...]")
+        self.subparsers.add_parser("about", help="ebloc-broker metadata")
         self._driver()
         self._submit()
         self._daemon()

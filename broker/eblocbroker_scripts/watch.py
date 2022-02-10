@@ -7,7 +7,7 @@ from pathlib import Path
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear
-from broker._utils.tools import _time, log, print_tb
+from broker._utils.tools import _date, log, print_tb
 from broker.lib import state
 
 Ebb = cfg.Ebb
@@ -96,7 +96,7 @@ def watch(eth_address="", from_block=None):
         _console_clear()
         open(watch_fn, "w").close()
         log(
-            f"\r==> {_time() } bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
+            f"\r==> {_date() } bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
             "bold",
         )
         if not watch_only_jobs:

@@ -115,7 +115,6 @@ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb
     sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 sudo apt update
 sudo apt-get install -y mongodb-org
-#
 sudo chown -R mongodb. /var/log/mongodb
 sudo chown -R mongodb. /var/lib/mongodb
 sudo chown mongodb:mongodb /tmp/mongodb-27017.sock

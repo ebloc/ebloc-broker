@@ -264,7 +264,7 @@ def insert_character(string, index, char) -> str:
     return string[:index] + char + string[index:]
 
 
-def get_time():
+def get_date():
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
 

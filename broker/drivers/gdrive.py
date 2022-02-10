@@ -18,7 +18,7 @@ from broker.utils import (
     StorageID,
     byte_to_mb,
     generate_md5sum,
-    get_time,
+    get_date,
     popen_communicate,
     print_tb,
     untar,
@@ -44,7 +44,7 @@ class GdriveClass(Storage):
             cached_tar_file = cache_folder / name
             if self.folder_type_dict[source_code_hash] == "gzip":
                 if os.path.isfile(cached_tar_file):
-                    self.job_infos[0]["is_already_cached"][source_code_hash] = True
+                    self.job_infos[0]["is_cached"][source_code_hash] = True
                     self.assign_folder_path_to_download(_id, source_code_hash, cached_tar_file)
                     output = generate_md5sum(cached_tar_file)
                     if output != self.md5sum_dict[key]:
@@ -61,11 +61,11 @@ class GdriveClass(Storage):
             elif self.folder_type_dict[source_code_hash] == "folder":
                 output = ""
                 if os.path.isfile(cached_tar_file):
-                    self.job_infos[0]["is_already_cached"][source_code_hash] = True
+                    self.job_infos[0]["is_cached"][source_code_hash] = True
                     self.assign_folder_path_to_download(_id, source_code_hash, cache_folder)
                     output = generate_md5sum(cached_tar_file)
                 elif os.path.isdir(cache_folder):
-                    self.job_infos[0]["is_already_cached"][source_code_hash] = True
+                    self.job_infos[0]["is_cached"][source_code_hash] = True
                     self.folder_path_to_download[source_code_hash] = cache_folder
                     output = generate_md5sum(cache_folder)
 
@@ -122,10 +122,10 @@ class GdriveClass(Storage):
 
         is_continue = False
         with suppress(Exception):
-            output = self.job_infos[0]["store_duration"][_id]
+            output = self.job_infos[0]["storage_duration"][_id]
             is_continue = True
 
-        if is_continue and not self.job_infos[0]["is_already_cached"][source_code_hash] and not output:
+        if is_continue and not self.job_infos[0]["is_cached"][source_code_hash] and not output:
             log("## Downloaded as temporary data file", "bold yellow")
             self.folder_path_to_download[source_code_hash] = self.results_folder_prev
         else:
@@ -187,7 +187,7 @@ class GdriveClass(Storage):
         return True
 
     def remove_downloaded_file(self, source_code_hash, _id, pathname):
-        if not self.job_infos[0]["is_already_cached"][source_code_hash] and self.job_infos[0]["store_duration"][_id]:
+        if not self.job_infos[0]["is_cached"][source_code_hash] and self.job_infos[0]["storage_duration"][_id]:
             _remove(pathname)
 
     def get_data_init(self, key, _id, is_job_key=False):
@@ -212,7 +212,7 @@ class GdriveClass(Storage):
                     gdrive_output,
                     self.results_folder_prev,
                     self.source_code_hashes,
-                    self.job_infos[0]["is_already_cached"],
+                    self.job_infos[0]["is_cached"],
                 )
             except Exception as e:
                 print_tb(e)
@@ -337,7 +337,7 @@ class GdriveClass(Storage):
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        log(f"{br(get_time())} job's source code has been sent through Google Drive", "bold cyan")
+        log(f"{br(get_date())} job's source code has been sent through Google Drive", "bold cyan")
 
         # self.get_data_init(key=self.job_key, _id=0, is_job_key=True)
 

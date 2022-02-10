@@ -5,9 +5,8 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
-from typing import Union
-
 from pymongo import MongoClient
+from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
@@ -592,8 +591,8 @@ class Contract:
         else:
             return self.eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
 
-    def get_job_store_duration(self, provider_addr, source_code_hash):
-        """Return job storage duration time."""
+    def get_job_storage_duration(self, provider_addr, source_code_hash):
+        """Return job's storage duration."""
         if not isinstance(provider_addr, (Account, LocalAccount)):
             provider_addr = self.w3.toChecksumAddress(provider_addr)
 

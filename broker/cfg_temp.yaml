@@ -1,25 +1,24 @@
 cfg:
   eth_address: "0x0000000000000000000000000000000000000000"
-  home_dir: /home/avatar_doo_avatar
-  whoami: avatar_doo_avatar
-  datadir: /home/avatar_doo_avatar/.eblocpoa
-  log_path: /home/avatar_doo_avatar/.ebloc-broker
-  ebloc_path: /home/avatar_doo_avatar/ebloc-broker
-  base_data_path: /home/avatar_doo_avatar/test_eblocbroker
-  oc_user: 5f0db7e4-3078-4988-8fa5-f066984a8a97
-  gmail: alper.alimoglu.research@gmail.com
+  whoami: alper
+  home_dir: /home/alper
+  datadir: /home/alper/.eblocpoa
+  log_path: /home/alper/.ebloc-broker
+  ebloc_path: /home/alper/ebloc-broker
+  base_data_path: /home/alper/test_eblocbroker
+  oc_user: 059ab6ba-4030-48bb-b81b-12115f531296
+  gmail: alper.alimoglu.research2@gmail.com
   gdrive: /usr/local/bin/gdrive
   rpc_port: 8545
   provider:
-    slurmuser: netlab
-    is_bloxberg: true
-    is_thread: true
-    is_ipfs_use: true
-    is_eudat_use: true
-    is_gdrive_use: true
-    is_eblocpoa: false
-    is_geth_tunnel: false
-    available_core: 4
+    slurmuser: alper
+    is_bloxberg: True
+    is_thread: True
+    is_ipfs_use: True
+    is_eudat_use: True
+    is_gdrive_use: True
+    is_eblocpoa: False
+    is_geth_tunnel: False
     prices:
       commitment_blk: 600
       price_core_min: 100

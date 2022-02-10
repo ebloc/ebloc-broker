@@ -36,7 +36,7 @@ class DataStorage:
     def __init__(self, args) -> None:
         """Create a new Data Stroge object."""
         self.received_block = args[0]
-        self.store_duration = args[1]
+        self.storage_duration = args[1]
         self.is_private = args[2]
         self.is_verified_used = args[3]
         self.received_storage_deposit: int = 0
@@ -323,16 +323,16 @@ class JobPrices:
             received_storage_deposit = self.Ebb.get_received_storage_deposit(
                 self.job.provider, self.job.requester, source_code_hash
             )
-            job_store_duration = self.Ebb.get_job_store_duration(self.job.provider, source_code_hash)
+            job_storage_duration = self.Ebb.get_job_storage_duration(self.job.provider, source_code_hash)
         else:
             filename = call.__file__
             data = ("func", self.job.provider, self.job.requester, source_code_hash)
             output = run(["python", filename, *[str(arg) for arg in data]])  ###
             output = output.split("\n")
             received_storage_deposit = float(output[0])
-            job_store_duration = make_tuple(output[1])
+            job_storage_duration = make_tuple(output[1])
 
-        ds = DataStorage(job_store_duration)
+        ds = DataStorage(job_storage_duration)
         ds.received_storage_deposit = received_storage_deposit
         return ds
 
@@ -347,7 +347,7 @@ class JobPrices:
             else:
                 ds = self.create_data_storage(self.job.source_code_hashes_str[idx])
 
-            if ds.received_block + ds.store_duration < self.w3.eth.block_number:
+            if ds.received_block + ds.storage_duration < self.w3.eth.block_number:
                 # storage time is completed
                 ds.received_storage_deposit = 0
 
@@ -357,12 +357,12 @@ class JobPrices:
                 _source_code_hash = bytes32_to_ipfs(source_code_hash)
 
             log(f"==> is_private{br(_source_code_hash, 'blue')}={ds.is_private}")
-            # print(received_block + store_duration >= self.w3.eth.block_number)
+            # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_storage_deposit > 0 or
             if (
-                ds.received_storage_deposit > 0 and ds.received_block + ds.store_duration >= self.w3.eth.block_number
+                ds.received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.block_number
             ) or (
-                ds.received_block + ds.store_duration >= self.w3.eth.block_number
+                ds.received_block + ds.storage_duration >= self.w3.eth.block_number
                 and not ds.is_private
                 and ds.is_verified_used
             ):
@@ -379,7 +379,7 @@ class JobPrices:
                     self.storage_cost += data_price
                     break
 
-                #  if not ds.received_storage_deposit and (received_block + store_duration < w3.eth.block_number):
+                #  if not ds.received_storage_deposit and (received_block + storage_duration < w3.eth.block_number):
                 if not ds.received_storage_deposit:
                     self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
                     if self.job.storage_hours[idx] > 0:

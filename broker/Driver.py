@@ -28,7 +28,7 @@ from broker.utils import (
     StorageID,
     check_ubuntu_packages,
     eth_address_to_md5,
-    get_time,
+    get_date,
     is_driver_on,
     is_geth_on,
     is_internet_on,
@@ -178,7 +178,7 @@ class Driver:
     def process_logged_job(self, idx):
         """Process logged job one by one."""
         self.received_block = []
-        self.store_duration = []
+        self.storage_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
         console_ruler(idx, character="-")
@@ -214,7 +214,7 @@ class Driver:
             cfg.Ebb.get_job_source_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
-            self.job_info.update({"store_duration": self.store_duration})
+            self.job_info.update({"storage_duration": self.storage_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
             cfg.Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)
@@ -244,7 +244,7 @@ class Driver:
             "logged_job": self.logged_job,
             "job_infos": self.job_infos,
             "requester_id": requester_md5_id,
-            "is_already_cached": self.is_already_cached,
+            "is_cached": self.is_cached,
         }
         if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             storage_class = IpfsClass(**kwargs)
@@ -268,7 +268,7 @@ class Driver:
 
     def process_logged_jobs(self):
         """Process logged jobs."""
-        self.is_already_cached = {}
+        self.is_cached = {}
         self.latest_block_number = 0
         self.is_provider_received_job = False
         for idx, logged_job in enumerate(self.logged_jobs_to_process):
@@ -392,7 +392,7 @@ def run_driver():
                 log(f"==> Since Driver started provider_gained_wei={value}")
 
         current_block_num = Ebb.get_block_number()
-        log(f" * {get_time()} waiting new job to come since block_number={block_read_from}")
+        log(f" * {get_date()} waiting new job to come since block_number={block_read_from}")
         log(f"==> current_block={current_block_num} | sync_from={block_read_from}")
         # log(f"block_read_from={block_read_from}")
         flag = True
@@ -425,7 +425,7 @@ def run_driver():
             log(f"E: {e}")
             if "Filter not found" in str(e) or "Read timed out" in str(e):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
-                log("## Sleeping for 60 seconds...", end="")
+                log("## sleeping for 60 seconds...", end="")
                 time.sleep(60)
                 log(ok())
             else:

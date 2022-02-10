@@ -18,19 +18,13 @@ from decimal import Decimal
 from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
-from broker.errors import Terminate
+from broker._utils._log import br, log, ok
+from broker.errors import HandlerException, QuietExit, Terminate
 
 try:
     import thread
 except ImportError:
     import _thread as thread  # noqa
-
-try:
-    from broker._utils._log import br, log, ok
-    from broker.errors import HandlerException, QuietExit
-except ImportError:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils._log import br, log, ok
-    from ebloc_broker.broker.errors import HandlerException, QuietExit
 
 
 def WHERE(back=0):
@@ -61,7 +55,7 @@ def countdown(seconds: int, is_silent=False):
     while seconds:
         mins, secs = divmod(seconds, 60)
         timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
-        print(f" * {_time()} | {timer}", end="\r")
+        print(f" * {_date()} | {timer}", end="\r")
         time.sleep(1)
         seconds -= 1
 
@@ -84,8 +78,10 @@ def _timestamp(zone="Europe/Istanbul") -> int:
     return int(time.mktime(datetime.now(timezone(zone)).timetuple()))
 
 
-def _time(zone="Europe/Istanbul", _type=""):
-    if _type == "hour":
+def _date(zone="Europe/Istanbul", _type=""):
+    if _type == "month":
+        return datetime.now(timezone(zone)).strftime("%m-%d")
+    elif _type == "hour":
         return datetime.now(timezone(zone)).strftime("%H:%M:%S")
 
     return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
@@ -245,7 +241,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True, filename=None):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     """Calculate the changed percent."""
     try:
         initial = float(initial)
@@ -254,7 +250,6 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True, f
         return None
 
     change = "{0:.8f}".format(float(change))
-    # percent = round((float(change)) / abs(float(initial)) * 100, 8)
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
     if percent == -0.0:
         change = 0.0

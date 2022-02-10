@@ -6,11 +6,7 @@ from filelock import FileLock
 from pathlib import Path
 from ruamel.yaml import YAML, comments, representer
 
-try:
-    from broker._utils.tools import _remove, print_tb
-except:
-    from ebloc_broker.broker._utils.tools import _remove, print_tb
-
+from broker._utils.tools import _remove, print_tb
 
 _SR = representer.RoundTripRepresenter
 
