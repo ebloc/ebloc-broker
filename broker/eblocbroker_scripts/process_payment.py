@@ -35,8 +35,7 @@ def process_payment(
 
     for cloud_storage_id in cloud_storage_ids:
         if len(result_ipfs_hash) != 46 and cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
-            log("E: Result ipfs's length does not match with its original length. Please check your job_key")
-            raise
+            raise Exception("Result ipfs's length does not match with its original length, check your job_key")
 
     self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number, is_print=False)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:

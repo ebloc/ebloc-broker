@@ -12,14 +12,12 @@ import "./Lib.sol";
 contract EBlocBrokerBase {
     address public owner;
     address[] registeredProviders; // A dynamically-sized array of 'address' structs
-
+    uint32 constant ONE_HOUR_BLOCK_DURATION = 600; // ~1 hour , avg block time is 6 seconds
     mapping(address => uint32) requesterCommittedBlock; // Block number when provider is registered in order the watch provider's event activity
     mapping(address => Lib.Provider) providers;
     mapping(address => uint32[]) pricesSetBlockNum;
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID
     // mapping(string => mapping(uint32 => uint => Job) jobs;
-
-    uint32 constant ONE_HOUR_BLOCK_DURATION = 600; // ~1 hour , avg block time is 6 seconds
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -53,7 +51,7 @@ contract EBlocBrokerBase {
     }
 
     /**
-     * @dev Modifier to make a function callable only when given timestamp is smaller than the block.timestamp
+     * @dev Modifier to make a function callable only when given timestamp is smaller than the block.timestamp.
      */
     modifier whenBehindNow(uint256 timestamp) {
         require(timestamp <= block.timestamp); // dev: Ahead block.timestamp

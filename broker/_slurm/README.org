@@ -1,8 +1,8 @@
 * SLURM Emulator Mode Setup
 
-__ [[http://wildflower.diablonet.net/~scaron/slurmsetup.html]]
-__ [[https://slurm.schedmd.com/faq.html#multi_slurmd]]
-__ [[https://stackoverflow.com/a/40707189/2402577]]
+- [[http://wildflower.diablonet.net/~scaron/slurmsetup.html]]
+- [[https://slurm.schedmd.com/faq.html#multi_slurmd]]
+- [[https://stackoverflow.com/a/40707189/2402577]]
 
 ** Package install
 
@@ -47,7 +47,6 @@ PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #+end_src
 
-
 # ./configure --enable-multiple-slurmd  # emulator-mode
 # ./configure --enable-debug --enable-front-end --enable-multiple-slurmd
 
@@ -67,7 +66,6 @@ PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
 # Emulator mode 128 nodes
 NodeName=ebloc[1-2] NodeHostName=ebloc NodeAddr=79.123.177.145 CPUs=1
 PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
-
 #+end_src
 
 ** Set things up for slurmdbd (the SLURM accounting daemon) in MySQL. !(slurm == $(username))!
@@ -96,14 +94,14 @@ DROP DATABASE slurm_acct_db;
 #+end_src
 
 
-** Cont
+** Cont.
 
 Should run ~sudo slurmdbd~ on the background in order to register the slurm-user.
 
 #+begin_src bash
 sudo slurmdbd
 user_name=$(whoami)
-sacctmgr add cluster $(hostname) --immediate
+sacctmgr add cluster $(hostname -s) --immediate
 sacctmgr add account $user_name --immediate
 sacctmgr create user $user_name defaultaccount=$user_name adminlevel=None --immediate
 
@@ -138,7 +136,6 @@ id -u username
 pkill -U UID
 sudo usermod -u 1000 username
 #+end_src
-
 
 -------------
 

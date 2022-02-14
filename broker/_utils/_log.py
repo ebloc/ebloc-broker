@@ -5,19 +5,19 @@ import pathlib
 import sys
 import textwrap
 import threading
+from typing import Dict, Union
+
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
 from rich.traceback import install
-from typing import Dict, Union
 
 from broker import cfg
 
 install()  # for rich, show_locals=True
 # pretty.install()
 
-console = Console()
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
@@ -27,9 +27,11 @@ custom_theme = Theme(
         "warning": "magenta",
         "danger": "bold red",
         "b": "bold",
+        "m": "#ff79c6",
         "magenta": "#ff79c6",
     }
 )
+console = Console(theme=custom_theme)
 
 
 class Colors:
@@ -60,7 +62,7 @@ class Log:
     Find colors from: python -m rich
     """
 
-    def __init__(self):  # noqa
+    def __init__(self):
         super().__init__()
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
@@ -84,7 +86,7 @@ class Log:
                 print(f"[bold {color}]{text}[/bold {color}]")
             else:
                 print(f"[{color}]{text}[/{color}]")
-        else:  # end == "":
+        else:
             if is_bold:
                 print(f"[bold {color}]{text}[/bold {color}]", end="", flush=True)
             else:
@@ -102,8 +104,7 @@ class Log:
 
         if text == "[ ok ]":
             text = "[  [bold green]OK[/bold green]  ]"
-
-        if text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
+        elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
             _len = 3
             is_bullet = True
             if not color:
@@ -145,6 +146,11 @@ def _console_clear():
 
 
 def console_ruler(msg="", character="=", color="cyan", filename=""):
+    """Draw console ruler.
+
+    Indicated rich console to write into given filename
+    __ https://stackoverflow.com/a/6826099/2402577
+    """
     if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
         filename = thread_log_files[threading.current_thread().name]
     elif not filename:
@@ -156,9 +162,7 @@ def console_ruler(msg="", character="=", color="cyan", filename=""):
             filename = "program.log"
 
     if filename not in ll.console:
-        #: Indicated rich console to write into given filename
-        # __ https://stackoverflow.com/a/6826099/2402577
-        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True, theme=custom_theme)
 
     if msg:
         console.rule(f"[bold {color}]{msg}", characters=character)
@@ -306,7 +310,7 @@ def log(
         if filename not in ll.console:
             #: Indicated rich console to write into given filename
             # __ https://stackoverflow.com/a/6826099/2402577
-            ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+            ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True, theme=custom_theme)
 
     if isinstance(text, dict):
         if max_depth:

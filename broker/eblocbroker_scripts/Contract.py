@@ -5,8 +5,9 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
-from pymongo import MongoClient
 from typing import Union
+
+from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
@@ -143,7 +144,7 @@ class Contract:
         attempt = 0
         poll_latency = 3
         if not is_silent:
-            log(f"## Waiting for the transaction({tx_hash}) receipt... ", end="")
+            log(f"## waiting for the transaction({tx_hash}) receipt... ", end="")
 
         while True:
             try:
@@ -257,6 +258,8 @@ class Contract:
                 return _yaml["networks"]["bloxberg"]
             elif env.IS_EBLOCPOA:
                 return _yaml["networks"]["eblocpoa"]
+            else:
+                raise Exception("Wrong contract yaml address setup")
         except Exception as e:
             raise e
 
@@ -268,7 +271,7 @@ class Contract:
 
         contract_address = self.w3.toChecksumAddress(contract["address"])
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
-            raise
+            raise Exception("Empty contract")
 
         log(f"==> contract_address={contract_address.lower()}")
         return True
@@ -362,7 +365,7 @@ class Contract:
         self.gas_price = GAS_PRICE
         self._from = self.w3.toChecksumAddress(account)
         self.required_confs = 1
-        return self.timeout_wrapper("withdraw", *args)
+        return self.timeout_wrapper("withdraw")
 
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
@@ -468,9 +471,9 @@ class Contract:
 
     def _get_provider_prices_for_job(self, *args):
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.getJobProviderPrices(*args)
+            return self.eBlocBroker.getProviderPrices(*args)
         else:
-            return self.eBlocBroker.functions.getJobProviderPrices(*args).call()
+            return self.eBlocBroker.functions.getProviderPrices(*args).call()
 
     def _get_job_info(self, *args):
         if env.IS_BLOXBERG:
@@ -603,9 +606,9 @@ class Contract:
                 pass
 
         if env.IS_BLOXBERG:
-            return self.eBlocBroker.getDataStoreDuration(provider_addr, source_code_hash)
+            return self.eBlocBroker.getStorageDuration(provider_addr, source_code_hash)
         else:
-            return self.eBlocBroker.functions.getDataStoreDuration(provider_addr, source_code_hash).call()
+            return self.eBlocBroker.functions.getStorageDuration(provider_addr, source_code_hash).call()
 
     def get_received_storage_deposit(self, provider, requester, source_code_hash):
         """Return received storage deposit for the corresponding source code hash."""

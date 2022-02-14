@@ -2,8 +2,9 @@
 
 import os
 from contextlib import suppress
-from filelock import FileLock
 from pathlib import Path
+
+from filelock import FileLock
 from ruamel.yaml import YAML, comments, representer
 
 from broker._utils.tools import _remove, print_tb

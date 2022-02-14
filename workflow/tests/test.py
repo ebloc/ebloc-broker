@@ -39,26 +39,19 @@ def combineUint128(variable1, variable2):
 
 
 def test_custom_greeting(web3, chain):
-    print("\n")
-    greeter, _ = chain.provider.get_or_deploy_contract("Greeter")
+    print("")
+    greeter, _ = chain.provider.get_or_deploy_contract("Workflow")
     IPFS_chech(greeter, chain, web3)
-
     key = "acfd2fd8a1e9ccf031db0a93a861f6eb"
     set_txn_hash = greeter.transact().mapWorkflow(key)
     contract_address = chain.wait.for_receipt(set_txn_hash)
     print("mapWorkflow_" + "gasUsed=" + str(contract_address["gasUsed"]))
-
-    # ===
     v1 = 340282366920938463463374607431768211455
     resInt = combineUint128(v1, v1)
     print(resInt)
     set_txn_hash = greeter.transact().setCharacter(resInt)
-
     print(greeter.call().getVariables())
-
     print(greeter.call().getDoo())
-
-    # ===
     array = [
         0,
         1,

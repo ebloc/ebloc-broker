@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import os
-import pytest
 import sys
 from os import path
+
+import pytest
 
 import brownie
 from broker import cfg, config
@@ -411,7 +412,7 @@ def test_storage_refund():
     mine(cfg.BLOCK_DURATION_1_HOUR)
 
     tx = ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000})
-    refundedWei = tx.events["LogStoreDeposit"]["payment"]
+    refundedWei = tx.events["LogDepositStorage"]["payment"]
     log("refundedWei=" + str(refundedWei))
     withdraw(requester, refundedWei)
     with brownie.reverts():  # refundStorageDeposit should revert
@@ -419,8 +420,8 @@ def test_storage_refund():
             provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000}
         )
     tx = ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[1], {"from": requester, "gas": 4500000})
-    refundedWei = tx.events["LogStoreDeposit"]["payment"]
-    paid_address = tx.events["LogStoreDeposit"]["paidAddress"]
+    refundedWei = tx.events["LogDepositStorage"]["payment"]
+    paid_address = tx.events["LogDepositStorage"]["paidAddress"]
     withdraw(requester, refundedWei)
     with brownie.reverts():  # refundStorageDeposit should revert
         tx = ebb.refundStorageDeposit(
@@ -463,20 +464,20 @@ def test_storage_refund():
     )
 
     for source_code_hash in job.source_code_hashes:
-        log(ebb.getDataStoreDuration(provider, source_code_hash))
+        log(ebb.getStorageDuration(provider, source_code_hash))
 
     with brownie.reverts():  # refundStorageDeposit should revert, because it is already used by the provider
         for source_code_hash in job.source_code_hashes:
             tx = ebb.refundStorageDeposit(provider, requester, source_code_hash, {"from": requester, "gas": 4500000})
 
     with brownie.reverts():
-        tx = ebb.receiveStoreDeposit(requester, job.source_code_hashes[0], {"from": provider, "gas": 4500000})
+        tx = ebb.depositStorage(requester, job.source_code_hashes[0], {"from": provider, "gas": 4500000})
 
     mine(cfg.BLOCK_DURATION_1_HOUR)
     # after deadline (1 hr) is completed to store the data, provider could obtain the money
     for idx, source_code_hash in enumerate(job.source_code_hashes):
-        tx = ebb.receiveStoreDeposit(requester, source_code_hash, {"from": provider, "gas": 4500000})
-        amount = tx.events["LogStoreDeposit"]["payment"]
+        tx = ebb.depositStorage(requester, source_code_hash, {"from": provider, "gas": 4500000})
+        amount = tx.events["LogDepositStorage"]["payment"]
         withdraw(provider, amount)
         assert storage_payment[idx] == amount
 
@@ -1034,7 +1035,7 @@ def test_submit_job():
             job.cores = [core]
             job.run_time = [coreMin]
 
-            log("\ncontract_balance=" + str(ebb.getcontract_balance()))
+            log("\ncontract_balance=" + str(ebb.getContractBalance()))
             jobID = 0
             execution_time = int(arguments[1]) - int(arguments[0])
             end_time = int(arguments[1])
@@ -1056,7 +1057,7 @@ def test_submit_job():
             withdraw(requester, refunded)
             log(f"received={received} | refunded={refunded}")
 
-    log("\ncontract_balance=" + str(ebb.getcontract_balance()), "bold")
+    log("\ncontract_balance=" + str(ebb.getContractBalance()), "bold")
     # prints finalize version of the linked list.
     size = ebb.getProviderReceiptSize(provider)
     for idx in range(0, size):
@@ -1064,7 +1065,7 @@ def test_submit_job():
 
     console_ruler()
     log(f"==> storage_duration for job={job_key}")
-    job_storage_duration = ebb.getDataStoreDuration(provider, source_code_hash)
+    job_storage_duration = ebb.getStorageDuration(provider, source_code_hash)
     ds = DataStorage(job_storage_duration)
     log(
         f"receivedBlockNumber={ds.received_block} |"
@@ -1080,7 +1081,7 @@ def test_submit_job():
 
     """
     mine(cfg.BLOCK_DURATION_1_HOUR)
-    tx = ebb.receiveStoreDeposit(requester, source_code_hash, {"from": provider});
-    log('receiveStoreDeposit => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
+    tx = ebb.depositStorage(requester, source_code_hash, {"from": provider});
+    log('depositStorage => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
     log(ebb.getReceivedStorageDeposit(requester, source_code_hash, {"from": }))
     """

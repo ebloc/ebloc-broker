@@ -327,7 +327,7 @@ class JobPrices:
         else:
             filename = call.__file__
             data = ("func", self.job.provider, self.job.requester, source_code_hash)
-            output = run(["python", filename, *[str(arg) for arg in data]])  ###
+            output = run(["python", filename, *[str(arg) for arg in data]])  # GOTCHA
             output = output.split("\n")
             received_storage_deposit = float(output[0])
             job_storage_duration = make_tuple(output[1])

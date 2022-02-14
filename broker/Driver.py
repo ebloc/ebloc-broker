@@ -6,10 +6,11 @@ import os
 import sys
 import textwrap
 import time
-import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
+
+import zc.lockfile
 from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
@@ -44,9 +45,9 @@ with suppress(Exception):
     from broker.eblocbroker_scripts import Contract
 
 
+cfg.IS_BREAKPOINT = True
 pid = os.getpid()
 given_block_number = 0
-cfg.IS_BREAKPOINT = True
 
 if not cfg.IS_BREAKPOINT:
     os.environ["PYTHONBREAKPOINT"] = "0"
@@ -111,7 +112,7 @@ def _tools(block_continue):  # noqa
 
             if not output:
                 log(
-                    f"E: Provider's registered email=[magenta]{email}[/magenta] does not match\n"
+                    f"E: provider's registered email=[magenta]{email}[/magenta] does not match\n"
                     f"   with the set gdrive's email=[magenta]{gdrive_email}[/magenta]"
                 )
                 raise QuietExit
@@ -147,7 +148,7 @@ class Driver:
         self.job_info = None
         self.job_infos = {}
         self.requester_id: str = ""
-        #: Indicates Lock check for the received job whether received or not
+        #: indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
     def set_job_recevied_mongodb(self, key, index) -> None:
@@ -369,7 +370,7 @@ def run_driver():
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
         raise QuietExit(f"Provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
-    block_read_from = block_number_saved
+    blk_read = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     eth_balance = Ebb.eth_balance(env.PROVIDER_ID)
     log(f"==> deployed_block_number={deployed_block_number}")
@@ -378,8 +379,8 @@ def run_driver():
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
-        if not str(block_read_from).isdigit():
-            raise Terminate(f"block_read_from={block_read_from}")
+        if not str(blk_read).isdigit():
+            raise Terminate(f"block_read_from={blk_read}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         if cfg.IS_THREADING_ENABLED:
@@ -392,11 +393,10 @@ def run_driver():
                 log(f"==> Since Driver started provider_gained_wei={value}")
 
         current_block_num = Ebb.get_block_number()
-        log(f" * {get_date()} waiting new job to come since block_number={block_read_from}")
-        log(f"==> current_block={current_block_num} | sync_from={block_read_from}")
-        # log(f"block_read_from={block_read_from}")
+        log(f" * {get_date()} waiting new job to come since block_number={blk_read}")
+        log(f"==> current_block={current_block_num} | sync_from={blk_read}")
         flag = True
-        while current_block_num < int(block_read_from):
+        while current_block_num < int(blk_read):
             current_block_num = Ebb.get_block_number()
             if flag:
                 log(f"## Waiting block number to be updated, it remains constant at {current_block_num}")
@@ -404,22 +404,18 @@ def run_driver():
             flag = False
             time.sleep(2)
 
-        log(f"#> [bold yellow]Passed incremented block number... Watching from block_number=[cyan]{block_read_from}")
-        block_read_from = str(block_read_from)  # reading events' block number has been updated
+        log(f"#> [bold yellow]Passed incremented block number... Watching from block_number=[cyan]{blk_read}")
+        blk_read = str(blk_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         try:
-            driver.logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
+            driver.logged_jobs_to_process = Ebb.run_log_job(blk_read, env.PROVIDER_ID)
             driver.process_logged_jobs()
             if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
                 # updates the latest read block number
-                block_read_from = driver.latest_block_number + 1
-                env.config["block_continue"] = block_read_from
+                blk_read = driver.latest_block_number + 1
+                env.config["block_continue"] = blk_read
             if not driver.is_provider_received_job:
-                # If there is no submitted job for the provider, than block start
-                # to read from the current block number and updates the latest read
-                # block number read from the file
-                env.config["block_continue"] = current_block_num
-                block_read_from = current_block_num
+                blk_read = env.config["block_continue"] = current_block_num
         except Exception as e:
             log()
             log(f"E: {e}")
@@ -474,7 +470,7 @@ def main(args):
 
         console_ruler("provider session starts")
         log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        with launch_ipdb_on_exception():
+        with launch_ipdb_on_exception():  # NOQA
             # if an exception is raised, enclose code with the `with` statement to launch ipdb
             _main()
     except KeyboardInterrupt:

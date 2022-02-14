@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import git
 import gzip
 import io
 import os
 import time
 from contextlib import suppress
-from git.exc import InvalidGitRepositoryError
 from pathlib import Path
+
+import git
+from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
 from broker._utils._log import ok

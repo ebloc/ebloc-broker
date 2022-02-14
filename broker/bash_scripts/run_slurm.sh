@@ -3,12 +3,16 @@
 alias sudo='nocorrect sudo'
 USER=$(whoami)
 if [[ $(whoami) == "root" ]] ; then
-    echo "==> logname="$(logname)
+    echo "## logname="$(logname)
+    echo "## hostname="$(hostname -s)
     USER=$(logname)
 fi
 
 verbose=false
-sudo killall slurmd slurmdbd slurmctld > /dev/null 2>&1
+sudo killall slurmd > /dev/null 2>&1
+sudo killall slurmdbd > /dev/null 2>&1
+sudo killall slurmctld > /dev/null 2>&1
+
 sudo rm -f /var/run/slurmdbd.pid
 sudo chown $USER /var/run/slurmctld.pid 2>/dev/null
 sudo chown $USER -R /var/log/slurm/

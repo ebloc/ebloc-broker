@@ -81,8 +81,6 @@ print(nx.ancestors(g, 3))
 g.add_edge('job2', 'job3', weight=4)
 g.add_edge('job3', 'job4', weight=2)
 g.add_edge('job1', 'job5', weight=3)
-
-
 """
 
 

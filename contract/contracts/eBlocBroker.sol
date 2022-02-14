@@ -280,12 +280,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         _cleanJobStorageTime(jobSt);
         balances[requester] += payment;
-        emit LogStoreDeposit(requester, payment);
+        emit LogDepositStorage(requester, payment);
 
         return true;
     }
 
-    function receiveStoreDeposit(address dataOwner, bytes32 sourceCodeHash) public whenProviderRunning returns (bool) {
+    function depositStorage(address dataOwner, bytes32 sourceCodeHash) public whenProviderRunning returns (bool) {
         Lib.Provider storage provider = providers[msg.sender];
         Lib.Storage storage storageInfo = provider.storageInfo[dataOwner][sourceCodeHash];
         Lib.JobStorageTime storage jobSt = provider.jobSt[sourceCodeHash];
@@ -296,7 +296,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         balances[msg.sender] += payment;
         _cleanJobStorageTime(jobSt);
 
-        emit LogStoreDeposit(msg.sender, payment);
+        emit LogDepositStorage(msg.sender, payment);
         return true;
     }
 
@@ -837,7 +837,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 address _provider = args.provider;
                 balances[_provider] += _temp; // transfer storagePayment back to provider
                 _cleanJobStorageTime(jobSt);
-                emit LogStoreDeposit(args.provider, _temp);
+                emit LogDepositStorage(args.provider, _temp);
             }
 
             if (
@@ -941,11 +941,20 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /* ===============================================PUBLIC_GETTERS=============================================== */
+    /**
+     * @dev Returns balance of the requested address in Wei. It takes a
+       provider's Ethereum address as parameter.
+
+     * @param owner The address of the requester or provider.
+     */
+    function balanceOf(address owner) external view returns (uint256) {
+        return balances[owner];
+    }
 
     /**
      * @dev Get balance on eBlocBroker
      */
-    function getcontract_balance() external view returns (uint256) {
+    function getContractBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
@@ -1055,7 +1064,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return (job, jobInfo.received, jobInfo.jobOwner, jobInfo.dataTransferIn, jobInfo.dataTransferOut);
     }
 
-    function getJobProviderPrices(
+    function getProviderPrices(
         address _provider,
         string memory key,
         uint256 index
@@ -1075,22 +1084,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return providers[_provider].jobStatus[key].length;
     }
 
-    /**
-     * @dev Returns balance of the requested address in Wei. It takes a
-       provider's Ethereum address as parameter.
-
-     * @param owner The address of the requester or provider.
-     */
-    function balanceOf(address owner) external view returns (uint256) {
-        return balances[owner];
-    }
-
     /* Returns a list of registered provider Ethereum addresses */
     function getProviders() external view returns (address[] memory) {
         return registeredProviders;
     }
 
-    function getDataStoreDuration(address _provider, bytes32 sourceCodeHash)
+    function getStorageDuration(address _provider, bytes32 sourceCodeHash)
         external
         view
         returns (Lib.JobStorageTime memory)

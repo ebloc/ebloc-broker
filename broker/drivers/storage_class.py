@@ -16,7 +16,7 @@ from broker._utils import _log
 from broker._utils._log import ok
 from broker._utils.tools import _squeue, mkdir, read_json
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, run, subprocess_call
+from broker.lib import calculate_size, log, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
@@ -46,7 +46,6 @@ class Storage(BaseClass):
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]
         self.data_transfer_in_to_download_mb = 0  # total size in MB to download
-        self.is_cached = self.is_cached
         self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
         self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
         self.registered_data_hashes = []  # noqa
@@ -177,7 +176,7 @@ class Storage(BaseClass):
             return True
         return False
 
-    def is_cached(self, name, _id) -> bool:
+    def _is_cached(self, name, _id) -> bool:
         if self.cache_type[_id] == CacheType.PRIVATE:
             # Checks whether it is already exist under public cache directory
             cached_folder = f"{self.public_dir}/{name}"

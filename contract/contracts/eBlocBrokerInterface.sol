@@ -76,11 +76,11 @@ interface eBlocBrokerInterface {
 
     /**
        @notice
-       * For the requested job, the LogStoreDeposit() event logs the storage
+       * For the requested job, the LogDepositStorage() event logs the storage
          deposit transferred to its provider, which was processed either by the
-         submitJob() or the receiveStoreDeposit() function.
+         submitJob() or the depositStorage() function.
      */
-    event LogStoreDeposit(address indexed paidAddress, uint256 payment);
+    event LogDepositStorage(address indexed paidAddress, uint256 payment);
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 }

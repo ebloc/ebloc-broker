@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import importlib
 import sys
 
 from web3 import IPCProvider, Web3
@@ -35,7 +34,7 @@ def connect():
 def _connect_into_web3():
     """Connect into web3 of the testnet.
 
-    bloxberg:
+    * bloxberg:
     __ https://bloxberg.org
     """
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
@@ -121,7 +120,8 @@ def connect_into_eblocbroker() -> None:
                     # network.connect("bloxberg")
                     try:
                         log(
-                            "warning: 'bloxberg' key is added into the [magenta]~/.brownie/network-config.yaml[/magenta] yaml file. Please try again"
+                            "warning: [green]bloxberg[/green] key is added into the "
+                            "[magenta]~/.brownie/network-config.yaml[/magenta] yaml file. Please try again."
                         )
                         network.connect("bloxberg")
                     except KeyError:

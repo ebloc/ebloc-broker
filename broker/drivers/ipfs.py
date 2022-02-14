@@ -65,7 +65,7 @@ class IpfsClass(Storage):
         self.registered_data_hashes = []
         for idx, source_code_hash in enumerate(self.source_code_hashes):
             if self.cloudStorageID[idx] == StorageID.NONE:
-                self.registered_data_hashes.append(source_code_hash)  ##
+                self.registered_data_hashes.append(source_code_hash)  # GOTCHA
             else:
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 if ipfs_hash not in self.ipfs_hashes:

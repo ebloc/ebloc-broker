@@ -127,13 +127,12 @@ sudo systemctl --no-pager status --full mongod
 # =========================
 VENV=$HOME/venv
 python3.8 -m venv $VENV
-source $VENV/bin/activate
-$VENV/bin/python3.8 -m pip install --upgrade pip
+source $VENV/bin/activate && $VENV/bin/python3.8 -m pip install --upgrade pip
 sudo apt-get install -y libssl-dev zlib1g-dev gcc g++ make
 sudo apt install libgirepository1.0-dev
 python3 -m pip install --no-use-pep517 cm-rgb
 pip install wheel
-pip install pycairo  # dbus-python
+# pip install pycairo  # dbus-python
 cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver
 
 sudo chown $(logname) -R $HOME/.cache/black

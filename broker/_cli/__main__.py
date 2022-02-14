@@ -7,9 +7,8 @@ from broker._cli.helper import Helper
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
 
-__version__ = "2.0.0"
-
-parser = Helper().get_parser()
+helper = Helper()
+parser = helper.get_parser()
 args = parser.parse_args()
 console_fn = __file__.replace("__main__", "console")
 
@@ -52,6 +51,12 @@ def daemon():
         run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
 
 
+def console():
+    import subprocess
+
+    subprocess.call([console_fn])
+
+
 def register_provider():
     try:
         cfg.Ebb.register_provider(args.path)
@@ -73,10 +78,21 @@ def data():
         print_tb(e)
 
 
-def console():
-    import subprocess
+def withdraw():
+    try:
+        cfg.Ebb.withdraw(args.eth_address)
+    except Exception as e:
+        print_tb(e)
 
-    subprocess.call([console_fn])
+
+def balance():
+    from broker._utils._log import log
+
+    try:
+        balance = cfg.Ebb.get_balance(args.eth_address)
+        log(f"## balance={balance}")
+    except Exception as e:
+        print_tb(e)
 
 
 def submit():
@@ -94,9 +110,11 @@ def submit():
 def main():  # noqa
     try:
         globals()[args.command]()
-    except:
-        print(f"ebloc-broker v{__version__} - Blockchain based autonomous computational resource broker\n")
+    except KeyError:
+        print(f"ebloc-broker v{cfg.__version__} - Blockchain based autonomous computational resource broker\n")
         parser.print_help()
+    except Exception as e:
+        print_tb(e)
 
 
 if __name__ == "__main__":

@@ -6,11 +6,15 @@ __ https://stackoverflow.com/a/12413139/2402577
 """
 from rich.console import Console
 
+__version__ = "2.0.0"
+
 IS_BROWNIE_TEST = False
 IS_THREADING_ENABLED = True
 IS_PRIVATE_IPFS = False
 IS_BREAKPOINT = False
 IS_THREAD_JOIN = False
+#: variable to check is long test applied
+IS_FULL_TEST = False
 
 IPFS_TIMEOUT = 300
 TX_TIMEOUT = 1800

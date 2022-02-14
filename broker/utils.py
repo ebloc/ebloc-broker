@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import base58
 import binascii
 import hashlib
 import json
@@ -17,6 +16,8 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
+
+import base58
 
 from broker import cfg, config
 from broker._utils import _log
@@ -151,7 +152,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
     except socket.error as e:
-        print(e)
+        log(f"E: {e}")
         return False
 
 
@@ -162,7 +163,7 @@ def sleep_timer(sleep_duration):
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
-    sys.stdout.write("\rSleeping is done                                \n")
+    sys.stdout.write("\rsleeping is done                                \n")
 
 
 def remove_ansi_escape_sequence(string):
@@ -216,20 +217,20 @@ def run_with_output(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
+def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
     """Act similir to run(cmd).
 
-    But also returns the output message captures on during the run stdout_file
+    But also returns the output message captures on during the run stdout_fn
     is not None in case of nohup process writes its results into a file.
 
     * How to catch exception output from Python subprocess.check_output()?:
     __ https://stackoverflow.com/a/24972004/2402577
     """
     cmd = list(map(str, cmd))  # all items should be string
-    if stdout_file is None:
+    if stdout_fn is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
-        with open(stdout_file, mode) as outfile:
+        with open(stdout_fn, mode) as outfile:
             # output written into file, error will be returned
             p = Popen(cmd, stdout=outfile, stderr=PIPE, env=_env, universal_newlines=False)
             output, error = p.communicate()
@@ -323,14 +324,6 @@ def generate_md5sum(path: str) -> str:
         return tar_hash.split(" ", 1)[0]
     else:
         raise Exception(f"{path} does not exist")
-
-
-def getcwd():
-    try:
-        cwd = os.path.dirnamegetcwd(os.path.abspath(__file__))
-    except:
-        cwd = os.getcwd()
-    return cwd
 
 
 def eth_address_to_md5(address):
@@ -583,7 +576,7 @@ def compress_folder(folder_path, is_exclude_git=False):
     Note that to get fully reproducible tarballs, you should also impose the
     sort order used by tar
 
-    __ https://unix.stackexchange.com/a/438330/198423  == (Eac time tar produces different files)
+    __ https://unix.stackexchange.com/a/438330/198423  == (Each time tar produces different files)
     __ https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
     base_name = os.path.basename(folder_path)

@@ -5,7 +5,6 @@ import errno
 import json
 import linecache
 import os
-import requests
 import shutil
 import signal
 import sys
@@ -15,8 +14,10 @@ import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
-from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
+
+import requests
+from pytz import timezone, utc
 
 from broker._utils._log import br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate

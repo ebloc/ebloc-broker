@@ -10,6 +10,10 @@ from broker.utils import extract_gzip, log, popen_communicate
 
 
 def appy_patch(base_dir, patch_fn):
+    r"""Apply path file.
+
+    cmd: perl -pe 's/\x1b.*?[mGKH]//g' alper.patch > good.patch
+    """
     patch_file = f"{base_dir}/{patch_fn}"
     base_name = patch_fn.replace(".gz", "")
     diff_file_name = f"{base_dir}/{base_name}"
@@ -30,9 +34,9 @@ def appy_patch(base_dir, patch_fn):
         try:
             good_patch = f"{base_dir}/good.patch"
             sep = "~"
-            popen_communicate(  # perl -pe 's/\x1b.*?[mGKH]//g' alper.patch > good.patch
-                ["perl", "-pe", "s/\x1b.*?[mGKH]//g", Path(patch_file).replace(f"{sep}", f"\{sep}")],
-                stdout_file=good_patch,
+            popen_communicate(
+                ["perl", "-pe", "s/\x1b.*?[mGKH]//g", str(Path(patch_file)).replace(f"{sep}", f"\{sep}")],
+                stdout_fn=good_patch,
             )
             git.apply_patch(base_dir, good_patch, is_gpg=False)
         except Exception as e1:

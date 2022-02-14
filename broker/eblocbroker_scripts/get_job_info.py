@@ -241,8 +241,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
         raise e
 
     if str(self.job_info["core"]) == "0":
-        log("E: Failed to get_job_info: Out of index")
-        raise
+        raise Exception("E: Failed to get_job_info: Out of index")
 
     if is_log_print:
         self.get_job_info_print(provider, job_key, index, received_block_number)

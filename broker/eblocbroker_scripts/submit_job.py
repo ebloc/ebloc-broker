@@ -21,15 +21,13 @@ def is_requester_valid(self, _from):
     _from = self.w3.toChecksumAddress(_from)
     *_, orcid = self._get_requester_info(_from)
     if not self.does_requester_exist(_from):
-        log(f"E: Requester's Ethereum address {_from} is not registered")
-        raise
+        raise Exception(f"E: Requester's Ethereum address {_from} is not registered")
 
     if not self._is_orc_id_verified(_from):
         if orcid:
-            log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+            raise Exception(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
         else:
-            log(f"E: Requester({_from})'s orcid is not registered")
-        raise
+            raise Exception(f"E: Requester({_from})'s orcid is not registered")
 
 
 def check_before_submit(self, provider, _from, provider_info, key, job):
