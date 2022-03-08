@@ -277,11 +277,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         Lib.JobStorageTime storage jobSt = provider.jobSt[sourceCodeHash];
         // Required remaining time to cache should be 0
         require(jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
-
-        _cleanJobStorageTime(jobSt);
+        _cleanJobStorageDuration(jobSt);
         balances[requester] += payment;
         emit LogDepositStorage(requester, payment);
-
         return true;
     }
 
@@ -294,8 +292,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint256 payment = storageInfo.received;
         storageInfo.received = 0;
         balances[msg.sender] += payment;
-        _cleanJobStorageTime(jobSt);
-
+        _cleanJobStorageDuration(jobSt);
         emit LogDepositStorage(msg.sender, payment);
         return true;
     }
@@ -656,7 +653,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         string memory desc
     ) public returns (bool) {
         require(msg.sender == providers[provider].jobStatus[key][0].jobOwner);
-
         emit LogJobDescription(provider, msg.sender, key, desc);
         return true;
     }
@@ -836,7 +832,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 storageInfo.received = 0;
                 address _provider = args.provider;
                 balances[_provider] += _temp; // transfer storagePayment back to provider
-                _cleanJobStorageTime(jobSt);
+                _cleanJobStorageDuration(jobSt);
                 emit LogDepositStorage(args.provider, _temp);
             }
 
@@ -888,7 +884,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Cleaning for the storage struct storage (JobStorageTime, Storage) for its mapped sourceCodeHash
      */
-    function _cleanJobStorageTime(Lib.JobStorageTime storage jobSt) internal {
+    function _cleanJobStorageDuration(Lib.JobStorageTime storage jobSt) internal {
         delete jobSt.receivedBlock;
         delete jobSt.storageDuration;
         delete jobSt.isPrivate;

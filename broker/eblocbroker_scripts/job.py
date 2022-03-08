@@ -37,8 +37,8 @@ class DataStorage:
         """Create a new Data Stroge object."""
         self.received_block = args[0]
         self.storage_duration = args[1]
-        self.is_private = args[2]
-        self.is_verified_used = args[3]
+        self.is_private: bool = args[2]
+        self.is_verified_used: bool = args[3]
         self.received_storage_deposit: int = 0
 
 
@@ -312,7 +312,7 @@ class JobPrices:
         self.price_cache = provider_price_info[5]
 
     def set_computational_cost(self):
-        """Set computational cost in the object."""
+        """Set computational cost within the object."""
         self.computational_cost = 0
         for idx, core in enumerate(self.job.cores):
             self.computational_cost += int(self.price_core_min * core * self.job.run_time[idx])
@@ -412,5 +412,5 @@ class JobPrices:
                 log(f"\t[bold blue]==> {key}={value}")
 
             if key == "data_transfer":
-                log(f"\t\t[bold yellow]==> in={self.cost['data_transfer_in']}")
-                log(f"\t\t[bold yellow]==> out={self.cost['data_transfer_out']}")
+                log(f"\t\t[bold yellow]* in={self.cost['data_transfer_in']}")
+                log(f"\t\t[bold yellow]* out={self.cost['data_transfer_out']}")

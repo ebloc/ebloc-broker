@@ -27,9 +27,9 @@ config.logging.propagate = False
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
 provider_email = "provider_test@gmail.com"
-federation_cloud_id = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
+fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 
-available_core_num = 128
+available_core = 128
 price_core_min = 1
 price_data_transfer = 1
 price_storage = 1
@@ -45,9 +45,9 @@ ebb = None
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb
-    global chain
-    global ebb
+    global Ebb  # noqa
+    global chain  # noqa
+    global ebb  # noqa
 
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
     ebb = Contract.eblocbroker.eBlocBroker = config.ebb = _Ebb
@@ -102,9 +102,9 @@ def register_provider(price_core_min=1):
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_email,
-        federation_cloud_id,
+        fid,
         ipfs_address,
-        available_core_num,
+        available_core,
         prices,
         COMMITMENT_BLOCK_NUM,
         {"from": accounts[0]},
@@ -222,7 +222,7 @@ def test_stored_data_usage():
     log(tx.events["LogJob"]["jobKey"])
     assert _cost["storage"] == 2
     job_price, _cost = job.cost(provider, requester)
-    log("==> job_index=" + str(tx.events["LogJob"]["index"]))
+    log(f"==> job_index={tx.events['LogJob']['index']}")
     log(tx.events["LogJob"]["jobKey"])
     assert _cost["storage"] == 0, "Since it is not verified yet cost of storage should be 2"
     assert _cost["data_transfer"] == 1
@@ -327,7 +327,7 @@ def test_computational_refund():
     tx = ebb.processPayment(job.source_code_hashes[0], args, run_time, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
-    log(str(received_sum) + " " + str(refunded_sum))
+    log(f"{received_sum} {refunded_sum}")
     assert received_sum + refunded_sum == 505
     assert received_sum == 104 and refunded_sum == 401
     withdraw(accounts[0], received_sum)
@@ -396,7 +396,7 @@ def test_storage_refund():
     tx = ebb.refund(provider, job_key, index, jobID, job.cores, job.run_time, {"from": provider})
     log(ebb.getJobInfo(provider, job_key, index, jobID))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
-    log(f"refundedWei={refundedWei}")
+    log(f"refunded_wei={refundedWei}", "bold")
     withdraw(requester, refundedWei)
 
     # VM Exception while processing transaction: invalid opcode
@@ -413,7 +413,7 @@ def test_storage_refund():
 
     tx = ebb.refundStorageDeposit(provider, requester, job.source_code_hashes[0], {"from": requester, "gas": 4500000})
     refundedWei = tx.events["LogDepositStorage"]["payment"]
-    log("refundedWei=" + str(refundedWei))
+    log(f"refunded_wei={refundedWei}", "bold")
     withdraw(requester, refundedWei)
     with brownie.reverts():  # refundStorageDeposit should revert
         tx = ebb.refundStorageDeposit(
@@ -448,10 +448,8 @@ def test_storage_refund():
     tx = ebb.refund(provider, job_key, index, jobID, job.cores, job.run_time, {"from": provider})
     log(ebb.getJobInfo(provider, job_key, index, jobID))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
-    log("refundedWei=" + str(refundedWei))
-
+    log(f"refunded_wei={refundedWei}", "bold")
     assert _cost["computational"] + _cost["data_transfer"] + _cost["cache"] == refundedWei
-
     storage_cost_sum = 0
     storage_payment = []
     for source_code_hash in job.source_code_hashes:
@@ -485,32 +483,30 @@ def test_storage_refund():
 def test_update_provider():
     mine(5)
     provider_registered_bn = register_provider()
-
-    federation_cloud_id = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    ebb.updateProviderInfo(GPG_FINGERPRINT, provider_email, federation_cloud_id, ipfs_address, {"from": accounts[0]})
+    fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
+    ebb.updateProviderInfo(GPG_FINGERPRINT, provider_email, fid, ipfs_address, {"from": accounts[0]})
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
-
-    available_core_num = 64
+    available_core = 64
     prices = [2, 2, 2, 2]
-    ebb.updateProviderPrices(available_core_num, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
     prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
     provider_info = ebb.getProviderInfo(accounts[0], prices_set_block_number)
     assert 2 == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
-    available_core_num = 128
-    ebb.updateProviderPrices(available_core_num, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    available_core = 128
+    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
 
     prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
     assert ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 128
 
-    available_core_num = 16
-    ebb.updateProviderPrices(available_core_num, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    available_core = 16
+    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
 
     prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
     assert ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 16
     mine(cfg.BLOCK_DURATION_1_HOUR)
 
-    available_core_num = 32
-    ebb.updateProviderPrices(available_core_num, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    available_core = 32
+    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
 
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
     assert ebb.getUpdatedProviderPricesBlocks(accounts[0])[2] == COMMITMENT_BLOCK_NUM * 2 + provider_registered_bn
@@ -655,7 +651,6 @@ def test_multiple_data():
     end_time = start_time + 60 * execution_time
     args = [index, jobID, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
-
     # log(tx.events['LogProcessPayment'])
     received_sum = tx.events["LogProcessPayment"]["receivedWei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
@@ -713,7 +708,6 @@ def test_workflow():
     assert res[0] == 250
 
     ###################
-
     job.source_code_hashes = [source_code_hash, source_code_hash1]  # Hashed of the data file in array
     job.storage_hours = [0, 0]
     job.data_transfer_ins = [100, 0]
@@ -936,11 +930,9 @@ def test_submit_job():
     # price_data_transfer = _providerPriceInfo[3]
     # price_storage = _providerPriceInfo[4]
     # price_cache = _providerPriceInfo[5]
-
-    log("provider_available_core_num=" + str(available_core_num))
-    log("provider_price_core_min=" + str(price_core_min))
+    log(f"provider_available_core={available_core}")
+    log(f"provider_price_core_min={price_core_min}")
     log(providerPriceInfo)
-
     job_price_sum = 0
     jobID = 0
     index = 0
@@ -1007,7 +999,6 @@ def test_submit_job():
     # log(block_read_from)
     # rpc.mine(100)
     # log(web3.eth.blockNumber)
-
     jobID = 0
     with open(fname) as f:
         for index, line in enumerate(f):
@@ -1034,8 +1025,7 @@ def test_submit_job():
 
             job.cores = [core]
             job.run_time = [coreMin]
-
-            log("\ncontract_balance=" + str(ebb.getContractBalance()))
+            log(f"contract_balance={ebb.getContractBalance()}")
             jobID = 0
             execution_time = int(arguments[1]) - int(arguments[0])
             end_time = int(arguments[1])
@@ -1057,7 +1047,7 @@ def test_submit_job():
             withdraw(requester, refunded)
             log(f"received={received} | refunded={refunded}")
 
-    log("\ncontract_balance=" + str(ebb.getContractBalance()), "bold")
+    log(f"contract_balance={ebb.getContractBalance()}")
     # prints finalize version of the linked list.
     size = ebb.getProviderReceiptSize(provider)
     for idx in range(0, size):
@@ -1073,10 +1063,8 @@ def test_submit_job():
         f"is_private={ds.is_private} |"
         f"isVerified_Used={ds.is_verified_used}"
     )
-    log(
-        "received_storage_deposit="
-        + str(ebb.getReceivedStorageDeposit(provider, requester, source_code_hash, {"from": provider}))
-    )
+    received_storage_deposit = ebb.getReceivedStorageDeposit(provider, requester, source_code_hash, {"from": provider})
+    log(f"received_storage_deposit={received_storage_deposit}")
     console_ruler("DONE")
 
     """

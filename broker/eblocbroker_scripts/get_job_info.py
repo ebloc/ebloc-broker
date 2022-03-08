@@ -14,8 +14,6 @@ from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
 
 def analyze_data(self, key, provider=None):
     """Obtain information related to source-code data."""
-    # if not provider:
-    #     provider = env.PROVIDER_ID
     current_block_number = cfg.Ebb.get_block_number()
     self.received_block = []
     self.storage_duration = []
@@ -98,8 +96,8 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
 
 
 def get_job_source_code_hashes(self, provider, job_key, index, received_block_number=0):
-    # job_info["received_block_number"]
     """Source_code_hashes of the completed job is obtained from its event."""
+    # job_info["received_block_number"]
     self.set_job_received_block_number(received_block_number)
     try:
         event_filter = self._eBlocBroker.events.LogJob.createFilter(
@@ -267,7 +265,7 @@ def main():
         if len(sys.argv) == 6:
             received_block_number = int(sys.argv[5])
     else:
-        print("E: Please provide [provider, job_key, index, and job_id] as arguments")
+        log("E: Provide <provider, job_key, index, and job_id> as arguments")
         sys.exit(1)
 
     try:

@@ -69,16 +69,13 @@ class State:
     inv_code = {value: key for key, value in code.items()}
 
 
-def _connect_web3():
+def session_start_msg(slurm_user, block_number, pid):
+    """Print message at the beginning of Driver process and connect into web3."""
     if not cfg.w3:
         from broker.imports import connect_into_web3
 
         connect_into_web3()
 
-
-def session_start_msg(slurm_user, block_number, pid):
-    """Print message at the beginning of Driver process and connect into web3."""
-    _connect_web3()
     if not env.PROVIDER_ID and cfg.w3:
         PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
     else:
