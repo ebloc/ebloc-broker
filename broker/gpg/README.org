@@ -11,7 +11,7 @@ echo $key_id && gpg --list-keys $key_id
 gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key_id
 #+end_src
 
-----------------------------------------------------------------------
+------------------------------------------------------------------
 
 ** Requester
 
@@ -51,7 +51,6 @@ gpg> save
 #+begin_src bash
 gpg --list-keys
 gpg --batch --delete-key <key_id>
-
 gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'
 
 for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do

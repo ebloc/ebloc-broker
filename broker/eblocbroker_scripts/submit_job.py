@@ -21,15 +21,13 @@ def is_requester_valid(self, _from):
     _from = self.w3.toChecksumAddress(_from)
     *_, orcid = self._get_requester_info(_from)
     if not self.does_requester_exist(_from):
-        log(f"E: Requester's Ethereum address {_from} is not registered")
-        raise
+        raise Exception(f"E: Requester's Ethereum address {_from} is not registered")
 
     if not self._is_orc_id_verified(_from):
         if orcid:
-            log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+            raise Exception(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
         else:
-            log(f"E: Requester({_from})'s orcid is not registered")
-        raise
+            raise Exception(f"E: Requester({_from})'s orcid is not registered")
 
 
 def check_before_submit(self, provider, _from, provider_info, key, job):
@@ -46,7 +44,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             is_use_ipfs = True
             break
 
-    if not job.source_code_hashes:
+    if not job.code_hashes:
         raise Exception("source_code_hash list is empty")
 
     if len(key) >= 64:
@@ -93,7 +91,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                 raise QuietExit from e
 
-    for idx, source_code_hash in enumerate(job.source_code_hashes_str):
+    for idx, source_code_hash in enumerate(job.code_hashes_str):
         if source_code_hash == "":
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
@@ -153,10 +151,10 @@ def submit_job(self, provider, key, job, requester=None, account_id=None, requir
     ]
     job.print_before_submit()
     try:
-        # source_code_hashes_l = []
-        # for idx, source_code_hash in job.source_code_hashes:
-        #     source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
-        # log(f"==> source_code_hashes={source_code_hashes_l}")
+        # code_hashes_l = []
+        # for idx, source_code_hash in job.code_hashes:
+        #     code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
+        # log(f"==> code_hashes={code_hashes_l}")
         tx = self._submit_job(
             required_confs,
             _from,
@@ -165,11 +163,11 @@ def submit_job(self, provider, key, job, requester=None, account_id=None, requir
             job.data_transfer_ins,
             args,
             job.storage_hours,
-            job.source_code_hashes,
+            job.code_hashes,
         )
         return self.tx_id(tx)
     except TransactionError as e:
-        log(f"Warning: {e}")
+        log(f"warning: {e}")
         tx_hash = str(e).replace("Tx dropped without known replacement: ", "")
         if is_transaction_valid(tx_hash):
             return tx_hash

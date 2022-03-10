@@ -6,7 +6,7 @@ import time
 
 from broker.config import IgnoreThreadsFilter, ThreadFilter
 
-# Attach the IgnoreThreadsFilter to the main root log handler
+# Attach the IgnoreThreadsFilter to the main root log handler.
 # This is responsible for ignoring all log records originating from
 # new threads.
 main_handler = logging.FileHandler("/tmp/mainlogfile.log", "a")

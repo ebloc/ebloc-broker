@@ -3,6 +3,10 @@
 from broker._utils.tools import log
 
 
+def _percent(amount, ratio):
+    return float(format(amount * ratio / 100, ".2f"))
+
+
 def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
     try:
         initial = float(initial)

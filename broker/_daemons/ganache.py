@@ -4,10 +4,11 @@ import sys
 
 import daemon
 
-from broker import cfg
-from broker._utils.tools import print_tb
 from broker.config import env
-from broker.utils import is_ganache_on, is_npm_installed, log, popen_communicate
+from broker.utils import is_ganache_on, popen_communicate
+
+# from broker import cfg
+# from broker.utils import is_npm_installed, log
 
 
 def run(port=8547, hardfork_name="istanbul"):

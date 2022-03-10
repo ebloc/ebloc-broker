@@ -37,6 +37,17 @@ def has_context_name():
     return "name" in app.context
 
 
+@app.command("balance", "Returns user's earned money amount in Wei.")
+def balance(eth_address):
+    """Return block number.
+
+    :param str eth_address: Ethereum address of the provider
+    """
+    t1.join()
+    balance = Ebb.get_balance(eth_address)
+    log(f"## balance={balance}")
+
+
 @app.command("block_number", "Returns block number")
 def block_number():
     """Return block number."""
@@ -69,7 +80,7 @@ def get_providers():
 def list_registered_data_files(eth_address):
     """Return registered data files of the given provider.
 
-    :param str address: Ethereum address of the provider
+    :param str eth_address: Ethereum address of the provider
     """
     t1.join()
     try:

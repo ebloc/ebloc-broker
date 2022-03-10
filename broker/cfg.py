@@ -6,13 +6,22 @@ __ https://stackoverflow.com/a/12413139/2402577
 """
 from rich.console import Console
 
+__version__ = "2.0.0"
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 IS_BROWNIE_TEST = False
 IS_THREADING_ENABLED = True
+IS_PRIVATE_IPFS = False
+IS_BREAKPOINT = False
+IS_THREAD_JOIN = False
+#: variable to check is long test applied
+IS_FULL_TEST = False
+
+IPFS_TIMEOUT = 300
 TX_TIMEOUT = 1800
 BLOCK_DURATION = 6
-BLOCK_DURATION_1_HOUR = 3600 / BLOCK_DURATION
+BLOCK_DURATION_1_HOUR = int(3600 / BLOCK_DURATION)
 BLOCK_DURATION_1_DAY = BLOCK_DURATION_1_HOUR * 24
-IS_PRIVATE_IPFS = False
 IS_FULL_TEST = False
 IPFS_TIMEOUT = 300
 IS_THREAD_JOIN = False
@@ -43,7 +52,7 @@ class _Ipfs:
         if not self.ipfs:
             from broker.libs.ipfs import Ipfs
 
-            global ipfs
+            global ipfs  # noqa
             self.ipfs: "Ipfs" = Ipfs()
             ipfs = self.ipfs
 
@@ -59,7 +68,7 @@ class W3:
         if not self.w3:
             from brownie import web3
 
-            global w3
+            global w3  # noqa
             self.w3: "web3" = web3
             w3 = self.w3
 

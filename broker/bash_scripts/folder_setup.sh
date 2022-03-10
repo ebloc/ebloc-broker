@@ -29,20 +29,25 @@ set_email () {
 
 provider_setup () {
     ## configure_slurm
+    _FILE=$DIR/slurm_mail_prog.sh
     FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
-    [ ! -f $FILE ] && cp $FILE $DIR/
+    EMAIL=$(cat ~/.ebloc-broker/cfg.yaml | shyaml get-value cfg.gmail)
+    # [ ! -f $_FILE ] && cp $FILE $DIR/
+    cp $FILE $DIR/
+    line_old="EMAIL="
+    line_new=$EMAIL
+    sed -i.bak "s/^\(EMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
+    rm -f $DIR/slurm_mail_prog.sh.bak
     line_old="_HOME"
     line_new=$(echo $HOME | sed 's/\//\\\//g')
     sed -i.bak "s/^\(_HOME=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
     rm -f $DIR/slurm_mail_prog.sh.bak
 
-    venv_path=$HOME"/venv"
-    var=$(echo $venv_path | sed 's/\//\\\//g')
-    sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $DIR/slurm_mail_prog.sh
-    rm $DIR/slurm_mail_prog.sh.bak
-
-    email=$(cat $DIR/slurm_mail_prog.sh| grep EMAIL=)
-    yes_or_no "Do you want to change your email" $email && set_email
+    # venv_path=$HOME"/venv"
+    # var=$(echo $venv_path | sed 's/\//\\\//g')
+    # sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $DIR/slurm_mail_prog.sh
+    # rm $DIR/slurm_mail_prog.sh.bak
+    yes_or_no "Do you want to change your email" $EMAIL && set_email
 }
 
 configure_coinbase () { # coinbase address setup
@@ -184,7 +189,7 @@ fi
 # configure_coinbase
 # configure_oc
 # configure_ipfs
-echo -e "Warning: Update the following file "$TMP_DIR"/.eudat_client.txt' with
+echo -e "warning: Update the following file "$TMP_DIR"/.eudat_client.txt' with
 your EUDAT account's password. Best to make sure the file is not readable or
 even listable for anyone but you. You achieve this with:
 'chmod 700 eudat_password.txt'"

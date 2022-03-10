@@ -40,7 +40,7 @@ def eudat_submit(job: Job, is_pass=False, required_confs=1):
 if __name__ == "__main__":
     try:
         job = Job()
-        fn = "job_with_data.yaml"  # "job.yaml"
+        fn = "job.yaml"
         job.set_config(fn)
         eudat_submit(job)
     except KeyboardInterrupt:

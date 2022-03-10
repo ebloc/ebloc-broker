@@ -11,7 +11,7 @@ from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size
 from broker.libs import _git
-from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_time, is_ipfs_on, log, run_ipfs_daemon
+from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, run_ipfs_daemon
 
 
 class IpfsClass(Storage):
@@ -43,7 +43,7 @@ class IpfsClass(Storage):
             self.thread_log_setup()
 
         run_ipfs_daemon()
-        log(f"{br(get_time())} Job's source code has been sent through ", "bold cyan", end="")
+        log(f"{br(get_date())} Job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
             log("[bold green]IPFS")
         else:
@@ -63,9 +63,9 @@ class IpfsClass(Storage):
             return False
 
         self.registered_data_hashes = []
-        for idx, source_code_hash in enumerate(self.source_code_hashes):
+        for idx, source_code_hash in enumerate(self.code_hashes):
             if self.cloudStorageID[idx] == StorageID.NONE:
-                self.registered_data_hashes.append(source_code_hash)  ##
+                self.registered_data_hashes.append(source_code_hash)  # GOTCHA
             else:
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 if ipfs_hash not in self.ipfs_hashes:

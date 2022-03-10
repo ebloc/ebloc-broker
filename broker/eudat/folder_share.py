@@ -7,7 +7,7 @@ from broker import config
 from broker.config import env
 from broker.libs import eudat
 
-eudat.login("aalimog1@@boun.edu.tr", "/home/alper/.ebloc-broker/password_owncloud.txt", env.OC_CLIENT)
+eudat.login("aalimog1@@boun.edu.tr", expanduser("~/.ebloc-broker/password_owncloud.txt"), env.OC_CLIENT)
 folder_names = os.listdir(expanduser("~/oc"))
 for i in range(0, len(folder_names) - 1):
     name = folder_names[i]

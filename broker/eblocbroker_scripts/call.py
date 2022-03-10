@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# UNIX: enable executable from terminal with: chmod +x filename
 
 import os
-import sys
 import time
 
-import psutil  # 3rd party for demo
+import psutil
 
 from broker._utils._log import br, log
 from broker.config import env
@@ -16,7 +14,7 @@ def print_msg(msg):
     log(f"{br(string)} {msg}")
 
 
-def calculate(data, *args):
+def test():
     from brownie import network, project
 
     print_msg(f"parent pid: {psutil.Process().parent().pid}, start calculate()")
@@ -27,7 +25,20 @@ def calculate(data, *args):
     print_msg(f"parent pid: {psutil.Process().parent().pid}, end calculate()")
 
 
-if __name__ == "__main__":
+def calculate(func_name, *args):
+    from brownie import network, project
 
-    if len(sys.argv) > 1:
-        calculate(*sys.argv[1:])
+    print_msg(f"parent pid: {psutil.Process().parent().pid}, start calculate()")
+    print(f"func_name={func_name} | {args}")
+    network.connect("bloxberg")
+    project = project.load(env.CONTRACT_PROJECT_PATH)
+    ebb = project.eBlocBroker.at("0xccD25f5Ae21037a6DCCff829B01034E2fD332796")
+    print(ebb.getOwner())
+    print_msg(f"parent pid: {psutil.Process().parent().pid}, end calculate()")
+
+
+if __name__ == "__main__":
+    test()
+    # func_name = sys.argv[1]
+    # if len(sys.argv) > 1:
+    #     calculate(func_name, *sys.argv[2:])

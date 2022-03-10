@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
 
-"""UNIX: enable executable from terminal with: chmod +x filename."""
-
 if __name__ == "__main__":
     import call
 
     from broker.utils import run
 
-    # import logging
-    # import multiprocessing as mp
-    # mp.log_to_stderr(logging.DEBUG)
-
     filename = call.__file__
-    func_name = "getDataStoreDuration"
+    func_name = "getStorageInfo"
     data = (
         "",
         "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49",

@@ -120,7 +120,7 @@ def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
 
 
 def test_with_small_data(value):
-    fn = "/home/alper/test_eblocbroker/run_cppr/run.sh"
+    fn = os.path.expanduser("~/test_eblocbroker/run_cppr/run.sh")
     with open(fn, "r") as file:
         filedata = file.read()
         filedata = filedata.replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
@@ -147,7 +147,7 @@ def check_linked_data(paths_from, path_to, is_pass=False):
         print("")
         question_yes_no(
             "#> Would you like to continue with linked folder path in your run.sh?\n"
-            "If no, please feel free to update your run.sh file and continue",
+            "If no, feel free to update your run.sh file and continue",
             is_exit=True,
         )
 

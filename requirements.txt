@@ -26,25 +26,24 @@ appdirs==1.4.4
     # via
     #   virtualenv
 apscheduler==3.8.0
+argcomplete==2.0.0
 aspy.refactor-imports==2.1.1
     # via
     #   seed-isort-config
-astroid==2.8.4
+astroid==2.9.3
     # via
     #   pylint
 asttokens==2.0.5
     # via
     #   eth-brownie
     #   vyper
-async-timeout==4.0.1
+async-timeout==4.0.2
     # via
     #   aiohttp
     #   eth-brownie
 asynctest==0.13.0
-    # via
-    #   eth-brownie
 attrdict==2.0.1
-attrs==21.2.0
+attrs==21.4.0
     # via
     #   aiohttp
     #   automat
@@ -84,7 +83,7 @@ bitarray==1.2.2
     # via
     #   eth-account
     #   eth-brownie
-black==21.11b1
+black==22.1.0
     # via
     #   eth-brownie
 bleach==4.1.0
@@ -102,7 +101,6 @@ btrees==4.7.2
 cached-property==1.5.2
     # via
     #   aspy.refactor-imports
-    #   eth-brownie
     #   vulcano
 certifi==2021.10.8
     # via
@@ -125,7 +123,7 @@ chameleon==3.8.1
 chardet==4.0.0
     # via
     #   python-debian
-charset-normalizer==2.0.9
+charset-normalizer==2.0.11
     # via
     #   aiohttp
     #   eth-brownie
@@ -226,11 +224,11 @@ eth-abi==2.1.1
     #   eth-brownie
     #   eth-event
     #   web3
-eth-account==0.5.6
+eth-account==0.5.7
     # via
     #   eth-brownie
     #   web3
-eth-brownie==1.17.2
+eth-brownie==1.18.1
 eth-event==1.2.3
     # via
     #   eth-brownie
@@ -244,7 +242,7 @@ eth-keyfile==0.5.1
     # via
     #   eth-account
     #   eth-brownie
-eth-keys==0.3.3
+eth-keys==0.3.4
     # via
     #   eth-account
     #   eth-brownie
@@ -253,7 +251,7 @@ eth-rlp==0.2.1
     # via
     #   eth-account
     #   eth-brownie
-eth-typing==2.2.2
+eth-typing==2.3.0
     # via
     #   eip712
     #   eth-abi
@@ -295,7 +293,7 @@ flake8==4.0.1
     #   flake8-mypy
     #   flake8-noqa
 flake8-mypy==17.8.0
-flake8-noqa==1.2.0
+flake8-noqa==1.2.1
 flask==1.1.2
     # via
     #   grip
@@ -303,7 +301,7 @@ fonttools==4.28.3
     # via
     #   matplotlib
 forex-python==1.5
-frozenlist==1.2.0
+frozenlist==1.3.0
     # via
     #   aiohttp
     #   aiosignal
@@ -357,8 +355,6 @@ imagesize==1.3.0
     #   sphinx
 importchecker==2.0
 importlib-metadata==4.8.2
-    # via
-    #   eth-brownie
 importlib-resources==5.1.2
 importmagic==0.1.7
 incremental==17.5.0
@@ -373,7 +369,7 @@ iniconfig==1.1.1
     # via
     #   eth-brownie
     #   pytest
-install==1.3.4
+install==1.3.5
 ipdb==0.13.9
 ipfshttpclient @ https://github.com/avatar-lavventura/py-ipfs-http-client/archive/refs/heads/master.zip
     # via
@@ -430,7 +426,7 @@ lazr.uri==1.0.3
     # via
     #   launchpadlib
     #   wadllib
-lazy-object-proxy==1.6.0
+lazy-object-proxy==1.7.1
     # via
     #   astroid
     #   eth-brownie
@@ -467,7 +463,6 @@ mccabe==0.6.1
     #   flake8
     #   pylint
 mdv==1.7.4
-mercurial==5.4.2
 monotonic==1.6
     # via
     #   fasteners
@@ -480,7 +475,7 @@ morphys==1.0
 multiaddr==0.0.9
     # via
     #   eth-brownie
-multidict==5.2.0
+multidict==6.0.2
     # via
     #   aiohttp
     #   eth-brownie
@@ -493,7 +488,7 @@ multipart==0.2.4
 multitasking==0.0.9
     # via
     #   yfinance
-mypy==0.910
+mypy==0.931
     # via
     #   flake8-mypy
 mypy-extensions==0.4.3
@@ -518,7 +513,6 @@ ng==1.2.0
 nodeenv==1.6.0
     # via
     #   pre-commit
-    #   pyright
 numpy==1.19.4
     # via
     #   imageio
@@ -586,11 +580,11 @@ pillow==8.0.1
     #   imageio
     #   matplotlib
     #   reportlab
-pip-tools==6.4.0
+pip-tools==6.5.1
 pipenv==2020.11.15
 pipupgrade==1.10.1
 pkginfo==1.5.0.1
-platformdirs==2.4.0
+platformdirs==2.4.1
     # via
     #   black
     #   eth-brownie
@@ -604,16 +598,16 @@ pluggy==1.0.0
     #   tox
 ppi==0.0.4
 pre-commit==2.5.1
-prompt-toolkit==3.0.23
+prompt-toolkit==3.0.26
     # via
     #   eth-brownie
     #   ipython
     #   vulcano
-protobuf==3.19.1
+protobuf==3.19.4
     # via
     #   eth-brownie
     #   web3
-psutil==5.8.0
+psutil==5.9.0
     # via
     #   eth-brownie
 ptyprocess==0.7.0
@@ -645,9 +639,8 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
     # via
     #   service-identity
-pycairo==1.20.0
-    # via
-    #   pygobject
+pycairo==1.21.0
+    # via pygobject
 pycares==4.0.0
     # via
     #   aiodns
@@ -658,7 +651,7 @@ pycodestyle==2.8.0
 pycparser==2.20
     # via
     #   cffi
-pycryptodome==3.12.0
+pycryptodome==3.14.1
     # via
     #   eip712
     #   eth-brownie
@@ -669,7 +662,7 @@ pydocstyle==6.1.1
 pyflakes==2.4.0
     # via
     #   flake8
-pygments==2.10.0
+pygments==2.11.2
     # via
     #   colored-traceback
     #   eth-brownie
@@ -684,7 +677,7 @@ pygments==2.10.0
 pygments-lexer-solidity==0.7.0
     # via
     #   eth-brownie
-pygobject==3.36.0
+pygobject==3.42.0
 pygogo==0.13.2
 pyhamcrest==2.0.2
     # via
@@ -693,7 +686,7 @@ pyjwt==1.7.1
     # via
     #   eth-brownie
     #   pythx
-pylint==2.11.1
+pylint==2.12.2
 pymongo==3.11.0
 pymy==0.0.8
 pymysql==0.9.3
@@ -708,14 +701,13 @@ pynspector==0.0.4
 pyocclient==0.6
 pyopenssl==20.0.1
 pypandoc==1.6.3
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via
     #   eth-brownie
     #   matplotlib
     #   packaging
     #   vulcano
-pyright==0.0.9
-pyrsistent==0.18.0
+pyrsistent==0.18.1
     # via
     #   eth-brownie
     #   jsonschema
@@ -730,7 +722,7 @@ pytest==6.2.5
     #   ng
     #   pytest-forked
     #   pytest-xdist
-pytest-forked==1.3.0
+pytest-forked==1.4.0
     # via
     #   eth-brownie
     #   pytest-xdist
@@ -764,7 +756,7 @@ python-language-server==0.36.2
 python-lsp-jsonrpc==1.0.0
     # via
     #   python-lsp-server
-python-lsp-server==1.2.1
+python-lsp-server==1.3.3
 python-slugify==1.2.6
 pythx==1.6.1
     # via
@@ -784,14 +776,13 @@ pyyaml==5.4.1
     #   eth-brownie
     #   gshell
     #   pre-commit
+    #   shyaml
 readme-renderer==26.0
 regex==2021.11.10
     # via
-    #   black
     #   dateparser
-    #   eth-brownie
 reportlab==3.5.67
-requests[socks]==2.26.0
+requests[socks]==2.27.1
     # via
     #   eth-brownie
     #   forex-python
@@ -816,15 +807,15 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==11.0.0
+rich==12.0.0
 rlp==2.0.1
     # via
     #   eth-account
     #   eth-brownie
     #   eth-rlp
 roman==3.3
-rope==0.22.1
-ruamel.yaml==0.17.10
+rope==0.22.0
+ruamel.yaml==0.17.20
 ruamel.yaml.clib==0.2.6
     # via
     #   ruamel.yaml
@@ -847,6 +838,7 @@ setuptools-scm==6.3.2
 sexpdata==0.0.3
     # via
     #   epc
+shyaml==0.6.2
 simplejson==3.16.0
     # via
     #   forex-python
@@ -955,16 +947,16 @@ toml==0.10.2
     #   autopep8
     #   eth-brownie
     #   ipdb
-    #   mypy
     #   pep517
     #   pre-commit
     #   pylint
     #   pytest
     #   tox
-tomli==1.2.2
+tomli==2.0.0
     # via
     #   black
     #   eth-brownie
+    #   mypy
     #   setuptools-scm
 toolz==0.11.2
     # via
@@ -989,16 +981,13 @@ txaio==20.12.1
     # via
     #   autobahn
 typed-ast==1.5.1
-    # via
-    #   eth-brownie
 types-filelock==0.1.5
 types-pytz==2021.1.2
 types-pyyaml==6.0.0
 types-termcolor==1.1.1
-typing-extensions==3.10.0.2
+typing-extensions==4.0.1
     # via
     #   astroid
-    #   async-timeout
     #   black
     #   eth-brownie
     #   flake8-noqa
@@ -1018,7 +1007,7 @@ ujson==4.0.2
 unidecode==1.2.0
     # via
     #   python-slugify
-urllib3==1.26.7
+urllib3==1.26.8
     # via
     #   eth-brownie
     #   requests
@@ -1058,7 +1047,7 @@ wcwidth==0.2.5
     # via
     #   eth-brownie
     #   prompt-toolkit
-web3==5.25.0
+web3==5.27.0
     # via
     #   eth-brownie
 webdriver-manager==3.4.2
@@ -1107,7 +1096,6 @@ zexceptions==4.1
     #   accesscontrol
 zipp==3.6.0
     # via
-    #   eth-brownie
     #   importlib-metadata
 zodb==5.6.0
 zodbpickle==2.0.0

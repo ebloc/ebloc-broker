@@ -16,15 +16,17 @@ interface eBlocBrokerInterface {
         uint32 index,
         uint32 jobID,
         address recipient,
-        uint256 receivedWei, // Value in wei to be recevied by the provider
-        uint256 refundedWei, // Value in wei to be refunded to the requester
+        uint256 receivedWei, // value in wei to be recevied by the provider
+        uint256 refundedWei, // value in wei to be refunded to the requester
         uint256 completionTime,
         bytes32 resultIpfsHash,
         uint256 dataTransferIn,
         uint256 dataTransferOut
     );
 
-    // Records the updated jobs' information under setJobStatus*() method calls
+    /**
+     * @dev Records the updated jobs' information under setJobStatus*() method calls
+     */
     event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 stateCodes);
 
     // Records the submitted jobs' information under submitJob() method call
@@ -76,11 +78,11 @@ interface eBlocBrokerInterface {
 
     /**
        @notice
-       * For the requested job, the LogStoreDeposit() event logs the storage
+       * For the requested job, the LogDepositStorage() event logs the storage
          deposit transferred to its provider, which was processed either by the
-         submitJob() or the receiveStoreDeposit() function.
+         submitJob() or the depositStorage() function.
      */
-    event LogStoreDeposit(address indexed paidAddress, uint256 payment);
+    event LogDepositStorage(address indexed paidAddress, uint256 payment);
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 }

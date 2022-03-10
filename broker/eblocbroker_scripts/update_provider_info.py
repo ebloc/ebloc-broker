@@ -10,27 +10,27 @@ from broker.eblocbroker_scripts.register_provider import get_ipfs_id
 from broker.errors import QuietExit
 
 
-def is_provider_info_match(self, email, ipfs_id):
+def is_provider_info_match(self, email, ipfs_id, gpg_fingerprint, f_id):
     try:
         provider_info = self.get_provider_info(env.PROVIDER_ID)
         if (
             provider_info["gpg_fingerprint"] == gpg_fingerprint.upper()
             and provider_info["email"] == email
-            and provider_info["f_id"] == federation_cloud_id
+            and provider_info["f_id"] == f_id
             and provider_info["ipfs_id"] == ipfs_id
         ):
             log(provider_info)
             raise QuietExit("warning: Given information is same with the cluster's saved info. Nothing to do.")
 
-        tx = self._update_provider_info(f"0x{gpg_fingerprint}", email, federation_cloud_id, ipfs_id)
+        tx = self._update_provider_info(f"0x{gpg_fingerprint}", email, f_id, ipfs_id)
         return self.tx_id(tx)
     except Exception as e:
         raise e
 
 
-def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs_id):
+def update_provider_info(self, gpg_fingerprint, email, f_id, ipfs_id):
     """Update provider info."""
-    if len(federation_cloud_id) >= 128:
+    if len(f_id) >= 128:
         raise Exception("E: federation_cloud_id could be lesser than 128")
 
     if len(email) >= 128:
@@ -44,7 +44,7 @@ def update_provider_info(self, gpg_fingerprint, email, federation_cloud_id, ipfs
         log(f"E: gpg_fingerprint={gpg_fingerprint} length should be 40")
         raise QuietExit
 
-    return self.is_provider_info_match(email, ipfs_id)
+    return self.is_provider_info_match(email, ipfs_id, gpg_fingerprint, f_id)
 
 
 if __name__ == "__main__":
@@ -56,14 +56,14 @@ if __name__ == "__main__":
         ipfs_id = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_id, flags=re.DOTALL)
 
     gpg_fingerprint = get_gpg_fingerprint(env.GMAIL)
-    federation_cloud_id = env.F_ID
+    f_id = env.F_ID
     log(f"## gmail=[magenta]{env.GMAIL}")
     log(f"## gpg_fingerprint={gpg_fingerprint}")
     log(f"## ipfs_id=[magenta]{ipfs_id}")
-    log(f"## fid=[magenta]{federation_cloud_id}")
+    log(f"## fid=[magenta]{f_id}")
     try:
         is_gpg_published(gpg_fingerprint)
-        tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, federation_cloud_id, ipfs_id)
+        tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_id)
         receipt = get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)

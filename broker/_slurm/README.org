@@ -1,8 +1,9 @@
 * SLURM Emulator Mode Setup
 
-__ [[http://wildflower.diablonet.net/~scaron/slurmsetup.html]]
-__ [[https://slurm.schedmd.com/faq.html#multi_slurmd]]
-__ [[https://stackoverflow.com/a/40707189/2402577]]
+- [[http://wildflower.diablonet.net/~scaron/slurmsetup.html]]
+- [[https://slurm.schedmd.com/faq.html#multi_slurmd]]
+- [[https://stackoverflow.com/a/40707189/2402577]]
+- [[https://www.hpc.caltech.edu/documentation/slurm-commands]]
 
 ** Package install
 
@@ -20,8 +21,8 @@ make clean
 ./configure --enable-debug --enable-front-end  # seems like this also works
 ./configure --enable-debug --enable-front-end --enable-multiple-slurmd
 sudo make && sudo make install
-sudo cp ~/ebloc-broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
-sudo cp ~/ebloc-broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
+sudo cp ~/ebloc-broker/broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
+sudo cp ~/ebloc-broker/broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
 
 sudo chmod 755 /usr/local/etc/slurmdbd.conf
 sudo chmod 755 /usr/local/etc/slurm.conf
@@ -47,7 +48,6 @@ PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #+end_src
 
-
 # ./configure --enable-multiple-slurmd  # emulator-mode
 # ./configure --enable-debug --enable-front-end --enable-multiple-slurmd
 
@@ -59,7 +59,7 @@ NodeName=cn[01-02] Procs=1 ThreadsPerCore=1 Sockets=1 CoresPerSocket=1 RealMemor
 # PARTITIONS
 PartitionName=DEFAULT State=UP MaxTime=28-00:00:00 DefaultTime=01:00:00 PreemptMode=REQUEUE Priority=10000 Shared=FORCE:1
 PartitionName=production Default=YES Nodes=cn[01-02]
---
+
 # COMPUTE NODES
 NodeName=ebloc[1-2] NodeHostName=localhost NodeAddr=127.0.0.1 CPUs=2
 PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
@@ -67,7 +67,6 @@ PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
 # Emulator mode 128 nodes
 NodeName=ebloc[1-2] NodeHostName=ebloc NodeAddr=79.123.177.145 CPUs=1
 PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
-
 #+end_src
 
 ** Set things up for slurmdbd (the SLURM accounting daemon) in MySQL. !(slurm == $(username))!
@@ -77,37 +76,41 @@ Should run ~sudo slurmdbd~ on the background in order to register the slurm-user
 #+begin_src bash
 sudo slurmdbd
 sudo /etc/init.d/mysql start
-
 sudo su
 mysql -u root -p [ENTER]
-Enter password: [ENTER]
+#+end_src
 
+#+begin_src sql
 create database slurm_acct_db;
-CREATE USER 'alper'@'localhost' IDENTIFIED BY '12345';     # 'alper'=> $(whoami)
+CREATE USER 'alper'@'localhost' IDENTIFIED BY '12345';  # 'alper'=> $(whoami)
 grant usage on *.* to 'alper'@'localhost';
 grant all privileges on slurm_acct_db.* to 'alper'@'localhost';
 flush privileges;
 exit;
+#+end_src
 
+#+begin_src sql
 SELECT User, Host FROM mysql.user;
 SELECT User FROM mysql.user;
 SHOW DATABASES;
 DROP DATABASE slurm_acct_db;
 #+end_src
 
-
-** Cont
+** Cont.
 
 Should run ~sudo slurmdbd~ on the background in order to register the slurm-user.
 
 #+begin_src bash
-sudo slurmdbd
+sudo slurmdbd && sleep 1
 user_name=$(whoami)
-sacctmgr add cluster $(hostname) --immediate
+sacctmgr add cluster $(hostname -s) --immediate
 sacctmgr add account $user_name --immediate
 sacctmgr create user $user_name defaultaccount=$user_name adminlevel=None --immediate
+#+end_src
 
-# help: following line is required only to remove
+*** help: following line is required only to remove
+
+#+begin_src bash
 sacctmgr remove user where user=user_name
 #+end_src
 
@@ -116,13 +119,14 @@ sacctmgr remove user where user=user_name
 *** Check registered provider and users
 
 #+begin_src bash
+user=$(whoami)
 sacctmgr list cluster
 sacctmgr show assoc format=account
-sacctmgr show assoc format=account,user,partition where user=<user_name>
+sacctmgr show assoc format=account,user,partition where user=$user
 sacctmgr show user -s
 #+end_src
 
-~$ scontrol show nodes~
+~scontrol show nodes~
 
 *** Provider
 
@@ -138,7 +142,6 @@ id -u username
 pkill -U UID
 sudo usermod -u 1000 username
 #+end_src
-
 
 -------------
 

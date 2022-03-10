@@ -24,11 +24,10 @@ from broker._utils import _log
 from broker._utils._getch import _Getch
 from broker._utils._log import br
 from broker._utils.tools import WHERE, _exit, is_process_on, log, print_tb, run
-from broker.config import env, logging
+from broker.config import env
 from broker.errors import QuietExit
 
 Qm = b"\x12 "
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 empty_bytes32 = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -152,7 +151,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
     except socket.error as e:
-        print(e)
+        log(f"E: {e}")
         return False
 
 
@@ -163,7 +162,7 @@ def sleep_timer(sleep_duration):
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
-    sys.stdout.write("\rSleeping is done                                \n")
+    sys.stdout.write("\rsleeping is done                                \n")
 
 
 def remove_ansi_escape_sequence(string):
@@ -217,20 +216,20 @@ def run_with_output(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-def popen_communicate(cmd, stdout_file=None, mode="w", _env=None):
+def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
     """Act similir to run(cmd).
 
-    But also returns the output message captures on during the run stdout_file
+    But also returns the output message captures on during the run stdout_fn
     is not None in case of nohup process writes its results into a file.
 
     * How to catch exception output from Python subprocess.check_output()?:
     __ https://stackoverflow.com/a/24972004/2402577
     """
     cmd = list(map(str, cmd))  # all items should be string
-    if stdout_file is None:
+    if stdout_fn is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:
-        with open(stdout_file, mode) as outfile:
+        with open(stdout_fn, mode) as outfile:
             # output written into file, error will be returned
             p = Popen(cmd, stdout=outfile, stderr=PIPE, env=_env, universal_newlines=False)
             output, error = p.communicate()
@@ -253,9 +252,8 @@ def is_transaction_valid(tx_hash) -> bool:
 
 
 def is_transaction_passed(tx_hash) -> bool:
-    receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
     with suppress(Exception):
-        if receipt["status"] == 1:
+        if cfg.w3.eth.get_transaction_receipt(tx_hash)["status"] == 1:
             return True
 
     return False
@@ -265,7 +263,7 @@ def insert_character(string, index, char) -> str:
     return string[:index] + char + string[index:]
 
 
-def get_time():
+def get_date():
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -289,20 +287,16 @@ def bytes32_to_ipfs(bytes_array):
         merge = Qm + bytes_array
         return base58.b58encode(merge).decode("utf-8")
     else:
-        logging.info(f"{isinstance} is not a bytes instance")
+        log(f"bytes_array={bytes_array} is not a bytes instance")
+
     return bytes_array
 
 
-def _ipfs_to_bytes32(hash_str: str):
-    """Convert ipfs hash into bytes32 format."""
-    bytes_array = base58.b58decode(hash_str)
-    b = bytes_array[2:]
-    return binascii.hexlify(b).decode("utf-8")
-
-
 def ipfs_to_bytes32(ipfs_hash: str) -> bytes:
-    ipfs_hash_bytes32 = _ipfs_to_bytes32(ipfs_hash)
-    return cfg.w3.toBytes(hexstr=ipfs_hash_bytes32)
+    """Convert ipfs hash into bytes32 format."""
+    bytes_array = base58.b58decode(ipfs_hash)
+    b = bytes_array[2:]
+    return cfg.w3.toBytes(hexstr=binascii.hexlify(b).decode("utf-8"))
 
 
 def byte_to_mb(size_in_bytes: float) -> int:
@@ -323,16 +317,7 @@ def generate_md5sum(path: str) -> str:
         tar_hash = check_output(["md5sum", path]).decode("utf-8").strip()
         return tar_hash.split(" ", 1)[0]
     else:
-        logging.error(f"E: {path} does not exist")
-        raise
-
-
-def getcwd():
-    try:
-        cwd = os.path.dirnamegetcwd(os.path.abspath(__file__))
-    except:
-        cwd = os.getcwd()
-    return cwd
+        raise Exception(f"{path} does not exist")
 
 
 def eth_address_to_md5(address):
@@ -447,12 +432,12 @@ def is_geth_on():
         raise QuietExit
 
 
-def run_ipfs_daemon():
+def run_ipfs_daemon(_is_print=False):
     """Check that does IPFS run on the background or not."""
-    if is_ipfs_on():
+    if is_ipfs_on(_is_print):
         return True
 
-    log("Warning: [green]IPFS[/green] does not work on the background")
+    log("warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
     output = run(["python3", env.EBLOCPATH / "broker" / "python_scripts" / "run_ipfs_daemon.py"])
     while True:
@@ -465,6 +450,7 @@ def run_ipfs_daemon():
 
         if is_ipfs_on(is_print=True):
             return True
+
     return False
 
 
@@ -584,7 +570,7 @@ def compress_folder(folder_path, is_exclude_git=False):
     Note that to get fully reproducible tarballs, you should also impose the
     sort order used by tar
 
-    __ https://unix.stackexchange.com/a/438330/198423  == (Eac time tar produces different files)
+    __ https://unix.stackexchange.com/a/438330/198423  == (Each time tar produces different files)
     __ https://unix.stackexchange.com/questions/580685/why-does-the-pigz-produce-a-different-md5sum
     """
     base_name = os.path.basename(folder_path)
@@ -627,8 +613,8 @@ def compress_folder(folder_path, is_exclude_git=False):
             cmd,
             stdin=p2.stdout,
             stdout=PIPE,
-            env={"PIGZ": "-n"},
-        )  # __  "GZIP" alternative
+            env={"PIGZ": "-n"},  # env={"GZIP": "-n"},  # alternative
+        )
         p2.stdout.close()
         p3.communicate()
         tar_hash = generate_md5sum(tar_base)

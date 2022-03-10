@@ -1,0 +1,7 @@
+c:      # my comment
+    b:
+        f: 5
+    x: {g: 6}
+a:
+    z: 4
+    b: 4    # my comment

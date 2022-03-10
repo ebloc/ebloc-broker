@@ -53,7 +53,7 @@ library Lib {
         address payable provider;
         /* A uint32 value containing the block number when the requested
          * provider set its prices most recent. */
-        uint32 providerPriceBlockIndex;
+        uint32 priceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
            stored and shared using either IPFS, EUDAT, IPFS (with GPG
            encryption), or Google Drive. */
@@ -89,12 +89,12 @@ library Lib {
     }
 
     struct Storage {
-        uint256 received; // Received payment for storage usage
+        uint256 received; // received payment for storage usage
     }
 
-    struct JobStorageTime {
+    struct JobStorage {
         uint32 receivedBlock;
-        uint32 storeDuration;
+        uint32 storageDuration;
         bool isPrivate;
         bool isVerifiedUsed; // Set to True if the requester is used and verified the given sourceCodeHash
         //address      owner; //Cloud be multiple owners
@@ -138,7 +138,7 @@ library Lib {
         uint32 committedBlock; // Block number when  is registered in order the watch provider's event activity
         bool isRunning; // Flag that checks is Provider running or not
         mapping(uint256 => ProviderInfo) info;
-        mapping(bytes32 => JobStorageTime) jobSt; // Stored information related to job's storage time
+        mapping(bytes32 => JobStorage) jobSt; // Stored information related to job's storage time
         mapping(bytes32 => RegisteredData) registeredData;
         mapping(address => mapping(bytes32 => Storage)) storageInfo;
         mapping(string => Status[]) jobStatus; // All submitted jobs into provider 's Status is accessible
@@ -360,17 +360,13 @@ library Lib {
         }
     }
 
-    /* used for tests */
-    function getReceiptListSize(LL storage self) external view returns (uint32) {
-        return self.length;
-    }
-
-    /* used for test */
-    function printIndex(LL storage self, uint32 index) external view returns (uint256 _index, int32) {
-        _index = self.tail;
+    /* used for test getReceiptListSize */
+    function printIndex(LL storage self, uint32 index) external view returns (uint32, uint256 idx, int32) {
+        idx = self.tail;
         for (uint256 i = 0; i < index; i++) {
-            _index = self.items[_index].next;
+            idx = self.items[idx].next;
         }
-        return (self.items[_index].endpoint, self.items[_index].core);
+        // self.length: receipt_list_size
+        return (self.length, self.items[idx].endpoint, self.items[idx].core);
     }
 }

@@ -35,7 +35,7 @@ node -v
 # ganache-cli
 # ===========
 export NODE_OPTIONS=--openssl-legacy-provider
-sudo npm install -g ganache-cli --unsafe-perm
+sudo npm install -g ganache-cli  # --unsafe-perm
 
 # go
 sudo snap install go --classic
@@ -115,27 +115,24 @@ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb
     sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 sudo apt update
 sudo apt-get install -y mongodb-org
-# sudo mkdir /var/lib/mongodb
-# sudo mkdir /var/log/mongodb
 sudo chown -R mongodb. /var/log/mongodb
 sudo chown -R mongodb. /var/lib/mongodb
 sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
 sudo systemctl start mongod.service
-sudo systemctl --no-pager status --full mongod
 sudo systemctl unmask mongodb
 sudo systemctl enable mongod
+sudo systemctl --no-pager status --full mongod
 
 # ebloc-broker pip packages
 # =========================
 VENV=$HOME/venv
 python3.8 -m venv $VENV
-source $VENV/bin/activate
-$VENV/bin/python3.8 -m pip install --upgrade pip
+source $VENV/bin/activate && $VENV/bin/python3.8 -m pip install --upgrade pip
 sudo apt-get install -y libssl-dev zlib1g-dev gcc g++ make
 sudo apt install libgirepository1.0-dev
 python3 -m pip install --no-use-pep517 cm-rgb
 pip install wheel
-pip install pycairo  # dbus-python
+# pip install pycairo  # dbus-python
 cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver
 
 sudo chown $(logname) -R $HOME/.cache/black
@@ -187,7 +184,6 @@ cd $HOME
 ~/ebloc-broker/broker/python_scripts/add_bloxberg_into_network_config.py
 cd ~/ebloc-broker/contract/
 brownie compile
-
 cd
 gpg --gen-key
 gpg --list-keys
@@ -197,9 +193,7 @@ sudo mkdir /oc
 sudo chown $(whoami) /oc
 sudo chown -R $(whoami) /oc
 # sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
-#------------------------------------------------------------------------------
-# Provider
-#------------------------------------------------------------------------------
+
 yes_or_no () {
     while true; do
         string="$GREEN#>$NC $* [Y/n]:"
@@ -212,9 +206,21 @@ yes_or_no () {
     done
 }
 
-provider_setup () {
+# provider
+# ========
+install_slurm_and_requirements () {
+    # mysql
+    # =====
+    sudo apt update
+    sudo apt install -y mysql-server
+    sudo apt-get install -y libmunge-dev libmunge2 munge
+    sudo apt-get install -y mysql-client libmysqlclient-dev default-libmysqlclient-dev
+
     # slurm
     # =====
+    sudo mkdir -p /var/log/slurm
+    sudo chown $(whoami) -R /var/log/slurm
+
     git clone https://github.com/SchedMD/slurm $HOME/slurm
     cd $HOME/slurm
     git checkout e2e21cb571ce88a6dd52989ec6fe30da8c4ef15f  # slurm-19-05-8-1
@@ -223,31 +229,28 @@ provider_setup () {
     ./configure --enable-debug --enable-front-end
     sudo make
     sudo make install
-    sudo cp ~/ebloc-broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
-    sudo cp ~/ebloc-broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
-    sudo chmod 0600 /usr/local/etc/slurmdbd.conf
-    sudo chmod 0600 /usr/local/etc/slurm.conf
+
+    # configurations
+    # ==============
+    sudo groupadd eblocbroker
+    sudo cp ~/ebloc-broker/broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
+    sudo cp ~/ebloc-broker/broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
+    # sudo chmod 755 /usr/local/etc/slurm.conf  # 0600 ?
+    # sudo chmod 755 /usr/local/etc/slurmdbd.conf  # 0600 ?
     sudo chown $(whoami) /usr/local/etc/slurmdbd.conf
     sudo chown munge:munge /etc/munge/munge.key
     sudo chmod 400 /etc/munge/munge.key
-    sudo systemctl enable slurmctld
-    sudo systemctl enable slurmdbd
     sudo systemctl enable munge
     sudo systemctl start munge
-
     mkdir -p /tmp/run
-    sudo groupadd eblocbroker
-
-    # mailutils
-    # =========
     sudo apt-get install mailutils -y
+    # sudo systemctl enable slurmctld  # Controller
+    # sudo systemctl enable slurmdbd  # Database
+    # sudo systemctl enable slurmd  # Compute Nodes
+}
 
-    # mysql
-    # =====
-    sudo apt update
-    sudo apt install -y mysql-server
-    sudo apt-get install -y libmunge-dev libmunge2 munge
-    sudo apt-get install -y mysql-client libmysqlclient-dev default-libmysqlclient-dev
+provider_setup () {
+    install_slurm_and_requirements
 }
 
 echo ""

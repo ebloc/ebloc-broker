@@ -29,6 +29,9 @@ def mine(block_number):
     __ https://stackoverflow.com/a/775075/2402577
     __ https://stackoverflow.com/a/775095/2402577
     """
+    if block_number == cfg.BLOCK_DURATION_1_HOUR:
+        log(f"## mining for {cfg.BLOCK_DURATION_1_HOUR} blocks...")
+
     seconds = block_number * cfg.BLOCK_DURATION
     height = w3.eth.blockNumber
     timestamp_temp = w3.eth.getBlock(height)["timestamp"]

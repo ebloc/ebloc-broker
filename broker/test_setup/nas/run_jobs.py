@@ -13,7 +13,7 @@ from web3.logs import DISCARD
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import console_ruler
-from broker._utils.tools import _time, _timestamp, countdown, is_process_on, log, run
+from broker._utils.tools import _date, _timestamp, countdown, is_process_on, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.libs import gdrive
@@ -206,11 +206,11 @@ def main():
                     storage = random.choice(ipfs_ids)
 
                 if selected_benchmark == "nas":
-                    log(f" * Submitting job from NAS Benchmark to [green]{provider_address}", "bold blue")
+                    log(f" * Submitting job from NAS Benchmark to [green]{provider_address}", "blue")
                     yaml_cfg = Yaml(nas_yaml_fn)
                     benchmark_name = create_nas_job_script()
                 elif selected_benchmark == "cppr":
-                    log(f" * Submitting job with cppr datasets to [green]{provider_address}", "bold blue")
+                    log(f" * Submitting job with cppr datasets to [green]{provider_address}", "blue")
                     yaml_cfg = Yaml(cppr_yam_fn)
                     hash_small_data, hash_med_data = create_cppr_job_script()
                     yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
@@ -225,7 +225,7 @@ def main():
                 yaml_cfg["config"]["provider_address"] = provider_address
                 try:
                     submit_base = SubmitBase(yaml_cfg.path)
-                    submission_date = _time()
+                    submission_date = _date()
                     submission_timestamp = _timestamp()
                     requester_address = random.choice(users).lower()
                     yaml_cfg["config"]["requester_address"] = requester_address

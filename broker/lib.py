@@ -69,16 +69,13 @@ class State:
     inv_code = {value: key for key, value in code.items()}
 
 
-def _connect_web3():
+def session_start_msg(slurm_user, block_number, pid):
+    """Print message at the beginning of Driver process and connect into web3."""
     if not cfg.w3:
         from broker.imports import connect_into_web3
 
         connect_into_web3()
 
-
-def session_start_msg(slurm_user, block_number, pid):
-    """Print message at the beginning of Driver process and connect into web3."""
-    _connect_web3()
     if not env.PROVIDER_ID and cfg.w3:
         PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
     else:
@@ -103,7 +100,6 @@ def calculate_size(path, _type="MB") -> float:
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # type: ignore
-    byte_size = 0.0
     byte_size = float(p2.communicate()[0].decode("utf-8").strip())
     if _type == "bytes":
         return byte_size
@@ -113,6 +109,7 @@ def calculate_size(path, _type="MB") -> float:
 
 def subprocess_call(cmd, attempt=1, sleep_time=1):
     """Run subprocess."""
+    error_msg = ""
     cmd = list(map(str, cmd))  # always should be type: str
     for count in range(attempt):
         try:
@@ -124,10 +121,7 @@ def subprocess_call(cmd, attempt=1, sleep_time=1):
                     log(f"{error_msg} ", "bold", end="")
                     log(WHERE())
 
-                if count + 1 == attempt:
-                    raise Exception(error_msg)
-
-                if attempt > 1:
+                if attempt > 1 and count + 1 != attempt:
                     log(f"{br(f'attempt={count}')} ", end="")
                     time.sleep(sleep_time)
             else:
@@ -139,15 +133,16 @@ def subprocess_call(cmd, attempt=1, sleep_time=1):
 
             raise e
 
+    raise Exception(error_msg)
+
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:
     """Run command pipe output into give file."""
-    p, output, error = popen_communicate(cmd, stdout_file=path, mode=mode)
+    p, output, error = popen_communicate(cmd, stdout_fn=path, mode=mode)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", "red")
-        log(f"E: scontrol error\n{output}")
-        raise
+        raise Exception(f"E: scontrol error:\n{output}")
 
     # log(f"## writing into path({path}) is completed")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed

@@ -5,10 +5,7 @@ import argparse
 from pymongo import MongoClient
 from rich.pretty import pprint
 
-try:
-    from broker._utils._log import log
-except:
-    from ebloc_broker.broker._utils._log import log
+from broker._utils._log import log
 
 
 class BaseMongoClass:
@@ -60,7 +57,7 @@ class MongoBroker(BaseMongoClass):
             "received_block_number": job_info["received_block_number"],
             "timestamp": timestamp,
             "cloudStorageID": cloud_storage_id,
-            "store_duration": job_info["store_duration"],
+            "storage_duration": job_info["storage_duration"],
             "receieved": False,
             "set_job_status_running_tx": "",
         }

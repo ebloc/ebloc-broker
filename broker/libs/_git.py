@@ -78,7 +78,6 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     This shows all the changes since the last commit, whether or not they have been staged for commit
     or not.
     """
-    sep = "*"  # separator in between the string infos
     is_file_empty = False
     with cd(path):
         log(f"==> Navigate to {path}")
@@ -92,13 +91,14 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
             # first ignore deleted files not to be added into git
             run([env.BASH_SCRIPTS_PATH / "git_ignore_deleted.sh"])
             head_commit_id = repo.rev_parse("HEAD")
+            sep = "~"  # separator in between the string infos
             patch_name = f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
         except:
             return False
 
-        patch_upload_name = f"{patch_name}.gz"  # file to be uploaded as zip
-        patch_file = f"{target_path}/{patch_upload_name}"
-        logging.info(f"patch_path={patch_upload_name}")
+        patch_upload_fn = f"{patch_name}.gz"  # file to be uploaded as zip
+        patch_file = f"{target_path}/{patch_upload_fn}"
+        logging.info(f"patch_path={patch_upload_fn}")
         try:
             repo.git.add(A=True)
             diff_and_gzip(patch_file)
@@ -107,14 +107,14 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
 
     time.sleep(0.25)
     if is_gzip_file_empty(patch_file):
-        log("==> Created patch file is empty, nothing to upload")
+        log("==> created patch file is empty, nothing to upload")
         with suppress(Exception):
-            os.remove(patch_upload_name)
+            os.remove(patch_upload_fn)
+            os.remove(patch_file)
 
-        os.remove(patch_file)
         is_file_empty = True
 
-    return patch_upload_name, patch_file, is_file_empty
+    return patch_upload_fn, patch_file, is_file_empty
 
 
 def add_all(repo=None):
@@ -186,7 +186,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
 
     with cd(git_folder):
         base_name = path_leaf(patch_file)
-        log(f"==> {base_name}")
+        log(f"==> [magenta]{base_name}")
         # folder_name = base_name_split[2]
         #
         # base_name_split = base_name.split("_")
@@ -195,21 +195,25 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
         # run(["git", "reset", "--hard"])
         # run(["git", "clean", "-f"])
         # echo "\n" >> patch_file.txt seems like fixing it
-        with open(patch_file, "a") as myfile:
-            myfile.write("\n")
-
-        run(
-            [
-                "git",
-                "apply",
-                "--reject",
-                "--whitespace=fix",
-                "--ignore-space-change",
-                "--ignore-whitespace",
-                "--verbose",
-                patch_file,
-            ]
-        )
+        #
+        # with open(patch_file, "a") as myfile:
+        #     myfile.write("\n")
+        cmd = [
+            "git",
+            "apply",
+            "--reject",
+            "--whitespace=fix",
+            "--ignore-space-change",
+            "--ignore-whitespace",
+            "--verbose",
+            patch_file,
+        ]  # ,is_quiet=True,
+        cmd_summary = cmd.copy()
+        cmd_summary.insert(3, "--summary")
+        output = run(cmd_summary)
+        log(output)
+        output = run(cmd)
+        log(output)
 
 
 def is_repo(folders):

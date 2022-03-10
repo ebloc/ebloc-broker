@@ -8,6 +8,7 @@ make
 gcc
 g++
 snap
+rsync
 autotools-dev
 libicu-dev
 libbz2-dev

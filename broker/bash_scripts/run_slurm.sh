@@ -1,14 +1,19 @@
 #!/bin/bash
 
+MA="\033[33;35m"; RED="\033[1;31m"; GREEN="\033[1;32m"; PURPLE="\033[1;34m"; NC="\033[0m"
+verbose=false
 alias sudo='nocorrect sudo'
 USER=$(whoami)
 if [[ $(whoami) == "root" ]] ; then
-    echo "==> logname="$(logname)
+    echo -e "$PURPLE##$NC logname=$MA"$(logname)$NC
+    echo -e "$PURPLE##$NC hostname=$MA"$(hostname -s)$NC
     USER=$(logname)
 fi
 
-verbose=false
-sudo killall slurmd slurmdbd slurmctld > /dev/null 2>&1
+sudo killall slurmd > /dev/null 2>&1
+sudo killall slurmdbd > /dev/null 2>&1
+sudo killall slurmctld > /dev/null 2>&1
+
 sudo rm -f /var/run/slurmdbd.pid
 sudo chown $USER /var/run/slurmctld.pid 2>/dev/null
 sudo chown $USER -R /var/log/slurm/
@@ -16,16 +21,13 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 sudo $DIR/run_munge.sh
 sudo /usr/local/sbin/slurmd
 # sudo /usr/local/sbin/slurmd -N $(hostname -s)  # emulate mode
-sudo /usr/local/sbin/slurmdbd &
+sudo slurmdbd &
 sleep 2.0
 sudo -u $USER mkdir -p /tmp/slurmstate
 sudo chown -R $USER /tmp/slurmstate
-
-sudo systemctl --no-pager status --full mongod
-sudo systemctl --no-pager status --full systemd-journald
-
+# sudo systemctl --no-pager status --full systemd-journald
 if [ "$verbose" = true ] ; then
-    sudo /usr/local/sbin/slurmctld -cDvvvvvv  # verbose
+    sudo /usr/local/sbin/slurmctld -cDvvvvvv
     # sudo -u $(logname) /usr/local/sbin/slurmctld -cDvvvvvv
 else
     sudo -u $USER /usr/local/sbin/slurmctld -c

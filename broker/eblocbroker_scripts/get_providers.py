@@ -13,13 +13,11 @@ if __name__ == "__main__":
         providers = Ebb.get_providers()
         if len(providers) == 0:
             log("E: There is no registered provider")
-
-        if len(providers) > 0:
+        else:
             log("providers:", "bold green")
 
         for provider in providers:
             log(provider.lower())
-
     except QuietExit:
         sys.exit(1)
     except Exception as e:
