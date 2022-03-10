@@ -16,7 +16,7 @@ from ipdb import launch_ipdb_on_exception
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._log import console_ruler, log, ok
-from broker._utils.tools import is_process_on, kill_process_by_name, print_tb
+from broker._utils.tools import _squeue, is_process_on, kill_process_by_name, print_tb
 from broker.config import env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
@@ -29,7 +29,7 @@ from broker.utils import (
     StorageID,
     check_ubuntu_packages,
     eth_address_to_md5,
-    get_time,
+    get_date,
     is_driver_on,
     is_geth_on,
     is_internet_on,
@@ -45,14 +45,11 @@ with suppress(Exception):
     from broker.eblocbroker_scripts import Contract
 
 
-# from threading import Thread
-# from multiprocessing import Process
+cfg.IS_BREAKPOINT = True
 pid = os.getpid()
-given_block_number = 0
-cfg.IS_FULL_TEST = True
 
-# if cfg.IS_FULL_TEST:
-#     os.environ["PYTHONBREAKPOINT"] = "0"
+if not cfg.IS_BREAKPOINT:
+    os.environ["PYTHONBREAKPOINT"] = "0"
 
 
 def wait_until_idle_core_available():
@@ -66,7 +63,7 @@ def wait_until_idle_core_available():
             break
 
 
-def _tools(block_continue):
+def _tools(block_continue):  # noqa
     """Check whether the required functions are running or not.
 
     :param block_continue: Continue from given block number
@@ -89,7 +86,7 @@ def _tools(block_continue):
             raise QuietExit
 
         slurm.is_on()
-        if not is_process_on("mongod", "mongod"):
+        if not is_process_on("mongod"):
             raise Exception("mongodb is not running in the background")
 
         # run_driver_cancel()  # TODO: uncomment
@@ -114,7 +111,7 @@ def _tools(block_continue):
 
             if not output:
                 log(
-                    f"E: Provider's registered email=[magenta]{email}[/magenta] does not match\n"
+                    f"E: provider's registered email=[magenta]{email}[/magenta] does not match\n"
                     f"   with the set gdrive's email=[magenta]{gdrive_email}[/magenta]"
                 )
                 raise QuietExit
@@ -150,7 +147,7 @@ class Driver:
         self.job_info = None
         self.job_infos = {}
         self.requester_id: str = ""
-        #: Indicates Lock check for the received job whether received or not
+        #: indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
     def set_job_recevied_mongodb(self, key, index) -> None:
@@ -181,7 +178,7 @@ class Driver:
     def process_logged_job(self, idx):
         """Process logged job one by one."""
         self.received_block = []
-        self.store_duration = []
+        self.storage_duration = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
         console_ruler(idx, character="-")
@@ -217,7 +214,7 @@ class Driver:
             cfg.Ebb.get_job_source_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
-            self.job_info.update({"store_duration": self.store_duration})
+            self.job_info.update({"storage_duration": self.storage_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
             cfg.Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)
@@ -247,7 +244,7 @@ class Driver:
             "logged_job": self.logged_job,
             "job_infos": self.job_infos,
             "requester_id": requester_md5_id,
-            "is_already_cached": self.is_already_cached,
+            "is_cached": self.is_cached,
         }
         if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             storage_class = IpfsClass(**kwargs)
@@ -271,9 +268,9 @@ class Driver:
 
     def process_logged_jobs(self):
         """Process logged jobs."""
+        self.is_cached = {}
         self.latest_block_number = 0
         self.is_provider_received_job = False
-        self.is_already_cached = {}
         for idx, logged_job in enumerate(self.logged_jobs_to_process):
             self.job_infos = []
             self.logged_job = logged_job
@@ -289,24 +286,7 @@ class Driver:
                 breakpoint()  # DEBUG
 
 
-def print_squeue():
-    try:
-        squeue_output = run(["squeue"])
-        if "squeue: error:" in str(squeue_output):
-            raise Exception("squeue: error")
-    except Exception as e:
-        raise Terminate(
-            "Warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
-        ) from e
-
-    # Gets real info under the header after the first line
-    if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
-        # checks if the squeue output's line number is gretaer than 1
-        log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-        log(squeue_output, "bold")
-
-
-def run_driver():
+def run_driver(given_bn):
     """Run the main driver script for eblocbroker on the background."""
     # dummy sudo command to get the password when session starts for only to
     # create users and submit the slurm job under another user
@@ -340,8 +320,8 @@ def run_driver():
     if not env.config["block_continue"]:
         env.config["block_continue"] = deployed_block_number
 
-    if given_block_number > 0:
-        block_number_saved = int(given_block_number)
+    if given_bn > 0:
+        block_number_saved = int(given_bn)
     else:
         block_number_saved = env.config["block_continue"]
         if not isinstance(env.config["block_continue"], int):
@@ -369,11 +349,10 @@ def run_driver():
         log(f"## is_threading={cfg.IS_THREADING_ENABLED}")
 
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
-    log(f"==> whoami={env.WHOAMI}")
     log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
+    log(f"==> whoami={env.WHOAMI}")
     log(f"==> log_file={_log.DRIVER_LOG}")
     log(f"==> rootdir={os.getcwd()}")
-    log(f"==> is_full_test={cfg.IS_FULL_TEST}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
@@ -390,7 +369,7 @@ def run_driver():
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
         raise QuietExit(f"Provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
-    block_read_from = block_number_saved
+    blk_read = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     eth_balance = Ebb.eth_balance(env.PROVIDER_ID)
     log(f"==> deployed_block_number={deployed_block_number}")
@@ -399,61 +378,56 @@ def run_driver():
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
-        if not str(block_read_from).isdigit():
-            raise Terminate(f"block_read_from={block_read_from}")
+        if not str(blk_read).isdigit():
+            raise Terminate(f"block_read_from={blk_read}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
-        print_squeue()
+        if cfg.IS_THREADING_ENABLED:
+            _squeue()
+
         console_ruler()
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:
                 log(f"==> Since Driver started provider_gained_wei={value}")
 
-        current_block_num = Ebb.get_block_number()
-        log(f" * {get_time()} waiting new job to come since block_number={block_read_from}")
-        log(f"==> current_block={current_block_num} | sync_from={block_read_from}")
-        # log(f"block_read_from={block_read_from}")
+        current_bn = Ebb.get_block_number()
+        log(f" * {get_date()} waiting new job to come since block_number={blk_read}")
+        log(f"==> current_block={current_bn} | sync_from={blk_read}")
         flag = True
-        while current_block_num < int(block_read_from):
-            current_block_num = Ebb.get_block_number()
+        while current_bn < int(blk_read):
+            current_bn = Ebb.get_block_number()
             if flag:
-                log(f"## Waiting block number to be updated, it remains constant at {current_block_num}")
+                log(f"## Waiting block number to be updated, it remains constant at {current_bn}")
 
             flag = False
             time.sleep(2)
 
-        log(f"#> [bold yellow]Passed incremented block number... Watching from block_number=[cyan]{block_read_from}")
-        block_read_from = str(block_read_from)  # reading events' block number has been updated
+        log(f"#> [bold yellow]Passed incremented block number... Watching from block_number=[cyan]{blk_read}")
+        blk_read = str(blk_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         try:
-            driver.logged_jobs_to_process = Ebb.run_log_job(block_read_from, env.PROVIDER_ID)
+            driver.logged_jobs_to_process = Ebb.run_log_job(blk_read, env.PROVIDER_ID)
             driver.process_logged_jobs()
             if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
                 # updates the latest read block number
-                block_read_from = driver.latest_block_number + 1
-                env.config["block_continue"] = block_read_from
+                blk_read = driver.latest_block_number + 1
+                env.config["block_continue"] = blk_read
             if not driver.is_provider_received_job:
-                # If there is no submitted job for the provider, than block start
-                # to read from the current block number and updates the latest read
-                # block number read from the file
-                env.config["block_continue"] = current_block_num
-                block_read_from = current_block_num
+                blk_read = env.config["block_continue"] = current_bn
         except Exception as e:
             log()
             log(f"E: {e}")
             if "Filter not found" in str(e) or "Read timed out" in str(e):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
-                log("## Sleeping for 60 seconds...", end="")
+                log("## sleeping for 60 seconds...", end="")
                 time.sleep(60)
                 log(ok())
-            elif not cfg.IS_FULL_TEST:
-                breakpoint()  # DEBUG
             else:
                 print_tb(e)
 
 
-def _main():
+def _main(given_bn):
     lock = None
     try:
         is_driver_on(process_count=1, is_print=False)
@@ -464,7 +438,7 @@ def _main():
             give_rwe_access(env.WHOAMI, "/tmp/run")
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
 
-        run_driver()
+        run_driver(given_bn)
     except HandlerException:
         pass
     except QuietExit as e:
@@ -483,13 +457,12 @@ def _main():
 
 
 def main(args):
-    global given_block_number
+    given_bn = 0
     try:
         if args.bn:
-            given_block_number = args.bn
-            cfg.IS_FULL_TEST = False
+            given_bn = args.bn
         elif args.latest:
-            given_block_number = cfg.Ebb.get_block_number()
+            given_bn = cfg.Ebb.get_block_number()
 
         if args.is_thread is False:
             cfg.IS_THREADING_ENABLED = False
@@ -497,7 +470,7 @@ def main(args):
         console_ruler("provider session starts")
         log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         with launch_ipdb_on_exception():
-            # if an exception is raised, enclose code with the `with` statement to launch ipdb
-            _main()
+            # if an exception is raised, launch ipdb
+            _main(given_bn)
     except KeyboardInterrupt:
         sys.exit(1)

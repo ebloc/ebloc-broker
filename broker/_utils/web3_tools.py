@@ -7,12 +7,16 @@ from web3.types import TxReceipt
 
 from broker import cfg
 from broker._utils._log import log, ok
+from brownie.network.transaction import TransactionReceipt
 
 
-def get_tx_status(tx_hash: str, is_silent=False) -> TxReceipt:
+def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
     """Return status of the transaction."""
     if not tx_hash:
-        log("warning: tx_hash is empty")
+        raise Exception("warning: tx_hash is empty")
+
+    if isinstance(tx_hash, TransactionReceipt):
+        tx_hash = tx_hash.txid
 
     if not is_silent:
         log(f"tx_hash={tx_hash}", "bold")

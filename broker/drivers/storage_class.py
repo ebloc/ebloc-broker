@@ -14,9 +14,9 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import ok
-from broker._utils.tools import mkdir, read_json
+from broker._utils.tools import _squeue, mkdir, read_json
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, run, subprocess_call
+from broker.lib import calculate_size, log, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
@@ -37,7 +37,7 @@ class Storage(BaseClass):
         self.requester_id = kwargs.pop("requester_id")
         self.job_infos = kwargs.pop("job_infos")
         self.logged_job = kwargs.pop("logged_job")
-        self.is_already_cached = kwargs.pop("is_already_cached")
+        self.is_cached = kwargs.pop("is_cached")
         self.job_key = self.logged_job.args["jobKey"]
         self.index = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
@@ -46,7 +46,6 @@ class Storage(BaseClass):
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]
         self.data_transfer_in_to_download_mb = 0  # total size in MB to download
-        self.is_already_cached = self.is_already_cached
         self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
         self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
         self.registered_data_hashes = []  # noqa
@@ -136,11 +135,11 @@ class Storage(BaseClass):
 
     def check_already_cached(self, source_code_hash):
         if os.path.isfile(f"{self.private_dir}/{source_code_hash}.tar.gz"):
-            log(f":beer: [green]{source_code_hash}[/green] is already cached in {self.private_dir}", "bold")
-            self.is_already_cached[source_code_hash] = True
+            log(f":beer:  [green]{source_code_hash}[/green] is already cached in {self.private_dir}", "bold")
+            self.is_cached[source_code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{source_code_hash}.tar.gz"):
-            log(f":beer: [green]{source_code_hash}[/green] is already cached in {self.public_dir}", "bold")
-            self.is_already_cached[source_code_hash] = True
+            log(f":beer:  [green]{source_code_hash}[/green] is already cached in {self.public_dir}", "bold")
+            self.is_cached[source_code_hash] = True
 
     def complete_refund(self) -> str:
         """Complete refund back to the requester."""
@@ -177,7 +176,7 @@ class Storage(BaseClass):
             return True
         return False
 
-    def is_cached(self, name, _id) -> bool:
+    def _is_cached(self, name, _id) -> bool:
         if self.cache_type[_id] == CacheType.PRIVATE:
             # Checks whether it is already exist under public cache directory
             cached_folder = f"{self.public_dir}/{name}"
@@ -250,7 +249,7 @@ class Storage(BaseClass):
             give_rwe_access(env.WHOAMI, self.results_folder_prev)
             # give_rwe_access(self.requester_id, self.requester_home)
             # give_rwe_access(env.WHOAMI, self.requester_home)
-            if calculate_size(self.results_data_folder) > 0:
+            if calculate_size(self.results_data_folder, _type="bytes") > 0:
                 link.link_folders()
 
             if len(self.registered_data_hashes) > 0:
@@ -334,7 +333,7 @@ class Storage(BaseClass):
 
         # seperator character is *
         run_file = f"{self.results_folder}/run.sh"
-        sbatch_file_path = f"{self.results_folder}/{job_key}*{index}*{job_block_number}.sh"
+        sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_block_number}.sh"  # separator(~)
         with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
             f.write("#!/bin/bash\n")
             f.write("#SBATCH -o slurm.out  # STDOUT\n")
@@ -356,8 +355,4 @@ class Storage(BaseClass):
             log("E: Detects an error on the sbatch. slurm_job_id is not a digit")
 
         with suppress(Exception):
-            squeue_output = run(["squeue"])
-            if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
-                # checks if the squeue output's line number is gretaer than 1
-                log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-                log(f"{squeue_output}  {ok()}", "bold")
+            _squeue()

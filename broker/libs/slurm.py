@@ -17,8 +17,7 @@ def add_user_to_slurm(user):
     p, output, *_ = popen_communicate(cmd)
     if p.returncode != 0 and "Nothing new added" not in output:
         print_tb()
-        logging.error(f"E: sacctmgr remove error: {output}")
-        raise
+        raise Exception(f"E: sacctmgr remove error: {output}")
 
     # try:
     #     if "Nothing new added" not in output:
@@ -74,11 +73,11 @@ def pending_jobs_check():
 
 def is_on() -> bool:
     """Check whether Slurm runs on the background or not, if not runs slurm."""
-    log("## checking Slurm... ", end="")
+    log("## checking slurm[yellow]... ", end="")
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
-            log("failed", "bold red")
+            log("[  [red]failed[/red]  ]", "bold")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             raise QuietExit(
                 f"E: [bold green]{process_name}[/bold green] is not running in the background. Please run:\n"

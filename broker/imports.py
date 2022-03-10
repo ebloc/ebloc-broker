@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import importlib
 import sys
 
 from web3 import IPCProvider, Web3
@@ -35,7 +34,7 @@ def connect():
 def _connect_into_web3():
     """Connect into web3 of the testnet.
 
-    Bloxberg:
+    * bloxberg:
     __ https://bloxberg.org
     """
     if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
@@ -63,12 +62,12 @@ def connect_into_web3() -> None:
         if not cfg.w3.isConnected():
             try:
                 if env.IS_GETH_TUNNEL:
-                    raise Exception("Open tunnel: ssh -f -N -L 8545:localhost:8545 username@remote-ip")
+                    raise Exception("web3ConnectError: try tunnelling: ssh -f -N -L 8545:localhost:8545 username@<ip>")
 
                 if not env.IS_BLOXBERG:
                     is_geth_on()
                 else:
-                    log("E: web3 is not connected into BLOXBERG")
+                    log("E: web3 is not connected into [green]BLOXBERG[/green]")
             except QuietExit:
                 pass
             except Exception as e:
@@ -121,7 +120,8 @@ def connect_into_eblocbroker() -> None:
                     # network.connect("bloxberg")
                     try:
                         log(
-                            "warning: 'bloxberg' key is added into the [magenta]~/.brownie/network-config.yaml[/magenta] yaml file. Please try again"
+                            "warning: [green]bloxberg[/green] key is added into the "
+                            "[magenta]~/.brownie/network-config.yaml[/magenta] yaml file. Please try again."
                         )
                         network.connect("bloxberg")
                     except KeyError:
@@ -130,7 +130,7 @@ def connect_into_eblocbroker() -> None:
                 project = project.load(env.CONTRACT_PROJECT_PATH)
                 config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
-                #: for the contract events
+                #: for the contract's events
                 config._eBlocBroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
         elif env.IS_EBLOCPOA:
             config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)

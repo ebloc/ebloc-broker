@@ -53,7 +53,7 @@ def main():
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
     job_key = job.keys[tar_hash]
     try:
-        job_price, _cost = job.cost(provider, _from, job)
+        job_price, _cost = job.cost(provider, _from)
         tx_hash = Ebb.submit_job(provider, job_key, job_price, job, requester=_from)
     except Exception as e:
         raise e

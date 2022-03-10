@@ -11,7 +11,7 @@ from broker.utils import print_tb
 def _update_data_price():
     Ebb = cfg.Ebb
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
-        log(f"Warning: Provider {env.PROVIDER_ID} is not registered.\n")
+        log(f"warning: Provider {env.PROVIDER_ID} is not registered.\n")
         raise QuietExit
 
     source_code_hash = "b6aaf03752dc68d625fc57b451faa2bf"

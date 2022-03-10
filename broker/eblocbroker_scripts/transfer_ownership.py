@@ -35,7 +35,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         new_owner = str(sys.argv[1])
     else:
-        log("Warning: Please provide the new_owner address as argument.")
+        log("warning: Please provide the new_owner address as argument.")
         sys.exit(1)
 
     try:

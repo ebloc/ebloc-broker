@@ -44,7 +44,6 @@ def register_requester(self, yaml_fn, is_question=True):
     account = args["config"]["account"].lower()
     email = args["config"]["email"]
     federation_cloud_id = args["config"]["federation_cloud_id"]
-    args.remove_temp()
     # if env.IS_BLOXBERG:
     #     account = self.brownie_load_account().address
 

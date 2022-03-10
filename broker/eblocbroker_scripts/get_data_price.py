@@ -11,7 +11,11 @@ def get_data_price(provider, source_code_hash):
     log(f"==> commitment_block_duration={commitment_block_duration}")
 
 
-if __name__ == "__main__":
+def main():
     address = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
     code_hash = "b6aaf03752dc68d625fc57b451faa2bf"
     get_data_price(address, code_hash)
+
+
+if __name__ == "__main__":
+    main()

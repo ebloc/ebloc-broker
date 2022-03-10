@@ -18,6 +18,7 @@ class Pidfile:
         self.pidfile = path
         self.log = log
         self.warn = warn
+        self.pidfd = None
 
     def __enter__(self):
         try:
@@ -28,11 +29,13 @@ class Pidfile:
                 pid = self._check()
                 if pid:
                     self.pidfd = None
-                    raise ProcessRunningException("process already running in %s as pid %s" % (self.pidfile, pid))
-                else:
-                    os.remove(self.pidfile)
-                    self.warn("removed staled lockfile %s" % (self.pidfile))
-                    self.pidfd = os.open(self.pidfile, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
+                    raise ProcessRunningException(
+                        "process already running in %s as pid %s" % (self.pidfile, pid)
+                    ) from e
+
+                os.remove(self.pidfile)
+                self.warn("removed staled lockfile %s" % (self.pidfile))
+                self.pidfd = os.open(self.pidfile, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
             else:
                 raise
 

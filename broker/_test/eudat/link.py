@@ -11,7 +11,7 @@ if __name__ == "__main__":
     link_path_to = f"{env.LINK_PATH}/datasets/BL06-camel-sml/"
 
     try:
-        check_linked_data(path_from, link_path_to, is_continue=True)
+        check_linked_data(path_from, link_path_to, is_pass=True)
     except:
         print_tb()
 

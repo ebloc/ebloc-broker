@@ -7,10 +7,9 @@ from brownie import accounts
 
 
 def test_ownership(Ebb):
-    """Get Owner"""
+    """Test ownership of the contract."""
     assert Ebb.getOwner() == accounts[0]
-
-    with pytest.reverts():  # transferOwnership should revert
+    with pytest.reverts():
         Ebb.transferOwnership(ZERO_ADDRESS, {"from": accounts[0]})
 
     Ebb.transferOwnership(accounts[1], {"from": accounts[0]})

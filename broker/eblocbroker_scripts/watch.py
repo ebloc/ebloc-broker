@@ -7,7 +7,7 @@ from pathlib import Path
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear
-from broker._utils.tools import _time, log, print_tb
+from broker._utils.tools import _date, log, print_tb
 from broker.lib import state
 
 Ebb = cfg.Ebb
@@ -15,17 +15,20 @@ watch_only_jobs = True
 
 
 def watch(eth_address="", from_block=None):
-    from_block = 13895443
-    if not eth_address:
-        eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
+    # from_block = 13895443
+    from_block = 13998718
+    # if not eth_address:
+    #     # TODO: pull from cfg
+    #     eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
 
+    is_provider = False
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     _log.ll.LOG_FILENAME = watch_fn
     # open("watch.out", "w").close()
     _console_clear()
-    log(" * s t a r t i n g")
+    print(" * s t a r t i n g")
     while True:
-        block_number = Ebb.get_block_number()
+        bn = Ebb.get_block_number()
         if not watch_only_jobs:
             providers_info = {}
             providers = Ebb.get_providers()
@@ -35,16 +38,26 @@ def watch(eth_address="", from_block=None):
         if not from_block:
             from_block = cfg.Ebb.get_block_number() - cfg.BLOCK_DURATION_1_DAY
 
-        event_filter = cfg.Ebb._eBlocBroker.events.LogJob.createFilter(
-            fromBlock=int(from_block),
-            argument_filters={"provider": eth_address},
-            toBlock="latest",
-        )
-        logged_jobs = event_filter.get_all_entries()
+        if is_provider:
+            event_filter = cfg.Ebb._eBlocBroker.events.LogJob.createFilter(
+                fromBlock=int(from_block),
+                argument_filters={"provider": eth_address},
+                toBlock="latest",
+            )
+        else:
+            event_filter = cfg.Ebb._eBlocBroker.events.LogJob.createFilter(
+                fromBlock=int(from_block),
+                argument_filters={"owner": eth_address},
+                toBlock="latest",
+            )
+
         columns = 80
         columns_size = int(int(columns) / 2 - 9)
         job_full = ""
-        for job in enumerate(logged_jobs):
+        job_count = 0
+        completed_count = 0
+        for job in enumerate(event_filter.get_all_entries()):
+            job_count += 1
             try:
                 _args = job["args"]
             except:
@@ -63,6 +76,7 @@ def watch(eth_address="", from_block=None):
             _color = "magenta"
             if state_val == "COMPLETED":
                 _color = "green"
+                completed_count += 1
 
             job_full = (
                 f" [bold blue]*[/bold blue] [bold]{_job['job_key']}[/bold] {_job['index']} {_job['provider']} "
@@ -80,7 +94,10 @@ def watch(eth_address="", from_block=None):
         is_connected = Ebb.is_web3_connected()
         _console_clear()
         open(watch_fn, "w").close()
-        log(f"\r==> {_time() } bn={block_number} | web3={is_connected} | address={eth_address}", "bold")
+        log(
+            f"\r==> {_date() } bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
+            "bold",
+        )
         if not watch_only_jobs:
             providers = Ebb.get_providers()
             columns_size = int(int(columns) / 2 - 12)

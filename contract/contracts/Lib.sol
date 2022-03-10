@@ -94,7 +94,7 @@ library Lib {
 
     struct JobStorageTime {
         uint32 receivedBlock;
-        uint32 storeDuration;
+        uint32 storageDuration;
         bool isPrivate;
         bool isVerifiedUsed; // Set to True if the requester is used and verified the given sourceCodeHash
         //address      owner; //Cloud be multiple owners

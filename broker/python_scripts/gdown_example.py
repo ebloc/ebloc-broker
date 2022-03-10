@@ -2,14 +2,6 @@
 
 import gdown
 
-# __ https://drive.google.com/file/d/1zo4BkS8wqqbc7gxYQMedhqCiQUb51LAp/view?usp=sharing
-
-url = "https://drive.google.com/uc?id=0B9P1L--7Wd2vNm9zMTJWOGxobkU"
-output = "20150428_collected_images.tgz"
-gdown.download(url, output, quiet=False)
-md5 = "fa837a88f0c40c513d975104edf3da17"
-gdown.cached_download(url, output, md5=md5, postprocess=gdown.extractall)
-gdown.download()
 cmd = [
     "curl",
     "--fail",
@@ -25,3 +17,17 @@ cmd = [
     "-w",
     "%{http_code}",
 ]
+
+
+def main():
+    # __ https://drive.google.com/file/d/1zo4BkS8wqqbc7gxYQMedhqCiQUb51LAp/view?usp=sharing
+    url = "https://drive.google.com/uc?id=0B9P1L--7Wd2vNm9zMTJWOGxobkU"
+    output = "20150428_collected_images.tgz"
+    gdown.download(url, output, quiet=False)
+    md5 = "fa837a88f0c40c513d975104edf3da17"
+    gdown.cached_download(url, output, md5=md5, postprocess=gdown.extractall)
+    gdown.download(url)
+
+
+if __name__ == "__main__":
+    main()

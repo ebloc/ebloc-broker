@@ -15,7 +15,7 @@ from broker._utils.tools import _remove, bytes_to_mb, mkdir, read_json
 from broker.config import env, logging
 from broker.drivers.storage_class import Storage
 from broker.lib import run
-from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_time, print_tb, untar
+from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, print_tb, untar
 
 Ebb = cfg.Ebb
 
@@ -80,7 +80,7 @@ class EudatClass(Storage):
         return False
 
     def cache(self, folder_name, _id) -> bool:
-        success = self.is_cached(folder_name, _id)
+        success = self._is_cached(folder_name, _id)
         cached_folder = Path("")
         if self.cache_type[_id] == CacheType.PRIVATE:
             # download into private directory at $HOME/.ebloc-broker/cache
@@ -236,7 +236,7 @@ class EudatClass(Storage):
         for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 folder_name = source_code_hash_text
-                if folder_name not in self.is_already_cached:
+                if folder_name not in self.is_cached:
                     data_transfer_in_to_download += self.get_file_size(
                         f"/{folder_name}/{folder_name}.tar.gz", folder_name
                     )
@@ -254,7 +254,6 @@ class EudatClass(Storage):
             raise Exception(f"{self.private_dir} does not exist")
 
         share_id_file = f"{self.private_dir}/{self.job_key}_share_id.json"
-        # accept_flag = 0 # TODO: delete it seems unneeded
         for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 folder_name = source_code_hash_text
@@ -276,9 +275,8 @@ class EudatClass(Storage):
                     size = info.attributes["{DAV:}getcontentlength"]
                     folder_token_flag[folder_name] = True
                     log(f"==> index={br(idx)}: /{source_fn} => {size} bytes")
-                    # accept_flag += 1  # TODO: delete it seems unneeded
                 except:
-                    log(f"warning: shared_folder{br(source_code_hash_text)} is not accepted yet")
+                    log(f"warning: shared_folder{br(source_code_hash_text, 'green')} is not accepted yet")
                     folder_token_flag[folder_name] = False
 
         try:  # TODO: add pass on template
@@ -354,7 +352,7 @@ class EudatClass(Storage):
             with open(share_id_file, "w") as f:
                 json.dump(self.share_id, f)
         else:
-            raise Exception(f"E: share_id is empty")
+            raise Exception("E: share_id is empty")
 
         # self.total_size_to_download()
 
@@ -376,7 +374,7 @@ class EudatClass(Storage):
             time.sleep(0.25)
 
     def _run(self) -> bool:
-        log(f"{br(get_time())} new job has been received through EUDAT: {self.job_key} {self.index} ", "bold cyan")
+        log(f"{br(get_date())} new job has been received through EUDAT: {self.job_key} {self.index} ", "bold cyan")
         # TODO: refund check
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
