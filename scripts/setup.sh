@@ -35,7 +35,7 @@ node -v
 # ganache-cli
 # ===========
 export NODE_OPTIONS=--openssl-legacy-provider
-sudo npm install -g ganache-cli --unsafe-perm
+sudo npm install -g ganache-cli  # --unsafe-perm
 
 # go
 sudo snap install go --classic
@@ -115,27 +115,24 @@ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb
     sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 sudo apt update
 sudo apt-get install -y mongodb-org
-# sudo mkdir /var/lib/mongodb
-# sudo mkdir /var/log/mongodb
 sudo chown -R mongodb. /var/log/mongodb
 sudo chown -R mongodb. /var/lib/mongodb
 sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
 sudo systemctl start mongod.service
-sudo systemctl --no-pager status --full mongod
 sudo systemctl unmask mongodb
 sudo systemctl enable mongod
+sudo systemctl --no-pager status --full mongod
 
 # ebloc-broker pip packages
 # =========================
 VENV=$HOME/venv
 python3.8 -m venv $VENV
-source $VENV/bin/activate
-$VENV/bin/python3.8 -m pip install --upgrade pip
+source $VENV/bin/activate && $VENV/bin/python3.8 -m pip install --upgrade pip
 sudo apt-get install -y libssl-dev zlib1g-dev gcc g++ make
 sudo apt install libgirepository1.0-dev
 python3 -m pip install --no-use-pep517 cm-rgb
 pip install wheel
-pip install pycairo  # dbus-python
+# pip install pycairo  # dbus-python
 cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver
 
 sudo chown $(logname) -R $HOME/.cache/black

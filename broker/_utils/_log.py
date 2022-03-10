@@ -13,15 +13,11 @@ from rich.pretty import pprint
 from rich.theme import Theme
 from rich.traceback import install
 
-try:
-    from broker import cfg
-except:
-    from ebloc_broker.broker import cfg
+from broker import cfg
 
 install()  # for rich, show_locals=True
 # pretty.install()
 
-console = Console()
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
@@ -31,9 +27,11 @@ custom_theme = Theme(
         "warning": "magenta",
         "danger": "bold red",
         "b": "bold",
+        "m": "#ff79c6",
         "magenta": "#ff79c6",
     }
 )
+console = Console(theme=custom_theme)
 
 
 class Colors:
@@ -64,7 +62,7 @@ class Log:
     Find colors from: python -m rich
     """
 
-    def __init__(self):  # noqa
+    def __init__(self):
         super().__init__()
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
@@ -88,7 +86,7 @@ class Log:
                 print(f"[bold {color}]{text}[/bold {color}]")
             else:
                 print(f"[{color}]{text}[/{color}]")
-        else:  # end == "":
+        else:
             if is_bold:
                 print(f"[bold {color}]{text}[/bold {color}]", end="", flush=True)
             else:
@@ -105,9 +103,8 @@ class Log:
             text = text[1:]
 
         if text == "[ ok ]":
-            text = "[ [bold green]ok[/bold green] ]"
-
-        if text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
+            text = "[  [bold green]OK[/bold green]  ]"
+        elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
             _len = 3
             is_bullet = True
             if not color:
@@ -149,6 +146,11 @@ def _console_clear():
 
 
 def console_ruler(msg="", character="=", color="cyan", filename=""):
+    """Draw console ruler.
+
+    Indicated rich console to write into given filename
+    __ https://stackoverflow.com/a/6826099/2402577
+    """
     if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
         filename = thread_log_files[threading.current_thread().name]
     elif not filename:
@@ -160,9 +162,7 @@ def console_ruler(msg="", character="=", color="cyan", filename=""):
             filename = "program.log"
 
     if filename not in ll.console:
-        #: Indicated rich console to write into given filename
-        # __ https://stackoverflow.com/a/6826099/2402577
-        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True, theme=custom_theme)
 
     if msg:
         console.rule(f"[bold {color}]{msg}", characters=character)
@@ -256,11 +256,12 @@ def log(
     is_write=True,
     where_back=0,
     is_code=False,
+    is_align=False,
     is_err=False,
     is_output=True,
     max_depth=None,
 ):
-    """Print for own settings.
+    """Log output with own settings.
 
     * colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
@@ -272,20 +273,32 @@ def log(
 
     if is_err:
         text = str(text)
-        if str(text):
-            if "E: " not in text[3]:
+        if text:
+            if "E: " not in text[3] and "warning:" not in text.lower():
                 text = f"E: {text}"
         else:
             return
 
+        text = text.replace("E: warning:", "warning:")
+
     if isinstance(text, str) and "E: " in text[3:]:
-        text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] {text.replace('E: ', '')}"
+        _text = text.replace("warning: ", "").replace("E: ", "")
+        if "E: warning: " not in text:
+            if "warning:" in text:
+                text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+            else:
+                text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] [bold]{_text}"
+        else:
+            text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
 
     if "-=-=" in str(text):
         is_bold = True
 
     if is_code:
         text = " \ \n  ".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
+
+    if is_align:
+        text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
 
     if is_write:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
@@ -301,7 +314,7 @@ def log(
         if filename not in ll.console:
             #: Indicated rich console to write into given filename
             # __ https://stackoverflow.com/a/6826099/2402577
-            ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True)
+            ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True, theme=custom_theme)
 
     if isinstance(text, dict):
         if max_depth:
@@ -323,7 +336,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue]{text}[bold green]][/bold green]"
+    return f"[bold green][[/bold green][bold blue] {text} [bold green]][/bold green]"
 
 
 ll = Log()

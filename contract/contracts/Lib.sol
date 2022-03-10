@@ -89,12 +89,12 @@ library Lib {
     }
 
     struct Storage {
-        uint256 received; // Received payment for storage usage
+        uint256 received; // received payment for storage usage
     }
 
-    struct JobStorageTime {
+    struct JobStorage {
         uint32 receivedBlock;
-        uint32 storeDuration;
+        uint32 storageDuration;
         bool isPrivate;
         bool isVerifiedUsed; // Set to True if the requester is used and verified the given sourceCodeHash
         //address      owner; //Cloud be multiple owners
@@ -138,7 +138,7 @@ library Lib {
         uint32 committedBlock; // Block number when  is registered in order the watch provider's event activity
         bool isRunning; // Flag that checks is Provider running or not
         mapping(uint256 => ProviderInfo) info;
-        mapping(bytes32 => JobStorageTime) jobSt; // Stored information related to job's storage time
+        mapping(bytes32 => JobStorage) jobSt; // Stored information related to job's storage time
         mapping(bytes32 => RegisteredData) registeredData;
         mapping(address => mapping(bytes32 => Storage)) storageInfo;
         mapping(string => Status[]) jobStatus; // All submitted jobs into provider 's Status is accessible

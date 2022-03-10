@@ -9,8 +9,8 @@ json.dump(eBlocBroker.abi, file)
 file.close()
 EOF
 )"
-
 printf "Setting ABI\n"
 echo "$input"
 echo "$input" | brownie console --network bloxberg
-mv abi.json $HOME/ebloc-broker/broker/eblocbroker/abi.json
+mv abi.json $HOME/ebloc-broker/broker/eblocbroker_scripts/abi.json
+printf "DONE"

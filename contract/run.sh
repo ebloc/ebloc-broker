@@ -1,13 +1,15 @@
 #!/bin/bash
 
+export NODE_OPTIONS=--openssl-legacy-provider
 PORT=8547
 source $HOME/venv/bin/activate
 brownie compile
 $HOME/ebloc-broker/broker/_daemons/ganache.py $PORT
-# test all
-# ========
-pytest tests -s -x -v --disable-pytest-warnings --log-level=INFO
-# pytest tests --capture=sys -s -x -k "test_test3" --disable-pytest-warnings
+
+pytest tests -s -x -v --disable-pytest-warnings --log-level=INFO  # test all
+# pytest tests --capture=sys -s -x -k "test_multiple_data" --disable-pytest-warnings
+
+# pytest tests --capture=sys -s -x -k " test_data_info" --disable-pytest-warnings
 rm -rf reports/
 
 # pytest tests/test_overlap.py -s -x -v --disable-pytest-warnings --log-level=INFO  # test all

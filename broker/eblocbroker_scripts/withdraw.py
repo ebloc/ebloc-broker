@@ -14,15 +14,14 @@ def _withdraw():
     if len(sys.argv) == 2:
         account = str(sys.argv[1])
     else:
-        log("## Provide an Ethereum account as an argument")
+        log("## provide an ethereum account as an argument")
         sys.exit(1)
 
     try:
         balance = Ebb.get_balance(account)
         if balance > 0:
-            log(f"account_balance={balance}")
-            tx_hash = Ebb.withdraw(account)
-            get_tx_status(tx_hash)
+            log(f"account_balance={balance}", "bold")
+            get_tx_status(Ebb.withdraw(account))
         else:
             log("warning: account balance is empty nothing to do")
     except QuietExit:

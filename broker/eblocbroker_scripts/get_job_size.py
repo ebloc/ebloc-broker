@@ -4,7 +4,8 @@ import sys
 
 from broker import cfg
 
-if __name__ == "__main__":
+
+def main():
     Ebb = cfg.Ebb
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
@@ -14,3 +15,7 @@ if __name__ == "__main__":
         key = "QmRsaBEGcqxQcJbBxCi1LN9iz5bDAGDWR6Hx7ZvWqgqmdR"
 
     print(Ebb.getJobSize(provider, key))
+
+
+if __name__ == "__main__":
+    main()

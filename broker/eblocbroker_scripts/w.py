@@ -5,7 +5,7 @@ import time
 import consoledraw
 
 from broker import cfg
-from broker._utils.tools import _time, log
+from broker._utils.tools import _date, log
 from broker.config import env
 from broker.lib import state
 
@@ -40,7 +40,7 @@ providers = Ebb.get_providers()
 while True:
     with console:
         log(
-            f"\r * {_time() } latest_block_number={block_number} | is_web3_connected={is_connected}",
+            f"\r * {_date() } latest_block_number={block_number} | is_web3_connected={is_connected}",
             "bold",
             end="",
         )

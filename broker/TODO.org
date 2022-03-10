@@ -1,2 +1,14 @@
-             *outline*
+                            *outline*
+* TASKS
 ** TODO patch eudat and google-drive
+** TODO
+
+__ https://stackoverflow.com/a/29243206/2402577
+
+#+begin_src python
+import zlib
+
+a = "this string needs compressing"
+a = zlib.compress(a.encode())
+print(zlib.decompress(a).decode())
+#+end_src

@@ -1,0 +1,38 @@
+live:
+  - name: Ethereum
+    networks:
+      - name: eblocpoa
+        id: eblocpoa
+        host: http://127.0.0.1:8545/
+        chainid: 23422
+        gas_price: false
+      - name: bloxberg (Bloxberg)
+        id: bloxberg
+        chainid: 8995
+        host: https://core.bloxberg.org
+        explorer: https://blockexplorer.bloxberg.org/api
+
+networks:
+    development:
+        cmd_settings:
+            unlock:
+              - 0x0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49
+development:
+  - name: Ganache-CLI
+    id: development
+    cmd: ganache-cli
+    host: http://127.0.0.1
+    timeout: 120
+    cmd_settings:
+      port: 8547
+      gas_limit: 6721975
+      accounts: 10
+      evm_version: istanbul
+      mnemonic: brownie
+  - name: Geth Dev
+    id: geth-dev
+    cmd: ethnode
+    host: http://127.0.0.1
+    timeout: 120
+    cmd_settings:
+      port: 8545

@@ -99,8 +99,8 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
     text = f"{start_time},{completion_time}"
     log(f"==> {br(text)} cores={cores}")
     job = Job()
-    job.source_code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
-    job.key = job.source_code_hashes[0]
+    job.code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
+    job.key = job.code_hashes[0]
     job.index = index
     job._id = 0
     job.cores = cores
@@ -128,7 +128,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
         job.data_transfer_ins,
         args,
         job.storage_hours,
-        job.source_code_hashes,
+        job.code_hashes,
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 

@@ -45,9 +45,8 @@ def pre_check(job, requester):
             for storage_id in job.storage_ids[1:]:
                 if storage_id in (StorageID.GDRIVE, StorageID.EUDAT):
                     raise Exception(
-                        "If source code is submitted via IPFS, data files should be submitted via IPFS or IPFS_GPG"
+                        "If source code is submitted via IPFS, then data files must be submitted using IPFS or IPFS_GPG"
                     )
-
     except Exception as e:
         print_tb(e)
         sys.exit()
@@ -106,18 +105,17 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
             if idx == 0:
                 key = ipfs_hash
 
-            job.source_code_hashes.append(ipfs_to_bytes32(ipfs_hash))
-            job.source_code_hashes_str.append(ipfs_hash)
-            log(f"==> ipfs_hash={ipfs_hash}")
-            log(f"==> md5sum={generate_md5sum(target)}")
+            job.code_hashes.append(ipfs_to_bytes32(ipfs_hash))
+            job.code_hashes_str.append(ipfs_hash)
+            log(f"==> ipfs_hash={ipfs_hash} | md5sum={generate_md5sum(target)}")
             if main_storage_id == StorageID.IPFS_GPG:
                 # created gpg file will be removed since its already in ipfs
                 targets.append(target)
         else:
             code_hash = folder
             if isinstance(code_hash, bytes):
-                job.source_code_hashes.append(code_hash)
-                job.source_code_hashes_str.append(code_hash.decode("utf-8"))
+                job.code_hashes.append(code_hash)
+                job.code_hashes_str.append(code_hash.decode("utf-8"))
 
             # TODO: if its ipfs
             # if isinstance(code_hash, bytes):
@@ -125,11 +123,11 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
             # if len(code_hash) == 32:
             #     value = cfg.w3.toBytes(text=code_hash)
-            #     job.source_code_hashes.append(value)
-            #     job.source_code_hashes_str.append(value.decode("utf-8"))
+            #     job.code_hashes.append(value)
+            #     job.code_hashes_str.append(value.decode("utf-8"))
             # else:
-            #     job.source_code_hashes.append(ipfs_to_bytes32(code_hash))
-            #     job.source_code_hashes_str.append(code_hash)
+            #     job.code_hashes.append(ipfs_to_bytes32(code_hash))
+            #     job.code_hashes_str.append(code_hash)
 
         # if idx != len(job.folders_to_share) - 1:
         #     log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "cyan")
@@ -151,7 +149,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                         if ".tar.gz.gpg" in str(target):
                             _remove(target)
                 except IndexError:
-                    log(f"E: Tx({tx_hash}) is reverted")
+                    log(f"E: Tx={tx_hash} is reverted")
         else:
             pass
     except QuietExit:
@@ -164,7 +162,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_with_data.yaml")
+    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_simple.yaml")
     submit_ipfs(job)
 
 

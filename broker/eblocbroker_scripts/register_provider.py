@@ -27,7 +27,7 @@ def _register_provider(self, *args, **kwargs):
 
     if self.does_provider_exist(env.PROVIDER_ID):
         log(
-            f"Warning: Provider {env.PROVIDER_ID} is already registered.\n"
+            f"warning: Provider {env.PROVIDER_ID} is already registered.\n"
             "Please call the [blue]update_provider_info.py[/blue] or "
             "[blue]update_provider_prices.py[/blue] script for an update."
         )
@@ -130,7 +130,6 @@ def register_provider_wrapper(yaml_fn):
     if exit_flag:
         sys.exit(1)
 
-    args.remove_temp()
     ipfs_id = get_ipfs_id()
     ip_address = get_ip()
     if ip_address not in ipfs_id:

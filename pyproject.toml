@@ -25,5 +25,7 @@ exclude = '''
   | env
   | venv
   | docs
+  | ebloc_broker.egg-info
+  | orcid-authentication-php
 )/
 '''

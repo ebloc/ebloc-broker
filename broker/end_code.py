@@ -4,6 +4,7 @@ import base64
 import getpass
 import os
 import pprint
+import shutil
 import sys
 import time
 from contextlib import suppress
@@ -12,10 +13,11 @@ from time import sleep
 from typing import Dict, List
 
 from broker import cfg
+from broker._utils import _log
 from broker._utils._log import br, log, ok
 from broker._utils.tools import _remove, exit_after, mkdir, read_json
 from broker._utils.web3_tools import get_tx_status
-from broker.config import env, logging, setup_logger
+from broker.config import env
 from broker.errors import QuietExit
 from broker.imports import connect
 from broker.lib import (
@@ -54,9 +56,9 @@ class Common:
         self.patch_file: Path = Path("")
         self.requester_gpg_fingerprint: str = ""
         self.patch_upload_name = ""
-        self.data_transfer_out = 0.0
+        self.data_transfer_out = 0
 
-    @exit_after(900)  # timeout in 15 minuntes
+    @exit_after(900)
     def _get_tx_status(self, tx_hash):
         get_tx_status(tx_hash)
 
@@ -103,18 +105,20 @@ class Eudat(Common):
                 log(f"==> {self.patch_file} is already uploaded")
                 return
 
-        _data_transfer_out = calculate_size(self.patch_file)
-        log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
-        self.data_transfer_out += _data_transfer_out
-        if not eudat.upload_results(
-            self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, max_retries=5
-        ):
-            raise
+        try:
+            _data_transfer_out = calculate_size(self.patch_file)
+            log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
+            self.data_transfer_out += _data_transfer_out
+            eudat.upload_results(
+                self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, max_retries=5
+            )
+        except Exception as e:
+            raise e
 
 
 class Gdrive(Common):
     def upload(self, key, is_job_key):
-        """Upload result into gdrive.
+        """Upload generated result into gdrive.
 
         :param key: key of the shared gdrive file
         :returns: True if upload is successful
@@ -130,15 +134,15 @@ class Gdrive(Common):
             raise Exception(f"{WHERE(1)} E: {key} does not have a match. meta_data={meta_data}. {e}") from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        logging.info(f"mime_type={mime_type}")
+        log(f"mime_type={mime_type}")
         self.data_transfer_out += calculate_size(self.patch_file)
-        logging.info(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
+        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type or "/zip" in mime_type:
             cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         else:
-            raise Exception("E: files could not be uploaded")
+            raise Exception("Files could not be uploaded")
 
         try:
             log(subprocess_call(cmd, 5))
@@ -160,8 +164,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.data_transfer_in = 0
         self.data_transfer_out = 0.0
         self.elapsed_time = 0
-        self.source_code_hashes_to_process: List[str] = []
-        self.source_code_hashes: List[str] = []
+        self.code_hashes_to_process: List[str] = []
+        self.code_hashes: List[str] = []
         self.result_ipfs_hash: str = ""
         self.requester_gpg_fingerprint: str = ""
         self.end_time_stamp = ""
@@ -169,13 +173,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.encoded_share_tokens = {}  # type: Dict[str, str]
         #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
-        log_filename = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
-        logging = setup_logger(log_filename)
+        _log.ll.LOG_FILENAME = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         self.job_id = 0  # TODO: should be mapped to slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
-            logging.error("E: Given key and index are equal to each other")
+            log("E: Given key and index are equal to each other")
             sys.exit(1)
 
         try:
@@ -215,20 +218,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> home={env.HOME}")
         log(f"==> pwd={os.getcwd()}")
         log(f"==> results_folder={self.results_folder}")
+        log(f"==> provider_id={env.PROVIDER_ID}")
         log(f"==> job_key={self.job_key}")
         log(f"==> index={self.index}")
         log(f"==> storage_ids={self.storage_ids}")
         log(f"==> folder_name=[white]{self.folder_name}")
-        log(f"==> provider_id={env.PROVIDER_ID}")
         log(f"==> requester_id_address={self.requester_id_address}")
-        log(f"==> received={self.job_info['received']}")
         log(f"==> job_status_running_tx={self.job_status_running_tx}")
+        log(f"==> received={self.job_info['received']}")
 
     def get_shared_tokens(self):
         with suppress(Exception):
             share_ids = read_json(f"{self.private_dir}/{self.job_key}_share_id.json")
 
-        for source_code_hash in self.source_code_hashes_to_process:
+        for source_code_hash in self.code_hashes_to_process:
             try:
                 share_token = share_ids[source_code_hash]["share_token"]
                 self.share_tokens[source_code_hash] = share_token
@@ -268,20 +271,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 
-        raise Exception(f"Corresponding storage_id_class={self.storage_ids[_id]} does not exist")
+        raise Exception(f"corresponding storage_id_class={self.storage_ids[_id]} does not exist")
 
-    def set_source_code_hashes_to_process(self):
-        for idx, source_code_hash in enumerate(self.source_code_hashes):
+    def set_code_hashes_to_process(self):
+        for idx, source_code_hash in enumerate(self.code_hashes):
             if self.storage_ids[idx] in [StorageID.IPFS, StorageID.IPFS_GPG]:
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
-                self.source_code_hashes_to_process.append(ipfs_hash)
+                self.code_hashes_to_process.append(ipfs_hash)
             else:
-                self.source_code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
+                self.code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
 
     def _ipfs_add_folder(self, folder_path):
         try:
             self.result_ipfs_hash = cfg.ipfs.add(folder_path)
-            logging.info(f"==> result_ipfs_hash={self.result_ipfs_hash}")
+            log(f"==> result_ipfs_hash={self.result_ipfs_hash}")
             cfg.ipfs.pin(self.result_ipfs_hash)
             data_transfer_out = cfg.ipfs.get_cumulative_size(self.result_ipfs_hash)
         except Exception as e:
@@ -367,7 +370,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         except Exception as e:
             raise e
 
-        for idx, name in enumerate(self.source_code_hashes_to_process[1:], 1):
+        for idx, name in enumerate(self.code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
             source = self.results_data_folder / name
             try:
@@ -386,14 +389,16 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self._ipfs_add_folder(self.patch_folder_ipfs)
 
     def sacct_result(self):
-        """Return sacct results.
+        """Return sacct output for the job.
 
         CPUTime = NCPUS * Elapsed
+
         To get stats about real CPU usage you need to look at SystemCPU and
-        UserCPU, but the docs warns that it only measure CPU time for the
-        parent process and not for child processes.
+        UserCPU, but the docs warns that it only measure CPU time for the parent
+        process and not for child processes.
         """
         slurm_log_output_fn = f"{self.results_folder}/slurm_job_info.out"
+        slurm_log_output_fn_temp = f"{self.results_folder}/slurm_job_info.out~"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
         cmd.append("jobID,jobname,user,account,group,cluster,allocCPUS,REQMEM,TotalCPU,elapsed")
         run_stdout_to_file(cmd, slurm_log_output_fn)
@@ -405,6 +410,17 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         run_stdout_to_file(cmd, slurm_log_output_fn, mode="a")
         with open(slurm_log_output_fn, "a") as f:
             f.write("\n")
+
+        shutil.move(slurm_log_output_fn, slurm_log_output_fn_temp)
+        open(slurm_log_output_fn, "w").close()
+        with open(slurm_log_output_fn_temp) as f1, open(slurm_log_output_fn, "w") as f2:
+            line = f1.read().strip()
+            if "--" in line:
+                line = line.replace("-", "=")
+
+            f2.write(line)
+
+        os.remove(slurm_log_output_fn_temp)
 
     def get_job_info(self, is_print=False, is_log_print=True):
         self.job_info = eblocbroker_function_call(
@@ -501,7 +517,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("## Received running job status successfully", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
-                lambda: Ebb.get_job_source_code_hashes(
+                lambda: Ebb.get_job_code_hashes(
                     env.PROVIDER_ID,
                     self.job_key,
                     self.index,
@@ -514,15 +530,15 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        self.source_code_hashes = self.job_info["code_hashes"]
-        self.set_source_code_hashes_to_process()
+        self.code_hashes = self.job_info["code_hashes"]
+        self.set_code_hashes_to_process()
         self.sacct_result()
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_time = slurm.get_elapsed_time(self.slurm_job_id)
         if self.elapsed_time > int(run_time[self.job_id]):
             self.elapsed_time = run_time[self.job_id]
 
-        logging.info(f"finalized_elapsed_time={self.elapsed_time}")
+        log(f"finalized_elapsed_time={self.elapsed_time}", "green")
         _job_info = pprint.pformat(self.job_info)
         log("## job_info:", "bold magenta")
         log(_job_info, "bold")

@@ -5,7 +5,9 @@ from pathlib import Path
 
 from broker import cfg
 from broker._utils.tools import log
-from broker.test_setup.user_set import extra_users, users
+from broker.test_setup.user_set import users
+
+# from broker.test_setup.user_set import extra_users
 
 collect_account = "0xfd0ebcd42d4c4c2a2281adfdb48177454838c433".lower()
 

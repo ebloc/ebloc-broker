@@ -14,12 +14,10 @@ from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
 
 def analyze_data(self, key, provider=None):
     """Obtain information related to source-code data."""
-    # if not provider:
-    #     provider = env.PROVIDER_ID
     current_block_number = cfg.Ebb.get_block_number()
     self.received_block = []
-    self.store_duration = []
-    self.job_info["is_already_cached"] = {}
+    self.storage_duration = []
+    self.job_info["is_cached"] = {}
     for idx, code_hash in enumerate(self.job_info["code_hashes"]):
         if self.job_info["cloudStorageID"][idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
             source_code_hash = source_code_hash_str = bytes32_to_ipfs(code_hash)
@@ -33,31 +31,31 @@ def analyze_data(self, key, provider=None):
         received_storage_deposit = cfg.Ebb.get_received_storage_deposit(
             provider, self.job_info["job_owner"], source_code_hash
         )
-        job_store_duration = cfg.Ebb.get_job_store_duration(provider, source_code_hash)
-        ds = DataStorage(job_store_duration)
+        job_storage_duration = cfg.Ebb.get_job_storage_duration(provider, source_code_hash)
+        ds = DataStorage(job_storage_duration)
         ds.received_storage_deposit = received_storage_deposit
         self.received_block.append(ds.received_block)
-        self.store_duration.append(ds.store_duration)
-        self.job_info["is_already_cached"][source_code_hash_str] = False  # FIXME double check
+        self.storage_duration.append(ds.storage_duration)
+        self.job_info["is_cached"][source_code_hash_str] = False  # FIXME double check
         # if remaining time to cache is 0, then caching is requested for the
         # related source_code_hash
-        if ds.received_block + ds.store_duration >= current_block_number:
+        if ds.received_block + ds.storage_duration >= current_block_number:
             if ds.received_block < current_block_number:
-                self.job_info["is_already_cached"][source_code_hash_str] = True
+                self.job_info["is_cached"][source_code_hash_str] = True
             elif ds.received_block == current_block_number:
-                if source_code_hash in self.job_info["is_already_cached"]:
-                    self.job_info["is_already_cached"][source_code_hash_str] = True
+                if source_code_hash in self.job_info["is_cached"]:
+                    self.job_info["is_cached"][source_code_hash_str] = True
                 else:
                     # for the first job should be False since it is
                     # requested for cache for the first time
-                    self.job_info["is_already_cached"][source_code_hash_str] = False
+                    self.job_info["is_cached"][source_code_hash_str] = False
 
         log(f" * source_code_hash{br(idx)}=[green]{source_code_hash_str}")
         log(f"==> received_block={ds.received_block}")
-        log(f"==> store_duration{br(self.job_info['received_block_number'])}={ds.store_duration}")
+        log(f"==> storage_duration{br(self.job_info['received_block_number'])}={ds.storage_duration}")
         log(f"==> cloud_storage_id{br(idx)}={StorageID(self.job_info['cloudStorageID'][idx]).name}")
         log(f"==> cached_type={CacheType(self.job_info['cacheType'][idx]).name}")
-        log(f"==> is_already_cached={self.job_info['is_already_cached'][source_code_hash_str]}")
+        log(f"==> is_cached={self.job_info['is_cached'][source_code_hash_str]}")
 
 
 def set_job_received_block_number(self, received_block_number):
@@ -97,9 +95,9 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
         raise e
 
 
-def get_job_source_code_hashes(self, provider, job_key, index, received_block_number=0):
+def get_job_code_hashes(self, provider, job_key, index, received_block_number=0):
+    """code_hashes of the completed job is obtained from its event."""
     # job_info["received_block_number"]
-    """Source_code_hashes of the completed job is obtained from its event."""
     self.set_job_received_block_number(received_block_number)
     try:
         event_filter = self._eBlocBroker.events.LogJob.createFilter(
@@ -134,9 +132,9 @@ def get_job_info_print(self, provider, job_key, index, received_block_number):
         if result_ipfs_hash:
             log(f"==> result_ipfs_hash={result_ipfs_hash}")
 
-        Ebb.get_job_source_code_hashes(provider, job_key, index, received_block_number)
+        Ebb.get_job_code_hashes(provider, job_key, index, received_block_number)
         if self.job_info["code_hashes"]:
-            log("source_code_hashes:", "bold blue")
+            log("code_hashes:", "bold blue")
             for idx, code_hash in enumerate(self.job_info["code_hashes"]):
                 main_cloud_storage_id = self.job_info["cloudStorageID"][idx]
                 if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
@@ -207,7 +205,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             "code_hashes": None,
             "data_transfer_in_to_download": None,
             "data_transfer_out_used": None,
-            "store_duration": None,
+            "storage_duration": None,
         }
         received_block_number = self.update_job_cores(provider, job_key, index, received_block_number)
         if not received_block_number or received_block_number == self.deployed_block_number:
@@ -241,16 +239,15 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
         raise e
 
     if str(self.job_info["core"]) == "0":
-        log("E: Failed to get_job_info: Out of index")
-        raise
+        raise Exception("E: Failed to get_job_info: Out of index")
 
     if is_log_print:
         self.get_job_info_print(provider, job_key, index, received_block_number)
 
-    if self.job_info["store_duration"] is None:
-        self.job_info["store_duration"] = []
+    if self.job_info["storage_duration"] is None:
+        self.job_info["storage_duration"] = []
         for _ in range(len(self.job_info["cacheType"])):
-            self.job_info["store_duration"].append(0)
+            self.job_info["storage_duration"].append(0)
 
     return self.job_info
 
@@ -268,7 +265,7 @@ def main():
         if len(sys.argv) == 6:
             received_block_number = int(sys.argv[5])
     else:
-        print("E: Please provide [provider, job_key, index, and job_id] as arguments")
+        log("E: Provide <provider, job_key, index, and job_id> as arguments")
         sys.exit(1)
 
     try:

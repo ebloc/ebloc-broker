@@ -5,19 +5,19 @@ from contextlib import suppress
 from pathlib import Path
 
 from filelock import FileLock
-from ruamel.yaml import YAML, representer
+from ruamel.yaml import YAML, comments, representer
 
-try:
-    from broker._utils.tools import print_tb, _remove
-except:  # if ebloc_broker used as a submodule
-    from ebloc_broker.broker._utils.tools import print_tb, _remove
+from broker._utils.tools import print_tb
+
+_SR = representer.RoundTripRepresenter
 
 
-class SubYaml(dict):
+class SubYaml(comments.CommentedMap):
     """SubYaml object."""
 
     def __init__(self, parent):
         self.parent = parent
+        super().__init__(self)
 
     def updated(self):
         self.parent.updated()
@@ -33,34 +33,41 @@ class SubYaml(dict):
 
     def __getitem__(self, key):
         try:
-            super().__getitem__(key)
+            return super().__getitem__(key)
         except KeyError:
             super().__setitem__(key, SubYaml(self))
             self.updated()
-        return super().__getitem__(key)
+            return super().__getitem__(key)
 
     def __delitem__(self, key):
         super().__delitem__(key)
         self.updated()
 
-    def update(self, *args, **kwargs):
+    def update(self, *args, **kw):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
 
-        for k, v in kwargs.items():
+            for attr in [comments.Comment.attrib, comments.Format.attrib]:
+                if hasattr(arg, attr):
+                    setattr(self, attr, getattr(arg, attr))
+
+        for k, v in kw.items():
             self[k] = v
 
         self.updated()
 
 
-class Yaml(dict):
-    """Yaml object.
+_SR.add_representer(SubYaml, _SR.represent_dict)
+
+
+class Yaml(comments.CommentedMap):
+    """Create yaml object.
 
     How to auto-dump modified values in nested dictionaries using ruamel.yaml?
     __ https://stackoverflow.com/a/68694688/2402577
 
-    ruamel.yaml.representer.RepresenterError: cannot represent an object: {'value': }
+    representer.RepresenterError: cannot represent an object: {'value': }
     __ https://stackoverflow.com/a/68685839/2402577
 
     PyYAML Saving data to .yaml files
@@ -68,11 +75,14 @@ class Yaml(dict):
 
     Yaml format
     __ https://stackoverflow.com/a/70034493/2402577
+
+    Keep comments of a yaml file when modify its values in nested dictionaries
+    __ https://stackoverflow.com/a/71000545/2402577
     """
 
     def __init__(self, path, auto_dump=True):
-        #: To get the dirname of the absolute path
-        path = os.path.expanduser(path)
+        super().__init__(self)
+        path = os.path.expanduser(path)  # dirname of the absolute path
         self.dirname = os.path.dirname(os.path.abspath(path))
         self.filename = os.path.basename(path)
         if self.filename[0] == ".":
@@ -82,24 +92,14 @@ class Yaml(dict):
 
         self.fp_lock = os.path.join(self.dirname, fp_lockname)
         self.path = path if hasattr(path, "open") else Path(path)
-        self.path_temp = f"{self.path}~"
         self.auto_dump = auto_dump
         self.changed = False
         self.yaml = YAML()
-        # self.yaml = YAML(typ="safe")
         self.yaml.indent(mapping=4, sequence=4, offset=2)
-        self.yaml.default_flow_style = False
         if self.path.exists():
             with FileLock(self.fp_lock, timeout=1):
                 with open(path) as f:
                     self.update(self.yaml.load(f) or {})
-
-    def remove_temp(self):
-        _remove(self.path_temp)
-
-    def compare_files(self, fn1, fn2):
-        with open(fn1, "r") as file1, open(fn2, "r") as file2:
-            return file1.read() == file2.read()
 
     def updated(self):
         if self.auto_dump:
@@ -108,32 +108,12 @@ class Yaml(dict):
             self.changed = True
 
     def dump(self, force=False):
-        """Dump yaml object.
-
-        If two files have the same content in Python:
-        __ https://stackoverflow.com/a/1072576/2402577
-        """
+        """Dump yaml object."""
         if not self.changed and not force:
             return
 
-        with open(self.path_temp, "w") as f:
-            # write to a temporary file
+        with open(self.path, "w") as f:
             self.yaml.dump(dict(self), f)
-
-        if os.path.isfile(self.path_temp):
-            with open(self.path_temp) as f_temp:
-                content = f_temp.readlines()
-
-            if len(content) == 1 and content[0] == "{}\n":
-                os.remove(self.path_temp)
-            else:
-                if os.path.isfile(self.path_temp):
-                    if os.path.isfile(self.path):
-                        if not self.compare_files(self.path, self.path_temp):
-                            # rename the temporary to the real one
-                            os.rename(self.path_temp, self.path)
-                    else:
-                        os.rename(self.path_temp, self.path)
 
         self.changed = False
 
@@ -165,15 +145,19 @@ class Yaml(dict):
             for k, v in arg.items():
                 self[k] = v
 
+            for attr in [comments.Comment.attrib, comments.Format.attrib]:
+                if hasattr(arg, attr):
+                    setattr(self, attr, getattr(arg, attr))
+
         for k, v in kw.items():
             self[k] = v
 
         self.updated()
 
 
-_SR = representer.RoundTripRepresenter
-# _SR = representer.SafeRepresenter
-_SR.add_representer(SubYaml, _SR.represent_dict)
+_SR.add_representer(Yaml, _SR.represent_dict)
+
+cfg = Yaml(Path("config.yaml"))
 
 
 def test_1():
@@ -208,13 +192,11 @@ def test_3():
     print(config_file.read_text())
     cfg["b"]["x"] = 3
     cfg["a"] = 4
-
     print(f"{config_file} 2:")
     print(config_file.read_text())
 
     cfg.update(a=9, d=196)
     cfg["c"]["y"].update(k=11, l=12)
-
     print(f"{config_file} 3:")
     print(config_file.read_text())
 
@@ -240,10 +222,32 @@ def test_3():
     assert cfg_again["c"]["b"]["f"] == 333, "cfg['c']['b']['f'] is not 333"
 
 
-if __name__ == "__main__":
+def test_4():
+    fn = Path("config.yaml")
+    fn.write_text(
+        """
+    c:  # my comment
+      b:
+         f: 5
+      x: {g: 6}
+    a:
+      z: 4
+      b: 4  # my comment
+    """
+    )
+    Yaml(fn)
+    print(Path(fn).read_text())
+
+
+def main():
     try:
         test_1()
         test_2()
         test_3()
+        test_4()
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

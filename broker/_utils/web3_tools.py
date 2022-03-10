@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 
 from contextlib import suppress
-
 from web3._utils.threads import Timeout
 from web3.types import TxReceipt
 
 from broker import cfg
 from broker._utils._log import log, ok
+from brownie.network.transaction import TransactionReceipt
 
 
-def get_tx_status(tx_hash: str, is_silent=False) -> TxReceipt:
+def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
     """Return status of the transaction."""
     if not tx_hash:
-        log("warning: tx_hash is empty")
+        raise Exception("warning: tx_hash is empty")
+
+    if isinstance(tx_hash, TransactionReceipt):
+        tx_hash = tx_hash.txid
 
     if not is_silent:
         log(f"tx_hash={tx_hash}", "bold")
@@ -34,7 +37,7 @@ def get_tx_status(tx_hash: str, is_silent=False) -> TxReceipt:
                 log(f"log_{idx}=", "bold blue", end="")
                 log(_log)
 
-            log("#> Was transaction successfully deployed? ", end="")
+            log("#> Is transaction successfully deployed? ", end="")
 
         if tx_receipt["status"] == 1:
             if not is_silent:
@@ -43,7 +46,7 @@ def get_tx_status(tx_hash: str, is_silent=False) -> TxReceipt:
             if not is_silent:
                 log()
 
-            raise Exception("E: Transaction is reverted")
+            raise Exception("E: tx is reverted")
 
         return tx_receipt
     except Timeout as e:

@@ -7,6 +7,6 @@ echo -e "==> network="$network
 rm -rf build/
 brownie compile
 brownie run eBlocBroker --network $network
-#     | \
-#     tee |  sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' > $filename
-# cat $filename
+echo -e "Setting ABI..."
+./set_abi.sh  >/dev/null 2>&1
+echo -e "done"
