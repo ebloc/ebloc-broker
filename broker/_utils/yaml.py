@@ -27,18 +27,17 @@ class SubYaml(comments.CommentedMap):
             v = SubYaml(self)
             v.update(value)
             value = v
+
         super().__setitem__(key, value)
         self.updated()
 
     def __getitem__(self, key):
         try:
-            res = super().__getitem__(key)
+            return super().__getitem__(key)
         except KeyError:
             super().__setitem__(key, SubYaml(self))
             self.updated()
             return super().__getitem__(key)
-
-        return res
 
     def __delitem__(self, key):
         super().__delitem__(key)
@@ -48,6 +47,7 @@ class SubYaml(comments.CommentedMap):
         for arg in args:
             for k, v in arg.items():
                 self[k] = v
+
             for attr in [comments.Comment.attrib, comments.Format.attrib]:
                 if hasattr(arg, attr):
                     setattr(self, attr, getattr(arg, attr))
@@ -62,7 +62,7 @@ _SR.add_representer(SubYaml, _SR.represent_dict)
 
 
 class Yaml(comments.CommentedMap):
-    """Yaml object.
+    """Create yaml object.
 
     How to auto-dump modified values in nested dictionaries using ruamel.yaml?
     __ https://stackoverflow.com/a/68694688/2402577

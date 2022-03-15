@@ -6,7 +6,7 @@ if __name__ == "__main__":
     from broker.utils import run
 
     filename = call.__file__
-    func_name = "getStorageDuration"
+    func_name = "getStorageInfo"
     data = (
         "",
         "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49",

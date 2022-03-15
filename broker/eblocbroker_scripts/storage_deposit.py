@@ -2,7 +2,6 @@
 
 from broker import cfg
 from broker._utils._log import br, log
-from broker._utils.tools import print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker.errors import QuietExit
 from broker.utils import StorageID, bytes32_to_ipfs
@@ -33,7 +32,7 @@ def deposit_storage(eth_address, is_provider=False):
 
     for job in enumerate(event_filter.get_all_entries()):
         job_info = job[1].args
-        # job_provider = job_info["provider"]
+        flag_check = []
         for idx, code_hash in enumerate(job_info["sourceCodeHash"]):
             main_cloud_storage_id = job_info["cloudStorageID"][idx]
             if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
@@ -52,17 +51,43 @@ def deposit_storage(eth_address, is_provider=False):
             provider = Ebb.w3.toChecksumAddress(job_info["provider"])
             if is_provider and eth_address.lower() == provider.lower():
                 data_owner = Ebb.w3.toChecksumAddress(job_info["owner"])
-                deposit = Ebb.get_received_storage_deposit(provider, data_owner, code_hash)
-                if deposit > 0:
-                    print(deposit)
-                    tx = Ebb.deposit_storage(data_owner, code_hash, eth_address)
-                    get_tx_status(Ebb.tx_id(tx))
+                deposit, output = Ebb.get_storage_info(provider, data_owner, code_hash)
+                flag_check.append(output[3])
+                log(f"deposit={deposit}, {output}", "bold")
+
+        if deposit > 0 and not any(flag_check):  # if not any(i for i in flag_check):
+            is_verified_list = [True, True]
+            tx = Ebb._data_received(
+                job_info["jobKey"],
+                job_info["index"],
+                job_info["sourceCodeHash"],
+                job_info["cacheType"],
+                is_verified_list,
+            )
+            get_tx_status(Ebb.tx_id(tx))
+        else:
+            log("warning: already all data files are are verifid")
+
+    # try:
+    #     if deposit > 0:
+    #         log(f"deposit={deposit}", "bold")
+    #         tx = Ebb.deposit_storage(data_owner, code_hash, eth_address)
+    #         get_tx_status(Ebb.tx_id(tx))
+    # except:
+    #     pass
+
+    # try:
+    #     output = Ebb.get_storage_info(provider, code_hash)
+    #     breakpoint()  # DEBUG
+    # except:
+    #     pass
 
 
 if __name__ == "__main__":
     try:
-        deposit_storage("0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea", is_provider=True)
+        deposit_storage("0x72c1a89ff3606aa29686ba8d29e28dccff06430a", is_provider=True)
     except QuietExit:
         pass
-    except Exception:
+    except Exception as e:
+        log(str(e))
         breakpoint()  # DEBUG

@@ -38,7 +38,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
                 log(f"log_{idx}=", "bold blue", end="")
                 log(_log)
 
-            log("#> Was transaction successfully deployed? ", end="")
+            log("#> Is transaction successfully deployed? ", end="")
 
         if tx_receipt["status"] == 1:
             if not is_silent:
@@ -47,7 +47,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
             if not is_silent:
                 log()
 
-            raise Exception("E: Transaction is reverted")
+            raise Exception("E: tx is reverted")
 
         return tx_receipt
     except Timeout as e:

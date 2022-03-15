@@ -57,12 +57,6 @@ class ENV(ENV_BASE):
 
         self.SLURMUSER = self.cfg["provider"]["slurmuser"]
         self.GDRIVE = self.cfg["gdrive"]
-        self.OC_USER = self.cfg["oc_user"]
-        if "@b2drop.eudat.eu" not in self.OC_USER:
-            self.F_ID = f"{self.OC_USER}@b2drop.eudat.eu"
-        else:
-            self.F_ID = self.OC_USER
-
         self.DATADIR = Path(self.cfg["datadir"])
         self.LOG_PATH = Path(self.cfg["log_path"])
         self.config = Yaml(self.LOG_PATH.joinpath("config.yaml"))
@@ -84,7 +78,13 @@ class ENV(ENV_BASE):
         self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")
         self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
         self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
-        self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"])
+        self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"].lower())
+        self.OC_USER = self.cfg["oc_user"]
+        if "@b2drop.eudat.eu" not in self.OC_USER:
+            self.F_ID = f"{self.OC_USER}@b2drop.eudat.eu"
+        else:
+            self.F_ID = self.OC_USER
+
         _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
         mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID)
         # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"

@@ -6,13 +6,13 @@ config:
         cache_type: public
         path: ~/test_eblocbroker/test_data/base/source_code
         size_mb: 1
-        storage_hours: 0
+        storage_hours: 1
     data:
         data1:
             cache_type: public
             path: ~/test_eblocbroker/test_data/base/data/data1
             size_mb: 1
-            storage_hours: 0
+            storage_hours: 1
             storage_id: ipfs
     data_transfer_out: 1
     jobs:

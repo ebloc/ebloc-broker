@@ -95,8 +95,8 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
         raise e
 
 
-def get_job_source_code_hashes(self, provider, job_key, index, received_block_number=0):
-    """Source_code_hashes of the completed job is obtained from its event."""
+def get_job_code_hashes(self, provider, job_key, index, received_block_number=0):
+    """code_hashes of the completed job is obtained from its event."""
     # job_info["received_block_number"]
     self.set_job_received_block_number(received_block_number)
     try:
@@ -132,9 +132,9 @@ def get_job_info_print(self, provider, job_key, index, received_block_number):
         if result_ipfs_hash:
             log(f"==> result_ipfs_hash={result_ipfs_hash}")
 
-        Ebb.get_job_source_code_hashes(provider, job_key, index, received_block_number)
+        Ebb.get_job_code_hashes(provider, job_key, index, received_block_number)
         if self.job_info["code_hashes"]:
-            log("source_code_hashes:", "bold blue")
+            log("code_hashes:", "bold blue")
             for idx, code_hash in enumerate(self.job_info["code_hashes"]):
                 main_cloud_storage_id = self.job_info["cloudStorageID"][idx]
                 if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):

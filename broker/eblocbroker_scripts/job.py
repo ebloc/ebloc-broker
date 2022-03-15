@@ -51,8 +51,8 @@ class Job:
         self.w3 = self.Ebb.w3
         self.run_time: List[int] = []
         self.folders_to_share: List[str] = []  # path of folder to share
-        self.source_code_hashes: List[bytes] = []
-        self.source_code_hashes_str: List[str] = []
+        self.code_hashes: List[bytes] = []
+        self.code_hashes_str: List[str] = []
         self.storage_hours: List[int] = []
         self.storage_ids: List[int] = []
         self.cache_types: List[int] = []
@@ -117,7 +117,7 @@ class Job:
     def check(self):
         try:
             assert len(self.cores) == len(self.run_time)
-            assert len(self.source_code_hashes) == len(self.storage_hours)
+            assert len(self.code_hashes) == len(self.storage_hours)
             assert len(self.storage_hours) == len(self.storage_ids)
             assert len(self.cache_types) == len(self.storage_ids)
             for idx, storage_id in enumerate(self.storage_ids):
@@ -139,7 +139,7 @@ class Job:
 
     def clean_before_submit(self):
         for folder in self.folders_to_share:
-            if not isinstance(folder, bytes):
+            if isinstance(folder, str):
                 _remove(os.path.join(folder, ".mypy_cache"))
 
     def check_account_status(self, _from):
@@ -264,7 +264,7 @@ class Job:
         self.data_prices_set_block_numbers.append(0)  # TODO: calculate from the contract
 
     def print_before_submit(self):
-        for idx, source_code_hash in enumerate(self.source_code_hashes_str):
+        for idx, source_code_hash in enumerate(self.code_hashes_str):
             print_temp = {
                 "path": self.paths[idx],
                 "source_code_hash": source_code_hash,
@@ -315,20 +315,27 @@ class JobPrices:
         for idx, core in enumerate(self.job.cores):
             self.computational_cost += int(self.price_core_min * core * self.job.run_time[idx])
 
-    def create_data_storage(self, source_code_hash: str):
+    def new_contract_function_call(self, code_hash):
+        """Call contract function with new brownie object.
+
+        This part is not needed when `{from: }` is removed from the getter in the smart contract
+        """
+        filename = call.__file__
+        data = ("func", self.job.provider, self.job.requester, code_hash)
+        output = run(["python", filename, *[str(arg) for arg in data]])  # GOTCHA
+        output = output.split("\n")
+        received_storage_deposit = float(output[0])
+        job_storage_duration = make_tuple(output[1])
+        return received_storage_deposit, job_storage_duration
+
+    def create_data_storage(self, code_hash: str, is_main=True):
         """Create data storage object."""
-        if self.is_brownie:
-            received_storage_deposit = self.Ebb.get_received_storage_deposit(
-                self.job.provider, self.job.requester, source_code_hash
+        if self.is_brownie or is_main:
+            received_storage_deposit, job_storage_duration = self.Ebb.get_job_storage_duration(
+                self.job.provider, self.job.requester, code_hash
             )
-            job_storage_duration = self.Ebb.get_job_storage_duration(self.job.provider, source_code_hash)
         else:
-            filename = call.__file__
-            data = ("func", self.job.provider, self.job.requester, source_code_hash)
-            output = run(["python", filename, *[str(arg) for arg in data]])  # GOTCHA
-            output = output.split("\n")
-            received_storage_deposit = float(output[0])
-            job_storage_duration = make_tuple(output[1])
+            received_storage_deposit, job_storage_duration = self.new_contract_function_call(code_hash)
 
         ds = DataStorage(job_storage_duration)
         ds.received_storage_deposit = received_storage_deposit
@@ -339,11 +346,11 @@ class JobPrices:
         self.storage_cost = 0
         self.cache_cost = 0
         self.data_transfer_in_sum = 0
-        for idx, source_code_hash in enumerate(self.job.source_code_hashes):
+        for idx, source_code_hash in enumerate(self.job.code_hashes):
             if self.is_brownie:
                 ds = self.create_data_storage(source_code_hash)
             else:
-                ds = self.create_data_storage(self.job.source_code_hashes_str[idx])
+                ds = self.create_data_storage(self.job.code_hashes_str[idx])
 
             if ds.received_block + ds.storage_duration < self.w3.eth.block_number:
                 # storage time is completed

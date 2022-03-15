@@ -16,8 +16,8 @@ interface eBlocBrokerInterface {
         uint32 index,
         uint32 jobID,
         address recipient,
-        uint256 receivedWei, // Value in wei to be recevied by the provider
-        uint256 refundedWei, // Value in wei to be refunded to the requester
+        uint256 receivedWei, // value in wei to be recevied by the provider
+        uint256 refundedWei, // value in wei to be refunded to the requester
         uint256 completionTime,
         bytes32 resultIpfsHash,
         uint256 dataTransferIn,

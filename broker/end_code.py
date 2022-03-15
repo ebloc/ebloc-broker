@@ -56,9 +56,9 @@ class Common:
         self.patch_file: Path = Path("")
         self.requester_gpg_fingerprint: str = ""
         self.patch_upload_name = ""
-        self.data_transfer_out = 0.0
+        self.data_transfer_out = 0
 
-    @exit_after(900)  # timeout in 15 minuntes
+    @exit_after(900)
     def _get_tx_status(self, tx_hash):
         get_tx_status(tx_hash)
 
@@ -164,8 +164,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.data_transfer_in = 0
         self.data_transfer_out = 0.0
         self.elapsed_time = 0
-        self.source_code_hashes_to_process: List[str] = []
-        self.source_code_hashes: List[str] = []
+        self.code_hashes_to_process: List[str] = []
+        self.code_hashes: List[str] = []
         self.result_ipfs_hash: str = ""
         self.requester_gpg_fingerprint: str = ""
         self.end_time_stamp = ""
@@ -231,7 +231,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         with suppress(Exception):
             share_ids = read_json(f"{self.private_dir}/{self.job_key}_share_id.json")
 
-        for source_code_hash in self.source_code_hashes_to_process:
+        for source_code_hash in self.code_hashes_to_process:
             try:
                 share_token = share_ids[source_code_hash]["share_token"]
                 self.share_tokens[source_code_hash] = share_token
@@ -273,13 +273,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         raise Exception(f"corresponding storage_id_class={self.storage_ids[_id]} does not exist")
 
-    def set_source_code_hashes_to_process(self):
-        for idx, source_code_hash in enumerate(self.source_code_hashes):
+    def set_code_hashes_to_process(self):
+        for idx, source_code_hash in enumerate(self.code_hashes):
             if self.storage_ids[idx] in [StorageID.IPFS, StorageID.IPFS_GPG]:
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
-                self.source_code_hashes_to_process.append(ipfs_hash)
+                self.code_hashes_to_process.append(ipfs_hash)
             else:
-                self.source_code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
+                self.code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
 
     def _ipfs_add_folder(self, folder_path):
         try:
@@ -370,7 +370,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         except Exception as e:
             raise e
 
-        for idx, name in enumerate(self.source_code_hashes_to_process[1:], 1):
+        for idx, name in enumerate(self.code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
             source = self.results_data_folder / name
             try:
@@ -517,7 +517,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("## Received running job status successfully", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
-                lambda: Ebb.get_job_source_code_hashes(
+                lambda: Ebb.get_job_code_hashes(
                     env.PROVIDER_ID,
                     self.job_key,
                     self.index,
@@ -530,8 +530,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        self.source_code_hashes = self.job_info["code_hashes"]
-        self.set_source_code_hashes_to_process()
+        self.code_hashes = self.job_info["code_hashes"]
+        self.set_code_hashes_to_process()
         self.sacct_result()
         self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
         self.elapsed_time = slurm.get_elapsed_time(self.slurm_job_id)

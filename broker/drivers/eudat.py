@@ -27,15 +27,15 @@ class EudatClass(Storage):
         self.accept_flag = 0
         self.share_id = {}
         self.tar_downloaded_path = {}
-        self.source_code_hashes_to_process: List[str] = []
-        for source_code_hash in self.source_code_hashes:
-            self.source_code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
+        self.code_hashes_to_process: List[str] = []
+        for source_code_hash in self.code_hashes:
+            self.code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
 
-        for source_code_hash in self.source_code_hashes_to_process:
+        for source_code_hash in self.code_hashes_to_process:
             self.check_already_cached(source_code_hash)
 
     def cache_wrapper(self) -> bool:
-        for idx, folder_name in enumerate(self.source_code_hashes_to_process):
+        for idx, folder_name in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] == StorageID.NONE:
                 return True
             elif not self.cache(folder_name, idx):
@@ -233,7 +233,7 @@ class EudatClass(Storage):
 
     def total_size_to_download(self):
         data_transfer_in_to_download = 0  # total size to download in bytes
-        for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
+        for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 folder_name = source_code_hash_text
                 if folder_name not in self.is_cached:
@@ -254,7 +254,7 @@ class EudatClass(Storage):
             raise Exception(f"{self.private_dir} does not exist")
 
         share_id_file = f"{self.private_dir}/{self.job_key}_share_id.json"
-        for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
+        for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 folder_name = source_code_hash_text
                 self.folder_type_dict[folder_name] = None
@@ -314,7 +314,7 @@ class EudatClass(Storage):
             return False
 
         self.accept_flag = 0
-        for idx, source_code_hash_text in enumerate(self.source_code_hashes_to_process):
+        for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] == StorageID.NONE:
                 self.accept_flag += 1
             else:
@@ -340,10 +340,10 @@ class EudatClass(Storage):
                         else:
                             self.search_token(f_id, share_list, folder_name)
 
-                if self.accept_flag is len(self.source_code_hashes):
+                if self.accept_flag is len(self.code_hashes):
                     break
         else:
-            if self.accept_flag is len(self.source_code_hashes):
+            if self.accept_flag is len(self.code_hashes):
                 logging.info("shared token already exists on mongoDB")
             # else:
             #     raise Exception(f"E: could not find a shared file. Found ones are:\n{self.share_id}")
@@ -392,7 +392,7 @@ class EudatClass(Storage):
         if not self.cache_wrapper():
             return False
 
-        for idx, folder_name in enumerate(self.source_code_hashes_to_process):
+        for idx, folder_name in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 if self.folder_type_dict[folder_name] == "tar.gz":
                     # untar the cached tar file into private directory
@@ -413,7 +413,7 @@ class EudatClass(Storage):
                         return False
 
         log(f"==> data_transfer_in_requested={self.data_transfer_in_requested} MB")
-        for idx, folder_name in enumerate(self.source_code_hashes_to_process):
+        for idx, folder_name in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] == StorageID.NONE:
                 if isinstance(folder_name, bytes):
                     self.registered_data_hashes.append(folder_name.decode("utf-8"))

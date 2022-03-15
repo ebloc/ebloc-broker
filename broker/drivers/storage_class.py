@@ -46,8 +46,8 @@ class Storage(BaseClass):
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]
         self.data_transfer_in_to_download_mb = 0  # total size in MB to download
-        self.source_code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
-        self.source_code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.source_code_hashes]
+        self.code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
+        self.code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.code_hashes]
         self.registered_data_hashes = []  # noqa
         self.job_key_list: List[str] = []
         self.md5sum_dict: Dict[str, str] = {}
@@ -313,7 +313,7 @@ class Storage(BaseClass):
         self.Ebb.mongo_broker.add_item(
             job_key,
             self.index,
-            self.source_code_hashes_str,
+            self.code_hashes_str,
             self.requester_id,
             timestamp,
             main_cloud_storage_id,

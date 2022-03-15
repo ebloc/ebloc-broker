@@ -35,14 +35,14 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     for folder_to_share in job.folders_to_share:
         if isinstance(folder_to_share, bytes):
             code_hash = folder_to_share
-            job.source_code_hashes.append(code_hash)
-            job.source_code_hashes_str.append(code_hash.decode("utf-8"))
+            job.code_hashes.append(code_hash)
+            job.code_hashes_str.append(code_hash.decode("utf-8"))
         else:
             tar_hash = job.foldername_tar_hash[folder_to_share]
             #: required to send string as bytes == str_data.encode('utf-8')
             code_hash = Ebb.w3.toBytes(text=tar_hash)
-            job.source_code_hashes.append(code_hash)
-            job.source_code_hashes_str.append(code_hash.decode("utf-8"))
+            job.code_hashes.append(code_hash)
+            job.code_hashes_str.append(code_hash.decode("utf-8"))
 
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
     key = job.keys[tar_hash]

@@ -8,7 +8,6 @@
 # $HOME/node_modules/.bin/prettier --write contracts/**/*.sol --config .prettierrce
 
 # Linux
-/usr/local/bin/prettier --write contracts/**/*.sol --config .prettierrce
-
+prettier --write contracts/**/*.sol --config .prettierrce
 rm -f contracts/.#*
 solium --config contracts/.soliumrc.json -d contracts/

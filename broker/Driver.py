@@ -211,7 +211,7 @@ class Driver:
                 partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.job_block_number),
                 max_retries=10,
             )
-            cfg.Ebb.get_job_source_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
+            cfg.Ebb.get_job_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
             self.job_info.update({"storage_duration": self.storage_duration})
@@ -349,10 +349,10 @@ def run_driver(given_bn):
         log(f"## is_threading={cfg.IS_THREADING_ENABLED}")
 
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
-    log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
     log(f"==> whoami={env.WHOAMI}")
     log(f"==> log_file={_log.DRIVER_LOG}")
     log(f"==> rootdir={os.getcwd()}")
+    log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
@@ -367,7 +367,7 @@ def run_driver(given_bn):
         )
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-        raise QuietExit(f"Provider's ({env.PROVIDER_ID}) ORCID is not verified")
+        raise QuietExit(f"provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
     blk_read = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)

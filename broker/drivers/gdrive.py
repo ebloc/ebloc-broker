@@ -198,7 +198,7 @@ class GdriveClass(Storage):
                     folder_name,
                     gdrive_output,
                     self.results_folder_prev,
-                    self.source_code_hashes,
+                    self.code_hashes,
                     self.job_infos[0]["is_cached"],
                 )
             except Exception as e:
@@ -344,7 +344,7 @@ class GdriveClass(Storage):
         if not self.check_run_sh():
             self.complete_refund()
 
-        for idx, source_code_hash in enumerate(self.source_code_hashes):
+        for idx, source_code_hash in enumerate(self.code_hashes):
             if self.cloudStorageID[idx] == StorageID.NONE:
                 if isinstance(source_code_hash, bytes):
                     self.registered_data_hashes.append(source_code_hash.decode("utf-8"))

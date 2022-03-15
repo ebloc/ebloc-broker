@@ -288,8 +288,8 @@ def _submit(provider, requester, job, required_confs=1):
 
             # required to send string as bytes
             value = cfg.w3.toBytes(text=folder_hash)
-            job.source_code_hashes.append(value)
-            job.source_code_hashes_str.append(value.decode("utf-8"))
+            job.code_hashes.append(value)
+            job.code_hashes_str.append(value.decode("utf-8"))
             _folder = f"{folder_hash}_{requester_name}"
             if not share_single_folder(_folder, provider_info["f_id"]):
                 sys.exit(1)
@@ -297,11 +297,11 @@ def _submit(provider, requester, job, required_confs=1):
             time.sleep(0.25)
         else:
             code_hash = folder
-            job.source_code_hashes.append(code_hash)
-            job.source_code_hashes_str.append(code_hash.decode("utf-8"))
+            job.code_hashes.append(code_hash)
+            job.code_hashes_str.append(code_hash.decode("utf-8"))
 
     job.price, *_ = job.cost(provider, requester)
-    # print(job.source_code_hashes)
+    # print(job.code_hashes)
     try:
         return job.Ebb.submit_job(provider, job_key, job, requester, required_confs=required_confs)
     except QuietExit:

@@ -73,10 +73,10 @@ class Contract:
     from broker.eblocbroker_scripts.data import get_data_info
     from broker.eblocbroker_scripts.get_job_info import (
         analyze_data,
+        get_job_code_hashes,
         get_job_info,
         get_job_info_print,
         get_job_owner,
-        get_job_source_code_hashes,
         set_job_received_block_number,
         update_job_cores,
     )
@@ -136,7 +136,7 @@ class Contract:
         return self.w3.eth.syncing
 
     def timenow(self) -> int:
-        return self.w3.eth.get_block(self.w3.eth.get_block_number())["timestamp"]
+        return self.w3.eth.get_block(self.get_block_number())["timestamp"]
 
     def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_silent=False) -> TxReceipt:
         """Wait till the tx is deployed."""
@@ -244,7 +244,7 @@ class Contract:
         return self.tx_id(tx)
 
     def get_block_number(self):
-        """Retrun block number."""
+        """Return block number."""
         return self.w3.eth.block_number
 
     def is_address(self, addr):
@@ -392,6 +392,13 @@ class Contract:
         self._from = _from
         self.required_confs = 1
         return self.timeout_wrapper("registerRequester", *args)
+
+    def _data_received(self, *args) -> "TransactionReceipt":
+        """Withdraw payment."""
+        self.gas_price = GAS_PRICE
+        self._from = env.PROVIDER_ID
+        self.required_confs = 1
+        return self.timeout_wrapper("dataReceived", *args)
 
     def _refund(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
@@ -588,13 +595,13 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def get_provider_receipt_node(self, provider_address, index):
+    def get_provider_receipt_node(self, provideress, index):
         """Return provider's receipt node based on given index."""
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
-                return self.eBlocBroker.getProviderReceiptNode(provider_address, index)
+                return self.eBlocBroker.getProviderReceiptNode(provideress, index)
             else:
-                return self.eBlocBroker.functions.getProviderReceiptNode(provider_address, index).call()
+                return self.eBlocBroker.functions.getProviderReceiptNode(provideress, index).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
@@ -670,10 +677,10 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def get_job_storage_duration(self, provider_addr, code_hash):
+    def get_job_storage_duration(self, provider, requester, code_hash):
         """Return job's storage duration."""
-        if not isinstance(provider_addr, (Account, LocalAccount)):
-            provider_addr = self.w3.toChecksumAddress(provider_addr)
+        if not isinstance(provider, (Account, LocalAccount)):
+            provider = self.w3.toChecksumAddress(provider)
 
         if isinstance(code_hash, str):
             with suppress(Exception):
@@ -681,24 +688,37 @@ class Contract:
 
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
-                return self.eBlocBroker.getStorageDuration(provider_addr, code_hash)
+                return self.eBlocBroker.getStorageInfo(provider, requester, code_hash)
             else:
-                return self.eBlocBroker.functions.getStorageDuration(provider_addr, code_hash).call()
+                return self.eBlocBroker.functions.getStorageInfo(provider, requester, code_hash).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def get_received_storage_deposit(self, provider, requester, code_hash) -> int:
+    # def get_received_storage_deposit(self, provider, requester, code_hash) -> int:
+    #     """Return the received storage deposit for the corresponding source code hash.
+
+    #     * required for the whenProviderRegistered() check on the contract
+    #     """
+    #     if isinstance(code_hash, str):
+    #         with suppress(Exception):
+    #             code_hash = ipfs_to_bytes32(code_hash)
+
+    #     if env.IS_BLOXBERG:
+    #         return self.eBlocBroker.getStorageDeposit(provider, requester, code_hash)
+    #     else:
+    #         return self.eBlocBroker.functions.getStorageDeposit(provider, requester, code_hash).call()
+
+    def get_storage_info(self, provider, requester, code_hash):
         """Return the received storage deposit for the corresponding source code hash."""
-        ops = {"from": provider}  # required for the whenProviderRegistered() check on the contract
         if isinstance(code_hash, str):
             with suppress(Exception):
                 code_hash = ipfs_to_bytes32(code_hash)
 
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
-                return self.eBlocBroker.getReceivedStorageDeposit(provider, requester, code_hash, ops)
+                return self.eBlocBroker.getStorageInfo(provider, requester, code_hash)
             else:
-                return self.eBlocBroker.functions.getReceivedStorageDeposit(provider, requester, code_hash).call(ops)
+                return self.eBlocBroker.functions.getStorageInfo(provider, requester, code_hash).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 

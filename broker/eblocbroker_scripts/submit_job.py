@@ -44,7 +44,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             is_use_ipfs = True
             break
 
-    if not job.source_code_hashes:
+    if not job.code_hashes:
         raise Exception("source_code_hash list is empty")
 
     if len(key) >= 64:
@@ -91,7 +91,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                 raise QuietExit from e
 
-    for idx, source_code_hash in enumerate(job.source_code_hashes_str):
+    for idx, source_code_hash in enumerate(job.code_hashes_str):
         if source_code_hash == "":
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
@@ -151,10 +151,10 @@ def submit_job(self, provider, key, job, requester=None, account_id=None, requir
     ]
     job.print_before_submit()
     try:
-        # source_code_hashes_l = []
-        # for idx, source_code_hash in job.source_code_hashes:
-        #     source_code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
-        # log(f"==> source_code_hashes={source_code_hashes_l}")
+        # code_hashes_l = []
+        # for idx, source_code_hash in job.code_hashes:
+        #     code_hashes_l.append(bytes32_to_ipfs(source_code_hash))
+        # log(f"==> code_hashes={code_hashes_l}")
         tx = self._submit_job(
             required_confs,
             _from,
@@ -163,7 +163,7 @@ def submit_job(self, provider, key, job, requester=None, account_id=None, requir
             job.data_transfer_ins,
             args,
             job.storage_hours,
-            job.source_code_hashes,
+            job.code_hashes,
         )
         return self.tx_id(tx)
     except TransactionError as e:

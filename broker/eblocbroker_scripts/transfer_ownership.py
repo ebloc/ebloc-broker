@@ -6,14 +6,13 @@ from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
-from broker.utils import ZERO_ADDRESS
 
 
 def transfer_ownership(self, new_owner):
     """Transfer ownership."""
     _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
     new_owner = self.w3.toChecksumAddress(new_owner)
-    if new_owner == ZERO_ADDRESS:
+    if new_owner == cfg.ZERO_ADDRESS:
         raise Exception("E: Provided address is zero")
 
     if not self.w3.isAddress(new_owner):

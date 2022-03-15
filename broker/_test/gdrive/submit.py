@@ -48,7 +48,7 @@ def main():
     for folder_to_share in job.folders_to_share:
         tar_hash = job.foldername_tar_hash[folder_to_share]
         # required to send string as bytes == str_data.encode('utf-8')
-        job.source_code_hashes.append(Ebb.w3.toBytes(text=tar_hash))
+        job.code_hashes.append(Ebb.w3.toBytes(text=tar_hash))
 
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
     job_key = job.keys[tar_hash]
@@ -61,7 +61,7 @@ def main():
     for k, v in job.tar_hashes.items():
         log(f"{k} => {v}")
 
-    log(f"==> source_code_hashes={job.source_code_hashes}")
+    log(f"==> code_hashes={job.code_hashes}")
     if job.analyze_tx_status(tx_hash):
         log("SUCCESS")
     else:
