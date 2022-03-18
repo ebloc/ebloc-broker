@@ -2,6 +2,7 @@
 
 import os
 import sys
+from os.path import expanduser
 from pathlib import Path
 
 import broker.libs._git as git
@@ -48,6 +49,6 @@ def main(base_dir, patch_fn):
 
 
 if __name__ == "__main__":
-    base_dir = "/home/alper/test_eblocbroker/test_data/base/source_code"
+    base_dir = expanduser("~/test_eblocbroker/test_data/base/source_code")
     patch_fn = "patch~f5fae5edf523c00f3f033af668f78663bf331091~QmYhNZrnG9Tj2ay5HbRWxp4Lr8i4pbiDV3ddWz32u4Cvzb~0.diff.gz"
     main(base_dir, patch_fn)

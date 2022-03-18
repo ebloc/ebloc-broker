@@ -2,6 +2,7 @@
 
 import os
 import sys
+from os.path import expanduser
 
 from broker import cfg
 from broker._utils.tools import print_tb
@@ -25,5 +26,5 @@ def add_to_ipfs(results_folder):
     # shutil.move(results_folder, filepath + '/' + result_ipfs_hash)
 
 
-results_folder = "/home/alper/DAG"
+results_folder = expanduser("~/DAG")
 add_to_ipfs(results_folder)
