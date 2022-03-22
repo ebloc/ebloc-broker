@@ -22,21 +22,21 @@ def remove_user(user_name, user_dir=None):
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user_name}", "--immediate"]
     p, output, *_ = popen_communicate(cmd)
     if p.returncode != 0 and "Nothing deleted" not in output:
-        raise Exception(f"E: sacctmgr remove error: {output}")
+        raise Exception(f"sacctmgr remove error: {output}")
 
     # remove_user(user)
     if user_dir:
         _remove(user_dir)
 
 
-def username_check(check):
+def username_check(username):
     """Check if username exists."""
     try:
-        pwd.getpwnam(check)
-        log("## user %s exists" % (check))
+        pwd.getpwnam(username)
+        log(f"## user [blue]{username}[/blue] exists")
         return False
     except KeyError:
-        log("user %s does not exist. Continuing... %s" % (check, check))
+        log(f"user {username} does not exist. Continuing...")
         return True
 
 
@@ -75,7 +75,7 @@ def user_add(user_address, basedir, slurm_user):
     add_user_to_slurm(user_name)
     if username_check(user_name):
         run(["sudo", "useradd", "-d", user_dir, "-m", user_name, "--shell", "/bin/bash"])
-        log(f"{user_address} => {user_name}) is added as user", "yellow")
+        log(f"## [yellow]{user_address} => {user_name}) is added as user")
         try:
             set_folder_permission(user_dir, user_name, slurm_user)
             add_user_to_slurm(user_name)
@@ -92,7 +92,7 @@ def user_add(user_address, basedir, slurm_user):
             add_user_to_slurm(user_name)  # force to add user to slurm
             mkdir(f"{user_dir}/cache")
         else:
-            log(f"{user_address} => {user_name} has already been created", "bold yellow")
+            log(f"## [magenta]{user_address}[/magenta] => [blue]{user_name}[/blue] has already been created")
 
 
 def main():

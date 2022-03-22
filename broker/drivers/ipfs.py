@@ -27,7 +27,7 @@ class IpfsClass(Storage):
         try:
             ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
             if "CumulativeSize" not in ipfs_stat:
-                raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve")
+                raise Exception("Markle not found! Timeout for the IPFS object stat retrieve")
         except Exception as e:
             print_tb(e)
             raise e
@@ -35,7 +35,7 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
-        logging.info(f"data_transfer_out={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
+        log(f"data_transfer_out={data_size_mb} MB | Rounded={int(data_size_mb)} MB", "bold")
 
     def run(self) -> bool:
         self.start_time = time.time()
@@ -96,12 +96,12 @@ class IpfsClass(Storage):
             cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
             if idx > 0:
                 # https://stackoverflow.com/a/31814223/2402577
-                dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
-                if os.path.exists(dst_filename):
-                    _remove(dst_filename)
+                dst_fn = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
+                if os.path.exists(dst_fn):
+                    _remove(dst_fn)
 
-                shutil.move(target, dst_filename)
-                target = dst_filename
+                shutil.move(target, dst_fn)
+                target = dst_fn
 
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
                 cfg.ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)

@@ -1,5 +1,5 @@
 {
-  "name": "eBlocBroker",
+  "name": "ebloc-broker",
   "version": "2.0.0",
   "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
   "license": "UNLICENSED",
@@ -8,16 +8,14 @@
     "doc": "docs"
   },
   "dependencies": {
+    "ganache": "^7.0.3",
+    "ethlint": "*",
     "binstring": "*",
     "bs58": "*",
-    "dotenv": "^10.0.0",
     "require": "^2.4.20",
-    "scrypt": "^6.0.3",
     "web3": "^1.6.1",
     "web3_ipc": "*",
-    "web3-eth-personal": "^1.6.1",
-    "ethlint": "*",
-    "ganache-cli": "*"
+    "web3-eth-personal": "^1.6.1"
   },
   "devDependencies": {
     "prettier": "^2.4.1",

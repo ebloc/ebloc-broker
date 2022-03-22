@@ -48,7 +48,7 @@ def merge_two_dicts(x, y):
     return z
 
 
-def countdown(seconds: int, is_silent=False):
+def countdown(seconds: int, is_silent=False) -> None:
     if not is_silent:
         log(f"## sleep_time={seconds} seconds")
 
@@ -106,14 +106,14 @@ def utc_to_local(utc_dt, zone="Europe/Istanbul"):
     return local_tz.normalize(local_dt)
 
 
-def PrintException():
+def PrintException() -> str:
     exc_type, exc_obj, tb = sys.exc_info()  # noqa
     f = tb.tb_frame
     lineno = tb.tb_lineno
-    filename = f.f_code.co_filename
-    linecache.checkcache(filename)
-    line = linecache.getline(filename, lineno, f.f_globals)
-    return '{}:{} "{}"'.format(os.path.basename(filename), lineno, line.strip())
+    fn = f.f_code.co_filename
+    linecache.checkcache(fn)
+    line = linecache.getline(fn, lineno, f.f_globals)
+    return '{}:{} "{}"'.format(os.path.basename(fn), lineno, line.strip())
 
 
 def print_tb(message=None, is_print_exc=True) -> None:
@@ -141,7 +141,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
         log(message, where_back=1)
 
 
-def _remove(path: str, is_verbose=False):
+def _remove(path: str, is_verbose=False) -> None:
     """Remove file or folders based on its type.
 
     __ https://stackoverflow.com/a/10840586/2402577
@@ -158,12 +158,12 @@ def _remove(path: str, is_verbose=False):
             shutil.rmtree(path)
         else:
             if is_verbose:
-                log(f"warning: {WHERE(1)} Nothing is removed, following path does not exist:\n[magenta]{path}")
+                log(f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[magenta]{path}")
 
             return
 
         if is_verbose:
-            log(f"==> {WHERE(1)} remove following path:\n[magenta]{path}")
+            log(f"#> {WHERE(1)} remove following path:\n[magenta]{path}")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -205,7 +205,7 @@ def round_float(v, ndigits=2) -> float:
     return float(v_str)
 
 
-def _exit(msg=""):
+def _exit(msg="") -> None:
     """Immediate program termination."""
     if msg:
         if msg[:2] != "E:":
@@ -214,6 +214,7 @@ def _exit(msg=""):
             log(msg)
 
         log("## Exiting")
+
     os._exit(0)
 
 
@@ -279,7 +280,7 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     return percent
 
 
-def print_trace(cmd, back=1, exc="", returncode=""):
+def print_trace(cmd, back=1, exc="", returncode="") -> None:
     _cmd = " ".join(cmd)
     if exc:
         log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "bold red")
@@ -295,22 +296,23 @@ def print_trace(cmd, back=1, exc="", returncode=""):
         log(_cmd, "bold yellow", is_code=True)
 
 
-def run(cmd, my_env=None, is_quiet=False) -> str:
+def run(cmd, env=None, is_quiet=False) -> str:
     if not isinstance(cmd, str):
         cmd = list(map(str, cmd))  # all items should be string
     else:
         cmd = [cmd]
 
     try:
-        if my_env is None:
+        if env is None:
             return check_output(cmd).decode("utf-8").strip()
         else:
-            return check_output(cmd, env=my_env).decode("utf-8").strip()
+            return check_output(cmd, env=env).decode("utf-8").strip()
     except CalledProcessError as e:
         if not is_quiet:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
 
-        raise Exception from None  # prevent tree of trace
+        # prevent tree of trace
+        raise Exception from None
     except Exception as e:
         raise e
 
@@ -318,7 +320,7 @@ def run(cmd, my_env=None, is_quiet=False) -> str:
 def is_process_on(process_name, name="", process_count=0, port=None, is_print=True) -> bool:
     """Check wheather the process runs on the background.
 
-    https://stackoverflow.com/a/6482230/2402577
+    __ https://stackoverflow.com/a/6482230/2402577
     """
     if not name:
         name = process_name
@@ -342,10 +344,10 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
             p1 = Popen(["lsof", "-i", f"tcp:{port}"], stdout=PIPE)
             p2 = Popen(["grep", "LISTEN"], stdin=p1.stdout, stdout=PIPE)
             out = p2.communicate()[0].decode("utf-8").strip()
-            running_pid = out.strip().split()[1]
-            if running_pid in pids:
+            pid = out.strip().split()[1]
+            if pid in pids:
                 if is_print:
-                    log(f"==> [green]{name}[/green] is already running on the background, its pid={running_pid}")
+                    log(f"==> [green]{name}[/green] is already running on the background, its pid={pid}")
 
                 return True
         else:
@@ -376,7 +378,7 @@ def kill_process_by_name(process_name: str):
     p2 = Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()  # type: ignore
     p3 = Popen(["awk", "{print $2}"], stdin=p2.stdout, stdout=PIPE)
-    p2.stdout.close()
+    p2.stdout.close()  # noqa
     output = p3.communicate()[0].decode("utf-8").strip()
     lines = output.splitlines()
     for pid in lines:
@@ -400,7 +402,7 @@ def without_keys(d, keys):
     return {x: d[x] for x in d if x not in keys}
 
 
-def quit_function(fn_name):
+def quit_function(fn_name) -> None:
     print("\nwarning: ", end="")
     print("{0} took too long".format(fn_name), file=sys.stderr)
     breakpoint()  # DEBUG
@@ -487,23 +489,7 @@ def get_ip():
     return data["ip"]
 
 
-def is_gpg_published(gpg_fingerprint):
-    try:
-        run(["gpg", "--list-keys", gpg_fingerprint])
-    except Exception as e:
-        log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
-        try:
-            run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
-        except:
-            raise Exception from e
-
-
-def get_gpg_fingerprint(email) -> str:
-    output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
-    return output.split("\n")[1].replace(" ", "").upper()
-
-
-def _squeue():
+def _squeue() -> None:
     try:
         squeue_output = run(["squeue"])
         if "squeue: error:" in str(squeue_output):
@@ -520,7 +506,7 @@ def _squeue():
         log(f"{squeue_output}  {ok()}", "bold")
 
 
-def compare_files(fn1, fn2):
+def compare_files(fn1, fn2) -> bool:
     """Compare to files.
 
     * If two files have the same content in Python:

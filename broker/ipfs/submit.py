@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -25,11 +24,33 @@ from broker.utils import (
 )
 
 # TODO: folders_to_share let user directly provide the IPFS hash instead of the folder
+ipfs = cfg.ipfs
+Ebb = cfg.Ebb
 
 
-def pre_check(job, requester):
+def pre_check_gpg(requester):
+    requester_info = Ebb.get_requester_info(requester)
+    gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
+    if requester_info["gpg_fingerprint"].upper() != gpg_fingerprint:
+        raise Exception(
+            f"E: requester({requester})'s gpg_fingerprint({requester_info['gpg_fingerprint'].upper()}) does not "
+            f"match with registered gpg_fingerprint={gpg_fingerprint}"
+        )
+
+    try:
+        ipfs.is_gpg_published(gpg_fingerprint)
+    except Exception as e:
+        raise e
+
+
+def pre_check(job: Job, requester):
     """Pre check jobs to submit."""
     try:
+        for storage_id in job.storage_ids:
+            if storage_id == StorageID.IPFS_GPG:
+                pre_check_gpg(requester)
+                break
+
         job.check_account_status(requester)
         is_bin_installed("ipfs")
         if not is_dpkg_installed("pigz"):
@@ -53,7 +74,6 @@ def pre_check(job, requester):
 
 
 def submit_ipfs(job: Job, is_pass=False, required_confs=1):
-    Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     provider = Ebb.w3.toChecksumAddress(job.provider_addr)
     pre_check(job, requester)
@@ -88,14 +108,14 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 log(f"==> provider_gpg_finderprint={provider_gpg_finderprint}")
                 try:
                     # target is updated
-                    target = cfg.ipfs.gpg_encrypt(provider_gpg_finderprint, target)
+                    target = ipfs.gpg_encrypt(provider_gpg_finderprint, target)
                     log(f"==> gpg_file={target}")
                 except Exception as e:
                     print_tb(e)
                     sys.exit(1)
 
             try:
-                ipfs_hash = cfg.ipfs.add(target)
+                ipfs_hash = ipfs.add(target)
                 # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
                 run(["ipfs", "refs", ipfs_hash])
             except Exception as e:
@@ -139,7 +159,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         if required_confs >= 1:
             tx_receipt = get_tx_status(tx_hash)
             if tx_receipt["status"] == 1:
-                processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
                 try:
                     if processed_logs:
                         log("job_info:", "bold yellow")

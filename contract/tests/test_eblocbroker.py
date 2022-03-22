@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import os
-import pytest
 import sys
 from os import path
+
+import pytest
 
 import brownie
 from broker import cfg, config
@@ -931,14 +932,14 @@ def test_submit_job():
     requester = accounts[1]
     register_provider()
     register_requester(requester)
-    fname = f"{cwd}/files/test.txt"
-    # fname = f"{cwd}/files/test_.txt"
+    fn = f"{cwd}/files/test.txt"
+    # fn = f"{cwd}/files/test_.txt"
     log(f"==> registered_provider_addresses={ebb.getProviders()}")
     provider_price_info = ebb.getProviderInfo(accounts[0], 0)
     # block_read_from = provider_price_info[0]
     _provider_price_info = provider_price_info[1]
     # availableCoreNum = _provider_price_info[0]
-    # commitmentBlockDuration = _provider_price_info[1]
+    # commitment_block_duration = _provider_price_info[1]
     price_core_min = _provider_price_info[2]
     # price_data_transfer = _provider_price_info[3]
     # price_storage = _provider_price_info[4]
@@ -949,7 +950,7 @@ def test_submit_job():
     job_price_sum = 0
     job_id = 0
     index = 0
-    with open(fname) as f:
+    with open(fn) as f:
         for line in f:
             arguments = line.rstrip("\n").split(" ")
             storage_hour = 1
@@ -1010,7 +1011,7 @@ def test_submit_job():
     # rpc.mine(100)
     # log(web3.eth.blockNumber)
     job_id = 0
-    with open(fname) as f:
+    with open(fn) as f:
         for index, line in enumerate(f):
             arguments = line.rstrip("\n").split(" ")
             tx = ebb.setJobStatusRunning(job_key, index, job_id, int(arguments[0]), {"from": accounts[0]})
@@ -1020,7 +1021,7 @@ def test_submit_job():
 
     console_ruler()
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
-    with open(fname) as f:
+    with open(fn) as f:
         for index, line in enumerate(f):
             arguments = line.rstrip("\n").split(" ")
             if index == 0:

@@ -229,7 +229,7 @@ class EudatClass(Storage):
                 return info.get_size()
 
             log(str(e))
-            raise Exception("E: failed all the attempts to get file info at Eudat") from e
+            raise Exception("failed all the attempts to get file info at eudat") from e
 
     def total_size_to_download(self):
         data_transfer_in_to_download = 0  # total size to download in bytes
@@ -271,7 +271,7 @@ class EudatClass(Storage):
 
                 try:
                     info = config.oc.file_info(f"/{source_fn}")
-                    logging.info("shared folder is already accepted")
+                    log("shared folder is already accepted")
                     size = info.attributes["{DAV:}getcontentlength"]
                     folder_token_flag[folder_name] = True
                     log(f"==> index={br(idx)}: /{source_fn} => {size} bytes")
@@ -344,15 +344,15 @@ class EudatClass(Storage):
                     break
         else:
             if self.accept_flag is len(self.code_hashes):
-                logging.info("shared token already exists on mongoDB")
+                log("shared token already exists on mongoDB")
             # else:
-            #     raise Exception(f"E: could not find a shared file. Found ones are:\n{self.share_id}")
+            #     raise Exception(f"could not find a shared file. Found ones are:\n{self.share_id}")
 
         if bool(self.share_id):
             with open(share_id_file, "w") as f:
                 json.dump(self.share_id, f)
         else:
-            raise Exception("E: share_id is empty")
+            raise Exception("share_id is empty")
 
         # self.total_size_to_download()
 

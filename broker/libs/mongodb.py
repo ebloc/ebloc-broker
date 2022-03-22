@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-
 from pymongo import MongoClient
 from rich.pretty import pprint
 
@@ -22,7 +21,7 @@ class BaseMongoClass:
             return output
         else:
             self.find_all()
-            raise Exception("E: could not find key")
+            raise Exception("could not find key")
 
     def add_item(self, key, item):
         res = self.collection.replace_one({"key": key}, item, True)
@@ -82,7 +81,7 @@ class MongoBroker(BaseMongoClass):
             return output
         else:
             # self.find_all()
-            raise Exception(f"E: Coudn't find id. key={key} index={index}")
+            raise Exception(f"Coudn't find id. key={key} index={index}")
 
     def delete_one(self, job_key, index: int):
         output = self.collection.delete_one({"job_key": job_key, "index": index})

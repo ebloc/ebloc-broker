@@ -22,7 +22,7 @@ def get_provider_info(self, provider):
     try:
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
         block_read_from, provider_price_info = self._get_provider_info(provider, prices_set_block_numbers[-1])
-        _event_filter = self._eBlocBroker.events.LogProviderInfo.createFilter(
+        _event_filter = self._eblocbroker.events.LogProviderInfo.createFilter(
             fromBlock=int(prices_set_block_numbers[0]),
             # toBlock=int(block_read_from) + 1,
             argument_filters={"provider": provider},

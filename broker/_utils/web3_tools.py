@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from contextlib import suppress
-
 from web3._utils.threads import Timeout
 from web3.types import TxReceipt
 
@@ -30,7 +29,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
 
             log("tx=", "bold", end="")
             log(_tx_receipt, max_depth=1)
-            for idx, _log in enumerate(_tx_receipt["logs"]):  # All logs fried under the tx
+            for idx, _log in enumerate(_tx_receipt["logs"]):  # all logs emitted under the tx
                 _log = dict(_log)
                 with suppress(Exception):
                     del _log["data"]
@@ -38,7 +37,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
                 log(f"log_{idx}=", "bold blue", end="")
                 log(_log)
 
-            log("#> Is transaction successfully deployed? ", end="")
+            log("#> Is transaction successfully deployed?", end="")
 
         if tx_receipt["status"] == 1:
             if not is_silent:
@@ -47,7 +46,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
             if not is_silent:
                 log()
 
-            raise Exception("E: tx is reverted")
+            raise Exception("tx is reverted")
 
         return tx_receipt
     except Timeout as e:

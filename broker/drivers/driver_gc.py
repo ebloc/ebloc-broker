@@ -18,6 +18,7 @@ def main():
     cursor = coll.find({})
     for document in cursor:
         # print(document)
+        # TODO: requester paramer as get_storage_duration
         received_block_number, storage_duration = Ebb.get_job_storage_duration(
             env.PROVIDER_ID, document["sourceCodeHash"]
         )

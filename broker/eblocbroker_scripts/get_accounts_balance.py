@@ -13,11 +13,11 @@ def main():
     Ebb = cfg.Ebb
     path = expanduser("~/.brownie/accounts")
     dirlist = listdir(path)
-    for fname in dirlist:
-        account_path = f"{path}/{fname}"
+    for fn in dirlist:
+        account_path = f"{path}/{fn}"
         print(account_path)
         with suppress(Exception):
-            Ebb.brownie_load_account(str(fname), "alper")
+            Ebb.brownie_load_account(str(fn), "alper")
 
     sum_balance = 0
     for account in accounts:

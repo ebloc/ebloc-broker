@@ -2,7 +2,6 @@
 
 import sys
 from typing import List
-
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -19,10 +18,10 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
     _from = self.w3.toChecksumAddress(_from)
 
     if not self.does_provider_exist(provider):
-        raise Exception(f"E: Requested provider's Ethereum address {provider} does not exist")
+        raise Exception(f"Requested provider's Ethereum address {provider} does not exist")
 
     if provider != _from and not self.does_requester_exist(_from):
-        raise Exception(f"E: Requested requester's Ethereum address {_from} does not exist")
+        raise Exception(f"Requested requester's Ethereum address {_from} does not exist")
 
     try:
         tx = self._refund(provider, job_key, index, job_id, cores, elapsed_time)
@@ -55,10 +54,10 @@ if __name__ == "__main__":
         tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, elapsed_time)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            processed_logs = Ebb._eBlocBroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
+            processed_logs = Ebb._eblocbroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
             log(vars(processed_logs[0].args))
             try:
-                logging.info(f"refunded_wei={processed_logs[0].args['refundedWei']}")
+                log(f"refunded_wei={processed_logs[0].args['refundedWei']}")
                 log("SUCCESS", "green")
             except Exception as e:
                 logging.error(f"E: Transaction is reverted. {e}")

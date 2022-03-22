@@ -17,6 +17,8 @@ from broker.eblocbroker_scripts.timenow import print_timenow
 from broker.errors import QuietExit
 from broker.submit_base import SubmitBase
 
+# https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/PROJECTS.rst
+
 
 def my_inline_function():
     cfg.Ebb.get_block_number()  # starts as thread right away

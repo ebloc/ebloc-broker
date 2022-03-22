@@ -20,7 +20,7 @@ def get_requester_info(self, requester):
             raise QuietExit
 
         block_read_from, orc_id = self._get_requester_info(requester)
-        event_filter = self._eBlocBroker.events.LogRequester.createFilter(
+        event_filter = self._eblocbroker.events.LogRequester.createFilter(
             fromBlock=int(block_read_from), toBlock=int(block_read_from) + 1
         )
         gpg_fingerprint = event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()

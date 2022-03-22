@@ -5,6 +5,7 @@
 #    pip-compile
 #
 accesscontrol==4.2
+atomicwrites==1.4.0
 acquisition==4.6
     # via
     #   accesscontrol
@@ -807,7 +808,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==12.0.0
+rich==12.0.1
 rlp==2.0.1
     # via
     #   eth-account
@@ -1220,7 +1221,7 @@ zope.testing==4.9
 zope.traversing==4.4.1
     # via
     #   z3c.pt
-
+types-requests==2.27.14
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools

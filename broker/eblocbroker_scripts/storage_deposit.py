@@ -18,13 +18,13 @@ def deposit_storage(eth_address, is_provider=False):
     """
     from_block = Ebb.get_deployed_block_number()
     if is_provider:
-        event_filter = Ebb._eBlocBroker.events.LogJob.createFilter(
+        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
             fromBlock=int(from_block),
             argument_filters={"provider": eth_address},
             toBlock="latest",
         )
     else:  # should be owner of the job
-        event_filter = Ebb._eBlocBroker.events.LogJob.createFilter(
+        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
             fromBlock=int(from_block),
             argument_filters={"owner": eth_address},
             toBlock="latest",

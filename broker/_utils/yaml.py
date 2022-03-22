@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from atomicwrites import atomic_write
 from contextlib import suppress
 from filelock import FileLock
 from pathlib import Path
@@ -63,7 +64,7 @@ _SR.add_representer(SubYaml, _SR.represent_dict)
 class Yaml(comments.CommentedMap):
     """Create yaml object.
 
-    * How to auto-dump modified values in nested dictionaries using ruamel.yaml?
+    * How to auto_dump modified values in nested dictionaries using ruamel.yaml?
     __ https://stackoverflow.com/a/68694688/2402577
 
     * representer.RepresenterError: cannot represent an object: {'value': }
@@ -97,7 +98,7 @@ class Yaml(comments.CommentedMap):
         self.auto_dump = auto_dump  # if false read-only
         if self.path.exists():
             with FileLock(self.fp_lock, timeout=1):
-                with open(path) as f:
+                with open(path, "r") as f:
                     self.update(self.yaml.load(f) or {})
 
     def updated(self):
@@ -111,7 +112,8 @@ class Yaml(comments.CommentedMap):
         if not self.changed and not force:
             return
 
-        with open(self.path, "w") as f:
+        with atomic_write(self.path, overwrite=True) as f:
+            # alternative: `with open(self.path, "w") as f:`
             self.yaml.dump(dict(self), f)
 
         self.changed = False
@@ -238,12 +240,24 @@ def test_4():
     print(Path(fn).read_text())
 
 
+def test_5():
+    config_file = Path("test_1.yaml")
+    cfg = Yaml(config_file, auto_dump=False)
+    cfg["a"] = 1
+    cfg["b"]["x"] = 2
+    cfg["c"]["y"]["z"] = 45
+    cfg.dump()
+    config_file.read_text()
+    config_file.unlink()
+
+
 def main():
     try:
         test_1()
         test_2()
         test_3()
         test_4()
+        test_5()
     except Exception as e:
         print_tb(e)
 

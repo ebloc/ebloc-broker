@@ -2,13 +2,13 @@
 
 ** Provider and Requester should do it
 
-** TODO check before submitting job for the requester
+** TODO check before submitting job from the requester
 
 #+begin_src bash
-# key_id=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
-key_id=$(gpg --list-secret-keys --keyid-format LONG <email>)
-echo $key_id && gpg --list-keys $key_id
-gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key_id
+# key=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
+key=$(gpg --list-secret-keys --keyid-format LONG <email>)
+echo $key && gpg --list-keys $key
+gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key
 #+end_src
 
 ------------------------------------------------------------------
@@ -18,13 +18,13 @@ gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key_id
 See https://stackoverflow.com/a/34132924/2402577 for more info.
 
 #+begin_src bash
-key_id="239FE90C6BF3D91CFEC825C3CC507FABC162029F"
-gpg --verbose --keyserver hkps://keyserver.ubuntu.com --recv-key $key_id
-# gpg --verbose --keyserver hkps://keyserver.ubuntu.com --search-keys $key_id
+key="239FE90C6BF3D91CFEC825C3CC507FABC162029F"
+gpg --verbose --keyserver hkps://keyserver.ubuntu.com --recv-key $key
+# gpg --verbose --keyserver hkps://keyserver.ubuntu.com --search-keys $key
 #+end_src
 
 #+begin_src bash
-gpg --edit-key $key_id
+gpg --edit-key $key
 > trust
   1 = I do not know or will not say
   2 = I do NOT trust
@@ -41,18 +41,18 @@ Do you really want to set this key to ultimate trust? (y/N) y
 ** Change the passphrase of the secret key
 
 #+begin_src bash
-gpg --edit-key <your_key_id_here>
+gpg --edit-key <your_key_here>
 gpg> passwd
 gpg> save
 #+end_src
 
-~gpg --delete-secret-key <key_id>~
+~gpg --delete-secret-key <key>~
 
 #+begin_src bash
 gpg --list-keys
-gpg --batch --delete-key <key_id>
+gpg --batch --delete-key <key>
+gpg --delete-secret-key <key>
 gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'
-
 for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
     gpg --batch --delete-key "$i"
 done

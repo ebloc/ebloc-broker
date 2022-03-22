@@ -74,7 +74,7 @@ def log_loop(event_filter, poll_interval: int = 2):
 
 
 def run_log_job(self, from_block, provider):
-    event_filter = self._eBlocBroker.events.LogJob.createFilter(
+    event_filter = self._eblocbroker.events.LogJob.createFilter(
         fromBlock=int(from_block),
         toBlock="latest",
         argument_filters={"provider": str(provider)},
@@ -87,7 +87,7 @@ def run_log_job(self, from_block, provider):
 
 
 def run_log_cancel_refund(self, from_block, provider):
-    event_filter = self._eBlocBroker.events.LogRefund.createFilter(
+    event_filter = self._eblocbroker.events.LogRefund.createFilter(
         fromBlock=int(from_block), argument_filters={"provider": str(provider)}
     )
     logged_cancelled_jobs = event_filter.get_all_entries()
@@ -118,7 +118,7 @@ uint8 cacheType,
 uint received);
 
 def run_single_log_job(self, from_block, jobKey, transactionHash):
-    event_filter = self._eBlocBroker.events.LogJob.createFilter(
+    event_filter = self._eblocbroker.events.LogJob.createFilter(
         fromBlock=int(from_block), argument_filters={"provider": str(provider)}
     )
     logged_jobs = event_filter.get_all_entries()

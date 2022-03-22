@@ -20,8 +20,8 @@ providers = [
 
 Ebb = cfg.Ebb
 _collect_account = collect_account.replace("0x", "")
-fname = str(Path(expanduser("~/.brownie/accounts")) / _collect_account)
-_collect_account = Ebb.brownie_load_account(fname, "alper")
+fn = str(Path(expanduser("~/.brownie/accounts")) / _collect_account)
+_collect_account = Ebb.brownie_load_account(fn, "alper")
 log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
 
 
@@ -29,18 +29,18 @@ def balances():
     """Prints balance of all the users located under ~/.brownie/accounts."""
     for account in users:
         _account = account.lower().replace("0x", "")
-        fname = Path(expanduser("~/.brownie/accounts")) / _account
-        print(fname)
-        account = Ebb.brownie_load_account(str(fname), "alper")
+        fn = Path(expanduser("~/.brownie/accounts")) / _account
+        print(fn)
+        account = Ebb.brownie_load_account(str(fn), "alper")
         log(Ebb._get_balance(account))
 
 
 def collect_all_into_base():
     for account in users:
         _account = account.lower().replace("0x", "")
-        fname = Path(expanduser("~/.brownie/accounts")) / _account
-        log(fname)
-        account = Ebb.brownie_load_account(str(fname), "alper")
+        fn = Path(expanduser("~/.brownie/accounts")) / _account
+        log(fn)
+        account = Ebb.brownie_load_account(str(fn), "alper")
         balance_to_transfer = Ebb._get_balance(account, "wei")
         log(balance_to_transfer)
         log(Ebb._get_balance(collect_account, "wei"))
@@ -53,9 +53,9 @@ def collect_all_into_base():
 def send_eth_to_users(accounts, value):
     for account in accounts:
         _account = account.lower().replace("0x", "")
-        fname = Path(expanduser("~/.brownie/accounts")) / _account
-        print(fname)
-        account = Ebb.brownie_load_account(str(fname), "alper")
+        fn = Path(expanduser("~/.brownie/accounts")) / _account
+        print(fn)
+        account = Ebb.brownie_load_account(str(fn), "alper")
         log(Ebb._get_balance(collect_account, "wei"))
         log(Ebb.transfer(value, _collect_account, account, required_confs=0))
         log(Ebb._get_balance(account))

@@ -108,7 +108,7 @@ class Storage(BaseClass):
                 slurm.remove_user(self.requester_id)
                 slurm.add_user_to_slurm(self.requester_id)
 
-        raise Exception("E: sbatch could not submit the job")
+        raise Exception("sbatch could not submit the job")
 
     def thread_log_setup(self):
         import threading

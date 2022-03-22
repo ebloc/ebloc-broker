@@ -27,8 +27,8 @@ https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-bl
 #+end_src
 
 #+begin_src bash
-mkdir -p ~/tools
-cd ~/tools
+mkdir -p ~/git
+cd ~/git
 git clone https://github.com/prasmussen/gdrive.git && cd gdrive
 #+end_src
 
@@ -49,7 +49,7 @@ rm -f ~/.gdrive/token_v2.json
 Open terminal and go to the folder where the ~handerls_drive.go~ is.
 
 #+begin_src bash
-go install github.com/prasmussen/gdrive@latest
+go get github.com/prasmussen/gdrive  # go install github.com/prasmussen/gdrive@latest
 go build -ldflags "-w -s"
 sudo cp gdrive /usr/local/bin/gdrive
 gdrive about
@@ -62,13 +62,11 @@ https://accounts.google.com/o/oauth2/auth?access_type=...
 
 ** Guide
 
+- [[https://stackoverflow.com/a/65507155/2402577][How to handle “App is temporarily blocked from logging in with your Google account” barrier]]
 - [[https://github.com/prasmussen/gdrive/issues/426][TUTORIAL: How to get rid of 403 Errors]]
-- https://github.com/prasmussen/gdrive/issues/426#issuecomment-459150627
-- https://github.com/marufshidiq/gdrive-cli-builder
-- [[https://stackoverflow.com/a/65507155/2402577][stackoverflow answer]]
-
-  [1]: [[https://github.com/prasmussen/gdrive/commit/31d0829c180795d17e00b7a354fffe4d72be712b#commitcomment-45165924]]
-
+- [[https://github.com/prasmussen/gdrive/issues/426#issuecomment-459150627]]
+- [[https://github.com/marufshidiq/gdrive-cli-builder]]
+- [[https://github.com/prasmussen/gdrive/commit/31d0829c180795d17e00b7a354fffe4d72be712b#commitcomment-45165924]]
 
 * Headless Usage & Authorization
 

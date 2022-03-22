@@ -15,10 +15,6 @@ class JobException(Exception):
     """Job info exception to prevent trace to be printed."""
 
 
-class Web3NotConnected(Exception):
-    """Web3 is not connected."""
-
-
 class QuietExit(Exception):
     """Trace is not printed."""
 
@@ -33,3 +29,7 @@ class Timeout(Exception):
 
 class Terminate(Exception):
     """Terminate the process."""
+
+
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""

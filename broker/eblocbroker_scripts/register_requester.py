@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import sys
 
-import ipfshttpclient
-
 from broker import cfg
 from broker._utils._log import c, log
-from broker._utils.tools import get_gpg_fingerprint, is_byte_str_zero, is_gpg_published, print_tb
+from broker._utils.tools import is_byte_str_zero, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
@@ -15,6 +14,7 @@ from broker.errors import QuietExit
 from broker.utils import question_yes_no, run_ipfs_daemon
 
 Ebb = cfg.Ebb
+ipfs = cfg.ipfs
 
 
 def register_requester(self, yaml_fn, is_question=True):
@@ -33,33 +33,30 @@ def register_requester(self, yaml_fn, is_question=True):
         raise QuietExit
 
     args = Yaml(yaml_fn)
-    ipfs_id = cfg.ipfs.get_ipfs_id(client)
+    ipfs_id = ipfs.get_ipfs_id(client)
     email = env.GMAIL
-    gpg_fingerprint = get_gpg_fingerprint(email)
+    gpg_fingerprint = ipfs.get_gpg_fingerprint(email)
     try:
-        is_gpg_published(gpg_fingerprint)
+        ipfs.is_gpg_published(gpg_fingerprint)
     except Exception as e:
         raise e
 
-    account = args["config"]["account"].lower()
-    email = args["config"]["email"]
-    federation_cloud_id = args["config"]["federation_cloud_id"]
-    # if env.IS_BLOXBERG:
-    #     account = self.brownie_load_account().address
-
+    account = args["cfg"]["eth_address"].lower()
+    email = args["cfg"]["gmail"]
+    federation_cloud_id = args["cfg"]["oc_username"]
     log(f"==> registering {account} as requester")
     if is_byte_str_zero(account):
         log(f"E: account={account} is not valid, change it in [{c.pink}]~/.ebloc-broker/cfg.yaml")
         raise QuietExit
 
     if len(federation_cloud_id) >= 128:
-        raise Exception("E: federation_cloud_id is more than 128")
+        raise Exception("federation_cloud_id is more than 128")
 
     if len(email) >= 128:
-        raise Exception("E: email is more than 128")
+        raise Exception("email is more than 128")
 
     if len(gpg_fingerprint) != 40:
-        raise Exception("E: gpg_fingerprint should be 40 characters")
+        raise Exception("gpg_fingerprint should be 40 characters")
 
     if self.does_requester_exist(account):
         log(f"warning: requester {account} is already registered")
@@ -97,7 +94,8 @@ def register_requester(self, yaml_fn, is_question=True):
 
 if __name__ == "__main__":
     try:
-        yaml_fn = "~/ebloc-broker/broker/yaml_files/register_requester.yaml"
+        # yaml_fn = "~/ebloc-broker/broker/yaml_files/register_requester.yaml"
+        yaml_fn = "~/.ebloc-broker/cfg.yaml"
         tx_hash = Ebb.register_requester(yaml_fn)
         if tx_hash:
             get_tx_status(tx_hash)

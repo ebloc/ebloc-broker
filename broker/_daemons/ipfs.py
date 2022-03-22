@@ -20,21 +20,22 @@ def run():
     __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
-    log("==> Running [green]IPFS[/green] daemon")
+    ipfs_init_folder = Path.home().joinpath(".ipfs")
+    log("#> Running [green]IPFS[/green] daemon")
     if not os.path.isfile(config.env.IPFS_LOG):
         open(config.env.IPFS_LOG, "a").close()
 
     with daemon.DaemonContext():
         if cfg.IS_PRIVATE_IPFS:
-            _env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": Path.home().joinpath(".ipfs")}
+            env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": ipfs_init_folder}
         else:
-            _env = {"IPFS_PATH": Path.home().joinpath(".ipfs")}
+            env = {"IPFS_PATH": ipfs_init_folder}
 
-        popen_communicate([IPFS_BIN, "daemon", "--routing=none"], stdout_fn=config.env.IPFS_LOG, _env=_env)
+        popen_communicate([IPFS_BIN, "daemon", "--routing=none"], stdout_fn=config.env.IPFS_LOG, env=env)
 
     # ipfs mounted at: /ipfs
     # output = run(["sudo", "ipfs", "mount", "-f", "/ipfs"])
-    # logging.info(output)
+    # log(output)
     #
     # for home and home2
     # ipfs swarm connect /ip4/192.168.1.3/tcp/4001/p2p/12D3KooWSE6pY7t5NxMLiGd4h7oba6XqxJFD2KNZTQFEjWLeHKsd

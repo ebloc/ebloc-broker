@@ -5,7 +5,7 @@ if __name__ == "__main__":
 
     from broker.utils import run
 
-    filename = call.__file__
+    fn = call.__file__
     func_name = "getStorageInfo"
     data = (
         "",
@@ -14,12 +14,12 @@ if __name__ == "__main__":
         "QmdxhbcHJr3r4yeJNdvRabLVJ78VT2DTNMkBD7LN2MzeqJ",
     )
 
-    output = run(["python", filename, *[str(arg) for arg in data]])
+    output = run(["python", fn, *[str(arg) for arg in data]])
     print(output)
-    # # in case filename is an executable you don't need "python" before `filename`:
+    # # in case fn is an executable you don't need "python" before `fn`:
     # try:
     #     # for breakpoint remove , stdout=subprocess.PIPE
-    #     p = subprocess.Popen(args=["python", filename, *[str(arg) for arg in data]], stdout=subprocess.PIPE)
+    #     p = subprocess.Popen(args=["python", fn, *[str(arg) for arg in data]], stdout=subprocess.PIPE)
     #     output, error = p.communicate()
     #     p.wait()
     #     time.sleep(1)

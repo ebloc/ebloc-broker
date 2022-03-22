@@ -38,7 +38,7 @@ def get_data_info(self, provider) -> None:
     pre_check_data(provider)
     try:
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
-        event_filter = self._eBlocBroker.events.LogRegisterData.createFilter(
+        event_filter = self._eblocbroker.events.LogRegisterData.createFilter(
             fromBlock=int(prices_set_block_numbers[0]),
             toBlock="latest",
             argument_filters={"provider": provider},

@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import sys
 from os.path import expanduser
 
-import ipfshttpclient
-
 from broker import cfg
 from broker._utils._log import c, log
-from broker._utils.tools import get_gpg_fingerprint, get_ip, is_byte_str_zero, is_gpg_published, print_tb
+from broker._utils.tools import get_ip, is_byte_str_zero, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
@@ -17,6 +16,7 @@ from broker.errors import QuietExit
 from broker.utils import run_ipfs_daemon
 
 Ebb = cfg.Ebb
+ipfs = cfg.ipfs
 
 
 def _register_provider(self, *args, **kwargs):
@@ -34,13 +34,13 @@ def _register_provider(self, *args, **kwargs):
         raise QuietExit
 
     if kwargs["commitment_blk"] < cfg.BLOCK_DURATION_1_HOUR:
-        raise Exception(f"E: Commitment block number should be greater than {cfg.BLOCK_DURATION_1_HOUR}")
+        raise Exception(f"Commitment block number should be greater than {cfg.BLOCK_DURATION_1_HOUR}")
 
     if len(kwargs["federation_cloud_id"]) >= 128:
-        raise Exception("E: federation_cloud_id hould be lesser than 128")
+        raise Exception("federation_cloud_id hould be lesser than 128")
 
     if len(kwargs["email"]) >= 128:
-        raise Exception("E: e-mail should be less than 128")
+        raise Exception("e-mail should be less than 128")
 
     try:
         tx = self.register_provider(*args)
@@ -75,6 +75,10 @@ def get_ipfs_id() -> str:
         sys.exit(1)
 
 
+def error_msg(key, yaml_fn):
+    log(f"E: [blue]{key}[/blue] is empty in [magenta]{yaml_fn}")
+
+
 def register_provider_wrapper(yaml_fn):
     """Register provider."""
     yaml_fn = os.path.expanduser(yaml_fn)
@@ -82,10 +86,8 @@ def register_provider_wrapper(yaml_fn):
         log(f"E: yaml_fn({yaml_fn}) does not exist")
         raise QuietExit
 
-    args = Yaml(yaml_fn)
-    # @b2drop.eudat.eu
-
-    federation_cloud_id = args["cfg"]["oc_user"]
+    args = Yaml(yaml_fn, auto_dump=False)  # @b2drop.eudat.eu
+    federation_cloud_id = args["cfg"]["oc_username"]
     email = args["cfg"]["gmail"]
     available_core = args["cfg"]["provider"]["available_core"]
     commitment_blk = args["cfg"]["provider"]["prices"]["commitment_blk"]
@@ -94,37 +96,36 @@ def register_provider_wrapper(yaml_fn):
     price_storage = args["cfg"]["provider"]["prices"]["price_storage"]
     price_cache = args["cfg"]["provider"]["prices"]["price_cache"]
     exit_flag = False
-
     if not federation_cloud_id:
-        log(f"E: [blue]federation_cloud_id[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("federation_cloud_id", yaml_fn)
         exit_flag = True
 
     if not available_core:
-        log(f"E: [blue]available_core[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("available_core", yaml_fn)
         exit_flag = True
 
     if not commitment_blk:
-        log(f"E: [blue]commitment_blk[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("commitment_blk", yaml_fn)
         exit_flag = True
 
     if not price_core_min:
-        log(f"E: [blue]price_core_min[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("price_core_min", yaml_fn)
         exit_flag = True
 
     if not price_data_transfer:
-        log(f"E: [blue]price_data_transfer[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("price_data_transfer", yaml_fn)
         exit_flag = True
 
     if not price_storage:
-        log(f"E: [blue]price_storage[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("price_storage", yaml_fn)
         exit_flag = True
 
     if not price_cache:
-        log(f"E: [blue]price_cache[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("price_cache", yaml_fn)
         exit_flag = True
 
     if not email:
-        log(f"E: [blue]email[/blue] is empty in [magenta]{yaml_fn}")
+        error_msg("email", yaml_fn)
         exit_flag = True
 
     if exit_flag:
@@ -141,8 +142,8 @@ def register_provider_wrapper(yaml_fn):
 
     try:
         email = env.GMAIL
-        gpg_fingerprint = get_gpg_fingerprint(email)
-        is_gpg_published(gpg_fingerprint)
+        gpg_fingerprint = ipfs.get_gpg_fingerprint(email)
+        ipfs.is_gpg_published(gpg_fingerprint)
     except Exception as e:
         raise e
 

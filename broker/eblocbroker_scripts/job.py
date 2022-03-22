@@ -76,8 +76,8 @@ class Job:
         self.paths = []
         self.data_prices_set_block_numbers = []
         self.data_paths = []
-        called_filename = os.path.basename(sys._getframe(1).f_code.co_filename)
-        if called_filename.startswith("test_"):
+        called_fn = os.path.basename(sys._getframe(1).f_code.co_filename)
+        if called_fn.startswith("test_"):
             self.is_brownie = True
         else:
             self.is_brownie = False
@@ -158,14 +158,18 @@ class Job:
             *_, orcid = self.Ebb.get_requester_info(_from)
             if not self.Ebb.is_orcid_verified(_from):
                 if orcid != empty_bytes32:
-                    log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+                    try:
+                        log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+                    except:
+                        log(f"E: Requester({_from})'s orcid: {orcid} is not verified")
                 else:
                     log(f"E: Requester({_from})'s orcid is not registered")
+
                 raise QuietExit
         except QuietExit:
             sys.exit(1)
-        except:
-            print_tb()
+        except Exception as e:
+            print_tb(e)
             sys.exit(1)
 
     def set_config(self, fn):
@@ -176,6 +180,8 @@ class Job:
         self.cfg = Yaml(fn)
         self.requester_addr = self.cfg["config"]["requester_address"]
         self.provider_addr = self.cfg["config"]["provider_address"]
+        # self.gmail = self.cfg["config"]["provider_address"]
+
         self.source_code_storage_id = storage_id = self.cfg["config"]["source_code"]["storage_id"]
         self.storage_ids.append(STORAGE_IDs[storage_id])
         if storage_id == StorageID.NONE:
@@ -320,9 +326,9 @@ class JobPrices:
 
         This part is not needed when `{from: }` is removed from the getter in the smart contract
         """
-        filename = call.__file__
         data = ("func", self.job.provider, self.job.requester, code_hash)
-        output = run(["python", filename, *[str(arg) for arg in data]])  # GOTCHA
+        fn = call.__file__
+        output = run(["python", fn, *[str(arg) for arg in data]])  # GOTCHA
         output = output.split("\n")
         received_storage_deposit = float(output[0])
         job_storage_duration = make_tuple(output[1])
@@ -412,10 +418,10 @@ class JobPrices:
         self.cost["data_transfer_in"] = self.data_transfer_in_cost
         self.cost["data_transfer_out"] = self.data_transfer_out_cost
         self.cost["data_transfer"] = self.data_transfer_cost
-        for key, value in self.cost.items():
-            if key not in ("data_transfer_out", "data_transfer_in"):
-                log(f"\t[bold blue]==> {key}={value}")
+        for k, v in self.cost.items():
+            if k not in ("data_transfer_out", "data_transfer_in"):
+                log(f"\t[bold blue]* {k}={v}")
 
-            if key == "data_transfer":
+            if k == "data_transfer":
                 log(f"\t\t[bold yellow]* in={self.cost['data_transfer_in']}")
                 log(f"\t\t[bold yellow]* out={self.cost['data_transfer_out']}")

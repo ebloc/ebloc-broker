@@ -103,14 +103,14 @@ def raise_error(error):
     raise RuntimeError(error)
 
 
-def extract_gzip(filename):
+def extract_gzip(fn):
     try:
-        args = shlex.split(f"gunzip --force {filename}")
+        args = shlex.split(f"gunzip --force {fn}")
         run(args)
     except:
-        args = shlex.split(f"zcat {filename}")
-        base_dir = os.path.dirname(filename)
-        base_name = os.path.basename(filename).replace(".gz", "")
+        args = shlex.split(f"zcat {fn}")
+        base_dir = os.path.dirname(fn)
+        base_name = os.path.basename(fn).replace(".gz", "")
         popen_communicate(args, f"{base_dir}/{base_name}")
 
 
@@ -123,8 +123,8 @@ def untar(tar_file, extract_to):
     tar interprets the next argument after -f as the file name of the tar file.
     Put the p before the f:
     """
-    filename = os.path.basename(tar_file)
-    accept_files = [".git", filename]
+    fn = os.path.basename(tar_file)
+    accept_files = [".git", fn]
     if not is_dir_empty(extract_to):
         for name in os.listdir(extract_to):
             # if tar itself already exist inside the same directory along with
@@ -216,7 +216,7 @@ def run_with_output(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
+def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
     """Act similir to run(cmd).
 
     But also returns the output message captures on during the run stdout_fn
@@ -231,7 +231,7 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
     else:
         with open(stdout_fn, mode) as outfile:
             # output written into file, error will be returned
-            p = Popen(cmd, stdout=outfile, stderr=PIPE, env=_env, universal_newlines=False)
+            p = Popen(cmd, stdout=outfile, stderr=PIPE, env=env, universal_newlines=False)
             output, error = p.communicate()
             p.wait()
             return p, output, error.rstrip()
@@ -241,9 +241,9 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
         output = output.strip().decode("utf-8")
 
     if error:
-        error = error.decode("utf-8")
+        error = error.decode("utf-8").rstrip()
 
-    return p, output, error.rstrip()
+    return p, output, error
 
 
 def is_transaction_valid(tx_hash) -> bool:
@@ -325,14 +325,14 @@ def eth_address_to_md5(address):
     return hashlib.md5(address.encode("utf-8")).hexdigest()
 
 
-def write_to_file(fname, message) -> None:
-    with open(fname, "w") as f:
+def write_to_file(fn, message) -> None:
+    with open(fn, "w") as f:
         f.write(str(message))
 
 
-def read_file(fname):
+def read_file(fn):
     try:
-        file = open(fname, "r")
+        file = open(fn, "r")
         return file.read().rstrip()
     except IOError as e:
         print_tb(e)
@@ -343,25 +343,25 @@ def read_file(fname):
         file.close()
 
 
-def is_gzip_file_empty(filename):
+def is_gzip_file_empty(fn):
     """Check whether the given gzip file is empty or not.
 
-    cmd: gzip -l filename.gz | awk 'NR==2 {print $2}
+    cmd: gzip -l fn.gz | awk 'NR==2 {print $2}
     """
-    p1 = Popen(["gzip", "-l", filename], stdout=PIPE, env={"LC_ALL": "C"})
+    p1 = Popen(["gzip", "-l", fn], stdout=PIPE, env={"LC_ALL": "C"})
     p2 = Popen(["awk", "NR==2 {print $2}"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
     size = p2.communicate()[0].decode("utf-8").strip()
     if bool(int(size)):
         return False
 
-    log(f"==> Created gzip file is empty:\n    [magenta]{filename}[/magenta]")
+    log(f"==> Created gzip file is empty:\n    [magenta]{fn}[/magenta]")
     return True
 
 
-def getsize(filename):
+def getsize(fn):
     """Return the size of a file, reported by os.stat()."""
-    return os.stat(filename).st_size
+    return os.stat(fn).st_size
 
 
 def path_leaf(path):
@@ -437,9 +437,14 @@ def run_ipfs_daemon(_is_print=False):
     if is_ipfs_on(_is_print):
         return True
 
+    try:
+        output = run(["/usr/local/bin/ipfs", "repo", "stat"])
+    except Exception as e:
+        raise QuietExit from e
+
     log("warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
-    output = run(["python3", env.EBLOCPATH / "broker" / "python_scripts" / "run_ipfs_daemon.py"])
+    output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "run_ipfs_daemon.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
@@ -465,14 +470,14 @@ def check_ubuntu_packages(packages=None):
     return True
 
 
-def is_npm_installed(package_name) -> bool:
+def is_npm_installed(package) -> bool:
     output = run(["npm", "list", "-g", "--depth=0"])
-    return package_name in output
+    return package in output
 
 
-def is_dpkg_installed(package_name) -> bool:
+def is_dpkg_installed(package) -> bool:
     try:
-        run(["dpkg", "-s", package_name])
+        run(["dpkg", "-s", package])
         return True
     except:
         return False
@@ -626,6 +631,6 @@ def compress_folder(folder_path, is_exclude_git=False):
     return tar_hash, f"{dir_path}/{tar_file}"
 
 
-def dump_dict_to_file(filename, job_keys):
-    with open(filename, "w") as f:
+def dump_dict_to_file(fn, job_keys):
+    with open(fn, "w") as f:
         json.dump(job_keys, f)

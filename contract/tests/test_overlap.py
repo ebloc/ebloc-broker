@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import os
-import pytest
 import sys
 from os import path
+
+import pytest
 
 from broker import cfg, config
 from broker._utils._log import br, console_ruler, log

@@ -8,7 +8,7 @@ from contextlib import suppress
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import _remove, mkdir
-from broker.config import env, logging
+from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size, echo_grep_awk, log, run, subprocess_call
 from broker.libs import _git, gdrive
@@ -57,10 +57,10 @@ class GdriveClass(Storage):
             downloaded_folder_path = f"{self.folder_path_to_download[source_code_hash]}/{name}"
             if not os.path.isdir(downloaded_folder_path):
                 # check before move operation
-                raise Exception(f"E: Folder ({downloaded_folder_path}) is not downloaded successfully")
+                raise Exception(f"Folder ({downloaded_folder_path}) is not downloaded successfully")
 
             self.data_transfer_in_requested = calculate_size(downloaded_folder_path)
-            logging.info(
+            log(
                 f"data_transfer_in_requested={self.data_transfer_in_requested} MB | "
                 f"Rounded={int(self.data_transfer_in_requested)} MB"
             )
@@ -76,12 +76,11 @@ class GdriveClass(Storage):
             if not os.path.isfile(file_path):
                 raise Exception(f"{WHERE(1)} E: File {file_path} is not downloaded successfully")
 
-            filename = f"{self.folder_path_to_download[source_code_hash]}/{name}"
             p1 = subprocess.Popen(
                 [
                     "ls",
                     "-ln",
-                    filename,
+                    f"{self.folder_path_to_download[source_code_hash]}/{name}",
                 ],
                 stdout=subprocess.PIPE,
             )
@@ -89,7 +88,7 @@ class GdriveClass(Storage):
             p1.stdout.close()  # type: ignore
             # returns downloaded files size in bytes
             self.data_transfer_in_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
-            logging.info(
+            log(
                 f"data_transfer_in_requested={self.data_transfer_in_requested} MB |"
                 f" Rounded={int(self.data_transfer_in_requested)} MB"
             )

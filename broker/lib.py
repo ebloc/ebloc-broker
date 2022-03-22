@@ -9,11 +9,12 @@ import sys
 import time
 import traceback
 from multiprocessing import Process
+from os.path import exists
 from threading import Thread
 
 from broker import cfg, config
 from broker._utils._log import br
-from broker._utils.tools import _remove, is_process_on, log, print_tb
+from broker._utils.tools import _remove, is_process_on, log, mkdir, print_tb
 from broker.config import env, logging
 from broker.errors import Web3NotConnected
 from broker.utils import WHERE, byte_to_mb, popen_communicate, run
@@ -64,7 +65,7 @@ class State:
         "CANCELLED": 4,
         "COMPLETED": 5,
         "TIMEOUT": 6,
-        "COMPLETED_WAITING_ADDITIONAL_DATA_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
+        "COMPLETED_WAITING_ADDITIONAL_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
     }
     inv_code = {value: key for key, value in code.items()}
 
@@ -81,7 +82,7 @@ def session_start_msg(slurm_user, block_number, pid):
     else:
         PROVIDER_ID = env.PROVIDER_ID
 
-    log(f"==> Driver process has the PID={pid}")
+    log(f"==> driver process has the PID={pid}")
     log(f"==> provider_address={PROVIDER_ID}")
     log(f"==> slurm_user={slurm_user}")
     log(f"==> left_of_block_number={block_number}")
@@ -91,7 +92,7 @@ def session_start_msg(slurm_user, block_number, pid):
 def run_driver_cancel():
     """Run driver_cancel daemon on the background."""
     if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
-        # Running driver_cancel.py on the background if it is not already
+        # running driver_cancel.py on the background if it is not already
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
@@ -119,7 +120,7 @@ def subprocess_call(cmd, attempt=1, sleep_time=1):
                     _cmd = " ".join(cmd)
                     log(f"\n$ {_cmd}", "bold red")
                     log(f"{error_msg} ", "bold", end="")
-                    log(WHERE())
+                    log(f"WHERE={WHERE()}")
 
                 if attempt > 1 and count + 1 != attempt:
                     log(f"{br(f'attempt={count}')} ", end="")
@@ -142,16 +143,16 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
         log(f"\n{_cmd}", "red")
-        raise Exception(f"E: scontrol error:\n{output}")
+        raise Exception(f"scontrol error:\n{output}")
 
     # log(f"## writing into path({path}) is completed")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed
 
 
-def remove_files(filename) -> bool:
+def remove_files(fn) -> bool:
     """Remove given file path."""
-    if "*" in filename:
-        for f in glob.glob(filename):
+    if "*" in fn:
+        for f in glob.glob(fn):
             try:
                 _remove(f)
             except Exception as e:
@@ -159,7 +160,7 @@ def remove_files(filename) -> bool:
                 return False
     else:
         try:
-            _remove(filename)
+            _remove(fn)
         except Exception as e:
             print_tb(str(e))
             return False
@@ -190,7 +191,7 @@ def eblocbroker_function_call(func, max_retries):
             print_tb(e)
             raise e
 
-    raise Exception("E: eblocbroker_function_call completed all the attempts.")
+    raise Exception("eblocbroker_function_call completed all the attempts")
 
 
 def is_dir(path) -> bool:
@@ -224,12 +225,22 @@ def run_storage_thread(storage_class):
 
 def run_storage_process(storage_class):
     storage_process = Process(target=storage_class.run)
-    storage_process.start()
     try:
+        storage_process.start()
         storage_process.join()  # waits until the job is completed
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
+
+
+def pre_check():
+    mkdir(env.LOG_PATH / "private")
+    mkdir(env.LOG_PATH / "drivers_output")
+    mkdir(env.LOG_PATH / "links")
+    mkdir(env.LOG_PATH / "transactions")
+    mkdir(env.LOG_PATH / "end_code_output")
+    if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
+        raise Exception("slurm_mail_prog.sh is not location in /var/ebloc-broker/")
 
 
 # from broker.utils StorageID

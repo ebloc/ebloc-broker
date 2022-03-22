@@ -15,7 +15,7 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import br, log, ok
-from broker._utils.tools import _remove, exit_after, mkdir, read_json
+from broker._utils.tools import _remove, exit_after, mkdirs, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.errors import QuietExit
@@ -43,6 +43,7 @@ from broker.utils import (
     remove_empty_files_and_folders,
 )
 
+ipfs = cfg.ipfs
 Ebb = cfg.Ebb
 connect()
 
@@ -76,7 +77,7 @@ class IpfsGPG(Common):
     def upload(self, *_):
         """Upload files right after all the patchings are completed."""
         try:
-            cfg.ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
+            ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
         except Exception as e:
             _remove(self.patch_file)
             raise e
@@ -148,21 +149,21 @@ class Gdrive(Common):
             log(subprocess_call(cmd, 5))
         except Exception as e:
             print_tb(e)
-            raise Exception("E: gdrive could not upload the file") from e
+            raise Exception("gdrive could not upload the file") from e
 
 
 class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def __init__(self, **kwargs) -> None:
         args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
-        self.job_key = kwargs.pop("job_key")
+        self.job_key: str = kwargs.pop("job_key")
         self.index = int(kwargs.pop("index"))
-        self.received_block_number = kwargs.pop("received_block_number")
-        self.folder_name = kwargs.pop("folder_name")
-        self.slurm_job_id = kwargs.pop("slurm_job_id")
+        self.received_block_number: int = kwargs.pop("received_block_number")
+        self.folder_name: str = kwargs.pop("folder_name")
+        self.slurm_job_id: int = kwargs.pop("slurm_job_id")
         self.share_tokens = {}  # type: Dict[str, str]
         self.requester_id_address = ""
         self.data_transfer_in = 0
-        self.data_transfer_out = 0.0
+        self.data_transfer_out = 0
         self.elapsed_time = 0
         self.code_hashes_to_process: List[str] = []
         self.code_hashes: List[str] = []
@@ -174,7 +175,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
         _log.ll.LOG_FILENAME = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
-        self.job_id = 0  # TODO: should be mapped to slurm_job_id
+        self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -211,8 +212,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.patch_folder = Path(self.results_folder_prev) / "patch"
         self.patch_folder_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
         self.job_status_running_tx = Ebb.mongo_broker.get_job_status_running_tx(self.job_key, self.index)
-        mkdir(self.patch_folder)
-        mkdir(self.patch_folder_ipfs)
+        mkdirs([self.patch_folder, self.patch_folder_ipfs])
         remove_empty_files_and_folders(self.results_folder)
         log(f"==> whoami={getpass.getuser()} | id={os.getegid()}")
         log(f"==> home={env.HOME}")
@@ -283,10 +283,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
     def _ipfs_add_folder(self, folder_path):
         try:
-            self.result_ipfs_hash = cfg.ipfs.add(folder_path)
+            self.result_ipfs_hash = ipfs.add(folder_path)
             log(f"==> result_ipfs_hash={self.result_ipfs_hash}")
-            cfg.ipfs.pin(self.result_ipfs_hash)
-            data_transfer_out = cfg.ipfs.get_cumulative_size(self.result_ipfs_hash)
+            ipfs.pin(self.result_ipfs_hash)
+            data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
         except Exception as e:
             print_tb(e)
             raise e
@@ -360,7 +360,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     print_tb(e)
                     raise e
         except Exception as e:
-            raise Exception("E: Problem on the git_diff_patch_and_upload() function") from e
+            raise Exception("Problem on the git_diff_patch_and_upload() function") from e
 
     def upload_driver(self):
         self.clean_before_upload()

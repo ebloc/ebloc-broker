@@ -10,3 +10,4 @@ munge
 mysql-client
 mysql-server
 software-properties-common
+default-libmysqlclient-dev

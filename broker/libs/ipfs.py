@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import signal
 import sys
 import time
-from subprocess import check_output
-
-import ipfshttpclient
 from cid import make_cid
+from subprocess import check_output
 
 from broker import cfg
 from broker._utils._log import br, ok
@@ -45,10 +44,8 @@ class Ipfs:
     def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
         """Get only chunk and hash of a given path, do not write to disk.
 
-        Args:
-            path: Path of a folder or file
-
-        Return string that contains the ouput of the run commad.
+        :param str path: path: Path of a folder or file
+        :returns: string that contains the ouput of the run commad.
         """
         if os.path.isdir(path):
             cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
@@ -141,7 +138,7 @@ class Ipfs:
             try:
                 untar(tar_file, extract_target)
             except Exception as e:
-                raise Exception("E: Could not extract the given tar file") from e
+                raise Exception("Could not extract the given tar file") from e
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
@@ -151,7 +148,8 @@ class Ipfs:
         _remove(f"{env.HOME}/.ipfs/repo.lock")
         _remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 
-    def gpg_encrypt(self, user_gpg_finderprint, target):
+    def gpg_encrypt(self, gpg_finderprint, target):
+        self.check_gpg_password(gpg_finderprint)
         is_delete = False
         if os.path.isdir(target):
             try:
@@ -176,9 +174,9 @@ class Ipfs:
 
         for attempt in range(5):
             try:
-                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint]
+                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", gpg_finderprint]
                 log(f"{br(attempt)} cmd: [magenta]{' '.join(cmd)}", "bold")
-                run(cmd)  # this may not work if it is requested too much in a short time
+                run(cmd)  # this may not work if it is requested too much in short time
                 break
             except Exception as e:
                 log(f"warning: {e}")
@@ -189,7 +187,7 @@ class Ipfs:
                 "--batch",
                 "--yes",
                 "--recipient",
-                user_gpg_finderprint,
+                gpg_finderprint,
                 "--trust-model",
                 "always",
                 "--output",
@@ -229,7 +227,7 @@ class Ipfs:
                     if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                         raise QuietExit
                 else:
-                    log("E: connection into provider's IPFS node via swarm is not accomplished")
+                    log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")
                     raise Exception(e)
             else:
                 log(f"{output} {ok()}")
@@ -237,8 +235,8 @@ class Ipfs:
             print_tb(e)
             raise e
 
-    def _ipfs_stat(self, ipfs_hash, _is_ipfs_on=True):
-        """Return stats of the give IPFS hash.
+    def stat(self, ipfs_hash, _is_ipfs_on=True):
+        """Return stat of the give IPFS hash.
 
         This function *may* run for an indetermined time. Returns a dict with the
         size of the block with the given hash.
@@ -259,34 +257,38 @@ class Ipfs:
             signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
 
         try:
-            output = self._ipfs_stat(ipfs_hash, _is_ipfs_on=False)
+            output = self.stat(ipfs_hash, _is_ipfs_on=False)
+            _stat = {}
             for line in output.split("\n"):
                 if "CumulativeSize" not in line:
-                    log(line)
+                    line = line.replace(" ", "")
+                    output_stat = line.split(":")
+                    _stat[output_stat[0]] = int(output_stat[1])
 
-            # output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
+            log("ipfs_object_stat=", "b", end="")
+            log(_stat, "b")
             cumulative_size = int(output.split("\n")[4].split(":")[1].replace(" ", ""))
             log(f"cumulative_size={cumulative_size}", "bold")
             return output, cumulative_size
         except Exception as e:
-            raise Exception(f"E: Timeout, failed to find IPFS file: {ipfs_hash}") from e
+            raise Exception(f"Timeout, failed to find ipfs file: {ipfs_hash}") from e
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         output = run_with_output(["ipfs", "get", ipfs_hash, f"--output={path}"])
-        logging.info(output)
+        log(output)
         if is_storage_paid:
             # pin downloaded ipfs hash if storage is paid
             output = check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
-            logging.info(output)
+            log(output)
 
     def get_cumulative_size(self, ipfs_hash: str):
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        output = self._ipfs_stat(ipfs_hash)
+        output = self.stat(ipfs_hash)
         if output:
             return int(output.split("\n")[4].split(":")[1].replace(" ", ""))
         else:
@@ -364,3 +366,42 @@ class Ipfs:
                 return ipfs_address
 
         raise ValueError("No valid ipfs has is found")
+
+    def check_gpg_password(self, gpg_finderprint):
+        """Check passphrase of gpg from a file.
+
+        * How can I check passphrase of gpg from a file?
+        __ https://unix.stackexchange.com/q/683084/198423
+        """
+        cmd = [
+            "gpg",
+            "--batch",
+            "--pinentry-mode",
+            "loopback",
+            f"--passphrase-file={env.GPG_PASS_FILE}",
+            "--dry-run",
+            "--passwd",
+            gpg_finderprint,
+        ]
+        try:
+            run(cmd)
+        except Exception as e:
+            print_tb(e)
+            raise e
+
+    def publish_gpg(self, gpg_fingerprint):
+        log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
+        run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+
+    def is_gpg_published(self, gpg_fingerprint):
+        try:
+            run(["gpg", "--list-keys", gpg_fingerprint])
+        except Exception as e:
+            try:
+                self.publish_gpg(gpg_fingerprint)
+            except:
+                raise Exception from e
+
+    def get_gpg_fingerprint(self, email) -> str:
+        output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
+        return output.split("\n")[1].replace(" ", "").upper()

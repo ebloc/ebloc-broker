@@ -1,11 +1,11 @@
 config:
-    requester_address: '0x0636278cbd420368b1238ab204b1073df9cc1c5c'
-    provider_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
+    requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
+    provider_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
     source_code:
         cache_type: public
         path: ~/test_eblocbroker/test_data/base/source_code
         storage_hours: 0
-        storage_id: ipfs
+        storage_id: ipfs_gpg
     data:
         data1:
             cache_type: public

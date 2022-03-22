@@ -20,42 +20,39 @@ def analyze_data(self, key, provider=None):
     self.job_info["is_cached"] = {}
     for idx, code_hash in enumerate(self.job_info["code_hashes"]):
         if self.job_info["cloudStorageID"][idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
-            source_code_hash = source_code_hash_str = bytes32_to_ipfs(code_hash)
-            if idx == 0 and key != source_code_hash:
-                log(f"E: IPFS hash does not match with the given source_code_hash.\n\t{key} != {source_code_hash}")
+            code_hash = code_hash_str = bytes32_to_ipfs(code_hash)
+            if idx == 0 and key != code_hash:
+                log(f"E: IPFS hash does not match with the given code_hash.\n\t{key} != {code_hash}")
                 continue
         else:
-            source_code_hash = code_hash
-            source_code_hash_str = cfg.w3.toText(code_hash)
+            code_hash_str = cfg.w3.toText(code_hash)
 
-        received_storage_deposit = cfg.Ebb.get_received_storage_deposit(
-            provider, self.job_info["job_owner"], source_code_hash
-        )
-        job_storage_duration = cfg.Ebb.get_job_storage_duration(provider, source_code_hash)
+        received_storage_deposit, *_ = cfg.Ebb.get_storage_info(provider, self.job_info["job_owner"], code_hash)
+        *_, job_storage_duration = cfg.Ebb.get_job_storage_duration(provider, cfg.ZERO_ADDRESS, code_hash)
         ds = DataStorage(job_storage_duration)
         ds.received_storage_deposit = received_storage_deposit
         self.received_block.append(ds.received_block)
         self.storage_duration.append(ds.storage_duration)
-        self.job_info["is_cached"][source_code_hash_str] = False  # FIXME double check
+        self.job_info["is_cached"][code_hash_str] = False  # FIXME double check
         # if remaining time to cache is 0, then caching is requested for the
-        # related source_code_hash
+        # related code_hash
         if ds.received_block + ds.storage_duration >= current_block_number:
             if ds.received_block < current_block_number:
-                self.job_info["is_cached"][source_code_hash_str] = True
+                self.job_info["is_cached"][code_hash_str] = True
             elif ds.received_block == current_block_number:
-                if source_code_hash in self.job_info["is_cached"]:
-                    self.job_info["is_cached"][source_code_hash_str] = True
+                if code_hash in self.job_info["is_cached"]:
+                    self.job_info["is_cached"][code_hash_str] = True
                 else:
                     # for the first job should be False since it is
                     # requested for cache for the first time
-                    self.job_info["is_cached"][source_code_hash_str] = False
+                    self.job_info["is_cached"][code_hash_str] = False
 
-        log(f" * source_code_hash{br(idx)}=[green]{source_code_hash_str}")
+        log(f" * code_hash{br(idx)}=[green]{code_hash_str}")
         log(f"==> received_block={ds.received_block}")
         log(f"==> storage_duration{br(self.job_info['received_block_number'])}={ds.storage_duration}")
         log(f"==> cloud_storage_id{br(idx)}={StorageID(self.job_info['cloudStorageID'][idx]).name}")
         log(f"==> cached_type={CacheType(self.job_info['cacheType'][idx]).name}")
-        log(f"==> is_cached={self.job_info['is_cached'][source_code_hash_str]}")
+        log(f"==> is_cached={self.job_info['is_cached'][code_hash_str]}")
 
 
 def set_job_received_block_number(self, received_block_number):
@@ -73,7 +70,7 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
     """Update job cores."""
     self.set_job_received_block_number(received_bn)
     try:
-        event_filter = self._eBlocBroker.events.LogJob.createFilter(
+        event_filter = self._eblocbroker.events.LogJob.createFilter(
             argument_filters={"provider": str(provider)},
             fromBlock=int(self.job_info["received_block_number"]),
             toBlock=self.to_block,
@@ -100,7 +97,7 @@ def get_job_code_hashes(self, provider, job_key, index, received_block_number=0)
     # job_info["received_block_number"]
     self.set_job_received_block_number(received_block_number)
     try:
-        event_filter = self._eBlocBroker.events.LogJob.createFilter(
+        event_filter = self._eblocbroker.events.LogJob.createFilter(
             argument_filters={"provider": str(provider)},
             fromBlock=int(self.job_info["received_block_number"]),
             toBlock=self.to_block,
@@ -112,7 +109,7 @@ def get_job_code_hashes(self, provider, job_key, index, received_block_number=0)
 
         return self.job_info
     except Exception as e:
-        logging.error(f"E: Failed to run get_job_source_code_hash(): {e}")
+        logging.error(f"E: Failed to run get_job_code_hash(): {e}")
         raise e
 
 
@@ -168,8 +165,8 @@ def get_job_owner(self, provider, job_key, index, job_id=0):
 def get_job_info(self, provider, job_key, index, job_id, received_block_number=0, is_print=True, is_log_print=False):
     """Return information of the job."""
     if is_print:
-        fname = "~/ebloc-broker/broker/eblocbroker_scripts/get_job_info.py"
-        log(f"{fname} {provider} {job_key} {index} {job_id} {received_block_number}", "bold cyan", is_code=True)
+        fn = "~/ebloc-broker/broker/eblocbroker_scripts/get_job_info.py"
+        log(f"$ {fn} {provider} {job_key} {index} {job_id} {received_block_number}", "bold cyan", is_code=True)
 
     try:
         provider = cfg.w3.toChecksumAddress(provider)
@@ -189,7 +186,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             "job_owner": job_owner.lower(),
             "data_transfer_in": data_transfer_in,
             "data_transfer_out": data_transfer_out,
-            "commitmentBlockDuration": job_prices[1],
+            "commitment_block_duration": job_prices[1],
             "price_core_min": job_prices[2],
             "price_data_transfer": job_prices[3],
             "price_storage": job_prices[4],
@@ -220,7 +217,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
                 self.job_info["received_block_number"] = received_block_number
         # else:
         #    to_block = int(received_block_number)
-        event_filter = self._eBlocBroker.events.LogProcessPayment.createFilter(
+        event_filter = self._eblocbroker.events.LogProcessPayment.createFilter(
             argument_filters={"provider": str(provider)},
             fromBlock=int(received_block_number),
             toBlock="latest",
@@ -239,7 +236,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
         raise e
 
     if str(self.job_info["core"]) == "0":
-        raise Exception("E: Failed to get_job_info: Out of index")
+        raise Exception("Failed to get_job_info: Out of index")
 
     if is_log_print:
         self.get_job_info_print(provider, job_key, index, received_block_number)

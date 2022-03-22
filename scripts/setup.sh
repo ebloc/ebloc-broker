@@ -4,10 +4,7 @@ git clone https://github.com/ebloc/ebloc-broker
 cd ebloc-broker
 git checkout dev && source scripts/setup.sh
 '
-RED="\033[1;31m"
-GREEN="\033[1;32m"
-BLUE="\033[1;36m"
-NC="\033[0m" # no Color
+RED="\033[1;31m"; GREEN="\033[1;32m"; BLUE="\033[1;36m"; NC="\033[0m"
 
 # general
 # =======
@@ -35,15 +32,17 @@ node -v
 # ganache-cli
 # ===========
 export NODE_OPTIONS=--openssl-legacy-provider
-sudo npm install -g ganache-cli  # --unsafe-perm
+sudo npm install -g ganache
 
 # go
 sudo snap install go --classic
+go version
 
 # ipfs
 # =======
-# alternative: sudo snap install ipfs
-#              ipfs init && sudo mount --bind ~/.ipfs ~/snap/ipfs/common
+# alternative use snap to install ipfs:
+# sudo snap install ipfs
+# ipfs init && sudo mount --bind ~/.ipfs ~/snap/ipfs/common
 install_ipfs () {
     ipfs_current_version=""
     which ipfs &>/dev/null
@@ -70,19 +69,21 @@ install_ipfs () {
         ipfs version
         cd
     fi
+    # https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
+    # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
+    ipfs init --profile=server,badgerds
+    ipfs config Reprovider.Strategy roots
+    ipfs config Routing.Type none
+    # https://github.com/lucas-clemente/quic-go/wiki/UDP-Receive-Buffer-Size
+    sudo sysctl -w net.core.rmem_max=2500000
 }
 install_ipfs
-
-# https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
-# https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
-ipfs init --profile=server,badgerds
-ipfs config Reprovider.Strategy roots
-ipfs config Routing.Type none
-sudo sysctl -w net.core.rmem_max=262144
 
 # echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 # sudo sysctl -p
 
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
 sudo firewall-cmd --add-port=4001/tcp --permanent
 sudo firewall-cmd --reload
 sudo firewall-cmd --list-all
@@ -129,12 +130,11 @@ VENV=$HOME/venv
 python3.8 -m venv $VENV
 source $VENV/bin/activate && $VENV/bin/python3.8 -m pip install --upgrade pip
 sudo apt-get install -y libssl-dev zlib1g-dev gcc g++ make
-sudo apt install libgirepository1.0-dev
+sudo apt install -y libgirepository1.0-dev
 python3 -m pip install --no-use-pep517 cm-rgb
 pip install wheel
-# pip install pycairo  # dbus-python
 cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver
-
+mkdir -p $HOME/.cache/black
 sudo chown $(logname) -R $HOME/.cache/black
 black_version=$(pip freeze | grep black | sed 's|black==||g')
 if [ "$black_version" != "" ]; then
@@ -180,18 +180,18 @@ mkdir $empyt_folder
 cd $empyt_folder
 brownie init
 rm -rf $empyt_folder
-cd $HOME
+cd ~
 ~/ebloc-broker/broker/python_scripts/add_bloxberg_into_network_config.py
 cd ~/ebloc-broker/contract/
 brownie compile
-cd
+cd ~
 gpg --gen-key
 gpg --list-keys
 
-sudo apt-get install davfs2 -y
 sudo mkdir /oc
 sudo chown $(whoami) /oc
 sudo chown -R $(whoami) /oc
+sudo apt-get install davfs2 -y
 # sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
 
 yes_or_no () {
@@ -206,55 +206,8 @@ yes_or_no () {
     done
 }
 
-# provider
-# ========
-install_slurm_and_requirements () {
-    # mysql
-    # =====
-    sudo apt update
-    sudo apt install -y mysql-server
-    sudo apt-get install -y libmunge-dev libmunge2 munge
-    sudo apt-get install -y mysql-client libmysqlclient-dev default-libmysqlclient-dev
-
-    # slurm
-    # =====
-    sudo mkdir -p /var/log/slurm
-    sudo chown $(whoami) -R /var/log/slurm
-
-    git clone https://github.com/SchedMD/slurm $HOME/slurm
-    cd $HOME/slurm
-    git checkout e2e21cb571ce88a6dd52989ec6fe30da8c4ef15f  # slurm-19-05-8-1
-    sudo rm -rf /usr/local/lib/slurm/ /tmp/slurmstate/
-    make clean
-    ./configure --enable-debug --enable-front-end
-    sudo make
-    sudo make install
-
-    # configurations
-    # ==============
-    sudo groupadd eblocbroker
-    sudo cp ~/ebloc-broker/broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
-    sudo cp ~/ebloc-broker/broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
-    # sudo chmod 755 /usr/local/etc/slurm.conf  # 0600 ?
-    # sudo chmod 755 /usr/local/etc/slurmdbd.conf  # 0600 ?
-    sudo chown $(whoami) /usr/local/etc/slurmdbd.conf
-    sudo chown munge:munge /etc/munge/munge.key
-    sudo chmod 400 /etc/munge/munge.key
-    sudo systemctl enable munge
-    sudo systemctl start munge
-    mkdir -p /tmp/run
-    sudo apt-get install mailutils -y
-    # sudo systemctl enable slurmctld  # Controller
-    # sudo systemctl enable slurmdbd  # Database
-    # sudo systemctl enable slurmd  # Compute Nodes
-}
-
-provider_setup () {
-    install_slurm_and_requirements
-}
-
 echo ""
-yes_or_no "Are you a provider? Yes for slurm installation" && provider_setup
+yes_or_no "Are you a provider? Yes for slurm installation" && ./install_slurm.sh
 
 # finally
 # =======

@@ -2,7 +2,6 @@
 
 _HOME="/home/user"  # may differ for each providerget from the file name
 EMAIL=""
-
 VENV_PATH=${_HOME}"/venv"
 BROKER_PATH=${_HOME}"/ebloc-broker/broker"
 LOG_FILE=${_HOME}"/.ebloc-broker/slurm_script.log"
@@ -20,7 +19,7 @@ if [[ $c == *" Began, "* ]]; then
     name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Began)')
     arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
     arg1=$(echo $name | cut -d "$sep" -f 2)  # index
-    msg="JOB_STARTED fname=$name\n"
+    msg="JOB_STARTED fn=$name\n"
     msg="${msg}./start_code.py $arg0 $arg1 $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
@@ -44,7 +43,7 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
     arg1=$(echo $name | cut -d "$sep" -f 2)  # index
     arg2=$(echo $name | cut -d "$sep" -f 3)  # received_block_number
-    msg="$status fname=$name\n"
+    msg="$status fn=$name\n"
     msg="${msg}./end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
@@ -59,7 +58,7 @@ if [[ $event == *"TIMEOUT"* ]]; then
     arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
     arg1=$(echo $name | cut -d "$sep" -f 2)  # index
     arg2=$(echo $name | cut -d "$sep" -f 3)  # received_block_number
-    msg="TIMEOUT fname=$name\n"
+    msg="TIMEOUT fn=$name\n"
     msg="${msg}./end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
@@ -74,7 +73,7 @@ if [[ $event == *"CANCELLED"* ]]; then
     arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
     arg1=$(echo $name | cut -d "$sep" -f 2)  # index
     arg2=$(echo $name | cut -d "$sep" -f 3)  # received_block_number
-    msg="CANCELLED fname=$name\n"
+    msg="CANCELLED fn=$name\n"
     msg="${msg}./end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE

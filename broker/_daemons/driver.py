@@ -12,7 +12,7 @@ from broker.utils import is_driver_on, print_tb
 
 class DriverDaemon(run.RunDaemon):  # pylint: disable=too-many-ancestors
     def run(self):
-        tools.run(["python3", env.EBLOCPATH / "broker" / "run.py"])
+        tools.run(["eblocbroker", "driver"])
 
 
 def main():

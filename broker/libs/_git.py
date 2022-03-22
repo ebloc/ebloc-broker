@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
+import git
 import gzip
 import io
 import os
 import time
 from contextlib import suppress
-from pathlib import Path
-
-import git
 from git.exc import InvalidGitRepositoryError
+from pathlib import Path
 
 from broker import cfg
 from broker._utils._log import ok
@@ -53,18 +52,18 @@ def is_initialized(path) -> bool:
         return output == "true"
 
 
-def diff_and_gzip(filename):
+def diff_and_gzip(fn):
     repo = git.Repo(".", search_parent_directories=True)
-    with gzip.open(filename, "wb") as output:
+    with gzip.open(fn, "wb") as output:
         # We cannot directly write Python objects like strings!
         # We must first convert them into a bytes format using io.BytesIO() and then write it
         with io.TextIOWrapper(output, encoding="utf-8") as encode:
             encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty", "--color=never"))
 
 
-def decompress_gzip(filename):
-    if not is_gzip_file_empty(filename):
-        with gzip.open(filename, "rb") as ip:
+def decompress_gzip(fn):
+    if not is_gzip_file_empty(fn):
+        with gzip.open(fn, "rb") as ip:
             with io.TextIOWrapper(ip, encoding="utf-8") as decoder:
                 content = decoder.read()
                 log(content)
@@ -98,7 +97,7 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
 
         patch_upload_fn = f"{patch_name}.gz"  # file to be uploaded as zip
         patch_file = f"{target_path}/{patch_upload_fn}"
-        logging.info(f"patch_path={patch_upload_fn}")
+        log(f"patch_path=[magenta]{patch_upload_fn}", "bold")
         try:
             repo.git.add(A=True)
             diff_and_gzip(patch_file)
@@ -150,7 +149,7 @@ def commit_changes(path):
         try:
             output = run(["ls", "-l", ".git/refs/heads"])
         except Exception as e:
-            raise Exception("E: Problem on git.commit_changes()") from e
+            raise Exception("Problem on git.commit_changes()") from e
 
         if output == "total 0":
             logging.warning("There is no first commit")

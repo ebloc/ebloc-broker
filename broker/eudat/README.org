@@ -2,6 +2,8 @@
 
 ** Linux mount
 
+~se /etc/davfs2/davfs2.conf~  => add ~use_locks       0~ line
+
 #+begin_src bash
 sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
 #+end_src

@@ -5,9 +5,8 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
-from typing import Union
-
 from pymongo import MongoClient
+from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
@@ -60,7 +59,7 @@ class Contract:
             try:
                 from broker.imports import connect
 
-                self.eBlocBroker, self.w3, self._eBlocBroker = connect()
+                self.eBlocBroker, self.w3, self._eblocbroker = connect()
             except Exception as e:
                 print_tb(e)
                 sys.exit(1)
@@ -97,23 +96,23 @@ class Contract:
     from broker.eblocbroker_scripts.update_provider_info import is_provider_info_match, update_provider_info
     from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
 
-    def brownie_load_account(self, fname="", password="alper"):
+    def brownie_load_account(self, fn="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
         cfg = Yaml(env.LOG_PATH / ".bloxberg_account.yaml")
-        if not fname:
-            fname = cfg["config"]["name"]
+        if not fn:
+            fn = cfg["config"]["name"]
 
         if cfg["config"]["passw"]:
             password = cfg["config"]["passw"]
 
-        full_path = expanduser(f"~/.brownie/accounts/{fname}")
+        full_path = expanduser(f"~/.brownie/accounts/{fn}")
         if not full_path:
             raise Exception(f"{full_path} does not exist")
 
         # accounts.load("alper.json", password="alper")  # DELETE
-        return accounts.load(fname, password=password)
+        return accounts.load(fn, password=password)
 
     def is_eth_account_locked(self, addr):
         """Check whether the ethereum account is locked."""
@@ -194,7 +193,7 @@ class Contract:
 
         block_number = self.w3.eth.get_transaction(contract["tx_hash"]).blockNumber
         if block_number is None:
-            raise Exception("E: Contract is not available on the blockchain, is it synced?")
+            raise Exception("Contract is not available on the blockchain, is it synced?")
 
         return self.w3.eth.get_transaction(contract["tx_hash"]).blockNumber
 
@@ -226,9 +225,9 @@ class Contract:
                 account = self.w3.eth.accounts[account_id]
                 return self.w3.toChecksumAddress(account)
             except Exception as e:
-                raise Exception("E: Given index account does not exist, check .eblocpoa/keystore") from e
+                raise Exception("Given index account does not exist, check .eblocpoa/keystore") from e
         else:
-            raise Exception(f"E: Invalid account {address} is provided")
+            raise Exception(f"Invalid account {address} is provided")
 
     def _get_balance(self, account, _type="ether"):
         if not isinstance(account, (Account, LocalAccount)):
@@ -256,13 +255,13 @@ class Contract:
 
     def _get_contract_yaml(self) -> Path:
         try:
-            _yaml = Yaml(env.CONTRACT_YAML_FILE)
+            _yaml = Yaml(env.CONTRACT_YAML_FILE, auto_dump=False)
             if env.IS_BLOXBERG:
                 return _yaml["networks"]["bloxberg"]
             elif env.IS_EBLOCPOA:
                 return _yaml["networks"]["eblocpoa"]
             else:
-                raise Exception("Wrong contract yaml address setup")
+                raise Exception("wrong contract yaml address setup")
         except Exception as e:
             raise e
 
@@ -694,20 +693,6 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    # def get_received_storage_deposit(self, provider, requester, code_hash) -> int:
-    #     """Return the received storage deposit for the corresponding source code hash.
-
-    #     * required for the whenProviderRegistered() check on the contract
-    #     """
-    #     if isinstance(code_hash, str):
-    #         with suppress(Exception):
-    #             code_hash = ipfs_to_bytes32(code_hash)
-
-    #     if env.IS_BLOXBERG:
-    #         return self.eBlocBroker.getStorageDeposit(provider, requester, code_hash)
-    #     else:
-    #         return self.eBlocBroker.functions.getStorageDeposit(provider, requester, code_hash).call()
-
     def get_storage_info(self, provider, requester, code_hash):
         """Return the received storage deposit for the corresponding source code hash."""
         if isinstance(code_hash, str):
@@ -740,5 +725,4 @@ class EBB:
         return getattr(self.eblocbroker, name)
 
 
-# eblocbroker: Union["Contract", None] = None
 Ebb = EBB()

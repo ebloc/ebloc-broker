@@ -1,8 +1,8 @@
 #!/bin/bash
 
-GREEN="\033[1;32m"
-NC="\033[0m" # no Color
-TMP_DIR=$HOME/.ebloc-broker
+GREEN="\033[1;32m"; NC="\033[0m"
+LOG_DIR=~/.ebloc-broker
+BASE_DIR=~/ebloc-broker/broker
 DIR=/var/ebloc-broker
 
 yes_or_no () {
@@ -30,7 +30,7 @@ set_email () {
 provider_setup () {
     ## configure_slurm
     _FILE=$DIR/slurm_mail_prog.sh
-    FILE=$HOME/ebloc-broker/broker/bash_scripts/slurm_mail_prog.sh
+    FILE=$BASE_DIR/bash_scripts/slurm_mail_prog.sh
     EMAIL=$(cat ~/.ebloc-broker/cfg.yaml | shyaml get-value cfg.gmail)
     # [ ! -f $_FILE ] && cp $FILE $DIR/
     cp $FILE $DIR/
@@ -42,7 +42,6 @@ provider_setup () {
     line_new=$(echo $HOME | sed 's/\//\\\//g')
     sed -i.bak "s/^\(_HOME=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
     rm -f $DIR/slurm_mail_prog.sh.bak
-
     # venv_path=$HOME"/venv"
     # var=$(echo $venv_path | sed 's/\//\\\//g')
     # sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $DIR/slurm_mail_prog.sh
@@ -64,17 +63,17 @@ configure_coinbase () { # coinbase address setup
         echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
     else
         echo "COINBASE is: $COINBASE"
-        check=$(eblocbroker/is_address.py $COINBASE)
+        check=$($BASE_DIR/eblocbroker_scripts/is_address.py $COINBASE)
         if [ "$check" != "True" ]; then
             echo "Ethereum address is not valid, please use a valid one."
             exit
         fi
-        # sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $TMP_DIR/.env
-        # rm $TMP_DIR/.env.bak
+        # sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $LOG_DIR/.env
+        # rm $LOG_DIR/.env.bak
     fi
 }
 
-configure_oc () { # OC_USER address setup
+configure_oc () {  # OC_USER address setup
     OC_USER=$(echo $OC_USER)
     if [[ ! -v OC_USER ]]; then
         echo "OC_USER is not set"
@@ -85,8 +84,8 @@ configure_oc () { # OC_USER address setup
         echo "Type your OC_USER, followed by [ENTER]:"
         read OC_USER
     fi
-    # sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $TMP_DIR/.env
-    # rm -f $TMP_DIR/.env.bak
+    # sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $LOG_DIR/.env
+    # rm -f $LOG_DIR/.env.bak
 
     if ! grep -q "export OC_USER=" $HOME/.profile; then
         echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
@@ -96,7 +95,7 @@ configure_oc () { # OC_USER address setup
 
 configure_slurm () { # slurm setup
     sudo killall slurmctld slurmdbd slurmd
-    var=$(echo $TMP_DIR/slurm_mail_prog.sh | sed 's/\//\\\//g')
+    var=$(echo $LOG_DIR/slurm_mail_prog.sh | sed 's/\//\\\//g')
     # var=$var"/bash_scripts"
     # With JobRequeue=0 or --no-requeue,
     # the job will not restart automatically, please see https://stackoverflow.com/a/43366542/2402577
@@ -120,30 +119,26 @@ configure_ipfs () { # ipfs setups
     sudo chown $l:root /ipns
 }
 
-current_dir=$HOME/ebloc-broker
-
 # Folder Setup
 # ============
-DIR=/var/ebloc-broker
 if [ ! -d $DIR ]; then
     sudo mkdir -p $DIR
     sudo chown $(whoami) -R $DIR
 fi
 mkdir -p $DIR/cache
 
-if [ ! -d $TMP_DIR ]; then
-    mkdir -p $TMP_DIR
+if [ ! -d $LOG_DIR ]; then
+    mkdir -p $LOG_DIR
 fi
 
-touch $TMP_DIR/config.yaml
-mkdir -p $TMP_DIR/private
-mkdir -p $TMP_DIR/drivers_output
-mkdir -p $TMP_DIR/links
-mkdir -p $TMP_DIR/transactions
-mkdir -p $TMP_DIR/end_code_output
-mkdir -p $TMP_DIR/tmp
-if [ ! -f $TMP_DIR/cfg.yaml ]; then
-    cp $current_dir/cfg_temp.yaml $TMP_DIR
+touch $LOG_DIR/config.yaml
+mkdir -p $LOG_DIR/private
+mkdir -p $LOG_DIR/drivers_output
+mkdir -p $LOG_DIR/links
+mkdir -p $LOG_DIR/transactions
+mkdir -p $LOG_DIR/end_code_output
+if [ ! -f $LOG_DIR/cfg.yaml ]; then
+    cp $BASE_DIR/cfg_temp.yaml $LOG_DIR/cfg.yaml
 fi
 
 # gdrive
@@ -153,48 +148,49 @@ if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
 fi
 
+echo -e "warning: Update the following file "$LOG_DIR"/.eudat_client.txt' with
+your EUDAT account's password. Best to make sure the file is not readable or
+even listable for anyone but you. You achieve this with:
+'chmod 700 eudat_password.txt'"
+echo ""
+yes_or_no "Are you are a provider" && provider_setup
+
 # LOG_PATH
 # ========
-# line_new=$TMP_DIR
+# line_new=$LOG_DIR
 # var=$(echo $line_new | sed 's/\//\\\//g')
-# sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $TMP_DIR/.env
-# rm -f $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $LOG_DIR/.env
+# rm -f $LOG_DIR/.env.bak
 
 
 # line_new=$(which gdrive | sed 's/\//\\\//g')
-# sed -i.bak "s/^\(GDRIVE=\).*/\1\"$line_new\"/" $TMP_DIR/.env
-# rm -f $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(GDRIVE=\).*/\1\"$line_new\"/" $LOG_DIR/.env
+# rm -f $LOG_DIR/.env.bak
 
 # EBLOCPATH
 # =========
-# eblocbrokerPath="$HOME/ebloc-broker"
+# eblocbrokerPath="$BASE_DIR"
 # var=$(echo $eblocbrokerPath | sed 's/\//\\\//g')
-# sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" $TMP_DIR/.env
-# rm $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(EBLOCPATH=\).*/\1\"$var\"/" $LOG_DIR/.env
+# rm $LOG_DIR/.env.bak
 
 # User Name
 # =========
 # line_old="whoami"
 # line_new=$(logname)
 
-# sed -i.bak "s/^\(WHOAMI=\).*/\1\"$line_new\"/" $TMP_DIR/.env
-# rm -f $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(WHOAMI=\).*/\1\"$line_new\"/" $LOG_DIR/.env
+# rm -f $LOG_DIR/.env.bak
 
 # RPC PORT
 # ========
 # line_old="8545"
-# sed -i.bak "s/^\(RPC_PORT=\).*/\1$line_old/" $TMP_DIR/.env
-# rm $TMP_DIR/.env.bak
+# sed -i.bak "s/^\(RPC_PORT=\).*/\1$line_old/" $LOG_DIR/.env
+# rm $LOG_DIR/.env.bak
 
 # configure_coinbase
 # configure_oc
 # configure_ipfs
-echo -e "warning: Update the following file "$TMP_DIR"/.eudat_client.txt' with
-your EUDAT account's password. Best to make sure the file is not readable or
-even listable for anyone but you. You achieve this with:
-'chmod 700 eudat_password.txt'"
-echo ""
-yes_or_no "Are you are a provider" && provider_setup
 
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node
@@ -203,8 +199,8 @@ yes_or_no "Are you are a provider" && provider_setup
 # PATH Name
 # =========
 # line_old="EBLOCBROKER_PATH"
-# line_new=$(echo $current_dir | sed 's/\//\\\//g')
-# sed -i.bak 's/'$line_old'/'$line_new'/' $TMP_DIR/.env
-# rm -f $TMP_DIR/.env.bak
+# line_new=$(echo $BASE_DIR | sed 's/\//\\\//g')
+# sed -i.bak 's/'$line_old'/'$line_new'/' $LOG_DIR/.env
+# rm -f $LOG_DIR/.env.bak
 # sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
 # rm -f $DIR/slurm_mail_prog.sh.bak

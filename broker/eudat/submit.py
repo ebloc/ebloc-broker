@@ -12,11 +12,11 @@ from broker.link import check_link_folders
 from broker.utils import print_tb
 
 
-def eudat_submit(job: Job, is_pass=False, required_confs=1):
+def submit_eudat(job: Job, is_pass=False, required_confs=1):
     log("==> Submitting source code through [blue]EUDAT[/blue]")
     Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
-    oc_client = "059ab6ba-4030-48bb-b81b-12115f531296"
+    oc_client = env.OC_USER
     connect()
     try:
         job.check_account_status(requester)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         job = Job()
         fn = "job.yaml"
         job.set_config(fn)
-        eudat_submit(job)
+        submit_eudat(job)
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

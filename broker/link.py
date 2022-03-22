@@ -88,7 +88,7 @@ class Link:
                     log()
 
                 folder_new_hash = generate_md5sum(destination)
-                assert folder_hash == folder_new_hash, "Hash does not match for original and linked folder"
+                assert folder_hash == folder_new_hash, "hash of original and linked folder does not match"
 
 
 def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
@@ -99,7 +99,7 @@ def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
             if isinstance(data_file, bytes):
                 data_file = data_file.decode("utf-8")
 
-            log(f"[bold green] * {data_file}[/bold green] => [bold yellow]../data_link/{data_file}[/bold yellow]")
+            log(f"[blue] * [/blue][green]{data_file}[/green] => [yellow]../data_link/{data_file}[/yellow]", "bold")
 
     if folders_to_share:
         is_continue = True
@@ -141,7 +141,7 @@ def check_linked_data(paths_from, path_to, is_pass=False):
     log()
     for key, value in link.data_map.items():
         test_with_small_data(value)
-        log(f"[bold green] * {key}[/bold green] => [bold yellow]../data_link/{value}[/bold yellow]")
+        log(f"[blue] * [/blue][green]{key}[/green] => [yellow]../data_link/{value}[/yellow]", "bold")
 
     if not is_pass:
         print("")

@@ -11,6 +11,7 @@ from contextlib import suppress
 from datetime import datetime
 from functools import partial
 from ipdb import launch_ipdb_on_exception
+from typing import List
 
 from broker import cfg, config
 from broker._utils import _log
@@ -19,9 +20,8 @@ from broker._utils.tools import _squeue, is_process_on, kill_process_by_name, pr
 from broker.config import env, logging, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
-from broker.drivers.ipfs import IpfsClass
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
-from broker.lib import eblocbroker_function_call, run_storage_thread, session_start_msg, state
+from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
 from broker.utils import (
@@ -46,6 +46,7 @@ with suppress(Exception):
 
 cfg.IS_BREAKPOINT = True
 pid = os.getpid()
+Ebb: "Contract.Contract" = cfg.Ebb
 
 if not cfg.IS_BREAKPOINT:
     os.environ["PYTHONBREAKPOINT"] = "0"
@@ -54,12 +55,10 @@ if not cfg.IS_BREAKPOINT:
 def wait_until_idle_core_available():
     """Wait until an idle core becomes available."""
     while True:
-        idle_cores = slurm.get_idle_cores(is_print=False)
-        # log(f"idle_cores={idle_cores}", "blue")
-        if idle_cores == 0:
-            sleep_timer(60)
-        else:
+        if slurm.get_idle_cores(is_print=False):
             break
+        else:
+            sleep_timer(60)
 
 
 def _tools(block_continue):  # noqa
@@ -72,15 +71,16 @@ def _tools(block_continue):  # noqa
         if not is_internet_on():
             raise Terminate("Network connection is down. Please try again")
 
+        pre_check()
         if not check_ubuntu_packages():
             raise Terminate()
 
-        if not env.IS_BLOXBERG:
-            is_geth_on()
-        else:
+        if env.IS_BLOXBERG:
             log(":beer:  Connected into [green]BLOXBERG[/green]", "bold")
+        else:
+            is_geth_on()
 
-        if not Contract.Ebb.is_orcid_verified(env.PROVIDER_ID):
+        if not Ebb.is_orcid_verified(env.PROVIDER_ID):
             log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
             raise QuietExit
 
@@ -118,7 +118,7 @@ def _tools(block_continue):  # noqa
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
-                log(f"E: Please store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
+                log(f"E: Store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
                 raise QuietExit
 
             if not os.path.isdir(env.IPFS_REPO):
@@ -128,9 +128,8 @@ def _tools(block_continue):  # noqa
             run_ipfs_daemon()
     except QuietExit as e:
         raise e
-    except Exception as e:
-        print_tb(e)
-        raise Terminate from e
+    # except Exception as e:
+    #     raise Terminate from e
 
 
 class Driver:
@@ -138,19 +137,22 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb: "Contract.Contract" = cfg.Ebb
+        self.Ebb: "Contract.Contract" = Ebb
         self.block_number: int = 0
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
         self.job_info = None
-        self.job_infos = {}
+        self.job_infos = []
+        self.logged_job = {}
         self.requester_id: str = ""
+        self.storage_duration: List[int] = []
+        self.received_block: List[int] = []
         #: indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 
     def set_job_recevied_mongodb(self, key, index) -> None:
-        if self.Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
-            raise JobException("## [ mongo_db ] job is already received")
+        if Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
+            raise JobException("## [  mongo_db  ] job is already received")
 
     def is_job_received(self) -> None:
         """Prevent to download job files again."""
@@ -168,32 +170,27 @@ class Driver:
         if not self.job_infos[0]["core"] or not self.job_infos[0]["run_time"]:
             raise JobException("E: requested job does not exist")
 
-        if not self.Ebb.does_requester_exist(self.requester_id):
+        if not Ebb.does_requester_exist(self.requester_id):
             raise JobException("E: job owner is not registered")
 
         self.is_job_received()
 
     def process_logged_job(self, idx):
         """Process logged job one by one."""
-        self.received_block = []
         self.storage_duration = []
+        self.received_block = []
         wait_until_idle_core_available()
         self.is_provider_received_job = True
         console_ruler(idx, character="-")
-        # sourceCodeHash = binascii.hexlify(logged_job.args['sourceCodeHash'][0]).decode("utf-8")[0:32]
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
         self.job_block_number = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
-        log(f"## job_key=[magenta]{job_key}[/magenta] | index={index}")
-        log(
-            f"received_block_number={self.job_block_number} \n"
-            f"transactionHash={self.logged_job['transactionHash'].hex()} | "
-            f"log_index={self.logged_job['logIndex']} \n"
-            f"provider={self.logged_job.args['provider']} \n"
-            f"received={self.logged_job.args['received']}",
-            "bold yellow",
-        )
+        log(f"## job_key=[magenta]{job_key}[/magenta] | index={index}", "b")
+        log(f"   received_block_number={self.job_block_number}", "b")
+        log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}", "b")
+        log(f"   provider={self.logged_job.args['provider']}", "b")
+        log(f"   received={self.logged_job.args['received']}", "b")
         if self.logged_job["blockNumber"] > self.latest_block_number:
             self.latest_block_number = self.logged_job["blockNumber"]
 
@@ -206,15 +203,15 @@ class Driver:
         try:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
-                partial(self.Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.job_block_number),
+                partial(Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.job_block_number),
                 max_retries=10,
             )
-            cfg.Ebb.get_job_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
+            Ebb.get_job_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
             self.job_info.update({"storage_duration": self.storage_duration})
             self.job_info.update({"cacheType": self.logged_job.args["cacheType"]})
-            cfg.Ebb.analyze_data(job_key, env.PROVIDER_ID)
+            Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)
             log(f"==> requester={self.requester_id}")
             log("==> [yellow]job_info:", "bold")
@@ -226,7 +223,7 @@ class Driver:
         for job in range(1, len(self.job_info["core"])):
             with suppress(Exception):
                 self.job_infos.append(  # if workflow is given then add jobs into list
-                    self.Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.job_block_number)
+                    Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.job_block_number)
                 )
 
         self.check_requested_job()
@@ -269,9 +266,8 @@ class Driver:
         self.is_cached = {}
         self.latest_block_number = 0
         self.is_provider_received_job = False
-        for idx, logged_job in enumerate(self.logged_jobs_to_process):
+        for idx, self.logged_job in enumerate(self.logged_jobs_to_process):
             self.job_infos = []
-            self.logged_job = logged_job
             self.requester_id = None
             try:
                 self.process_logged_job(idx)
@@ -401,7 +397,7 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        log(f"#> [bold yellow]passed incremented block number, watching from block_number=[cyan]{blk_read}...")
+        log(f"==> [bold yellow]passed incremented block number, watching from block_number=[cyan]{blk_read}...")
         blk_read = str(blk_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         try:
@@ -447,7 +443,7 @@ def _main(given_bn):
         terminate(str(e), lock)
     except Exception as e:
         print_tb(e)
-        breakpoint()  # DEBUG: end of program pressed CTRL-c
+        # breakpoint()  # DEBUG: end of program pressed CTRL-c
     finally:
         with suppress(Exception):
             if lock:
@@ -460,7 +456,7 @@ def main(args):
         if args.bn:
             given_bn = args.bn
         elif args.latest:
-            given_bn = cfg.Ebb.get_block_number()
+            given_bn = Ebb.get_block_number()
 
         if args.is_thread is False:
             cfg.IS_THREADING_ENABLED = False

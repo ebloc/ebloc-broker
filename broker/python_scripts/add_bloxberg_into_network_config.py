@@ -8,7 +8,7 @@ import ruamel.yaml
 from broker._utils._log import log
 
 
-def add_bloxberg_config(fname):
+def add_bloxberg_config(fn):
     bloxberg_config = {
         "name": "bloxberg (Bloxberg)",
         "id": "bloxberg",
@@ -16,7 +16,7 @@ def add_bloxberg_config(fname):
         "host": "https://core.bloxberg.org",
         "explorer": "https://blockexplorer.bloxberg.org/api",
     }
-    config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fname))
+    config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
     data = config
 
     is_bloxberg_added = False
@@ -26,7 +26,7 @@ def add_bloxberg_config(fname):
                 if "bloxberg" in network["name"]:
                     is_bloxberg_added = True
                     if json.loads(json.dumps(network)) == bloxberg_config:
-                        log(f"## bloxberg config is already added into {fname}")
+                        log(f"## bloxberg config is already added into {fn}")
                     else:
                         network["name"] = bloxberg_config["name"]
                         network["id"] = bloxberg_config["id"]
@@ -39,13 +39,13 @@ def add_bloxberg_config(fname):
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(mapping=ind, sequence=ind, offset=bsi)
-    with open(fname, "w") as fp:
+    with open(fn, "w") as fp:
         yaml.dump(data, fp)
 
 
 def main():
-    fname = Path.home() / ".brownie" / "network-config.yaml"
-    add_bloxberg_config(fname)
+    fn = Path.home() / ".brownie" / "network-config.yaml"
+    add_bloxberg_config(fn)
 
 
 if __name__ == "__main__":

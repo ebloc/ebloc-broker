@@ -2,6 +2,7 @@
 
 import json
 import os
+from contextlib import suppress
 
 from dotenv import load_dotenv
 
@@ -23,19 +24,15 @@ def remove_element(data, element_to_remove):
 
 
 def main():
-    fn = env.LOG_PATH + "/" + "cachingRecord.json"
-    print(fn)
+    fn = env.LOG_PATH + "/" + "caching_record.json"
     if not os.path.isfile(fn):
         data = {}
     else:
-        try:
+        with suppress(Exception):
             data = read_json(fn)
-        except:
-            pass
 
     add_element(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
     add_element(data, "ipfs_hash", "timestamp")
-
     with open("data.json", "w") as outfile:
         json.dump(data, outfile)
 
