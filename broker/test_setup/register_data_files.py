@@ -38,12 +38,13 @@ hashes = [
 
 def main():
     data_price = 1
-    commitment_blk_dur = 600
+    commitment_dur = 600
     for code_hash in hashes:
         with suppress(Exception):
-            _register_data(code_hash, data_price, commitment_blk_dur)
+            _register_data(code_hash, data_price, commitment_dur)
 
-    log(f"## registering data {len(hashes)} files {ok()}")
+    log()
+    log(f"#> registering data {len(hashes)} files{ok()}")
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import ok
-from broker._utils.tools import _squeue, mkdir, read_json
+from broker._utils.tools import mkdir, read_json, squeue
 from broker.config import ThreadFilter, env, logging
 from broker.lib import calculate_size, log, subprocess_call
 from broker.libs import slurm
@@ -39,16 +39,17 @@ class Storage(BaseClass):
         self.logged_job = kwargs.pop("logged_job")
         self.is_cached = kwargs.pop("is_cached")
         self.job_key = self.logged_job.args["jobKey"]
-        self.index = self.logged_job.args["index"]
+        self.index: int = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
-        self.run_time = self.logged_job.args["runTime"]
-        self.job_id = 0
+        self.run_time: int = self.logged_job.args["runTime"]
+        self.job_id: int = 0
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]
         self.data_transfer_in_to_download_mb = 0  # total size in MB to download
         self.code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
         self.code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.code_hashes]
-        self.registered_data_hashes = []  # noqa
+        self.verified_data: Dict[str, bool] = {}
+        self.registered_data_hashes: List[str] = []
         self.job_key_list: List[str] = []
         self.md5sum_dict: Dict[str, str] = {}
         self.folder_path_to_download: Dict[str, Path] = {}
@@ -67,6 +68,7 @@ class Storage(BaseClass):
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.mc = None
+
         self.data_transfer_in_to_download: int = 0
         _log.thread_log_files[self.thread_name] = self.drivers_log_path
         try:
@@ -230,9 +232,19 @@ class Storage(BaseClass):
 
     def check_run_sh(self) -> bool:
         if not os.path.isfile(self.run_path):
-            logging.error(f"E: {self.run_path} file does not exist")
+            log(f"E: {self.run_path} file does not exist")
             return False
+
         return True
+
+    def check_downloaded_folder_hash(self, fn, data_hash) -> bool:
+        """Check hash of the downloaded file is correct or not."""
+        if bool(generate_md5sum(fn) == data_hash):
+            self.verified_data[data_hash] = True
+            return True
+        else:
+            self.verified_data[data_hash] = False
+            return False
 
     def sbatch_call(self):
         link = Link(self.results_data_folder, self.results_data_link)
@@ -321,10 +333,10 @@ class Storage(BaseClass):
         )
         # TODO: update as used_data_transfer_in value
         data_transfer_in_json = self.results_folder_prev / "data_transfer_in.json"
+        data = {}
         try:
             data = read_json(data_transfer_in_json)
         except:
-            data = {}
             data["data_transfer_in"] = self.data_transfer_in_to_download_mb
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
@@ -352,7 +364,7 @@ class Storage(BaseClass):
         subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
         slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
         if not slurm_job_id.isdigit():
-            log("E: Detects an error on the sbatch. slurm_job_id is not a digit")
+            log("E: Detects an error on the sbatch, slurm_job_id is not a digit")
 
         with suppress(Exception):
-            _squeue()
+            squeue()

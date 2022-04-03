@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import ipfshttpclient
 import os
 import re
 import signal
 import sys
 import time
-from cid import make_cid
 from subprocess import check_output
+
+import ipfshttpclient
+from cid import make_cid
 
 from broker import cfg
 from broker._utils._log import br, ok
@@ -161,7 +162,7 @@ class Ipfs:
                 sys.exit(1)
         else:
             if not os.path.isfile(target):
-                logging.error(f"{target} does not exist")
+                log(f"{target} does not exist")
                 sys.exit(1)
             else:
                 encrypt_target = target
@@ -202,6 +203,8 @@ class Ipfs:
             print_tb(e)
             if "encryption failed: Unusable public key" in str(e):
                 log("#> Check solution: https://stackoverflow.com/a/34132924/2402577")
+
+            raise e
         finally:
             if is_delete:
                 _remove(encrypt_target)
@@ -314,15 +317,15 @@ class Ipfs:
             try:
                 result_ipfs_hash = run_with_output(cmd)
                 if not result_ipfs_hash and not self.is_valid(result_ipfs_hash):
-                    logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
+                    log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
                     time.sleep(5)
                 elif not self.is_valid(result_ipfs_hash):
-                    logging.error(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
+                    log(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
                     time.sleep(5)
 
                 break
             except:
-                logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
+                log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
                 time.sleep(5)
         else:
             raise Exception("Failed all the attempts to generate ipfs hash")
@@ -390,7 +393,7 @@ class Ipfs:
             raise e
 
     def publish_gpg(self, gpg_fingerprint):
-        log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
+        # log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
         run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
 
     def is_gpg_published(self, gpg_fingerprint):

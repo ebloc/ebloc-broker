@@ -6,20 +6,22 @@ import os
 import sys
 import textwrap
 import time
-import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-from ipdb import launch_ipdb_on_exception
 from typing import List
+
+import zc.lockfile
+from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._log import console_ruler, log, ok
-from broker._utils.tools import _squeue, is_process_on, kill_process_by_name, print_tb
-from broker.config import env, logging, setup_logger
+from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
+from broker.config import env, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
+from broker.drivers.ipfs import IpfsClass
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
@@ -35,8 +37,8 @@ from broker.utils import (
     is_program_valid,
     question_yes_no,
     run,
-    run_ipfs_daemon,
     sleep_timer,
+    start_ipfs_daemon,
     terminate,
 )
 
@@ -125,7 +127,7 @@ def _tools(block_continue):  # noqa
                 log(f"E: {env.IPFS_REPO} does not exist")
                 raise QuietExit
 
-            run_ipfs_daemon()
+            start_ipfs_daemon()
     except QuietExit as e:
         raise e
     # except Exception as e:
@@ -197,7 +199,7 @@ class Driver:
         try:
             run([env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
         except:
-            logging.error("E: Filename contains an invalid character")
+            log("E: Filename contains an invalid character")
             return
 
         try:
@@ -377,7 +379,7 @@ def run_driver(given_bn):
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         if cfg.IS_THREADING_ENABLED:
-            _squeue()
+            squeue()
 
         console_ruler()
         if isinstance(balance, int):

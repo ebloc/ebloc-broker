@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
-import ipfshttpclient
 import os
 import re
 import sys
 from os.path import expanduser
 
+import ipfshttpclient
+
 from broker import cfg
-from broker._utils._log import c, log
+from broker._utils._log import log
 from broker._utils.tools import get_ip, is_byte_str_zero, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
-from broker.utils import run_ipfs_daemon
+from broker.utils import start_ipfs_daemon
 
 Ebb = cfg.Ebb
 ipfs = cfg.ipfs
@@ -22,7 +23,7 @@ ipfs = cfg.ipfs
 def _register_provider(self, *args, **kwargs):
     """Register provider."""
     if is_byte_str_zero(env.PROVIDER_ID):
-        log(f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [{c.pink}]~/.ebloc-broker/.env")
+        log(f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [m]~/.ebloc-broker/.env")
         raise QuietExit
 
     if self.does_provider_exist(env.PROVIDER_ID):
@@ -50,7 +51,7 @@ def _register_provider(self, *args, **kwargs):
 
 
 def get_ipfs_id() -> str:
-    run_ipfs_daemon()
+    start_ipfs_daemon()
     try:
         # may create error
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
@@ -89,13 +90,18 @@ def register_provider_wrapper(yaml_fn):
     args = Yaml(yaml_fn, auto_dump=False)  # @b2drop.eudat.eu
     federation_cloud_id = args["cfg"]["oc_username"]
     email = args["cfg"]["gmail"]
-    available_core = args["cfg"]["provider"]["available_core"]
-    commitment_blk = args["cfg"]["provider"]["prices"]["commitment_blk"]
-    price_core_min = args["cfg"]["provider"]["prices"]["price_core_min"]
-    price_data_transfer = args["cfg"]["provider"]["prices"]["price_data_transfer"]
-    price_storage = args["cfg"]["provider"]["prices"]["price_storage"]
-    price_cache = args["cfg"]["provider"]["prices"]["price_cache"]
+    _args = args["cfg"]["provider"]
+    available_core = _args["available_core"]
+    commitment_blk = _args["prices"]["commitment_blk"]
+    price_core_min = _args["prices"]["price_core_min"]
+    price_data_transfer = _args["prices"]["price_data_transfer"]
+    price_storage = _args["prices"]["price_storage"]
+    price_cache = _args["prices"]["price_cache"]
     exit_flag = False
+    if env.PROVIDER_ID == Ebb.get_owner():
+        log("E: Address cannot be same as owner's")
+        exit_flag = True
+
     if not federation_cloud_id:
         error_msg("federation_cloud_id", yaml_fn)
         exit_flag = True
@@ -144,6 +150,7 @@ def register_provider_wrapper(yaml_fn):
         email = env.GMAIL
         gpg_fingerprint = ipfs.get_gpg_fingerprint(email)
         ipfs.is_gpg_published(gpg_fingerprint)
+        ipfs.publish_gpg(gpg_fingerprint)
     except Exception as e:
         raise e
 

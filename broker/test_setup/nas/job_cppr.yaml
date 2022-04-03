@@ -1,21 +1,21 @@
 config:
-    requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
-    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
+    requester_address: '0x904c343addd9f21510e711564dbf52d2a0daf7e3'
+    provider_address: 29e613b04125c16db3f3613563bfdd0ba24cb629
     source_code:
-        storage_id: eudat
+        storage_id: gdrive
         cache_type: public
         path: ~/test_eblocbroker/run_cppr
         storage_hours: 0
     data:
         data1:
-            hash: 03919732a417cb1d14049844b9de0f47
+            hash: 3b0f75445e662dc87e28d60a5b13cd43
         data2:
-            hash: fa64e96bcee96dbc480a1495bddbf53c
+            hash: fe801973c5b22ef6861f2ea79dc1eb9c
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/LB07-bunny-sml
+            path: /home/alper/test_eblocbroker/dataset_zip/small/babyface.n6c100
             storage_hours: 1
-            storage_id: eudat
+            storage_id: gdrive
     data_transfer_out: 5
     jobs:
         job1:

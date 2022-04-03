@@ -109,7 +109,7 @@ def get_job_code_hashes(self, provider, job_key, index, received_block_number=0)
 
         return self.job_info
     except Exception as e:
-        logging.error(f"E: Failed to run get_job_code_hash(): {e}")
+        log(f"E: Failed to run get_job_code_hash(): {e}")
         raise e
 
 

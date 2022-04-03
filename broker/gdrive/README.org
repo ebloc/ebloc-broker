@@ -14,10 +14,10 @@ https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-bl
 > If you want to use it for yourself, you will need to:
 >
 > 1. Go to https://console.developers.google.com and create a new project for yourself
-> 2. Search for the `Google Drive API` in the search box at the top, and click manage this app
+> 2. Search for the **Google Drive API** in the search box at the top, and click manage this app
 > 3. Click `OAuth` consent screen on the left and set it up.
 >     - Assuming your account isn't part of an organization, you'll have to say your app is for external users and in testing
->     - In the required scopes section, add .../auth/docs and .../auth/drive (I'm not sure which needed, it's probably only one of
+>     - In the required scopes section, add **.../auth/docs** and **.../auth/drive** (I'm not sure which needed, it's probably only one of
 > those). This will probably not be available if you didn't complete (2)
 >     - Add the accounts you want to use with your copy of gdrive as testers of your app. Only these accounts will be able to use your copy
 > of gdrive, so everyone will have to compile their own (unless someone
@@ -33,6 +33,12 @@ git clone https://github.com/prasmussen/gdrive.git && cd gdrive
 #+end_src
 
 Copy the ~Client ID~ and ~Secret~ into ~handlers_drive.go~ lines 17 and 18 and compile the application
+
+*Note:* Generated token expires in 7 days.
+
+finally:
+- https://console.cloud.google.com/apis/credentials/consent
+  ~PUBLISH APP~
 
 #+begin_src bash
 $ emacs -nw handlers_drive.go
@@ -50,8 +56,7 @@ Open terminal and go to the folder where the ~handerls_drive.go~ is.
 
 #+begin_src bash
 go get github.com/prasmussen/gdrive  # go install github.com/prasmussen/gdrive@latest
-go build -ldflags "-w -s"
-sudo cp gdrive /usr/local/bin/gdrive
+go build -ldflags "-w -s" && sudo cp gdrive /usr/local/bin/gdrive
 gdrive about
 #+end_src
 

@@ -40,12 +40,13 @@ test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
-provider_addresses = [
-    "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
-    "0x765508fc8f78a465f518ae79897d0e4b249e82dc",
-    "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a",
-    "0xeab50158e8e51de21616307a99c9604c1c453a02",
-]
+provider_addresses = ["29e613b04125c16db3f3613563bfdd0ba24cb629"]
+# provider_addresses = [
+#     "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
+#     "0x765508fc8f78a465f518ae79897d0e4b249e82dc",
+#     "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a",
+#     "0xeab50158e8e51de21616307a99c9604c1c453a02",
+# ]
 
 
 def create_cppr_job_script():
@@ -201,11 +202,11 @@ def run_job(counter) -> None:
             storage = random.choice(ipfs_ids)
 
         if selected_benchmark == "nas":
-            log(f" * Submitting job from NAS Benchmark to [green]{provider_address}", "blue")
+            log(f" * Submitting job from NAS Benchmark to [green]{provider_address}", "bold blue")
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting job with cppr datasets to [green]{provider_address}", "blue")
+            log(f" * Submitting job with cppr datasets to [green]{provider_address}", "bold blue")
             yaml_cfg = Yaml(cppr_yam_fn)
             hash_small_data, hash_medium_data = create_cppr_job_script()
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data

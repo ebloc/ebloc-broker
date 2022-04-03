@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import git
 import gzip
 import io
 import os
 import time
 from contextlib import suppress
-from git.exc import InvalidGitRepositoryError
 from pathlib import Path
+
+import git
+from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
 from broker._utils._log import ok
@@ -122,7 +123,7 @@ def add_all(repo=None):
         if not repo:
             repo = git.Repo(".", search_parent_directories=True)
 
-        log("all files in the entire working tree are updated in the Git repository ", end="")
+        log("all files in the entire working tree are updated in the Git repository", end="")
         repo.git.add(A=True)
         log(ok())
         try:
@@ -135,7 +136,7 @@ def add_all(repo=None):
             )
 
         if changed_file_len > 0:
-            log("Record changes to the repository ", end="")
+            log("Record changes to the repository", end="")
             repo.git.commit("-m", "update")
             log(ok())
     except Exception as e:
@@ -152,7 +153,7 @@ def commit_changes(path):
             raise Exception("Problem on git.commit_changes()") from e
 
         if output == "total 0":
-            logging.warning("There is no first commit")
+            log("warning: there is no first commit")
         else:
             changed_files = [item.a_path for item in repo.index.diff(None)]
             if len(changed_files) > 0:

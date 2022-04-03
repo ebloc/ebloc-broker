@@ -12,7 +12,7 @@ from typing import List
 from broker import cfg, config
 from broker._utils._log import br, log, ok
 from broker._utils.tools import _remove, bytes_to_mb, mkdir, read_json
-from broker.config import env, logging
+from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import run
 from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, print_tb, untar
@@ -65,7 +65,7 @@ class EudatClass(Storage):
                     # adding into mongoDB for future uses
                     log(f"#> Added into mongoDB {ok()}")
                 else:
-                    logging.error("E: Something is wrong, not added into mongoDB")
+                    log("E: Something is wrong, not added into mongoDB")
 
                 log(f"==> name={folder_name} | share_id={share_id} | share_token={self.share_token} {ok()}")
                 try:
@@ -80,16 +80,16 @@ class EudatClass(Storage):
         return False
 
     def cache(self, folder_name, _id) -> bool:
-        success = self._is_cached(folder_name, _id)
-        cached_folder = Path("")
+        is_cache_success = self._is_cached(folder_name, _id)
+        cached_folder = Path()
         if self.cache_type[_id] == CacheType.PRIVATE:
-            # download into private directory at $HOME/.ebloc-broker/cache
+            # download into private directory of the user
             cached_folder = self.private_dir
         elif self.cache_type[_id] == CacheType.PUBLIC:
             cached_folder = self.public_dir
 
         cached_tar_file = cached_folder / f"{folder_name}.tar.gz"
-        if success:
+        if is_cache_success:
             self.folder_type_dict[folder_name] = "tar.gz"
             self.tar_downloaded_path[folder_name] = cached_tar_file
             return True
@@ -105,7 +105,8 @@ class EudatClass(Storage):
 
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
-                    self.eudat_download_folder(cached_folder, folder_name)
+                    self.download_folder(cached_folder, folder_name)
+                    self.check_downloaded_folder_hash(cached_folder / f"{folder_name}.tar.gz", folder_name)
                 except Exception as e:
                     print_tb(e)
                     self.complete_refund()
@@ -113,7 +114,9 @@ class EudatClass(Storage):
             else:
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
-                    self.eudat_download_folder(cached_folder, folder_name)
+                    self.download_folder(cached_folder, folder_name)
+                    breakpoint()  # DEBUG
+                    self.check_downloaded_folder_hash(cached_folder / f"{folder_name}.tar.gz", folder_name)
                 except Exception as e:
                     print_tb(e)
                     self.complete_refund()
@@ -126,11 +129,9 @@ class EudatClass(Storage):
             ):
                 _remove(cached_tar_file)
                 return False
-        else:
-            # Here we already know that its tar.gz file
+        else:  # here we already know that its tar.gz file
             self.folder_type_dict[folder_name] = "tar.gz"
-            output = generate_md5sum(cached_tar_file)
-            if output == folder_name:
+            if generate_md5sum(cached_tar_file) == folder_name:
                 # checking is already downloaded folder's hash matches with the given hash
                 log(f"==> {cached_tar_file} is already cached")
                 self.tar_downloaded_path[folder_name] = cached_tar_file
@@ -138,7 +139,8 @@ class EudatClass(Storage):
                 return True
 
             try:
-                self.eudat_download_folder(cached_folder, folder_name)
+                self.download_folder(cached_folder, folder_name)
+                self.check_downloaded_folder_hash(cached_folder / f"{folder_name}.tar.gz", folder_name)
             except Exception as e:
                 print_tb(e)
                 self.complete_refund()
@@ -146,12 +148,11 @@ class EudatClass(Storage):
 
         return True
 
-    def eudat_download_folder(self, results_folder_prev, folder_name):
+    def download_folder(self, results_folder_prev, folder_name):
         """Download corresponding folder from the EUDAT.
 
-        Always assumes job is sent as .tar.gz file
+        Always assumes job is submitted as .tar.gz file
         """
-        # TODO: check hash of the downloaded file is correct or not
         cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
         log("#> downloading [green]output.zip[/green] for:", end="")
         log(f"{folder_name} => {cached_tar_file} ", "bold")
@@ -173,14 +174,14 @@ class EudatClass(Storage):
                         "--show-progres",
                         "--progress=bar:force",
                     ]
-                    log(" ".join(cmd), is_code=True, color="yellow")
+                    log(" ".join(cmd), is_code=True, color="bold yellow")
                     run(cmd)
                     with cd(results_folder_prev):
                         run(["unzip", "-o", "-j", download_fn])
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_file
-                    log(f"## download file from eudat {ok()}")
+                    log(f"## download file from eudat{ok()}")
                     return
             except:
                 log("E: Failed to download eudat file via wget.\nTrying config.oc.get_file() approach...")
@@ -189,7 +190,7 @@ class EudatClass(Storage):
                     log(ok())
                     return
                 else:
-                    logging.error(f"E: Something is wrong, oc could not retrieve the file [attempt:{attempt}]")
+                    log(f"E: Something is wrong, oc could not retrieve the file [attempt:{attempt}]")
 
         raise Exception("Eudat download error")
 
@@ -247,7 +248,7 @@ class EudatClass(Storage):
             f"{self.data_transfer_in_to_download_mb} MB"
         )
 
-    def eudat_get_share_token(self, f_id):
+    def get_share_token(self, f_id):
         """Check key is already shared or not."""
         folder_token_flag = {}
         if not os.path.isdir(self.private_dir):
@@ -378,7 +379,7 @@ class EudatClass(Storage):
         # TODO: refund check
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
-            self.eudat_get_share_token(provider_info["f_id"])
+            self.get_share_token(provider_info["f_id"])
         except Exception as e:
             print_tb(f"E: could not get the share id. {e}")
             # return False ###
@@ -426,11 +427,11 @@ class EudatClass(Storage):
                 except KeyError:
                     try:
                         shared_id = Ebb.mongo_broker.find_shareid_item(key=share_key)
-                        log(f"#> reading from mongo_broker {ok()}")
+                        log(f"#> reading from mongo_broker{ok()}")
                         log(shared_id)
                     except Exception as e:
                         print_tb(e)
-                        log(f"E: [yellow]share_id[/yellow] cannot be detected from key={share_key}")
+                        log(f"E: [yellow]share_id[/yellow] cannot be detected from the key={share_key}")
                         return False
 
         return self.sbatch_call()

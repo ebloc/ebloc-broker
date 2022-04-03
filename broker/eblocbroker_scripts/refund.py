@@ -2,6 +2,7 @@
 
 import sys
 from typing import List
+
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -60,7 +61,7 @@ if __name__ == "__main__":
                 log(f"refunded_wei={processed_logs[0].args['refundedWei']}")
                 log("SUCCESS", "green")
             except Exception as e:
-                logging.error(f"E: Transaction is reverted. {e}")
+                log(f"E: Transaction is reverted. {e}")
     except QuietExit:
         pass
     except Exception as e:

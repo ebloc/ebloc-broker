@@ -18,6 +18,7 @@ cfg:
     is_ipfs_use: True
     is_eudat_use: True
     is_gdrive_use: True
+    available_core: 1
     prices:
       commitment_blk: 600
       price_core_min: 100

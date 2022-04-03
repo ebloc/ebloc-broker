@@ -26,8 +26,7 @@ from broker.utils import (
 
 
 class GdriveClass(Storage):
-    def gdrive_download_folder(self, name, key, source_code_hash, _id, cache_folder) -> bool:
-        log(f"{WHERE(1)}")
+    def download_folder(self, name, key, source_code_hash, _id, cache_folder):
         if self._is_cached(source_code_hash, _id):
             return True
 
@@ -123,7 +122,7 @@ class GdriveClass(Storage):
                         self.cache_type[_id] = CacheType.PRIVATE
                         return
                 else:
-                    self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder)
+                    self.download_folder(name, key, source_code_hash, _id, cache_folder)
             elif self.folder_type_dict[source_code_hash] == "folder":
                 output = ""
                 if os.path.isfile(cached_tar_file):
@@ -141,13 +140,13 @@ class GdriveClass(Storage):
                     self.cache_type[_id] = CacheType.PRIVATE
                     return
                 else:
-                    self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder)
+                    self.download_folder(name, key, source_code_hash, _id, cache_folder)
         elif self.cache_type[_id] == CacheType.PUBLIC:
             cache_folder = self.public_dir
             cached_tar_file = cache_folder / name
             if self.folder_type_dict[source_code_hash] == "gzip":
                 if not os.path.isfile(cached_tar_file):
-                    self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder)
+                    self.download_folder(name, key, source_code_hash, _id, cache_folder)
                     if is_job_key and not self.is_run_exists_in_tar(cached_tar_file):
                         _remove(cached_tar_file)
                         raise Exception
@@ -158,7 +157,7 @@ class GdriveClass(Storage):
                         self.folder_path_to_download[source_code_hash] = self.public_dir
                         log(f"==> {name} is already cached within the public cache directory")
                     else:
-                        self.gdrive_download_folder(name, key, source_code_hash, _id, cache_folder)
+                        self.download_folder(name, key, source_code_hash, _id, cache_folder)
             elif self.folder_type_dict[source_code_hash] == "folder":
                 tar_file = cache_folder / source_code_hash / name
                 if os.path.isfile(tar_file):
@@ -168,9 +167,9 @@ class GdriveClass(Storage):
                         self.folder_path_to_download[source_code_hash] = self.public_dir
                         log(f"==> {name} is already cached within the public cache directory")
                     else:
-                        self.gdrive_download_folder(name, key, source_code_hash, _id, f"{self.public_dir}/{name}")
+                        self.download_folder(name, key, source_code_hash, _id, f"{self.public_dir}/{name}")
                 else:
-                    self.gdrive_download_folder(name, key, source_code_hash, _id, f"{self.public_dir}/{name}")
+                    self.download_folder(name, key, source_code_hash, _id, f"{self.public_dir}/{name}")
 
     def remove_downloaded_file(self, source_code_hash, _id, pathname):
         if not self.job_infos[0]["is_cached"][source_code_hash] and self.job_infos[0]["storage_duration"][_id]:
@@ -308,8 +307,8 @@ class GdriveClass(Storage):
                 raise e
 
             self.remove_downloaded_file(source_code_hash, _id, f"{cache_folder}/{name}/")
-            tar_file = f"{self.results_folder}/{name}.tar.gz"
             try:
+                tar_file = f"{self.results_folder}/{name}.tar.gz"
                 untar(tar_file, self.results_folder)
                 _remove(tar_file)
                 return target
@@ -317,7 +316,7 @@ class GdriveClass(Storage):
                 print_tb(e)
                 raise e
         else:
-            raise Exception("Neither folder or gzip type given.")
+            raise Exception("Neither folder or gzip type is given")
 
     def run(self) -> bool:
         self.start_time = time.time()

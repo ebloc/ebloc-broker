@@ -432,7 +432,7 @@ def is_geth_on():
         raise QuietExit
 
 
-def run_ipfs_daemon(_is_print=False):
+def start_ipfs_daemon(_is_print=False):
     """Check that does IPFS run on the background or not."""
     if is_ipfs_on(_is_print):
         return True
@@ -444,7 +444,7 @@ def run_ipfs_daemon(_is_print=False):
 
     log("warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
-    output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "run_ipfs_daemon.py"])
+    output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "start_ipfs_daemon.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:

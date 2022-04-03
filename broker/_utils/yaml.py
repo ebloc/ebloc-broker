@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import os
-from atomicwrites import atomic_write
+import shutil
 from contextlib import suppress
-from filelock import FileLock
 from pathlib import Path
+
+from atomicwrites import atomic_write
+from filelock import FileLock
 from ruamel.yaml import YAML, comments, representer
 
-from broker._utils.tools import print_tb
+from broker._utils.tools import _remove, print_tb
 
 _SR = representer.RoundTripRepresenter
 
@@ -81,7 +83,13 @@ class Yaml(comments.CommentedMap):
     """
 
     def __init__(self, path, auto_dump=True):
+        """Initialize Yaml object.
+
+        :param path: file path of the yaml file
+        :param auto_dump: if false read-only on the background operations
+        """
         super().__init__(self)
+        self.auto_dump = auto_dump
         path = os.path.expanduser(path)  # dirname of the absolute path
         self.dirname = os.path.dirname(os.path.abspath(path))
         self.fn = os.path.basename(path)
@@ -92,14 +100,29 @@ class Yaml(comments.CommentedMap):
 
         self.fp_lock = os.path.join(self.dirname, fp_lockname)
         self.path = path if hasattr(path, "open") else Path(path)
+        self.path_temp = Path(f"{path}~")
+        self.changed = False
         self.yaml = YAML()
         self.yaml.indent(mapping=4, sequence=4, offset=2)
-        self.changed = False
-        self.auto_dump = auto_dump  # if false read-only
-        if self.path.exists():
-            with FileLock(self.fp_lock, timeout=1):
-                with open(path, "r") as f:
+        with FileLock(self.fp_lock, timeout=1):
+            _remove(self.path_temp)
+            if self.auto_dump:
+                if self.path.exists():
+                    shutil.copyfile(self.path, self.path_temp)
+                else:
+                    self.path_temp.touch()
+
+            if self.path.exists():
+                if self.auto_dump:
+                    _path = self.path_temp
+                else:
+                    _path = self.path
+
+                with open(_path, "r") as f:
                     self.update(self.yaml.load(f) or {})
+
+            if self.auto_dump:
+                shutil.move(self.path_temp, self.path)
 
     def updated(self):
         if self.auto_dump:
@@ -112,8 +135,13 @@ class Yaml(comments.CommentedMap):
         if not self.changed and not force:
             return
 
-        with atomic_write(self.path, overwrite=True) as f:
-            # alternative: `with open(self.path, "w") as f:`
+        if self.path_temp.exists():
+            path = self.path_temp
+        else:
+            path = self.path
+
+        #: alternative: `with open(path, "w") as f:`
+        with atomic_write(path, overwrite=True) as f:
             self.yaml.dump(dict(self), f)
 
         self.changed = False
@@ -157,8 +185,11 @@ class Yaml(comments.CommentedMap):
 
 
 _SR.add_representer(Yaml, _SR.represent_dict)
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-cfg = Yaml(Path("config.yaml"))
+
+def print_file(fn):
+    print(str(Path(fn).read_text()).rstrip())
 
 
 def test_1():
@@ -189,25 +220,25 @@ def test_3():
     cfg["a"] = 1
     cfg["b"]["x"] = 2
     cfg["c"]["y"]["z"] = 45
-    print(f"{config_file} 1:")
-    print(config_file.read_text())
+    print(f"{config_file} 1:-=-=-=-=-=-=-=-=-=-")
+    print_file(config_file)
     cfg["b"]["x"] = 3
     cfg["a"] = 4
-    print(f"{config_file} 2:")
-    print(config_file.read_text())
+    print(f"{config_file} 2:-=-=-=-=-=-=-=-=-=-")
+    print_file(config_file)
 
     cfg.update(a=9, d=196)
     cfg["c"]["y"].update(k=11, l=12)
-    print(f"{config_file} 3:")
-    print(config_file.read_text())
+    print(f"{config_file} 3:-=-=-=-=-=-=-=-=-=-")
+    print_file(config_file)
 
     # reread config from file
     cfg = Yaml(config_file)
     assert isinstance(cfg["c"]["y"], SubYaml)
     assert cfg["c"]["y"]["z"] == 45
     del cfg["c"]
-    print(f"{config_file} 4:")
-    print(config_file.read_text())
+    print(f"{config_file} 4:-=-=-=-=-=-=-=-=-=-")
+    print_file(config_file)
 
     # start from scratch immediately use updating
     config_file.unlink()
@@ -217,14 +248,15 @@ def test_3():
     assert isinstance(cfg["a"], SubYaml)
     assert isinstance(cfg["c"]["b"], SubYaml)
     cfg["c"]["b"]["f"] = 333
-    print(f"{config_file} 5:")
-    print(config_file.read_text())
+    print(f"{config_file} 5:-=-=-=-=-=-=-=-=-=-")
+    print_file(config_file)
     cfg_again = Yaml(config_file)
     assert cfg_again["c"]["b"]["f"] == 333, "cfg['c']['b']['f'] is not 333"
 
 
 def test_4():
     fn = Path("config.yaml")
+    print(f"{fn} 6:-=-=-=-=-=-=-=-=-=-")
     fn.write_text(
         """
     c:  # my comment
@@ -237,7 +269,7 @@ def test_4():
     """
     )
     Yaml(fn)
-    print(Path(fn).read_text())
+    print_file(fn)
 
 
 def test_5():
@@ -253,6 +285,7 @@ def test_5():
 
 def main():
     try:
+        Yaml(Path("config.yaml"))
         test_1()
         test_2()
         test_3()
@@ -260,6 +293,9 @@ def main():
         test_5()
     except Exception as e:
         print_tb(e)
+    finally:
+        _remove("test.yaml")
+        _remove("config.yaml")
 
 
 if __name__ == "__main__":

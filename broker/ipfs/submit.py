@@ -3,6 +3,7 @@
 import os
 import sys
 from pathlib import Path
+
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -20,7 +21,7 @@ from broker.utils import (
     is_bin_installed,
     is_dpkg_installed,
     print_tb,
-    run_ipfs_daemon,
+    start_ipfs_daemon,
 )
 
 # TODO: folders_to_share let user directly provide the IPFS hash instead of the folder
@@ -61,7 +62,7 @@ def pre_check(job: Job, requester):
             log(f"E: Please store your gpg password in the [magenta]{env.GPG_PASS_FILE}[/magenta]\nfile for decrypting")
             raise QuietExit
 
-        run_ipfs_daemon()
+        start_ipfs_daemon()
         if job.storage_ids[0] == StorageID.IPFS:
             for storage_id in job.storage_ids[1:]:
                 if storage_id in (StorageID.GDRIVE, StorageID.EUDAT):
@@ -162,7 +163,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
                 try:
                     if processed_logs:
-                        log("job_info:", "bold yellow")
+                        log("[yellow]job_info[/yellow]=", "bold", end="")
                         log(vars(processed_logs[0].args))
 
                     for target in targets:

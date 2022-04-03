@@ -1,13 +1,13 @@
 config:
-  requester_address: "0x02a07535bc88f180ecf9f7c6fd66c0c8941fd7ab"
-  provider_address: "0xeab50158e8e51de21616307a99c9604c1c453a02"
-  source_code:
-    storage_id: ipfs
-    cache_type: public
-    path: ~/test_eblocbroker/NPB3.3-SER_source_code
-    storage_hours: 0
-  data_transfer_out: 5
-  jobs:
-    job1:
-      cores: 1
-      run_time: 60
+    requester_address: '0x4cd57387cc4414be8cece4e6ab84a7dd641eab25'
+    provider_address: 29e613b04125c16db3f3613563bfdd0ba24cb629
+    source_code:
+        storage_id: ipfs
+        cache_type: public
+        path: ~/test_eblocbroker/NPB3.3-SER_source_code
+        storage_hours: 0
+    data_transfer_out: 5
+    jobs:
+        job1:
+            cores: 1
+            run_time: 60

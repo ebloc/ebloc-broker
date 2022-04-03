@@ -274,12 +274,12 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         raise Exception(f"corresponding storage_id_class={self.storage_ids[_id]} does not exist")
 
     def set_code_hashes_to_process(self):
-        for idx, source_code_hash in enumerate(self.code_hashes):
+        for idx, code_hash in enumerate(self.code_hashes):
             if self.storage_ids[idx] in [StorageID.IPFS, StorageID.IPFS_GPG]:
-                ipfs_hash = bytes32_to_ipfs(source_code_hash)
+                ipfs_hash = bytes32_to_ipfs(code_hash)
                 self.code_hashes_to_process.append(ipfs_hash)
             else:
-                self.code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
+                self.code_hashes_to_process.append(cfg.w3.toText(code_hash))
 
     def _ipfs_add_folder(self, folder_path):
         try:
@@ -475,6 +475,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("E: failed all the attempts, abort")
         sys.exit(1)
 
+    def remove_job_folder(self):
+        """Remove downloaded code from local since it is not needed anymore; garbage collector."""
+        _remove(self.results_folder)
+
     def run(self):
         try:
             data = read_json(f"{self.results_folder_prev}/data_transfer_in.json")
@@ -539,9 +543,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.elapsed_time = run_time[self.job_id]
 
         log(f"finalized_elapsed_time={self.elapsed_time}", "green")
-        _job_info = pprint.pformat(self.job_info)
         log("## job_info:", "bold magenta")
-        log(_job_info, "bold")
+        log(pprint.pformat(self.job_info), "bold")
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
@@ -558,7 +561,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self._get_tx_status(tx_hash)
         self.get_job_info()
         log("SUCCESS")
-        # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
+        # self.remove_job_folder()
 
 
 if __name__ == "__main__":

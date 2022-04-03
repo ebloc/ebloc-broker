@@ -34,11 +34,6 @@ custom_theme = Theme(
 console = Console(theme=custom_theme)
 
 
-class Colors:
-    red = "#ff5555"
-    pink = "#ff79c6"
-
-
 class Style:
     B = BOLD = "\033[1m"
     E = END = "\033[0m"
@@ -102,7 +97,7 @@ class Log:
             is_r = "\r"
             text = text[1:]
 
-        if text == "[ ok ]":
+        if text in ["[ ok ]", "[ OK ]", "[  OK  ]"]:
             text = "[  [bold green]OK[/bold green]  ]"
         elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** ", "***"]:
             _len = 3
@@ -119,7 +114,7 @@ class Log:
             is_bullet = True
             if not color:
                 color = "red"
-        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN"]:
+        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN", "DONE"]:
             if not color:
                 color = "green"
                 is_bold = True
@@ -293,7 +288,7 @@ def log(
             if "warning:" in text:
                 text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
             else:
-                text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] [bold]{_text}"
+                text = f"{WHERE(where_back)}[bold red] E:[/bold red] [bold]{_text}"
         else:
             text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
 
@@ -341,9 +336,8 @@ def WHERE(back=0):
     except:
         frame = sys._getframe(1)
 
-    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue] {text} [bold green]][/bold green]"
+    text = os.path.basename(frame.f_code.co_filename)
+    return f"[bold][green][[/green][blue]{text}[/blue]:{frame.f_lineno}[green]][/green][/bold]"
 
 
 ll = Log()
-c = Colors()

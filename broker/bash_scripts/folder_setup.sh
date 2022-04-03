@@ -131,7 +131,6 @@ if [ ! -d $LOG_DIR ]; then
     mkdir -p $LOG_DIR
 fi
 
-touch $LOG_DIR/config.yaml
 mkdir -p $LOG_DIR/private
 mkdir -p $LOG_DIR/drivers_output
 mkdir -p $LOG_DIR/links

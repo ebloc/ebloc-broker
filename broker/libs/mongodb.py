@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+
 from pymongo import MongoClient
 from rich.pretty import pprint
 

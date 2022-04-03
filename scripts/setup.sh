@@ -6,6 +6,18 @@ git checkout dev && source scripts/setup.sh
 '
 RED="\033[1;31m"; GREEN="\033[1;32m"; BLUE="\033[1;36m"; NC="\033[0m"
 
+yes_or_no () {
+    while true; do
+        string="$GREEN#>$NC $* [Y/n]:"
+        read -p "$(echo -e $string) " yn
+        case $yn in
+            [Yy]*) return 0  ;;
+            [Nn]*) echo "end" ; return  1 ;;
+            * ) echo "Please answer yes or no";;
+        esac
+    done
+}
+
 # general
 # =======
 sudo add-apt-repository ppa:git-core/ppa -y
@@ -84,6 +96,7 @@ install_ipfs
 
 sudo systemctl start firewalld
 sudo systemctl enable firewalld
+sudo ufw allow 5000/tcp
 sudo firewall-cmd --add-port=4001/tcp --permanent
 sudo firewall-cmd --reload
 sudo firewall-cmd --list-all
@@ -175,16 +188,19 @@ systemctl status --no-pager --full systemd-timesyncd
 timedatectl status
 sudo systemctl enable systemd-timesyncd
 
-empyt_folder=~/ebloc-broker/empty_folder
-mkdir $empyt_folder
-cd $empyt_folder
-brownie init
-rm -rf $empyt_folder
-cd ~
-~/ebloc-broker/broker/python_scripts/add_bloxberg_into_network_config.py
-cd ~/ebloc-broker/contract/
-brownie compile
-cd ~
+install_brownie () {
+    empyt_folder=~/ebloc-broker/empty_folder
+    mkdir -p $empyt_folder
+    cd $empyt_folder
+    brownie init
+    cd ~ && rm -rf $empyt_folder
+    ~/ebloc-broker/broker/python_scripts/add_bloxberg_into_network_config.py
+    cd ~/ebloc-broker/contract/
+    brownie compile
+    cd ~
+}
+install_brownie
+
 gpg --gen-key
 gpg --list-keys
 
@@ -193,19 +209,6 @@ sudo chown $(whoami) /oc
 sudo chown -R $(whoami) /oc
 sudo apt-get install davfs2 -y
 # sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
-
-yes_or_no () {
-    while true; do
-        string="$GREEN#>$NC $* [Y/n]:"
-        read -p "$(echo -e $string) " yn
-        case $yn in
-            [Yy]*) return 0  ;;
-            [Nn]*) echo "end" ; return  1 ;;
-            * ) echo "Please answer yes or no";;
-        esac
-    done
-}
-
 echo ""
 yes_or_no "Are you a provider? Yes for slurm installation" && ./install_slurm.sh
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# mv */* /var/ebloc-broker/cache
+
 mv -v adhead.n6c100 050e6cc8dd7e889bf7874689f1e1ead6
 mv -v adhead.n6c10 9d5d892a63b5758090258300a59eb389
 mv -v babyface.n26c100 779745f315060d1bc0cd44b7266fb4da

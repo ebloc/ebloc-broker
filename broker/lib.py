@@ -15,8 +15,8 @@ from threading import Thread
 from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import _remove, is_process_on, log, mkdir, print_tb
-from broker.config import env, logging
-from broker.errors import Web3NotConnected
+from broker.config import env
+from broker.errors import QuietExit, Web3NotConnected
 from broker.utils import WHERE, byte_to_mb, popen_communicate, run
 
 
@@ -38,9 +38,9 @@ class State:
         - SUBMITTED: Initial state.
 
         - PENDING: Indicates when a request is receieved by the provider. The
-          job is waiting for resource allocation.  It will eventually run.
+          job is waiting for resource allocation. It will eventually run.
 
-        - RUNNING: The job currently is allocated to a node and isrunning.
+        - RUNNING: The job currently is allocated to a node and is running.
           Corresponding data files are downloaded and verified.
 
         - REFUNDED: Indicates if job is refunded.
@@ -87,6 +87,8 @@ def session_start_msg(slurm_user, block_number, pid):
     log(f"==> slurm_user={slurm_user}")
     log(f"==> left_of_block_number={block_number}")
     log(f"==> latest__block_number={cfg.Ebb.get_block_number()}")
+    if PROVIDER_ID == cfg.ZERO_ADDRESS:
+        raise QuietExit(f"provider address is {cfg.ZERO_ADDRESS}")
 
 
 def run_driver_cancel():
@@ -111,7 +113,7 @@ def calculate_size(path, _type="MB") -> float:
 def subprocess_call(cmd, attempt=1, sleep_time=1):
     """Run subprocess."""
     error_msg = ""
-    cmd = list(map(str, cmd))  # always should be type: str
+    cmd = list(map(str, cmd))  # type should be always `str`
     for count in range(attempt):
         try:
             p, output, error_msg = popen_communicate(cmd)
@@ -196,7 +198,7 @@ def eblocbroker_function_call(func, max_retries):
 
 def is_dir(path) -> bool:
     if not os.path.isdir(path):
-        logging.error(f"{path} folder does not exist")
+        log(f"{path} folder does not exist")
         return False
 
     return True
@@ -240,7 +242,7 @@ def pre_check():
     mkdir(env.LOG_PATH / "transactions")
     mkdir(env.LOG_PATH / "end_code_output")
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception("slurm_mail_prog.sh is not location in /var/ebloc-broker/")
+        raise Exception("slurm_mail_prog.sh scripts is not location in /var/ebloc-broker/")
 
 
 # from broker.utils StorageID

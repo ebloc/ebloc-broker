@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+
 from web3 import IPCProvider, Web3
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
@@ -14,7 +15,7 @@ from broker.utils import is_geth_on, run, terminate
 
 
 def connect():
-    """Connect and return into web3 and ebloc_broker objects."""
+    """Connect into web3 and return web3 and ebloc_broker objects."""
     if config.ebb and cfg.w3:
         return config.ebb, cfg.w3, config._eblocbroker
 

@@ -44,7 +44,7 @@ def process_payment(
 
     """
     if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
-        logging.error("Job is completed and already get paid")
+        log("Job is completed and already get paid")
         sys.exit(1)
     """
     try:

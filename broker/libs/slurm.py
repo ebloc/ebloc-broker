@@ -30,7 +30,7 @@ def remove_user(user):
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user}", "--immediate"]
     p, output, error_msg = popen_communicate(cmd)
     if p.returncode and "Nothing deleted" not in output:
-        logging.error(f"E: sacctmgr remove error: {output}")
+        log(f"E: sacctmgr remove error: {output}")
         raise BashCommandsException(p.returncode, output, error_msg, str(cmd))
 
 
@@ -50,7 +50,7 @@ def get_idle_cores(is_print=True) -> int:
                 f"==> [green]allocated_cores=[/green]{allocated_cores} | "
                 f"[green]idle_cores=[/green]{idle_cores} | "
                 f"[green]other_cores=[/green]{other_cores} | "
-                f"[green]total_number_of_cores=[/green]{total_cores}"
+                f"[green]total_cores=[/green]{total_cores}"
             )
     else:
         log("E: sinfo return emptry string")
@@ -62,11 +62,12 @@ def get_idle_cores(is_print=True) -> int:
 def pending_jobs_check():
     """If there is no idle cores, waits for idle cores to be emerged."""
     idle_cores = get_idle_cores()
-    is_print = 0
+    print_flag = False
     while idle_cores is None:
-        if not is_print:
+        if not print_flag:
             log("waiting running jobs to be completed...")
-            is_print = 1
+            print_flag = True
+
         idle_cores = get_idle_cores(is_print=False)
         time.sleep(10)
 
@@ -97,7 +98,7 @@ def is_on() -> bool:
         except:
             return False
     elif "sinfo: error" in output:
-        logging.error(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
+        log(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
         return False
     else:
         log(ok())

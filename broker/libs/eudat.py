@@ -3,7 +3,6 @@
 import hashlib
 import os
 import os.path
-import owncloud
 import pickle
 import shutil
 import subprocess
@@ -11,6 +10,8 @@ import sys
 import time
 from contextlib import suppress
 from pathlib import Path
+
+import owncloud
 from web3.logs import DISCARD
 
 from broker import cfg, config
@@ -116,7 +117,7 @@ def _login(fn, user, password_path) -> None:
             else:
                 terminate("Could not connect into [blue]eudat using config.oc.login()[/blue]")
 
-    logging.error("E: user is None object")
+    log("E: user is None object")
     terminate()
 
 
@@ -135,28 +136,21 @@ def login(user, password_path: Path, fn: str) -> None:
             with cfg.console.status(status_str):
                 config.oc.get_config()
 
-            log(f" {status_str} {ok()}")
+            log(f" {status_str}{ok()}")
         except subprocess.CalledProcessError as e:
-            logging.error(f"FAILED. {e.output.decode('utf-8').strip()}")
+            log(f"FAILED. {e.output.decode('utf-8').strip()}")
             _login(fn, user, password_path)
     else:
         _login(fn, user, password_path)
 
 
-def share_single_folder(folder_name, f_id) -> bool:
-    try:
-        # folder_names = os.listdir(env.OWNCLOUD_PATH)
-        # fID = '5f0db7e4-3078-4988-8fa5-f066984a8a97@b2drop.eudat.eu'
-        if not config.oc.is_shared(folder_name):
-            config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-            log(f"sharing with [yellow]{f_id}[/yellow]{ok()}", "bold")
-            return True
+def share_single_folder(folder_name, f_id):
+    """Share given folder path with the user."""
+    if not config.oc.is_shared(folder_name):
+        config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
+        log(f"sharing with [yellow]{f_id}[/yellow]{ok()}", "bold")
 
-        log("## Requester folder is already shared")
-        return True
-    except Exception as e:
-        print_tb(e)
-        return False
+    log("## Requester folder is already shared")
 
 
 def initialize_folder(folder_to_share, requester_name) -> str:
@@ -289,7 +283,10 @@ def _submit(provider, requester, job, required_confs=1):
             value = cfg.w3.toBytes(text=folder_hash)
             job.code_hashes.append(value)
             job.code_hashes_str.append(value.decode("utf-8"))
-            if not share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"]):
+            try:
+                share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
+            except Exception as e:
+                print_tb(e)
                 sys.exit(1)
 
             time.sleep(0.25)

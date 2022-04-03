@@ -1,12 +1,8 @@
 #!/bin/bash
 
 sudo apt-get update
-grep -vE '^#' package_slurm.list | xargs -n1 sudo apt install -yf
+xargs -a <(awk '! /^ *(#|$)/' ~/ebloc-broker/scripts/package_slurm.list) -r -- sudo apt install -yf
 sudo apt autoremove -y
-
-# apt-cache search mysql | grep "dev"
-# sudo apt-get install libmysqld-dev
-# sudo apt-get install libmysqlclient
 
 # slurm
 # =====
@@ -19,7 +15,7 @@ git checkout e2e21cb571ce88a6dd52989ec6fe30da8c4ef15f  # slurm-19-05-8-1
 sudo rm -rf /usr/local/lib/slurm/ /tmp/slurmstate/
 make clean
 ./configure --enable-debug --enable-front-end
-# ./configure --enable-debug --enable-front-end --enable-multiple-slurmd  # # seems like this also works
+# ./configure --enable-debug --enable-front-end --enable-multiple-slurmd  # seems like this also works
 sudo make
 sudo make install
 
@@ -41,3 +37,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install mailutils  # postfix
 # sudo systemctl enable slurmctld  # Controller
 # sudo systemctl enable slurmdbd  # Database
 # sudo systemctl enable slurmd  # Compute Nodes
+
+# apt-cache search mysql | grep "dev"
+# sudo apt-get install libmysqld-dev
+# sudo apt-get install libmysqlclient

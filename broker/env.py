@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
 
+import os
 from pathlib import Path
 
 from broker._utils.yaml import Yaml
+from broker.errors import QuietExit
 
 
 class ENV_BASE:
     def __init__(self) -> None:
-        # self.true_set = ("yes", "true", "t", "1")
         self.HOME: Path = Path.home()
-        self.cfg_yaml = Yaml(self.HOME / ".ebloc-broker" / "cfg.yaml")
+        fn = self.HOME / ".ebloc-broker" / "cfg.yaml"
+        if not os.path.isfile(fn):
+            if not os.path.isdir(self.HOME / ".ebloc-broker"):
+                raise QuietExit(f"E: {self.HOME / '.ebloc-broker'} is not initialized")
+
+            raise QuietExit(f"E: {fn} is not created")
+
+        self.cfg_yaml = Yaml(fn)
         self.cfg = self.cfg_yaml["cfg"]
         self.WHOAMI = self.cfg["whoami"]
         self._HOME = Path("/home") / self.WHOAMI

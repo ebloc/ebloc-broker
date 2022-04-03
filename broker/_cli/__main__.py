@@ -41,9 +41,9 @@ def about():
 
 def daemon():
     if args.daemon_type[0] == "ipfs":
-        from broker.utils import run_ipfs_daemon
+        from broker.utils import start_ipfs_daemon
 
-        run_ipfs_daemon(_is_print=True)
+        start_ipfs_daemon(_is_print=True)
     if args.daemon_type[0] == "slurm":
         from broker.config import env
         from broker.utils import run

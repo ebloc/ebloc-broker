@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import ipfshttpclient
 import os
 import sys
 
+import ipfshttpclient
+
 from broker import cfg
-from broker._utils._log import c, log
+from broker._utils._log import log
 from broker._utils.tools import is_byte_str_zero, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit
-from broker.utils import question_yes_no, run_ipfs_daemon
+from broker.utils import question_yes_no, start_ipfs_daemon
 
 Ebb = cfg.Ebb
 ipfs = cfg.ipfs
@@ -21,7 +22,7 @@ def register_requester(self, yaml_fn, is_question=True):
     """Register or update requester into smart contract."""
     yaml_fn = os.path.expanduser(yaml_fn)
     try:
-        run_ipfs_daemon()
+        start_ipfs_daemon()
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except Exception as e:
         log("E: Run ipfs daemon to detect your ipfs_id")
@@ -38,6 +39,7 @@ def register_requester(self, yaml_fn, is_question=True):
     gpg_fingerprint = ipfs.get_gpg_fingerprint(email)
     try:
         ipfs.is_gpg_published(gpg_fingerprint)
+        ipfs.publish_gpg(gpg_fingerprint)
     except Exception as e:
         raise e
 
@@ -46,7 +48,7 @@ def register_requester(self, yaml_fn, is_question=True):
     federation_cloud_id = args["cfg"]["oc_username"]
     log(f"==> registering {account} as requester")
     if is_byte_str_zero(account):
-        log(f"E: account={account} is not valid, change it in [{c.pink}]~/.ebloc-broker/cfg.yaml")
+        log(f"E: account={account} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml")
         raise QuietExit
 
     if len(federation_cloud_id) >= 128:
@@ -57,6 +59,9 @@ def register_requester(self, yaml_fn, is_question=True):
 
     if len(gpg_fingerprint) != 40:
         raise Exception("gpg_fingerprint should be 40 characters")
+
+    if account == Ebb.get_owner():
+        raise Exception("Address cannot be same as owner's")
 
     if self.does_requester_exist(account):
         log(f"warning: requester {account} is already registered")

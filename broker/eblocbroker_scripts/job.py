@@ -35,8 +35,8 @@ class DataStorage:
 
     def __init__(self, args) -> None:
         """Create a new Data Stroge object."""
-        self.received_block = args[0]
-        self.storage_duration = args[1]
+        self.received_block: int = args[0]
+        self.storage_duration: int = args[1]
         self.is_private: bool = args[2]
         self.is_verified_used: bool = args[3]
         self.received_storage_deposit: int = 0
@@ -109,6 +109,7 @@ class Job:
                 log(f"==> job_index={processed_logs[0].args['index']}")
             except IndexError:
                 log("E: Transaction is reverted")
+
             return True
         except Exception as e:
             print_tb(e)

@@ -33,13 +33,13 @@ def start_call(job_key, index, slurm_job_id) -> None:
 
     p1 = Popen(["scontrol", "show", "job", slurm_job_id], stdout=PIPE)
     p2 = Popen(["grep", "StartTime"], stdin=p1.stdout, stdout=PIPE)
-    p1.stdout.close()
+    p1.stdout.close()  # noqa
     p3 = Popen(
         ["grep", "-o", "-P", "(?<=StartTime=).*(?= E)"],
         stdin=p2.stdout,
         stdout=PIPE,
     )
-    p2.stdout.close()
+    p2.stdout.close()  # noqa
     date = p3.communicate()[0].decode("utf-8").strip()
     start_time = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
     log(f"{env.EBLOCPATH}/broker/eblocbroker_scripts/set_job_status_running.py {job_key} {index} {job_id} {start_time}")

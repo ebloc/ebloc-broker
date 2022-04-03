@@ -5,7 +5,6 @@ import errno
 import json
 import linecache
 import os
-import requests
 import shutil
 import signal
 import sys
@@ -15,8 +14,10 @@ import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
-from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
+
+import requests
+from pytz import timezone, utc
 
 from broker._utils._log import br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
@@ -50,7 +51,7 @@ def merge_two_dicts(x, y):
 
 def countdown(seconds: int, is_silent=False) -> None:
     if not is_silent:
-        log(f"## sleep_time={seconds} seconds")
+        log(f"## sleep_time={seconds} seconds                                             ")
 
     while seconds:
         mins, secs = divmod(seconds, 60)
@@ -150,6 +151,9 @@ def _remove(path: str, is_verbose=False) -> None:
         if path == "/":
             raise ValueError("E: Attempting to remove root(/)")
 
+        if not path:
+            raise ValueError("E: Attempting to empty Path()")
+
         if os.path.isfile(path):
             with suppress(FileNotFoundError):
                 os.remove(path)
@@ -163,7 +167,7 @@ def _remove(path: str, is_verbose=False) -> None:
             return
 
         if is_verbose:
-            log(f"#> {WHERE(1)} remove following path:\n[magenta]{path}")
+            log(f"#> {WHERE(1)} following path:\n[magenta]{path}[/magenta] is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -489,7 +493,7 @@ def get_ip():
     return data["ip"]
 
 
-def _squeue() -> None:
+def squeue() -> None:
     try:
         squeue_output = run(["squeue"])
         if "squeue: error:" in str(squeue_output):
@@ -514,3 +518,8 @@ def compare_files(fn1, fn2) -> bool:
     """
     with open(fn1, "r") as file1, open(fn2, "r") as file2:
         return file1.read() == file2.read()
+
+
+def touch(fn) -> None:
+    """Create empthy file."""
+    open(fn, "a").close()
