@@ -3,25 +3,29 @@
 VENV=$HOME/venv
 source $VENV/bin/activate
 num=$(ps aux | grep -E "[w]atch.py" | grep -v -e "grep" -e "emacsclient" -e "flycheck_" | wc -l)
+provider_1="0x29e613b04125c16db3f3613563bfdd0ba24cb629"
+provider_2="0x1926b36af775e1312fdebcc46303ecae50d945af"
+provider_3="0x4934a70ba8c1c3acfa72e809118bdd9048563a24"
+provider_4="0x51e2b36469cdbf58863db70cc38652da84d20c67"
 if [ $num -ge 1 ]; then
     echo "warning: watch.py is already running, count="$num
 else
-    rm ~/.ebloc-broker/watch_*.out
-    ./watch.py 0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA >/dev/null &
-    ./watch.py 0x765508fc8f78a465f518ae79897d0e4b249e82dc >/dev/null &
-    ./watch.py 0x38cc03c7e2a7d2acce50045141633ecdcf477e9a >/dev/null &
-    ./watch.py 0xeab50158e8e51de21616307a99c9604c1c453a02 >/dev/null &
+    rm -f ~/.ebloc-broker/watch_*.out
+    ~/ebloc-broker/broker/eblocbroker_scripts/watch.py $provider_1 >/dev/null &
+    ~/ebloc-broker/broker/eblocbroker_scripts/watch.py $provider_2 >/dev/null &
+    ~/ebloc-broker/broker/eblocbroker_scripts/watch.py $provider_3 >/dev/null &
+    ~/ebloc-broker/broker/eblocbroker_scripts/watch.py $provider_4 >/dev/null &
 fi
 
 watch --color head -n 15 \
-      ~/.ebloc-broker/watch_0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA.out \
-      ~/.ebloc-broker/watch_0x765508fc8f78a465f518ae79897d0e4b249e82dc.out \
-      ~/.ebloc-broker/watch_0x38cc03c7e2a7d2acce50045141633ecdcf477e9a.out \
-      ~/.ebloc-broker/watch_0xeab50158e8e51de21616307a99c9604c1c453a02.out
+      ~/.ebloc-broker/watch_$provider_1.out \
+      ~/.ebloc-broker/watch_$provider_2.out \
+      ~/.ebloc-broker/watch_$provider_3.out \
+      ~/.ebloc-broker/watch_$provider_4.out
 
 : ' commented
-cat ~/.ebloc-broker/watch_0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA.out
-cat ~/.ebloc-broker/watch_0x765508fc8f78a465f518ae79897d0e4b249e82dc.out
-cat ~/.ebloc-broker/watch_0x38cc03c7e2a7d2acce50045141633ecdcf477e9a.out
-cat ~/.ebloc-broker/watch_0xeab50158e8e51de21616307a99c9604c1c453a02.out
+cat ~/.ebloc-broker/watch_$provider_1.out
+cat ~/.ebloc-broker/watch_$provider_2.out
+cat ~/.ebloc-broker/watch_$provider_3.out
+cat ~/.ebloc-broker/watch_$provider_4.out
 '

@@ -6,7 +6,6 @@ import traceback
 from broker import cfg
 from broker._utils._log import br, log
 from broker._utils.tools import print_tb
-from broker.config import logging
 from broker.eblocbroker_scripts.job import DataStorage
 from broker.lib import state
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
@@ -27,7 +26,7 @@ def analyze_data(self, key, provider=None):
         else:
             code_hash_str = cfg.w3.toText(code_hash)
 
-        received_storage_deposit, *_ = cfg.Ebb.get_storage_info(provider, self.job_info["job_owner"], code_hash)
+        received_storage_deposit, *_ = cfg.Ebb.get_storage_info(code_hash, provider, self.job_info["job_owner"])
         *_, job_storage_duration = cfg.Ebb.get_job_storage_duration(provider, cfg.ZERO_ADDRESS, code_hash)
         ds = DataStorage(job_storage_duration)
         ds.received_storage_deposit = received_storage_deposit

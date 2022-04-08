@@ -25,7 +25,7 @@ interface eBlocBrokerInterface {
     );
 
     /**
-     * @dev Records the updated jobs' information under setJobStatus*() method calls
+     * @dev Records the updated jobs' information under setJobState*() method calls
      */
     event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 stateCodes);
 
@@ -49,7 +49,7 @@ interface eBlocBrokerInterface {
     event LogProviderInfo(
         address indexed provider,
         bytes32 indexed gpgFingerprint,
-        string email,
+        string gmail,
         string fID,
         string ipfsID
     );
@@ -59,7 +59,7 @@ interface eBlocBrokerInterface {
     event LogRequester(
         address indexed requester,
         bytes32 indexed gpgFingerprint,
-        string email,
+        string gmail,
         string fID,
         string ipfsID
     );

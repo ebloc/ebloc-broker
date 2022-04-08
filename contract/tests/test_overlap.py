@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 from broker import cfg, config
 from broker._utils._log import br, console_ruler, log
@@ -26,7 +25,7 @@ config.logging.propagate = False
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
 
-provider_email = "provider@gmail.com"
+provider_gmail = "provider@gmail.com"
 available_core_num = 128
 price_core_min = 1
 price_data_transfer = 1
@@ -133,7 +132,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
         {"from": requester, "value": web3.toWei(job_price, "wei")},
     )
 
-    tx = ebb.setJobStatusRunning(job.key, job.index, job._id, start_time, {"from": provider})
+    tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_time, {"from": provider})
     rpc.sleep(60)
 
     mine(5)

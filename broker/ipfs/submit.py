@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -31,15 +30,15 @@ Ebb = cfg.Ebb
 
 def pre_check_gpg(requester):
     requester_info = Ebb.get_requester_info(requester)
-    gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
-    if requester_info["gpg_fingerprint"].upper() != gpg_fingerprint:
+    from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
+    if requester_info["gpg_fingerprint"].upper() != from_gpg_fingerprint:
         raise Exception(
             f"E: requester({requester})'s gpg_fingerprint({requester_info['gpg_fingerprint'].upper()}) does not "
-            f"match with registered gpg_fingerprint={gpg_fingerprint}"
+            f"match with registered gpg_fingerprint={from_gpg_fingerprint}"
         )
 
     try:
-        ipfs.is_gpg_published(gpg_fingerprint)
+        ipfs.is_gpg_published(from_gpg_fingerprint)
     except Exception as e:
         raise e
 
@@ -101,15 +100,16 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         if isinstance(folder, Path):
             target = folder
             if job.storage_ids[idx] == StorageID.IPFS_GPG:
-                provider_gpg_finderprint = provider_info["gpg_fingerprint"]
-                if not provider_gpg_finderprint:
+                provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
+                if not provider_gpg_fingerprint:
                     log("E: Provider did not register any GPG fingerprint")
                     sys.exit(1)
 
-                log(f"==> provider_gpg_finderprint={provider_gpg_finderprint}")
+                log(f"==> provider_gpg_fingerprint={provider_gpg_fingerprint}")
                 try:
-                    # target is updated
-                    target = ipfs.gpg_encrypt(provider_gpg_finderprint, target)
+                    from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
+                    #: target is updated
+                    target = ipfs.gpg_encrypt(from_gpg_fingerprint, provider_gpg_fingerprint, target)
                     log(f"==> gpg_file={target}")
                 except Exception as e:
                     print_tb(e)

@@ -64,8 +64,8 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
                 log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
             except IndexError:
                 log(f"E: Tx({tx_hash}) is reverted")
-    except QuietExit:
-        pass
+    # except QuietExit:
+    #     pass
     except Exception as e:
         print_tb(e)
 
@@ -83,9 +83,9 @@ if __name__ == "__main__":
         fn = "job.yaml"
         job.set_config(fn)
         submit_gdrive(job)
-    except QuietExit:
-        sys.exit(1)
-    except KeyboardInterrupt:
-        sys.exit(1)
+    # except QuietExit:
+    #     sys.exit(1)
+    # except KeyboardInterrupt:
+    #     sys.exit(1)
     except Exception as e:
         print_tb(e)

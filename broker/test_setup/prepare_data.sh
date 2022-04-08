@@ -1,5 +1,21 @@
 #!/bin/bash
 
+extract () {
+    mv ~/.share/small.tar.gz /var/ebloc-broker/cache
+    mv ~/.share/medium.tar.gz /var/ebloc-broker/cache
+    cd /var/ebloc-broker/cache
+    tar -xvf small.tar.gz
+    tar -xvf medium.tar.gz
+    command rm small.tar.gz
+    command rm medium.tar.gz
+    trash-empty
+    mv small/* .
+    mv medium/* .
+    rmdir *
+}
+
+# extract
+
 # mv */* /var/ebloc-broker/cache
 
 mv -v adhead.n6c100 050e6cc8dd7e889bf7874689f1e1ead6

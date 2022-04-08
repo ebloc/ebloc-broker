@@ -22,7 +22,16 @@ from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.link import Link
-from broker.utils import CacheType, bytes32_to_ipfs, cd, generate_md5sum, print_tb, write_to_file
+from broker.utils import (
+    CacheType,
+    bytes32_to_ipfs,
+    cd,
+    generate_md5sum,
+    ipfs_to_bytes32,
+    is_ipfs_hash_valid,
+    print_tb,
+    write_to_file,
+)
 
 
 class BaseClass:
@@ -67,8 +76,6 @@ class Storage(BaseClass):
         self.patch_folder = self.results_folder_prev / "patch"
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
-        self.mc = None
-
         self.data_transfer_in_to_download: int = 0
         _log.thread_log_files[self.thread_name] = self.drivers_log_path
         try:
@@ -86,10 +93,11 @@ class Storage(BaseClass):
     def submit_slurm_job(self, job_core_num, sbatch_file_path):
         """Slurm submits job.
 
-        * Real mode -n is used.
-        * For Emulator-mode -N use 'sbatch -c'
-        * cmd: sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
-                sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
+        - Real mode -n is used.
+        - For Emulator-mode -N use `sbatch -c`
+        cmd:
+        sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
+            sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
         """
         for _attempt in range(10):
             try:
@@ -135,17 +143,18 @@ class Storage(BaseClass):
         # _log.addHandler(thread_handler)
         # config.logging = _log
 
-    def check_already_cached(self, source_code_hash):
-        if os.path.isfile(f"{self.private_dir}/{source_code_hash}.tar.gz"):
-            log(f":beer:  [green]{source_code_hash}[/green] is already cached in {self.private_dir}", "bold")
-            self.is_cached[source_code_hash] = True
-        elif os.path.isfile(f"{self.public_dir}/{source_code_hash}.tar.gz"):
-            log(f":beer:  [green]{source_code_hash}[/green] is already cached in {self.public_dir}", "bold")
-            self.is_cached[source_code_hash] = True
+    def check_already_cached(self, code_hash):
+        if os.path.isfile(f"{self.private_dir}/{code_hash}.tar.gz"):
+            log(f":beer:  [green]{code_hash}[/green] is already cached in {self.private_dir}", "bold")
+            self.is_cached[code_hash] = True
+        elif os.path.isfile(f"{self.public_dir}/{code_hash}.tar.gz"):
+            log(f":beer:  [green]{code_hash}[/green] is already cached in {self.public_dir}", "bold")
+            self.is_cached[code_hash] = True
 
-    def complete_refund(self) -> str:
+    def full_refund(self) -> str:
         """Complete refund back to the requester."""
         try:
+            log(f"## warning: full refund is in process related to job_key={self.job_key}")
             tx_hash = self.Ebb.refund(
                 self.logged_job.args["provider"],
                 env.PROVIDER_ID,
@@ -181,12 +190,12 @@ class Storage(BaseClass):
     def _is_cached(self, name, _id) -> bool:
         if self.cache_type[_id] == CacheType.PRIVATE:
             # Checks whether it is already exist under public cache directory
-            cached_folder = f"{self.public_dir}/{name}"
-            cached_tar_file = f"{cached_folder}.tar.gz"
+            cache_folder = f"{self.public_dir}/{name}"
+            cached_tar_file = f"{cache_folder}.tar.gz"
 
             if not os.path.isfile(cached_tar_file):
-                if os.path.isfile(f"{cached_folder}/run.sh"):
-                    return self.is_md5sum_matches(cached_folder, name, _id, "folder", CacheType.PUBLIC)
+                if os.path.isfile(f"{cache_folder}/run.sh"):
+                    return self.is_md5sum_matches(cache_folder, name, _id, "folder", CacheType.PUBLIC)
             else:
                 if self.whoami() == "EudatClass":
                     self.folder_type_dict[name] = "tar.gz"
@@ -194,12 +203,12 @@ class Storage(BaseClass):
                 return self.is_md5sum_matches(cached_tar_file, name, _id, "", CacheType.PUBLIC)
         else:
             # Checks whether it is already exist under the requesting user's private cache directory
-            cached_folder = self.private_dir
-            cached_folder = f"{self.private_dir}/{name}"
-            cached_tar_file = f"{cached_folder}.tar.gz"
+            cache_folder = self.private_dir
+            cache_folder = f"{self.private_dir}/{name}"
+            cached_tar_file = f"{cache_folder}.tar.gz"
             if not os.path.isfile(cached_tar_file):
-                if os.path.isfile(f"{cached_folder}/run.sh"):
-                    return self.is_md5sum_matches(cached_folder, name, _id, "folder", CacheType.PRIVATE)
+                if os.path.isfile(f"{cache_folder}/run.sh"):
+                    return self.is_md5sum_matches(cache_folder, name, _id, "folder", CacheType.PRIVATE)
             else:
                 if self.whoami() == "EudatClass":
                     self.folder_type_dict[name] = "tar.gz"
@@ -246,9 +255,28 @@ class Storage(BaseClass):
             self.verified_data[data_hash] = False
             return False
 
+    def submit_verified_data_files(self):
+        verify_data_list = []
+        for k, v in self.verified_data.items():
+            if v:
+                *_, output = self.Ebb.get_storage_info(k)
+                received_block = output[0]
+                is_verified_used = output[3]
+                if received_block > 0 and not is_verified_used:
+                    if len(k) == 32:
+                        verify_data_list.append(k.encode("utf-8"))
+                    elif is_ipfs_hash_valid(k):
+                        verify_data_list.append(ipfs_to_bytes32(k))
+
+        if len(verify_data_list) > 0:
+            log(f"verify_data_list={verify_data_list}", "bold")
+            tx = cfg.Ebb.set_data_verified(verify_data_list)
+            tx_hash = cfg.Ebb.tx_id(tx)
+            log(f"verify_data tx_hash={tx_hash}", "bold")
+
     def sbatch_call(self):
-        link = Link(self.results_data_folder, self.results_data_link)
         try:
+            link = Link(self.results_data_folder, self.results_data_link)
             if len(self.registered_data_hashes) > 0:
                 # in case there there mounted folder first umount them in order
                 # to give folder permission
@@ -268,6 +296,7 @@ class Storage(BaseClass):
                 link.registered_data(self.registered_data_hashes)
 
             self._sbatch_call()
+            self.submit_verified_data_files()
         except Exception as e:
             print_tb(f"E: Failed to call _sbatch_call() function. {e}")
             raise e
@@ -279,8 +308,8 @@ class Storage(BaseClass):
         set, try again in a bit for job 5.
         """
         try:
-            _slurm_job_id = self.submit_slurm_job(job_core_num, sbatch_file_path)
-            slurm_job_id = _slurm_job_id.split()[3]
+            slurm_job_id = self.submit_slurm_job(job_core_num, sbatch_file_path)
+            slurm_job_id = slurm_job_id.split()[3]
             cmd = ["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"]
             subprocess_call(cmd, attempt=10, sleep_time=10)
             return slurm_job_id
@@ -288,7 +317,7 @@ class Storage(BaseClass):
             print_tb(e)
             raise e
 
-    def _sbatch_call(self) -> None:
+    def _sbatch_call(self) -> bool:
         """Run sbatch on the cluster.
 
         * unshare: work fine for terminal programs.
@@ -345,7 +374,8 @@ class Storage(BaseClass):
 
         # seperator character is *
         run_file = f"{self.results_folder}/run.sh"
-        sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_block_number}.sh"  # separator(~)
+        #: separator "~"
+        sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_block_number}.sh"
         with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
             f.write("#!/bin/bash\n")
             f.write("#SBATCH -o slurm.out  # STDOUT\n")
@@ -368,3 +398,5 @@ class Storage(BaseClass):
 
         with suppress(Exception):
             squeue()
+
+        return True

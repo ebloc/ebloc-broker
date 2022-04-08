@@ -34,7 +34,7 @@ def get_provider_info(self, provider):
                 if key not in event_filter:
                     event_filter[key] = _event_filter.get_all_entries()[idx].args[key]
 
-        for key in ["email", "ipfsID", "fID", "gpgFingerprint"]:
+        for key in ["gmail", "ipfsID", "fID", "gpgFingerprint"]:
             if key not in event_filter:
                 event_filter[key] = ""
 
@@ -50,7 +50,7 @@ def get_provider_info(self, provider):
             "address": provider,
             "block_read_from": block_read_from,
             "is_orcid_verified": self.is_orcid_verified(provider),
-            "email": event_filter["email"],
+            "gmail": event_filter["gmail"],
             "gpg_fingerprint": gpg_fingerprint,
             "f_id": event_filter["fID"],
             "ipfs_id": event_filter["ipfsID"],

@@ -12,10 +12,10 @@ from broker.test_setup.user_set import users
 collect_account = "0xfd0ebcd42d4c4c2a2281adfdb48177454838c433".lower()
 
 providers = [
-    "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
-    "0x765508fc8f78a465f518ae79897d0e4b249e82dc",
-    "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a",
-    "0xeab50158e8e51de21616307a99c9604c1c453a02",
+    "0x29e613B04125c16db3f3613563bFdd0BA24Cb629",
+    "0x1926b36af775e1312fdebcc46303ecae50d945af",
+    "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24",
+    "0x51e2b36469cdbf58863db70cc38652da84d20c67",
 ]
 
 Ebb = cfg.Ebb

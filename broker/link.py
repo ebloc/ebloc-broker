@@ -23,12 +23,12 @@ class Link:
             if isinstance(data_hash, bytes):
                 data_hash = data_hash.decode("utf-8")
 
-            destination = f"{self.path_to}/{data_hash}"
-            if os.path.isdir(destination):
+            dest = f"{self.path_to}/{data_hash}"
+            if os.path.isdir(dest):
                 with suppress(Exception):
-                    run(["sudo", "umount", "-f", destination], is_quiet=True)
+                    run(["sudo", "umount", "-f", dest], is_quiet=True)
 
-    def link(self, path, destination, is_read_only=False):
+    def link(self, path, dest, is_read_only=False):
         """Make links between folders.
 
         You can create a read-only bind-mount(https://lwn.net/Articles/281157/).
@@ -38,14 +38,14 @@ class Link:
         __ https://askubuntu.com/a/243390/660555
         """
         if is_read_only:
-            mkdir(destination)
-            run(["sudo", "mount", "--bind", path, destination])
-            run(["sudo", "mount", "-o", "bind,remount,ro", destination])
+            mkdir(dest)
+            run(["sudo", "mount", "--bind", path, dest])
+            run(["sudo", "mount", "-o", "bind,remount,ro", dest])
         else:
-            run(["ln", "-sfn", path, destination])
+            run(["ln", "-sfn", path, dest])
 
         log(f" ┌── {path}", "bold green")
-        log(f" └─> {destination}", "bold yellow")
+        log(f" └─> {dest}", "bold yellow")
 
     def registered_data(self, data_hashes):
         for data_hash in data_hashes:
@@ -53,8 +53,8 @@ class Link:
                 data_hash = data_hash.decode("utf-8")
 
             path = Path("/var") / "ebloc-broker" / "cache" / data_hash
-            destination = f"{self.path_to}/{data_hash}"
-            self.link(path, destination, is_read_only=True)
+            dest = f"{self.path_to}/{data_hash}"
+            self.link(path, dest, is_read_only=True)
 
     def link_folders(self, paths=None):
         """Create linked folders under the data_link folder."""
@@ -82,12 +82,12 @@ class Link:
                     raise e
 
                 self.data_map[folder_name] = folder_hash
-                destination = f"{self.path_to}/{folder_hash}"
-                self.link(path, destination)
+                dest = f"{self.path_to}/{folder_hash}"
+                self.link(path, dest)
                 if idx < len(paths) - 1:
                     log()
 
-                folder_new_hash = generate_md5sum(destination)
+                folder_new_hash = generate_md5sum(dest)
                 assert folder_hash == folder_new_hash, "hash of original and linked folder does not match"
 
 
@@ -119,12 +119,11 @@ def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
                 )
 
 
-def test_with_small_data(value):
+def test_with_small_dataset(value):
     fn = os.path.expanduser("~/test_eblocbroker/run_cppr/run.sh")
     with open(fn, "r+") as file:
-        filedata = file.read()
-        filedata = filedata.replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
-        file.write(filedata)
+        changed_filedata = file.read().replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
+        file.write(changed_filedata)
 
 
 def check_linked_data(paths_from, path_to, is_pass=False):
@@ -138,7 +137,7 @@ def check_linked_data(paths_from, path_to, is_pass=False):
     link.link_folders(paths_from)
     log()
     for key, value in link.data_map.items():
-        test_with_small_data(value)
+        test_with_small_dataset(value)
         log(f"[blue] * [/blue][green]{key}[/green] => [yellow]../data_link/{value}[/yellow]", "bold")
 
     if not is_pass:

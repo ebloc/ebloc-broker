@@ -187,13 +187,14 @@ def eblocbroker_function_call(func, max_retries):
     for _ in range(max_retries):
         try:
             return func()
-        except Web3NotConnected:
-            time.sleep(1)
+        # except Web3NotConnected:
+        #     time.sleep(1)
         except Exception as e:
-            print_tb(e)
-            raise e
+            log(f"E: {e}")
+            log("Sleep 15 seconds, will try again...")
+            time.sleep(15)
 
-    raise Exception("eblocbroker_function_call completed all the attempts")
+    raise Exception("eblocbroker_function_call completed all the attempts abort")
 
 
 def is_dir(path) -> bool:

@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 from contextlib import suppress
+from pathlib import Path
 
 from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, read_json
@@ -14,11 +15,18 @@ from broker.errors import QuietExit
 from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
 
-# TODO: gdrive list --query "sharedWithMe"
-
 
 def check_user(given_user):
-    output = run(["gdrive", "about"])
+    try:
+        output = run(["gdrive", "about"])
+    except:
+        with open(Path.home() / ".gdrive" / "token_v2.json", "r") as f:
+            output = json.load(f)
+
+        log("#> Trying: gdrive about --refresh-token <id>")
+        run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
+        output = run(["gdrive", "about"])  # re-try
+
     user = output.partition("\n")[0].split(", ")[1]
     return user == given_user, user
 
@@ -39,7 +47,7 @@ def submit(provider, _from, job):
         raise QuietExit from e
 
     provider = job.Ebb.w3.toChecksumAddress(provider)
-    provider_to_share = provider_info["email"]
+    provider_to_share = provider_info["gmail"]
     data_files_json_path = f"{job.tmp_dir}/meta_data.json"
     try:
         if len(job.folders_to_share) > 1:
@@ -141,17 +149,28 @@ def upload(folder_to_share, tmp_dir, job_key_flag=False):
 
 
 def delete_all(_type="all"):
+    """Delete all created files and folder within the gdrive."""
     if _type == "dir":
-        output = list_all("dir")
-        for line in output.splitlines():
-            run(["gdrive", "delete", "--recursive", line.split()[0]])
-    else:
-        output = list_all()
-        for line in output.splitlines():
-            if " dir   " in line:
+        for line in list_all("dir").splitlines():
+            with suppress(Exception):
                 run(["gdrive", "delete", "--recursive", line.split()[0]])
-            else:
-                run(["gdrive", "delete", line.split()[0]])
+    else:
+        for line in list_all().splitlines():
+            if " dir   " not in line:  # first remove files
+                try:
+                    run(["gdrive", "delete", line.split()[0]])
+                except Exception as e:
+                    log(f"E {e}")
+
+        for line in list_all().splitlines():
+            if " dir   " in line:
+                try:
+                    run(["gdrive", "delete", "--recursive", line.split()[0]])
+                except Exception as e:
+                    log(f"E {e}")
+            # else:
+            #     with suppress(Exception):
+            #         run(["gdrive", "delete", line.split()[0]])
 
 
 def list_all(_type="all"):
@@ -256,7 +275,7 @@ def fetch_grive_output(output, key):
         if key in line:
             return line.split(" ")[0]
 
-    raise Exception("gdrive: give key does not exist")
+    raise Exception(f"gdrive: given key={key} does not exist")
 
 
 def parse_gdrive_info(gdrive_info):
@@ -284,11 +303,11 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
         log(f"==> data_id=[magenta]{key}")
         log(output, "bold green")
         data_files_id = fetch_grive_output(output, "meta_data.json")
-        # key for the source_code elimination output*.tar.gz files
-        source_code_key = fetch_grive_output(output, f"{folder_name}.tar.gz")
         if not data_files_id:
             raise Exception
 
+        # key for the source_code elimination output*.tar.gz files
+        source_code_key = fetch_grive_output(output, f"{folder_name}.tar.gz")
         cmd = [
             "gdrive",
             "download",
@@ -356,7 +375,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
 
                 md5sum = get_file_info(gdrive_info, _type="Md5sum")
                 log(f" * gdrive_info for [green]{k}[/green]:")
-                log(gdrive_info, "bold yellow")
+                parse_gdrive_info(gdrive_info)
                 given_code_hash = code_hashes[idx].decode("utf-8")
                 log(f"==> given_code_hash={given_code_hash}  idx={idx}")
                 if md5sum != given_code_hash:
@@ -381,7 +400,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
             raise Exception("Something is wrong; data_key_dict is empty")
 
     output = byte_to_mb(size_to_download)
-    log(f"total_size={byte_size} bytes | size to download={size_to_download} bytes => {output} MB")
+    log(f"total_size={byte_size} bytes | size to download={size_to_download} bytes => {output} MB", "bold")
     return output, data_key_dict, source_code_key
 
 

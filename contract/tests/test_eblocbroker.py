@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 from broker import cfg, config
@@ -24,7 +23,7 @@ Contract.eblocbroker = Contract.Contract(is_brownie=True)
 setup_logger("", True)
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
-provider_email = "provider_test@gmail.com"
+provider_gmail = "provider_test@gmail.com"
 fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 
 available_core = 128
@@ -100,7 +99,7 @@ def register_provider(price_core_min=1):
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
-        provider_email,
+        provider_gmail,
         fid,
         ipfs_address,
         available_core,
@@ -308,14 +307,7 @@ def test_data_info():
         assert storage_payment[idx] == job.storage_hours[idx] * price_cache
 
     job.is_verified = [False, True]
-    ebb.dataReceived(  # called by the provider
-        job_key,
-        0,
-        job.code_hashes,
-        job.cache_types,
-        job.is_verified,
-        {"from": provider, "gas": 4500000},
-    )
+    tx = ebb.setDataVerified([job.code_hashes[1]], {"from": provider, "gas": 4500000})
     for idx, code_hash in enumerate(job.code_hashes):
         *_, output = ebb.getStorageInfo(provider, cfg.ZERO_ADDRESS, code_hash)
         assert output[3] == job.is_verified[idx]
@@ -371,7 +363,7 @@ def test_computational_refund():
     index = 0
     job_id = 0
     start_time = 1579524978
-    tx = ebb.setJobStatusRunning(job.code_hashes[0], index, job_id, start_time, {"from": accounts[0]})
+    tx = ebb.setJobStateRunning(job.code_hashes[0], index, job_id, start_time, {"from": accounts[0]})
     rpc.sleep(60)
     mine(5)
     args = [index, job_id, 1579524998, 2, 0, job.cores, [5], True]
@@ -493,9 +485,10 @@ def test_storage_refund():
         storage_payment.append(deposit)
 
     job.is_verified = [True, True]
-    ebb.dataReceived(  # called by the provider
-        job_key, index, job.code_hashes, job.cache_types, job.is_verified, {"from": provider, "gas": 4500000}
-    )
+    tx = ebb.setDataVerified(job.code_hashes, {"from": provider, "gas": 4500000})
+    # ebb.dataReceived(  # called by the provider
+    #     job_key, index, job.code_hashes, job.cache_types, job.is_verified, {"from": provider, "gas": 4500000}
+    # )
     for code_hash in job.code_hashes:
         *_, output = ebb.getStorageInfo(provider, cfg.ZERO_ADDRESS, code_hash)
         log(output, "bold")
@@ -519,7 +512,7 @@ def test_update_provider():
     mine(5)
     provider_registered_bn = register_provider()
     fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    ebb.updateProviderInfo(GPG_FINGERPRINT, provider_email, fid, ipfs_address, {"from": accounts[0]})
+    ebb.updateProviderInfo(GPG_FINGERPRINT, provider_gmail, fid, ipfs_address, {"from": accounts[0]})
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
     available_core = 64
     prices = [2, 2, 2, 2]
@@ -608,13 +601,13 @@ def test_multiple_data():
     assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
     # cluster verifies the given data files for the related job
     index = 0
-    is_verified_list = [True, True]
-    tx = ebb.dataReceived(
+    # is_verified_list = [True, True]
+    tx = ebb.setDataVerified(job.code_hashes, {"from": provider, "gas": 4500000})
+    tx = ebb.setDataPublic(
         job_key,
         index,
         job.code_hashes,
         job.cache_types,
-        is_verified_list,
         {"from": provider, "gas": 4500000},
     )
     # second time job is wanted to send by the differnt user  with the same data files
@@ -639,11 +632,11 @@ def test_multiple_data():
     # ===== provider side =====
     index = 0
     job_id = 0
-    start_time = get_block_timestamp()
     execution_time = 10
     result_ipfs_hash = "0xabcd"
-    tx = ebb.setJobStatusRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
-    mine(60 * execution_time / cfg.BLOCK_DURATION)
+    start_time = get_block_timestamp()
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    mine(60 * execution_time / cfg.BLOCK_DURATION + 1)
     end_time = start_time + 60 * execution_time
     block_timestamp = get_block_timestamp()
     assert (
@@ -674,7 +667,7 @@ def test_multiple_data():
     start_time = get_block_timestamp()
     execution_time = 10
     result_ipfs_hash = "0xabcd"
-    tx = ebb.setJobStatusRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
     mine(60 * execution_time / cfg.BLOCK_DURATION)
     end_time = start_time + 60 * execution_time
     args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
@@ -778,15 +771,15 @@ def test_workflow():
         log(ebb.getJobInfo(provider, job_key, 1, 2))
         log(ebb.getJobInfo(provider, job_key, 0, 3))
 
-    # setJobStatus for the workflow:
+    # setJobState for the workflow:
     index = 0
     job_id = 0
     start_time = 10
-    tx = ebb.setJobStatusRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
     index = 0
     job_id = 1
     start_time = 20
-    tx = ebb.setJobStatusRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
     # process_payment for the workflow
     index = 0
     job_id = 0
@@ -844,8 +837,7 @@ def test_workflow():
     index = 0
     job_id = 2
     start_time = 20
-    tx = ebb.setJobStatusRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
-
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
     args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, True]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     # log(tx.events['LogProcessPayment'])
@@ -859,7 +851,6 @@ def test_workflow():
     assert job_price - _cost["storage"] == received_sum + refunded_sum
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
-    # ebb.updateDataReceivedBlock(result_ipfs_hash, {"from": accounts[4]})
 
 
 def test_simple_submit():
@@ -906,7 +897,7 @@ def test_simple_submit():
     index = 0
     job_id = 0
     start_time = 1579524978
-    tx = ebb.setJobStatusRunning(job.key, index, job_id, start_time, {"from": provider})
+    tx = ebb.setJobStateRunning(job.key, index, job_id, start_time, {"from": provider})
     rpc.sleep(60)
     mine(5)
 
@@ -1014,10 +1005,10 @@ def test_submit_job():
     with open(fn) as f:
         for index, line in enumerate(f):
             arguments = line.rstrip("\n").split(" ")
-            tx = ebb.setJobStatusRunning(job_key, index, job_id, int(arguments[0]), {"from": accounts[0]})
+            tx = ebb.setJobStateRunning(job_key, index, job_id, int(arguments[0]), {"from": accounts[0]})
             if index == 0:
                 with brownie.reverts():
-                    tx = ebb.setJobStatusRunning(job_key, index, job_id, int(arguments[0]) + 1, {"from": accounts[0]})
+                    tx = ebb.setJobStateRunning(job_key, index, job_id, int(arguments[0]) + 1, {"from": accounts[0]})
 
     console_ruler()
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")

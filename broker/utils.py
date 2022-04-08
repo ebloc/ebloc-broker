@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import base58
 import binascii
 import hashlib
 import json
@@ -16,8 +17,6 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, CalledProcessError, Popen, check_output
-
-import base58
 
 from broker import cfg, config
 from broker._utils import _log
@@ -292,11 +291,18 @@ def bytes32_to_ipfs(bytes_array):
     return bytes_array
 
 
+def is_ipfs_hash_valid(ipfs_hash: str) -> bool:
+    return bool(len(ipfs_hash) == 46 and ipfs_hash[:2] == "Qm")
+
+
 def ipfs_to_bytes32(ipfs_hash: str) -> bytes:
     """Convert ipfs hash into bytes32 format."""
-    bytes_array = base58.b58decode(ipfs_hash)
-    b = bytes_array[2:]
-    return cfg.w3.toBytes(hexstr=binascii.hexlify(b).decode("utf-8"))
+    if is_ipfs_hash_valid(ipfs_hash):
+        bytes_array = base58.b58decode(ipfs_hash)
+        b = bytes_array[2:]
+        return cfg.w3.toBytes(hexstr=binascii.hexlify(b).decode("utf-8"))
+    else:
+        raise Exception("Not valid ipfs hash given")
 
 
 def byte_to_mb(size_in_bytes: float) -> int:
@@ -444,14 +450,14 @@ def start_ipfs_daemon(_is_print=False):
 
     log("warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
-    output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "start_ipfs_daemon.py"])
+    output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
             log(content_file.read().rstrip(), "bold blue")
             time.sleep(5)  # in case sleep for 5 seconds
             if output:
-                log(output.rstrip(), "bold blue")
+                log(output.replace("==> Running IPFS daemon", "").rstrip(), "bold blue")
 
         if is_ipfs_on(is_print=True):
             return True

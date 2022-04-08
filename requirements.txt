@@ -808,7 +808,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==12.0.1
+rich==12.2.0
 rlp==2.0.1
     # via
     #   eth-account

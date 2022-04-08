@@ -44,18 +44,18 @@ class EudatClass(Storage):
 
     def search_token(self, f_id, share_list, folder_name, is_silent=False) -> bool:
         """Search for the share_token from the shared folder."""
+        f_id = f_id.replace("@b2drop.eudat.eu", "")  # check in case
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         if not is_silent:
-            log(f"## searching share tokens for the related source_code_folder={folder_name}")
+            log(f"## searching share tokens for the related source_code_folder={share_key}")
 
         for idx in range(len(share_list) - 1, -1, -1):
             # starts iterating from last item to the first one
             input_folder_name = share_list[idx]["name"]
             input_folder_name = input_folder_name[1:]  # removes '/' at the beginning
             share_id = share_list[idx]["id"]
-            # input_owner = share_list[i]['owner']
-            input_user = f"{share_list[idx]['user']}@b2drop.eudat.eu"
-            if input_folder_name == share_key and input_user == f_id:
+            user = share_list[idx]["user"]
+            if input_folder_name == share_key and user == f_id:
                 self.share_token = str(share_list[idx]["share_token"])
                 self.share_id[share_key] = {
                     "share_id": int(share_id),
@@ -81,45 +81,41 @@ class EudatClass(Storage):
 
     def cache(self, folder_name, _id) -> bool:
         is_cache_success = self._is_cached(folder_name, _id)
-        cached_folder = Path()
+        cache_folder = Path()
         if self.cache_type[_id] == CacheType.PRIVATE:
             # download into private directory of the user
-            cached_folder = self.private_dir
+            cache_folder = self.private_dir
         elif self.cache_type[_id] == CacheType.PUBLIC:
-            cached_folder = self.public_dir
+            cache_folder = self.public_dir
 
-        cached_tar_file = cached_folder / f"{folder_name}.tar.gz"
+        cached_tar_file = cache_folder / f"{folder_name}.tar.gz"
         if is_cache_success:
             self.folder_type_dict[folder_name] = "tar.gz"
             self.tar_downloaded_path[folder_name] = cached_tar_file
             return True
 
         if not os.path.isfile(cached_tar_file):
-            if os.path.isfile(cached_folder / f"{folder_name}.tar.gz"):
-                tar_hash = generate_md5sum(f"{cached_folder}/{folder_name}.tar.gz")
+            if os.path.isfile(cache_folder / f"{folder_name}.tar.gz"):
+                tar_hash = generate_md5sum(f"{cache_folder}/{folder_name}.tar.gz")
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
                     log(f"==> {folder_name} is already cached under the public directory", "bold blue")
                     return True
-
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
-                    self.download_folder(cached_folder, folder_name)
-                    self.check_downloaded_folder_hash(cached_folder / f"{folder_name}.tar.gz", folder_name)
+                    self.download_folder(cache_folder, folder_name)
                 except Exception as e:
                     print_tb(e)
-                    self.complete_refund()
+                    self.full_refund()
                     return False
             else:
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
-                    self.download_folder(cached_folder, folder_name)
-                    breakpoint()  # DEBUG
-                    self.check_downloaded_folder_hash(cached_folder / f"{folder_name}.tar.gz", folder_name)
+                    self.download_folder(cache_folder, folder_name)
                 except Exception as e:
                     print_tb(e)
-                    self.complete_refund()
+                    self.full_refund()
                     return False
 
             if (
@@ -139,16 +135,15 @@ class EudatClass(Storage):
                 return True
 
             try:
-                self.download_folder(cached_folder, folder_name)
-                self.check_downloaded_folder_hash(cached_folder / f"{folder_name}.tar.gz", folder_name)
+                self.download_folder(cache_folder, folder_name)
             except Exception as e:
                 print_tb(e)
-                self.complete_refund()
+                self.full_refund()
                 return False
 
         return True
 
-    def download_folder(self, results_folder_prev, folder_name):
+    def _download_folder(self, results_folder_prev, folder_name):
         """Download corresponding folder from the EUDAT.
 
         Always assumes job is submitted as .tar.gz file
@@ -194,6 +189,11 @@ class EudatClass(Storage):
 
         raise Exception("Eudat download error")
 
+    def download_folder(self, cache_folder, folder_name):
+        """Wrap download folder function."""
+        self._download_folder(cache_folder, folder_name)
+        self.check_downloaded_folder_hash(cache_folder / f"{folder_name}.tar.gz", folder_name)
+
     def accept_given_shares(self):
         for *_, v in self.share_id.items():
             try:
@@ -204,10 +204,9 @@ class EudatClass(Storage):
     def get_file_size(self, fn, folder_name):
         # accept_given_shares()
         try:
-            log(f"## trying to get {fn} info from EUDAT")
+            log(f"## trying to get {fn} file info from EUDAT")
             #: DAV/Properties/getcontentlength the number of bytes of a resource
-            info = config.oc.file_info(fn)
-            return info.get_size()
+            return config.oc.file_info(fn).get_size()
         except Exception as e:
             log(f"warning: {e}")
             if "HTTP error: 404" in str(e):
@@ -217,8 +216,7 @@ class EudatClass(Storage):
                     for _dir in _list:
                         shutil.move(f"{env.OWNCLOUD_PATH}/{_dir}", f"{env.OWNCLOUD_PATH}/{_folder_fn}")
 
-                    info = config.oc.file_info(fn)
-                    return info.get_size()
+                    return config.oc.file_info(fn).get_size()
                 except Exception as e:
                     log(f"E: {e}")
                     _list = config.oc.list(".")
@@ -226,8 +224,7 @@ class EudatClass(Storage):
                         if folder_name in path.get_name() and folder_name != path.get_name:
                             config.oc.move(path.get_name(), folder_name)
 
-                info = config.oc.file_info(fn)
-                return info.get_size()
+                return config.oc.file_info(fn).get_size()
 
             log(str(e))
             raise Exception("failed all the attempts to get file info at eudat") from e
@@ -296,7 +293,7 @@ class EudatClass(Storage):
                 # TODO: if added before or some do nothing
                 if Ebb.mongo_broker.add_item_share_id(share_key, value["share_id"], value["share_token"]):
                     # adding into mongoDB for future usage
-                    log(f"#> [green]{share_key}[/green] is added into mongoDB {ok()}")
+                    log(f"#> [green]{share_key}[/green] is added into mongoDB{ok()}")
             except Exception as e:
                 print_tb(e)
                 log(f"E: {e}")
@@ -386,9 +383,9 @@ class EudatClass(Storage):
 
         if int(self.data_transfer_in_to_download_mb) > int(self.data_transfer_in_requested):
             log(f"==> data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")
-            log(f"==> data_transfer_in_requested={self.data_transfer_in_requested}")
+            log(f"==> data_transfer_in_requested={self.data_transfer_in_requested}", "bold")
             log("E: Requested size to download the source code and data files is greater than the given amount")
-            return self.complete_refund()
+            return self.full_refund()
 
         if not self.cache_wrapper():
             return False
@@ -410,10 +407,10 @@ class EudatClass(Storage):
                         return False
 
                     if idx == 0 and not self.check_run_sh():
-                        self.complete_refund()
+                        self.full_refund()
                         return False
 
-        log(f"==> data_transfer_in_requested={self.data_transfer_in_requested} MB")
+        log(f"==> data_transfer_in_requested={self.data_transfer_in_requested} MB", "bold")
         for idx, folder_name in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] == StorageID.NONE:
                 if isinstance(folder_name, bytes):

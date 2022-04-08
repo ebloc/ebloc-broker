@@ -23,8 +23,11 @@ class ENV_BASE:
         self._HOME = Path("/home") / self.WHOAMI
         self.EBLOCPATH = Path(self.cfg["ebloc_path"])
         self.CONTRACT_PROJECT_PATH = self._HOME / "ebloc-broker" / "contract"
-        self.IS_BLOXBERG = self.cfg["provider"]["is_bloxberg"]
-        self.IS_EBLOCPOA = self.cfg["provider"]["is_eblocpoa"]
+        self.IS_BLOXBERG = True
+        if self.IS_BLOXBERG:
+            self.IS_EBLOCPOA = False  # eblocpoa is not in use
+            self.IS_GETH_TUNNEL = False
+
         self.CONTRACT_YAML_FILE = self.EBLOCPATH / "broker" / "eblocbroker_scripts" / "contract.yaml"
         try:
             _yaml = Yaml(self.CONTRACT_YAML_FILE)

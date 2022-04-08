@@ -3,6 +3,7 @@
 import hashlib
 import os
 import os.path
+import owncloud
 import pickle
 import shutil
 import subprocess
@@ -10,14 +11,12 @@ import sys
 import time
 from contextlib import suppress
 from pathlib import Path
-
-import owncloud
 from web3.logs import DISCARD
 
 from broker import cfg, config
 from broker._utils._log import br, ok
 from broker._utils.web3_tools import get_tx_status
-from broker.config import env, logging
+from broker.config import env
 from broker.errors import QuietExit
 from broker.lib import calculate_size, run
 from broker.libs import _git
@@ -98,7 +97,7 @@ def _login(fn, user, password_path) -> None:
 
     for _ in range(config.RECONNECT_ATTEMPTS):
         try:
-            status_str = f"Trying to login into owncloud user=[yellow]{user}[/yellow] ..."
+            status_str = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
             with cfg.console.status(status_str):
                 # may take few minutes to connect
                 config.oc.login(user, password)
@@ -107,7 +106,7 @@ def _login(fn, user, password_path) -> None:
             f = open(fn, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(f"  {status_str} {ok()}")
+            log(f"  {status_str} {ok()}", "bold")
             return
         except Exception as e:
             log(str(e))
@@ -284,8 +283,12 @@ def _submit(provider, requester, job, required_confs=1):
             job.code_hashes.append(value)
             job.code_hashes_str.append(value.decode("utf-8"))
             try:
+                if "@b2drop.eudat.eu" not in provider_info["f_id"]:
+                    provider_info["f_id"] = provider_info["f_id"] + "@b2drop.eudat.eu"
+
                 share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
             except Exception as e:
+                log(f"E: Failed sharing folder with [yellow]{provider_info['f_id']}")
                 print_tb(e)
                 sys.exit(1)
 

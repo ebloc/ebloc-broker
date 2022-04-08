@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import signal
 import sys
 import time
-from subprocess import check_output
-
-import ipfshttpclient
 from cid import make_cid
+from contextlib import suppress
+from subprocess import check_output
 
 from broker import cfg
 from broker._utils._log import br, ok
 from broker._utils.tools import _remove, handler, log, print_tb
-from broker.config import env, logging
+from broker.config import env
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.lib import subprocess_call
 from broker.utils import (
@@ -127,7 +127,7 @@ class Ipfs:
         ]
         try:
             run(cmd)
-            log(f"==> GPG decrypt {ok()}")
+            log(f"#> GPG decrypt {ok()}")
             _remove(gpg_file)
             os.unlink(gpg_file_link)
         except Exception as e:
@@ -149,8 +149,11 @@ class Ipfs:
         _remove(f"{env.HOME}/.ipfs/repo.lock")
         _remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 
-    def gpg_encrypt(self, gpg_finderprint, target):
-        self.check_gpg_password(gpg_finderprint)
+    def gpg_encrypt(self, from_gpg_fingerprint, recipient_gpg_fingerprint, target):
+        if from_gpg_fingerprint == recipient_gpg_fingerprint:
+            raise Exception("E: Both given fingerprints are same")
+
+        self.check_gpg_password(from_gpg_fingerprint)
         is_delete = False
         if os.path.isdir(target):
             try:
@@ -175,9 +178,9 @@ class Ipfs:
 
         for attempt in range(5):
             try:
-                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", gpg_finderprint]
+                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", recipient_gpg_fingerprint]
                 log(f"{br(attempt)} cmd: [magenta]{' '.join(cmd)}", "bold")
-                run(cmd)  # this may not work if it is requested too much in short time
+                run(cmd, suppress_stderr=True)  # this may not work if it is requested too much in short time
                 break
             except Exception as e:
                 log(f"warning: {e}")
@@ -188,7 +191,7 @@ class Ipfs:
                 "--batch",
                 "--yes",
                 "--recipient",
-                gpg_finderprint,
+                recipient_gpg_fingerprint,
                 "--trust-model",
                 "always",
                 "--output",
@@ -212,30 +215,45 @@ class Ipfs:
     ################
     # ONLINE CALLS #
     ################
-    def swarm_connect(self, ipfs_id: str):
+    def swarm_connect(self, ipfs_id: str, is_silent=False):
         """Swarm connect into the ipfs node."""
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         # TODO: check is valid IPFS id
         try:
-            log(f" * trying to connect into {ipfs_id}")
+            if is_silent:
+                log(f" * trying to connect into {ipfs_id}", end="")
+            else:
+                log(f" * trying to connect into {ipfs_id}")
+
             cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_id]
             p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
-                log()
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
-                if "failure: dial to self attempted" in e:
-                    log(f"E: {e}")
-                    if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
-                        raise QuietExit
+                if not is_silent:
+                    log()
+                    if "failure: dial to self attempted" in e:
+                        log(f"E: {e}")
+                        if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
+                            raise QuietExit
+                    else:
+                        log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")
+                        raise Exception(e)
                 else:
-                    log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")
-                    raise Exception(e)
+                    log("  [  failed  ]")
             else:
-                log(f"{output} {ok()}")
+                if is_silent:
+                    log(ok())
+                else:
+                    log(f"{output} {ok()}")
         except Exception as e:
-            print_tb(e)
+            if is_silent:
+                log("[  failed  ]")
+
+            if not is_silent:
+                print_tb(e)
+
             raise e
 
     def stat(self, ipfs_hash, _is_ipfs_on=True):
@@ -250,7 +268,7 @@ class Ipfs:
         with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
             return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-    def is_hash_exists_online(self, ipfs_hash: str):
+    def is_hash_exists_online(self, ipfs_hash: str, swarm_ipfs_id=None, is_silent=False):
         log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
@@ -260,6 +278,10 @@ class Ipfs:
             signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
 
         try:
+            if swarm_ipfs_id:
+                with suppress(Exception):  # TODO: Attempt to swarm connect into requester
+                    self.swarm_connect(swarm_ipfs_id, is_silent=is_silent)
+
             output = self.stat(ipfs_hash, _is_ipfs_on=False)
             _stat = {}
             for line in output.split("\n"):
@@ -357,9 +379,14 @@ class Ipfs:
 
         return False
 
-    def get_ipfs_id(self, client) -> str:
+    def get_ipfs_id(self, client=None) -> str:
+        if self.client:
+            _client = self.client
+        else:
+            _client = client
+
         """Return public ipfs id."""
-        ipfs_addresses = client.id()["Addresses"]
+        ipfs_addresses = _client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
                 return ipfs_address
@@ -370,7 +397,7 @@ class Ipfs:
 
         raise ValueError("No valid ipfs has is found")
 
-    def check_gpg_password(self, gpg_finderprint):
+    def check_gpg_password(self, gpg_fingerprint):
         """Check passphrase of gpg from a file.
 
         * How can I check passphrase of gpg from a file?
@@ -384,13 +411,18 @@ class Ipfs:
             f"--passphrase-file={env.GPG_PASS_FILE}",
             "--dry-run",
             "--passwd",
-            gpg_finderprint,
+            gpg_fingerprint,
         ]
-        try:
-            run(cmd)
-        except Exception as e:
-            print_tb(e)
-            raise e
+        _p, output, error_msg = popen_communicate(cmd)  # type: ignore
+        if _p.returncode or error_msg:
+            raise Exception(error_msg)
+            # raise BashCommandsException(p.returncode, output, error_msg, str(cmd))
+
+        # try:
+        #     run(cmd)
+        # except Exception as e:
+        #     print_tb(e)
+        #     raise e
 
     def publish_gpg(self, gpg_fingerprint):
         # log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")

@@ -2,22 +2,20 @@
 
 import sys
 from typing import List
-
 from web3.logs import DISCARD
 
 from broker import cfg
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker._utils.web3_tools import get_tx_status
-from broker.config import env, logging  # noqa: F401
+from broker.config import env
 from broker.errors import QuietExit
 
 
 def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
     """Refund job payment."""
-    provider = self.w3.toChecksumAddress(provider)
     _from = self.w3.toChecksumAddress(_from)
-
+    provider = self.w3.toChecksumAddress(provider)
     if not self.does_provider_exist(provider):
         raise Exception(f"Requested provider's Ethereum address {provider} does not exist")
 
@@ -25,7 +23,7 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
         raise Exception(f"Requested requester's Ethereum address {_from} does not exist")
 
     try:
-        tx = self._refund(provider, job_key, index, job_id, cores, elapsed_time)
+        tx = self._refund(_from, provider, job_key, index, job_id, cores, elapsed_time)
         return self.tx_id(tx)
     except Exception as e:
         print_tb(e)

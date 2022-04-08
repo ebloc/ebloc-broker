@@ -27,7 +27,7 @@ def get_requester_info(self, requester):
         requester_info = {
             "address": requester.lower(),
             "block_read_from": block_read_from,
-            "email": event_filter.get_all_entries()[0].args["email"],
+            "gmail": event_filter.get_all_entries()[0].args["gmail"],
             "gpg_fingerprint": gpg_fingerprint,
             "ipfs_id": event_filter.get_all_entries()[0].args["ipfsID"],
             "f_id": event_filter.get_all_entries()[0].args["fID"],

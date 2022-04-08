@@ -1,5 +1,6 @@
 #!/bin/bash
 
+SEP="~"
 _HOME="/home/user"  # may differ for each providerget from the file name
 EMAIL=""
 VENV_PATH=${_HOME}"/venv"
@@ -8,7 +9,6 @@ LOG_FILE=${_HOME}"/.ebloc-broker/slurm_script.log"
 a=$(echo $0)
 b=$(echo $1)
 c=$(echo $2)
-sep="~"
 event=$(echo $c | awk '{print $8}')
 msg="==> [$(date)] $a $b $c \n$event"
 echo $msg | mail -s "Message Subject" $EMAIL
@@ -17,8 +17,8 @@ echo $msg >> $LOG_FILE
 slurm_job_id=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
 if [[ $c == *" Began, "* ]]; then
     name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Began)')
-    arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
-    arg1=$(echo $name | cut -d "$sep" -f 2)  # index
+    arg0=$(echo $name | cut -d "$SEP" -f 1)  # job_key
+    arg1=$(echo $name | cut -d "$SEP" -f 2)  # index
     msg="JOB_STARTED fn=$name\n"
     msg="${msg}./start_code.py $arg0 $arg1 $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
@@ -32,18 +32,18 @@ fi
 if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     if [[ $event == *"COMPLETED"* ]]; then
-        status="COMPLETED"
+        state="COMPLETED"
         name=$(echo "$c" | grep -o -P '(?<=Name=).*(?=.sh Ended)')
     fi
 
     if [[ $event == *"FAILED"* ]]; then
-        status="FAILED"
+        state="FAILED"
         name=$(echo "$c" | grep -o -P '(?<=Name=).*(?=.sh Failed)')
     fi
-    arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
-    arg1=$(echo $name | cut -d "$sep" -f 2)  # index
-    arg2=$(echo $name | cut -d "$sep" -f 3)  # received_block_number
-    msg="$status fn=$name\n"
+    arg0=$(echo $name | cut -d "$SEP" -f 1)  # job_key
+    arg1=$(echo $name | cut -d "$SEP" -f 2)  # index
+    arg2=$(echo $name | cut -d "$SEP" -f 3)  # received_block_number
+    msg="$state fn=$name\n"
     msg="${msg}./end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
@@ -55,9 +55,9 @@ fi
 
 if [[ $event == *"TIMEOUT"* ]]; then
     name=$(echo "$c"   | grep -o -P '(?<=Name=).*(?=.sh Failed)')
-    arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
-    arg1=$(echo $name | cut -d "$sep" -f 2)  # index
-    arg2=$(echo $name | cut -d "$sep" -f 3)  # received_block_number
+    arg0=$(echo $name | cut -d "$SEP" -f 1)  # job_key
+    arg1=$(echo $name | cut -d "$SEP" -f 2)  # index
+    arg2=$(echo $name | cut -d "$SEP" -f 3)  # received_block_number
     msg="TIMEOUT fn=$name\n"
     msg="${msg}./end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL
@@ -70,9 +70,9 @@ fi
 
 if [[ $event == *"CANCELLED"* ]]; then
     name=$(echo "$c"  | grep -o -P '(?<=Name=).*(?=.sh Ended)')
-    arg0=$(echo $name | cut -d "$sep" -f 1)  # job_key
-    arg1=$(echo $name | cut -d "$sep" -f 2)  # index
-    arg2=$(echo $name | cut -d "$sep" -f 3)  # received_block_number
+    arg0=$(echo $name | cut -d "$SEP" -f 1)  # job_key
+    arg1=$(echo $name | cut -d "$SEP" -f 2)  # index
+    arg2=$(echo $name | cut -d "$SEP" -f 3)  # received_block_number
     msg="CANCELLED fn=$name\n"
     msg="${msg}./end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
     echo $msg | mail -s "Message Subject" $EMAIL

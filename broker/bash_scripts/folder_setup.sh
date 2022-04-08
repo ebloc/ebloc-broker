@@ -17,12 +17,12 @@ yes_or_no () {
     done
 }
 
-set_email () {
-    echo "Type your email-address, followed by [ENTER]:"
-    read EMAIL
-    line_old="EMAIL="
-    line_new=$EMAIL
-    sed -i.bak "s/^\(EMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
+set_gmail () {
+    echo "Type your gmail-address, followed by [ENTER]:"
+    read GMAIL
+    line_old="GMAIL="
+    line_new=$GMAIL
+    sed -i.bak "s/^\(GMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
     rm -f $DIR/slurm_mail_prog.sh.bak
 
 }
@@ -31,12 +31,12 @@ provider_setup () {
     ## configure_slurm
     _FILE=$DIR/slurm_mail_prog.sh
     FILE=$BASE_DIR/bash_scripts/slurm_mail_prog.sh
-    EMAIL=$(cat ~/.ebloc-broker/cfg.yaml | shyaml get-value cfg.gmail)
+    GMAIL=$(cat ~/.ebloc-broker/cfg.yaml | shyaml get-value cfg.gmail)
     # [ ! -f $_FILE ] && cp $FILE $DIR/
     cp $FILE $DIR/
-    line_old="EMAIL="
-    line_new=$EMAIL
-    sed -i.bak "s/^\(EMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
+    line_old="GMAIL="
+    line_new=$GMAIL
+    sed -i.bak "s/^\(GMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
     rm -f $DIR/slurm_mail_prog.sh.bak
     line_old="_HOME"
     line_new=$(echo $HOME | sed 's/\//\\\//g')
@@ -46,7 +46,7 @@ provider_setup () {
     # var=$(echo $venv_path | sed 's/\//\\\//g')
     # sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $DIR/slurm_mail_prog.sh
     # rm $DIR/slurm_mail_prog.sh.bak
-    yes_or_no "Do you want to change your email" $EMAIL && set_email
+    yes_or_no "Do you want to change your gmail" $GMAIL && set_gmail
 }
 
 configure_coinbase () { # coinbase address setup

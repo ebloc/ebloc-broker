@@ -17,7 +17,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        tx_hash = Ebb.set_job_status_running(key, index, job_id, start_time)
+        tx_hash = Ebb.set_job_state_running(key, index, job_id, start_time)
         print(f"tx_hash={tx_hash}")
     except Exception as e:
         print_tb(e)

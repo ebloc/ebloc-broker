@@ -6,13 +6,12 @@ import os
 import sys
 import textwrap
 import time
+import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-from typing import List
-
-import zc.lockfile
 from ipdb import launch_ipdb_on_exception
+from typing import List
 
 from broker import cfg, config
 from broker._utils import _log
@@ -22,6 +21,7 @@ from broker.config import env, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
+from broker.eblocbroker_scripts.register_provider import get_ipfs_id
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
@@ -73,6 +73,7 @@ def _tools(block_continue):  # noqa
         if not is_internet_on():
             raise Terminate("Network connection is down. Please try again")
 
+        provider_info_contract = Ebb.get_provider_info(env.PROVIDER_ID)
         pre_check()
         if not check_ubuntu_packages():
             raise Terminate()
@@ -103,20 +104,20 @@ def _tools(block_continue):  # noqa
                 raise Terminate(f"E: Path for gdrive='{env.GDRIVE}' please set a valid path in the .env file")
 
             try:
-                email = Contract.Ebb.get_provider_info(env.PROVIDER_ID)["email"]
-                output, gdrive_email = gdrive.check_user(email)
+                gmail = provider_info_contract["gmail"]
+                output, gdrive_gmail = gdrive.check_user(gmail)
             except Exception as e:
                 print_tb(e)
                 raise QuietExit from e
 
             if not output:
                 log(
-                    f"E: provider's registered email=[magenta]{email}[/magenta] does not match\n"
-                    f"   with the set gdrive's email=[magenta]{gdrive_email}[/magenta]"
+                    f"E: provider's registered gmail=[magenta]{gmail}[/magenta] does not match\n"
+                    f"   with the set gdrive's gmail=[magenta]{gdrive_gmail}[/magenta]"
                 )
                 raise QuietExit
 
-            log(f"==> provider_email=[magenta]{email}")
+            log(f"==> provider_gmail=[magenta]{gmail}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
@@ -128,6 +129,27 @@ def _tools(block_continue):  # noqa
                 raise QuietExit
 
             start_ipfs_daemon()
+
+        try:
+            flag_error = False
+            if provider_info_contract["f_id"] != env.OC_USER:
+                flag_error = True
+
+            if env.IS_IPFS_USE:
+                ipfs_id = get_ipfs_id()
+                gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
+                if (
+                    provider_info_contract["ipfs_id"] != ipfs_id
+                    and provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper()
+                ):
+                    flag_error = True
+
+            if flag_error:
+                raise QuietExit("warning: Given information is not same with the provider's saved info.")
+
+        except Exception as e:
+            raise QuietExit("warning: Given information is not same with the provider's saved info.") from e
+
     except QuietExit as e:
         raise e
     # except Exception as e:

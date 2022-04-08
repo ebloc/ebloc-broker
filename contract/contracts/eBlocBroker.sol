@@ -55,7 +55,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /**
      * @dev Withdraws the balance
      */
-    function withdraw() public {
+    function withdraw() public returns (bool) {
         // Using the withdrawal pattern
         uint256 amount = balances[msg.sender];
         // Set zero the balance before sending to prevent reentrancy attacks
@@ -63,6 +63,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         // Forwards all available gas
         (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed"); // Return value is checked
+        return true;
     }
 
     /**
@@ -301,7 +302,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      *
      * @param gpgFingerprint is a bytes8 containing a gpg key ID that is used by GNU
        Privacy Guard to encrypt or decrypt files.
-     * @param email is a string containing an email
+     * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
        sharing requester's repository with the provider through EUDAT.
      * @param availableCore is a uint32 value containing the number of available
@@ -319,7 +320,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      */
     function registerProvider(
         bytes32 gpgFingerprint,
-        string memory email,
+        string memory gmail,
         string memory fcID,
         string memory ipfsID,
         uint32 availableCore,
@@ -342,45 +343,44 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         pricesSetBlockNum[msg.sender].push(uint32(block.number));
         provider.constructProvider();
         registeredProviders.push(msg.sender);
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, fcID, ipfsID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
         return true;
     }
 
     function updateProviderInfo(
         bytes32 gpgFingerprint,
-        string memory email,
+        string memory gmail,
         string memory fcID,
         string memory ipfsID
     ) public whenProviderRegistered returns (bool) {
-        emit LogProviderInfo(msg.sender, gpgFingerprint, email, fcID, ipfsID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
         return true;
     }
 
-    function dataReceived(
+    function setDataVerified(bytes32[] memory sourceCodeHash) public whenProviderRunning returns (bool){
+        Lib.Provider storage provider = providers[msg.sender];
+        for (uint256 i = 0; i < sourceCodeHash.length; i++) {
+            bytes32 codeHash = sourceCodeHash[i];
+            if (_updateDataReceivedBlock(provider, codeHash))
+                provider.jobSt[codeHash].isVerifiedUsed = true;
+        }
+        return true;
+    }
+
+    function setDataPublic(
         string memory key,
         uint32 index,
         bytes32[] memory sourceCodeHash,
-        uint8[] memory cacheType,
-        bool[] memory isVerified
+        uint8[] memory cacheType
     ) public whenProviderRunning {
         Lib.Provider storage provider = providers[msg.sender];
-        require(
-            isVerified.length == sourceCodeHash.length &&
-                provider.jobStatus[key][index].sourceCodeHash == keccak256(abi.encodePacked(sourceCodeHash, cacheType))
-            // List of provide sourceCodeHashes should be same as with the ones that
-            // are provided along with the job
-        );
+        // List of provide sourceCodeHash should be same as with the ones that
+        // are provided along with the job
+        require(provider.jobStatus[key][index].sourceCodeHash == keccak256(abi.encodePacked(sourceCodeHash, cacheType)));
         for (uint256 i = 0; i < sourceCodeHash.length; i++) {
-            bytes32 codeHash = sourceCodeHash[i];
-            // only the provider can update receied job only to itself
-            Lib.JobStorage storage jobSt = provider.jobSt[codeHash];
-            if (!jobSt.isVerifiedUsed && _updateDataReceivedBlock(provider, codeHash) && isVerified[i]) {
-                // False: if already verified and used
-                jobSt.isVerifiedUsed = true;
-                if (cacheType[i] == uint8(Lib.CacheType.PUBLIC)) {
-                    jobSt.isPrivate = false;
-                }
-            }
+            Lib.JobStorage storage jobSt = provider.jobSt[sourceCodeHash[i]];
+            if (jobSt.isVerifiedUsed && cacheType[i] == uint8(Lib.CacheType.PUBLIC))
+                jobSt.isPrivate = false;
         }
     }
 
@@ -450,7 +450,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      *
      * @param gpgFingerprint | is a bytes8 containing a gpg key ID that is used by the
        GNU Privacy Guard to encrypt or decrypt files.
-     * @param email is a string containing an email
+     * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
        sharing requester's repository with the provider through EUDAT.
      * @param ipfsID | is a string containing an IPFS peer ID for creating peer
@@ -459,12 +459,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      */
     function registerRequester(
         bytes32 gpgFingerprint,
-        string memory email,
+        string memory gmail,
         string memory fcID,
         string memory ipfsID
     ) public returns (bool) {
         requesterCommittedBlock[msg.sender] = uint32(block.number);
-        emit LogRequester(msg.sender, gpgFingerprint, email, fcID, ipfsID);
+        emit LogRequester(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
         return true;
     }
 
@@ -681,7 +681,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /* @dev Sets the job's state (stateCode) which is obtained from Slurm */
-    function setJobStatus(Lib.Job storage job, Lib.JobStateCodes stateCode)
+    function setJobState(Lib.Job storage job, Lib.JobStateCodes stateCode)
         internal
         validJobStateCode(stateCode)
         returns (bool)
@@ -690,20 +690,19 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return true;
     }
 
-    function setJobStatusPending(
-        string memory key,
-        uint32 index,
-        uint32 jobID
-    ) public returns (bool) {
-        /* Used as a pointer to a storage */
-        Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
-        // job.stateCode should be {SUBMITTED (0)}
-        require(job.stateCode == Lib.JobStateCodes.SUBMITTED, "Not permitted");
-        job.stateCode = Lib.JobStateCodes.PENDING;
-        emit LogSetJob(msg.sender, key, index, jobID, uint8(Lib.JobStateCodes.PENDING));
-    }
+    /* function setJobStatePending( */
+    /*     string memory key, */
+    /*     uint32 index, */
+    /*     uint32 jobID */
+    /* ) public returns (bool) {         */
+    /*     Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID]; */
+    /*     // job.stateCode should be {SUBMITTED (0)} */
+    /*     require(job.stateCode == Lib.JobStateCodes.SUBMITTED, "Not permitted"); */
+    /*     job.stateCode = Lib.JobStateCodes.PENDING; */
+    /*     emit LogSetJob(msg.sender, key, index, jobID, uint8(Lib.JobStateCodes.PENDING)); */
+    /* } */
 
-    function setJobStatusRunning(
+    function setJobStateRunning(
         string memory key,
         uint32 index,
         uint32 jobID,

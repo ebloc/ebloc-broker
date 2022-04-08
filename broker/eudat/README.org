@@ -1,5 +1,8 @@
 * Eudat
 
+** B2DROP-support: https://eudat.eu/support-request?service=B2DROP
+__ [[https://eudat.eu/services/userdoc/b2drop]]
+
 ** Linux mount
 
 ~se /etc/davfs2/davfs2.conf~  => add ~use_locks       0~ line
@@ -23,3 +26,18 @@ git checkout .  # => undo changes
 #+end_src
 
 [[https://b2access.eudat.eu/saml-idp/saml2idp-web-entry?signInId=4cadb9de-1d0e-4548-ab9b-2a3654066aac][Sign up into B2ACESS EUDAT]]
+
+#+begin_src python
+# token_ format:
+{
+│   'id': '6793',
+│   'remote': 'https://b2drop.eudat.eu/',
+│   'remote_id': '78934',
+│   'share_token': 'f2RFar4gaXwg6bC',
+│   'name': '/7bf550cb36f800b0583d5f371a5c6a07_24e75be7090f9009',
+│   'owner': 'dbae8f40-20da-4f6f-b466-d434793320be',
+│   'user': '5dd71484-1ae2-4188-98e7-536123582716',
+│   'mountpoint': '{{TemporaryMountPointName#/7bf550cb36f800b0583d5f371a5c6a07_24e75be7090f9009}}',
+│   'accepted': '0'
+}
+#+end_src

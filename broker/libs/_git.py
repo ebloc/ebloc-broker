@@ -12,7 +12,7 @@ from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
 from broker._utils._log import ok
-from broker.config import env, logging
+from broker.config import env
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
 
 
@@ -227,7 +227,7 @@ def is_repo(folders):
 
 
 def _generate_git_repo(folder):
-    log(folder, "green")
+    # log(folder, "green")
     try:
         initialize_check(folder)
         commit_changes(folder)

@@ -27,10 +27,9 @@ sudo apt-get install -y net-tools
 sudo apt-get install -y openssh-server
 
 cd ~/ebloc-broker
-git checkout test
+git checkout dev
 git pull --rebase -v
-sudo apt-get update
-grep -vE '^#' package.list | xargs -n1 sudo apt install -yf
+~/ebloc-broker/scripts/package_update.sh
 
 # nodejs
 # ======
@@ -38,6 +37,7 @@ curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
 sudo apt -y install nodejs
 sudo npm install -g npm
 sudo npm install -g n
+npm config set fund false
 sudo n latest
 node -v
 
@@ -55,6 +55,15 @@ go version
 # alternative use snap to install ipfs:
 # sudo snap install ipfs
 # ipfs init && sudo mount --bind ~/.ipfs ~/snap/ipfs/common
+open_port_4001 () {
+    sudo systemctl enable ufw && sudo ufw enable
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
+    sudo ufw allow 4001/tcp
+    sudo ufw status verbose
+    sudo nmap localhost
+}
+
 install_ipfs () {
     ipfs_current_version=""
     which ipfs &>/dev/null
@@ -64,11 +73,13 @@ install_ipfs () {
         echo ipfs_current_version=v$ipfs_current_version
     fi
     cd /tmp
-    version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
+    version="0.11.0"
+    # version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
     echo "version_to_download=v"$version
     if [[ "$ipfs_current_version" == "$version" ]]; then
         echo "$GREEN##$NC Latest version is already downloaded"
     else
+        kill -9 $(ps auxww | grep -E "[i]pfs"  | awk '{print $2}') > /dev/null 2>&1;
         arch=$(dpkg --print-architecture)
         wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
         tar -xvf "go-ipfs_v"$version"_linux-"$arch".tar.gz"
@@ -83,23 +94,17 @@ install_ipfs () {
     fi
     # https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
     # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
+    # set net.core.rmem_max: https://github.com/lucas-clemente/quic-go/wiki/UDP-Receive-Buffer-Size
     ipfs init --profile=server,badgerds
     ipfs config Reprovider.Strategy roots
     ipfs config Routing.Type none
-    # https://github.com/lucas-clemente/quic-go/wiki/UDP-Receive-Buffer-Size
     sudo sysctl -w net.core.rmem_max=2500000
+    open_port_4001
 }
 install_ipfs
 
 # echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 # sudo sysctl -p
-
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
-sudo ufw allow 5000/tcp
-sudo firewall-cmd --add-port=4001/tcp --permanent
-sudo firewall-cmd --reload
-sudo firewall-cmd --list-all
 
 # go-geth
 # =======
@@ -173,8 +178,8 @@ else
     cd ~/.solcx
     rm -f solc-v0.8.*
     wget https://solc-bin.ethereum.org/linux-amd64/solc-linux-amd64-v0.7.6+commit.7338295f
-    chmod +x solc-linux-amd64-v0.7.6+commit.7338295f
     mv solc-linux-amd64-v0.7.6+commit.7338295f solc-v0.7.6
+    chmod +x solc-v0.7.6
 fi
 
 ~/ebloc-broker/broker/bash_scripts/folder_setup.sh

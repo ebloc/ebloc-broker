@@ -25,6 +25,7 @@ BLOCK_DURATION_1_DAY = BLOCK_DURATION_1_HOUR * 24
 IS_FULL_TEST = False
 IPFS_TIMEOUT = 300
 IS_THREAD_JOIN = False
+GPG_VERBOSE = False
 
 
 class EBB:
@@ -68,7 +69,7 @@ class W3:
         if not self.w3:
             from brownie import web3
 
-            global w3  # noqa
+            global w3  # type: ignore
             self.w3: "web3" = web3
             w3 = self.w3
 

@@ -1,32 +1,31 @@
 contract_owner: "0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"
 
 requester:
-  address: "0x72c1a89ff3606aa29686ba8d29e28dccff06430a"
-  gmail: kalialimoglu@gmail.com
-  eudat_email: kalialimoglu@gmail.com
-  oc_username: "4ce6ad43-8257-466f-96eb-be7eee714968"
-  b2drop_user_name: alper alper
-  hostname: home
+  address: ""
+  gmail:
+  eudat_email:
+  oc_username:
+  b2drop_user_name:
+  hostname: ipkis
 
 providers:
   provider_1:
-    address: "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA"
-    gmail: alper.alimoglu.research@gmail.com
-    oc_username: "dbae8f40-20da-4f6f-b466-d434793320be"
-    ip:
-    hostname: instance-3
-    name: instance-6
-    eudat: alper.alimoglu.research2@gmail.com
-  provider_2:
-    address: "0x765508fc8f78a465f518ae79897d0e4b249e82dc"
-    gmail: alper.alimoglu.test.1@gmail.com
-    b2drop_user_name: alper.alimoglu.test.1
-  provider_3:
-    address: "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a"
+    address: "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
     gmail: alper.alimoglu.test.2@gmail.com
-    b2drop_user_name: alper.alimoglu.test.2
+    oc_username: "5dd71484-1ae2-4188-98e7-536123582716"
+    hostname: kama
+    eudat: alper.alimoglu.research2@gmail.com
+    google_tab: "KAMA"
+  provider_2:
+    address: ""
+    gmail:
+    b2drop_user_name:
+  provider_3:
+    address: ""
+    gmail:
+    b2drop_user_name:
   provider_4:
-    address: "0xeab50158e8e51de21616307a99c9604c1c453a02"
-    gmail: alper.alimoglu.test.3@gmail.com
-    b2drop_user_name: alper.alimoglu.test.3
-    hostname: instance-9
+    address: ""
+    gmail:
+    b2drop_user_name:
+    hostname:

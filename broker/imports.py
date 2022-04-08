@@ -31,7 +31,7 @@ def connect():
     return config.ebb, cfg.w3, config._eblocbroker
 
 
-def _connect_into_web3():
+def _connect_into_web3() -> None:
     """Connect into web3 of the testnet.
 
     * bloxberg:

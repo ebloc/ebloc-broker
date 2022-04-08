@@ -53,16 +53,21 @@ class ENV(ENV_BASE):
 
             accounts.load("alpy.json", "alper")
 
-        self.SLURMUSER = self.cfg["provider"]["slurmuser"]
+        if "provider" in self.cfg:
+            self.IS_PROVIDER = True
+            self.SLURMUSER = self.cfg["provider"]["slurmuser"]
+            self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
+            self.IS_EUDAT_USE = self.cfg["provider"]["is_eudat_use"]
+            self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
+            if isinstance(self.cfg["provider"]["is_thread"], bool):
+                cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]
+        else:
+            self.IS_PROVIDER = False
+
         self.GDRIVE = self.cfg["gdrive"]
         self.DATADIR = Path(self.cfg["datadir"])
         self.LOG_PATH = Path(self.cfg["log_path"])
         self.config = Yaml(self.LOG_PATH.joinpath("config.yaml"))
-        self.IS_GETH_TUNNEL = self.cfg["provider"]["is_geth_tunnel"]
-        self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
-        self.IS_EUDAT_USE = self.cfg["provider"]["is_eudat_use"]
-        self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
-        self.RPC_PORT = self.cfg["rpc_port"]
         self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
@@ -77,11 +82,11 @@ class ENV(ENV_BASE):
         self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
         self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
         self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"].lower())
-        self.OC_USER = self.cfg["oc_username"]
-        if "@b2drop.eudat.eu" not in self.OC_USER:
-            self.F_ID = f"{self.OC_USER}@b2drop.eudat.eu"
+        self.OC_USER = self.cfg["oc_username"].replace("@b2drop.eudat.eu", "")
+        if "rpc_port" in self.cfg:
+            self.RPC_PORT = self.cfg["rpc_port"]
         else:
-            self.F_ID = self.OC_USER
+            self.RPC_PORT = 8545
 
         _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
         mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID.lower())
@@ -89,11 +94,6 @@ class ENV(ENV_BASE):
         mkdir("/tmp/run")
         self.DRIVER_LOCKFILE = "/tmp/run/driver_popen.pid"
         self.DRIVER_DAEMON_LOCK = "/tmp/run/driverdaemon.pid"
-        if isinstance(self.cfg["provider"]["is_thread"], bool):
-            cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]
-        else:
-            raise Exception("is_thead should be bool variable")
-
         self.GMAIL = self.cfg["gmail"]
 
 
@@ -135,13 +135,13 @@ def setup_logger(log_path="", is_brownie=False):
     return logging.getLogger()
 
 
+Ebb = cfg.Ebb
+ipfs = cfg.ipfs
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
-Ebb = None  # eBlocBlock Contract Class
 ebb = None  # eBlocBroker Contract on the blockchain
 contract = None
 chain = None
-ipfs = None
 w3_ebb = None
 colored_traceback.add_hook(always=True)
 logger = setup_logger()  # Default initialization

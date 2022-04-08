@@ -4,17 +4,15 @@ import sys
 
 from broker import cfg
 from broker._utils.tools import log
-from broker.utils import print_tb
 
 if __name__ == "__main__":
     Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         tx = str(sys.argv[1])
     else:
-        tx = "0xfa65c8516e81f972d1bdf801e0524aad1b2a9c54bb8e746613fb7316034f3e3e"
+        tx = "0xa980242a427de1906067b3b277f101066bf470215a9821399ea0e0eed56282d1"
 
     try:
         log(Ebb.get_transaction_receipt(tx))
-    except:
-        print_tb()
-        sys.exit(1)
+    except Exception as e:
+        log(f"E: {e}")

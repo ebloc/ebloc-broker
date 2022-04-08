@@ -1,8 +1,8 @@
 networks:
     bloxberg:
         project_dir: ~/ebloc-broker/contract
-        address: '0x0286D47B4e8906D01FD18c39bf29D849AcB3c175'
-        tx_hash: '0x482e53a2b1412719ad4bf3a8414ae54817b86324b3ea1f60389b2cb33296e891'
+        address: '0x95B832DA945bf6145665C79de0039dc02eB6cd46'
+        tx_hash: '0x0f3db0a47aec10498da9ccf2db1cbdfdf9a1a753b365d18421ab65837356d11c'
     eblocpoa:
         project_dir: ~/ebloc-broker/contract
         address: '0x1B5DD5B6FD259C19767a47CA0cADFecb25786FCC'

@@ -5,9 +5,8 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
-from random import randint
-
 from pymongo import MongoClient
+from random import randint
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -19,7 +18,7 @@ from broker._utils.yaml import Yaml
 from broker.libs import gdrive
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
-from broker.test_setup.user_set import users
+from broker.test_setup.user_set import providers, requesters
 from broker.utils import print_tb
 
 yaml_files = ["job_nas.yaml"]
@@ -32,21 +31,16 @@ _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 benchmarks = ["nas", "cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
+storage_ids = ["ipfs", "ipfs"]
 ipfs_ids = ["ipfs_gpg", "ipfs"]
-# for provider_address in provider_addresses:
+# for provider_address in providers:
 #     pre_submit(storage_ids, provider_address)
 
 test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
-provider_addresses = ["29e613b04125c16db3f3613563bfdd0ba24cb629"]
-# provider_addresses = [
-#     "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
-#     "0x765508fc8f78a465f518ae79897d0e4b249e82dc",
-#     "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a",
-#     "0xeab50158e8e51de21616307a99c9604c1c453a02",
-# ]
+providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
 
 
 def create_cppr_job_script():
@@ -193,7 +187,7 @@ def run_job(counter) -> None:
 
     :param counter: counter index to keep track of submitted job number
     """
-    for idx, provider_address in enumerate(provider_addresses):
+    for idx, provider_address in enumerate(providers):
         # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
         storage_id = (idx + counter) % len(storage_ids)
         selected_benchmark = random.choice(benchmarks)
@@ -206,7 +200,7 @@ def run_job(counter) -> None:
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting job with cppr datasets to [green]{provider_address}", "bold blue")
+            log(f" * Submitting job with cppr datasets to provider=[green]{provider_address}", "bold blue")
             yaml_cfg = Yaml(cppr_yam_fn)
             hash_small_data, hash_medium_data = create_cppr_job_script()
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
@@ -223,7 +217,7 @@ def run_job(counter) -> None:
             submit_base = SubmitBase(yaml_cfg.path)
             submission_date = _date()
             submission_timestamp = _timestamp()
-            requester_address = random.choice(users).lower()
+            requester_address = random.choice(requesters).lower()
             yaml_cfg["config"]["requester_address"] = requester_address
             log(f"requester={requester_address}", "bold")
             tx_hash = submit_base.submit(is_pass=True)
@@ -244,12 +238,15 @@ def run_job(counter) -> None:
                 log(job_result)
 
             countdown(seconds=5, is_silent=True)
+            # breakpoint()  # DEBUG
         except Exception as e:
             print_tb(e)
 
 
 def main():
-    check_gdrive_user()
+    if "gdrive" in storage_ids:
+        check_gdrive_user()
+
     console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
     log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     if not is_process_on("mongod", "mongod"):
@@ -266,4 +263,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)

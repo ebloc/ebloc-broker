@@ -5,8 +5,10 @@ import errno
 import json
 import linecache
 import os
+import requests
 import shutil
 import signal
+import subprocess
 import sys
 import threading
 import time
@@ -14,10 +16,8 @@ import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
-from subprocess import PIPE, CalledProcessError, Popen, check_output
-
-import requests
 from pytz import timezone, utc
+from subprocess import PIPE, CalledProcessError, Popen, check_output
 
 from broker._utils._log import br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
@@ -35,8 +35,8 @@ def WHERE(back=0):
     except:
         frame = sys._getframe(1)
 
-    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green]  [bold blue]{text}  [bold green]][/bold green]"
+    text = f"[blue]{os.path.basename(frame.f_code.co_filename)}[/blue]:{frame.f_lineno}"
+    return f"[bold][green][[/green]  {text}  [green]][/green][/bold]"
 
 
 def merge_two_dicts(x, y):
@@ -300,7 +300,7 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         log(_cmd, "bold yellow", is_code=True)
 
 
-def run(cmd, env=None, is_quiet=False) -> str:
+def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
     if not isinstance(cmd, str):
         cmd = list(map(str, cmd))  # all items should be string
     else:
@@ -308,7 +308,10 @@ def run(cmd, env=None, is_quiet=False) -> str:
 
     try:
         if env is None:
-            return check_output(cmd).decode("utf-8").strip()
+            if not suppress_stderr:
+                return check_output(cmd).decode("utf-8").strip()
+            else:
+                return check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
         else:
             return check_output(cmd, env=env).decode("utf-8").strip()
     except CalledProcessError as e:
@@ -523,3 +526,16 @@ def compare_files(fn1, fn2) -> bool:
 def touch(fn) -> None:
     """Create empthy file."""
     open(fn, "a").close()
+
+
+def pid_exists(pid):
+    if pid < 0:
+        return False  # NOTE: pid == 0 returns True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:  # errno.ESRCH
+        return False  # No such process
+    except PermissionError:  # errno.EPERM
+        return True  # Operation not permitted (i.e., process exists)
+    else:
+        return True  # no error, we can send a signal to the process

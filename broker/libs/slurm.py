@@ -4,7 +4,7 @@ import time
 
 from broker._utils._log import ok
 from broker._utils.tools import is_process_on
-from broker.config import env, logging
+from broker.config import env
 from broker.errors import BashCommandsException, QuietExit
 from broker.lib import run
 from broker.utils import log, popen_communicate, print_tb
@@ -15,7 +15,7 @@ def add_user_to_slurm(user):
     cmd = ["sacctmgr", "add", "user", user, f"account={user}", "--immediate"]
     # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
-    if p.returncode != 0 and "Nothing new added" not in output:
+    if p.returncode > 0 and "Nothing new added" not in output:
         print_tb()
         raise Exception(f"sacctmgr remove error: {output}")
 
@@ -112,7 +112,7 @@ def get_elapsed_time(slurm_job_id) -> int:
     except Exception as e:
         raise QuietExit from e
 
-    log(f"elapsed_time={elapsed_time}")
+    log(f"elapsed_time={elapsed_time}", "bold")
     elapsed_time = elapsed_time.split(":")
     elapsed_day = "0"
     elapsed_hour = elapsed_time[0].strip()
@@ -123,7 +123,7 @@ def get_elapsed_time(slurm_job_id) -> int:
         elapsed_hour = elapsed_hour[1]
 
     elapsed_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
-    log(f"elapsed_time={elapsed_time}")
+    log(f"elapsed_time={elapsed_time}", "bold")
     return elapsed_time
 
 

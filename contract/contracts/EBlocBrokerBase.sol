@@ -78,7 +78,7 @@ contract EBlocBrokerBase {
      * @dev Modifier to make a function callable only when stateCode is valid
      */
     modifier validJobStateCode(Lib.JobStateCodes stateCode) {
-        /*stateCode cannot be NULL, COMPLETED, REFUNDED on setJobStatus call */
+        /*stateCode cannot be NULL, COMPLETED, REFUNDED on setJobState call */
         require(uint8(stateCode) > 1 && uint8(stateCode) < 7);
         _;
     }
