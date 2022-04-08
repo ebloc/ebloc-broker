@@ -2,6 +2,7 @@
 
 import sys
 from typing import List
+
 from web3.logs import DISCARD
 
 from broker import cfg

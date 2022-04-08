@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import ipfshttpclient
 import os
 import sys
+
+import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import log

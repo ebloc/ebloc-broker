@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import owncloud
 from os.path import expanduser
+
+import owncloud
 
 from broker._utils.tools import log
 from broker.config import env

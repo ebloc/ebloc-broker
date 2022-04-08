@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import daemon
 import os
 import sys
 from pathlib import Path
+
+import daemon
 
 from broker import cfg, config
 from broker._utils._log import ok

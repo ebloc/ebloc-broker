@@ -50,7 +50,7 @@ connect()
 
 
 class Common:
-    """Prevent `Class` to have attribute `method` mypy warnings."""
+    """Prevent 'Class' to have attribute 'method' mypy warnings."""
 
     def __init__(self) -> None:
         self.results_folder: Path = Path("")
@@ -377,7 +377,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.clean_before_upload()
         try:
             storage_class = self.get_cloud_storage_class(0)
+            breakpoint()  # DEBUG
             self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
+            breakpoint()  # DEBUG
         except Exception as e:
             raise e
 
