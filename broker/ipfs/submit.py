@@ -184,7 +184,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_simple.yaml")
+    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml")
     submit_ipfs(job)
 
 

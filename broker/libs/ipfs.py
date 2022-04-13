@@ -127,7 +127,7 @@ class Ipfs:
             gpg_file_link,
         ]
         try:
-            run(cmd)
+            run(cmd, suppress_stderr=True)
             log(f"#> GPG decrypt {ok()}")
             _remove(gpg_file)
             os.unlink(gpg_file_link)

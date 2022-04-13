@@ -5,9 +5,8 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
-from random import randint
-
 from pymongo import MongoClient
+from random import randint
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -32,7 +31,6 @@ _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 benchmarks = ["nas", "cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
-storage_ids = ["ipfs", "ipfs"]
 ipfs_ids = ["ipfs_gpg", "ipfs"]
 # for provider_address in providers:
 #     pre_submit(storage_ids, provider_address)
@@ -41,7 +39,7 @@ test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
-providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
+# providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
 
 
 def create_cppr_job_script():
@@ -82,6 +80,7 @@ def create_cppr_job_script():
     hash_small_data = random.choice(registered_data_hashes_small)
     hash_medium_data = random.choice(registered_data_hashes_medium)
     fn = Path.home() / "test_eblocbroker" / "run_cppr" / "run.sh"
+    open(fn, "w").close()
     f = open(fn, "w+")
     f.write("#!/bin/bash\n")
     f.write("#SBATCH -o slurm.out  # STDOUT\n")
@@ -129,6 +128,7 @@ def create_nas_job_script(is_small=False):
     output_fn = "output.log"
     hash_str = random.getrandbits(128)
     fn = Path.home() / "test_eblocbroker" / "NPB3.3-SER_source_code" / "run.sh"
+    open(fn, "w").close()
     f = open(fn, "w+")
     f.write("#!/bin/bash\n")
     f.write("#SBATCH -o slurm.out  # STDOUT\n")
@@ -177,7 +177,7 @@ def pre_submit(storage_ids, provider_address):
 
 def check_gdrive_user():
     try:
-        gdrive.check_user("alper.alimoglu.research2@gmail.com")
+        gdrive.check_gdrive_about("alper.alimoglu.research2@gmail.com")
     except Exception as e:
         print_tb(e)
         sys.exit(1)

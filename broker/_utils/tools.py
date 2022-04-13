@@ -5,6 +5,7 @@ import errno
 import json
 import linecache
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -540,3 +541,12 @@ def pid_exists(pid):
         return True  # Operation not permitted (i.e., process exists)
     else:
         return True  # no error, we can send a signal to the process
+
+
+def remove_ansi_escape_sequence(string):
+    """Remove the ANSI escape sequences from a string.
+
+    __ https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+    """
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    return ansi_escape.sub("", string)

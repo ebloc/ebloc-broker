@@ -38,6 +38,8 @@ mkdir -p $base/cache
 find $HOME/.ebloc-broker/*/* -mindepth 1 ! \
      -regex '^./private\(/.*\)?' -delete 2> /dev/null
 
+killall.sh
+
 rm -rf $HOME/.ebloc-broker/transactions/*
 rm -f $HOME/.ebloc-broker/end_code_output/*
 rm -f $HOME/.ebloc-broker/drivers_output/*
@@ -52,8 +54,6 @@ rm -f $HOME/.ebloc-broker/ipfs.out
 rm -f $HOME/.ebloc-broker/ganache.out
 rm -f $HOME/.ebloc-broker/*.yaml~
 
-killall.sh
-
 rm -f $base/geth_server.out
 rm -f $base/.node-xmlhttprequest*
 rm -f $base/ipfs.out
@@ -66,8 +66,10 @@ rm /tmp/run/driver_popen.pid
 rm -f ~/.ebloc-broker/.oc_client.pckl
 
 # unpin and remove all IPFS content from my machine
-ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm
-ipfs repo gc
+# ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm
+# ipfs repo gc
+rm -rf ~/.ipfs/badgerds
+# ~/ebloc-broker/broker/python_scripts/clean_gdrive.py
 
 for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
     gpg --batch --delete-key "$i" 2>/dev/null

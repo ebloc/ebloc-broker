@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
+import git
 import gzip
 import io
 import os
 import time
 from contextlib import suppress
-from pathlib import Path
-
-import git
 from git.exc import InvalidGitRepositoryError
+from pathlib import Path
 
 from broker import cfg
 from broker._utils._log import ok
-from broker.config import env
+from broker._utils.tools import remove_ansi_escape_sequence
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
 
 
@@ -53,7 +52,26 @@ def is_initialized(path) -> bool:
         return output == "true"
 
 
-def diff_and_gzip(fn):
+def diff_and_gzip(fn, home_dir):
+    with gzip.open(fn, "wb") as output:
+        # We cannot directly write Python objects like strings!
+        # We must first convert them into a bytes format using io.BytesIO() and then write it
+        with io.TextIOWrapper(output, encoding="utf-8") as encode:
+            cmd = [
+                "env",
+                f"HOME={home_dir}",
+                "git",
+                "diff",
+                "--binary",
+                "HEAD",
+                "--minimal",
+                "--ignore-submodules=dirty",
+                "--color=never",
+            ]
+            encode.write(run(cmd))
+
+
+def diff_and_gzip_repo(fn):
     repo = git.Repo(".", search_parent_directories=True)
     with gzip.open(fn, "wb") as output:
         # We cannot directly write Python objects like strings!
@@ -70,7 +88,7 @@ def decompress_gzip(fn):
                 log(content)
 
 
-def diff_patch(path: Path, source_code_hash, index, target_path):
+def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
     """Apply diff patch.
 
     "git diff HEAD" for detecting all the changes:
@@ -80,28 +98,39 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     """
     is_file_empty = False
     with cd(path):
-        log(f"==> Navigate to {path}")
+        log(f"==> Navigated into {path}")
         """TODO
         if not is_initialized(path):
             upload everything, changed files!
         """
-        repo = git.Repo(".", search_parent_directories=True)
         try:
-            repo.git.config("core.fileMode", "false")  # git config core.fileMode false
-            # first ignore deleted files not to be added into git
-            run([env.BASH_SCRIPTS_PATH / "git_ignore_deleted.sh"])
-            head_commit_id = repo.rev_parse("HEAD")
+            #: https://stackoverflow.com/a/52227100/2402577
+            run(["env", f"HOME={home_dir}", "git", "config", "--global", "--add", "safe.directory", path])
+            run(["env", f"HOME={home_dir}", "git", "config", "core.fileMode", "false"])
+            # first ignore deleted files not to be added into git ignore deleted
+            # files to prevent them to added into git commit which will increase the file size
+            output = run(["env", f"HOME={home_dir}", "git", "status"])
+            for line in output.split("\n"):
+                if "deleted:" in line:
+                    fn = line.replace("deleted:", "").strip().replace(" ", "")
+                    fn = remove_ansi_escape_sequence(fn)
+                    with suppress(Exception):
+                        run(["env", f"HOME={home_dir}", "git", "update-index", "--assume-unchanged", fn])
+
+            # head_commit_id = repo.rev_parse("HEAD")
+            head_commit_id = run(["env", f"HOME={home_dir}", "git", "rev-parse", "HEAD"])
             sep = "~"  # separator in between the string infos
             patch_name = f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
-        except:
+        except Exception as e:
+            print_tb(e)
             return False
 
         patch_upload_fn = f"{patch_name}.gz"  # file to be uploaded as zip
         patch_file = f"{target_path}/{patch_upload_fn}"
         log(f"patch_path=[magenta]{patch_upload_fn}", "bold")
         try:
-            repo.git.add(A=True)
-            diff_and_gzip(patch_file)
+            run(["env", f"HOME={home_dir}", "git", "add", "-A"])
+            diff_and_gzip(patch_file, home_dir)
         except:
             return False
 
@@ -115,6 +144,33 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
         is_file_empty = True
 
     return patch_upload_fn, patch_file, is_file_empty
+
+
+def add_all_(_env):
+    """Add all into git using bare git."""
+    try:
+        log(
+            "all files in the entire working tree are updated in the Git repository",
+            end="",
+        )
+        run(["git", "add", "-A"], env=_env)
+        log(ok())
+        try:
+            cmd = ["git", "diff-index", "HEAD", "--ignore-blank-lines", "--ignore-space-at-eol", "--shortstat"]
+            output = run(cmd, env=_env)
+            changed_file_count = int(output.split("files changed", 1)[0])
+        except:
+            cmd = ["git", "diff", "--cached", "--ignore-blank-lines", "--ignore-space-at-eol", "--shortstat"]
+            output = run(cmd, env=_env)
+            changed_file_count = int(output.split("files changed", 1)[0])
+
+        if changed_file_count > 0:
+            log("Record changes to the repository", end="")
+            run(["git", "commit", "-m", "update"], env=_env)
+            log(ok())
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
 def add_all(repo=None):
@@ -207,7 +263,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             "--ignore-whitespace",
             "--verbose",
             patch_file,
-        ]  # ,is_quiet=True,
+        ]
         cmd_summary = cmd.copy()
         cmd_summary.insert(3, "--summary")
         output = run(cmd_summary)
@@ -227,7 +283,6 @@ def is_repo(folders):
 
 
 def _generate_git_repo(folder):
-    # log(folder, "green")
     try:
         initialize_check(folder)
         commit_changes(folder)

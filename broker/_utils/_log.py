@@ -147,7 +147,7 @@ def _console_clear():
 def console_ruler(msg="", character="=", color="cyan", fn=""):
     """Draw console ruler.
 
-    Indicated rich console to write into given fn
+    Indicate rich console to write into given fn
     __ https://stackoverflow.com/a/6826099/2402577
     """
     if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
@@ -178,7 +178,7 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
         is_print = ll.IS_PRINT
 
     if threading.current_thread().name != "MainThread":
-        # prevent writing Thread's output into console
+        # prevent writing Thread's output onto console
         is_print = False
 
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
@@ -218,23 +218,23 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
                 else:
                     ll.console[fn].print(_text, end="", soft_wrap=True)
     else:
-        text_write = ""
+        text_to_write = ""
         if is_bullet:
-            text_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
+            text_to_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
         else:
             if _color:
-                text_write = f"[{_color}]{_text}[/{_color}]"
+                text_to_write = f"[{_color}]{_text}[/{_color}]"
             else:
-                text_write = _text
+                text_to_write = _text
 
         if is_print:
             if end == "":
-                print(text_write, end="")
+                print(text_to_write, end="")
             else:
-                print(text_write, flush=flush)
+                print(text_to_write, flush=flush)
 
         if is_write:
-            ll.console[fn].print(text_write, end=end, soft_wrap=True)
+            ll.console[fn].print(text_to_write, end=end, soft_wrap=True)
 
     if end is None:
         if is_write:

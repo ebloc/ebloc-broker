@@ -73,7 +73,7 @@ class Storage(BaseClass):
         self.results_data_link = self.results_folder_prev / "data_link"
         self.private_dir = self.requester_home / "cache"
         self.public_dir = self.PROGRAM_PATH / "cache"
-        self.patch_folder = self.results_folder_prev / "patch"
+        self.patch_dir = self.results_folder_prev / "patch"
         self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_time = None
         self.data_transfer_in_to_download: int = 0
@@ -88,7 +88,7 @@ class Storage(BaseClass):
         mkdir(self.results_folder)
         mkdir(self.results_data_folder)
         mkdir(self.results_data_link)
-        mkdir(self.patch_folder)
+        mkdir(self.patch_dir)
 
     def submit_slurm_job(self, job_core_num, sbatch_file_path):
         """Slurm submits job.

@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
-
 from web3.logs import DISCARD
 
 from broker import cfg
 from broker._utils._log import ok
 from broker._utils.web3_tools import get_tx_status
 from broker.eblocbroker_scripts.job import Job
-from broker.errors import QuietExit
-from broker.lib import run
 from broker.libs import _git, gdrive
 from broker.link import check_link_folders
 from broker.utils import is_program_valid, log, print_tb
-
+from broker.libs.gdrive import check_gdrive
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
 
@@ -22,11 +18,7 @@ Ebb = cfg.Ebb
 
 def pre_check():
     is_program_valid(["gdrive", "version"])
-    try:
-        run(["gdrive", "about"])
-    except Exception as e:
-        print_tb(e)
-        raise QuietExit from e
+    check_gdrive()
 
 
 def submit_gdrive(job: Job, is_pass=False, required_confs=1):
@@ -64,8 +56,6 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
                 log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
             except IndexError:
                 log(f"E: Tx({tx_hash}) is reverted")
-    # except QuietExit:
-    #     pass
     except Exception as e:
         print_tb(e)
 
@@ -83,9 +73,5 @@ if __name__ == "__main__":
         fn = "job.yaml"
         job.set_config(fn)
         submit_gdrive(job)
-    # except QuietExit:
-    #     sys.exit(1)
-    # except KeyboardInterrupt:
-    #     sys.exit(1)
     except Exception as e:
         print_tb(e)

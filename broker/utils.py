@@ -27,12 +27,12 @@ from broker._utils.tools import WHERE, _exit, is_process_on, log, print_tb, run
 from broker.config import env
 from broker.errors import QuietExit
 
-Qm = b"\x12 "
 empty_bytes32 = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 )
 zero_bytes32 = "0x00"
+Qm = b"\x12 "
 
 
 class BaseEnum(IntEnum):
@@ -162,16 +162,8 @@ def sleep_timer(sleep_duration):
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
+
     sys.stdout.write("\rsleeping is done                                \n")
-
-
-def remove_ansi_escape_sequence(string):
-    """Remove ansi escape sequence.
-
-    __ https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
-    """
-    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    return ansi_escape.sub("", string)
 
 
 def _try(func):

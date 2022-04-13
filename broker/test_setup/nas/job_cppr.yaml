@@ -1,21 +1,21 @@
 config:
-    requester_address: '0xe72307313f8b8f96cfcd99ecef0f1ab03d28be5d'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    requester_address: '0x382f1e1fe7680315053ea1c489b4fc003ff9ad64'
+    provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
     source_code:
-        storage_id: ipfs_gpg
+        storage_id: ipfs
         cache_type: public
         path: ~/test_eblocbroker/run_cppr
         storage_hours: 0
     data:
         data1:
-            hash: f71df9d36cd519d80a3302114779741d
+            hash: 082d2a71d86a64250f06be14c55ca27e
         data2:
             hash: 0d6c3288ef71d89fb93734972d4eb903
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/babyface.n6c100
+            path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-venus
             storage_hours: 1
-            storage_id: ipfs_gpg
+            storage_id: ipfs
     data_transfer_out: 5
     jobs:
         job1:

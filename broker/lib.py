@@ -16,7 +16,7 @@ from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import _remove, is_process_on, log, mkdir, print_tb
 from broker.config import env
-from broker.errors import QuietExit, Web3NotConnected
+from broker.errors import QuietExit
 from broker.utils import WHERE, byte_to_mb, popen_communicate, run
 
 
@@ -187,8 +187,6 @@ def eblocbroker_function_call(func, max_retries):
     for _ in range(max_retries):
         try:
             return func()
-        # except Web3NotConnected:
-        #     time.sleep(1)
         except Exception as e:
             log(f"E: {e}")
             log("Sleep 15 seconds, will try again...")

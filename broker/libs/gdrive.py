@@ -16,7 +16,8 @@ from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
 
 
-def check_user(given_user):
+def check_gdrive():
+    """Check whether `gdrive about` returns a valid output."""
     try:
         output = run(["gdrive", "about"])
     except:
@@ -27,6 +28,11 @@ def check_user(given_user):
         run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
         output = run(["gdrive", "about"])  # re-try
 
+    return output
+
+
+def check_gdrive_about(given_user):
+    output = check_gdrive()
     user = output.partition("\n")[0].split(", ")[1]
     return user == given_user, user
 

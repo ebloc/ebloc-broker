@@ -53,6 +53,7 @@ class Common:
     """Prevent 'Class' to have attribute 'method' mypy warnings."""
 
     def __init__(self) -> None:
+        self.requester_home_path = Path("")
         self.results_folder: Path = Path("")
         self.results_folder_prev: Path = Path("")
         self.patch_file: Path = Path("")
@@ -88,7 +89,7 @@ class IpfsGPG(Common):
 class Eudat(Common):
     def __init__(self) -> None:
         self.encoded_share_tokens = {}  # type: Dict[str, str]
-        self.patch_folder: Path = Path("")
+        self.patch_dir: Path = Path("")
 
     def initialize(self):
         with suppress(Exception):
@@ -100,9 +101,9 @@ class Eudat(Common):
             print_tb(e)
             raise e
 
-    def upload(self, source_code_hash, *_):
+    def upload(self, code_hash, *_):
         with suppress(Exception):  # first time uploading
-            uploaded_file_size = eudat.get_size(f_name=f"{source_code_hash}/{self.patch_upload_fn}")
+            uploaded_file_size = eudat.get_size(f_name=f"{code_hash}/{self.patch_upload_fn}")
             size_in_bytes = calculate_size(self.patch_file, _type="bytes")
             if uploaded_file_size == float(size_in_bytes):
                 log(f"==> {self.patch_file} is already uploaded")
@@ -110,10 +111,10 @@ class Eudat(Common):
 
         try:
             _data_transfer_out = calculate_size(self.patch_file)
-            log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
+            log(f"==> {br(code_hash)}.data_transfer_out={_data_transfer_out}MB")
             self.data_transfer_out += _data_transfer_out
             eudat.upload_results(
-                self.encoded_share_tokens[source_code_hash], self.patch_upload_fn, self.patch_folder, max_retries=5
+                self.encoded_share_tokens[code_hash], self.patch_upload_fn, self.patch_dir, max_retries=5
             )
         except Exception as e:
             raise e
@@ -203,7 +204,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log(f"E: {e}")
             sys.exit(1)
 
-        self.results_folder_prev: Path = env.PROGRAM_PATH / self.requester_id_address / f"{self.job_key}_{self.index}"
+        self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
+        self.results_folder_prev: Path = self.requester_home_path / f"{self.job_key}_{self.index}"
         self.results_folder = self.results_folder_prev / "JOB_TO_RUN"
         if not is_dir(self.results_folder) and not is_dir(self.results_folder_prev):
             sys.exit(1)
@@ -211,9 +213,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.results_data_link = Path(self.results_folder_prev) / "data_link"
         self.results_data_folder = Path(self.results_folder_prev) / "data"
         self.private_dir = Path(env.PROGRAM_PATH) / self.requester_id_address / "cache"
-        self.patch_folder = Path(self.results_folder_prev) / "patch"
-        self.patch_folder_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
-        mkdirs([self.patch_folder, self.patch_folder_ipfs])
+        self.patch_dir = Path(self.results_folder_prev) / "patch"
+        self.patch_dir_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
+        mkdirs([self.patch_dir, self.patch_dir_ipfs])
         remove_empty_files_and_folders(self.results_folder)
         log(f"==> whoami={getpass.getuser()} | id={os.getegid()}")
         log(f"==> home={env.HOME}")
@@ -347,21 +349,21 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
-    def git_diff_patch_and_upload(self, source: Path, name, storage_class, is_job_key):
+    def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key):
         if is_job_key:
-            log(f"==> base_patch={self.patch_folder}")
+            log(f"==> base_patch={self.patch_dir}")
             log(f"==> source_code_patch={name}")
         else:
             log(f"==> datafile_patch={name}")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
-                target_path = self.patch_folder_ipfs
+                target_path = self.patch_dir_ipfs
             else:
-                target_path = self.patch_folder
+                target_path = self.patch_dir
 
             self.patch_upload_fn, self.patch_file, is_file_empty = _git.diff_patch(
-                source, name, self.index, target_path
+                source_fn, name, self.index, target_path, self.requester_home_path
             )
             if not is_file_empty:
                 try:
@@ -377,29 +379,29 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.clean_before_upload()
         try:
             storage_class = self.get_cloud_storage_class(0)
-            breakpoint()  # DEBUG
             self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
-            breakpoint()  # DEBUG
+
         except Exception as e:
             raise e
 
         for idx, name in enumerate(self.code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
-            source = self.results_data_folder / name
             try:
                 if not self.storage_ids[idx] == StorageID.NONE:
                     storage_class = self.get_cloud_storage_class(idx)
-                    self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
+                    self.git_diff_patch_and_upload(
+                        self.results_data_folder / name, name, storage_class, is_job_key=False
+                    )
                 else:
                     pass
             except Exception as e:
                 print_tb(e)
                 raise e
 
-        if not is_dir_empty(self.patch_folder_ipfs):
+        if not is_dir_empty(self.patch_dir_ipfs):
             # it will upload files after all the patchings are completed
             # in case any file is created via ipfs
-            self._ipfs_add_folder(self.patch_folder_ipfs)
+            self._ipfs_add_folder(self.patch_dir_ipfs)
 
     def sacct_result(self):
         """Return sacct output for the job.

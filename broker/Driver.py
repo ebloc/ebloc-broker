@@ -6,13 +6,12 @@ import os
 import sys
 import textwrap
 import time
+import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
-from typing import List
-
-import zc.lockfile
 from ipdb import launch_ipdb_on_exception
+from typing import List
 
 from broker import cfg, config
 from broker._utils import _log
@@ -106,7 +105,7 @@ def _tools(block_continue):  # noqa
 
             try:
                 gmail = provider_info_contract["gmail"]
-                output, gdrive_gmail = gdrive.check_user(gmail)
+                output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
             except Exception as e:
                 print_tb(e)
                 raise QuietExit from e
@@ -153,8 +152,6 @@ def _tools(block_continue):  # noqa
 
     except QuietExit as e:
         raise e
-    # except Exception as e:
-    #     raise Terminate from e
 
 
 class Driver:

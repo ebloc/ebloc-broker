@@ -1,6 +1,6 @@
 config:
-    requester_address: '0xf4c8345baab83d92a88420b093a96dcdb08705de'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    requester_address: '0x8b7356a95c8ba1846eb963fd127741730f666ba8'
+    provider_address: '0x1926b36af775e1312fdebcc46303ecae50d945af'
     source_code:
         storage_id: ipfs
         cache_type: public

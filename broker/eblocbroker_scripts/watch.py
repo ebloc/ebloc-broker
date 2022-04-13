@@ -17,7 +17,7 @@ watch_only_jobs = True
 
 
 def watch(eth_address="", from_block=None):
-    from_block = 15084748
+    from_block = 15104672
     # if not eth_address:
     #     # TODO: pull from cfg
     #     eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"

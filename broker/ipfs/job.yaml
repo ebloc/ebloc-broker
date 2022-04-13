@@ -1,26 +1,24 @@
 config:
-    requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
-    provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+    requester_address: '0xa61bb920ef738eab3d296c0c983a660f6492e1af'
+    provider_address: '0x29e613B04125c16db3f3613563bFdd0BA24Cb629'
     source_code:
         cache_type: public
-        path: /home/alper/test_eblocbroker/source_code
-        storage_hours: 1
+        path: ~/test_eblocbroker/source_code
+        storage_hours: 0
         storage_id: ipfs
-    base_data_path: /home/alper/test_eblocbroker/test_data/base/
     data:
         data1:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+            path: ~/test_eblocbroker/test_data/base/data/data1
             storage_hours: 1
             storage_id: ipfs
-        data2:
-            cache_type: public
-            path: /home/alper/test_eblocbroker/test_data/base/data/data1
-            storage_hours: 1
-            storage_id: ipfs
-    data_transfer_out: 1
+        # data2:
+        #     cache_type: public
+        #     path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+        #     storage_hours: 1
+        #     storage_id: ipfs
+    data_transfer_out: 2
     jobs:
         job1:
             cores: 1
             run_time: 1
-    _base_dir: {}

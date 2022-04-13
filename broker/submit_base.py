@@ -21,7 +21,7 @@ class SubmitBase:
         elif self.job.source_code_storage_id == "gdrive":
             return submit_gdrive(self.job, is_pass, required_confs)
 
-        raise Exception("Not valid source_code_storage_id is given")
+        raise Exception("Valid source_code_storage_id is not given")
 
 
 def main():
