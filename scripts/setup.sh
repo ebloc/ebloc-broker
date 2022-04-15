@@ -23,8 +23,6 @@ yes_or_no () {
 sudo add-apt-repository ppa:git-core/ppa -y
 sudo apt-get update
 sudo apt-get install -y git
-sudo apt-get install -y net-tools
-sudo apt-get install -y openssh-server
 
 cd ~/ebloc-broker
 git checkout dev
@@ -146,9 +144,8 @@ sudo systemctl --no-pager status --full mongod
 # =========================
 VENV=$HOME/venv
 python3.8 -m venv $VENV
-source $VENV/bin/activate && $VENV/bin/python3.8 -m pip install --upgrade pip
-sudo apt-get install -y libssl-dev zlib1g-dev gcc g++ make
-sudo apt install -y libgirepository1.0-dev
+source $VENV/bin/activate
+$VENV/bin/python3.8 -m pip install --upgrade pip
 python3 -m pip install --no-use-pep517 cm-rgb
 pip install wheel
 cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver

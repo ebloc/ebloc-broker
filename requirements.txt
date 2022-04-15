@@ -284,7 +284,7 @@ extensionclass==4.5.1
     #   persistence
 ezenv==0.91
 fasteners==0.14.1
-filelock==3.0.12
+filelock==3.6.0
     # via
     #   gdown
     #   tox
@@ -355,7 +355,7 @@ imagesize==1.3.0
     # via
     #   sphinx
 importchecker==2.0
-importlib-metadata==4.8.2
+importlib-metadata==4.2.0
 importlib-resources==5.1.2
 importmagic==0.1.7
 incremental==17.5.0
@@ -1019,7 +1019,7 @@ varint==1.0.2
     #   eth-brownie
     #   multiaddr
     #   py-multicodec
-virtualenv==20.0.10
+virtualenv==20.14.1
     # via
     #   pipenv
     #   pre-commit

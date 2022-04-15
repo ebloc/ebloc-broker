@@ -1,0 +1,33 @@
+* start
+
+To delete all containers including its volumes use: ~docker rm -vf $(docker ps -aq)~
+To delete all the images: ~docker rmi -f $(docker images -aq)~
+
+#+begin_src bash
+docker-compose up --remove-orphans
+
+remove_dangling () {
+    docker rmi $(docker images -qa -f 'dangling=true')  # --force
+    docker image ls
+}
+docker build -t ebloc-broker:latest --progress plain .
+#+end_src
+
+sudo systemctl start docker
+sudo docker run ebloc-broker
+
+docker run --name test -it ebloc-broker bash
+docker run -it ebloc-broker bash
+
+** clean docker cache
+
+#+begin_src bash
+alias docker_clean_images="docker rmi $(docker images -a --filter=dangling=true -q)"
+alias docker_clean_ps="docker rm $(docker ps --filter=status=exited --filter=status=created -q)"
+docker kill $(docker ps -q)
+docker_clean_ps
+docker rmi $(docker images -a -q)
+#+end_src
+
+# https://github.com/SciDAS/slurm-in-docker/blob/master/controller/Dockerfile
+# FROM scidas/slurm.base:19.05.1
