@@ -5,9 +5,8 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
-from typing import Union
-
 from pymongo import MongoClient
+from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 

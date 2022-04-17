@@ -25,25 +25,27 @@ RUN apt-get update \
  && apt-get install -y libdbus-1-dev \
     libdbus-glib-1-dev \
     libgirepository1.0-dev \
+    libssl-dev \
     npm
 
+ENV NODE_OPTION=--openssl-legacy-provider
+RUN npm config set fund false
+RUN npm config set update-notifier false
+RUN npm install -g npm@latest
+RUN npm install -g ganache
+RUN ganache --version
+
 WORKDIR /workspace
-RUN [ ! -d /workspace/ebloc-broker ] && git clone https://github.com/ebloc/ebloc-broker.git
+RUN git clone https://github.com/ebloc/ebloc-broker.git
 WORKDIR /workspace/ebloc-broker
 RUN git checkout dev
+RUN git fetch --all --quiet >/dev/null 2>&1
+RUN git pull --all -r -v >/dev/null 2>&1
 RUN pip install -U pip wheel
-RUN pip install -e .
-# RUN if python -c "import broker" &> /dev/null; then pip install -e . --use-deprecated=legacy-resolver; fi  # takes few minutes
+#: takes few minutes
+RUN pip install -e . #  --use-deprecated=legacy-resolver
+# RUN if python -c "import broker" &> /dev/null; then pip install -e . --use-deprecated=legacy-resolver; fi
 RUN eblocbroker >/dev/null 2>&1  # final check
-
-RUN npm config set fund false \
-    npm install -g npm@8.7.0 && \
-    npm install npm@latest -g && \
-    npm install n -g && \
-    n latest
-
-ENV NODE_OPTION=--openssl-legacy-provider
-RUN npm install -g ganache
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 FROM python:3.7
@@ -73,10 +75,10 @@ COPY --from=0 /go /go
 COPY --from=0 /usr/local/bin /usr/local/bin
 COPY --from=0 /usr/local/go /usr/local/go
 COPY --from=0 /workspace/gdrive /workspace/gdrive
-COPY --from=1 /workspace/ebloc-broker /workspace/ebloc-broker
 COPY --from=1 /opt/venv /opt/venv
 COPY --from=1 /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=1 /usr/local/bin /usr/local/bin
+COPY --from=1 /workspace/ebloc-broker /workspace/ebloc-broker
 
 ENV GOPATH=/go
 ENV GOROOT=/usr/local/go

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 from broker import cfg, config
 from broker._utils._log import br, console_ruler, log
@@ -15,9 +14,10 @@ from broker.utils import CacheType, StorageID
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import mine, new_test
-from contract.tests.test_eblocbroker import register_provider, register_requester
+from contract.tests.test_overall_eblocbroker import register_provider, register_requester
 
-cfg.Ebb = Contract.eblocbroker = Contract.Contract(is_brownie=True)
+Contract.eblocbroker = Contract.Contract(is_brownie=True)
+
 
 # from brownie.test import given, strategy
 setup_logger("", True)
@@ -45,15 +45,33 @@ chain = None
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global ebb
-    global chain
+    global Ebb  # noqa
+    global chain  # noqa
+    global ebb  # noqa
+
     cfg.IS_BROWNIE_TEST = True
-    config.w3 = web3
-    ebb = Contract.eblocbroker.eBlocBroker = config.ebb = _Ebb
+    config.Ebb = Ebb = Contract.Contract(is_brownie=True)
+    config.ebb = _Ebb
+    Contract.eblocbroker.eBlocBroker = _Ebb
+    ebb = _Ebb
+    Ebb.w3 = web3
     if not config.chain:
         config.chain = Chain()
 
     chain = config.chain
+
+
+# @pytest.fixture(scope="module", autouse=True)
+# def my_own_session_run_at_beginning(_Ebb):
+#     global ebb
+#     global chain
+#     cfg.IS_BROWNIE_TEST = True
+#     config.w3 = web3
+#     ebb = Contract.eblocbroker.eBlocBroker = config.ebb = _Ebb
+#     if not config.chain:
+#         config.chain = Chain()
+
+#     chain = config.chain
 
 
 @pytest.fixture(autouse=True)
@@ -135,11 +153,9 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
 
     tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_time, {"from": provider})
     rpc.sleep(60)
-
     mine(5)
     data_transfer_in = 0
     data_transfer_out = 0
-
     args = [job.index, job._id, completion_time, data_transfer_in, data_transfer_out, job.cores, [1], True]
     tx = ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
     if is_print:

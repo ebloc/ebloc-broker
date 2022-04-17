@@ -16,6 +16,26 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
   [[https://github.com/trufflesuite/ganache][ganache-cli]]
 
 
+** Using Docker
+
+You can use a sandbox container provided in the [[./docker-compose.yml]] file for testing inside a Docker
+environment.
+
+This container provides everything you need to test using a Python 3.7 interpreter.
+
+Start the test environment:
+
+#+begin_src bash
+docker build -t ebloc-broker:latest --progress plain .
+docker-compose up -d --remove-orphans
+#+end_src
+
+To open a session to the container:
+
+#+begin_src bash
+docker-compose exec sandbox bash
+#+end_src
+
 ** Cloud Storages
 
 *** EUDAT

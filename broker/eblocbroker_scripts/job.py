@@ -7,7 +7,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Dict, List
 
-from broker import cfg
+from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import _exit, _remove, log, print_tb
 from broker._utils.web3_tools import get_tx_status
@@ -305,11 +305,15 @@ class JobPrices:
 
     def set_provider_info(self):
         """Set provider info into variables."""
-        if self.Ebb.does_provider_exist(self.job.provider):
+        if cfg.IS_BROWNIE_TEST:
+            self.Ebb.eBlocBroker = config.ebb
             *_, provider_price_info = self.Ebb._get_provider_info(self.job.provider, 0)
         else:
-            log(f"E: {self.job.provider} does not exist as a provider")
-            raise QuietExit
+            if self.Ebb.does_provider_exist(self.job.provider):
+                *_, provider_price_info = self.Ebb._get_provider_info(self.job.provider, 0)
+            else:
+                log(f"E: {self.job.provider} does not exist as a provider")
+                raise QuietExit
 
         self.price_core_min = provider_price_info[2]
         self.price_data_transfer = provider_price_info[3]

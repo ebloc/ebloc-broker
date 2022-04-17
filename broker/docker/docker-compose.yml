@@ -1,9 +1,0 @@
-version: "3"
-services:
-  app:
-    image: ebloc-broker
-    restart: always
-    ports:
-      - "4001:4001" # Public IPFS Port
-    command: [/bin/echo, "hello world"]
-    command: [/bin/tree, "."]

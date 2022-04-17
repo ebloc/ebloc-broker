@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import git
 import gzip
 import io
 import os
 import time
 from contextlib import suppress
-from git.exc import InvalidGitRepositoryError
 from pathlib import Path
+
+import git
+from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
 from broker._utils._log import ok
@@ -37,9 +38,9 @@ def is_initialized(path) -> bool:
     """
     with cd(path):
         try:
+            #: checks is the give path top git folder
             *_, output, err = popen_communicate(["git", "rev-parse", "--is-inside-work-tree"])  # noqa
             if output == "true":
-                #: checks is the give path top git folder
                 git.Repo(".", search_parent_directories=False)
                 return True
         except InvalidGitRepositoryError as e:
@@ -71,13 +72,11 @@ def diff_and_gzip(fn, home_dir):
             encode.write(run(cmd))
 
 
-def diff_and_gzip_repo(fn):
-    repo = git.Repo(".", search_parent_directories=True)
-    with gzip.open(fn, "wb") as output:
-        # We cannot directly write Python objects like strings!
-        # We must first convert them into a bytes format using io.BytesIO() and then write it
-        with io.TextIOWrapper(output, encoding="utf-8") as encode:
-            encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty", "--color=never"))
+# def diff_and_gzip_repo(fn):
+#     repo = git.Repo(".", search_parent_directories=True)
+#     with gzip.open(fn, "wb") as output:
+#         with io.TextIOWrapper(output, encoding="utf-8") as encode:
+#             encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty", "--color=never"))
 
 
 def decompress_gzip(fn):
@@ -104,6 +103,7 @@ def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
             upload everything, changed files!
         """
         try:
+            # os.environ["HOME"] = str(home_dir)  # needed if repo is used
             #: https://stackoverflow.com/a/52227100/2402577
             run(["env", f"HOME={home_dir}", "git", "config", "--global", "--add", "safe.directory", path])
             run(["env", f"HOME={home_dir}", "git", "config", "core.fileMode", "false"])

@@ -54,7 +54,8 @@ go version
 # sudo snap install ipfs
 # ipfs init && sudo mount --bind ~/.ipfs ~/snap/ipfs/common
 open_port_4001 () {
-    sudo systemctl enable ufw && sudo ufw enable
+    sudo systemctl enable ufw
+    sudo ufw enable
     sudo systemctl start firewalld
     sudo systemctl enable firewalld
     sudo ufw allow 4001/tcp

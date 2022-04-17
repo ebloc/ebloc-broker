@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 from broker import cfg, config
@@ -40,6 +39,10 @@ Ebb = None
 chain = None
 ebb = None
 
+gas_costs = {}
+gas_costs["registerRequester"] = []
+gas_costs["registerProvider"] = []
+
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
@@ -47,6 +50,7 @@ def my_own_session_run_at_beginning(_Ebb):
     global chain  # noqa
     global ebb  # noqa
 
+    cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
     config.ebb = _Ebb
     Contract.eblocbroker.eBlocBroker = _Ebb
@@ -108,6 +112,7 @@ def register_provider(price_core_min=1):
         COMMITMENT_BLOCK_NUM,
         {"from": accounts[0]},
     )
+    gas_costs["registerProvider"].append(tx.__dict__["gas_used"])
     provider_registered_bn = tx.block_number
     log(f"block number when the provider is registered={provider_registered_bn}", "bold")
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogProviderInfo"]["gpgFingerprint"])
@@ -136,6 +141,7 @@ def register_requester(account):
         "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf",
         {"from": account},
     )
+    gas_costs["registerRequester"].append(tx.__dict__["gas_used"])
     assert ebb.doesRequesterExist(account), True
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogRequester"]["gpgFingerprint"])
     assert gpg_fingerprint == GPG_FINGERPRINT
@@ -1059,11 +1065,13 @@ def test_submit_job():
     *_, job_storage_info = ebb.getStorageInfo(provider, cfg.ZERO_ADDRESS, code_hash)
     ds = DataStorage(job_storage_info)
     log(
-        f"receivedBlockNumber={ds.received_block} |"
+        f"received_bn={ds.received_block} |"
         f"storage_duration(block numbers)={ds.storage_duration} | "
         f"is_private={ds.is_private} |"
-        f"is_verified_Used={ds.is_verified_used}"
+        f"is_verified_Used={ds.is_verified_used}",
+        "bold",
     )
     received_storage_deposit, *_ = ebb.getStorageInfo(provider, requester, code_hash)
     log(f"received_storage_deposit={received_storage_deposit}", "bold")
-    console_ruler("DONE")
+    for k, v in gas_costs.items():
+        print(f"{k} => {v}")
