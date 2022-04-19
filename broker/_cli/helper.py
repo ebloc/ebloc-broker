@@ -29,6 +29,7 @@ class Helper:
         self.parser._optionals.title = "Options"
         self.subparsers = self.parser.add_subparsers(dest="command", metavar="command [<options>...]")
         self.subparsers.add_parser("about", help="ebloc-broker metadata")
+        self.subparsers.add_parser("init", help="Initialize the ebloc-broker project")
         self.driver()
         self.daemon()
         self.register()

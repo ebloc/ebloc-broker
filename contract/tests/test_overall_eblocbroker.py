@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import os
-import pytest
 import sys
 from os import path
+
+import pytest
 
 import brownie
 from broker import cfg, config

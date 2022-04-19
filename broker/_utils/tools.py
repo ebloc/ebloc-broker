@@ -16,6 +16,7 @@ import traceback
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
+from pathlib import PosixPath
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
 import requests
@@ -287,10 +288,12 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
 
 
 def print_trace(cmd, back=1, exc="", returncode="") -> None:
-    _cmd = " ".join(cmd)
+    if not isinstance(cmd, str):
+        cmd = " ".join(cmd)
+
     if exc:
         log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "bold red")
-        log(f"[blue]$ [/blue][white]{_cmd}", "bold")
+        log(f"[blue]$ [/blue][white]{cmd}", "bold")
         log(exc.rstrip(), "bold red")
     else:
         if returncode:
@@ -299,12 +302,15 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         else:
             log("E: Failed command:")
 
-        log(_cmd, "bold yellow", is_code=True)
+        log(cmd, "bold yellow", is_code=True)
 
 
 def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
     if not isinstance(cmd, str):
-        cmd = list(map(str, cmd))  # all items should be string
+        if isinstance(cmd, PosixPath):
+            cmd = str(cmd)
+        else:
+            cmd = list(map(str, cmd))  # all items should be string
     else:
         cmd = [cmd]
 

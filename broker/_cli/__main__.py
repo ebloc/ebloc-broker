@@ -19,6 +19,17 @@ def driver():
     main(args)
 
 
+def init():
+    import git
+    from pathlib import Path
+
+    from broker._utils.tools import run
+
+    f = Path(__file__).parent.resolve()
+    repo = git.Repo(f, search_parent_directories=True)
+    run(Path(repo.working_tree_dir) / "broker" / "bash_scripts" / "folder_setup.sh")
+
+
 def about():
     from os.path import expanduser
 
@@ -45,10 +56,14 @@ def daemon():
 
         start_ipfs_daemon(_is_print=True)
     if args.daemon_type[0] == "slurm":
-        from broker.config import env
-        from broker.utils import run
+        import git
+        import pathlib
 
-        run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
+        from broker._utils.tools import run
+
+        f = pathlib.Path(__file__).parent.resolve()
+        repo = git.Repo(f, search_parent_directories=True)
+        run(repo.working_tree_dir / "broker" / "bash_scripts" / "run_slurm.sh")
 
 
 def console():

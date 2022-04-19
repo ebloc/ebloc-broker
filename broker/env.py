@@ -13,6 +13,7 @@ class ENV_BASE:
         fn = self.HOME / ".ebloc-broker" / "cfg.yaml"
         if not os.path.isfile(fn):
             if not os.path.isdir(self.HOME / ".ebloc-broker"):
+                raise Exception()
                 raise QuietExit(f"E: {self.HOME / '.ebloc-broker'} is not initialized")
 
             raise QuietExit(f"E: {fn} is not created")
