@@ -43,6 +43,11 @@ ebb = None
 gas_costs = {}
 gas_costs["registerRequester"] = []
 gas_costs["registerProvider"] = []
+gas_costs["setJobStateRunning"] = []
+gas_costs["submitJob"] = []
+gas_costs["refund"] = []
+gas_costs["depositStorage"] = []
+gas_costs["updateProviderInfo"] = []
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -324,12 +329,14 @@ def test_data_info():
     for idx, code_hash in enumerate(job.code_hashes):
         with brownie.reverts():
             tx = ebb.depositStorage(requester, code_hash, {"from": provider, "gas": 4500000})
+            gas_costs["depositStorage"].append(tx.__dict__["gas_used"])
 
     mine(cfg.BLOCK_DURATION_1_HOUR)
     for idx, code_hash in enumerate(job.code_hashes):
         *_, output = ebb.getStorageInfo(provider, cfg.ZERO_ADDRESS, code_hash)
         if output[3]:
             tx = ebb.depositStorage(requester, code_hash, {"from": provider, "gas": 4500000})
+            gas_costs["depositStorage"].append(tx.__dict__["gas_used"])
             print(tx.events["LogDepositStorage"])
 
 
@@ -372,6 +379,7 @@ def test_computational_refund():
     job_id = 0
     start_time = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], index, job_id, start_time, {"from": accounts[0]})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     rpc.sleep(60)
     mine(5)
     args = [index, job_id, 1579524998, 2, 0, job.cores, [5], True]
@@ -436,6 +444,7 @@ def test_storage_refund():
     index = 0
     job_id = 0
     tx = ebb.refund(provider, job_key, index, job_id, job.cores, job.run_time, {"from": provider})
+    gas_costs["refund"].append(tx.__dict__["gas_used"])
     log(ebb.getJobInfo(provider, job_key, index, job_id))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
     log(f"refunded_wei={refundedWei}", "bold")
@@ -482,6 +491,7 @@ def test_storage_refund():
     index = 1
     job_id = 0
     tx = ebb.refund(provider, job_key, index, job_id, job.cores, job.run_time, {"from": provider})
+    gas_costs["refund"].append(tx.__dict__["gas_used"])
     log(ebb.getJobInfo(provider, job_key, index, job_id))
     refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
     log(f"refunded_wei={refundedWei}", "bold")
@@ -504,13 +514,16 @@ def test_storage_refund():
     with brownie.reverts():  # refundStorageDeposit should revert, because it is already used by the provider
         for code_hash in job.code_hashes:
             tx = ebb.refundStorageDeposit(provider, requester, code_hash, {"from": requester, "gas": 4500000})
+            gas_costs["depositStorage"].append(tx.__dict__["gas_used"])
 
         tx = ebb.depositStorage(requester, job.code_hashes[0], {"from": provider, "gas": 4500000})
+        gas_costs["depositStorage"].append(tx.__dict__["gas_used"])
 
     mine(cfg.BLOCK_DURATION_1_HOUR)
     # after deadline (1 hr) is completed to store the data, provider could obtain the money
     for idx, code_hash in enumerate(job.code_hashes):
         tx = ebb.depositStorage(requester, code_hash, {"from": provider, "gas": 4500000})
+        gas_costs["depositStorage"].append(tx.__dict__["gas_used"])
         amount = tx.events["LogDepositStorage"]["payment"]
         withdraw(provider, amount)
         assert storage_payment[idx] == amount
@@ -520,7 +533,8 @@ def test_update_provider():
     mine(5)
     provider_registered_bn = register_provider()
     fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-    ebb.updateProviderInfo(GPG_FINGERPRINT, provider_gmail, fid, ipfs_address, {"from": accounts[0]})
+    tx = ebb.updateProviderInfo(GPG_FINGERPRINT, provider_gmail, fid, ipfs_address, {"from": accounts[0]})
+    gas_costs["updateProviderInfo"].append(tx.__dict__["gas_used"])
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
     available_core = 64
     prices = [2, 2, 2, 2]
@@ -644,6 +658,7 @@ def test_multiple_data():
     result_ipfs_hash = "0xabcd"
     start_time = get_block_timestamp()
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     mine(60 * execution_time / cfg.BLOCK_DURATION + 1)
     end_time = start_time + 60 * execution_time
     block_timestamp = get_block_timestamp()
@@ -676,6 +691,7 @@ def test_multiple_data():
     execution_time = 10
     result_ipfs_hash = "0xabcd"
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     mine(60 * execution_time / cfg.BLOCK_DURATION)
     end_time = start_time + 60 * execution_time
     args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
@@ -784,10 +800,12 @@ def test_workflow():
     job_id = 0
     start_time = 10
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     index = 0
     job_id = 1
     start_time = 20
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     # process_payment for the workflow
     index = 0
     job_id = 0
@@ -846,6 +864,7 @@ def test_workflow():
     job_id = 2
     start_time = 20
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, True]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     # log(tx.events['LogProcessPayment'])
@@ -906,6 +925,7 @@ def test_simple_submit():
     job_id = 0
     start_time = 1579524978
     tx = ebb.setJobStateRunning(job.key, index, job_id, start_time, {"from": provider})
+    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     rpc.sleep(60)
     mine(5)
 
@@ -1014,9 +1034,11 @@ def test_submit_job():
         for index, line in enumerate(f):
             arguments = line.rstrip("\n").split(" ")
             tx = ebb.setJobStateRunning(job_key, index, job_id, int(arguments[0]), {"from": accounts[0]})
+            gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
             if index == 0:
                 with brownie.reverts():
                     tx = ebb.setJobStateRunning(job_key, index, job_id, int(arguments[0]) + 1, {"from": accounts[0]})
+                    gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
 
     console_ruler()
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
@@ -1076,3 +1098,164 @@ def test_submit_job():
     log(f"received_storage_deposit={received_storage_deposit}", "bold")
     for k, v in gas_costs.items():
         print(f"{k} => {v}")
+
+
+def test_submit_n_data():
+    gas_costs = []
+    job = Job()
+    provider = accounts[0]
+    requester = accounts[1]
+    price_core_min = 100
+    register_provider(price_core_min)
+    register_requester(requester)
+
+    job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
+    job.key = job.code_hashes[0]
+    job.cores = [2]
+    job.run_time = [1]
+    job.data_transfer_ins = [1]
+    job.data_transfer_out = 1
+    job.storage_ids = [StorageID.IPFS.value]
+    job.cache_types = [CacheType.PUBLIC.value]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+    job_price, _cost = job.cost(provider, requester)
+    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+    ]
+
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+    gas_costs.append(tx.__dict__["gas_used"])
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    job.code_hashes = [b"9b3e9babb6539c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
+    job.key = job.code_hashes[0]
+    job.cores = [2]
+    job.run_time = [1]
+    job.data_transfer_ins = [1, 1]
+    job.data_transfer_out = 1
+    job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
+    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.storage_hours = [0, 0]
+    job.data_prices_set_block_numbers = [0, 0]
+    job_price, _cost = job.cost(provider, requester)
+    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+    ]
+
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+    gas_costs.append(tx.__dict__["gas_used"])
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    job.code_hashes = [
+        b"9b3e9aabb6539c1aczea8d606fc55403",
+        b"9a4c0c1c9aadb203daf9367bd4df930b",
+        b"9a4c0c1c9aadb203daf1367bd4df930b",
+    ]
+    job.key = job.code_hashes[0]
+    job.cores = [2]
+    job.run_time = [1]
+    job.data_transfer_ins = [1, 1, 199]
+    job.data_transfer_out = 1
+    job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value, StorageID.GDRIVE.value]
+    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.storage_hours = [0, 0, 0]
+    job.data_prices_set_block_numbers = [0, 0, 0]
+    job_price, _cost = job.cost(provider, requester)
+    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+    ]
+
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+    gas_costs.append(tx.__dict__["gas_used"])
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    job.code_hashes = [
+        b"9b3e9babb6539c1azeea8d606fc55403",
+        b"9a4c0c1c9aadb2039af9367bd4df930b",
+        b"9a4c0c1c9aadb203daf1367bd4df930b",
+        b"9a4c0c1c9aadb203daf1167bd4df930b",
+    ]
+    job.key = job.code_hashes[0]
+    job.cores = [2]
+    job.run_time = [1]
+    job.data_transfer_ins = [1, 1, 199, 200]
+    job.data_transfer_out = 1
+    job.storage_ids = [StorageID.IPFS.value, StorageID.IPFS.value, StorageID.IPFS.value, StorageID.IPFS.value]
+    job.cache_types = [
+        CacheType.PUBLIC.value,
+        CacheType.PUBLIC.value,
+        CacheType.PUBLIC.value,
+        CacheType.PUBLIC.value,
+    ]
+    job.storage_hours = [1, 1, 1, 1]
+    job.data_prices_set_block_numbers = [0, 0, 0, 0]
+    job_price, _cost = job.cost(provider, requester)
+    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    args = [
+        provider,
+        provider_price_block_number,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+    ]
+
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester, "value": web3.toWei(job_price, "wei")},
+    )
+    gas_costs.append(tx.__dict__["gas_used"])
+
+    print(gas_costs)
+    print(gas_costs[1] - gas_costs[0])
+    print(gas_costs[2] - gas_costs[1])
+    print(gas_costs[3] - gas_costs[2])

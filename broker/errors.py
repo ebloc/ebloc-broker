@@ -12,7 +12,7 @@ class HandlerException(Exception):
 
 
 class JobException(Exception):
-    """Job info exception to prevent trace to be printed."""
+    """Generate fetch job info exception to prevent trace to be printed."""
 
 
 class QuietExit(Exception):

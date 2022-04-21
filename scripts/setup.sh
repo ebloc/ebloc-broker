@@ -41,8 +41,12 @@ node -v
 
 # ganache-cli
 # ===========
-export NODE_OPTIONS=--openssl-legacy-provider
-sudo npm install -g ganache
+# export NODE_OPTIONS=--openssl-legacy-provider
+# sudo npm install -g ganache
+hash -r
+npm config set update-notifier false
+npm install -g npm@latest
+npm install ganache --global
 
 # go
 sudo snap install go --classic

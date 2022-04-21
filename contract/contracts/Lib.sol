@@ -96,7 +96,7 @@ library Lib {
         uint32 receivedBlock;
         uint32 storageDuration;
         bool isPrivate;
-        bool isVerifiedUsed; // Set to `true` if the provided usedand verified the given code hash
+        bool isVerifiedUsed; // Set to `true` if the provided used and verified the given code hash
         //address      owner; //Cloud be multiple owners
     }
 

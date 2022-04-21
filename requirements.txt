@@ -129,7 +129,6 @@ charset-normalizer==2.0.11
     #   aiohttp
     #   eth-brownie
     #   requests
-chromedriver==2.24.1
 click==8.0.3
     # via
     #   black
@@ -824,7 +823,6 @@ secretstorage==3.3.1
     # via
     #   keyring
 seed-isort-config==2.2.0
-selenium==3.141.0
 selinux==0.2.1
 semantic-version==2.8.5
     # via
@@ -1013,7 +1011,6 @@ urllib3==1.26.8
     #   eth-brownie
     #   requests
     #   requests-unixsocket
-    #   selenium
 varint==1.0.2
     # via
     #   eth-brownie

@@ -1,8 +1,6 @@
 build-essential
 gcc
 libboost-all-dev
-libmariadbd-dev
-libmariadb-dev
 libmunge2
 libmunge-dev
 libmysqlclient-dev
@@ -11,3 +9,6 @@ mysql-client
 mysql-server
 software-properties-common
 default-libmysqlclient-dev
+libmariadbclient-dev
+libmariadbd-dev
+libmariadb-dev
