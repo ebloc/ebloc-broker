@@ -12,7 +12,7 @@ import "./Lib.sol";
 contract EBlocBrokerBase {
     address public owner;
     address[] registeredProviders; // A dynamically-sized array of 'address' structs
-    uint32 constant ONE_HOUR_BLOCK_DURATION = 600; // ~1 hour , avg block time is 6 seconds
+    uint32 constant ONE_HOUR_BLOCK_DURATION = 600; // ~1 hour, average block time is 6 seconds
     mapping(address => uint32) requesterCommittedBlock; // Block number when provider is registered in order the watch provider's event activity
     mapping(address => Lib.Provider) providers;
     mapping(address => uint32[]) pricesSetBlockNum;

@@ -9,6 +9,3 @@ mysql-client
 mysql-server
 software-properties-common
 default-libmysqlclient-dev
-libmariadbclient-dev
-libmariadbd-dev
-libmariadb-dev

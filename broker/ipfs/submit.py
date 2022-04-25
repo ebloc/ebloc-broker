@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -78,7 +77,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     provider = Ebb.w3.toChecksumAddress(job.provider_addr)
     pre_check(job, requester)
-    log("==> Attemptting to submit a job")
+    log(f"==> Attemptting to submit job ({job.source_code_path})")
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
     check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
@@ -90,7 +89,6 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         log("E: Please provide IPFS or IPFS_GPG storage type for the source code")
         sys.exit(1)
 
-    targets = []
     try:
         provider_info = Ebb.get_provider_info(provider)
     except Exception as e:
@@ -101,6 +99,18 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         if isinstance(folder, Path):
             target = folder
             if job.storage_ids[idx] == StorageID.IPFS_GPG:
+                provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
+                if not provider_gpg_fingerprint:
+                    log("E: Provider did not register any GPG fingerprint")
+                    sys.exit(1)
+
+    targets = []
+    is_ipfs_gpg = False
+    for idx, folder in enumerate(job.folders_to_share):
+        if isinstance(folder, Path):
+            target = folder
+            if job.storage_ids[idx] == StorageID.IPFS_GPG:
+                is_ipfs_gpg = True
                 provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
                 if not provider_gpg_fingerprint:
                     log("E: Provider did not register any GPG fingerprint")
@@ -151,13 +161,15 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
             #     job.code_hashes.append(ipfs_to_bytes32(code_hash))
             #     job.code_hashes_str.append(code_hash)
 
-        # if idx != len(job.folders_to_share) - 1:
-        #     log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "cyan")
+    if not is_ipfs_gpg:
+        provider_addr_to_submit = job.search_best_provider(requester)
+    else:
+        provider_addr_to_submit = provider
+        job.price, *_ = job.cost(provider_addr_to_submit, requester)
 
-    # requester inputs for testing purpose
-    job.price, *_ = job.cost(provider, requester)
+    breakpoint()  # DEBUG
     try:
-        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
+        tx_hash = Ebb.submit_job(provider_addr_to_submit, key, job, requester, required_confs)
         if required_confs >= 1:
             tx_receipt = get_tx_status(tx_hash)
             if tx_receipt["status"] == 1:
@@ -172,8 +184,6 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                             _remove(target)
                 except IndexError:
                     log(f"E: Tx={tx_hash} is reverted")
-        else:
-            pass
     except QuietExit:
         pass
     except Exception as e:

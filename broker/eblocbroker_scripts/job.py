@@ -71,11 +71,13 @@ class Job:
         self.provider_addr: str = ""
         self.is_registered_data_requested = {}  # type: Dict[str, bool]
         self.data_transfer_out: int = 0
+        self.price = 0
         self.data_transfer_ins = []
         self.registered_data_files = []
         self.paths = []
         self.data_prices_set_block_numbers = []
         self.data_paths = []
+        self.source_code_path = None
         called_fn = os.path.basename(sys._getframe(1).f_code.co_filename)
         if called_fn.startswith("test_"):
             self.is_brownie = True
@@ -85,16 +87,18 @@ class Job:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def cost(self, provider, requester):
+    def cost(self, provider, requester, is_silent=False):
         """Calcualte cost related to the given job."""
-        log("==> Entered into the cost calculation...")
+        if not is_silent:
+            log("==> Entered into the cost calculation...")
+
         self.provider = provider
         self.requester = requester
         self.check()
         jp = JobPrices(self)
         jp.set_computational_cost()
         jp.set_storage_cost()  # burda patliyor sanki DELETE
-        jp.set_job_price()
+        jp.set_job_price(is_silent)
         return jp.job_price, jp.cost
 
     def analyze_tx_status(self, tx_hash) -> bool:
@@ -190,9 +194,9 @@ class Job:
         else:
             cache_type = self.cfg["config"]["source_code"]["cache_type"]
             self.cache_types.append(CACHE_TYPES[cache_type])
-            source_code_path = Path(os.path.expanduser(self.cfg["config"]["source_code"]["path"]))
-            size_mb = calculate_size(source_code_path)
-            self.paths.append(source_code_path)
+            self.source_code_path = Path(os.path.expanduser(self.cfg["config"]["source_code"]["path"]))
+            size_mb = calculate_size(self.source_code_path)
+            self.paths.append(self.source_code_path)
             self.data_transfer_ins.append(size_mb)
             self.storage_hours.append(self.cfg["config"]["source_code"]["storage_hours"])
             self.data_prices_set_block_numbers.append(0)
@@ -255,8 +259,8 @@ class Job:
             self.run_time.append(self.cfg["config"]["jobs"][key]["run_time"])
 
         self.data_transfer_out = self.cfg["config"]["data_transfer_out"]
-        if source_code_path:
-            self.tmp_dir = source_code_path.parent.absolute()
+        if self.source_code_path:
+            self.tmp_dir = self.source_code_path.parent.absolute()
         else:
             self.tmp_dir = Path(os.path.expanduser(self.cfg["config"]["tmp_dir"]))
 
@@ -281,6 +285,28 @@ class Job:
             }
             log(print_temp)
             log()
+
+    def _search_best_provider(self, requester, is_silent=False):
+        selected_provider = ""
+        selected_price = 0
+        price_to_select = sys.maxsize
+        for provider in self.Ebb.get_providers():
+            _price, *_ = self.cost(provider, requester, is_silent)
+            log(f" * provider={provider} | price={_price}")
+            if _price < price_to_select:
+                selected_provider = provider
+                selected_price = _price
+
+        return selected_provider, selected_price
+
+    def search_best_provider(self, requester):
+        provider_to_share, best_price = self._search_best_provider(requester, is_silent=True)
+        self.price, *_ = self.cost(provider_to_share, requester)
+        if self.price != best_price:
+            raise Exception(f"job_price={self.price} and best_price={best_price} does not match")
+
+        log(f"## provider_to_share={provider_to_share} | price={best_price}", "bold")
+        return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
 
 class JobPrices:
@@ -336,8 +362,8 @@ class JobPrices:
         output = run(["python", fn, *[str(arg) for arg in data]])  # GOTCHA
         output = output.split("\n")
         received_storage_deposit = float(output[0])
-        job_storage_duration = make_tuple(output[1])
-        return received_storage_deposit, job_storage_duration
+        data_storage_duration = make_tuple(output[1])
+        return received_storage_deposit, data_storage_duration
 
     def create_data_storage(self, code_hash: str, is_main=True):
         """Create data storage object."""
@@ -409,24 +435,25 @@ class JobPrices:
         self.data_transfer_out_cost = self.price_data_transfer * self.job.data_transfer_out
         self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
 
-    def set_job_price(self):
+    def set_job_price(self, is_silent=False) -> None:
         """Set job price in the object."""
         self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
-        log(f"==> price_core_min={self.price_core_min}")
-        log(f"==> price_data_transfer={self.price_data_transfer}")
-        log(f"==> price_storage={self.price_storage}")
-        log(f"==> price_cache={self.price_cache}")
-        log(f" * job_price={self.job_price}", "bold blue")
         self.cost["computational"] = self.computational_cost
         self.cost["cache"] = self.cache_cost
         self.cost["storage"] = self.storage_cost
         self.cost["data_transfer_in"] = self.data_transfer_in_cost
         self.cost["data_transfer_out"] = self.data_transfer_out_cost
         self.cost["data_transfer"] = self.data_transfer_cost
-        for k, v in self.cost.items():
-            if k not in ("data_transfer_out", "data_transfer_in"):
-                log(f"\t[bold blue]* {k}={v}")
+        if not is_silent:
+            log(f"==> price_core_min={self.price_core_min}")
+            log(f"==> price_data_transfer={self.price_data_transfer}")
+            log(f"==> price_storage={self.price_storage}")
+            log(f"==> price_cache={self.price_cache}")
+            log(f" * job_price={self.job_price}", "bold blue")
+            for k, v in self.cost.items():
+                if k not in ("data_transfer_out", "data_transfer_in"):
+                    log(f"\t[bold blue]* {k}={v}")
 
-            if k == "data_transfer":
-                log(f"\t\t[bold yellow]* in={self.cost['data_transfer_in']}")
-                log(f"\t\t[bold yellow]* out={self.cost['data_transfer_out']}")
+                if k == "data_transfer":
+                    log(f"\t\t[bold yellow]* in={self.cost['data_transfer_in']}")
+                    log(f"\t\t[bold yellow]* out={self.cost['data_transfer_out']}")

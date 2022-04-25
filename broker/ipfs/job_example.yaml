@@ -1,6 +1,6 @@
 config:
   requester_address: "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
-  provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+  provider_address: "0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea"
   source_code:
     cache_type: public
     path: /home/alper/test_eblocbroker/test_data/base/source_code

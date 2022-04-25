@@ -3,6 +3,7 @@
 import hashlib
 import os
 import os.path
+import owncloud
 import pickle
 import shutil
 import subprocess
@@ -10,8 +11,6 @@ import sys
 import time
 from contextlib import suppress
 from pathlib import Path
-
-import owncloud
 from web3.logs import DISCARD
 
 from broker import cfg, config
@@ -236,7 +235,8 @@ def submit(provider, requester, job, required_confs=1):
                 processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
                 log(vars(processed_logs[0].args))
                 try:
-                    log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
+                    processed_logs[0].args["index"]
+                    # log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
                 except IndexError:
                     log(f"E: Tx({tx_hash}) is reverted")
         else:
@@ -249,40 +249,11 @@ def submit(provider, requester, job, required_confs=1):
     return tx_hash
 
 
-def _submit(provider, requester, job, required_confs=1):
-    job.Ebb.is_requester_valid(requester)
-    job.Ebb.is_eth_account_locked(requester)
-    provider = cfg.w3.toChecksumAddress(provider)
-    provider_info = job.Ebb.get_provider_info(provider)
-    requester_name = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
-    log(f"==> provider_fid=[magenta]{provider_info['f_id']}")
-    try:
-        _git.is_repo(job.folders_to_share)
-    except:
-        print_tb()
-        sys.exit(1)
-
-    for idx, folder in enumerate(job.folders_to_share):
+def _share_folders(job, provider_info, requester_name, folders_hash):
+    """Share generated archived file with the corresponding provider."""
+    for folder in job.folders_to_share:
+        folder_hash = folders_hash[folder]
         if not isinstance(folder, bytes):
-            if idx != 0:
-                print("")
-
-            log(f"==> folder_to_share={folder}")
-            try:
-                _git.initialize_check(folder)
-                _git.commit_changes(folder)
-                folder_hash = initialize_folder(folder, requester_name)
-            except Exception as e:
-                print_tb(e)
-                sys.exit(1)
-
-            if idx == 0:
-                job_key = folder_hash
-
-            # required to send string as bytes
-            value = cfg.w3.toBytes(text=folder_hash)
-            job.code_hashes.append(value)
-            job.code_hashes_str.append(value.decode("utf-8"))
             try:
                 if "@b2drop.eudat.eu" not in provider_info["f_id"]:
                     provider_info["f_id"] = provider_info["f_id"] + "@b2drop.eudat.eu"
@@ -294,15 +265,55 @@ def _submit(provider, requester, job, required_confs=1):
                 sys.exit(1)
 
             time.sleep(0.25)
+
+
+def _submit(provider, requester, job, required_confs=1):
+    job.Ebb.is_requester_valid(requester)
+    job.Ebb.is_eth_account_locked(requester)
+    provider = cfg.w3.toChecksumAddress(provider)
+    requester_name = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
+    try:
+        _git.is_repo(job.folders_to_share)
+    except:
+        print_tb()
+        sys.exit(1)
+
+    folders_hash = {}
+    for idx, folder in enumerate(job.folders_to_share):
+        if not isinstance(folder, bytes):
+            if idx != 0:
+                print("")
+
+            log(f"==> folder_to_share={folder}")
+            try:
+                _git.initialize_check(folder)
+                _git.commit_changes(folder)
+                folder_hash = initialize_folder(folder, requester_name)
+                folders_hash[folder] = folder_hash
+            except Exception as e:
+                print_tb(e)
+                sys.exit(1)
+
+            if idx == 0:
+                job_key = folder_hash
+
+            # required to send string as bytes
+            value = cfg.w3.toBytes(text=folder_hash)
+            job.code_hashes.append(value)
+            job.code_hashes_str.append(value.decode("utf-8"))
         else:
             code_hash = folder
             job.code_hashes.append(code_hash)
             job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-    job.price, *_ = job.cost(provider, requester)
+    # provider_addr_to_submit = provider
+    provider_addr_to_submit = job.search_best_provider(requester)
+    provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
+    log(f"==> provider_fid=[magenta]{provider_info['f_id']}")
+    _share_folders(job, provider_info, requester_name, folders_hash)
     # print(job.code_hashes)
     try:
-        return job.Ebb.submit_job(provider, job_key, job, requester, required_confs=required_confs)
+        return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)
     except QuietExit:
         sys.exit(1)
     except Exception as e:

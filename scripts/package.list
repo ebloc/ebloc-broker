@@ -48,4 +48,5 @@ net-tools
 openssh-server
 npm
 tmux
+munge
 nano

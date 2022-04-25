@@ -34,8 +34,8 @@ def _register_provider(self, *args, **kwargs):
         )
         raise QuietExit
 
-    if kwargs["commitment_blk"] < cfg.BLOCK_DURATION_1_HOUR:
-        raise Exception(f"Commitment block number should be greater than {cfg.BLOCK_DURATION_1_HOUR}")
+    if kwargs["commitment_blk"] < cfg.ONE_HOUR_BLOCK_DURATION:
+        raise Exception(f"Commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}")
 
     if len(kwargs["f_id"]) >= 128:
         raise Exception("f_id hould be lesser than 128")

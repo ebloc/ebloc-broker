@@ -729,6 +729,19 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
+    def search_best_provider(self, job, requester, is_silent=False):
+        selected_provider = ""
+        selected_price = 0
+        price_to_select = sys.maxsize
+        for provider in Ebb.get_providers():
+            _price, *_ = job.cost(provider, requester, is_silent)
+            log(f" * provider={provider} | price={_price}")
+            if _price < price_to_select:
+                selected_provider = provider
+                selected_price = _price
+
+        return selected_provider, selected_price
+
 
 class EBB:
     def __init__(self):

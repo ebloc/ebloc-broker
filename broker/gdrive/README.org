@@ -49,7 +49,6 @@ Delete the old .gdrive/token_v2.json
 rm -f ~/.gdrive/token_v2.json
 #+end_src
 
-
 ** Build
 
 Open terminal and go to the folder where the ~handerls_drive.go~ is.
@@ -58,7 +57,7 @@ Open terminal and go to the folder where the ~handerls_drive.go~ is.
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive  # go install github.com/prasmussen/gdrive@latest
 go build -ldflags "-w -s" && sudo cp gdrive /usr/local/bin/gdrive
-# rm -f ~/.gdrive/token_v2.json
+rm -f ~/.gdrive/token_v2.json
 gdrive about
 #+end_src
 

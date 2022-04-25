@@ -9,8 +9,8 @@ from broker._utils.web3_tools import get_tx_status
 
 def update_provider_prices(self, available_core, commitment_blk, prices):
     """Update provider prices."""
-    if commitment_blk < cfg.BLOCK_DURATION_1_HOUR:
-        raise Exception(f"Commitment block number should be greater than {cfg.BLOCK_DURATION_1_HOUR}")
+    if commitment_blk < cfg.ONE_HOUR_BLOCK_DURATION:
+        raise Exception(f"Commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}")
 
     if not available_core:
         raise Exception("Please enter positive value for the available core number")

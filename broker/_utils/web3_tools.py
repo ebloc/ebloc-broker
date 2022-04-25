@@ -30,7 +30,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
 
             log("tx=", "bold", end="")
             log(tx_receipt_dict, max_depth=1)
-            for idx, tx_log in enumerate(tx_receipt_dict["logs"]):  # all logs emitted under the tx
+            for idx, tx_log in enumerate(tx_receipt_dict["logs"]):  # all logs that are emitted under the Tx
                 tx_log = dict(tx_log)
                 with suppress(Exception):
                     del tx_log["data"]
@@ -51,7 +51,7 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
 
         return tx_receipt
     except Timeout as e:
-        log(str(e))
+        log(f"E: {e}")
         raise e
     except Exception as e:
         raise e

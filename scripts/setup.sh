@@ -35,7 +35,7 @@ curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
 sudo apt -y install nodejs
 sudo npm install -g npm
 sudo npm install -g n
-npm config set fund false
+sudo npm config set fund false
 sudo n latest
 node -v
 
@@ -77,7 +77,6 @@ install_ipfs () {
     fi
     cd /tmp
     version="0.11.0"
-    # version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
     echo "version_to_download=v"$version
     if [[ "$ipfs_current_version" == "$version" ]]; then
         echo "$GREEN##$NC Latest version is already downloaded"
@@ -129,6 +128,7 @@ sudo apt install python3-virtualenv -y
 sudo apt install python3.7 -y
 sudo apt install python3.8-dev -y
 sudo apt install python3.8-venv -y
+sudo apt install libgirepository1.0-dev -y
 
 # mongodb
 # =======
@@ -194,6 +194,8 @@ sudo systemctl restart systemd-timesyncd.service
 systemctl status --no-pager --full systemd-timesyncd
 timedatectl status
 sudo systemctl enable systemd-timesyncd
+sudo DEBIAN_FRONTEND=noninteractive apt-get install mailutils
+systemctl reload postfix
 
 install_brownie () {
     empyt_folder=~/ebloc-broker/empty_folder
@@ -211,16 +213,20 @@ install_brownie
 gpg --gen-key
 gpg --list-keys
 
+mkdir -p ~/git
+git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
+
 sudo mkdir /oc
 sudo chown $(whoami) /oc
 sudo chown -R $(whoami) /oc
 sudo apt-get install davfs2 -y
 # sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
 echo ""
-yes_or_no "Are you a provider? Yes for slurm installation" && ./install_slurm.sh
+yes_or_no "Are you a provider? Yes for slurm installation" && ~/ebloc-broker/scripts/install_slurm.sh
 
 # finally
 # =======
-sudo apt --fix-broken install
 sudo apt autoclean -y
 sudo apt autoremove -y
+sudo apt-get install -f -y
+sudo apt --fix-broken install -y

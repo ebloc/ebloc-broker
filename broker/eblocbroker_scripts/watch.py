@@ -37,7 +37,7 @@ def watch(eth_address="", from_block=None):
                 providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
         if not from_block:
-            from_block = Ebb.get_block_number() - cfg.BLOCK_DURATION_1_DAY
+            from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
         if is_provider:
             event_filter = Ebb._eblocbroker.events.LogJob.createFilter(

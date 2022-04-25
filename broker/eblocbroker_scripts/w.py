@@ -22,7 +22,7 @@ for provider_addr in providers:
     providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
 jobs = []
-from_block = cfg.Ebb.get_block_number() - cfg.BLOCK_DURATION_1_DAY
+from_block = cfg.Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 event_filter = cfg.Ebb._eblocbroker.events.LogJob.createFilter(
     fromBlock=int(from_block),
     argument_filters={"owner": ETH_ADDRESS},
@@ -70,7 +70,7 @@ while True:
             providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
         jobs = []
-        from_block = cfg.Ebb.get_block_number() - cfg.BLOCK_DURATION_1_DAY
+        from_block = cfg.Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
         event_filter = cfg.Ebb._eblocbroker.events.LogJob.createFilter(
             fromBlock=int(from_block),
             argument_filters={"owner": ETH_ADDRESS},

@@ -7,10 +7,9 @@ from broker._utils.web3_tools import get_tx_status
 from broker.lib import log
 from broker.test_setup.user_set import requesters
 
-Ebb = cfg.Ebb
-
 
 def main():
+    Ebb = cfg.Ebb
     owner_address = Ebb.get_owner()
     for idx, requester in enumerate(requesters):
         try:

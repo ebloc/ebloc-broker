@@ -11,7 +11,6 @@ from pathlib import Path
 from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
-from broker.errors import QuietExit
 from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
 
@@ -37,33 +36,26 @@ def check_gdrive_about(given_user):
     return user == given_user, user
 
 
-def submit(provider, _from, job):
+def submit(_from, job):
     try:
         job.check_account_status(_from)
-        job.Ebb.is_provider_valid(provider)
+        # job.Ebb.is_provider_valid(provider)
         job.Ebb.is_requester_valid(_from)
     except Exception as e:
         raise e
 
-    try:
-        provider_info = job.Ebb.get_provider_info(provider)
-        log(f"==> Provider's available_core_num={provider_info['available_core_num']}")
-        log(f"==> Provider's price_core_min={provider_info['price_core_min']}")
-    except Exception as e:
-        raise QuietExit from e
-
-    provider = job.Ebb.w3.toChecksumAddress(provider)
-    provider_to_share = provider_info["gmail"]
+    folder_ids_to_share = []
     data_files_json_path = f"{job.tmp_dir}/meta_data.json"
     try:
         if len(job.folders_to_share) > 1:
             for folder_to_share in job.folders_to_share[1:]:
                 if not isinstance(folder_to_share, bytes):
-                    # starting from the first element ignoring source_folder
+                    # starting from the first data file ignoring source_folder
                     # attempting to share the data folder
-                    job_key, tar_hash, job.tar_hashes = share_folder(folder_to_share, provider_to_share, job.tmp_dir)
+                    folder_key, tar_hash, job.tar_hashes = upload_folder(folder_to_share, job.tmp_dir)
+                    folder_ids_to_share.append(folder_key)  # record keys to share at end
                     job.foldername_tar_hash[folder_to_share] = tar_hash
-                    job.keys[tar_hash] = job_key
+                    job.keys[tar_hash] = folder_key
 
             if job.tmp_dir == "":
                 print_tb("job.tmp_dir is empty")
@@ -84,17 +76,16 @@ def submit(provider, _from, job):
 
         folder_to_share = job.folders_to_share[0]
         if not isinstance(folder_to_share, bytes):
-            job_key, tar_hash, job.tar_hashes = share_folder(
-                folder_to_share, provider_to_share, job.tmp_dir, job_key_flag=True
-            )
+            folder_key, tar_hash, job.tar_hashes = upload_folder(folder_to_share, job.tmp_dir, folder_key_flag=True)
+            folder_ids_to_share.append(folder_key)  # record keys to share at end
             job.foldername_tar_hash[folder_to_share] = tar_hash
             # add an element to the beginning of the dict since Python
             # 3.7. dictionaries are now ordered by insertion order.
-            job.keys_final[tar_hash] = job_key
+            job.keys_final[tar_hash] = folder_key
             job.keys_final.update(job.keys)
             job.keys = job.keys_final
 
-        return job
+        return job, folder_ids_to_share
     except Exception as e:
         print_tb(e)
         raise e
@@ -116,19 +107,16 @@ def submit(provider, _from, job):
             log(ok())
 
 
-def share_folder(folder_to_share, provider_to_share, tmp_dir, job_key_flag=False):
+def upload_folder(folder_to_share, tmp_dir, folder_key_flag=False):
     log(f"## folder_to_share={folder_to_share}")
-    log(f"## provider_to_share=[magenta]{provider_to_share}")
-    key, *_, tar_hash, tar_hashes = upload(folder_to_share, tmp_dir, job_key_flag)
-    cmd = ["gdrive", "share", key, "--role", "writer", "--type", "user", "--email", provider_to_share]
-    log(f"share_output=[magenta]{run(cmd)}", "bold")
+    key, *_, tar_hash, tar_hashes = upload(folder_to_share, tmp_dir, folder_key_flag)
     return key, tar_hash, tar_hashes
 
 
-def upload(folder_to_share, tmp_dir, job_key_flag=False):
+def upload(folder_to_share, tmp_dir, is_source_code=False):
     tar_hashes = {}
     is_already_uploaded = False
-    log(f"==> job_key_flag={job_key_flag} | tar.gz file is inside the base folder")
+    log(f"==> is_source_code={is_source_code} | tar.gz file is inside the base folder")
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, _ = compress_folder(folder_to_share, is_exclude_git=True)
     tar_hashes[folder_to_share] = tar_hash
@@ -137,7 +125,7 @@ def upload(folder_to_share, tmp_dir, job_key_flag=False):
     _to = f"{path_to_move}/{tar_hash}.tar.gz"
     mkdir(path_to_move)
     shutil.move(_from, _to)
-    if job_key_flag:
+    if is_source_code:
         shutil.copyfile(f"{tmp_dir}/meta_data.json", f"{path_to_move}/meta_data.json")
 
     is_file_exist = _list(tar_hash, is_folder=True)
@@ -410,10 +398,10 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     return output, data_key_dict, source_code_key
 
 
-def _dump_dict_to_file(fn, job_keys):
+def _dump_dict_to_file(fn, folder_keys):
     try:
         log("==> meta_data.json file is updated in the parent folder")
-        dump_dict_to_file(fn, job_keys)
+        dump_dict_to_file(fn, folder_keys)
     except Exception as e:
         print_tb(e)
         raise e
