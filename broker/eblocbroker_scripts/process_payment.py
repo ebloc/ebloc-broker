@@ -39,7 +39,7 @@ def process_payment(
 
     self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number, is_print=False)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:
-        log("warning: Job is completed and already get paid")
+        log(f"warning: job ({job_key},{index},{job_id}) is completed and already get paid")
         sys.exit(1)
 
     """
@@ -95,24 +95,13 @@ if __name__ == "__main__":
         data_transfer_out = float(my_args[8])
         core = my_args[9]
         run_time = my_args[10]
-
         # convert all strings in a list to int of the following arguments
         cloud_storage_id = list(map(int, cloud_storage_id))
         core = list(map(int, core))
         run_time = list(map(int, run_time))
-
-    else:  # dummy call
-        job_key = "cdd786fca7ab7aa0c55bc039c6c68137"
-        index = 0
-        job_id = 0
-        elapsed_time = 1
-        result_ipfs_hash = ""
-        cloud_storage_id = 1
-        end_time = 1584375940
-        data_transfer_in = 0.029152870178222656
-        data_transfer_out = 0.0
-        core = [1]
-        run_time = [5]
+    else:
+        log("E: wrong number of arguments provided")
+        sys.exit(1)
 
     try:
         tx_hash = Ebb.process_payment(

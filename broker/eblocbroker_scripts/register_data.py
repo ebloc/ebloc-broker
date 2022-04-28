@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from contextlib import suppress
+
 from broker import cfg
 from broker._utils.tools import log
 from broker._utils.web3_tools import get_tx_status
@@ -12,6 +14,7 @@ def _register_data(source_code_hash, data_price, commitment_dur):
     Ebb = cfg.Ebb
     is_exit = False
     price = None
+    is_update = False
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         log(f"warning: provider [green]{env.PROVIDER_ID}[/green] is not registered")
         raise QuietExit
@@ -21,15 +24,17 @@ def _register_data(source_code_hash, data_price, commitment_dur):
         raise QuietExit
 
     source_code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)
-    try:
+    with suppress(Exception):
         (price, _commitment_dur) = cfg.Ebb.get_registered_data_prices(env.PROVIDER_ID, source_code_hash_bytes, 0)
         log(
             f"## data([green]{source_code_hash}[/green]) is already registerered.\n"
             "Use [blue]./update_data_price.py[/blue] to update its price"
         )
-        is_exit = True
-    except:
-        pass
+        if data_price == price:
+            is_exit = True
+        else:
+            log("## Update price")
+            is_update = True
 
     if is_exit:
         raise QuietExit
@@ -39,7 +44,11 @@ def _register_data(source_code_hash, data_price, commitment_dur):
         raise QuietExit
 
     try:
-        tx = Ebb.register_data(source_code_hash_bytes, data_price, commitment_dur)
+        if not is_update:
+            tx = Ebb.register_data(source_code_hash_bytes, data_price, commitment_dur)
+        else:
+            tx = Ebb.update_data_price(source_code_hash_bytes, data_price, commitment_dur)
+
         get_tx_status(Ebb.tx_id(tx))
     except QuietExit as e:
         raise e

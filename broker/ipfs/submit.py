@@ -3,6 +3,7 @@
 import os
 import sys
 from pathlib import Path
+
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -26,6 +27,7 @@ from broker.utils import (
 # TODO: folders_to_share let user directly provide the IPFS hash instead of the folder
 ipfs = cfg.ipfs
 Ebb = cfg.Ebb
+key = None
 
 
 def pre_check_gpg(requester):
@@ -73,7 +75,29 @@ def pre_check(job: Job, requester):
         sys.exit()
 
 
+def _ipfs_add(job, target, idx, is_silent=False):
+    global key
+    try:
+        ipfs_hash = ipfs.add(target)
+        # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
+        run(["ipfs", "refs", ipfs_hash])
+    except Exception as e:
+        print_tb(e)
+        sys.exit(1)
+
+    if idx == 0:
+        key = ipfs_hash
+
+    job.code_hashes.append(ipfs_to_bytes32(ipfs_hash))
+    job.code_hashes_str.append(ipfs_hash)
+    if not is_silent:
+        log(f"==> ipfs_hash={ipfs_hash} | md5sum={generate_md5sum(target)}")
+
+    return job
+
+
 def submit_ipfs(job: Job, is_pass=False, required_confs=1):
+    global key
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     provider = Ebb.w3.toChecksumAddress(job.provider_addr)
     pre_check(job, requester)
@@ -95,15 +119,6 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         print_tb(e)
         sys.exit(1)
 
-    for idx, folder in enumerate(job.folders_to_share):
-        if isinstance(folder, Path):
-            target = folder
-            if job.storage_ids[idx] == StorageID.IPFS_GPG:
-                provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
-                if not provider_gpg_fingerprint:
-                    log("E: Provider did not register any GPG fingerprint")
-                    sys.exit(1)
-
     targets = []
     is_ipfs_gpg = False
     for idx, folder in enumerate(job.folders_to_share):
@@ -111,63 +126,51 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
             target = folder
             if job.storage_ids[idx] == StorageID.IPFS_GPG:
                 is_ipfs_gpg = True
-                provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
-                if not provider_gpg_fingerprint:
-                    log("E: Provider did not register any GPG fingerprint")
-                    sys.exit(1)
-
-                log(f"==> provider_gpg_fingerprint={provider_gpg_fingerprint}")
-                try:
-                    from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
-                    #: target is updated
-                    target = ipfs.gpg_encrypt(from_gpg_fingerprint, provider_gpg_fingerprint, target)
-                    log(f"==> gpg_file={target}")
-                except Exception as e:
-                    print_tb(e)
-                    sys.exit(1)
-
-            try:
-                ipfs_hash = ipfs.add(target)
-                # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
-                run(["ipfs", "refs", ipfs_hash])
-            except Exception as e:
-                print_tb(e)
-                sys.exit(1)
-
-            if idx == 0:
-                key = ipfs_hash
-
-            job.code_hashes.append(ipfs_to_bytes32(ipfs_hash))
-            job.code_hashes_str.append(ipfs_hash)
-            log(f"==> ipfs_hash={ipfs_hash} | md5sum={generate_md5sum(target)}")
-            if main_storage_id == StorageID.IPFS_GPG:
-                # created gpg file will be removed since its already in ipfs
-                targets.append(target)
+                job.code_hashes.append(b"")  # dummy items added
+                job.code_hashes_str.append("")  # dummy items added
+            else:
+                job = _ipfs_add(job, target, idx)
         else:
             code_hash = folder
             if isinstance(code_hash, bytes):
                 job.code_hashes.append(code_hash)
                 job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-            # TODO: if its ipfs
-            # if isinstance(code_hash, bytes):
-            #     code_hash = code_hash.decode("utf-8")
+    provider_addr_to_submit = job.search_best_provider(requester)
+    if is_ipfs_gpg:  # re-organize with gpg file
+        job.code_hashes = []
+        job.code_hashes_str = []
+        provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
+        provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
+        if not provider_gpg_fingerprint:
+            log("E: Provider did not register any GPG fingerprint")
+            sys.exit(1)
 
-            # if len(code_hash) == 32:
-            #     value = cfg.w3.toBytes(text=code_hash)
-            #     job.code_hashes.append(value)
-            #     job.code_hashes_str.append(value.decode("utf-8"))
-            # else:
-            #     job.code_hashes.append(ipfs_to_bytes32(code_hash))
-            #     job.code_hashes_str.append(code_hash)
+        log(f"==> provider_gpg_fingerprint={provider_gpg_fingerprint}")
+        for idx, folder in enumerate(job.folders_to_share):
+            if isinstance(folder, Path):
+                target = folder
+                if job.storage_ids[idx] == StorageID.IPFS_GPG:
+                    is_ipfs_gpg = True
+                    try:
+                        from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
+                        #: target is updated
+                        target = ipfs.gpg_encrypt(from_gpg_fingerprint, provider_gpg_fingerprint, target)
+                        log(f"==> gpg_file={target}")
+                        targets.append(target)  #: created gpg file will be removed since its already in ipfs
+                    except Exception as e:
+                        print_tb(e)
+                        sys.exit(1)
 
-    if not is_ipfs_gpg:
-        provider_addr_to_submit = job.search_best_provider(requester)
-    else:
-        provider_addr_to_submit = provider
+                job = _ipfs_add(job, target, idx)
+            else:
+                code_hash = folder
+                if isinstance(code_hash, bytes):
+                    job.code_hashes.append(code_hash)
+                    job.code_hashes_str.append(code_hash.decode("utf-8"))
+
         job.price, *_ = job.cost(provider_addr_to_submit, requester)
 
-    breakpoint()  # DEBUG
     try:
         tx_hash = Ebb.submit_job(provider_addr_to_submit, key, job, requester, required_confs)
         if required_confs >= 1:

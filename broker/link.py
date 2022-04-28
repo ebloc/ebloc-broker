@@ -121,7 +121,7 @@ def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
 
 def test_with_small_dataset(value):
     fn = os.path.expanduser("~/test_eblocbroker/run_cppr/run.sh")
-    with open(fn, "r+") as file:
+    with open(fn, "w+") as file:
         changed_filedata = file.read().replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
         file.write(changed_filedata)
 
@@ -137,7 +137,7 @@ def check_linked_data(paths_from, path_to, is_pass=False):
     link.link_folders(paths_from)
     log()
     for key, value in link.data_map.items():
-        test_with_small_dataset(value)
+        # test_with_small_dataset(value)  # delete_me
         log(f"[blue] * [/blue][green]{key}[/green] => [yellow]../data_link/{value}[/yellow]", "bold")
 
     if not is_pass:

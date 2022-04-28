@@ -1,21 +1,21 @@
 config:
-    requester_address: '0xe2969f599cb904e9a808ec7218bc14fcfa346965'
-    provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+    requester_address: '0x446aa04436809c130eab8e33ce9f5d3c80564fb7'
+    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
     source_code:
-        storage_id: gdrive
+        storage_id: ipfs_gpg
         cache_type: public
         path: ~/test_eblocbroker/run_cppr
         storage_hours: 0
     data:
         data1:
-            hash: 983b9fe8a85b543dd5a4a75d031f1091
+            hash: f82aa511f8631bfc9a82fe6fa30f4b52
         data2:
-            hash: 050e6cc8dd7e889bf7874689f1e1ead6
+            hash: 0d6c3288ef71d89fb93734972d4eb903
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/liver.n6c100
+            path: /home/alper/test_eblocbroker/dataset_zip/small/BVZ-sawtooth
             storage_hours: 1
-            storage_id: gdrive
+            storage_id: ipfs_gpg
     data_transfer_out: 5
     jobs:
         job1:

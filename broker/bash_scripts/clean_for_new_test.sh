@@ -64,6 +64,7 @@ rm -rf docs/_build_html/
 rm -rf docs/_build/
 rm /tmp/run/driver_popen.pid
 rm -f ~/.ebloc-broker/.oc_client.pckl
+rm -f /var/ebloc-broker/cache/*.tar.gz
 # rm -f .oc.pckl
 
 # unpin and remove all IPFS content from my machine

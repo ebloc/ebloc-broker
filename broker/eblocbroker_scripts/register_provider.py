@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import sys
 from os.path import expanduser
-
-import ipfshttpclient
 
 from broker import cfg
 from broker._utils._log import log
@@ -85,12 +84,12 @@ def error_msg(key, yaml_fn):
 
 def register_provider_wrapper(yaml_fn):
     """Register provider."""
-    yaml_fn = os.path.expanduser(yaml_fn)
+    yaml_fn = expanduser(yaml_fn)
     if not os.path.exists(yaml_fn):
         log(f"E: yaml_fn({yaml_fn}) does not exist")
         raise QuietExit
 
-    args = Yaml(yaml_fn, auto_dump=False)  # @b2drop.eudat.eu
+    args = Yaml(yaml_fn, auto_dump=False)
     f_id = args["cfg"]["oc_username"].replace("@b2drop.eudat.eu", "")
     gmail = args["cfg"]["gmail"]
     _args = args["cfg"]["provider"]
@@ -180,10 +179,14 @@ def register_provider_wrapper(yaml_fn):
         raise e
 
 
-if __name__ == "__main__":
+def main():
     try:
         # yaml_fn = expanduser("~/ebloc-broker/broker/yaml_files/register_provider.yaml")
         yaml_fn = expanduser("~/.ebloc-broker/cfg.yaml")  # setup for the provider
         register_provider_wrapper(yaml_fn)
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

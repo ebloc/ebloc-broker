@@ -97,7 +97,7 @@ class Job:
         self.check()
         jp = JobPrices(self)
         jp.set_computational_cost()
-        jp.set_storage_cost()  # burda patliyor sanki DELETE
+        jp.set_storage_cost(is_silent)
         jp.set_job_price(is_silent)
         return jp.job_price, jp.cost
 
@@ -276,14 +276,14 @@ class Job:
 
     def print_before_submit(self):
         for idx, source_code_hash in enumerate(self.code_hashes_str):
-            print_temp = {
+            temp = {
                 "path": self.paths[idx],
                 "source_code_hash": source_code_hash,
                 "folder_size_mb": self.data_transfer_ins[idx],
                 "storage_ids": StorageID(self.storage_ids[idx]).name,
                 "cache_type": CacheType(self.cache_types[idx]).name,
             }
-            log(print_temp)
+            log(temp)
             log()
 
     def _search_best_provider(self, requester, is_silent=False):
@@ -292,8 +292,9 @@ class Job:
         price_to_select = sys.maxsize
         for provider in self.Ebb.get_providers():
             _price, *_ = self.cost(provider, requester, is_silent)
-            log(f" * provider={provider} | price={_price}")
+            log(f" * {provider} | price={_price}")
             if _price < price_to_select:
+                price_to_select = _price
                 selected_provider = provider
                 selected_price = _price
 
@@ -305,7 +306,7 @@ class Job:
         if self.price != best_price:
             raise Exception(f"job_price={self.price} and best_price={best_price} does not match")
 
-        log(f"## provider_to_share={provider_to_share} | price={best_price}", "bold")
+        log(f"[green]##[/green] provider_to_share={provider_to_share} | price={best_price}", "bold")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
 
@@ -333,18 +334,18 @@ class JobPrices:
         """Set provider info into variables."""
         if cfg.IS_BROWNIE_TEST:
             self.Ebb.eBlocBroker = config.ebb
-            *_, provider_price_info = self.Ebb._get_provider_info(self.job.provider, 0)
+            *_, provider_prices = self.Ebb._get_provider_info(self.job.provider)
         else:
             if self.Ebb.does_provider_exist(self.job.provider):
-                *_, provider_price_info = self.Ebb._get_provider_info(self.job.provider, 0)
+                *_, provider_prices = self.Ebb._get_provider_info(self.job.provider)
             else:
                 log(f"E: {self.job.provider} does not exist as a provider")
                 raise QuietExit
 
-        self.price_core_min = provider_price_info[2]
-        self.price_data_transfer = provider_price_info[3]
-        self.price_storage = provider_price_info[4]
-        self.price_cache = provider_price_info[5]
+        self.price_core_min = provider_prices[2]
+        self.price_data_transfer = provider_prices[3]
+        self.price_storage = provider_prices[4]
+        self.price_cache = provider_prices[5]
 
     def set_computational_cost(self):
         """Set computational cost within the object."""
@@ -378,7 +379,7 @@ class JobPrices:
         ds.received_storage_deposit = received_storage_deposit
         return ds
 
-    def set_storage_cost(self):
+    def set_storage_cost(self, is_silent=False):
         """Calculate the cache cost."""
         self.storage_cost = 0
         self.cache_cost = 0
@@ -398,7 +399,8 @@ class JobPrices:
             except:
                 _source_code_hash = bytes32_to_ipfs(source_code_hash)
 
-            log(f"==> is_private{br(_source_code_hash, 'blue')}={ds.is_private}")
+            if not is_silent:
+                log(f"==> is_private{br(_source_code_hash, 'blue')}={ds.is_private}")
             # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_storage_deposit > 0 or
             if (
@@ -408,7 +410,8 @@ class JobPrices:
                 and not ds.is_private
                 and ds.is_verified_used
             ):
-                log(f"==> For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
+                if not is_silent:
+                    log(f"==> For {bytes32_to_ipfs(source_code_hash)} cost of storage is not paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0:
                     # if true, registered data's price should be considered for storage

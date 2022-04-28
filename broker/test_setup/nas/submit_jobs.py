@@ -5,9 +5,8 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
-from random import randint
-
 from pymongo import MongoClient
+from random import randint
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -46,12 +45,10 @@ cppr_yam_fn = test_dir / "job_cppr.yaml"
 def create_cppr_job_script():
     """Create cppr slurm job script to be submitted."""
     registered_data_hashes_small = [
-        "b6aaf03752dc68d625fc57b451faa2bf",
         "f1de03edab51f281815c3c1e5ecb88c6",
-        "082d2a71d86a64250f06be14c55ca27e",
         "03919732a417cb1d14049844b9de0f47",
         "983b9fe8a85b543dd5a4a75d031f1091",
-        "f71df9d36cd519d80a3302114779741d",
+        "b6aaf03752dc68d625fc57b451faa2bf",
         "c0fee5472f3c956ba759fd54f1fe843e",
         "63ffd1da6122e3fe9f63b1e7fcac1ff5",
         "9e8918ff9903e3314451bf2943296d31",
@@ -60,22 +57,23 @@ def create_cppr_job_script():
         "3b0f75445e662dc87e28d60a5b13cd43",
         "ebe53bd498a9f6446cd77d9252a9847c",
         "f82aa511f8631bfc9a82fe6fa30f4b52",
-        "761691119cedfb9836a78a08742b14cc",
+        "082d2a71d86a64250f06be14c55ca27e",
         "f93b9a9f63447e0e086322b8416d4a39",
+        "761691119cedfb9836a78a08742b14cc",
     ]
-
     registered_data_hashes_medium = [
-        "050e6cc8dd7e889bf7874689f1e1ead6",
-        "9d5d892a63b5758090258300a59eb389",
-        "779745f315060d1bc0cd44b7266fb4da",
-        "fe801973c5b22ef6861f2ea79dc1eb9c",
-        "0d6c3288ef71d89fb93734972d4eb903",
-        "4613abc322e8f2fdeae9a5dd10f17540",
-        "dd0fbccccf7a198681ab838c67b68fbf",
-        "45281dfec4618e5d20570812dea38760",
-        "fa64e96bcee96dbc480a1495bddbf53c",
-        "8f6faf6cfd245cae1b5feb11ae9eb3cf",
-        "1bfca57fe54bc46ba948023f754521d6",
+        "050e6cc8dd7e889bf7874689f1e1ead6",  # A
+        "9d5d892a63b5758090258300a59eb389",  # A
+        "779745f315060d1bc0cd44b7266fb4da",  # A
+        "fe801973c5b22ef6861f2ea79dc1eb9c",  # B
+        "0d6c3288ef71d89fb93734972d4eb903",  # B
+        "4613abc322e8f2fdeae9a5dd10f17540",  # B
+        "dd0fbccccf7a198681ab838c67b68fbf",  # C
+        "45281dfec4618e5d20570812dea38760",  # C
+        "fa64e96bcee96dbc480a1495bddbf53c",  # C
+        "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
+        "1bfca57fe54bc46ba948023f754521d6",  # D
+        "f71df9d36cd519d80a3302114779741d",  # D
     ]
 
     hash_small_data = random.choice(registered_data_hashes_small)
@@ -240,9 +238,9 @@ def run_job(counter) -> None:
                 log(job_result)
 
             countdown(seconds=5, is_silent=True)
-            # breakpoint()  # DEBUG
         except Exception as e:
             print_tb(e)
+            breakpoint()  # DEBUG
 
 
 def main():

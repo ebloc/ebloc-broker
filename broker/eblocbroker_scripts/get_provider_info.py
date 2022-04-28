@@ -20,8 +20,9 @@ def get_provider_info(self, provider):
         )
 
     try:
+        # TODO: fetch commitment price
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
-        block_read_from, provider_price_info = self._get_provider_info(provider, prices_set_block_numbers[-1])
+        block_read_from, provider_prices = self._get_provider_info(provider, prices_set_block_numbers[-1])
         _event_filter = self._eblocbroker.events.LogProviderInfo.createFilter(
             fromBlock=int(prices_set_block_numbers[0]),
             # toBlock=int(block_read_from) + 1,
@@ -41,12 +42,12 @@ def get_provider_info(self, provider):
         #: removes padding 24 zeros at the beginning
         gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
         provider_info = {
-            "available_core_num": provider_price_info[0],
-            "commitment_block_num": provider_price_info[1],
-            "price_core_min": provider_price_info[2],
-            "price_data_transfer": provider_price_info[3],
-            "price_storage": provider_price_info[4],
-            "price_cache": provider_price_info[5],
+            "available_core_num": provider_prices[0],
+            "commitment_block_num": provider_prices[1],
+            "price_core_min": provider_prices[2],
+            "price_data_transfer": provider_prices[3],
+            "price_storage": provider_prices[4],
+            "price_cache": provider_prices[5],
             "address": provider,
             "block_read_from": block_read_from,
             "is_orcid_verified": self.is_orcid_verified(provider),

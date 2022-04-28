@@ -1,22 +1,18 @@
 #!/bin/bash
 
 extract () {
-    mv ~/.share/small.tar.gz /var/ebloc-broker/cache
-    mv ~/.share/medium.tar.gz /var/ebloc-broker/cache
+    tar -xvf ~/.share/small.tar.gz -C /var/ebloc-broker/cache
+    tar -xvf ~/.share/medium.tar.gz -C /var/ebloc-broker/cache
     cd /var/ebloc-broker/cache
-    tar -xvf small.tar.gz
-    tar -xvf medium.tar.gz
-    command rm small.tar.gz
-    command rm medium.tar.gz
-    trash-empty
     mv small/* .
     mv medium/* .
     rmdir *
+    # command rm small.tar.gz
+    # command rm medium.tar.gz
+    # trash-empty
 }
 
 # extract
-
-# mv */* /var/ebloc-broker/cache
 
 mv -v adhead.n6c100 050e6cc8dd7e889bf7874689f1e1ead6
 mv -v adhead.n6c10 9d5d892a63b5758090258300a59eb389

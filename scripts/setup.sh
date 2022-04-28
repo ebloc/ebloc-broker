@@ -57,13 +57,12 @@ go version
 # alternative use snap to install ipfs:
 # sudo snap install ipfs
 # ipfs init && sudo mount --bind ~/.ipfs ~/snap/ipfs/common
-open_port_4001 () {
-    sudo systemctl enable ufw
-    sudo ufw enable
+open_port_4001 () {  # ufw does not work on digital-ocean
     sudo systemctl start firewalld
     sudo systemctl enable firewalld
-    sudo ufw allow 4001/tcp
-    sudo ufw status verbose
+    sudo firewall-cmd --add-port=4001/tcp --permanent
+    sudo firewall-cmd --reload
+    sudo firewall-cmd --list-all
     sudo nmap localhost
 }
 
@@ -97,10 +96,10 @@ install_ipfs () {
     # https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
     # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
     # set net.core.rmem_max: https://github.com/lucas-clemente/quic-go/wiki/UDP-Receive-Buffer-Size
+    sudo sysctl -w net.core.rmem_max=2500000
     ipfs init --profile=server,badgerds
     ipfs config Reprovider.Strategy roots
     ipfs config Routing.Type none
-    sudo sysctl -w net.core.rmem_max=2500000
     open_port_4001
 }
 install_ipfs

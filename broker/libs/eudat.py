@@ -249,22 +249,20 @@ def submit(provider, requester, job, required_confs=1):
     return tx_hash
 
 
-def _share_folders(job, provider_info, requester_name, folders_hash):
+def _share_folders(provider_info, requester_name, folders_hash):
     """Share generated archived file with the corresponding provider."""
-    for folder in job.folders_to_share:
-        folder_hash = folders_hash[folder]
-        if not isinstance(folder, bytes):
-            try:
-                if "@b2drop.eudat.eu" not in provider_info["f_id"]:
-                    provider_info["f_id"] = provider_info["f_id"] + "@b2drop.eudat.eu"
+    for folder, folder_hash in folders_hash.items():
+        try:
+            if "@b2drop.eudat.eu" not in provider_info["f_id"]:
+                provider_info["f_id"] = provider_info["f_id"] + "@b2drop.eudat.eu"
 
-                share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
-            except Exception as e:
-                log(f"E: Failed sharing folder with [yellow]{provider_info['f_id']}")
-                print_tb(e)
-                sys.exit(1)
+            share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
+        except Exception as e:
+            log(f"E: Failed sharing folder with [yellow]{provider_info['f_id']}")
+            print_tb(e)
+            sys.exit(1)
 
-            time.sleep(0.25)
+        time.sleep(0.25)
 
 
 def _submit(provider, requester, job, required_confs=1):
@@ -310,7 +308,7 @@ def _submit(provider, requester, job, required_confs=1):
     provider_addr_to_submit = job.search_best_provider(requester)
     provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
     log(f"==> provider_fid=[magenta]{provider_info['f_id']}")
-    _share_folders(job, provider_info, requester_name, folders_hash)
+    _share_folders(provider_info, requester_name, folders_hash)
     # print(job.code_hashes)
     try:
         return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)

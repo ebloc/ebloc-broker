@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 from broker import cfg, config
@@ -51,6 +50,7 @@ gas_costs["withdraw"] = []
 gas_costs["authenticateOrcID"] = []
 gas_costs["depositStorage"] = []
 gas_costs["updateProviderInfo"] = []
+gas_costs["updataDataPrice"] = []
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -723,17 +723,14 @@ def test_workflow():
 
     ebb.registerData(code_hash, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
-
     code_hash1 = "0x68b8d8218e730fc2957bcb12119cb204"
-    # "web3.toBytes(hexstr=ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve"))
     ebb.registerData(code_hash1, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     mine(6)
-
     with brownie.reverts():
-        ebb.registerData(code_hash1, 20, 1000, {"from": provider})
+        ebb.registerData(code_hash1, 21, 1000, {"from": provider})
 
-    ebb.updataDataPrice(code_hash1, 250, cfg.ONE_HOUR_BLOCK_DURATION + 1, {"from": provider})
-
+    tx = ebb.updataDataPrice(code_hash1, 250, cfg.ONE_HOUR_BLOCK_DURATION + 1, {"from": provider})
+    gas_costs["updataDataPrice"].append(tx.__dict__["gas_used"])
     data_block_numbers = ebb.getRegisteredDataBlockNumbers(provider, code_hash1)
     log(f"get_registered_data_block_numbers={data_block_numbers[1]}", "bold")
     get_block_number()

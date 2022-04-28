@@ -22,7 +22,7 @@ cfg:
     available_core: 4
     prices:
       commitment_blk: 600
-      price_core_min: 1
+      price_core_min: 2
       price_data_transfer: 1
       price_storage: 1
       price_cache: 1

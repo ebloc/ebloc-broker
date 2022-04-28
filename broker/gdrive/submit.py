@@ -24,7 +24,7 @@ def pre_check():
     check_gdrive()
 
 
-def _submit(provider, key, requester, required_confs):
+def _submit(job, provider, key, requester, required_confs):
     try:
         tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
         tx_receipt = get_tx_status(tx_hash)
@@ -58,7 +58,6 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
     _git.generate_git_repo(job.folders_to_share)
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
-    provider = Ebb.w3.toChecksumAddress(job.provider_addr)
     job.clean_before_submit()
     job, folder_ids_to_share = gdrive.submit(requester, job)
     for folder_to_share in job.folders_to_share:
@@ -78,7 +77,7 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     provider_addr_to_submit = job.search_best_provider(requester)
     try:
         job.Ebb.is_provider_valid(provider_addr_to_submit)
-        provider_info = job.Ebb.get_provider_info(provider)
+        provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
         # log(f"## provider_addr_to_submit=[magenta]{provider_addr_to_submit}")
         log(f"==> provider's available_core_num={provider_info['available_core_num']}")
         log(f"==> provider's price_core_min={provider_info['price_core_min']}")
@@ -87,7 +86,7 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
         raise QuietExit from e
 
     _share_folders(folder_ids_to_share, provider_gmail)
-    return _submit(provider_addr_to_submit, key, requester, required_confs)
+    return _submit(job, provider_addr_to_submit, key, requester, required_confs)
 
 
 if __name__ == "__main__":
