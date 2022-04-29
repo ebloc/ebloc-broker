@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 """Driver for ebloc-broker."""
-
 import os
 import sys
 import textwrap
@@ -388,9 +387,9 @@ def run_driver(given_bn):
 
     blk_read = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
-    eth_balance = Ebb.eth_balance(env.PROVIDER_ID)
+    gwei_balance = Ebb.gwei_balance(env.PROVIDER_ID)
     log(f"==> deployed_block_number={deployed_block_number}")
-    log(f"==> account_balance={eth_balance} gwei | {cfg.w3.fromWei(eth_balance, 'ether')} eth")
+    log(f"==> account_balance={gwei_balance} Gwei | {cfg.w3.fromWei(gwei_balance, 'ether')} eth")
     log(f"==> Ebb_balance={balance_temp}")
     while True:
         wait_until_idle_core_available()
@@ -406,7 +405,7 @@ def run_driver(given_bn):
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:
-                log(f"==> Since Driver started provider_gained_wei={value}")
+                log(f"==> Since Driver started provider_gained_gwei={value}")
 
         current_bn = Ebb.get_block_number()
         log(f" * {get_date()} waiting new job to come since block_number={blk_read}")

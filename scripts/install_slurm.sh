@@ -3,7 +3,6 @@
 sudo apt-get update
 xargs -a <(awk '! /^ *(#|$)/' ~/ebloc-broker/scripts/package_slurm.list) -r -- sudo apt install -yf
 sudo apt install libmariadbclient-dev -y
-sudo apt install libmariadbd-dev -y
 sudo apt install libmariadb-dev -y
 
 #: https://askubuntu.com/a/556387/660555
@@ -25,10 +24,13 @@ git clone --depth 1 --branch slurm-19-05-8-1 https://github.com/SchedMD/slurm.gi
 cd ~/slurm
 sudo rm -rf /usr/local/lib/slurm/ /tmp/slurmstate/
 make clean
-./configure --enable-debug --enable-front-end
-# ./configure --enable-debug --enable-front-end --enable-multiple-slurmd  # seems like this also works
-sudo make
-sudo make install
+./configure --enable-debug --enable-front-end  # --enable-multiple-slurmd  # seems like this also works
+sudo make && sudo make install
+scontrol --version
+if [ $? -ne 0 ]; then
+   echo scontrol [ FAIL ]
+   exit 1
+fi
 
 # configurations
 # ==============
@@ -38,9 +40,5 @@ sudo cp ~/ebloc-broker/broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd
 sudo chmod 664 /usr/local/etc/slurm.conf  # 0600 , 755 , 660 , 755
 sudo chmod 755 /usr/local/etc/slurmdbd.conf
 mkdir -p /tmp/run
-
-# sudo systemctl enable slurmctld  # Controller
-# sudo systemctl enable slurmdbd  # Database
-# sudo systemctl enable slurmd  # Compute Nodes
 
 # apt-cache search mysql | grep "dev"

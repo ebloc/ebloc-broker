@@ -19,7 +19,7 @@ def _update_data_price():
     commitment_block_duration = 600
     source_code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)
     try:
-        (price, _commitment_block_duration) = cfg.Ebb.get_registered_data_prices(
+        (price, _commitment_block_duration) = cfg.Ebb.get_registered_data_price(
             env.PROVIDER_ID, source_code_hash_bytes, 0
         )
         if price == new_data_price and _commitment_block_duration == commitment_block_duration:

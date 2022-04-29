@@ -18,12 +18,12 @@ _collect_account = Ebb.brownie_load_account(fn, "alper")
 log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
 
 
-def balances(accounts, is_silent=False):
+def balances(accounts, is_verbose=False):
     """Print balance of all the users located under ~/.brownie/accounts."""
     for account in accounts:
         _account = account.lower().replace("0x", "")
         fn = Path(expanduser("~/.brownie/accounts")) / _account
-        if not is_silent:
+        if not is_verbose:
             print(fn)
 
         account = Ebb.brownie_load_account(str(fn), "alper")
@@ -36,9 +36,9 @@ def collect_all_into_base():
         fn = Path(expanduser("~/.brownie/accounts")) / _account
         log(fn)
         account = Ebb.brownie_load_account(str(fn), "alper")
-        balance_to_transfer = Ebb._get_balance(account, "wei")
+        balance_to_transfer = Ebb._get_balance(account, "gwei")
         log(balance_to_transfer)
-        log(Ebb._get_balance(collect_account, "wei"))
+        log(Ebb._get_balance(collect_account, "gwei"))
         if balance_to_transfer > 21000:
             log(Ebb.transfer(balance_to_transfer - 21000, account, collect_account, required_confs=0))
             log(Ebb._get_balance(account))
@@ -51,7 +51,7 @@ def send_eth_to_users(accounts, value):
         fn = Path(expanduser("~/.brownie/accounts")) / _account
         print(fn)
         account = Ebb.brownie_load_account(str(fn), "alper")
-        log(Ebb._get_balance(collect_account, "wei"))
+        log(Ebb._get_balance(collect_account, "gwei"))
         log(Ebb.transfer(value, _collect_account, account, required_confs=0))
         log(Ebb._get_balance(account))
         log(Ebb._get_balance(collect_account))
@@ -61,7 +61,7 @@ def send_eth_to_users(accounts, value):
 def main():
     owner = Ebb.get_owner()
     log(f"ower_balance ({owner})=", "bold", end="")
-    balances([owner], is_silent=True)
+    balances([owner], is_verbose=True)
     balances(providers)
     breakpoint()  # DEBUG
     balances(requesters)

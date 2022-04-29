@@ -42,11 +42,11 @@ class EudatClass(Storage):
                 return False
         return True
 
-    def search_token(self, f_id, share_list, folder_name, is_silent=False) -> bool:
+    def search_token(self, f_id, share_list, folder_name, is_verbose=False) -> bool:
         """Search for the share_token from the shared folder."""
         f_id = f_id.replace("@b2drop.eudat.eu", "")  # check in case
         share_key = f"{folder_name}_{self.requester_id[:16]}"
-        if not is_silent:
+        if not is_verbose:
             log(f"## searching share tokens for the related source_code_folder={share_key}")
 
         for idx in range(len(share_list) - 1, -1, -1):

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import os
-import pytest
 import sys
 from os import path
+
+import pytest
 
 import brownie
 from broker import cfg, config
@@ -51,6 +52,8 @@ gas_costs["authenticateOrcID"] = []
 gas_costs["depositStorage"] = []
 gas_costs["updateProviderInfo"] = []
 gas_costs["updataDataPrice"] = []
+gas_costs["updateProviderPrices"] = []
+gas_costs["registerData"] = []
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -207,7 +210,7 @@ def test_stored_data_usage():
         job.run_time,
         job.data_transfer_out,
     ]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     # first time job is submitted with the data files
     # https://stackoverflow.com/a/12468284/2402577
     tx = ebb.submitJob(
@@ -216,26 +219,26 @@ def test_stored_data_usage():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     log(tx.events["LogDataStorageRequest"]["owner"])
     key = tx.events["LogJob"]["jobKey"]
     log(f"==> job_index={tx.events['LogJob']['index']} | key={key}")
-    assert _cost["storage"] == 2
-    job_price, _cost = job.cost(provider, requester)
+    assert cost["storage"] == 2
+    job_price, cost = job.cost(provider, requester)
     log(f"==> job_index={tx.events['LogJob']['index']}")
     log(tx.events["LogJob"]["jobKey"])
-    assert _cost["storage"] == 0, "Since it is not verified yet cost of storage should be 2"
-    assert _cost["data_transfer"] == 1
+    assert cost["storage"] == 0, "Since it is not verified yet cost of storage should be 2"
+    assert cost["data_transfer"] == 1
     with brownie.reverts():
-        job_price_revert = 500  # data_transfer_in cost is ignored
+        job_price_revert = 5  # data_transfer_in cost is ignored
         tx = ebb.submitJob(
             job.code_hashes[0],
             job.data_transfer_ins,
             args,
             job.storage_hours,
             job.code_hashes,
-            {"from": requester, "value": web3.toWei(job_price_revert, "wei")},
+            {"from": requester, "value": web3.toWei(job_price_revert, "gwei")},
         )
 
     tx = ebb.submitJob(
@@ -244,11 +247,11 @@ def test_stored_data_usage():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     assert "LogDataStorageRequest" not in tx.events
     mine(cfg.ONE_HOUR_BLOCK_DURATION)
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     # first time job is submitted with the data files
     tx = ebb.submitJob(
         job.code_hashes[0],
@@ -256,7 +259,7 @@ def test_stored_data_usage():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     log(tx.events["LogDataStorageRequest"]["owner"])
 
@@ -293,7 +296,7 @@ def test_data_info():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 1]
     job.data_prices_set_block_numbers = [0, 0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -311,7 +314,7 @@ def test_data_info():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     provider_price_info = ebb.getProviderInfo(provider, 0)
     price_cache = provider_price_info[1][4]
@@ -357,7 +360,7 @@ def test_computational_refund():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -375,7 +378,7 @@ def test_computational_refund():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     index = 0
     job_id = 0
@@ -387,8 +390,8 @@ def test_computational_refund():
     args = [index, job_id, 1579524998, 2, 0, job.cores, [5], True]
     run_time = 1
     tx = ebb.processPayment(job.code_hashes[0], args, run_time, zero_bytes32, {"from": accounts[0]})
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     log(f"{received_sum} {refunded_sum}")
     assert received_sum + refunded_sum == 505
     assert received_sum == 104 and refunded_sum == 401
@@ -416,8 +419,8 @@ def test_storage_refund():
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     job.data_prices_set_block_numbers = [0, 0]  # provider's registered data won't be used
-    job_price, _cost = job.cost(provider, requester)
-    job_price += 1  # for test 1 wei extra is paid
+    job_price, cost = job.cost(provider, requester)
+    job_price += 1  # for test 1 Gwei extra is paid
     args = [
         provider,
         job.provider_price_block_number,
@@ -434,7 +437,7 @@ def test_storage_refund():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
 
     refunded = tx.events["LogJob"]["refunded"]
@@ -448,9 +451,9 @@ def test_storage_refund():
     tx = ebb.refund(provider, job_key, index, job_id, job.cores, job.run_time, {"from": provider})
     gas_costs["refund"].append(tx.__dict__["gas_used"])
     log(ebb.getJobInfo(provider, job_key, index, job_id))
-    refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
-    log(f"refunded_wei={refundedWei}", "bold")
-    withdraw(requester, refundedWei)
+    refundedGwei = tx.events["LogRefundRequest"]["refundedGwei"]
+    log(f"refunded_gwei={refundedGwei}", "bold")
+    withdraw(requester, refundedGwei)
     # VM Exception while processing transaction: invalid opcode
     with brownie.reverts():
         ebb.getJobInfo(provider, job_key, 5, job_id)
@@ -460,20 +463,20 @@ def test_storage_refund():
         _storage_cost_sum, *_ = ebb.getStorageInfo(provider, requester, code_hash)
         storage_cost_sum += _storage_cost_sum
 
-    assert _cost["storage"] == storage_cost_sum
-    assert _cost["computational"] + _cost["data_transfer"] + _cost["cache"] == refundedWei
+    assert cost["storage"] == storage_cost_sum
+    assert cost["computational"] + cost["data_transfer"] + cost["cache"] == refundedGwei
     mine(cfg.ONE_HOUR_BLOCK_DURATION)
     tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester, "gas": 4500000})
-    refundedWei = tx.events["LogDepositStorage"]["payment"]
-    log(f"refunded_wei={refundedWei}", "bold")
-    withdraw(requester, refundedWei)
+    refundedGwei = tx.events["LogDepositStorage"]["payment"]
+    log(f"refunded_gwei={refundedGwei}", "bold")
+    withdraw(requester, refundedGwei)
     with brownie.reverts():
         tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester, "gas": 4500000})
 
     tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[1], {"from": requester, "gas": 4500000})
-    refundedWei = tx.events["LogDepositStorage"]["payment"]
+    refundedGwei = tx.events["LogDepositStorage"]["payment"]
     paid_address = tx.events["LogDepositStorage"]["paidAddress"]
-    withdraw(requester, refundedWei)
+    withdraw(requester, refundedGwei)
     with brownie.reverts():
         tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester, "gas": 4500000})
 
@@ -486,7 +489,7 @@ def test_storage_refund():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     log(f"job_index={tx.events['LogJob']['index']}", "bold")
     log(tx.events["LogJob"]["jobKey"])
@@ -495,9 +498,9 @@ def test_storage_refund():
     tx = ebb.refund(provider, job_key, index, job_id, job.cores, job.run_time, {"from": provider})
     gas_costs["refund"].append(tx.__dict__["gas_used"])
     log(ebb.getJobInfo(provider, job_key, index, job_id))
-    refundedWei = tx.events["LogRefundRequest"]["refundedWei"]
-    log(f"refunded_wei={refundedWei}", "bold")
-    assert _cost["computational"] + _cost["data_transfer"] + _cost["cache"] == refundedWei
+    refundedGwei = tx.events["LogRefundRequest"]["refundedGwei"]
+    log(f"refunded_gwei={refundedGwei}", "bold")
+    assert cost["computational"] + cost["data_transfer"] + cost["cache"] == refundedGwei
     storage_cost_sum = 0
     storage_payment = []
     for code_hash in job.code_hashes:
@@ -541,25 +544,41 @@ def test_update_provider():
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
     available_core = 64
     prices = [2, 2, 2, 2]
-    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
-    prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
-    provider_info = ebb.getProviderInfo(accounts[0], prices_set_block_number)
-    assert 2 == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
+    tx = ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    gas_costs["updateProviderPrices"].append(tx.__dict__["gas_used"])
+
+    prices = [3, 3, 3, 3]  # update prices right away to check overwrite
+    tx = ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    gas_costs["updateProviderPrices"].append(tx.__dict__["gas_used"])
+
+    prices = [4, 4, 4, 4]  # update prices right away to check overwrite
+    tx = ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    gas_costs["updateProviderPrices"].append(tx.__dict__["gas_used"])
+
+    prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])
+    provider_info = ebb.getProviderInfo(accounts[0], prices_set_block_number[-1])
+    assert 4 == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
+    provider_info = ebb.getProviderInfo(accounts[0], prices_set_block_number[0])
+    assert 1 == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
+
     available_core = 128
-    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    tx = ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    gas_costs["updateProviderPrices"].append(tx.__dict__["gas_used"])
 
     prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
     assert ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 128
 
     available_core = 16
-    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    tx = ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    gas_costs["updateProviderPrices"].append(tx.__dict__["gas_used"])
 
     prices_set_block_number = ebb.getUpdatedProviderPricesBlocks(accounts[0])[1]
     assert ebb.getProviderInfo(accounts[0], prices_set_block_number)[1][0] == 16
     mine(cfg.ONE_HOUR_BLOCK_DURATION)
 
     available_core = 32
-    ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    tx = ebb.updateProviderPrices(available_core, COMMITMENT_BLOCK_NUM, prices, {"from": accounts[0]})
+    gas_costs["updateProviderPrices"].append(tx.__dict__["gas_used"])
 
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
     assert ebb.getUpdatedProviderPricesBlocks(accounts[0])[2] == COMMITMENT_BLOCK_NUM * 2 + provider_registered_bn
@@ -602,7 +621,7 @@ def test_multiple_data():
         job.data_transfer_out,
     ]
 
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     # first time job is submitted with the data files
     tx = ebb.submitJob(
         job_key,
@@ -610,20 +629,20 @@ def test_multiple_data():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     log(f"==> job_index={tx.events['LogJob']['index']}")
     log(tx.events["LogJob"]["jobKey"])
-    assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
+    assert cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
 
     # second time job is wanted to send by the same user  with the same data files
-    job_price, _cost = job.cost(provider, requester)
-    assert _cost["storage"] == 0, "Since cost of storage is already paid by the user it should be 0"
+    job_price, cost = job.cost(provider, requester)
+    assert cost["storage"] == 0, "Since cost of storage is already paid by the user it should be 0"
 
     # second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = job.cost(provider, requester_1)
-    log(f"==> cost={_cost}")
-    assert _cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
+    job_price, cost = job.cost(provider, requester_1)
+    log(f"==> cost={cost}")
+    assert cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
     # cluster verifies the given data files for the related job
     index = 0
     # is_verified_list = [True, True]
@@ -637,22 +656,22 @@ def test_multiple_data():
         {"from": provider, "gas": 4500000},
     )
     #: second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = job.cost(provider, requester)
-    assert _cost["storage"] == 0, "Since it is verified storageCost should be 0"
+    job_price, cost = job.cost(provider, requester)
+    assert cost["storage"] == 0, "Since it is verified storageCost should be 0"
     #: second time job is wanted to send by the differnt user  with the same data files
-    job_price, _cost = job.cost(provider, requester_1)
-    assert _cost["storage"] == 100, "Since data1 is verified and public, its cost of storage should be 0"
+    job_price, cost = job.cost(provider, requester_1)
+    assert cost["storage"] == 100, "Since data1 is verified and public, its cost of storage should be 0"
     # ds = scripts.DataStorage(provider, code_hashes[1], True)
-    job_price, _cost = job.cost(provider, requester)
-    assert _cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
-    assert _cost["data_transfer"] == job.data_transfer_out, "cost of data_transfer should cover only data_transfer_out"
+    job_price, cost = job.cost(provider, requester)
+    assert cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
+    assert cost["data_transfer"] == job.data_transfer_out, "cost of data_transfer should cover only data_transfer_out"
     tx = ebb.submitJob(
         job_key,
         job.data_transfer_ins,
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     log(f"job_index={tx.events['LogJob']['index']}", "bold")
     # ===== provider side =====
@@ -680,8 +699,8 @@ def test_multiple_data():
         False,
     ]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     log(f"received_sum={received_sum} refunded_sum={refunded_sum}", "bold")
     assert received_sum == 320 and refunded_sum == 0
     withdraw(accounts[0], received_sum)
@@ -702,8 +721,8 @@ def test_multiple_data():
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # log(tx.events['LogProcessPayment'])
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     log(f"received_sum={received_sum} refunded_sum={refunded_sum}", "bold")
     assert received_sum == 120 and refunded_sum == 0
     withdraw(accounts[0], received_sum)
@@ -721,36 +740,36 @@ def test_workflow():
     with brownie.reverts():
         ebb.updataDataPrice(code_hash, 20, 100, {"from": provider})
 
-    ebb.registerData(code_hash, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    tx = ebb.registerData(code_hash, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    gas_costs["registerData"].append(tx.__dict__["gas_used"])
+
     ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
     code_hash1 = "0x68b8d8218e730fc2957bcb12119cb204"
     ebb.registerData(code_hash1, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    gas_costs["registerData"].append(tx.__dict__["gas_used"])
     mine(6)
     with brownie.reverts():
         ebb.registerData(code_hash1, 21, 1000, {"from": provider})
 
-    tx = ebb.updataDataPrice(code_hash1, 250, cfg.ONE_HOUR_BLOCK_DURATION + 1, {"from": provider})
+    tx = ebb.updataDataPrice(code_hash1, 250, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    gas_costs["updataDataPrice"].append(tx.__dict__["gas_used"])
+    tx = ebb.updataDataPrice(code_hash1, 251, cfg.ONE_HOUR_BLOCK_DURATION + 1, {"from": provider})
     gas_costs["updataDataPrice"].append(tx.__dict__["gas_used"])
     data_block_numbers = ebb.getRegisteredDataBlockNumbers(provider, code_hash1)
     log(f"get_registered_data_block_numbers={data_block_numbers[1]}", "bold")
     get_block_number()
     data_prices = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
-    log(f"register_data_price={data_prices}", "bold")
     assert data_prices[0] == 20
-
-    res = ebb.getRegisteredDataPrice(provider, code_hash1, data_block_numbers[1])
-    log(f"register_data_price={res}", "bold")
-    assert res[0] == 250
-    mine(cfg.ONE_HOUR_BLOCK_DURATION - 9)
-
-    res = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
-    log(f"register_data_price={res}", "bold")
-    assert res[0] == 20
+    output = ebb.getRegisteredDataPrice(provider, code_hash1, data_block_numbers[-1])
+    assert output[0] == 251
+    mine(cfg.ONE_HOUR_BLOCK_DURATION - 10)
+    output = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
+    log(f"register_data_price={output}", "bold")
+    assert output[0] == 20
     mine(1)
-
-    res = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
-    log(f"register_data_price={res}", "bold")
-    assert res[0] == 250
+    output = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
+    log(f"register_data_price={output}", "bold")
+    assert output[0] == 251
 
     job.code_hashes = [code_hash, code_hash1]  # Hashed of the data file in array
     job.storage_hours = [0, 0]
@@ -775,14 +794,14 @@ def test_workflow():
         job.data_transfer_out,
     ]
 
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     tx = ebb.submitJob(  # first submit
         job_key,
         job.data_transfer_ins,
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     for idx in range(0, 3):
         log(ebb.getJobInfo(provider, job_key, 0, idx))
@@ -823,28 +842,25 @@ def test_workflow():
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # log(tx.events['LogProcessPayment'])
-    received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
-    refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
-    received_sum += tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum += tx.events["LogProcessPayment"]["refundedWei"]
-    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}")
-    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    received_sums.append(tx.events["LogProcessPayment"]["receivedGwei"])
+    refunded_sums.append(tx.events["LogProcessPayment"]["refundedGwei"])
+    received_sum += tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum += tx.events["LogProcessPayment"]["refundedGwei"]
+    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
     index = 0
     job_id = 1
     execution_time = 15
     data_transfer = [0, 0]
     end_time = 39
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
-
     args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
-    received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
-    refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
-    received_sum += tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum += tx.events["LogProcessPayment"]["refundedWei"]
-    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}")
-    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    received_sums.append(tx.events["LogProcessPayment"]["receivedGwei"])
+    refunded_sums.append(tx.events["LogProcessPayment"]["refundedGwei"])
+    received_sum += tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum += tx.events["LogProcessPayment"]["refundedGwei"]
+    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
     index = 0
     job_id = 2
     execution_time = 20
@@ -874,14 +890,14 @@ def test_workflow():
     tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # log(tx.events['LogProcessPayment'])
-    received_sums.append(tx.events["LogProcessPayment"]["receivedWei"])
-    refunded_sums.append(tx.events["LogProcessPayment"]["refundedWei"])
-    received_sum += tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum += tx.events["LogProcessPayment"]["refundedWei"]
-    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}")
-    log(received_sums)
-    log(refunded_sums)
-    assert job_price - _cost["storage"] == received_sum + refunded_sum
+    received_sums.append(tx.events["LogProcessPayment"]["receivedGwei"])
+    refunded_sums.append(tx.events["LogProcessPayment"]["refundedGwei"])
+    received_sum += tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum += tx.events["LogProcessPayment"]["refundedGwei"]
+    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
+    log(f"received_sums={received_sums}", "bold")
+    log(f"refunded_sums={refunded_sums}", "bold")
+    assert job_price - cost["storage"] == received_sum + refunded_sum
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
 
@@ -903,8 +919,7 @@ def test_simple_submit():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
-
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
 
     args = [
@@ -924,7 +939,7 @@ def test_simple_submit():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     log(f"submitJob_gas_used={tx.__dict__['gas_used']}")
     index = 0
@@ -944,8 +959,8 @@ def test_simple_submit():
     tx = ebb.processPayment(job.key, args, elapsed_time, out_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # tx = ebb.processPayment(job.code_hashes[0], args, elapsed_time, zero_bytes32, {"from": accounts[0]})
-    received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     # log(str(received_sum) + " " + str(refunded_sum))
     assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5
     withdraw(accounts[0], received_sum)
@@ -1011,7 +1026,7 @@ def test_submit_job():
             ]
 
             # log(code_hashes[0])
-            job_price, _cost = job.cost(provider, requester)
+            job_price, cost = job.cost(provider, requester)
             job_price_sum += job_price
             data_transfer_ins = [100]
             job_key = job.storage_hours[0]
@@ -1021,7 +1036,7 @@ def test_submit_job():
                 args,
                 job.storage_hours,
                 job.code_hashes,
-                {"from": requester, "value": web3.toWei(job_price, "wei")},
+                {"from": requester, "value": web3.toWei(job_price, "gwei")},
             )
             # log('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
             log(f"job_index={tx.events['LogJob']['index']}", "bold")
@@ -1080,8 +1095,8 @@ def test_submit_job():
             tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
             gas_costs["processPayment"].append(tx.__dict__["gas_used"])
             # code_hashes
-            received = tx.events["LogProcessPayment"]["receivedWei"]
-            refunded = tx.events["LogProcessPayment"]["refundedWei"]
+            received = tx.events["LogProcessPayment"]["receivedGwei"]
+            refunded = tx.events["LogProcessPayment"]["refundedGwei"]
             withdraw(accounts[0], received)
             withdraw(requester, refunded)
             log(f"received={received} | refunded={refunded}", "bold")
@@ -1127,7 +1142,7 @@ def test_submit_n_data():
     job.cache_types = [CacheType.PUBLIC.value]
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -1146,7 +1161,7 @@ def test_submit_n_data():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     gas_costs.append(tx.__dict__["gas_used"])
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1160,7 +1175,7 @@ def test_submit_n_data():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -1179,7 +1194,7 @@ def test_submit_n_data():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     gas_costs.append(tx.__dict__["gas_used"])
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1197,7 +1212,7 @@ def test_submit_n_data():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -1216,7 +1231,7 @@ def test_submit_n_data():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     gas_costs.append(tx.__dict__["gas_used"])
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1240,7 +1255,7 @@ def test_submit_n_data():
     ]
     job.storage_hours = [0, 0, 0, 1]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
-    job_price, _cost = job.cost(provider, requester)
+    job_price, cost = job.cost(provider, requester)
     provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -1259,7 +1274,7 @@ def test_submit_n_data():
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
     gas_costs.append(tx.__dict__["gas_used"])
 

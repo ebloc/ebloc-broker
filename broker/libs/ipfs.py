@@ -216,14 +216,14 @@ class Ipfs:
     ################
     # ONLINE CALLS #
     ################
-    def swarm_connect(self, ipfs_id: str, is_silent=False):
+    def swarm_connect(self, ipfs_id: str, is_verbose=False):
         """Swarm connect into the ipfs node."""
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         # TODO: check is valid IPFS id
         try:
-            if is_silent:
+            if is_verbose:
                 log(f" * trying to connect into {ipfs_id}", end="")
             else:
                 log(f" * trying to connect into {ipfs_id}")
@@ -232,7 +232,7 @@ class Ipfs:
             p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
-                if not is_silent:
+                if not is_verbose:
                     log()
                     if "failure: dial to self attempted" in e:
                         log(f"E: {e}")
@@ -244,15 +244,15 @@ class Ipfs:
                 else:
                     log("  [  failed  ]")
             else:
-                if is_silent:
+                if is_verbose:
                     log(ok())
                 else:
                     log(f"{output} {ok()}")
         except Exception as e:
-            if is_silent:
+            if is_verbose:
                 log("[  failed  ]")
 
-            if not is_silent:
+            if not is_verbose:
                 print_tb(e)
 
             raise e
@@ -269,7 +269,7 @@ class Ipfs:
         with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
             return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-    def is_hash_exists_online(self, ipfs_hash: str, swarm_ipfs_id=None, is_silent=False):
+    def is_hash_exists_online(self, ipfs_hash: str, swarm_ipfs_id=None, is_verbose=False):
         log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
@@ -281,7 +281,7 @@ class Ipfs:
         try:
             if swarm_ipfs_id:
                 with suppress(Exception):  # TODO: Attempt to swarm connect into requester
-                    self.swarm_connect(swarm_ipfs_id, is_silent=is_silent)
+                    self.swarm_connect(swarm_ipfs_id, is_verbose=is_verbose)
 
             output = self.stat(ipfs_hash, _is_ipfs_on=False)
             _stat = {}

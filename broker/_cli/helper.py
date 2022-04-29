@@ -16,6 +16,7 @@ class Helper:
 
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
+
         __ https://github.com/kislyuk/argcomplete
         __ https://stackoverflow.com/questions/14597466/custom-tab-completion-in-python-argparse
         """

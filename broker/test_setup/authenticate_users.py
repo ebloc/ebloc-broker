@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import time
+
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import print_tb
@@ -17,6 +19,7 @@ def main():
             tx_hash = Ebb.authenticate_orc_id(requester, "0000-0001-7642-0552", owner_address)
             if tx_hash:
                 get_tx_status(tx_hash)
+                time.sleep(1)
         except Exception as e:
             print_tb(e)
 

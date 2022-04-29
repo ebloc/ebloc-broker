@@ -5,8 +5,9 @@ import random
 import sys
 from datetime import datetime
 from pathlib import Path
-from pymongo import MongoClient
 from random import randint
+
+from pymongo import MongoClient
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -21,9 +22,10 @@ from broker.submit_base import SubmitBase
 from broker.test_setup.user_set import providers, requesters
 from broker.utils import print_tb
 
-yaml_files = ["job_nas.yaml"]
+# yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
+is_mini_test = True
 
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
@@ -31,7 +33,13 @@ _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 benchmarks = ["nas", "cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
-ipfs_ids = ["ipfs_gpg", "ipfs"]
+ipfs_ids = ["ipfs", "ipfs_gpg"]
+
+if is_mini_test:
+    benchmarks = ["cppr"]
+    storage_ids = ["ipfs"]
+    ipfs_ids = ["ipfs"]
+
 # for provider_address in providers:
 #     pre_submit(storage_ids, provider_address)
 
@@ -159,7 +167,7 @@ def pre_submit(storage_ids, provider_address):
         submit_base = SubmitBase(yaml_cfg.path)
         tx_hash = submit_base.submit(is_pass, required_confs)
         if required_confs >= 1:
-            tx_receipt = get_tx_status(tx_hash, is_silent=True)
+            tx_receipt = get_tx_status(tx_hash, is_verbose=True)
             if tx_receipt["status"] == 1:
                 processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
                 try:
@@ -196,11 +204,11 @@ def run_job(counter) -> None:
             storage = random.choice(ipfs_ids)
 
         if selected_benchmark == "nas":
-            log(f" * Submitting job from NAS Benchmark to [green]{provider_address}", "bold blue")
+            log(f" * Submitting job from [cyan]NAS Benchmark[/cyan] to [green]{provider_address}", "bold blue")
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting job with cppr datasets to provider=[green]{provider_address}", "bold blue")
+            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to provider=[green]{provider_address}", "bold blue")
             yaml_cfg = Yaml(cppr_yam_fn)
             hash_small_data, hash_medium_data = create_cppr_job_script()
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
@@ -222,7 +230,7 @@ def run_job(counter) -> None:
             log(f"requester={requester_address}", "bold")
             tx_hash = submit_base.submit(is_pass=True)
             log(f"tx_hash={tx_hash}", "bold")
-            tx_receipt = get_tx_status(tx_hash, is_silent=True)
+            tx_receipt = get_tx_status(tx_hash, is_verbose=True)
             if tx_receipt["status"] == 1:
                 processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
                 job_result = vars(processed_logs[0].args)
@@ -237,7 +245,7 @@ def run_job(counter) -> None:
                 ebb_mongo.add_item(tx_hash, job_result)
                 log(job_result)
 
-            countdown(seconds=5, is_silent=True)
+            countdown(seconds=5, is_verbose=True)
         except Exception as e:
             print_tb(e)
             breakpoint()  # DEBUG

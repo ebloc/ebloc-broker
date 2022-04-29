@@ -1,21 +1,21 @@
 config:
-    requester_address: '0x446aa04436809c130eab8e33ce9f5d3c80564fb7'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    requester_address: '0x7621e307269e5d9d4d27fd1c24425b210048f486'
+    provider_address: '0x1926b36af775e1312fdebcc46303ecae50d945af'
     source_code:
-        storage_id: ipfs_gpg
+        storage_id: ipfs
         cache_type: public
         path: ~/test_eblocbroker/run_cppr
         storage_hours: 0
     data:
         data1:
-            hash: f82aa511f8631bfc9a82fe6fa30f4b52
+            hash: c0fee5472f3c956ba759fd54f1fe843e
         data2:
-            hash: 0d6c3288ef71d89fb93734972d4eb903
+            hash: dd0fbccccf7a198681ab838c67b68fbf
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/BVZ-sawtooth
+            path: /home/alper/test_eblocbroker/dataset_zip/small/BVZ-tsukuba
             storage_hours: 1
-            storage_id: ipfs_gpg
+            storage_id: ipfs
     data_transfer_out: 5
     jobs:
         job1:

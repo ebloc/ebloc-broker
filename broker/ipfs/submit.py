@@ -75,7 +75,7 @@ def pre_check(job: Job, requester):
         sys.exit()
 
 
-def _ipfs_add(job, target, idx, is_silent=False):
+def _ipfs_add(job, target, idx, is_verbose=False):
     global key
     try:
         ipfs_hash = ipfs.add(target)
@@ -90,7 +90,7 @@ def _ipfs_add(job, target, idx, is_silent=False):
 
     job.code_hashes.append(ipfs_to_bytes32(ipfs_hash))
     job.code_hashes_str.append(ipfs_hash)
-    if not is_silent:
+    if not is_verbose:
         log(f"==> ipfs_hash={ipfs_hash} | md5sum={generate_md5sum(target)}")
 
     return job

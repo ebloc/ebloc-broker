@@ -149,7 +149,7 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "wei")},
+        {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
 
     tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_time, {"from": provider})
@@ -161,8 +161,8 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
     tx = ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
     if is_print:
         log(f"==> process_payment received_gas_used={tx.__dict__['gas_used']}")
-    # received_sum = tx.events["LogProcessPayment"]["receivedWei"]
-    # refunded_sum = tx.events["LogProcessPayment"]["refundedWei"]
+    # received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
+    # refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     # withdraw(provider, received_sum)
     # withdraw(requester, refunded_sum)
     check_list(is_print)

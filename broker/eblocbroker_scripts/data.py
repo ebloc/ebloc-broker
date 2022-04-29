@@ -28,7 +28,7 @@ def is_data_registered(provider, registered_data_hash) -> bool:
         raise Exception(f"registered_data_hash {registered_data_hash} is not in bytes")
 
     with suppress(Exception):
-        cfg.Ebb.get_registered_data_prices(provider, registered_data_hash, 0)
+        cfg.Ebb.get_registered_data_price(provider, registered_data_hash, 0)
         return True
 
     return False
@@ -47,7 +47,7 @@ def get_data_info(self, provider) -> None:
         for entry in event_filter.get_all_entries():
             registered_data_hash = entry.args["registeredDataHash"]
             with suppress(Exception):  # ignores removed data hashes
-                (price, commitment_block_duration) = cfg.Ebb.get_registered_data_prices(
+                (price, commitment_block_duration) = cfg.Ebb.get_registered_data_price(
                     provider, registered_data_hash, 0
                 )
                 provider_data[registered_data_hash] = {

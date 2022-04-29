@@ -13,17 +13,17 @@ from broker.utils import generate_md5sum, path_leaf, question_yes_no
 
 
 class Link:
-    def __init__(self, path_from, path_to) -> None:
+    def __init__(self, folder_target, folder_link) -> None:
         self.data_map = {}  # type: Dict[str, str]
-        self.path_from = path_from
-        self.path_to = path_to
+        self.folder_target = folder_target
+        self.folder_link = folder_link
 
     def umount(self, data_hashes):
         for data_hash in data_hashes:
             if isinstance(data_hash, bytes):
                 data_hash = data_hash.decode("utf-8")
 
-            dest = f"{self.path_to}/{data_hash}"
+            dest = f"{self.folder_link}/{data_hash}"
             if os.path.isdir(dest):
                 with suppress(Exception):
                     run(["sudo", "umount", "-f", dest], is_quiet=True)
@@ -53,7 +53,7 @@ class Link:
                 data_hash = data_hash.decode("utf-8")
 
             path = Path("/var") / "ebloc-broker" / "cache" / data_hash
-            dest = f"{self.path_to}/{data_hash}"
+            dest = f"{self.folder_link}/{data_hash}"
             self.link(path, dest, is_read_only=True)
 
     def link_folders(self, paths=None):
@@ -63,7 +63,7 @@ class Link:
 
         if not paths:
             # instead of full path only returns folder names
-            paths = [f for f in listdir(self.path_from) if isdir(join(self.path_from, f))]
+            paths = [f for f in listdir(self.folder_target) if isdir(join(self.folder_target, f))]
             is_only_folder_names = True
         else:
             is_only_folder_names = False
@@ -72,7 +72,7 @@ class Link:
             if not isinstance(path, bytes):
                 if is_only_folder_names:
                     folder_name = path
-                    path = f"{self.path_from}/{path}"
+                    path = f"{self.folder_target}/{path}"
                 else:
                     folder_name = path_leaf(path)
 
@@ -82,7 +82,7 @@ class Link:
                     raise e
 
                 self.data_map[folder_name] = folder_hash
-                dest = f"{self.path_to}/{folder_hash}"
+                dest = f"{self.folder_link}/{folder_hash}"
                 self.link(path, dest)
                 if idx < len(paths) - 1:
                     log()
@@ -103,8 +103,8 @@ def check_link_folders(folders_to_share, registered_data_files, is_pass=False):
 
     if folders_to_share:
         is_continue = True
-        path_to = env.LINK_PATH / "base" / "data_link"
-        check_linked_data(folders_to_share, path_to, is_pass)
+        folder_link = env.LINK_PATH / "base" / "data_link"
+        check_linked_data(folders_to_share, folder_link, is_pass)
         for folder in folders_to_share:
             if not os.path.isdir(folder):
                 log(f"E: {folder} path does not exist")
@@ -126,15 +126,15 @@ def test_with_small_dataset(value):
         file.write(changed_filedata)
 
 
-def check_linked_data(paths_from, path_to, is_pass=False):
+def check_linked_data(folders_target, folder_link, is_pass=False):
     """Generate folder as hard linked of the given folder paths or provider main folder.
 
-    :param paths_from: iterates all over the given folders
-    :param path_to: linked folders_to_share into into given path
+    :param folders_target: iterates all over the given folders
+    :param folder_link: linked folders_to_share into into given path
     """
-    mkdir(path_to)
-    link = Link(paths_from, path_to)
-    link.link_folders(paths_from)
+    mkdir(folder_link)
+    link = Link(folders_target, folder_link)
+    link.link_folders(folders_target)
     log()
     for key, value in link.data_map.items():
         # test_with_small_dataset(value)  # delete_me
@@ -148,13 +148,13 @@ def check_linked_data(paths_from, path_to, is_pass=False):
             is_exit=True,
         )
 
-    for folder in paths_from:
+    for folder in folders_target:
         if not os.path.isdir(folder):
             log(f"E: {folder} path does not exist")
             sys.exit(1)
 
 
 if __name__ == "__main__":
-    path_from = env.HOME / "test_eblocbroker" / "test_data" / "base" / "data"
-    path_to = env.LINK_PATH / "base" / "data_link"
-    check_linked_data(path_from, path_to, is_pass=True)
+    folder_target = env.HOME / "test_eblocbroker" / "test_data" / "base" / "data"
+    folder_link = env.LINK_PATH / "base" / "data_link"
+    check_linked_data(folder_target, folder_link, is_pass=True)

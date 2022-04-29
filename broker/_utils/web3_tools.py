@@ -10,7 +10,7 @@ from broker._utils._log import log, ok
 from brownie.network.transaction import TransactionReceipt
 
 
-def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
+def get_tx_status(tx_hash, is_verbose=False) -> TxReceipt:
     """Return status of the transaction."""
     if not tx_hash:
         raise Exception("warning: tx_hash is empty")
@@ -18,13 +18,13 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
     if isinstance(tx_hash, TransactionReceipt):
         tx_hash = tx_hash.txid
 
-    if not is_silent:
+    if not is_verbose:
         log(f"tx_hash={tx_hash}", "bold")
 
     try:
-        tx_receipt = cfg.Ebb._wait_for_transaction_receipt(tx_hash, is_silent=is_silent)
+        tx_receipt = cfg.Ebb._wait_for_transaction_receipt(tx_hash, is_verbose=is_verbose)
         tx_receipt_dict = dict(tx_receipt)
-        if not is_silent:
+        if not is_verbose:
             with suppress(Exception):
                 del tx_receipt_dict["logsBloom"]
 
@@ -41,10 +41,10 @@ def get_tx_status(tx_hash, is_silent=False) -> TxReceipt:
             log("#> Is transaction successfully deployed?", end="")
 
         if tx_receipt["status"] == 1:
-            if not is_silent:
+            if not is_verbose:
                 log(ok())
         else:
-            if not is_silent:
+            if not is_verbose:
                 log()
 
             raise Exception("tx is reverted")

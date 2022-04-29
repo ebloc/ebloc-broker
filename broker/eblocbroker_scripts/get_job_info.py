@@ -196,8 +196,8 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             "cloudStorageID": None,
             "result_ipfs_hash": "",
             "completion_time": None,
-            "refundedWei": None,
-            "receivedWei": None,
+            "refundedGwei": None,
+            "receivedGwei": None,
             "code_hashes": None,
             "data_transfer_in_to_download": None,
             "data_transfer_out_used": None,
@@ -225,8 +225,8 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
                 self.job_info.update({"completion_time": logged_receipt.args["completionTime"]})
-                self.job_info.update({"receivedWei": logged_receipt.args["receivedWei"]})
-                self.job_info.update({"refundedWei": logged_receipt.args["refundedWei"]})
+                self.job_info.update({"receivedGwei": logged_receipt.args["receivedGwei"]})
+                self.job_info.update({"refundedGwei": logged_receipt.args["refundedGwei"]})
                 self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 break

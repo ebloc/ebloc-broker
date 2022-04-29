@@ -85,7 +85,7 @@ library Lib {
 
     struct DataInfo {
         uint32 price;
-        uint32 commitmentBlockDuration;
+        uint32 commitmentBlockDur;
     }
 
     struct Storage {
@@ -125,8 +125,8 @@ library Lib {
 
     struct ProviderInfo {
         uint32 availableCore; // Registered core number of the provider
-        uint32 commitmentBlockDuration;
-        /* All the price varaibles are defined in Wei.
+        uint32 commitmentBlockDur;
+        /* All the price varaibles are defined in Gwei.
            Floating-point or fixed-point decimals have not yet been implemented in Solidity */
         uint32 priceCoreMin; // Provider's price for core per minute
         uint32 priceDataTransfer;

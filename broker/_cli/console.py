@@ -39,7 +39,7 @@ def has_context_name():
     return "name" in app.context
 
 
-@app.command("balance", "Returns user's earned money amount in Wei.")
+@app.command("balance", "Returns user's earned money amount in Gwei.")
 def balance(eth_address):
     """Return block number.
 

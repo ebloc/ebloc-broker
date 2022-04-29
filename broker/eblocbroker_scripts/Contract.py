@@ -5,8 +5,9 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
-from pymongo import MongoClient
 from typing import Union
+
+from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
@@ -137,7 +138,7 @@ class Contract:
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.get_block_number())["timestamp"]
 
-    def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_silent=False) -> TxReceipt:
+    def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_verbose=False) -> TxReceipt:
         """Wait till the tx is deployed."""
         if isinstance(tx_hash, TransactionReceipt):
             tx_hash = tx_hash.txid
@@ -145,7 +146,7 @@ class Contract:
         tx_receipt = None
         attempt = 0
         poll_latency = 3
-        if not is_silent:
+        if not is_verbose:
             log(f"## waiting for the transaction({tx_hash}) receipt... ", end="")
 
         while True:
@@ -161,14 +162,14 @@ class Contract:
             if tx_receipt and tx_receipt["blockHash"]:
                 break
 
-            if not is_silent:
+            if not is_verbose:
                 log()
                 log(f"## attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
 
             attempt += 1
             time.sleep(poll_latency)
 
-        if not is_silent:
+        if not is_verbose:
             log(ok())
 
         if not compact:
@@ -229,14 +230,13 @@ class Contract:
         else:
             raise Exception(f"Invalid account {address} is provided")
 
-    def _get_balance(self, account, _type="ether"):
+    def _get_balance(self, account, eth_unit="ether"):
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)
         else:
             account = str(account)
 
-        balance_wei = self.w3.eth.get_balance(account)
-        return self.w3.fromWei(balance_wei, _type)
+        return self.w3.fromWei(self.w3.eth.get_balance(account), eth_unit)
 
     def transfer(self, amount, from_account, to_account, required_confs=1):
         tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
@@ -372,7 +372,7 @@ class Contract:
                 "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
                 "allow_revert": True,
-                "value": self.w3.toWei(job_price, "wei"),
+                "value": self.w3.toWei(job_price, "gwei"),
                 "required_confs": required_confs,
             }
             try:
@@ -491,7 +491,16 @@ class Contract:
     ###########
     # GETTERS #
     ###########
-    def get_registered_data_prices(self, *args):
+    def get_registered_data_bn(self, *args):
+        if self.eBlocBroker is not None:
+            if env.IS_BLOXBERG:
+                return self.eBlocBroker.getRegisteredDataBlockNumbers(*args)
+            else:
+                return self.eBlocBroker.functions.getRegisteredDataBlockNumbers(*args).call()
+        else:
+            raise Exception("Contract object's eBlocBroker variable is None")
+
+    def get_registered_data_price(self, *args):
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
                 return self.eBlocBroker.getRegisteredDataPrice(*args)
@@ -660,9 +669,9 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def eth_balance(self, account):
-        """Return account balance."""
-        return self.w3.eth.get_balance(account)
+    def gwei_balance(self, account):
+        """Return account balance in Gwei."""
+        return self.w3.fromWei(self.w3.eth.get_balance(account), "gwei")
 
     def get_balance(self, account):
         if not isinstance(account, (Account, LocalAccount)):
@@ -729,12 +738,12 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def search_best_provider(self, job, requester, is_silent=False):
+    def search_best_provider(self, job, requester, is_verbose=False):
         selected_provider = ""
         selected_price = 0
         price_to_select = sys.maxsize
         for provider in Ebb.get_providers():
-            _price, *_ = job.cost(provider, requester, is_silent)
+            _price, *_ = job.cost(provider, requester, is_verbose)
             log(f" * provider={provider} | price={_price}")
             if _price < price_to_select:
                 selected_provider = provider

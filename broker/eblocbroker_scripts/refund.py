@@ -57,7 +57,7 @@ if __name__ == "__main__":
             processed_logs = Ebb._eblocbroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
             log(vars(processed_logs[0].args))
             try:
-                log(f"refunded_wei={processed_logs[0].args['refundedWei']}")
+                log(f"refunded_gwei={processed_logs[0].args['refundedGwei']}")
                 log("SUCCESS", "green")
             except Exception as e:
                 log(f"E: Transaction is reverted. {e}")

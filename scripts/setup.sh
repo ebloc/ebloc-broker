@@ -31,13 +31,21 @@ git pull --rebase -v
 
 # nodejs
 # ======
-curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
-sudo apt -y install nodejs
+output=$(node -v)
+if [ "$output" == "" ];then
+   # curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
+   curl -fsSL https://deb.nodesource.com/setup_17.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   node -v
+fi
+
+# npm
+# ===
+sudo aptitude install npm -y
 sudo npm install -g npm
 sudo npm install -g n
 sudo npm config set fund false
 sudo n latest
-node -v
 
 # ganache-cli
 # ===========
@@ -128,6 +136,7 @@ sudo apt install python3.7 -y
 sudo apt install python3.8-dev -y
 sudo apt install python3.8-venv -y
 sudo apt install libgirepository1.0-dev -y
+sudo apt install libcairo2-dev
 
 # mongodb
 # =======
@@ -144,22 +153,24 @@ sudo systemctl unmask mongodb
 sudo systemctl enable mongod
 sudo systemctl --no-pager status --full mongod
 
-# ebloc-broker pip packages
-# =========================
-VENV=$HOME/venv
-python3.8 -m venv $VENV
-source $VENV/bin/activate
-$VENV/bin/python3.8 -m pip install --upgrade pip
-python3 -m pip install --no-use-pep517 cm-rgb
-pip install wheel
-cd ~/ebloc-broker && pip install -e . --use-deprecated=legacy-resolver
-mkdir -p $HOME/.cache/black
-sudo chown $(logname) -R $HOME/.cache/black
-black_version=$(pip freeze | grep black | sed 's|black==||g')
-if [ "$black_version" != "" ]; then
-    rm -rf $HOME/.cache/black/*
-    mkdir -p $HOME/.cache/black/$black_version
-fi
+install_ebb_pip_packages () {
+    VENV=$HOME/venv
+    [ ! -d $VENV ] && python3 -m venv $VENV
+    source $VENV/bin/activate
+    $VENV/bin/python3.8 -m pip install --upgrade pip
+    python3 -m pip install --no-use-pep517 cm-rgb
+    pip install wheel
+    cd ~/ebloc-broker
+    pip install -e .
+    mkdir -p $HOME/.cache/black
+    sudo chown $(logname) -R $HOME/.cache/black
+    black_version=$(pip freeze | grep black | sed 's|black==||g')
+    if [ "$black_version" != "" ]; then
+        rm -rf $HOME/.cache/black/*
+        mkdir -p $HOME/.cache/black/$black_version
+    fi
+}
+install_ebb_pip_packages
 
 # solc
 # ====
@@ -214,6 +225,8 @@ gpg --list-keys
 
 mkdir -p ~/git
 git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
+go env -w GO111MODULE=auto
+go get github.com/prasmussen/gdrive
 
 sudo mkdir /oc
 sudo chown $(whoami) /oc

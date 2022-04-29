@@ -27,7 +27,7 @@ class IpfsClass(Storage):
         """Check whether ipfs-hash is online."""
         try:
             ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(
-                ipfs_hash, self.requester_info["ipfs_id"], is_silent=True
+                ipfs_hash, self.requester_info["ipfs_id"], is_verbose=True
             )
             if "CumulativeSize" not in ipfs_stat:
                 raise Exception("Markle not found! Timeout for the IPFS object stat retrieve")

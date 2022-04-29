@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 from contextlib import suppress
 
 from broker._utils._log import log, ok
@@ -47,15 +48,16 @@ def register_data_files(data_price, accounts):
     for code_hash in accounts:
         with suppress(Exception):
             _register_data(code_hash, data_price, commitment_dur)
+            time.sleep(1)
 
     log()
     log(f"#> registering data {len(hashes_small)} files{ok()}")
 
 
 def main():
-    register_data_files(data_price=1, accounts=hashes_small)
-    register_data_files(data_price=2, accounts=hashes_medium)
-    register_data_files(data_price=3, accounts=hashes_medium_2)
+    # register_data_files(data_price=1, accounts=hashes_small)
+    register_data_files(data_price=20, accounts=hashes_medium)
+    register_data_files(data_price=30, accounts=hashes_medium_2)
 
 
 if __name__ == "__main__":

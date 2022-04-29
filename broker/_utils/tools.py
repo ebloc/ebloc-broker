@@ -52,8 +52,8 @@ def merge_two_dicts(x, y):
     return z
 
 
-def countdown(seconds: int, is_silent=False) -> None:
-    if not is_silent:
+def countdown(seconds: int, is_verbose=False) -> None:
+    if not is_verbose:
         log(f"## sleep_time={seconds} seconds                                             ")
 
     while seconds:
