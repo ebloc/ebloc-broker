@@ -438,7 +438,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         os.remove(slurm_log_output_fn_temp)
 
-    def get_job_info(self, is_print=False, is_log_print=True):
+    def get_job_info(self, is_print=False, is_log_print=True) -> None:
         self.job_info = eblocbroker_function_call(
             lambda: Ebb.get_job_info(
                 env.PROVIDER_ID,

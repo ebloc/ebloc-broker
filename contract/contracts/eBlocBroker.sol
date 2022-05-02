@@ -57,7 +57,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      */
     function withdraw() public returns (bool) {
         // Using the withdrawal pattern
-        uint256 amount = balances[msg.sender];
+        uint256 amount = balances[msg.sender].mul(1 gwei);
         // Set zero the balance before sending to prevent reentrancy attacks
         delete balances[msg.sender]; // gas refund is made
         // Forwards all available gas
@@ -341,7 +341,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         _setProviderPrices(provider, block.number, availableCore, prices, commitmentBlockDur);
         pricesSetBlockNum[msg.sender].push(uint32(block.number));
-        provider.constructProvider();
+        provider.construct();
         registeredProviders.push(msg.sender);
         emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
         return true;
@@ -640,26 +640,27 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             storageDuration,
             info
         );
+        uint msg_value = msg.value.div(1 gwei);
         cost = cost.add(_calculateComputationalCost(info, args.core, args.runTime));
-        require(msg.value >= cost);
+        require(msg_value >= cost);
         // Here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
-        Lib.Status storage st = provider.jobStatus[key].push();
-        st.cacheCost = storageDuration[0];
-        st.dataTransferIn = dataTransferIn[0];
-        st.dataTransferOut = args.dataTransferOut;
-        st.pricesSetBlockNum = uint32(priceBlockIndex);
-        st.received = cost.sub(storageCost);
-        st.jobOwner = payable(msg.sender);
-        st.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
-        st.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
+        Lib.Status storage jobInfo = provider.jobStatus[key].push();
+        jobInfo.cacheCost = storageDuration[0];
+        jobInfo.dataTransferIn = dataTransferIn[0];
+        jobInfo.dataTransferOut = args.dataTransferOut;
+        jobInfo.pricesSetBlockNum = uint32(priceBlockIndex);
+        jobInfo.received = cost.sub(storageCost);
+        jobInfo.jobOwner = payable(msg.sender);
+        jobInfo.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
+        jobInfo.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
         priceBlockIndex = provider.jobStatus[key].length - 1;
         uint256 refunded;
-        if (msg.value != cost) {
-            refunded = msg.value - cost;
+        if (msg_value != cost) {
+            refunded = (msg_value - cost);
             // transfers extra payment (msg.value - sum), if any, back to requester (msg.sender)
             balances[msg.sender] += refunded;
         }
-        emitLogJob(key, uint32(priceBlockIndex), sourceCodeHash, args, refunded);
+        emitLogJob(key, uint32(priceBlockIndex), sourceCodeHash, args, refunded, msg_value);
         return;
     }
 
@@ -915,7 +916,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32 index,
         bytes32[] memory codeHashes,
         Lib.JobArgument memory args,
-        uint256 refunded
+        uint256 refunded,
+        uint msg_value
     ) internal {
         emit LogJob(
             args.provider,
@@ -927,7 +929,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             args.cacheType,
             args.core,
             args.runTime,
-            msg.value,
+            msg_value,  // msg.value.div(1 gwei)
             refunded
         );
     }
@@ -958,12 +960,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /* Returns a list of registered/updated provider's registered data prices */
-    function getRegisteredDataBlockNumbers(address _provider, bytes32 sourceCodeHash)
+    function getRegisteredDataBlockNumbers(address provider, bytes32 sourceCodeHash)
         external
         view
         returns (uint32[] memory)
     {
-        return providers[_provider].registeredData[sourceCodeHash].committedBlock;
+        return providers[provider].registeredData[sourceCodeHash].committedBlock;
     }
 
     /**
@@ -1066,8 +1068,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /* Returns a list of registered/updated provider's block number */
-    function getUpdatedProviderPricesBlocks(address _provider) external view returns (uint32[] memory) {
-        return pricesSetBlockNum[_provider];
+    function getUpdatedProviderPricesBlocks(address provider) external view returns (uint32[] memory) {
+        return pricesSetBlockNum[provider];
     }
 
     function getJobSize(address provider, string memory key) public view returns (uint256) {
@@ -1083,8 +1085,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     /* @dev Checks whether or not the given Ethereum address of the provider is
        already registered in eBlocBroker.
      */
-    function doesProviderExist(address _provider) external view returns (bool) {
-        return providers[_provider].committedBlock > 0;
+    function doesProviderExist(address provider) external view returns (bool) {
+        return providers[provider].committedBlock > 0;
     }
 
     /* @dev Checks whether or not the enrolled requester's given ORCID iD is

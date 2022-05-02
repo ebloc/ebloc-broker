@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 """Driver for ebloc-broker."""
+import math
 import os
 import sys
 import textwrap
 import time
 from contextlib import suppress
 from datetime import datetime
+from decimal import Decimal
 from functools import partial
 from typing import List
 
@@ -388,8 +390,12 @@ def run_driver(given_bn):
     blk_read = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     gwei_balance = Ebb.gwei_balance(env.PROVIDER_ID)
+    wei_amount = Decimal(gwei_balance) * (Decimal(10) ** 9)
     log(f"==> deployed_block_number={deployed_block_number}")
-    log(f"==> account_balance={gwei_balance} Gwei | {cfg.w3.fromWei(gwei_balance, 'ether')} eth")
+    log(
+        f"==> account_balance={math.floor(gwei_balance)} Gwei | "
+        f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} Eth"
+    )
     log(f"==> Ebb_balance={balance_temp}")
     while True:
         wait_until_idle_core_available()

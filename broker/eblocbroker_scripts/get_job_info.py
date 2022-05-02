@@ -26,10 +26,10 @@ def analyze_data(self, key, provider=None):
         else:
             code_hash_str = cfg.w3.toText(code_hash)
 
-        received_storage_deposit, *_ = cfg.Ebb.get_storage_info(code_hash, provider, self.job_info["job_owner"])
+        received_deposit, *_ = cfg.Ebb.get_storage_info(code_hash, provider, self.job_info["job_owner"])
         *_, job_storage_duration = cfg.Ebb.get_job_storage_duration(provider, cfg.ZERO_ADDRESS, code_hash)
         ds = DataStorage(job_storage_duration)
-        ds.received_storage_deposit = received_storage_deposit
+        ds.received_deposit = received_deposit
         self.received_block.append(ds.received_block)
         self.storage_duration.append(ds.storage_duration)
         self.job_info["is_cached"][code_hash_str] = False  # FIXME double check

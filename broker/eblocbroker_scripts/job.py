@@ -39,7 +39,7 @@ class DataStorage:
         self.storage_duration: int = args[1]
         self.is_private: bool = args[2]
         self.is_verified_used: bool = args[3]
-        self.received_storage_deposit: int = 0
+        self.received_deposit: int = 0
 
 
 class Job:
@@ -58,6 +58,7 @@ class Job:
         self.cache_types: List[int] = []
         self.cores: List[int] = []
         self.run_time = []
+        self.key = ""
         self.keys = {}  # type: Dict[str, str]
         self.keys_final = {}  # type: Dict[str, str]
         self.foldername_tar_hash = {}  # type: Dict[str, str]
@@ -316,7 +317,7 @@ class Job:
 
         if is_all_same:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
-            breakpoint()  # DEBUG
+            # breakpoint()  # DEBUG
 
         log(f"[green]##[/green] provider_to_share={provider_to_share} | price={best_price}", "bold")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
@@ -374,21 +375,21 @@ class JobPrices:
         fn = call.__file__
         output = run(["python", fn, *[str(arg) for arg in data]])  # GOTCHA
         output = output.split("\n")
-        received_storage_deposit = float(output[0])
+        received_deposit = float(output[0])
         data_storage_duration = make_tuple(output[1])
-        return received_storage_deposit, data_storage_duration
+        return received_deposit, data_storage_duration
 
     def create_data_storage(self, code_hash: str, is_main=True):
         """Create data storage object."""
         if self.is_brownie or is_main:
-            received_storage_deposit, job_storage_duration = self.Ebb.get_job_storage_duration(
+            received_deposit, job_storage_duration = self.Ebb.get_job_storage_duration(
                 self.job.provider, self.job.requester, code_hash
             )
         else:
-            received_storage_deposit, job_storage_duration = self.new_contract_function_call(code_hash)
+            received_deposit, job_storage_duration = self.new_contract_function_call(code_hash)
 
         ds = DataStorage(job_storage_duration)
-        ds.received_storage_deposit = received_storage_deposit
+        ds.received_deposit = received_deposit
         return ds
 
     def set_storage_cost(self, is_verbose=False):
@@ -407,7 +408,7 @@ class JobPrices:
 
             if ds.received_block + ds.storage_duration < self.w3.eth.block_number:
                 # storage time is completed
-                ds.received_storage_deposit = 0
+                ds.received_deposit = 0
 
             try:
                 _code_hash = code_hash.decode("utf-8")
@@ -417,10 +418,8 @@ class JobPrices:
             if is_verbose:
                 log(f"==> is_private{br(_code_hash, 'blue')}={ds.is_private}")
             # print(received_block + storage_duration >= self.w3.eth.block_number)
-            # if ds.received_storage_deposit > 0 or
-            if (
-                ds.received_storage_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.block_number
-            ) or (
+            # if ds.received_deposit > 0 or
+            if (ds.received_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.block_number) or (
                 ds.received_block + ds.storage_duration >= self.w3.eth.block_number
                 and not ds.is_private
                 and ds.is_verified_used
@@ -448,10 +447,7 @@ class JobPrices:
                     self.storage_cost += data_price
                     self.registered_data_cost_list[_code_hash] = data_price
                     self.registered_data_cost += data_price
-                    break
-
-                #  if not ds.received_storage_deposit and (received_block + storage_duration < w3.eth.block_number):
-                if not ds.received_storage_deposit:
+                elif not ds.received_deposit:  # and (received_block + storage_duration < w3.eth.block_number)
                     self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
                     if self.job.storage_hours[idx] > 0:
                         self.storage_cost += (
@@ -487,10 +483,12 @@ class JobPrices:
                     log(f"[green]|[/green]   * {k}={v}", "bold")
                     if k == "storage":
                         log(f"[green]|[/green]       [yellow]*[/yellow] in={self.cost['data_transfer_in']}", "bold")
-                        log(
-                            f"[green]|[/green]       [yellow]*[/yellow] registered_data={self.registered_data_cost}",
-                            "bold",
-                        )
+                        if self.registered_data_cost > 0:
+                            log(
+                                f"[green]|[/green]       [yellow]*[/yellow] registered_data={self.registered_data_cost}",
+                                "bold",
+                            )
+                            log(f"[green]|[/green]         {self.registered_data_cost_list}")
 
                 if k == "data_transfer":
                     log(f"[green]|[/green]       [yellow]*[/yellow] in={self.cost['data_transfer_in']}", "bold")

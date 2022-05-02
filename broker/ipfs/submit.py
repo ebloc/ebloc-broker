@@ -27,7 +27,6 @@ from broker.utils import (
 # TODO: folders_to_share let user directly provide the IPFS hash instead of the folder
 ipfs = cfg.ipfs
 Ebb = cfg.Ebb
-key = None
 
 
 def pre_check_gpg(requester):
@@ -76,7 +75,6 @@ def pre_check(job: Job, requester):
 
 
 def _ipfs_add(job, target, idx, is_verbose=False):
-    global key
     try:
         ipfs_hash = ipfs.add(target)
         # ipfs_hash = ipfs.add(folder, True)  # True includes .git/
@@ -86,7 +84,7 @@ def _ipfs_add(job, target, idx, is_verbose=False):
         sys.exit(1)
 
     if idx == 0:
-        key = ipfs_hash
+        job.key = ipfs_hash
 
     job.code_hashes.append(ipfs_to_bytes32(ipfs_hash))
     job.code_hashes_str.append(ipfs_hash)
@@ -97,7 +95,6 @@ def _ipfs_add(job, target, idx, is_verbose=False):
 
 
 def submit_ipfs(job: Job, is_pass=False, required_confs=1):
-    global key
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     provider = Ebb.w3.toChecksumAddress(job.provider_addr)
     pre_check(job, requester)
@@ -172,7 +169,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         job.price, *_ = job.cost(provider_addr_to_submit, requester)
 
     try:
-        tx_hash = Ebb.submit_job(provider_addr_to_submit, key, job, requester, required_confs)
+        tx_hash = Ebb.submit_job(provider_addr_to_submit, job.key, job, requester, required_confs)
         if required_confs >= 1:
             tx_receipt = get_tx_status(tx_hash)
             if tx_receipt["status"] == 1:

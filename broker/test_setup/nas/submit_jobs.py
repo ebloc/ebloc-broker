@@ -35,13 +35,13 @@ benchmarks = ["nas", "cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
 ipfs_ids = ["ipfs", "ipfs_gpg"]
 
-if is_mini_test:
-    benchmarks = ["cppr"]
-    storage_ids = ["ipfs"]
-    ipfs_ids = ["ipfs"]
+# if is_mini_test:
+#     benchmarks = ["cppr"]
+#     storage_ids = ["ipfs"]
+#     ipfs_ids = ["ipfs"]
 
 # for provider_address in providers:
-#     pre_submit(storage_ids, provider_address)
+#     mini_tests_submit(storage_ids, provider_address)
 
 test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
 nas_yaml_fn = test_dir / "job_nas.yaml"
@@ -50,42 +50,55 @@ cppr_yam_fn = test_dir / "job_cppr.yaml"
 # providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
 
 
-def create_cppr_job_script():
+def create_cppr_job_script(idx):
     """Create cppr slurm job script to be submitted."""
-    registered_data_hashes_small = [
-        "f1de03edab51f281815c3c1e5ecb88c6",
-        "03919732a417cb1d14049844b9de0f47",
-        "983b9fe8a85b543dd5a4a75d031f1091",
-        "b6aaf03752dc68d625fc57b451faa2bf",
-        "c0fee5472f3c956ba759fd54f1fe843e",
-        "63ffd1da6122e3fe9f63b1e7fcac1ff5",
-        "9e8918ff9903e3314451bf2943296d31",
-        "eaf488aea87a13a0bea5b83a41f3d49a",
-        "e62593609805db0cd3a028194afb43b1",
-        "3b0f75445e662dc87e28d60a5b13cd43",
-        "ebe53bd498a9f6446cd77d9252a9847c",
-        "f82aa511f8631bfc9a82fe6fa30f4b52",
-        "082d2a71d86a64250f06be14c55ca27e",
-        "f93b9a9f63447e0e086322b8416d4a39",
-        "761691119cedfb9836a78a08742b14cc",
-    ]
-    registered_data_hashes_medium = [
+    # registered_data_hashes_small = [
+    #     "f1de03edab51f281815c3c1e5ecb88c6",
+    #     "03919732a417cb1d14049844b9de0f47",
+    #     "983b9fe8a85b543dd5a4a75d031f1091",
+    #     "b6aaf03752dc68d625fc57b451faa2bf",
+    #     "c0fee5472f3c956ba759fd54f1fe843e",
+    #     "63ffd1da6122e3fe9f63b1e7fcac1ff5",
+    #     "9e8918ff9903e3314451bf2943296d31",
+    #     "eaf488aea87a13a0bea5b83a41f3d49a",
+    #     "e62593609805db0cd3a028194afb43b1",
+    #     "3b0f75445e662dc87e28d60a5b13cd43",
+    #     "ebe53bd498a9f6446cd77d9252a9847c",
+    #     "f82aa511f8631bfc9a82fe6fa30f4b52",
+    #     "082d2a71d86a64250f06be14c55ca27e",
+    #     "f93b9a9f63447e0e086322b8416d4a39",
+    #     "761691119cedfb9836a78a08742b14cc",
+    # ]
+    registered_data_hashes_medium = {}
+    registered_data_hashes_medium[0] = [
         "050e6cc8dd7e889bf7874689f1e1ead6",  # A
         "9d5d892a63b5758090258300a59eb389",  # A
         "779745f315060d1bc0cd44b7266fb4da",  # A
+    ]
+    registered_data_hashes_medium[1] = [
         "fe801973c5b22ef6861f2ea79dc1eb9c",  # B
         "0d6c3288ef71d89fb93734972d4eb903",  # B
         "4613abc322e8f2fdeae9a5dd10f17540",  # B
+    ]
+    registered_data_hashes_medium[2] = [
         "dd0fbccccf7a198681ab838c67b68fbf",  # C
         "45281dfec4618e5d20570812dea38760",  # C
         "fa64e96bcee96dbc480a1495bddbf53c",  # C
+    ]
+    registered_data_hashes_medium[3] = [
         "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
         "1bfca57fe54bc46ba948023f754521d6",  # D
         "f71df9d36cd519d80a3302114779741d",  # D
     ]
+    _list = registered_data_hashes_medium[idx]
+    hash_medium_data_0 = random.choice(_list)
+    hash_medium_data = random.choice(_list)
+    while True:
+        if hash_medium_data_0 == hash_medium_data:
+            hash_medium_data = random.choice(_list)
+        else:
+            break
 
-    hash_small_data = random.choice(registered_data_hashes_small)
-    hash_medium_data = random.choice(registered_data_hashes_medium)
     fn = Path.home() / "test_eblocbroker" / "run_cppr" / "run.sh"
     open(fn, "w").close()
     f = open(fn, "w+")
@@ -95,7 +108,7 @@ def create_cppr_job_script():
     f.write("#SBATCH --mail-type=ALL\n\n")
     f.write("export OMP_NUM_THREADS=1\n")
     f.write("current_date=$(LANG=en_us_88591; date)\n")
-    f.write(f"DATA_HASH='{hash_small_data}'\n")
+    f.write(f"DATA_HASH='{hash_medium_data_0}'\n")
     f.write("DATA1_DIR='../data_link/'$DATA_HASH'/'\n")
     f.write("echo ' * '$current_date > output.log\n")
     f.write("find $DATA1_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
@@ -125,7 +138,7 @@ def create_cppr_job_script():
     f.write("echo '  [  DONE  ]  ' >> output.log\n")
     f.close()
     run(["sed", "-i", r"s/\x0//g", fn])  # remove NULL characters from the SBATCH file
-    return hash_small_data, hash_medium_data
+    return hash_medium_data_0, hash_medium_data
 
 
 def create_nas_job_script(is_small=False):
@@ -155,7 +168,7 @@ def create_nas_job_script(is_small=False):
     return benchmark_name
 
 
-def pre_submit(storage_ids, provider_address):
+def mini_tests_submit(storage_ids, provider_address):
     is_pass = True
     required_confs = 0
     yaml_fn = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas" / "job_nas.yaml"
@@ -210,8 +223,8 @@ def run_job(counter) -> None:
         elif selected_benchmark == "cppr":
             log(f" * Submitting [cyan]job with cppr datasets[/cyan] to provider=[green]{provider_address}", "bold blue")
             yaml_cfg = Yaml(cppr_yam_fn)
-            hash_small_data, hash_medium_data = create_cppr_job_script()
-            yaml_cfg["config"]["data"]["data1"]["hash"] = hash_small_data
+            hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
+            yaml_cfg["config"]["data"]["data1"]["hash"] = hash_medium_data_0
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
             small_datasets = Path.home() / "test_eblocbroker" / "dataset_zip" / "small"
@@ -240,7 +253,7 @@ def run_job(counter) -> None:
                 if selected_benchmark == "nas":
                     job_result["submitted_job_kind"] = f"{selected_benchmark}_{benchmark_name}"
                 elif selected_benchmark == "cppr":
-                    job_result["submitted_job_kind"] = f"{selected_benchmark}_{hash_small_data}_{hash_medium_data}"
+                    job_result["submitted_job_kind"] = f"{selected_benchmark}_{hash_medium_data_0}_{hash_medium_data}"
 
                 ebb_mongo.add_item(tx_hash, job_result)
                 log(job_result)

@@ -5,10 +5,15 @@ import sys
 from broker import cfg
 from broker._utils.tools import log
 
-if __name__ == "__main__":
+
+def main():
     Ebb = cfg.Ebb
     if len(sys.argv) == 2:
         address = str(sys.argv[1])
-        print(Ebb._get_balance(address))
-    else:  # ./get_account_balance.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49
+        log(Ebb._get_balance(address))
+    else:
         log("E: Please provide an address as argument")
+
+
+if __name__ == "__main__":
+    main()

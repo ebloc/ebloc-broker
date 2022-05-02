@@ -5,5 +5,11 @@ from broker.libs import eudat
 
 eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
 oc = config.oc
-print(oc.list("."))
-breakpoint()  # DEBUG
+print("running: `oc.list('.')`")
+_list = oc.list(".")
+for item in _list:
+    print(item)
+    try:
+        oc.delete(item.path)
+    except Exception as e:
+        print(e)

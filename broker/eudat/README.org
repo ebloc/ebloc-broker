@@ -8,7 +8,8 @@ __ [[https://eudat.eu/services/userdoc/b2drop]]
 ~se /etc/davfs2/davfs2.conf~  => add ~use_locks       0~ line
 
 #+begin_src bash
-sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
+mkdir /mnt/oc
+sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /mnt/oc
 #+end_src
 
 ** GIT Guide

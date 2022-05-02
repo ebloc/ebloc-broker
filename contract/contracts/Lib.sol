@@ -168,7 +168,7 @@ library Lib {
      *@dev Invoked when registerProvider() function is called
      *@param self | Provider struct
      */
-    function constructProvider(Provider storage self) internal {
+    function construct(Provider storage self) internal {
         self.isRunning = true;
         self.committedBlock = uint32(block.number);
         self.receiptList.length = 1; // trick to show mapped index(0)'s values as zero

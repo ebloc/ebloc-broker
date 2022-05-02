@@ -25,7 +25,7 @@ def process_payment(
     run_time,
     received_block_number=0,
 ):
-    """Process payment of the paid job."""
+    """Process payment of the received job."""
     log(
         f"~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {data_transfer_in} {data_transfer_out} '{core}'"

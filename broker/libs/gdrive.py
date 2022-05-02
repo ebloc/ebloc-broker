@@ -146,8 +146,10 @@ def delete_all(_type="all"):
     """Delete all created files and folder within the gdrive."""
     if _type == "dir":
         for line in list_all("dir").splitlines():
-            with suppress(Exception):
+            try:
                 run(["gdrive", "delete", "--recursive", line.split()[0]])
+            except:
+                pass
     else:
         for line in list_all().splitlines():
             if " dir   " not in line:  # first remove files
@@ -159,7 +161,9 @@ def delete_all(_type="all"):
         for line in list_all().splitlines():
             if " dir   " in line:
                 try:
-                    run(["gdrive", "delete", "--recursive", line.split()[0]])
+                    log(f"Attempt to delete dir: {line.split()[0]} ", end="")
+                    output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
+                    print(output)
                 except Exception as e:
                     log(f"E {e}")
             # else:

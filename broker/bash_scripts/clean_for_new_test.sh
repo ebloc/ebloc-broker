@@ -71,7 +71,9 @@ rm -f /var/ebloc-broker/cache/*.tar.gz
 # ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm
 # ipfs repo gc
 rm -rf ~/.ipfs/badgerds
-# ~/ebloc-broker/broker/python_scripts/clean_gdrive.py
+echo "#> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
+~/ebloc-broker/broker/python_scripts/clean_gdrive.py
+echo "[  OK  ]"
 
 for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
     gpg --batch --delete-key "$i" 2>/dev/null

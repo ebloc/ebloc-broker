@@ -33,5 +33,5 @@ repos:
     hooks:
       - id: flake8
 
-_language_version:
+default_language_version:
   python: python3

@@ -32,6 +32,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBCONF_NOWARNINGS="yes"
 RUN apt-get update \
  && apt-get install -y --no-install-recommends apt-utils \
  && apt-get install -y --no-install-recommends libdbus-1-dev \
