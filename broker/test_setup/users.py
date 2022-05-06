@@ -1,49 +1,44 @@
 #!/usr/bin/env python3
 
+import time
 from os.path import expanduser
 from pathlib import Path
 
 from broker import cfg
 from broker._utils.tools import log
-from broker.test_setup.user_set import users
+from broker.test_setup.user_set import providers, requesters
 
 # from broker.test_setup.user_set import extra_users
 
 collect_account = "0xfd0ebcd42d4c4c2a2281adfdb48177454838c433".lower()
-
-providers = [
-    "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA",
-    "0x765508fc8f78a465f518ae79897d0e4b249e82dc",
-    "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a",
-    "0xeab50158e8e51de21616307a99c9604c1c453a02",
-]
-
 Ebb = cfg.Ebb
 _collect_account = collect_account.replace("0x", "")
-fname = str(Path(expanduser("~/.brownie/accounts")) / _collect_account)
-_collect_account = Ebb.brownie_load_account(fname, "alper")
+fn = str(Path(expanduser("~/.brownie/accounts")) / _collect_account)
+_collect_account = Ebb.brownie_load_account(fn, "alper")
 log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
 
 
-def balances():
-    """Prints balance of all the users located under ~/.brownie/accounts."""
-    for account in users:
+def balances(accounts, is_verbose=False):
+    """Print balance of all the users located under ~/.brownie/accounts."""
+    for account in accounts:
         _account = account.lower().replace("0x", "")
-        fname = Path(expanduser("~/.brownie/accounts")) / _account
-        print(fname)
-        account = Ebb.brownie_load_account(str(fname), "alper")
-        log(Ebb._get_balance(account))
+        fn = Path(expanduser("~/.brownie/accounts")) / _account
+        if not is_verbose:
+            print(fn)
+
+        account = Ebb.brownie_load_account(str(fn), "alper")
+        log(Ebb._get_balance(account), "magenta")
 
 
 def collect_all_into_base():
-    for account in users:
+    for account in requesters:
         _account = account.lower().replace("0x", "")
-        fname = Path(expanduser("~/.brownie/accounts")) / _account
-        log(fname)
-        account = Ebb.brownie_load_account(str(fname), "alper")
-        balance_to_transfer = Ebb._get_balance(account, "wei")
+        fn = Path(expanduser("~/.brownie/accounts")) / _account
+        log(fn)
+        account = Ebb.brownie_load_account(str(fn), "alper")
+        balance_to_transfer = Ebb._get_balance(account, "gwei")
         log(balance_to_transfer)
-        log(Ebb._get_balance(collect_account, "wei"))
+        log(Ebb._get_balance(collect_account, "gwei"))
         if balance_to_transfer > 21000:
             log(Ebb.transfer(balance_to_transfer - 21000, account, collect_account, required_confs=0))
             log(Ebb._get_balance(account))
@@ -53,21 +48,27 @@ def collect_all_into_base():
 def send_eth_to_users(accounts, value):
     for account in accounts:
         _account = account.lower().replace("0x", "")
-        fname = Path(expanduser("~/.brownie/accounts")) / _account
-        print(fname)
-        account = Ebb.brownie_load_account(str(fname), "alper")
-        log(Ebb._get_balance(collect_account, "wei"))
+        fn = Path(expanduser("~/.brownie/accounts")) / _account
+        print(fn)
+        account = Ebb.brownie_load_account(str(fn), "alper")
+        log(Ebb._get_balance(collect_account, "gwei"))
         log(Ebb.transfer(value, _collect_account, account, required_confs=0))
         log(Ebb._get_balance(account))
         log(Ebb._get_balance(collect_account))
-        # breakpoint()  # DEBUG
+        time.sleep(1)
 
 
 def main():
-    balances()
+    owner = Ebb.get_owner()
+    log(f"ower_balance ({owner})=", "bold", end="")
+    balances([owner], is_verbose=True)
+    balances(providers)
+    breakpoint()  # DEBUG
+    balances(requesters)
     # collect_all_into_base()
-    # send_eth_to_users(providers, "0.5 ether")
-    # send_eth_to_users(users, "0.2 ether")
+    # send_eth_to_users(["0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"], "0.5 ether")
+    # send_eth_to_users(providers, "0.4 ether")
+    # send_eth_to_users(requesters, "0.1 ether")
     # send_eth_to_users(extra_users, "0.1 ether")
 
 

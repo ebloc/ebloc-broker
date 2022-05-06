@@ -1,4 +1,4 @@
-config:
-    account: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
-    email: alper.alimoglu.research2@gmail.com
-    federation_cloud_id: 059ab6ba-4030-48bb-b81b-12115f531296
+cfg:
+    eth_address: '0xab608a70d0b4a3a288dd68a1661cdb8b6c742672'
+    gmail: alper.alimoglu.research2@gmail.com
+    oc_username: dbae8f40-20da-4f6f-b466-d434793320be

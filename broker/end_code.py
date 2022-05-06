@@ -12,10 +12,12 @@ from pathlib import Path
 from time import sleep
 from typing import Dict, List
 
+import psutil
+
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import br, log, ok
-from broker._utils.tools import _remove, exit_after, mkdir, read_json
+from broker._utils.tools import _remove, exit_after, mkdirs, pid_exists, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.errors import QuietExit
@@ -43,20 +45,22 @@ from broker.utils import (
     remove_empty_files_and_folders,
 )
 
+ipfs = cfg.ipfs
 Ebb = cfg.Ebb
 connect()
 
 
 class Common:
-    """Prevent "Class" to have attribute "method" mypy warnings."""
+    """Prevent 'Class' to have attribute 'method' mypy warnings."""
 
     def __init__(self) -> None:
+        self.requester_home_path = Path("")
         self.results_folder: Path = Path("")
         self.results_folder_prev: Path = Path("")
         self.patch_file: Path = Path("")
         self.requester_gpg_fingerprint: str = ""
-        self.patch_upload_name = ""
-        self.data_transfer_out = 0
+        self.patch_upload_fn = ""
+        self.data_transfer_out: int = 0
 
     @exit_after(900)
     def _get_tx_status(self, tx_hash):
@@ -76,7 +80,8 @@ class IpfsGPG(Common):
     def upload(self, *_):
         """Upload files right after all the patchings are completed."""
         try:
-            cfg.ipfs.gpg_encrypt(self.requester_gpg_fingerprint, self.patch_file)
+            from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
+            ipfs.gpg_encrypt(from_gpg_fingerprint, self.requester_gpg_fingerprint, self.patch_file)
         except Exception as e:
             _remove(self.patch_file)
             raise e
@@ -85,7 +90,7 @@ class IpfsGPG(Common):
 class Eudat(Common):
     def __init__(self) -> None:
         self.encoded_share_tokens = {}  # type: Dict[str, str]
-        self.patch_folder: Path = Path("")
+        self.patch_dir: Path = Path("")
 
     def initialize(self):
         with suppress(Exception):
@@ -97,9 +102,9 @@ class Eudat(Common):
             print_tb(e)
             raise e
 
-    def upload(self, source_code_hash, *_):
+    def upload(self, code_hash, *_):
         with suppress(Exception):  # first time uploading
-            uploaded_file_size = eudat.get_size(f_name=f"{source_code_hash}/{self.patch_upload_name}")
+            uploaded_file_size = eudat.get_size(f_name=f"{code_hash}/{self.patch_upload_fn}")
             size_in_bytes = calculate_size(self.patch_file, _type="bytes")
             if uploaded_file_size == float(size_in_bytes):
                 log(f"==> {self.patch_file} is already uploaded")
@@ -107,10 +112,10 @@ class Eudat(Common):
 
         try:
             _data_transfer_out = calculate_size(self.patch_file)
-            log(f"==> {br(source_code_hash)}.data_transfer_out={_data_transfer_out}MB")
+            log(f"==> {br(code_hash)}.data_transfer_out={_data_transfer_out}MB")
             self.data_transfer_out += _data_transfer_out
             eudat.upload_results(
-                self.encoded_share_tokens[source_code_hash], self.patch_upload_name, self.patch_folder, max_retries=5
+                self.encoded_share_tokens[code_hash], self.patch_upload_fn, self.patch_dir, max_retries=5
             )
         except Exception as e:
             raise e
@@ -134,9 +139,9 @@ class Gdrive(Common):
             raise Exception(f"{WHERE(1)} E: {key} does not have a match. meta_data={meta_data}. {e}") from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        log(f"mime_type={mime_type}")
+        log(f"mime_type=[magenta]{mime_type}", "bold")
         self.data_transfer_out += calculate_size(self.patch_file)
-        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
+        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB", "bold")
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type or "/zip" in mime_type:
@@ -148,21 +153,21 @@ class Gdrive(Common):
             log(subprocess_call(cmd, 5))
         except Exception as e:
             print_tb(e)
-            raise Exception("E: gdrive could not upload the file") from e
+            raise Exception("gdrive could not upload the file") from e
 
 
 class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
     def __init__(self, **kwargs) -> None:
         args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
-        self.job_key = kwargs.pop("job_key")
+        self.job_key: str = kwargs.pop("job_key")
         self.index = int(kwargs.pop("index"))
-        self.received_block_number = kwargs.pop("received_block_number")
-        self.folder_name = kwargs.pop("folder_name")
-        self.slurm_job_id = kwargs.pop("slurm_job_id")
+        self.received_bn: int = kwargs.pop("received_bn")
+        self.folder_name: str = kwargs.pop("folder_name")
+        self.slurm_job_id: int = kwargs.pop("slurm_job_id")
         self.share_tokens = {}  # type: Dict[str, str]
         self.requester_id_address = ""
         self.data_transfer_in = 0
-        self.data_transfer_out = 0.0
+        self.data_transfer_out = 0
         self.elapsed_time = 0
         self.code_hashes_to_process: List[str] = []
         self.code_hashes: List[str] = []
@@ -174,7 +179,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
         _log.ll.LOG_FILENAME = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
-        self.job_id = 0  # TODO: should be mapped to slurm_job_id
+        self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -188,7 +193,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.job_key,
                     self.index,
                     self.job_id,
-                    self.received_block_number,
+                    self.received_bn,
                 ),
                 max_retries=10,
             )
@@ -200,7 +205,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log(f"E: {e}")
             sys.exit(1)
 
-        self.results_folder_prev: Path = env.PROGRAM_PATH / self.requester_id_address / f"{self.job_key}_{self.index}"
+        self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
+        self.results_folder_prev: Path = self.requester_home_path / f"{self.job_key}_{self.index}"
         self.results_folder = self.results_folder_prev / "JOB_TO_RUN"
         if not is_dir(self.results_folder) and not is_dir(self.results_folder_prev):
             sys.exit(1)
@@ -208,11 +214,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.results_data_link = Path(self.results_folder_prev) / "data_link"
         self.results_data_folder = Path(self.results_folder_prev) / "data"
         self.private_dir = Path(env.PROGRAM_PATH) / self.requester_id_address / "cache"
-        self.patch_folder = Path(self.results_folder_prev) / "patch"
-        self.patch_folder_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
-        self.job_status_running_tx = Ebb.mongo_broker.get_job_status_running_tx(self.job_key, self.index)
-        mkdir(self.patch_folder)
-        mkdir(self.patch_folder_ipfs)
+        self.patch_dir = Path(self.results_folder_prev) / "patch"
+        self.patch_dir_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
+        mkdirs([self.patch_dir, self.patch_dir_ipfs])
         remove_empty_files_and_folders(self.results_folder)
         log(f"==> whoami={getpass.getuser()} | id={os.getegid()}")
         log(f"==> home={env.HOME}")
@@ -224,8 +228,20 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f"==> storage_ids={self.storage_ids}")
         log(f"==> folder_name=[white]{self.folder_name}")
         log(f"==> requester_id_address={self.requester_id_address}")
-        log(f"==> job_status_running_tx={self.job_status_running_tx}")
         log(f"==> received={self.job_info['received']}")
+        self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
+        with suppress(Exception):
+            p = psutil.Process(int(self.job_state_running_pid))
+            log(p)
+            while True:
+                if not pid_exists(self.job_state_running_pid):
+                    break
+                else:
+                    log("#> job_state_running() is still running, sleeping for 15 seconds")
+                    sleep(15)
+
+        self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(self.job_key, self.index)
+        log(f"==> job_state_running_tx={self.job_state_running_tx}")
 
     def get_shared_tokens(self):
         with suppress(Exception):
@@ -274,19 +290,19 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         raise Exception(f"corresponding storage_id_class={self.storage_ids[_id]} does not exist")
 
     def set_code_hashes_to_process(self):
-        for idx, source_code_hash in enumerate(self.code_hashes):
+        for idx, code_hash in enumerate(self.code_hashes):
             if self.storage_ids[idx] in [StorageID.IPFS, StorageID.IPFS_GPG]:
-                ipfs_hash = bytes32_to_ipfs(source_code_hash)
+                ipfs_hash = bytes32_to_ipfs(code_hash)
                 self.code_hashes_to_process.append(ipfs_hash)
             else:
-                self.code_hashes_to_process.append(cfg.w3.toText(source_code_hash))
+                self.code_hashes_to_process.append(cfg.w3.toText(code_hash))
 
     def _ipfs_add_folder(self, folder_path):
         try:
-            self.result_ipfs_hash = cfg.ipfs.add(folder_path)
+            self.result_ipfs_hash = ipfs.add(folder_path)
             log(f"==> result_ipfs_hash={self.result_ipfs_hash}")
-            cfg.ipfs.pin(self.result_ipfs_hash)
-            data_transfer_out = cfg.ipfs.get_cumulative_size(self.result_ipfs_hash)
+            ipfs.pin(self.result_ipfs_hash)
+            data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
         except Exception as e:
             print_tb(e)
             raise e
@@ -296,34 +312,31 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
     def process_payment_tx(self):
         try:
-            tx_hash = eblocbroker_function_call(
-                lambda: Ebb.process_payment(
-                    self.job_key,
-                    self.index,
-                    self.job_id,
-                    self.elapsed_time,
-                    self.result_ipfs_hash,
-                    self.storage_ids,
-                    self.end_time_stamp,
-                    self.data_transfer_in,
-                    self.data_transfer_out,
-                    self.job_info["core"],
-                    self.job_info["run_time"],
-                    self.received_block_number,
-                ),
-                max_retries=10,
+            tx_hash = Ebb.process_payment(
+                self.job_key,
+                self.index,
+                self.job_id,
+                self.elapsed_time,
+                self.result_ipfs_hash,
+                self.storage_ids,
+                self.end_time_stamp,
+                self.data_transfer_in,
+                self.data_transfer_out,
+                self.job_info["core"],
+                self.job_info["run_time"],
+                self.received_bn,
             )
         except Exception as e:
             print_tb(e)
             sys.exit(1)
 
-        log(f"==> process_payment {self.job_key} {self.index}")
+        log(f"==> [white]process_payment {self.job_key} {self.index}")
         return tx_hash
 
-    def clean_before_upload(self):
+    def clean_before_upload(self) -> None:
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
 
-    def remove_source_code(self):
+    def remove_source_code(self) -> None:
         """Client's initial downloaded files are removed."""
         timestamp_file = f"{self.results_folder_prev}/timestamp.txt"
         try:
@@ -337,21 +350,21 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
 
-    def git_diff_patch_and_upload(self, source: Path, name, storage_class, is_job_key):
+    def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key):
         if is_job_key:
-            log(f"==> base_patch={self.patch_folder}")
-            log(f"==> sourcecode_patch={name}")
+            log(f"==> base_patch={self.patch_dir}")
+            log(f"==> source_code_patch={name}")
         else:
             log(f"==> datafile_patch={name}")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
-                target_path = self.patch_folder_ipfs
+                target_path = self.patch_dir_ipfs
             else:
-                target_path = self.patch_folder
+                target_path = self.patch_dir
 
-            self.patch_upload_name, self.patch_file, is_file_empty = _git.diff_patch(
-                source, name, self.index, target_path
+            self.patch_upload_fn, self.patch_file, is_file_empty = _git.diff_patch(
+                source_fn, name, self.index, target_path, self.requester_home_path
             )
             if not is_file_empty:
                 try:
@@ -360,33 +373,36 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     print_tb(e)
                     raise e
         except Exception as e:
-            raise Exception("E: Problem on the git_diff_patch_and_upload() function") from e
+            print_tb(e)
+            raise Exception("Problem on the git_diff_patch_and_upload() function") from e
 
     def upload_driver(self):
         self.clean_before_upload()
         try:
             storage_class = self.get_cloud_storage_class(0)
             self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
+
         except Exception as e:
             raise e
 
         for idx, name in enumerate(self.code_hashes_to_process[1:], 1):
             # starting from 1st index for data files
-            source = self.results_data_folder / name
             try:
                 if not self.storage_ids[idx] == StorageID.NONE:
                     storage_class = self.get_cloud_storage_class(idx)
-                    self.git_diff_patch_and_upload(source, name, storage_class, is_job_key=False)
+                    self.git_diff_patch_and_upload(
+                        self.results_data_folder / name, name, storage_class, is_job_key=False
+                    )
                 else:
                     pass
             except Exception as e:
                 print_tb(e)
                 raise e
 
-        if not is_dir_empty(self.patch_folder_ipfs):
+        if not is_dir_empty(self.patch_dir_ipfs):
             # it will upload files after all the patchings are completed
             # in case any file is created via ipfs
-            self._ipfs_add_folder(self.patch_folder_ipfs)
+            self._ipfs_add_folder(self.patch_dir_ipfs)
 
     def sacct_result(self):
         """Return sacct output for the job.
@@ -422,14 +438,14 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         os.remove(slurm_log_output_fn_temp)
 
-    def get_job_info(self, is_print=False, is_log_print=True):
+    def get_job_info(self, is_print=False, is_log_print=True) -> None:
         self.job_info = eblocbroker_function_call(
             lambda: Ebb.get_job_info(
                 env.PROVIDER_ID,
                 self.job_key,
                 self.index,
                 self.job_id,
-                self.received_block_number,
+                self.received_bn,
                 is_print=is_print,
                 is_log_print=is_log_print,
             ),
@@ -455,7 +471,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
             try:
                 self.job_info = Ebb.get_job_info(
-                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_block_number, is_print
+                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_bn, is_print
                 )
                 is_print = False
             except Exception as e:
@@ -475,6 +491,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("E: failed all the attempts, abort")
         sys.exit(1)
 
+    def remove_job_folder(self):
+        """Remove downloaded code from local since it is not needed anymore; garbage collector."""
+        _remove(self.results_folder)
+
     def run(self):
         try:
             data = read_json(f"{self.results_folder_prev}/data_transfer_in.json")
@@ -490,8 +510,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        log("\njob_owner's info\n================", "bold green")
-        log(f"==> email=[white]{self.requester_info['email']}")
+        log("\njob owner's info", "bold green", end="")
+        log("\n================", "bold green")
+        log(f"==> gmail=[white]{self.requester_info['gmail']}")
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
         log(f"==> ipfs_id={self.requester_info['ipfs_id']}")
         log(f"==> f_id={self.requester_info['f_id']}")
@@ -503,10 +524,10 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         try:
-            if self.job_status_running_tx:
-                Ebb._wait_for_transaction_receipt(self.job_status_running_tx)
+            if self.job_state_running_tx:
+                Ebb._wait_for_transaction_receipt(self.job_state_running_tx)
             else:
-                log("warning: job_status_running_tx is empty")
+                log("warning: job_state_running_tx is empty")
 
             self.get_job_info(is_log_print=False)  # re-fetch job info
             self.attemp_get_job_info()
@@ -514,7 +535,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             raise e
 
-        log("## Received running job status successfully", "bold green")
+        log("## received running job state successfully", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(
@@ -522,7 +543,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     self.job_key,
                     self.index,
                     # self.job_id,
-                    self.received_block_number,
+                    self.received_bn,
                 ),
                 max_retries=10,
             )
@@ -538,10 +559,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.elapsed_time > int(run_time[self.job_id]):
             self.elapsed_time = run_time[self.job_id]
 
-        log(f"finalized_elapsed_time={self.elapsed_time}", "green")
-        _job_info = pprint.pformat(self.job_info)
+        log(f"finalized_elapsed_time={self.elapsed_time}", "bold")
         log("## job_info:", "bold magenta")
-        log(_job_info, "bold")
+        log(pprint.pformat(self.job_info), "bold")
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()
@@ -558,14 +578,14 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self._get_tx_status(tx_hash)
         self.get_job_info()
         log("SUCCESS")
-        # TODO: garbage collector, removed downloaded code from local since it is not needed anymore
+        # self.remove_job_folder()
 
 
 if __name__ == "__main__":
     kwargs = {
         "job_key": sys.argv[1],
         "index": sys.argv[2],
-        "received_block_number": sys.argv[3],
+        "received_bn": sys.argv[3],
         "folder_name": sys.argv[4],
         "slurm_job_id": sys.argv[5],
     }

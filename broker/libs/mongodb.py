@@ -22,7 +22,7 @@ class BaseMongoClass:
             return output
         else:
             self.find_all()
-            raise Exception("E: could not find key")
+            raise Exception("could not find key")
 
     def add_item(self, key, item):
         res = self.collection.replace_one({"key": key}, item, True)
@@ -59,7 +59,7 @@ class MongoBroker(BaseMongoClass):
             "cloudStorageID": cloud_storage_id,
             "storage_duration": job_info["storage_duration"],
             "receieved": False,
-            "set_job_status_running_tx": "",
+            "set_job_state_running_tx": "",
         }
         res = self.collection.replace_one({"job_key": job_key, "index": index}, item, True)
         return res.acknowledged
@@ -82,22 +82,33 @@ class MongoBroker(BaseMongoClass):
             return output
         else:
             # self.find_all()
-            raise Exception(f"E: Coudn't find id. key={key} index={index}")
+            raise Exception(f"Coudn't find id. key={key} index={index}")
 
     def delete_one(self, job_key, index: int):
         output = self.collection.delete_one({"job_key": job_key, "index": index})
         return output.acknowledged
 
-    def get_job_status_running_tx(self, key: str, index: int):
+    def get_job_state_running_tx(self, key: str, index: int):
         """Get tx hash of the job.status as running."""
         output = self.find_id(key, index)
-        return output["set_job_status_running_tx"]
+        return output["set_job_state_running_tx"]
 
-    def set_job_status_running_tx(self, key: str, index: int, value: str):
+    def get_job_state_running_pid(self, key: str, index: int):
+        """Get tx hash of the job.status as running."""
+        output = self.find_id(key, index)
+        return output["pid"]
+
+    def set_job_state_pid(self, key: str, index: int, pid: int):
+        """Set tx hash of the job.status as running."""
+        output = self.find_id(key, index)
+        res = self.collection.update_one({"_id": output["_id"]}, {"$set": {"pid": pid}}, upsert=False)
+        return res.acknowledged
+
+    def set_job_state_running_tx(self, key: str, index: int, value: str):
         """Set tx hash of the job.status as running."""
         output = self.find_id(key, index)
         res = self.collection.update_one(
-            {"_id": output["_id"]}, {"$set": {"set_job_status_running_tx": value}}, upsert=False
+            {"_id": output["_id"]}, {"$set": {"set_job_state_running_tx": value}}, upsert=False
         )
         return res.acknowledged
 
@@ -150,12 +161,12 @@ def main():
         log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
     else:
         ebb_mongo.find_all_shareid()
-        # output = ebb_mongo.get_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
+        # output = ebb_mongo.get_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
         # log(output)
         # ebb_mongo.find_all()
         # Ebb = cfg.Ebb
         # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
-        # output = ebb_mongo.set_job_status_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
+        # output = ebb_mongo.set_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
         # ebb_mongo.find_all()
 
 

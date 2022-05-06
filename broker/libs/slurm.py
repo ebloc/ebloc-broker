@@ -4,7 +4,7 @@ import time
 
 from broker._utils._log import ok
 from broker._utils.tools import is_process_on
-from broker.config import env, logging
+from broker.config import env
 from broker.errors import BashCommandsException, QuietExit
 from broker.lib import run
 from broker.utils import log, popen_communicate, print_tb
@@ -15,32 +15,32 @@ def add_user_to_slurm(user):
     cmd = ["sacctmgr", "add", "user", user, f"account={user}", "--immediate"]
     # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
-    if p.returncode != 0 and "Nothing new added" not in output:
+    if p.returncode > 0 and "Nothing new added" not in output:
         print_tb()
-        raise Exception(f"E: sacctmgr remove error: {output}")
+        raise Exception(f"sacctmgr remove error: {output}")
 
     # try:
     #     if "Nothing new added" not in output:
     #         run(["sacctmgr", "create", "user", user, f"defaultaccount={env.SLURMUSER}", "adminlevel=[None]", "--immediate"])
     # except Exception as e:
-    #     raise Exception("E: Problem on sacctmgr create user") from e
+    #     raise Exception("Problem on sacctmgr create user") from e
 
 
 def remove_user(user):
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user}", "--immediate"]
     p, output, error_msg = popen_communicate(cmd)
     if p.returncode and "Nothing deleted" not in output:
-        logging.error(f"E: sacctmgr remove error: {output}")
+        log(f"E: sacctmgr remove error: {output}")
         raise BashCommandsException(p.returncode, output, error_msg, str(cmd))
 
 
-def get_idle_cores(is_print=True):
+def get_idle_cores(is_print=True) -> int:
     """Return idle cores.
 
-    https://stackoverflow.com/a/50095154/2402577
+    __ https://stackoverflow.com/a/50095154/2402577
     """
     core_info = run(["sinfo", "-h", "-o%C"]).split("/")
-    if len(core_info) != 0:
+    if len(core_info):
         allocated_cores = core_info[0]
         idle_cores = core_info[1]
         other_cores = core_info[2]
@@ -50,11 +50,11 @@ def get_idle_cores(is_print=True):
                 f"==> [green]allocated_cores=[/green]{allocated_cores} | "
                 f"[green]idle_cores=[/green]{idle_cores} | "
                 f"[green]other_cores=[/green]{other_cores} | "
-                f"[green]total_number_of_cores=[/green]{total_cores}"
+                f"[green]total_cores=[/green]{total_cores}"
             )
     else:
-        logging.error("E: sinfo is emptry string")
-        return None
+        log("E: sinfo return emptry string")
+        return 0
 
     return idle_cores
 
@@ -62,11 +62,12 @@ def get_idle_cores(is_print=True):
 def pending_jobs_check():
     """If there is no idle cores, waits for idle cores to be emerged."""
     idle_cores = get_idle_cores()
-    is_print = 0
+    print_flag = False
     while idle_cores is None:
-        if not is_print:
-            logging.info("Waiting running jobs to be completed...")
-            is_print = 1
+        if not print_flag:
+            log("waiting running jobs to be completed...")
+            print_flag = True
+
         idle_cores = get_idle_cores(is_print=False)
         time.sleep(10)
 
@@ -84,19 +85,20 @@ def is_on() -> bool:
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 
+    # , "\<sacctmgr\>"
     output = run(["sinfo", "-N", "-l"])
     if "PARTITION" not in output:
-        logging.error("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")
+        log("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")
         if not output:
-            logging.error(f"E: {output}")
+            log(f"E: {output}")
         try:
-            logging.info("Starting Slurm... \n")
+            log("Starting Slurm... \n")
             run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
             return True
         except:
             return False
     elif "sinfo: error" in output:
-        logging.error(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
+        log(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
         return False
     else:
         log(ok())
@@ -110,7 +112,7 @@ def get_elapsed_time(slurm_job_id) -> int:
     except Exception as e:
         raise QuietExit from e
 
-    logging.info(f"elapsed_time={elapsed_time}")
+    log(f"elapsed_time={elapsed_time}", "bold")
     elapsed_time = elapsed_time.split(":")
     elapsed_day = "0"
     elapsed_hour = elapsed_time[0].strip()
@@ -121,7 +123,7 @@ def get_elapsed_time(slurm_job_id) -> int:
         elapsed_hour = elapsed_hour[1]
 
     elapsed_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
-    logging.info(f"elapsed_time={elapsed_time}")
+    log(f"elapsed_time={elapsed_time}", "bold")
     return elapsed_time
 
 

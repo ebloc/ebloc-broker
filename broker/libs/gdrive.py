@@ -6,50 +6,56 @@ import shutil
 import subprocess
 import sys
 from contextlib import suppress
+from pathlib import Path
 
 from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, read_json
-from broker.config import env, logging
-from broker.errors import QuietExit
+from broker.config import env
 from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
 
-# TODO: gdrive list --query "sharedWithMe"
+
+def check_gdrive():
+    """Check whether `gdrive about` returns a valid output."""
+    try:
+        output = run(["gdrive", "about"])
+    except:
+        with open(Path.home() / ".gdrive" / "token_v2.json", "r") as f:
+            output = json.load(f)
+
+        log("#> Trying: gdrive about --refresh-token <id>")
+        run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
+        output = run(["gdrive", "about"])  # re-try
+
+    return output
 
 
-def check_user(_user):
-    output = run(["gdrive", "about"])
+def check_gdrive_about(given_user):
+    output = check_gdrive()
     user = output.partition("\n")[0].split(", ")[1]
-    return user == _user, user
+    return user == given_user, user
 
 
-def submit(provider, _from, job):
+def submit(_from, job):
     try:
         job.check_account_status(_from)
-        job.Ebb.is_provider_valid(provider)
+        # job.Ebb.is_provider_valid(provider)
         job.Ebb.is_requester_valid(_from)
     except Exception as e:
         raise e
 
-    try:
-        provider_info = job.Ebb.get_provider_info(provider)
-        log(f"==> Provider's available_core_num={provider_info['available_core_num']}")
-        log(f"==> Provider's price_core_min={provider_info['price_core_min']}")
-    except Exception as e:
-        raise QuietExit from e
-
-    provider = job.Ebb.w3.toChecksumAddress(provider)
-    provider_to_share = provider_info["email"]
+    folder_ids_to_share = []
     data_files_json_path = f"{job.tmp_dir}/meta_data.json"
     try:
         if len(job.folders_to_share) > 1:
             for folder_to_share in job.folders_to_share[1:]:
                 if not isinstance(folder_to_share, bytes):
-                    # starting from the first element ignoring source_folder
+                    # starting from the first data file ignoring source_folder
                     # attempting to share the data folder
-                    job_key, tar_hash, job.tar_hashes = share_folder(folder_to_share, provider_to_share, job.tmp_dir)
+                    folder_key, tar_hash, job.tar_hashes = upload_folder(folder_to_share, job.tmp_dir)
+                    folder_ids_to_share.append(folder_key)  # record keys to share at end
                     job.foldername_tar_hash[folder_to_share] = tar_hash
-                    job.keys[tar_hash] = job_key
+                    job.keys[tar_hash] = folder_key
 
             if job.tmp_dir == "":
                 print_tb("job.tmp_dir is empty")
@@ -70,17 +76,16 @@ def submit(provider, _from, job):
 
         folder_to_share = job.folders_to_share[0]
         if not isinstance(folder_to_share, bytes):
-            job_key, tar_hash, job.tar_hashes = share_folder(
-                folder_to_share, provider_to_share, job.tmp_dir, job_key_flag=True
-            )
+            folder_key, tar_hash, job.tar_hashes = upload_folder(folder_to_share, job.tmp_dir, folder_key_flag=True)
+            folder_ids_to_share.append(folder_key)  # record keys to share at end
             job.foldername_tar_hash[folder_to_share] = tar_hash
             # add an element to the beginning of the dict since Python
             # 3.7. dictionaries are now ordered by insertion order.
-            job.keys_final[tar_hash] = job_key
+            job.keys_final[tar_hash] = folder_key
             job.keys_final.update(job.keys)
             job.keys = job.keys_final
 
-        return job
+        return job, folder_ids_to_share
     except Exception as e:
         print_tb(e)
         raise e
@@ -102,19 +107,16 @@ def submit(provider, _from, job):
             log(ok())
 
 
-def share_folder(folder_to_share, provider_to_share, tmp_dir, job_key_flag=False):
+def upload_folder(folder_to_share, tmp_dir, folder_key_flag=False):
     log(f"## folder_to_share={folder_to_share}")
-    log(f"## provider_to_share=[magenta]{provider_to_share}")
-    key, *_, tar_hash, tar_hashes = upload(folder_to_share, tmp_dir, job_key_flag)
-    cmd = ["gdrive", "share", key, "--role", "writer", "--type", "user", "--email", provider_to_share]
-    log(f"share_output=[magenta]{run(cmd)}", "bold")
+    key, *_, tar_hash, tar_hashes = upload(folder_to_share, tmp_dir, folder_key_flag)
     return key, tar_hash, tar_hashes
 
 
-def upload(folder_to_share, tmp_dir, job_key_flag=False):
+def upload(folder_to_share, tmp_dir, is_source_code=False):
     tar_hashes = {}
     is_already_uploaded = False
-    log(f"==> job_key_flag={job_key_flag}, tar.gz file is inside the base folder")
+    log(f"==> is_source_code={is_source_code} | tar.gz file is inside the base folder")
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, _ = compress_folder(folder_to_share, is_exclude_git=True)
     tar_hashes[folder_to_share] = tar_hash
@@ -123,7 +125,7 @@ def upload(folder_to_share, tmp_dir, job_key_flag=False):
     _to = f"{path_to_move}/{tar_hash}.tar.gz"
     mkdir(path_to_move)
     shutil.move(_from, _to)
-    if job_key_flag:
+    if is_source_code:
         shutil.copyfile(f"{tmp_dir}/meta_data.json", f"{path_to_move}/meta_data.json")
 
     is_file_exist = _list(tar_hash, is_folder=True)
@@ -140,6 +142,50 @@ def upload(folder_to_share, tmp_dir, job_key_flag=False):
     return key, is_already_uploaded, tar_hash, tar_hashes
 
 
+def delete_all(_type="all"):
+    """Delete all created files and folder within the gdrive."""
+    if _type == "dir":
+        for line in list_all("dir").splitlines():
+            try:
+                run(["gdrive", "delete", "--recursive", line.split()[0]])
+            except:
+                pass
+    else:
+        for line in list_all().splitlines():
+            if " dir   " not in line:  # first remove files
+                try:
+                    run(["gdrive", "delete", line.split()[0]])
+                except Exception as e:
+                    log(f"E {e}")
+
+        for line in list_all().splitlines():
+            if " dir   " in line:
+                try:
+                    log(f"Attempt to delete dir: {line.split()[0]} ", end="")
+                    output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
+                    print(output)
+                except Exception as e:
+                    log(f"E {e}")
+            # else:
+            #     with suppress(Exception):
+            #         run(["gdrive", "delete", line.split()[0]])
+
+
+def list_all(_type="all"):
+    if _type == "dir":
+        _lines = ""
+        lines = run(["gdrive", "list", "--no-header"])
+        for line in lines.splitlines():
+            if " dir   " in line:
+                _lines += f"{line}\n"
+                # breakpoint()  # DEBUG
+        return _lines[:-1]
+    else:
+        lines = run(["gdrive", "list", "--no-header"])
+
+    return lines
+
+
 def _list(tar_hash, is_folder=False):
     r"""Query list from gdrive.
 
@@ -147,21 +193,19 @@ def _list(tar_hash, is_folder=False):
     __https://developers.google.com/drive/api/v3/reference/query-ref
     """
     if is_folder:
-        filename = f"name='{tar_hash}'"
+        fn = f"name='{tar_hash}'"
     else:
-        filename = f"name='{tar_hash}.tar.gz'"
+        fn = f"name='{tar_hash}.tar.gz'"
 
-    output = run(
+    return run(
         [
             "gdrive",
             "list",
             "--query",
-            f"{filename} and trashed=false",
+            f"{fn} and trashed=false",
             "--no-header",
         ]
     )
-
-    return output
 
 
 def _upload(dir_path, tar_hash, is_folder=False):
@@ -207,10 +251,10 @@ def get_file_id(key):
 
 
 def get_data_key_ids(results_folder_prev) -> bool:
-    filename = f"{results_folder_prev}/meta_data.json"
-    log(f"==> meta_data_path={filename}")
+    fn = f"{results_folder_prev}/meta_data.json"
+    log(f"==> meta_data_path={fn}")
     try:
-        meta_data = read_json(filename)
+        meta_data = read_json(fn)
     except Exception as e:
         print_tb(e)
 
@@ -220,7 +264,7 @@ def get_data_key_ids(results_folder_prev) -> bool:
 def update_meta_data_gdrive(key, path):
     output = get_file_id(key)
     meta_data_key = fetch_grive_output(output, "meta_data.json")
-    log(f"`gdrive update {meta_data_key} {path}` ", end="")
+    log(f"`gdrive update {meta_data_key} {path}`", end="")
     run(["gdrive", "update", meta_data_key, path])
 
 
@@ -228,6 +272,22 @@ def fetch_grive_output(output, key):
     for line in output.split("\n"):
         if key in line:
             return line.split(" ")[0]
+
+    raise Exception(f"gdrive: given key={key} does not exist")
+
+
+def parse_gdrive_info(gdrive_info):
+    try:
+        _dict = {}
+        for line in gdrive_info.splitlines():
+            line = line.replace(" ", "")
+            output = line.split(":")
+            if output[0] not in ["DownloadUrl", "ViewUrl"]:
+                _dict[output[0]] = output[1]
+
+        log(_dict)
+    except:
+        log(gdrive_info, "bold yellow")
 
 
 def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_hashes, is_cached):
@@ -241,11 +301,11 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
         log(f"==> data_id=[magenta]{key}")
         log(output, "bold green")
         data_files_id = fetch_grive_output(output, "meta_data.json")
-        # key for the source_code elimination output*.tar.gz files
-        source_code_key = fetch_grive_output(output, f"{folder_name}.tar.gz")
         if not data_files_id:
             raise Exception
 
+        # key for the source_code elimination output*.tar.gz files
+        source_code_key = fetch_grive_output(output, f"{folder_name}.tar.gz")
         cmd = [
             "gdrive",
             "download",
@@ -275,7 +335,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     _source_code_hash = code_hashes[0].decode("utf-8")
     if md5sum != _source_code_hash:
         # checks md5sum obtained from gdrive and given by the user
-        raise Exception(f"E: md5sum does not match with the provided data {source_code_key}")
+        raise Exception(f"md5sum does not match with the provided data {source_code_key}")
 
     log(f"SUCCESS on folder={md5sum}", "bold green")
     byte_size = int(get_file_info(gdrive_info, "Size"))
@@ -299,11 +359,11 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
                 log(f" * gdrive_info for [green]{k}[/green]:")
-                log(gdrive_info, "bold yellow")
+                parse_gdrive_info(gdrive_info)
                 idx += 1
             else:  # should start from the first index
-                _key = str(v)
                 try:
+                    _key = str(v)
                     output = get_file_id(_key)
                     data_key = fetch_grive_output(output, f"{k}.tar.gz")
                     cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
@@ -313,13 +373,13 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
 
                 md5sum = get_file_info(gdrive_info, _type="Md5sum")
                 log(f" * gdrive_info for [green]{k}[/green]:")
-                log(gdrive_info, "bold yellow")
+                parse_gdrive_info(gdrive_info)
                 given_code_hash = code_hashes[idx].decode("utf-8")
                 log(f"==> given_code_hash={given_code_hash}  idx={idx}")
                 if md5sum != given_code_hash:
                     # checks md5sum obtained from gdrive and given by the user
                     raise Exception(
-                        f"E: md5sum does not match with the provided data{br(idx)}\n"
+                        f"md5sum does not match with the provided data{br(idx)}\n"
                         f"md5sum={md5sum} | given={given_code_hash}"
                     )
 
@@ -335,17 +395,17 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
             with open(data_link_file, "w") as f:
                 json.dump(data_key_dict, f)
         else:
-            raise Exception("E: Something is wrong. data_key_dict is empty")
+            raise Exception("Something is wrong; data_key_dict is empty")
 
     output = byte_to_mb(size_to_download)
-    logging.info(f"Total_size={byte_size} bytes | size to download={size_to_download} bytes => {output} MB")
+    log(f"total_size={byte_size} bytes | size to download={size_to_download} bytes => {output} MB", "bold")
     return output, data_key_dict, source_code_key
 
 
-def _dump_dict_to_file(filename, job_keys):
+def _dump_dict_to_file(fn, folder_keys):
     try:
         log("==> meta_data.json file is updated in the parent folder")
-        dump_dict_to_file(filename, job_keys)
+        dump_dict_to_file(fn, folder_keys)
     except Exception as e:
         print_tb(e)
         raise e

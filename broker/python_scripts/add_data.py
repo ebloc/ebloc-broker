@@ -9,7 +9,7 @@ from broker._utils.tools import print_tb
 
 
 def add_to_ipfs(results_folder):
-    """Add result folder into ipfs repo."""
+    """Add result folder into ipfs repository."""
     try:
         result_ipfs_hash = cfg.ipfs.add(results_folder)
         print(result_ipfs_hash)

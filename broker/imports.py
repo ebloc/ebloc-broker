@@ -15,9 +15,9 @@ from broker.utils import is_geth_on, run, terminate
 
 
 def connect():
-    """Connect into web3 and ebloc_broker objects."""
+    """Connect into web3 and return web3 and ebloc_broker objects."""
     if config.ebb and cfg.w3:
-        return config.ebb, cfg.w3, config._eBlocBroker
+        return config.ebb, cfg.w3, config._eblocbroker
 
     try:
         if not cfg.w3.isConnected():
@@ -28,10 +28,10 @@ def connect():
     except Exception as e:
         print_tb(e)
 
-    return config.ebb, cfg.w3, config._eBlocBroker
+    return config.ebb, cfg.w3, config._eblocbroker
 
 
-def _connect_into_web3():
+def _connect_into_web3() -> None:
     """Connect into web3 of the testnet.
 
     * bloxberg:
@@ -105,7 +105,7 @@ def connect_into_eblocbroker() -> None:
         abi_file = env.EBLOCPATH / "broker" / "eblocbroker_scripts" / "abi.json"
         abi = read_json(abi_file, is_dict=False)
     except Exception as e:
-        raise Exception(f"E: could not read the abi.json file: {abi_file}") from e
+        raise Exception(f"could not read the abi.json file: {abi_file}") from e
 
     try:
         if env.IS_BLOXBERG:
@@ -131,10 +131,10 @@ def connect_into_eblocbroker() -> None:
                 config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
                 config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
                 #: for the contract's events
-                config._eBlocBroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
+                config._eblocbroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
         elif env.IS_EBLOCPOA:
             config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
-            config._eBlocBroker = config.ebb
+            config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
     except Exception as e:
         print_tb(e)

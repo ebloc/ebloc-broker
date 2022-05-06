@@ -1,0 +1,25 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /home/alper/ebloc-broker/broker/TODO.org
+
+
+* DONE
+CLOSED: [2022-04-04 Mon 10:34]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-04-04 Mon 10:34
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+__ https://stackoverflow.com/a/29243206/2402577
+
+#+begin_src python
+import zlib
+
+a = "this string needs compressing"
+a = zlib.compress(a.encode())
+print(zlib.decompress(a).decode())
+#+end_src

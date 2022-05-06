@@ -12,7 +12,7 @@ from git.exc import InvalidGitRepositoryError
 
 from broker import cfg
 from broker._utils._log import ok
-from broker.config import env, logging
+from broker._utils.tools import remove_ansi_escape_sequence
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
 
 
@@ -38,9 +38,9 @@ def is_initialized(path) -> bool:
     """
     with cd(path):
         try:
+            #: checks is the give path top git folder
             *_, output, err = popen_communicate(["git", "rev-parse", "--is-inside-work-tree"])  # noqa
             if output == "true":
-                #: checks is the give path top git folder
                 git.Repo(".", search_parent_directories=False)
                 return True
         except InvalidGitRepositoryError as e:
@@ -53,24 +53,41 @@ def is_initialized(path) -> bool:
         return output == "true"
 
 
-def diff_and_gzip(filename):
-    repo = git.Repo(".", search_parent_directories=True)
-    with gzip.open(filename, "wb") as output:
+def diff_and_gzip(fn, home_dir):
+    with gzip.open(fn, "wb") as output:
         # We cannot directly write Python objects like strings!
         # We must first convert them into a bytes format using io.BytesIO() and then write it
         with io.TextIOWrapper(output, encoding="utf-8") as encode:
-            encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty", "--color=never"))
+            cmd = [
+                "env",
+                f"HOME={home_dir}",
+                "git",
+                "diff",
+                "--binary",
+                "HEAD",
+                "--minimal",
+                "--ignore-submodules=dirty",
+                "--color=never",
+            ]
+            encode.write(run(cmd))
 
 
-def decompress_gzip(filename):
-    if not is_gzip_file_empty(filename):
-        with gzip.open(filename, "rb") as ip:
+# def diff_and_gzip_repo(fn):
+#     repo = git.Repo(".", search_parent_directories=True)
+#     with gzip.open(fn, "wb") as output:
+#         with io.TextIOWrapper(output, encoding="utf-8") as encode:
+#             encode.write(repo.git.diff("--binary", "HEAD", "--minimal", "--ignore-submodules=dirty", "--color=never"))
+
+
+def decompress_gzip(fn):
+    if not is_gzip_file_empty(fn):
+        with gzip.open(fn, "rb") as ip:
             with io.TextIOWrapper(ip, encoding="utf-8") as decoder:
                 content = decoder.read()
                 log(content)
 
 
-def diff_patch(path: Path, source_code_hash, index, target_path):
+def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
     """Apply diff patch.
 
     "git diff HEAD" for detecting all the changes:
@@ -80,41 +97,80 @@ def diff_patch(path: Path, source_code_hash, index, target_path):
     """
     is_file_empty = False
     with cd(path):
-        log(f"==> Navigate to {path}")
+        log(f"==> Navigated into {path}")
         """TODO
         if not is_initialized(path):
             upload everything, changed files!
         """
-        repo = git.Repo(".", search_parent_directories=True)
         try:
-            repo.git.config("core.fileMode", "false")  # git config core.fileMode false
-            # first ignore deleted files not to be added into git
-            run([env.BASH_SCRIPTS_PATH / "git_ignore_deleted.sh"])
-            head_commit_id = repo.rev_parse("HEAD")
+            # os.environ["HOME"] = str(home_dir)  # needed if repo is used
+            #: https://stackoverflow.com/a/52227100/2402577
+            run(["env", f"HOME={home_dir}", "git", "config", "--global", "--add", "safe.directory", path])
+            run(["env", f"HOME={home_dir}", "git", "config", "core.fileMode", "false"])
+            # first ignore deleted files not to be added into git ignore deleted
+            # files to prevent them to added into git commit which will increase the file size
+            output = run(["env", f"HOME={home_dir}", "git", "status"])
+            for line in output.split("\n"):
+                if "deleted:" in line:
+                    fn = line.replace("deleted:", "").strip().replace(" ", "")
+                    fn = remove_ansi_escape_sequence(fn)
+                    with suppress(Exception):
+                        run(["env", f"HOME={home_dir}", "git", "update-index", "--assume-unchanged", fn])
+
+            # head_commit_id = repo.rev_parse("HEAD")
+            head_commit_id = run(["env", f"HOME={home_dir}", "git", "rev-parse", "HEAD"])
             sep = "~"  # separator in between the string infos
             patch_name = f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
-        except:
+        except Exception as e:
+            print_tb(e)
             return False
 
-        patch_upload_name = f"{patch_name}.gz"  # file to be uploaded as zip
-        patch_file = f"{target_path}/{patch_upload_name}"
-        logging.info(f"patch_path={patch_upload_name}")
+        patch_upload_fn = f"{patch_name}.gz"  # file to be uploaded as zip
+        patch_file = f"{target_path}/{patch_upload_fn}"
+        log(f"patch_path=[magenta]{patch_upload_fn}", "bold")
         try:
-            repo.git.add(A=True)
-            diff_and_gzip(patch_file)
+            run(["env", f"HOME={home_dir}", "git", "add", "-A"])
+            diff_and_gzip(patch_file, home_dir)
         except:
             return False
 
     time.sleep(0.25)
     if is_gzip_file_empty(patch_file):
-        log("==> Created patch file is empty, nothing to upload")
+        log("==> created patch file is empty, nothing to upload")
         with suppress(Exception):
-            os.remove(patch_upload_name)
+            os.remove(patch_upload_fn)
+            os.remove(patch_file)
 
-        os.remove(patch_file)
         is_file_empty = True
 
-    return patch_upload_name, patch_file, is_file_empty
+    return patch_upload_fn, patch_file, is_file_empty
+
+
+def add_all_(_env):
+    """Add all into git using bare git."""
+    try:
+        log(
+            "all files in the entire working tree are updated in the Git repository",
+            end="",
+        )
+        run(["git", "add", "-A"], env=_env)
+        log(ok())
+        try:
+            cmd = ["git", "diff-index", "HEAD", "--ignore-blank-lines", "--ignore-space-at-eol", "--shortstat"]
+            output = run(cmd, env=_env)
+            changed_file_count = int(output.split("files changed", 1)[0])
+        except:
+            cmd = ["git", "diff", "--cached", "--ignore-blank-lines", "--ignore-space-at-eol", "--shortstat"]
+            output = run(cmd, env=_env)
+            changed_file_count = int(output.split("files changed", 1)[0])
+
+        if changed_file_count > 0:
+            log("Record changes to the repository", end="")
+            run(["git", "commit", "-m", "update"], env=_env)
+            log(ok())
+    except Exception as e:
+        print_tb(e)
+        raise e
 
 
 def add_all(repo=None):
@@ -123,7 +179,7 @@ def add_all(repo=None):
         if not repo:
             repo = git.Repo(".", search_parent_directories=True)
 
-        log("all files in the entire working tree are updated in the Git repository ", end="")
+        log("all files in the entire working tree are updated in the Git repository", end="")
         repo.git.add(A=True)
         log(ok())
         try:
@@ -136,7 +192,7 @@ def add_all(repo=None):
             )
 
         if changed_file_len > 0:
-            log("Record changes to the repository ", end="")
+            log("Record changes to the repository", end="")
             repo.git.commit("-m", "update")
             log(ok())
     except Exception as e:
@@ -150,10 +206,10 @@ def commit_changes(path):
         try:
             output = run(["ls", "-l", ".git/refs/heads"])
         except Exception as e:
-            raise Exception("E: Problem on git.commit_changes()") from e
+            raise Exception("Problem on git.commit_changes()") from e
 
         if output == "total 0":
-            logging.warning("There is no first commit")
+            log("warning: there is no first commit")
         else:
             changed_files = [item.a_path for item in repo.index.diff(None)]
             if len(changed_files) > 0:
@@ -207,7 +263,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             "--ignore-whitespace",
             "--verbose",
             patch_file,
-        ]  # ,is_quiet=True,
+        ]
         cmd_summary = cmd.copy()
         cmd_summary.insert(3, "--summary")
         output = run(cmd_summary)
@@ -227,7 +283,6 @@ def is_repo(folders):
 
 
 def _generate_git_repo(folder):
-    log(folder, "green")
     try:
         initialize_check(folder)
         commit_changes(folder)

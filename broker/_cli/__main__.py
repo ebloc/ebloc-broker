@@ -19,6 +19,17 @@ def driver():
     main(args)
 
 
+def init():
+    import git
+    from pathlib import Path
+
+    from broker._utils.tools import run
+
+    f = Path(__file__).parent.resolve()
+    repo = git.Repo(f, search_parent_directories=True)
+    run(Path(repo.working_tree_dir) / "broker" / "bash_scripts" / "folder_setup.sh")
+
+
 def about():
     from os.path import expanduser
 
@@ -41,20 +52,38 @@ def about():
 
 def daemon():
     if args.daemon_type[0] == "ipfs":
-        from broker.utils import run_ipfs_daemon
+        from broker.utils import start_ipfs_daemon
 
-        run_ipfs_daemon(_is_print=True)
+        start_ipfs_daemon(_is_print=True)
     if args.daemon_type[0] == "slurm":
-        from broker.config import env
-        from broker.utils import run
+        import git
+        import pathlib
 
-        run(["sudo", env.BASH_SCRIPTS_PATH / "run_slurm.sh"])
+        from broker._utils.tools import run
+
+        f = pathlib.Path(__file__).parent.resolve()
+        repo = git.Repo(f, search_parent_directories=True)
+        run(repo.working_tree_dir / "broker" / "bash_scripts" / "run_slurm.sh")
 
 
 def console():
     import subprocess
 
     subprocess.call([console_fn])
+
+
+def providers():
+    from broker._utils._log import log
+
+    try:
+        providers = cfg.Ebb.get_providers()
+        if len(providers) == 0:
+            log("warning: there is no registered provider")
+        else:
+            for provider in providers:
+                log(provider.lower())
+    except Exception as e:
+        print_tb(e)
 
 
 def register_provider():

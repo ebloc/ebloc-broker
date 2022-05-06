@@ -3,36 +3,12 @@
 - [[http://wildflower.diablonet.net/~scaron/slurmsetup.html]]
 - [[https://slurm.schedmd.com/faq.html#multi_slurmd]]
 - [[https://stackoverflow.com/a/40707189/2402577]]
-
+- [[https://www.hpc.caltech.edu/documentation/slurm-commands]]
+- [[https://rolk.github.io/2015/04/20/slurm-cluster]]
 ** Package install
 
 #+begin_src bash
-./setup.sh
-sudo mkdir -p /var/log/slurm
-sudo chown $(whoami) -R /var/log/slurm
-
-# curl -O https://download.schedmd.com/slurm/slurm-21.08.3.tar.bz2
-git clone https://github.com/SchedMD/slurm $HOME/slurm
-cd $HOME/slurm
-git checkout e2e21cb571ce88a6dd52989ec6fe30da8c4ef15f  #slurm-19-05-8-1
-sudo rm -rf /usr/local/lib/slurm/ /tmp/slurmstate/
-make clean
-./configure --enable-debug --enable-front-end  # seems like this also works
-./configure --enable-debug --enable-front-end --enable-multiple-slurmd
-sudo make && sudo make install
-sudo cp ~/ebloc-broker/_slurm/confs/slurm.conf /usr/local/etc/slurm.conf
-sudo cp ~/ebloc-broker/_slurm/confs/slurmdbd.conf /usr/local/etc/slurmdbd.conf
-
-sudo chmod 755 /usr/local/etc/slurmdbd.conf
-sudo chmod 755 /usr/local/etc/slurm.conf
-sudo chown $(whoami) /usr/local/etc/slurmdbd.conf
-sudo chown munge:munge /etc/munge/munge.key
-sudo chmod 400 /etc/munge/munge.key
-
-sudo systemctl enable slurmctld
-sudo systemctl enable slurmdbd
-sudo systemctl enable munge
-sudo systemctl start munge
+~/ebloc-broker/scripts/install_slurm.sh
 #+end_src
 
 #+begin_src bash
@@ -58,7 +34,7 @@ NodeName=cn[01-02] Procs=1 ThreadsPerCore=1 Sockets=1 CoresPerSocket=1 RealMemor
 # PARTITIONS
 PartitionName=DEFAULT State=UP MaxTime=28-00:00:00 DefaultTime=01:00:00 PreemptMode=REQUEUE Priority=10000 Shared=FORCE:1
 PartitionName=production Default=YES Nodes=cn[01-02]
---
+
 # COMPUTE NODES
 NodeName=ebloc[1-2] NodeHostName=localhost NodeAddr=127.0.0.1 CPUs=2
 PartitionName=debug Nodes=ebloc[1-2] Default=YES MaxTime=INFINITE State=UP
@@ -75,37 +51,42 @@ Should run ~sudo slurmdbd~ on the background in order to register the slurm-user
 #+begin_src bash
 sudo slurmdbd
 sudo /etc/init.d/mysql start
-
 sudo su
-mysql -u root -p [ENTER]
-Enter password: [ENTER]
+mysql -u root -p [ENTER no passwd required]
+#+end_src
 
+#+begin_src sql
+SET GLOBAL innodb_buffer_pool_size=402653184;
 create database slurm_acct_db;
-CREATE USER 'alper'@'localhost' IDENTIFIED BY '12345';     # 'alper'=> $(whoami)
+CREATE USER 'alper'@'localhost' IDENTIFIED BY '12345';  # 'alper'=> $(whoami)
 grant usage on *.* to 'alper'@'localhost';
 grant all privileges on slurm_acct_db.* to 'alper'@'localhost';
 flush privileges;
 exit;
+#+end_src
 
+#+begin_src sql
 SELECT User, Host FROM mysql.user;
 SELECT User FROM mysql.user;
 SHOW DATABASES;
 DROP DATABASE slurm_acct_db;
 #+end_src
 
-
 ** Cont.
 
 Should run ~sudo slurmdbd~ on the background in order to register the slurm-user.
 
 #+begin_src bash
-sudo slurmdbd
+sudo slurmdbd && sleep 1
 user_name=$(whoami)
-sacctmgr add cluster $(hostname -s) --immediate
+sacctmgr add cluster eblocbroker --immediate
 sacctmgr add account $user_name --immediate
 sacctmgr create user $user_name defaultaccount=$user_name adminlevel=None --immediate
+#+end_src
 
-# help: following line is required only to remove
+*** help: following line is required only to remove
+
+#+begin_src bash
 sacctmgr remove user where user=user_name
 #+end_src
 
@@ -114,13 +95,14 @@ sacctmgr remove user where user=user_name
 *** Check registered provider and users
 
 #+begin_src bash
+user=$(whoami)
 sacctmgr list cluster
 sacctmgr show assoc format=account
-sacctmgr show assoc format=account,user,partition where user=<user_name>
+sacctmgr show assoc format=account,user,partition where user=$user
 sacctmgr show user -s
 #+end_src
 
-~$ scontrol show nodes~
+~scontrol show nodes~
 
 *** Provider
 
@@ -147,4 +129,10 @@ alper
 
 @alper According to the current version of the FAQ (slurm.schedmd.com/faq.html,
 question Can Slurm emulate a larger cluster?), it appears so – damienfrancois
+#+end_src
+
+#+begin_src bash
+sudo systemctl enable slurmctld  # Controller
+sudo systemctl enable slurmdbd  # Database
+sudo systemctl enable slurmd  # Compute Nodes
 #+end_src

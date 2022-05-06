@@ -4,11 +4,12 @@ import sys
 
 from broker import cfg
 from broker._utils._log import br
-from broker._utils.tools import get_gpg_fingerprint, is_gpg_published, log, print_tb
-from broker.config import env
+from broker._utils.tools import log, print_tb
 from broker.errors import QuietExit
 from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
 from brownie.exceptions import TransactionError
+
+ipfs = cfg.ipfs
 
 
 def is_provider_valid(self, provider):
@@ -21,13 +22,13 @@ def is_requester_valid(self, _from):
     _from = self.w3.toChecksumAddress(_from)
     *_, orcid = self._get_requester_info(_from)
     if not self.does_requester_exist(_from):
-        raise Exception(f"E: Requester's Ethereum address {_from} is not registered")
+        raise Exception(f"Requester's Ethereum address {_from} is not registered")
 
     if not self._is_orc_id_verified(_from):
         if orcid:
-            raise Exception(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
-        else:
-            raise Exception(f"E: Requester({_from})'s orcid is not registered")
+            raise Exception(f"Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+
+        raise Exception(f"Requester({_from})'s orcid is not registered")
 
 
 def check_before_submit(self, provider, _from, provider_info, key, job):
@@ -50,17 +51,17 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     if len(key) >= 64:
         raise Exception("Length of key is greater than 64, please provide lesser")
 
-    key_len = 46
-    if len(key) != key_len and main_storage_id in [StorageID.IPFS, StorageID.IPFS_GPG]:
+    len_key = 46
+    if len(key) != len_key and main_storage_id in [StorageID.IPFS, StorageID.IPFS_GPG]:
         raise Exception(
-            f"E: key's length does not match with its original length, it should be {key_len}. "
+            f"key's length does not match with its original length, it should be {len_key}. "
             f"Please check your key length, given key={key}"
         )
 
-    key_len = 33
+    len_key = 33
     if len(key) != 33 and main_storage_id == StorageID.GDRIVE:
         raise Exception(
-            f"E: key's length does not match with its original length, it should be {key_len}. "
+            f"key's length does not match with its original length, it should be {len_key}. "
             "Please check your key length"
         )
 
@@ -73,19 +74,19 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     for core_min in job.run_time:
         if core_min > 1440:
-            raise Exception("E: run_time provided greater than 1440. Please provide smaller value")
+            raise Exception("run_time provided greater than 1440. Please provide smaller value")
 
     for cache_type in job.cache_types:
         if cache_type > 1:
             # cache_type should be {0: private, 1: public}
-            raise Exception(f"E: cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
+            raise Exception(f"cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
 
     if is_use_ipfs:
         if not is_ipfs_on():
             sys.exit()
 
         try:
-            cfg.ipfs.swarm_connect(provider_info["ipfs_id"])
+            ipfs.swarm_connect(provider_info["ipfs_id"])
         except Exception as e:
             log(f"E: {e}")
             if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
@@ -95,44 +96,24 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         if source_code_hash == "":
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
-    requester_info = self.get_requester_info(_from)
-    gpg_fingerprint = get_gpg_fingerprint(env.GMAIL).upper()
-    if requester_info["gpg_fingerprint"].upper() != gpg_fingerprint:
-        raise Exception(
-            f"E: gpg_fingerprint does not match {requester_info['gpg_fingerprint'].upper()} "
-            f"with registered gpg_fingerprint={gpg_fingerprint}"
-        )
 
-    try:
-        is_gpg_published(gpg_fingerprint)
-    except Exception as e:
-        raise e
-
-
-def submit_job(self, provider, key, job, requester=None, account_id=None, required_confs=1):
+def submit_job(self, provider, key, job, requester=None, required_confs=1):
     """Submit job.
 
     How to get exception message in Python properly:
     __ https://stackoverflow.com/a/45532289/2402577
     __ https://stackoverflow.com/a/24065533/2402577
     """
-    if not requester and not account_id:
-        raise Exception("E: Not valid msg.sender address is provided.")
+    if not provider and not requester:
+        raise Exception("Not valid msg.sender address is provided.")
 
-    log("==> Submitting the job")
     provider = self.w3.toChecksumAddress(provider)
-    if not env.IS_BLOXBERG:
-        if account_id and not requester:
-            _from = self.w3.toChecksumAddress(self.w3.eth.accounts[account_id])
-        else:
-            _from = self.w3.toChecksumAddress(requester)
-    else:
-        _from = requester
-
+    _from = self.w3.toChecksumAddress(requester)
+    log("==> Submitting the job")
     try:
         provider_info = self.get_provider_info(provider)
-        log(f"Provider's available_core_num={provider_info['available_core_num']}", "bold")
-        log(f"Provider's price_core_min={provider_info['price_core_min']}", "bold")
+        log(f"provider's available_core_num={provider_info['available_core_num']}", "bold")
+        log(f"provider's price_core_min={provider_info['price_core_min']}", "bold")
     except Exception as e:
         print_tb(e)
         raise e
@@ -172,9 +153,9 @@ def submit_job(self, provider, key, job, requester=None, account_id=None, requir
         if is_transaction_valid(tx_hash):
             return tx_hash
         else:
-            raise Exception(f"E: tx_hash={tx_hash} is not a valid transaction hash.") from e
+            raise Exception(f"tx_hash={tx_hash} is not a valid transaction hash.") from e
     except Exception as e:
         if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
-            raise QuietExit  # noqa
+            raise QuietExit from None
 
         raise e

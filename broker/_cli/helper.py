@@ -16,6 +16,7 @@ class Helper:
 
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
+
         __ https://github.com/kislyuk/argcomplete
         __ https://stackoverflow.com/questions/14597466/custom-tab-completion-in-python-argparse
         """
@@ -29,6 +30,7 @@ class Helper:
         self.parser._optionals.title = "Options"
         self.subparsers = self.parser.add_subparsers(dest="command", metavar="command [<options>...]")
         self.subparsers.add_parser("about", help="ebloc-broker metadata")
+        self.subparsers.add_parser("init", help="Initialize the ebloc-broker project")
         self.driver()
         self.daemon()
         self.register()
@@ -36,6 +38,7 @@ class Helper:
         self.data()
         self.withdraw()
         self.balance()
+        self.subparsers.add_parser("providers", help="List of registered providers.")
         self.subparsers.add_parser("console", help="Load the console")
         argcomplete.autocomplete(self.parser)
 

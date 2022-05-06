@@ -9,23 +9,22 @@ from broker import cfg
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker._utils.web3_tools import get_tx_status
-from broker.config import env, logging  # noqa: F401
+from broker.config import env
 from broker.errors import QuietExit
 
 
 def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
     """Refund job payment."""
-    provider = self.w3.toChecksumAddress(provider)
     _from = self.w3.toChecksumAddress(_from)
-
+    provider = self.w3.toChecksumAddress(provider)
     if not self.does_provider_exist(provider):
-        raise Exception(f"E: Requested provider's Ethereum address {provider} does not exist")
+        raise Exception(f"Requested provider's Ethereum address {provider} does not exist")
 
     if provider != _from and not self.does_requester_exist(_from):
-        raise Exception(f"E: Requested requester's Ethereum address {_from} does not exist")
+        raise Exception(f"Requested requester's Ethereum address {_from} does not exist")
 
     try:
-        tx = self._refund(provider, job_key, index, job_id, cores, elapsed_time)
+        tx = self._refund(_from, provider, job_key, index, job_id, cores, elapsed_time)
         return self.tx_id(tx)
     except Exception as e:
         print_tb(e)
@@ -55,13 +54,13 @@ if __name__ == "__main__":
         tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, elapsed_time)
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            processed_logs = Ebb._eBlocBroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
+            processed_logs = Ebb._eblocbroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
             log(vars(processed_logs[0].args))
             try:
-                logging.info(f"refunded_wei={processed_logs[0].args['refundedWei']}")
+                log(f"refunded_gwei={processed_logs[0].args['refundedGwei']}")
                 log("SUCCESS", "green")
             except Exception as e:
-                logging.error(f"E: Transaction is reverted. {e}")
+                log(f"E: Transaction is reverted. {e}")
     except QuietExit:
         pass
     except Exception as e:

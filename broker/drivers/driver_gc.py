@@ -18,10 +18,11 @@ def main():
     cursor = coll.find({})
     for document in cursor:
         # print(document)
+        # TODO: requester paramer as get_storage_duration
         received_block_number, storage_duration = Ebb.get_job_storage_duration(
             env.PROVIDER_ID, document["sourceCodeHash"]
         )
-        end_block_time = received_block_number + storage_duration * cfg.BLOCK_DURATION_1_HOUR
+        end_block_time = received_block_number + storage_duration * cfg.ONE_HOUR_BLOCK_DURATION
         storageID = document["storageID"]
         if end_block_time < block_number and received_block_number != 0:
             if storageID in (StorageID.IPFS, StorageID.IPFS_GPG):

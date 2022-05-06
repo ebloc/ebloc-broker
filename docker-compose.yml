@@ -1,0 +1,10 @@
+version: "3"
+services:
+  sandbox:
+    build:
+      context: .
+    volumes:
+      - .:/code
+    ports:
+      - "4001:4001" # Public IPFS Port
+    command: tail -f /dev/null

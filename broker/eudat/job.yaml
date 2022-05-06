@@ -1,6 +1,6 @@
 config:
-    requester_address: '0x0636278cbd420368b1238ab204b1073df9cc1c5c'
-    provider_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
+    requester_address: '0x17b4ec0bcd6a8f386b354becd44b3c4813448184'
+    provider_address: '0x1926b36AF775E1312FDEbCc46303eCAe50d945aF'
     source_code:
         cache_type: private
         path: ~/test_eblocbroker/test_data/base/source_code

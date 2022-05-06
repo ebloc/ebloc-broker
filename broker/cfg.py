@@ -7,8 +7,8 @@ __ https://stackoverflow.com/a/12413139/2402577
 from rich.console import Console
 
 __version__ = "2.0.0"
-
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 IS_BROWNIE_TEST = False
 IS_THREADING_ENABLED = True
 IS_PRIVATE_IPFS = False
@@ -20,8 +20,8 @@ IS_FULL_TEST = False
 IPFS_TIMEOUT = 300
 TX_TIMEOUT = 1800
 BLOCK_DURATION = 6
-BLOCK_DURATION_1_HOUR = int(3600 / BLOCK_DURATION)
-BLOCK_DURATION_1_DAY = BLOCK_DURATION_1_HOUR * 24
+ONE_HOUR_BLOCK_DURATION = int(3600 / BLOCK_DURATION)
+ONE_DAY_BLOCK_DURATION = ONE_HOUR_BLOCK_DURATION * 24
 IS_FULL_TEST = False
 IPFS_TIMEOUT = 300
 IS_THREAD_JOIN = False
@@ -68,7 +68,7 @@ class W3:
         if not self.w3:
             from brownie import web3
 
-            global w3  # noqa
+            global w3  # type: ignore
             self.w3: "web3" = web3
             w3 = self.w3
 

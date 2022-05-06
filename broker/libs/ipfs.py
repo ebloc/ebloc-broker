@@ -5,6 +5,7 @@ import re
 import signal
 import sys
 import time
+from contextlib import suppress
 from subprocess import check_output
 
 import ipfshttpclient
@@ -13,7 +14,7 @@ from cid import make_cid
 from broker import cfg
 from broker._utils._log import br, ok
 from broker._utils.tools import _remove, handler, log, print_tb
-from broker.config import env, logging
+from broker.config import env
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.lib import subprocess_call
 from broker.utils import (
@@ -45,10 +46,8 @@ class Ipfs:
     def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
         """Get only chunk and hash of a given path, do not write to disk.
 
-        Args:
-            path: Path of a folder or file
-
-        Return string that contains the ouput of the run commad.
+        :param str path: path: Path of a folder or file
+        :returns: string that contains the ouput of the run commad.
         """
         if os.path.isdir(path):
             cmd = ["ipfs", "add", "-r", "--quieter", "--only-hash", path]
@@ -128,8 +127,8 @@ class Ipfs:
             gpg_file_link,
         ]
         try:
-            run(cmd)
-            log(f"==> GPG decrypt {ok()}")
+            run(cmd, suppress_stderr=True)
+            log(f"#> GPG decrypt {ok()}")
             _remove(gpg_file)
             os.unlink(gpg_file_link)
         except Exception as e:
@@ -141,7 +140,7 @@ class Ipfs:
             try:
                 untar(tar_file, extract_target)
             except Exception as e:
-                raise Exception("E: Could not extract the given tar file") from e
+                raise Exception("Could not extract the given tar file") from e
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
@@ -151,7 +150,11 @@ class Ipfs:
         _remove(f"{env.HOME}/.ipfs/repo.lock")
         _remove(f"{env.HOME}/.ipfs/datastore/LOCK")
 
-    def gpg_encrypt(self, user_gpg_finderprint, target):
+    def gpg_encrypt(self, from_gpg_fingerprint, recipient_gpg_fingerprint, target):
+        if from_gpg_fingerprint == recipient_gpg_fingerprint:
+            raise Exception("E: Both given fingerprints are same")
+
+        self.check_gpg_password(from_gpg_fingerprint)
         is_delete = False
         if os.path.isdir(target):
             try:
@@ -163,7 +166,7 @@ class Ipfs:
                 sys.exit(1)
         else:
             if not os.path.isfile(target):
-                logging.error(f"{target} does not exist")
+                log(f"{target} does not exist")
                 sys.exit(1)
             else:
                 encrypt_target = target
@@ -176,9 +179,9 @@ class Ipfs:
 
         for attempt in range(5):
             try:
-                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", user_gpg_finderprint]
+                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", recipient_gpg_fingerprint]
                 log(f"{br(attempt)} cmd: [magenta]{' '.join(cmd)}", "bold")
-                run(cmd)  # this may not work if it is requested too much in a short time
+                run(cmd, suppress_stderr=True)  # this may not work if it is requested too much in short time
                 break
             except Exception as e:
                 log(f"warning: {e}")
@@ -189,7 +192,7 @@ class Ipfs:
                 "--batch",
                 "--yes",
                 "--recipient",
-                user_gpg_finderprint,
+                recipient_gpg_fingerprint,
                 "--trust-model",
                 "always",
                 "--output",
@@ -204,6 +207,8 @@ class Ipfs:
             print_tb(e)
             if "encryption failed: Unusable public key" in str(e):
                 log("#> Check solution: https://stackoverflow.com/a/34132924/2402577")
+
+            raise e
         finally:
             if is_delete:
                 _remove(encrypt_target)
@@ -211,34 +216,49 @@ class Ipfs:
     ################
     # ONLINE CALLS #
     ################
-    def swarm_connect(self, ipfs_id: str):
+    def swarm_connect(self, ipfs_id: str, is_verbose=False):
         """Swarm connect into the ipfs node."""
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         # TODO: check is valid IPFS id
         try:
-            log(f" * trying to connect into {ipfs_id}")
+            if is_verbose:
+                log(f" * trying to connect into {ipfs_id}", end="")
+            else:
+                log(f" * trying to connect into {ipfs_id}")
+
             cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_id]
             p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
-                log()
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
-                if "failure: dial to self attempted" in e:
-                    log(f"E: {e}")
-                    if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
-                        raise QuietExit
+                if not is_verbose:
+                    log()
+                    if "failure: dial to self attempted" in e:
+                        log(f"E: {e}")
+                        if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
+                            raise QuietExit
+                    else:
+                        log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")
+                        raise Exception(e)
                 else:
-                    log("E: connection into provider's IPFS node via swarm is not accomplished")
-                    raise Exception(e)
+                    log("  [  failed  ]")
             else:
-                log(f"{output} {ok()}")
+                if is_verbose:
+                    log(ok())
+                else:
+                    log(f"{output} {ok()}")
         except Exception as e:
-            print_tb(e)
+            if is_verbose:
+                log("[  failed  ]")
+
+            if not is_verbose:
+                print_tb(e)
+
             raise e
 
-    def _ipfs_stat(self, ipfs_hash, _is_ipfs_on=True):
-        """Return stats of the give IPFS hash.
+    def stat(self, ipfs_hash, _is_ipfs_on=True):
+        """Return stat of the give IPFS hash.
 
         This function *may* run for an indetermined time. Returns a dict with the
         size of the block with the given hash.
@@ -249,7 +269,7 @@ class Ipfs:
         with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
             return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-    def is_hash_exists_online(self, ipfs_hash: str):
+    def is_hash_exists_online(self, ipfs_hash: str, swarm_ipfs_id=None, is_verbose=False):
         log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
@@ -259,34 +279,42 @@ class Ipfs:
             signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
 
         try:
-            output = self._ipfs_stat(ipfs_hash, _is_ipfs_on=False)
+            if swarm_ipfs_id:
+                with suppress(Exception):  # TODO: Attempt to swarm connect into requester
+                    self.swarm_connect(swarm_ipfs_id, is_verbose=is_verbose)
+
+            output = self.stat(ipfs_hash, _is_ipfs_on=False)
+            _stat = {}
             for line in output.split("\n"):
                 if "CumulativeSize" not in line:
-                    log(line)
+                    line = line.replace(" ", "")
+                    output_stat = line.split(":")
+                    _stat[output_stat[0]] = int(output_stat[1])
 
-            # output_json = json.dumps(output.as_json(), indent=4, sort_keys=True)
+            log("ipfs_object_stat=", "b", end="")
+            log(_stat, "b")
             cumulative_size = int(output.split("\n")[4].split(":")[1].replace(" ", ""))
             log(f"cumulative_size={cumulative_size}", "bold")
             return output, cumulative_size
         except Exception as e:
-            raise Exception(f"E: Timeout, failed to find IPFS file: {ipfs_hash}") from e
+            raise Exception(f"Timeout, failed to find ipfs file: {ipfs_hash}") from e
 
     def get(self, ipfs_hash, path, is_storage_paid):
         if not is_ipfs_on():
             raise IpfsNotConnected
 
         output = run_with_output(["ipfs", "get", ipfs_hash, f"--output={path}"])
-        logging.info(output)
+        log(output)
         if is_storage_paid:
             # pin downloaded ipfs hash if storage is paid
             output = check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
-            logging.info(output)
+            log(output)
 
     def get_cumulative_size(self, ipfs_hash: str):
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        output = self._ipfs_stat(ipfs_hash)
+        output = self.stat(ipfs_hash)
         if output:
             return int(output.split("\n")[4].split(":")[1].replace(" ", ""))
         else:
@@ -312,15 +340,15 @@ class Ipfs:
             try:
                 result_ipfs_hash = run_with_output(cmd)
                 if not result_ipfs_hash and not self.is_valid(result_ipfs_hash):
-                    logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
+                    log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
                     time.sleep(5)
                 elif not self.is_valid(result_ipfs_hash):
-                    logging.error(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
+                    log(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
                     time.sleep(5)
 
                 break
             except:
-                logging.error(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
+                log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
                 time.sleep(5)
         else:
             raise Exception("Failed all the attempts to generate ipfs hash")
@@ -352,9 +380,14 @@ class Ipfs:
 
         return False
 
-    def get_ipfs_id(self, client) -> str:
+    def get_ipfs_id(self, client=None) -> str:
+        if self.client:
+            _client = self.client
+        else:
+            _client = client
+
         """Return public ipfs id."""
-        ipfs_addresses = client.id()["Addresses"]
+        ipfs_addresses = _client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
                 return ipfs_address
@@ -364,3 +397,47 @@ class Ipfs:
                 return ipfs_address
 
         raise ValueError("No valid ipfs has is found")
+
+    def check_gpg_password(self, gpg_fingerprint):
+        """Check passphrase of gpg from a file.
+
+        * How can I check passphrase of gpg from a file?
+        __ https://unix.stackexchange.com/q/683084/198423
+        """
+        cmd = [
+            "gpg",
+            "--batch",
+            "--pinentry-mode",
+            "loopback",
+            f"--passphrase-file={env.GPG_PASS_FILE}",
+            "--dry-run",
+            "--passwd",
+            gpg_fingerprint,
+        ]
+        _p, output, error_msg = popen_communicate(cmd)  # type: ignore
+        if _p.returncode or error_msg:
+            raise Exception(error_msg)
+            # raise BashCommandsException(p.returncode, output, error_msg, str(cmd))
+
+        # try:
+        #     run(cmd)
+        # except Exception as e:
+        #     print_tb(e)
+        #     raise e
+
+    def publish_gpg(self, gpg_fingerprint):
+        # log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
+        run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+
+    def is_gpg_published(self, gpg_fingerprint):
+        try:
+            run(["gpg", "--list-keys", gpg_fingerprint])
+        except Exception as e:
+            try:
+                self.publish_gpg(gpg_fingerprint)
+            except:
+                raise Exception from e
+
+    def get_gpg_fingerprint(self, email) -> str:
+        output = run(["gpg", "--list-secret-keys", "--keyid-format", "LONG", email])
+        return output.split("\n")[1].replace(" ", "").upper()

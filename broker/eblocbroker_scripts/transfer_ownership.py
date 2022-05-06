@@ -13,13 +13,13 @@ def transfer_ownership(self, new_owner):
     _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
     new_owner = self.w3.toChecksumAddress(new_owner)
     if new_owner == cfg.ZERO_ADDRESS:
-        raise Exception("E: Provided address is zero")
+        raise Exception("Provided address is zero")
 
     if not self.w3.isAddress(new_owner):
-        raise Exception("E: Provided address is not valid")
+        raise Exception("Provided address is not valid")
 
     if self.is_owner(new_owner):
-        raise Exception("E: new_owner is already the owner")
+        raise Exception("new_owner is already the owner")
 
     try:
         tx = self._transfer_ownership(_from, new_owner)

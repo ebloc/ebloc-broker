@@ -5,8 +5,9 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from pathlib import Path
-from pymongo import MongoClient
 from typing import Union
+
+from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
@@ -36,7 +37,7 @@ class Contract:
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         # self.gas_limit = "max"  # 300000
         self.ops = {}
-        self.max_retries = 10
+        self.max_retries = 20
         self.required_confs = 1
         self._from = ""
         #: Transaction cost exceeds current gas limit. Limit: 9990226, got:
@@ -59,7 +60,7 @@ class Contract:
             try:
                 from broker.imports import connect
 
-                self.eBlocBroker, self.w3, self._eBlocBroker = connect()
+                self.eBlocBroker, self.w3, self._eblocbroker = connect()
             except Exception as e:
                 print_tb(e)
                 sys.exit(1)
@@ -96,23 +97,23 @@ class Contract:
     from broker.eblocbroker_scripts.update_provider_info import is_provider_info_match, update_provider_info
     from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
 
-    def brownie_load_account(self, fname="", password="alper"):
+    def brownie_load_account(self, fn="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
         cfg = Yaml(env.LOG_PATH / ".bloxberg_account.yaml")
-        if not fname:
-            fname = cfg["config"]["name"]
+        if not fn:
+            fn = cfg["config"]["name"]
 
         if cfg["config"]["passw"]:
             password = cfg["config"]["passw"]
 
-        full_path = expanduser(f"~/.brownie/accounts/{fname}")
+        full_path = expanduser(f"~/.brownie/accounts/{fn}")
         if not full_path:
             raise Exception(f"{full_path} does not exist")
 
         # accounts.load("alper.json", password="alper")  # DELETE
-        return accounts.load(fname, password=password)
+        return accounts.load(fn, password=password)
 
     def is_eth_account_locked(self, addr):
         """Check whether the ethereum account is locked."""
@@ -137,7 +138,7 @@ class Contract:
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.get_block_number())["timestamp"]
 
-    def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_silent=False) -> TxReceipt:
+    def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_verbose=False) -> TxReceipt:
         """Wait till the tx is deployed."""
         if isinstance(tx_hash, TransactionReceipt):
             tx_hash = tx_hash.txid
@@ -145,7 +146,7 @@ class Contract:
         tx_receipt = None
         attempt = 0
         poll_latency = 3
-        if not is_silent:
+        if not is_verbose:
             log(f"## waiting for the transaction({tx_hash}) receipt... ", end="")
 
         while True:
@@ -161,14 +162,14 @@ class Contract:
             if tx_receipt and tx_receipt["blockHash"]:
                 break
 
-            if not is_silent:
+            if not is_verbose:
                 log()
                 log(f"## attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
 
             attempt += 1
             time.sleep(poll_latency)
 
-        if not is_silent:
+        if not is_verbose:
             log(ok())
 
         if not compact:
@@ -191,11 +192,11 @@ class Contract:
             print_tb(e)
             return False
 
-        block_number = self.w3.eth.get_transaction(contract["tx_hash"]).blockNumber
-        if block_number is None:
-            raise Exception("E: Contract is not available on the blockchain, is it synced?")
+        block_number: int = self.w3.eth.get_transaction(contract["tx_hash"]).blockNumber
+        if not block_number:
+            raise Exception("Contract is not available on the blockchain, is it synced?")
 
-        return self.w3.eth.get_transaction(contract["tx_hash"]).blockNumber
+        return block_number
 
     def get_transaction_receipt(self, tx, compact=False):
         """Get transaction receipt.
@@ -207,7 +208,7 @@ class Contract:
         """
         tx_receipt = self.w3.eth.get_transaction_receipt(tx)
         if not compact:
-            return tx_receipt
+            return dict(tx_receipt)
         else:
             return without_keys(tx_receipt, self.invalid)
 
@@ -225,18 +226,17 @@ class Contract:
                 account = self.w3.eth.accounts[account_id]
                 return self.w3.toChecksumAddress(account)
             except Exception as e:
-                raise Exception("E: Given index account does not exist, check .eblocpoa/keystore") from e
+                raise Exception("Given index account does not exist, check .eblocpoa/keystore") from e
         else:
-            raise Exception(f"E: Invalid account {address} is provided")
+            raise Exception(f"Invalid account {address} is provided")
 
-    def _get_balance(self, account, _type="ether"):
+    def _get_balance(self, account, eth_unit="ether"):
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)
         else:
             account = str(account)
 
-        balance_wei = self.w3.eth.get_balance(account)
-        return self.w3.fromWei(balance_wei, _type)
+        return self.w3.fromWei(self.w3.eth.get_balance(account), eth_unit)
 
     def transfer(self, amount, from_account, to_account, required_confs=1):
         tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
@@ -255,13 +255,13 @@ class Contract:
 
     def _get_contract_yaml(self) -> Path:
         try:
-            _yaml = Yaml(env.CONTRACT_YAML_FILE)
+            _yaml = Yaml(env.CONTRACT_YAML_FILE, auto_dump=False)
             if env.IS_BLOXBERG:
                 return _yaml["networks"]["bloxberg"]
             elif env.IS_EBLOCPOA:
                 return _yaml["networks"]["eblocpoa"]
             else:
-                raise Exception("Wrong contract yaml address setup")
+                raise Exception("wrong contract yaml address setup")
         except Exception as e:
             raise e
 
@@ -290,10 +290,10 @@ class Contract:
     def timeout(self, func, *args):
         """Timeout deploy contract's functions.
 
-        brownie:
+        brownie usage:
         self.eBlocBroker.submitJob(*args, self.ops)
 
-        geth:
+        geth usage:
         self.eBlocBroker.functions.submitJob(*args).transact(self.ops)
         """
         method = None
@@ -321,7 +321,16 @@ class Contract:
             try:
                 return self.timeout(method, *args)
             except ValueError as e:
-                log(f"E: Tx: {e}")
+                if "There is another transaction with same nonce in the queue" in str(e):
+                    log(f"warning: Tx: {e}")
+                    log("#> sleeping for 15 seconds, will try again")
+                    time.sleep(15)
+                else:
+                    log(f"E: Tx: {e}")
+
+                if "Try increasing the gas price" in str(e):
+                    self.gas_price *= 1.13
+
                 if "Execution reverted" in str(e) or "Insufficient funds" in str(e):
                     print_tb(e)
                     raise QuietExit from e
@@ -342,6 +351,15 @@ class Contract:
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
                 self.gas_price *= 1.13
+            except Exception as e:
+                log(f"Exception: {e}", "bold")
+                # brownie.exceptions.TransactionError: Tx dropped without known replacement
+                if "Tx dropped without known replacement" in str(e):
+                    self.gas_price *= 1.13
+                    log("Sleep 15 seconds, will try again...")
+                    time.sleep(15)
+                else:
+                    raise e
 
     ################
     # Transactions #
@@ -354,7 +372,7 @@ class Contract:
                 "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
                 "allow_revert": True,
-                "value": self.w3.toWei(job_price, "wei"),
+                "value": self.w3.toWei(job_price, "gwei"),
                 "required_confs": required_confs,
             }
             try:
@@ -391,13 +409,6 @@ class Contract:
         self._from = _from
         self.required_confs = 1
         return self.timeout_wrapper("registerRequester", *args)
-
-    def _data_received(self, *args) -> "TransactionReceipt":
-        """Withdraw payment."""
-        self.gas_price = GAS_PRICE
-        self._from = env.PROVIDER_ID
-        self.required_confs = 1
-        return self.timeout_wrapper("dataReceived", *args)
 
     def _refund(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
@@ -450,17 +461,24 @@ class Contract:
         self.required_confs = 1
         return self.timeout_wrapper("updataDataPrice", *args)
 
-    def set_job_status_running(self, key, index, job_id, start_time) -> "TransactionReceipt":
-        """Set the job status as running."""
+    def set_data_verified(self, *args) -> "TransactionReceipt":
+        """Set data hashes as verified."""
+        self.gas_price = GAS_PRICE
+        self._from = env.PROVIDER_ID
+        self.required_confs = 0
+        return self.timeout_wrapper("setDataVerified", *args)
+
+    def set_job_state_running(self, key, index, job_id, start_time) -> "TransactionReceipt":
+        """Set the job state as running."""
         _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
         self._from = _from
-        self.required_confs = 0
-        return self.timeout_wrapper("setJobStatusRunning", key, int(index), int(job_id), int(start_time))
+        self.required_confs = 1  # "1" safer to wait for confirmation
+        return self.timeout_wrapper("setJobStateRunning", key, int(index), int(job_id), int(start_time))
 
     def _process_payment(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
-        self.required_confs = 0
+        self.required_confs = 1  # "1" safer to wait for confirmation
         return self.timeout_wrapper("processPayment", *args)
 
     def remove_registered_data(self, *args) -> "TransactionReceipt":
@@ -473,7 +491,16 @@ class Contract:
     ###########
     # GETTERS #
     ###########
-    def get_registered_data_prices(self, *args):
+    def get_registered_data_bn(self, *args):
+        if self.eBlocBroker is not None:
+            if env.IS_BLOXBERG:
+                return self.eBlocBroker.getRegisteredDataBlockNumbers(*args)
+            else:
+                return self.eBlocBroker.functions.getRegisteredDataBlockNumbers(*args).call()
+        else:
+            raise Exception("Contract object's eBlocBroker variable is None")
+
+    def get_registered_data_price(self, *args):
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
                 return self.eBlocBroker.getRegisteredDataPrice(*args)
@@ -627,6 +654,7 @@ class Contract:
             raise Exception("Contract object's eBlocBroker variable is None")
 
     def _get_provider_info(self, provider, prices_set_block_number=0):
+        """Fetch price of the provider within the commitment duration."""
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
                 block_read_from, provider_price_info = self.eBlocBroker.getProviderInfo(
@@ -641,9 +669,9 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def eth_balance(self, account):
-        """Return account balance."""
-        return self.w3.eth.get_balance(account)
+    def gwei_balance(self, account):
+        """Return account balance in Gwei."""
+        return self.w3.fromWei(self.w3.eth.get_balance(account), "gwei")
 
     def get_balance(self, account):
         if not isinstance(account, (Account, LocalAccount)):
@@ -693,33 +721,35 @@ class Contract:
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    # def get_received_storage_deposit(self, provider, requester, code_hash) -> int:
-    #     """Return the received storage deposit for the corresponding source code hash.
-
-    #     * required for the whenProviderRegistered() check on the contract
-    #     """
-    #     if isinstance(code_hash, str):
-    #         with suppress(Exception):
-    #             code_hash = ipfs_to_bytes32(code_hash)
-
-    #     if env.IS_BLOXBERG:
-    #         return self.eBlocBroker.getStorageDeposit(provider, requester, code_hash)
-    #     else:
-    #         return self.eBlocBroker.functions.getStorageDeposit(provider, requester, code_hash).call()
-
-    def get_storage_info(self, provider, requester, code_hash):
+    def get_storage_info(self, code_hash, provider=env.PROVIDER_ID, data_owner=cfg.ZERO_ADDRESS):
         """Return the received storage deposit for the corresponding source code hash."""
         if isinstance(code_hash, str):
-            with suppress(Exception):
-                code_hash = ipfs_to_bytes32(code_hash)
+            if len(code_hash) == 32:
+                code_hash = code_hash.encode("utf-8")
+            else:
+                with suppress(Exception):
+                    code_hash = ipfs_to_bytes32(code_hash)
 
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
-                return self.eBlocBroker.getStorageInfo(provider, requester, code_hash)
+                return self.eBlocBroker.getStorageInfo(provider, data_owner, code_hash)
             else:
-                return self.eBlocBroker.functions.getStorageInfo(provider, requester, code_hash).call()
+                return self.eBlocBroker.functions.getStorageInfo(provider, data_owner, code_hash).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
+
+    def search_best_provider(self, job, requester, is_verbose=False):
+        selected_provider = ""
+        selected_price = 0
+        price_to_select = sys.maxsize
+        for provider in Ebb.get_providers():
+            _price, *_ = job.cost(provider, requester, is_verbose)
+            log(f" * provider={provider} | price={_price}")
+            if _price < price_to_select:
+                selected_provider = provider
+                selected_price = _price
+
+        return selected_provider, selected_price
 
 
 class EBB:
@@ -739,5 +769,4 @@ class EBB:
         return getattr(self.eblocbroker, name)
 
 
-# eblocbroker: Union["Contract", None] = None
 Ebb = EBB()

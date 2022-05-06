@@ -16,8 +16,8 @@ interface eBlocBrokerInterface {
         uint32 index,
         uint32 jobID,
         address recipient,
-        uint256 receivedWei, // value in wei to be recevied by the provider
-        uint256 refundedWei, // value in wei to be refunded to the requester
+        uint256 receivedGwei, // value in Gwei to be recevied by the provider
+        uint256 refundedGwei, // value in Gwei to be refunded to the requester
         uint256 completionTime,
         bytes32 resultIpfsHash,
         uint256 dataTransferIn,
@@ -25,7 +25,7 @@ interface eBlocBrokerInterface {
     );
 
     /**
-     * @dev Records the updated jobs' information under setJobStatus*() method calls
+     * @dev Records the updated jobs' information under setJobState*() method calls
      */
     event LogSetJob(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint8 stateCodes);
 
@@ -49,7 +49,7 @@ interface eBlocBrokerInterface {
     event LogProviderInfo(
         address indexed provider,
         bytes32 indexed gpgFingerprint,
-        string email,
+        string gmail,
         string fID,
         string ipfsID
     );
@@ -59,13 +59,13 @@ interface eBlocBrokerInterface {
     event LogRequester(
         address indexed requester,
         bytes32 indexed gpgFingerprint,
-        string email,
+        string gmail,
         string fID,
         string ipfsID
     );
 
     // Records the refunded jobs' information under refund() method call
-    event LogRefundRequest(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint256 refundedWei);
+    event LogRefundRequest(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint256 refundedGwei);
 
     // Logs source code of the registed data files
     event LogRegisterData(address indexed provider, bytes32 registeredDataHash);

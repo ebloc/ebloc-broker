@@ -17,7 +17,7 @@ def main():
     received_block_num, storage_duration = Ebb.getStorageInfo(provider_addr, source_code_hash)
     print(
         f"received_block_num={received_block_num}; storage_duration={storage_duration};"
-        f" end_block_time={received_block_num + storage_duration * cfg.BLOCK_DURATION_1_HOUR}"
+        f" end_block_time={received_block_num + storage_duration * cfg.ONE_HOUR_BLOCK_DURATION}"
     )
 
 

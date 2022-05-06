@@ -27,12 +27,12 @@ from broker._utils.tools import WHERE, _exit, is_process_on, log, print_tb, run
 from broker.config import env
 from broker.errors import QuietExit
 
-Qm = b"\x12 "
 empty_bytes32 = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 )
 zero_bytes32 = "0x00"
+Qm = b"\x12 "
 
 
 class BaseEnum(IntEnum):
@@ -103,14 +103,14 @@ def raise_error(error):
     raise RuntimeError(error)
 
 
-def extract_gzip(filename):
+def extract_gzip(fn):
     try:
-        args = shlex.split(f"gunzip --force {filename}")
+        args = shlex.split(f"gunzip --force {fn}")
         run(args)
     except:
-        args = shlex.split(f"zcat {filename}")
-        base_dir = os.path.dirname(filename)
-        base_name = os.path.basename(filename).replace(".gz", "")
+        args = shlex.split(f"zcat {fn}")
+        base_dir = os.path.dirname(fn)
+        base_name = os.path.basename(fn).replace(".gz", "")
         popen_communicate(args, f"{base_dir}/{base_name}")
 
 
@@ -123,8 +123,8 @@ def untar(tar_file, extract_to):
     tar interprets the next argument after -f as the file name of the tar file.
     Put the p before the f:
     """
-    filename = os.path.basename(tar_file)
-    accept_files = [".git", filename]
+    fn = os.path.basename(tar_file)
+    accept_files = [".git", fn]
     if not is_dir_empty(extract_to):
         for name in os.listdir(extract_to):
             # if tar itself already exist inside the same directory along with
@@ -162,16 +162,8 @@ def sleep_timer(sleep_duration):
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
         sys.stdout.flush()
         time.sleep(1)
+
     sys.stdout.write("\rsleeping is done                                \n")
-
-
-def remove_ansi_escape_sequence(string):
-    """Remove ansi escape sequence.
-
-    __ https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
-    """
-    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    return ansi_escape.sub("", string)
 
 
 def _try(func):
@@ -216,7 +208,7 @@ def run_with_output(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
+def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
     """Act similir to run(cmd).
 
     But also returns the output message captures on during the run stdout_fn
@@ -231,7 +223,7 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
     else:
         with open(stdout_fn, mode) as outfile:
             # output written into file, error will be returned
-            p = Popen(cmd, stdout=outfile, stderr=PIPE, env=_env, universal_newlines=False)
+            p = Popen(cmd, stdout=outfile, stderr=PIPE, env=env, universal_newlines=False)
             output, error = p.communicate()
             p.wait()
             return p, output, error.rstrip()
@@ -241,9 +233,9 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", _env=None):
         output = output.strip().decode("utf-8")
 
     if error:
-        error = error.decode("utf-8")
+        error = error.decode("utf-8").rstrip()
 
-    return p, output, error.rstrip()
+    return p, output, error
 
 
 def is_transaction_valid(tx_hash) -> bool:
@@ -292,11 +284,18 @@ def bytes32_to_ipfs(bytes_array):
     return bytes_array
 
 
+def is_ipfs_hash_valid(ipfs_hash: str) -> bool:
+    return bool(len(ipfs_hash) == 46 and ipfs_hash[:2] == "Qm")
+
+
 def ipfs_to_bytes32(ipfs_hash: str) -> bytes:
     """Convert ipfs hash into bytes32 format."""
-    bytes_array = base58.b58decode(ipfs_hash)
-    b = bytes_array[2:]
-    return cfg.w3.toBytes(hexstr=binascii.hexlify(b).decode("utf-8"))
+    if is_ipfs_hash_valid(ipfs_hash):
+        bytes_array = base58.b58decode(ipfs_hash)
+        b = bytes_array[2:]
+        return cfg.w3.toBytes(hexstr=binascii.hexlify(b).decode("utf-8"))
+    else:
+        raise Exception("Not valid ipfs hash given")
 
 
 def byte_to_mb(size_in_bytes: float) -> int:
@@ -325,14 +324,14 @@ def eth_address_to_md5(address):
     return hashlib.md5(address.encode("utf-8")).hexdigest()
 
 
-def write_to_file(fname, message) -> None:
-    with open(fname, "w") as f:
+def write_to_file(fn, message) -> None:
+    with open(fn, "w") as f:
         f.write(str(message))
 
 
-def read_file(fname):
+def read_file(fn):
     try:
-        file = open(fname, "r")
+        file = open(fn, "r")
         return file.read().rstrip()
     except IOError as e:
         print_tb(e)
@@ -343,25 +342,25 @@ def read_file(fname):
         file.close()
 
 
-def is_gzip_file_empty(filename):
+def is_gzip_file_empty(fn):
     """Check whether the given gzip file is empty or not.
 
-    cmd: gzip -l filename.gz | awk 'NR==2 {print $2}
+    cmd: gzip -l fn.gz | awk 'NR==2 {print $2}
     """
-    p1 = Popen(["gzip", "-l", filename], stdout=PIPE, env={"LC_ALL": "C"})
+    p1 = Popen(["gzip", "-l", fn], stdout=PIPE, env={"LC_ALL": "C"})
     p2 = Popen(["awk", "NR==2 {print $2}"], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()
     size = p2.communicate()[0].decode("utf-8").strip()
     if bool(int(size)):
         return False
 
-    log(f"==> Created gzip file is empty:\n    [magenta]{filename}[/magenta]")
+    log(f"==> Created gzip file is empty:\n    [magenta]{fn}[/magenta]")
     return True
 
 
-def getsize(filename):
+def getsize(fn):
     """Return the size of a file, reported by os.stat()."""
-    return os.stat(filename).st_size
+    return os.stat(fn).st_size
 
 
 def path_leaf(path):
@@ -411,10 +410,10 @@ def is_geth_account_locked(address) -> bool:
     return False
 
 
-def is_driver_on(process_count=0, is_print=True):
+def is_driver_on(process_count=1, is_print=True):
     """Check whether driver runs on the background."""
-    if is_process_on("python.*[D]river", "Driver", process_count, is_print=is_print):
-        log(f"## Track output using:\n[blue]tail -f {_log.DRIVER_LOG}")
+    if is_process_on("python.*[e]blocbroker driver", process_count=process_count, is_print=is_print):
+        log(f"## Track output using: [blue]tail -f {_log.DRIVER_LOG}")
         raise QuietExit
 
 
@@ -432,21 +431,26 @@ def is_geth_on():
         raise QuietExit
 
 
-def run_ipfs_daemon(_is_print=False):
+def start_ipfs_daemon(_is_print=False):
     """Check that does IPFS run on the background or not."""
     if is_ipfs_on(_is_print):
         return True
 
+    try:
+        output = run(["/usr/local/bin/ipfs", "repo", "stat"])
+    except Exception as e:
+        raise QuietExit from e
+
     log("warning: [green]IPFS[/green] does not work on the background")
     log("#> Starting [green]IPFS daemon[/green] on the background")
-    output = run(["python3", env.EBLOCPATH / "broker" / "python_scripts" / "run_ipfs_daemon.py"])
+    output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
             log(content_file.read().rstrip(), "bold blue")
             time.sleep(5)  # in case sleep for 5 seconds
             if output:
-                log(output.rstrip(), "bold blue")
+                log(output.replace("==> Running IPFS daemon", "").rstrip(), "bold blue")
 
         if is_ipfs_on(is_print=True):
             return True
@@ -465,14 +469,14 @@ def check_ubuntu_packages(packages=None):
     return True
 
 
-def is_npm_installed(package_name) -> bool:
+def is_npm_installed(package) -> bool:
     output = run(["npm", "list", "-g", "--depth=0"])
-    return package_name in output
+    return package in output
 
 
-def is_dpkg_installed(package_name) -> bool:
+def is_dpkg_installed(package) -> bool:
     try:
-        run(["dpkg", "-s", package_name])
+        run(["dpkg", "-s", package])
         return True
     except:
         return False
@@ -626,6 +630,6 @@ def compress_folder(folder_path, is_exclude_git=False):
     return tar_hash, f"{dir_path}/{tar_file}"
 
 
-def dump_dict_to_file(filename, job_keys):
-    with open(filename, "w") as f:
+def dump_dict_to_file(fn, job_keys):
+    with open(fn, "w") as f:
         json.dump(job_keys, f)

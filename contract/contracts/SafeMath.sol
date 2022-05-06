@@ -29,7 +29,6 @@ library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a, "addition overflow");
-
         return c;
     }
 
@@ -45,7 +44,6 @@ library SafeMath {
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         require(b <= a, "subtraction overflow");
         uint256 c = a - b;
-
         return c;
     }
 
@@ -65,10 +63,8 @@ library SafeMath {
         if (a == 0) {
             return 0;
         }
-
         uint256 c = a * b;
         require(c / a == b, "multiplication overflow");
-
         return c;
     }
 
@@ -88,7 +84,6 @@ library SafeMath {
         require(b > 0, "division by zero");
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
         return c;
     }
 
@@ -113,14 +108,12 @@ library SafeMath32 {
     function add(uint32 _a, uint32 _b) internal pure returns (uint32) {
         uint32 c = _a + _b;
         require(c >= _a);
-
         return c;
     }
 
     function sub(uint32 _a, uint32 _b) internal pure returns (uint32) {
         require(_b <= _a);
         uint32 c = _a - _b;
-
         return c;
     }
 
@@ -128,20 +121,18 @@ library SafeMath32 {
         if (_a == 0) {
             return 0;
         }
-
         uint32 c = _a * _b;
         require(c / _a == _b);
-
         return c;
     }
+
     /*
-        function div(uint32 _a, uint32 _b) internal pure returns (uint32) {
-                require(_b > 0); // Solidity only automatically asserts when dividing by 0
-                uint32 c = _a / _b;
-                // assert(_a == _b * c + _a % _b); // There is no case in which this doesn't hold
+    function div(uint32 _a, uint32 _b) internal pure returns (uint32) {
+            require(_b > 0); // Solidity only automatically asserts when dividing by 0
+            uint32 c = _a / _b;
+            // assert(_a == _b * c + _a % _b); // There is no case in which this doesn't hold
 
-                return c;
-        }
-
-        */
+            return c;
+    }
+    */
 }

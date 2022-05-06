@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-users = [
+providers = [
+    "0x29e613b04125c16db3f3613563bfdd0ba24cb629",  # A
+    "0x1926b36af775e1312fdebcc46303ecae50d945af",  # B
+    "0x4934a70ba8c1c3acfa72e809118bdd9048563a24",  # C
+    "0x51e2b36469cdbf58863db70cc38652da84d20c67",  # D
+]
+
+requesters = [  # should not contain providers
     "0x378181ce7b07e8dd749c6f42772574441b20e35f",
     "0x4cd57387cc4414be8cece4e6ab84a7dd641eab25",
     "0x02a07535bc88f180ecf9f7c6fd66c0c8941fd7ab",
@@ -9,7 +16,6 @@ users = [
     "0x1397e8bf32d57b46f507ff2e912a29cd9aa78dcd",
     "0xdce54cfd06e7ccf5f2e7640e0007ba667190e38e",
     "0x5affc0638b7b311be40a0e27ed5cd7c133c16e64",
-    "0xd118b6ef83ccf11b34331f1e7285542ddf70bc49",
     "0x904c343addd9f21510e711564dbf52d2a0daf7e3",
     "0x17b4ec0bcd6a8f386b354becd44b3c4813448184",
     "0x6e89235ddcc313a8184ffa4cea496d0f42f1f647",
@@ -21,11 +27,9 @@ users = [
     "0x30f02cecf3e824f963cfa05270c8993a49703d55",
     "0x44d85663b00117e38a9d6def322fb09dc40b6839",
     "0x78bc08e70dce53f7823456e34610bc55828373af",
-    "0x4934a70ba8c1c3acfa72e809118bdd9048563a24",
     "0x7293d2089b6f6e814240d21dc869cc88a3471839",
     "0x141c01e36d4e908d42437e203442cd3af40b4d79",
     "0x782cf10b0c7393c0c98587277bfc26e73d3d0ca2",
-    "0x51e2b36469cdbf58863db70cc38652da84d20c67",
     "0x66b7bf743b17f05f8a5afff687f085dc88ed3515",
     "0xbe2a4e39b6853086aab31d4003e2d1fa67561eae",
     "0xbc28a0dab6eaef04574e2116059bb9102aa31e42",
@@ -58,7 +62,6 @@ users = [
     "0xc660aba0006e51cd79428f179467a8d7fbcf90f7",
     "0x64b570f0e7c019dc750c4a75c33dca55bdc51845",
     "0xf6d9f88fa98d4dc427ffdb1bdf01860fd12c98c7",
-    "0x29e613b04125c16db3f3613563bfdd0ba24cb629",
     "0x865fdb0532b1579ee4eebf0096dbde06f1548a36",
     "0x676b8d6e031a394c079fc8fee03ad2974ef126f5",
     "0x77c0b42b5c358ff7c97e268794b9ff6a278a0f1e",
@@ -67,7 +70,6 @@ users = [
     "0xe72307313f8b8f96cfcd99ecef0f1ab03d28be5d",
     "0xfe0f02d3d387eec745090c756a31a3c3c2bf32cf",
     "0x831854a093f30acb032ab9eeaeb715b37ee1bb03",
-    "0x1926b36af775e1312fdebcc46303ecae50d945af",
     "0x28fe7b65c3846541d6d17271585792805ae280f7",
     "0xfce73328daf1ae024d0a724c595e1d5b2ac8aecb",
     "0x805332ee379269b087c8c1b96adb0f398d53e46f",
@@ -101,16 +103,23 @@ users = [
     "0xe2969f599cb904e9a808ec7218bc14fcfa346965",
     "0x0636278cbd420368b1238ab204b1073df9cc1c5c",
     "0x72c1a89ff3606aa29686ba8d29e28dccff06430a",
-]
-
-extra_users = [
     "0x168cb3240a429c899a74aacda4289f4658ec924b",
     "0x08b003717bfab7a80b17b51c32223460fe9efe2a",
     "0x4aae9220409e1c4d74ac95ba14edb0684a431379",
     "0xab608a70d0b4a3a288dd68a1661cdb8b6c742672",
+]
+
+extra_requesters = [
     "0xe2e146d6b456760150d78819af7d276a1223a6d4",
     "0xa9fc23943e48a3efd35bbdd440932f123d05b697",
     "0x5b235d87f3fab61f87d238c11f6790dec1cde736",
     "0xe03914783115e807d8ea1660dbdcb4f5b2f969c0",
     "0x85fa5e6dd9843cce8f67f4797a96a156c3c79c25",
 ]
+
+for provider in providers:
+    if provider in requesters:
+        raise Exception(f"Provider {provider}, is in the requester list fix it")
+
+    if provider in extra_requesters:
+        raise Exception(f"Provider {provider}, is in the extra_requesters list fix it")

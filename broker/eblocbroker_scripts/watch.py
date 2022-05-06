@@ -10,18 +10,23 @@ from broker._utils._log import _console_clear
 from broker._utils.tools import _date, log, print_tb
 from broker.lib import state
 
+# from broker.test_setup.user_set import providers
+
 Ebb = cfg.Ebb
 watch_only_jobs = True
 
 
 def watch(eth_address="", from_block=None):
-    # from_block = 13895443
-    from_block = 13998718
+    from_block = 15394725
     # if not eth_address:
     #     # TODO: pull from cfg
     #     eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
 
-    is_provider = False
+    if not eth_address:
+        log("E: eth_address is empty, run as: ./watch.py <eth_address>")
+        sys.exit(1)
+
+    is_provider = True
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     _log.ll.LOG_FILENAME = watch_fn
     # open("watch.out", "w").close()
@@ -36,16 +41,16 @@ def watch(eth_address="", from_block=None):
                 providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
         if not from_block:
-            from_block = cfg.Ebb.get_block_number() - cfg.BLOCK_DURATION_1_DAY
+            from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
         if is_provider:
-            event_filter = cfg.Ebb._eBlocBroker.events.LogJob.createFilter(
+            event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
                 fromBlock=int(from_block),
                 argument_filters={"provider": eth_address},
                 toBlock="latest",
             )
         else:
-            event_filter = cfg.Ebb._eBlocBroker.events.LogJob.createFilter(
+            event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
                 fromBlock=int(from_block),
                 argument_filters={"owner": eth_address},
                 toBlock="latest",
@@ -64,7 +69,7 @@ def watch(eth_address="", from_block=None):
                 job = job[1]
                 _args = job["args"]
 
-            _job = cfg.Ebb.get_job_info(
+            _job = Ebb.get_job_info(
                 _args["provider"],
                 _args["jobKey"],
                 _args["index"],

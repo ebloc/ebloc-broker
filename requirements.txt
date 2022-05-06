@@ -5,6 +5,7 @@
 #    pip-compile
 #
 accesscontrol==4.2
+atomicwrites==1.4.0
 acquisition==4.6
     # via
     #   accesscontrol
@@ -128,7 +129,6 @@ charset-normalizer==2.0.11
     #   aiohttp
     #   eth-brownie
     #   requests
-chromedriver==2.24.1
 click==8.0.3
     # via
     #   black
@@ -138,7 +138,7 @@ click==8.0.3
     #   ng
     #   pip-tools
     #   ppi
-colorama==0.4.3
+colorama==0.4.4
     # via
     #   crayons
     #   rich
@@ -283,7 +283,7 @@ extensionclass==4.5.1
     #   persistence
 ezenv==0.91
 fasteners==0.14.1
-filelock==3.0.12
+filelock==3.6.0
     # via
     #   gdown
     #   tox
@@ -294,7 +294,7 @@ flake8==4.0.1
     #   flake8-noqa
 flake8-mypy==17.8.0
 flake8-noqa==1.2.1
-flask==1.1.2
+Flask==2.1.1
     # via
     #   grip
 fonttools==4.28.3
@@ -309,7 +309,7 @@ frozenlist==1.3.0
 gdown==3.12.2
     # via
     #   gshell
-git-filter-repo==2.32.0
+git-filter-repo==2.33.0
 gitdb==4.0.2
     # via
     #   gitpython
@@ -339,7 +339,7 @@ hyperlink==20.0.1
 hypothesis==6.27.3
     # via
     #   eth-brownie
-identify==1.4.19
+identify==2.4.12
     # via
     #   pre-commit
 idna==3.3
@@ -354,7 +354,7 @@ imagesize==1.3.0
     # via
     #   sphinx
 importchecker==2.0
-importlib-metadata==4.8.2
+importlib-metadata==4.2.0
 importlib-resources==5.1.2
 importmagic==0.1.7
 incremental==17.5.0
@@ -384,7 +384,7 @@ ipython-genutils==0.2.0
 isort==5.10.1
     # via
     #   pylint
-itsdangerous==1.1.0
+itsdangerous==2.1.2
     # via
     #   flask
 jedi==0.17.2
@@ -396,7 +396,7 @@ jeepney==0.6.0
     # via
     #   keyring
     #   secretstorage
-jinja2==2.11.2
+jinja2==3.1.1
     # via
     #   flask
     #   sphinx
@@ -488,7 +488,7 @@ multipart==0.2.4
 multitasking==0.0.9
     # via
     #   yfinance
-mypy==0.931
+mypy==0.942
     # via
     #   flake8-mypy
 mypy-extensions==0.4.3
@@ -513,7 +513,6 @@ ng==1.2.0
 nodeenv==1.6.0
     # via
     #   pre-commit
-    #   pyright
 numpy==1.19.4
     # via
     #   imageio
@@ -598,7 +597,7 @@ pluggy==1.0.0
     #   python-lsp-server
     #   tox
 ppi==0.0.4
-pre-commit==2.5.1
+pre-commit==2.18.1
 prompt-toolkit==3.0.26
     # via
     #   eth-brownie
@@ -688,7 +687,7 @@ pyjwt==1.7.1
     #   eth-brownie
     #   pythx
 pylint==2.12.2
-pymongo==3.11.0
+pymongo==4.1.0
 pymy==0.0.8
 pymysql==0.9.3
     # via
@@ -708,7 +707,6 @@ pyparsing==3.0.7
     #   matplotlib
     #   packaging
     #   vulcano
-pyright==1.3.5
 pyrsistent==0.18.1
     # via
     #   eth-brownie
@@ -758,7 +756,7 @@ python-language-server==0.36.2
 python-lsp-jsonrpc==1.0.0
     # via
     #   python-lsp-server
-python-lsp-server==1.3.3
+python-lsp-server==1.4.1
 python-slugify==1.2.6
 pythx==1.6.1
     # via
@@ -809,7 +807,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==12.0.0
+rich==12.3.0
 rlp==2.0.1
     # via
     #   eth-account
@@ -825,7 +823,6 @@ secretstorage==3.3.1
     # via
     #   keyring
 seed-isort-config==2.2.0
-selenium==3.141.0
 selinux==0.2.1
 semantic-version==2.8.5
     # via
@@ -1014,13 +1011,12 @@ urllib3==1.26.8
     #   eth-brownie
     #   requests
     #   requests-unixsocket
-    #   selenium
 varint==1.0.2
     # via
     #   eth-brownie
     #   multiaddr
     #   py-multicodec
-virtualenv==20.0.10
+virtualenv==20.14.1
     # via
     #   pipenv
     #   pre-commit
@@ -1066,7 +1062,7 @@ websockets==9.1
     #   python-binance
     #   web3
 webtest==2.0.35
-werkzeug==2.0.2
+Werkzeug==2.1.1
     # via
     #   flask
 wheel==0.37.1
@@ -1222,7 +1218,7 @@ zope.testing==4.9
 zope.traversing==4.4.1
     # via
     #   z3c.pt
-
+types-requests==2.27.14
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools

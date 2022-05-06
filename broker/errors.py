@@ -12,15 +12,7 @@ class HandlerException(Exception):
 
 
 class JobException(Exception):
-    """Job info exception to prevent trace to be printed."""
-
-
-class Terminate(Exception):
-    """Terminate the process."""
-
-
-class Web3NotConnected(Exception):
-    """Web3 is not connected."""
+    """Generate fetch job info exception to prevent trace to be printed."""
 
 
 class QuietExit(Exception):
@@ -33,3 +25,11 @@ class IpfsNotConnected(Exception):
 
 class Timeout(Exception):
     """Timeout."""
+
+
+class Terminate(Exception):
+    """Terminate the process."""
+
+
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""

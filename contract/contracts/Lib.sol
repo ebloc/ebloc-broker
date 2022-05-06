@@ -53,7 +53,7 @@ library Lib {
         address payable provider;
         /* A uint32 value containing the block number when the requested
          * provider set its prices most recent. */
-        uint32 providerPriceBlockIndex;
+        uint32 priceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
            stored and shared using either IPFS, EUDAT, IPFS (with GPG
            encryption), or Google Drive. */
@@ -85,7 +85,7 @@ library Lib {
 
     struct DataInfo {
         uint32 price;
-        uint32 commitmentBlockDuration;
+        uint32 commitmentBlockDur;
     }
 
     struct Storage {
@@ -96,7 +96,7 @@ library Lib {
         uint32 receivedBlock;
         uint32 storageDuration;
         bool isPrivate;
-        bool isVerifiedUsed; // Set to True if the requester is used and verified the given sourceCodeHash
+        bool isVerifiedUsed; // Set to `true` if the provided used and verified the given code hash
         //address      owner; //Cloud be multiple owners
     }
 
@@ -125,8 +125,8 @@ library Lib {
 
     struct ProviderInfo {
         uint32 availableCore; // Registered core number of the provider
-        uint32 commitmentBlockDuration;
-        /* All the price varaibles are defined in Wei.
+        uint32 commitmentBlockDur;
+        /* All the price varaibles are defined in Gwei.
            Floating-point or fixed-point decimals have not yet been implemented in Solidity */
         uint32 priceCoreMin; // Provider's price for core per minute
         uint32 priceDataTransfer;
@@ -168,7 +168,7 @@ library Lib {
      *@dev Invoked when registerProvider() function is called
      *@param self | Provider struct
      */
-    function constructProvider(Provider storage self) internal {
+    function construct(Provider storage self) internal {
         self.isRunning = true;
         self.committedBlock = uint32(block.number);
         self.receiptList.length = 1; // trick to show mapped index(0)'s values as zero
@@ -360,17 +360,13 @@ library Lib {
         }
     }
 
-    /* used for tests */
-    function getReceiptListSize(LL storage self) external view returns (uint32) {
-        return self.length;
-    }
-
-    /* used for test */
-    function printIndex(LL storage self, uint32 index) external view returns (uint256 _index, int32) {
-        _index = self.tail;
+    /* used for test getReceiptListSize */
+    function printIndex(LL storage self, uint32 index) external view returns (uint32, uint256 idx, int32) {
+        idx = self.tail;
         for (uint256 i = 0; i < index; i++) {
-            _index = self.items[_index].next;
+            idx = self.items[idx].next;
         }
-        return (self.items[_index].endpoint, self.items[_index].core);
+        // self.length: receipt_list_size
+        return (self.length, self.items[idx].endpoint, self.items[idx].core);
     }
 }

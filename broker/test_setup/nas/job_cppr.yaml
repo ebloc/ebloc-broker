@@ -1,6 +1,6 @@
 config:
-    requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
-    provider_address: '0x38cc03c7e2a7d2acce50045141633ecdcf477e9a'
+    requester_address: '0x3d50f068445c457c0c38d52980a5e6442e780d89'
+    provider_address: '0x51e2b36469cdbf58863db70cc38652da84d20c67'
     source_code:
         storage_id: eudat
         cache_type: public
@@ -8,12 +8,12 @@ config:
         storage_hours: 0
     data:
         data1:
-            hash: 03919732a417cb1d14049844b9de0f47
+            hash: f71df9d36cd519d80a3302114779741d
         data2:
-            hash: fa64e96bcee96dbc480a1495bddbf53c
+            hash: 8f6faf6cfd245cae1b5feb11ae9eb3cf
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/LB07-bunny-sml
+            path: /home/alper/test_eblocbroker/dataset_zip/small/liver.n6c100
             storage_hours: 1
             storage_id: eudat
     data_transfer_out: 5

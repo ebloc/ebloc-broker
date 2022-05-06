@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -9,29 +7,59 @@ from broker._utils._log import ok
 from broker._utils.web3_tools import get_tx_status
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
+from broker.lib import run
 from broker.libs import _git, gdrive
+from broker.libs.gdrive import check_gdrive
 from broker.link import check_link_folders
 from broker.utils import is_program_valid, log, print_tb
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
 
+Ebb = cfg.Ebb
+
 
 def pre_check():
     is_program_valid(["gdrive", "version"])
+    check_gdrive()
+
+
+def _submit(job, provider, key, requester, required_confs):
+    try:
+        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
+        tx_receipt = get_tx_status(tx_hash)
+        if tx_receipt["status"] == 1:
+            processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+            log(vars(processed_logs[0].args))
+            try:
+                log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
+            except IndexError:
+                log(f"E: Tx({tx_hash}) is reverted")
+    except Exception as e:
+        print_tb(e)
+
+    log()
+    for k, v in job.tar_hashes.items():
+        log(f"{k} [blue]=>[/blue] {v}")
+
+    return tx_hash
+
+
+def _share_folders(folder_ids_to_share, provider_gmail):
+    for folder_id in folder_ids_to_share:
+        cmd = ["gdrive", "share", folder_id, "--role", "writer", "--type", "user", "--email", provider_gmail]
+        log(f"share_output=[magenta]{run(cmd)}", "bold")
 
 
 def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     log("==> Submitting source code through [blue]GDRIVE[/blue]")
     pre_check()
-    Ebb = cfg.Ebb
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files, is_pass=is_pass)
+    check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
     _git.generate_git_repo(job.folders_to_share)
-    job.clean_before_submit()
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
-    provider = Ebb.w3.toChecksumAddress(job.provider_addr)
-    job = gdrive.submit(provider, requester, job)
+    job.clean_before_submit()
+    job, folder_ids_to_share = gdrive.submit(requester, job)
     for folder_to_share in job.folders_to_share:
         if isinstance(folder_to_share, bytes):
             code_hash = folder_to_share
@@ -46,36 +74,27 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
 
     tar_hash = job.foldername_tar_hash[job.folders_to_share[0]]
     key = job.keys[tar_hash]
-    job.price, *_ = job.cost(provider, requester)
+    provider_addr_to_submit = job.search_best_provider(requester)
     try:
-        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
-        tx_receipt = get_tx_status(tx_hash)
-        if tx_receipt["status"] == 1:
-            processed_logs = Ebb._eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
-            log(vars(processed_logs[0].args))
-            try:
-                log(f"{ok()} [bold]job_index={processed_logs[0].args['index']}")
-            except IndexError:
-                log(f"E: Tx({tx_hash}) is reverted")
-    except QuietExit:
-        pass
+        job.Ebb.is_provider_valid(provider_addr_to_submit)
+        provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
+        # log(f"## provider_addr_to_submit=[magenta]{provider_addr_to_submit}")
+        log(f"==> provider's available_core_num={provider_info['available_core_num']}")
+        log(f"==> provider's price_core_min={provider_info['price_core_min']}")
+        provider_gmail = provider_info["gmail"]
     except Exception as e:
-        print_tb(e)
+        raise QuietExit from e
 
-    log()
-    for k, v in job.tar_hashes.items():
-        log(f"{k} [blue]=>[/blue] {v}")
-
-    return tx_hash
+    _share_folders(folder_ids_to_share, provider_gmail)
+    return _submit(job, provider_addr_to_submit, key, requester, required_confs)
 
 
 if __name__ == "__main__":
     try:
         job = Job()
-        fn = "job_with_data.yaml"  # "job.yaml"
+        # fn = "job_with_data.yaml"
+        fn = "job.yaml"
         job.set_config(fn)
         submit_gdrive(job)
-    except KeyboardInterrupt:
-        sys.exit(1)
     except Exception as e:
         print_tb(e)

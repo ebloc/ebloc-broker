@@ -12,32 +12,34 @@ from broker._utils.tools import print_tb
 from broker.utils import is_ipfs_on, log, popen_communicate
 
 
+def mount_ipfs():
+    """Mount ipfs at: /ipfs."""
+    log(run(["sudo", "ipfs", "mount", "-f", "/ipfs"]))
+
+
 def run():
     """Run ipfs daemon.
 
-    cmd: ipfs daemon  # --mount
+    cmd: ipfs daemon --enable-gc --routing=none  # --mount
     __ https://stackoverflow.com/a/8375012/2402577
     __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
+    ipfs_init_folder = Path.home().joinpath(".ipfs")
     log("==> Running [green]IPFS[/green] daemon")
     if not os.path.isfile(config.env.IPFS_LOG):
         open(config.env.IPFS_LOG, "a").close()
 
     with daemon.DaemonContext():
         if cfg.IS_PRIVATE_IPFS:
-            _env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": Path.home().joinpath(".ipfs")}
+            env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": ipfs_init_folder}
         else:
-            _env = {"IPFS_PATH": Path.home().joinpath(".ipfs")}
+            env = {"IPFS_PATH": ipfs_init_folder}
 
-        popen_communicate([IPFS_BIN, "daemon", "--routing=none"], stdout_fn=config.env.IPFS_LOG, _env=_env)
+        cmd = [IPFS_BIN, "daemon", "--enable-gc", "--routing=none"]
+        popen_communicate(cmd, stdout_fn=config.env.IPFS_LOG, env=env)
 
-    # ipfs mounted at: /ipfs
-    # output = run(["sudo", "ipfs", "mount", "-f", "/ipfs"])
-    # logging.info(output)
-    #
-    # for home and home2
-    # ipfs swarm connect /ip4/192.168.1.3/tcp/4001/p2p/12D3KooWSE6pY7t5NxMLiGd4h7oba6XqxJFD2KNZTQFEjWLeHKsd
+    # mount_ipfs()
 
 
 def main():
@@ -52,7 +54,7 @@ def main():
         cfg.ipfs.remove_lock_files()
         run()
     else:
-        log(f"## [green]IPFS[/green] daemon is already running {ok()}")
+        log(f"## [green]IPFS[/green] daemon is already running{ok()}")
         sys.exit(100)
 
 

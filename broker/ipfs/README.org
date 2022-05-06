@@ -58,6 +58,7 @@ public
 * All other nodes
 
 - Port check: ~nc -v <ip> 4001~
+- ~nc gateway-int.ipfs.io 4001~
 
 #+begin_src bash
 # sudo netstat -lptn | grep 4001

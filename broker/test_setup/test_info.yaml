@@ -1,33 +1,31 @@
-config:
-    provider_1:
-      address: "0x3e6FfC5EdE9ee6d782303B2dc5f13AFeEE277AeA"
-      gmail: alper.alimoglu.research@gmail.com
-      ip: 34.65.171.36
-      hostname: instance-3
-      name: instance-6
-      eudat: alper.alimoglu.research2@gmail.com
-      federation_cloud_id: "dbae8f40-20da-4f6f-b466-d434793320be"
-    provider_2:
-      address: "0x765508fc8f78a465f518ae79897d0e4b249e82dc"
-      gmail: alper.alimoglu.test.1@gmail.com
-      b2drop_user_name: alper.alimoglu.test.1
-      b2drop_api_user: 248c87be-c965-4fb9-980a-e4af88331569@b2drop.eudat.eu
-    provider_3:
-      address: "0x38cc03c7e2a7d2acce50045141633ecdcf477e9a"
-      gmail: alper.alimoglu.test.2@gmail.com
-      b2drop_user_name: alper.alimoglu.test.2
-      b2drop_api_user: 5dd71484-1ae2-4188-98e7-536123582716@b2drop.eudat.eu
-    provider_4:
-      address: "0xeab50158e8e51de21616307a99c9604c1c453a02"
-      gmail: alper.alimoglu.test.3@gmail.com
-      b2drop_user_name: alper.alimoglu.test.3
-      b2drop_api_user: 3e3c90b7-0e2c-4967-957f-0df518529157@b2drop.eudat.eu
-      hostname: instance-9  # @tomasina
+contract_owner: "0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"
 
-users:
-  address: "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
-  eudat: aalimog1@binghamton.edu
-  oc_user: "059ab6ba-4030-48bb-b81b-12115f531296"
-  b2drop_user_name: alper.alimoglu
-  gmail: alper.alimoglu@gmai.com
-  b2drop_api_user:
+requester:
+  address: ""
+  gmail:
+  eudat_email:
+  oc_username:
+  b2drop_user_name:
+  hostname: ipkis
+
+providers:
+  provider_1:
+    address: "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
+    gmail: alper.alimoglu.test.2@gmail.com
+    oc_username: "5dd71484-1ae2-4188-98e7-536123582716"
+    hostname: kama
+    eudat: alper.alimoglu.research2@gmail.com
+    google_tab: "KAMA"
+  provider_2:
+    address: ""
+    gmail:
+    b2drop_user_name:
+  provider_3:
+    address: ""
+    gmail:
+    b2drop_user_name:
+  provider_4:
+    address: ""
+    gmail:
+    b2drop_user_name:
+    hostname:

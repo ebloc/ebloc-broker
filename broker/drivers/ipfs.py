@@ -7,11 +7,11 @@ import time
 from broker import cfg
 from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, print_tb
-from broker.config import ThreadFilter, env, logging, setup_logger  # noqa: F401
+from broker.config import ThreadFilter, env, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size
 from broker.libs import _git
-from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, run_ipfs_daemon
+from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, start_ipfs_daemon
 
 
 class IpfsClass(Storage):
@@ -21,13 +21,16 @@ class IpfsClass(Storage):
         self.cache_type = CacheType.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
+        self.requester_info = self.Ebb.get_requester_info(self.job_infos[0]["job_owner"])
 
     def check_ipfs(self, ipfs_hash) -> None:
-        """Append into self.ipfs_hashes."""
+        """Check whether ipfs-hash is online."""
         try:
-            ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(ipfs_hash)
+            ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(
+                ipfs_hash, self.requester_info["ipfs_id"], is_verbose=True
+            )
             if "CumulativeSize" not in ipfs_stat:
-                raise Exception("E: Markle not found! Timeout for the IPFS object stat retrieve")
+                raise Exception("Markle not found! Timeout for the IPFS object stat retrieve")
         except Exception as e:
             print_tb(e)
             raise e
@@ -35,15 +38,20 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
-        logging.info(f"data_transfer_out={data_size_mb} MB | Rounded={int(data_size_mb)} MB")
+        log(f"data_transfer_out={data_size_mb} MB | rounded={int(data_size_mb)} MB", "bold")
+
+    def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
+        """Wrap ipfs get call."""
+        cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
+        self.verified_data[ipfs_hash] = True
 
     def run(self) -> bool:
         self.start_time = time.time()
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
 
-        run_ipfs_daemon()
-        log(f"{br(get_date())} Job's source code has been sent through ", "bold cyan", end="")
+        start_ipfs_daemon()
+        log(f"{br(get_date())} job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
             log("[bold green]IPFS")
         else:
@@ -93,15 +101,15 @@ class IpfsClass(Storage):
                 mkdir(target)
 
             is_storage_paid = False  # TODO: should be set before by user input
-            cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
+            self.ipfs_get(ipfs_hash, target, is_storage_paid)
             if idx > 0:
                 # https://stackoverflow.com/a/31814223/2402577
-                dst_filename = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
-                if os.path.exists(dst_filename):
-                    _remove(dst_filename)
+                dst_fn = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
+                if os.path.exists(dst_fn):
+                    _remove(dst_fn)
 
-                shutil.move(target, dst_filename)
-                target = dst_filename
+                shutil.move(target, dst_fn)
+                target = dst_fn
 
             if self.cloudStorageID[idx] == StorageID.IPFS_GPG:
                 cfg.ipfs.decrypt_using_gpg(f"{target}/{ipfs_hash}", target)
@@ -117,7 +125,7 @@ class IpfsClass(Storage):
                 initial_folder_size = folder_size
 
             if idx == 0 and not self.check_run_sh():
-                self.complete_refund()
+                self.full_refund()
                 return False
 
         log(

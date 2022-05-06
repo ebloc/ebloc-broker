@@ -27,16 +27,11 @@ custom_theme = Theme(
         "warning": "magenta",
         "danger": "bold red",
         "b": "bold",
-        "m": "#ff79c6",
-        "magenta": "#ff79c6",
+        "m": "magenta",
+        # "magenta": "#ff79c6",
     }
 )
 console = Console(theme=custom_theme)
-
-
-class Colors:
-    red = "#ff5555"
-    pink = "#ff79c6"
 
 
 class Style:
@@ -70,7 +65,7 @@ class Log:
 
     def print_color(self, text: str, color=None, is_bold=True, end=None) -> None:
         """Print string in color format."""
-        if text[0:3] in ["==> ", "#> ", "## "]:
+        if text[0:3] in ["==>", "#> ", "## "]:
             if color and text == "==> ":
                 print(f"[bold {color}]{text[0:3]}[/bold {color}]", end="", flush=True)
             else:
@@ -102,14 +97,14 @@ class Log:
             is_r = "\r"
             text = text[1:]
 
-        if text == "[ ok ]":
+        if text in ["[ ok ]", "[ OK ]", "[  OK  ]"]:
             text = "[  [bold green]OK[/bold green]  ]"
-        elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** "]:
+        elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** ", "***"]:
             _len = 3
             is_bullet = True
             if not color:
                 color = "blue"
-        elif text[:8] in ["Warning:", "warning:"]:
+        elif text[:8].lower() == "warning:":
             _len = 8
             is_bullet = True
             if not color:
@@ -119,7 +114,7 @@ class Log:
             is_bullet = True
             if not color:
                 color = "red"
-        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN"]:
+        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN", "DONE"]:
             if not color:
                 color = "green"
                 is_bold = True
@@ -138,48 +133,52 @@ def br(text, color="white"):
 
 
 def ok(text="OK"):
-    return br(f"  [green]{text}[/green]  ")
+    if text == "OK":
+        text = br(f"  [green]{text}[/green]  ")
+        return f"  {text}"
+    else:
+        return br(f"  [green]{text}[/green]  ")
 
 
 def _console_clear():
     console.clear()
 
 
-def console_ruler(msg="", character="=", color="cyan", filename=""):
+def console_ruler(msg="", character="=", color="cyan", fn=""):
     """Draw console ruler.
 
-    Indicated rich console to write into given filename
+    Indicate rich console to write into given fn
     __ https://stackoverflow.com/a/6826099/2402577
     """
     if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
-        filename = thread_log_files[threading.current_thread().name]
-    elif not filename:
+        fn = thread_log_files[threading.current_thread().name]
+    elif not fn:
         if ll.LOG_FILENAME:
-            filename = ll.LOG_FILENAME
+            fn = ll.LOG_FILENAME
         elif DRIVER_LOG:
-            filename = DRIVER_LOG
+            fn = DRIVER_LOG
         else:
-            filename = "program.log"
+            fn = "program.log"
 
-    if filename not in ll.console:
-        ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True, theme=custom_theme)
+    if fn not in ll.console:
+        ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
 
     if msg:
         console.rule(f"[bold {color}]{msg}", characters=character)
-        ll.console[filename].rule(f"[bold {color}]{msg}", characters=character)
+        ll.console[fn].rule(f"[bold {color}]{msg}", characters=character)
     else:
         console.rule(characters=character)
-        ll.console[filename].rule(characters=character)
+        ll.console[fn].rule(characters=character)
 
 
-def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=True):
+def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
     if not is_output:
         is_print = is_output
     else:
         is_print = ll.IS_PRINT
 
     if threading.current_thread().name != "MainThread":
-        # prevent writing Thread's output into console
+        # prevent writing Thread's output onto console
         is_print = False
 
     text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
@@ -208,49 +207,47 @@ def _log(text, color, is_bold, flush, filename, end, is_write=True, is_output=Tr
         _text = text[_len:]
         if is_write:
             if is_bullet:
-                ll.console[filename].print(
+                ll.console[fn].print(
                     f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
                     end=end,
                     soft_wrap=True,
                 )
             else:
                 if color:
-                    ll.console[filename].print(f"[bold {color}]{_text}[/bold {color}]", end="", soft_wrap=True)
+                    ll.console[fn].print(f"[bold {color}]{_text}[/bold {color}]", end="", soft_wrap=True)
                 else:
-                    ll.console[filename].print(_text, end="", soft_wrap=True)
+                    ll.console[fn].print(_text, end="", soft_wrap=True)
     else:
-        text_write = ""
+        text_to_write = ""
         if is_bullet:
-            text_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
+            text_to_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
         else:
             if _color:
-                text_write = f"[{_color}]{_text}[/{_color}]"
+                text_to_write = f"[{_color}]{_text}[/{_color}]"
             else:
-                text_write = _text
+                text_to_write = _text
 
         if is_print:
             if end == "":
-                print(text_write, end="")
+                print(text_to_write, end="")
             else:
-                print(text_write, flush=flush)
+                print(text_to_write, flush=flush)
 
         if is_write:
-            ll.console[filename].print(text_write, end=end, soft_wrap=True)
+            ll.console[fn].print(text_to_write, end=end, soft_wrap=True)
 
     if end is None:
         if is_write:
-            ll.console[filename].print("")
+            ll.console[fn].print("")
 
         if color and is_bullet:
             print()
-
-    # f.close()
 
 
 def log(
     text="",
     color=None,
-    filename=None,
+    fn=None,
     end=None,
     flush=False,
     is_write=True,
@@ -265,9 +262,13 @@ def log(
 
     * colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
+
+    :param text: string to print
+    :param color: color of the complete string
+    :param fn: filename to write
     """
     is_bold: bool = False
-    if color == "bold":
+    if color in ["bold", "b"]:
         is_bold = True
         color = None
 
@@ -287,7 +288,7 @@ def log(
             if "warning:" in text:
                 text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
             else:
-                text = f"{WHERE(where_back)}[bold {c.red}] E:[/bold {c.red}] [bold]{_text}"
+                text = f"{WHERE(where_back)}[bold red] E:[/bold red] [bold]{_text}"
         else:
             text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
 
@@ -302,19 +303,19 @@ def log(
 
     if is_write:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
-            filename = thread_log_files[threading.current_thread().name]
-        elif not filename:
+            fn = thread_log_files[threading.current_thread().name]
+        elif not fn:
             if ll.LOG_FILENAME:
-                filename = ll.LOG_FILENAME
+                fn = ll.LOG_FILENAME
             elif DRIVER_LOG:
-                filename = DRIVER_LOG
+                fn = DRIVER_LOG
             else:
-                filename = "program.log"
+                fn = "program.log"
 
-        if filename not in ll.console:
-            #: Indicated rich console to write into given filename
+        if fn not in ll.console:
+            #: Indicated rich console to write into given fn
             # __ https://stackoverflow.com/a/6826099/2402577
-            ll.console[filename] = Console(file=open(filename, "a"), force_terminal=True, theme=custom_theme)
+            ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
 
     if isinstance(text, dict):
         if max_depth:
@@ -323,9 +324,9 @@ def log(
             pprint(text)
 
         if is_write:
-            ll.console[filename].print(text)
+            ll.console[fn].print(text)
     else:
-        _log(text, color, is_bold, flush, filename, end, is_write, is_output)
+        _log(text, color, is_bold, flush, fn, end, is_write, is_output)
 
 
 def WHERE(back=0):
@@ -335,9 +336,8 @@ def WHERE(back=0):
     except:
         frame = sys._getframe(1)
 
-    text = f"{os.path.basename(frame.f_code.co_filename)}[/bold blue]:{frame.f_lineno}"
-    return f"[bold green][[/bold green][bold blue] {text} [bold green]][/bold green]"
+    text = os.path.basename(frame.f_code.co_filename)
+    return f"[bold][green][[/green][blue]{text}[/blue]:{frame.f_lineno}[green]][/green][/bold]"
 
 
 ll = Log()
-c = Colors()

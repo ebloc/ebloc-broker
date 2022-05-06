@@ -31,4 +31,4 @@ if [[ "$DATA_HASH" != "5052dd3d29392077cbdf8e34cbdd4f5f" ]]; then
         (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1
     done
 fi
-echo '  [  DONE  ]  ' >> output.log
+echo "  [  DONE  ]  " >> output.log

@@ -35,7 +35,7 @@ where <benchmark-name> is "bt", "cg", "ep", "ft", "is", "lu",
       <class>          is "S", "W", "A", "B", "C" or "D"
 #+END_SRC
 
-** Requirements
+** pre-requirements
 
 #+begin_src bash
 sudo apt-get install -y openmpi-bin

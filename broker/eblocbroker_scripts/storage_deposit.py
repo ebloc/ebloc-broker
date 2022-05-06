@@ -18,13 +18,13 @@ def deposit_storage(eth_address, is_provider=False):
     """
     from_block = Ebb.get_deployed_block_number()
     if is_provider:
-        event_filter = Ebb._eBlocBroker.events.LogJob.createFilter(
+        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
             fromBlock=int(from_block),
             argument_filters={"provider": eth_address},
             toBlock="latest",
         )
     else:  # should be owner of the job
-        event_filter = Ebb._eBlocBroker.events.LogJob.createFilter(
+        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
             fromBlock=int(from_block),
             argument_filters={"owner": eth_address},
             toBlock="latest",
@@ -51,7 +51,7 @@ def deposit_storage(eth_address, is_provider=False):
             provider = Ebb.w3.toChecksumAddress(job_info["provider"])
             if is_provider and eth_address.lower() == provider.lower():
                 data_owner = Ebb.w3.toChecksumAddress(job_info["owner"])
-                deposit, output = Ebb.get_storage_info(provider, data_owner, code_hash)
+                deposit, output = Ebb.get_storage_info(code_hash, provider, data_owner)
                 flag_check.append(output[3])
                 log(f"deposit={deposit}, {output}", "bold")
 
@@ -77,7 +77,7 @@ def deposit_storage(eth_address, is_provider=False):
     #     pass
 
     # try:
-    #     output = Ebb.get_storage_info(provider, code_hash)
+    #     output = Ebb.get_storage_info(code_hash, provider)
     #     breakpoint()  # DEBUG
     # except:
     #     pass

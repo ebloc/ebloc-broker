@@ -1,6 +1,6 @@
 config:
-    requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
-    provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+    requester_address: '0x17b4ec0bcd6a8f386b354becd44b3c4813448184'
+    provider_address: '0x1926b36AF775E1312FDEbCc46303eCAe50d945aF'
     source_code:
         cache_type: private
         path: ~/test_eblocbroker/test_data/base/source_code
@@ -12,7 +12,7 @@ config:
             cache_type: public
             path: ~/test_eblocbroker/test_data/base/data/data1
             size_mb: 1
-            storage_hours: 1
+            storage_hours: 0
             storage_id: gdrive
     data_transfer_out: 1
     jobs:
