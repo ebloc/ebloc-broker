@@ -15,7 +15,6 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
   [[https://github.com/eth-brownie/brownie][eth-brownie]],
   [[https://github.com/trufflesuite/ganache][ganache-cli]]
 
-
 ** Using Docker
 
 You can use a sandbox container provided in the [[./docker-compose.yml]] file for testing inside a Docker
@@ -67,13 +66,11 @@ Next, type ~eblocbroker --help~ for basic usage information.
 *** Submit Job
 
 
-In order to submit your job each user should already registered into
-eBlocBroker.You can use [[./broker/eblocbroker/register_requester.py]] to register.
+In order to submit your job each user should already registered into eBlocBroker.
+You can use [[./broker/eblocbroker/register_requester.py]] to register.
 Please update following arguments inside ~register.yaml~.
 
-After registration is done, each user should authenticate their ORCID iD using
-the following [[http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php]].
-
+After registration is done, each user should authenticate their ORCID iD using the following [[http://eblocbroker.duckdns.org/]].
 
 ~$ ./eblocbroker.py submit job.yaml~
 

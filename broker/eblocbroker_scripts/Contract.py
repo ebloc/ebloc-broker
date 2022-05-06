@@ -468,12 +468,12 @@ class Contract:
         self.required_confs = 0
         return self.timeout_wrapper("setDataVerified", *args)
 
-    def set_job_state_running(self, key, index, job_id, start_time) -> "TransactionReceipt":
+    def set_job_state_running(self, key, index, job_id, start_timestamp) -> "TransactionReceipt":
         """Set the job state as running."""
         _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
         self._from = _from
         self.required_confs = 1  # "1" safer to wait for confirmation
-        return self.timeout_wrapper("setJobStateRunning", key, int(index), int(job_id), int(start_time))
+        return self.timeout_wrapper("setJobStateRunning", key, int(index), int(job_id), int(start_timestamp))
 
     def _process_payment(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE

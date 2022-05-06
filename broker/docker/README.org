@@ -1,7 +1,7 @@
 * start
 
-To delete all containers including its volumes use: ~docker rm -vf $(docker ps -aq)~
-To delete all the images: ~docker rmi -f $(docker images -aq)~
+- to delete all containers including its volumes use: ~docker rm -vf $(docker ps -aq)~
+- to delete all the images: ~docker rmi -f $(docker images -aq)~
 
 #+begin_src bash
 docker-compose up --remove-orphans
@@ -10,6 +10,7 @@ remove_dangling () {
     docker rmi $(docker images -qa -f 'dangling=true')  # --force
     docker image ls
 }
+
 docker build -t eblocbroker:latest --progress plain .
 #+end_src
 

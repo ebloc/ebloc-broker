@@ -219,8 +219,8 @@ def is_oc_mounted() -> bool:
         print(
             "Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n"
             "Please do: \n"
-            "sudo mkdir -p /oc \n"
-            "sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc"
+            "sudo mkdir -p /mnt/oc \n"
+            "sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /mnt/oc"
         )
         return False
     else:

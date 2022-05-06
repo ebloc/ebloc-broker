@@ -173,7 +173,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.code_hashes: List[str] = []
         self.result_ipfs_hash: str = ""
         self.requester_gpg_fingerprint: str = ""
-        self.end_time_stamp = ""
+        self.end_timestamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
         #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
@@ -319,7 +319,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 self.elapsed_time,
                 self.result_ipfs_hash,
                 self.storage_ids,
-                self.end_time_stamp,
+                self.end_timestamp,
                 self.data_transfer_in,
                 self.data_transfer_out,
                 self.job_info["core"],
@@ -338,9 +338,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
     def remove_source_code(self) -> None:
         """Client's initial downloaded files are removed."""
-        timestamp_file = f"{self.results_folder_prev}/timestamp.txt"
+        timestamp_fn = f"{self.results_folder_prev}/timestamp.txt"
         try:
-            cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file]
+            cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn]
             files_to_remove = run(cmd)
             if files_to_remove:
                 log(f"## Files to be removed: \n{files_to_remove}\n")
@@ -348,7 +348,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             sys.exit()
 
-        run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_file, "-delete"])
+        run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn, "-delete"])
 
     def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key):
         if is_job_key:
@@ -554,13 +554,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.code_hashes = self.job_info["code_hashes"]
         self.set_code_hashes_to_process()
         self.sacct_result()
-        self.end_time_stamp = slurm.get_job_end_time(self.slurm_job_id)
+        self.end_timestamp = slurm.get_job_end_timestamp(self.slurm_job_id)
         self.elapsed_time = slurm.get_elapsed_time(self.slurm_job_id)
         if self.elapsed_time > int(run_time[self.job_id]):
             self.elapsed_time = run_time[self.job_id]
 
         log(f"finalized_elapsed_time={self.elapsed_time}", "bold")
-        log("## job_info:", "bold magenta")
+        log("## job_info=", "bold magenta", end="")
         log(pprint.pformat(self.job_info), "bold")
         try:
             self.get_cloud_storage_class(0).initialize(self)

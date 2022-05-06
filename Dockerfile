@@ -80,7 +80,7 @@ RUN git checkout dev \
  && git fetch --all --quiet >/dev/null 2>&1 \
  && git pull --all -r -v >/dev/null 2>&1 \
  && pip install -U pip wheel \
- && pip install -e .  \
+ && pip install -e . --use-deprecated=legacy-resolver \
  && eblocbroker >/dev/null 2>&1
 
 COPY --from=0 /go /go

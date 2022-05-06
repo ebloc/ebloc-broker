@@ -161,7 +161,7 @@ install_ebb_pip_packages () {
     python3 -m pip install --no-use-pep517 cm-rgb
     pip install wheel
     cd ~/ebloc-broker
-    pip install -e .
+    pip install -e . --use-deprecated=legacy-resolver
     mkdir -p $HOME/.cache/black
     sudo chown $(logname) -R $HOME/.cache/black
     black_version=$(pip freeze | grep black | sed 's|black==||g')

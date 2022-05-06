@@ -130,9 +130,3 @@ alper
 @alper According to the current version of the FAQ (slurm.schedmd.com/faq.html,
 question Can Slurm emulate a larger cluster?), it appears so – damienfrancois
 #+end_src
-
-#+begin_src bash
-sudo systemctl enable slurmctld  # Controller
-sudo systemctl enable slurmdbd  # Database
-sudo systemctl enable slurmd  # Compute Nodes
-#+end_src

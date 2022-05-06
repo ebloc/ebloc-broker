@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import glob
-
-# import hashlib
 import os
 import subprocess
 import sys
@@ -192,7 +190,7 @@ def eblocbroker_function_call(func, max_retries):
             log("Sleep 15 seconds, will try again...")
             time.sleep(15)
 
-    raise Exception("eblocbroker_function_call completed all the attempts abort")
+    raise Exception("eblocbroker_function_call completed all the attempts, ABORT")
 
 
 def is_dir(path) -> bool:

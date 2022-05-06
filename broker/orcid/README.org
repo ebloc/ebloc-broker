@@ -2,15 +2,14 @@
 
 * Setup
 
-#+BEGIN_SRC bash
-sudo chmod 700 /eBloc
-sudo setfacl -R -m user:alper:rwx    /eBloc
-sudo setfacl -R -m user:www-data:rwx /eBloc
-#+END_SRC
+#+begin_src bash
+sudo mkdir /ebloc
+sudo chmod 700 /ebloc
+sudo setfacl -R -m user:alper:rwx /ebloc
+sudo setfacl -R -m user:www-data:rwx /ebloc
+#+end_src
 
-----------------------------
-
-#+BEGIN_SRC bash
+#+begin_src bash
 sudo killall cat
 tmux new -s pipe1
 
@@ -27,7 +26,7 @@ exit # to close
 To connect to tmux session:
 tmux attach  # pipe2
 tmux attach  # pipe2
-#+END_SRC
+#+end_src
 
 * Guide:
 - [[https://superuser.com/a/714465/723632][tmux]]

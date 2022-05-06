@@ -9,7 +9,10 @@ print("running: `oc.list('.')`")
 _list = oc.list(".")
 for item in _list:
     print(item)
-    try:
-        oc.delete(item.path)
-    except Exception as e:
-        print(e)
+
+# for item in _list:
+#     print(item)
+#     try:
+#         oc.delete(item.path)
+#     except Exception as e:
+#         print(e)

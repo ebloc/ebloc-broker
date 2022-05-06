@@ -107,7 +107,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             !_provider.isRunning || // If provider stop running
             job.stateCode <= Lib.JobStateCodes.PENDING || // If job' state is SUBMITTED(0) or PENDING(1)
             (job.stateCode == Lib.JobStateCodes.RUNNING &&
-                (block.timestamp - job.startTime) > elapsedTime[jobID] * 60 + 1 hours)
+                (block.timestamp - job.startTimestamp) > elapsedTime[jobID] * 60 + 1 hours)
         ) {
             // job.stateCode remain in running state after one hour that job should have finished
             job.stateCode = Lib.JobStateCodes.REFUNDED; /* Prevents double spending and re-entrancy attack */
@@ -152,17 +152,16 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        * by the provider provider and paying of unused core, cache, and dataTransfer usage cost
        * back to the client
        * @param key Uniqu ID for the given job.
-       * @param args The index of the job and ID of the job to identify for workflow {index, jobID, completionTime}.
-       * @param elapsedTime Execution time in minutes of the completed job.
+       * @param args The index of the job and ID of the job to identify for workflow {index, jobID, endTimestamp}.
+       * => elapsedTime Execution time in minutes of the completed job.
        * @param resultIpfsHash Ipfs hash of the generated output files.
        */
     function processPayment(
         string memory key,
         Lib.JobIndexes memory args,
-        uint32 elapsedTime,
         bytes32 resultIpfsHash
     ) public whenProviderRunning {
-        require(args.completionTime <= block.timestamp, "Ahead now");
+        require(args.endTimestamp <= block.timestamp, "Ahead now");
         /* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
            is not mapped to a job, this will throw automatically and revert all changes */
         Lib.Provider storage provider = providers[msg.sender];
@@ -172,10 +171,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         require(
             job.stateCode != Lib.JobStateCodes.COMPLETED &&
                 job.stateCode != Lib.JobStateCodes.REFUNDED &&
-                elapsedTime <= args.runTime[args.jobID] &&  // provider cannot request more execution time of the job that is already requested
+                args.elapsedTime <= args.runTime[args.jobID] &&  // provider cannot request more execution time of the job that is already requested
                 args.dataTransferIn <= jobInfo.dataTransferIn &&  // provider cannot request more than the job's given dataTransferIn
                 args.dataTransferOut <= jobInfo.dataTransferOut &&  // provider cannot request more than the job's given dataTransferOut
-                (elapsedTime > 0 && job.stateCode == Lib.JobStateCodes.RUNNING)  // job should be in running state if positive execution duration is provided
+                (args.elapsedTime > 0 && job.stateCode == Lib.JobStateCodes.RUNNING)  // job should be in running state if positive execution duration is provided
         );
         Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
         uint256 amountToGain;
@@ -221,20 +220,18 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             // Prevents additional dataTransfer profit to be request for dataTransferOut
             delete jobInfo.dataTransferOut;
         }
-
         amountToGain = amountToGain.add(
-            uint256(info.priceCoreMin).mul(core.mul(elapsedTime)).add( // computational_cost
+            uint256(info.priceCoreMin).mul(core.mul(args.elapsedTime)).add( // computational_cost
                 info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut))) // data_transfer_cost
             )
         );
-
         amountToRefund = amountToRefund.add( // computational_cost_refund
-            uint256(info.priceCoreMin).mul(core.mul((runTime.sub(uint256(elapsedTime)))))
+            uint256(info.priceCoreMin).mul(core.mul((runTime.sub(uint256(args.elapsedTime)))))
         );
         require(amountToGain.add(amountToRefund) <= jobInfo.received);
         Lib.IntervalArg memory _interval;
-        _interval.startTime = job.startTime;
-        _interval.completionTime = uint32(args.completionTime);
+        _interval.startTimestamp = job.startTimestamp;
+        _interval.endTimestamp = uint32(args.endTimestamp);
         _interval.availableCore = int32(info.availableCore);
         _interval.core = int32(int256(core)); // int32(core);
         if (provider.receiptList.checkIfOverlapExists(_interval) == 0) {
@@ -707,14 +704,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         string memory key,
         uint32 index,
         uint32 jobID,
-        uint32 startTime
-    ) public whenBehindNow(startTime) returns (bool) {
+        uint32 startTimestamp
+    ) public whenBehindNow(startTimestamp) returns (bool) {
         /* Used as a pointer to a storage */
         Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID];
-        /* Provider can sets job's status as RUNNING and its startTime only one time
+        /* Provider can sets job's status as RUNNING and its startTimestamp only one time
            job.stateCode should be {SUBMITTED (0), PENDING(1)} */
         require(job.stateCode <= Lib.JobStateCodes.PENDING, "Not permitted");
-        job.startTime = startTime;
+        job.startTimestamp = startTimestamp;
         job.stateCode = Lib.JobStateCodes.RUNNING;
         emit LogSetJob(msg.sender, key, index, jobID, uint8(Lib.JobStateCodes.RUNNING));
         return true;
@@ -858,10 +855,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                                 jobSt.isPrivate = true; // Set by the data owner
                             }
                         } else cacheCost = cacheCost.add(info.priceCache.mul(dataTransferIn[i])); // cacheCost
-                    } else {
-                        // Data~n is stored (privatley or publicly) on provider
+                    } else {  // data~n is stored (privatley or publicly) on the provider
                         if (
-                            storageInfo.received == 0 && // checks wheater the user is owner of the data file
+                            storageInfo.received == 0 && // checks whether the user is owner of the data file
                             jobSt.isPrivate == true
                         ) cacheCost = cacheCost.add(info.priceCache.mul(dataTransferIn[i]));
                     }
@@ -879,7 +875,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Cleaning for the storage struct storage (JobStorage, Storage) for its mapped sourceCodeHash
+     * @dev Clean storage struct storage (JobStorage, Storage) corresponding mapped sourceCodeHash
      */
     function _cleanJobStorage(Lib.JobStorage storage jobSt) internal {
         delete jobSt.receivedBlock;
@@ -901,10 +897,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             key,
             args.index,
             args.jobID,
+            args.elapsedTime,
             recipient,
             receivedGwei,
             refundedGwei,
-            args.completionTime,
             resultIpfsHash,
             args.dataTransferIn,
             args.dataTransferOut

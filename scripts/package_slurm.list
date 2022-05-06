@@ -1,10 +1,10 @@
 build-essential
 gcc
 libboost-all-dev
+munge
 libmunge2
 libmunge-dev
 libmysqlclient-dev
-munge
 mysql-client
 mysql-server
 software-properties-common

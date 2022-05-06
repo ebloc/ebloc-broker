@@ -10,7 +10,7 @@ function error_with_msg {
 }
 
 function check_running_status {
-    for count in {10..0}; do
+    for count in {5..0}; do
         STATUS=$(/usr/bin/supervisorctl status $1 | awk '{print $2}')
         echo "- $1 is in the $STATUS state."
         if [[ "$STATUS" = "RUNNING" ]]
@@ -38,6 +38,7 @@ function check_port_status {
 
 function start_service {
     echo "## Starting $1"
+    whoami
     /usr/bin/supervisorctl start $1
     check_running_status $1
 }

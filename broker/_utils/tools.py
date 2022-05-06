@@ -420,7 +420,7 @@ def without_keys(d, keys):
 def quit_function(fn_name) -> None:
     print("\nwarning: ", end="")
     print("{0} took too long".format(fn_name), file=sys.stderr)
-    breakpoint()  # DEBUG
+    # breakpoint()  # DEBUG
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
 
@@ -455,10 +455,7 @@ def read_json(path, is_dict=True):
             else:
                 return {}
         else:
-            if data:
-                return data
-            else:
-                return None
+            return data
 
 
 def remove_trailing_zeros(number):

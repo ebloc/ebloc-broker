@@ -15,10 +15,10 @@ interface eBlocBrokerInterface {
         string jobKey,
         uint32 index,
         uint32 jobID,
+        uint32 elapsedTime,
         address recipient,
         uint256 receivedGwei, // value in Gwei to be recevied by the provider
         uint256 refundedGwei, // value in Gwei to be refunded to the requester
-        uint256 completionTime,
         bytes32 resultIpfsHash,
         uint256 dataTransferIn,
         uint256 dataTransferOut

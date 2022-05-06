@@ -355,7 +355,7 @@ class EudatClass(Storage):
         # self.total_size_to_download()
 
     def run(self) -> bool:
-        self.start_time = time.time()
+        self.start_timestamp = time.time()
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
             log(f"## Keep track from: tail -f {self.drivers_log_path}")

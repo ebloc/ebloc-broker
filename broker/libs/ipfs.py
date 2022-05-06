@@ -104,10 +104,8 @@ class Ipfs:
         This function is specific for using on driver.ipfs to decript tar file,
         specific for "tar.gz" file types.
 
-        cmd:
         gpg --verbose --output={tar_file} --pinentry-mode loopback \
-            --passphrase-file=f"{env.LOG_PATH}/gpg_pass.txt" \
-            --decrypt {gpg_file_link}
+            --passphrase-file=gpg_pass.txt --decrypt <gpg_file>
         """
         if not os.path.isfile(f"{gpg_file}.gpg"):
             os.symlink(gpg_file, f"{gpg_file}.gpg")

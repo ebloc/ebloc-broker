@@ -21,7 +21,7 @@ if [ -z "$(ls -A $source_folder)" ]; then
 else
     rsync -av --progress $source_folder/ $to_folder --exclude .mypy_cache --exclude venv --exclude \
           'nohup.out' --exclude node_modules --exclude='.git' --exclude /README.md --exclude contract \
-          --exclude workflow --exclude webapp --exclude .gitignore --exclude owncloudScripts/oc \
+          --exclude workflow --exclude webapp --exclude .gitignore --exclude \
           --exclude bash_scripts/rsync.sh --exclude owncloudScripts/password.txt \
           --exclude eblocbroker/contract.json --exclude eblocbroker/abi.json \
           --filter="dir-merge,- .gitignore" --delete

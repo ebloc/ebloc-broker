@@ -112,7 +112,7 @@ def get_elapsed_time(slurm_job_id) -> int:
     except Exception as e:
         raise QuietExit from e
 
-    log(f"elapsed_time={elapsed_time}", "bold")
+    log(f"elapsed_time={elapsed_time} | ", "bold", end="")
     elapsed_time = elapsed_time.split(":")
     elapsed_day = "0"
     elapsed_hour = elapsed_time[0].strip()
@@ -123,22 +123,22 @@ def get_elapsed_time(slurm_job_id) -> int:
         elapsed_hour = elapsed_hour[1]
 
     elapsed_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
-    log(f"elapsed_time={elapsed_time}", "bold")
+    log(f"[cyan]{elapsed_time}[/cyan] mins", "bold")
     return elapsed_time
 
 
-def get_job_end_time(slurm_job_id) -> int:
-    """Get the end time of the job in universal time"""
-    end_time = run(["sacct", "-n", "-X", "-j", slurm_job_id, "--format=End"])
-    if end_time == "":
+def get_job_end_timestamp(slurm_job_id) -> int:
+    """Return the end time of the job in universal time."""
+    end_timestamp = run(["sacct", "-n", "-X", "-j", slurm_job_id, "--format=End"])
+    if end_timestamp == "":
         log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.")
         raise QuietExit
 
-    try:  # cmd: date -d 2018-09-09T21:50:51 +"%s"
-        end_time_stamp = run(["date", "-d", end_time, "+'%s'"])
+    try:  # cmd: date -d 2018-09-09T21:50:51 + "%s"
+        end_timestamp = run(["date", "-d", end_timestamp, "+'%s'"])
     except Exception as e:
         raise QuietExit from e
 
-    end_time_stamp = end_time_stamp.rstrip().replace("'", "")
-    log(f"==> end_time_stamp={end_time_stamp}")
-    return end_time_stamp
+    end_timestamp = end_timestamp.rstrip().replace("'", "")
+    log(f"==> end_timestamp={end_timestamp}")
+    return end_timestamp

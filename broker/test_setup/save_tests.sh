@@ -12,7 +12,6 @@ rm .eudat_client.txt
 rm -rf links
 rm -rf private
 rmdir *
-
 cd ~/TESTS
 tar -cvf ebb.tar.gz ebloc-broker
 rm -rf ebloc-broker

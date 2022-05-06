@@ -5,13 +5,12 @@ import pathlib
 import sys
 import textwrap
 import threading
-from typing import Dict, Union
-
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
 from rich.traceback import install
+from typing import Dict, Union
 
 from broker import cfg
 
@@ -317,7 +316,11 @@ def log(
             # __ https://stackoverflow.com/a/6826099/2402577
             ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
 
-    if isinstance(text, dict):
+    if isinstance(text, list):
+        pprint(text)
+        if is_write:
+            ll.console[fn].print(text)
+    elif isinstance(text, dict):
         if max_depth:
             pprint(text, max_depth=max_depth)
         else:

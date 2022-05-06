@@ -115,8 +115,8 @@ def check_price_keys(price_keys, provider, code_hash):
             assert key in res, f"{key} does no exist in price keys({res}) for the registered data{code_hash}"
 
 
-def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_print=True):
-    text = f"{start_time},{completion_time}"
+def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, is_print=True):
+    text = f"{start_timestamp},{end_timestamp}"
     log(f"==> {br(text)} cores={cores}")
     job = Job()
     job.code_hashes = [b"8b3e98abb65d0c1aceea8d606fc55403"]
@@ -152,15 +152,16 @@ def submit_receipt(index, cores, start_time, completion_time, elapsed_time, is_p
         {"from": requester, "value": web3.toWei(job_price, "gwei")},
     )
 
-    tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_time, {"from": provider})
+    tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_timestamp, {"from": provider})
     rpc.sleep(60)
     mine(5)
     data_transfer_in = 0
     data_transfer_out = 0
-    args = [job.index, job._id, completion_time, data_transfer_in, data_transfer_out, job.cores, [1], True]
-    tx = ebb.processPayment(job.key, args, elapsed_time, "", {"from": provider})
+    args = [job.index, job._id, end_timestamp, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1], True]
+    tx = ebb.processPayment(job.key, args, "", {"from": provider})
     if is_print:
         log(f"==> process_payment received_gas_used={tx.__dict__['gas_used']}")
+
     # received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
     # refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     # withdraw(provider, received_sum)
@@ -184,30 +185,30 @@ def test_submit_job_gas():
     register_provider(100)
     register_requester(requester)
 
-    start_time = 10
-    completion_time = 20
+    start_timestamp = 10
+    end_timestamp = 20
     cores = [127]
     index = 0
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 10
-    completion_time = 25
+    start_timestamp = 10
+    end_timestamp = 25
     cores = [1]
     index = 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 11
-    completion_time = 25
+    start_timestamp = 11
+    end_timestamp = 25
     cores = [1]
     index = 2
-    tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    tx = submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     gas_base = int(tx.__dict__["gas_used"])
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 8
-    completion_time = 9
+    start_timestamp = 8
+    end_timestamp = 9
     cores = [65]
     index = 3
-    tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    tx = submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
     check_list()
     log(f"==> gas_cost_for_iteration={gas_end - gas_base}")
@@ -224,35 +225,35 @@ def test_test1():
     register_provider(100)
     register_requester(requester)
 
-    start_time = 10
-    completion_time = 20
+    start_timestamp = 10
+    end_timestamp = 20
     cores = [1]
     index = 0
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -------------------
-    start_time = 27
-    completion_time = 35
+    start_timestamp = 27
+    end_timestamp = 35
     cores = [1]
     index = 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -------------------
-    start_time = 30
-    completion_time = 45
+    start_timestamp = 30
+    end_timestamp = 45
     cores = [1]
     index = 2
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -------------------
-    start_time = 30
-    completion_time = 45
+    start_timestamp = 30
+    end_timestamp = 45
     cores = [1]
     index = 3
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -------------------
-    start_time = 27
-    completion_time = 30
+    start_timestamp = 27
+    end_timestamp = 30
     cores = [120]
     index = 4
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
 
 
 def test_test2():
@@ -265,113 +266,113 @@ def test_test2():
     register_provider(100)
     register_requester(requester)
 
-    start_time = 10
-    completion_time = 20
+    start_timestamp = 10
+    end_timestamp = 20
     cores = [1]
     index = 0
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 10
-    completion_time = 20
+    start_timestamp = 10
+    end_timestamp = 20
     cores = [128]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 9
-    completion_time = 19
+    start_timestamp = 9
+    end_timestamp = 19
     cores = [128]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 11
-    completion_time = 21
+    start_timestamp = 11
+    end_timestamp = 21
     cores = [128]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 15
-    completion_time = 25
+    start_timestamp = 15
+    end_timestamp = 25
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 8
-    completion_time = 9
+    start_timestamp = 8
+    end_timestamp = 9
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 40
-    completion_time = 45
+    start_timestamp = 40
+    end_timestamp = 45
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 40
-    completion_time = 45
+    start_timestamp = 40
+    end_timestamp = 45
     cores = [126]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 41
-    completion_time = 45
+    start_timestamp = 41
+    end_timestamp = 45
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 39
-    completion_time = 41
+    start_timestamp = 39
+    end_timestamp = 41
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 26
-    completion_time = 39
+    start_timestamp = 26
+    end_timestamp = 39
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 20
-    completion_time = 38
+    start_timestamp = 20
+    end_timestamp = 38
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 20
-    completion_time = 37
+    start_timestamp = 20
+    end_timestamp = 37
     cores = [8]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 39
-    completion_time = 40
+    start_timestamp = 39
+    end_timestamp = 40
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 37
-    completion_time = 39
+    start_timestamp = 37
+    end_timestamp = 39
     cores = [8]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 45
-    completion_time = 50
+    start_timestamp = 45
+    end_timestamp = 50
     cores = [128]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 39
-    completion_time = 40
+    start_timestamp = 39
+    end_timestamp = 40
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 40
-    completion_time = 41
+    start_timestamp = 40
+    end_timestamp = 41
     cores = [1]
     index += 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
 
 
 def test_test3():
@@ -384,29 +385,29 @@ def test_test3():
     register_provider(100)
     register_requester(requester)
 
-    start_time = 10
-    completion_time = 20
+    start_timestamp = 10
+    end_timestamp = 20
     cores = [1]
     index = 0
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 27
-    completion_time = 35
+    start_timestamp = 27
+    end_timestamp = 35
     cores = [1]
     index = 1
-    submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 30
-    completion_time = 45
+    start_timestamp = 30
+    end_timestamp = 45
     cores = [1]
     index = 2
-    tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    tx = submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     gas_base = int(tx.__dict__["gas_used"])
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    start_time = 34
-    completion_time = 51
+    start_timestamp = 34
+    end_timestamp = 51
     cores = [1]
     index = 3
-    tx = submit_receipt(index, cores, start_time, completion_time, elapsed_time=1)
+    tx = submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     gas_end = int(tx.__dict__["gas_used"])
     log(f"==> gas_cost_for_iteration={gas_end - gas_base}")

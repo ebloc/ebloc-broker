@@ -46,9 +46,9 @@ def start_call(job_key, index, slurm_job_id) -> None:
     )
     p2.stdout.close()  # type: ignore
     date = p3.communicate()[0].decode("utf-8").strip()
-    start_time = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
+    start_timestamp = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
     log(
-        f"{env.EBLOCPATH}/broker/eblocbroker_scripts/set_job_state_running.py {job_key} {index} {job_id} {start_time}",
+        f"{env.EBLOCPATH}/broker/eblocbroker_scripts/set_job_state_running.py {job_key} {index} {job_id} {start_timestamp}",
         "bold white",
     )
     log(f"#> pid={pid}")
@@ -64,11 +64,11 @@ def start_call(job_key, index, slurm_job_id) -> None:
             sys.exit(1)
 
         try:
-            tx = Ebb.set_job_state_running(job_key, index, job_id, start_time)
+            tx = Ebb.set_job_state_running(job_key, index, job_id, start_timestamp)
             tx_hash = Ebb.tx_id(tx)
             log(f"tx_hash={tx_hash}", "bold")
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log(f"==> set_job_state_running_started {start_time} | attempt_date={d}")
+            log(f"==> set_job_state_running_started {start_timestamp} | attempt_date={d}")
             log("## mongo.set_job_state_running_tx", end="")
             if Ebb.mongo_broker.set_job_state_running_tx(str(job_key), int(index), str(tx_hash)):
                 log(ok())

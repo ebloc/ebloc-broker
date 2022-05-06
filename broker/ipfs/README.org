@@ -1,5 +1,14 @@
 * Enable Port Google-Instance
 
+Helpful conversation:
+https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c?permalink_comment_id=4022998#gistcomment-4022998
+
+An easy way to make a node undiscoverable by other nodes is to not connect to the DHT at all. To do
+this either launch your daemon with --routing=none flag or change the ipfs config file. That is to
+say either
+
+-----------------
+
 - ~Navigation Menu~ => ~VPN Network~ => ~Firewall~ => ~Create Firewall Rule~
 - Name: ~ipfs~
 - Logs: ~Off~

@@ -1,0 +1,14 @@
+* NOTES
+
+** Run
+
+#+begin_src bash
+hypercorn app_ebb:app -b 127.0.0.1:8000 --reload
+#+end_src
+
+** Respond
+
+#+begin_src bash
+curl -v 127.0.0.1:8000
+curl -X POST http://127.0.0.1:8000/webhook -d "0x'"
+#+end_src
