@@ -1,42 +1,36 @@
-* start
+* NOTES
+
+** Remove cache
 
 - to delete all containers including its volumes use: ~docker rm -vf $(docker ps -aq)~
 - to delete all the images: ~docker rmi -f $(docker images -aq)~
 
 #+begin_src bash
-docker-compose up --remove-orphans
-
 remove_dangling () {
-    docker rmi $(docker images -qa -f 'dangling=true')  # --force
+    docker rmi $(docker images -qa -f 'dangling=true') --force
     docker image ls
 }
-
-docker build -t eblocbroker:latest --progress plain .
-#+end_src
 
 sudo systemctl start docker
 sudo docker run eblocbroker
 
 # docker run --name test -it eblocbroker bash
 docker run -it eblocbroker bash
+#+end_src
 
 ** Clean complete docker cache
 
 #+begin_src bash
-alias docker_clean_images="docker rmi $(docker images -a --filter=dangling=true -q) --force"
-alias docker_clean_ps="docker rm $(docker ps --filter=status=exited --filter=status=created -q) --force"
 docker kill $(docker ps -q)
-docker_clean_images
-docker_clean_ps
-docker rmi $(docker images -a -q)
+docker rmi $(docker images -a --filter=dangling=true -q) --force
+docker rm $(docker ps --filter=status=exited --filter=status=created -q) --force
+docker rmi $(docker images -a -q) --force
 #+end_src
-
-# https://github.com/SciDAS/slurm-in-docker/blob/master/controller/Dockerfile
-# FROM scidas/slurm.base:19.05.1
 
 ** PUSH
 
-NOTE: Now in order to push the image just make sure the path which you are using must have your username included in the tag.
+NOTE: Now in order to push the image just make sure the path which you are using must have your
+username included in the tag.
 
 #+begin_src bash
 docker login -u eblocbroker -p <password>
@@ -45,3 +39,16 @@ docker push eblocbroker/app
 #+end_src
 
 ~docker history --human --format "{{.CreatedBy}}: {{.Size}}" eblocbroker~
+
+** Build
+
+#+begin_src bash
+docker build -t ebb:latest --progress plain .
+docker-compose up -d
+#+end_src
+
+** Compose-up
+
+#+begin_src bash
+docker-compose up --remove-orphans
+#+end_src

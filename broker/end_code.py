@@ -510,8 +510,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        log("\njob owner's info", "bold green", end="")
-        log("\n================", "bold green")
+        log("\njob owner's info\n================", "bold green")
         log(f"==> gmail=[white]{self.requester_info['gmail']}")
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
         log(f"==> ipfs_id={self.requester_info['ipfs_id']}")
@@ -535,7 +534,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             raise e
 
-        log("## received running job state successfully", "bold green")
+        log("## Receive state of the running job  [  OK  ]", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(

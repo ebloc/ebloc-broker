@@ -29,7 +29,35 @@ EXIT_AFTER = 120
 
 
 class Contract:
-    """Object to access smart-contract functions."""
+    """Object to access ebloc-broker smart-contract functions."""
+
+    from broker.eblocbroker_scripts.authenticate_orc_id import authenticate_orc_id
+    from broker.eblocbroker_scripts.data import get_data_info
+    from broker.eblocbroker_scripts.get_job_info import (
+        analyze_data,
+        get_job_code_hashes,
+        get_job_info,
+        get_job_info_print,
+        get_job_owner,
+        set_job_received_block_number,
+        update_job_cores,
+    )
+    from broker.eblocbroker_scripts.get_provider_info import get_provider_info
+    from broker.eblocbroker_scripts.get_requester_info import get_requester_info
+    from broker.eblocbroker_scripts.log_job import run_log_cancel_refund, run_log_job
+    from broker.eblocbroker_scripts.process_payment import process_payment
+    from broker.eblocbroker_scripts.refund import refund
+    from broker.eblocbroker_scripts.register_provider import _register_provider
+    from broker.eblocbroker_scripts.register_requester import register_requester
+    from broker.eblocbroker_scripts.submit_job import (
+        check_before_submit,
+        is_provider_valid,
+        is_requester_valid,
+        submit_job,
+    )
+    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership
+    from broker.eblocbroker_scripts.update_provider_info import is_provider_info_match, update_provider_info
+    from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
 
     def __init__(self, is_brownie=False) -> None:
         """Create a new Contrect."""
@@ -66,36 +94,6 @@ class Contract:
                 sys.exit(1)
 
     ebb = None  # contract object
-
-    # Imported methods
-    # ================
-    from broker.eblocbroker_scripts.authenticate_orc_id import authenticate_orc_id
-    from broker.eblocbroker_scripts.data import get_data_info
-    from broker.eblocbroker_scripts.get_job_info import (
-        analyze_data,
-        get_job_code_hashes,
-        get_job_info,
-        get_job_info_print,
-        get_job_owner,
-        set_job_received_block_number,
-        update_job_cores,
-    )
-    from broker.eblocbroker_scripts.get_provider_info import get_provider_info
-    from broker.eblocbroker_scripts.get_requester_info import get_requester_info
-    from broker.eblocbroker_scripts.log_job import run_log_cancel_refund, run_log_job
-    from broker.eblocbroker_scripts.process_payment import process_payment
-    from broker.eblocbroker_scripts.refund import refund
-    from broker.eblocbroker_scripts.register_provider import _register_provider
-    from broker.eblocbroker_scripts.register_requester import register_requester
-    from broker.eblocbroker_scripts.submit_job import (
-        check_before_submit,
-        is_provider_valid,
-        is_requester_valid,
-        submit_job,
-    )
-    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership
-    from broker.eblocbroker_scripts.update_provider_info import is_provider_info_match, update_provider_info
-    from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
 
     def brownie_load_account(self, fn="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""

@@ -10,5 +10,5 @@ hypercorn app_ebb:app -b 127.0.0.1:8000 --reload
 
 #+begin_src bash
 curl -v 127.0.0.1:8000
-curl -X POST http://127.0.0.1:8000/webhook -d "0x'"
+curl -X POST http://127.0.0.1:8000/webhook -d "0x29e613b04125c16db3f3613563bfdd0ba24cb629 0000-0001-7642-0552"
 #+end_src

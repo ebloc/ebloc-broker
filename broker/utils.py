@@ -27,12 +27,12 @@ from broker._utils.tools import WHERE, _exit, is_process_on, log, print_tb, run
 from broker.config import env
 from broker.errors import QuietExit
 
+Qm = b"\x12 "
+zero_bytes32 = "0x00"
 empty_bytes32 = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 )
-zero_bytes32 = "0x00"
-Qm = b"\x12 "
 
 
 class BaseEnum(IntEnum):
@@ -115,7 +115,7 @@ def extract_gzip(fn):
 
 
 def untar(tar_file, extract_to):
-    """Untar given tar file.
+    """Extract the given tar file.
 
     umask can be ignored by using the -p (--preserve) option
         --no-overwrite-dir: preserve metadata of existing directories
@@ -124,12 +124,12 @@ def untar(tar_file, extract_to):
     Put the p before the f:
     """
     fn = os.path.basename(tar_file)
-    accept_files = [".git", fn]
+    accepted_files = [".git", fn]
     if not is_dir_empty(extract_to):
         for name in os.listdir(extract_to):
             # if tar itself already exist inside the same directory along with
             # `.git` file
-            if name not in accept_files:
+            if name not in accepted_files:
                 log(f"==> {tar_file} is already extracted into\n    {extract_to}")
                 return
     # tar --warning=no-timestamp

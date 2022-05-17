@@ -130,3 +130,27 @@ alper
 @alper According to the current version of the FAQ (slurm.schedmd.com/faq.html,
 question Can Slurm emulate a larger cluster?), it appears so – damienfrancois
 #+end_src
+
+
+** DOCKER
+
+#+begin_src bash
+docker build -t slurm:latest . --progress plain
+docker run --hostname slurmctl -it slurm bash
+#+end_src
+
+#+begin_src bash
+docker-compose up -d --remove-orphans
+docker ps
+docker exec -it ebloc-broker_slurm_1 /bin/bash
+#+end_src
+
+** main helpful links
+- [[https://github.com/giovtorres/docker-centos7-slurm/blob/main/Dockerfile]]
+- [[https://github.com/edf-hpc/slurm-web/blob/master/docker/container/Dockerfile]]
+
+*** some more
+
+- [[https://github.com/GRomR1/docker-slurmbase/blob/master/Dockerfile]]
+- [[https://github.com/SciDAS/slurm-in-docker/blob/master/base/Dockerfile]]
+- [[https://stackoverflow.com/questions/42597739/accessing-docker-container-mysql-databases]]

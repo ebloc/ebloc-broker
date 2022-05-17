@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import asyncio
 import logging
+
 import quart.flask_patch  # noqa
 from flask import abort, request
 from quart import Quart
+
 from broker import cfg
 
 logging.disable(logging.CRITICAL)

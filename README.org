@@ -25,14 +25,20 @@ This container provides everything you need to test using a Python 3.7 interpret
 Start the test environment:
 
 #+begin_src bash
-docker build -t ebloc-broker:latest --progress plain .
-docker-compose up -d --remove-orphans
+docker build -t ebb:latest . --progress plain
+docker-compose up -d
 #+end_src
 
-To open a session to the container:
+To enter the shell of the running container in interactive mode, run:
 
 #+begin_src bash
-docker-compose exec sandbox bash
+docker exec -it ebloc-broker_slurm_1 /bin/bash
+#+end_src
+
+To stop the cluster container, run:
+
+#+begin_src bash
+docker-compose down
 #+end_src
 
 ** Cloud Storages

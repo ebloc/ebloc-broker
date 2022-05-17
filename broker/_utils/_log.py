@@ -5,12 +5,13 @@ import pathlib
 import sys
 import textwrap
 import threading
+from typing import Dict, Union
+
 from rich import pretty, print, print_json  # noqa
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
 from rich.traceback import install
-from typing import Dict, Union
 
 from broker import cfg
 

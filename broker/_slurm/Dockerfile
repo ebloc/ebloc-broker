@@ -24,6 +24,7 @@ RUN apt-get update \
      libmariadbd-dev \
      mariadb-server \
      supervisor \
+     nano \
  && apt clean
 
 # Add Tini
@@ -36,8 +37,8 @@ WORKDIR /workspace
 ARG JOBS=4
 RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
  && cd slurm \
- && ./configure --enable-debug --enable-front-end -prefix=/usr --sysconfdir=/etc/slurm \
-    --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --enable-slurmrestd \
+   --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
  && make \
  && make -j ${JOBS} install \
  && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
@@ -57,13 +58,15 @@ RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/Sc
  && chown -R slurm:slurm /var/spool/slurmd \
     /var/spool/slurmctld \
     /var/log/slurm \
-    /var/run/slurm \
- && chown -R munge:munge /var/log/munge
+    /var/run/slurm
 
-WORKDIR /usr/local/var/log/munge
-WORKDIR /run/munge
-# RUN /sbin/create-munge-key
+# Create munge service file and start it
+# RUN chown munge: /var/log/munge /var/lib/munge && \
+#     mkdir -p /etc/service/munge
+# RUN chown -R munge:munge /var/log/munge
+# RUN chown root:root /var/log/munge
 
+RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
 COPY files/supervisord.conf /etc/
@@ -79,11 +82,3 @@ RUN chmod 0600 /etc/slurm/slurmdbd.conf
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
-
-# RUN chown root:root /var/log/munge
-
-
-# https://github.com/giovtorres/docker-centos7-slurm/blob/main/Dockerfile
-
-# docker build -t slurm:latest . --progress plain
-# docker run -it slurm bash

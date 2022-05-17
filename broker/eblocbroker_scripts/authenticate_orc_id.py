@@ -41,8 +41,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         except Exception as e:
             raise e
     else:
-        log(f"## Address: {address} that has orc_id: {orc_id} is already authenticated")
-        return None
+        raise Exception(f"## Address: {address} that has orc_id: {orc_id} is already authenticated")
 
 
 def main():
