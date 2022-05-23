@@ -9,8 +9,8 @@ mv Qm* ipfs
 cp -a ipfs ipfs_gpg
 cd ipfs
 rm */*.diff.gz.gpg
-rmdir *
+rmdir * >/dev/null 2>&1
 cd ../ipfs_gpg
 rm */*.diff.gz
-rmdir *
+rmdir * >/dev/null 2>&1
 cd ..

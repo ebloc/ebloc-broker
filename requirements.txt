@@ -687,7 +687,7 @@ pyjwt==1.7.1
     #   eth-brownie
     #   pythx
 pylint==2.12.2
-pymongo==4.1.0
+pymongo==4.1.1
 pymy==0.0.8
 pymysql==0.9.3
     # via

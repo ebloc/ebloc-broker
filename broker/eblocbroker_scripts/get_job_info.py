@@ -227,15 +227,15 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
-                self.job_info.update({"end_timestamp": logged_receipt.args["endTimestamp"]})
+                # self.job_info.update({"end_timestamp": logged_receipt.args["endTimestamp"]})
                 self.job_info.update({"receivedGwei": logged_receipt.args["receivedGwei"]})
                 self.job_info.update({"refundedGwei": logged_receipt.args["refundedGwei"]})
                 self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
-                self.job_info["actual_run_time"] = ceil(
-                    self.job_info["end_timestamp"] - self.job_info["start_timestamp"]
-                )
+                # self.job_info["actual_run_time"] = ceil(
+                #     self.job_info["end_timestamp"] - self.job_info["start_timestamp"]
+                # )
                 break
     except Exception as e:
         log(f"E: Failed to get_job_info: {traceback.format_exc()}")

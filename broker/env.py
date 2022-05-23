@@ -11,11 +11,11 @@ from broker.errors import QuietExit
 class ENV_BASE:
     def __init__(self) -> None:
         self.HOME: Path = Path.home()
-        hidden_base = self.HOME / ".ebloc-broker"
-        fn = hidden_base / "cfg.yaml"
+        hidden_base_dir = self.HOME / ".ebloc-broker"
+        fn = hidden_base_dir / "cfg.yaml"
         if not os.path.isfile(fn):
-            if not os.path.isdir(hidden_base):
-                raise QuietExit(f"E: {hidden_base} is not initialized")
+            if not os.path.isdir(hidden_base_dir):
+                raise QuietExit(f"E: {hidden_base_dir} is not initialized")
 
             raise QuietExit(f"E: {fn} is not created")
 

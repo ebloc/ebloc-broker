@@ -7,9 +7,10 @@ from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear
 from broker._utils.tools import log, print_tb
+from broker.utils import bytes32_to_ipfs, empty_bytes32
 
 Ebb = cfg.Ebb
-watch_only_jobs = True
+print_only_ipfs_result_hashes = True
 
 
 def watch(eth_address="", from_block=None):
@@ -28,13 +29,8 @@ def watch(eth_address="", from_block=None):
     is_provider = True
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     _log.ll.LOG_FILENAME = watch_fn
-    _console_clear()
-
-    if not watch_only_jobs:
-        providers_info = {}
-        providers = Ebb.get_providers()
-        for provider_addr in providers:
-            providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
+    if not print_only_ipfs_result_hashes:
+        _console_clear()
 
     if is_provider:
         event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
@@ -64,12 +60,13 @@ def watch(eth_address="", from_block=None):
             job["blockNumber"],
             is_print=False,
         )
-        log(_job)
-        breakpoint()  # DEBUG
-        # if _job["result_ipfs_hash"] != empty_bytes32 and _job["result_ipfs_hash"] != "":
-        #     result_ipfs_hash = bytes32_to_ipfs(_job["result_ipfs_hash"])
-        #     log(result_ipfs_hash)
-        #     # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")
+        if print_only_ipfs_result_hashes:
+            if _job["result_ipfs_hash"] != empty_bytes32 and _job["result_ipfs_hash"] != "":
+                result_ipfs_hash = bytes32_to_ipfs(_job["result_ipfs_hash"])
+                log(result_ipfs_hash)
+                # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")
+        else:
+            log(_job)
 
 
 if __name__ == "__main__":

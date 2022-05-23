@@ -228,11 +228,15 @@ git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive
 
-sudo mkdir /oc
-sudo chown $(whoami) /oc
-sudo chown -R $(whoami) /oc
-sudo apt-get install davfs2 -y
-# sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
+mount_oc () {
+    sudo mkdir /oc
+    sudo chown $(whoami) /oc
+    sudo chown -R $(whoami) /oc
+    sudo apt-get install davfs2 -y
+    sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /oc
+}
+# mount_oc
+
 echo ""
 yes_or_no "Are you a provider? Yes for slurm installation" && ~/ebloc-broker/scripts/install_slurm.sh
 

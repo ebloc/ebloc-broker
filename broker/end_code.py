@@ -51,7 +51,7 @@ connect()
 
 
 class Common:
-    """Prevent 'Class' to have attribute 'method' mypy warnings."""
+    """Prevent 'Class' to have attribute 'method' as mypy warnings."""
 
     def __init__(self) -> None:
         self.requester_home_path = Path("")

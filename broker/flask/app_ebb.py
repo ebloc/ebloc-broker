@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-from contextlib import suppress
-from broker import cfg
 import asyncio
 import logging
+from contextlib import suppress
+
 import quart.flask_patch  # noqa
 from flask import abort, request
 from quart import Quart
+
+from broker import cfg
 
 logging.disable(logging.CRITICAL)
 logging.getLogger("requests").setLevel(logging.CRITICAL)
