@@ -23,16 +23,16 @@ from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
 from broker._utils._log import br
-from broker._utils.tools import WHERE, _exit, is_process_on, log, print_tb, run
+from broker._utils.tools import WHERE, _exit, is_process_on, log, pre_cmd_set, print_tb, run
 from broker.config import env
 from broker.errors import QuietExit
 
+Qm = b"\x12 "
+zero_bytes32 = "0x00"
 empty_bytes32 = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 )
-zero_bytes32 = "0x00"
-Qm = b"\x12 "
 
 
 class BaseEnum(IntEnum):
@@ -115,7 +115,7 @@ def extract_gzip(fn):
 
 
 def untar(tar_file, extract_to):
-    """Untar given tar file.
+    """Extract the given tar file.
 
     umask can be ignored by using the -p (--preserve) option
         --no-overwrite-dir: preserve metadata of existing directories
@@ -124,12 +124,12 @@ def untar(tar_file, extract_to):
     Put the p before the f:
     """
     fn = os.path.basename(tar_file)
-    accept_files = [".git", fn]
+    accepted_files = [".git", fn]
     if not is_dir_empty(extract_to):
         for name in os.listdir(extract_to):
             # if tar itself already exist inside the same directory along with
             # `.git` file
-            if name not in accept_files:
+            if name not in accepted_files:
                 log(f"==> {tar_file} is already extracted into\n    {extract_to}")
                 return
     # tar --warning=no-timestamp
@@ -191,23 +191,6 @@ def is_bin_installed(name):
         raise e
 
 
-def run_with_output(cmd):
-    """Run command and return its output.
-
-    __ https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
-    """
-    cmd = list(map(str, cmd))  # all items should be string
-    ret = ""
-    with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
-        for line in p.stdout:
-            ret += line.strip()
-            print(line, end="")  # process line here
-        return ret
-
-    if p.returncode != 0:
-        raise CalledProcessError(p.returncode, p.args)
-
-
 def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
     """Act similir to run(cmd).
 
@@ -217,7 +200,7 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
     * How to catch exception output from Python subprocess.check_output()?:
     __ https://stackoverflow.com/a/24972004/2402577
     """
-    cmd = list(map(str, cmd))  # all items should be string
+    cmd = pre_cmd_set(cmd)
     if stdout_fn is None:
         p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     else:

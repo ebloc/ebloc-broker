@@ -388,16 +388,17 @@ def test_computational_refund():
     )
     index = 0
     job_id = 0
-    start_time = 1579524978
-    tx = ebb.setJobStateRunning(job.code_hashes[0], index, job_id, start_time, {"from": accounts[0]})
+    start_timestamp = 1579524978
+    tx = ebb.setJobStateRunning(job.code_hashes[0], index, job_id, start_timestamp, {"from": accounts[0]})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     rpc.sleep(60)
     mine(5)
-    args = [index, job_id, 1579524998, 2, 0, job.cores, [5], True]
     run_time = 1
-    tx = ebb.processPayment(job.code_hashes[0], args, run_time, zero_bytes32, {"from": accounts[0]})
+    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5], True]
+    tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
+    assert tx.events["LogProcessPayment"]["elapsedTime"] == run_time
     log(f"{received_sum} {refunded_sum}")
     assert received_sum + refunded_sum == 505
     assert received_sum == 104 and refunded_sum == 401
@@ -681,28 +682,30 @@ def test_multiple_data():
     # ===== provider side =====
     index = 0
     job_id = 0
-    execution_time = 10
+    elapsed_time = 10
     result_ipfs_hash = "0xabcd"
-    start_time = get_block_timestamp()
-    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    start_timestamp = get_block_timestamp()
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": accounts[0]})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
-    mine(60 * execution_time / cfg.BLOCK_DURATION + 1)
-    end_time = start_time + 60 * execution_time
+    mine(60 * elapsed_time / cfg.BLOCK_DURATION + 1)
+    ended_timestamp = start_timestamp + 60 * elapsed_time
     block_timestamp = get_block_timestamp()
     assert (
-        end_time <= block_timestamp
-    ), f"block timestamp is ahead of completion time, difference={block_timestamp - end_time}"
+        ended_timestamp <= block_timestamp
+    ), f"block timestamp is ahead of timestamp of when the job ended, difference={block_timestamp - ended_timestamp}"
     args = [
         index,
         job_id,
-        end_time,
+        ended_timestamp,
         sum(job.data_transfer_ins),
         job.data_transfer_out,
+        elapsed_time,
         job.cores,
         job.run_time,
         False,
     ]
-    tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
+    assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
     log(f"received_sum={received_sum} refunded_sum={refunded_sum}", "bold")
@@ -714,15 +717,26 @@ def test_multiple_data():
     data_transfer = [data_transfer_in, data_transfer_out]
     index = 1
     job_id = 0
-    start_time = get_block_timestamp()
-    execution_time = 10
+    start_timestamp = get_block_timestamp()
+    elapsed_time = 10
     result_ipfs_hash = "0xabcd"
-    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": accounts[0]})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
-    mine(60 * execution_time / cfg.BLOCK_DURATION)
-    end_time = start_time + 60 * execution_time
-    args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
-    tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    mine(60 * elapsed_time / cfg.BLOCK_DURATION)
+    ended_timestamp = start_timestamp + 60 * elapsed_time
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        False,
+    ]
+    tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
+    assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # log(tx.events['LogProcessPayment'])
     received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
@@ -823,27 +837,37 @@ def test_workflow():
     # setJobState for the workflow:
     index = 0
     job_id = 0
-    start_time = 10
-    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    start_timestamp = 10
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": accounts[0]})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     index = 0
     job_id = 1
-    start_time = 20
-    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    start_timestamp = 20
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": accounts[0]})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     # process_payment for the workflow
     index = 0
     job_id = 0
-    execution_time = 10
+    elapsed_time = 10
     data_transfer = [100, 0]
-    end_time = 20
+    ended_timestamp = 20
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
     received_sums = []
     refunded_sums = []
     received_sum = 0
     refunded_sum = 0
-    args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
-    tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        False,
+    ]
+    tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # log(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedGwei"])
@@ -853,12 +877,23 @@ def test_workflow():
     log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
     index = 0
     job_id = 1
-    execution_time = 15
+    elapsed_time = 15
     data_transfer = [0, 0]
-    end_time = 39
+    ended_timestamp = 39
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
-    args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, False]
-    tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        False,
+    ]
+    tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
+    assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     received_sums.append(tx.events["LogProcessPayment"]["receivedGwei"])
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedGwei"])
@@ -867,31 +902,43 @@ def test_workflow():
     log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
     index = 0
     job_id = 2
-    execution_time = 20
+    elapsed_time = 20
     data_transfer = [0, 100]
-    end_time = 39
+    ended_timestamp = 39
     result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
     with brownie.reverts():  # processPayment should revert, setRunning is not called for the job=2
         args = [
             index,
             job_id,
-            end_time,
+            ended_timestamp,
             data_transfer[0],
             data_transfer[1],
+            elapsed_time,
             job.cores,
             job.run_time,
             False,
         ]
-        tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+        tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
         gas_costs["processPayment"].append(tx.__dict__["gas_used"])
 
     index = 0
     job_id = 2
-    start_time = 20
-    tx = ebb.setJobStateRunning(job_key, index, job_id, start_time, {"from": accounts[0]})
+    start_timestamp = 20
+    tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": accounts[0]})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
-    args = [index, job_id, end_time, data_transfer[0], data_transfer[1], job.cores, job.run_time, True]
-    tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        True,
+    ]
+    tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
+    assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # log(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedGwei"])
@@ -948,19 +995,29 @@ def test_simple_submit():
     log(f"submitJob_gas_used={tx.__dict__['gas_used']}")
     index = 0
     job_id = 0
-    start_time = 1579524978
-    tx = ebb.setJobStateRunning(job.key, index, job_id, start_time, {"from": provider})
+    start_timestamp = 1579524978
+    tx = ebb.setJobStateRunning(job.key, index, job_id, start_timestamp, {"from": provider})
     gas_costs["setJobStateRunning"].append(tx.__dict__["gas_used"])
     rpc.sleep(60)
     mine(5)
 
-    completion_time = 1579524998
+    ended_timestampstamp = 1579524998
     data_transfer_in = 0
     data_transfer_out = 0.01
-    args = [index, job_id, completion_time, data_transfer_in, data_transfer_out, job.cores, [1], True]
     elapsed_time = 1
+    args = [
+        index,
+        job_id,
+        ended_timestampstamp,
+        data_transfer_in,
+        data_transfer_out,
+        elapsed_time,
+        job.cores,
+        [1],
+        True,
+    ]
     out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
-    tx = ebb.processPayment(job.key, args, elapsed_time, out_hash, {"from": accounts[0]})
+    tx = ebb.processPayment(job.key, args, out_hash, {"from": accounts[0]})
     gas_costs["processPayment"].append(tx.__dict__["gas_used"])
     # tx = ebb.processPayment(job.code_hashes[0], args, elapsed_time, zero_bytes32, {"from": accounts[0]})
     received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
@@ -1084,21 +1141,22 @@ def test_submit_job():
             job.run_time = [core_min]
             log(f"contract_balance={ebb.getContractBalance()}", "bold")
             job_id = 0
-            execution_time = int(arguments[1]) - int(arguments[0])
-            end_time = int(arguments[1])
+            elapsed_time = int(arguments[1]) - int(arguments[0])
+            ended_timestamp = int(arguments[1])
             args = [
                 index,
                 job_id,
-                end_time,
+                ended_timestamp,
                 data_transfer_in_sum,
                 job.data_transfer_out,
+                elapsed_time,
                 job.cores,
                 job.run_time,
                 True,
             ]
-            tx = ebb.processPayment(job_key, args, execution_time, result_ipfs_hash, {"from": accounts[0]})
+            tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": accounts[0]})
+            assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
             gas_costs["processPayment"].append(tx.__dict__["gas_used"])
-            # code_hashes
             received = tx.events["LogProcessPayment"]["receivedGwei"]
             refunded = tx.events["LogProcessPayment"]["refundedGwei"]
             withdraw(accounts[0], received)

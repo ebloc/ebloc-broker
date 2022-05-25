@@ -31,9 +31,9 @@ class BaseMongoClass:
     def find_all(self, sort_str=""):
         """Find all records."""
         if not sort_str:
-            cursor = self.collection.find({})
+            cursor = self.collection.find({}, {"_id": False})
         else:
-            cursor = self.collection.find({}).sort(sort_str)
+            cursor = self.collection.find({}, {"_id": False}).sort(sort_str)
 
         for document in cursor:
             log(document)
@@ -64,7 +64,7 @@ class MongoBroker(BaseMongoClass):
         res = self.collection.replace_one({"job_key": job_key, "index": index}, item, True)
         return res.acknowledged
 
-    def find_all_shareid(self):
+    def find_all_share_id(self):
         cursor = self.share_id_coll.find({})
         for document in cursor:
             log(document)
@@ -160,7 +160,7 @@ def main():
         output = ebb_mongo.delete_all()
         log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
     else:
-        ebb_mongo.find_all_shareid()
+        ebb_mongo.find_all_share_id()
         # output = ebb_mongo.get_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)
         # log(output)
         # ebb_mongo.find_all()

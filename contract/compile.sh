@@ -1,3 +1,4 @@
 #!/bin/bash
 
-source $HOME/venv/bin/activate && brownie compile
+source $HOME/venv/bin/activate
+brownie compile

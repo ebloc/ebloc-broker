@@ -1,10 +1,21 @@
+                            *outline*
 
-| tasks            | requester | goo0 | goo1 | goo2 | goo3 |
-|------------------+-----------+------+------+------+------|
-| ebb.tar.gz       |           |      |      |      |      |
-| tx_from_bloxberg |           |      |      |      |      |
-| gdrive_patch     |           |      |      |      |      |
-| mongo_fetch      |           |      |      |      |      |
-|------------------+-----------+------+------+------+------|
+* TASKS
 
-- [] Download test_eblocbroker
+- [X] Download test_eblocbroker
+- [X] contract transactions
+
+| tasks            | req | goo0 | goo1 | goo2 | goo3 |
+|------------------+-----+------+------+------+------|
+| tx_from_bloxberg | [X] | [X]  | [X]  | [X]  | [X]  |
+| ebb.tar.gz       |     |      |      |      |      |
+| mongo_fetch      |     |      |      |      |      |
+|------------------+-----+------+------+------+------|
+
+| patches  | req | goo0 | goo1 | goo2 | goo3 |
+|----------+-----+------+------+------+------|
+| gdrive   | [X] | [X]  | [X]  | [X]  | [X]  |
+| eudat    | []  | []   | []   | []   | []   |
+| ipfs     | []  | []   | []   | []   | []   |
+| ipfs_gpg | []  | []   | []   | []   | []   |
+|----------+-----+------+------+------+------|

@@ -317,7 +317,11 @@ def log(
             # __ https://stackoverflow.com/a/6826099/2402577
             ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
 
-    if isinstance(text, dict):
+    if isinstance(text, list):
+        pprint(text)
+        if is_write:
+            ll.console[fn].print(text)
+    elif isinstance(text, dict):
         if max_depth:
             pprint(text, max_depth=max_depth)
         else:

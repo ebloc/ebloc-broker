@@ -23,3 +23,16 @@ a = "this string needs compressing"
 a = zlib.compress(a.encode())
 print(zlib.decompress(a).decode())
 #+end_src
+
+* DONE
+CLOSED: [2022-05-26 Thu 09:56]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-05-26 Thu 09:56
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+carry `run_with_output` into tools
+
+convert all ~run(~ into ~run_with_output(~

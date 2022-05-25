@@ -30,7 +30,7 @@ class Link:
                     run(["sudo", "umount", "-f", dest], is_quiet=True)
 
     def link(self, path, dest, is_read_only=False):
-        """Make links between folders.
+        """Create links between folders.
 
         You can create a read-only bind-mount(https://lwn.net/Articles/281157/).
         mount --bind /path/to/source/ /path/to/dest/

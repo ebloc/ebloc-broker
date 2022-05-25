@@ -57,7 +57,6 @@ class Job:
         self.storage_ids: List[int] = []
         self.cache_types: List[int] = []
         self.cores: List[int] = []
-        self.run_time = []
         self.key = ""
         self.keys = {}  # type: Dict[str, str]
         self.keys_final = {}  # type: Dict[str, str]

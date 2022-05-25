@@ -18,7 +18,7 @@ def process_payment(
     elapsed_time,
     result_ipfs_hash,
     cloud_storage_ids,
-    end_time,
+    ended_timestamp,
     data_transfer_in,
     data_transfer_out,
     core,
@@ -28,7 +28,7 @@ def process_payment(
     """Process payment of the received job."""
     log(
         f"~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
-        f" {result_ipfs_hash} '{cloud_storage_ids}' {end_time} {data_transfer_in} {data_transfer_out} '{core}'"
+        f" {result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'",
         "bold blue",
     )
@@ -57,14 +57,16 @@ def process_payment(
         args = [
             int(index),
             int(job_id),
-            int(end_time),
+            int(ended_timestamp),
             int(data_transfer_in),
             int(data_transfer_out),
+            # int(elapsed_time),  # TODO
             core,
             run_time,
             final_job,
         ]
-        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)  # tx is not returned
+        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)
+        # tx = self._process_payment(job_key, args, result_ipfs_hash)  # TODO
     except Exception as e:
         print_tb(e)
         raise e
@@ -90,7 +92,7 @@ if __name__ == "__main__":
         elapsed_time = int(my_args[3])
         result_ipfs_hash = str(my_args[4])
         cloud_storage_id = my_args[5]
-        end_time = int(my_args[6])
+        ended_timestamp = int(my_args[6])
         data_transfer_in = float(my_args[7])
         data_transfer_out = float(my_args[8])
         core = my_args[9]
@@ -111,7 +113,7 @@ if __name__ == "__main__":
             elapsed_time,
             result_ipfs_hash,
             cloud_storage_id,
-            end_time,
+            ended_timestamp,
             data_transfer_in,
             data_transfer_out,
             core,

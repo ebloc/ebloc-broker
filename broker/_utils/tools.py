@@ -83,7 +83,9 @@ def _timestamp(zone="Europe/Istanbul") -> int:
 
 
 def _date(zone="Europe/Istanbul", _type=""):
-    if _type == "month":
+    if _type == "year":
+        return datetime.now(timezone(zone)).strftime("%Y-%m-%d")
+    elif _type == "month":
         return datetime.now(timezone(zone)).strftime("%m-%d")
     elif _type == "hour":
         return datetime.now(timezone(zone)).strftime("%H:%M:%S")
@@ -305,15 +307,18 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         log(cmd, "bold yellow", is_code=True)
 
 
-def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
+def pre_cmd_set(cmd):
     if not isinstance(cmd, str):
         if isinstance(cmd, PosixPath):
-            cmd = str(cmd)
+            return str(cmd)
         else:
-            cmd = list(map(str, cmd))  # all items should be string
+            return list(map(str, cmd))  # all items should be string
     else:
-        cmd = [cmd]
+        return [cmd]
 
+
+def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
+    cmd = pre_cmd_set(cmd)
     try:
         if env is None:
             if not suppress_stderr:
@@ -330,6 +335,23 @@ def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
         raise Exception from None
     except Exception as e:
         raise e
+
+
+def run_keep_print(cmd):
+    """Constantly print Popen output while script is running.
+
+    __ https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    """
+    cmd = pre_cmd_set(cmd)
+    ret = ""
+    with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            ret += line.strip()
+            print(line, end="")  # process line here
+        return ret
+
+    if p.returncode != 0:
+        raise CalledProcessError(p.returncode, p.args)
 
 
 def is_process_on(process_name, name="", process_count=0, port=None, is_print=True) -> bool:
@@ -420,7 +442,7 @@ def without_keys(d, keys):
 def quit_function(fn_name) -> None:
     print("\nwarning: ", end="")
     print("{0} took too long".format(fn_name), file=sys.stderr)
-    breakpoint()  # DEBUG
+    # breakpoint()  # DEBUG
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
 
@@ -455,10 +477,7 @@ def read_json(path, is_dict=True):
             else:
                 return {}
         else:
-            if data:
-                return data
-            else:
-                return None
+            return data
 
 
 def remove_trailing_zeros(number):

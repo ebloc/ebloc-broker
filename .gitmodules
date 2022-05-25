@@ -1,3 +1,3 @@
-[submodule "orcid-authentication-php"]
-	path = orcid-authentication-php
-	url = https://github.com/avatar-lavventura/orcid-authentication-php.git
+[submodule "orcid-authentication"]
+	path = orcid-authentication
+	url = https://github.com/avatar-lavventura/orcid-authentication

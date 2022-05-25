@@ -2,6 +2,7 @@
 
 import sys
 import traceback
+from math import ceil
 
 from broker import cfg
 from broker._utils._log import br, log
@@ -119,8 +120,8 @@ def get_job_info_print(self, provider, job_key, index, received_block_number):
     if self.job_info["result_ipfs_hash"] != empty_bytes32 and self.job_info["result_ipfs_hash"] != "":
         result_ipfs_hash = bytes32_to_ipfs(self.job_info["result_ipfs_hash"])
 
-    if self.job_info["completion_time"]:
-        elapsed_time = int(self.job_info["completion_time"]) - int(self.job_info["start_time"])
+    if self.job_info["end_timestamp"]:
+        elapsed_time = int(self.job_info["end_timestamp"]) - int(self.job_info["start_timestamp"])
 
     if isinstance(self.job_info, dict):
         log(f"==> state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})")
@@ -173,6 +174,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             provider, job_key, int(index), int(job_id)
         )
         job_prices = self._get_provider_prices_for_job(provider, job_key, int(index))
+
         self.job_info = {
             "provider": provider,
             "job_key": job_key,
@@ -180,7 +182,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             "availableCore": job_prices[0],
             "cacheType": None,
             "stateCode": job[0],
-            "start_time": job[1],
+            "start_timestamp": job[1],
             "received": received,
             "job_owner": job_owner.lower(),
             "data_transfer_in": data_transfer_in,
@@ -193,9 +195,10 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
             "received_block_number": received_block_number,
             "core": None,
             "run_time": None,
+            "actual_run_time": None,
             "cloudStorageID": None,
             "result_ipfs_hash": "",
-            "completion_time": None,
+            "end_timestamp": None,
             "refundedGwei": None,
             "receivedGwei": None,
             "code_hashes": None,
@@ -224,11 +227,15 @@ def get_job_info(self, provider, job_key, index, job_id, received_block_number=0
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
-                self.job_info.update({"completion_time": logged_receipt.args["completionTime"]})
+                # self.job_info.update({"end_timestamp": logged_receipt.args["endTimestamp"]})
                 self.job_info.update({"receivedGwei": logged_receipt.args["receivedGwei"]})
                 self.job_info.update({"refundedGwei": logged_receipt.args["refundedGwei"]})
                 self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
+                self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
+                # self.job_info["actual_run_time"] = ceil(
+                #     self.job_info["end_timestamp"] - self.job_info["start_timestamp"]
+                # )
                 break
     except Exception as e:
         log(f"E: Failed to get_job_info: {traceback.format_exc()}")

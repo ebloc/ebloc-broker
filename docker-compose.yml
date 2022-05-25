@@ -1,10 +1,15 @@
-version: "3"
+version: '3'
+
 services:
-  sandbox:
-    build:
-      context: .
-    volumes:
-      - .:/code
+  slurm:
+    build: .
+    hostname: slurmctl
+    stdin_open: true
+    tty: true
     ports:
       - "4001:4001" # Public IPFS Port
-    command: tail -f /dev/null
+    volumes:
+      - /tmp/volumes/lib:/var/lib/slurmd
+      - /tmp/volumes/spool:/var/spool/slurm
+      - /tmp/volumes/log:/var/log/slurm
+      - /tmp/volumes/db:/var/lib/mysql

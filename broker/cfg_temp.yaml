@@ -7,7 +7,6 @@ cfg:
   datadir: /home/alper/.eblocpoa
   log_path: /home/alper/.ebloc-broker
   ebloc_path: /home/alper/ebloc-broker
-  base_data_path: /home/alper/test_eblocbroker
   gdrive: /usr/local/bin/gdrive
   rpc_port: 8545
   provider:

@@ -8,7 +8,7 @@ import daemon
 
 from broker import cfg, config
 from broker._utils._log import ok
-from broker._utils.tools import print_tb
+from broker._utils.tools import print_tb, run
 from broker.utils import is_ipfs_on, log, popen_communicate
 
 
@@ -17,7 +17,7 @@ def mount_ipfs():
     log(run(["sudo", "ipfs", "mount", "-f", "/ipfs"]))
 
 
-def run():
+def _run():
     """Run ipfs daemon.
 
     cmd: ipfs daemon --enable-gc --routing=none  # --mount
@@ -52,7 +52,7 @@ def main():
 
     if not is_ipfs_on():
         cfg.ipfs.remove_lock_files()
-        run()
+        _run()
     else:
         log(f"## [green]IPFS[/green] daemon is already running{ok()}")
         sys.exit(100)

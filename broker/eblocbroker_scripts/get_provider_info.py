@@ -70,7 +70,6 @@ def get_provider_info(self, provider):
         provider_info["price_data_transfer"] = provider_prices[3]
         provider_info["price_storage"] = provider_prices[4]
         provider_info["price_cache"] = provider_prices[5]
-        #
         orc_id = self.get_user_orcid(provider)
         if not is_byte_str_zero(orc_id):
             provider_info["orc_id"] = orc_id.decode("utf-8").replace("\x00", "")

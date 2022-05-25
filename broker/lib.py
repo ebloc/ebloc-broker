@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import glob
-
-# import hashlib
 import os
 import subprocess
 import sys
@@ -88,13 +86,12 @@ def session_start_msg(slurm_user, block_number, pid):
     log(f"==> left_of_block_number={block_number}")
     log(f"==> latest__block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:
-        raise QuietExit(f"provider address is {cfg.ZERO_ADDRESS}")
+        raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS}")
 
 
 def run_driver_cancel():
     """Run driver_cancel daemon on the background."""
     if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
-        # running driver_cancel.py on the background if it is not already
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
@@ -106,8 +103,8 @@ def calculate_size(path, _type="MB") -> float:
     byte_size = float(p2.communicate()[0].decode("utf-8").strip())
     if _type == "bytes":
         return byte_size
-    else:
-        return byte_to_mb(byte_size)
+
+    return byte_to_mb(byte_size)
 
 
 def subprocess_call(cmd, attempt=1, sleep_time=1):
@@ -148,7 +145,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
         raise Exception(f"scontrol error:\n{output}")
 
     # log(f"## writing into path({path}) is completed")
-    run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces with sed
+    run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces using sed
 
 
 def remove_files(fn) -> bool:
@@ -192,7 +189,7 @@ def eblocbroker_function_call(func, max_retries):
             log("Sleep 15 seconds, will try again...")
             time.sleep(15)
 
-    raise Exception("eblocbroker_function_call completed all the attempts abort")
+    raise Exception("eblocbroker_function_call completed all the attempts, ABORT")
 
 
 def is_dir(path) -> bool:
@@ -214,7 +211,7 @@ def run_storage_thread(storage_class):
     storage_thread.name = storage_class.thread_name
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
-    log(f"==> thread_log_path={storage_class.drivers_log_path}")
+    log(f"==> thread_log_fn={storage_class.drivers_log_path}")
     storage_thread.start()
     if cfg.IS_THREAD_JOIN:
         try:
@@ -241,7 +238,7 @@ def pre_check():
     mkdir(env.LOG_PATH / "transactions")
     mkdir(env.LOG_PATH / "end_code_output")
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception("slurm_mail_prog.sh scripts is not location in /var/ebloc-broker/")
+        raise Exception("slurm_mail_prog.sh scripts is not location in /var/ebloc-broker/ folder")
 
 
 # from broker.utils StorageID

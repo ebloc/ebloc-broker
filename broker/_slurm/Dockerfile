@@ -2,6 +2,10 @@
 FROM python:3.7
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS="yes"
+
+ENV PATH "/root/.pyenv/shims:/root/.pyenv/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin"
+EXPOSE 6817 6818 6819 6820 3306
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends apt-utils \
  && apt-get install -y git \
@@ -20,6 +24,7 @@ RUN apt-get update \
      libmariadbd-dev \
      mariadb-server \
      supervisor \
+     nano \
  && apt clean
 
 # Add Tini
@@ -29,12 +34,13 @@ RUN chmod +x /tini
 
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
+ARG JOBS=4
 RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
  && cd slurm \
- && ./configure --enable-debug --enable-front-end -prefix=/usr --sysconfdir=/etc/slurm \
-    --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --enable-slurmrestd \
+   --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
  && make \
- && make install \
+ && make -j ${JOBS} install \
  && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
  && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
  && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
@@ -46,23 +52,27 @@ RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/Sc
  && useradd -r -g slurm slurm \
  && mkdir -p /etc/sysconfig/slurm \
      /var/spool/slurmd \
-      /var/spool/slurmctld \
-      /var/log/slurm \
-      /var/run/slurm \
+     /var/spool/slurmctld \
+     /var/log/slurm \
+     /var/run/slurm \
  && chown -R slurm:slurm /var/spool/slurmd \
     /var/spool/slurmctld \
     /var/log/slurm \
-    /var/run/slurm \
- && chown munge:munge /var/log/munge
+    /var/run/slurm
 
-  WORKDIR /usr/local/var/log/munge
-# RUN /sbin/create-munge-key
+# Create munge service file and start it
+# RUN chown munge: /var/log/munge /var/lib/munge && \
+#     mkdir -p /etc/service/munge
+# RUN chown -R munge:munge /var/log/munge
+# RUN chown root:root /var/log/munge
 
+RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
 WORKDIR /var/log/slurm
+WORKDIR /var/run/supervisor
 COPY files/supervisord.conf /etc/
 
 # Mark externally mounted volumes
-VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm"]
+VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
 
 COPY --chown=slurm files/slurm/slurm.conf /etc/slurm/slurm.conf
 COPY --chown=slurm files/slurm/gres.conf /etc/slurm/gres.conf
@@ -72,5 +82,3 @@ RUN chmod 0600 /etc/slurm/slurmdbd.conf
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
-
-# https://github.com/giovtorres/docker-centos7-slurm/blob/main/Dockerfile

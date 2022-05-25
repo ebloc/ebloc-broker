@@ -325,7 +325,7 @@ class GdriveClass(Storage):
             raise Exception("Neither folder or gzip type is given")
 
     def run(self) -> bool:
-        self.start_time = time.time()
+        self.start_timestamp = time.time()
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
 

@@ -2,8 +2,12 @@
 
 GREEN="\033[1;32m"; NC="\033[0m"
 LOG_DIR=~/.ebloc-broker
-BASE_DIR=~/ebloc-broker/broker
 DIR=/var/ebloc-broker
+if grep -q docker /proc/1/cgroup; then  # inside docker
+    BASE_DIR=/workspace/ebloc-broker/broker
+else
+    BASE_DIR=~/ebloc-broker/broker
+fi
 
 yes_or_no () {
     while true; do
@@ -24,7 +28,6 @@ set_gmail () {
     line_new=$GMAIL
     sed -i.bak "s/^\(GMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
     rm -f $DIR/slurm_mail_prog.sh.bak
-
 }
 
 provider_setup () {
@@ -49,54 +52,9 @@ provider_setup () {
     yes_or_no "Do you want to change your gmail" $GMAIL && set_gmail
 }
 
-configure_coinbase () { # coinbase address setup
-    COINBASE=$(echo $COINBASE)
-    if [[ ! -v COINBASE ]]; then
-        echo "COINBASE is not set"
-        echo "Type your provider Ethereum Address, followed by [ENTER]:"
-        read COINBASE
-        echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
-    elif [[ -z "$COINBASE" ]]; then
-        echo "COINBASE is set to the empty string"
-        echo "Type your provider Ethereum Address, followed by [ENTER]:"
-        read COINBASE
-        echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
-    else
-        echo "COINBASE is: $COINBASE"
-        check=$($BASE_DIR/eblocbroker_scripts/is_address.py $COINBASE)
-        if [ "$check" != "True" ]; then
-            echo "Ethereum address is not valid, please use a valid one."
-            exit
-        fi
-        # sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $LOG_DIR/.env
-        # rm $LOG_DIR/.env.bak
-    fi
-}
-
-configure_oc () {  # OC_USER address setup
-    OC_USER=$(echo $OC_USER)
-    if [[ ! -v OC_USER ]]; then
-        echo "OC_USER is not set"
-        echo "Type your OC_USER, followed by [ENTER]:"
-        read OC_USER
-    elif [[ -z "$OC_USER" ]]; then
-        echo "OC_USER is set to the empty string"
-        echo "Type your OC_USER, followed by [ENTER]:"
-        read OC_USER
-    fi
-    # sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $LOG_DIR/.env
-    # rm -f $LOG_DIR/.env.bak
-
-    if ! grep -q "export OC_USER=" $HOME/.profile; then
-        echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
-    fi
-    source $HOME/.profile
-}
-
 configure_slurm () { # slurm setup
     sudo killall slurmctld slurmdbd slurmd
     var=$(echo $LOG_DIR/slurm_mail_prog.sh | sed 's/\//\\\//g')
-    # var=$var"/bash_scripts"
     # With JobRequeue=0 or --no-requeue,
     # the job will not restart automatically, please see https://stackoverflow.com/a/43366542/2402577
     sudo sed -i.bak "s/^\(.*JobRequeue=\).*/\10/" /usr/local/etc/slurm.conf
@@ -140,6 +98,8 @@ if [ ! -f $LOG_DIR/cfg.yaml ]; then
     cp $BASE_DIR/cfg_temp.yaml $LOG_DIR/cfg.yaml
 fi
 
+$BASE_DIR/python_scripts/init.py
+
 # gdrive
 # ======
 FILE=$HOME/.gdrive
@@ -147,11 +107,12 @@ if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
 fi
 
-echo -e "warning: Update the following file "$LOG_DIR"/.eudat_client.txt' with
-your EUDAT account's password. Best to make sure the file is not readable or
-even listable for anyone but you. You achieve this with:
-'chmod 700 eudat_password.txt'"
-echo ""
+# echo -e "warning: Update the following file "$LOG_DIR"/.eudat_client.txt' with
+# your EUDAT account's password. Best to make sure the file is not readable or
+# even listable for anyone but you. You achieve this with:
+# 'chmod 700 eudat_password.txt'"
+# echo ""
+
 yes_or_no "Are you are a provider" && provider_setup
 
 # LOG_PATH
@@ -203,3 +164,47 @@ yes_or_no "Are you are a provider" && provider_setup
 # rm -f $LOG_DIR/.env.bak
 # sed -i.bak "s/^\(EBLOCBROKER_PATH=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh
 # rm -f $DIR/slurm_mail_prog.sh.bak
+
+# configure_coinbase () { # coinbase address setup
+#     COINBASE=$(echo $COINBASE)
+#     if [[ ! -v $COINBASE ]]; then
+#         echo "COINBASE is not set"
+#         echo "Type your provider Ethereum Address, followed by [ENTER]:"
+#         read COINBASE
+#         echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
+#     elif [[ -z "$COINBASE" ]]; then
+#         echo "COINBASE is set to the empty string"
+#         echo "Type your provider Ethereum Address, followed by [ENTER]:"
+#         read COINBASE
+#         echo 'export COINBASE="'$COINBASE'"' >> $HOME/.profile
+#     else
+#         echo "COINBASE is: $COINBASE"
+#         check=$($BASE_DIR/eblocbroker_scripts/is_address.py $COINBASE)
+#         if [ "$check" != "True" ]; then
+#             echo "Ethereum address is not valid, please use a valid one."
+#             exit
+#         fi
+#         # sed -i.bak "s/^\(PROVIDER_ID=\).*/\1\"$COINBASE\"/" $LOG_DIR/.env
+#         # rm $LOG_DIR/.env.bak
+#     fi
+# }
+
+# configure_oc () {  # OC_USER address setup
+#     OC_USER=$(echo $OC_USER)
+#     if [[ ! -v OC_USER ]]; then
+#         echo "OC_USER is not set"
+#         echo "Type your OC_USER, followed by [ENTER]:"
+#         read OC_USER
+#     elif [[ -z "$OC_USER" ]]; then
+#         echo "OC_USER is set to the empty string"
+#         echo "Type your OC_USER, followed by [ENTER]:"
+#         read OC_USER
+#     fi
+#     # sed -i.bak "s/^\(OC_USER=\).*/\1\"$OC_USER\"/" $LOG_DIR/.env
+#     # rm -f $LOG_DIR/.env.bak
+
+#     if ! grep -q "export OC_USER=" $HOME/.profile; then
+#         echo 'export OC_USER="'$OC_USER'"' >> $HOME/.profile
+#     fi
+#     source $HOME/.profile
+# }

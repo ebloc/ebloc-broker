@@ -15,7 +15,6 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
   [[https://github.com/eth-brownie/brownie][eth-brownie]],
   [[https://github.com/trufflesuite/ganache][ganache-cli]]
 
-
 ** Using Docker
 
 You can use a sandbox container provided in the [[./docker-compose.yml]] file for testing inside a Docker
@@ -26,14 +25,20 @@ This container provides everything you need to test using a Python 3.7 interpret
 Start the test environment:
 
 #+begin_src bash
-docker build -t ebloc-broker:latest --progress plain .
-docker-compose up -d --remove-orphans
+docker build -t ebb:latest . --progress plain
+docker-compose up -d
 #+end_src
 
-To open a session to the container:
+To enter the shell of the running container in interactive mode, run:
 
 #+begin_src bash
-docker-compose exec sandbox bash
+docker exec -it ebloc-broker_slurm_1 /bin/bash
+#+end_src
+
+To stop the cluster container, run:
+
+#+begin_src bash
+docker-compose down
 #+end_src
 
 ** Cloud Storages
@@ -67,13 +72,11 @@ Next, type ~eblocbroker --help~ for basic usage information.
 *** Submit Job
 
 
-In order to submit your job each user should already registered into
-eBlocBroker.You can use [[./broker/eblocbroker/register_requester.py]] to register.
+In order to submit your job each user should already registered into eBlocBroker.
+You can use [[./broker/eblocbroker/register_requester.py]] to register.
 Please update following arguments inside ~register.yaml~.
 
-After registration is done, each user should authenticate their ORCID iD using
-the following [[http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php]].
-
+After registration is done, each user should authenticate their ORCID iD using the following [[http://eblocbroker.duckdns.org/]].
 
 ~$ ./eblocbroker.py submit job.yaml~
 

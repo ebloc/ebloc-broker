@@ -8,7 +8,6 @@ from rich.console import Console
 
 __version__ = "2.0.0"
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
-
 IS_BROWNIE_TEST = False
 IS_THREADING_ENABLED = True
 IS_PRIVATE_IPFS = False
@@ -22,8 +21,8 @@ TX_TIMEOUT = 1800
 BLOCK_DURATION = 6
 ONE_HOUR_BLOCK_DURATION = int(3600 / BLOCK_DURATION)
 ONE_DAY_BLOCK_DURATION = ONE_HOUR_BLOCK_DURATION * 24
-IS_FULL_TEST = False
 IPFS_TIMEOUT = 300
+IS_FULL_TEST = False
 IS_THREAD_JOIN = False
 
 
@@ -36,7 +35,7 @@ class EBB:
         if not self.eblocbroker:
             from broker.eblocbroker_scripts.Contract import Contract
 
-            global Ebb  # noqa
+            global Ebb  # type: ignore
             self.eblocbroker: "Contract" = Contract()
             Ebb = self.eblocbroker
 
@@ -52,7 +51,7 @@ class _Ipfs:
         if not self.ipfs:
             from broker.libs.ipfs import Ipfs
 
-            global ipfs  # noqa
+            global ipfs  # type: ignore
             self.ipfs: "Ipfs" = Ipfs()
             ipfs = self.ipfs
 

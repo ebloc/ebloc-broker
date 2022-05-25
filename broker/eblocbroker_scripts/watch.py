@@ -26,6 +26,9 @@ def watch(eth_address="", from_block=None):
         log("E: eth_address is empty, run as: ./watch.py <eth_address>")
         sys.exit(1)
 
+    if not from_block:
+        from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
+
     is_provider = True
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     _log.ll.LOG_FILENAME = watch_fn
@@ -39,9 +42,6 @@ def watch(eth_address="", from_block=None):
             providers = Ebb.get_providers()
             for provider_addr in providers:
                 providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
-
-        if not from_block:
-            from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
         if is_provider:
             event_filter = Ebb._eblocbroker.events.LogJob.createFilter(

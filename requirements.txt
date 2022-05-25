@@ -31,7 +31,7 @@ argcomplete==2.0.0
 aspy.refactor-imports==2.1.1
     # via
     #   seed-isort-config
-astroid==2.9.3
+astroid==2.11.5
     # via
     #   pylint
 asttokens==2.0.5
@@ -84,7 +84,7 @@ bitarray==1.2.2
     # via
     #   eth-account
     #   eth-brownie
-black==22.1.0
+black==22.3.0
     # via
     #   eth-brownie
 bleach==4.1.0
@@ -124,12 +124,12 @@ chameleon==3.8.1
 chardet==4.0.0
     # via
     #   python-debian
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
     # via
     #   aiohttp
     #   eth-brownie
     #   requests
-click==8.0.3
+click==8.1.3
     # via
     #   black
     #   eth-brownie
@@ -228,7 +228,7 @@ eth-account==0.5.7
     # via
     #   eth-brownie
     #   web3
-eth-brownie==1.18.1
+eth-brownie==1.18.2
 eth-event==1.2.3
     # via
     #   eth-brownie
@@ -584,7 +584,7 @@ pip-tools==6.5.1
 pipenv==2020.11.15
 pipupgrade==1.10.1
 pkginfo==1.5.0.1
-platformdirs==2.4.1
+platformdirs==2.5.2
     # via
     #   black
     #   eth-brownie
@@ -598,12 +598,12 @@ pluggy==1.0.0
     #   tox
 ppi==0.0.4
 pre-commit==2.18.1
-prompt-toolkit==3.0.26
+prompt-toolkit==3.0.29
     # via
     #   eth-brownie
     #   ipython
     #   vulcano
-protobuf==3.19.4
+protobuf==3.20.1
     # via
     #   eth-brownie
     #   web3
@@ -662,7 +662,7 @@ pydocstyle==6.1.1
 pyflakes==2.4.0
     # via
     #   flake8
-pygments==2.11.2
+pygments==2.12.0
     # via
     #   colored-traceback
     #   eth-brownie
@@ -686,8 +686,8 @@ pyjwt==1.7.1
     # via
     #   eth-brownie
     #   pythx
-pylint==2.12.2
-pymongo==4.1.0
+pylint==2.13.9
+pymongo==4.1.1
 pymy==0.0.8
 pymysql==0.9.3
     # via
@@ -701,7 +701,7 @@ pynspector==0.0.4
 pyocclient==0.6
 pyopenssl==20.0.1
 pypandoc==1.6.3
-pyparsing==3.0.7
+pyparsing==3.0.9
     # via
     #   eth-brownie
     #   matplotlib
@@ -951,7 +951,7 @@ toml==0.10.2
     #   pylint
     #   pytest
     #   tox
-tomli==2.0.0
+tomli==2.0.1
     # via
     #   black
     #   eth-brownie
@@ -962,7 +962,7 @@ toolz==0.11.2
     #   cytoolz
     #   eth-brownie
 tox==3.24.3
-tqdm==4.62.3
+tqdm==4.64.0
     # via
     #   eth-brownie
     #   gdown
@@ -1006,7 +1006,7 @@ ujson==4.0.2
 unidecode==1.2.0
     # via
     #   python-slugify
-urllib3==1.26.8
+urllib3==1.26.9
     # via
     #   eth-brownie
     #   requests
@@ -1031,7 +1031,7 @@ vulcano==0.5.3
 vvm==0.1.0
     # via
     #   eth-brownie
-vyper==0.3.1
+vyper==0.3.3
     # via
     #   eth-brownie
 wadllib==1.3.3
@@ -1045,7 +1045,7 @@ wcwidth==0.2.5
     # via
     #   eth-brownie
     #   prompt-toolkit
-web3==5.27.0
+web3==5.29.0
     # via
     #   eth-brownie
 webdriver-manager==3.4.2
@@ -1069,7 +1069,7 @@ wheel==0.37.1
     # via
     #   pip-tools
     #   pypandoc
-wrapt==1.13.3
+wrapt==1.14.1
     # via
     #   astroid
     #   eth-brownie

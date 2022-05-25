@@ -7,12 +7,12 @@ class BashCommandsException(Exception):
         Exception.__init__("Error in the executed command")
 
 
-class HandlerException(Exception):
-    """Generate HandlerException."""
-
-
 class JobException(Exception):
     """Generate fetch job info exception to prevent trace to be printed."""
+
+
+class HandlerException(Exception):
+    """Generate HandlerException."""
 
 
 class QuietExit(Exception):

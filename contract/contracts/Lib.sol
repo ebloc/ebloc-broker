@@ -75,9 +75,10 @@ library Lib {
     struct JobIndexes {
         uint32 index;
         uint32 jobID;
-        uint32 completionTime;
+        uint32 endTimestamp;
         uint32 dataTransferIn;
         uint32 dataTransferOut;
+        uint32 elapsedTime;
         uint256[] core;
         uint256[] runTime;
         bool endJob;
@@ -107,7 +108,7 @@ library Lib {
 
     struct Job {
         JobStateCodes stateCode; // Assigned by the provider
-        uint32 startTime; // Submitted job's starting universal time on the server side. Assigned by the provider
+        uint32 startTimestamp; // Submitted job's starting universal time on the server side. Assigned by the provider
     }
 
     // Submitted Job's information
@@ -152,8 +153,8 @@ library Lib {
     }
 
     struct IntervalArg {
-        uint32 startTime;
-        uint32 completionTime;
+        uint32 startTimestamp;
+        uint32 endTimestamp;
         int32 core; // job's requested core number
         int256 availableCore;
     }
@@ -200,56 +201,56 @@ library Lib {
 
     function _iterate(
         LL storage self,
-        uint256 currentNode_index,
-        uint256 prevNode_index,
+        uint256 currentNodeIndex,
+        uint256 prevNodeIndex,
         uint32 _length,
         int32 carriedSum,
         Lib.IntervalArg memory _interval
     ) internal returns (bool) {
         // int32 carriedSum = core; // Carried sum variable is assigned with job's given core number
-        uint256 currentNode_endpoint = self.items[currentNode_index].endpoint; // read from the storage
-        int32 currentNode_core = self.items[currentNode_index].core;
-        uint32 currentNode_next = self.items[currentNode_index].next;
+        uint256 currentNodeEndpoint = self.items[currentNodeIndex].endpoint; // read from the storage
+        int32 currentNodeCore = self.items[currentNodeIndex].core;
+        uint32 currentNodeNext = self.items[currentNodeIndex].next;
         do {
-            if (_interval.startTime >= currentNode_endpoint) {
-                if (_interval.startTime == currentNode_endpoint) {
-                    int32 temp = currentNode_core + (_interval.core * -1);
+            if (_interval.startTimestamp >= currentNodeEndpoint) {
+                if (_interval.startTimestamp == currentNodeEndpoint) {
+                    int32 temp = currentNodeCore + (_interval.core * -1);
                     if (temp == 0) {
-                        self.items[prevNode_index].next = currentNode_next;
-                        delete self.items[currentNode_index]; // length of the list is not incremented
+                        self.items[prevNodeIndex].next = currentNodeNext;
+                        delete self.items[currentNodeIndex]; // length of the list is not incremented
                         self.length = _length; // !!! !!!! !!!
                     } else {
                         if (temp > _interval.availableCore) return false;
-                        self.items[currentNode_index].core = temp;
+                        self.items[currentNodeIndex].core = temp;
                         self.length = _length;
                     }
                     return true;
                 } else {
                     /* Covers [val, val1) s = s-1 */
-                    push(self, self.items[prevNode_index].next, _interval.startTime, _interval.core * -1, _length);
-                    self.items[prevNode_index].next = _length;
+                    push(self, self.items[prevNodeIndex].next, _interval.startTimestamp, _interval.core * -1, _length);
+                    self.items[prevNodeIndex].next = _length;
                     self.length = _length + 1;
                     return true;
                 }
             }
             /* Inside while loop carriedSum is updated. If enters into if statement it
             means revert() is catched and all the previous operations are reverted back */
-            carriedSum += currentNode_core;
+            carriedSum += currentNodeCore;
             if (carriedSum > _interval.availableCore) {
                 return false;
             }
-            prevNode_index = currentNode_index;
-            currentNode_index = currentNode_next; // already in the memory, cheaper
-            currentNode_endpoint = self.items[currentNode_index].endpoint; // read from the storage
-            currentNode_core = self.items[currentNode_index].core;
-            currentNode_next = self.items[currentNode_index].next;
+            prevNodeIndex = currentNodeIndex;
+            currentNodeIndex = currentNodeNext; // already in the memory, cheaper
+            currentNodeEndpoint = self.items[currentNodeIndex].endpoint; // read from the storage
+            currentNodeCore = self.items[currentNodeIndex].core;
+            currentNodeNext = self.items[currentNodeIndex].next;
         } while (true);
     }
 
     function _iterateStart(
         LL storage self,
-        uint256 prevNode_index,
-        uint256 currentNode_index,
+        uint256 prevNodeIndex,
+        uint256 currentNodeIndex,
         Lib.IntervalArg memory _interval
     )
         internal
@@ -258,25 +259,25 @@ library Lib {
             uint256 _addr,
             uint256,
             int32 carriedSum,
-            uint32 prevNode_index_next_temp,
+            uint32 prevNodeIndexNextTemp,
             int32 updatedCoreVal
         )
     {
         flag = 1;
-        uint32 currentNode_endpoint = self.items[prevNode_index].endpoint;
-        uint32 currentNode_next = self.items[prevNode_index].next;
-        int32 currentNode_core = self.items[prevNode_index].core;
+        uint32 currentNodeEndpoint = self.items[prevNodeIndex].endpoint;
+        uint32 currentNodeNext = self.items[prevNodeIndex].next;
+        int32 currentNodeCore = self.items[prevNodeIndex].core;
         int32 temp;
         do {
             /* Inside while loop carriedSum is updated. If enters into if statement it
             means revert() is catched and all the previous operations are reverted back */
-            if (_interval.completionTime >= currentNode_endpoint) {
+            if (_interval.endTimestamp >= currentNodeEndpoint) {
                 carriedSum += _interval.core;
                 if (carriedSum > _interval.availableCore) return (0, _addr, 0, 0, 0, 0);
 
-                if (_interval.completionTime == currentNode_endpoint) {
-                    temp = currentNode_core + int32(_interval.core);
-                    carriedSum += currentNode_core;
+                if (_interval.endTimestamp == currentNodeEndpoint) {
+                    temp = currentNodeCore + int32(_interval.core);
+                    carriedSum += currentNodeCore;
                     if (carriedSum > _interval.availableCore || temp > _interval.availableCore)
                         return (0, _addr, 0, 0, 0, 0);
 
@@ -284,40 +285,40 @@ library Lib {
                         flag = 2; // helps to prevent pushing since it is already added
                     } else {
                         flag = 3; // helps to prevent pushing since it is already added
-                        prevNode_index_next_temp = self.items[prevNode_index].next;
-                        self.items[currentNode_index] = self.items[currentNode_next];
+                        prevNodeIndexNextTemp = self.items[prevNodeIndex].next;
+                        self.items[currentNodeIndex] = self.items[currentNodeNext];
                     }
                 }
-                _addr = currentNode_index; /* "addr" points the index to be added into the linked list */
-                return (flag, _addr, prevNode_index, carriedSum, prevNode_index_next_temp, temp);
+                _addr = currentNodeIndex; /* "addr" points the index to be added into the linked list */
+                return (flag, _addr, prevNodeIndex, carriedSum, prevNodeIndexNextTemp, temp);
             }
-            carriedSum += currentNode_core;
+            carriedSum += currentNodeCore;
             if (carriedSum > _interval.availableCore) {
                 return (0, _addr, 0, 0, 0, 0);
             }
-            prevNode_index = currentNode_index;
-            currentNode_index = currentNode_next;
-            currentNode_endpoint = self.items[currentNode_index].endpoint;
-            currentNode_next = self.items[currentNode_index].next;
-            currentNode_core = self.items[currentNode_index].core;
+            prevNodeIndex = currentNodeIndex;
+            currentNodeIndex = currentNodeNext;
+            currentNodeEndpoint = self.items[currentNodeIndex].endpoint;
+            currentNodeNext = self.items[currentNodeIndex].next;
+            currentNodeCore = self.items[currentNodeIndex].core;
         } while (true);
     }
 
-    function checkIfOverlapExists(LL storage self, IntervalArg memory _interval) internal returns (uint256 flag) {
+    function overlapCheck(LL storage self, IntervalArg memory _interval) internal returns (uint256 flag) {
         uint256 addr = self.tail;
         uint256 addrTemp;
-        uint256 prevNode_index;
-        uint256 currentNode_index;
-        uint256 prevNode_index_next_temp;
+        uint256 prevNodeIndex;
+        uint256 currentNodeIndex;
+        uint256 prevNodeIndexNextTemp;
         int32 carriedSum;
         int32 updatedCoreVal;
-        if (_interval.completionTime <= self.items[addr].endpoint) {
+        if (_interval.endTimestamp <= self.items[addr].endpoint) {
             /* Current node points index of previous tail-node right after the insert operation */
-            currentNode_index = prevNode_index = addr;
-            (flag, addr, prevNode_index, carriedSum, prevNode_index_next_temp, updatedCoreVal) = _iterateStart(
+            currentNodeIndex = prevNodeIndex = addr;
+            (flag, addr, prevNodeIndex, carriedSum, prevNodeIndexNextTemp, updatedCoreVal) = _iterateStart(
                 self,
-                prevNode_index,
-                currentNode_index,
+                prevNodeIndex,
+                currentNodeIndex,
                 _interval
             );
             if (flag == 0) {
@@ -327,23 +328,23 @@ library Lib {
         uint256 _length = self.length;
         if (flag <= 1) {
             /* inserted while keeps sorted order */
-            push(self, addr, _interval.completionTime, _interval.core, uint32(_length));
+            push(self, addr, _interval.endTimestamp, _interval.core, uint32(_length));
             _length += 1;
             carriedSum = _interval.core;
             if (flag == 0) {
                 addrTemp = addr;
-                prevNode_index = self.tail = uint32(_length - 1);
+                prevNodeIndex = self.tail = uint32(_length - 1);
             } else {
-                addrTemp = self.items[prevNode_index].next;
-                self.items[prevNode_index].next = uint32(_length - 1);
-                prevNode_index = uint32(_length - 1);
+                addrTemp = self.items[prevNodeIndex].next;
+                self.items[prevNodeIndex].next = uint32(_length - 1);
+                prevNodeIndex = uint32(_length - 1);
             }
         }
         if (flag > 1) {
-            addrTemp = self.items[prevNode_index].next;
+            addrTemp = self.items[prevNodeIndex].next;
         }
-        currentNode_index = addrTemp; //self.items[prevNode_index].next;
-        if (_iterate(self, currentNode_index, prevNode_index, uint32(_length), carriedSum, _interval)) {
+        currentNodeIndex = addrTemp; //self.items[prevNodeIndex].next;
+        if (_iterate(self, currentNodeIndex, prevNodeIndex, uint32(_length), carriedSum, _interval)) {
             if (flag == 2) {
                 self.items[addr].core = updatedCoreVal;
             }
@@ -351,10 +352,10 @@ library Lib {
         } else {
             if (flag <= 1) {
                 delete self.items[uint32(_length - 1)];
-                if (prevNode_index == self.tail) self.tail = uint32(addrTemp);
-                else self.items[prevNode_index].next = uint32(addrTemp); // change on storage
+                if (prevNodeIndex == self.tail) self.tail = uint32(addrTemp);
+                else self.items[prevNodeIndex].next = uint32(addrTemp); // change on the contract storage
             } else if (flag == 3) {
-                self.items[prevNode_index].next = uint32(prevNode_index_next_temp);
+                self.items[prevNodeIndex].next = uint32(prevNodeIndexNextTemp);
             }
             return 0; // false
         }

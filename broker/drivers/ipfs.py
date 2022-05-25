@@ -46,7 +46,7 @@ class IpfsClass(Storage):
         self.verified_data[ipfs_hash] = True
 
     def run(self) -> bool:
-        self.start_time = time.time()
+        self.start_timestamp = time.time()
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
 

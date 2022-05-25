@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from sys import platform
 
 from broker._utils.yaml import Yaml
 from broker.errors import QuietExit
@@ -10,18 +11,25 @@ from broker.errors import QuietExit
 class ENV_BASE:
     def __init__(self) -> None:
         self.HOME: Path = Path.home()
-        fn = self.HOME / ".ebloc-broker" / "cfg.yaml"
+        hidden_base_dir = self.HOME / ".ebloc-broker"
+        fn = hidden_base_dir / "cfg.yaml"
         if not os.path.isfile(fn):
-            if not os.path.isdir(self.HOME / ".ebloc-broker"):
-                raise Exception()
-                raise QuietExit(f"E: {self.HOME / '.ebloc-broker'} is not initialized")
+            if not os.path.isdir(hidden_base_dir):
+                raise QuietExit(f"E: {hidden_base_dir} is not initialized")
 
             raise QuietExit(f"E: {fn} is not created")
 
         self.cfg_yaml = Yaml(fn)
         self.cfg = self.cfg_yaml["cfg"]
         self.WHOAMI = self.cfg["whoami"]
-        self._HOME = Path("/home") / self.WHOAMI
+        if platform in ("linux", "linux2"):
+            self._HOME = Path("/home") / self.WHOAMI
+        elif platform == "darwin":
+            self._HOME = Path("/Users") / self.WHOAMI
+        elif platform == "win32":
+            print("E: does not work in windows")
+            exit(1)
+
         self.EBLOCPATH = Path(self.cfg["ebloc_path"])
         self.CONTRACT_PROJECT_PATH = self._HOME / "ebloc-broker" / "contract"
         self.IS_BLOXBERG = True

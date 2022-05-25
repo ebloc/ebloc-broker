@@ -22,12 +22,11 @@ def driver():
 def init():
     import git
     from pathlib import Path
-
-    from broker._utils.tools import run
+    from broker._utils.tools import run_keep_print
 
     f = Path(__file__).parent.resolve()
     repo = git.Repo(f, search_parent_directories=True)
-    run(Path(repo.working_tree_dir) / "broker" / "bash_scripts" / "folder_setup.sh")
+    run_keep_print(Path(repo.working_tree_dir) / "broker" / "bash_scripts" / "folder_setup.sh")
 
 
 def about():
@@ -58,12 +57,11 @@ def daemon():
     if args.daemon_type[0] == "slurm":
         import git
         import pathlib
-
-        from broker._utils.tools import run
+        from broker._utils.tools import run_keep_print
 
         f = pathlib.Path(__file__).parent.resolve()
         repo = git.Repo(f, search_parent_directories=True)
-        run(repo.working_tree_dir / "broker" / "bash_scripts" / "run_slurm.sh")
+        run_keep_print(repo.working_tree_dir / "broker" / "bash_scripts" / "run_slurm.sh")
 
 
 def console():
