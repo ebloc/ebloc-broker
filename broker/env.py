@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 from pathlib import Path
 from sys import platform
 
@@ -28,10 +29,10 @@ class ENV_BASE:
             self._HOME = Path("/Users") / self.WHOAMI
         elif platform == "win32":
             print("E: does not work in windows")
-            exit(1)
+            sys.exit(1)
 
         self.EBLOCPATH = Path(self.cfg["ebloc_path"])
-        self.CONTRACT_PROJECT_PATH = self._HOME / "ebloc-broker" / "contract"
+        self.CONTRACT_PROJECT_PATH = self.EBLOCPATH / "contract"
         self.IS_BLOXBERG = True
         if self.IS_BLOXBERG:
             self.IS_EBLOCPOA = False  # eblocpoa is not in use

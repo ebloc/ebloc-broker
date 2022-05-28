@@ -1,5 +1,5 @@
 #!/bin/bash
 
-IP=79.123.177.145
+IP=127.0.0.1
 PORT=3003
-sphinx-autobuild . _build_html -H $IP --port $PORT
+/usr/local/bin/sphinx-autobuild . _build_html -H $IP --port $PORT

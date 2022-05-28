@@ -1,0 +1,12 @@
+* info
+
+- sphinx config is taken from Ethereum Alarm Clock documentation.
+[[https://github.com/ethereum-alarm-clock/ethereum-alarm-clock]]
+[[https://ethereum-alarm-clock.readthedocs.io/en/latest/]]
+
+* Convert
+
+#+begin_src bash
+$HOME/ebloc-broker/docs/convert/run_convert.sh
+./run
+#+end_src

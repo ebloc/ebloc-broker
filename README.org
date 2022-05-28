@@ -1,14 +1,16 @@
 * eBlocBroker
 
-eBlocBroker is a blockchain based autonomous computational resource broker.
+eBlocBroker is smart contract that provides an application of blockchain technology to provide
+computational and data resources to research communities.
 
-** Website: [[http://ebloc.cmpe.boun.edu.tr]]
-# http://ebloc.org
+# ** Website: [[http://ebloc.cmpe.boun.edu.tr]]
+# # http://ebloc.org
 
 # - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
 
 ** Prerequisites
-- [[https://github.com/SchedMD/slurm][Slurm]],[[https://geth.ethereum.org/docs/getting-started][Geth]],
+- [[https://github.com/SchedMD/slurm][Slurm]],
+  [[https://geth.ethereum.org/docs/getting-started][Geth]],
   [[https://ipfs.io][IPFS]],
   [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]],
   [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]],
@@ -20,22 +22,19 @@ eBlocBroker is a blockchain based autonomous computational resource broker.
 You can use a sandbox container provided in the [[./docker-compose.yml]] file for testing inside a Docker
 environment.
 
-This container provides everything you need to test using a Python 3.7 interpreter.
-
-Start the test environment:
+This container provides everything you need to test using a ~Python 3.7~ interpreter. Start the test environment:
 
 #+begin_src bash
-docker build -t ebb:latest . --progress plain
 docker-compose up -d
 #+end_src
 
-To enter the shell of the running container in interactive mode, run:
+To enter the shell of the running container in the interactive mode, run:
 
 #+begin_src bash
-docker exec -it ebloc-broker_slurm_1 /bin/bash
+docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 #+end_src
 
-To stop the cluster container, run:
+To stop the container, run:
 
 #+begin_src bash
 docker-compose down
@@ -49,9 +48,9 @@ docker-compose down
 
 First, from [[https://b2access.eudat.eu/home/][B2ACCESS home page]]
 
-~No account? Signup~ => ~Create B2ACCESS user account (username) only~
+~No account SignUp~ => ~Create B2ACCESS user account (username) only~
 
-- [[b2drop.eudat.eu][B2DROP login site]]
+- [[https://b2drop.eudat.eu/][B2DROP login site]]
 
 **** Create app password
 
@@ -70,7 +69,6 @@ Next, type ~eblocbroker --help~ for basic usage information.
 ** Requester
 
 *** Submit Job
-
 
 In order to submit your job each user should already registered into eBlocBroker.
 You can use [[./broker/eblocbroker/register_requester.py]] to register.
@@ -117,13 +115,11 @@ config:
 - ~cache_type~ should be variable from [ ~public~, ~private~ ]
 - ~storaage_id~ should be variable from [ ~ipfs~, ~ipfs_gpg~, ~none~, ~eudat~, ~gdrive~ ]
 
---------------
+--------------------------------
 
 ** Provider
 
-Provider should run: [[./eblocbroker.py]] driver Python script.
-
-~$ ./eblocbroker.py driver~
+Each provider should run ~eblocbroker driver~ for start running the Python script.
 
 *** Screenshot of provider GUI:
 

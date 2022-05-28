@@ -15,7 +15,7 @@ import time
 import traceback
 from contextlib import suppress
 from enum import IntEnum
-from subprocess import PIPE, CalledProcessError, Popen, check_output
+from subprocess import PIPE, Popen, check_output
 
 import base58
 

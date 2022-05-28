@@ -18,6 +18,7 @@ from broker import cfg
 install()  # for rich, show_locals=True
 # pretty.install()
 
+IS_WRITE = True  # if False disable write into file for the process
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
@@ -205,7 +206,7 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
             _text = text[_len:]
 
         _text = text[_len:]
-        if is_write:
+        if is_write and IS_WRITE:
             if is_bullet:
                 ll.console[fn].print(
                     f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
@@ -233,11 +234,11 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
             else:
                 print(text_to_write, flush=flush)
 
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print(text_to_write, end=end, soft_wrap=True)
 
     if end is None:
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print("")
 
         if color and is_bullet:
@@ -301,7 +302,7 @@ def log(
     if is_align:
         text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
 
-    if is_write:
+    if is_write and IS_WRITE:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
             fn = thread_log_files[threading.current_thread().name]
         elif not fn:
@@ -319,7 +320,7 @@ def log(
 
     if isinstance(text, list):
         pprint(text)
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print(text)
     elif isinstance(text, dict):
         if max_depth:
@@ -327,7 +328,7 @@ def log(
         else:
             pprint(text)
 
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print(text)
     else:
         _log(text, color, is_bold, flush, fn, end, is_write, is_output)

@@ -20,7 +20,7 @@ def is_provider_info_match(self, gmail, ipfs_id, gpg_fingerprint, f_id):
             and provider_info["ipfs_id"] == ipfs_id
         ):
             log(provider_info)
-            raise QuietExit("warning: Given information is same with the cluster's saved info. Nothing to do.")
+            raise QuietExit("warning: Given information is same as the cluster's saved info. Nothing to do.")
 
         tx = self._update_provider_info(f"0x{gpg_fingerprint}", gmail, f_id, ipfs_id)
         return self.tx_id(tx)
@@ -29,9 +29,9 @@ def is_provider_info_match(self, gmail, ipfs_id, gpg_fingerprint, f_id):
 
 
 def update_provider_info(self, gpg_fingerprint, gmail, f_id, ipfs_id):
-    """Update provider info."""
+    """Update provider information."""
     if len(f_id) >= 128:
-        raise Exception("federation_cloud_id could be lesser than 128")
+        raise Exception("federation_cloud_id should be less than 128")
 
     if len(gmail) >= 128:
         raise Exception("e-mail should be less than 128")

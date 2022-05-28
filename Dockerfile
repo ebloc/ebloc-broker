@@ -21,10 +21,37 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS="yes"
 EXPOSE 6817 6818 6819 6820 3306
 
-## ebloc-broker -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+COPY --from=0 /go /go
+COPY --from=0 /usr/local/bin /usr/local/bin
+COPY --from=0 /usr/local/go /usr/local/go
+COPY --from=0 /workspace/gdrive /workspace/gdrive
+
+ENV GOPATH=/go
+ENV GOROOT=/usr/local/go
+ENV PATH /go/bin:/usr/local/go/bin:$PATH
+
+## Add Tini
+## ========
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+## mongodb
+## =======
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add - \
+ && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | \
+    tee /etc/apt/sources.list.d/mongodb-org-4.4.list \
+ && apt-get update \
+ && apt-get install -y mongodb-org \
+ && mkdir -p /data/db \
+ && chown -R mongodb. /var/log/mongodb \
+ && chown -R mongodb. /var/lib/mongodb \
+ && chown mongodb:mongodb /data/db
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --assume-yes apt-utils \
  && apt-get install -y --no-install-recommends --assume-yes \
+    aptitude \
     build-essential \
     libdbus-1-dev \
     libdbus-glib-1-dev \
@@ -40,8 +67,8 @@ RUN apt-get update \
     npm \
     nodejs \
     python3-venv \
-    # sudo \
-    # slurm-packages
+    sudo \
+    ## required packages to install for Slurm
     gcc \
     munge \
     libmunge-dev \
@@ -72,44 +99,15 @@ RUN python3 -m venv /opt/venv
 #: enable venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-WORKDIR /workspace
-RUN git clone https://github.com/ebloc/ebloc-broker.git
-WORKDIR /workspace/ebloc-broker
-#: `pip install -e .` takes few minutes
-RUN git checkout dev >/dev/null 2>&1 \
- && git fetch --all --quiet >/dev/null 2>&1 \
- && git pull --all -r -v >/dev/null 2>&1 \
- && pip install --upgrade pip \
- && pip install -U pip wheel setuptools \
- && pip install -e . --use-deprecated=legacy-resolver \
- && eblocbroker >/dev/null 2>&1 \
- && ./broker/_utils/yaml.py >/dev/null 2>&1
-
-COPY --from=0 /go /go
-COPY --from=0 /usr/local/bin /usr/local/bin
-COPY --from=0 /usr/local/go /usr/local/go
-COPY --from=0 /workspace/gdrive /workspace/gdrive
-
-ENV GOPATH=/go
-ENV GOROOT=/usr/local/go
-ENV PATH /go/bin:/usr/local/go/bin:$PATH
-
-# Instal SLURM
-# -=-=-=-=-=-=
-# Add Tini
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
-
+## Instal SLURM
+## -=-=-=-=-=-=
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
-ARG JOBS=4
 RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
  && cd slurm \
- && ./configure --prefix=/usr --sysconfdir=/etc/slurm --enable-slurmrestd \
-   --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
  && make \
- && make -j ${JOBS} install \
+ && make -j 4 install \
  && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
  && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
  && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
@@ -129,51 +127,53 @@ RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/Sc
     /var/log/slurm \
     /var/run/slurm
 
+## ebloc-broker
+# -=-=-=-=-=-=-
+WORKDIR /workspace
+RUN git clone https://github.com/ebloc/ebloc-broker.git
+WORKDIR /workspace/ebloc-broker
+#: `pip install -e .` takes few minutes
+RUN git checkout dev >/dev/null 2>&1 \
+ && git fetch --all --quiet >/dev/null 2>&1 \
+ && git pull --all -r -v >/dev/null 2>&1 \
+ && pip install --upgrade pip \
+ && pip install -U pip wheel setuptools \
+ && pip install -e . --use-deprecated=legacy-resolver \
+ && mkdir -p ~/.cache/black/$(pip freeze | grep black | sed 's|black==||g') \
+ && eblocbroker >/dev/null 2>&1 \
+ && ./broker/_utils/yaml.py >/dev/null 2>&1
+
+WORKDIR /workspace/ebloc-broker/empty_folder
+RUN brownie init \
+  && cd ~ \
+  && rm -rf /workspace/ebloc-broker/empty_folder \
+  && /workspace/ebloc-broker/broker/python_scripts/add_bloxberg_into_network_config.py \
+  && cd /workspace//ebloc-broker/contract \
+  && brownie compile
+
+# orginize Slurm files
 RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
-COPY broker/_slurm/files/supervisord.conf /etc/
+COPY docker/slurm/files/supervisord.conf /etc/
 
-# Mark externally mounted volumes
+# mark externally mounted volumes
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-
-COPY --chown=slurm broker/_slurm/files/slurm/slurm.conf /etc/slurm/slurm.conf
-COPY --chown=slurm broker/_slurm/files/slurm/gres.conf /etc/slurm/gres.conf
-COPY --chown=slurm broker/_slurm/files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
+COPY --chown=slurm docker/slurm/files/slurm/slurm.conf /etc/slurm/slurm.conf
+COPY --chown=slurm docker/slurm/files/slurm/gres.conf /etc/slurm/gres.conf
+COPY --chown=slurm docker/slurm/files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
-## mongodb
-RUN curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add - \
- && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | \
-    tee /etc/apt/sources.list.d/mongodb-org-4.4.list \
- && apt-get update \
- && apt-get install -y mongodb-org \
- && mkdir -p /data/db \
- && chown -R mongodb. /var/log/mongodb \
- && chown -R mongodb. /var/lib/mongodb \
- && chown mongodb:mongodb /data/db
+## finally
+RUN ipfs version \
+ && ganache --version \
+ && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
+ && du -sh / 2>&1 | grep -v "cannot" \
+ && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
+ && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc
 
-# RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k \
-#  && echo "source ~/powerlevel10k/powerlevel10k.zsh-theme" >> ~/.zshrc \
-
-## Finally
 WORKDIR /workspace/ebloc-broker/broker
-RUN apt-get clean \
- && apt-get autoremove \
- && apt-get autoclean \
- && ipfs version \
- && ganache --version
-
-COPY broker/_slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash"]
 
-# -=-=-=-=-=-=-=-=-=-=-=-=- DELETE -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# COPY --from=1 /opt/venv /opt/venv  # /opt/venv/bin
-# COPY --from=1 /usr/local/lib/node_modules /usr/local/lib/node_modules
-# COPY --from=1 /usr/local/bin /usr/local/bin
-# COPY --from=1 /workspace/ebloc-broker /workspace/ebloc-broker
-
-# COPY --from=1 /usr/local/sbin/ /usr/local/sbin/
-# COPY --from=1 /usr/local/bin /usr/local/bin
-# COPY --from=1 /usr/local/lib /usr/local/lib
+COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]

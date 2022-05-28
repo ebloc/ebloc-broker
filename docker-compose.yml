@@ -9,7 +9,29 @@ services:
     ports:
       - "4001:4001" # Public IPFS Port
     volumes:
-      - /tmp/volumes/lib:/var/lib/slurmd
-      - /tmp/volumes/spool:/var/spool/slurm
-      - /tmp/volumes/log:/var/log/slurm
-      - /tmp/volumes/db:/var/lib/mysql
+      - ./volumes/lib:/var/lib/slurmd
+      - ./volumes/spool:/var/spool/slurm
+      - ./volumes/log:/var/log/slurm
+      - ./volumes/db:/var/lib/mysql
+  # slurm:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: ./docker/provider
+  #   hostname: slurmctl
+  #   stdin_open: true
+  #   tty: true
+  #   ports:
+  #     - "4001:4001" # Public IPFS Port
+  #   volumes:
+  #     - ./volumes/lib:/var/lib/slurmd
+  #     - ./volumes/spool:/var/spool/slurm
+  #     - ./volumes/log:/var/log/slurm
+  #     - ./volumes/db:/var/lib/mysql
+  # requester:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: ./docker/requester
+  #   stdin_open: true
+  #   tty: true
+  #   ports:
+  #     - "4002:4002" # Public IPFS Port

@@ -171,6 +171,7 @@ class Driver:
         self.requester_id: str = ""
         self.storage_duration: List[int] = []
         self.received_block: List[int] = []
+        self.is_cached = {}
         #: indicates Lock check for the received job whether received or not
         self.is_provider_received_job = False
 

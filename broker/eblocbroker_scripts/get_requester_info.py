@@ -14,8 +14,8 @@ def get_requester_info(self, requester):
         if not self.does_requester_exist(requester):
             log(
                 f"E: Requester({requester}) is not registered.\n"
-                "Please try again with registered Ethereum Address as requester. \n"
-                "You can register your requester using: [blue]./broker/eblocbroker_scripts/register_requester.py",
+                "Please try again with registered Ethereum Address as requester.\n"
+                "You can register requester using: [blue]./broker/eblocbroker_scripts/register_requester.py",
             )
             raise QuietExit
 
@@ -46,7 +46,6 @@ if __name__ == "__main__":
     Ebb = cfg.Ebb
     if len(sys.argv) == 1:
         requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
-        # requester = "0x12ba09353d5C8aF8Cb362d6FF1D782C1E195b571"
     elif len(sys.argv) == 2:
         requester = str(sys.argv[1])
 

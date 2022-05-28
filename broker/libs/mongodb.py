@@ -28,15 +28,18 @@ class BaseMongoClass:
         res = self.collection.replace_one({"key": key}, item, True)
         return res.acknowledged
 
-    def find_all(self, sort_str=""):
+    def find_all(self, sort_str="", is_return=False):
         """Find all records."""
         if not sort_str:
             cursor = self.collection.find({}, {"_id": False})
         else:
             cursor = self.collection.find({}, {"_id": False}).sort(sort_str)
 
-        for document in cursor:
-            log(document)
+        if not is_return:
+            for document in cursor:
+                log(document)
+        else:
+            return cursor
 
 
 class MongoBroker(BaseMongoClass):

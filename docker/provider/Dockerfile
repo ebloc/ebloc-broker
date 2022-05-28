@@ -1,0 +1,1 @@
+FROM eblocbroker/app:latest
