@@ -30,7 +30,7 @@ def enum(*sequential, **named):
 
 
 class State:
-    """State code of the Slurm jobs, add keys into the hashmap.
+    """Set state code of the Slurm jobs and add their keys into the hashmap.
 
     Hashmap keys:
         - SUBMITTED: Initial state.

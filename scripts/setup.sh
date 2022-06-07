@@ -110,20 +110,19 @@ install_ipfs () {
     ipfs config Routing.Type none
     open_port_4001
 }
-install_ipfs
-
 # echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 # sudo sysctl -p
-
-# go-geth
-# =======
+install_ipfs
 sudo add-apt-repository -y ppa:ethereum/ethereum
 sudo apt-get -y install ethereum
 
 # python
 # ======
-sudo apt install software-properties-common -y
+sudo apt install libgirepository1.0-dev -y
+sudo apt install libcairo2-dev -y
+
 sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt install software-properties-common -y
 sudo apt-get update
 sudo apt install python-dev -y
 sudo apt install python2 -y
@@ -133,10 +132,6 @@ sudo apt install python3-pip -y
 sudo apt install python3-venv -y
 sudo apt install python3-virtualenv -y
 sudo apt install python3.7 -y
-sudo apt install python3.8-dev -y
-sudo apt install python3.8-venv -y
-sudo apt install libgirepository1.0-dev -y
-sudo apt install libcairo2-dev
 
 # mongodb
 # =======
@@ -157,11 +152,11 @@ install_ebb_pip_packages () {
     VENV=$HOME/venv
     [ ! -d $VENV ] && python3 -m venv $VENV
     source $VENV/bin/activate
-    $VENV/bin/python3.8 -m pip install --upgrade pip
+    $VENV/bin/python3 -m pip install --upgrade pip
     python3 -m pip install --no-use-pep517 cm-rgb
-    pip install wheel
+    $VENV/bin/python3 -m pip install wheel
     cd ~/ebloc-broker
-    pip install -e . --use-deprecated=legacy-resolver
+    $VENV/bin/python3 -m pip install -e . --use-deprecated=legacy-resolver
     mkdir -p $HOME/.cache/black
     sudo chown $(logname) -R $HOME/.cache/black
     black_version=$(pip freeze | grep black | sed 's|black==||g')

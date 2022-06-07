@@ -398,7 +398,7 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"[bold green]{name}[/bold green] is not running on the background {WHERE(1)}")
+        print_tb(f"[bold green]{name}[/bold green] is not running on the background  {WHERE(1)}")
 
     return False
 

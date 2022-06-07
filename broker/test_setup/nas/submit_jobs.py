@@ -279,7 +279,7 @@ def main():
 
     console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
     log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    if not is_process_on("mongod", "mongod"):
+    if not is_process_on("mongod"):
         raise Exception("mongodb is not running in the background")
 
     counter = 0

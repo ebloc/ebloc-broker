@@ -46,11 +46,8 @@ def start_call(job_key, index, slurm_job_id) -> None:
     )
     p2.stdout.close()  # type: ignore
     date = p3.communicate()[0].decode("utf-8").strip()
-    start_timestamp = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
-    log(
-        f"{env.EBLOCPATH}/broker/eblocbroker_scripts/set_job_state_running.py {job_key} {index} {job_id} {start_timestamp}",
-        "bold white",
-    )
+    start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
+    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {job_key} {index} {job_id} {start_ts}", "bold white")
     log(f"#> pid={pid}")
     for attempt in range(10):
         if attempt > 0:
@@ -64,11 +61,11 @@ def start_call(job_key, index, slurm_job_id) -> None:
             sys.exit(1)
 
         try:
-            tx = Ebb.set_job_state_running(job_key, index, job_id, start_timestamp)
+            tx = Ebb.set_job_state_running(job_key, index, job_id, start_ts)
             tx_hash = Ebb.tx_id(tx)
             log(f"tx_hash={tx_hash}", "bold")
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log(f"==> set_job_state_running_started {start_timestamp} | attempt_date={d}")
+            log(f"==> set_job_state_running_started {start_ts} | attempt_date={d}")
             log("## mongo.set_job_state_running_tx", end="")
             if Ebb.mongo_broker.set_job_state_running_tx(str(job_key), int(index), str(tx_hash)):
                 log(ok())
@@ -86,7 +83,7 @@ def start_call(job_key, index, slurm_job_id) -> None:
                 log(f"warning: {e}")
                 sys.exit(1)
 
-    log("E: All start_code() function call attempts failed, ABORT")
+    log("E: All of the start_code() function call attempts failed, ABORT")
     sys.exit(1)
 
 

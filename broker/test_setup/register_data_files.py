@@ -24,7 +24,7 @@ hashes_small = [
     "761691119cedfb9836a78a08742b14cc",
 ]
 
-hashes_medium = [
+hashes_medium_1 = [
     "050e6cc8dd7e889bf7874689f1e1ead6",  # A
     "9d5d892a63b5758090258300a59eb389",  # A
     "779745f315060d1bc0cd44b7266fb4da",  # A
@@ -43,9 +43,9 @@ hashes_medium_2 = [
 ]
 
 
-def register_data_files(data_price, accounts):
+def register_data_files(data_price, hashes):
     commitment_dur = 600
-    for code_hash in accounts:
+    for code_hash in hashes:
         with suppress(Exception):
             _register_data(code_hash, data_price, commitment_dur)
             time.sleep(1)
@@ -55,9 +55,9 @@ def register_data_files(data_price, accounts):
 
 
 def main():
-    # register_data_files(data_price=1, accounts=hashes_small)
-    register_data_files(data_price=20, accounts=hashes_medium)
-    register_data_files(data_price=30, accounts=hashes_medium_2)
+    # register_data_files(data_price=1, hashes=hashes_small)
+    register_data_files(data_price=20, hashes=hashes_medium_1)
+    register_data_files(data_price=30, hashes=hashes_medium_2)
 
 
 if __name__ == "__main__":

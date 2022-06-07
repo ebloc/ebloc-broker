@@ -16,7 +16,7 @@ def ex_1():
 
     # Specify the edges you want here
     red_edges = [("A", "C"), ("E", "C")]
-    edge_colours = ["black" if not edge in red_edges else "red" for edge in G.edges()]
+    # edge_colours = ["black" if not edge in red_edges else "red" for edge in G.edges()]
     black_edges = [edge for edge in G.edges() if edge not in red_edges]
 
     # Need to create a layout when doing

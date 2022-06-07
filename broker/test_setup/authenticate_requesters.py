@@ -12,11 +12,11 @@ from broker.test_setup.user_set import requesters
 
 def main():
     Ebb = cfg.Ebb
-    owner_address = Ebb.get_owner()
+    owner = Ebb.get_owner()
     for idx, requester in enumerate(requesters):
         try:
-            log(br(idx))
-            tx_hash = Ebb.authenticate_orc_id(requester, "0000-0001-7642-0552", owner_address)
+            log(f"{br(idx)} ", end="")
+            tx_hash = Ebb.authenticate_orc_id(requester, "0000-0001-7642-0552", owner)
             if tx_hash:
                 get_tx_status(tx_hash)
                 time.sleep(1)

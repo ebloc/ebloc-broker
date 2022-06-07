@@ -164,8 +164,11 @@ COPY --chown=slurm docker/slurm/files/slurm/gres.conf /etc/slurm/gres.conf
 COPY --chown=slurm docker/slurm/files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
-## finally
+## finally  # sysctl -w net.core.rmem_max=2500000  ?
 RUN ipfs version \
+ && ipfs init --profile=server,badgerds \
+ && ipfs config Reprovider.Strategy roots \
+ && ipfs config Routing.Type none \
  && ganache --version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
  && du -sh / 2>&1 | grep -v "cannot" \

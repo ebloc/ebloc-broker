@@ -38,6 +38,7 @@ class ENV_BASE:
             self.IS_EBLOCPOA = False  # eblocpoa is not in use
             self.IS_GETH_TUNNEL = False
 
+        self.EBB_SCRIPTS = self.EBLOCPATH / "broker" / "eblocbroker_scripts"
         self.CONTRACT_YAML_FILE = self.EBLOCPATH / "broker" / "eblocbroker_scripts" / "contract.yaml"
         try:
             _yaml = Yaml(self.CONTRACT_YAML_FILE)
