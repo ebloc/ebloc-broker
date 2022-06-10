@@ -9,10 +9,10 @@ services:
     ports:
       - "4001:4001" # Public IPFS Port
     volumes:
-      - ./volumes/lib:/var/lib/slurmd
-      - ./volumes/spool:/var/spool/slurm
-      - ./volumes/log:/var/log/slurm
-      - ./volumes/db:/var/lib/mysql
+      - ~/docker/volumes/lib:/var/lib/slurmd
+      - ~/docker/volumes/spool:/var/spool/slurm
+      - ~/docker/volumes/log:/var/log/slurm
+      - ~/docker/volumes/db:/var/lib/mysql
   # slurm:
   #   build:
   #     dockerfile: Dockerfile

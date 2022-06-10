@@ -32,6 +32,7 @@ ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 benchmarks = ["nas", "cppr"]
+benchmarks = ["cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
 ipfs_ids = ["ipfs", "ipfs_gpg"]
 
@@ -44,7 +45,7 @@ ipfs_ids = ["ipfs", "ipfs_gpg"]
 #     ipfs_ids = ["ipfs"]
 #     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
 
-test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
+test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
@@ -85,14 +86,14 @@ def create_cppr_job_script(idx):
     # ]
     registered_data_hashes_medium = {}
     registered_data_hashes_medium[0] = [
-        "050e6cc8dd7e889bf7874689f1e1ead6",  # A
-        "9d5d892a63b5758090258300a59eb389",  # A
-        "779745f315060d1bc0cd44b7266fb4da",  # A
+        "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
+        "0d6c3288ef71d89fb93734972d4eb903",  # A
+        "4613abc322e8f2fdeae9a5dd10f17540",  # A
     ]
     registered_data_hashes_medium[1] = [
-        "fe801973c5b22ef6861f2ea79dc1eb9c",  # B
-        "0d6c3288ef71d89fb93734972d4eb903",  # B
-        "4613abc322e8f2fdeae9a5dd10f17540",  # B
+        "050e6cc8dd7e889bf7874689f1e1ead6",  # B
+        "9d5d892a63b5758090258300a59eb389",  # B
+        "779745f315060d1bc0cd44b7266fb4da",  # B
     ]
     registered_data_hashes_medium[2] = [
         "dd0fbccccf7a198681ab838c67b68fbf",  # C
@@ -138,6 +139,7 @@ def create_cppr_job_script(idx):
     f.write("    echo $file >> output.log\n")
     f.write("    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("done\n")
+
     # adding cppr to run with data hashes
     f.write("DATA_HASH='change_folder_hash'\n")
     f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
@@ -190,7 +192,7 @@ def create_nas_job_script(is_small=False):
 def mini_tests_submit(storage_ids, provider_address):
     is_pass = True
     required_confs = 0
-    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas" / "job_nas.yaml"
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "job_nas.yaml"
     yaml_cfg = Yaml(yaml_fn)
     yaml_cfg["config"]["provider_address"] = provider_address
     for storage_id in storage_ids:
@@ -283,13 +285,13 @@ def main():
         raise Exception("mongodb is not running in the background")
 
     counter = 0
-    for _ in range(60):
+    for _ in range(80):
         for _ in range(2):  # submitted as batch is faster
             run_job(counter)
             counter += 1
 
-        sleep_time = randint(200, 400)
-        countdown(sleep_time)
+        sleep_duration = randint(200, 400)
+        countdown(sleep_duration)
 
 
 if __name__ == "__main__":

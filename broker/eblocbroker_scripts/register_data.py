@@ -26,6 +26,11 @@ def _register_data(source_code_hash, data_price, commitment_dur):
     source_code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)
     with suppress(Exception):
         (price, _commitment_dur) = cfg.Ebb.get_registered_data_price(env.PROVIDER_ID, source_code_hash_bytes, 0)
+        bn = cfg.Ebb.get_registered_data_bn(env.PROVIDER_ID, source_code_hash_bytes)
+        if bn[0] == 0:
+            log(f"E: registered block number returns zero for {source_code_hash_bytes}")
+            is_exit = True
+
         log(
             f"## data([green]{source_code_hash}[/green]) is already registerered.\n"
             "Use [blue]./update_data_price.py[/blue] to update its price"

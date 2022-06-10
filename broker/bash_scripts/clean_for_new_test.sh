@@ -65,7 +65,7 @@ rm -f $BASE/package-lock.json
 
 rm -rf docs/_build_html/
 rm -rf docs/_build/
-rm /tmp/run/driver_popen.pid
+rm -f /tmp/run/driver_popen.pid >/dev/null 2>&1
 rm -f ~/.ebloc-broker/.oc_client.pckl
 rm -f /var/ebloc-broker/cache/*.tar.gz
 # rm -f .oc.pckl

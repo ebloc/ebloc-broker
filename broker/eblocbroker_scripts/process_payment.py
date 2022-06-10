@@ -26,9 +26,14 @@ def process_payment(
     received_block_number=0,
 ):
     """Process payment of the received job."""
+    if not result_ipfs_hash:
+        _result_ipfs_hash = '""'
+    else:
+        _result_ipfs_hash = result_ipfs_hash
+
     log(
         f"~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
-        f" {result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
+        f" {_result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'",
         "bold blue",
     )
@@ -74,8 +79,7 @@ def process_payment(
     return self.tx_id(tx)
 
 
-if __name__ == "__main__":
-    Ebb = cfg.Ebb
+def main():
     if len(sys.argv) == 12:
         args = sys.argv[1:]
         my_args = []  # type: Union[Any]
@@ -106,7 +110,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        tx_hash = Ebb.process_payment(
+        tx_hash = cfg.Ebb.process_payment(
             job_key,
             index,
             job_id,
@@ -122,3 +126,7 @@ if __name__ == "__main__":
         log(f"tx_hash={tx_hash}")
     except:
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,21 +1,21 @@
 config:
-    requester_address: '0x64b570f0e7c019dc750c4a75c33dca55bdc51845'
+    requester_address: '0x24056c57e3b0933d2fa7d83fb9667d0efdfae64d'
     provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
     source_code:
-        storage_id: ipfs_gpg
+        storage_id: eudat
         cache_type: public
         path: ~/test_eblocbroker/run_cppr
         storage_hours: 0
     data:
         data1:
-            hash: 050e6cc8dd7e889bf7874689f1e1ead6
+            hash: 0d6c3288ef71d89fb93734972d4eb903
         data2:
-            hash: 779745f315060d1bc0cd44b7266fb4da
+            hash: 4613abc322e8f2fdeae9a5dd10f17540
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/BVZ-tsukuba
+            path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
             storage_hours: 1
-            storage_id: ipfs_gpg
+            storage_id: eudat
     data_transfer_out: 5
     jobs:
         job1:

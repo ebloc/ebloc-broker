@@ -138,7 +138,7 @@ sudo apt install python3.7 -y
 curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
 echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | \
     sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-sudo apt update
+sudo apt-get update
 sudo apt-get install -y mongodb-org
 sudo chown -R mongodb. /var/log/mongodb
 sudo chown -R mongodb. /var/lib/mongodb
@@ -218,7 +218,7 @@ install_brownie
 gpg --gen-key
 gpg --list-keys
 
-mkdir -p ~/git
+mkdir -p ~/docker ~/git
 git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive

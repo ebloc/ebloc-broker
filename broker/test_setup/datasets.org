@@ -2,7 +2,6 @@
 
 #+begin_src bash
 b6aaf03752dc68d625fc57b451faa2bf  BL06-gargoyle-sml.tbz2
-f1de03edab51f281815c3c1e5ecb88c6  babyface.n6c100.tbz2
 082d2a71d86a64250f06be14c55ca27e  babyface.n6c10.tbz2
 03919732a417cb1d14049844b9de0f47  BL06-camel-med.tbz2
 983b9fe8a85b543dd5a4a75d031f1091  BL06-camel-sml.tbz2
@@ -17,7 +16,26 @@ ebe53bd498a9f6446cd77d9252a9847c  LB07-bunny-med.tbz2
 f82aa511f8631bfc9a82fe6fa30f4b52  LB07-bunny-sml.tbz2
 761691119cedfb9836a78a08742b14cc  liver.n6c100.tbz2
 f93b9a9f63447e0e086322b8416d4a39  liver.n6c10.tbz2
+
 #+end_src
+
+#+begin_src bash
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-gargoyle-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/babyface.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-camel-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/LB07-bunny-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-sawtooth.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-tsukuba.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-venus.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-tsukuba.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/LB07-bunny-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-sawtooth.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-venus.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c100.tbz2
+#+end_src
+
+-----------------------------------------------------------------------
 
 * Medium size data-sets
 
@@ -35,7 +53,7 @@ fa64e96bcee96dbc480a1495bddbf53c  LB07-bunny-lrg.tbz2
 1bfca57fe54bc46ba948023f754521d6  liver.n26c10.tbz2
 #+end_src
 
-* Download all use wget
+* Download all Medium data files using ~wget~
 
 #+begin_src bash
 wget -bqc https://vision.cs.uwaterloo.ca/files/adhead.n6c100.tbz2
