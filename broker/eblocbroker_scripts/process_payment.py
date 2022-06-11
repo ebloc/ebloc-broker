@@ -65,13 +65,12 @@ def process_payment(
             int(ended_timestamp),
             int(data_transfer_in),
             int(data_transfer_out),
-            # int(elapsed_time),  # TODO
+            int(elapsed_time),
             core,
             run_time,
             final_job,
         ]
-        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)
-        # tx = self._process_payment(job_key, args, result_ipfs_hash)  # TODO
+        tx = self._process_payment(job_key, args, result_ipfs_hash)
     except Exception as e:
         print_tb(e)
         raise e
@@ -123,7 +122,7 @@ def main():
             core,
             run_time,
         )
-        log(f"tx_hash={tx_hash}")
+        log(f"tx_hash={tx_hash}", "bold")
     except:
         sys.exit(1)
 

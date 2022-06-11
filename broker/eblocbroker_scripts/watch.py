@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -8,6 +9,8 @@ from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear
 from broker._utils.tools import _date, log, print_tb
+from broker._utils.yaml import Yaml
+from broker.errors import QuietExit
 from broker.lib import state
 
 # from broker.test_setup.user_set import providers
@@ -16,15 +19,28 @@ Ebb = cfg.Ebb
 watch_only_jobs = True
 
 
+def get_eth_address_from_cfg():
+    hidden_base_dir = Path.home() / ".ebloc-broker"
+    fn = hidden_base_dir / "cfg.yaml"
+    if not os.path.isfile(fn):
+        if not os.path.isdir(hidden_base_dir):
+            raise QuietExit(f"E: {hidden_base_dir} is not initialized")
+
+        raise QuietExit(f"E: {fn} is not created")
+
+    cfg_yaml = Yaml(fn)
+    cfg = cfg_yaml["cfg"]
+    return cfg.w3.toChecksumAddress(cfg["eth_address"].lower())
+
+
 def watch(eth_address="", from_block=None):
     from_block = 15394725
-    # if not eth_address:
-    #     # TODO: pull from cfg
-    #     eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
-
     if not eth_address:
-        log("E: eth_address is empty, run as: ./watch.py <eth_address>")
-        sys.exit(1)
+        try:
+            eth_address = get_eth_address_from_cfg()
+        except Exception as e:
+            log(f"E: {e}\neth_address is empty, run as: ./watch.py <eth_address>")
+            sys.exit(1)
 
     if not from_block:
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION

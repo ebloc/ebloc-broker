@@ -319,6 +319,10 @@ class Contract:
             try:
                 return self.timeout(method, *args)
             except ValueError as e:
+                if "Sequence has incorrect length" in str(e):
+                    print_tb(e)
+                    raise QuietExit from e
+
                 if "There is another transaction with same nonce in the queue" in str(e):
                     log(f"warning: Tx: {e}")
                     log("#> sleeping for 15 seconds, will try again")
