@@ -31,9 +31,7 @@ git pull --rebase -v
 
 # nodejs
 # ======
-output=$(node -v)
-if [ "$output" == "" ];then
-   # curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
+if [ "$(node -v)" == "" ];then
    curl -fsSL https://deb.nodesource.com/setup_17.x | sudo -E bash -
    sudo apt-get install -y nodejs
    node -v
@@ -83,7 +81,7 @@ install_ipfs () {
         echo ipfs_current_version=v$ipfs_current_version
     fi
     cd /tmp
-    version="0.11.0"
+    version="0.13.0"
     echo "version_to_download=v"$version
     if [[ "$ipfs_current_version" == "$version" ]]; then
         echo "$GREEN##$NC Latest version is already downloaded"

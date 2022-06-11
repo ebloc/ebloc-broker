@@ -114,12 +114,12 @@ def _tools(block_continue):  # noqa
 
             if not output:
                 log(
-                    f"E: provider's registered gmail=[magenta]{gmail}[/magenta] does not match\n"
-                    f"   with the set gdrive's gmail=[magenta]{gdrive_gmail}[/magenta]"
+                    f"E: provider's registered gmail=[m]{gmail}[/m] does not match\n"
+                    f"   with the set gdrive's gmail=[m]{gdrive_gmail}[/m]"
                 )
                 raise QuietExit
 
-            log(f"==> provider_gmail=[magenta]{gmail}")
+            log(f"==> provider_gmail=[m]{gmail}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
@@ -211,8 +211,8 @@ class Driver:
         index = self.logged_job.args["index"]
         self.job_block_number = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
-        log(f"## job_key=[magenta]{job_key}[/magenta] | index={index}", "b")
-        log(f"   received_block_number={self.job_block_number}", "b")
+        log(f"## job_key=[m]{job_key}[/m] | index={index}", "b")
+        log(f"   received_bn={self.job_block_number}", "b")
         log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}", "b")
         log(f"   provider={self.logged_job.args['provider']}", "b")
         log(f"   received={self.logged_job.args['received']}", "b")
@@ -302,7 +302,7 @@ class Driver:
             except Exception as e:
                 print_tb(e)
                 log(str(e))
-                breakpoint()  # DEBUG
+                # breakpoint()  # DEBUG
 
 
 def run_driver(given_bn):

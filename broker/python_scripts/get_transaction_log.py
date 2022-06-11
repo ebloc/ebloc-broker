@@ -7,7 +7,8 @@ from web3.logs import DISCARD
 from broker import cfg
 from broker.utils import log
 
-if __name__ == "__main__":
+
+def main():
     if len(sys.argv) == 2:
         tx_hash = str(sys.argv[1])
         event = "LogJob"
@@ -25,3 +26,7 @@ if __name__ == "__main__":
         processed_logs = cfg.Ebb.eBlocBroker.events.LogReceipt().processReceipt(tx_receipt, errors=DISCARD)
         log(vars(processed_logs[0].args))
         log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+
+
+if __name__ == "__main__":
+    main()

@@ -493,7 +493,7 @@ multipart==0.2.4
 multitasking==0.0.9
     # via
     #   yfinance
-mypy==0.942
+mypy==0.961
     # via
     #   flake8-mypy
 mypy-extensions==0.4.3
@@ -814,7 +814,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==12.3.0
+rich==12.4.4
 rlp==2.0.1
     # via
     #   eth-account

@@ -26,7 +26,7 @@ def appy_patch(base_dir, patch_fn):
         if patch_file.endswith(".diff.gz"):
             extract_gzip(patch_file)
     else:
-        log(f"==> [magenta]{diff_file_name}[/magenta] exists")
+        log(f"==> [m]{diff_file_name}[/m] exists")
 
     try:
         git.apply_patch(base_dir, patch_file.replace(".gz", ""), is_gpg=False)

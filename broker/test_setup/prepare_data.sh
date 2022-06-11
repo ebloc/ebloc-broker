@@ -9,7 +9,6 @@ rename_all() {
     mv -v BL06-gargoyle-lrg 4613abc322e8f2fdeae9a5dd10f17540
     mv -v bone.n6c100 dd0fbccccf7a198681ab838c67b68fbf
     mv -v bone.n6c10 45281dfec4618e5d20570812dea38760
-    mv -v LB07-bunny-lrg fa64e96bcee96dbc480a1495bddbf53c
     mv -v liver.n26c100 8f6faf6cfd245cae1b5feb11ae9eb3cf
     mv -v liver.n26c10 1bfca57fe54bc46ba948023f754521d6
     mv -v babyface.n6c100 f1de03edab51f281815c3c1e5ecb88c6
@@ -28,6 +27,7 @@ rename_all() {
     mv -v LB07-bunny-sml f82aa511f8631bfc9a82fe6fa30f4b52
     mv -v liver.n6c100 761691119cedfb9836a78a08742b14cc
     mv -v liver.n6c10 f93b9a9f63447e0e086322b8416d4a39
+    mv -v bone.n26c10 bfc83d9f6d5c3d68ca09499190851e86
 }
 
 extract () {

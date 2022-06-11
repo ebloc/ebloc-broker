@@ -57,7 +57,7 @@ class MongoBroker(BaseMongoClass):
             "requester_addr": job_info["job_owner"],
             "requester_id": requester_id,
             "source_code_hash": source_code_hash_list,
-            "received_block_number": job_info["received_block_number"],
+            "received_bn": job_info["received_bn"],
             "timestamp": timestamp,
             "cloudStorageID": cloud_storage_id,
             "storage_duration": job_info["storage_duration"],
@@ -124,7 +124,7 @@ class MongoBroker(BaseMongoClass):
     def get_job_block_number(self, requester_addr, key, index) -> int:
         cursor = self.collection.find({"requester_addr": requester_addr.lower(), "job_key": key, "index": index})
         for document in cursor:
-            return document["received_block_number"]
+            return document["received_bn"]
 
         return 0
 

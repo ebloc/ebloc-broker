@@ -1,7 +1,7 @@
 * Installation
 
-link:
-https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-blocked-from-logging-in-with-your-google-accou/65507155#65507155
+- [[https://console.cloud.google.com/apis/credentials]]
+- https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-blocked-from-logging-in-with-your-google-accou/65507155#65507155
 
 ~@tellowkrinkle's [comment][1] help me to solve the issue~
 

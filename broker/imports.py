@@ -124,7 +124,7 @@ def connect_into_eblocbroker() -> None:
                 try:
                     log(
                         "warning: [green]bloxberg[/green] key is added into the "
-                        "[magenta]~/.brownie/network-config.yaml[/magenta] file. Please try again."
+                        "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
                     )
                     network.connect("bloxberg")
                 except KeyError:
@@ -133,7 +133,7 @@ def connect_into_eblocbroker() -> None:
             project = project.load(env.CONTRACT_PROJECT_PATH)
             config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
-            #: for the contract's events
+            #: required for to fetch the contract's events
             config._eblocbroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file())
     except Exception as e:
         print_tb(e)

@@ -19,12 +19,10 @@ def main():
     for document in cursor:
         # print(document)
         # TODO: requester paramer as get_storage_duration
-        received_block_number, storage_duration = Ebb.get_job_storage_duration(
-            env.PROVIDER_ID, document["sourceCodeHash"]
-        )
-        end_block_time = received_block_number + storage_duration * cfg.ONE_HOUR_BLOCK_DURATION
+        received_bn, storage_duration = Ebb.get_job_storage_duration(env.PROVIDER_ID, document["sourceCodeHash"])
+        end_block_time = received_bn + storage_duration * cfg.ONE_HOUR_BLOCK_DURATION
         storageID = document["storageID"]
-        if end_block_time < block_number and received_block_number != 0:
+        if end_block_time < block_number and received_bn != 0:
             if storageID in (StorageID.IPFS, StorageID.IPFS_GPG):
                 ipfsHash = document["jobKey"]
                 print(run(["ipfs", "pin", "rm", ipfsHash]))
@@ -39,7 +37,7 @@ def main():
                 print(cached_file_name)
                 _remove(cached_file_name)
 
-            print(received_block_number)
+            print(received_bn)
             coll.delete_one({"jobKey": ipfsHash})
 
 

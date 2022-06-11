@@ -35,7 +35,7 @@ def handle_event(logged_jobs):
         log(f"received={job.args['received']}")
         for value in job.args["sourceCodeHash"]:
             sourceCodeHash = job.args["sourceCodeHash"][value]
-            log(f"source_code_hash{br(value)} => {bytes32_to_ipfs(sourceCodeHash)}")
+            log(f"code_hash{br(value)} => {bytes32_to_ipfs(sourceCodeHash)}")
 
         console_ruler()
 
@@ -103,8 +103,8 @@ def main():
         from_block = int(sys.argv[1])
         provider = str(sys.argv[2])  # Only obtains jobs that are submitted to the provider.
     else:
-        from_block = 13172386
-        provider = "0x57b60037b82154ec7149142c606ba024fbb0f991"
+        from_block = 15867616
+        provider = "0x1926b36af775e1312fdebcc46303ecae50d945af"
 
     handle_event(logged_jobs=Ebb.run_log_job(from_block, provider))
 

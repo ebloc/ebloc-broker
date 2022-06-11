@@ -29,7 +29,7 @@ def start_call(job_key, index, slurm_job_id) -> None:
     Ebb.mongo_broker.set_job_state_pid(str(job_key), int(index), pid)
     _log.ll.LOG_FILENAME = env.LOG_PATH / "transactions" / env.PROVIDER_ID.lower() / f"{job_key}_{index}.txt"
     # _log.ll.IS_PRINT = False
-    log(f"~/ebloc-broker/broker/start_code.py {job_key} {index} {slurm_job_id}", "bold magenta")
+    log(f"~/ebloc-broker/broker/start_code.py {job_key} {index} {slurm_job_id}", "info")
     job_id = 0  # TODO: should be obtained from the user's input
     _, _, error = popen_communicate(["scontrol", "show", "job", slurm_job_id])
     if "slurm_load_jobs error: Invalid job id specified" in str(error):

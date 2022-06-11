@@ -2,20 +2,20 @@
 
 * TASKS
 
-- [X] Download test_eblocbroker
-- [X] contract transactions
+- [X] download ~test_eblocbroker~
+- [X] contract's transactions from bloxberg
 
 | tasks            | req | goo0 | goo1 | goo2 | goo3 |
 |------------------+-----+------+------+------+------|
-| tx_from_bloxberg | [X] | [X]  | [X]  | [X]  | [X]  |
-| ebb.tar.gz       |     |      |      |      |      |
-| mongo_fetch      |     |      |      |      |      |
+| tx_from_bloxberg | [-] | []   | []   | []   | []   |
+| ebb.tar.gz       | [X] | []   | []   | []   | []   |
+| mongo_fetch      | []  | []   | []   | []   | []   |
 |------------------+-----+------+------+------+------|
 
 | patches  | req | goo0 | goo1 | goo2 | goo3 |
 |----------+-----+------+------+------+------|
 | gdrive   | [X] | [X]  | [X]  | [X]  | [X]  |
-| eudat    | []  | []   | []   | []   | []   |
+| eudat    | [X] | [-]  | [-]  | [-]  | [-]  |
 | ipfs     | []  | []   | []   | []   | []   |
 | ipfs_gpg | []  | []   | []   | []   | []   |
 |----------+-----+------+------+------+------|

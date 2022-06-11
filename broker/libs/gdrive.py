@@ -298,7 +298,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
 
     try:
         output = get_file_id(key)
-        log(f"==> data_id=[magenta]{key}")
+        log(f"==> data_id=[m]{key}")
         log(output, "bold green")
         data_files_id = fetch_grive_output(output, "meta_data.json")
         if not data_files_id:

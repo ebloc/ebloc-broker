@@ -15,7 +15,7 @@ Ebb = cfg.Ebb
 _collect_account = collect_account.replace("0x", "")
 fn = str(Path(expanduser("~/.brownie/accounts")) / _collect_account)
 _collect_account = Ebb.brownie_load_account(fn, "alper")
-log(f"collect_account={Ebb._get_balance(collect_account)}", "bold")
+log(f"## collect_account={Ebb._get_balance(collect_account)}")
 
 
 def balances(accounts, is_verbose=False):
@@ -27,7 +27,7 @@ def balances(accounts, is_verbose=False):
             print(fn)
 
         account = Ebb.brownie_load_account(str(fn), "alper")
-        log(Ebb._get_balance(account), "magenta")
+        log(Ebb._get_balance(account), "m")
 
 
 def collect_all_into_base():

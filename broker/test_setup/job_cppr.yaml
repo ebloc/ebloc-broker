@@ -1,6 +1,6 @@
 config:
-    requester_address: '0x24056c57e3b0933d2fa7d83fb9667d0efdfae64d'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    requester_address: '0x8b7356a95c8ba1846eb963fd127741730f666ba8'
+    provider_address: '0x51e2b36469cdbf58863db70cc38652da84d20c67'
     source_code:
         storage_id: eudat
         cache_type: public
@@ -8,12 +8,12 @@ config:
         storage_hours: 0
     data:
         data1:
-            hash: 0d6c3288ef71d89fb93734972d4eb903
+            hash: f71df9d36cd519d80a3302114779741d
         data2:
-            hash: 4613abc322e8f2fdeae9a5dd10f17540
+            hash: 1bfca57fe54bc46ba948023f754521d6
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+            path: /home/alper/test_eblocbroker/dataset_zip/small/BL06-gargoyle-sml
             storage_hours: 1
             storage_id: eudat
     data_transfer_out: 5
@@ -21,3 +21,4 @@ config:
         job1:
             cores: 1
             run_time: 60
+    provider_addr: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'

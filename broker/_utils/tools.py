@@ -138,7 +138,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
     sep_terminate = "raise Terminate"
     tb_text = "".join(traceback.format_exc())
     if sep_terminate in tb_text:
-        tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [magenta]Terminate[/magenta]()"
+        tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [m]Terminate[/m]()"
 
     if is_print_exc and tb_text != "NoneType: None\n":
         log(tb_text.rstrip(), "bold", where_back=1)
@@ -167,12 +167,12 @@ def _remove(path: str, is_verbose=False) -> None:
             shutil.rmtree(path)
         else:
             if is_verbose:
-                log(f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[magenta]{path}")
+                log(f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[m]{path}")
 
             return
 
         if is_verbose:
-            log(f"#> {WHERE(1)} following path:\n[magenta]{path}[/magenta] is removed")
+            log(f"#> {WHERE(1)} following path:\n[m]{path}[/m] is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.

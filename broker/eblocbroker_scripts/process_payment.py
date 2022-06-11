@@ -23,7 +23,7 @@ def process_payment(
     data_transfer_out,
     core,
     run_time,
-    received_block_number=0,
+    received_bn=0,
 ):
     """Process payment of the received job."""
     if not result_ipfs_hash:
@@ -42,7 +42,7 @@ def process_payment(
         if len(result_ipfs_hash) != 46 and cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             raise Exception("Result ipfs's length does not match with its original length, check your job_key")
 
-    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number, is_print=False)
+    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_bn, is_print=False)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:
         log(f"warning: job ({job_key},{index},{job_id}) is completed and already get paid")
         sys.exit(1)

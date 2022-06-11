@@ -258,6 +258,9 @@ def string_to_bytes32(hash_str: str):
 
 def bytes32_to_ipfs(bytes_array):
     """Convert bytes_array into IPFS hash format."""
+    if bytes_array in (b"", ""):
+        return ""
+
     if isinstance(bytes_array, bytes):
         merge = Qm + bytes_array
         return base58.b58encode(merge).decode("utf-8")
@@ -337,7 +340,7 @@ def is_gzip_file_empty(fn):
     if bool(int(size)):
         return False
 
-    log(f"==> Created gzip file is empty:\n    [magenta]{fn}[/magenta]")
+    log(f"==> Created gzip file is empty:\n    [m]{fn}[/m]")
     return True
 
 
@@ -514,7 +517,7 @@ def question_yes_no(message, is_exit=False):
     if "[Y/n]:" not in message:
         message = f"{message} [Y/n]: "
 
-    log(text=message, end="", flush=True)
+    log(text=message, end="")
     getch = _Getch()
     while True:
         choice = getch().lower()

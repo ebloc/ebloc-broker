@@ -3,7 +3,9 @@
 import time
 from contextlib import suppress
 
-from broker._utils._log import log, ok
+from broker._utils._log import log
+from broker.config import env
+from broker.eblocbroker_scripts.get_data_price import get_data_price
 from broker.eblocbroker_scripts.register_data import _register_data
 
 hashes_small = [
@@ -36,28 +38,36 @@ hashes_medium_2 = [
     "779745f315060d1bc0cd44b7266fb4da",  # B
     "dd0fbccccf7a198681ab838c67b68fbf",  # C
     "45281dfec4618e5d20570812dea38760",  # C
-    "fa64e96bcee96dbc480a1495bddbf53c",  # C
+    "bfc83d9f6d5c3d68ca09499190851e86",  # C
     "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
     "1bfca57fe54bc46ba948023f754521d6",  # D
     "f71df9d36cd519d80a3302114779741d",  # D
 ]
 
 
+def print_prices(hashes):
+    for code_hash in hashes:
+        (price, _commitment_dur) = get_data_price(env.PROVIDER_ID, code_hash, is_verbose=False)
+        log(f"{code_hash}={price}")
+
+
 def register_data_files(data_price, hashes):
-    commitment_dur = 600
+    log(f"#> registering data {len(hashes)} files")
     for code_hash in hashes:
         with suppress(Exception):
-            _register_data(code_hash, data_price, commitment_dur)
+            _register_data(code_hash, data_price, commitment_dur=600)
             time.sleep(1)
-
-    log()
-    log(f"#> registering data {len(hashes_small)} files{ok()}")
 
 
 def main():
     # register_data_files(data_price=1, hashes=hashes_small)
     register_data_files(data_price=20, hashes=hashes_medium_1)
+    log()
     register_data_files(data_price=30, hashes=hashes_medium_2)
+    log()
+    print_prices(hashes_medium_1)
+    log()
+    print_prices(hashes_medium_2)
 
 
 if __name__ == "__main__":

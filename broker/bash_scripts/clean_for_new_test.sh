@@ -79,7 +79,7 @@ echo "#> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
 ~/ebloc-broker/broker/python_scripts/clean_gdrive.py
 echo "[  OK  ]"
 
-for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
+for i in `gpg --list-keys --with-colons --fingerprint | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
     gpg --batch --delete-key "$i" 2>/dev/null
 done
 

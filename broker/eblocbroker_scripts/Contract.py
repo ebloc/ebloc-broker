@@ -38,8 +38,7 @@ class Contract:
         get_job_code_hashes,
         get_job_info,
         get_job_info_print,
-        get_job_owner,
-        set_job_received_block_number,
+        set_job_received_bn,
         update_job_cores,
     )
     from broker.eblocbroker_scripts.get_provider_info import get_provider_info

@@ -168,7 +168,7 @@ class Ipfs:
         for attempt in range(5):
             try:
                 cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", recipient_gpg_fingerprint]
-                log(f"{br(attempt)} cmd: [magenta]{' '.join(cmd)}", "bold")
+                log(f"{br(attempt)} cmd: [m]{' '.join(cmd)}", "bold")
                 run(cmd, suppress_stderr=True)  # this may not work if it is requested too much in short time
                 break
             except Exception as e:
@@ -189,7 +189,7 @@ class Ipfs:
                 encrypt_target,
             ]
             run(cmd)
-            log(f"==> gpg_file=[magenta]{encrypted_file_target}")
+            log(f"==> gpg_file=[m]{encrypted_file_target}")
             return encrypted_file_target
         except Exception as e:
             print_tb(e)

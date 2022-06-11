@@ -1,16 +1,16 @@
 # syntax=docker/dockerfile:1
 FROM golang:latest
 RUN apt-get install -y ca-certificates
-RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/v0.11.0/go-ipfs_v0.11.0_linux-amd64.tar.gz" \
- && tar -xvf "go-ipfs_v0.11.0_linux-amd64.tar.gz" \
- && rm -f go-ipfs_v0.11.0_linux-amd64.tar.gz
-WORKDIR go-ipfs
-RUN make install \
+RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/v0.13.0/go-ipfs_v0.13.0_linux-amd64.tar.gz" \
+ && tar -xf "go-ipfs_v0.13.0_linux-amd64.tar.gz" \
+ && rm -f go-ipfs_v0.13.0_linux-amd64.tar.gz \
+ && cd go-ipfs \
+ && make install \
  && ./install.sh
 
-RUN git clone https://github.com/prasmussen/gdrive.git /workspace
-WORKDIR /workspace/gdrive
-RUN go env -w GO111MODULE=auto \
+RUN git clone https://github.com/prasmussen/gdrive.git /workspace/gdrive \
+ && cd /workspace/gdrive \
+ && go env -w GO111MODULE=auto \
  && go get github.com/prasmussen/gdrive
 
 FROM python:3.7
@@ -151,7 +151,7 @@ RUN brownie init \
   && cd /workspace//ebloc-broker/contract \
   && brownie compile
 
-# orginize Slurm files
+# orginize slurm files
 RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
@@ -165,15 +165,16 @@ COPY --chown=slurm docker/slurm/files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.co
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
 ## finally  # sysctl -w net.core.rmem_max=2500000  ?
-RUN ipfs version \
- && ipfs init --profile=server,badgerds \
+RUN gdrive version \
+ && ipfs version \
+ && ipfs init \
  && ipfs config Reprovider.Strategy roots \
  && ipfs config Routing.Type none \
  && ganache --version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
- && du -sh / 2>&1 | grep -v "cannot" \
  && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
- && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc
+ && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc \
+ && du -sh / 2>&1 | grep -v "cannot"
 
 WORKDIR /workspace/ebloc-broker/broker
 CMD ["/bin/bash"]

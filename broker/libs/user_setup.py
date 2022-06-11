@@ -62,7 +62,7 @@ def set_folder_permission(path, user_name, slurm_user):
 
 def user_add(user_address, basedir, slurm_user):
     user_address = user_address.lower()
-    log(f"#> adding user=[magenta]{user_address}[/magenta]", end="")
+    log(f"#> adding user=[m]{user_address}[/m]", end="")
     try:  # convert ethereum user address into 32-bits
         user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
         log(f" | user_name={user_name}", "bold")
@@ -92,7 +92,7 @@ def user_add(user_address, basedir, slurm_user):
             add_user_to_slurm(user_name)  # force to add user to slurm
             mkdir(f"{user_dir}/cache")
         else:
-            log(f"## [magenta]{user_address}[/magenta] => [blue]{user_name}[/blue] has already been created")
+            log(f"## [m]{user_address}[/m] => [blue]{user_name}[/blue] has already been created")
 
 
 def main():

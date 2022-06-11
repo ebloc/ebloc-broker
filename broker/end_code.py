@@ -139,7 +139,7 @@ class Gdrive(Common):
             raise Exception(f"{WHERE(1)} E: {key} does not have a match, meta_data={meta_data}. {e}") from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        log(f"mime_type=[magenta]{mime_type}", "bold")
+        log(f"mime_type=[m]{mime_type}", "bold")
         self.data_transfer_out += calculate_size(self.patch_file)
         log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB", "bold")
         if "folder" in mime_type:
@@ -559,7 +559,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.elapsed_time = run_time[self.job_id]
 
         log(f"finalized_elapsed_time={self.elapsed_time}", "bold")
-        log("## job_info=", "bold magenta", end="")
+        log("## job_info=", "info", end="")
         log(pprint.pformat(self.job_info), "bold")
         try:
             self.get_cloud_storage_class(0).initialize(self)

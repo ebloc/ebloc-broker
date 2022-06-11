@@ -57,10 +57,10 @@ if __name__ == "__main__":
 
     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
     f_id = env.OC_USER
-    log(f"## gmail=[magenta]{env.GMAIL}")
+    log(f"## gmail=[m]{env.GMAIL}")
     log(f"## gpg_fingerprint={gpg_fingerprint}")
-    log(f"## ipfs_id=[magenta]{ipfs_id}")
-    log(f"## fid=[magenta]{f_id}")
+    log(f"## ipfs_id=[m]{ipfs_id}")
+    log(f"## fid=[m]{f_id}")
     try:
         cfg.ipfs.is_gpg_published(gpg_fingerprint)
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_id)

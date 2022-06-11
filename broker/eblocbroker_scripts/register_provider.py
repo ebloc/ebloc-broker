@@ -61,14 +61,14 @@ def get_ipfs_id() -> str:
         except ipfshttpclient.exceptions.ConnectionError:
             log(
                 "E: Failed to establish a new connection to IPFS, please run it on the background.\n"
-                "Please run [magenta]~/ebloc-broker/broker/_daemons/ipfs.py"
+                "Please run [m]~/ebloc-broker/broker/_daemons/ipfs.py"
             )
             sys.exit(1)
         except Exception as e:
             print_tb(e)
             log(
                 "E: Failed to establish a new connection to IPFS, please run it on the background.\n"
-                "Please run [magenta]~/ebloc-broker/broker/_daemons/ipfs.py"
+                "Please run [m]~/ebloc-broker/broker/_daemons/ipfs.py"
             )
             sys.exit(1)
 
@@ -80,7 +80,7 @@ def get_ipfs_id() -> str:
 
 
 def error_msg(key, yaml_fn):
-    log(f"E: [blue]{key}[/blue] is empty in [magenta]{yaml_fn}")
+    log(f"E: [blue]{key}[/blue] is empty in [m]{yaml_fn}")
 
 
 def register_provider_wrapper(yaml_fn):

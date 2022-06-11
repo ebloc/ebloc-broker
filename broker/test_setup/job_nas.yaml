@@ -1,8 +1,8 @@
 config:
-    requester_address: '0x77c0b42b5c358ff7c97e268794b9ff6a278a0f1e'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    requester_address: '0xe2969f599cb904e9a808ec7218bc14fcfa346965'
+    provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
     source_code:
-        storage_id: eudat
+        storage_id: ipfs_gpg
         cache_type: public
         path: ~/test_eblocbroker/NPB3.3-SER_source_code
         storage_hours: 0
@@ -11,3 +11,4 @@ config:
         job1:
             cores: 1
             run_time: 60
+    provider_addr: '0x1926b36af775e1312fdebcc46303ecae50d945af'

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-for dir in */*; do
-    gpg --verbose --batch --yes --output=$(echo $dir | rev | cut -c5- | rev) --pinentry-mode loopback --passphrase-file=/home/alper/.ebloc-broker/.gpg_pass.txt --decrypt "$dir"
+for fn in */*; do
+    echo "$fn"
+    gpg --verbose --batch --yes --output=$(echo $fn | rev | cut -c5- | rev) --pinentry-mode loopback --passphrase-file=/home/alper/.ebloc-broker/.gpg_pass.txt --decrypt "$fn"
 done
 rm */*.diff.gz.gpg

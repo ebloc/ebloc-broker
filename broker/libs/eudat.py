@@ -130,9 +130,7 @@ def login(user, password_path: Path, fn: str) -> None:
         f = open(fn, "rb")
         config.oc = pickle.load(f)
         try:
-            status_str = (
-                f"[bold]Login into owncloud from the dumped_object=[magenta]{fn}[/magenta] [yellow]...[/yellow]"
-            )
+            status_str = f"[bold]Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
             with cfg.console.status(status_str):
                 config.oc.get_config()
 
@@ -308,7 +306,7 @@ def _submit(provider, requester, job, required_confs=1):
     # provider_addr_to_submit = provider
     provider_addr_to_submit = job.search_best_provider(requester)
     provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
-    log(f"==> provider_fid=[magenta]{provider_info['f_id']}")
+    log(f"==> provider_fid=[m]{provider_info['f_id']}")
     _share_folders(provider_info, requester_name, folders_hash)
     # print(job.code_hashes)
     try:

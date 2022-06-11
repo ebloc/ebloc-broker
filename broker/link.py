@@ -89,7 +89,7 @@ class Link:
                     log()
 
                 folder_new_hash = generate_md5sum(dest)
-                assert folder_hash == folder_new_hash, "hash of original and linked folder does not match"
+                assert folder_hash == folder_new_hash, "hash of the original and the linked folder does not match"
 
 
 def check_link_folders(folders_to_share, registered_data_files, source_code_path, is_pass=False):
@@ -114,7 +114,7 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
             print("")
             if not is_pass:
                 question_yes_no(
-                    "#> Would you like to continue with linked folder path in your `[magenta]run.sh[/magenta]` file?\n"
+                    "#> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
                     "If no, please feel free to update your run.sh file and continue",
                     is_exit=True,
                 )
@@ -123,11 +123,11 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
 def test_with_small_dataset(value):
     fn = os.path.expanduser("~/test_eblocbroker/run_cppr/run.sh")
     with open(fn, "r+") as file:
-        filedata = file.read()
+        file_data = file.read()
 
-    changed_filedata = filedata.replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
+    changed_file_data = file_data.replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
     with open(fn, "w+") as file:
-        file.write(changed_filedata)
+        file.write(changed_file_data)
 
 
 def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=False):
@@ -147,7 +147,7 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
     if not is_pass:
         print("")
         question_yes_no(
-            "#> Would you like to continue with linked folder path in your `[magenta]run.sh[/magenta]` file?\n"
+            "#> Would you like to continue with the linked folder path in your `[m]run.sh[/m]` file?\n"
             "If no, feel free to update your run.sh file and continue",
             is_exit=True,
         )
