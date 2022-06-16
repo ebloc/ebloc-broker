@@ -14,22 +14,20 @@ def _update_data_price():
         log(f"warning: Provider {env.PROVIDER_ID} is not registered.\n")
         raise QuietExit
 
-    source_code_hash = "b6aaf03752dc68d625fc57b451faa2bf"
-    new_data_price = 21
+    code_hash = "050e6cc8dd7e889bf7874689f1e1ead6"
+    new_data_price = 20
     commitment_block_duration = 600
-    source_code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)
+    code_hash_bytes = cfg.w3.toBytes(text=code_hash)
     try:
-        (price, _commitment_block_duration) = cfg.Ebb.get_registered_data_price(
-            env.PROVIDER_ID, source_code_hash_bytes, 0
-        )
+        (price, _commitment_block_duration) = cfg.Ebb.get_registered_data_price(env.PROVIDER_ID, code_hash_bytes, 0)
         if price == new_data_price and _commitment_block_duration == commitment_block_duration:
-            log(f"## data([green]{source_code_hash}[/green]) already registerered with the given values")
+            log(f"## data([green]{code_hash}[/green]) already registerered with the given values")
             raise QuietExit
     except:
         raise QuietExit
 
     try:
-        tx = Ebb.update_data_price(source_code_hash_bytes, new_data_price, commitment_block_duration)
+        tx = Ebb.update_data_price(code_hash_bytes, new_data_price, commitment_block_duration)
         get_tx_status(Ebb.tx_id(tx))
     except QuietExit:
         pass

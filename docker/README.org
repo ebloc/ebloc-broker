@@ -7,15 +7,15 @@
 
 #+begin_src bash
 remove_dangling () {
-    docker rmi $(docker images -qa -f 'dangling=true') --force
+    docker images -qa -f 'dangling=true' | ifne docker rmi $(docker images -qa -f 'dangling=true') --force
     docker image ls
 }
 
-sudo systemctl start docker
-sudo docker run eblocbroker
+# sudo systemctl start docker
+# sudo docker run eblocbroker
 
-# docker run --name test -it eblocbroker bash
-docker run -it eblocbroker bash
+# doocker run --name test -it eblocbroker bash
+docker run --hostname slurmctl -it ebb bash
 #+end_src
 
 ** Clean complete docker cache
@@ -33,12 +33,17 @@ NOTE: Now in order to push the image just make sure the path which you are using
 username included in the tag.
 
 #+begin_src bash
-docker login -u eblocbroker -p <password>
-docker tag eblocbroker:latest eblocbroker/app
+cat ~/.docker_password.txt | docker login --username eblocbroker --password-stdin
+docker build -t ebb:latest . --progress plain
+docker tag ebb:latest eblocbroker/app
 docker push eblocbroker/app
 #+end_src
 
-~docker history --human --format "{{.CreatedBy}}: {{.Size}}" eblocbroker~
+~docker history --human --format "{{.CreatedBy}}: {{.Size}}" ebb~
+
+#+begin_src bash
+docker images ebb:latest --format "{{.Repository}}:{{.Tag}} -> {{.Size}}"
+#+end_src
 
 ** Build
 
@@ -52,4 +57,10 @@ docker build -t ebb:latest --progress plain .
 docker-compose up -d
 # or
 docker-compose up --remove-orphans
+#+end_src
+
+** Image for service slurm was built because it did not already exist. To rebuild this image you must use:
+
+#+begin_src bash
+docker-compose up --build
 #+end_src

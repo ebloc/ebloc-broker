@@ -55,7 +55,7 @@ class ENV(ENV_BASE):
 
         if "provider" in self.cfg:
             self.IS_PROVIDER = True
-            self.SLURMUSER = self.cfg["provider"]["slurmuser"]
+            self.SLURMUSER = self.cfg["provider"]["slurm_user"]
             self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
             self.IS_EUDAT_USE = self.cfg["provider"]["is_eudat_use"]
             self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
@@ -139,7 +139,7 @@ Ebb = cfg.Ebb
 ipfs = cfg.ipfs
 RECONNECT_ATTEMPTS = 5
 RECONNECT_SLEEP = 15
-ebb = None  # eBlocBroker Contract on the blockchain
+ebb = None  # ebloc-broker contract on the blockchain
 contract = None
 chain = None
 w3_ebb = None

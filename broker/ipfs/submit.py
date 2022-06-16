@@ -59,7 +59,7 @@ def pre_check(job: Job, requester):
             sys.exit()
 
         if not os.path.isfile(env.GPG_PASS_FILE):
-            log(f"E: Please store your gpg password in the [magenta]{env.GPG_PASS_FILE}[/magenta]\nfile for decrypting")
+            log(f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m]\nfile for decrypting")
             raise QuietExit
 
         start_ipfs_daemon()

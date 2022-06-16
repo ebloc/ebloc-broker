@@ -229,14 +229,13 @@ class Storage(BaseClass):
             )
             if output.count("/") == 1:
                 # main folder should contain the 'run.sh' file
-                log(f"[magenta]./run.sh[/magenta] exists under the parent folder{ok()}", "bold")
+                log(f"[m]./run.sh[/m] exists under the parent folder{ok()}", "bold")
                 return True
             else:
                 log("E: run.sh does not exist under the parent folder")
                 return False
         except:
-            breakpoint()  # DEBUG
-            log(f"E: run.sh does not exist under the tar={tar_path}")
+            log(f"E: `run.sh` file does not exist under the tar={tar_path}")
             return False
 
     def check_run_sh(self) -> bool:
@@ -349,7 +348,7 @@ class Storage(BaseClass):
         timestamp = p2.communicate()[0].decode("utf-8").strip()
         log(f"timestamp={timestamp}, ", "bold", end="")
         write_to_file(self.results_folder_prev / "timestamp.txt", timestamp)
-        log(f"job_received_block_number={job_block_number}", "bold")
+        log(f"job_received_bn={job_block_number}", "bold")
         log("## Adding recevied job into the mongoDB database")
         self.Ebb.mongo_broker.add_item(
             job_key,

@@ -53,7 +53,7 @@ def my_own_session_run_at_beginning(_Ebb):
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
     config.ebb = _Ebb
-    Contract.eblocbroker.eBlocBroker = _Ebb
+    cfg.Ebb.eBlocBroker = Contract.eblocbroker.eBlocBroker = _Ebb
     ebb = _Ebb
     Ebb.w3 = web3
     if not config.chain:

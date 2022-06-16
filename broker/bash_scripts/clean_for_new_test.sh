@@ -65,7 +65,7 @@ rm -f $BASE/package-lock.json
 
 rm -rf docs/_build_html/
 rm -rf docs/_build/
-rm /tmp/run/driver_popen.pid
+rm -f /tmp/run/driver_popen.pid >/dev/null 2>&1
 rm -f ~/.ebloc-broker/.oc_client.pckl
 rm -f /var/ebloc-broker/cache/*.tar.gz
 # rm -f .oc.pckl
@@ -79,7 +79,7 @@ echo "#> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
 ~/ebloc-broker/broker/python_scripts/clean_gdrive.py
 echo "[  OK  ]"
 
-for i in `gpg --list-keys --with-colons --fingerprint  | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
+for i in `gpg --list-keys --with-colons --fingerprint | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
     gpg --batch --delete-key "$i" 2>/dev/null
 done
 

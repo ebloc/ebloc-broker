@@ -14,7 +14,7 @@ print_only_ipfs_result_hashes = True
 
 
 def watch(eth_address="", from_block=None):
-    from_block = 15394725
+    from_block = 15867616
     # if not eth_address:
     #     # TODO: pull from cfg
     #     eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
@@ -61,21 +61,24 @@ def watch(eth_address="", from_block=None):
             is_print=False,
         )
         if print_only_ipfs_result_hashes:
-            if _job["result_ipfs_hash"] != empty_bytes32 and _job["result_ipfs_hash"] != "":
-                result_ipfs_hash = bytes32_to_ipfs(_job["result_ipfs_hash"])
-                log(result_ipfs_hash)
+            if _job["result_ipfs_hash"] != empty_bytes32 and _job["result_ipfs_hash"] not in (b"", ""):
+                log(bytes32_to_ipfs(_job["result_ipfs_hash"]))
                 # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")
         else:
             log(_job)
 
 
+def main():
+    eth_address = None
+    if len(sys.argv) == 2:
+        eth_address = sys.argv[1]
+
+    watch(eth_address)
+
+
 if __name__ == "__main__":
     try:
-        eth_address = None
-        if len(sys.argv) == 2:
-            eth_address = sys.argv[1]
-
-        watch(eth_address)
+        main()
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

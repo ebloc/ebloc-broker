@@ -3,7 +3,9 @@
 import time
 from contextlib import suppress
 
-from broker._utils._log import log, ok
+from broker._utils._log import log
+from broker.config import env
+from broker.eblocbroker_scripts.get_data_price import get_data_price
 from broker.eblocbroker_scripts.register_data import _register_data
 
 hashes_small = [
@@ -24,40 +26,48 @@ hashes_small = [
     "761691119cedfb9836a78a08742b14cc",
 ]
 
-hashes_medium = [
-    "050e6cc8dd7e889bf7874689f1e1ead6",  # A
-    "9d5d892a63b5758090258300a59eb389",  # A
-    "779745f315060d1bc0cd44b7266fb4da",  # A
+hashes_medium_1 = [
+    "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
+    "0d6c3288ef71d89fb93734972d4eb903",  # A
+    "4613abc322e8f2fdeae9a5dd10f17540",  # A
 ]
 
 hashes_medium_2 = [
-    "fe801973c5b22ef6861f2ea79dc1eb9c",  # B
-    "0d6c3288ef71d89fb93734972d4eb903",  # B
-    "4613abc322e8f2fdeae9a5dd10f17540",  # B
+    "050e6cc8dd7e889bf7874689f1e1ead6",  # B
+    "9d5d892a63b5758090258300a59eb389",  # B
+    "779745f315060d1bc0cd44b7266fb4da",  # B
     "dd0fbccccf7a198681ab838c67b68fbf",  # C
     "45281dfec4618e5d20570812dea38760",  # C
-    "fa64e96bcee96dbc480a1495bddbf53c",  # C
+    "bfc83d9f6d5c3d68ca09499190851e86",  # C
     "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
     "1bfca57fe54bc46ba948023f754521d6",  # D
     "f71df9d36cd519d80a3302114779741d",  # D
 ]
 
 
-def register_data_files(data_price, accounts):
-    commitment_dur = 600
-    for code_hash in accounts:
-        with suppress(Exception):
-            _register_data(code_hash, data_price, commitment_dur)
-            time.sleep(1)
+def print_prices(hashes):
+    for code_hash in hashes:
+        (price, _commitment_dur) = get_data_price(env.PROVIDER_ID, code_hash, is_verbose=False)
+        log(f"{code_hash}={price}")
 
-    log()
-    log(f"#> registering data {len(hashes_small)} files{ok()}")
+
+def register_data_files(data_price, hashes):
+    log(f"#> registering data {len(hashes)} files")
+    for code_hash in hashes:
+        with suppress(Exception):
+            _register_data(code_hash, data_price, commitment_dur=600)
+            time.sleep(1)
 
 
 def main():
-    # register_data_files(data_price=1, accounts=hashes_small)
-    register_data_files(data_price=20, accounts=hashes_medium)
-    register_data_files(data_price=30, accounts=hashes_medium_2)
+    # register_data_files(data_price=1, hashes=hashes_small)
+    register_data_files(data_price=20, hashes=hashes_medium_1)
+    log()
+    register_data_files(data_price=30, hashes=hashes_medium_2)
+    log()
+    print_prices(hashes_medium_1)
+    log()
+    print_prices(hashes_medium_2)
 
 
 if __name__ == "__main__":

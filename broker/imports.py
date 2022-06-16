@@ -43,20 +43,20 @@ def _connect_into_web3() -> None:
         else:
             cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
     else:
-        web3_ipc_path = env.DATADIR.joinpath("geth.ipc")
-        cfg.w3 = Web3(IPCProvider(web3_ipc_path))
+        web3_ipc_fn = env.DATADIR.joinpath("geth.ipc")
+        cfg.w3 = Web3(IPCProvider(web3_ipc_fn))
         # inject the poa compatibility middleware to the innermost layer
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
 def connect_into_web3() -> None:
-    """Connect into private network using web3.
+    """Connect into private ethereum network using web3.
 
     Note that you should create only one RPC Provider per process, as it
     recycles underlying TCP/IP network connections between your process and
     Ethereum node
     """
-    web3_ipc_path = env.DATADIR.joinpath("geth.ipc")
+    web3_ipc_fn = env.DATADIR.joinpath("geth.ipc")
     for _ in range(5):
         _connect_into_web3()
         if not cfg.w3.isConnected():
@@ -80,17 +80,25 @@ def connect_into_web3() -> None:
                     "to /private/geth.ipc file doing: ",
                     end="",
                 )
-                log(f"sudo chown $(logname) {web3_ipc_path}", "green")
-                log(f"#> Running `sudo chown $(whoami) {web3_ipc_path}`")
-                run(["sudo", "chown", env.WHOAMI, web3_ipc_path])
+                log(f"sudo chown $(logname) {web3_ipc_fn}", "green")
+                log(f"#> Running `sudo chown $(whoami) {web3_ipc_fn}`")
+                run(["sudo", "chown", env.WHOAMI, web3_ipc_fn])
         else:
             break
     else:
         terminate(is_traceback=False)
 
 
+def read_abi_file():
+    try:
+        abi_file = env.EBLOCPATH / "broker" / "eblocbroker_scripts" / "abi.json"
+        return read_json(abi_file, is_dict=False)
+    except Exception as e:
+        raise Exception(f"unable to read the abi.json file: {abi_file}") from e
+
+
 def connect_into_eblocbroker() -> None:
-    """Connect into ebloc-broker contract in the given blockchain."""
+    """Connect into ebloc-broker smart contract in the given private blockchain."""
     if config.ebb:
         return
 
@@ -102,40 +110,31 @@ def connect_into_eblocbroker() -> None:
         raise QuietExit
 
     try:
-        abi_file = env.EBLOCPATH / "broker" / "eblocbroker_scripts" / "abi.json"
-        abi = read_json(abi_file, is_dict=False)
-    except Exception as e:
-        raise Exception(f"could not read the abi.json file: {abi_file}") from e
-
-    try:
-        if env.IS_BLOXBERG:
-            if not cfg.IS_BROWNIE_TEST:
-                from brownie import network, project
-
-                try:
-                    network.connect("bloxberg")
-                except Exception as e:
-                    print_tb(e)
-                    add_bloxberg_into_network_config.main()
-                    # network.connect("bloxberg")
-                    try:
-                        log(
-                            "warning: [green]bloxberg[/green] key is added into the "
-                            "[magenta]~/.brownie/network-config.yaml[/magenta] yaml file. Please try again."
-                        )
-                        network.connect("bloxberg")
-                    except KeyError:
-                        sys.exit(1)
-
-                project = project.load(env.CONTRACT_PROJECT_PATH)
-                config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
-                config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
-                #: for the contract's events
-                config._eblocbroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
-        elif env.IS_EBLOCPOA:
-            config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=abi)
+        if env.IS_EBLOCPOA:
+            config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file())
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
+        elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
+            from brownie import network, project
+
+            try:
+                network.connect("bloxberg")
+            except:
+                add_bloxberg_into_network_config.main()
+                try:
+                    log(
+                        "warning: [green]bloxberg[/green] key is added into the "
+                        "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
+                    )
+                    network.connect("bloxberg")
+                except KeyError:
+                    sys.exit(1)
+
+            project = project.load(env.CONTRACT_PROJECT_PATH)
+            config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
+            config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
+            #: required for to fetch the contract's events
+            config._eblocbroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file())
     except Exception as e:
         print_tb(e)
         raise e

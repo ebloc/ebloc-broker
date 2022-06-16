@@ -31,9 +31,7 @@ git pull --rebase -v
 
 # nodejs
 # ======
-output=$(node -v)
-if [ "$output" == "" ];then
-   # curl -sL https://deb.nodesource.com/setup_14.x | sudo bash -
+if [ "$(node -v)" == "" ];then
    curl -fsSL https://deb.nodesource.com/setup_17.x | sudo -E bash -
    sudo apt-get install -y nodejs
    node -v
@@ -83,7 +81,7 @@ install_ipfs () {
         echo ipfs_current_version=v$ipfs_current_version
     fi
     cd /tmp
-    version="0.11.0"
+    version="0.13.0"
     echo "version_to_download=v"$version
     if [[ "$ipfs_current_version" == "$version" ]]; then
         echo "$GREEN##$NC Latest version is already downloaded"
@@ -110,20 +108,19 @@ install_ipfs () {
     ipfs config Routing.Type none
     open_port_4001
 }
-install_ipfs
-
 # echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 # sudo sysctl -p
-
-# go-geth
-# =======
+install_ipfs
 sudo add-apt-repository -y ppa:ethereum/ethereum
 sudo apt-get -y install ethereum
 
 # python
 # ======
-sudo apt install software-properties-common -y
+sudo apt install libgirepository1.0-dev -y
+sudo apt install libcairo2-dev -y
+
 sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt install software-properties-common -y
 sudo apt-get update
 sudo apt install python-dev -y
 sudo apt install python2 -y
@@ -133,17 +130,13 @@ sudo apt install python3-pip -y
 sudo apt install python3-venv -y
 sudo apt install python3-virtualenv -y
 sudo apt install python3.7 -y
-sudo apt install python3.8-dev -y
-sudo apt install python3.8-venv -y
-sudo apt install libgirepository1.0-dev -y
-sudo apt install libcairo2-dev
 
 # mongodb
 # =======
 curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
 echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | \
     sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-sudo apt update
+sudo apt-get update
 sudo apt-get install -y mongodb-org
 sudo chown -R mongodb. /var/log/mongodb
 sudo chown -R mongodb. /var/lib/mongodb
@@ -157,11 +150,11 @@ install_ebb_pip_packages () {
     VENV=$HOME/venv
     [ ! -d $VENV ] && python3 -m venv $VENV
     source $VENV/bin/activate
-    $VENV/bin/python3.8 -m pip install --upgrade pip
+    $VENV/bin/python3 -m pip install --upgrade pip
     python3 -m pip install --no-use-pep517 cm-rgb
-    pip install wheel
+    $VENV/bin/python3 -m pip install wheel
     cd ~/ebloc-broker
-    pip install -e . --use-deprecated=legacy-resolver
+    $VENV/bin/python3 -m pip install -e . --use-deprecated=legacy-resolver
     mkdir -p $HOME/.cache/black
     sudo chown $(logname) -R $HOME/.cache/black
     black_version=$(pip freeze | grep black | sed 's|black==||g')
@@ -223,7 +216,7 @@ install_brownie
 gpg --gen-key
 gpg --list-keys
 
-mkdir -p ~/git
+mkdir -p ~/docker ~/git
 git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive

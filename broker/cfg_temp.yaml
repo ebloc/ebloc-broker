@@ -10,7 +10,7 @@ cfg:
   gdrive: /usr/local/bin/gdrive
   rpc_port: 8545
   provider:
-    slurmuser: alper
+    slurm_user: alper
     is_bloxberg: true
     is_thread: true
     is_ipfs_use: true

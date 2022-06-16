@@ -56,5 +56,4 @@ def convert_md_2_rst_process(fn_root):
     file_target.close()
 
 
-home = expanduser("~")
-setup(f"{home}/eBlocBroker/docs/convert")
+setup(f"{expanduser('~')}/ebloc-broker/docs/convert")

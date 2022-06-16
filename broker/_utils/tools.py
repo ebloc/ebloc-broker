@@ -138,7 +138,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
     sep_terminate = "raise Terminate"
     tb_text = "".join(traceback.format_exc())
     if sep_terminate in tb_text:
-        tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [magenta]Terminate[/magenta]()"
+        tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [m]Terminate[/m]()"
 
     if is_print_exc and tb_text != "NoneType: None\n":
         log(tb_text.rstrip(), "bold", where_back=1)
@@ -167,12 +167,12 @@ def _remove(path: str, is_verbose=False) -> None:
             shutil.rmtree(path)
         else:
             if is_verbose:
-                log(f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[magenta]{path}")
+                log(f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[m]{path}")
 
             return
 
         if is_verbose:
-            log(f"#> {WHERE(1)} following path:\n[magenta]{path}[/magenta] is removed")
+            log(f"#> {WHERE(1)} following path:\n[m]{path}[/m] is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -251,7 +251,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True, color=None):
     """Calculate the changed percent."""
     try:
         initial = float(initial)
@@ -263,11 +263,14 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
     if percent == -0.0:
         change = 0.0
-        color = "white"
+        if not color:
+            color = "white"
     elif percent > 0:
-        color = "green"
+        if not color:
+            color = "green"
     else:
-        color = "red"
+        if not color:
+            color = "red"
 
     if abs(float(change)) < 0.1:
         change = "{0:.8f}".format(float(change))
@@ -395,7 +398,7 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"[bold green]{name}[/bold green] is not running on the background {WHERE(1)}")
+        print_tb(f"[bold green]{name}[/bold green] is not running on the background  {WHERE(1)}")
 
     return False
 

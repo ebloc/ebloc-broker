@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# from random import randint
-
 import networkx as nx
 
 G = nx.DiGraph()
@@ -20,3 +18,4 @@ G.add_edge(1, 4)
 # now draw the graph:
 pos = {0: (0, 0), 1: (1, 1), 2: (-1, 1), 3: (0, 2), 4: (2, 2)}
 nx.draw(G, pos, edge_color="r")
+print("end")

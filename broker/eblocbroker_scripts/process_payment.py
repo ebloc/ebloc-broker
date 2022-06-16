@@ -23,12 +23,17 @@ def process_payment(
     data_transfer_out,
     core,
     run_time,
-    received_block_number=0,
+    received_bn=0,
 ):
     """Process payment of the received job."""
+    if not result_ipfs_hash:
+        _result_ipfs_hash = '""'
+    else:
+        _result_ipfs_hash = result_ipfs_hash
+
     log(
         f"~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
-        f" {result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
+        f" {_result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'",
         "bold blue",
     )
@@ -37,7 +42,7 @@ def process_payment(
         if len(result_ipfs_hash) != 46 and cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             raise Exception("Result ipfs's length does not match with its original length, check your job_key")
 
-    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_block_number, is_print=False)
+    self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_bn, is_print=False)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:
         log(f"warning: job ({job_key},{index},{job_id}) is completed and already get paid")
         sys.exit(1)
@@ -60,13 +65,12 @@ def process_payment(
             int(ended_timestamp),
             int(data_transfer_in),
             int(data_transfer_out),
-            # int(elapsed_time),  # TODO
+            int(elapsed_time),
             core,
             run_time,
             final_job,
         ]
-        tx = self._process_payment(job_key, args, int(elapsed_time), result_ipfs_hash)
-        # tx = self._process_payment(job_key, args, result_ipfs_hash)  # TODO
+        tx = self._process_payment(job_key, args, result_ipfs_hash)
     except Exception as e:
         print_tb(e)
         raise e
@@ -74,8 +78,7 @@ def process_payment(
     return self.tx_id(tx)
 
 
-if __name__ == "__main__":
-    Ebb = cfg.Ebb
+def main():
     if len(sys.argv) == 12:
         args = sys.argv[1:]
         my_args = []  # type: Union[Any]
@@ -106,7 +109,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        tx_hash = Ebb.process_payment(
+        tx_hash = cfg.Ebb.process_payment(
             job_key,
             index,
             job_id,
@@ -119,6 +122,10 @@ if __name__ == "__main__":
             core,
             run_time,
         )
-        log(f"tx_hash={tx_hash}")
+        log(f"tx_hash={tx_hash}", "bold")
     except:
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# git fetch
-# git checkout origin/master -- README.md
-
 wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
 mv geth.md source/geth.md
 cp $HOME/ebloc-broker/README.md /home/alper/ebloc-broker/docs/convert/source/readme.md

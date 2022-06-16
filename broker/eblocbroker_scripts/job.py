@@ -276,7 +276,7 @@ class Job:
         self.storage_hours.append(0)
         self.storage_ids.append(StorageID.NONE)
         self.data_transfer_ins.append(0)
-        self.data_prices_set_block_numbers.append(0)  # TODO: calculate from the contract
+        self.data_prices_set_block_numbers.append(0)
 
     def print_before_submit(self):
         for idx, code_hash in enumerate(self.code_hashes_str):
@@ -305,18 +305,17 @@ class Job:
                 selected_provider = provider
                 selected_price = _price
 
-        is_all_same = all(x == price_list[0] for x in price_list)
-        return selected_provider, selected_price, is_all_same
+        is_all_equal = all(x == price_list[0] for x in price_list)
+        return selected_provider, selected_price, is_all_equal
 
     def search_best_provider(self, requester):
-        provider_to_share, best_price, is_all_same = self._search_best_provider(requester, is_verbose=True)
+        provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=True)
         self.price, *_ = self.cost(provider_to_share, requester)
         if self.price != best_price:
             raise Exception(f"job_price={self.price} and best_price={best_price} does not match")
 
-        if is_all_same:  # force to submit given provider address
+        if is_all_equal:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
-            # breakpoint()  # DEBUG
 
         log(f"[green]##[/green] provider_to_share={provider_to_share} | price={best_price}", "bold")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
@@ -424,25 +423,24 @@ class JobPrices:
                 and ds.is_verified_used
             ):
                 if is_verbose:
-                    log(f"==> For {bytes32_to_ipfs(code_hash)} cost of storage is not paid")
+                    log(f"==> for {bytes32_to_ipfs(code_hash)} cost of storage is not paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0 or self.job.storage_ids[idx] == StorageID.NONE:
                     if self.job.data_prices_set_block_numbers[idx] == 0:
                         registered_data_bn_list = self.Ebb.get_registered_data_bn(self.job.provider, code_hash)
                         if bn > registered_data_bn_list[-1]:
-                            data_price_set_block_number = registered_data_bn_list[-1]
+                            data_price_set_bn = registered_data_bn_list[-1]
                         else:
-                            data_price_set_block_number = registered_data_bn_list[-2]
+                            data_price_set_bn = registered_data_bn_list[-2]
                     else:
-                        data_price_set_block_number = self.job.data_prices_set_block_numbers[idx]
+                        data_price_set_bn = self.job.data_prices_set_block_numbers[idx]
 
                     # if true, registered data's price should be considered for storage
-                    output = self.ebb.getRegisteredDataPrice(
+                    (data_price, *_) = self.Ebb.get_registered_data_price(
                         self.job.provider,
                         code_hash,
-                        data_price_set_block_number,
+                        data_price_set_bn,
                     )
-                    data_price = output[0]
                     self.storage_cost += data_price
                     self.registered_data_cost_list[_code_hash] = data_price
                     self.registered_data_cost += data_price

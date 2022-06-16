@@ -19,4 +19,4 @@ killall python 2> /dev/null
 killall python3 2> /dev/null
 echo "## killall all jobs in squeue"
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
-printf "killall for ebloc-broker test  [  ${GREEN}OK${NC} ] \n"
+printf "killall for ebloc-broker test  [  ${GREEN}OK${NC}  ]\n"

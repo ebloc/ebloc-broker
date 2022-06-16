@@ -11,6 +11,11 @@ import git
 from broker._utils.yaml import Yaml
 
 
+def is_docker() -> bool:
+    path = "/proc/self/cgroup"
+    return os.path.exists("/.dockerenv") or os.path.isfile(path) and any("docker" in line for line in open(path))
+
+
 def get_git_root(path):
     git_repo = git.Repo(path, search_parent_directories=True)
     git_root = git_repo.git.rev_parse("--show-toplevel")
@@ -31,6 +36,8 @@ def main():
     yaml_file["datadir"] = str(home_dir / ".eblocpoa")
     yaml_file["log_path"] = str(home_dir / ".ebloc-broker")
     yaml_file["ebloc_path"] = git_root
+    if is_docker():
+        yaml_file["provider"]["slurm_user"] = "slurm"
 
 
 if __name__ == "__main__":

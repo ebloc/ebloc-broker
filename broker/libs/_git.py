@@ -127,7 +127,7 @@ def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
 
         patch_upload_fn = f"{patch_name}.gz"  # file to be uploaded as zip
         patch_file = f"{target_path}/{patch_upload_fn}"
-        log(f"patch_path=[magenta]{patch_upload_fn}", "bold")
+        log(f"patch_path=[m]{patch_upload_fn}", "bold")
         try:
             run(["env", f"HOME={home_dir}", "git", "add", "-A"])
             diff_and_gzip(patch_file, home_dir)
@@ -242,7 +242,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
 
     with cd(git_folder):
         base_name = path_leaf(patch_file)
-        log(f"==> [magenta]{base_name}")
+        log(f"==> [m]{base_name}")
         # folder_name = base_name_split[2]
         #
         # base_name_split = base_name.split("_")

@@ -18,17 +18,17 @@ from broker import cfg
 install()  # for rich, show_locals=True
 # pretty.install()
 
+IS_WRITE = True  # if False disable write into file for the process
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
 custom_theme = Theme(
     {
-        "info": "dim cyan",
-        "warning": "magenta",
+        "info": "bold magenta",
+        # "info": "bold dim magenta",
         "danger": "bold red",
         "b": "bold",
         "m": "magenta",
-        # "magenta": "#ff79c6",
     }
 )
 console = Console(theme=custom_theme)
@@ -63,29 +63,23 @@ class Log:
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
         self.console: Dict[str, Console] = {}
 
-    def print_color(self, text: str, color=None, is_bold=True, end=None) -> None:
+    def print_color(self, text: str, color=None, is_bold=True, end="\n") -> None:
         """Print string in color format."""
         if text[0:3] in ["==>", "#> ", "## "]:
             if color and text == "==> ":
-                print(f"[bold {color}]{text[0:3]}[/bold {color}]", end="", flush=True)
+                console.print(f"[bold][{color}]{text[0:3]}[{color}][/bold]", end="")
             else:
-                print(f"[bold blue]{text[0:3]}[/bold blue]", end="", flush=True)
+                console.print(f"[bold blue]{text[0:3]}[/bold blue]", end="")
 
             text = text[3:]
         elif text[0:2] == "E:":
-            print("[bold red]E:[/bold red]", end="", flush=True)
+            console.print("[bold red]E:[/bold red]", end="")
             text = text[2:]
 
-        if end is None:
-            if is_bold:
-                print(f"[bold {color}]{text}[/bold {color}]")
-            else:
-                print(f"[{color}]{text}[/{color}]")
+        if is_bold:
+            console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end)
         else:
-            if is_bold:
-                print(f"[bold {color}]{text}[/bold {color}]", end="", flush=True)
-            else:
-                print(f"[{color}]{text}[/{color}]", end="")
+            console.print(f"[{color}]{text}[/{color}]", end=end)
 
     def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
@@ -164,14 +158,14 @@ def console_ruler(msg="", character="=", color="cyan", fn=""):
         ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
 
     if msg:
-        console.rule(f"[bold {color}]{msg}", characters=character)
-        ll.console[fn].rule(f"[bold {color}]{msg}", characters=character)
+        console.rule(f"[bold][{color}]{msg}", characters=character)
+        ll.console[fn].rule(f"[bold][{color}]{msg}", characters=character)
     else:
         console.rule(characters=character)
         ll.console[fn].rule(characters=character)
 
 
-def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
+def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
     if not is_output:
         is_print = is_output
     else:
@@ -191,11 +185,8 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
         if is_print:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_bullet:
-                    print(
-                        f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{text[_len:]}[/{color}]",
-                        end=end,
-                        flush=flush,
-                    )
+                    _msg = f"[bold][{_color}]{is_r}{text[:_len]}[/{_color}][/bold][{color}]{text[_len:]}[/{color}]"
+                    console.print(_msg, end=end)
                 else:
                     ll.print_color(str(text), color, is_bold=is_bold, end=end)
 
@@ -205,22 +196,22 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
             _text = text[_len:]
 
         _text = text[_len:]
-        if is_write:
+        if is_write and IS_WRITE:
             if is_bullet:
                 ll.console[fn].print(
-                    f"[bold {_color}]{is_r}{text[:_len]}[/bold {_color}][{color}]{_text}[/{color}]",
+                    f"[bold][{_color}]{is_r}{text[:_len]}[/{_color}][/bold][{color}]{_text}[/{color}]",
                     end=end,
                     soft_wrap=True,
                 )
             else:
                 if color:
-                    ll.console[fn].print(f"[bold {color}]{_text}[/bold {color}]", end="", soft_wrap=True)
+                    ll.console[fn].print(f"[bold][{color}]{_text}[/{color}][/bold]", end=end, soft_wrap=True)
                 else:
-                    ll.console[fn].print(_text, end="", soft_wrap=True)
+                    ll.console[fn].print(_text, end=end, soft_wrap=True)
     else:
         text_to_write = ""
         if is_bullet:
-            text_to_write = f"[bold {_color}]{is_r}{_text[:_len]}[/bold {_color}][bold]{_text[_len:]}[/bold]"
+            text_to_write = f"[bold][{_color}]{is_r}{_text[:_len]}[/{_color}][/bold][bold]{_text[_len:]}[/bold]"
         else:
             if _color:
                 text_to_write = f"[{_color}]{_text}[/{_color}]"
@@ -228,28 +219,17 @@ def _log(text, color, is_bold, flush, fn, end, is_write=True, is_output=True):
                 text_to_write = _text
 
         if is_print:
-            if end == "":
-                print(text_to_write, end="")
-            else:
-                print(text_to_write, flush=flush)
+            console.print(text_to_write, end=end)
 
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print(text_to_write, end=end, soft_wrap=True)
-
-    if end is None:
-        if is_write:
-            ll.console[fn].print("")
-
-        if color and is_bullet:
-            print()
 
 
 def log(
     text="",
     color=None,
     fn=None,
-    end=None,
-    flush=False,
+    end="\n",
     is_write=True,
     where_back=0,
     is_code=False,
@@ -263,9 +243,10 @@ def log(
     * colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
 
-    :param text: string to print
-    :param color: color of the complete string
-    :param fn: filename to write
+    :param end: (str, optional) Character to write at end of output. Defaults to "\\n".
+    :param text: String to print
+    :param color: Color of the complete string
+    :param fn: Filename to write
     """
     is_bold: bool = False
     if color in ["bold", "b"]:
@@ -301,7 +282,7 @@ def log(
     if is_align:
         text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
 
-    if is_write:
+    if is_write and IS_WRITE:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
             fn = thread_log_files[threading.current_thread().name]
         elif not fn:
@@ -319,7 +300,7 @@ def log(
 
     if isinstance(text, list):
         pprint(text)
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print(text)
     elif isinstance(text, dict):
         if max_depth:
@@ -327,10 +308,10 @@ def log(
         else:
             pprint(text)
 
-        if is_write:
+        if is_write and IS_WRITE:
             ll.console[fn].print(text)
     else:
-        _log(text, color, is_bold, flush, fn, end, is_write, is_output)
+        _log(text, color, is_bold, fn, end, is_write, is_output)
 
 
 def WHERE(back=0):

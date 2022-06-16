@@ -192,7 +192,7 @@ class GdriveClass(Storage):
 
         mime_type = gdrive.get_file_info(gdrive_output, _type="Mime")
         folder_name = gdrive.get_file_info(gdrive_output, _type="Name")
-        log(f"==> mime_type=[magenta]{mime_type}")
+        log(f"==> mime_type=[m]{mime_type}")
         if is_job_key:
             # key for the sourceCode tar.gz file is obtained
             try:
@@ -241,7 +241,7 @@ class GdriveClass(Storage):
         # folder is already stored by its code_hash
         code_hash = name.replace(".tar.gz", "")
         log(f"==> name={name}")
-        log(f"==> mime_type=[magenta]{mime_type}")
+        log(f"==> mime_type=[m]{mime_type}")
         if _id == 0:
             # source code folder, ignore downloading result-*
             name = f"{name}.tar.gz"

@@ -38,8 +38,7 @@ class Contract:
         get_job_code_hashes,
         get_job_info,
         get_job_info_print,
-        get_job_owner,
-        set_job_received_block_number,
+        set_job_received_bn,
         update_job_cores,
     )
     from broker.eblocbroker_scripts.get_provider_info import get_provider_info
@@ -319,6 +318,10 @@ class Contract:
             try:
                 return self.timeout(method, *args)
             except ValueError as e:
+                if "Sequence has incorrect length" in str(e):
+                    print_tb(e)
+                    raise QuietExit from e
+
                 if "There is another transaction with same nonce in the queue" in str(e):
                     log(f"warning: Tx: {e}")
                     log("#> sleeping for 15 seconds, will try again")

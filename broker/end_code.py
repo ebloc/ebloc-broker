@@ -136,10 +136,10 @@ class Gdrive(Common):
             cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
             gdrive_info = subprocess_call(cmd, 5, sleep_time=30)
         except Exception as e:
-            raise Exception(f"{WHERE(1)} E: {key} does not have a match. meta_data={meta_data}. {e}") from e
+            raise Exception(f"{WHERE(1)} E: {key} does not have a match, meta_data={meta_data}. {e}") from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        log(f"mime_type=[magenta]{mime_type}", "bold")
+        log(f"mime_type=[m]{mime_type}", "bold")
         self.data_transfer_out += calculate_size(self.patch_file)
         log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB", "bold")
         if "folder" in mime_type:
@@ -218,17 +218,17 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.patch_dir_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
         mkdirs([self.patch_dir, self.patch_dir_ipfs])
         remove_empty_files_and_folders(self.results_folder)
-        log(f"==> whoami={getpass.getuser()} | id={os.getegid()}")
-        log(f"==> home={env.HOME}")
-        log(f"==> pwd={os.getcwd()}")
-        log(f"==> results_folder={self.results_folder}")
-        log(f"==> provider_id={env.PROVIDER_ID}")
-        log(f"==> job_key={self.job_key}")
-        log(f"==> index={self.index}")
-        log(f"==> storage_ids={self.storage_ids}")
-        log(f"==> folder_name=[white]{self.folder_name}")
-        log(f"==> requester_id_address={self.requester_id_address}")
-        log(f"==> received={self.job_info['received']}")
+        log(f" * whoami={getpass.getuser()} | id={os.getegid()}")
+        log(f" * home={env.HOME}")
+        log(f" * pwd={os.getcwd()}")
+        log(f" * results_folder={self.results_folder}")
+        log(f" * provider_id={env.PROVIDER_ID}")
+        log(f" * job_key={self.job_key}")
+        log(f" * index={self.index}")
+        log(f" * storage_ids={self.storage_ids}")
+        log(f" * folder_name=[white]{self.folder_name}")
+        log(f" * requester_id_address={self.requester_id_address}")
+        log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
         with suppress(Exception):
             p = psutil.Process(int(self.job_state_running_pid))
@@ -237,7 +237,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                 if not pid_exists(self.job_state_running_pid):
                     break
                 else:
-                    log("#> job_state_running() is still running, sleeping for 15 seconds")
+                    log("#> job_state_running() is still running; sleeping for 15 seconds")
                     sleep(15)
 
         self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(self.job_key, self.index)
@@ -350,7 +350,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn, "-delete"])
 
-    def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key):
+    def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key) -> None:
         if is_job_key:
             log(f"==> base_patch={self.patch_dir}")
             log(f"==> source_code_patch={name}")
@@ -534,7 +534,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             raise e
 
-        log("## Receive state of the running job  [  OK  ]", "bold green")
+        log("## receive state of the running job  [  OK  ]", "bold green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(
@@ -559,7 +559,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             self.elapsed_time = run_time[self.job_id]
 
         log(f"finalized_elapsed_time={self.elapsed_time}", "bold")
-        log("## job_info=", "bold magenta", end="")
+        log("## job_info=", "info", end="")
         log(pprint.pformat(self.job_info), "bold")
         try:
             self.get_cloud_storage_class(0).initialize(self)

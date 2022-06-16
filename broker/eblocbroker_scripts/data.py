@@ -63,7 +63,7 @@ def get_data_info(self, provider) -> None:
         raise e
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) == 2:
         provider = str(sys.argv[1])
     else:
@@ -74,3 +74,7 @@ if __name__ == "__main__":
     except Exception as e:
         print_tb(e)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

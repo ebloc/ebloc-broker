@@ -30,7 +30,7 @@ def enum(*sequential, **named):
 
 
 class State:
-    """State code of the Slurm jobs, add keys into the hashmap.
+    """Set state code of the Slurm jobs and add their keys into the hashmap.
 
     Hashmap keys:
         - SUBMITTED: Initial state.
@@ -80,13 +80,13 @@ def session_start_msg(slurm_user, block_number, pid):
     else:
         PROVIDER_ID = env.PROVIDER_ID
 
-    log(f"==> driver process has the PID={pid}")
-    log(f"==> provider_address={PROVIDER_ID}")
-    log(f"==> slurm_user={slurm_user}")
-    log(f"==> left_of_block_number={block_number}")
-    log(f"==> latest__block_number={cfg.Ebb.get_block_number()}")
+    log(f" * driver_process_PID={pid}")
+    log(f" * provider_address={PROVIDER_ID}")
+    log(f" * slurm_user={slurm_user}")
+    log(f" * left_of_block_number={block_number}")
+    log(f" * latest__block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:
-        raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS}")
+        raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
 
 
 def run_driver_cancel():

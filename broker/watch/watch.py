@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -8,6 +9,8 @@ from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear
 from broker._utils.tools import _date, log, print_tb
+from broker._utils.yaml import Yaml
+from broker.errors import QuietExit
 from broker.lib import state
 
 # from broker.test_setup.user_set import providers
@@ -16,18 +19,31 @@ Ebb = cfg.Ebb
 watch_only_jobs = True
 
 
+def get_eth_address_from_cfg():
+    hidden_base_dir = Path.home() / ".ebloc-broker"
+    fn = hidden_base_dir / "cfg.yaml"
+    if not os.path.isfile(fn):
+        if not os.path.isdir(hidden_base_dir):
+            raise QuietExit(f"E: {hidden_base_dir} is not initialized")
+
+        raise QuietExit(f"E: {fn} is not created")
+
+    cfg_yaml = Yaml(fn)
+    cfg = cfg_yaml["cfg"]
+    return cfg.w3.toChecksumAddress(cfg["eth_address"].lower())
+
+
 def watch(eth_address="", from_block=None):
-    from_block = 15394725
-    # if not eth_address:
-    #     # TODO: pull from cfg
-    #     eth_address = "0xeab50158e8e51de21616307a99c9604c1c453a02"
-
-    if not eth_address:
-        log("E: eth_address is empty, run as: ./watch.py <eth_address>")
-        sys.exit(1)
-
     if not from_block:
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
+
+    from_block = 15867616
+    if not eth_address:
+        try:
+            eth_address = get_eth_address_from_cfg()
+        except Exception as e:
+            log(f"E: {e}\neth_address is empty, run as: ./watch.py <eth_address>")
+            sys.exit(1)
 
     is_provider = True
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
@@ -58,6 +74,7 @@ def watch(eth_address="", from_block=None):
 
         columns = 80
         columns_size = int(int(columns) / 2 - 9)
+        header = f"   [bold yellow]{'{:<44}'.format('KEY')} INDEX STATUS[/bold yellow]"
         job_full = ""
         job_count = 0
         completed_count = 0
@@ -78,23 +95,23 @@ def watch(eth_address="", from_block=None):
                 is_print=False,
             )
             state_val = state.inv_code[_job["stateCode"]]
-            _color = "magenta"
+            c = "magenta"
             if state_val == "COMPLETED":
-                _color = "green"
+                c = "green"
                 completed_count += 1
 
             job_full = (
-                f" [bold blue]*[/bold blue] [bold]{_job['job_key']}[/bold] {_job['index']} {_job['provider']} "
-                f"[bold {_color}]{state_val}[/bold {_color}]\n{job_full}"
+                f" [bold blue]*[/bold blue] [bold white]{'{:<48}'.format(_job['job_key'])}[/bold white] "
+                f"{_job['index']} [bold {c}]{state_val}[/bold {c}]\n{job_full}"
             )
 
         if not watch_only_jobs:
             job_ruler = (
                 "[green]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/green]"
             )
-            job_full = f"{job_ruler}\n{job_full}".rstrip()
+            job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
         else:
-            job_full = job_full.rstrip()
+            job_full = f"{header}\n{job_full}".rstrip()
 
         is_connected = Ebb.is_web3_connected()
         _console_clear()
@@ -106,7 +123,7 @@ def watch(eth_address="", from_block=None):
         if not watch_only_jobs:
             providers = Ebb.get_providers()
             columns_size = int(int(columns) / 2 - 12)
-            log("\r" + "=" * columns_size + "[bold cyan] providers [/bold cyan]" + "=" * columns_size, "green")
+            log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "green")
             for k, v in providers_info.items():
                 log(f"** provider_address={k}", end="\r")
                 log(v, end="\r")
@@ -116,13 +133,17 @@ def watch(eth_address="", from_block=None):
         time.sleep(2)
 
 
+def main():
+    eth_address = None
+    if len(sys.argv) == 2:
+        eth_address = sys.argv[1]
+
+    watch(eth_address)
+
+
 if __name__ == "__main__":
     try:
-        eth_address = None
-        if len(sys.argv) == 2:
-            eth_address = sys.argv[1]
-
-        watch(eth_address)
+        main()
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

@@ -2,7 +2,6 @@
 
 #+begin_src bash
 b6aaf03752dc68d625fc57b451faa2bf  BL06-gargoyle-sml.tbz2
-f1de03edab51f281815c3c1e5ecb88c6  babyface.n6c100.tbz2
 082d2a71d86a64250f06be14c55ca27e  babyface.n6c10.tbz2
 03919732a417cb1d14049844b9de0f47  BL06-camel-med.tbz2
 983b9fe8a85b543dd5a4a75d031f1091  BL06-camel-sml.tbz2
@@ -10,7 +9,6 @@ f71df9d36cd519d80a3302114779741d  BL06-gargoyle-med.tbz2
 c0fee5472f3c956ba759fd54f1fe843e  BVZ-sawtooth.tbz2
 63ffd1da6122e3fe9f63b1e7fcac1ff5  BVZ-tsukuba.tbz2
 9e8918ff9903e3314451bf2943296d31  BVZ-venus.tbz2
-bea2685fa4977823bdfd6d92e4dcc2fd  doo.sh
 eaf488aea87a13a0bea5b83a41f3d49a  KZ2-sawtooth.tbz2
 e62593609805db0cd3a028194afb43b1  KZ2-tsukuba.tbz2
 3b0f75445e662dc87e28d60a5b13cd43  KZ2-venus.tbz2
@@ -18,7 +16,26 @@ ebe53bd498a9f6446cd77d9252a9847c  LB07-bunny-med.tbz2
 f82aa511f8631bfc9a82fe6fa30f4b52  LB07-bunny-sml.tbz2
 761691119cedfb9836a78a08742b14cc  liver.n6c100.tbz2
 f93b9a9f63447e0e086322b8416d4a39  liver.n6c10.tbz2
+bfc83d9f6d5c3d68ca09499190851e86  bone.n26c10.tbz2
 #+end_src
+
+#+begin_src bash
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-gargoyle-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/babyface.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-camel-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/LB07-bunny-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-sawtooth.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-tsukuba.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-venus.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-tsukuba.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/LB07-bunny-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-sawtooth.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-venus.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c100.tbz2
+#+end_src
+
+-----------------------------------------------------------------------
 
 * Medium size data-sets
 
@@ -31,7 +48,42 @@ fe801973c5b22ef6861f2ea79dc1eb9c  babyface.n26c10.tbz2
 4613abc322e8f2fdeae9a5dd10f17540  BL06-gargoyle-lrg.tbz2
 dd0fbccccf7a198681ab838c67b68fbf  bone.n6c100.tbz2
 45281dfec4618e5d20570812dea38760  bone.n6c10.tbz2
-fa64e96bcee96dbc480a1495bddbf53c  LB07-bunny-lrg.tbz2
 8f6faf6cfd245cae1b5feb11ae9eb3cf  liver.n26c100.tbz2
 1bfca57fe54bc46ba948023f754521d6  liver.n26c10.tbz2
+#+end_src
+
+* Download all Medium data files using ~wget~
+
+#+begin_src bash
+wget -bqc https://vision.cs.uwaterloo.ca/files/adhead.n6c100.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/adhead.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/babyface.n26c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/babyface.n26c100.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-camel-lrg.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-gargoyle-lrg.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/bone.n6c100.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/bone.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n26c100.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n26c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/babyface.n6c100.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/babyface.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-camel-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-camel-med.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-gargoyle-med.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BL06-gargoyle-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-tsukuba.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-sawtooth.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/BVZ-venus.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-tsukuba.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-sawtooth.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/KZ2-venus.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/LB07-bunny-sml.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/LB07-bunny-med.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c10.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c100.tbz2
+wget -bqc https://vision.cs.uwaterloo.ca/files/bone.n26c10.tbz2
+#+end_src
+
+#+begin_src bash
+for i in `command ls *.tbz2` ; do tarx "$i" ; done
 #+end_src

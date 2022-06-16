@@ -22,7 +22,6 @@ from broker.submit_base import SubmitBase
 from broker.test_setup.user_set import providers, requesters
 from broker.utils import print_tb
 
-# yaml_files = ["job_nas.yaml"]
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 is_mini_test = True
@@ -35,8 +34,8 @@ benchmarks = ["nas", "cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
 ipfs_ids = ["ipfs", "ipfs_gpg"]
 
-# for provider_address in providers:
-#     mini_tests_submit(storage_ids, provider_address)
+# for provider_addr in providers:
+#     mini_tests_submit(storage_ids, provider_addr)
 
 # if is_mini_test:
 #     benchmarks = ["cppr"]
@@ -44,7 +43,7 @@ ipfs_ids = ["ipfs", "ipfs_gpg"]
 #     ipfs_ids = ["ipfs"]
 #     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
 
-test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas"
+test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
@@ -85,19 +84,19 @@ def create_cppr_job_script(idx):
     # ]
     registered_data_hashes_medium = {}
     registered_data_hashes_medium[0] = [
-        "050e6cc8dd7e889bf7874689f1e1ead6",  # A
-        "9d5d892a63b5758090258300a59eb389",  # A
-        "779745f315060d1bc0cd44b7266fb4da",  # A
+        "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
+        "0d6c3288ef71d89fb93734972d4eb903",  # A
+        "4613abc322e8f2fdeae9a5dd10f17540",  # A
     ]
     registered_data_hashes_medium[1] = [
-        "fe801973c5b22ef6861f2ea79dc1eb9c",  # B
-        "0d6c3288ef71d89fb93734972d4eb903",  # B
-        "4613abc322e8f2fdeae9a5dd10f17540",  # B
+        "050e6cc8dd7e889bf7874689f1e1ead6",  # B
+        "9d5d892a63b5758090258300a59eb389",  # B
+        "779745f315060d1bc0cd44b7266fb4da",  # B
     ]
     registered_data_hashes_medium[2] = [
         "dd0fbccccf7a198681ab838c67b68fbf",  # C
         "45281dfec4618e5d20570812dea38760",  # C
-        "fa64e96bcee96dbc480a1495bddbf53c",  # C
+        "bfc83d9f6d5c3d68ca09499190851e86",  # C
     ]
     registered_data_hashes_medium[3] = [
         "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
@@ -138,6 +137,7 @@ def create_cppr_job_script(idx):
     f.write("    echo $file >> output.log\n")
     f.write("    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("done\n")
+
     # adding cppr to run with data hashes
     f.write("DATA_HASH='change_folder_hash'\n")
     f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
@@ -187,12 +187,12 @@ def create_nas_job_script(is_small=False):
     return benchmark_name
 
 
-def mini_tests_submit(storage_ids, provider_address):
+def mini_tests_submit(storage_ids, provider_addr):
     is_pass = True
     required_confs = 0
-    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "nas" / "job_nas.yaml"
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "test_setup" / "job_nas.yaml"
     yaml_cfg = Yaml(yaml_fn)
-    yaml_cfg["config"]["provider_address"] = provider_address
+    yaml_cfg["config"]["provider_address"] = provider_addr
     for storage_id in storage_ids:
         yaml_cfg["config"]["source_code"]["storage_id"] = storage_id
         benchmark_name = create_nas_job_script(is_small=True)
@@ -206,7 +206,7 @@ def mini_tests_submit(storage_ids, provider_address):
                     if processed_logs:
                         job_result = vars(processed_logs[0].args)
                         job_result["tx_hash"] = tx_hash
-                        job_result["submitted_job_kind"] = f"nas_{benchmark_name}"
+                        job_result["job_kind"] = f"nas_{benchmark_name}"
                         log(job_result)
                 except IndexError:
                     log(f"E: Tx({tx_hash}) is reverted")
@@ -217,7 +217,7 @@ def run_job(counter) -> None:
 
     :param counter: counter index to keep track of submitted job number
     """
-    for idx, provider_address in enumerate(providers):
+    for idx, provider_addr in enumerate(providers):
         # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
         storage_id = (idx + counter) % len(storage_ids)
         selected_benchmark = random.choice(benchmarks)
@@ -226,12 +226,13 @@ def run_job(counter) -> None:
             storage = random.choice(ipfs_ids)
 
         if selected_benchmark == "nas":
-            log(f" * Submitting job from [cyan]NAS Benchmark[/cyan] to [green]{provider_address}", "bold blue")
+            log(f" * Submitting job from [cyan]NAS Benchmark[/cyan] to [green]{provider_addr}", "bold blue")
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to provider=[green]{provider_address}", "bold blue")
+            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to provider=[green]{provider_addr}", "bold blue")
             yaml_cfg = Yaml(cppr_yam_fn)
+            log(f"data_set_idx={idx}")
             hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_medium_data_0
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
@@ -242,7 +243,7 @@ def run_job(counter) -> None:
             yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets / dir_name)
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
-        yaml_cfg["config"]["provider_address"] = provider_address
+        yaml_cfg["config"]["provider_address"] = provider_addr
         try:
             submit_base = SubmitBase(yaml_cfg.path)
             submission_date = _date()
@@ -260,9 +261,9 @@ def run_job(counter) -> None:
                 job_result["submit_timestamp"] = submission_timestamp
                 job_result["tx_hash"] = tx_hash
                 if selected_benchmark == "nas":
-                    job_result["submitted_job_kind"] = f"{selected_benchmark}_{benchmark_name}"
+                    job_result["job_kind"] = f"{selected_benchmark}_{benchmark_name}"
                 elif selected_benchmark == "cppr":
-                    job_result["submitted_job_kind"] = f"{selected_benchmark}_{hash_medium_data_0}_{hash_medium_data}"
+                    job_result["job_kind"] = f"{selected_benchmark}_{hash_medium_data_0}_{hash_medium_data}"
 
                 ebb_mongo.add_item(tx_hash, job_result)
                 log(job_result)
@@ -270,7 +271,6 @@ def run_job(counter) -> None:
             countdown(seconds=5, is_verbose=True)
         except Exception as e:
             print_tb(e)
-            breakpoint()  # DEBUG
 
 
 def main():
@@ -279,17 +279,19 @@ def main():
 
     console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
     log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    if not is_process_on("mongod", "mongod"):
+    if not is_process_on("mongod"):
         raise Exception("mongodb is not running in the background")
 
     counter = 0
-    for _ in range(60):
+    for _ in range(80):
         for _ in range(2):  # submitted as batch is faster
             run_job(counter)
             counter += 1
 
-        sleep_time = randint(200, 400)
-        countdown(sleep_time)
+        sleep_duration = randint(250, 450)
+        countdown(sleep_duration)
+
+    log(f"#> number_of_submitted_jobs={counter}")
 
 
 if __name__ == "__main__":
