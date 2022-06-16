@@ -6,7 +6,6 @@ __ https://stackoverflow.com/a/12413139/2402577
 """
 from rich.console import Console
 
-__version__ = "2.1.0"
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 IS_BROWNIE_TEST = False
 IS_THREADING_ENABLED = True

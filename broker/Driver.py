@@ -59,7 +59,7 @@ if not cfg.IS_BREAKPOINT:
 def wait_until_idle_core_available():
     """Wait until an idle core becomes available."""
     while True:
-        if slurm.get_idle_cores(is_print=False):
+        if slurm.get_idle_cores(is_print=False) > 0:
             break
         else:
             sleep_timer(60)

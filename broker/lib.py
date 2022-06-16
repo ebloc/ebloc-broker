@@ -80,11 +80,11 @@ def session_start_msg(slurm_user, block_number, pid):
     else:
         PROVIDER_ID = env.PROVIDER_ID
 
-    log(f" * driver_process_PID={pid}")
+    log(f" * driver_process_pid={pid}")
     log(f" * provider_address={PROVIDER_ID}")
     log(f" * slurm_user={slurm_user}")
     log(f" * left_of_block_number={block_number}")
-    log(f" * latest__block_number={cfg.Ebb.get_block_number()}")
+    log(f" *  latest_block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:
         raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
 
@@ -168,7 +168,7 @@ def remove_files(fn) -> bool:
 
 
 def echo_grep_awk(str_data, grep_str, column):
-    """Echo grap awk.
+    """Echo grep awk.
 
     cmd: echo gdrive_info | grep _type | awk "{print $2}"
     """
@@ -189,7 +189,7 @@ def eblocbroker_function_call(func, max_retries):
             log("Sleep 15 seconds, will try again...")
             time.sleep(15)
 
-    raise Exception("eblocbroker_function_call completed all the attempts, ABORT")
+    raise Exception("eblocbroker_function_call completed all the attempts  [  ABORT  ]")
 
 
 def is_dir(path) -> bool:

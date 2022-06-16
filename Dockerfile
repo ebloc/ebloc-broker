@@ -164,7 +164,7 @@ COPY --chown=slurm docker/slurm/files/slurm/gres.conf /etc/slurm/gres.conf
 COPY --chown=slurm docker/slurm/files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
-## finally  # sysctl -w net.core.rmem_max=2500000  ?
+## finally
 RUN gdrive version \
  && ipfs version \
  && ipfs init \

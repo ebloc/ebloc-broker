@@ -2,7 +2,7 @@
 
 import sys
 
-from broker import cfg
+from broker import __version__, cfg
 from broker._cli.helper import Helper
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
@@ -138,7 +138,7 @@ def main():  # noqa
     try:
         globals()[args.command]()
     except KeyError:
-        print(f"ebloc-broker v{cfg.__version__} - Blockchain based autonomous computational resource broker\n")
+        print(f"ebloc-broker v{__version__} - Blockchain based autonomous computational resource broker\n")
         parser.print_help()
     except Exception as e:
         print_tb(e)

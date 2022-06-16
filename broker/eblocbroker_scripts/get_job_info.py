@@ -5,28 +5,33 @@ import sys
 from broker import cfg
 from broker._utils._log import br, log
 from broker._utils.tools import print_tb
+from broker.eblocbroker_scripts.get_transaction_receipt import get_msg_value
 from broker.eblocbroker_scripts.job import DataStorage
 from broker.lib import state
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
 
+Ebb = cfg.Ebb
+
 
 def analyze_data(self, key, provider=None):
     """Obtain information related to source-code data."""
-    current_bn = cfg.Ebb.get_block_number()
+    current_bn = Ebb.get_block_number()
     self.received_block = []
     self.storage_duration = []
     self.job_info["is_cached"] = {}
     for idx, code_hash in enumerate(self.job_info["code_hashes"]):
         if self.job_info["cloudStorageID"][idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
+            _type = "ipfs_hash"
             code_hash = code_hash_str = bytes32_to_ipfs(code_hash)
             if idx == 0 and key != code_hash:
                 log(f"E: IPFS hash does not match with the given code_hash.\n\t{key} != {code_hash}")
                 continue
         else:
+            _type = "md5sum"
             code_hash_str = cfg.w3.toText(code_hash)
 
-        received_deposit, *_ = cfg.Ebb.get_storage_info(code_hash, provider, self.job_info["job_owner"])
-        *_, job_storage_duration = cfg.Ebb.get_job_storage_duration(provider, cfg.ZERO_ADDRESS, code_hash)
+        received_deposit, *_ = Ebb.get_storage_info(code_hash, provider, self.job_info["job_owner"])
+        *_, job_storage_duration = Ebb.get_job_storage_duration(provider, cfg.ZERO_ADDRESS, code_hash)
         ds = DataStorage(job_storage_duration)
         ds.received_deposit = received_deposit
         self.received_block.append(ds.received_block)
@@ -45,12 +50,27 @@ def analyze_data(self, key, provider=None):
                     # requested for cache for the first time
                     self.job_info["is_cached"][code_hash_str] = False
 
-        log(f" * code_hash{br(idx)}=[green]{code_hash_str}")
-        log(f"==> received_block={ds.received_block}")
-        log(f"==> storage_duration{br(self.job_info['received_bn'])}={ds.storage_duration}")
-        log(f"==> cloud_storage_id{br(idx)}={StorageID(self.job_info['cloudStorageID'][idx]).name}")
-        log(f"==> cached_type={CacheType(self.job_info['cacheType'][idx]).name}")
-        log(f"==> is_cached={self.job_info['is_cached'][code_hash_str]}")
+        log(br(f"{idx}, {_type}"), "bold cyan", end="")
+        if len(code_hash) <= 32:
+            log(f" {code_hash_str} bytes={code_hash} ", "bold", end="")
+        else:
+            if _type == "ipfs_hash":
+                log(f" {code_hash_str} ", "bold", end="")
+            else:
+                log(f" {code_hash_str} {code_hash} ", "bold", end="")
+
+        log(CacheType(self.job_info["cacheType"][idx]).name, "bold magenta", end="")
+        log(" ", end="")
+        log(StorageID(self.job_info["cloudStorageID"][idx]).name, "bold", end="")
+        log(" ", end="")
+        log(f"is_cached={self.job_info['is_cached'][code_hash_str]}", "bold", end="")
+        if ds.received_block > 0:
+            log(f" received_block={ds.received_block}", "bold", end="")
+
+        if ds.storage_duration > 0:
+            log(f" storage_dur={ds.storage_duration}", "bold", end="")
+
+        log()
 
 
 def set_job_received_bn(self, received_bn):
@@ -80,6 +100,14 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 self.job_info.update({"run_time": logged_job.args["runTime"]})
                 self.job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 self.job_info.update({"cacheType": logged_job.args["cacheType"]})
+                self.job_info.update({"submitJob_tx_hash": logged_job["transactionHash"].hex()})
+                self.job_info.update(
+                    {
+                        "submitJob_msg_value": get_msg_value(
+                            logged_job["blockHash"].hex(), logged_job["transactionIndex"]
+                        )
+                    }
+                )
                 break
         else:
             log(f"E: failed to find and update job({job_key})")
@@ -107,41 +135,21 @@ def get_job_code_hashes(self, provider, job_key, index, received_bn=0):
 
         return self.job_info
     except Exception as e:
-        log(f"E: Failed to run get_job_code_hash(): {e}")
+        log(f"E: Failed to run `get_job_code_hashes()` function\n{e}")
         raise e
 
 
 def get_job_info_print(self, provider, job_key, index, received_bn):
-    Ebb = cfg.Ebb
     result_ipfs_hash = ""
     if self.job_info["result_ipfs_hash"] != empty_bytes32 and self.job_info["result_ipfs_hash"] != "":
         result_ipfs_hash = bytes32_to_ipfs(self.job_info["result_ipfs_hash"])
 
     if isinstance(self.job_info, dict):
-        log(f"==> state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})")
-        log(self.job_info)
+        log(f" * state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})")
         if result_ipfs_hash:
             log(f"==> result_ipfs_hash={result_ipfs_hash}")
 
         Ebb.get_job_code_hashes(provider, job_key, index, received_bn)
-        if self.job_info["code_hashes"]:
-            log("code_hashes:", "bold blue")
-            for idx, code_hash in enumerate(self.job_info["code_hashes"]):
-                main_cloud_storage_id = self.job_info["cloudStorageID"][idx]
-                if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
-                    _hash = bytes32_to_ipfs(code_hash)
-                    _type = "ipfs_hash"
-                else:
-                    _hash = cfg.w3.toText(code_hash)
-                    _type = "md5sum"
-
-                log(br(f"{idx}, {_type}"), "bold cyan", end="")
-                if len(code_hash) <= 32:
-                    log(f" {_hash} bytes={code_hash}", "bold")
-                else:
-                    log(f" {_hash}\n\t{code_hash}", "bold")
-
-        log()
         self.analyze_data(job_key, provider)
     else:
         print(self.job_info)
@@ -189,6 +197,9 @@ def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print
             "data_transfer_in_to_download": None,
             "data_transfer_out_used": None,
             "storage_duration": None,
+            "submitJob_tx_hash": None,
+            "processPayment_tx_hash": None,
+            "submitJob_msg_value": 0,
         }
         received_bn = self.update_job_cores(provider, job_key, index, received_bn)
         if not received_bn or received_bn == self.deployed_block_number:
@@ -215,6 +226,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"actual_elapsed_time": logged_receipt.args["elapsedTime"]})
+                self.job_info.update({"processPayment_tx_hash": logged_receipt["transactionHash"].hex()})
                 if self.job_info["result_ipfs_hash"] == empty_bytes32:
                     self.job_info.update({"result_ipfs_hash": b""})
 
@@ -227,6 +239,7 @@ def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print
 
     if is_log_print:
         self.get_job_info_print(provider, job_key, index, received_bn)
+        log(self.job_info)
 
     if not self.job_info["storage_duration"]:
         self.job_info["storage_duration"] = []
@@ -252,7 +265,7 @@ def main():
         log("E: Provide <provider, [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments")
         sys.exit(1)
 
-    cfg.Ebb.get_job_info(provider, job_key, index, job_id, received_bn, is_log_print=True)
+    Ebb.get_job_info(provider, job_key, index, job_id, received_bn, is_log_print=True)
 
 
 if __name__ == "__main__":

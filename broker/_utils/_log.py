@@ -29,6 +29,7 @@ custom_theme = Theme(
         "danger": "bold red",
         "b": "bold",
         "m": "magenta",
+        "w": "white",
     }
 )
 console = Console(theme=custom_theme)

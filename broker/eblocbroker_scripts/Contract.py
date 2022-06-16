@@ -195,6 +195,13 @@ class Contract:
 
         return block_number
 
+    def get_transaction_by_block(self, block_hash, tx_index):
+        """Returns the transaction at the index specified by transaction_index from the block specified by block_identifier.
+
+        __ https://web3py.readthedocs.io/en/stable/web3.eth.html?highlight=raw%20trace#web3.eth.Eth.get_transaction_by_block
+        """
+        return dict(self.w3.eth.get_transaction_by_block(block_hash, tx_index))
+
     def get_transaction_receipt(self, tx, compact=False):
         """Get transaction receipt.
 

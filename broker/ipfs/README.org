@@ -1,13 +1,13 @@
 * Enable Port Google-Instance
 
 Helpful conversation:
-https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c?permalink_comment_id=4022998#gistcomment-4022998
+- [[https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c?permalink_comment_id=4022998#gistcomment-4022998]]
 
 An easy way to make a node undiscoverable by other nodes is to not connect to the DHT at all. To do
 this either launch your daemon with --routing=none flag or change the ipfs config file. That is to
 say either
 
------------------
+---------------------------------------
 
 - ~Navigation Menu~ => ~VPN Network~ => ~Firewall~ => ~Create Firewall Rule~
 - Name: ~ipfs~
@@ -33,7 +33,7 @@ say either
 #+begin_src bash
 DIR=~/.ipfs
 if [ ! -d "DIR" ]; then
-	IPFS_PATH=~/.ipfs ipfs init --profile server
+    IPFS_PATH=~/.ipfs ipfs init --profile server
 fi
 go get github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen
 ipfs-swarm-key-gen > ~/.ipfs/swarm.key && cat ~/.ipfs/swarm.key && echo ""
@@ -42,7 +42,7 @@ export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon
 ipfs swarm addrs
 #+end_src
 
-* Google node
+* Google Node
 
 #+begin_src bash
 sudo firewall-cmd --add-port=4001/tcp --permanent
@@ -116,11 +116,9 @@ ipfs pin rm <ipfs_hash>
 ipfs repo gc
 #+end_src
 
-** Private IPFS setup:
+** Private IPFS Setup:
 
 #+begin_src bash
-## ipfs private network
-# =====================
 connect_private_ipfs () {
     export IPFS_PATH=~/.ipfs
     cat ~/ebloc-broker/scripts/ipfs_swarm.key | tr -d ' ' > $IPFS_PATH"/swarm.key"

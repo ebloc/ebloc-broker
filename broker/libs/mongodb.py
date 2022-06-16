@@ -50,7 +50,7 @@ class MongoBroker(BaseMongoClass):
         self.share_id_coll = self.mc["ebloc_broker"]["share_id"]
 
     def add_item(self, job_key, index, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info):
-        """Adding job_key info along with its cache_duration into mongoDB."""
+        """Adding job info along with its cache_duration into mongoDB."""
         item = {
             "job_key": job_key,
             "index": index,

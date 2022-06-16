@@ -2,6 +2,8 @@
 
 from setuptools import find_packages, setup
 
+from broker import __version__
+
 with open("README.org", "r") as fh:
     long_description = fh.read()
 
@@ -12,7 +14,7 @@ setup(
     name="ebloc-broker",
     packages=find_packages(),
     setup_requires=["wheel", "eth-brownie"],
-    version="2.1.0",  # don't change this manually, use bumpversion instead
+    version=__version__,
     license="MIT",
     description=(  # noqa: E501
         "A Python framework to communicate with ebloc-broker, which is "

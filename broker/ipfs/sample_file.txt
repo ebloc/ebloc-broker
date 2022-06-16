@@ -8,27 +8,27 @@ current_date=$(LANG=en_us_88591; date)
 DATA_HASH='e62593609805db0cd3a028194afb43b1'
 DATA1_DIR='../data_link/'$DATA_HASH'/'
 echo ' * '$current_date > output.log
-find $DATA1_DIR -name '*.max' -print0 | while read -d $'\0' file
+find $DATA1_DIR -name '*.max' -print0 | while read -d $'\0' fn
 do
-    echo $file >> output.log
-    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1
+    echo $fn >> output.log
+    (/usr/bin/time -v cppr -a pr $fn) >> output.log 2>&1
 done
 DATA_HASH='8f6faf6cfd245cae1b5feb11ae9eb3cf'
 DATA2_DIR='../data_link/'$DATA_HASH'/'
 echo ' * '$current_date >> output.log
-find $DATA2_DIR -name '*.max' -print0 | while read -d $'\0' file
+find $DATA2_DIR -name '*.max' -print0 | while read -d $'\0' fn
 do
-    echo $file >> output.log
-    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1
+    echo $fn >> output.log
+    (/usr/bin/time -v cppr -a pr $fn) >> output.log 2>&1
 done
 DATA_HASH='5052dd3d29392077cbdf8e34cbdd4f5f'
 if [[ "$DATA_HASH" != "5052dd3d29392077cbdf8e34cbdd4f5f" ]]; then
     DATA3_DIR='../data_link/'$DATA_HASH'/'
     echo ' * '$current_date >> output.log
-    find $DATA3_DIR -name '*.max' -print0 | while read -d $'\0' file
+    find $DATA3_DIR -name '*.max' -print0 | while read -d $'\0' fn
     do
-        echo $file >> output.log
-        (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1
+        echo $fn >> output.log
+        (/usr/bin/time -v cppr -a pr $fn) >> output.log 2>&1
     done
 fi
 echo "  [  DONE  ]  " >> output.log
