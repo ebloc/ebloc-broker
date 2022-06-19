@@ -25,7 +25,7 @@ def register_requester(self, yaml_fn, is_question=True):
         start_ipfs_daemon()
         client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
     except Exception as e:
-        log("E: Run ipfs daemon to detect your ipfs_id")
+        log("E: Run ipfs daemon to detect your ipfs_address")
         print_tb(e)
         sys.exit(1)
 
@@ -34,7 +34,7 @@ def register_requester(self, yaml_fn, is_question=True):
         raise QuietExit
 
     args = Yaml(yaml_fn)
-    ipfs_id = ipfs.get_ipfs_id(client)
+    ipfs_address = ipfs.get_ipfs_address(client)
     gmail = env.GMAIL
     gpg_fingerprint = ipfs.get_gpg_fingerprint(gmail)
     try:
@@ -69,7 +69,7 @@ def register_requester(self, yaml_fn, is_question=True):
         if (
             requester_info["gmail"] == gmail
             and requester_info["gpg_fingerprint"] == gpg_fingerprint
-            and requester_info["ipfs_id"] == ipfs_id
+            and requester_info["ipfs_address"] == ipfs_address
             and requester_info["f_id"] == f_id
         ):
             log(requester_info)
@@ -82,7 +82,7 @@ def register_requester(self, yaml_fn, is_question=True):
             "gmail": gmail,
             "f_id": f_id,
             "gpg_fingerprint": gpg_fingerprint,
-            "ipfs_id": ipfs_id,
+            "ipfs_address": ipfs_address,
         }
         log("==> [bold yellow]new_requester_info:")
         log(_requester_info)
@@ -90,7 +90,7 @@ def register_requester(self, yaml_fn, is_question=True):
             return
 
     try:
-        tx = self._register_requester(account, gpg_fingerprint, gmail, f_id, ipfs_id)
+        tx = self._register_requester(account, gpg_fingerprint, gmail, f_id, ipfs_address)
         return self.tx_id(tx)
     except Exception as e:
         print_tb(e)

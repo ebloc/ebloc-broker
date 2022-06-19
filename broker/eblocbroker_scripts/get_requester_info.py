@@ -29,7 +29,7 @@ def get_requester_info(self, requester):
             "block_read_from": block_read_from,
             "gmail": event_filter.get_all_entries()[0].args["gmail"],
             "gpg_fingerprint": gpg_fingerprint,
-            "ipfs_id": event_filter.get_all_entries()[0].args["ipfsID"],
+            "ipfs_address": event_filter.get_all_entries()[0].args["ipfsID"],
             "f_id": event_filter.get_all_entries()[0].args["fID"],
             "is_orcid_verified": self.is_orcid_verified(requester),
         }

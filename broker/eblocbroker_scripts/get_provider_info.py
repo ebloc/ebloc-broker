@@ -6,6 +6,7 @@ from contextlib import suppress
 from broker import cfg
 from broker._utils.tools import is_byte_str_zero, log, print_tb
 from broker.config import env
+from broker.errors import QuietExit
 from brownie.network.account import Account
 
 Ebb = cfg.Ebb
@@ -17,9 +18,9 @@ def get_provider_info(self, provider):
         provider = self.w3.toChecksumAddress(provider)
 
     if not self.does_provider_exist(provider):
-        raise Exception(
-            f"E: Provider {provider} is not registered.\n"
-            "Please try again with registered Ethereum Address as provider"
+        raise QuietExit(
+            f"E: Provider {provider} is not registered. "
+            f"Please try again with registered Ethereum Address as provider"
         )
 
     try:
@@ -33,7 +34,7 @@ def get_provider_info(self, provider):
         )
         event_filter = {}
         for idx in range(len(_event_filter.get_all_entries()) - 1, -1, -1):
-            # In lists [-1] indicated the most recent emitted event
+            # in lists [-1] indicated the most recent emitted event
             for key in _event_filter.get_all_entries()[idx].args:
                 if key not in event_filter:
                     event_filter[key] = _event_filter.get_all_entries()[idx].args[key]
@@ -50,14 +51,14 @@ def get_provider_info(self, provider):
             "gmail": event_filter["gmail"],
             "gpg_fingerprint": gpg_fingerprint,
             "f_id": event_filter["fID"],
-            "ipfs_id": event_filter["ipfsID"],
+            "ipfs_address": event_filter["ipfsID"],
             "prices_set_block_numbers": prices_set_block_numbers,
             "block_number": bn,
         }
 
         if bn < prices_set_block_numbers[-1]:
             remaining_blk = prices_set_block_numbers[-1] - bn
-            log(f"#> Remaing blocks ({remaining_blk}) for updated prices in future block: {provider_prices}")
+            log(f"#> remaing blocks ({remaining_blk}) for updated prices in future block: {provider_prices}")
             *_, provider_prices = Ebb._get_provider_info(provider)
             with suppress(Exception):
                 provider_info["block_read_from"] = prices_set_block_numbers[-2]
@@ -79,16 +80,22 @@ def get_provider_info(self, provider):
         raise e
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) == 2:
         provider = str(sys.argv[1])
     else:
         provider = env.PROVIDER_ID
 
+    provider_info = Ebb.get_provider_info(provider)
+    log("provider_info=", "bold", end="")
+    log(provider_info)
+
+
+if __name__ == "__main__":
     try:
-        provider_info = Ebb.get_provider_info(provider)
-        log("provider_info=", "bold", end="")
-        log(provider_info)
+        main()
+    except QuietExit as e:
+        log(e, is_wrap=True)
     except Exception as e:
         print_tb(e)
         sys.exit(1)

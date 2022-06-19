@@ -23,7 +23,7 @@ from broker.config import env, setup_logger
 from broker.drivers.eudat import EudatClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
-from broker.eblocbroker_scripts.register_provider import get_ipfs_id
+from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
@@ -138,10 +138,9 @@ def _tools(block_continue):  # noqa
                 flag_error = True
 
             if env.IS_IPFS_USE:
-                ipfs_id = get_ipfs_id()
                 gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
                 if (
-                    provider_info_contract["ipfs_id"] != ipfs_id
+                    provider_info_contract["ipfs_address"] != get_ipfs_address()
                     and provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper()
                 ):
                     flag_error = True

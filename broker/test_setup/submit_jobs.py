@@ -32,7 +32,7 @@ _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 benchmarks = ["nas", "cppr"]
 storage_ids = ["eudat", "gdrive", "ipfs"]
-ipfs_ids = ["ipfs", "ipfs_gpg"]
+ipfs_types = ["ipfs", "ipfs_gpg"]
 
 # for provider_addr in providers:
 #     mini_tests_submit(storage_ids, provider_addr)
@@ -40,7 +40,7 @@ ipfs_ids = ["ipfs", "ipfs_gpg"]
 # if is_mini_test:
 #     benchmarks = ["cppr"]
 #     storage_ids = ["ipfs"]
-#     ipfs_ids = ["ipfs"]
+#     ipfs_types = ["ipfs"]
 #     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
 
 test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
@@ -223,7 +223,7 @@ def run_job(counter) -> None:
         selected_benchmark = random.choice(benchmarks)
         storage = storage_ids[storage_id]
         if storage == "ipfs":
-            storage = random.choice(ipfs_ids)
+            storage = random.choice(ipfs_types)
 
         if selected_benchmark == "nas":
             log(f" * Submitting job from [cyan]NAS Benchmark[/cyan] to [green]{provider_addr}", "bold blue")

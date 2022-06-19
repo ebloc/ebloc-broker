@@ -60,7 +60,7 @@ def pre_check(job: Job, requester):
 
         if not os.path.isfile(env.GPG_PASS_FILE):
             log(
-                f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decrypting", is_code=True
+                f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decrypting", is_wrap=True
             )
             raise QuietExit
 

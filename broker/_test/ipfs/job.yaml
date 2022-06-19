@@ -1,14 +1,14 @@
 config:
   source_code:
     cache_type: public
-    path: /home/alper/test_eblocbroker/source_code
+    path: ~/test_eblocbroker/source_code
     size_mb: 2
     storage_hours: 1
     storage_id: ipfs
   data:
     data1:
       cache_type: public
-      path: /home/alper/test_eblocbroker/datasets/BL06-camel-sml
+      path: ~/test_eblocbroker/datasets/BL06-camel-sml
       size_mb: 2
       storage_hours: 1
       storage_id: ipfs

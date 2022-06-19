@@ -10,7 +10,6 @@ def main():
     job_yaml = env.HOME / "ebloc-broker" / "broker" / "_test" / "ipfs" / "job.yaml"
     job_yaml_temp = job_yaml.replace(".yaml", "_temp.yaml")
     copyfile(job_yaml, job_yaml_temp)
-
     submit_ipfs(job_yaml_temp)
 
 

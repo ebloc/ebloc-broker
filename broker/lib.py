@@ -89,12 +89,6 @@ def session_start_msg(slurm_user, block_number, pid):
         raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
 
 
-def run_driver_cancel():
-    """Run driver_cancel daemon on the background."""
-    if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
-        config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
-
-
 def calculate_size(path, _type="MB") -> float:
     """Return the size of the given path in MB, bytes if wanted."""
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
@@ -238,7 +232,13 @@ def pre_check():
     mkdir(env.LOG_PATH / "transactions")
     mkdir(env.LOG_PATH / "end_code_output")
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception("slurm_mail_prog.sh scripts is not location in /var/ebloc-broker/ folder")
+        raise Exception("slurm_mail_prog.sh scripts is not located under the `/var/ebloc-broker` folder")
+
+
+def run_driver_cancel():
+    """Run driver_cancel daemon on the background."""
+    if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
+        config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
 
 
 # from broker.utils StorageID

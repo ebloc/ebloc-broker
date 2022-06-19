@@ -169,7 +169,7 @@ def main():
         # ebb_mongo.find_all()
         # Ebb = cfg.Ebb
         # output = ebb_mongo.find_id("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 32)
-        # output = ebb_mongo.set_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xalper33")
+        # output = ebb_mongo.set_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 33, "0xuser33")
         # ebb_mongo.find_all()
 
 

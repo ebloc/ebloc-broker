@@ -141,10 +141,10 @@ def print_tb(message=None, is_print_exc=True) -> None:
         tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [m]Terminate[/m]()"
 
     if is_print_exc and tb_text != "NoneType: None\n":
-        log(tb_text.rstrip(), "bold", where_back=1)
+        log(tb_text.rstrip(), "bold", back=1)
 
     if message and "An exception of type Exception occurred" not in message:
-        log(message, where_back=1)
+        log(message, back=1)
 
 
 def _remove(path: str, is_verbose=False) -> None:

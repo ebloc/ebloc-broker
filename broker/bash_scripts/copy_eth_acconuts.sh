@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sudo chown alper -R /home/alper/.eblocpoa/keystore/
-cp /home/alper/.eblocpoa/keystore/* /home/alper/.brownie/accounts
+sudo chown alper -R ~/.eblocpoa/keystore/
+cp ~/.eblocpoa/keystore/* ~/.brownie/accounts
 sudo chown alper -R ~/.brownie/accounts/*
 cd ~/.brownie/accounts/
 for f in *; do

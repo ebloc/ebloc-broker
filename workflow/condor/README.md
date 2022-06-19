@@ -69,26 +69,26 @@ montage-workflow-v2: https://github.com/pegasus-isi/montage-workflow-v2
 ```
 ./example-dss.sh
 
-$ pegasus-run  /home/alper/pegasus/montage-workflow-v2/work/1540532824
+$ pegasus-run  ~/pegasus/montage-workflow-v2/work/1540532824
 Submitting to condor montage-0.dag.condor.sub
 Submitting job(s).
 1 job(s) submitted to provider 1.
 
 Your workflow has been started and is running in the base directory:
 
-  /home/alper/pegasus/montage-workflow-v2/work/1540532824
+  ~/pegasus/montage-workflow-v2/work/1540532824
 
 *** To monitor the workflow you can run ***
 
-  pegasus-status -l /home/alper/pegasus/montage-workflow-v2/work/1540532824
+  pegasus-status -l ~/pegasus/montage-workflow-v2/work/1540532824
 
 *** To remove your workflow run ***
 
-  pegasus-remove /home/alper/pegasus/montage-workflow-v2/work/1540532824
+  pegasus-remove ~/pegasus/montage-workflow-v2/work/1540532824
 
-$ pegasus-status -l /home/alper/pegasus/montage-workflow-v2/work/1540532824
+$ pegasus-status -l ~/pegasus/montage-workflow-v2/work/1540532824
 STAT  IN_STATE  JOB
-Run      04:21  montage-0 ( /home/alper/pegasus/montage-workflow-v2/work/1540532824 )
+Run      04:21  montage-0 ( ~/pegasus/montage-workflow-v2/work/1540532824 )
 Run      00:51   ┣━merge_mProject_PID1_ID1
 Run      00:31   ┣━merge_mProject_PID1_ID3
 Run      00:31   ┣━merge_mProject_PID1_ID2
@@ -99,7 +99,7 @@ UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
    46     0     0     4     0    10     0  16.7 Running *montage-0.dag
 Summary: 1 DAG total (Running:1)
 
-$ pegasus-status -l /home/alper/pegasus/montage-workflow-v2/work/1540532824
+$ pegasus-status -l ~/pegasus/montage-workflow-v2/work/1540532824
 (no matching jobs found in Condor Q)
 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
     0     0     0     0     0    60     0 100.0 Success *montage-0.dag

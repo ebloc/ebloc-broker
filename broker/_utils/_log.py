@@ -14,6 +14,7 @@ from rich.theme import Theme
 from rich.traceback import install
 
 from broker import cfg
+from broker.errors import QuietExit
 
 install()  # for rich, show_locals=True
 # pretty.install()
@@ -24,12 +25,14 @@ IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
 custom_theme = Theme(
     {
-        "info": "bold magenta",
-        # "info": "bold dim magenta",
+        "info": "bold magenta",  # "bold dim magenta"
         "danger": "bold red",
         "b": "bold",
         "m": "magenta",
         "w": "white",
+        "cy": "cyan",
+        "y": "yellow",
+        "g": "green",
     }
 )
 console = Console(theme=custom_theme)
@@ -232,12 +235,12 @@ def log(
     fn=None,
     end="\n",
     is_write=True,
-    where_back=0,
     is_code=False,
-    is_align=False,
+    is_wrap=False,
     is_err=False,
     is_output=True,
     max_depth=None,
+    back=0,
 ):
     """Log output with own settings.
 
@@ -249,6 +252,9 @@ def log(
     :param color: Color of the complete string
     :param fn: Filename to write
     """
+    if isinstance(text, QuietExit):
+        text = str(text)
+
     is_bold: bool = False
     if color in ["bold", "b"]:
         is_bold = True
@@ -268,11 +274,11 @@ def log(
         _text = text.replace("warning: ", "").replace("E: ", "")
         if "E: warning: " not in text:
             if "warning:" in text:
-                text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+                text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
             else:
-                text = f"{WHERE(where_back)}[bold red] E:[/bold red] [bold]{_text}"
+                text = f"{WHERE(back)}[bold red] E:[/bold red] [bold]{_text}"
         else:
-            text = f"{WHERE(where_back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+            text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
 
     if "-=-=" in str(text):
         is_bold = True
@@ -280,7 +286,7 @@ def log(
     if is_code:
         text = " \ \n  ".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
 
-    if is_align:
+    if is_wrap:
         text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
 
     if is_write and IS_WRITE:

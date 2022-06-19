@@ -156,7 +156,7 @@ yes_or_no "Are you are a provider" && provider_setup
 
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node
-# sudo chmod 700 /home/*
+# sudo chmod 700 ~/*
 
 # PATH Name
 # =========

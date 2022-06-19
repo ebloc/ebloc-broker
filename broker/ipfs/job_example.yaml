@@ -3,13 +3,13 @@ config:
   provider_address: "0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea"
   source_code:
     cache_type: public
-    path: /home/alper/test_eblocbroker/test_data/base/source_code
+    path: ~/test_eblocbroker/test_data/base/source_code
     storage_hours: 0
     storage_id: ipfs
   data:
     data1:
       cache_type: public
-      path: /home/alper/test_eblocbroker/test_data/base/data/data1
+      path: ~/test_eblocbroker/test_data/base/data/data1
       storage_hours: 1
       storage_id: ipfs
   data_transfer_out: 2

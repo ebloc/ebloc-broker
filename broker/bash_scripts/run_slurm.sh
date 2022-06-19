@@ -10,9 +10,10 @@ if [[ $(whoami) == "root" ]] ; then
     USER=$(logname)
 fi
 
-sudo killall slurmd > /dev/null 2>&1
-sudo killall slurmdbd > /dev/null 2>&1
-sudo killall slurmctld > /dev/null 2>&1
+declare -a arr=("slurmd" "slurmdbd" "slurmctld")
+for i in "${arr[@]}"; do  # https://stackoverflow.com/a/8880633/2402577
+    sudo killall "$i" > /dev/null 2>&1
+done
 
 sudo rm -f /var/run/slurmdbd.pid
 sudo chown $USER /var/run/slurmctld.pid 2>/dev/null

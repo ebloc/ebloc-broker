@@ -27,9 +27,9 @@ def share_list(oc):
     print(oc.file_info(fn).attributes)
     fn = "/5c3c4018fbf2e1d1ef2555ede86cf626"
     print(oc.file_info(fn).attributes)
-    # oc.get_directory_as_zip(fn, 'alper.tar.gz')
+    # oc.get_directory_as_zip(fn, 'dummy.tar.gz')
     # oc.put_file('getShareList.py', 'getShareList.py')
-    # print(oc.list('alper'))
+    # print(oc.list('dummy_dir'))
     # print(oc.list('9a44346985f190a0af70a6ef6f0d35ee'))
 
 
@@ -42,7 +42,7 @@ def main():
     try:
         oc.login(user, paswd)
         print(oc.list("."))
-        oc.mkdir("alper")
+        oc.mkdir("dummy_dir")
     except Exception as e:
         print_tb(e)
 

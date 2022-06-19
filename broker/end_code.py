@@ -513,7 +513,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log("\njob owner's info\n================", "bold green")
         log(f"==> gmail=[white]{self.requester_info['gmail']}")
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
-        log(f"==> ipfs_id={self.requester_info['ipfs_id']}")
+        log(f"==> ipfs_address={self.requester_info['ipfs_address']}")
         log(f"==> f_id={self.requester_info['f_id']}")
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
             self.get_job_info()

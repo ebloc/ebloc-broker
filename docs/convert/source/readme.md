@@ -105,9 +105,9 @@ coreNumber         = 128;
 clusterEmail       = "ebloc@gmail.com";
 federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
 corePriceMinuteWei = 100;
-ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
+ipfsAddress        = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
 
-./registerCluster.py $coreNumber $clusterEmail $federationCloudId $corePriceMinuteWei $ipfsID
+./registerCluster.py $coreNumber $clusterEmail $federationCloudId $corePriceMinuteWei $ipfsAddress
 ```
 
 - A Python daemon program called *Driver* is responsible for facilitating the communication between
@@ -246,7 +246,7 @@ Enter verification code:
 First you have to share your folder with the cluster:
 
 ```bash
-folderPath='/home/prc/multiple/workingTestIpfs'
+folderPath='~/multiple/workingTestIpfs'
 folderName='ipfs'
 clusterToShare='aalimog1@binghamton.edu'
 gdrive upload --recursive $folderPath/$folderName

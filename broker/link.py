@@ -53,9 +53,11 @@ class Link:
             if isinstance(data_hash, bytes):
                 data_hash = data_hash.decode("utf-8")
 
-            path = Path("/var") / "ebloc-broker" / "cache" / data_hash
-            dest = f"{self.folder_link}/{data_hash}"
-            self.link(path, dest, is_read_only=True)
+            self.link(
+                Path("/") / "var" / "ebloc-broker" / "cache" / data_hash,
+                f"{self.folder_link}/{data_hash}",
+                is_read_only=True,
+            )
 
     def link_folders(self, paths=None):
         """Create linked folders under the data_link folder."""

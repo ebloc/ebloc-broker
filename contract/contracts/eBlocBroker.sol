@@ -311,7 +311,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      *        => fee per megabyte of cache usage values respectively.
      * @param commitmentBlockDur is a uint32 value containing the duration
        of the committed prices.
-     * @param ipfsID is a string containing an IPFS peer ID for creating peer
+     * @param ipfsAddress is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
      * @return bool
      */
@@ -319,7 +319,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 gpgFingerprint,
         string memory gmail,
         string memory fcID,
-        string memory ipfsID,
+        string memory ipfsAddress,
         uint32 availableCore,
         uint32[] memory prices,
         uint32 commitmentBlockDur
@@ -340,7 +340,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         pricesSetBlockNum[msg.sender].push(uint32(block.number));
         provider.construct();
         registeredProviders.push(msg.sender);
-        emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsAddress);
         return true;
     }
 
@@ -348,9 +348,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 gpgFingerprint,
         string memory gmail,
         string memory fcID,
-        string memory ipfsID
+        string memory ipfsAddress
     ) public whenProviderRegistered returns (bool) {
-        emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
+        emit LogProviderInfo(msg.sender, gpgFingerprint, gmail, fcID, ipfsAddress);
         return true;
     }
 
@@ -450,7 +450,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
        sharing requester's repository with the provider through EUDAT.
-     * @param ipfsID | is a string containing an IPFS peer ID for creating peer
+     * @param ipfsAddress | is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
      * @return bool
      */
@@ -458,10 +458,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         bytes32 gpgFingerprint,
         string memory gmail,
         string memory fcID,
-        string memory ipfsID
+        string memory ipfsAddress
     ) public returns (bool) {
         requesterCommittedBlock[msg.sender] = uint32(block.number);
-        emit LogRequester(msg.sender, gpgFingerprint, gmail, fcID, ipfsID);
+        emit LogRequester(msg.sender, gpgFingerprint, gmail, fcID, ipfsAddress);
         return true;
     }
 

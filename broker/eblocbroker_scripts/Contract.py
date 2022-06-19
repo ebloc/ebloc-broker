@@ -349,7 +349,7 @@ class Contract:
                         try:
                             return self.timeout(method, *args)
                         except Exception as e1:
-                            log(str(e1), is_align=True)
+                            log(str(e1), is_wrap=True)
                             raise QuietExit from e1
 
                     raise QuietExit from e

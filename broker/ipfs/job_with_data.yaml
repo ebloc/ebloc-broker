@@ -13,7 +13,7 @@ config:
             hash: 8f6faf6cfd245cae1b5feb11ae9eb3cf
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+            path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
             storage_hours: 1
             storage_id: ipfs
     data_transfer_out: 1

@@ -13,7 +13,7 @@ config:
             hash: 1bfca57fe54bc46ba948023f754521d6
         data3:
             cache_type: public
-            path: /home/alper/test_eblocbroker/dataset_zip/small/BL06-gargoyle-sml
+            path: ~/test_eblocbroker/dataset_zip/small/BL06-gargoyle-sml
             storage_hours: 1
             storage_id: eudat
     data_transfer_out: 5

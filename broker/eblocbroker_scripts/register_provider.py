@@ -50,10 +50,10 @@ def _register_provider(self, *args, **kwargs):
         raise e
 
 
-def get_ipfs_id() -> str:
+def get_ipfs_address() -> str:
     start_ipfs_daemon()
     if ipfs.client:
-        return ipfs.get_ipfs_id()
+        return ipfs.get_ipfs_address()
     else:
         try:
             # may create error
@@ -73,7 +73,7 @@ def get_ipfs_id() -> str:
             sys.exit(1)
 
         try:
-            return ipfs.get_ipfs_id(client)
+            return ipfs.get_ipfs_address(client)
         except Exception as e:
             print_tb(str(e))
             sys.exit(1)
@@ -140,14 +140,12 @@ def register_provider_wrapper(yaml_fn):
     if exit_flag:
         sys.exit(1)
 
-    ipfs_id = get_ipfs_id()
-    ip_address = get_ip()
-    if ip_address not in ipfs_id:
+    ipfs_address = get_ipfs_address()
+    ip = get_ip()
+    if ip not in ipfs_address:
         # public IP should exists in the ipfs id
-        ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_id, flags=re.DOTALL)
+        ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip}/tcp", ipfs_address, flags=re.DOTALL)
         log(f"==> ipfs_address={ipfs_address}")
-    else:
-        ipfs_address = ipfs_id
 
     try:
         gmail = env.GMAIL

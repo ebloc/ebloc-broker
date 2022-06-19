@@ -30,10 +30,6 @@ with open('../broker/eblocbroker_scripts/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 #+end_src
 
-#+begin_src bash
-cp ~/eBlocBroker/contract/network-config_.yaml ~/.brownie/network-config.yaml
-#+end_src
-
 * Accounts
 
 - Path: ~$HOME/.brownie/accounts~
@@ -49,5 +45,5 @@ $ brownie console --network bloxberg
 * Extract private key
 
 #+begin_src bash
-brownie accounts import alper /home/alper/.eblocpoa/keystore/UTC--2020-03-18T13-02-58.306094822Z--d118b6ef83ccf11b34331f1e7285542ddf70bc49
+brownie accounts import alper ~/.eblocpoa/keystore/UTC--2020-03-18T13-02-58.306094822Z--d118b6ef83ccf11b34331f1e7285542ddf70bc49
 #+end_src

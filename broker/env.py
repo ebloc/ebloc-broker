@@ -24,9 +24,9 @@ class ENV_BASE:
         self.cfg = self.cfg_yaml["cfg"]
         self.WHOAMI = self.cfg["whoami"]
         if platform in ("linux", "linux2"):
-            self._HOME = Path("/home") / self.WHOAMI
+            self._HOME = Path("/") / "home" / self.WHOAMI
         elif platform == "darwin":
-            self._HOME = Path("/Users") / self.WHOAMI
+            self._HOME = Path("/") / "Users" / self.WHOAMI
         elif platform == "win32":
             print("E: does not work in windows")
             sys.exit(1)

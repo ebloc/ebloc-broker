@@ -73,8 +73,8 @@ class ENV(ENV_BASE):
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
         self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")
         self.GANACHE_LOG = self.LOG_PATH.joinpath("ganache.out")
+        self.PROGRAM_PATH = Path("/") / "var" / "ebloc-broker"
         self.OWNCLOUD_PATH = Path("/mnt/oc")
-        self.PROGRAM_PATH = Path("/var") / "ebloc-broker"
         self.LINK_PATH = self.LOG_PATH.joinpath("links")
         self.JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("test.txt")
         self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SEP="~"
-_HOME="/home/user"  # may differ for each providerget from the file name
+_HOME="/home/username"  # may differ for each providerget from the file name
 EMAIL=""
 VENV_PATH=${_HOME}"/venv"
 BROKER_PATH=${_HOME}"/ebloc-broker/broker"

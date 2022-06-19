@@ -43,9 +43,8 @@ def _connect_into_web3() -> None:
         else:
             cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
     else:
-        web3_ipc_fn = env.DATADIR.joinpath("geth.ipc")
-        cfg.w3 = Web3(IPCProvider(web3_ipc_fn))
-        # inject the poa compatibility middleware to the innermost layer
+        cfg.w3 = Web3(IPCProvider(env.DATADIR.joinpath("geth.ipc")))
+        #: inject the poa compatibility middleware to the innermost layer
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
@@ -81,7 +80,7 @@ def connect_into_web3() -> None:
                     end="",
                 )
                 log(f"sudo chown $(logname) {web3_ipc_fn}", "green")
-                log(f"#> Running `sudo chown $(whoami) {web3_ipc_fn}`")
+                log(f"#> running `sudo chown $(whoami) {web3_ipc_fn}`")
                 run(["sudo", "chown", env.WHOAMI, web3_ipc_fn])
         else:
             break
@@ -91,7 +90,7 @@ def connect_into_web3() -> None:
 
 def read_abi_file():
     try:
-        abi_file = env.EBLOCPATH / "broker" / "eblocbroker_scripts" / "abi.json"
+        abi_file = env.EBB_SCRIPTS / "abi.json"
         return read_json(abi_file, is_dict=False)
     except Exception as e:
         raise Exception(f"unable to read the abi.json file: {abi_file}") from e

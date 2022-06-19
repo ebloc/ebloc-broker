@@ -2,15 +2,15 @@ cfg:
   eth_address: "0x0000000000000000000000000000000000000000"
   oc_username: ""
   gmail: ""
-  whoami: alper
-  home_dir: /home/alper
-  datadir: /home/alper/.eblocpoa
-  log_path: /home/alper/.ebloc-broker
-  ebloc_path: /home/alper/ebloc-broker
+  whoami: username
+  home_dir: /home/username
+  datadir: ~/.eblocpoa
+  log_path: ~/.ebloc-broker
+  ebloc_path: ~/ebloc-broker
   gdrive: /usr/local/bin/gdrive
   rpc_port: 8545
   provider:
-    slurm_user: alper
+    slurm_user: slurm
     is_bloxberg: true
     is_thread: true
     is_ipfs_use: true

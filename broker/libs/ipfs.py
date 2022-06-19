@@ -204,7 +204,7 @@ class Ipfs:
     ################
     # ONLINE CALLS #
     ################
-    def swarm_connect(self, ipfs_id: str, is_verbose=False):
+    def swarm_connect(self, ipfs_address: str, is_verbose=False):
         """Swarm connect into the ipfs node."""
         if not is_ipfs_on():
             raise IpfsNotConnected
@@ -212,11 +212,11 @@ class Ipfs:
         # TODO: check is valid IPFS id
         try:
             if is_verbose:
-                log(f" * trying to connect into {ipfs_id}", end="")
+                log(f" * trying to connect into {ipfs_address}", end="")
             else:
-                log(f" * trying to connect into {ipfs_id}")
+                log(f" * trying to connect into {ipfs_address}")
 
-            cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_id]
+            cmd = ["/usr/local/bin/ipfs", "swarm", "connect", ipfs_address]
             p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
@@ -257,7 +257,7 @@ class Ipfs:
         with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
             return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-    def is_hash_exists_online(self, ipfs_hash: str, swarm_ipfs_id=None, is_verbose=False):
+    def is_hash_exists_online(self, ipfs_hash: str, ipfs_address=None, is_verbose=False):
         log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
@@ -267,9 +267,9 @@ class Ipfs:
             signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
 
         try:
-            if swarm_ipfs_id:
+            if ipfs_address:
                 with suppress(Exception):  # TODO: Attempt to swarm connect into requester
-                    self.swarm_connect(swarm_ipfs_id, is_verbose=is_verbose)
+                    self.swarm_connect(ipfs_address, is_verbose=is_verbose)
 
             output = self.stat(ipfs_hash, _is_ipfs_on=False)
             _stat = {}
@@ -368,7 +368,7 @@ class Ipfs:
 
         return False
 
-    def get_ipfs_id(self, client=None) -> str:
+    def get_ipfs_address(self, client=None) -> str:
         if self.client:
             _client = self.client
         else:

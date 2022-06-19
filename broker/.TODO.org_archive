@@ -1,7 +1,7 @@
 #    -*- mode: org -*-
 
 
-Archived entries from file /home/alper/ebloc-broker/broker/TODO.org
+Archived entries from file ~/ebloc-broker/broker/TODO.org
 
 
 * DONE
@@ -36,3 +36,13 @@ CLOSED: [2022-05-26 Thu 09:56]
 carry `run_with_output` into tools
 
 convert all ~run(~ into ~run_with_output(~
+
+* DONE remove all /home/username
+CLOSED: [2022-06-20 Mon 20:01]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-06-20 Mon 20:01
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
