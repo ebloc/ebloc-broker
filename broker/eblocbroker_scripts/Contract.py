@@ -60,6 +60,7 @@ class Contract:
 
     def __init__(self, is_brownie=False) -> None:
         """Create a new Contrect."""
+        self.EBB_SCRIPTS = env.EBB_SCRIPTS
         mc = MongoClient()
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         # self.gas_limit = "max"  # 300000

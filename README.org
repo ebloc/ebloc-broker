@@ -1,7 +1,12 @@
 * eBlocBroker
 
-eBlocBroker is smart contract that provides an application of blockchain technology to provide
-computational and data resources to research communities.
+*eBlocBroker is smart contract that provides an application of blockchain technology to provide computational and data resources to research communities.*
+
+Developed by Alper Alimoglu and Can Ozturan from Bogazici University, Istanbul. This work is
+supported by the Turkish Directorate of Strategy and Budget under the TAM Project number
+2007K12-873.
+
+Contact [[mailto:alper.alimoglu@boun.edu.tr][alper.alimoglu@boun.edu.tr]], [[mailto:ozturaca@boun.edu.tr][ozturaca@boun.edu.tr]] if necessary.
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]]
 # # http://ebloc.org
@@ -9,6 +14,7 @@ computational and data resources to research communities.
 # - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
 
 ** Prerequisites
+
 - [[https://github.com/SchedMD/slurm][Slurm]],
   [[https://geth.ethereum.org/docs/getting-started][Geth]],
   [[https://ipfs.io][IPFS]],

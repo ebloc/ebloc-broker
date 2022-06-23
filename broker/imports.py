@@ -105,7 +105,7 @@ def connect_into_eblocbroker() -> None:
         connect_into_web3()
 
     if not env.EBLOCPATH:
-        log("E: EBLOCPATH variable is empty")
+        log("E: env.EBLOCPATH variable is empty")
         raise QuietExit
 
     try:

@@ -33,7 +33,7 @@ class State:
     """Set state code of the Slurm jobs and add their keys into the hashmap.
 
     Hashmap keys:
-        - SUBMITTED: Initial state.
+        - SUBMITTED: Initial state of the job.
 
         - PENDING: Indicates when a request is receieved by the provider. The
           job is waiting for resource allocation. It will eventually run.
@@ -41,16 +41,16 @@ class State:
         - RUNNING: The job currently is allocated to a node and is running.
           Corresponding data files are downloaded and verified.
 
-        - REFUNDED: Indicates if job is refunded.
+        - REFUNDED: The job has refunded.
 
-        - CANCELLED: Job was explicitly cancelled by the requester or system
+        - CANCELLED: The job was explicitly cancelled by the requester or system
           administrator.  The job may or may not have been initiated.  Set by
           the requester.
 
         - COMPLETED: The job has completed successfully and deposit is paid to
           the provider.
 
-        - TIMEOUT: Job terminated upon reaching its time limit.
+        - TIMEOUT: The job has terminated upon reaching its time limit.
 
     __ https://slurm.schedmd.com/squeue.html
     """

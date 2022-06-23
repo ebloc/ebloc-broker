@@ -74,11 +74,11 @@ def analyze_data(self, key, provider=None):
 
 
 def set_job_received_bn(self, received_bn):
-    if not received_bn:
+    if received_bn:
+        self.to_block = int(received_bn)
+    else:
         received_bn = self.deployed_block_number
         self.to_block = "latest"
-    else:
-        self.to_block = int(received_bn)
 
     if int(received_bn) > int(self.job_info["received_bn"]):
         self.job_info["received_bn"] = received_bn
@@ -158,7 +158,7 @@ def get_job_info_print(self, provider, job_key, index, received_bn):
 def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print=True, is_log_print=False):
     """Return information of the job."""
     if is_print:
-        fn = "~/ebloc-broker/broker/eblocbroker_scripts/get_job_info.py"
+        fn = self.EBB_SCRIPTS / "get_job_info.py"
         log(f"$ {fn} {provider} {job_key} {index} {job_id} {received_bn}", "bold cyan", is_code=True)
 
     try:

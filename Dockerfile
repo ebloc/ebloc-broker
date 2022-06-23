@@ -99,13 +99,14 @@ RUN python3 -m venv /opt/venv
 #: enable venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-## Instal SLURM
-## -=-=-=-=-=-=
+## SLURM
+# Compile, build and install Slurm from Git source
+ARG SLURM_TAG=slurm-22-05-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
-RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
+RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
  && cd slurm \
- && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no \
  && make \
  && make -j 4 install \
  && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
@@ -115,7 +116,7 @@ RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/Sc
  && cd .. \
  && rm -rf slurm \
  && slurmctld -V \
- && groupadd -r slurm  \
+ && groupadd -r slurm \
  && useradd -r -g slurm slurm \
  && mkdir -p /etc/sysconfig/slurm \
      /var/spool/slurmd \
@@ -159,9 +160,9 @@ COPY docker/slurm/files/supervisord.conf /etc/
 
 # mark externally mounted volumes
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-COPY --chown=slurm docker/slurm/files/slurm/slurm.conf /etc/slurm/slurm.conf
-COPY --chown=slurm docker/slurm/files/slurm/gres.conf /etc/slurm/gres.conf
-COPY --chown=slurm docker/slurm/files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
+COPY --chown=slurm docker/slurm/files/gres.conf /etc/slurm/gres.conf
+COPY --chown=slurm docker/slurm/files/slurm.conf /etc/slurm/slurm.conf
+COPY --chown=slurm docker/slurm/files/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
 ## finally
@@ -173,11 +174,10 @@ RUN gdrive version \
  && ganache --version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
  && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
- && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc \
+ # && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc \
  && du -sh / 2>&1 | grep -v "cannot"
-
-WORKDIR /workspace/ebloc-broker/broker
-CMD ["/bin/bash"]
 
 COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
+WORKDIR /workspace/ebloc-broker/broker
+CMD ["/bin/bash"]

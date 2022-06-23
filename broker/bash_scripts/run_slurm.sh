@@ -21,6 +21,12 @@ sudo chown $USER -R /var/log/slurm/
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 sudo $DIR/run_munge.sh
 sudo /usr/local/sbin/slurmd
+## https://slurm.schedmd.com/faq.html#multi_slurmd
+# sudo /usr/local/sbin/slurmd -N <hostname>1
+# sudo /usr/local/sbin/slurmd -N <hostname>2
+# sudo /usr/local/sbin/slurmd -N <hostname>3
+# sudo /usr/local/sbin/slurmd -N <hostname>4
+
 # sudo /usr/local/sbin/slurmd -N $(hostname -s)  # emulate mode
 sudo slurmdbd &
 sleep 2.0
