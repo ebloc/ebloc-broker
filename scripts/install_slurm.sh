@@ -15,12 +15,12 @@ sudo apt --fix-broken install -y
 # munge
 # =====
 sudo chown -R munge:munge /var/lib/munge
-# ls -ld /var/lib/munge
 sudo chown munge:munge /etc/munge/munge.key
 sudo chmod 400 /etc/munge/munge.key
 sudo systemctl enable munge
 sudo systemctl start munge
 systemctl status -l munge
+ls -ld /var/lib/munge
 
 # configurations
 # ==============

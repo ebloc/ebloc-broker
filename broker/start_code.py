@@ -57,7 +57,7 @@ def start_call(job_key, index, slurm_job_id) -> None:
         job, *_ = Ebb._get_job_info(env.PROVIDER_ID, job_key, int(index), int(job_id))
         state_code = int(job[0])
         if state_code > 1:
-            log(f"warning: state_code={state.inv_code[state_code]}({state_code}) | state is already changed")
+            log(f"warning: state is already changed, state_code={state.inv_code[state_code]}({state_code})")
             sys.exit(1)
 
         try:

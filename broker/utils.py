@@ -67,21 +67,21 @@ CACHE_TYPES = {
 STORAGE_IDs = {
     "ipfs": StorageID.IPFS,
     "ipfs_gpg": StorageID.IPFS_GPG,
-    "none": StorageID.NONE,
     "eudat": StorageID.EUDAT,
     "gdrive": StorageID.GDRIVE,
+    "none": StorageID.NONE,
 }
 
 
 class cd:
     """Context manager for changing the current working directory.
 
-    # enter the directory like this:
+    - Enter the directory like this:
     with cd("~/Library"):
         # we are in ~/Library
         subprocess.call("ls")
 
-    # outside the context manager we are back wherever we started.
+    - Outside the context manager we are back wherever we started.
 
     __ https://stackoverflow.com/a/13197763/2402577
     """
@@ -114,7 +114,7 @@ def extract_gzip(fn):
         popen_communicate(args, f"{base_dir}/{base_name}")
 
 
-def untar(tar_file, extract_to):
+def untar(tar_fn, extract_to):
     """Extract the given tar file.
 
     umask can be ignored by using the -p (--preserve) option
@@ -123,17 +123,17 @@ def untar(tar_file, extract_to):
     tar interprets the next argument after -f as the file name of the tar file.
     Put the p before the f:
     """
-    fn = os.path.basename(tar_file)
+    fn = os.path.basename(tar_fn)
     accepted_files = [".git", fn]
     if not is_dir_empty(extract_to):
         for name in os.listdir(extract_to):
             # if tar itself already exist inside the same directory along with
             # `.git` file
             if name not in accepted_files:
-                log(f"==> {tar_file} is already extracted into\n    {extract_to}")
+                log(f"==> {tar_fn} is already extracted into\n    {extract_to}")
                 return
     # tar --warning=no-timestamp
-    cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_file, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
+    cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_fn, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
     run(cmd)
 
 
@@ -608,12 +608,12 @@ def compress_folder(folder_path, is_exclude_git=False):
         p2.stdout.close()
         p3.communicate()
         tar_hash = generate_md5sum(tar_base)
-        tar_file = f"{tar_hash}.tar.gz"
-        shutil.move(tar_base, tar_file)
-        log(f"==> created_tar_file={dir_path}/{tar_file}")
+        tar_fn = f"{tar_hash}.tar.gz"
+        shutil.move(tar_base, tar_fn)
+        log(f"==> created_tar_fn={dir_path}/{tar_fn}")
         log(f"==> tar_hash={tar_hash}")
 
-    return tar_hash, f"{dir_path}/{tar_file}"
+    return tar_hash, f"{dir_path}/{tar_fn}"
 
 
 def dump_dict_to_file(fn, job_keys):

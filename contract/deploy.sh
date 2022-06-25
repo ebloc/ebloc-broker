@@ -2,7 +2,7 @@
 
 # network="eblocpoa"
 network="bloxberg"
-echo -e "==> network="$network
+echo -e "## network="$network
 rm -rf build/
 brownie compile
 brownie run eBlocBroker --network $network

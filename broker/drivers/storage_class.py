@@ -189,31 +189,24 @@ class Storage(BaseClass):
 
     def _is_cached(self, name, _id) -> bool:
         if self.cache_type[_id] == CacheType.PRIVATE:
-            # Checks whether it is already exist under public cache directory
+            #: checks whether it is already exist under public cache directory
+            _cache_type = CacheType.PUBLIC
             cache_folder = f"{self.public_dir}/{name}"
-            cached_tar_file = f"{cache_folder}.tar.gz"
-
-            if not os.path.isfile(cached_tar_file):
-                if os.path.isfile(f"{cache_folder}/run.sh"):
-                    return self.is_md5sum_matches(cache_folder, name, _id, "folder", CacheType.PUBLIC)
-            else:
-                if self.whoami() == "EudatClass":
-                    self.folder_type_dict[name] = "tar.gz"
-
-                return self.is_md5sum_matches(cached_tar_file, name, _id, "", CacheType.PUBLIC)
+            cached_tar_fn = f"{cache_folder}.tar.gz"
         else:
-            # Checks whether it is already exist under the requesting user's private cache directory
+            #: checks whether it is already exist under the requesting user's private cache directory
+            _cache_type = CacheType.PRIVATE
             cache_folder = self.private_dir
             cache_folder = f"{self.private_dir}/{name}"
-            cached_tar_file = f"{cache_folder}.tar.gz"
-            if not os.path.isfile(cached_tar_file):
-                if os.path.isfile(f"{cache_folder}/run.sh"):
-                    return self.is_md5sum_matches(cache_folder, name, _id, "folder", CacheType.PRIVATE)
-            else:
-                if self.whoami() == "EudatClass":
-                    self.folder_type_dict[name] = "tar.gz"
+            cached_tar_fn = f"{cache_folder}.tar.gz"
 
-                return self.is_md5sum_matches(cached_tar_file, name, _id, "", CacheType.PRIVATE)
+        if os.path.isfile(cached_tar_fn):
+            if self.whoami() == "EudatClass":
+                self.folder_type_dict[name] = "tar.gz"
+
+            return self.is_md5sum_matches(cached_tar_fn, name, _id, "", _cache_type)
+        elif os.path.isfile(f"{cache_folder}/run.sh"):
+            return self.is_md5sum_matches(cache_folder, name, _id, "folder", _cache_type)
 
         return False
 

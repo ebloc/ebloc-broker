@@ -19,7 +19,7 @@ ENV PYTHONUNBUFFERED 1
 ENV PATH="/root/.pyenv/shims:/root/.pyenv/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:$PATH"
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS="yes"
-EXPOSE 6817 6818 6819 6820 3306
+EXPOSE 6817 6818 6819 6820 3306 6001 6002
 
 COPY --from=0 /go /go
 COPY --from=0 /usr/local/bin /usr/local/bin
@@ -96,37 +96,8 @@ RUN npm config set fund false \
  && npm install -g ganache
 
 RUN python3 -m venv /opt/venv
-#: enable venv
+#; enable venv
 ENV PATH="/opt/venv/bin:$PATH"
-
-## SLURM
-# Compile, build and install Slurm from Git source
-ARG SLURM_TAG=slurm-22-05-2-1
-RUN git config --global advice.detachedHead false
-WORKDIR /workspace
-RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
- && cd slurm \
- && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no \
- && make \
- && make -j 4 install \
- && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
- && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
- && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
- && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
- && cd .. \
- && rm -rf slurm \
- && slurmctld -V \
- && groupadd -r slurm \
- && useradd -r -g slurm slurm \
- && mkdir -p /etc/sysconfig/slurm \
-     /var/spool/slurmd \
-     /var/spool/slurmctld \
-     /var/log/slurm \
-     /var/run/slurm \
- && chown -R slurm:slurm /var/spool/slurmd \
-    /var/spool/slurmctld \
-    /var/log/slurm \
-    /var/run/slurm
 
 ## ebloc-broker
 # -=-=-=-=-=-=-
@@ -152,15 +123,53 @@ RUN brownie init \
   && cd /workspace//ebloc-broker/contract \
   && brownie compile
 
-# orginize slurm files
-RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
+## SLURM
+# Compile, build and install Slurm from Git source
+# && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no \
+ARG SLURM_TAG=slurm-22-05-2-1
+RUN git config --global advice.detachedHead false
+WORKDIR /workspace
+RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
+ && cd slurm \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no --enable-debug  --enable-multiple-slurmd \
+ && make \
+ && make -j 4 install \
+ && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
+ && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
+ && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
+ && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
+ && cd .. \
+ && rm -rf slurm \
+ && slurmctld -V \
+ && groupadd -r slurm \
+ && useradd -r -g slurm slurm \
+ && mkdir -p /etc/sysconfig/slurm \
+     /var/spool/slurmd \
+     /var/spool/slurmctld \
+     /var/log/slurm \
+     /var/run/slurm \
+ && chown -R slurm:slurm /var/spool/slurmd \
+    /var/spool/slurmctld \
+    /var/log/slurm \
+    /var/run/slurm
+
+VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
+COPY --chown=slurm docker/slurm/files/create-munge-key /sbin/
+RUN /sbin/create-munge-key \
+ && chown munge:munge -R /run/munge
+
+# # orginize slurm files
+# RUN chown root:munge -R /etc/munge/munge.key /etc/munge /var/lib/munge
+# # RUN chown root:munge -R /var/lib/munge /etc/munge/munge.key /etc/munge
+# RUN chown munge:munge -R /var/lib/munge /etc/munge/munge.key /etc/munge
+# RUN chown -R munge: /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge/
+# RUN chmod 0700 /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge/
+
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
 COPY docker/slurm/files/supervisord.conf /etc/
 
 # mark externally mounted volumes
-VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-COPY --chown=slurm docker/slurm/files/gres.conf /etc/slurm/gres.conf
 COPY --chown=slurm docker/slurm/files/slurm.conf /etc/slurm/slurm.conf
 COPY --chown=slurm docker/slurm/files/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
@@ -174,10 +183,10 @@ RUN gdrive version \
  && ganache --version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
  && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
- # && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc \
  && du -sh / 2>&1 | grep -v "cannot"
 
 COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker
 CMD ["/bin/bash"]
+COPY --chown=slurm docker/slurm/files/slurm.conf /etc/slurm/slurm.conf

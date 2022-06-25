@@ -36,7 +36,6 @@ for job in reversed(logged_jobs):
     jobs.append(job_info)
 
 is_connected = Ebb.is_web3_connected()
-providers = Ebb.get_providers()
 while True:
     with console:
         log(

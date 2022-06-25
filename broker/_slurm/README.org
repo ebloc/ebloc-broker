@@ -131,8 +131,8 @@ a larger cluster?), it appears so – damienfrancois
 ** DOCKER
 
 #+begin_src bash
-docker build -t slurm:latest . --progress plain
-docker run --hostname slurmctl -it slurm bash
+docker build -t ebloc-broker_slurm:latest . --progress plain
+docker run --hostname slurmctl -it ebloc-broker_slurm bash
 #+end_src
 
 #+begin_src bash

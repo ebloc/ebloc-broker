@@ -88,13 +88,13 @@ class EudatClass(Storage):
         elif self.cache_type[_id] == CacheType.PUBLIC:
             cache_folder = self.public_dir
 
-        cached_tar_file = cache_folder / f"{folder_name}.tar.gz"
+        cached_tar_fn = cache_folder / f"{folder_name}.tar.gz"
         if is_cache_success:
             self.folder_type_dict[folder_name] = "tar.gz"
-            self.tar_downloaded_path[folder_name] = cached_tar_file
+            self.tar_downloaded_path[folder_name] = cached_tar_fn
             return True
 
-        if not os.path.isfile(cached_tar_file):
+        if not os.path.isfile(cached_tar_fn):
             if os.path.isfile(cache_folder / f"{folder_name}.tar.gz"):
                 tar_hash = generate_md5sum(f"{cache_folder}/{folder_name}.tar.gz")
                 if tar_hash == folder_name:
@@ -121,16 +121,16 @@ class EudatClass(Storage):
             if (
                 _id == 0
                 and self.folder_type_dict[folder_name] == "tar.gz"
-                and not self.is_run_exists_in_tar(cached_tar_file)
+                and not self.is_run_exists_in_tar(cached_tar_fn)
             ):
-                _remove(cached_tar_file)
+                _remove(cached_tar_fn)
                 return False
         else:  # here we already know that its tar.gz file
             self.folder_type_dict[folder_name] = "tar.gz"
-            if generate_md5sum(cached_tar_file) == folder_name:
+            if generate_md5sum(cached_tar_fn) == folder_name:
                 # checking is already downloaded folder's hash matches with the given hash
-                log(f"==> {cached_tar_file} is already cached")
-                self.tar_downloaded_path[folder_name] = cached_tar_file
+                log(f"==> {cached_tar_fn} is already cached")
+                self.tar_downloaded_path[folder_name] = cached_tar_fn
                 self.folder_type_dict[folder_name] = "tar.gz"
                 return True
 
@@ -148,9 +148,9 @@ class EudatClass(Storage):
 
         Always assumes job is submitted as .tar.gz file
         """
-        cached_tar_file = f"{results_folder_prev}/{folder_name}.tar.gz"
+        cached_tar_fn = f"{results_folder_prev}/{folder_name}.tar.gz"
         log("#> downloading [green]output.zip[/green] for:", end="")
-        log(f"{folder_name} => {cached_tar_file} ", "bold")
+        log(f"{folder_name} => {cached_tar_fn} ", "bold")
         key = folder_name
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         for attempt in range(1):
@@ -158,7 +158,7 @@ class EudatClass(Storage):
                 log("## Trying [blue]wget[/blue] approach...")
                 token = self.share_id[share_key]["share_token"]
                 if token:
-                    download_fn = f"{cached_tar_file.replace('.tar.gz', '')}_{self.requester_id}.download"
+                    download_fn = f"{cached_tar_fn.replace('.tar.gz', '')}_{self.requester_id}.download"
                     cmd = [
                         "wget",
                         "-O",
@@ -175,13 +175,13 @@ class EudatClass(Storage):
                         run(["unzip", "-o", "-j", download_fn])
 
                     _remove(download_fn)
-                    self.tar_downloaded_path[folder_name] = cached_tar_file
+                    self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(f"## download file from eudat{ok()}")
                     return
             except:
                 log("E: Failed to download eudat file via wget.\nTrying config.oc.get_file() approach...")
-                if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_file):
-                    self.tar_downloaded_path[folder_name] = cached_tar_file
+                if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_fn):
+                    self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(ok())
                     return
                 else:

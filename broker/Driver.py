@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """Driver for ebloc-broker."""
+
 import math
 import os
 import sys

@@ -73,9 +73,7 @@ COPY files/supervisord.conf /etc/
 
 # Mark externally mounted volumes
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-
 COPY --chown=slurm files/slurm/slurm.conf /etc/slurm/slurm.conf
-COPY --chown=slurm files/slurm/gres.conf /etc/slurm/gres.conf
 COPY --chown=slurm files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 

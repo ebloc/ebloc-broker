@@ -8,5 +8,5 @@ uptime -p >> completed.txt
 hostname >> completed.txt
 echo "nproc=$(nproc)" >> completed.txt
 /usr/bin/unshare -r -n ./run_me.sh
-sleep 5
+sleep 10
 echo "END">> completed.txt

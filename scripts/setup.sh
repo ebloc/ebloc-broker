@@ -39,20 +39,17 @@ fi
 
 # npm
 # ===
+# export NODE_OPTIONS=--openssl-legacy-provider
 sudo aptitude install npm -y
 sudo npm install -g npm
 sudo npm install -g n
 sudo npm config set fund false
 sudo n latest
-
-# ganache-cli
-# ===========
-# export NODE_OPTIONS=--openssl-legacy-provider
-# sudo npm install -g ganache
 hash -r
 npm config set update-notifier false
 npm install -g npm@latest
 npm install ganache --global
+npm audit fix --force
 
 # go
 sudo snap install go --classic

@@ -3,6 +3,8 @@
 from broker import cfg
 from broker._utils.tools import log
 
+Ebb = cfg.Ebb
+
 
 def get_provider_price_info(address, requested_core, core_minute, data_transfer):
     provider_info = Ebb.get_provider_info(address)
@@ -19,8 +21,7 @@ def get_provider_price_info(address, requested_core, core_minute, data_transfer)
         print("{0: <19}".format("price: ") + str(_price))
 
 
-if __name__ == "__main__":
-    Ebb = cfg.Ebb
+def main():
     providers = Ebb.get_providers()
     requested_core = 2
     day = 0
@@ -33,3 +34,7 @@ if __name__ == "__main__":
     for provider in providers:
         log(f"==> provider_address={provider}")
         get_provider_price_info(provider, requested_core, core_minute, data_transfer)
+
+
+if __name__ == "__main__":
+    main()

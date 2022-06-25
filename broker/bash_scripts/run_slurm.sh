@@ -21,7 +21,10 @@ sudo chown $USER -R /var/log/slurm/
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 sudo $DIR/run_munge.sh
 sudo /usr/local/sbin/slurmd
+
 ## https://slurm.schedmd.com/faq.html#multi_slurmd
+# When starting the slurmd daemon, include the NodeName of the node that it is
+# supposed to serve on the execute line (e.g. "slurmd -N hostname").
 # sudo /usr/local/sbin/slurmd -N <hostname>1
 # sudo /usr/local/sbin/slurmd -N <hostname>2
 # sudo /usr/local/sbin/slurmd -N <hostname>3

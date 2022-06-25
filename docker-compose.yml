@@ -8,6 +8,8 @@ services:
     tty: true
     ports:
       - "4001:4001" # Public IPFS Port
+      # - "6001:6001"
+      # - "6002:6002"
     volumes:
       - ~/docker/volumes/lib:/var/lib/slurmd
       - ~/docker/volumes/spool:/var/spool/slurm

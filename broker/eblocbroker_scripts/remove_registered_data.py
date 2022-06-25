@@ -18,7 +18,7 @@ def main():
             tx = Ebb.remove_registered_data(data_hash)
             get_tx_status(Ebb.tx_id(tx))
         else:
-            log(f"## data({data_hash}) is alread deleted or not registered")
+            log(f"## data({data_hash}) is deleted or not registered")
     except Exception as e:
         print_tb(e)
 

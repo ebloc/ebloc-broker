@@ -17,7 +17,7 @@ from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_
 class IpfsClass(Storage):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #: if storage class is IPFS `cache_type` is always public
+        #: if storage class is IPFS, then `cache_type` is always public
         self.cache_type = CacheType.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
@@ -73,7 +73,7 @@ class IpfsClass(Storage):
         self.registered_data_hashes = []
         for idx, source_code_hash in enumerate(self.code_hashes):
             if self.cloudStorageID[idx] == StorageID.NONE:
-                self.registered_data_hashes.append(source_code_hash)  # GOTCHA
+                self.registered_data_hashes.append(source_code_hash)
             else:
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 if ipfs_hash not in self.ipfs_hashes:

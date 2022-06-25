@@ -8,11 +8,11 @@
     "doc": "docs"
   },
   "dependencies": {
-    "ganache": "^7.0.3",
-    "ethlint": "*",
     "binstring": "*",
     "bs58": "*",
-    "require": "^2.4.20",
+    "ethlint": "*",
+    "ganache": "^7.3.2",
+    "require": "^0.4.4",
     "web3": "^1.6.1",
     "web3_ipc": "*",
     "web3-eth-personal": "^1.6.1"

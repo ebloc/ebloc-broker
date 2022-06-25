@@ -271,7 +271,7 @@ class Job:
         self.set_cache_types(self.cache_types)
 
     def add_empty_data_item(self):
-        """Set registered data info as empty value for other variables."""
+        """Set registered data info as [None, or 0] for other variables."""
         self.cache_types.append(0)
         self.storage_hours.append(0)
         self.storage_ids.append(StorageID.NONE)

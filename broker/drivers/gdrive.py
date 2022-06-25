@@ -113,12 +113,12 @@ class GdriveClass(Storage):
         if self.cache_type[_id] == CacheType.PRIVATE:
             # first checking does is already exist under public cache directory
             cache_folder = self.private_dir
-            cached_tar_file = cache_folder / name
+            cached_tar_fn = cache_folder / name
             if self.folder_type_dict[code_hash] == "gzip":
-                if os.path.isfile(cached_tar_file):
+                if os.path.isfile(cached_tar_fn):
                     self.job_infos[0]["is_cached"][code_hash] = True
-                    self.assign_folder_path_to_download(_id, code_hash, cached_tar_file)
-                    output = generate_md5sum(cached_tar_file)
+                    self.assign_folder_path_to_download(_id, code_hash, cached_tar_fn)
+                    output = generate_md5sum(cached_tar_fn)
                     if output != self.md5sum_dict[key]:
                         raise Exception("File's md5sum does not match with its orignal md5sum value")
 
@@ -131,10 +131,10 @@ class GdriveClass(Storage):
                     self.download_folder(name, key, code_hash, _id, cache_folder)
             elif self.folder_type_dict[code_hash] == "folder":
                 output = ""
-                if os.path.isfile(cached_tar_file):
+                if os.path.isfile(cached_tar_fn):
                     self.job_infos[0]["is_cached"][code_hash] = True
                     self.assign_folder_path_to_download(_id, code_hash, cache_folder)
-                    output = generate_md5sum(cached_tar_file)
+                    output = generate_md5sum(cached_tar_fn)
                 elif os.path.isdir(cache_folder):
                     self.job_infos[0]["is_cached"][code_hash] = True
                     self.folder_path_to_download[code_hash] = cache_folder
@@ -149,15 +149,15 @@ class GdriveClass(Storage):
                     self.download_folder(name, key, code_hash, _id, cache_folder)
         elif self.cache_type[_id] == CacheType.PUBLIC:
             cache_folder = self.public_dir
-            cached_tar_file = cache_folder / name
+            cached_tar_fn = cache_folder / name
             if self.folder_type_dict[code_hash] == "gzip":
-                if not os.path.isfile(cached_tar_file):
+                if not os.path.isfile(cached_tar_fn):
                     self.download_folder(name, key, code_hash, _id, cache_folder)
-                    if is_job_key and not self.is_run_exists_in_tar(cached_tar_file):
-                        _remove(cached_tar_file)
+                    if is_job_key and not self.is_run_exists_in_tar(cached_tar_fn):
+                        _remove(cached_tar_fn)
                         raise Exception
                 else:
-                    output = generate_md5sum(cached_tar_file)
+                    output = generate_md5sum(cached_tar_fn)
                     if output == code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[code_hash] = self.public_dir
@@ -165,9 +165,9 @@ class GdriveClass(Storage):
                     else:
                         self.download_folder(name, key, code_hash, _id, cache_folder)
             elif self.folder_type_dict[code_hash] == "folder":
-                tar_file = cache_folder / code_hash / name
-                if os.path.isfile(tar_file):
-                    output = generate_md5sum(tar_file)
+                tar_fn = cache_folder / code_hash / name
+                if os.path.isfile(tar_fn):
+                    output = generate_md5sum(tar_fn)
                     if output == code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         self.folder_path_to_download[code_hash] = self.public_dir
@@ -314,9 +314,9 @@ class GdriveClass(Storage):
 
             self.remove_downloaded_file(code_hash, _id, f"{cache_folder}/{name}/")
             try:
-                tar_file = f"{self.results_folder}/{name}.tar.gz"
-                untar(tar_file, self.results_folder)
-                _remove(tar_file)
+                tar_fn = f"{self.results_folder}/{name}.tar.gz"
+                untar(tar_fn, self.results_folder)
+                _remove(tar_fn)
                 return target
             except Exception as e:
                 print_tb(e)

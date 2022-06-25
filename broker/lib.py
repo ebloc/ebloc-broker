@@ -188,7 +188,7 @@ def eblocbroker_function_call(func, max_retries):
 
 def is_dir(path) -> bool:
     if not os.path.isdir(path):
-        log(f"{path} folder does not exist")
+        log(f"warning: {path} folder does not exist")
         return False
 
     return True

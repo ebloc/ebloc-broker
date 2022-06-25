@@ -35,7 +35,11 @@ custom_theme = Theme(
         "g": "green",
     }
 )
-console = Console(theme=custom_theme)
+console = Console(
+    theme=custom_theme,
+    force_terminal=True,  # https://rich.readthedocs.io/en/latest/console.html#terminal-detection
+    # force_interactive=False,
+)
 
 
 class Style:

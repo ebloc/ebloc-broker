@@ -94,20 +94,20 @@ class Ipfs:
         This function is specific for using on driver.ipfs to decript tar file,
         specific for "tar.gz" file types.
 
-        gpg --verbose --output={tar_file} --pinentry-mode loopback \
+        gpg --verbose --output={tar_fn} --pinentry-mode loopback \
             --passphrase-file=gpg_pass.txt --decrypt <gpg_file>
         """
         if not os.path.isfile(f"{gpg_file}.gpg"):
             os.symlink(gpg_file, f"{gpg_file}.gpg")
 
         gpg_file_link = f"{gpg_file}.gpg"
-        tar_file = f"{gpg_file}.tar.gz"
+        tar_fn = f"{gpg_file}.tar.gz"
         cmd = [
             "gpg",
             "--verbose",
             "--batch",
             "--yes",
-            f"--output={tar_file}",
+            f"--output={tar_fn}",
             "--pinentry-mode",
             "loopback",
             f"--passphrase-file={env.GPG_PASS_FILE}",
@@ -126,13 +126,13 @@ class Ipfs:
         #     os.unlink(gpg_file_link)
         if extract_target:
             try:
-                untar(tar_file, extract_target)
+                untar(tar_fn, extract_target)
             except Exception as e:
                 raise Exception("Could not extract the given tar file") from e
             finally:
                 cmd = None
                 _remove(f"{extract_target}/.git")
-                _remove(tar_file)
+                _remove(tar_fn)
 
     def remove_lock_files(self):
         _remove(f"{env.HOME}/.ipfs/repo.lock")
