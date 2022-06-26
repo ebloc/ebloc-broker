@@ -305,10 +305,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @param availableCore is a uint32 value containing the number of available
        cores.
      * @param prices is a structure containing four uint32 values, which are
-     *        => fee per minute of core usage,
-     *        => fee per megabyte of transferring data,
-     *        => fee per megabyte of storage usage for an hour, and
-     *        => fee per megabyte of cache usage values respectively.
+     *        => price per core-minute,
+     *        => price per megabyte of transferring data,
+     *        => price per megabyte of storage usage for an hour, and
+     *        => price per megabyte of cache usage values respectively.
      * @param commitmentBlockDur is a uint32 value containing the duration
        of the committed prices.
      * @param ipfsAddress is a string containing an IPFS peer ID for creating peer
@@ -328,7 +328,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         require(
             availableCore > 0 &&
                 prices[0] > 0 &&
-                // fee per storage should be minimum 1, which helps to identify
+                // price per storage should be minimum 1, which helps to identify
                 // is user used or not the related data file
                 prices[2] > 0 &&
                 !provider.isRunning &&

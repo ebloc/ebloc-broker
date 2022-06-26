@@ -16,14 +16,14 @@ def get_data_price(provider, source_code_hash, is_verbose=True):
 
     registered_data_bn_list = Ebb.get_registered_data_bn(provider, code_hash_bytes)
     if bn > registered_data_bn_list[-1]:
-        data_price_set_bn = registered_data_bn_list[-1]
+        data_fee_set_bn = registered_data_bn_list[-1]
     else:
-        data_price_set_bn = registered_data_bn_list[-2]
+        data_fee_set_bn = registered_data_bn_list[-2]
         if is_verbose:
             remaining_min = (registered_data_bn_list[-1] - bn) * 6 / 60
             note_msg = f"{remaining_min} minutes remaining for new price to take place"
 
-    (price, commitment_block_dur) = Ebb.get_registered_data_price(provider, code_hash_bytes, data_price_set_bn)
+    (price, commitment_block_dur) = Ebb.get_registered_data_price(provider, code_hash_bytes, data_fee_set_bn)
     if is_verbose:
         log(f" * price={price}")
         log(f" * commitment_block_dur={commitment_block_dur}")

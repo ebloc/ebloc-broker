@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export NODE_OPTIONS=--openssl-legacy-provider
 PORT=8547
 source $HOME/venv/bin/activate
 brownie compile

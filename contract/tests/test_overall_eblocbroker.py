@@ -29,10 +29,10 @@ fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 
 available_core = 128
 price_core_min = 1
-price_data_transfer = 1
-price_storage = 1
-price_cache = 1
-prices = [price_core_min, price_data_transfer, price_storage, price_cache]
+price_data_transfer_mb = 1
+price_storage_hr = 1
+price_cache_mb = 1
+prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
 
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
 ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
@@ -118,7 +118,7 @@ def register_provider(price_core_min=1):
     ebb = config.ebb
     mine(1)
     web3.eth.defaultAccount = accounts[0]
-    prices = [price_core_min, price_data_transfer, price_storage, price_cache]
+    prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_gmail,
@@ -323,12 +323,12 @@ def test_data_info():
         {"from": requester, "value": to_gwei(job_price)},
     )
     provider_price_info = ebb.getProviderInfo(provider, 0)
-    price_cache = provider_price_info[1][4]
+    price_cache_mb = provider_price_info[1][4]
     storage_payment = []
     for idx, code_hash in enumerate(job.code_hashes):
         deposit, *_ = ebb.getStorageInfo(provider, requester, code_hash)
         storage_payment.append(deposit)
-        assert storage_payment[idx] == job.storage_hours[idx] * price_cache
+        assert storage_payment[idx] == job.storage_hours[idx] * price_cache_mb
 
     job.is_verified = [False, True]
     tx = ebb.setDataVerified([job.code_hashes[1]], {"from": provider, "gas": 4500000})
@@ -837,9 +837,9 @@ def test_submit_job():
     # availableCoreNum = _provider_price_info[0]
     # commitment_block_duration = _provider_price_info[1]
     price_core_min = _provider_price_info[2]
-    # price_data_transfer = _provider_price_info[3]
-    # price_storage = _provider_price_info[4]
-    # price_cache = _provider_price_info[5]
+    # price_data_transfer_mb = _provider_price_info[3]
+    # price_storage_hr = _provider_price_info[4]
+    # price_cache_mb = _provider_price_info[5]
     log(f"provider_available_core={available_core}")
     log(f"provider_price_core_min={price_core_min}")
     log(provider_price_info)

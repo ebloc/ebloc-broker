@@ -58,15 +58,15 @@ if [ "$force" != "yes" ] && [ -e /etc/munge/munge.key ] ; then
   # fi
 fi
 
-#Generating the key file and change owner and permissions
+# Generating the key file and change owner and permissions
 if [ "$randomfile" = "/dev/random" ] ; then
   echo Please type on the keyboard, echo move your mouse,
   echo utilize the disks. This gives the random number generator
   echo a better chance to gain enough entropy.
 fi
+
 echo -n "Generating a pseudo-random key using $randomfile "
-dd if=$randomfile bs=1 count=1024 > /etc/munge/munge.key \
-  2>/dev/null
+dd if=$randomfile bs=1 count=1024 > /etc/munge/munge.key 2>/dev/null
 chown munge:munge /etc/munge/munge.key
 chmod 0400 /etc/munge/munge.key
-echo completed.
+echo "completed."

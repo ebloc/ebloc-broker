@@ -81,13 +81,14 @@ fi
 echo "#> Starting supervisord process manager"
 /usr/bin/supervisord --configuration /etc/supervisord.conf
 
-for service in mysqld mongod slurmdbd slurmctld slurmd_1 slurmd_2  # munged
-do
-    start_service $service
-done
 sudo chown munge:munge -R /run/munge  # double check
 nohup sudo -u munge munged -F > /var/log/munged.log &!
 # munged: Info: Unauthorized credential for client UID=0 GID=0 // but works
+
+for service in mysqld mongod slurmdbd slurmctld slurmd_1 slurmd_2
+do
+    start_service $service
+done
 
 for port in 6817 6818 6819 6001 6002
 do

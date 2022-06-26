@@ -39,7 +39,6 @@ fi
 
 # npm
 # ===
-# export NODE_OPTIONS=--openssl-legacy-provider
 sudo aptitude install npm -y
 sudo npm install -g npm
 sudo npm install -g n

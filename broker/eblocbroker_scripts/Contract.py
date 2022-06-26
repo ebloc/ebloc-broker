@@ -537,7 +537,7 @@ class Contract:
         """Check if the given address is the owner of the contract."""
         return address.lower() == self.get_owner().lower()
 
-    def _get_provider_prices_for_job(self, *args):
+    def _get_provider_fees_for_job(self, *args):
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
                 return self.eBlocBroker.getProviderPrices(*args)  # NOQA

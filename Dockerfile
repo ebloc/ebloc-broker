@@ -189,4 +189,3 @@ COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker
 CMD ["/bin/bash"]
-COPY --chown=slurm docker/slurm/files/slurm.conf /etc/slurm/slurm.conf

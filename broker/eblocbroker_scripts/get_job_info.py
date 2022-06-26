@@ -5,8 +5,8 @@ import sys
 from broker import cfg
 from broker._utils._log import br, log
 from broker._utils.tools import print_tb
-from broker.eblocbroker_scripts.get_transaction_receipt import get_msg_value
 from broker.eblocbroker_scripts.job import DataStorage
+from broker.errors import QuietExit
 from broker.lib import state
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
 
@@ -14,7 +14,7 @@ Ebb = cfg.Ebb
 
 
 def analyze_data(self, key, provider=None):
-    """Obtain information related to source-code data."""
+    """Obtain the information related to code data."""
     current_bn = Ebb.get_block_number()
     self.received_block = []
     self.storage_duration = []
@@ -101,13 +101,13 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 self.job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 self.job_info.update({"cacheType": logged_job.args["cacheType"]})
                 self.job_info.update({"submitJob_tx_hash": logged_job["transactionHash"].hex()})
-                self.job_info.update(
-                    {
-                        "submitJob_msg_value": get_msg_value(
-                            logged_job["blockHash"].hex(), logged_job["transactionIndex"]
-                        )
-                    }
+                self.job_info.update({"submitJob_block_hash": logged_job["blockHash"].hex()})
+                tx_by_block = Ebb.get_transaction_by_block(
+                    self.job_info["submitJob_block_hash"], logged_job["transactionIndex"]
                 )
+                self.job_info.update({"submitJob_msg_value": int(tx_by_block["value"] / 10**9)})
+                output = Ebb.get_transaction_receipt(self.job_info["submitJob_tx_hash"])
+                self.job_info.update({"submitJob_gas_used": int(output["gasUsed"])})
                 break
         else:
             log(f"E: failed to find and update job({job_key})")
@@ -157,16 +157,22 @@ def get_job_info_print(self, provider, job_key, index, received_bn):
 
 def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print=True, is_log_print=False):
     """Return information of the job."""
-    if is_print:
-        fn = self.EBB_SCRIPTS / "get_job_info.py"
-        log(f"$ {fn} {provider} {job_key} {index} {job_id} {received_bn}", "bold cyan", is_code=True)
-
     try:
         provider = cfg.w3.toChecksumAddress(provider)
-        job, received, job_owner, data_transfer_in, data_transfer_out = self._get_job_info(
-            provider, job_key, int(index), int(job_id)
-        )
-        job_prices = self._get_provider_prices_for_job(provider, job_key, int(index))
+        try:
+            job, received, job_owner, data_transfer_in, data_transfer_out = self._get_job_info(
+                provider, job_key, int(index), int(job_id)
+            )
+        except Exception as e:
+            if str(e) == "VM execution error: Bad instruction fe":
+                raise QuietExit("Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given") from e
+
+            raise e
+
+        job_prices = self._get_provider_fees_for_job(provider, job_key, int(index))
+        if is_print:
+            fn = self.EBB_SCRIPTS / "get_job_info.py"
+            log(f"$ {fn} {provider} {job_key} {index} {job_id} {received_bn}", "bold white", is_code=True)
 
         self.job_info = {
             "provider": provider,
@@ -197,9 +203,13 @@ def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print
             "data_transfer_in_to_download": None,
             "data_transfer_out_used": None,
             "storage_duration": None,
+            "submitJob_block_hash": None,
             "submitJob_tx_hash": None,
-            "processPayment_tx_hash": None,
             "submitJob_msg_value": 0,
+            "submitJob_gas_used": 0,
+            "processPayment_block_hash": None,
+            "processPayment_tx_hash": None,
+            "processPayment_gas_used": 0,
         }
         received_bn = self.update_job_cores(provider, job_key, index, received_bn)
         if not received_bn or received_bn == self.deployed_block_number:
@@ -230,6 +240,9 @@ def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print
                 if self.job_info["result_ipfs_hash"] == empty_bytes32:
                     self.job_info.update({"result_ipfs_hash": b""})
 
+                self.job_info.update({"processPayment_block_hash": logged_receipt["blockHash"].hex()})
+                output = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
+                self.job_info.update({"processPayment_gas_used": int(output["gasUsed"])})
                 break
     except Exception as e:
         raise e
@@ -271,6 +284,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except QuietExit as e:
+        log(f"E: {e}")
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

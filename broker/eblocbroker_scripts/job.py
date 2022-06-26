@@ -429,17 +429,17 @@ class JobPrices:
                     if self.job.data_prices_set_block_numbers[idx] == 0:
                         registered_data_bn_list = self.Ebb.get_registered_data_bn(self.job.provider, code_hash)
                         if bn > registered_data_bn_list[-1]:
-                            data_price_set_bn = registered_data_bn_list[-1]
+                            data_fee_set_bn = registered_data_bn_list[-1]
                         else:
-                            data_price_set_bn = registered_data_bn_list[-2]
+                            data_fee_set_bn = registered_data_bn_list[-2]
                     else:
-                        data_price_set_bn = self.job.data_prices_set_block_numbers[idx]
+                        data_fee_set_bn = self.job.data_prices_set_block_numbers[idx]
 
                     # if true, registered data's price should be considered for storage
                     (data_price, *_) = self.Ebb.get_registered_data_price(
                         self.job.provider,
                         code_hash,
-                        data_price_set_bn,
+                        data_fee_set_bn,
                     )
                     self.storage_cost += data_price
                     self.registered_data_cost_list[_code_hash] = data_price

@@ -288,7 +288,7 @@ def log(
         is_bold = True
 
     if is_code:
-        text = " \ \n  ".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
+        text = " \ \n  ".join(textwrap.wrap(text, 100, break_long_words=False, break_on_hyphens=False))
 
     if is_wrap:
         text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
