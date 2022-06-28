@@ -19,7 +19,6 @@ ENV PYTHONUNBUFFERED 1
 ENV PATH="/root/.pyenv/shims:/root/.pyenv/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:$PATH"
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS="yes"
-EXPOSE 6817 6818 6819 6820 3306 6001 6002
 
 COPY --from=0 /go /go
 COPY --from=0 /usr/local/bin /usr/local/bin
@@ -30,17 +29,13 @@ ENV GOPATH=/go
 ENV GOROOT=/usr/local/go
 ENV PATH /go/bin:/usr/local/go/bin:$PATH
 
-## Add Tini
-## ========
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+# Add Tini
+ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini
 RUN chmod +x /tini
 
-## mongodb
-## =======
-RUN curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add - \
- && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | \
-    tee /etc/apt/sources.list.d/mongodb-org-4.4.list \
+# Install mongodb
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
+ && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
  && apt-get update \
  && apt-get install -y mongodb-org \
  && mkdir -p /data/db \
@@ -63,7 +58,6 @@ RUN apt-get update \
     pigz \
     zlib1g-dev \
     make \
-    default-mysql-server \
     npm \
     nodejs \
     python3-venv \
@@ -74,14 +68,14 @@ RUN apt-get update \
     libmunge-dev \
     libboost-all-dev \
     libmunge2 \
-    default-mysql-client \
-    default-mysql-server \
     software-properties-common \
+    default-mysql-server \
+    default-mysql-client \
     default-libmysqlclient-dev \
+    mariadb-server \
     mailutils \
     unzip \
     libmariadbd-dev \
-    mariadb-server \
     supervisor \
     nano \
     less \
@@ -99,8 +93,7 @@ RUN python3 -m venv /opt/venv
 #; enable venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-## ebloc-broker
-# -=-=-=-=-=-=-
+# Install ebloc-broker
 WORKDIR /workspace
 RUN git clone https://github.com/ebloc/ebloc-broker.git
 WORKDIR /workspace/ebloc-broker
@@ -123,15 +116,14 @@ RUN brownie init \
   && cd /workspace//ebloc-broker/contract \
   && brownie compile
 
-## SLURM
+# Install Slurm
 # Compile, build and install Slurm from Git source
-# && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no \
 ARG SLURM_TAG=slurm-22-05-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
 RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
  && cd slurm \
- && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no --enable-debug  --enable-multiple-slurmd \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no --enable-debug --enable-multiple-slurmd \
  && make \
  && make -j 4 install \
  && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
@@ -185,7 +177,11 @@ RUN gdrive version \
  && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
  && du -sh / 2>&1 | grep -v "cannot"
 
+EXPOSE 6817 6818 6819 6820 3306 6001 6002
+
 COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# define command at startup
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker
+
 CMD ["/bin/bash"]

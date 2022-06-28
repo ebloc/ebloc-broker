@@ -39,6 +39,18 @@ function start_service {
     check_running_status $1
 }
 
+function check_cluster () {
+    echo "#> waiting for the cluster to become available"
+    for count in {10..0}; do
+        if ! grep -E "up.*idle" <(timeout 1 sinfo); then
+            sleep 1
+        else
+            break
+        fi
+    done
+    error_with_msg "Slurm partitions failed to start successfully."
+}
+
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "[mysqld]\nskip-host-cache\nskip-name-resolve" > /etc/my.cnf.d/docker.cnf
     echo "#> Initializing database"
@@ -65,45 +77,33 @@ if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
     mysql -NBe "CREATE DATABASE slurm_acct_db"
     echo "#> Slurm acct database created. Stopping MariaDB"
     killall mysqld
-
-    # for count in {30..0}; do
-    #     if echo "SELECT 1" | mysql &> /dev/null
-    #     then
-    #         sleep 1
-    #     else
-    #         break
-    #     fi
-    # done
-
+    for count in {10..0}; do
+        if echo "SELECT 1" | mysql &> /dev/null
+        then
+            sleep 1
+        else
+            break
+        fi
+    done
     error_with_msg "MariaDB did not stop"
 fi
 
 echo "#> Starting supervisord process manager"
 /usr/bin/supervisord --configuration /etc/supervisord.conf
 
+# order of the programs is important
 sudo chown munge:munge -R /run/munge  # double check
 nohup sudo -u munge munged -F > /var/log/munged.log &!
 # munged: Info: Unauthorized credential for client UID=0 GID=0 // but works
-
-for service in mysqld mongod slurmdbd slurmctld slurmd_1 slurmd_2
-do
+for service in mysqld slurmdbd slurmctld slurmd_1 slurmd_2 mongod; do
     start_service $service
 done
 
-for port in 6817 6818 6819 6001 6002
-do
+for port in 6817 6818 6819 6001 6002; do
     check_port_status $port
 done
 
-echo "#> Waiting for the cluster to become available"
-for count in {10..0}; do
-    if ! grep -E "up.*idle" <(timeout 1 sinfo); then
-        sleep 1
-    else
-        break
-    fi
-done
-error_with_msg "Slurm partitions failed to start successfully."
+check_cluster
 
 echo "#> Cluster is now available"
 exec "$@"

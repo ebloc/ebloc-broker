@@ -4,43 +4,38 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS="yes"
 
 ENV PATH "/root/.pyenv/shims:/root/.pyenv/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin"
-EXPOSE 6817 6818 6819 6820 3306
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends apt-utils \
  && apt-get install -y git \
      build-essential \
+     software-properties-common \
      gcc \
      munge \
      libmunge-dev \
      libboost-all-dev \
      libmunge2 \
-     default-mysql-client \
      default-mysql-server \
-     software-properties-common \
+     default-mysql-client \
      default-libmysqlclient-dev \
+     mariadb-server \
      mailutils \
      unzip \
      libmariadbd-dev \
-     mariadb-server \
      supervisor \
      nano \
- && apt clean
+     less \
+ && apt-get clean
 
-# Add Tini
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
-
+EXPOSE 6817 6818 6819 6820 3306 6001 6002
+ARG SLURM_TAG=slurm-22-05-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
-ARG JOBS=4
-RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
+RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
  && cd slurm \
- && ./configure --prefix=/usr --sysconfdir=/etc/slurm --enable-slurmrestd \
-   --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no --enable-debug  --enable-multiple-slurmd \
  && make \
- && make -j ${JOBS} install \
+ && make -j 4 install \
  && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
  && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
  && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
@@ -48,7 +43,7 @@ RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/Sc
  && cd .. \
  && rm -rf slurm \
  && slurmctld -V \
- && groupadd -r slurm  \
+ && groupadd -r slurm \
  && useradd -r -g slurm slurm \
  && mkdir -p /etc/sysconfig/slurm \
      /var/spool/slurmd \
@@ -60,22 +55,24 @@ RUN git clone -b slurm-19-05-8-1 --single-branch --depth 1 https://github.com/Sc
     /var/log/slurm \
     /var/run/slurm
 
-# Create munge service file and start it
-# RUN chown munge: /var/log/munge /var/lib/munge && \
-#     mkdir -p /etc/service/munge
-# RUN chown -R munge:munge /var/log/munge
-# RUN chown root:root /var/log/munge
+VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
+COPY --chown=slurm files/create-munge-key /sbin/
+RUN /sbin/create-munge-key \
+ && chown munge:munge -R /run/munge
 
-RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
 COPY files/supervisord.conf /etc/
 
-# Mark externally mounted volumes
-VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-COPY --chown=slurm files/slurm/slurm.conf /etc/slurm/slurm.conf
-COPY --chown=slurm files/slurm/slurmdbd.conf /etc/slurm/slurmdbd.conf
+# mark externally mounted volumes
+COPY --chown=slurm files/slurm.conf /etc/slurm/slurm.conf
+COPY --chown=slurm files/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
+
+## Add Tini
+## ========
+ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini
+RUN chmod +x /tini
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]

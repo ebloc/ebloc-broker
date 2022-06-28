@@ -8,9 +8,7 @@ supported by the Turkish Directorate of Strategy and Budget under the TAM Projec
 
 Contact [[mailto:alper.alimoglu@boun.edu.tr][alper.alimoglu@boun.edu.tr]], [[mailto:ozturaca@boun.edu.tr][ozturaca@boun.edu.tr]] if necessary.
 
-# ** Website: [[http://ebloc.cmpe.boun.edu.tr]]
-# # http://ebloc.org
-
+# ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
 # - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
 
 ** Prerequisites
@@ -82,7 +80,7 @@ Please update following arguments inside ~register.yaml~.
 
 After registration is done, each user should authenticate their ORCID iD using the following [[http://eblocbroker.duckdns.org/]].
 
-~$ ./eblocbroker.py submit job.yaml~
+~$ eblocbroker submit job.yaml~
 
 **** Example yaml file in order to define a job to submit.
 
@@ -96,7 +94,6 @@ config:
         path: ~/test_eblocbroker/source_code
         storage_hours: 0
         storage_id: ipfs
-    base_data_path: ~/test_eblocbroker/test_data/base/
     data:
         data1:
             cache_type: public
@@ -121,7 +118,7 @@ config:
 - ~cache_type~ should be variable from [ ~public~, ~private~ ]
 - ~storaage_id~ should be variable from [ ~ipfs~, ~ipfs_gpg~, ~none~, ~eudat~, ~gdrive~ ]
 
---------------------------------
+-----------------------------------
 
 ** Provider
 

@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  slurm_slurm:
+  slurm:
     build: .
     hostname: slurmctl
     stdin_open: true
