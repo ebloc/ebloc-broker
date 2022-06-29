@@ -104,7 +104,7 @@ def calculate_size(path, _type="MB") -> float:
 def subprocess_call(cmd, attempt=1, sleep_time=1):
     """Run subprocess."""
     error_msg = ""
-    cmd = list(map(str, cmd))  # type should be always `str`
+    cmd = list(map(str, cmd))  # type of the cmd should be `str`
     for count in range(attempt):
         try:
             p, output, error_msg = popen_communicate(cmd)
@@ -138,7 +138,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
         log(f"\n{_cmd}", "red")
         raise Exception(f"scontrol error:\n{output}")
 
-    # log(f"## writing into path({path}) is completed")
+    # log(f"## writing into path({path})  [  OK  ]")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces using sed
 
 
@@ -205,7 +205,7 @@ def run_storage_thread(storage_class):
     storage_thread.name = storage_class.thread_name
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
-    log(f"==> thread_log_fn={storage_class.drivers_log_path}")
+    log(f"#> thread_log_fn={storage_class.drivers_log_path}")
     storage_thread.start()
     if cfg.IS_THREAD_JOIN:
         try:
@@ -216,8 +216,8 @@ def run_storage_thread(storage_class):
 
 
 def run_storage_process(storage_class):
-    storage_process = Process(target=storage_class.run)
     try:
+        storage_process = Process(target=storage_class.run)
         storage_process.start()
         storage_process.join()  # waits until the job is completed
     except (KeyboardInterrupt, SystemExit):

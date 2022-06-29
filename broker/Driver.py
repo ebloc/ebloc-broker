@@ -133,6 +133,7 @@ def _tools(block_continue):  # noqa
 
             start_ipfs_daemon()
 
+        exception_msg = "warning: given information is not same with the provider's registered info"
         try:
             flag_error = False
             if provider_info_contract["f_id"] != env.OC_USER:
@@ -147,10 +148,10 @@ def _tools(block_continue):  # noqa
                     flag_error = True
 
             if flag_error:
-                raise QuietExit("warning: Given information is not same with the provider's saved info.")
+                raise QuietExit(exception_msg)
 
         except Exception as e:
-            raise QuietExit("warning: Given information is not same with the provider's saved info.") from e
+            raise QuietExit(exception_msg) from e
 
     except QuietExit as e:
         raise e
@@ -181,13 +182,14 @@ class Driver:
 
     def is_job_received(self) -> None:
         """Prevent to download job files again."""
-        if self.job_infos[0]["stateCode"] == state.code["COMPLETED"]:
+        job_infos = self.job_infos[0]
+        if job_infos["stateCode"] == state.code["COMPLETED"]:
             raise JobException("## job is already completed")
 
-        if self.job_infos[0]["stateCode"] == state.code["REFUNDED"]:
+        if job_infos["stateCode"] == state.code["REFUNDED"]:
             raise JobException("## job is refunded")
 
-        if not self.job_infos[0]["stateCode"] == state.code["SUBMITTED"]:
+        if not job_infos["stateCode"] == state.code["SUBMITTED"]:
             raise JobException("warning: job is already captured and in process or completed")
 
     def check_requested_job(self) -> None:

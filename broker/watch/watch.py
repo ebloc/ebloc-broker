@@ -13,9 +13,8 @@ from broker._utils.yaml import Yaml
 from broker.errors import QuietExit
 from broker.lib import state
 
-# from broker.test_setup.user_set import providers
-
 Ebb = cfg.Ebb
+columns_size = 30
 watch_only_jobs = True
 
 
@@ -47,33 +46,30 @@ def watch(eth_address="", from_block=None):
 
     is_provider = True
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
+    open(watch_fn, "w").close()
     _log.ll.LOG_FILENAME = watch_fn
     # open("watch.out", "w").close()
     _console_clear()
-    print(" * s t a r t i n g")
+    print(f" * s t a r t i n g for provider={eth_address}")
     while True:
         bn = Ebb.get_block_number()
         if not watch_only_jobs:
+            # from broker.test_setup.user_set import providers
             providers_info = {}
             providers = Ebb.get_providers()
             for provider_addr in providers:
                 providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
         if is_provider:
-            event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
-                fromBlock=int(from_block),
-                argument_filters={"provider": eth_address},
-                toBlock="latest",
-            )
+            _argument_filters = {"provider": eth_address}
         else:
-            event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
-                fromBlock=int(from_block),
-                argument_filters={"owner": eth_address},
-                toBlock="latest",
-            )
+            _argument_filters = {"owner": eth_address}
 
-        columns = 80
-        columns_size = int(int(columns) / 2 - 9)
+        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
+            fromBlock=int(from_block),
+            argument_filters=_argument_filters,
+            toBlock="latest",
+        )
         header = f"   [bold yellow]{'{:<44}'.format('KEY')} INDEX STATUS[/bold yellow]"
         job_full = ""
         job_count = 0
@@ -105,24 +101,22 @@ def watch(eth_address="", from_block=None):
                 f"{_job['index']} [bold {c}]{state_val}[/bold {c}]\n{job_full}"
             )
 
-        if not watch_only_jobs:
+        if watch_only_jobs:
+            job_full = f"{header}\n{job_full}".rstrip()
+        else:
             job_ruler = (
                 "[green]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/green]"
             )
             job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
-        else:
-            job_full = f"{header}\n{job_full}".rstrip()
 
         is_connected = Ebb.is_web3_connected()
         _console_clear()
-        open(watch_fn, "w").close()
         log(
-            f"\r==> {_date() } bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
+            f"\r==> {_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
             "bold",
         )
         if not watch_only_jobs:
             providers = Ebb.get_providers()
-            columns_size = int(int(columns) / 2 - 12)
             log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "green")
             for k, v in providers_info.items():
                 log(f"** provider_address={k}", end="\r")

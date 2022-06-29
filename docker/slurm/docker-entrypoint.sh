@@ -104,6 +104,6 @@ for port in 6817 6818 6819 6001 6002; do
 done
 
 check_cluster
-
+/usr/bin/supervisorctl start startup
 echo "#> Cluster is now available"
 exec "$@"

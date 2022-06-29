@@ -10,10 +10,11 @@ from broker._utils.tools import log, print_tb
 from broker.utils import bytes32_to_ipfs
 
 Ebb = cfg.Ebb
-print_only_ipfs_result_hashes = False
+is_print_only_ipfs_result_hashes = False
 
 
 def watch(eth_address="", from_block=None):
+    """Log submitted jobs' information."""
     from_block = 15867616
     if not eth_address:
         log("E: eth_address is empty, run as: [m]./watch.py <eth_address>")
@@ -23,24 +24,22 @@ def watch(eth_address="", from_block=None):
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
     is_provider = True
-    watch_fn = Path.home() / ".ebloc-broker" / f"job_infos_{eth_address}.out"
+    watch_fn = Path.home() / ".ebloc-broker" / f"jobs_info_{eth_address}.out"
     _log.ll.LOG_FILENAME = watch_fn
-    if not print_only_ipfs_result_hashes:
+    open(watch_fn, "w").close()  # clean the file
+    if not is_print_only_ipfs_result_hashes:
         _console_clear()
 
     if is_provider:
-        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
-            fromBlock=int(from_block),
-            argument_filters={"provider": eth_address},
-            toBlock="latest",
-        )
+        _argument_filters = {"provider": eth_address}
     else:
-        event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
-            fromBlock=int(from_block),
-            argument_filters={"owner": eth_address},
-            toBlock="latest",
-        )
+        _argument_filters = {"owner": eth_address}
 
+    event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
+        fromBlock=int(from_block),
+        argument_filters=_argument_filters,
+        toBlock="latest",
+    )
     for idx, job in enumerate(event_filter.get_all_entries()):
         try:
             _args = job["args"]
@@ -58,13 +57,13 @@ def watch(eth_address="", from_block=None):
             0,
             job["blockNumber"],
             is_print=False,
-            is_log_print=not print_only_ipfs_result_hashes,
+            is_log_print=not is_print_only_ipfs_result_hashes,
         )
         del _job["code_hashes"]
         if _job["result_ipfs_hash"] in (b"", ""):
             del _job["result_ipfs_hash"]
 
-        if print_only_ipfs_result_hashes:
+        if is_print_only_ipfs_result_hashes:
             if "result_ipfs_hash" in _job:
                 log(bytes32_to_ipfs(_job["result_ipfs_hash"]))
                 # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")

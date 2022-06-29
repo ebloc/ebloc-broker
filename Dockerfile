@@ -183,5 +183,4 @@ COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # define command at startup
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker
-
 CMD ["/bin/bash"]
