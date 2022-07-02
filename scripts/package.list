@@ -49,3 +49,5 @@ openssh-server
 tmux
 munge
 nano
+netcat
+iputils-ping

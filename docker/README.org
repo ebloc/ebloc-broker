@@ -14,7 +14,6 @@ remove_dangling
 
 # sudo systemctl start docker
 # sudo docker run eblocbroker
-
 # doocker run --name test -it eblocbroker bash
 docker run --hostname slurmctl -it ebb bash
 #+end_src
@@ -31,13 +30,13 @@ docker rmi $(docker images -a -q) --force
 ** PUSH
 
 NOTE: Now in order to push the image just make sure the path which you are using must have your
-username included in the tag.
+username included in the tag, [[https://hub.docker.com/u/ebloc][docker-hub]].
 
 #+begin_src bash
-cat ~/.docker_password.txt | docker login --username eblocbroker --password-stdin
+cat ~/.docker_password.txt | docker login --username ebloc --password-stdin
 docker build -t ebb:latest . --progress plain
-docker tag ebb:latest eblocbroker/app
-docker push eblocbroker/app
+docker tag ebb:latest ebloc/ebloc-broker
+docker push ebloc/ebloc-broker
 #+end_src
 
 ~docker history --human --format "{{.CreatedBy}}: {{.Size}}" ebb~
@@ -55,6 +54,8 @@ docker build -t ebb:latest --progress plain .
 ** Compose-up
 
 #+begin_src bash
+docker-compose up -d --build --remove-orphans
+#
 docker-compose up -d
 # or
 docker-compose up --remove-orphans
@@ -64,4 +65,10 @@ docker-compose up --remove-orphans
 
 #+begin_src bash
 docker-compose up --build
+#+end_src
+
+* bash to container
+
+#+begin_src bash
+docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 #+end_src

@@ -14,6 +14,7 @@ class Helper:
     def __init__(self):
         """Initialize helper.
 
+        Test: ./__main__.py -h
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
 
@@ -30,7 +31,7 @@ class Helper:
         self.parser._optionals.title = "Options"
         self.subparsers = self.parser.add_subparsers(dest="command", metavar="command [<options>...]")
         self.subparsers.add_parser("about", help="ebloc-broker metadata")
-        self.subparsers.add_parser("init", help="Initialize the ebloc-broker project")
+        self.init()
         self.driver()
         self.daemon()
         self.register()
@@ -47,6 +48,13 @@ class Helper:
 
     def get_parser(self) -> argparse.ArgumentParser:
         return self.parser
+
+    def init(self):
+        obj = self.subparsers.add_parser("init", help="Initialize the ebloc-broker project")
+        obj.add_argument(
+            "--base", action="store_true", help="Set cfg.py file with initial values"
+        ).completer = EnvironCompleter
+        obj.set_defaults(is_base=None)
 
     def driver(self):
         obj = self.subparsers.add_parser("driver", help="Driver scripts", epilog="run: nohup ebloc-broker > cmd.log &!")

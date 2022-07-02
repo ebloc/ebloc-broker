@@ -1,11 +1,11 @@
 #!/bin/bash
 
 string=$1
-key_first_char=$(echo $string | cut -c1-1)
+first_char=$(echo $string | cut -c1-1)
 if [[ $string == "" ]]; then
     echo "E: provided string is empty"
     false
-   exit
+    exit
 fi
 
 if [[ $string == "." ]] || [[ $string == ".." ]]; then
@@ -23,7 +23,7 @@ if [ $key_len -gt 255 ]; then
     exit
 fi
 
-if ! [[ $key_first_char =~ ^[0-9a-zA-Z]+$ ]]; then
+if ! [[ $first_char =~ ^[0-9a-zA-Z]+$ ]]; then
     echo "E: first character is not valid"
     false
     exit

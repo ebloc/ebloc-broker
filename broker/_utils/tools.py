@@ -340,7 +340,7 @@ def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
         raise e
 
 
-def run_keep_print(cmd):
+def constantly_print_popen(cmd):
     """Constantly print Popen output while script is running.
 
     __ https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
@@ -351,6 +351,7 @@ def run_keep_print(cmd):
         for line in p.stdout:
             ret += line.strip()
             print(line, end="")  # process line here
+
         return ret
 
     if p.returncode != 0:

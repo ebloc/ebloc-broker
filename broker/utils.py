@@ -76,12 +76,12 @@ STORAGE_IDs = {
 class cd:
     """Context manager for changing the current working directory.
 
-    - Enter the directory like this:
-    with cd("~/Library"):
-        # we are in ~/Library
-        subprocess.call("ls")
-
     - Outside the context manager we are back wherever we started.
+
+    - Enter the directory like this:
+    with cd("/home/to/folder"):
+        # we are in /home/to/folder
+        subprocess.call("ls")
 
     __ https://stackoverflow.com/a/13197763/2402577
     """
@@ -127,14 +127,12 @@ def untar(tar_fn, extract_to):
     accepted_files = [".git", fn]
     if not is_dir_empty(extract_to):
         for name in os.listdir(extract_to):
-            # if tar itself already exist inside the same directory along with
-            # `.git` file
+            # if tar itself already exist inside the same directory along with `.git` file
             if name not in accepted_files:
                 log(f"==> {tar_fn} is already extracted into\n    {extract_to}")
                 return
-    # tar --warning=no-timestamp
-    cmd = ["tar", "--warning=no-timestamp", "-xvpf", tar_fn, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"]
-    run(cmd)
+
+    run(["tar", "--warning=no-timestamp", "-xvpf", tar_fn, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"])
 
 
 def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:

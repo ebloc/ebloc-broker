@@ -35,7 +35,7 @@ def connect():
 
 
 def _connect_into_web3() -> None:
-    """Connect into web3 of the testnet.
+    """Connect into web3 of the ethereum blockchain.
 
     * bloxberg:
     __ https://bloxberg.org

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import getpass
 import os
 from inspect import getsourcefile
@@ -41,4 +42,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(1)

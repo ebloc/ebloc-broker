@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo ""
-date
+echo "" && date "+%a %e %b %Y %H:%M:%S %Z"
 cd /workspace/ebloc-broker
-git pull -r -v
+git fetch --all --quiet
+git submodule update --init
+git submodule update --quiet
+git pull --all -r -v

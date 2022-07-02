@@ -2,5 +2,6 @@
 * TASKS
 ** TODO patch eudat and google-drive
 ** TODO verify downloaded data
-** TODO re-run the tests
 ** TODO Convert `ipfsID` into `ipfsAddress` in eBlocBrokerInterface.sol
+** TODO Test updated code in 2 machines with your test cast submitting job.
+** TODO IPFS inside docker should be swarm connect from outside

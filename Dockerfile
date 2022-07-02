@@ -62,6 +62,7 @@ RUN apt-get update \
     nodejs \
     python3-venv \
     sudo \
+    netcat \
     ## required packages to install for Slurm
     gcc \
     munge \
@@ -105,7 +106,7 @@ RUN git checkout dev >/dev/null 2>&1 \
  && pip install -U pip wheel setuptools \
  && pip install -e . --use-deprecated=legacy-resolver \
  && mkdir -p ~/.cache/black/$(pip freeze | grep black | sed 's|black==||g') \
- && eblocbroker >/dev/null 2>&1 \
+ && eblocbroker init --base \
  && ./broker/_utils/yaml.py >/dev/null 2>&1
 
 WORKDIR /workspace/ebloc-broker/empty_folder

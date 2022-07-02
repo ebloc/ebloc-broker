@@ -1,4 +1,6 @@
-* eBlocBroker
+* ebloc-broker
+
+** What is eBlocBroker?
 
 *eBlocBroker is smart contract that provides an application of blockchain technology to provide computational and data resources to research communities.*
 
@@ -8,18 +10,20 @@ supported by the Turkish Directorate of Strategy and Budget under the TAM Projec
 
 Contact [[mailto:alper.alimoglu@boun.edu.tr][alper.alimoglu@boun.edu.tr]], [[mailto:ozturaca@boun.edu.tr][ozturaca@boun.edu.tr]] if necessary.
 
+For more info see: ...
+
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
 # - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
 
 ** Prerequisites
 
 - [[https://github.com/SchedMD/slurm][Slurm]],
-  [[https://geth.ethereum.org/docs/getting-started][Geth]],
   [[https://ipfs.io][IPFS]],
   [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]],
   [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]],
   [[https://github.com/eth-brownie/brownie][eth-brownie]],
   [[https://github.com/trufflesuite/ganache][ganache-cli]]
+# [[https://geth.ethereum.org/docs/getting-started][Geth]]
 
 ** Using Docker
 
@@ -74,10 +78,9 @@ Next, type ~eblocbroker --help~ for basic usage information.
 
 *** Submit Job
 
-In order to submit your job each user should already registered into eBlocBroker.
-You can use [[./broker/eblocbroker/register_requester.py]] to register.
-Please update following arguments inside ~register.yaml~.
-
+In order to submit your job each user should already registered into eBlocBroker using ~eblocbroker register_provider ~/.ebloc-broker/cfg.yaml~
+# You can use [[./broker/eblocbroker_scripts/register_requester.py]] to register.
+# Please update following arguments inside ~register.yaml~.
 After registration is done, each user should authenticate their ORCID iD using the following [[http://eblocbroker.duckdns.org/]].
 
 ~$ eblocbroker submit job.yaml~

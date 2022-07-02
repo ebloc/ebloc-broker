@@ -6,4 +6,4 @@ services:
     stdin_open: true
     tty: true
     ports:
-      - "4002:4002" # Public IPFS Port
+        - "4101:4001"

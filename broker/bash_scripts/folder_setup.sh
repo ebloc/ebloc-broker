@@ -1,13 +1,6 @@
 #!/bin/bash
 
-GREEN="\033[1;32m"; NC="\033[0m"
-LOG_DIR=~/.ebloc-broker
-DIR=/var/ebloc-broker
-if grep -q docker /proc/1/cgroup; then  # inside docker
-    BASE_DIR=/workspace/ebloc-broker/broker
-else
-    BASE_DIR=~/ebloc-broker/broker
-fi
+GREEN="\033[1;32m"; NC="\033[0m"; VAR="base"
 
 yes_or_no () {
     while true; do
@@ -20,6 +13,14 @@ yes_or_no () {
         esac
     done
 }
+
+LOG_DIR=~/.ebloc-broker
+DIR=/var/ebloc-broker
+if grep -q docker /proc/1/cgroup; then  # inside docker
+    BASE_DIR=/workspace/ebloc-broker/broker
+else
+    BASE_DIR=~/ebloc-broker/broker
+fi
 
 set_gmail () {
     echo "Type your gmail-address, followed by [ENTER]:"
@@ -49,7 +50,9 @@ provider_setup () {
     # var=$(echo $venv_path | sed 's/\//\\\//g')
     # sed -i.bak "s/^\(VENV_PATH=\).*/\1\"$var\"/" $DIR/slurm_mail_prog.sh
     # rm $DIR/slurm_mail_prog.sh.bak
-    yes_or_no "Do you want to change your gmail" $GMAIL && set_gmail
+    if [[ "$1" != "$VAR" ]]; then
+        yes_or_no "Do you want to change your gmail" $GMAIL && set_gmail
+    fi
 }
 
 configure_slurm () { # slurm setup
@@ -115,7 +118,9 @@ fi
 # 'chmod 700 eudat_password.txt'"
 # echo ""
 
-yes_or_no "Are you are a provider" && provider_setup
+if [[ "$1" != "$VAR" ]]; then
+    yes_or_no "Are you are a provider" && provider_setup
+fi
 
 # LOG_PATH
 # ========

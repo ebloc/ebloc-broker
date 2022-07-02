@@ -7,28 +7,13 @@ services:
     stdin_open: true
     tty: true
     ports:
-      - "4001:4001" # Public IPFS Port
-      # - "6001:6001"
-      # - "6002:6002"
+      - "4001:4001" # public IPFS Port
     volumes:
       - ~/docker/volumes/lib:/var/lib/slurmd
       - ~/docker/volumes/spool:/var/spool/slurm
       - ~/docker/volumes/log:/var/log/slurm
       - ~/docker/volumes/db:/var/lib/mysql
-  # slurm:
-  #   build:
-  #     dockerfile: Dockerfile
-  #     context: ./docker/provider
-  #   hostname: slurmctl
-  #   stdin_open: true
-  #   tty: true
-  #   ports:
-  #     - "4001:4001" # Public IPFS Port
-  #   volumes:
-  #     - ./volumes/lib:/var/lib/slurmd
-  #     - ./volumes/spool:/var/spool/slurm
-  #     - ./volumes/log:/var/log/slurm
-  #     - ./volumes/db:/var/lib/mysql
+
   # requester:
   #   build:
   #     dockerfile: Dockerfile
@@ -36,4 +21,4 @@ services:
   #   stdin_open: true
   #   tty: true
   #   ports:
-  #     - "4002:4002" # Public IPFS Port
+  #     - "4101:4001" # Public IPFS Port

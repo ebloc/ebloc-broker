@@ -13,7 +13,7 @@ from cid import make_cid
 
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import _remove, handler, log, print_tb, run_keep_print
+from broker._utils.tools import _remove, handler, log, print_tb, constantly_print_popen
 from broker.config import env
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.lib import subprocess_call
@@ -291,7 +291,7 @@ class Ipfs:
         if not is_ipfs_on():
             raise IpfsNotConnected
 
-        output = run_keep_print(["ipfs", "get", ipfs_hash, f"--output={path}"])
+        output = constantly_print_popen(["ipfs", "get", ipfs_hash, f"--output={path}"])
         log(output)
         if is_storage_paid:
             # pin downloaded ipfs hash if storage is paid
@@ -326,7 +326,7 @@ class Ipfs:
 
         for attempt in range(10):
             try:
-                result_ipfs_hash = run_keep_print(cmd)
+                result_ipfs_hash = constantly_print_popen(cmd)
                 if not result_ipfs_hash and not self.is_valid(result_ipfs_hash):
                     log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
                     time.sleep(5)

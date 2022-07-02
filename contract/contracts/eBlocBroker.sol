@@ -104,7 +104,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
         uint256 amount;
         if (
-            !_provider.isRunning || // If provider stop running
+            !_provider.isRunning ||
             job.stateCode <= Lib.JobStateCodes.PENDING || // If job' state is SUBMITTED(0) or PENDING(1)
             (job.stateCode == Lib.JobStateCodes.RUNNING &&
                 (block.timestamp - job.startTimestamp) > elapsedTime[jobID] * 60 + 1 hours)
