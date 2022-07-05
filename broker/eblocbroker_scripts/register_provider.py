@@ -79,10 +79,6 @@ def get_ipfs_address() -> str:
             sys.exit(1)
 
 
-def error_msg(key, yaml_fn):
-    log(f"E: [blue]{key}[/blue] is empty in [m]{yaml_fn}")
-
-
 def register_provider_wrapper(yaml_fn):
     """Register provider."""
     yaml_fn = expanduser(yaml_fn)
@@ -105,39 +101,45 @@ def register_provider_wrapper(yaml_fn):
         log("E: Address cannot be same as owner's")
         exit_flag = True
 
+    error_list = []
     if not f_id:
-        error_msg("f_id", yaml_fn)
+        error_list.append("f_id")
         exit_flag = True
 
     if not available_core:
-        error_msg("available_core", yaml_fn)
+        error_list.append("available_core")
         exit_flag = True
 
     if not commitment_blk:
-        error_msg("commitment_blk", yaml_fn)
+        error_list.append("commitment_blk")
         exit_flag = True
 
     if not price_core_min:
-        error_msg("price_core_min", yaml_fn)
+        error_list.append("price_core_min")
         exit_flag = True
 
     if not price_data_transfer:
-        error_msg("price_data_transfer", yaml_fn)
+        error_list.append("price_data_transfer")
         exit_flag = True
 
     if not price_storage:
-        error_msg("price_storage", yaml_fn)
+        error_list.append("price_storage")
         exit_flag = True
 
     if not price_cache:
-        error_msg("price_cache", yaml_fn)
+        error_list.append("price_cache")
         exit_flag = True
 
     if not gmail:
-        error_msg("gmail", yaml_fn)
+        error_list.append("gmail")
         exit_flag = True
 
     if exit_flag:
+        if len(error_list) == 1:
+            log(f"E: [blue]{error_list[0]}[/blue] is empty in [m]{yaml_fn}")
+        else:
+            log(f"E: [blue]{error_list}[/blue] variables are empty in [m]{yaml_fn}")
+
         sys.exit(1)
 
     ipfs_address = get_ipfs_address()

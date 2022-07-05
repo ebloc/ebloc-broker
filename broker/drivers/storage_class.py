@@ -95,7 +95,7 @@ class Storage(BaseClass):
 
         - Real mode -n is used.
         - For Emulator-mode -N use `sbatch -c`
-        cmd:
+        - cmd:
         sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
             sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
         """
@@ -171,8 +171,7 @@ class Storage(BaseClass):
             raise e
 
     def is_md5sum_matches(self, path, name, _id, folder_type, cache_type) -> bool:
-        output = generate_md5sum(path)
-        if output == name:
+        if generate_md5sum(path) == name:
             # checking is already downloaded folder's hash matches with the given hash
             if self.whoami() == "EudatClass" and folder_type != "":
                 self.folder_type_dict[name] = folder_type
@@ -184,7 +183,9 @@ class Storage(BaseClass):
             elif cache_type == CacheType.PRIVATE:
                 self.folder_path_to_download[name] = self.private_dir
                 log(f"==> {name} is already cached under the private directory")
+
             return True
+
         return False
 
     def _is_cached(self, name, _id) -> bool:
@@ -221,7 +222,7 @@ class Storage(BaseClass):
                 .strip()
             )
             if output.count("/") == 1:
-                # main folder should contain the 'run.sh' file
+                # job folder should contain the 'run.sh' file
                 log(f"[m]./run.sh[/m] exists under the parent folder{ok()}", "bold")
                 return True
             else:
@@ -323,7 +324,7 @@ class Storage(BaseClass):
         main_cloud_storage_id = self.logged_job.args["cloudStorageID"][source_code_idx]
         job_info = self.job_infos[0]
         job_id = 0  # base job_id for them workflow
-        job_block_number = self.logged_job.blockNumber
+        job_bn = self.logged_job.blockNumber
         date = (
             subprocess.check_output(  # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
                 ["date", "--date=" + "1 seconds", "+%b %d %k:%M:%S %Y"],
@@ -341,7 +342,7 @@ class Storage(BaseClass):
         timestamp = p2.communicate()[0].decode("utf-8").strip()
         log(f"timestamp={timestamp}, ", "bold", end="")
         write_to_file(self.results_folder_prev / "timestamp.txt", timestamp)
-        log(f"job_received_bn={job_block_number}", "bold")
+        log(f"job_received_bn={job_bn}", "bold")
         log("## Adding recevied job into the mongoDB database")
         self.Ebb.mongo_broker.add_item(
             job_key,
@@ -367,7 +368,7 @@ class Storage(BaseClass):
         # seperator character is *
         run_file = f"{self.results_folder}/run.sh"
         #: separator "~"
-        sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_block_number}.sh"
+        sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}.sh"
         with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
             f.write("#!/bin/bash\n")
             f.write("#SBATCH -o slurm.out  # STDOUT\n")

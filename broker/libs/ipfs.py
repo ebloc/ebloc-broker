@@ -13,7 +13,7 @@ from cid import make_cid
 
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import _remove, handler, log, print_tb, constantly_print_popen
+from broker._utils.tools import _remove, constantly_print_popen, handler, log, print_tb
 from broker.config import env
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.lib import subprocess_call
@@ -384,7 +384,7 @@ class Ipfs:
             if "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
                 return ipfs_address
 
-        raise ValueError("No valid ipfs has is found")
+        raise QuietExit("E: No valid ipfs address is found from output of `ipfs id`. Try opening port 4001")
 
     def check_gpg_password(self, gpg_fingerprint):
         """Check passphrase of gpg from a file.

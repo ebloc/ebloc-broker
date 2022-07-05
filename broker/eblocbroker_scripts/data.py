@@ -13,6 +13,7 @@ Ebb = cfg.Ebb
 
 def pre_check_data(provider):
     """Return the provider information."""
+
     if not isinstance(provider, Account):
         provider = Ebb.w3.toChecksumAddress(provider)
 

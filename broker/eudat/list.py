@@ -7,16 +7,15 @@ from broker.utils import print_tb
 
 
 def share_list(oc):
-    shareList = oc.list_open_remote_share()
-    for i in range(len(shareList) - 1, -1, -1):
-        input_folder_name = shareList[i]["name"]
+    share_list = oc.list_open_remote_share()
+    for i in range(len(share_list) - 1, -1, -1):
+        input_folder_name = share_list[i]["name"]
         input_folder_name = input_folder_name[1:]  # removes '/' on the beginning
-        input_id = shareList[i]["id"]
-        owner = shareList[i]["owner"]
+        owner = share_list[i]["owner"]
         if input_folder_name == "5c3c4018fbf2e1d1ef2555ede86cf626":
-            print(shareList[i])
+            print(share_list[i])
             print(owner)
-            oc.accept_remote_share(int(input_id))
+            oc.accept_remote_share(int(share_list[i]["id"]))
             print("here")
 
     # print(oc.file_info('/3a46cc092e8681212dac00d3564f5a64.tar.gz').attributes['{DAV:}getcontentlength'])
@@ -35,12 +34,11 @@ def share_list(oc):
 
 def main():
     oc = owncloud.Client("https://b2drop.eudat.eu/")
-    user = env.OC_USER
     with open(env.LOG_PATH.joinpath(".eudat_client.txt"), "r") as content_file:
         paswd = content_file.read().strip()
 
     try:
-        oc.login(user, paswd)
+        oc.login(env.OC_USER, paswd)
         print(oc.list("."))
         oc.mkdir("dummy_dir")
     except Exception as e:

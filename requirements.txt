@@ -763,7 +763,7 @@ python-language-server==0.36.2
 python-lsp-jsonrpc==1.0.0
     # via
     #   python-lsp-server
-python-lsp-server==1.4.1
+python-lsp-server==1.5.0
 python-slugify==1.2.6
 pythx==1.6.1
     # via
@@ -814,7 +814,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==12.4.4
+rich==12.5.1
 rlp==2.0.1
     # via
     #   eth-account

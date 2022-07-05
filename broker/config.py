@@ -6,6 +6,8 @@ from contextlib import suppress
 from logging import Filter
 from pathlib import Path
 
+from web3.contract import Contract
+
 from broker import cfg
 from broker._utils import _log, colored_traceback
 from broker._utils.tools import mkdir
@@ -48,11 +50,6 @@ class ENV(ENV_BASE):
 
     def __init__(self) -> None:
         super().__init__()
-        with suppress(Exception):
-            from brownie import accounts
-
-            accounts.load("alpy.json", "alper")
-
         if "provider" in self.cfg:
             self.IS_PROVIDER = True
             self.SLURMUSER = self.cfg["provider"]["slurm_user"]
@@ -63,6 +60,11 @@ class ENV(ENV_BASE):
                 cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]
         else:
             self.IS_PROVIDER = False
+
+        # with suppress(Exception):
+        #     from brownie import accounts
+
+        #     accounts.load("alpy.json", "alper")
 
         self.GDRIVE = self.cfg["gdrive"]
         self.DATADIR = Path(self.cfg["datadir"])
@@ -137,9 +139,7 @@ def setup_logger(log_path="", is_brownie=False):
 
 Ebb = cfg.Ebb
 ipfs = cfg.ipfs
-RECONNECT_ATTEMPTS = 5
-RECONNECT_SLEEP = 15
-ebb = None  # ebloc-broker contract on the blockchain
+ebb: Contract = None  # ebloc-broker contract object on the blockchain
 contract = None
 chain = None
 w3_ebb = None
@@ -149,6 +149,6 @@ coll = None
 oc = None
 driver_cancel_process = None
 _eblocbroker = None
-env: ENV = ENV()
+env: ENV
 with suppress(Exception):
-    env: ENV = ENV()
+    env = ENV()

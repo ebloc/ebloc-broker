@@ -23,7 +23,7 @@ class IpfsClass(Storage):
         self.cumulative_sizes = {}
         self.requester_info = self.Ebb.get_requester_info(self.job_infos[0]["job_owner"])
 
-    def check_ipfs(self, ipfs_hash) -> None:
+    def check(self, ipfs_hash) -> None:
         """Check whether ipfs-hash is online."""
         try:
             ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(
@@ -44,6 +44,10 @@ class IpfsClass(Storage):
         """Wrap ipfs get call."""
         cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
         self.verified_data[ipfs_hash] = True
+
+    def print_data_transfer_in(self) -> None:
+        dt_in = self.data_transfer_in_to_download_mb
+        log(f"#> data_transfer_in={dt_in} MB | rounded={int(dt_in)} MB")
 
     def run(self) -> bool:
         self.start_timestamp = time.time()
@@ -66,7 +70,7 @@ class IpfsClass(Storage):
 
         _remove(f"{self.results_folder}/{self.job_key}")
         try:
-            self.check_ipfs(self.job_key)
+            self.check(self.job_key)
         except:
             return False
 
@@ -78,7 +82,7 @@ class IpfsClass(Storage):
                 ipfs_hash = bytes32_to_ipfs(source_code_hash)
                 if ipfs_hash not in self.ipfs_hashes:
                     try:  # job_key as data hash already may added to the list
-                        self.check_ipfs(ipfs_hash)
+                        self.check(ipfs_hash)
                     except:
                         return False
 
@@ -128,8 +132,5 @@ class IpfsClass(Storage):
                 self.full_refund()
                 return False
 
-        log(
-            f"==> data_transfer_in={self.data_transfer_in_to_download_mb} MB | "
-            f"rounded={int(self.data_transfer_in_to_download_mb)} MB"
-        )
+        self.print_data_transfer_in()
         return self.sbatch_call()

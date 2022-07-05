@@ -1,9 +1,6 @@
 * GNU Privacy
 
-** Provider and Requester should do it
-
-** TODO check before submitting job from the requester
-
+** check before submitting job from the requester
 #+begin_src bash
 # key=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
 key=$(gpg --list-secret-keys --keyid-format LONG <email>)
@@ -46,9 +43,9 @@ gpg> passwd
 gpg> save
 #+end_src
 
-~gpg --delete-secret-key <key>~
-
 #+begin_src bash
+gpg --delete-secret-key <key>
+#
 gpg --list-keys
 gpg --delete-key <uid_name>
 gpg --batch --delete-key <key>

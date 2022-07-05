@@ -24,8 +24,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         breakpoint()  # DEBUG
         raise Exception(f"Account: {_from} that will call the transaction is not the owner of the contract")
 
-    output = self.does_provider_exist(address)
-    if not self.does_requester_exist(address) and not output:
+    if not self.does_requester_exist(address) and not self.does_provider_exist(address):
         raise Exception(f"Address: {address} is not registered")
 
     if len(orc_id) != 19:
@@ -34,14 +33,14 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
     if not orc_id.replace("-", "").isdigit():
         raise Exception("orc_id contains characters")
 
-    if not self._is_orc_id_verified(address):
-        try:
-            tx = self._authenticate_orc_id(_from, address, str.encode(orc_id))
-            return self.tx_id(tx)
-        except Exception as e:
-            raise e
-    else:
+    if self._is_orc_id_verified(address):
         raise Exception(f"## Address: {address} that has orc_id: {orc_id} is already authenticated")
+
+    try:
+        tx = self._authenticate_orc_id(_from, address, str.encode(orc_id))
+        return self.tx_id(tx)
+    except Exception as e:
+        raise e
 
 
 def main():

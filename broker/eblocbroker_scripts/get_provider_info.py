@@ -19,8 +19,8 @@ def get_provider_info(self, provider):
 
     if not self.does_provider_exist(provider):
         raise QuietExit(
-            f"E: Provider {provider} is not registered. "
-            f"Please try again with registered Ethereum Address as provider"
+            f"E: provider={provider} is not registered.\n"
+            f"Please try again with registered Ethereum Address as provider."
         )
 
     try:

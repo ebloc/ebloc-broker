@@ -56,3 +56,19 @@ CLOSED: [2022-07-02 Sat 11:55]
 :ARCHIVE_CATEGORY: TODO
 :ARCHIVE_TODO: DONE
 :END:
+
+* DONE check before submitting job from the requester
+CLOSED: [2022-07-14 Thu 12:46]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-07-14 Thu 12:46
+:ARCHIVE_FILE: ~/ebloc-broker/broker/gpg/README.org
+:ARCHIVE_OLPATH: GNU Privacy
+:ARCHIVE_CATEGORY: README
+:ARCHIVE_TODO: DONE
+:END:
+#+begin_src bash
+# key=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
+key=$(gpg --list-secret-keys --keyid-format LONG <email>)
+echo $key && gpg --list-keys $key
+gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key
+#+end_src

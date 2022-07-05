@@ -16,7 +16,7 @@ import psutil
 
 from broker import cfg
 from broker._utils import _log
-from broker._utils._log import br, log, ok
+from broker._utils._log import WHERE, br, log, ok
 from broker._utils.tools import _remove, exit_after, mkdirs, pid_exists, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
@@ -34,7 +34,6 @@ from broker.lib import (
 )
 from broker.libs import _git, eudat, gdrive, slurm
 from broker.utils import (
-    WHERE,
     StorageID,
     byte_to_mb,
     bytes32_to_ipfs,

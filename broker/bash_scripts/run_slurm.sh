@@ -10,6 +10,9 @@ if [[ $(whoami) == "root" ]] ; then
     USER=$(logname)
 fi
 
+sudo /etc/init.d/mysql start
+sudo systemctl --no-pager status mysql
+
 declare -a arr=("slurmd" "slurmdbd" "slurmctld")
 for i in "${arr[@]}"; do  # https://stackoverflow.com/a/8880633/2402577
     sudo killall "$i" > /dev/null 2>&1
@@ -31,6 +34,7 @@ sudo /usr/local/sbin/slurmd
 # sudo /usr/local/sbin/slurmd -N <hostname>4
 
 # sudo /usr/local/sbin/slurmd -N $(hostname -s)  # emulate mode
+sudo chown mysql:mysql -R /var/lib/mysql
 sudo slurmdbd &
 sleep 2.0
 sudo -u $USER mkdir -p /tmp/slurmstate

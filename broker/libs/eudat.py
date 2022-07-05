@@ -94,16 +94,16 @@ def _login(fn, user, password_path) -> None:
     sleep_duration = 15
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     with open(password_path, "r") as content_file:
-        password = content_file.read().strip()
+        passwd = content_file.read().strip()
 
-    for _ in range(config.RECONNECT_ATTEMPTS):
+    for _ in range(cfg.RECONNECT_ATTEMPTS):
         try:
             status_str = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
             with cfg.console.status(status_str):
                 # may take few minutes to connect
-                config.oc.login(user, password)
+                config.oc.login(user, passwd)
 
-            password = ""
+            passwd = ""
             f = open(fn, "wb")
             pickle.dump(config.oc, f)
             f.close()
@@ -117,7 +117,7 @@ def _login(fn, user, password_path) -> None:
             else:
                 terminate("Could not connect into [blue]eudat using config.oc.login()[/blue]")
 
-    log("E: user is None object")
+    log("E: user is `None` object")
     terminate()
 
 

@@ -46,7 +46,6 @@ libssl-dev
 zlib1g-dev
 net-tools
 openssh-server
-tmux
 munge
 nano
 netcat

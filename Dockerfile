@@ -46,12 +46,13 @@ RUN curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | tee /etc/apt/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --assume-yes apt-utils \
  && apt-get install -y --no-install-recommends --assume-yes \
-    aptitude \
     build-essential \
+    aptitude \
     libdbus-1-dev \
     libdbus-glib-1-dev \
     libgirepository1.0-dev \
     libssl-dev \
+    gcc \
     members \
     pv \
     rsync \
@@ -63,23 +64,12 @@ RUN apt-get update \
     python3-venv \
     sudo \
     netcat \
-    ## required packages to install for Slurm
-    gcc \
-    munge \
-    libmunge-dev \
-    libboost-all-dev \
-    libmunge2 \
-    software-properties-common \
-    default-mysql-server \
-    default-mysql-client \
-    default-libmysqlclient-dev \
-    mariadb-server \
-    mailutils \
-    unzip \
-    libmariadbd-dev \
     supervisor \
     nano \
     less \
+    software-properties-common \
+    unzip \
+    python3-dev \
  && apt-get clean
 
 RUN npm config set fund false \
@@ -117,7 +107,31 @@ RUN brownie init \
   && cd /workspace//ebloc-broker/contract \
   && brownie compile
 
-# Install Slurm
+## finally
+RUN ipfs version \
+ && ipfs init \
+ && ipfs config Reprovider.Strategy roots \
+ && ipfs config Routing.Type none \
+ && ganache --version \
+ && gdrive version \
+ && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
+ && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
+ && du -sh / 2>&1 | grep -v "cannot"
+
+## slurm
+RUN apt-get install -y --no-install-recommends --assume-yes \
+    munge \
+    libmunge-dev \
+    libboost-all-dev \
+    libmunge2 \
+    default-mysql-server \
+    default-mysql-client \
+    default-libmysqlclient-dev \
+    mariadb-server \
+    mailutils \
+    libmariadbd-dev \
+ && apt-get clean
+
 # Compile, build and install Slurm from Git source
 ARG SLURM_TAG=slurm-22-05-2-1
 RUN git config --global advice.detachedHead false
@@ -137,50 +151,32 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/Sched
  && groupadd -r slurm \
  && useradd -r -g slurm slurm \
  && mkdir -p /etc/sysconfig/slurm \
-     /var/spool/slurmd \
-     /var/spool/slurmctld \
-     /var/log/slurm \
-     /var/run/slurm \
+    /var/spool/slurmd \
+    /var/spool/slurmctld \
+    /var/log/slurm \
+    /var/run/slurm \
  && chown -R slurm:slurm /var/spool/slurmd \
     /var/spool/slurmctld \
     /var/log/slurm \
     /var/run/slurm
 
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-COPY --chown=slurm docker/slurm/files/create-munge-key /sbin/
+COPY --chown=slurm docker/provider/create-munge-key /sbin/
 RUN /sbin/create-munge-key \
  && chown munge:munge -R /run/munge
 
-# # orginize slurm files
-# RUN chown root:munge -R /etc/munge/munge.key /etc/munge /var/lib/munge
-# # RUN chown root:munge -R /var/lib/munge /etc/munge/munge.key /etc/munge
-# RUN chown munge:munge -R /var/lib/munge /etc/munge/munge.key /etc/munge
-# RUN chown -R munge: /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge/
-# RUN chmod 0700 /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge/
-
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
-COPY docker/slurm/files/supervisord.conf /etc/
+COPY docker/provider/supervisord.conf /etc/
 
 # mark externally mounted volumes
-COPY --chown=slurm docker/slurm/files/slurm.conf /etc/slurm/slurm.conf
-COPY --chown=slurm docker/slurm/files/slurmdbd.conf /etc/slurm/slurmdbd.conf
+COPY --chown=slurm docker/provider/slurm.conf /etc/slurm/slurm.conf
+COPY --chown=slurm docker/provider/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
-
-## finally
-RUN gdrive version \
- && ipfs version \
- && ipfs init \
- && ipfs config Reprovider.Strategy roots \
- && ipfs config Routing.Type none \
- && ganache --version \
- && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
- && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
- && du -sh / 2>&1 | grep -v "cannot"
 
 EXPOSE 6817 6818 6819 6820 3306 6001 6002
 
-COPY docker/slurm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY docker/provider/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # define command at startup
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker

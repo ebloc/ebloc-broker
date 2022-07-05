@@ -51,7 +51,7 @@ with suppress(Exception):
 
 cfg.IS_BREAKPOINT = True
 pid = os.getpid()
-Ebb: "Contract.Contract" = cfg.Ebb
+Ebb: "Contract.Contract" = cfg.Ebb  # type: ignore
 
 if not cfg.IS_BREAKPOINT:
     os.environ["PYTHONBREAKPOINT"] = "0"
@@ -73,9 +73,11 @@ def _tools(block_continue):  # noqa
     """
     session_start_msg(env.SLURMUSER, block_continue, pid)
     try:
-        if not is_internet_on():
-            raise Terminate("Network connection is down. Please try again")
+        is_internet_on()
+    except Exception as e:
+        raise Terminate("Network connection is down. Please try again") from e
 
+    try:
         provider_info_contract = Ebb.get_provider_info(env.PROVIDER_ID)
         pre_check()
         if not check_ubuntu_packages():
@@ -149,10 +151,9 @@ def _tools(block_continue):  # noqa
 
             if flag_error:
                 raise QuietExit(exception_msg)
-
         except Exception as e:
+            log(f"E: {e}")
             raise QuietExit(exception_msg) from e
-
     except QuietExit as e:
         raise e
 
@@ -452,35 +453,6 @@ def run_driver(given_bn):
                 print_tb(e)
 
 
-def _main(given_bn):
-    lock = None
-    try:
-        is_driver_on(process_count=1, is_print=False)
-        try:
-            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
-        except PermissionError:
-            print_tb("E: PermissionError is generated for the locked file")
-            give_rwe_access(env.WHOAMI, "/tmp/run")
-            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
-
-        run_driver(given_bn)
-    except HandlerException:
-        pass
-    except QuietExit as e:
-        log(e, is_err=True)
-    except zc.lockfile.LockError:
-        log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
-    except Terminate as e:
-        terminate(str(e), lock)
-    except Exception as e:
-        print_tb(e)
-        # breakpoint()  # DEBUG: end of program pressed CTRL-c
-    finally:
-        with suppress(Exception):
-            if lock:
-                lock.close()
-
-
 def main(args):
     given_bn = 0
     try:
@@ -494,8 +466,32 @@ def main(args):
 
         console_ruler("provider session starts")
         log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        with launch_ipdb_on_exception():
-            # if an exception is raised, launch ipdb
-            _main(given_bn)
+        with launch_ipdb_on_exception():  # if an exception is raised, launch ipdb
+            lock = None
+            try:
+                is_driver_on(process_count=1, is_print=False)
+                try:
+                    lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+                except PermissionError:
+                    print_tb("E: PermissionError is generated for the locked file")
+                    give_rwe_access(env.WHOAMI, "/tmp/run")
+                    lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+
+                run_driver(given_bn)
+            except HandlerException:
+                pass
+            except QuietExit as e:
+                log(e, is_err=True)
+            except zc.lockfile.LockError:
+                log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
+            except Terminate as e:
+                terminate(str(e), lock)
+            except Exception as e:
+                print_tb(e)
+                # breakpoint()  # DEBUG: end of program pressed CTRL-c
+            finally:
+                with suppress(Exception):
+                    if lock:
+                        lock.close()
     except KeyboardInterrupt:
         sys.exit(1)

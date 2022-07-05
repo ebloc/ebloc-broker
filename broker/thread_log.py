@@ -25,7 +25,7 @@ logging.basicConfig(
 )
 
 log = logging.getLogger()
-log.info("Running Example")
+log.info("running example")
 
 
 def hello(name):  # shared module on write time
@@ -47,7 +47,7 @@ def thread_function(name):
     hello(name)
 
 
-if __name__ == "__main__":
+def main():
     log.info("main_thread_start")
     # consider giving the thread a name (add name=...), then you could
     # use ThreadFilter(threadname=...) to select on all messages with that name
@@ -57,3 +57,7 @@ if __name__ == "__main__":
     x.start()
     y.start()
     hello("main_thread_end")
+
+
+if __name__ == "__main__":
+    main()

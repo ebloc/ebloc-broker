@@ -64,12 +64,12 @@ class Link:
         from os import listdir
         from os.path import isdir, join
 
-        if not paths:
+        if paths:
+            is_only_folder_names = False
+        else:
             # instead of full path only returns folder names
             paths = [f for f in listdir(self.folder_target) if isdir(join(self.folder_target, f))]
             is_only_folder_names = True
-        else:
-            is_only_folder_names = False
 
         for idx, path in enumerate(paths):
             if not isinstance(path, bytes):

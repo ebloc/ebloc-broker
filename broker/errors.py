@@ -23,12 +23,12 @@ class IpfsNotConnected(Exception):
     """Attempt to connect to ipfs is failed."""
 
 
-class Timeout(Exception):
-    """Timeout."""
-
-
 class Terminate(Exception):
     """Terminate the process."""
+
+
+class Timeout(Exception):
+    """Timeout."""
 
 
 class Web3NotConnected(Exception):

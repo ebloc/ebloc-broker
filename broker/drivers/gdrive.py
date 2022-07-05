@@ -6,29 +6,19 @@ import time
 from contextlib import suppress
 
 from broker import cfg
-from broker._utils._log import br
+from broker._utils._log import WHERE, br
 from broker._utils.tools import _remove, mkdir
 from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size, echo_grep_awk, log, run, subprocess_call
 from broker.libs import _git, gdrive
-from broker.utils import (
-    WHERE,
-    CacheType,
-    StorageID,
-    byte_to_mb,
-    generate_md5sum,
-    get_date,
-    popen_communicate,
-    print_tb,
-    untar,
-)
+from broker.utils import CacheType, StorageID, byte_to_mb, generate_md5sum, get_date, popen_communicate, print_tb, untar
 
 
 class GdriveClass(Storage):
     def _download_folder(self, name, key, code_hash, _id, cache_folder) -> None:
         if self._is_cached(code_hash, _id):
-            return  # True
+            return
 
         is_continue = False
         with suppress(Exception):
@@ -151,12 +141,7 @@ class GdriveClass(Storage):
             cache_folder = self.public_dir
             cached_tar_fn = cache_folder / name
             if self.folder_type_dict[code_hash] == "gzip":
-                if not os.path.isfile(cached_tar_fn):
-                    self.download_folder(name, key, code_hash, _id, cache_folder)
-                    if is_job_key and not self.is_run_exists_in_tar(cached_tar_fn):
-                        _remove(cached_tar_fn)
-                        raise Exception
-                else:
+                if os.path.isfile(cached_tar_fn):
                     output = generate_md5sum(cached_tar_fn)
                     if output == code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
@@ -164,6 +149,11 @@ class GdriveClass(Storage):
                         log(f"==> {name} is already cached within the public cache directory")
                     else:
                         self.download_folder(name, key, code_hash, _id, cache_folder)
+                else:
+                    self.download_folder(name, key, code_hash, _id, cache_folder)
+                    if is_job_key and not self.is_run_exists_in_tar(cached_tar_fn):
+                        _remove(cached_tar_fn)
+                        raise Exception
             elif self.folder_type_dict[code_hash] == "folder":
                 tar_fn = cache_folder / code_hash / name
                 if os.path.isfile(tar_fn):
@@ -298,16 +288,17 @@ class GdriveClass(Storage):
                 raise e
 
             cache_folder = self.folder_path_to_download[code_hash]
-            cmd = [
-                "rsync",
-                "-avq",
-                "--partial-dir",
-                "--omit-dir-times",
-                f"{cache_folder}/{name}/",
-                self.results_folder,
-            ]
             try:
-                output = run(cmd)
+                run(
+                    [
+                        "rsync",
+                        "-avq",
+                        "--partial-dir",
+                        "--omit-dir-times",
+                        f"{cache_folder}/{name}/",
+                        self.results_folder,
+                    ]
+                )
             except Exception as e:
                 print_tb(e)
                 raise e

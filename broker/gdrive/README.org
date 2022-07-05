@@ -44,7 +44,8 @@ finally:
 $ emacs -nw handlers_drive.go
 #+end_src
 
-Delete the old .gdrive/token_v2.json
+Delete the old ~.gdrive/token_v2.json~
+
 #+begin_src bash
 rm -f ~/.gdrive/token_v2.json
 #+end_src
@@ -94,13 +95,12 @@ shared_with_me=true
 ** Load:
 
 #+begin_src bash
-folderName='ipfs'
-providerToShare='aalimog1@binghamton.edu' //'alper01234alper@gmail.com'
-
-gdrive upload --recursive $folderName
-jobKey=$(gdrive list | grep $folderName | awk '{print $1}')
-echo jobKey=$jobKey
-gdrive share $jobKey  --role writer --type user --email $providerToShare
+folder_name='ipfs'
+provider_to_share='aalimog1@binghamton.edu' //'alper01234alper@gmail.com'
+gdrive upload --recursive $folder_name
+key=$(gdrive list | grep $folder_name | awk '{print $1}')
+echo "key="$key
+gdrive share $key  --role writer --type user --email $provider_to_share
 #+end_src
 
 --------------------------------------------------------------------------------
@@ -110,9 +110,15 @@ gdrive share $jobKey  --role writer --type user --email $providerToShare
 #+begin_src bash
 cd folder
 shareId='1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG'
-folderName=$(gdrive info $shareId | grep 'Name' | awk '{print $2}')
+folder_name=$(gdrive info $shareId | grep 'Name' | awk '{print $2}')
 mimeType=$(gdrive info 1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG | grep 'Mime' | awk '{print $2}')
 gdrive download --recursive  $shareId --force
 gdrive upload --parent $shareId README.md
 gdrive upload --parent --recursive $shareId folder  # upload folder
 #+end_src
+
+** TODO:
+
+- [[https://github.com/prasmussen/gdrive/issues/621#issuecomment-1184700808][Google Cloud: OAuth
+  clients in test mode that are using the OAuth OOB flow]]
+  solution forked: https://github.com/msfjarvis/gdrive

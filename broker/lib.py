@@ -11,21 +11,20 @@ from os.path import exists
 from threading import Thread
 
 from broker import cfg, config
-from broker._utils._log import br
+from broker._utils._log import WHERE, br
 from broker._utils.tools import _remove, is_process_on, log, mkdir, print_tb
 from broker.config import env
 from broker.errors import QuietExit
-from broker.utils import WHERE, byte_to_mb, popen_communicate, run
+from broker.utils import byte_to_mb, popen_communicate, run
 
 
 def enum(*sequential, **named):
-    """Set reverse mapping for the Enum.
+    """Set reverse map for the Enum.
 
     __ https://stackoverflow.com/a/1695250/2402577
     """
     enums = dict(zip(sequential, range(len(sequential))), **named)
-    reverse = dict((value, key) for key, value in enums.items())
-    enums["reverse_mapping"] = reverse
+    enums["reverse_map"] = dict((value, key) for key, value in enums.items())
     return type("Enum", (), enums)
 
 
@@ -71,9 +70,9 @@ class State:
 def session_start_msg(slurm_user, block_number, pid):
     """Print message at the beginning of Driver process and connect into web3."""
     if not cfg.w3:
-        from broker.imports import connect_into_web3
+        from broker.imports import connect_to_web3
 
-        connect_into_web3()
+        connect_to_web3()
 
     if not env.PROVIDER_ID and cfg.w3:
         PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))

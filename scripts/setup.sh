@@ -64,7 +64,8 @@ open_port_4001 () {  # ufw does not work on digital-ocean
     sudo systemctl enable firewalld
     sudo firewall-cmd --add-port=4001/tcp --permanent
     sudo firewall-cmd --reload
-    sudo firewall-cmd --list-all
+    # sudo firewall-cmd --list-all
+    sudo firewall-cmd --list-all --zone=docker
     sudo nmap localhost
 }
 
@@ -194,8 +195,6 @@ sudo systemctl restart systemd-timesyncd.service
 systemctl status --no-pager --full systemd-timesyncd
 timedatectl status
 sudo systemctl enable systemd-timesyncd
-sudo DEBIAN_FRONTEND=noninteractive apt-get install mailutils
-systemctl reload postfix
 
 install_brownie () {
     empyt_folder=~/ebloc-broker/empty_folder
@@ -227,6 +226,8 @@ sudo apt autoclean -y
 sudo apt autoremove -y
 sudo apt-get install -f -y
 sudo apt --fix-broken install -y
+
+eblocbroker about
 
 # mount_oc () {
 #     sudo mkdir /oc

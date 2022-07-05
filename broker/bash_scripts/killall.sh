@@ -5,8 +5,7 @@ declare -a arr=("python.*[e]nd_code"
                 "python.*[s]tart_code"
                 "python.*[d]river_cancel"
                 "python.*[e]blocbroker"
-                "ipfs"
-               )
+                "ipfs")
 for i in "${arr[@]}"; do
     kill -9 $(ps auxww | grep -E "$i" | awk '{print $2}') > /dev/null 2>&1
 done
@@ -18,8 +17,7 @@ squeue
 if [ $? -eq 0 ]; then
     squeue | tail -n+2 | awk '{print $1}' | ifne xargs scancel 2> /dev/null
 fi
-
-printf "killall for ebloc-broker test  [  ${GREEN}OK${NC}  ]\n"
+printf "kill for ebloc-broker test  [  ${GREEN}OK${NC}  ]\n"
 
 #if [ "$EUID" -ne 0 ]
 #  then echo "Please run as root: sudo ./killall.sh"

@@ -136,8 +136,7 @@ def br(text, color="white"):
 
 def ok(text="OK"):
     if text == "OK":
-        text = br(f"  [green]{text}[/green]  ")
-        return f"  {text}"
+        return "  " + br(f"  [green]{text}[/green]  ")
     else:
         return br(f"  [green]{text}[/green]  ")
 
@@ -333,7 +332,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = os.path.basename(frame.f_code.co_filename)
-    return f"[bold][green][[/green][blue]{text}[/blue]:{frame.f_lineno}[green]][/green][/bold]"
+    return f"[bold][green][[/green][blue]  {text}[/blue]:{frame.f_lineno}  [green]][/green][/bold]"
 
 
 ll = Log()

@@ -16,23 +16,20 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             change = float(change)
     except ValueError:
         return None
+
+    if change:
+        try:
+            return round(change / abs(initial) * 100, decimal)
+        except:
+            return 0.0
     else:
-        if change is not None:
-            try:
-                initial = abs(initial)
-                return round(change / abs(initial) * 100, decimal)
-            except:
-                return 0.0
-
-        else:
-            try:
-                change = final - initial
-                return round(change / abs(initial) * 100, decimal)
-            except:
-                return 0.0
+        try:
+            return round((final - initial) / abs(initial) * 100, decimal)
+        except:
+            return 0.0
 
 
-def percent_change(initial, change, _decimal=8, is_color=False, end=None, is_arrow_print=True):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     try:
         initial = float(initial)
         change = float(change)

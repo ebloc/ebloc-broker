@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import List
 
@@ -179,7 +180,7 @@ class EudatClass(Storage):
                     log(f"## download file from eudat{ok()}")
                     return
             except:
-                log("E: Failed to download eudat file via wget.\nTrying config.oc.get_file() approach...")
+                log("E: Failed to download eudat file via wget.\nTrying `config.oc.get_file()` approach...")
                 if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_fn):
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(ok())
@@ -241,7 +242,7 @@ class EudatClass(Storage):
 
         self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
         log(
-            f"## Total size to download {data_transfer_in_to_download} bytes == "
+            f"## total size to download {data_transfer_in_to_download} bytes == "
             f"{self.data_transfer_in_to_download_mb} MB"
         )
 
@@ -277,12 +278,10 @@ class EudatClass(Storage):
                     log(f"warning: shared_folder{br(source_code_hash_text, 'green')} is not accepted yet")
                     folder_token_flag[folder_name] = False
 
-        try:  # TODO: add pass on template
+        with suppress(Exception):
             data = read_json(share_id_file)
             if isinstance(data, dict) and bool(data):
                 self.share_id = data
-        except:
-            pass
 
         if self.share_id:
             log("==> share_id:")
@@ -298,7 +297,7 @@ class EudatClass(Storage):
                 print_tb(e)
                 log(f"E: {e}")
 
-        for attempt in range(config.RECONNECT_ATTEMPTS):
+        for attempt in range(cfg.RECONNECT_ATTEMPTS):
             try:
                 share_list = config.oc.list_open_remote_share()
                 break

@@ -17,11 +17,11 @@ class Colorizer:
         self.style = style
         self.debug = debug
 
-    def colorize_traceback(self, type, value, tb):
+    def colorize_traceback(self, _type, value, tb):
         import traceback
         import pygments.lexers
 
-        tb_text = "".join(traceback.format_exception(type, value, tb))
+        tb_text = "".join(traceback.format_exception(_type, value, tb))
         lexer = pygments.lexers.get_lexer_by_name("pytb", stripall=True)
         tb_colored = pygments.highlight(tb_text, lexer, self.formatter)
         self.stream.write(tb_colored)
@@ -63,7 +63,8 @@ def _get_term_color_support():
     try:
         import curses
     except ImportError:
-        # Probably Windows, which doesn't have great curses support
+        # probably Windows, which doesn't have great curses support
         return 16
+
     curses.setupterm()
     return curses.tigetnum("colors")

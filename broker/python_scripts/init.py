@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 import getpass
 import os
+import sys
 from inspect import getsourcefile
 from os.path import abspath, expanduser
 from pathlib import Path

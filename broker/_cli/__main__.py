@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+
 from broker import __version__, cfg
 from broker._cli.helper import Helper
 from broker._utils.tools import print_tb

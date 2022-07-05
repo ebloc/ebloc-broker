@@ -5,7 +5,6 @@ if  [ "$first_char" = "[" ]; then
     echo "Already fixed."
     exit;
 fi
-
 sed -i 's/\"\[/\[/g' abi.json
 sed -i 's/\]\"/\]/g' abi.json
 sed -i 's/\\\"/\"/g' abi.json

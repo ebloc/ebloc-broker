@@ -22,8 +22,8 @@ import base58
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
-from broker._utils._log import br
-from broker._utils.tools import WHERE, _exit, is_process_on, log, pre_cmd_set, print_tb, run
+from broker._utils._log import WHERE, br
+from broker._utils.tools import _exit, is_process_on, log, pre_cmd_set, print_tb, run
 from broker.config import env
 from broker.errors import QuietExit
 
@@ -150,11 +150,11 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         return True
     except socket.error as e:
         log(f"E: {e}")
-        return False
+        raise e
 
 
 def sleep_timer(sleep_duration):
-    log(f"## Sleeping for {sleep_duration} seconds, called from {WHERE(1)}")
+    log(f"#> sleeping for {sleep_duration} seconds, called from {WHERE(1)}")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -415,7 +415,7 @@ def is_geth_on():
         raise QuietExit
 
 
-def start_ipfs_daemon(_is_print=False):
+def start_ipfs_daemon(_is_print=False) -> bool:
     """Check that does IPFS run on the background or not."""
     if is_ipfs_on(_is_print):
         return True
@@ -442,7 +442,7 @@ def start_ipfs_daemon(_is_print=False):
     return False
 
 
-def check_ubuntu_packages(packages=None):
+def check_ubuntu_packages(packages=None) -> bool:
     if not packages:
         packages = ["pigz", "curl", "mailutils", "munge", "git"]
 
@@ -454,8 +454,7 @@ def check_ubuntu_packages(packages=None):
 
 
 def is_npm_installed(package) -> bool:
-    output = run(["npm", "list", "-g", "--depth=0"])
-    return package in output
+    return package in run(["npm", "list", "-g", "--depth=0"])
 
 
 def is_dpkg_installed(package) -> bool:
@@ -538,7 +537,7 @@ def question_yes_no(message, is_exit=False):
             )
 
 
-def json_pretty(json_data):
+def json_pretty(json_data) -> None:
     """Print json in readeable clean format."""
     print(json.dumps(json_data, indent=4, sort_keys=True))
 
@@ -590,9 +589,8 @@ def compress_folder(folder_path, is_exclude_git=False):
             tar_base,
         ]
         if is_exclude_git:
-            # consider ignoring to add .git into the requested folder
-            idx = 2
-            cmd = cmd[:idx] + ["--exclude=.git"] + cmd[idx:]
+            #: consider ignoring to add .git into the requested folder
+            cmd = cmd[:2] + ["--exclude=.git"] + cmd[2:]
 
         p1 = Popen(["find", base_name, "-print0"], stdout=PIPE)
         p2 = Popen(["sort", "-z"], stdin=p1.stdout, stdout=PIPE, env={"LC_ALL": "C"})

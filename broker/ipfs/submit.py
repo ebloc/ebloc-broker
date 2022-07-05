@@ -25,8 +25,8 @@ from broker.utils import (
 )
 
 # TODO: folders_to_share let user directly provide the IPFS hash instead of the folder
-ipfs = cfg.ipfs
 Ebb = cfg.Ebb
+ipfs = cfg.ipfs
 
 
 def pre_check_gpg(requester):
@@ -34,7 +34,7 @@ def pre_check_gpg(requester):
     from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
     if requester_info["gpg_fingerprint"].upper() != from_gpg_fingerprint:
         raise Exception(
-            f"E: requester({requester})'s gpg_fingerprint({requester_info['gpg_fingerprint'].upper()}) does not "
+            f"requester({requester})'s gpg_fingerprint({requester_info['gpg_fingerprint'].upper()}) does not "
             f"match with registered gpg_fingerprint={from_gpg_fingerprint}"
         )
 
@@ -69,7 +69,7 @@ def pre_check(job: Job, requester):
             for storage_id in job.storage_ids[1:]:
                 if storage_id in (StorageID.GDRIVE, StorageID.EUDAT):
                     raise Exception(
-                        "If source code is submitted via IPFS, then the data files must be submitted using IPFS or IPFS_GPG"
+                        "If source-code is submitted via IPFS, then the data must be submitted using IPFS or IPFS_GPG"
                     )
     except Exception as e:
         print_tb(e)
@@ -179,7 +179,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                         if ".tar.gz.gpg" in str(target):
                             _remove(target)
                 except IndexError:
-                    log(f"E: Tx={tx_hash} is reverted")
+                    log(f"E: tx={tx_hash} is reverted")
     except QuietExit:
         pass
     except Exception as e:

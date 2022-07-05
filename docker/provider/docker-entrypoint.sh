@@ -55,7 +55,7 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "[mysqld]\nskip-host-cache\nskip-name-resolve" > /etc/my.cnf.d/docker.cnf
     echo "#> Initializing database"
     /usr/bin/mysql_install_db --user=mysql &> /dev/null
-    echo "#> Database initialized"
+    echo "#> Database initialized  [  OK  ]"
 fi
 
 if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
@@ -69,14 +69,13 @@ if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
         sleep 1
     done
     error_with_msg "MariaDB did not start"
-
     echo "* Creating Slurm acct database"
     mysql -NBe "CREATE USER 'slurm'@'localhost' identified by 'password'"
     mysql -NBe "GRANT ALL ON slurm_acct_db.* to 'slurm'@'localhost' identified by 'password' with GRANT option"
     mysql -NBe "GRANT ALL ON slurm_acct_db.* to 'slurm'@'slurmctl' identified by 'password' with GRANT option"
     mysql -NBe "CREATE DATABASE slurm_acct_db"
     echo "#> Slurm acct database created. Stopping MariaDB"
-    killall mysqld
+    pkill -f mysqld
     for count in {10..0}; do
         if echo "SELECT 1" | mysql &> /dev/null
         then

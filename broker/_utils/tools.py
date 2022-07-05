@@ -22,24 +22,13 @@ from subprocess import PIPE, CalledProcessError, Popen, check_output
 import requests
 from pytz import timezone, utc
 
-from broker._utils._log import br, log, ok
+from broker._utils._log import WHERE, br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
 
 try:
     import thread
 except ImportError:
     import _thread as thread  # noqa
-
-
-def WHERE(back=0):
-    """Return line number where the command is called."""
-    try:
-        frame = sys._getframe(back + 2)
-    except:
-        frame = sys._getframe(1)
-
-    text = f"[blue]{os.path.basename(frame.f_code.co_filename)}[/blue]:{frame.f_lineno}"
-    return f"[bold][green][[/green]  {text}  [green]][/green][/bold]"
 
 
 def merge_two_dicts(x, y):

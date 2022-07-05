@@ -15,7 +15,7 @@ from broker.utils import is_geth_on, run, terminate
 
 
 def connect():
-    """Connect into web3.
+    """Connect to web3.
 
     return: ebloc_broker and web3 objects.
     """
@@ -23,19 +23,16 @@ def connect():
         return config.ebb, cfg.w3, config._eblocbroker
 
     try:
-        if not cfg.w3.isConnected():
-            connect_into_web3()
-
-        if not config.ebb:
-            connect_into_eblocbroker()
+        connect_to_web3()
+        connect_to_eblocbroker()
     except Exception as e:
         print_tb(e)
 
     return config.ebb, cfg.w3, config._eblocbroker
 
 
-def _connect_into_web3() -> None:
-    """Connect into web3 of the ethereum blockchain.
+def _connect_to_web3() -> None:
+    """Connect to web3 of the ethereum blockchain.
 
     * bloxberg:
     __ https://bloxberg.org
@@ -51,16 +48,19 @@ def _connect_into_web3() -> None:
         cfg.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
-def connect_into_web3() -> None:
-    """Connect into private ethereum network using web3.
+def connect_to_web3() -> None:
+    """Connect to private ethereum network using web3.
 
     Note that you should create only one RPC Provider per process, as it
     recycles underlying TCP/IP network connections between your process and
     Ethereum node
     """
+    if cfg.w3.isConnected():
+        return
+
     web3_ipc_fn = env.DATADIR.joinpath("geth.ipc")
     for _ in range(5):
-        _connect_into_web3()
+        _connect_to_web3()
         if not cfg.w3.isConnected():
             try:
                 if env.IS_GETH_TUNNEL:
@@ -99,13 +99,13 @@ def read_abi_file():
         raise Exception(f"unable to read the abi.json file: {abi_file}") from e
 
 
-def connect_into_eblocbroker() -> None:
-    """Connect into ebloc-broker smart contract in the given private blockchain."""
+def connect_to_eblocbroker() -> None:
+    """Connect to eBlocBroker smart contract in the given private blockchain."""
     if config.ebb:
         return
 
     if not cfg.w3:
-        connect_into_web3()
+        connect_to_web3()
 
     if not env.EBLOCPATH:
         log("E: env.EBLOCPATH variable is empty")

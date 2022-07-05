@@ -41,20 +41,19 @@ def _register_data(source_code_hash, data_price, commitment_dur):
             is_update = True
     except Exception as e:
         print_tb(e)
-        breakpoint()  # DEBUG
 
     if is_exit:
         raise QuietExit
 
     if price == data_price and _commitment_dur == commitment_dur:
-        log(f"## data([green]{source_code_hash}[/green]) already registerered with the given values")
+        log(f"## data([green]{source_code_hash}[/green]) is already registerered with the given values")
         raise QuietExit
 
     try:
-        if not is_update:
-            tx = Ebb.register_data(code_hash_bytes, data_price, commitment_dur)
-        else:
+        if is_update:
             tx = Ebb.update_data_price(code_hash_bytes, data_price, commitment_dur)
+        else:
+            tx = Ebb.register_data(code_hash_bytes, data_price, commitment_dur)
 
         get_tx_status(Ebb.tx_id(tx))
     except QuietExit as e:
@@ -63,7 +62,7 @@ def _register_data(source_code_hash, data_price, commitment_dur):
         print_tb(e)
 
 
-if __name__ == "__main__":
+def main():
     try:
         source_code_hash = "050e6cc8dd7e889bf7874689f1e1ead6"
         data_price = 2
@@ -73,3 +72,7 @@ if __name__ == "__main__":
         pass
     except Exception as e:
         print_tb(e)
+
+
+if __name__ == "__main__":
+    main()

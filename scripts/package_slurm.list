@@ -8,4 +8,6 @@ libmysqlclient-dev
 mysql-client
 mysql-server
 software-properties-common
+default-mysql-server
+default-mysql-client
 default-libmysqlclient-dev

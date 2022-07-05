@@ -4,7 +4,6 @@ import sys
 import time
 from contextlib import suppress
 from os.path import expanduser
-from pathlib import Path
 from typing import Union
 
 from pymongo import MongoClient
@@ -28,12 +27,12 @@ GAS_PRICE = 1.0
 EXIT_AFTER = 120
 
 
-class Contract:
-    """Object to access ebloc-broker smart-contract functions."""
+class Base:
+    """Import base functions."""
 
-    from broker.eblocbroker_scripts.authenticate_orc_id import authenticate_orc_id
-    from broker.eblocbroker_scripts.data import get_data_info
-    from broker.eblocbroker_scripts.get_job_info import (
+    from broker.eblocbroker_scripts.authenticate_orc_id import authenticate_orc_id  # type: ignore
+    from broker.eblocbroker_scripts.data import get_data_info  # type: ignore
+    from broker.eblocbroker_scripts.get_job_info import (  # type: ignore
         analyze_data,
         get_job_code_hashes,
         get_job_info,
@@ -41,22 +40,29 @@ class Contract:
         set_job_received_bn,
         update_job_cores,
     )
-    from broker.eblocbroker_scripts.get_provider_info import get_provider_info
-    from broker.eblocbroker_scripts.get_requester_info import get_requester_info
-    from broker.eblocbroker_scripts.log_job import run_log_cancel_refund, run_log_job
-    from broker.eblocbroker_scripts.process_payment import process_payment
-    from broker.eblocbroker_scripts.refund import refund
-    from broker.eblocbroker_scripts.register_provider import _register_provider
-    from broker.eblocbroker_scripts.register_requester import register_requester
-    from broker.eblocbroker_scripts.submit_job import (
+    from broker.eblocbroker_scripts.get_provider_info import get_provider_info  # type: ignore
+    from broker.eblocbroker_scripts.get_requester_info import get_requester_info  # type: ignore
+    from broker.eblocbroker_scripts.log_job import run_log_cancel_refund, run_log_job  # type: ignore
+    from broker.eblocbroker_scripts.process_payment import process_payment  # type: ignore
+    from broker.eblocbroker_scripts.refund import refund  # type: ignore
+    from broker.eblocbroker_scripts.register_provider import _register_provider  # type: ignore
+    from broker.eblocbroker_scripts.register_requester import register_requester  # type: ignore
+    from broker.eblocbroker_scripts.submit_job import (  # type: ignore
         check_before_submit,
         is_provider_valid,
         is_requester_valid,
         submit_job,
     )
-    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership
-    from broker.eblocbroker_scripts.update_provider_info import is_provider_info_match, update_provider_info
-    from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices
+    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership  # type: ignore
+    from broker.eblocbroker_scripts.update_provider_info import (  # type: ignore
+        is_provider_info_match,
+        update_provider_info,
+    )
+    from broker.eblocbroker_scripts.update_provider_prices import update_provider_prices  # type: ignore
+
+
+class Contract(Base):
+    """Object to access ebloc-broker smart-contract functions."""
 
     def __init__(self, is_brownie=False) -> None:
         """Create a new Contrect."""
@@ -170,10 +176,10 @@ class Contract:
         if not is_verbose:
             log(ok())
 
-        if not compact:
-            return tx_receipt
-        else:
+        if compact:
             return without_keys(tx_receipt, self.invalid)
+        else:
+            return tx_receipt
 
     def tx_id(self, tx):
         """Return transaction id."""
@@ -197,9 +203,9 @@ class Contract:
         return block_number
 
     def get_transaction_by_block(self, block_hash, tx_index):
-        """Returns the transaction at the index specified by transaction_index from the block specified by block_identifier.
+        """Return the tx at the index specified by transaction_index from the block specified by block_identifier.
 
-        __ https://web3py.readthedocs.io/en/stable/web3.eth.html?highlight=raw%20trace#web3.eth.Eth.get_transaction_by_block
+        __ web3py.readthedocs.io/en/stable/web3.eth.html?highlight=raw%20trace#web3.eth.Eth.get_transaction_by_block
         """
         return dict(self.w3.eth.get_transaction_by_block(block_hash, tx_index))
 
@@ -258,7 +264,7 @@ class Contract:
             print_tb(e)
             raise Web3NotConnected from e
 
-    def _get_contract_yaml(self) -> Path:
+    def _get_contract_yaml(self):
         try:
             _yaml = Yaml(env.CONTRACT_YAML_FILE, auto_dump=False)
             if env.IS_BLOXBERG:
@@ -285,8 +291,8 @@ class Contract:
 
     def print_contract_info(self):
         """Print contract information."""
-        print(f"address={self.eBlocBroker.contract_address}")
-        print(f"deployed_block_number={self.get_deployed_block_number()}")
+        print(f"#> address={self.eBlocBroker.contract_address}")
+        print(f"#> deployed_block_number={self.get_deployed_block_number()}")
 
     ##############
     # Timeout Tx #

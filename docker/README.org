@@ -1,5 +1,24 @@
 * NOTES
 
+** PUSH
+
+NOTE: Now in order to push the image just make sure the path which you are using must have your
+username included in the tag, [[https://hub.docker.com/u/ebloc][docker-hub]].
+
+#+begin_src bash
+cat ~/.docker_password.txt | docker login --username ebloc --password-stdin
+docker build -t ebb:latest . --progress plain
+docker tag ebb:latest ebloc/ebloc-broker
+docker push ebloc/ebloc-broker
+#+end_src
+
+** Size
+
+#+begin_src bash
+docker history --human --format "{{.CreatedBy}}: {{.Size}}" ebb
+docker images ebb:latest --format "{{.Repository}}:{{.Tag}} -> {{.Size}}"
+#+end_src
+
 ** Remove cache
 
 - to delete all containers including its volumes use: ~docker rm -vf $(docker ps -aq)~
@@ -25,24 +44,6 @@ docker kill $(docker ps -q)
 docker rmi $(docker images -a --filter=dangling=true -q) --force
 docker rm $(docker ps --filter=status=exited --filter=status=created -q) --force
 docker rmi $(docker images -a -q) --force
-#+end_src
-
-** PUSH
-
-NOTE: Now in order to push the image just make sure the path which you are using must have your
-username included in the tag, [[https://hub.docker.com/u/ebloc][docker-hub]].
-
-#+begin_src bash
-cat ~/.docker_password.txt | docker login --username ebloc --password-stdin
-docker build -t ebb:latest . --progress plain
-docker tag ebb:latest ebloc/ebloc-broker
-docker push ebloc/ebloc-broker
-#+end_src
-
-~docker history --human --format "{{.CreatedBy}}: {{.Size}}" ebb~
-
-#+begin_src bash
-docker images ebb:latest --format "{{.Repository}}:{{.Tag}} -> {{.Size}}"
 #+end_src
 
 ** Build

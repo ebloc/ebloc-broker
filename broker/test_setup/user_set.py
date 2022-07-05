@@ -108,9 +108,10 @@ requesters = [  # should not contain providers
     "0x4aae9220409e1c4d74ac95ba14edb0684a431379",
     "0xab608a70d0b4a3a288dd68a1661cdb8b6c742672",
 ]
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+dummy_provider = "0xe2e146d6b456760150d78819af7d276a1223a6d4"
 
 extra_requesters = [
-    "0xe2e146d6b456760150d78819af7d276a1223a6d4",
     "0xa9fc23943e48a3efd35bbdd440932f123d05b697",
     "0x5b235d87f3fab61f87d238c11f6790dec1cde736",
     "0xe03914783115e807d8ea1660dbdcb4f5b2f969c0",
@@ -119,7 +120,7 @@ extra_requesters = [
 
 for provider in providers:
     if provider in requesters:
-        raise Exception(f"Provider {provider}, is in the requester list fix it")
+        raise Exception(f"provider={provider}, is in the requester list fix it")
 
     if provider in extra_requesters:
-        raise Exception(f"Provider {provider}, is in the extra_requesters list fix it")
+        raise Exception(f"provider={provider}, is in the extra_requesters list fix it")
