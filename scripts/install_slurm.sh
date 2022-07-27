@@ -50,9 +50,8 @@ sudo rm -rf /usr/local/lib/slurm/ /tmp/slurmstate/
 make clean >/dev/null 2>&1
 git reset --hard
 git clean -fdx
-./configure --enable-debug  --enable-multiple-slurmd --with-hdf5=no
-          # --prefix=/usr --with-mysql_config=/usr/bin --libdir=/usr/lib64
-# ./configure --enable-debug --enable-front-end  # --enable-multiple-slurmd : seems like this also works
+./configure --with-hdf5=no --enable-debug --enable-multiple-slurmd
+# ./configure --enable-debug --enable-front-end  # seems like this also works
 sudo make
 sudo make -j 4 install
 sudo install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example

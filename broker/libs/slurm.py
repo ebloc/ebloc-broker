@@ -37,14 +37,16 @@ def remove_user(user):
 def get_idle_cores(is_print=True) -> int:
     """Return idle cores.
 
+    * slurm: Is there any way to return unused core number?
     __ https://stackoverflow.com/a/50095154/2402577
+    __ https://slurm.schedmd.com/sinfo.html
     """
     core_info = run(["sinfo", "-h", "-o%C"]).split("/")
     if len(core_info):
-        allocated_cores = core_info[0]
-        idle_cores = core_info[1]
-        other_cores = core_info[2]
-        total_cores = core_info[3]
+        allocated_cores = int(core_info[0])
+        idle_cores = int(core_info[1])
+        other_cores = int(core_info[2])
+        total_cores = int(core_info[3])
         if is_print:
             log(
                 f"==> [green]allocated_cores=[/green]{allocated_cores} | "

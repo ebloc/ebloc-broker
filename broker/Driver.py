@@ -103,13 +103,14 @@ def _tools(block_continue):  # noqa
 
             eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
 
+        gmail = provider_info_contract["gmail"]
+        log(f"==> provider_gmail=[m]{gmail}")
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             if env.GDRIVE == "":
                 raise Terminate(f"E: Path for gdrive='{env.GDRIVE}' please set a valid path in the .env file")
 
             try:
-                gmail = provider_info_contract["gmail"]
                 output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
             except Exception as e:
                 print_tb(e)
@@ -121,8 +122,6 @@ def _tools(block_continue):  # noqa
                     f"   with the set gdrive's gmail=[m]{gdrive_gmail}[/m]"
                 )
                 raise QuietExit
-
-            log(f"==> provider_gmail=[m]{gmail}")
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):

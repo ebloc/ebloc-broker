@@ -48,7 +48,7 @@ function check_cluster () {
             break
         fi
     done
-    error_with_msg "Slurm partitions failed to start successfully."
+    error_with_msg "E: slurm partitions failed to start"
 }
 
 if [ ! -d "/var/lib/mysql/mysql" ]; then
