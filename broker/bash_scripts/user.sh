@@ -45,7 +45,6 @@ else
         sudo setfacl -R -m user:$SLURMUSER:rwx $BASEDIR/$_USERNAME  # give Read/Write/Execute access to root user on the give folder
 
         echo $USERADDRESS / $_USERNAME 'is created'
-
         ## force to add user to slurm
         sacctmgr remove user where user=$_USERNAME --immediate
         sacctmgr add account $_USERNAME --immediate
@@ -55,8 +54,8 @@ else
     fi
 fi
 
-# For test purposes:-------------------
+# For test purposes
+# =================
 # sudo userdel $_USERNAME
 # sudo rm -rf $BASEDIR/$_USERNAME
 # sacctmgr remove user where user=$_USERNAME --immediate
-# -------------------------------------

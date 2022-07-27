@@ -30,7 +30,7 @@ def remove_user(user_name, user_dir=None):
 
 
 def username_check(username):
-    """Check if username exists."""
+    """Check wheather username exists."""
     try:
         pwd.getpwnam(username)
         log(f"## user [blue]{username}[/blue] exists")
@@ -41,7 +41,7 @@ def username_check(username):
 
 
 def give_rwe_access(user, path):
-    """Give Read/Write/Execute access to the given user on the give folder."""
+    """Give read/write/execute access to the given user on the given folder."""
     run(["sudo", "setfacl", "-R", "-m", f"user:{user}:rwx", path])
 
 
@@ -49,14 +49,14 @@ def set_folder_permission(path, user_name, slurm_user):
     # block others and people in the same group to do read/write/execute
     run(["sudo", "chmod", "700", path])
 
-    # give Read/Write/Execute access to USER on the give folder
+    #: give read/write/execute access to USER on the given folder
     give_rwe_access(user_name, path)
 
-    # give Read/Write/Execute access to root user on the give folder
+    #: give read/write/execute access to root user on the given folder
     give_rwe_access(slurm_user, path)
 
-    # Inserting user into the eblocbroker group
-    # cmd: sudo usermod -a -G eblocbroker ebdf86b0ad4765fda68158489cec9908
+    # insert user into the eblocbroker group
+    # __ cmd: sudo usermod -a -G eblocbroker ebdf86b0ad4765fda68158489cec9908
     run(["sudo", "usermod", "-L", "-a", "-G", "eblocbroker", user_name])
 
 

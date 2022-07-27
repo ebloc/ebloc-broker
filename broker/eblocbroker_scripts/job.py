@@ -108,11 +108,11 @@ class Job:
             tx_receipt = get_tx_status(tx_hash)
             try:
                 if not self.Ebb:
-                    log("warning: self.Ebb is empty object")
+                    log("warning: self.Ebb is an empty object")
 
-                processed_logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
-                log(vars(processed_logs[0].args))
-                log(f"==> job_index={processed_logs[0].args['index']}")
+                logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
+                log(vars(logs[0].args))
+                log(f"==> job_index={logs[0].args['index']}")
             except IndexError:
                 log("E: Transaction is reverted")
 
@@ -254,7 +254,7 @@ class Job:
                         self.data_prices_set_block_numbers.append(0)
 
                 if is_data_hash and not is_data_registered(self.provider_addr, data_hash):
-                    raise Exception(f"## requested({data_hash}) data is not registered into provider")
+                    raise Exception(f"requested data={data_hash} is not registered into the provider")
 
         self.cores = []
         self.run_time = []
@@ -340,6 +340,8 @@ class JobPrices:
         self.set_provider_info()
         self.data_transfer_in_cost: int = 0
         self.data_transfer_out_cost: int = 0
+        self.registered_data_cost_list = {}
+        self.registered_data_cost = 0
 
     def set_provider_info(self):
         """Set provider info into variables."""
@@ -405,16 +407,17 @@ class JobPrices:
                 ds = self.create_data_storage(self.job.code_hashes_str[idx])
 
             if ds.received_block + ds.storage_duration < self.w3.eth.block_number:
-                # storage time is completed
+                # storage duration is completed
                 ds.received_deposit = 0
 
             try:
                 _code_hash = code_hash.decode("utf-8")
             except:
-                _code_hash = bytes32_to_ipfs(code_hash)
+                _code_hash = bytes32_to_ipfs(code_hash, is_verbose=False)
 
             if is_verbose:
                 log(f"==> is_private{br(_code_hash, 'blue')}={ds.is_private}")
+
             # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_deposit > 0 or
             if (ds.received_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.block_number) or (

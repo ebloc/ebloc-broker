@@ -26,7 +26,7 @@ def _run():
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
     ipfs_init_folder = Path.home().joinpath(".ipfs")
-    log("==> Running [green]IPFS[/green] daemon")
+    log("Running IPFS daemon")
     if not os.path.isfile(config.env.IPFS_LOG):
         open(config.env.IPFS_LOG, "a").close()
 

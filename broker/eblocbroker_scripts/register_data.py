@@ -23,29 +23,41 @@ def _register_data(source_code_hash, data_price, commitment_dur):
         raise QuietExit
 
     code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)
+
     try:
         (price, _commitment_dur) = get_latest_data_price(env.PROVIDER_ID, code_hash_bytes, is_verbose=False)
-        bn = cfg.Ebb.get_registered_data_bn(env.PROVIDER_ID, code_hash_bytes)
-        if bn[0] == 0:
-            log(f"E: registered block number returns zero for {code_hash_bytes}")
-            is_exit = True
+        try:
+            bn = cfg.Ebb.get_registered_data_bn(env.PROVIDER_ID, code_hash_bytes)
+            if bn[0] == 0:
+                log(f"E: registered block number returns zero for {code_hash_bytes}")
+                is_exit = True
 
-        log(
-            f"## data([green]{source_code_hash}[/green]) is already registerered"
             # "\nUse [blue]./update_data_price.py[/blue] to update its price"
-        )
-        if data_price == price:
-            is_exit = True
-        else:
-            log("## Update price")
-            is_update = True
-    except Exception as e:
-        print_tb(e)
+            log(f"## data([green]{source_code_hash}[/green]) is already registerered with price={price} ", end="")
+
+            if price == 1:
+                log("and costs nothing", "b")
+            else:
+                log()
+
+            if data_price == price or (price == 1 and data_price == 0):
+                is_exit = True
+            else:
+                log(f"## updating data price with price={data_price}")
+                is_update = True
+        except Exception as e:
+            print_tb(e)
+    except:
+        pass
 
     if is_exit:
         raise QuietExit
 
     if price == data_price and _commitment_dur == commitment_dur:
+        log(f"## data([green]{source_code_hash}[/green]) is already registerered with the given values")
+        raise QuietExit
+
+    if price == 1 and data_price == 0 and _commitment_dur == commitment_dur:
         log(f"## data([green]{source_code_hash}[/green]) is already registerered with the given values")
         raise QuietExit
 
@@ -64,8 +76,8 @@ def _register_data(source_code_hash, data_price, commitment_dur):
 
 def main():
     try:
-        source_code_hash = "050e6cc8dd7e889bf7874689f1e1ead6"
-        data_price = 2
+        source_code_hash = "fe801973c5b22ef6861f2ea79dc1eb9d"
+        data_price = 1
         commitment_dur = 600
         _register_data(source_code_hash, data_price, commitment_dur)
     except QuietExit:

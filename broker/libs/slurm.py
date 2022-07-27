@@ -7,17 +7,24 @@ from broker._utils.tools import is_process_on
 from broker.config import env
 from broker.errors import BashCommandsException, QuietExit
 from broker.lib import run
-from broker.utils import log, popen_communicate, print_tb
+from broker.utils import log, popen_communicate
+
+
+def add_account_to_slurm(user):
+    cmd = ["sacctmgr", "add", "account", user, "--immediate"]
+    p, output, *_ = popen_communicate(cmd)
+    if p.returncode > 0 and "Nothing new added" not in output:
+        raise Exception(f"E: {' '.join(cmd)}\nsacctmgr remove error: {output}")
 
 
 def add_user_to_slurm(user):
     #: remove__user(user)
+    add_account_to_slurm(user)
     cmd = ["sacctmgr", "add", "user", user, f"account={user}", "--immediate"]
     # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
     if p.returncode > 0 and "Nothing new added" not in output:
-        print_tb()
-        raise Exception(f"sacctmgr remove error: {output}")
+        raise Exception(f"E: {' '.join(cmd)}\nsacctmgr remove error: {output}")
 
     # try:
     #     if "Nothing new added" not in output:

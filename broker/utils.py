@@ -254,16 +254,15 @@ def string_to_bytes32(hash_str: str):
     return binascii.hexlify(bytes_array).decode("utf-8")
 
 
-def bytes32_to_ipfs(bytes_array):
+def bytes32_to_ipfs(bytes_array, is_verbose=True):
     """Convert bytes_array into IPFS hash format."""
     if bytes_array in (b"", ""):
         return ""
 
     if isinstance(bytes_array, bytes):
-        merge = Qm + bytes_array
-        return base58.b58encode(merge).decode("utf-8")
-    else:
-        log(f"bytes_array={bytes_array} is not a bytes instance")
+        return base58.b58encode(Qm + bytes_array).decode("utf-8")
+    elif is_verbose:
+        log(f"warning: bytes_array={bytes_array} is not a bytes instance")
 
     return bytes_array
 

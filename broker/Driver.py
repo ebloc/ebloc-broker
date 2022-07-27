@@ -367,7 +367,7 @@ def run_driver(given_bn):
         )
 
     if cfg.IS_THREADING_ENABLED:
-        log(f"## is_threading={cfg.IS_THREADING_ENABLED}")
+        log(f"==> is_threading={cfg.IS_THREADING_ENABLED}")
 
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
     log(f"==> whoami={env.WHOAMI}")
@@ -428,7 +428,7 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        log(f"==> [bold yellow]passed incremented block number, watching from block_number=[cyan]{blk_read}...")
+        log(f"==> [bold yellow]watching from block_number=[cyan]{blk_read}...")
         blk_read = str(blk_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         try:

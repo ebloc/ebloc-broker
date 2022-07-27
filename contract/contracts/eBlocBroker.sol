@@ -487,7 +487,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         /* Always increment price of the data by 1 before storing it. By default
            if price == 0, data does not exist.  If price == 1, it's an existing
            data that costs nothing. If price > 1, it's an existing data that
-           costs give price. */
+           costs the given price. */
         if (price == 0) {
             price = price + 1;
         }
@@ -788,10 +788,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                     dataPriceSetBlockNum = dataCommittedBlocks[dataCommittedBlocks.length - 2];
                 }
                 require(dataPriceSetBlockNum == dataPriceSetBlockNum);
-                // data is provided by the provider with its own price
-                uint32 _dataPrice = registeredData.dataInfo[dataPriceSetBlockNum].price;
-                if (_dataPrice > 1) {
-                    cacheCost = cacheCost.add(_dataPrice);
+                // provider is already registered data-file with its own price
+                uint32 _price = registeredData.dataInfo[dataPriceSetBlockNum].price;
+                if (_price > 1) {
+                    cacheCost = cacheCost.add(_price);
                 }
                 return (1, cacheCost);
             }
@@ -965,7 +965,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Get balance on eBlocBroker.
+     * @dev Get registered data price of the provider.
      *
      * If `pricesSetBn` is 0, it will return the current price at the
      * current block-number that is called
@@ -985,7 +985,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 pricesSetBn = _dataPrices[_dataPrices.length - 2];
             }
         }
-
         return (registeredData.dataInfo[pricesSetBn]);
     }
 

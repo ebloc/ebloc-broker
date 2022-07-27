@@ -14,15 +14,17 @@ exclude = '''
 /(
     \.eggs
   | \.git
+  | \.gitmodules
+  | \.gitattributes
   | \.hg
   | \.mypy_cache
   | \.tox
   | \.venv
   | _build
-  | buck-out
   | build
   | dist
   | env
+  | Pipfile
   | venv
   | docs
   | ebloc_broker.egg-info

@@ -108,7 +108,7 @@ requesters = [  # should not contain providers
     "0x4aae9220409e1c4d74ac95ba14edb0684a431379",
     "0xab608a70d0b4a3a288dd68a1661cdb8b6c742672",
 ]
-# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 dummy_provider = "0xe2e146d6b456760150d78819af7d276a1223a6d4"
 
 extra_requesters = [
