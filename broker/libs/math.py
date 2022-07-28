@@ -29,7 +29,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow=True):
     try:
         initial = float(initial)
         change = float(change)
@@ -53,14 +53,14 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow_print=True):
     else:
         change = "{0:.2f}".format(float(change))
 
-    if is_arrow_print:
+    if is_arrow:
         log(f"{format(initial, '.4f')} => ", end="")
         log(f"{format(float(initial) + float(change), '.4f')} ", "blue", end="")
 
     if float(change) >= 0:
         change = " " + change
 
-    if is_arrow_print:
+    if is_arrow:
         log(f"{change}({format(float(percent), '.2f')}%) ", _color, end=end)
     else:
         log(f"({format(float(percent), '.2f')}%) ", _color, end=end)

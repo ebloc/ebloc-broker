@@ -45,7 +45,6 @@ gpg> save
 
 #+begin_src bash
 gpg --delete-secret-key <key>
-#
 gpg --list-keys
 gpg --delete-key <uid_name>
 gpg --batch --delete-key <key>

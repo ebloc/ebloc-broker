@@ -91,12 +91,12 @@ class Job:
 
     def cost(self, provider, requester, is_verbose=False):
         """Calcualte cost related to the given job."""
-        if is_verbose:
-            log("==> Entered into the cost calculation...")
-
         self.provider = provider
         self.requester = requester
         self.check()
+        if is_verbose:
+            log("==> Entered into the cost calculation...")
+
         jp = JobPrices(self)
         jp.set_computational_cost()
         jp.set_storage_cost(is_verbose)
@@ -134,6 +134,15 @@ class Job:
         except Exception as e:
             print_tb(e)
             raise e
+
+        for idx, code_hash in enumerate(self.code_hashes):
+            if self.data_prices_set_block_numbers[idx] > 0 or self.storage_ids[idx] == StorageID.NONE:
+                registered_data_bn_list = self.Ebb.get_registered_data_bn(self.provider, code_hash)
+                try:
+                    registered_data_bn_list[-1]
+                except Exception as e:
+                    # requested data-file may not registered in the provider
+                    raise QuietExit from e
 
     def set_cache_types(self, types) -> None:
         self.cache_types = types
@@ -297,13 +306,18 @@ class Job:
         price_to_select = sys.maxsize
         price_list = []
         for provider in self.Ebb.get_providers():
-            _price, *_ = self.cost(provider, requester, is_verbose)
-            price_list.append(_price)
-            log(f" * provider={provider} | price={_price}")
-            if _price < price_to_select:
-                price_to_select = _price
-                selected_provider = provider
-                selected_price = _price
+            try:
+                _price, *_ = self.cost(provider, requester, is_verbose)
+                price_list.append(_price)
+                log(f" * provider={provider} | price={_price}")
+                if _price < price_to_select:
+                    price_to_select = _price
+                    selected_provider = provider
+                    selected_price = _price
+            except QuietExit:
+                pass
+            except Exception as e:
+                print_tb(e)
 
         is_all_equal = all(x == price_list[0] for x in price_list)
         return selected_provider, selected_price, is_all_equal

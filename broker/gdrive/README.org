@@ -1,7 +1,7 @@
 * Installation
 
 - [[https://console.cloud.google.com/apis/credentials]]
-- https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-blocked-from-logging-in-with-your-google-accou/65507155#65507155
+- [[https://stackoverflow.com/questions/65396850/how-to-handle-app-is-temporarily-blocked-from-logging-in-with-your-google-accou/65507155#65507155]]
 
 ~@tellowkrinkle's [comment][1] help me to solve the issue~
 
@@ -117,7 +117,7 @@ gdrive upload --parent $shareId README.md
 gdrive upload --parent --recursive $shareId folder  # upload folder
 #+end_src
 
-** TODO:
+  ** TODO:
 
 - [[https://github.com/prasmussen/gdrive/issues/621#issuecomment-1184700808][Google Cloud: OAuth
   clients in test mode that are using the OAuth OOB flow]]

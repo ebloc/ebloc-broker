@@ -222,14 +222,13 @@ class Storage(BaseClass):
                 .strip()
             )
             if output.count("/") == 1:
-                # job folder should contain the 'run.sh' file
                 log(f"[m]./run.sh[/m] exists under the parent folder{ok()}", "bold")
                 return True
             else:
                 log("E: run.sh does not exist under the parent folder")
                 return False
         except:
-            log(f"E: `run.sh` file does not exist under the tar={tar_path}")
+            log(f"E: run.sh file does not exist under the tar={tar_path}")
             return False
 
     def check_run_sh(self) -> bool:

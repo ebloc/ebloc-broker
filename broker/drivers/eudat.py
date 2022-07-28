@@ -63,7 +63,6 @@ class EudatClass(Storage):
                     "share_token": self.share_token,
                 }
                 if Ebb.mongo_broker.add_item_share_id(share_key, share_id, self.share_token):
-                    # adding into mongoDB for future uses
                     log(f"#> Added into mongoDB {ok()}")
                 else:
                     log("E: Something is wrong, not added into mongoDB")
@@ -101,7 +100,7 @@ class EudatClass(Storage):
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(f"==> {folder_name} is already cached under the public directory", "bold blue")
+                    log(f"==> {folder_name} is already cached under the public directory", "bold green")
                     return True
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
@@ -130,7 +129,7 @@ class EudatClass(Storage):
             self.folder_type_dict[folder_name] = "tar.gz"
             if generate_md5sum(cached_tar_fn) == folder_name:
                 # checking is already downloaded folder's hash matches with the given hash
-                log(f"==> {cached_tar_fn} is already cached")
+                log(f"==> {cached_tar_fn} is already cached", "bold green")
                 self.tar_downloaded_path[folder_name] = cached_tar_fn
                 self.folder_type_dict[folder_name] = "tar.gz"
                 return True

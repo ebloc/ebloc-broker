@@ -8,8 +8,8 @@ from broker._utils.tools import read_json
 from broker.config import env
 
 
-def add_element(data, key, elementToAdd):
-    data[key] = elementToAdd
+def add_element(data, key, element_to_add):
+    data[key] = element_to_add
 
 
 def remove_element(data, element_to_remove):

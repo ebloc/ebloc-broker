@@ -9,7 +9,7 @@ from broker.errors import QuietExit
 from broker.utils import print_tb
 
 
-def _register_data(source_code_hash, data_price, commitment_dur):
+def _register_data(code_hash, data_price, commitment_dur):
     Ebb = cfg.Ebb
     is_exit = False
     price = None
@@ -22,8 +22,7 @@ def _register_data(source_code_hash, data_price, commitment_dur):
         log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
         raise QuietExit
 
-    code_hash_bytes = cfg.w3.toBytes(text=source_code_hash)
-
+    code_hash_bytes = cfg.w3.toBytes(text=code_hash)
     try:
         (price, _commitment_dur) = get_latest_data_price(env.PROVIDER_ID, code_hash_bytes, is_verbose=False)
         try:
@@ -33,7 +32,7 @@ def _register_data(source_code_hash, data_price, commitment_dur):
                 is_exit = True
 
             # "\nUse [blue]./update_data_price.py[/blue] to update its price"
-            log(f"## data([green]{source_code_hash}[/green]) is already registerered with price={price} ", end="")
+            log(f"## data([green]{code_hash}[/green]) is already registerered with price={price} ", end="")
 
             if price == 1:
                 log("and costs nothing", "b")
@@ -54,11 +53,11 @@ def _register_data(source_code_hash, data_price, commitment_dur):
         raise QuietExit
 
     if price == data_price and _commitment_dur == commitment_dur:
-        log(f"## data([green]{source_code_hash}[/green]) is already registerered with the given values")
+        log(f"## data([green]{code_hash}[/green]) is already registerered with the given values")
         raise QuietExit
 
     if price == 1 and data_price == 0 and _commitment_dur == commitment_dur:
-        log(f"## data([green]{source_code_hash}[/green]) is already registerered with the given values")
+        log(f"## data([green]{code_hash}[/green]) is already registerered with the given values")
         raise QuietExit
 
     try:
@@ -76,10 +75,10 @@ def _register_data(source_code_hash, data_price, commitment_dur):
 
 def main():
     try:
-        source_code_hash = "fe801973c5b22ef6861f2ea79dc1eb9d"
+        code_hash = "fe801973c5b22ef6861f2ea79dc1eb9d"
         data_price = 1
         commitment_dur = 600
-        _register_data(source_code_hash, data_price, commitment_dur)
+        _register_data(code_hash, data_price, commitment_dur)
     except QuietExit:
         pass
     except Exception as e:

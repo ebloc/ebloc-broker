@@ -15,10 +15,6 @@ class HandlerException(Exception):
     """Generate HandlerException."""
 
 
-class QuietExit(Exception):
-    """Trace is not printed."""
-
-
 class IpfsNotConnected(Exception):
     """Attempt to connect to ipfs is failed."""
 
@@ -33,3 +29,7 @@ class Timeout(Exception):
 
 class Web3NotConnected(Exception):
     """Web3 is not connected."""
+
+
+class QuietExit(Exception):
+    """Trace is not printed."""
