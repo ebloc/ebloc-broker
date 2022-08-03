@@ -35,8 +35,7 @@ def run(port=8547, hardfork_name="istanbul"):
         popen_communicate(cmd, env.GANACHE_LOG)
 
 
-if __name__ == "__main__":
-    port = 8547
+def main():
     if len(sys.argv) == 2:
         port = int(sys.argv[1])
 
@@ -47,6 +46,9 @@ if __name__ == "__main__":
     #         sys.exit()
     # except Exception as e:
     #     print_tb(e)
-
-    if not is_ganache_on(port):
+    if not is_ganache_on(8547):
         run(port)
+
+
+if __name__ == "__main__":
+    main()

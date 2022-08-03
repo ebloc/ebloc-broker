@@ -3,19 +3,19 @@
 from broker._utils.tools import log
 
 
-def _percent(amount, ratio):
+def _percent(amount, ratio) -> float:
     return float(format(amount * ratio / 100, ".2f"))
 
 
-def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
+def _percent_change(initial: float, final=None, change=None, decimal: int = 2) -> float:
     try:
         initial = float(initial)
         if final:
             final = float(final)
         if change:
             change = float(change)
-    except ValueError:
-        return None
+    except ValueError as e:
+        raise e
 
     if change:
         try:
@@ -29,17 +29,16 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow=True):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow=True) -> float:
     try:
         initial = float(initial)
         change = float(change)
-    except ValueError:
-        return None
+    except ValueError as e:
+        raise e
 
     change = "{0:.8f}".format(float(change))
     # percent = round((float(change)) / abs(float(initial)) * 100, 8)
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
-
     if percent == -0.0:
         change = 0.0
         _color = "white"

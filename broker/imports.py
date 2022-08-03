@@ -37,7 +37,7 @@ def _connect_to_web3() -> None:
     * bloxberg:
     __ https://bloxberg.org
     """
-    if not env.IS_EBLOCPOA or env.IS_GETH_TUNNEL:
+    if env.IS_GETH_TUNNEL or not env.IS_EBLOCPOA:
         if env.IS_BLOXBERG:
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
@@ -64,12 +64,12 @@ def connect_to_web3() -> None:
         if not cfg.w3.isConnected():
             try:
                 if env.IS_GETH_TUNNEL:
-                    raise Exception("web3ConnectError: try tunnelling: ssh -f -N -L 8545:localhost:8545 username@<ip>")
+                    raise Exception("Web3ConnectError: try tunnelling: ssh -f -N -L 8545:localhost:8545 username@<ip>")
 
-                if not env.IS_BLOXBERG:
-                    is_geth_on()
-                else:
+                if env.IS_BLOXBERG:
                     log("E: web3 is not connected into [green]BLOXBERG[/green]")
+                else:
+                    is_geth_on()
             except QuietExit:
                 pass
             except Exception as e:

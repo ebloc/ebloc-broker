@@ -272,12 +272,13 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
         log(output)
 
 
-def is_repo(folders):
+def is_repo(folders) -> None:
     for folder in folders:
         if not isinstance(folder, bytes):
             with cd(folder):
                 if not is_initialized(folder):
-                    log(f"warning: .git does not exits in {folder}. Applying: git init ", end="")
+                    log(f"warning: {folder} doesn't have a git repository. ", end="")
+                    log("Applying: git init ", "bold", end="")
                     run(["git", "init", "--initial-branch=master"])
                     log(ok())
 

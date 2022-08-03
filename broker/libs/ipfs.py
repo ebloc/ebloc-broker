@@ -153,13 +153,13 @@ class Ipfs:
                 print_tb(e)
                 sys.exit(1)
         else:
-            if not os.path.isfile(target):
-                log(f"{target} does not exist")
-                sys.exit(1)
-            else:
+            if os.path.isfile(target):
                 encrypt_target = target
                 encrypted_file_target = f"{target}.gpg"
                 is_delete = True
+            else:
+                log(f"{target} does not exist")
+                sys.exit(1)
 
         if os.path.isfile(encrypted_file_target):
             log(f"## gpg_file: {encrypted_file_target} is already created")
@@ -220,7 +220,9 @@ class Ipfs:
             p, output, e = popen_communicate(cmd)
             if p.returncode != 0:
                 e = e.replace("[/", "/").replace("]", "").replace("e: ", "").rstrip()
-                if not is_verbose:
+                if is_verbose:
+                    log("  [  failed  ]")
+                else:
                     log()
                     if "failure: dial to self attempted" in e:
                         log(f"E: {e}")
@@ -229,8 +231,6 @@ class Ipfs:
                     else:
                         log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")
                         raise Exception(e)
-                else:
-                    log("  [  failed  ]")
             else:
                 if is_verbose:
                     log(ok())

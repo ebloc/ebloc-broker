@@ -129,14 +129,14 @@ def upload(folder_to_share, tmp_dir, is_source_code=False):
         shutil.copyfile(f"{tmp_dir}/meta_data.json", f"{path_to_move}/meta_data.json")
 
     is_file_exist = _list(tar_hash, is_folder=True)
-    if not is_file_exist:
-        key = _upload(dir_path, tar_hash, is_folder=True)
-        log(f"{_list(tar_hash)}", "bold green")
-    else:
+    if is_file_exist:
         log(f"## requested folder {tar_hash} is already uploaded", "bold blue")
         log(is_file_exist, "bold green")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
+    else:
+        key = _upload(dir_path, tar_hash, is_folder=True)
+        log(f"{_list(tar_hash)}", "bold green")
 
     _remove(f"{dir_path}/{tar_hash}")  # created .tar.gz file is removed
     return key, is_already_uploaded, tar_hash, tar_hashes

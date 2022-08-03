@@ -22,7 +22,7 @@ class BaseMongoClass:
             return output
         else:
             self.find_all()
-            raise Exception("could not find key")
+            raise Exception(f"could not find key={_key}")
 
     def add_item(self, key, item):
         res = self.collection.replace_one({"key": key}, item, True)
@@ -30,15 +30,17 @@ class BaseMongoClass:
 
     def find_all(self, sort_str="", is_return=False):
         """Find all records."""
-        if not sort_str:
-            cursor = self.collection.find({}, {"_id": False})
-        else:
+        if sort_str:
             cursor = self.collection.find({}, {"_id": False}).sort(sort_str)
+        else:
+            cursor = self.collection.find({}, {"_id": False})
 
-        if not is_return:
+        if is_return:
+            return cursor
+        else:
             for document in cursor:
                 log(document)
-        else:
+
             return cursor
 
 

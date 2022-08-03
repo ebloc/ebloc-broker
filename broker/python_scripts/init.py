@@ -17,7 +17,7 @@ def is_docker() -> bool:
     return os.path.exists("/.dockerenv") or os.path.isfile(path) and any("docker" in line for line in open(path))
 
 
-def get_git_root(path):
+def get_git_root(path) -> str:
     git_repo = git.Repo(path, search_parent_directories=True)
     git_root = git_repo.git.rev_parse("--show-toplevel")
     return git_root

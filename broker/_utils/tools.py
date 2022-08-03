@@ -41,18 +41,6 @@ def merge_two_dicts(x, y):
     return z
 
 
-def countdown(seconds: int, is_verbose=False) -> None:
-    if not is_verbose:
-        log(f"## sleep_time={seconds} seconds                                             ")
-
-    while seconds:
-        mins, secs = divmod(seconds, 60)
-        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
-        print(f" * {_date()} | {timer}", end="\r")
-        time.sleep(1)
-        seconds -= 1
-
-
 def timenow() -> int:
     """Return UTC timestamp."""
     d = datetime.utcnow()
@@ -71,15 +59,16 @@ def _timestamp(zone="Europe/Istanbul") -> int:
     return int(time.mktime(datetime.now(timezone(zone)).timetuple()))
 
 
-def _date(zone="Europe/Istanbul", _type=""):
+def _date(zone="Europe/Istanbul", _type=""):  # _date("UTC")
+    _zone = timezone(zone)
     if _type == "year":
-        return datetime.now(timezone(zone)).strftime("%Y-%m-%d")
+        return datetime.now(_zone).strftime("%Y-%m-%d")
     elif _type == "month":
-        return datetime.now(timezone(zone)).strftime("%m-%d")
+        return datetime.now(_zone).strftime("%m-%d")
     elif _type == "hour":
-        return datetime.now(timezone(zone)).strftime("%H:%M:%S")
+        return datetime.now(_zone).strftime("%H:%M:%S")
 
-    return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(_zone).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_dt_time(zone="Europe/Istanbul"):
@@ -568,3 +557,15 @@ def remove_ansi_escape_sequence(string):
     """
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", string)
+
+
+def countdown(seconds: int, is_verbose=False) -> None:
+    if not is_verbose:
+        log(f"## sleep_time={seconds} seconds                                             ")
+
+    while seconds:
+        mins, secs = divmod(seconds, 60)
+        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
+        print(f" * {_date()} | {timer}", end="\r")
+        time.sleep(1)
+        seconds -= 1

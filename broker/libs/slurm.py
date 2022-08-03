@@ -94,7 +94,6 @@ def is_on() -> bool:
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 
-    # , "\<sacctmgr\>"
     output = run(["sinfo", "-N", "-l"])
     if "PARTITION" not in output:
         log("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")

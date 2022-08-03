@@ -18,16 +18,6 @@ from broker.errors import QuietExit
 from broker.utils import byte_to_mb, popen_communicate, run
 
 
-def enum(*sequential, **named):
-    """Set reverse map for the Enum.
-
-    __ https://stackoverflow.com/a/1695250/2402577
-    """
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    enums["reverse_map"] = dict((value, key) for key, value in enums.items())
-    return type("Enum", (), enums)
-
-
 class State:
     """Set state code of the Slurm jobs and add their keys into the hashmap.
 
@@ -67,22 +57,36 @@ class State:
     inv_code = {value: key for key, value in code.items()}
 
 
-def session_start_msg(slurm_user, block_number, pid):
+state = State()
+
+
+def enum(*sequential, **named):
+    """Set reverse map for the Enum.
+
+    __ https://stackoverflow.com/a/1695250/2402577
+    """
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    enums["reverse_map"] = dict((value, key) for key, value in enums.items())
+    return type("Enum", (), enums)
+
+
+def session_start_msg(slurm_user, bn, pid):
     """Print message at the beginning of Driver process and connect into web3."""
     if not cfg.w3:
         from broker.imports import connect_to_web3
 
         connect_to_web3()
 
-    if not env.PROVIDER_ID and cfg.w3:
-        PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
-    else:
+    PROVIDER_ID = cfg.ZERO_ADDRESS
+    if env.PROVIDER_ID:
         PROVIDER_ID = env.PROVIDER_ID
+    elif cfg.w3:
+        PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
     log(f" * driver_process_pid={pid}")
     log(f" * provider_address={PROVIDER_ID}")
     log(f" * slurm_user={slurm_user}")
-    log(f" * left_of_block_number={block_number}")
+    log(f" * left_of_block_number={bn}")
     log(f" *  latest_block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:
         raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
@@ -257,5 +261,3 @@ def run_driver_cancel():
 
 # def preexec_function():
 #     signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-state = State()

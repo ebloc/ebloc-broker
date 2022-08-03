@@ -38,7 +38,7 @@ def main():
         elif sys.argv[1] in ["reload", "r"]:
             d.restart()
         else:
-            print("Unknown command")
+            print("E: unknown command")
             sys.exit(2)
             sys.exit(0)
     else:

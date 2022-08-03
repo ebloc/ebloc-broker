@@ -9,7 +9,9 @@ from broker.libs import eudat
 
 
 def main():
-    eudat.login("aalimog1@@boun.edu.tr", expanduser("~/.ebloc-broker/.eudat_client.txt"), env.OC_CLIENT)
+    user = "aalimog1@@boun.edu.tr"
+    passwd = expanduser("~/.ebloc-broker/.eudat_client.txt")
+    eudat.login(user, passwd, env.OC_CLIENT)
     folder_names = os.listdir(expanduser("/mnt/oc"))
     for idx in range(0, len(folder_names) - 1):
         name = folder_names[idx]
