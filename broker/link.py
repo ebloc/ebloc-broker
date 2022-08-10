@@ -164,7 +164,11 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
             test_with_small_dataset(value)  # delete_me
 
 
-if __name__ == "__main__":
+def main():
     folder_target = env.HOME / "test_eblocbroker" / "test_data" / "base" / "data"
     folder_link = env.LINK_PATH / "base" / "data_link"
     check_linked_data(folder_target, folder_link, is_pass=True)
+
+
+if __name__ == "__main__":
+    main()

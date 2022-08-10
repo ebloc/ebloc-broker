@@ -4,13 +4,7 @@
 
 *eBlocBroker is smart contract that provides an application of blockchain technology to provide computational and data resources to research communities.*
 
-Developed by Alper Alimoglu and Can Ozturan from Bogazici University, Istanbul. This work is
-supported by the Turkish Directorate of Strategy and Budget under the TAM Project number
-2007K12-873.
-
-Contact [[mailto:alper.alimoglu@boun.edu.tr][alper.alimoglu@boun.edu.tr]], [[mailto:ozturaca@boun.edu.tr][ozturaca@boun.edu.tr]] if necessary.
-
-For more info see: ...
+# For more info see: ...
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
 # - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
@@ -130,3 +124,11 @@ Each provider should run ~eblocbroker driver~ for start running the Python scrip
 *** Screenshot of provider GUI:
 
 [[file:/docs/gui1.png]]
+
+** Acknowledgement
+
+This work is supported by the Turkish Directorate of Strategy and Budget under the TAM Project
+number 2007K12-873.
+
+Developed by Alper Alimoglu and Can Ozturan from Bogazici University, Istanbul.
+Contact [[mailto:alper.alimoglu@boun.edu.tr][alper.alimoglu@boun.edu.tr]], [[mailto:ozturaca@boun.edu.tr][ozturaca@boun.edu.tr]] if necessary.

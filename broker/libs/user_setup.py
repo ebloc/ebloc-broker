@@ -4,6 +4,7 @@ import hashlib
 import os
 import pwd
 
+from broker._utils._log import ok
 from broker._utils.tools import _remove, mkdir
 from broker.lib import run
 from broker.libs.slurm import add_user_to_slurm
@@ -97,8 +98,8 @@ def user_add(user_address, basedir, slurm_user):
 
 def main():
     # 0xabd4f78b6a005bdf7543bc2d39edf07b53c926f4
-    user_add("0xabd4fs8b6a005bdf7543bc2d39eds08b53c926q0", "/var/eBlocBroker", "netlab")
-    log("FIN")
+    user_add("0xabd4fs8b6a005bdf7543bc2d39eds08b53c926q0", "/var/ebloc-broker", "netlab")
+    log(ok())
 
 
 if __name__ == "__main__":
