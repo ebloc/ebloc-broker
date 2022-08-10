@@ -15,7 +15,7 @@ force_add_slurm_user () {  # force to re-add slurm user
     sacctmgr create user $_USERNAME defaultaccount=$_USERNAME adminlevel=[None] --immediate
 }
 
-_USERNAME=$(echo -n $USERADDRESS | md5sum | head -c-4)  # convert Ethereum User Address into 32-bits
+_USERNAME=$(echo -n $USERADDRESS | md5sum | head -c-4)  # convert ethereum user address into 32-bits
 USER_HOME_DIR=$BASEDIR/$_USERNAME
 if ! id -u $_USERNAME > /dev/null 2>&1; then
     sudo useradd -d $USER_HOME_DIR -m $_USERNAME

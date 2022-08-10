@@ -380,8 +380,8 @@ class EudatClass(Storage):
             # return False ###
 
         if int(self.data_transfer_in_to_download_mb) > int(self.data_transfer_in_requested):
-            log(f"==> data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")
-            log(f"==> data_transfer_in_requested={self.data_transfer_in_requested}", "bold")
+            log(f" * data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")
+            log(f" * data_transfer_in_requested={self.data_transfer_in_requested}")
             log("E: Requested size to download the source code and data files is greater than the given amount")
             return self.full_refund()
 
@@ -408,7 +408,7 @@ class EudatClass(Storage):
                         self.full_refund()
                         return False
 
-        log(f"==> data_transfer_in_requested={self.data_transfer_in_requested} MB", "bold")
+        log(f" * data_transfer_in_requested={self.data_transfer_in_requested} MB")
         for idx, folder_name in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] == StorageID.NONE:
                 if isinstance(folder_name, bytes):

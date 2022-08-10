@@ -829,7 +829,7 @@ def test_submit_job():
     register_provider()
     register_requester(requester)
     fn = f"{cwd}/files/test.txt"
-    # fn = f"{cwd}/files/test_.txt"
+    # fn = f"{cwd}/files/_test.txt"
     log(f"==> registered_provider_addresses={ebb.getProviders()}")
     provider_price_info = ebb.getProviderInfo(accounts[0], 0)
     # block_read_from = provider_price_info[0]

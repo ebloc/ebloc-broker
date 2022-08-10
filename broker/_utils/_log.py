@@ -116,7 +116,7 @@ class Log:
             is_bullet = True
             if not color:
                 color = "red"
-        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN", "DONE"]:
+        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "DONE"]:
             if not color:
                 color = "green"
                 is_bold = True

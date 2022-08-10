@@ -124,7 +124,7 @@ def subprocess_call(cmd, attempt=1, sleep_time=1):
             else:
                 return output
         except Exception as e:
-            # https://stackoverflow.com/a/1156048/2402577
+            # __ https://stackoverflow.com/a/1156048/2402577
             for line in traceback.format_stack():
                 log(line.strip())
 
@@ -152,13 +152,13 @@ def remove_files(fn) -> bool:
             try:
                 _remove(f)
             except Exception as e:
-                print_tb(str(e))
+                print_tb(e)
                 return False
     else:
         try:
             _remove(fn)
         except Exception as e:
-            print_tb(str(e))
+            print_tb(e)
             return False
 
     return True
@@ -183,7 +183,7 @@ def eblocbroker_function_call(func, max_retries):
             return func()
         except Exception as e:
             log(f"E: {e}")
-            log("Sleep 15 seconds, will try again...")
+            log("sleep 15 seconds, will try again...")
             time.sleep(15)
 
     raise Exception("eblocbroker_function_call completed all the attempts  [  ABORT  ]")
@@ -235,7 +235,7 @@ def pre_check():
     mkdir(env.LOG_PATH / "transactions")
     mkdir(env.LOG_PATH / "end_code_output")
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception("slurm_mail_prog.sh scripts is not located under the `/var/ebloc-broker` folder")
+        raise Exception(f"slurm_mail_prog.sh scripts is not located in the {env.PROGRAM_PATH}")
 
 
 def run_driver_cancel():

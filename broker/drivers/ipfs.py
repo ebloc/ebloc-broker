@@ -15,7 +15,7 @@ from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_
 
 
 class IpfsClass(Storage):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         #: if storage class is IPFS, then `cache_type` is always public
         self.cache_type = CacheType.PUBLIC
@@ -38,7 +38,7 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
-        log(f"data_transfer_out={data_size_mb} MB | rounded={int(data_size_mb)} MB", "bold")
+        log(f" * data_transfer_out={data_size_mb} MB | rounded={int(data_size_mb)} MB")
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
         """Wrap ipfs get call."""
@@ -47,7 +47,7 @@ class IpfsClass(Storage):
 
     def print_data_transfer_in(self) -> None:
         dt_in = self.data_transfer_in_to_download_mb
-        log(f"#> data_transfer_in={dt_in} MB | rounded={int(dt_in)} MB")
+        log(f" * data_transfer_in={dt_in} MB | rounded={int(dt_in)} MB")
 
     def run(self) -> bool:
         self.start_timestamp = time.time()

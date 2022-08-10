@@ -30,6 +30,13 @@ with open('../broker/eblocbroker_scripts/abi.json','w') as fp:
     json.dump(eBlocBroker.abi, fp)
 #+end_src
 
+** compile all
+
+#+begin_src bash
+source $HOME/venv/bin/activate
+rm -rf build/
+brownie compile --all
+#+end_src
 * Accounts
 
 - Path: ~$HOME/.brownie/accounts~

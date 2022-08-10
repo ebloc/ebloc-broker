@@ -303,7 +303,7 @@ def generate_md5sum(path: str) -> str:
 
 
 def eth_address_to_md5(address):
-    """Convert Ethereum User Address into 32-bits."""
+    """Convert ethereum user address into 32-bits."""
     return hashlib.md5(address.encode("utf-8")).hexdigest()
 
 

@@ -492,20 +492,18 @@ class JobPrices:
             log(f"==> price_storage={self.price_storage}")
             log(f"==> price_cache={self.price_cache}")
             log(f"[green]*[/green] [blue]job_price[/blue]={self.job_price}", "bold")
+            _c = "[green]|[/green]       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
                     log(f"[green]|[/green]   * {k}={v}", "bold")
                     if k == "storage":
-                        log(f"[green]|[/green]       [yellow]*[/yellow] in={self.cost['data_transfer_in']}", "bold")
+                        log(f"{_c} in={self.cost['data_transfer_in']}", "bold")
                         if self.registered_data_cost > 0:
-                            log(
-                                f"[green]|[/green]       [yellow]*[/yellow] registered_data={self.registered_data_cost}",
-                                "bold",
-                            )
+                            log(f"{_c} registered_data={self.registered_data_cost}", "bold")
                             log(f"[green]|[/green]         {self.registered_data_cost_list}")
 
                 if k == "data_transfer":
-                    log(f"[green]|[/green]       [yellow]*[/yellow] in={self.cost['data_transfer_in']}", "bold")
-                    log(f"[green]|[/green]       [yellow]*[/yellow] out={self.cost['data_transfer_out']}", "bold")
+                    log(f"{_c} in={self.cost['data_transfer_in']}", "bold")
+                    log(f"{_c} out={self.cost['data_transfer_out']}", "bold")
 
             log()
