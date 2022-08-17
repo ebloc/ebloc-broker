@@ -230,9 +230,9 @@ def run_storage_process(storage_class):
 
 def pre_check():
     mkdir(env.LOG_PATH / "private")
-    mkdir(env.LOG_PATH / "drivers_output")
     mkdir(env.LOG_PATH / "links")
     mkdir(env.LOG_PATH / "transactions")
+    mkdir(env.LOG_PATH / "drivers_output")
     mkdir(env.LOG_PATH / "end_code_output")
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
         raise Exception(f"slurm_mail_prog.sh scripts is not located in the {env.PROGRAM_PATH}")

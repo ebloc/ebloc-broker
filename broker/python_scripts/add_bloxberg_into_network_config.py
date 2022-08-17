@@ -16,13 +16,11 @@ def add_bloxberg_config(fn):
         "host": "https://core.bloxberg.org",
         "explorer": "https://blockexplorer.bloxberg.org/api",
     }
-    config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
-    data = config
-
+    config_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
     is_bloxberg_added = False
-    for config in data["live"]:
-        if config["name"] == "Ethereum":
-            for network in config["networks"]:
+    for _config in config_data["live"]:
+        if _config["name"] == "Ethereum":
+            for network in _config["networks"]:
                 if "bloxberg" in network["name"]:
                     is_bloxberg_added = True
                     if json.loads(json.dumps(network)) == bloxberg_config:
@@ -35,12 +33,12 @@ def add_bloxberg_config(fn):
                         network["explorer"] = bloxberg_config["explorer"]
 
             if not is_bloxberg_added:
-                config["networks"].append(bloxberg_config)
+                _config["networks"].append(bloxberg_config)
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(mapping=ind, sequence=ind, offset=bsi)
     with open(fn, "w") as fp:
-        yaml.dump(data, fp)
+        yaml.dump(config_data, fp)
 
 
 def main():
