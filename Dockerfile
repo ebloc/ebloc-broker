@@ -115,7 +115,7 @@ RUN ipfs version \
  && ganache --version \
  && gdrive version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
- && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
+ && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc \
  && du -sh / 2>&1 | grep -v "cannot"
 
 ## slurm

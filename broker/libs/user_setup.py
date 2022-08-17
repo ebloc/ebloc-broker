@@ -31,7 +31,7 @@ def remove_user(user_name, user_dir=None):
 
 
 def username_check(username):
-    """Check wheather username exists."""
+    """Check whether username exists."""
     try:
         pwd.getpwnam(username)
         log(f"## user [blue]{username}[/blue] exists")

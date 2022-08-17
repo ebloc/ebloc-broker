@@ -136,7 +136,7 @@ def untar(tar_fn, extract_to):
 
 
 def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
-    """Check wheather internet is online.
+    """Check whether internet is online.
 
     Host: 8.8.8.8 (google-public-dns-a.google.com)
     OpenPort: 53/tcp

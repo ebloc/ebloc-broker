@@ -337,7 +337,7 @@ def constantly_print_popen(cmd):
 
 
 def is_process_on(process_name, name="", process_count=0, port=None, is_print=True) -> bool:
-    """Check wheather the process runs on the background.
+    """Check whether the process runs on the background.
 
     __ https://stackoverflow.com/a/6482230/2402577
     """

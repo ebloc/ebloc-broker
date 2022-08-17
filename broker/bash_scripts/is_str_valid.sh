@@ -1,7 +1,6 @@
 #!/bin/bash
 
 string=$1
-first_char=$(echo $string | cut -c1-1)
 if [[ $string == "" ]]; then
     echo "E: provided string is empty"
     false
@@ -10,7 +9,7 @@ fi
 
 if [[ $string == "." ]] || [[ $string == ".." ]]; then
     # "." and ".." are added automatically and always exist, so you can't have a
-    # file named . or .. // https://askubuntu.com/a/416508/660555
+    # file named . or .. // __https://askubuntu.com/a/416508/660555
     echo "E: filename cannot be '.' or '..'"
     false
     exit
@@ -23,6 +22,7 @@ if [ $key_len -gt 255 ]; then
     exit
 fi
 
+first_char=$(echo $string | cut -c1-1)
 if ! [[ $first_char =~ ^[0-9a-zA-Z]+$ ]]; then
     echo "E: first character is not valid"
     false
