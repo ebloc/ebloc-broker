@@ -19,7 +19,7 @@ class Link:
         self.folder_target = folder_target
         self.folder_link = folder_link
 
-    def umount(self, data_hashes):
+    def umount(self, data_hashes) -> None:
         for data_hash in data_hashes:
             if isinstance(data_hash, bytes):
                 data_hash = data_hash.decode("utf-8")

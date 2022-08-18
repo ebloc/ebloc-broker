@@ -73,8 +73,8 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
             raise Exception(f"run_time{br(idx)} is provided as 0. Please provide non-zero value")
 
     for core_min in job.run_time:
-        if core_min > 1440:
-            raise Exception("run_time provided greater than 1440. Please provide smaller value")
+        if core_min > 14400:
+            raise Exception("run_time provided greater than 14400. Please provide smaller value")
 
     for cache_type in job.cache_types:
         if cache_type > 1:

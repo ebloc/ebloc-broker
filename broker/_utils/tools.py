@@ -192,15 +192,36 @@ def round_float(v, ndigits=2) -> float:
     return float(v_str)
 
 
-def _exit(msg="") -> None:
-    """Immediate program termination."""
+def _sys_exit(msg="") -> None:
+    """Exit the main process."""
     if msg:
         if msg[:2] != "E:":
             log(f"E: {msg}")
         else:
             log(msg)
 
-        log("## Exiting")
+        log("#> exiting")
+
+    sys.exit()
+
+
+def _exit(msg="") -> None:
+    """Immediate program termination.
+
+    os._exit() in Python is used to exit a process with a specified state
+    without calling cleanup handlers, flushing stdio buffers, etc.
+
+    Note.  This method is typically used in a child process after the os.fork()
+    system call.  The standard way to exit a process is — this is the
+    sys.exit(n) method.
+    """
+    if msg:
+        if msg[:2] != "E:":
+            log(f"E: {msg}")
+        else:
+            log(msg)
+
+        log("#> exiting")
 
     os._exit(0)
 

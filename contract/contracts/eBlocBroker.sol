@@ -766,8 +766,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         for (uint256 i = 0; i < core.length; i++) {
             uint256 computationalCost = uint256(info.priceCoreMin).mul(uint256(core[i]).mul(uint256(runTime[i])));
             totalRunTime = totalRunTime.add(runTime[i]);
-            // total execution time of the workflow should be shorter than a day
-            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 1440);
+            // execution time of the workflow should be shorter than a day
+            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 14400);
             sum = sum.add(computationalCost);
         }
         return sum;
