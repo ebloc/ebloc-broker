@@ -193,7 +193,7 @@ def round_float(v, ndigits=2) -> float:
 
 
 def _sys_exit(msg="") -> None:
-    """Exit the main process."""
+    """Exit the parent process."""
     if msg:
         if msg[:2] != "E:":
             log(f"E: {msg}")

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Link: https://stackoverflow.com/questions/43449165/could-slurm-trigger-a-scriptimplemented-by-the-frontend-slurm-user-when-any-jo
+
 SEP="~"
 _HOME="/home/username"  # may differ for each providerget from the file name
 EMAIL=""
