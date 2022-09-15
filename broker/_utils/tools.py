@@ -250,7 +250,7 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True):
     """Calculate the changed percent."""
     try:
         initial = float(initial)
@@ -284,9 +284,15 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
         change = " " + change
 
     if is_arrow:
-        log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
+        if is_sign:
+            log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
+        else:
+            log(f"{abs(change)}({format(float(abs(percent)), '.2f')}%) ", color, end=end)
     else:
-        log(f"({format(float(percent), '.2f')}%) ", color, end=end)
+        if is_sign:
+            log(f"({format(float(percent), '.2f')}%) ", color, end=end)
+        else:
+            log(f"({format(float(abs(percent)), '.2f')}%) ", color, end=end)
 
     return percent
 

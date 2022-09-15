@@ -24,10 +24,10 @@ function check_port_status {
     for count in {2..0}; do
         echo 2>/dev/null >/dev/tcp/localhost/$1
         if [[ "$?" -eq 0 ]]; then
-            echo "#> Port $1 is listening"
+            echo "#> port $1 is listening"
             break
         else
-            echo "#> Port $1 is not listening"
+            echo "#> port $1 is not listening"
             sleep 1
         fi
     done
@@ -65,7 +65,7 @@ if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
         then
             break
         fi
-        echo "## Starting MariaDB to create Slurm account database"
+        echo "## starting MariaDB to create Slurm account database"
         sleep 1
     done
     error_with_msg "MariaDB did not start"
@@ -87,7 +87,7 @@ if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
     error_with_msg "MariaDB did not stop"
 fi
 
-echo "#> Starting supervisord process manager"
+echo "#> starting supervisord process manager"
 /usr/bin/supervisord --configuration /etc/supervisord.conf
 
 # order of the programs is important
@@ -103,6 +103,6 @@ for port in 6817 6818 6819 6001 6002; do
 done
 
 check_cluster
-/usr/bin/supervisorctl start startup
-echo "#> Cluster is now available"
+/usr/bin/supervisorctl start startup >/dev/null 2>&1
+echo "#> cluster is now available"
 exec "$@"

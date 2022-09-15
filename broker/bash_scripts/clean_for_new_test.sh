@@ -12,8 +12,7 @@ python3 -uB $HOME/ebloc-broker/broker/eblocbroker_scripts/get_block_number.py Tr
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 
 # remove created users users
-for user in $(members eblocbroker | tr " " "\n")
-do
+for user in $(members eblocbroker | tr " " "\n"); do
     echo $user will be deleted
     sudo userdel -f $user
 done

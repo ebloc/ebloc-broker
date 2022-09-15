@@ -174,7 +174,7 @@ COPY --chown=slurm docker/provider/slurm.conf /etc/slurm/slurm.conf
 COPY --chown=slurm docker/provider/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
-EXPOSE 6817 6818 6819 6820 3306 6001 6002
+EXPOSE 3306 6001 6002 6817 6818 6819 6820
 
 COPY docker/provider/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # define command at startup
