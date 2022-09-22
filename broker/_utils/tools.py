@@ -250,16 +250,18 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True, is_print=True):
     """Calculate the changed percent."""
     try:
         initial = float(initial)
-        change = float(change)
+        change = format(float(change), ".8f")
     except ValueError:
         return None
 
-    change = format(float(change), ".8f")
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
+    if not is_print:
+        return percent
+
     if abs(percent) == 0:
         change = 0.0
         if not color:
