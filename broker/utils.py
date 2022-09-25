@@ -190,7 +190,7 @@ def is_bin_installed(name):
 
 
 def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
-    """Act similir to run(cmd).
+    """Act similir to the `run()` function.
 
     But also returns the output message captures on during the run stdout_fn
     is not None in case of nohup process writes its results into a file.

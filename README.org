@@ -1,8 +1,7 @@
 * ebloc-broker
 
-** What is eBlocBroker?
-
-*eBlocBroker is smart contract that provides an application of blockchain technology to provide computational and data resources to research communities.*
+*eBlocBroker is a smart contract that applies blockchain technology to provide a market for
+computational and data resources to research communities.*
 
 # For more info see: ...
 

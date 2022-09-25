@@ -21,7 +21,7 @@ from broker.utils import byte_to_mb, popen_communicate, run
 class State:
     """Set state code of the Slurm jobs and add their keys into the hashmap.
 
-    Hashmap keys:
+    * Hashmap keys:
         - SUBMITTED: Initial state of the job.
 
         - PENDING: Indicates when a request is receieved by the provider. The

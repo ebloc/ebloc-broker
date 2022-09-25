@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import os
 import sys
 from contextlib import suppress
@@ -30,9 +29,9 @@ class Link:
                     run(["sudo", "umount", "-f", dest], is_quiet=True)
 
     def link(self, path, dest, is_read_only=False):
-        """Create link between folders.
+        """Make link between folders.
 
-        You can create a read-only bind-mount(https://lwn.net/Articles/281157/).
+        You can create a read-only bind-mount(https://lwn.net/Articles/281157/)
         mount --bind /path/to/source/ /path/to/dest/
         mount -o bind,remount,ro /path/to/dest
 

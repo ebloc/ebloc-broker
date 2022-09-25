@@ -421,7 +421,7 @@ def mkdirs(paths) -> None:
         mkdir(path)
 
 
-def kill_process_by_name(process_name: str):
+def kill_process_by_name(process_name: str) -> None:
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()  # type: ignore
