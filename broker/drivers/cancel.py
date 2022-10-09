@@ -80,14 +80,14 @@ def cancel_jobs(cancel_block_read_from_local):
             f_blockReadFrom.write(f"{value}")
             f_blockReadFrom.close()
             cancel_block_read_from_local = str(value)
-            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
             log(f"Waiting cancelled jobs from {cancel_block_read_from_local}")
         else:
             currentBlockNumber = block_number()
             f_blockReadFrom = open(env.CANCEL_BLOCK_READ_FROM_FILE, "w")  # updates the latest read block number
             f_blockReadFrom.write(f"{currentBlockNumber}")
             f_blockReadFrom.close()
-            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
             log(f"Waiting cancelled jobs from: {currentBlockNumber}")
 
 

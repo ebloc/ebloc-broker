@@ -80,7 +80,7 @@ configure_ipfs () { # ipfs setups
     sudo chown $l:root /ipns
 }
 
-# Folder Setup
+# folder setup
 # ============
 if [ ! -d $DIR ]; then
     sudo mkdir -p $DIR
@@ -117,7 +117,6 @@ fi
 # even listable for anyone but you. You achieve this with:
 # 'chmod 700 eudat_password.txt'"
 # echo ""
-
 if [[ "$1" != "$VAR" ]]; then
     yes_or_no "Are you are a provider" && provider_setup
 fi

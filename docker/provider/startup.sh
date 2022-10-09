@@ -6,3 +6,5 @@ git fetch --all --quiet
 git submodule update --init
 git submodule update --quiet
 git pull --all -r -v
+
+# cp docker/bashrc ~/.bashrc

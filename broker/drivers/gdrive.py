@@ -46,7 +46,7 @@ class GdriveClass(Storage):
             downloaded_folder_path = f"{self.folder_path_to_download[code_hash]}/{name}"
             if not os.path.isdir(downloaded_folder_path):
                 # check before move operation
-                raise Exception(f"Folder ({downloaded_folder_path}) is not downloaded successfully")
+                raise Exception(f"folder ({downloaded_folder_path}) is not downloaded successfully")
 
             self.data_transfer_in_requested = calculate_size(downloaded_folder_path)
             log(

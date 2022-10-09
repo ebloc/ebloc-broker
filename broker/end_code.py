@@ -77,7 +77,7 @@ class Ipfs(Common):
 
 class IpfsGPG(Common):
     def upload(self, *_):
-        """Upload files right after all the patchings are completed."""
+        """Upload patches right after all the patchings are completed."""
         try:
             from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
             ipfs.gpg_encrypt(from_gpg_fingerprint, self.requester_gpg_fingerprint, self.patch_file)

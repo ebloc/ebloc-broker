@@ -8,7 +8,7 @@ echo $key && gpg --list-keys $key
 gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key
 #+end_src
 
-** Requester
+** requester
 
 See https://stackoverflow.com/a/34132924/2402577 for more info.
 
@@ -33,7 +33,7 @@ Do you really want to set this key to ultimate trust? (y/N) y
 > quit
 #+end_src
 
-** Change the passphrase of the secret key
+** change the passphrase of the secret key
 
 #+begin_src bash
 gpg --edit-key <your_key_here>

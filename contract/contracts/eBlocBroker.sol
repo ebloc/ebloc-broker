@@ -42,7 +42,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * @dev Transfer ownership of the contract to a new account (`newOwner`).
      * It can only be called by the current owner.
      * @param newOwner The address to transfer ownership to.
      */
@@ -295,7 +295,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Registers a provider's (msg.sender's) given information
+     * @dev Register a provider's (msg.sender's) given information
      *
      * @param gpgFingerprint is a bytes8 containing a gpg key ID that is used by GNU
        Privacy Guard to encrypt or decrypt files.
@@ -332,7 +332,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 // is user used or not the related data file
                 prices[2] > 0 &&
                 !provider.isRunning &&
-                // Commitment duration should be one day
+                // commitment duration should be minimum 1 hour
                 commitmentBlockDur >= ONE_HOUR_BLOCK_DURATION
         );
 
@@ -387,7 +387,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @param availableCore Available core number.
      * @param commitmentBlockDur Requred block number duration for prices
      * to committed.
-     * @param prices Array of prices ([priceCoreMin, priceDataTransfer,
+     * @param prices Array of prices as array ([priceCoreMin, priceDataTransfer,
      * priceStorage, priceCache]) to update for the provider.
      * @return bool
      */
@@ -397,7 +397,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         uint32[] memory prices
     ) public whenProviderRegistered returns (bool) {
         require(
-            // Commitment duration should be one day
+            // commitment duration should be minimum 1 hour
             availableCore > 0 && prices[0] > 0 && commitmentBlockDur >= ONE_HOUR_BLOCK_DURATION
         );
         Lib.Provider storage provider = providers[msg.sender];
@@ -418,12 +418,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             _setProviderPrices(provider, committedBlock, availableCore, prices, commitmentBlockDur);
             pricesSetBlockNum[msg.sender].push(uint32(committedBlock));
         }
-
         return true;
     }
 
     /**
-     * @dev Suspends provider as it will not receive any more job, which may
+     * @dev Suspend provider as it will not receive any more job, which may
      * only be performed only by the provider owner.  Suspends the access
      * to the provider. Only provider owner could stop it.
      */
@@ -433,7 +432,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Resumes provider as it will continue to receive jobs, which may
+     * @dev Resume provider as it will continue to receive jobs, which may
      * only be performed only by the provider owner.
      */
     function resumeProvider() public whenProviderRegistered whenProviderSuspended returns (bool) {
@@ -466,7 +465,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Registers a given data's sourceCodeHash by the cluster
+     * @dev Register a given data's sourceCodeHash by the cluster
      *
      * @param sourceCodeHash source code hash of the provided data
      * @param price Price in Gwei of the data
@@ -498,7 +497,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Registers a given data's sourceCodeHash removal by the cluster
+     * @dev Register a given data's sourceCodeHash removal by the cluster
      *
      * @param sourceCodeHash: source code hashe of the already registered data
      */
@@ -507,7 +506,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Updated a given data's prices registiration by the cluster
+     * @dev Update a given data's prices registiration by the cluster
      *
      * @param sourceCodeHash: Source code hashe of the provided data
      * @param price: Price in Gwei of the data
@@ -544,7 +543,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Performs a job submission through eBlocBroker by a requester. This
+     * @dev Perform a job submission through eBlocBroker by a requester. This
        deposit is locked until the job is
      * finalized or cancelled.
      *
@@ -662,7 +661,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Logs an event for the description of the submitted job.
+     * @dev Log an event for the description of the submitted job.
      *
      * @param provider The address of the provider.
      * @param key The string of the key.
@@ -678,7 +677,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return true;
     }
 
-    /* @dev Sets the job's state (stateCode) which is obtained from Slurm */
+    /* @dev Set the job's state (stateCode) which is obtained from Slurm */
     function setJobState(Lib.Job storage job, Lib.JobStateCodes stateCode)
         internal
         validJobStateCode(stateCode)
@@ -742,7 +741,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Updated data's received block number with block number
+     * @dev Update data's received block number with block number
      * @param provider Structure of the provider
      * @param sourceCodeHash hash of the requested data
      */
@@ -766,19 +765,22 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         for (uint256 i = 0; i < core.length; i++) {
             uint256 computationalCost = uint256(info.priceCoreMin).mul(uint256(core[i]).mul(uint256(runTime[i])));
             totalRunTime = totalRunTime.add(runTime[i]);
-            // total execution time of the workflow should be shorter than a day
-            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 1440);
+            // execution time of the workflow should be shorter than a day
+            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 14400);
             sum = sum.add(computationalCost);
         }
         return sum;
     }
 
+    /**
+     * @dev Add registered data price to cacheCost if dataPricesSetBlockNum > 0 is true and
+     * the used provider's registered data exists
+     */
     function _checkRegisteredData(
         uint32 dataPricesSetBlockNum,
         Lib.RegisteredData storage registeredData,
         uint32 cacheCost
     ) internal view returns (uint256, uint32) {
-        // if true, then used cluster's registered data if exists
         if (dataPricesSetBlockNum > 0) {
             if (registeredData.committedBlock.length > 0) {
                 uint32[] memory dataCommittedBlocks = registeredData.committedBlock;
@@ -932,7 +934,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- PUBLIC GETTERS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
     /**
-     * @dev Returns balance of the requested address in Gwei. It takes a
+     * @dev Return balance of the requested address in Gwei. It takes a
        provider's Ethereum address as parameter.
 
      * @param owner The address of the requester or provider.
@@ -949,7 +951,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Returns the owner of the eBlocBroker contract
+     * @dev Return the owner of the eBlocBroker contract
      */
     function getOwner() external view returns (address) {
         return owner;
@@ -992,7 +994,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return orcID[user];
     }
 
-    /* @dev Returns the enrolled requester's block number of the enrolled
+    /* @dev Return the enrolled requester's block number of the enrolled
        requester, which points to the block that logs `LogRequester event.  It
        takes Ethereum address of the requester, which can be obtained by calling
        LogRequester event.
@@ -1001,7 +1003,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return requesterCommittedBlock[requester];
     }
 
-    /* @dev Returns the registered provider's information. It takes Ethereum
+    /* @dev Return the registered provider's information. It takes Ethereum
        address of the provider, which can be obtained by calling
        getProviderAddresses If the pricesSetBn is 0, then it will return
        the current price at the current block-number that is called
@@ -1024,7 +1026,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Returns various information about the submitted job such as the hash
+     * @dev Return various information about the submitted job such as the hash
      * of output files generated by IPFS, UNIX timestamp on job's start time,
      * received Gwei value from the client etc.
      *
@@ -1077,14 +1079,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         return registeredProviders;
     }
 
-    /* @dev Checks whether or not the given Ethereum address of the provider is
+    /* @dev Check whether or not the given Ethereum address of the provider is
        already registered in eBlocBroker.
      */
     function doesProviderExist(address provider) external view returns (bool) {
         return providers[provider].committedBlock > 0;
     }
 
-    /* @dev Checks whether or not the enrolled requester's given ORCID iD is
+    /* @dev Check whether or not the enrolled requester's given ORCID iD is
        already authenticated in eBlocBroker. */
     function isOrcIDVerified(address user) external view returns (bool) {
         if (orcID[user] == "") return false;
@@ -1092,7 +1094,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /**
-     * @dev Checks whether or not the given Ethereum address of the requester
+     * @dev Check whether or not the given Ethereum address of the requester
      * is already registered in eBlocBroker.
      *
      * @param requester The address of requester

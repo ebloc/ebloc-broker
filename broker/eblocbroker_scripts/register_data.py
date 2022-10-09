@@ -22,6 +22,10 @@ def _register_data(code_hash, data_price, commitment_dur):
         log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
         raise QuietExit
 
+    if commitment_dur < cfg.ONE_HOUR_BLOCK_DURATION:
+        log(f"warning: commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}")
+        raise QuietExit
+
     code_hash_bytes = cfg.w3.toBytes(text=code_hash)
     try:
         (price, _commitment_dur) = get_latest_data_price(env.PROVIDER_ID, code_hash_bytes, is_verbose=False)

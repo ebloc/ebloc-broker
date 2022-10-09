@@ -8,26 +8,25 @@ from broker._utils.tools import read_json
 from broker.config import env
 
 
-def add_element(data, key, element_to_add):
-    data[key] = element_to_add
+def add_item(data, key, item):
+    data[key] = item
 
 
-def remove_element(data, element_to_remove):
-    for element in list(data):
-        if element_to_remove in element:
-            del data[element_to_remove]
+def remove_item(data, element):
+    for item in list(data):
+        if element in item:
+            del data[element]
 
 
 def main():
     fn = env.LOG_PATH + "/" + "caching_record.json"
+    data = {}
     if os.path.isfile(fn):
         with suppress(Exception):
             data = read_json(fn)
-    else:
-        data = {}
 
-    add_element(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
-    add_element(data, "ipfs_hash", "timestamp")
+    add_item(data, "jobKey", ["local", "userName", "timestamp", "keepTime"])
+    add_item(data, "ipfs_hash", "timestamp")
     with open("data.json", "w") as outfile:
         json.dump(data, outfile)
 
@@ -35,7 +34,7 @@ def main():
         print(data["jobKey"][0])
         print(data["jobKey"])
 
-    remove_element(data, "ipfs_hash")
+    remove_item(data, "ipfs_hash")
     with open(fn, "w") as data_file:
         json.dump(data, data_file)
 

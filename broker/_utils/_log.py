@@ -99,7 +99,7 @@ class Log:
             is_r = "\r"
             text = text[1:]
 
-        if text in ["[ ok ]", "[ OK ]", "[  OK  ]"]:
+        if text.lower() in ["[ ok ]", "[  ok  ]"]:
             text = "[  [bold green]OK[/bold green]  ]"
         elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** ", "***"]:
             _len = 3
@@ -116,7 +116,12 @@ class Log:
             is_bullet = True
             if not color:
                 color = "red"
-        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "FIN", "DONE"]:
+        elif text[:2] in ["* "]:
+            _len = 2
+            is_bullet = True
+            if not color:
+                color = "blue"
+        elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "DONE"]:
             if not color:
                 color = "green"
                 is_bold = True
@@ -245,7 +250,7 @@ def log(
     max_depth=None,
     back=0,
 ):
-    """Log output with own settings.
+    """Log output with the own settings.
 
     * colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors

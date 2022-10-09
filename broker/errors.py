@@ -16,7 +16,7 @@ class HandlerException(Exception):
 
 
 class IpfsNotConnected(Exception):
-    """Attempt to connect to ipfs is failed."""
+    """Attempt to connect to IPFS is failed."""
 
 
 class Terminate(Exception):
@@ -32,4 +32,4 @@ class Web3NotConnected(Exception):
 
 
 class QuietExit(Exception):
-    """Trace is not printed."""
+    """Exit quietly without printing the trace."""

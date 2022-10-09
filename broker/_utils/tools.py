@@ -192,15 +192,36 @@ def round_float(v, ndigits=2) -> float:
     return float(v_str)
 
 
-def _exit(msg="") -> None:
-    """Immediate program termination."""
+def _sys_exit(msg="") -> None:
+    """Exit the parent process."""
     if msg:
         if msg[:2] != "E:":
             log(f"E: {msg}")
         else:
             log(msg)
 
-        log("## Exiting")
+        log("#> exiting")
+
+    sys.exit()
+
+
+def _exit(msg="") -> None:
+    """Immediate program termination.
+
+    os._exit() in Python is used to exit a process with a specified state
+    without calling cleanup handlers, flushing stdio buffers, etc.
+
+    Note.  This method is typically used in a child process after the os.fork()
+    system call.  The standard way to exit a process is — this is the
+    sys.exit(n) method.
+    """
+    if msg:
+        if msg[:2] != "E:":
+            log(f"E: {msg}")
+        else:
+            log(msg)
+
+        log("#> exiting")
 
     os._exit(0)
 
@@ -229,16 +250,18 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None):
+def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True, is_print=True):
     """Calculate the changed percent."""
     try:
         initial = float(initial)
-        change = float(change)
+        change = format(float(change), ".8f")
     except ValueError:
         return None
 
-    change = format(float(change), ".8f")
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
+    if not is_print:
+        return percent
+
     if abs(percent) == 0:
         change = 0.0
         if not color:
@@ -263,9 +286,15 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
         change = " " + change
 
     if is_arrow:
-        log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
+        if is_sign:
+            log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
+        else:
+            log(f"{abs(change)}({format(float(abs(percent)), '.2f')}%) ", color, end=end)
     else:
-        log(f"({format(float(percent), '.2f')}%) ", color, end=end)
+        if is_sign:
+            log(f"({format(float(percent), '.2f')}%) ", color, end=end)
+        else:
+            log(f"({format(float(abs(percent)), '.2f')}%) ", color, end=end)
 
     return percent
 
@@ -337,7 +366,7 @@ def constantly_print_popen(cmd):
 
 
 def is_process_on(process_name, name="", process_count=0, port=None, is_print=True) -> bool:
-    """Check wheather the process runs on the background.
+    """Check whether the process runs on the background.
 
     __ https://stackoverflow.com/a/6482230/2402577
     """
@@ -392,7 +421,7 @@ def mkdirs(paths) -> None:
         mkdir(path)
 
 
-def kill_process_by_name(process_name: str):
+def kill_process_by_name(process_name: str) -> None:
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
     p2 = Popen(["grep", "-E", process_name], stdin=p1.stdout, stdout=PIPE)
     p1.stdout.close()  # type: ignore

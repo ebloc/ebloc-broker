@@ -390,7 +390,7 @@ def run_driver(given_bn):
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
         raise QuietExit(f"provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
-    blk_read = block_number_saved
+    bn_read = block_number_saved
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     gwei_balance = Ebb.gwei_balance(env.PROVIDER_ID)
     wei_amount = Decimal(gwei_balance) * (Decimal(10) ** 9)
@@ -403,8 +403,8 @@ def run_driver(given_bn):
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
-        if not str(blk_read).isdigit():
-            raise Terminate(f"block_read_from={blk_read}")
+        if not str(bn_read).isdigit():
+            raise Terminate(f"block_read_from={bn_read}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         if cfg.IS_THREADING_ENABLED:
@@ -417,10 +417,10 @@ def run_driver(given_bn):
                 log(f"==> Since Driver started provider_gained_gwei={value}")
 
         current_bn = Ebb.get_block_number()
-        log(f" * {get_date()} waiting new job to come since block_number={blk_read}")
-        log(f"==> current_block={current_bn} | sync_from={blk_read}")
+        log(f" * {get_date()} waiting new job to come since block_number={bn_read}")
+        log(f"==> current_block={current_bn} | sync_from={bn_read}")
         flag = True
-        while current_bn < int(blk_read):
+        while current_bn < int(bn_read):
             current_bn = Ebb.get_block_number()
             if flag:
                 log(f"## Waiting block number to be updated, it remains constant at {current_bn}")
@@ -428,18 +428,18 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        log(f"==> [bold yellow]watching from block_number=[cyan]{blk_read}...")
-        blk_read = str(blk_read)  # reading events' block number has been updated
+        log(f"==> [bold yellow]watching from block_number=[cyan]{bn_read}...")
+        bn_read = str(bn_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         try:
-            driver.logged_jobs_to_process = Ebb.run_log_job(blk_read, env.PROVIDER_ID)
+            driver.logged_jobs_to_process = Ebb.run_log_job(bn_read, env.PROVIDER_ID)
             driver.process_logged_jobs()
             if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
                 # updates the latest read block number
-                blk_read = driver.latest_block_number + 1
-                env.config["block_continue"] = blk_read
+                bn_read = driver.latest_block_number + 1
+                env.config["block_continue"] = bn_read
             if not driver.is_provider_received_job:
-                blk_read = env.config["block_continue"] = current_bn
+                bn_read = env.config["block_continue"] = current_bn
         except Exception as e:
             log()
             log(f"E: {e}")

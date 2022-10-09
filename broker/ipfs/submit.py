@@ -60,7 +60,7 @@ def pre_check(job: Job, requester):
 
         if not os.path.isfile(env.GPG_PASS_FILE):
             log(
-                f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decrypting", is_wrap=True
+                f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption", is_wrap=True
             )
             raise QuietExit
 
@@ -97,16 +97,16 @@ def _ipfs_add(job, target, idx, is_verbose=False):
 
 
 def submit_ipfs(job: Job, is_pass=False, required_confs=1):
-    log(f"==> Attemptting to submit job ({job.source_code_path})")
+    log(f"==> attemptting to submit job ({job.source_code_path})")
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     pre_check(job, requester)
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
     check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
     if main_storage_id == StorageID.IPFS:
-        log("==> Submitting source code through [blue]IPFS[/blue]")
+        log("==> submitting source code through [blue]IPFS[/blue]")
     elif main_storage_id == StorageID.IPFS_GPG:
-        log("==> Submitting source code through [blue]IPFS_GPG[/blue]")
+        log("==> submitting source code through [blue]IPFS_GPG[/blue]")
     else:
         log("E: Please provide IPFS or IPFS_GPG storage type for the source code")
         sys.exit(1)
@@ -190,7 +190,8 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    job.set_config(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml")
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
+    job.set_config(yaml_fn)
     submit_ipfs(job)
 
 

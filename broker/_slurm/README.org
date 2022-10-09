@@ -12,22 +12,22 @@
 ~/ebloc-broker/scripts/install_slurm.sh
 #+end_src
 
+*** Working only --enable-front-end ~slurm-19-05-8-1~
 #+begin_src bash
-# WORKING only --enable-front-end slurm-19-05-8-1=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 NodeName=instance[1-2] NodeHostName=localhost NodeAddr=127.0.0.1 CPUs=1 RealMemory=7954
 PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE:1
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#+end_src
 
-# WORKING for emulate mode on slurm-19-05-8-1=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+*** Working for emulate mode on ~slurm-19-05-8-1~
+#+begin_src bash
 NodeName=instance[1-128] NodeHostName=instance NodeAddr=127.0.0.1 CPUs=1
 PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE:1
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #+end_src
 
 # ./configure --enable-multiple-slurmd  # emulator-mode
 # ./configure --enable-debug --enable-front-end --enable-multiple-slurmd
 
-- Example:
+** Example:
 
 #+begin_src conf
 # COMPUTE NODES

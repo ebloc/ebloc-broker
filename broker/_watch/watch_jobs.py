@@ -7,10 +7,12 @@ from broker import cfg
 from broker._utils import _log
 from broker._utils._log import _console_clear, console_ruler
 from broker._utils.tools import log, print_tb
+from broker.lib import state
 from broker.utils import bytes32_to_ipfs
 
 Ebb = cfg.Ebb
 is_print_only_ipfs_result_hashes = False
+is_compact = True  # to get the workload type
 
 
 def watch(eth_address="", from_block=None):
@@ -40,7 +42,10 @@ def watch(eth_address="", from_block=None):
         argument_filters=_argument_filters,
         toBlock="latest",
     )
+    completed_count = 0
+    job_count = 0
     for idx, job in enumerate(event_filter.get_all_entries()):
+        job_count += 1
         try:
             _args = job["args"]
         except:
@@ -57,8 +62,18 @@ def watch(eth_address="", from_block=None):
             0,
             job["blockNumber"],
             is_print=False,
-            is_log_print=not is_print_only_ipfs_result_hashes,
+            is_log_print=not is_print_only_ipfs_result_hashes and not is_compact,
+            is_fetch_code_hashes=is_compact,
         )
+        if is_compact:
+            log(_job["code_hashes"])
+            state_val = state.inv_code[_job["stateCode"]]
+            if state_val == "COMPLETED":
+                completed_count += 1
+
+            log(f"* {_job['job_key']} {_job['index']} {state_val}")
+
+        # breakpoint()  # DEBUG
         del _job["code_hashes"]
         if _job["result_ipfs_hash"] in (b"", ""):
             del _job["result_ipfs_hash"]
@@ -69,6 +84,8 @@ def watch(eth_address="", from_block=None):
                 # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")
         # else:
         #     log(_job)
+
+    log(f"{completed_count}/{job_count}")
 
 
 def main():

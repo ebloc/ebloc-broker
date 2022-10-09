@@ -2,6 +2,7 @@
 * TASKS
 ** TODO patch eudat and google-drive
 ** TODO verify downloaded data
-** TODO Convert `ipfsID` into `ipfsAddress` in eBlocBrokerInterface.sol
+** TODO convert ~ipfsID~ into ~ipfsAddress~ in the ~eBlocBrokerInterface.sol~
 ** TODO Test updated code in 2 machines with your test cast submitting job.
 ** TODO IPFS inside docker should be swarm connect from outside
+** TODO Do demo video do from https://asciinema.org/a/480875 , you can copy string from the video

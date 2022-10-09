@@ -7,8 +7,8 @@ import time
 from broker.config import IgnoreThreadsFilter, ThreadFilter
 
 # Attach the IgnoreThreadsFilter to the main root log handler.
-# This is responsible for ignoring all log records originating from
-# new threads.
+# This is responsible for ignoring all log records originating
+# from new threads.
 main_handler = logging.FileHandler("/tmp/mainlogfile.log", "a")
 main_handler.addFilter(IgnoreThreadsFilter())
 
@@ -28,7 +28,7 @@ log = logging.getLogger()
 log.info("running example")
 
 
-def hello(name):  # shared module on write time
+def test(name):  # shared module on write time
     log.info(name)
 
 
@@ -44,7 +44,7 @@ def thread_function(name):
     thread_handler.addFilter(ThreadFilter(thread_id=threading.get_ident()))
     log.addHandler(thread_handler)
     time.sleep(0.25)
-    hello(name)
+    test(name)
 
 
 def main():
@@ -56,7 +56,7 @@ def main():
     y = threading.Thread(target=thread_function, args=("thread_2",))
     x.start()
     y.start()
-    hello("main_thread_end")
+    test("main_thread_end")
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ from broker.utils import is_geth_on, run, terminate
 def connect():
     """Connect to web3.
 
-    return: ebloc_broker and web3 objects.
+    return: ebb and web3 objects.
     """
     if config.ebb and cfg.w3:
         return config.ebb, cfg.w3, config._eblocbroker

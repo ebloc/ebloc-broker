@@ -4,10 +4,35 @@
 
 import datetime
 from os import popen
+from typing import Dict, List
 
 from broker import cfg, config
 from broker._utils.tools import log
 from brownie import web3 as w3
+
+func_names = [
+    "registerRequester",
+    "registerProvider",
+    "setJobStateRunning",
+    "refund",
+    "setDataVerified",
+    "setDataVerified",
+    "processPayment",
+    "withdraw",
+    "authenticateOrcID",
+    "depositStorage",
+    "updateProviderInfo",
+    "updataDataPrice",
+    "updateProviderPrices",
+    "registerData",
+    "refundStorageDeposit",
+    "removeRegisteredData",
+]
+
+
+gas_costs = {}  # type: Dict[str, List[int]]
+for func_name in func_names:
+    gas_costs[func_name] = []
 
 
 def new_test():

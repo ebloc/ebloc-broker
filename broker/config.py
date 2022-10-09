@@ -66,6 +66,8 @@ class ENV(ENV_BASE):
 
         #     accounts.load("alpy.json", "alper")
 
+        self.PROGRAM_PATH = Path("/") / "var" / "ebloc-broker"
+        #
         self.GDRIVE = self.cfg["gdrive"]
         self.DATADIR = Path(self.cfg["datadir"])
         self.LOG_PATH = Path(self.cfg["log_path"])
@@ -75,7 +77,6 @@ class ENV(ENV_BASE):
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
         self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")
         self.GANACHE_LOG = self.LOG_PATH.joinpath("ganache.out")
-        self.PROGRAM_PATH = Path("/") / "var" / "ebloc-broker"
         self.OWNCLOUD_PATH = Path("/mnt/oc")
         self.LINK_PATH = self.LOG_PATH.joinpath("links")
         self.JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("test.txt")

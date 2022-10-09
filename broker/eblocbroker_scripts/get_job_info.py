@@ -139,23 +139,28 @@ def get_job_code_hashes(self, provider, job_key, index, received_bn=0):
         raise e
 
 
-def get_job_info_print(self, provider, job_key, index, received_bn):
+def get_job_info_print(self, provider, job_key, index, received_bn, is_print=True):
     result_ipfs_hash = ""
     if self.job_info["result_ipfs_hash"] != empty_bytes32 and self.job_info["result_ipfs_hash"] != "":
         result_ipfs_hash = bytes32_to_ipfs(self.job_info["result_ipfs_hash"])
 
     if isinstance(self.job_info, dict):
-        log(f" * state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})")
-        if result_ipfs_hash:
-            log(f"==> result_ipfs_hash={result_ipfs_hash}")
+        if is_print:
+            log(f" * state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})")
+
+            if result_ipfs_hash:
+                log(f"==> result_ipfs_hash={result_ipfs_hash}")
 
         Ebb.get_job_code_hashes(provider, job_key, index, received_bn)
-        self.analyze_data(job_key, provider)
-    else:
+        if is_print:
+            self.analyze_data(job_key, provider)
+    elif is_print:
         print(self.job_info)
 
 
-def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print=True, is_log_print=False):
+def get_job_info(
+    self, provider, job_key, index, job_id, received_bn=0, is_print=True, is_log_print=False, is_fetch_code_hashes=False
+):
     """Return information of the job."""
     try:
         provider = cfg.w3.toChecksumAddress(provider)
@@ -253,6 +258,8 @@ def get_job_info(self, provider, job_key, index, job_id, received_bn=0, is_print
     if is_log_print:
         self.get_job_info_print(provider, job_key, index, received_bn)
         log(self.job_info)
+    elif is_fetch_code_hashes:
+        self.get_job_info_print(provider, job_key, index, received_bn, is_print=is_print)
 
     if not self.job_info["storage_duration"]:
         self.job_info["storage_duration"] = []
