@@ -46,23 +46,11 @@ interface eBlocBrokerInterface {
 
     // Records the registered providers' registered information under
     // registerProvider() method call.  (fID stands for federationCloudId)
-    event LogProviderInfo(
-        address indexed provider,
-        bytes32 indexed gpgFingerprint,
-        string gmail,
-        string fID,
-        string ipfsID
-    );
+    event LogProviderInfo(address indexed provider, bytes32 indexed gpgFingerprint, string gmail, string fID, string ipfsID);
 
     // Records the registered requesters' registered information under
     // registerRequester() method call.
-    event LogRequester(
-        address indexed requester,
-        bytes32 indexed gpgFingerprint,
-        string gmail,
-        string fID,
-        string ipfsID
-    );
+    event LogRequester(address indexed requester, bytes32 indexed gpgFingerprint, string gmail, string fID, string ipfsID);
 
     // Records the refunded jobs' information under refund() method call
     event LogRefundRequest(address indexed provider, string jobKey, uint32 index, uint32 jobID, uint256 refundedGwei);

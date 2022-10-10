@@ -10,7 +10,7 @@ from broker.config import env
 from broker.utils import eth_address_to_md5
 
 Ebb = cfg.Ebb
-_log.ll.LOG_FILENAME = env.LOG_PATH / "cancelled_jobs_log.out"
+_log.ll.LOG_FILENAME = env.LOG_DIR / "cancelled_jobs_log.out"
 
 
 def cancel_jobs(cancel_block_read_from_local):

@@ -1,7 +1,7 @@
 * ebloc-broker
 
-*eBlocBroker is a smart contract that applies blockchain technology to provide a market for
-computational and data resources to research communities.*
+=eBlocBroker= is a smart contract that applies blockchain technology to provide a market for
+computational and data resources to research communities.
 
 # For more info see: ...
 
@@ -76,7 +76,9 @@ In order to submit your job each user should already registered into eBlocBroker
 # Please update following arguments inside ~register.yaml~.
 After registration is done, each user should authenticate their ORCID iD using the following [[http://eblocbroker.duckdns.org/]].
 
-~$ eblocbroker submit job.yaml~
+#+begin_src bash
+$ eblocbroker submit job.yaml
+#+end_src
 
 **** Example yaml file in order to define a job to submit.
 

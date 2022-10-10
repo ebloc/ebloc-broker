@@ -17,7 +17,7 @@ import psutil
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
-from broker._utils.tools import _remove, exit_after, mkdirs, pid_exists, read_json
+from broker._utils.tools import _remove, exit_after, is_dir, mkdirs, pid_exists, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.errors import QuietExit
@@ -25,7 +25,6 @@ from broker.imports import connect
 from broker.lib import (
     calculate_size,
     eblocbroker_function_call,
-    is_dir,
     remove_files,
     run,
     run_stdout_to_file,
@@ -93,7 +92,7 @@ class Eudat(Common):
 
     def initialize(self):
         with suppress(Exception):
-            eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".eudat_client.txt"), env.OC_CLIENT)
 
         try:
             self.get_shared_tokens()
@@ -122,7 +121,7 @@ class Eudat(Common):
 
 class Gdrive(Common):
     def upload(self, key, is_job_key):
-        """Upload generated result into gdrive.
+        """Upload the generated result into gdrive.
 
         :param key: key of the shared gdrive file
         :returns: True if upload is successful
@@ -175,14 +174,14 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.end_timestamp = ""
         self.modified_date = None
         self.encoded_share_tokens = {}  # type: Dict[str, str]
-        #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
+        #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
-        _log.ll.LOG_FILENAME = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
+        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
-            log("E: Given key and index are equal to each other")
+            log("E: given key and index are equal to each other")
             sys.exit(1)
 
         try:
@@ -354,7 +353,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log(f"==> base_patch={self.patch_dir}")
             log(f"==> source_code_patch={name}")
         else:
-            log(f"==> datafile_patch={name}")
+            log(f"==> data_file_patch={name}")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
@@ -373,14 +372,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     raise e
         except Exception as e:
             print_tb(e)
-            raise Exception("Problem on the git_diff_patch_and_upload() function") from e
+            raise Exception("problem on the git_diff_patch_and_upload() function") from e
 
     def upload_driver(self):
         self.clean_before_upload()
         try:
             storage_class = self.get_cloud_storage_class(0)
             self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
-
         except Exception as e:
             raise e
 

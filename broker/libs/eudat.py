@@ -257,7 +257,7 @@ def _share_folders(provider_info, requester_name, folders_hash):
 
             share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
         except Exception as e:
-            log(f"E: Failed sharing folder with [yellow]{provider_info['f_id']}")
+            log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
             print_tb(e)
             sys.exit(1)
 

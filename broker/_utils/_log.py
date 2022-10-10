@@ -33,6 +33,7 @@ custom_theme = Theme(
         "cy": "cyan",
         "y": "yellow",
         "g": "green",
+        "yob": "yellow on black blink",
     }
 )
 console = Console(
@@ -241,7 +242,6 @@ def log(
     text="",
     color=None,
     fn=None,
-    end="\n",
     is_write=True,
     is_code=False,
     is_wrap=False,
@@ -249,6 +249,7 @@ def log(
     is_output=True,
     max_depth=None,
     back=0,
+    end="\n",
 ):
     """Log output with the own settings.
 

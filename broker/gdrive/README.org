@@ -36,7 +36,7 @@ Copy the ~Client ID~ and ~Secret~ into ~handlers_drive.go~ lines 17 and 18 and c
 
 *Note:* Generated token expires in 7 days.
 
-finally:
+Finally:
 - https://console.cloud.google.com/apis/credentials/consent
   ~PUBLISH APP~
 

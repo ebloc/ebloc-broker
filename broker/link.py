@@ -110,15 +110,14 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
         for folder in folders_to_share:
             if not os.path.isdir(folder):
                 log(f"E: {folder} path does not exist")
-    else:
-        if is_continue:
-            print("")
-            if not is_pass:
-                question_yes_no(
-                    "#> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
-                    "If no, please feel free to update your run.sh file and continue",
-                    is_exit=True,
-                )
+    elif is_continue:
+        print()
+        if not is_pass:
+            question_yes_no(
+                "#> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
+                "If no, please feel free to update your run.sh file and continue",
+                is_exit=True,
+            )
 
 
 def test_with_small_dataset(value):

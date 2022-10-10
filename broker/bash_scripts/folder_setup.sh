@@ -121,11 +121,11 @@ if [[ "$1" != "$VAR" ]]; then
     yes_or_no "Are you are a provider" && provider_setup
 fi
 
-# LOG_PATH
-# ========
+# LOG_DIR
+# =======
 # line_new=$LOG_DIR
 # var=$(echo $line_new | sed 's/\//\\\//g')
-# sed -i.bak "s/^\(LOG_PATH=\).*/\1\"$var\"/" $LOG_DIR/.env
+# sed -i.bak "s/^\(LOG_DIR=\).*/\1\"$var\"/" $LOG_DIR/.env
 # rm -f $LOG_DIR/.env.bak
 
 

@@ -12,13 +12,13 @@
 ~/ebloc-broker/scripts/install_slurm.sh
 #+end_src
 
-*** Working only --enable-front-end ~slurm-19-05-8-1~
+*** working only --enable-front-end ~slurm-19-05-8-1~
 #+begin_src bash
 NodeName=instance[1-2] NodeHostName=localhost NodeAddr=127.0.0.1 CPUs=1 RealMemory=7954
 PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE:1
 #+end_src
 
-*** Working for emulate mode on ~slurm-19-05-8-1~
+*** working for emulate mode on ~slurm-19-05-8-1~
 #+begin_src bash
 NodeName=instance[1-128] NodeHostName=instance NodeAddr=127.0.0.1 CPUs=1
 PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE:1
@@ -128,7 +128,7 @@ https://stackoverflow.com/a/47009930/2402577
 According to the current version of the FAQ (slurm.schedmd.com/faq.html, question Can Slurm emulate
 a larger cluster?), it appears so – damienfrancois
 
-** DOCKER
+** Docker
 
 #+begin_src bash
 docker build -t ebloc-broker_slurm:latest . --progress plain
@@ -149,7 +149,7 @@ docker exec -it ebloc-broker_slurm_1 /bin/bash
 - [[https://github.com/giovtorres/docker-centos7-slurm/blob/main/Dockerfile]]
 - [[https://github.com/edf-hpc/slurm-web/blob/master/docker/container/Dockerfile]]
 
-*** some more
+*** Notes
 
 - [[https://github.com/GRomR1/docker-slurmbase/blob/master/Dockerfile]]
 - [[https://github.com/SciDAS/slurm-in-docker/blob/master/base/Dockerfile]]

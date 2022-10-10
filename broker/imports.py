@@ -14,8 +14,16 @@ from broker.python_scripts import add_bloxberg_into_network_config
 from broker.utils import is_geth_on, run, terminate
 
 
+def read_abi_file():
+    try:
+        abi_file = env.EBB_SCRIPTS / "abi.json"
+        return read_json(abi_file, is_dict=False)
+    except Exception as e:
+        raise Exception(f"unable to read the abi.json file: {abi_file}") from e
+
+
 def connect():
-    """Connect to web3.
+    """Connect to Web3.
 
     return: ebb and web3 objects.
     """
@@ -89,14 +97,6 @@ def connect_to_web3() -> None:
             break
     else:
         terminate(is_traceback=False)
-
-
-def read_abi_file():
-    try:
-        abi_file = env.EBB_SCRIPTS / "abi.json"
-        return read_json(abi_file, is_dict=False)
-    except Exception as e:
-        raise Exception(f"unable to read the abi.json file: {abi_file}") from e
 
 
 def connect_to_eblocbroker() -> None:

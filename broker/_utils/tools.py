@@ -534,6 +534,18 @@ def get_ip():
     return data["ip"]
 
 
+def countdown(seconds: int, is_verbose=False) -> None:
+    if not is_verbose:
+        log(f"## sleep_time={seconds} seconds                                             ")
+
+    while seconds:
+        mins, secs = divmod(seconds, 60)
+        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
+        print(f" * {_date()} | {timer}", end="\r")
+        time.sleep(1)
+        seconds -= 1
+
+
 def squeue() -> None:
     try:
         squeue_output = run(["squeue"])
@@ -579,6 +591,14 @@ def pid_exists(pid):
         return True  # no error, we can send a signal to the process
 
 
+def is_dir(path) -> bool:
+    if not os.path.isdir(path):
+        log(f"warning: {path} folder does not exist")
+        return False
+
+    return True
+
+
 def remove_ansi_escape_sequence(string):
     """Remove the ANSI escape sequences from a string.
 
@@ -586,15 +606,3 @@ def remove_ansi_escape_sequence(string):
     """
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", string)
-
-
-def countdown(seconds: int, is_verbose=False) -> None:
-    if not is_verbose:
-        log(f"## sleep_time={seconds} seconds                                             ")
-
-    while seconds:
-        mins, secs = divmod(seconds, 60)
-        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
-        print(f" * {_date()} | {timer}", end="\r")
-        time.sleep(1)
-        seconds -= 1

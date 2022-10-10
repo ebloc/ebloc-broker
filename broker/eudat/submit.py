@@ -24,7 +24,7 @@ def submit_eudat(job: Job, is_pass=False, required_confs=1):
         print_tb(e)
         raise e
 
-    login(oc_client, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+    login(oc_client, env.LOG_DIR.joinpath(".eudat_client.txt"), env.OC_CLIENT)
     if len(sys.argv) == 3:
         provider = str(sys.argv[1])
         tar_hash = sys.argv[2]

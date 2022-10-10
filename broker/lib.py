@@ -61,7 +61,7 @@ state = State()
 
 
 def enum(*sequential, **named):
-    """Set reverse map for the Enum.
+    """Set reverse map dict for the Enum.
 
     __ https://stackoverflow.com/a/1695250/2402577
     """
@@ -71,7 +71,7 @@ def enum(*sequential, **named):
 
 
 def session_start_msg(slurm_user, bn, pid):
-    """Print message at the beginning of Driver process and connect into web3."""
+    """Print message at the beginning of the driver process and connect into Web3."""
     if not cfg.w3:
         from broker.imports import connect_to_web3
 
@@ -105,7 +105,7 @@ def calculate_size(path, _type="MB") -> float:
 
 
 def subprocess_call(cmd, attempt=1, sleep_time=1):
-    """Run subprocess."""
+    """Run the subprocess."""
     error_msg = ""
     cmd = list(map(str, cmd))  # type of the cmd should be `str`
     for count in range(attempt):
@@ -134,7 +134,7 @@ def subprocess_call(cmd, attempt=1, sleep_time=1):
 
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:
-    """Run command pipe output into give file."""
+    """Run command pipe output into the given file."""
     p, output, error = popen_communicate(cmd, stdout_fn=path, mode=mode)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
@@ -189,16 +189,8 @@ def eblocbroker_function_call(func, max_retries):
     raise Exception("eblocbroker_function_call completed all the attempts  [  ABORT  ]")
 
 
-def is_dir(path) -> bool:
-    if not os.path.isdir(path):
-        log(f"warning: {path} folder does not exist")
-        return False
-
-    return True
-
-
 def run_storage_thread(storage_class):
-    """Run storage driver as thread.
+    """Run the storage driver as thread.
 
     Consider giving the thread a name (add name=...), then you could
     use ThreadFilter(threadname=...) to select on all messages with that name
@@ -228,20 +220,25 @@ def run_storage_process(storage_class):
         sys.exit(1)
 
 
-def pre_check():
-    mkdir(env.LOG_PATH / "private")
-    mkdir(env.LOG_PATH / "links")
-    mkdir(env.LOG_PATH / "transactions")
-    mkdir(env.LOG_PATH / "drivers_output")
-    mkdir(env.LOG_PATH / "end_code_output")
-    if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception(f"slurm_mail_prog.sh scripts is not located in the {env.PROGRAM_PATH}")
-
-
 def run_driver_cancel():
     """Run driver_cancel daemon on the background."""
     if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
+
+
+def pre_check():
+    folders = [
+        env.LOG_DIR / "links",
+        env.LOG_DIR / "private",
+        env.LOG_DIR / "transactions",
+        env.LOG_DIR / "drivers_output",
+        env.LOG_DIR / "end_code_output",
+    ]
+    for folder in folders:
+        mkdir(folder)
+
+    if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
+        raise Exception(f"slurm_mail_prog.sh scripts is not located in {env.PROGRAM_PATH}")
 
 
 # from broker.utils StorageID

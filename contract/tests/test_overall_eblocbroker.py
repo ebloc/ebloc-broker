@@ -583,6 +583,19 @@ def test_update_provider():
     assert block_read_from == COMMITMENT_BLOCK_NUM + provider_registered_bn
 
 
+def test_receive_registered_data_deposit():
+    job = Job()
+    provider = accounts[0]
+    requester = accounts[1]
+    requester_1 = accounts[2]
+    register_provider()
+    register_requester(requester)
+
+    # job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+    # job.code_hashes.append(ipfs_to_bytes32(job_key))
+    # job.code_hashes.append(ipfs_to_bytes32("QmVqtWxuBdZQdLnLce6XCBMuqoazAcbmuxoJHQbfbuqDu2"))
+
+
 def test_multiple_data():
     job = Job()
     provider = accounts[0]

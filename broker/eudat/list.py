@@ -34,7 +34,7 @@ def share_list(oc):
 
 def main():
     oc = owncloud.Client("https://b2drop.eudat.eu/")
-    with open(env.LOG_PATH.joinpath(".eudat_client.txt"), "r") as content_file:
+    with open(env.LOG_DIR.joinpath(".eudat_client.txt"), "r") as content_file:
         paswd = content_file.read().strip()
 
     try:

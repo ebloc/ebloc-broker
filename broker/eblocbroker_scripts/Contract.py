@@ -105,7 +105,7 @@ class Contract(Base):
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
-        cfg = Yaml(env.LOG_PATH / ".bloxberg_account.yaml")
+        cfg = Yaml(env.LOG_DIR / ".bloxberg_account.yaml")
         if not fn:
             fn = cfg["config"]["name"]
 

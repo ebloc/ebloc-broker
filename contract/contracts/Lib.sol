@@ -278,8 +278,7 @@ library Lib {
                 if (_interval.endTimestamp == currentNodeEndpoint) {
                     temp = currentNodeCore + int32(_interval.core);
                     carriedSum += currentNodeCore;
-                    if (carriedSum > _interval.availableCore || temp > _interval.availableCore)
-                        return (0, _addr, 0, 0, 0, 0);
+                    if (carriedSum > _interval.availableCore || temp > _interval.availableCore) return (0, _addr, 0, 0, 0, 0);
 
                     if (temp != 0) {
                         flag = 2; // helps to prevent pushing since it is already added
@@ -362,7 +361,15 @@ library Lib {
     }
 
     /* used for test getReceiptListSize */
-    function printIndex(LL storage self, uint32 index) external view returns (uint32, uint256 idx, int32) {
+    function printIndex(LL storage self, uint32 index)
+        external
+        view
+        returns (
+            uint32,
+            uint256 idx,
+            int32
+        )
+    {
         idx = self.tail;
         for (uint256 i = 0; i < index; i++) {
             idx = self.items[idx].next;

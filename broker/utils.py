@@ -400,11 +400,6 @@ def is_driver_on(process_count=1, is_print=True):
         raise QuietExit
 
 
-def is_ganache_on(port) -> bool:
-    """Check whether Ganache CLI runs on the background."""
-    return is_process_on("node.*[g]anache-cli", "Ganache CLI", process_count=0, port=port)
-
-
 def is_geth_on():
     """Check whether geth runs on the background."""
     process_name = f"geth@{env.RPC_PORT}"
@@ -412,6 +407,11 @@ def is_geth_on():
         log(f"E: geth is not running on the background, {process_name}. Please run:")
         log("sudo ~/eBlocPOA/server.sh", "bold yellow")
         raise QuietExit
+
+
+def is_ganache_on(port) -> bool:
+    """Check whether ganache-cli runs on the background."""
+    return is_process_on("node.*[g]anache-cli", "ganache-cli", process_count=0, port=port)
 
 
 def start_ipfs_daemon(_is_print=False) -> bool:

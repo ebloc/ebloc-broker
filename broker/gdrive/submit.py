@@ -32,7 +32,7 @@ def _submit(job, provider, key, requester, required_confs):
             processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             log(vars(processed_logs[0].args))
             try:
-                log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
+                log(f"job_index={processed_logs[0].args['index']}{ok()}", "bold")
             except IndexError:
                 log(f"E: Tx({tx_hash}) is reverted")
     except Exception as e:

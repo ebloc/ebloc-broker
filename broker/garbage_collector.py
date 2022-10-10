@@ -8,18 +8,18 @@ from broker._utils.tools import read_json
 from broker.config import env
 
 
-def add_item(data, key, item):
-    data[key] = item
-
-
 def remove_item(data, element):
     for item in list(data):
         if element in item:
             del data[element]
 
 
+def add_item(data, key, item):
+    data[key] = item
+
+
 def main():
-    fn = env.LOG_PATH + "/" + "caching_record.json"
+    fn = env.LOG_DIR + "/" + "caching_record.json"
     data = {}
     if os.path.isfile(fn):
         with suppress(Exception):

@@ -70,20 +70,20 @@ class ENV(ENV_BASE):
         #
         self.GDRIVE = self.cfg["gdrive"]
         self.DATADIR = Path(self.cfg["datadir"])
-        self.LOG_PATH = Path(self.cfg["log_path"])
-        self.config = Yaml(self.LOG_PATH.joinpath("config.yaml"))
+        self.LOG_DIR = Path(self.cfg["log_path"])
+        self.config = Yaml(self.LOG_DIR.joinpath("config.yaml"))
         self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
-        self.IPFS_LOG = self.LOG_PATH.joinpath("ipfs.out")
-        self.GANACHE_LOG = self.LOG_PATH.joinpath("ganache.out")
+        self.IPFS_LOG = self.LOG_DIR.joinpath("ipfs.out")
+        self.GANACHE_LOG = self.LOG_DIR.joinpath("ganache.out")
         self.OWNCLOUD_PATH = Path("/mnt/oc")
-        self.LINK_PATH = self.LOG_PATH.joinpath("links")
-        self.JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("test.txt")
-        self.GPG_PASS_FILE = self.LOG_PATH.joinpath(".gpg_pass.txt")
-        self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_jobs.txt")
-        self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_PATH.joinpath("cancelled_block_read_from.txt")
-        self.OC_CLIENT = self.LOG_PATH.joinpath(".oc_client.pckl")
+        self.LINK_PATH = self.LOG_DIR.joinpath("links")
+        self.JOBS_READ_FROM_FILE = self.LOG_DIR.joinpath("test.txt")
+        self.GPG_PASS_FILE = self.LOG_DIR.joinpath(".gpg_pass.txt")
+        self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_DIR.joinpath("cancelled_jobs.txt")
+        self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_DIR.joinpath("cancelled_block_read_from.txt")
+        self.OC_CLIENT = self.LOG_DIR.joinpath(".oc_client.pckl")
         self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"].lower())
         self.OC_USER = self.cfg["oc_username"].replace("@b2drop.eudat.eu", "")
         if "rpc_port" in self.cfg:
@@ -91,9 +91,9 @@ class ENV(ENV_BASE):
         else:
             self.RPC_PORT = 8545
 
-        _log.DRIVER_LOG = self.LOG_PATH.joinpath("provider.log")
-        mkdir(self.LOG_PATH / "transactions" / self.PROVIDER_ID.lower())
-        # self.BLOCK_READ_FROM_FILE = f"{self.LOG_PATH}/block_continue.txt"
+        _log.DRIVER_LOG = self.LOG_DIR.joinpath("provider.log")
+        mkdir(self.LOG_DIR / "transactions" / self.PROVIDER_ID.lower())
+        # self.BLOCK_READ_FROM_FILE = f"{self.LOG_DIR}/block_continue.txt"
         mkdir("/tmp/run")
         self.DRIVER_LOCKFILE = "/tmp/run/driver_popen.pid"
         self.DRIVER_DAEMON_LOCK = "/tmp/run/driverdaemon.pid"

@@ -74,7 +74,7 @@ class Storage(BaseClass):
         self.private_dir = self.requester_home / "cache"
         self.public_dir = self.PROGRAM_PATH / "cache"
         self.patch_dir = self.results_folder_prev / "patch"
-        self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
+        self.drivers_log_path = f"{env.LOG_DIR}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_timestamp = None
         self.data_transfer_in_to_download: int = 0
         _log.thread_log_files[self.thread_name] = self.drivers_log_path

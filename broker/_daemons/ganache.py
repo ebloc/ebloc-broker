@@ -16,7 +16,7 @@ def run(port=8547, hardfork_name="istanbul"):
 
     https://stackoverflow.com/a/8375012/2402577
     """
-    print(f"## Running Ganache CLI on port={port}")
+    print(f"## Launching ganache-cli on port={port}")
     with daemon.DaemonContext():
         cmd = [
             "ganache-cli",

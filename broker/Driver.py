@@ -99,9 +99,9 @@ def _tools(block_continue):  # noqa
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_EUDAT_USE:
             if not env.OC_USER:
-                raise Terminate(f"OC_USER is not set in {env.LOG_PATH.joinpath('.env')}")
+                raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('.env')}")
 
-            eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".eudat_client.txt"), env.OC_CLIENT)
 
         gmail = provider_info_contract["gmail"]
         log(f"==> provider_gmail=[m]{gmail}")
@@ -273,7 +273,7 @@ class Driver:
         elif main_cloud_storage_id == StorageID.EUDAT:
             if not config.oc:
                 try:
-                    eudat.login(env.OC_USER, f"{env.LOG_PATH}/.eudat_client.txt", env.OC_CLIENT)
+                    eudat.login(env.OC_USER, f"{env.LOG_DIR}/.eudat_client.txt", env.OC_CLIENT)
                 except Exception as e:
                     print_tb(e)
                     sys.exit(1)
@@ -325,13 +325,13 @@ def run_driver(given_bn):
         raise Terminate from e
 
     if not env.PROVIDER_ID:
-        raise Terminate(f"PROVIDER_ID is None in {env.LOG_PATH}/.env")
+        raise Terminate(f"PROVIDER_ID is None in {env.LOG_DIR}/.env")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
         raise Terminate(f"Please run: {env.BASH_SCRIPTS_PATH}/folder_setup.sh")
 
     if not env.SLURMUSER:
-        raise Terminate(f"SLURMUSER is not set in {env.LOG_PATH}/.env")
+        raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/.env")
 
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
