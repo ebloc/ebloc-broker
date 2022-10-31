@@ -4,7 +4,8 @@
 #+begin_src bash
 # key=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
 key=$(gpg --list-secret-keys --keyid-format LONG <email>)
-echo $key && gpg --list-keys $key
+echo $key
+gpg --list-keys $key
 gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key
 #+end_src
 

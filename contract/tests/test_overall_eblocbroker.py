@@ -41,6 +41,14 @@ chain = None
 ebb = None
 
 
+# @pytest.fixture(scope="session", autouse=True)
+# def cleanup():
+#     """Cleanup a testing directory once we are finished."""
+#     for k, v in gas_costs.items():
+#         if v:
+#             print(f"{k} => {v}")
+
+
 def append_gas_cost(func_n, tx):
     gas_costs[func_n].append(tx.__dict__["gas_used"])
 
@@ -51,15 +59,17 @@ def to_gwei(value):
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb  # noqa
+    global Ebb  # type: ignore
     global chain  # noqa
     global ebb  # noqa
 
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
+    #
     config.ebb = _Ebb
     Contract.eblocbroker.eBlocBroker = _Ebb
     ebb = _Ebb
+    #
     Ebb.w3 = web3
     if not config.chain:
         config.chain = Chain()
@@ -173,14 +183,13 @@ def test_register():
 
 
 def test_stored_data_usage():
-    job = Job()
     provider = accounts[0]
     requester = accounts[1]
     requester_1 = accounts[2]
     register_provider(100)
     register_requester(requester)
     register_requester(requester_1)
-    job_key = "1v12W1CJwSKE-SPFiq86pGpF74WPNRBD2"
+    job = Job()
     job.code_hashes.append(b"050e6cc8dd7e889bf7874689f1e1ead6")
     job.code_hashes.append(b"b6aaf03752dc68d625fc57b451faa2bf")
     job.data_transfer_ins = [1, 1]
@@ -190,12 +199,12 @@ def test_stored_data_usage():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [1]
     job.run_time = [5]
-    job.provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PRIVATE.value]
     args = [
         provider,
-        job.provider_price_block_number,
+        job.provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -207,7 +216,7 @@ def test_stored_data_usage():
     # first time job is submitted with the data files
     # https://stackoverflow.com/a/12468284/2402577
     tx = ebb.submitJob(
-        job_key,
+        job.code_hashes[0],
         job.data_transfer_ins,
         args,
         job.storage_hours,
@@ -292,10 +301,10 @@ def test_data_info():
     job.storage_hours = [0, 1]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -356,10 +365,10 @@ def test_computational_refund():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -411,7 +420,7 @@ def test_storage_refund():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
     job.run_time = [10]
-    job.provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     job.data_prices_set_block_numbers = [0, 0]  # provider's registered data won't be used
@@ -419,7 +428,7 @@ def test_storage_refund():
     job_price += 1  # for test additional 1 Gwei is paid
     args = [
         provider,
-        job.provider_price_block_number,
+        job.provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -583,19 +592,6 @@ def test_update_provider():
     assert block_read_from == COMMITMENT_BLOCK_NUM + provider_registered_bn
 
 
-def test_receive_registered_data_deposit():
-    job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-    requester_1 = accounts[2]
-    register_provider()
-    register_requester(requester)
-
-    # job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
-    # job.code_hashes.append(ipfs_to_bytes32(job_key))
-    # job.code_hashes.append(ipfs_to_bytes32("QmVqtWxuBdZQdLnLce6XCBMuqoazAcbmuxoJHQbfbuqDu2"))
-
-
 def test_multiple_data():
     job = Job()
     provider = accounts[0]
@@ -615,12 +611,12 @@ def test_multiple_data():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
     job.run_time = [10]
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -691,15 +687,15 @@ def test_multiple_data():
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_ts, {"from": accounts[0]})
     append_gas_cost("setJobStateRunning", tx)
     mine(60 * elapsed_time / cfg.BLOCK_DURATION + 1)
-    ended_timestamp = start_ts + 60 * elapsed_time
+    end_ts = start_ts + 60 * elapsed_time
     block_timestamp = get_block_timestamp()
     assert (
-        ended_timestamp <= block_timestamp
-    ), f"block timestamp is ahead of timestamp of when the job ended, difference={block_timestamp - ended_timestamp}"
+        end_ts <= block_timestamp
+    ), f"block timestamp is ahead of timestamp of when the job ended, difference={block_timestamp - end_ts}"
     args = [
         index,
         job_id,
-        ended_timestamp,
+        end_ts,
         sum(job.data_transfer_ins),
         job.data_transfer_out,
         elapsed_time,
@@ -711,7 +707,7 @@ def test_multiple_data():
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
-    log(f"received_sum={received_sum} refunded_sum={refunded_sum}", "bold")
+    log(f"received={received_sum} refunded={refunded_sum}", "bold")
     assert received_sum == 320 and refunded_sum == 0
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
@@ -726,11 +722,11 @@ def test_multiple_data():
     tx = ebb.setJobStateRunning(job_key, index, job_id, start_ts, {"from": accounts[0]})
     append_gas_cost("setJobStateRunning", tx)
     mine(60 * elapsed_time / cfg.BLOCK_DURATION)
-    ended_timestamp = start_ts + 60 * elapsed_time
+    end_ts = start_ts + 60 * elapsed_time
     args = [
         index,
         job_id,
-        ended_timestamp,
+        end_ts,
         data_transfer[0],
         data_transfer[1],
         elapsed_time,
@@ -744,7 +740,7 @@ def test_multiple_data():
     # log(tx.events['LogProcessPayment'])
     received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
-    log(f"received_sum={received_sum} refunded_sum={refunded_sum}", "bold")
+    log(f"#> received={received_sum} refunded={refunded_sum}")
     assert received_sum == 120 and refunded_sum == 0
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
@@ -768,11 +764,9 @@ def test_simple_submit():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, cost = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-
     args = [
         provider,
-        provider_price_block_number,
+        ebb.getProviderSetBlockNumbers(accounts[0])[-1],
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -789,7 +783,7 @@ def test_simple_submit():
         job.code_hashes,
         {"from": requester, "value": to_gwei(job_price)},
     )
-    log(f"submitJob_gas_used={tx.__dict__['gas_used']}")
+    log(f"submit_job_gas_used={tx.__dict__['gas_used']}")
     index = 0
     job_id = 0
     start_ts = 1579524978
@@ -939,11 +933,11 @@ def test_submit_job():
             log(f"contract_balance={ebb.getContractBalance()}", "bold")
             job_id = 0
             elapsed_time = int(arguments[1]) - int(arguments[0])
-            ended_timestamp = int(arguments[1])
+            end_ts = int(arguments[1])
             args = [
                 index,
                 job_id,
-                ended_timestamp,
+                end_ts,
                 data_transfer_in_sum,
                 job.data_transfer_out,
                 elapsed_time,
@@ -988,7 +982,6 @@ def test_submit_n_data():
     price_core_min = 100
     register_provider(price_core_min)
     register_requester(requester)
-
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
     job.key = job.code_hashes[0]
     job.cores = [2]
@@ -1000,10 +993,10 @@ def test_submit_n_data():
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -1033,10 +1026,10 @@ def test_submit_n_data():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -1070,10 +1063,10 @@ def test_submit_n_data():
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -1113,10 +1106,10 @@ def test_submit_n_data():
     job.storage_hours = [0, 0, 0, 1]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -1124,7 +1117,6 @@ def test_submit_n_data():
         job.run_time,
         job.data_transfer_out,
     ]
-
     tx = ebb.submitJob(
         job.key,
         job.data_transfer_ins,
@@ -1134,17 +1126,74 @@ def test_submit_n_data():
         {"from": requester, "value": to_gwei(job_price)},
     )
     gas_costs.append(tx.__dict__["gas_used"])
-
     print(gas_costs)
-    print(gas_costs[1] - gas_costs[0])
-    print(gas_costs[2] - gas_costs[1])
-    print(gas_costs[3] - gas_costs[2])
+    for idx in range(0, 3):
+        print(gas_costs[idx + 1] - gas_costs[idx])
 
 
-@pytest.fixture(scope="session", autouse=True)
-def cleanup(request):
-    """Cleanup a testing directory once we are finished."""
-    # for k, v in gas_costs.items():
-    #     if v:
-    #         print(f"{k} => {v}")
-    pass
+def test_receive_registered_data_deposit():
+    provider = accounts[0]
+    requester = accounts[1]
+    register_provider()
+    register_requester(requester)
+
+    data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
+    ebb.registerData(data_hash, 100, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    data_prices = ebb.getRegisteredDataPrice(provider, data_hash, 0)
+    assert data_prices[0] == 100
+    mine(1)
+    job = Job()
+    # job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+    # job.code_hashes.append(ipfs_to_bytes32(job_key))
+    # job.code_hashes.append(ipfs_to_bytes32("QmVqtWxuBdZQdLnLce6XCBMuqoazAcbmuxoJHQbfbuqDu2"))
+
+    job.code_hashes = [b"9b3e9babb6539c1aceea8d606fc55403", data_hash]
+    job.key = job.code_hashes[0]
+    job.cores = [2]
+    job.run_time = [1]
+    job.data_transfer_ins = [1, 1]
+    job.data_transfer_out = 1
+    job.storage_ids = [StorageID.EUDAT.value, StorageID.NONE.value]
+    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.storage_hours = [0, 0]
+    job.data_prices_set_block_numbers = [0, 0]
+    job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    args = [
+        provider,
+        job.provider_price_bn,
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+    ]
+    job_price, *_ = job.cost(provider, requester)
+    print(job_price)
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester, "value": to_gwei(job_price)},
+    )
+    #
+    start_ts = get_block_timestamp()
+    index = 0
+    tx = ebb.setJobStateRunning(job.key, index, job._id, start_ts, {"from": provider})
+    rpc.sleep(60)
+    mine(10)
+    elapsed_time = job.run_time[0]
+    end_ts = start_ts + 60 * elapsed_time
+
+    data_transfer_in = 0
+    data_transfer_out = 1
+    args = [index, job._id, end_ts, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1], True]
+    tx = ebb.processPayment(job.key, args, "", {"from": provider})
+    received = tx.events["LogProcessPayment"]["receivedGwei"]
+    refunded = tx.events["LogProcessPayment"]["refundedGwei"]
+    log(f"received={received} refunded={refunded}", "bold")
+
+    # gas_costs.append(tx.__dict__["gas_used"])
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -132,10 +132,10 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, _cost = job.cost(provider, requester)
-    provider_price_block_number = ebb.getProviderSetBlockNumbers(provider)[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
-        provider_price_block_number,
+        provider_price_bn,
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,

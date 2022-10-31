@@ -252,11 +252,18 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
 
 def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True, is_print=True):
     """Calculate the changed percent."""
+    if change == 0:
+        log("warning: percent_change() <change> is given as 0")
+        return 0
+
+    if initial == 0:
+        raise Exception("warning: <initial> is given as 0")
+
     try:
         initial = float(initial)
         change = format(float(change), ".8f")
-    except ValueError:
-        return None
+    except ValueError as e:
+        raise e
 
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
     if not is_print:

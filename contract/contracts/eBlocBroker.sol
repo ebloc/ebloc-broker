@@ -57,9 +57,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      */
     function withdraw() public returns (bool) {
         uint256 amount = balances[msg.sender].mul(1 gwei);
-        // Set zero the balance before sending to prevent reentrancy attacks
+        // set zero the balance before sending to prevent reentrancy attacks
         delete balances[msg.sender]; // gas refund is made
-        // Forwards all available gas
+        // forwards all available gas
         (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed"); // Return value is checked
         return true;
@@ -187,9 +187,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                 require(amountToGain.add(amountToRefund) <= jobInfo.cacheCost);
                 delete jobInfo.cacheCost; // Prevents additional cacheCost to be requested, can request cache cost only one time
             }
+            // Checking data transferring cost
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {
-                // Checking data transferring cost
-                amountToRefund = amountToRefund.add( // dataTransferRefund
+                //: data transfer refund
+                amountToRefund = amountToRefund.add(
                     info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
                 );
                 // Prevents additional cacheCost to be requested
@@ -232,7 +233,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             job.stateCode = Lib.JobStateCodes.REFUNDED;
             amountToRefund = jobInfo.received;
             jobInfo.received = 0;
-            // Pay back newOwned(jobInfo.received) back to the requester, which is full refund
+            // pay back newOwned(jobInfo.received) back to the requester, which is full refund
             balances[jobInfo.jobOwner] += amountToRefund;
             _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, amountToRefund);
             return;
@@ -249,7 +250,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (amountToRefund > 0) {
             balances[jobInfo.jobOwner] += amountToRefund;
         }
-        // Gained amount is transferred to the provider
+        // gained amount is transferred to the provider
         balances[msg.sender] += amountToGain;
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, amountToGain, amountToRefund);
         return;
@@ -834,7 +835,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
                             // temp used for storageCostTemp variable
                             temp = info.priceStorage.mul(dataTransferIn[i].mul(storageDuration[i]));
                             storageInfo.received = uint248(temp);
-                            storageCost = storageCost.add(temp); //storageCost
+                            storageCost = storageCost.add(temp);
                             if (args.cacheType[i] == uint8(Lib.CacheType.PRIVATE)) {
                                 jobSt.isPrivate = true; // Set by the data owner
                             }
@@ -941,8 +942,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     }
 
     /* Returns a list of registered/updated provider's registered data prices */
-    function getRegisteredDataBlockNumbers(address provider, bytes32 sourceCodeHash) external view returns (uint32[] memory) {
-        return providers[provider].registeredData[sourceCodeHash].committedBlock;
+    function getRegisteredDataBlockNumbers(address provider, bytes32 codeHash) external view returns (uint32[] memory) {
+        return providers[provider].registeredData[codeHash].committedBlock;
     }
 
     /**

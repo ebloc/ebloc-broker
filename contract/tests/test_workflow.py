@@ -122,41 +122,41 @@ def test_workflow():
     ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
     append_gas_cost("removeRegisteredData", tx)
     #
-    code_hash1 = "0x68b8d8218e730fc2957bcb12119cb204"
-    ebb.registerData(code_hash1, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
+    ebb.registerData(data_hash, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     append_gas_cost("registerData", tx)
     mine(6)
     with brownie.reverts():
-        ebb.registerData(code_hash1, 21, 1000, {"from": provider})
+        ebb.registerData(data_hash, 21, 1000, {"from": provider})
 
-    tx = ebb.updataDataPrice(code_hash1, 250, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    tx = ebb.updataDataPrice(data_hash, 250, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     append_gas_cost("updataDataPrice", tx)
-    tx = ebb.updataDataPrice(code_hash1, 251, cfg.ONE_HOUR_BLOCK_DURATION + 1, {"from": provider})
+    tx = ebb.updataDataPrice(data_hash, 251, cfg.ONE_HOUR_BLOCK_DURATION + 1, {"from": provider})
     append_gas_cost("updataDataPrice", tx)
-    data_block_numbers = ebb.getRegisteredDataBlockNumbers(provider, code_hash1)
+    data_block_numbers = ebb.getRegisteredDataBlockNumbers(provider, data_hash)
     log(f"get_registered_data_block_numbers={data_block_numbers[1]}", "bold")
     get_block_number()
-    data_prices = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
+    data_prices = ebb.getRegisteredDataPrice(provider, data_hash, 0)
     assert data_prices[0] == 20
-    output = ebb.getRegisteredDataPrice(provider, code_hash1, data_block_numbers[-1])
+    output = ebb.getRegisteredDataPrice(provider, data_hash, data_block_numbers[-1])
     assert output[0] == 251
     mine(cfg.ONE_HOUR_BLOCK_DURATION - 10)
-    output = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
+    output = ebb.getRegisteredDataPrice(provider, data_hash, 0)
     log(f"register_data_price={output}", "bold")
     assert output[0] == 20
     mine(1)
-    output = ebb.getRegisteredDataPrice(provider, code_hash1, 0)
+    output = ebb.getRegisteredDataPrice(provider, data_hash, 0)
     log(f"register_data_price={output}", "bold")
     assert output[0] == 251
 
-    job.code_hashes = [code_hash, code_hash1]  # Hashed of the data file in array
+    job.code_hashes = [code_hash, data_hash]  # Hashed of the data file in array
     job.storage_hours = [0, 0]
     job.data_transfer_ins = [100, 0]
     job.data_transfer_out = 100
 
     # job.data_prices_set_block_numbers = [0, 253]  # TODO: check this ex 253 exists or not
     job.data_prices_set_block_numbers = [0, data_block_numbers[1]]  # TODO: check this ex 253 exists or not
-    check_price_keys(job.data_prices_set_block_numbers, provider, code_hash1)
+    check_price_keys(job.data_prices_set_block_numbers, provider, data_hash)
     job.cores = [2, 4, 2]
     job.run_time = [10, 15, 20]
     job.storage_ids = [StorageID.IPFS.value, StorageID.NONE.value]

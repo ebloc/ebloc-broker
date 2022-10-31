@@ -78,8 +78,10 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     for cache_type in job.cache_types:
         if cache_type > 1:
-            # cache_type should be {0: private, 1: public}
-            raise Exception(f"cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
+            raise Exception(
+                f"cache_type ({cache_type}) provided greater than 1,"
+                "where it should be `0: PUBLIC` or `1: PRIVATE`. Please provide smaller value"
+            )
 
     if is_use_ipfs:
         if not is_ipfs_on():
@@ -100,7 +102,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 def submit_job(self, provider, key, job, requester=None, required_confs=1):
     """Submit job.
 
-    How to get exception message in Python properly:
+    - How to get exception message in Python properly:
     __ https://stackoverflow.com/a/45532289/2402577
     __ https://stackoverflow.com/a/24065533/2402577
     """
@@ -119,10 +121,9 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
         raise e
 
     self.check_before_submit(provider, _from, provider_info, key, job)
-    provider_price_block_number = self._get_provider_set_block_numbers(provider)
     args = [
         provider,
-        provider_price_block_number,
+        self._get_provider_set_block_numbers(provider),
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
