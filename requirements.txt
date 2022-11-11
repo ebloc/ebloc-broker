@@ -9,7 +9,7 @@ acquisition==4.6
     # via
     #   accesscontrol
 aiodns==2.0.0
-aiohttp==3.8.1
+aiohttp==3.8.3
     # via
     #   eth-brownie
     #   web3
@@ -81,7 +81,7 @@ bitarray==2.6.0
     # via
     #   eth-account
     #   eth-brownie
-black==22.6.0
+black==22.10.0
     # via
     #   eth-brownie
 bleach==4.1.0
@@ -100,7 +100,7 @@ cached-property==1.5.2
     # via
     #   aspy-refactor-imports
     #   vulcano
-certifi==2022.6.15
+certifi==2022.9.24
     # via
     #   eth-brownie
     #   pipenv
@@ -121,7 +121,7 @@ chameleon==3.8.1
 chardet==4.0.0
     # via
     #   python-debian
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via
     #   aiohttp
     #   eth-brownie
@@ -225,7 +225,7 @@ eth-account==0.5.9
     # via
     #   eth-brownie
     #   web3
-eth-brownie==1.19.1
+eth-brownie==1.19.2
 eth-event==1.2.3
     # via
     #   eth-brownie
@@ -285,12 +285,12 @@ filelock==3.6.0
     #   gdown
     #   tox
     #   virtualenv
-flake8==4.0.1
+flake8==6.0.0
     # via
     #   flake8-mypy
     #   flake8-noqa
 flake8-mypy==17.8.0
-flake8-noqa==1.2.1
+flake8-noqa==1.3.0
 flask==2.1.1
     # via
     #   grip
@@ -314,7 +314,7 @@ gitpython==3.1.0
 grip==4.5.2
 gshell==5.5.2
 gunicorn==20.0.4
-hexbytes==0.2.2
+hexbytes==0.2.3
     # via
     #   eip712
     #   eth-account
@@ -460,7 +460,7 @@ matplotlib==3.5.0
 matplotlib-inline==0.1.3
     # via
     #   ipython
-mccabe==0.6.1
+mccabe==0.7.0
     # via
     #   flake8
     #   pylint
@@ -648,7 +648,7 @@ pycairo==1.21.0
 pycares==4.0.0
     # via
     #   aiodns
-pycodestyle==2.8.0
+pycodestyle==2.10.0
     # via
     #   autopep8
     #   flake8
@@ -663,7 +663,7 @@ pycryptodome==3.15.0
     #   eth-keyfile
     #   vyper
 pydocstyle==6.1.1
-pyflakes==2.4.0
+pyflakes==3.0.1
     # via
     #   flake8
 pygments==2.12.0
@@ -759,7 +759,7 @@ python-language-server==0.36.2
 python-lsp-jsonrpc==1.0.0
     # via
     #   python-lsp-server
-python-lsp-server==1.5.0
+python-lsp-server==1.6.0
 python-slugify==1.2.6
 pythx==1.6.1
     # via
@@ -1054,7 +1054,7 @@ wcwidth==0.2.5
     # via
     #   eth-brownie
     #   prompt-toolkit
-web3==5.30.0
+web3==5.31.1
     # via
     #   eth-brownie
 webdriver-manager==3.4.2

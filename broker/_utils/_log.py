@@ -71,10 +71,11 @@ class Log:
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
         self.console: Dict[str, Console] = {}
+        self.inner_bullet_three = ["==>", "#> ", "## ", " * ", "###", "** ", "***"]
 
     def print_color(self, text: str, color=None, is_bold=True, end="\n") -> None:
         """Print string in color format."""
-        if text[0:3] in ["==>", "#> ", "## "]:
+        if text[0:3] in self.inner_bullet_three:
             if color and text == "==> ":
                 console.print(f"[bold][{color}]{text[0:3]}[{color}][/bold]", end="")
             else:
@@ -102,7 +103,7 @@ class Log:
 
         if text.lower() in ["[ ok ]", "[  ok  ]"]:
             text = "[  [bold green]OK[/bold green]  ]"
-        elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** ", "***"]:
+        elif text[:3] in self.inner_bullet_three:
             _len = 3
             is_bullet = True
             if not color:
@@ -253,7 +254,8 @@ def log(
 ):
     """Log output with the own settings.
 
-    * colors:
+    * Emojis: python -m rich.emoji | less
+    * Colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
 
     :param end: (str, optional) Character to write at end of output. Defaults to "\\n".

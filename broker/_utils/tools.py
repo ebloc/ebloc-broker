@@ -78,7 +78,7 @@ def get_dt_time(zone="Europe/Istanbul"):
 
 def timestamp_to_local(posix_time: int, zone="Europe/Istanbul"):
     """Return date in %Y-%m-%d %H:%M:%S format."""
-    ts = posix_time / 1000.0
+    ts = posix_time / 1000
     tz = timezone(zone)
     return datetime.fromtimestamp(ts, tz).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -91,7 +91,7 @@ def utc_to_local(utc_dt, zone="Europe/Istanbul"):
 
 
 def PrintException() -> str:
-    exc_type, exc_obj, tb = sys.exc_info()  # noqa
+    _, _, tb = sys.exc_info()  # returns: exc_type, exc_obj, tb
     f = tb.tb_frame
     lineno = tb.tb_lineno
     fn = f.f_code.co_filename
@@ -276,9 +276,8 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
     elif percent > 0:
         if not color:
             color = "green"
-    else:
-        if not color:
-            color = "red"
+    elif not color:
+        color = "red"
 
     if abs(float(change)) < 0.1:
         change = format(float(change), ".8f")
@@ -325,23 +324,23 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
 
 
 def pre_cmd_set(cmd):
-    if not isinstance(cmd, str):
+    if isinstance(cmd, str):
+        return [cmd]
+    else:
         if isinstance(cmd, PosixPath):
             return str(cmd)
         else:
             return list(map(str, cmd))  # all items should be string
-    else:
-        return [cmd]
 
 
 def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
     cmd = pre_cmd_set(cmd)
     try:
         if env is None:
-            if not suppress_stderr:
-                return check_output(cmd).decode("utf-8").strip()
-            else:
+            if suppress_stderr:
                 return check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
+            else:
+                return check_output(cmd).decode("utf-8").strip()
         else:
             return check_output(cmd, env=env).decode("utf-8").strip()
     except CalledProcessError as e:
@@ -581,7 +580,7 @@ def compare_files(fn1, fn2) -> bool:
 
 
 def touch(fn) -> None:
-    """Create empthy file."""
+    """Create empthy file, ex: touch fn."""
     open(fn, "a").close()
 
 

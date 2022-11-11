@@ -162,7 +162,6 @@ def register_requester(account):
     assert ebb.doesRequesterExist(account), True
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogRequester"]["gpgFingerprint"])
     assert gpg_fingerprint == GPG_FINGERPRINT
-
     orc_id = "0000-0001-7642-0552"
     orc_id_as_bytes = str.encode(orc_id)
     assert not ebb.isOrcIDVerified(account), "orc_id initial value should be false"
@@ -194,7 +193,6 @@ def test_stored_data_usage():
     job.code_hashes.append(b"b6aaf03752dc68d625fc57b451faa2bf")
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
-    # provider's registered data won't be used
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [1]
@@ -245,6 +243,7 @@ def test_stored_data_usage():
         # log(dict(tx.events["LogJob"]))
         # log(tx.events["LogJob"]["received"] - tx.events["LogJob"]["refunded"])
 
+    log(f"#> measured_job_price={job_price}")
     tx = ebb.submitJob(
         job.code_hashes[0],
         job.data_transfer_ins,
@@ -272,7 +271,6 @@ def test_stored_data_usage():
 def test_ownership():
     """Get Owner"""
     assert ebb.getOwner() == accounts[0]
-
     with brownie.reverts():
         ebb.transferOwnership(cfg.ZERO_ADDRESS, {"from": accounts[0]})
 
@@ -1084,7 +1082,9 @@ def test_submit_n_data():
         {"from": requester, "value": to_gwei(job_price)},
     )
     gas_costs.append(tx.__dict__["gas_used"])
-    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    # new job submission
+    # -=-=-=-=-=-=-=-=-=
     job.code_hashes = [
         b"9b3e9babb6539c1azeea8d606fc55403",
         b"9a4c0c1c9aadb2039af9367bd4df930b",
@@ -1126,6 +1126,7 @@ def test_submit_n_data():
         {"from": requester, "value": to_gwei(job_price)},
     )
     gas_costs.append(tx.__dict__["gas_used"])
+    log("#> submit_job data number gas differences:", "[yellow]")
     print(gas_costs)
     for idx in range(0, 3):
         print(gas_costs[idx + 1] - gas_costs[idx])
@@ -1138,25 +1139,30 @@ def test_receive_registered_data_deposit():
     register_requester(requester)
 
     data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
-    ebb.registerData(data_hash, 100, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    ebb.registerData(data_hash, 10, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     data_prices = ebb.getRegisteredDataPrice(provider, data_hash, 0)
-    assert data_prices[0] == 100
+    assert data_prices[0] == 10
     mine(1)
+    data_hash_2 = "0x68b8d8218e730fc2957bcb12119cb205"
+    ebb.registerData(data_hash_2, 20, cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+    data_prices = ebb.getRegisteredDataPrice(provider, data_hash_2, 0)
+    assert data_prices[0] == 20
+    mine(1)
+
     job = Job()
     # job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
     # job.code_hashes.append(ipfs_to_bytes32(job_key))
     # job.code_hashes.append(ipfs_to_bytes32("QmVqtWxuBdZQdLnLce6XCBMuqoazAcbmuxoJHQbfbuqDu2"))
-
-    job.code_hashes = [b"9b3e9babb6539c1aceea8d606fc55403", data_hash]
+    job.code_hashes = [b"9b3e9babb6539c1aceea8d606fc55403", data_hash, data_hash_2]
     job.key = job.code_hashes[0]
-    job.cores = [2]
+    job.cores = [1]
     job.run_time = [1]
-    job.data_transfer_ins = [1, 1]
-    job.data_transfer_out = 1
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.NONE.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
-    job.storage_hours = [0, 0]
-    job.data_prices_set_block_numbers = [0, 0]
+    job.data_transfer_ins = [1, 0, 0]
+    job.data_transfer_out = 0
+    job.storage_ids = [StorageID.EUDAT.value, StorageID.NONE.value, StorageID.NONE.value]
+    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.storage_hours = [0, 0, 0]
+    job.data_prices_set_block_numbers = [0, 0, 0]
     job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
     args = [
         provider,
@@ -1169,7 +1175,7 @@ def test_receive_registered_data_deposit():
         job.data_transfer_out,
     ]
     job_price, *_ = job.cost(provider, requester)
-    print(job_price)
+    # print(job_price)
     tx = ebb.submitJob(
         job.key,
         job.data_transfer_ins,
@@ -1181,19 +1187,22 @@ def test_receive_registered_data_deposit():
     #
     start_ts = get_block_timestamp()
     index = 0
+    received = tx.events["LogJob"]["received"]
+    # log(f"job_received={received}")
+    _recieved = ebb.getJobInfo(provider, job.key, index, 0)[1]
+    assert received == _recieved
+    # log(_recieved)
     tx = ebb.setJobStateRunning(job.key, index, job._id, start_ts, {"from": provider})
     rpc.sleep(60)
     mine(10)
     elapsed_time = job.run_time[0]
     end_ts = start_ts + 60 * elapsed_time
-
-    data_transfer_in = 0
-    data_transfer_out = 1
-    args = [index, job._id, end_ts, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1], True]
+    #
+    data_transfer_in_sum = 1
+    data_transfer_out = 0
+    args = [index, job._id, end_ts, data_transfer_in_sum, data_transfer_out, elapsed_time, job.cores, [1], True]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     received = tx.events["LogProcessPayment"]["receivedGwei"]
     refunded = tx.events["LogProcessPayment"]["refundedGwei"]
     log(f"received={received} refunded={refunded}", "bold")
-
-    # gas_costs.append(tx.__dict__["gas_used"])
-    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    assert job_price == received + refunded

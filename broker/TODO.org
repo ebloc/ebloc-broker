@@ -6,3 +6,5 @@
 ** TODO Test updated code in 2 machines with your test cast submitting job.
 ** TODO IPFS inside docker should be swarm connect from outside
 ** TODO Do demo video do from https://asciinema.org/a/480875 , you can copy string from the video
+** TODO check ? dataPricesSetBlockNum > 0 is true at checkRegisteredData() for registered data usage
+** TODO check ? in smart-contract in ~internal~ calls is if memory variable updated does it updated as well on where it called from

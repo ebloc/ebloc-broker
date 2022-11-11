@@ -223,8 +223,8 @@ class Driver:
 
         try:
             run([env.BASH_SCRIPTS_PATH / "is_str_valid.sh", job_key])
-        except:
-            log("E: Filename contains an invalid character")
+        except Exception as e:
+            log(f"E: Filename contains an invalid character: {e}")
             return
 
         try:

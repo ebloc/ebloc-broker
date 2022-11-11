@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_ALL=0
+TEST_ALL=1
 source $HOME/venv/bin/activate
 brownie compile
 $HOME/ebloc-broker/broker/_daemons/ganache.py 8547

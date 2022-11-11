@@ -414,6 +414,11 @@ class JobPrices:
         self.cache_cost = 0
         self.data_transfer_in_sum = 0
         bn = self.Ebb.get_block_number()
+        #: pre-check set zero if extra data-transfer-in is given
+        for idx, code_hash in enumerate(self.job.code_hashes):
+            if self.job.storage_ids[idx] == StorageID.NONE:
+                self.job.data_transfer_ins[idx] = 0
+
         for idx, code_hash in enumerate(self.job.code_hashes):
             if self.is_brownie:
                 ds = self.create_data_storage(code_hash)

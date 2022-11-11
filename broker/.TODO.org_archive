@@ -70,3 +70,13 @@ key=$(gpg --list-secret-keys --keyid-format LONG <email>)
 echo $key && gpg --list-keys $key
 gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key
 #+end_src
+
+* DONE if registered data requested data_in for that has should be 0
+CLOSED: [2022-11-13 Sun 11:28]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-11-13 Sun 11:28
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:

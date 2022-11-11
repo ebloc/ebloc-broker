@@ -10,16 +10,16 @@ pragma solidity >=0.7.0 <0.9.0;
 
 library Lib {
     enum CacheType {
-        PUBLIC, /* 0 */
-        PRIVATE /* 1 */
+        PUBLIC, // 0
+        PRIVATE // 1
     }
 
     enum CloudStorageID {
-        IPFS, /* 0 */
-        IPFS_GPG, /* 1 */
-        NONE, /* 2 Request to use from registered/cached data */
-        EUDAT, /* 3 */
-        GDRIVE /* 4 */
+        IPFS, // 0
+        IPFS_GPG, // 1
+        NONE, // 2 Request to use from registered or cached data
+        EUDAT, // 3
+        GDRIVE // 4
     }
 
     /* Status of the submitted job Enum */
@@ -117,10 +117,11 @@ library Lib {
         uint32 dataTransferIn;
         uint32 dataTransferOut;
         uint32 pricesSetBlockNum; // When provider is submitted provider's most recent block number when its set or updated
-        uint256 received; // Paid amount (new owned) by the client
+        uint256 received; // paid amount (new owned) by the requester
         address payable jobOwner; // Address of the client (msg.sender) has been stored
         bytes32 sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
         bytes32 jobInfo;
+        uint256 receivedRegisteredDataFee;
         mapping(uint256 => Job) jobs;
     }
 
@@ -182,9 +183,9 @@ library Lib {
         int32 core,
         uint32 idx
     ) internal {
+        self.items[idx].next = uint32(next);
         self.items[idx].endpoint = endpoint;
         self.items[idx].core = core;
-        self.items[idx].next = uint32(next);
     }
 
     function _recursive(Interval storage self)

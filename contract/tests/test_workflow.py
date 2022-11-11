@@ -3,7 +3,6 @@
 import os
 import sys
 from os import path
-from typing import Dict, List
 
 import pytest
 
@@ -304,13 +303,12 @@ def test_workflow():
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedGwei"])
     received_sum += tx.events["LogProcessPayment"]["receivedGwei"]
     refunded_sum += tx.events["LogProcessPayment"]["refundedGwei"]
-    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
-    log(f"received_sums={received_sums}", "bold")
-    log(f"refunded_sums={refunded_sums}", "bold")
-    assert job_price - cost["storage"] == received_sum + refunded_sum
+    log(f"#> received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}")
+    log(f"#> received_sums={received_sums}")
+    log(f"#> refunded_sums={refunded_sums}")
+    assert job_price == received_sum + refunded_sum
     withdraw(accounts[0], received_sum)
     withdraw(requester, refunded_sum)
-    #
     for k, v in gas_costs.items():
         if v:
             print(f"{k} => {v}")

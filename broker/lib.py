@@ -214,7 +214,7 @@ def run_storage_process(storage_class):
     try:
         storage_process = Process(target=storage_class.run)
         storage_process.start()
-        storage_process.join()  # waits until the job is completed
+        storage_process.join()  # waits until the job completes
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
@@ -238,7 +238,7 @@ def pre_check():
         mkdir(folder)
 
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception(f"slurm_mail_prog.sh scripts is not located in {env.PROGRAM_PATH}")
+        raise Exception(f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}")
 
 
 # from broker.utils StorageID
