@@ -176,10 +176,10 @@ class EudatClass(Storage):
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
-                    log(f"## download file from eudat{ok()}")
+                    log(f"## download file from B2DROP{ok()}")
                     return
             except:
-                log("E: Failed to download eudat file via wget.\nTrying `config.oc.get_file()` approach...")
+                log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
                 if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_fn):
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(ok())
@@ -227,7 +227,7 @@ class EudatClass(Storage):
                 return config.oc.file_info(fn).get_size()
 
             log(str(e))
-            raise Exception("failed all the attempts to get file info at eudat") from e
+            raise Exception("failed all the attempts to get file info at B2DROP") from e
 
     def total_size_to_download(self):
         data_transfer_in_to_download = 0  # total size to download in bytes
@@ -259,8 +259,8 @@ class EudatClass(Storage):
                 source_fn = f"{folder_name}/{folder_name}.tar.gz"
                 if os.path.isdir(env.OWNCLOUD_PATH / f"{folder_name}"):
                     log(
-                        f"## eudat shared folder({folder_name}) is already accepted and "
-                        "exists on the eudat's mounted folder"
+                        f"## B2DROP shared folder({folder_name}) is already accepted and "
+                        "exists on the B2DROP's mounted folder"
                     )
                     if os.path.isfile(f"{env.OWNCLOUD_PATH}/{source_fn}"):
                         self.folder_type_dict[folder_name] = "tar.gz"
@@ -301,7 +301,7 @@ class EudatClass(Storage):
                 share_list = config.oc.list_open_remote_share()
                 break
             except Exception as e:
-                log(f"E: Failed to list_open_remote_share eudat [attempt={attempt}]")
+                log(f"E: Failed to list_open_remote_share B2DROP [attempt={attempt}]")
                 print_tb(e)
                 time.sleep(1)
             else:

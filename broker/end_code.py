@@ -87,7 +87,7 @@ class IpfsGPG(Common):
 
 class Eudat(Common):
     def __init__(self) -> None:
-        self.encoded_share_tokens = {}  # type: Dict[str, str]
+        self.encoded_share_tokens: Dict[str, str] = {}
         self.patch_dir: Path = Path("")
 
     def initialize(self):
@@ -162,7 +162,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.received_bn: int = kwargs.pop("received_bn")
         self.folder_name: str = kwargs.pop("folder_name")
         self.slurm_job_id: int = kwargs.pop("slurm_job_id")
-        self.share_tokens = {}  # type: Dict[str, str]
+        self.share_tokens: Dict[str, str] = {}
         self.requester_id_address = ""
         self.data_transfer_in = 0
         self.data_transfer_out = 0
@@ -173,7 +173,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.requester_gpg_fingerprint: str = ""
         self.end_timestamp = ""
         self.modified_date = None
-        self.encoded_share_tokens = {}  # type: Dict[str, str]
+        self.encoded_share_tokens: Dict[str, str] = {}
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
@@ -280,7 +280,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             return Ipfs
         if self.storage_ids[_id] == StorageID.IPFS_GPG:
             return IpfsGPG
-        if self.storage_ids[_id] == StorageID.EUDAT:
+        if self.storage_ids[_id] == StorageID.B2DROP:
             return Eudat
         if self.storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive

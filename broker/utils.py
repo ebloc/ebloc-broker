@@ -55,7 +55,7 @@ class StorageID(BaseEnum):
     IPFS = 0
     IPFS_GPG = 1
     NONE = 2
-    EUDAT = 3
+    B2DROP = 3
     GDRIVE = 4
 
 
@@ -67,7 +67,7 @@ CACHE_TYPES = {
 STORAGE_IDs = {
     "ipfs": StorageID.IPFS,
     "ipfs_gpg": StorageID.IPFS_GPG,
-    "eudat": StorageID.EUDAT,
+    "eudat": StorageID.B2DROP,
     "gdrive": StorageID.GDRIVE,
     "none": StorageID.NONE,
 }
@@ -464,8 +464,8 @@ def is_dpkg_installed(package) -> bool:
         return False
 
 
-def terminate(msg="", is_traceback=False, lock=None):
-    """Exit."""
+def terminate(msg="", is_traceback=False, lock=None) -> None:
+    """Terminate the program and exit."""
     if msg:
         log(f"{WHERE(1)} Terminated: ", "bold red", end="")
         if msg[:3] == "E: ":

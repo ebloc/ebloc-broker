@@ -54,7 +54,7 @@ class ENV(ENV_BASE):
             self.IS_PROVIDER = True
             self.SLURMUSER = self.cfg["provider"]["slurm_user"]
             self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
-            self.IS_EUDAT_USE = self.cfg["provider"]["is_eudat_use"]
+            self.IS_B2DROP_USE = self.cfg["provider"]["is_eudat_use"]
             self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
             if isinstance(self.cfg["provider"]["is_thread"], bool):
                 cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]

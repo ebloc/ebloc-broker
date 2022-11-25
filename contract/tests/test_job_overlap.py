@@ -127,7 +127,7 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     job.run_time = [1]
     job.data_transfer_ins = [1]
     job.data_transfer_out = 1
-    job.storage_ids = [StorageID.EUDAT.value]
+    job.storage_ids = [StorageID.B2DROP.value]
     job.cache_types = [CacheType.PUBLIC.value]
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]

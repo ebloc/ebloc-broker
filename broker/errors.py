@@ -8,7 +8,7 @@ class BashCommandsException(Exception):
 
 
 class JobException(Exception):
-    """Generate job info exception to prevent trace to be printed."""
+    """Generate job info exception to prevent to print the trace."""
 
 
 class HandlerException(Exception):

@@ -1,5 +1,6 @@
                             *outline*
 * TASKS
+** TODO replace eudat with b2drop
 ** TODO patch eudat and google-drive
 ** TODO verify downloaded data
 ** TODO convert ~ipfsID~ into ~ipfsAddress~ in the ~eBlocBrokerInterface.sol~

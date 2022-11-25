@@ -12,7 +12,7 @@ from broker.link import check_link_folders
 from broker.utils import print_tb
 
 
-def submit_eudat(job: Job, is_pass=False, required_confs=1):
+def submit_b2drop(job: Job, is_pass=False, required_confs=1):
     log("==> Submitting source code through [blue]EUDAT[/blue]")
     Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         job = Job()
         fn = "job.yaml"
         job.set_config(fn)
-        submit_eudat(job)
+        submit_b2drop(job)
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

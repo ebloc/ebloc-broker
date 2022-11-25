@@ -84,7 +84,7 @@ def start_call(key, index, slurm_job_id) -> None:
 
             log(f"## attempt={attempt}: {e}")
 
-    log("E: all of the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]")
+    log("E: all the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]")
     sys.exit(1)
 
 

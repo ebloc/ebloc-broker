@@ -23,7 +23,7 @@ def read_abi_file():
 
 
 def connect():
-    """Connect to Web3.
+    """Connect to web3.
 
     return: ebb and web3 objects.
     """
@@ -40,7 +40,7 @@ def connect():
 
 
 def _connect_to_web3() -> None:
-    """Connect to web3 of the ethereum blockchain.
+    """Connect to web3 of the corresponding ethereum blockchain.
 
     * bloxberg:
     __ https://bloxberg.org
@@ -57,7 +57,7 @@ def _connect_to_web3() -> None:
 
 
 def connect_to_web3() -> None:
-    """Connect to private ethereum network using web3.
+    """Connect to the private ethereum network using web3.
 
     Note that you should create only one RPC Provider per process, as it
     recycles underlying TCP/IP network connections between your process and

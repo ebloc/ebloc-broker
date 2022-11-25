@@ -97,7 +97,7 @@ def _tools(block_continue):  # noqa
             raise Exception("mongodb is not running in the background")
 
         # run_driver_cancel()  # TODO: uncomment
-        if env.IS_EUDAT_USE:
+        if env.IS_B2DROP_USE:
             if not env.OC_USER:
                 raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('.env')}")
 
@@ -270,7 +270,7 @@ class Driver:
         }
         if main_cloud_storage_id in (StorageID.IPFS, StorageID.IPFS_GPG):
             storage_class = IpfsClass(**kwargs)
-        elif main_cloud_storage_id == StorageID.EUDAT:
+        elif main_cloud_storage_id == StorageID.B2DROP:
             if not config.oc:
                 try:
                     eudat.login(env.OC_USER, f"{env.LOG_DIR}/.eudat_client.txt", env.OC_CLIENT)

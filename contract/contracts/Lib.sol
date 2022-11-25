@@ -18,7 +18,7 @@ library Lib {
         IPFS, // 0
         IPFS_GPG, // 1
         NONE, // 2 Request to use from registered or cached data
-        EUDAT, // 3
+        B2DROP, // 3
         GDRIVE // 4
     }
 
@@ -55,7 +55,7 @@ library Lib {
          * provider set its prices most recent. */
         uint32 priceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
-           stored and shared using either IPFS, EUDAT, IPFS (with GPG
+           stored and shared using either IPFS, B2DROP, IPFS (with GPG
            encryption), or Google Drive. */
         uint8[] cloudStorageID;
         /* An array of uint8 values that denote whether the requester’s data

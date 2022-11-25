@@ -154,7 +154,7 @@ def register_requester(account):
     tx = ebb.registerRequester(
         GPG_FINGERPRINT,
         "alper.alimoglu@gmail.com",
-        "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu",
+        fid,
         "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf",
         {"from": account},
     )
@@ -358,7 +358,7 @@ def test_computational_refund():
     job.run_time = [5]
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
+    job.storage_ids = [StorageID.B2DROP.value, StorageID.B2DROP.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
@@ -419,7 +419,7 @@ def test_storage_refund():
     job.cores = [2]
     job.run_time = [10]
     job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
+    job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     job.data_prices_set_block_numbers = [0, 0]  # provider's registered data won't be used
     job_price, cost = job.cost(provider, requester)
@@ -540,7 +540,6 @@ def test_storage_refund():
 def test_update_provider():
     mine(5)
     provider_registered_bn = register_provider()
-    fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
     tx = ebb.updateProviderInfo(GPG_FINGERPRINT, provider_gmail, fid, ipfs_address, {"from": accounts[0]})
     append_gas_cost("updateProviderInfo", tx)
     log(ebb.getUpdatedProviderPricesBlocks(accounts[0]))
@@ -610,7 +609,7 @@ def test_multiple_data():
     job.cores = [2]
     job.run_time = [10]
     provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.IPFS.value]
+    job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     args = [
         provider,
@@ -757,7 +756,7 @@ def test_simple_submit():
     job.run_time = [1]
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
+    job.storage_ids = [StorageID.B2DROP.value, StorageID.B2DROP.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
@@ -1019,7 +1018,7 @@ def test_submit_n_data():
     job.run_time = [1]
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.EUDAT.value]
+    job.storage_ids = [StorageID.B2DROP.value, StorageID.B2DROP.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
@@ -1159,7 +1158,7 @@ def test_receive_registered_data_deposit():
     job.run_time = [1]
     job.data_transfer_ins = [1, 0, 0]
     job.data_transfer_out = 0
-    job.storage_ids = [StorageID.EUDAT.value, StorageID.NONE.value, StorageID.NONE.value]
+    job.storage_ids = [StorageID.B2DROP.value, StorageID.NONE.value, StorageID.NONE.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]

@@ -276,7 +276,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        Privacy Guard to encrypt or decrypt files.
      * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
-       sharing requester's repository with the provider through EUDAT.
+       sharing requester's repository with the provider through B2DROP.
      * @param availableCore is a uint32 value containing the number of available
        cores.
      * @param prices is a structure containing four uint32 values, which are
@@ -419,7 +419,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
        GNU Privacy Guard to encrypt or decrypt files.
      * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
-       sharing requester's repository with the provider through EUDAT.
+       sharing requester's repository with the provider through B2DROP.
      * @param ipfsAddress | is a string containing an IPFS peer ID for creating peer
        connection between requester and provider.
      * @return bool
@@ -526,7 +526,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * => provider is an Ethereum address value containing the Ethereum address
           of the provider that is requested to run the job.
      * => cloudStorageID | An array of uint8 values that denote whether the
-          requester’s data is stored and shared using either IPFS, EUDAT, IPFS
+          requester’s data is stored and shared using either IPFS, B2DROP, IPFS
           (with GNU Privacy Guard encryption), or Google Drive.
      * => cacheType An array of uint8 values that denote whether the requester’s
           data will be cached privately within job owner's home directory, or

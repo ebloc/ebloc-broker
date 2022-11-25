@@ -1,7 +1,5 @@
                             *outline*
-
 * TASKS
-
 - [X] download ~test_eblocbroker~
 - [X] contract's transactions from bloxberg
 
@@ -15,7 +13,7 @@
 | patches  | req | goo0 | goo1 | goo2 | goo3 |
 |----------+-----+------+------+------+------|
 | gdrive   | [X] | [X]  | [X]  | [X]  | [X]  |
-| eudat    | [X] | [-]  | [-]  | [-]  | [-]  |
+| b2drop   | [X] | [-]  | [-]  | [-]  | [-]  |
 | ipfs     | []  | []   | []   | []   | []   |
 | ipfs_gpg | []  | []   | []   | []   | []   |
 |----------+-----+------+------+------+------|

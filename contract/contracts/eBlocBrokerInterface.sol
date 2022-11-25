@@ -9,7 +9,8 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 interface eBlocBrokerInterface {
-    // Logged when the provider calls the receiveDeposit() method. Records the completed jobs' information under receiveDeposit() method call.
+    // Logged when the provider calls the receiveDeposit() method.
+    // Records the completed jobs' information under receiveDeposit() method call.
     event LogProcessPayment(
         address indexed provider,
         string jobKey,
@@ -57,13 +58,9 @@ interface eBlocBrokerInterface {
 
     // Logs source code of the registed data files
     event LogRegisterData(address indexed provider, bytes32 registeredDataHash);
-
     event LogRegisteredDataRequestToUse(address indexed provider, bytes32 registeredDataHash);
-
     event LogDataStorageRequest(address indexed provider, address owner, bytes32 requestedHash);
-
     event LogJobDescription(address indexed provider, address requester, string jobKey, string jobDesc);
-
     /**
        @notice
        * For the requested job, the LogDepositStorage() event logs the storage
@@ -71,6 +68,5 @@ interface eBlocBrokerInterface {
          submitJob() or the depositStorage() function.
      */
     event LogDepositStorage(address indexed paidAddress, uint256 payment);
-
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 }

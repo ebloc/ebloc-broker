@@ -22,24 +22,24 @@ class State:
     """Set state code of the Slurm jobs and add their keys into the hashmap.
 
     * Hashmap keys:
-        - SUBMITTED: Initial state of the job.
+    - SUBMITTED: Initial state of the job.
 
-        - PENDING: Indicates when a request is receieved by the provider. The
-          job is waiting for resource allocation. It will eventually run.
+    - PENDING: Indicates when a request is receieved by the provider. The
+      job is waiting for resource allocation. It will eventually run.
 
-        - RUNNING: The job currently is allocated to a node and is running.
-          Corresponding data files are downloaded and verified.
+    - RUNNING: The job currently is allocated to a node and is running.
+      Corresponding data files are downloaded and verified.
 
-        - REFUNDED: The job has refunded.
+    - REFUNDED: The job has refunded.
 
-        - CANCELLED: The job was explicitly cancelled by the requester or system
-          administrator.  The job may or may not have been initiated.  Set by
-          the requester.
+    - CANCELLED: The job was explicitly cancelled by the requester or system
+      administrator.  The job may or may not have been initiated.  Set by
+     the requester.
 
-        - COMPLETED: The job has completed successfully and deposit is paid to
-          the provider.
+    - COMPLETED: The job has completed successfully and deposit is paid to
+      the provider.
 
-        - TIMEOUT: The job has terminated upon reaching its time limit.
+    - TIMEOUT: The job has terminated upon reaching its time limit.
 
     __ https://slurm.schedmd.com/squeue.html
     """
@@ -249,7 +249,7 @@ def pre_check():
 #     if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
 #         if not key:
 #             return False
-#     elif int(file_type) == StorageID.EUDAT:
+#     elif int(file_type) == StorageID.B2DROP:
 #         pass
 #     elif int(file_type) == StorageID.GDRIVE:
 #         pass

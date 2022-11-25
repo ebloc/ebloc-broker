@@ -67,7 +67,7 @@ def pre_check(job: Job, requester):
         start_ipfs_daemon()
         if job.storage_ids[0] == StorageID.IPFS:
             for storage_id in job.storage_ids[1:]:
-                if storage_id in (StorageID.GDRIVE, StorageID.EUDAT):
+                if storage_id in (StorageID.GDRIVE, StorageID.B2DROP):
                     raise Exception(
                         "If source-code is submitted via IPFS, then the data must be submitted using IPFS or IPFS_GPG"
                     )

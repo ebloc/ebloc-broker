@@ -78,8 +78,6 @@ default-ipfs            default  INGRESS    1000      tcp:4001
 
 - https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578
 
---------------------------
-
 #+begin_src bash
 killall ipfs
 DIR=~/.ipfs
@@ -108,7 +106,7 @@ ipfs swarm connect /ip4/192.168.1.245/tcp/4001/p2p/12D3KooWEx4tD1xKp4Pr1xUnA3e2Z
 
 ----------------------------------------
 
-# Helpful commands for garbage collection
+** helpful commands for garbage collection
 
 #+begin_src bash
 ipfs pin ls --type recursive
@@ -119,7 +117,7 @@ ipfs repo gc
 ** Private IPFS Setup:
 
 #+begin_src bash
-connect_private_ipfs () {
+connect_to_private_ipfs () {
     export IPFS_PATH=~/.ipfs
     cat ~/ebloc-broker/scripts/ipfs_swarm.key | tr -d ' ' > $IPFS_PATH"/swarm.key"
     ipfs bootstrap rm --all
@@ -128,7 +126,7 @@ connect_private_ipfs () {
 }
 go install github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen@latest
 ipfs init
-connect_private_ipfs
+connect_to_private_ipfs
 #+end_src
 
 --------------------------------
