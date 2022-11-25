@@ -58,10 +58,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     function withdraw() public returns (bool) {
         uint256 amount = balances[msg.sender].mul(1 gwei);
         // set zero the balance before sending to prevent reentrancy attacks
-        delete balances[msg.sender]; // gas refund is made
+        delete balances[msg.sender]; // for gas refund
         // forwards all available gas
         (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed"); // Return value is checked
+        require(success, "Transfer failed"); // return value is checked
         return true;
     }
 
@@ -248,7 +248,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         storageInfo.received = 0;
         require(payment > 0 && !_provider.jobSt[sourceCodeHash].isVerifiedUsed);
         Lib.JobStorage storage jobSt = _provider.jobSt[sourceCodeHash];
-        // Required remaining time to cache should be 0
+        // required remaining time to cache should be 0
         require(jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
         _cleanJobStorage(jobSt);
         balances[requester] += payment;

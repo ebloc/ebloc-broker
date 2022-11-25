@@ -381,7 +381,7 @@ ipfshttpclient @ https://github.com/avatar-lavventura/py-ipfs-http-client/archiv
     # via
     #   eth-brownie
     #   web3
-ipython==7.27.0
+ipython==8.7.0
     # via
     #   ipdb
 ipython-genutils==0.2.0
@@ -448,9 +448,6 @@ lru-dict==1.1.8
     # via
     #   eth-brownie
     #   web3
-lxml==4.6.3
-    # via
-    #   yfinance
 mako==1.1.0
 markdown==3.1.1
     # via
@@ -495,9 +492,6 @@ multimapping==4.1
 multipart==0.2.4
     # via
     #   zope-publisher
-multitasking==0.0.9
-    # via
-    #   yfinance
 mypy==0.961
     # via
     #   flake8-mypy
@@ -523,13 +517,11 @@ ng==1.2.0
 nodeenv==1.6.0
     # via
     #   pre-commit
-numpy==1.19.4
+numpy==1.23.5
     # via
     #   imageio
     #   matplotlib
-    #   pandas
     #   slip
-    #   yfinance
 oauthlib==3.1.0
     # via
     #   lazr-restfulclient
@@ -543,9 +535,6 @@ packaging==21.3
     #   setuptools-scm
     #   sphinx
     #   tox
-pandas==1.3.1
-    # via
-    #   yfinance
 paramiko==2.7.1
     # via
     #   sshtunnel
@@ -651,9 +640,6 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
     # via
     #   service-identity
-pycairo==1.21.0
-    # via
-    #   pygobject
 pycares==4.0.0
     # via
     #   aiodns
@@ -690,7 +676,6 @@ pygments==2.13.0
 pygments-lexer-solidity==0.7.0
     # via
     #   eth-brownie
-pygobject==3.42.0
 pygogo==0.13.2
 pyhamcrest==2.0.2
     # via
@@ -752,7 +737,6 @@ python-dateutil==2.8.1
     #   eth-brownie
     #   matplotlib
     #   mythx-models
-    #   pandas
     #   pythx
 python-debian==0.1.39
 python-dotenv==0.16.0
@@ -779,7 +763,6 @@ pytz==2020.1
     #   babel
     #   dateparser
     #   datetime
-    #   pandas
     #   tzlocal
     #   zope-i18n
 pyxdg==0.26
@@ -812,7 +795,6 @@ requests[socks]==2.28.1
     #   vvm
     #   web3
     #   webdriver-manager
-    #   yfinance
 requests-toolbelt==0.9.1
 requests-unixsocket==0.2.0
 restrictedpython==5.0
@@ -983,7 +965,7 @@ tqdm==4.64.1
     # via
     #   eth-brownie
     #   gdown
-traitlets==4.3.3
+traitlets==5.7.1
     # via
     #   ipython
     #   matplotlib-inline
@@ -1102,7 +1084,6 @@ yarl==1.8.1
     # via
     #   aiohttp
     #   eth-brownie
-yfinance==0.1.63
 z3c-pt==3.3.0
 zc-lockfile==2.0
     # via

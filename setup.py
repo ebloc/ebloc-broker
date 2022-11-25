@@ -17,7 +17,7 @@ setup(
     version=__version__,
     license="MIT",
     description=(  # noqa: E501
-        "A Python framework to communicate with ebloc-broker, which is "
+        "A Python framework to communicate with ebloc-broker that is "
         "a blockchain based autonomous computational resource broker."
     ),
     long_description=long_description,

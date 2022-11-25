@@ -12,8 +12,7 @@ Ebb = cfg.Ebb
 
 
 def pre_check_data(provider):
-    """Return the provider information."""
-
+    """Return the provider's information."""
     if not isinstance(provider, Account):
         provider = Ebb.w3.toChecksumAddress(provider)
 
@@ -26,7 +25,7 @@ def pre_check_data(provider):
 
 def is_data_registered(provider, registered_data_hash) -> bool:
     if not isinstance(registered_data_hash, bytes):
-        raise Exception(f"registered_data_hash {registered_data_hash} is not in bytes")
+        raise Exception(f"registered_data_hash {registered_data_hash} is not in `bytes` instance")
 
     with suppress(Exception):
         cfg.Ebb.get_registered_data_price(provider, registered_data_hash, 0)

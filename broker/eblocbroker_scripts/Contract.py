@@ -74,7 +74,7 @@ class Contract(Base):
         self.max_retries = 20
         self.required_confs = 1
         self._from = ""
-        #: Transaction cost exceeds current gas limit. Limit: 9990226, got:
+        #: tx cost exceeds current gas limit. Limit: 9990226, got:
         #  10000000. Try decreasing supplied gas.
         self.gas = 9980000
         self.gas_price = GAS_PRICE
@@ -210,7 +210,7 @@ class Contract(Base):
         return dict(self.w3.eth.get_transaction_by_block(block_hash, tx_index))
 
     def get_transaction_receipt(self, tx, compact=False):
-        """Get transaction receipt.
+        """Get the transaction receipt.
 
         Returns the transaction receipt specified by transactionHash.
         If the transaction has not yet been mined returns 'None'
