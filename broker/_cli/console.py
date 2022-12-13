@@ -167,6 +167,12 @@ def submit_job(yaml_fn):
         print_tb(e)
 
 
+@app.command("tx_receipt", "Returns transaction receipt")
+def get_transaction_receipt():
+    t1.join()
+    print_timenow()
+
+
 # @app.command("hi", "Salute people given form parameter")
 # def salute_method_here(name, title="Mr."):
 #     """Salute to someone

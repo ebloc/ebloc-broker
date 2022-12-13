@@ -200,8 +200,7 @@ def _sys_exit(msg="") -> None:
         else:
             log(msg)
 
-        log("#> exiting")
-
+    log(f"#> Exiting {_date()}...")
     sys.exit()
 
 

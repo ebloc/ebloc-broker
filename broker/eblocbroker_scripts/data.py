@@ -34,6 +34,14 @@ def is_data_registered(provider, registered_data_hash) -> bool:
     return False
 
 
+def data_output_verbose(provider_data):
+    """Print only data hash and its price without color."""
+    print()
+    print("data_hash, price")
+    for k, v in sorted(provider_data.items()):
+        print(f"{k.decode('utf-8')}, {v['price']}")
+
+
 def get_data_info(self, provider) -> None:
     pre_check_data(provider)
     try:
@@ -56,9 +64,11 @@ def get_data_info(self, provider) -> None:
                     "registered_block_number": entry["blockNumber"],
                 }
 
-        for k, v in provider_data.items():
+        for k, v in sorted(provider_data.items()):
             log(f" * registered_data_hash={k.decode('utf-8')}")
             log(f"\t{v}")
+
+        # data_output_verbose(provider_data)
     except Exception as e:
         raise e
 

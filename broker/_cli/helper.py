@@ -14,7 +14,7 @@ class Helper:
     def __init__(self):
         """Initialize helper.
 
-        Test: ./__main__.py -h
+        test: ./__main__.py -h
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
 
@@ -33,6 +33,7 @@ class Helper:
         self.subparsers.add_parser("about", help="ebloc-broker metadata")
         self.init()
         self.driver()
+        # self.bloxberg()
         self.daemon()
         self.register()
         self.submit()
@@ -71,6 +72,12 @@ class Helper:
             "--no-thread", dest="is_thread", action="store_false", help="Disables threading"
         ).completer = EnvironCompleter
         obj.set_defaults(is_thread=None)
+
+    # def bloxberg(self):
+    #     obj = self.subparsers.add_parser("bloxberg", help="Interact with bloxberg blockchain")
+    #     obj.add_argument(
+    #         "tx-receipt", type=str, default=0, help="Return transaction receipt"
+    #     ).completer = EnvironCompleter
 
     def daemon(self):
         """Select daemon program to run.

@@ -52,7 +52,7 @@ class State:
         "CANCELLED": 4,
         "COMPLETED": 5,
         "TIMEOUT": 6,
-        "COMPLETED_WAITING_ADDITIONAL_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
+        "COMPLETED_AND_WAITING_ADDITIONAL_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
     }
     inv_code = {value: key for key, value in code.items()}
 

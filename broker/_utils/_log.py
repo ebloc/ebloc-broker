@@ -7,7 +7,7 @@ import textwrap
 import threading
 from typing import Dict, Union
 
-from rich import pretty, print, print_json  # noqa
+from rich import pretty, print_json  # noqa # print
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
@@ -89,7 +89,10 @@ class Log:
         if is_bold:
             console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end)
         else:
-            console.print(f"[{color}]{text}[/{color}]", end=end)
+            if color in ("white", "", None) and "[" not in text:
+                print(text, end=end)
+            else:
+                console.print(f"[{color}]{text}[/{color}]", end=end)
 
     def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
@@ -233,7 +236,10 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
                 text_to_write = _text
 
         if is_print:
-            console.print(text_to_write, end=end)
+            if color in ("white", "", None) and "[" not in text_to_write:
+                print(text, end=end)
+            else:
+                console.print(text_to_write, end=end)
 
         if is_write and IS_WRITE:
             ll.console[fn].print(text_to_write, end=end, soft_wrap=True)

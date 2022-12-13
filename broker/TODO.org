@@ -1,6 +1,9 @@
                             *outline*
 * TASKS
-** TODO replace eudat with b2drop
+** TODO replace ~eudat~ with ~b2drop~
+** TODO log ~dataTransferIn~ in the contract
+- self.eBlocBroker.decode_input(input)
+- testte dataTransferIn hep [0, 0, 0, 0] olarak hesaplanmis?
 ** TODO patch eudat and google-drive
 ** TODO verify downloaded data
 ** TODO convert ~ipfsID~ into ~ipfsAddress~ in the ~eBlocBrokerInterface.sol~
@@ -9,3 +12,7 @@
 ** TODO Do demo video do from https://asciinema.org/a/480875 , you can copy string from the video
 ** TODO check ? dataPricesSetBlockNum > 0 is true at checkRegisteredData() for registered data usage
 ** TODO check ? in smart-contract in ~internal~ calls is if memory variable updated does it updated as well on where it called from
+** TODO token
+– https://docs.openzeppelin.com/contracts/2.x/erc20
+– https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC20
+** TODO get_transaction_receipt console'a ekle

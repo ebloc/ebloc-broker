@@ -14,6 +14,8 @@ import "./SafeMath.sol";
 import "./eBlocBrokerInterface.sol";
 import "./EBlocBrokerBase.sol";
 
+import "./ERC20/ERC20.sol";
+
 /**
  * @title eBlocBroker
  * @dev The eBlocBroker is a blockchain based autonomous computational resource
@@ -37,9 +39,13 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender.
      */
-    constructor() {
+    constructor() public {
         owner = msg.sender;
     }
+
+    /* constructor() { */
+    /*     owner = msg.sender; */
+    /* } */
 
     /**
      * @dev Transfer ownership of the contract to a new account (`newOwner`).
@@ -155,7 +161,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         );
         Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
         uint256 gain;
-        uint256 refund;
+        uint256 _refund;
         uint256 core = args.core[args.jobID];
         uint256 runTime = args.runTime[args.jobID];
         if (args.dataTransferIn > 0) {
@@ -163,14 +169,14 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             if (jobInfo.cacheCost > 0) {
                 // checking data transferring cost
                 gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
-                refund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); // cache cost to refund
-                require(gain.add(refund) <= jobInfo.cacheCost);
+                _refund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); // cache cost to refund
+                require(gain.add(_refund) <= jobInfo.cacheCost);
                 delete jobInfo.cacheCost; // prevents additional cacheCost to be requested, can request cache cost only one time
             }
             // check data transferring cost
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {
                 //: data transfer refund
-                refund = refund.add(
+                _refund = _refund.add(
                     info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
                 );
                 // Prevents additional cacheCost to be requested
@@ -178,15 +184,15 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             }
         }
         if (jobInfo.dataTransferOut > 0 && args.endJob == true && args.dataTransferOut != jobInfo.dataTransferOut) {
-            refund = refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
+            _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
             if (jobInfo.cacheCost > 0) {
                 // If job cache is not used full refund for cache
-                refund = refund.add(info.priceCache.mul(jobInfo.cacheCost));
+                _refund = _refund.add(info.priceCache.mul(jobInfo.cacheCost));
                 delete jobInfo.cacheCost;
             }
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
                 // If job data transfer is not used full refund for cache
-                refund = refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
+                _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
                 delete jobInfo.dataTransferIn;
             }
             // Prevents additional dataTransfer profit to be request for dataTransferOut
@@ -199,8 +205,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         );
         gain = gain.add(jobInfo.receivedRegisteredDataFee);
         //: computationalCostRefund
-        refund = refund.add(uint256(info.priceCoreMin).mul(core.mul((runTime.sub(uint256(args.elapsedTime))))));
-        require(gain.add(refund) <= jobInfo.received);
+        _refund = _refund.add(uint256(info.priceCoreMin).mul(core.mul((runTime.sub(uint256(args.elapsedTime))))));
+        require(gain.add(_refund) <= jobInfo.received);
         Lib.IntervalArg memory _interval;
         _interval.startTimestamp = job.startTimestamp;
         _interval.endTimestamp = uint32(args.endTimestamp);
@@ -209,13 +215,13 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (provider.receiptList.overlapCheck(_interval) == 0) {
             // Important to check already refunded job or not, prevents double spending
             job.stateCode = Lib.JobStateCodes.REFUNDED;
-            refund = jobInfo.received;
-            refund.add(jobInfo.receivedRegisteredDataFee);
+            _refund = jobInfo.received;
+            _refund.add(jobInfo.receivedRegisteredDataFee);
             jobInfo.received = 0;
             jobInfo.receivedRegisteredDataFee = 0;
             // pay back newOwned(jobInfo.received) back to the requester, which is full refund
-            balances[jobInfo.jobOwner] += refund;
-            _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, refund);
+            balances[jobInfo.jobOwner] += _refund;
+            _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, _refund);
             return;
         }
         if (job.stateCode == Lib.JobStateCodes.CANCELLED) {
@@ -225,15 +231,15 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             // prevents double spending used as a reentrancy guard
             job.stateCode = Lib.JobStateCodes.COMPLETED;
         }
-        jobInfo.received = jobInfo.received.sub(gain.add(refund));
+        jobInfo.received = jobInfo.received.sub(gain.add(_refund));
         jobInfo.receivedRegisteredDataFee = 0;
         // unused core and bandwidth is refunded back to the client
-        if (refund > 0) {
-            balances[jobInfo.jobOwner] += refund;
+        if (_refund > 0) {
+            balances[jobInfo.jobOwner] += _refund;
         }
-        // gained amount is transferred to the provider
+        // transfer gained amount to the provider
         balances[msg.sender] += gain;
-        _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, refund);
+        _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
         return;
     }
 

@@ -253,6 +253,10 @@ class Contract(Base):
         tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
         return self.tx_id(tx)
 
+    def get_block(self, block_number: int):
+        """Return block."""
+        return self.w3.eth.get_block(block_number)
+
     def get_block_number(self):
         """Return block number."""
         return self.w3.eth.block_number
