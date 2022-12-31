@@ -98,6 +98,9 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         if source_code_hash == "":
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
+    if job.price == 0:
+        raise Exception("E: job.price is 0 ; something is wrong")
+
 
 def submit_job(self, provider, key, job, requester=None, required_confs=1):
     """Submit job.

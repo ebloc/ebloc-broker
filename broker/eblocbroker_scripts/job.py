@@ -5,8 +5,7 @@ import sys
 from ast import literal_eval as make_tuple
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict, List
-
+from typing import Dict, List  # noqa
 from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import _exit, _remove, log, print_tb
@@ -263,7 +262,8 @@ class Job:
                         self.data_prices_set_block_numbers.append(0)
 
                 if is_data_hash and not is_data_registered(self.provider_addr, data_hash):
-                    raise Exception(f"requested data={data_hash} is not registered into the provider")
+                    d = data_hash.decode("utf-8")
+                    raise QuietExit(f"Requested data={d} is not registered into the provider.")
 
         self.cores = []
         self.run_time = []
@@ -322,8 +322,15 @@ class Job:
         is_all_equal = all(x == price_list[0] for x in price_list)
         return selected_provider, selected_price, is_all_equal
 
-    def search_best_provider(self, requester):
-        provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=True)
+    def search_best_provider(self, requester, is_verbose=True):
+        if not self.provider_addr:
+            provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=is_verbose)
+        else:
+            _price, *_ = self.cost(self.provider_addr, requester, is_verbose=True)
+            best_price = _price
+            is_all_equal = True
+            provider_to_share = self.provider_addr
+
         self.price, *_ = self.cost(provider_to_share, requester)
         if self.price != best_price:
             raise Exception(f"job_price={self.price} and best_price={best_price} does not match")

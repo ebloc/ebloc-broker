@@ -11,13 +11,13 @@ from broker.lib import state
 from broker.utils import bytes32_to_ipfs
 
 Ebb = cfg.Ebb
-is_print_only_ipfs_result_hashes = False
+is_print_only_ipfs_result_hashes = True
 is_compact = True  # to get the workload type
 
 
 def watch(eth_address="", from_block=None):
     """Log submitted jobs' information."""
-    from_block = 15867616
+    from_block = 18813273
     if not eth_address:
         log("E: eth_address is empty, run as: [m]./watch.py <eth_address>")
         sys.exit(1)
@@ -44,7 +44,7 @@ def watch(eth_address="", from_block=None):
     )
     completed_count = 0
     job_count = 0
-    for idx, job in enumerate(event_filter.get_all_entries()):
+    for job in event_filter.get_all_entries():
         job_count += 1
         try:
             _args = job["args"]
@@ -52,8 +52,8 @@ def watch(eth_address="", from_block=None):
             job = job[1]
             _args = job["args"]
 
-        if idx != 0:
-            console_ruler()
+        # if idx != 0:
+        #     console_ruler()
 
         _job = Ebb.get_job_info(
             _args["provider"],
@@ -66,12 +66,12 @@ def watch(eth_address="", from_block=None):
             is_fetch_code_hashes=is_compact,
         )
         if is_compact:
-            log(_job["code_hashes"])
+            # log(_job["code_hashes"])  # log
             state_val = state.inv_code[_job["stateCode"]]
             if state_val == "COMPLETED":
                 completed_count += 1
 
-            log(f"* {_job['job_key']} {_job['index']} {state_val}")
+            log(f"* {_job['job_key']} {_job['index']} {state_val}", end="")
 
         # breakpoint()  # DEBUG
         del _job["code_hashes"]
@@ -80,8 +80,14 @@ def watch(eth_address="", from_block=None):
 
         if is_print_only_ipfs_result_hashes:
             if "result_ipfs_hash" in _job:
-                log(bytes32_to_ipfs(_job["result_ipfs_hash"]))
+                _ipfs_hash = bytes32_to_ipfs(_job["result_ipfs_hash"])
+                log(f" result_ipfs_hash={_ipfs_hash}")
                 # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")
+            else:
+                log()
+        else:
+            log()
+
         # else:
         #     log(_job)
 

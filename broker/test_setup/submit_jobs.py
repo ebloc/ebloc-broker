@@ -31,7 +31,7 @@ ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 benchmarks = ["nas", "cppr"]
-storage_ids = ["eudat", "gdrive", "ipfs"]
+storage_ids = ["b2drop", "gdrive", "ipfs"]
 ipfs_types = ["ipfs", "ipfs_gpg"]
 
 # for provider_addr in providers:

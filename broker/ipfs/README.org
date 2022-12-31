@@ -43,7 +43,6 @@ ipfs swarm addrs
 #+end_src
 
 * Google Node
-
 #+begin_src bash
 sudo firewall-cmd --add-port=4001/tcp --permanent
 sudo firewall-cmd --reload
@@ -65,7 +64,6 @@ public
 #+end_src
 
 * All other nodes
-
 - Port check: ~nc -v <ip> 4001~
 - ~nc gateway-int.ipfs.io 4001~
 
@@ -76,7 +74,7 @@ $ gcloud compute firewall-rules list | grep 'ipfs'
 default-ipfs            default  INGRESS    1000      tcp:4001
 #+end_src
 
-- https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578
+- [[https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578]]
 
 #+begin_src bash
 killall ipfs
@@ -84,6 +82,7 @@ DIR=~/.ipfs
 if [[ ! -d "$DIR" ]]; then
 	ipfs init
 fi
+
 ipfs bootstrap rm --all
 ipfs config show | grep "PeerID" | awk '{print $2}' | tr -d \"
 ipfs bootstrap add /ip4/35.240.104.228/tcp/4001/p2p/12D3KooWLqjUfi8fjz5tncRJXet4gUiK75VRJnB5E16Z8mVJ9c8N

@@ -23,7 +23,7 @@ ipfs = cfg.ipfs
 def _register_provider(self, *args, **kwargs):
     """Register provider."""
     if is_byte_str_zero(env.PROVIDER_ID):
-        log(f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [m]~/.ebloc-broker/.env")
+        log(f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml")
         raise QuietExit
 
     if self.does_provider_exist(env.PROVIDER_ID):

@@ -173,7 +173,7 @@ class Storage(BaseClass):
     def is_md5sum_matches(self, path, name, _id, folder_type, cache_type) -> bool:
         if generate_md5sum(path) == name:
             # checking is already downloaded folder's hash matches with the given hash
-            if self.whoami() == "EudatClass" and folder_type != "":
+            if self.whoami() == "B2dropClass" and folder_type != "":
                 self.folder_type_dict[name] = folder_type
 
             self.cache_type[_id] = cache_type
@@ -202,7 +202,7 @@ class Storage(BaseClass):
             cached_tar_fn = f"{cache_folder}.tar.gz"
 
         if os.path.isfile(cached_tar_fn):
-            if self.whoami() == "EudatClass":
+            if self.whoami() == "B2dropClass":
                 self.folder_type_dict[name] = "tar.gz"
 
             return self.is_md5sum_matches(cached_tar_fn, name, _id, "", _cache_type)

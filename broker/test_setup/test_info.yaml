@@ -3,7 +3,7 @@ contract_owner: "0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"
 requester:
   address: ""
   gmail:
-  eudat_email:
+  b2drop_email:
   oc_username:
   b2drop_user_name:
   hostname: ipkis
@@ -14,7 +14,7 @@ providers:
     gmail: alper.alimoglu.test.2@gmail.com
     oc_username: "5dd71484-1ae2-4188-98e7-536123582716"
     hostname: kama
-    eudat: alper.alimoglu.research2@gmail.com
+    b2drop: alper.alimoglu.research2@gmail.com
     google_tab: "KAMA"
   provider_2:
     address: ""

@@ -12,16 +12,18 @@ from broker._utils import _log
 from broker._utils._log import _console_clear
 from broker._utils.tools import _date, log, print_tb
 from broker._utils.yaml import Yaml
+from broker._watch.test_info import data_hashes
 from broker.errors import QuietExit
 from broker.lib import state
-from broker._watch.test_info import data_hashes
-
 
 Ebb = cfg.Ebb
 columns_size = 30
-is_get_ongoing_test_results = False
+is_while = True  # to get on-going results
 is_log_to_file = True
-is_csv = True
+is_provider = True
+
+is_csv = False
+analyze_long_test = False
 
 
 def get_eth_address_from_cfg():
@@ -175,6 +177,7 @@ def _watch(eth_address, from_block, is_provider):
             c = "green"
             completed_count += 1
 
+        workload_type = ""
         if len(_job["code_hashes"]) == 4:
             workload_cppr_count += 1
             workload_type = "cppr"
@@ -191,7 +194,7 @@ def _watch(eth_address, from_block, is_provider):
         _hash = _job["job_key"]
         _index = _job["index"]
         if not is_csv:
-            if is_get_ongoing_test_results:
+            if is_while:
                 job_full = (
                     f" [bold blue]*[/bold blue] [bold white]{'{:<48}'.format(_hash)}[/bold white] "
                     f"{_index} {workload_type} [bold {c}]{state_val}[/bold {c}]\n{job_full}"
@@ -208,22 +211,25 @@ def _watch(eth_address, from_block, is_provider):
 
         time.sleep(0.2)
 
-    if is_get_ongoing_test_results:
+    if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
     else:
         job_ruler = "[green]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/green]"
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
     is_connected = Ebb.is_web3_connected()
-    if is_get_ongoing_test_results:
+    if is_while:
         _console_clear()
 
     log(
         f"\r==> {_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
         "bold",
     )
-    log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}", "b")
-    log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}", "b")
+
+    if analyze_long_test:
+        log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}", "b")
+        log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}", "b")
+
     # get_providers_info()
     log(job_full, is_output=False)
 
@@ -232,7 +238,7 @@ def watch(eth_address="", from_block=None):
     if not from_block:
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
-    from_block = 15867616
+    from_block = 18813134
     if not eth_address:
         try:
             eth_address = get_eth_address_from_cfg()
@@ -246,10 +252,10 @@ def watch(eth_address="", from_block=None):
         _log.ll.LOG_FILENAME = watch_fn
 
     _console_clear()
-    log(f" * starting for provider={eth_address}")
-    is_provider = True
+    if is_provider:
+        log(f" * starting for provider={eth_address} from_block: {from_block}")
 
-    if is_get_ongoing_test_results:
+    if is_while:
         while True:
             _watch(eth_address, from_block, is_provider)
             log()

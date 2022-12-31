@@ -119,7 +119,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
         tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [m]Terminate[/m]()"
 
     if is_print_exc and tb_text != "NoneType: None\n":
-        log(tb_text.rstrip(), "bold", back=1)
+        log(tb_text.rstrip(), back=1)
 
     if message and "An exception of type Exception occurred" not in message:
         log(message, back=1)
@@ -200,7 +200,7 @@ def _sys_exit(msg="") -> None:
         else:
             log(msg)
 
-    log(f"#> Exiting {_date()}...")
+    log(f"#> Exiting {_date()}[w]...")
     sys.exit()
 
 

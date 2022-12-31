@@ -2,7 +2,7 @@
 
 import sys
 from contextlib import suppress
-
+from broker.errors import QuietExit
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
@@ -25,7 +25,7 @@ def pre_check_data(provider):
 
 def is_data_registered(provider, registered_data_hash) -> bool:
     if not isinstance(registered_data_hash, bytes):
-        raise Exception(f"registered_data_hash {registered_data_hash} is not in `bytes` instance")
+        raise QuietExit(f"#> requested data={registered_data_hash} is not in `bytes` instance")
 
     with suppress(Exception):
         cfg.Ebb.get_registered_data_price(provider, registered_data_hash, 0)

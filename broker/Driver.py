@@ -21,7 +21,7 @@ from broker._utils import _log
 from broker._utils._log import console_ruler, log, ok
 from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
-from broker.drivers.eudat import EudatClass
+from broker.drivers.b2drop import B2dropClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
@@ -67,9 +67,9 @@ def wait_until_idle_core_available():
 
 
 def _tools(block_continue):  # noqa
-    """Check whether the required functions are running or not.
+    """Check whether the required functions are running on the background.
 
-    :param block_continue: Continue from given block number
+    :param block_continue: Continue from given the block number
     """
     session_start_msg(env.SLURMUSER, block_continue, pid)
     try:
@@ -81,10 +81,11 @@ def _tools(block_continue):  # noqa
         provider_info_contract = Ebb.get_provider_info(env.PROVIDER_ID)
         pre_check()
         if not check_ubuntu_packages():
-            raise Terminate()
+            raise Terminate
 
         if env.IS_BLOXBERG:
             log(":beer:  Connected into [green]BLOXBERG[/green]", "bold")
+
         else:
             is_geth_on()
 
@@ -99,16 +100,16 @@ def _tools(block_continue):  # noqa
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_B2DROP_USE:
             if not env.OC_USER:
-                raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('.env')}")
+                raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('cfg.yaml')}")
 
-            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
 
         gmail = provider_info_contract["gmail"]
         log(f"==> provider_gmail=[m]{gmail}")
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             if env.GDRIVE == "":
-                raise Terminate(f"E: Path for gdrive='{env.GDRIVE}' please set a valid path in the .env file")
+                raise Terminate(f"E: gdrive_path='{env.GDRIVE}' please set a valid path in the cfg.yaml file")
 
             try:
                 output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
@@ -129,30 +130,36 @@ def _tools(block_continue):  # noqa
                 raise QuietExit
 
             if not os.path.isdir(env.IPFS_REPO):
-                log(f"E: {env.IPFS_REPO} does not exist")
-                raise QuietExit
+                raise QuietExit(f"E: {env.IPFS_REPO} does not exist")
 
             start_ipfs_daemon()
 
-        exception_msg = "warning: given information is not same with the provider's registered info"
+        exception_msg = "warning: Given information is not same with the provider's registered info"
         try:
             flag_error = False
             if provider_info_contract["f_id"] != env.OC_USER:
+                log("warning: [m]f_id[/m] does not match with the registered info.")
+                log(f"\t{provider_info_contract['f_id']} != {env.OC_USER}")
                 flag_error = True
 
             if env.IS_IPFS_USE:
                 gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
-                if (
-                    provider_info_contract["ipfs_address"] != get_ipfs_address()
-                    and provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper()
-                ):
+                _ipfs_address = get_ipfs_address()
+                if provider_info_contract["ipfs_address"] != _ipfs_address:
+                    log("warning: [m]ipfs_address[/m] does not match with the registered info.")
+                    log(f"\t{provider_info_contract['ipfs_address']} != {_ipfs_address}")
+                    flag_error = True
+
+                if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
+                    log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
+                    log(f"\t{provider_info_contract['gpg_fingerprint']} != {gpg_fingerprint.upper()}")
                     flag_error = True
 
             if flag_error:
                 raise QuietExit(exception_msg)
         except Exception as e:
-            log(f"E: {e}")
-            raise QuietExit(exception_msg) from e
+            log(f"E: {e}", is_err=True)
+            raise QuietExit from e
     except QuietExit as e:
         raise e
 
@@ -273,12 +280,12 @@ class Driver:
         elif main_cloud_storage_id == StorageID.B2DROP:
             if not config.oc:
                 try:
-                    eudat.login(env.OC_USER, f"{env.LOG_DIR}/.eudat_client.txt", env.OC_CLIENT)
+                    eudat.login(env.OC_USER, f"{env.LOG_DIR}/.b2drop_client.txt", env.OC_CLIENT)
                 except Exception as e:
                     print_tb(e)
                     sys.exit(1)
 
-            storage_class = EudatClass(**kwargs)
+            storage_class = B2dropClass(**kwargs)
         elif main_cloud_storage_id == StorageID.GDRIVE:
             storage_class = GdriveClass(**kwargs)
 
@@ -325,13 +332,13 @@ def run_driver(given_bn):
         raise Terminate from e
 
     if not env.PROVIDER_ID:
-        raise Terminate(f"PROVIDER_ID is None in {env.LOG_DIR}/.env")
+        raise Terminate(f"PROVIDER_ID is None in {env.LOG_DIR}/cfg.yaml")
 
     if not env.WHOAMI or not env.EBLOCPATH or not env.PROVIDER_ID:
         raise Terminate(f"Please run: {env.BASH_SCRIPTS_PATH}/folder_setup.sh")
 
     if not env.SLURMUSER:
-        raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/.env")
+        raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/cfg.yaml")
 
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
@@ -464,8 +471,8 @@ def main(args):
             cfg.IS_THREADING_ENABLED = False
 
         console_ruler("provider session starts")
-        log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        with launch_ipdb_on_exception():  # if an exception is raised, launch ipdb
+        log(f"* {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        with launch_ipdb_on_exception():  # if an exception is raised, then launch ipdb
             lock = None
             try:
                 is_driver_on(process_count=1, is_print=False)

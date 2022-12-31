@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from broker import cfg
-from broker.utils import log
+from broker._utils._log import log
 
 Ebb = cfg.Ebb
 

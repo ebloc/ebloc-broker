@@ -213,7 +213,9 @@ gpg --gen-key
 gpg --list-keys
 
 mkdir -p ~/git ~/docker
-git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
+DIR=~/git/gdrive
+[[ ! -d $DIR ]] && git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
+
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive
 

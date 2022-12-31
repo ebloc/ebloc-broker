@@ -16,7 +16,7 @@ class ENV_BASE:
         fn = hidden_base_dir / "cfg.yaml"
         if not os.path.isfile(fn):
             if not os.path.isdir(hidden_base_dir):
-                raise QuietExit(f"E: {hidden_base_dir} is not initialized")
+                raise QuietExit(f"E: {hidden_base_dir} is not initialized.\nRun: eblocbroker init")
 
             raise QuietExit(f"E: {fn} is not created")
 

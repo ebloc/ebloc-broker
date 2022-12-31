@@ -4,6 +4,7 @@
 #
 #    pip-compile --resolver=backtracking
 #
+pyobjc-framework-Cocoa ; sys_platform == "darwin"
 accesscontrol==4.2
 acquisition==4.6
     # via
@@ -323,6 +324,7 @@ gitpython==3.1.0
 grip==4.5.2
 gshell==5.5.2
 gunicorn==20.0.4
+halo==0.0.31
 hexbytes==0.2.3
     # via
     #   eip712
@@ -598,7 +600,7 @@ pluggy==1.0.0
     #   python-lsp-server
     #   tox
 ppi==0.0.4
-pre-commit==2.18.1
+pre-commit==2.21.0
 prompt-toolkit==3.0.31
     # via
     #   eth-brownie
@@ -803,7 +805,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==12.6.0
+rich==13.2.0
 rlp==2.0.1
     # via
     #   eth-account

@@ -12,6 +12,7 @@ from contextlib import suppress
 from pathlib import Path
 
 import owncloud
+from halo import Halo
 from web3.logs import DISCARD
 
 from broker import cfg, config
@@ -27,7 +28,7 @@ Ebb = cfg.Ebb
 
 
 def _upload_results(encoded_share_token, output_file_name):
-    r"""Upload results into Eudat using curl.
+    r"""Upload results into b2drop using curl.
 
     * How to upload files into shared b2drop.eudat(owncloud) repository using curl?
     __ https://stackoverflow.com/a/44556541/2402577
@@ -78,10 +79,10 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
                 log(error)
 
             if "warning: Couldn't read data from file" in error:
-                raise Exception("Eudat repository did not successfully uploaded")
+                raise Exception("b2drop repository did not successfully uploaded")
 
             if p.returncode != 0 or "<d:error" in output:
-                log("Eudat repository did not successfully uploaded")
+                log("b2drop repository did not successfully uploaded")
                 log(f"   curl is failed. {p.returncode} => {br(error)} {output}")
                 time.sleep(1)  # wait 1 second for next step retry to upload
             else:  # success on upload
@@ -96,18 +97,17 @@ def _login(fn, user, password_path) -> None:
     with open(password_path, "r") as content_file:
         passwd = content_file.read().strip()
 
+    message = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
     for _ in range(cfg.RECONNECT_ATTEMPTS):
         try:
-            status_str = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
-            with cfg.console.status(status_str):
-                # may take few minutes to connect
-                config.oc.login(user, passwd)
+            with Halo(text=message, spinner="line", placement="right"):  # https://github.com/manrajgrover/halo
+                config.oc.login(user, passwd)  # may take few minutes to connect
 
             passwd = ""
             f = open(fn, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(f"  {status_str} {ok()}", "bold")
+            log(message, success=True)
             return
         except Exception as e:
             log(str(e))
@@ -130,13 +130,13 @@ def login(user, password_path: Path, fn: str) -> None:
         f = open(fn, "rb")
         config.oc = pickle.load(f)
         try:
-            status_str = f"[bold]Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
-            with cfg.console.status(status_str):
+            message = f"[bold]Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
+            with Halo(text=message, spinner="line", placement="right"):
                 config.oc.get_config()
 
-            log(f" {status_str}{ok()}")
+            log(message, success=True)
         except subprocess.CalledProcessError as e:
-            log(f"FAILED. {e.output.decode('utf-8').strip()}")
+            log(f"{message} FAILED.\n{e.output.decode('utf-8').strip()}")
             _login(fn, user, password_path)
     else:
         _login(fn, user, password_path)
@@ -171,7 +171,7 @@ def initialize_folder(folder_to_share, requester_name) -> str:
 
     try:
         tar_dst = f"{tar_hash}_{requester_name}/{tar_hash}.tar.gz"
-        log("## uploading into [green]EUDAT B2DROP[/green] this may take some time depending on the file size...")
+        log("## uploading into [green]B2DROP[/green] this may take some time depending on the file size...")
         is_already_uploaded = False
         with suppress(Exception):
             # File is first time created
@@ -180,7 +180,7 @@ def initialize_folder(folder_to_share, requester_name) -> str:
             log(file_info, "bold")
             if float(file_info.attributes["{DAV:}getcontentlength"]) == size:
                 # check is it already uploaded or not via its file size
-                log(f"## {tar_source} is already uploaded into [green]EUDAT B2DROP")
+                log(f"## {tar_source} is already uploaded into [green]B2DROP")
                 is_already_uploaded = True
 
         if not is_already_uploaded:
@@ -215,7 +215,7 @@ def is_oc_mounted() -> bool:
 
     if "b2drop.eudat.eu/remote.php/webdav/" not in output:
         print(
-            "Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n"
+            "Mount a folder in order to access B2DROP(https://b2drop.eudat.eu/remote.php/webdav/).\n"
             "Please do: \n"
             "sudo mkdir -p /mnt/oc \n"
             "sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /mnt/oc"
@@ -303,13 +303,18 @@ def _submit(provider, requester, job, required_confs=1):
             job.code_hashes.append(code_hash)
             job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-    # provider_addr_to_submit = provider
+    # provider_addr_to_submit = job.Ebb.w3.toChecksumAddress(provider)
+    # job.price, *_ = job.cost(provider_addr_to_submit, requester)
+    #
     provider_addr_to_submit = job.search_best_provider(requester)
     provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
     log(f"==> provider_fid=[m]{provider_info['f_id']}")
     _share_folders(provider_info, requester_name, folders_hash)
     # print(job.code_hashes)
     try:
+        if job.price == 0:
+            raise Exception("E: job.price is 0 ; something is wrong")
+
         return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)
     except QuietExit:
         sys.exit(1)

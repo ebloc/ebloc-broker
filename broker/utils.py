@@ -67,7 +67,7 @@ CACHE_TYPES = {
 STORAGE_IDs = {
     "ipfs": StorageID.IPFS,
     "ipfs_gpg": StorageID.IPFS_GPG,
-    "eudat": StorageID.B2DROP,
+    "b2drop": StorageID.B2DROP,
     "gdrive": StorageID.GDRIVE,
     "none": StorageID.NONE,
 }

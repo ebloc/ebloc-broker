@@ -4,11 +4,11 @@ import hashlib
 import os
 import pwd
 
-from broker._utils._log import ok
+from broker._utils._log import log, ok
 from broker._utils.tools import _remove, mkdir
 from broker.lib import run
 from broker.libs.slurm import add_user_to_slurm
-from broker.utils import log, popen_communicate  # noqa: F401
+from broker.utils import popen_communicate  # noqa: F401
 
 
 def remove_user(user_name, user_dir=None):

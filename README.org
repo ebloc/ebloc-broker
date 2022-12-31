@@ -43,8 +43,7 @@ docker-compose down
 
 ** Cloud Storages
 
-*** EUDAT
-
+*** B2DROP
 **** Create B2ACCESS user account and login into B2DROP:
 
 First, from [[https://b2access.eudat.eu/home/][B2ACCESS home page]]
@@ -114,17 +113,26 @@ config:
 
 - ~path~ should represented as full path of the corresponding folder.
 - ~cache_type~ should be variable from [ ~public~, ~private~ ]
-- ~storaage_id~ should be variable from [ ~ipfs~, ~ipfs_gpg~, ~none~, ~eudat~, ~gdrive~ ]
+- ~storage_id~ should be variable from [ ~ipfs~, ~ipfs_gpg~, ~none~, ~b2drop~, ~gdrive~ ]
 
 -----------------------------------
 
 ** Provider
-
 Each provider should run ~eblocbroker driver~ for start running the Python script.
 
-*** Screenshot of provider GUI:
+
+#+HTML: <details><summary>Example screenshot of provider GUI:</summary>
 
 [[file:/docs/gui1.png]]
+
+#+HTML: </details>
+
+
+** 🎬  Demonstration
+
+- [[https://asciinema.org/a/551809]]
+- [[https://asciinema.org/a/551843]]
+
 
 ** Acknowledgement
 

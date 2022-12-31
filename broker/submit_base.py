@@ -16,7 +16,7 @@ class SubmitBase:
     def submit(self, is_pass=False, required_confs=1):
         if self.job.source_code_storage_id in ["ipfs", "ipfs_gpg"]:
             return submit_ipfs(self.job, is_pass, required_confs)
-        elif self.job.source_code_storage_id == "eudat":
+        elif self.job.source_code_storage_id == "b2drop":
             return submit_b2drop(self.job, is_pass, required_confs)
         elif self.job.source_code_storage_id == "gdrive":
             return submit_gdrive(self.job, is_pass, required_confs)

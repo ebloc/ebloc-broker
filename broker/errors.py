@@ -1,9 +1,9 @@
 class BashCommandsException(Exception):
     def __init__(self, returncode, output, error_msg, cmd):
-        self.cmd = cmd
         self.returncode = returncode
         self.output = output
         self.error_msg = error_msg
+        self.cmd = cmd
         Exception.__init__("Error in the executed command")
 
 

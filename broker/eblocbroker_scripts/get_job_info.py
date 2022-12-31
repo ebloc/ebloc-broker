@@ -177,10 +177,15 @@ def get_job_info(
         job_prices = self._get_provider_fees_for_job(provider, job_key, int(index))
         if is_print:
             fn = self.EBB_SCRIPTS / "get_job_info.py"
-            log(f"$ {fn} {provider} {job_key} {index} {job_id} {received_bn}", "bold white", is_code=True)
+            log(
+                f"[bold green]$[/bold green] {fn} {provider} {job_key} {index} {job_id} {received_bn}",
+                highlight=False,
+                is_code=True,
+            )
 
         self.job_info = {
             "provider": provider,
+            "job_owner": job_owner.lower(),
             "job_key": job_key,
             "index": index,
             "availableCore": job_prices[0],
@@ -188,7 +193,6 @@ def get_job_info(
             "stateCode": job[0],
             "start_timestamp": job[1],
             "received": received,
-            "job_owner": job_owner.lower(),
             "data_transfer_in": data_transfer_in,
             "data_transfer_out": data_transfer_out,
             "commitment_block_duration": job_prices[1],

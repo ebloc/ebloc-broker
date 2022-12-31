@@ -202,7 +202,7 @@ class Contract(Base):
 
         return block_number
 
-    def get_transaction_by_block(self, block_hash, tx_index):
+    def get_transaction_by_block(self, block_hash, tx_index) -> dict:
         """Return the tx at the index specified by transaction_index from the block specified by block_identifier.
 
         __ web3py.readthedocs.io/en/stable/web3.eth.html?highlight=raw%20trace#web3.eth.Eth.get_transaction_by_block
@@ -215,7 +215,7 @@ class Contract(Base):
         Returns the transaction receipt specified by transactionHash.
         If the transaction has not yet been mined returns 'None'
 
-        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_receipt
+        __ web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_receipt
         """
         tx_receipt = self.w3.eth.get_transaction_receipt(tx)
         if not compact:

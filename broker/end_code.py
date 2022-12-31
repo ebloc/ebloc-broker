@@ -85,14 +85,14 @@ class IpfsGPG(Common):
             raise e
 
 
-class Eudat(Common):
+class B2drop(Common):
     def __init__(self) -> None:
         self.encoded_share_tokens: Dict[str, str] = {}
         self.patch_dir: Path = Path("")
 
     def initialize(self):
         with suppress(Exception):
-            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
 
         try:
             self.get_shared_tokens()
@@ -154,7 +154,7 @@ class Gdrive(Common):
             raise Exception("gdrive could not upload the file") from e
 
 
-class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
+class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
     def __init__(self, **kwargs) -> None:
         args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
         self.job_key: str = kwargs.pop("job_key")
@@ -281,7 +281,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.storage_ids[_id] == StorageID.IPFS_GPG:
             return IpfsGPG
         if self.storage_ids[_id] == StorageID.B2DROP:
-            return Eudat
+            return B2drop
         if self.storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 

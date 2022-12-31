@@ -3,7 +3,7 @@ from broker import config
 from broker.config import env
 from broker.libs import eudat
 
-eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
 oc = config.oc
 print("running: `oc.list('.')`")
 _list = oc.list(".")

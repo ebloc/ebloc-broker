@@ -63,7 +63,8 @@ RUN apt-get update \
     nodejs \
     python3-venv \
     sudo \
-    netcat \
+    davfs2 \
+    netcat-traditional \
     supervisor \
     nano \
     less \

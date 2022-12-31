@@ -21,7 +21,7 @@ from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, pr
 Ebb = cfg.Ebb
 
 
-class EudatClass(Storage):
+class B2dropClass(Storage):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.share_token = None
@@ -144,7 +144,7 @@ class EudatClass(Storage):
         return True
 
     def _download_folder(self, results_folder_prev, folder_name):
-        """Download corresponding folder from the EUDAT.
+        """Download corresponding folder from the B2DROP.
 
         Always assumes job is submitted as .tar.gz file
         """
@@ -155,7 +155,7 @@ class EudatClass(Storage):
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         for attempt in range(1):
             try:
-                log("## Trying [blue]wget[/blue] approach...")
+                log("==> Trying [blue]wget[/blue] approach...")
                 token = self.share_id[share_key]["share_token"]
                 if token:
                     download_fn = f"{cached_tar_fn.replace('.tar.gz', '')}_{self.requester_id}.download"
@@ -187,7 +187,7 @@ class EudatClass(Storage):
                 else:
                     log(f"E: Something is wrong, oc could not retrieve the file [attempt:{attempt}]")
 
-        raise Exception("Eudat download error")
+        raise Exception("b2drop download error")
 
     def download_folder(self, cache_folder, folder_name):
         """Wrap download folder function."""
@@ -204,7 +204,7 @@ class EudatClass(Storage):
     def get_file_size(self, fn, folder_name):
         # accept_given_shares()
         try:
-            log(f"## trying to get {fn} file info from EUDAT")
+            log(f"## trying to get {fn} file info from B2DROP")
             #: DAV/Properties/getcontentlength the number of bytes of a resource
             return config.oc.file_info(fn).get_size()
         except Exception as e:
@@ -370,7 +370,7 @@ class EudatClass(Storage):
             time.sleep(0.25)
 
     def _run(self) -> bool:
-        log(f"{br(get_date())} new job has been received through EUDAT: {self.job_key} {self.index} ", "bold cyan")
+        log(f"{br(get_date())} new job has been received through B2DROP: {self.job_key} {self.index} ", "bold cyan")
         # TODO: refund check
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])

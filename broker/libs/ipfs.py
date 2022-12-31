@@ -287,7 +287,7 @@ class Ipfs:
         except Exception as e:
             raise Exception(f"Timeout, failed to find ipfs file: {ipfs_hash}") from e
 
-    def get(self, ipfs_hash, path, is_storage_paid):
+    def get(self, ipfs_hash, path, is_storage_paid=False):
         if not is_ipfs_on():
             raise IpfsNotConnected
 

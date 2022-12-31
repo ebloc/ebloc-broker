@@ -92,7 +92,7 @@ if [ ! -d $LOG_DIR ]; then
     mkdir -p $LOG_DIR
 fi
 
-touch $LOG_DIR/.eudat_client.txt
+touch $LOG_DIR/.b2drop_client.txt
 
 mkdir -p $LOG_DIR/private
 mkdir -p $LOG_DIR/drivers_output
@@ -112,10 +112,10 @@ if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
 fi
 
-# echo -e "warning: Update the following file "$LOG_DIR"/.eudat_client.txt' with
-# your EUDAT account's password. Best to make sure the file is not readable or
+# echo -e "warning: Update the following file "$LOG_DIR"/.b2drop_client.txt' with
+# your B2DROP account's password. Best to make sure the file is not readable or
 # even listable for anyone but you. You achieve this with:
-# 'chmod 700 eudat_password.txt'"
+# 'chmod 700 b2drop_password.txt'"
 # echo ""
 if [[ "$1" != "$VAR" ]]; then
     yes_or_no "Are you are a provider" && provider_setup

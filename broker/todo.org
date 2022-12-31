@@ -1,10 +1,9 @@
                             *outline*
 * TASKS
-** TODO replace ~eudat~ with ~b2drop~
 ** TODO log ~dataTransferIn~ in the contract
 - self.eBlocBroker.decode_input(input)
 - testte dataTransferIn hep [0, 0, 0, 0] olarak hesaplanmis?
-** TODO patch eudat and google-drive
+** TODO patch bdrop and google-drive
 ** TODO verify downloaded data
 ** TODO convert ~ipfsID~ into ~ipfsAddress~ in the ~eBlocBrokerInterface.sol~
 ** TODO Test updated code in 2 machines with your test cast submitting job.
@@ -16,3 +15,18 @@
 – https://docs.openzeppelin.com/contracts/2.x/erc20
 – https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC20
 ** TODO get_transaction_receipt console'a ekle
+** TODO rootless docker in the compute nodes
+https://serverfault.com/a/1078434/395276
+** TODO https://www.mturk.com
+** TODO apply patched for all the folders
+** TODO Later do, when cache time is completed:
+   oc.decline_remote_share(int(<share_id>)) to cancel shared folder at
+   end_code or after some time later
+** TODO /* Sets the job's state (stateCode) which is obtained from Slurm */
+Slurm status should be set on the receiveDeposit call not setJobStatus
+** TODO DAS2-fs1-2003-1.swf
+   Starting from // 5955  9447070
+   __ https://www.cse.huji.ac.il/labs/parallel/workload/l_das2/index.html
+** TODO oc may have "owncloud.owncloud.HTTPResponseError: HTTP error: 401" error
+** TODO Some code should go into utils.py
+   Some functıons are public that should carried into ~utils.py~

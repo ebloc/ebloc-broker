@@ -2,7 +2,6 @@
 
 import logging
 import threading
-from contextlib import suppress
 from logging import Filter
 from pathlib import Path
 
@@ -13,6 +12,7 @@ from broker._utils import _log, colored_traceback
 from broker._utils.tools import mkdir
 from broker._utils.yaml import Yaml
 from broker.env import ENV_BASE
+from broker.errors import QuietExit
 
 logging.getLogger("filelock").setLevel(logging.ERROR)
 
@@ -54,7 +54,7 @@ class ENV(ENV_BASE):
             self.IS_PROVIDER = True
             self.SLURMUSER = self.cfg["provider"]["slurm_user"]
             self.IS_IPFS_USE = self.cfg["provider"]["is_ipfs_use"]
-            self.IS_B2DROP_USE = self.cfg["provider"]["is_eudat_use"]
+            self.IS_B2DROP_USE = self.cfg["provider"]["is_b2drop_use"]
             self.IS_GDRIVE_USE = self.cfg["provider"]["is_gdrive_use"]
             if isinstance(self.cfg["provider"]["is_thread"], bool):
                 cfg.IS_THREADING_ENABLED = self.cfg["provider"]["is_thread"]
@@ -151,5 +151,8 @@ oc = None
 driver_cancel_process = None
 _eblocbroker = None
 env: ENV
-with suppress(Exception):
+try:
     env = ENV()
+except Exception as e:
+    print(e)
+    raise QuietExit from e

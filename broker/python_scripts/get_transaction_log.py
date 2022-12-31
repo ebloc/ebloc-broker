@@ -5,7 +5,7 @@ import sys
 from web3.logs import DISCARD
 
 from broker import cfg
-from broker.utils import log
+from broker._utils._log import log
 
 
 def main():

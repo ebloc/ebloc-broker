@@ -26,6 +26,7 @@ thread_log_files: Dict[str, str] = {}
 custom_theme = Theme(
     {
         "info": "bold magenta",  # "bold dim magenta"
+        "alert": "bold red",
         "danger": "bold red",
         "b": "bold",
         "m": "magenta",
@@ -71,7 +72,14 @@ class Log:
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
         self.console: Dict[str, Console] = {}
-        self.inner_bullet_three = ["==>", "#> ", "## ", " * ", "###", "** ", "***"]
+        self.inner_bullet_three = ["==>", "#> ", "## ", " * ", "###", "** ", "***", " **"]
+
+    # def halo_decorator(self):
+    #     with Halo(text="Loading", spinner="line", placement="right"):
+    #         time.sleep(6)
+
+    # def success() -> None:
+    #     pass
 
     def print_color(self, text: str, color=None, is_bold=True, end="\n") -> None:
         """Print string in color format."""
@@ -182,7 +190,7 @@ def console_ruler(msg="", character="=", color="cyan", fn=""):
         ll.console[fn].rule(characters=character)
 
 
-def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
+def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, highlight=True):
     if not is_output:
         is_print = is_output
     else:
@@ -198,7 +206,7 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
     else:
         _text = text
 
-    if color:
+    if color and color != "white":
         if is_print:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_bullet:
@@ -222,7 +230,7 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
                 )
             else:
                 if color:
-                    ll.console[fn].print(f"[bold][{color}]{_text}[/{color}][/bold]", end=end, soft_wrap=True)
+                    ll.console[fn].print(f"[{color}]{_text}[/{color}]", end=end, soft_wrap=True)
                 else:
                     ll.console[fn].print(_text, end=end, soft_wrap=True)
     else:
@@ -236,13 +244,10 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
                 text_to_write = _text
 
         if is_print:
-            if color in ("white", "", None) and "[" not in text_to_write:
-                print(text, end=end)
-            else:
-                console.print(text_to_write, end=end)
+            console.print(text_to_write, highlight=highlight, end=end)
 
         if is_write and IS_WRITE:
-            ll.console[fn].print(text_to_write, end=end, soft_wrap=True)
+            ll.console[fn].print(text_to_write, end=end, highlight=highlight, soft_wrap=True)
 
 
 def log(
@@ -255,6 +260,8 @@ def log(
     is_err=False,
     is_output=True,
     max_depth=None,
+    highlight=True,
+    success=False,
     back=0,
     end="\n",
 ):
@@ -268,6 +275,9 @@ def log(
     :param text: String to print
     :param color: Color of the complete string
     :param fn: Filename to write
+    :param highlight: Rich will highlight certain patterns in your output such
+        as numbers, strings, and other objects like IP addresses. You can
+        disable highlighting by setting highlight=False.
     """
     if isinstance(text, QuietExit):
         text = str(text)
@@ -282,26 +292,38 @@ def log(
         if text:
             if "E: " not in text[3] and "warning:" not in text.lower():
                 text = f"E: {text}"
+            elif "E: warning: " in text:
+                text = f"E: {text.replace('E: warning: ', '')}"
         else:
             return
 
         text = text.replace("E: warning:", "warning:")
 
+    if success:
+        text = f"{text} {ok()}"
+
     if isinstance(text, str) and "E: " in text[3:]:
         _text = text.replace("warning: ", "").replace("E: ", "")
-        if "E: warning: " not in text:
+        if "E: warning: " in text:
+            text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+        else:
             if "warning:" in text:
                 text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
             else:
                 text = f"{WHERE(back)}[bold red] E:[/bold red] [bold]{_text}"
-        else:
-            text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
 
     if "-=-=" in str(text):
         is_bold = True
 
     if is_code:
-        text = " \ \n  ".join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
+        base_str = ""
+        if text[0:2] == "$ ":
+            # is_bold = False
+            base_str = " \ \n      "
+        else:
+            base_str = " \ \n    "
+
+        text = base_str.join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
 
     if is_wrap:
         text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
@@ -335,7 +357,7 @@ def log(
         if is_write and IS_WRITE:
             ll.console[fn].print(text)
     else:
-        _log(text, color, is_bold, fn, end, is_write, is_output)
+        _log(text, color, is_bold, fn, end, is_write, is_output, highlight)
 
 
 def WHERE(back=0):

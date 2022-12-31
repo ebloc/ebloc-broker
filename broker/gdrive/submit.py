@@ -3,7 +3,7 @@
 from web3.logs import DISCARD
 
 from broker import cfg
-from broker._utils._log import ok
+from broker._utils._log import log, ok
 from broker._utils.web3_tools import get_tx_status
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
@@ -11,7 +11,7 @@ from broker.lib import run
 from broker.libs import _git, gdrive
 from broker.libs.gdrive import check_gdrive
 from broker.link import check_link_folders
-from broker.utils import is_program_valid, log, print_tb
+from broker.utils import is_program_valid, print_tb
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version

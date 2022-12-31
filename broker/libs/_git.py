@@ -237,6 +237,10 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
 
     __ https://stackoverflow.com/a/15375869/2402577
     """
+    if os.stat(patch_file).st_size == 0:
+        log(f"warning: patch_file={patch_file} is empty")
+        return
+
     if is_gpg:
         cfg.ipfs.decrypt_using_gpg(patch_file)
 
@@ -261,6 +265,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             "--whitespace=fix",
             "--ignore-space-change",
             "--ignore-whitespace",
+            # "--allow-empty",
             "--verbose",
             patch_file,
         ]

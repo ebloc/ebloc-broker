@@ -14,7 +14,7 @@ cfg:
     is_bloxberg: true
     is_thread: true
     is_ipfs_use: true
-    is_eudat_use: true
+    is_b2drop_use: true
     is_gdrive_use: true
     available_core: 4
     prices:
