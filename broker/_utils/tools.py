@@ -43,10 +43,10 @@ def merge_two_dicts(x, y):
 
 def timenow() -> int:
     """Return UTC timestamp."""
-    d = datetime.utcnow()
-    log(f"UTC_timestamp={d}", "bold")
+    dt = datetime.utcnow()
+    log(f"UTC_now={dt.strftime('%Y-%m-%d %H:%M:%S')}", "bold")
     epoch = datetime(1970, 1, 1)
-    return int((d - epoch).total_seconds())
+    return int((dt - epoch).total_seconds())
 
 
 def unix_time_millis(dt) -> int:

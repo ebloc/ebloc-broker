@@ -26,5 +26,10 @@ def add_to_ipfs(results_folder):
     # shutil.move(results_folder, filepath + '/' + result_ipfs_hash)
 
 
-results_folder = expanduser("~/DAG")
-add_to_ipfs(results_folder)
+def main():
+    results_folder = expanduser("~/DAG")
+    add_to_ipfs(results_folder)
+
+
+if __name__ == "__main__":
+    main()

@@ -28,6 +28,7 @@ custom_theme = Theme(
         "info": "bold magenta",  # "bold dim magenta"
         "alert": "bold red",
         "danger": "bold red",
+        "bg": "bold green",
         "b": "bold",
         "m": "magenta",
         "w": "white",

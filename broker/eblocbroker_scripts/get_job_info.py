@@ -223,7 +223,7 @@ def get_job_info(
         received_bn = self.update_job_cores(provider, job_key, index, received_bn)
         if not received_bn or received_bn == self.deployed_block_number:
             # First reading from the mongoDB, this will increase the speed to fetch from the logged data
-            received_bn_temp = self.mongo_broker.get_job_block_number(self.job_info["job_owner"], job_key, index)
+            received_bn_temp = self.mongo_broker.get_job_bn(self.job_info["job_owner"], job_key, index)
             if received_bn == 0 and received_bn_temp == 0:
                 received_bn = self.deployed_block_number
 

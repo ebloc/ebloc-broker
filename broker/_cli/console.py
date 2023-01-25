@@ -9,6 +9,7 @@ from vulcano.app import VulcanoApp
 from vulcano.app.lexer import MonokaiTheme
 
 from broker import cfg
+from broker._utils import _log
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker._utils.web3_tools import get_tx_status
@@ -26,12 +27,13 @@ def my_inline_function():
 
 app = VulcanoApp()
 Ebb = cfg.Ebb
+_log.IS_WRITE = False
 t1 = threading.Thread(target=my_inline_function)
 t1.start()
 
 
 def has_context_name():
-    """Function to hide a command from command line
+    """Hide a command from command line.
 
     This function is to prevent showing help and autocomplete for commands that need the name
     to be set up on the context.
@@ -115,6 +117,7 @@ def get_requester_info(address):
 def _timenow():
     t1.join()
     print_timenow()
+    log(f"#> bloxberg_latest_block_number={Ebb.get_block_number()}")
 
 
 @app.command("register_requester", "Registers requester info")

@@ -2,6 +2,7 @@
 
 import gdown
 
+"""
 cmd = [
     "curl",
     "--fail",
@@ -17,6 +18,7 @@ cmd = [
     "-w",
     "%{http_code}",
 ]
+"""
 
 
 def main():

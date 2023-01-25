@@ -7,6 +7,6 @@
 * Convert
 
 #+begin_src bash
-$HOME/ebloc-broker/docs/convert/run_convert.sh
+~/ebloc-broker/docs/convert/run_convert.sh
 ./run
 #+end_src

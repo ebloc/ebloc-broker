@@ -218,10 +218,10 @@ class Driver:
         console_ruler(idx, character="-")
         job_key = self.logged_job.args["jobKey"]
         index = self.logged_job.args["index"]
-        self.job_block_number = self.logged_job["blockNumber"]
+        self.job_bn = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
         log(f"## job_key=[m]{job_key}[/m] | index={index}", "b")
-        log(f"   received_bn={self.job_block_number}", "b")
+        log(f"   received_bn={self.job_bn}", "b")
         log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}", "b")
         log(f"   provider={self.logged_job.args['provider']}", "b")
         log(f"   received={self.logged_job.args['received']}", "b")
@@ -237,10 +237,10 @@ class Driver:
         try:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
-                partial(Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.job_block_number),
+                partial(Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.job_bn),
                 max_retries=10,
             )
-            Ebb.get_job_code_hashes(env.PROVIDER_ID, job_key, index, self.job_block_number)
+            Ebb.get_job_code_hashes(env.PROVIDER_ID, job_key, index, self.job_bn)
             self.requester_id = self.job_info["job_owner"]
             self.job_info.update({"received_block": self.received_block})
             self.job_info.update({"storage_duration": self.storage_duration})
@@ -257,7 +257,7 @@ class Driver:
         for job in range(1, len(self.job_info["core"])):
             with suppress(Exception):
                 self.job_infos.append(  # if workflow is given then add jobs into list
-                    Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.job_block_number)
+                    Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.job_bn)
                 )
 
         self.check_requested_job()

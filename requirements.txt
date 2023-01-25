@@ -83,7 +83,7 @@ bitarray==2.6.0
     # via
     #   eth-account
     #   eth-brownie
-black==22.10.0
+black==22.12.0
     # via
     #   eth-brownie
 bleach==4.1.0
@@ -182,8 +182,8 @@ dataclassy==0.11.1
     # via
     #   eip712
     #   eth-brownie
-dateparser==1.1.1
-datetime==4.3
+dateparser==1.1.6
+DateTime==5.0
     # via
     #   accesscontrol
 dbfread==2.0.4
@@ -232,7 +232,7 @@ eth-account==0.5.9
     # via
     #   eth-brownie
     #   web3
-eth-brownie==1.19.2
+eth-brownie==1.19.3
 eth-event==1.2.3
     # via
     #   eth-brownie
@@ -805,7 +805,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==13.2.0
+rich==13.3.3
 rlp==2.0.1
     # via
     #   eth-account
@@ -992,7 +992,7 @@ types-termcolor==1.1.1
 types-urllib3==1.26.15
     # via
     #   types-requests
-typing-extensions==4.0.1
+typing-extensions==4.4.0
     # via
     #   astroid
     #   black
@@ -1052,7 +1052,7 @@ wcwidth==0.2.5
     # via
     #   eth-brownie
     #   prompt-toolkit
-web3==5.31.1
+web3==5.31.3
     # via
     #   eth-brownie
 webdriver-manager==3.4.2

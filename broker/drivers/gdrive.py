@@ -66,14 +66,8 @@ class GdriveClass(Storage):
             if not os.path.isfile(file_path):
                 raise Exception(f"{WHERE(1)} E: File {file_path} is not downloaded successfully")
 
-            p1 = subprocess.Popen(
-                [
-                    "ls",
-                    "-ln",
-                    f"{self.folder_path_to_download[code_hash]}/{name}",
-                ],
-                stdout=subprocess.PIPE,
-            )
+            link_path = f"{self.folder_path_to_download[code_hash]}/{name}"
+            p1 = subprocess.Popen(["ls", "-ln", link_path], stdout=subprocess.PIPE)
             p2 = subprocess.Popen(["awk", "{print $5}"], stdin=p1.stdout, stdout=subprocess.PIPE)
             p1.stdout.close()  # type: ignore
             # returns downloaded files size in bytes

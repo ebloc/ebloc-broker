@@ -124,6 +124,7 @@ class Gdrive(Common):
         """Upload the generated result into gdrive.
 
         :param key: key of the shared gdrive file
+        :param is_job_key: is the provided key string is job's main key
         :returns: True if upload is successful
         """
         try:
@@ -229,8 +230,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
         with suppress(Exception):
-            p = psutil.Process(int(self.job_state_running_pid))
-            log(p)
+            log(psutil.Process(int(self.job_state_running_pid)))
             while True:
                 if not pid_exists(self.job_state_running_pid):
                     break
@@ -245,21 +245,21 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         with suppress(Exception):
             share_ids = read_json(f"{self.private_dir}/{self.job_key}_share_id.json")
 
-        for source_code_hash in self.code_hashes_to_process:
+        for code_hash in self.code_hashes_to_process:
             try:
-                share_token = share_ids[source_code_hash]["share_token"]
-                self.share_tokens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode(
-                    (f"{share_token}:").encode("utf-8")
-                ).decode("utf-8")
+                share_token = share_ids[code_hash]["share_token"]
+                self.share_tokens[code_hash] = share_token
+                self.encoded_share_tokens[code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
+                    "utf-8"
+                )
             except KeyError:
                 try:
                     shared_id = Ebb.mongo_broker.find_shareid_item(f"{self.job_key}_{self.requester_id_address[:16]}")
                     share_token = shared_id["share_token"]
-                    self.share_tokens[source_code_hash] = share_token
-                    self.encoded_share_tokens[source_code_hash] = base64.b64encode(
-                        (f"{share_token}:").encode("utf-8")
-                    ).decode("utf-8")
+                    self.share_tokens[code_hash] = share_token
+                    self.encoded_share_tokens[code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
+                        "utf-8"
+                    )
                 except Exception as e:
                     log(f"E: share_id cannot be detected from key={self.job_key}")
                     raise e

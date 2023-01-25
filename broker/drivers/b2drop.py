@@ -229,7 +229,7 @@ class B2dropClass(Storage):
             log(str(e))
             raise Exception("failed all the attempts to get file info at B2DROP") from e
 
-    def total_size_to_download(self):
+    def total_size_to_download(self) -> None:
         data_transfer_in_to_download = 0  # total size to download in bytes
         for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
