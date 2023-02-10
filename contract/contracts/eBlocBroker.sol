@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: MIT
 
-/*
-  file:   eBlocBroker.sol
-  author: Alper Alimoglu
-  email:  alper.alimoglu AT gmail.com
-*/
-
 pragma solidity >=0.7.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
-import "./Lib.sol";
 import "./SafeMath.sol";
+import "./Lib.sol";
 import "./eBlocBrokerInterface.sol";
 import "./EBlocBrokerBase.sol";
-
 import "./ERC20/ERC20.sol";
+// import "./Token.sol";
 
 /**
- * @title eBlocBroker
- * @dev The eBlocBroker is a blockchain based autonomous computational resource
-   broker.
+   @title eBlocBroker
+   @author Alper Alimoglu - @avatar-lavventura
+   @author email: alper.alimoglu AT gmail.com
+   @dev
+       The eBlocBroker is a blockchain based autonomous computational resource broker.
+
+        Expands upon the ERC20 token standard
+        https://theethereum.wiki/w/index.php/ERC20_Token_Standard
  */
-contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
-    using SafeMath32 for uint32;
+contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Token
+
     using SafeMath for uint256;
+    using SafeMath32 for uint32;
+    // using SafeMath64 for uint64;
+
     using Lib for Lib.CloudStorageID;
     using Lib for Lib.IntervalArg;
     using Lib for Lib.JobArgument;
@@ -33,19 +35,15 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
     using Lib for Lib.Provider;
     using Lib for Lib.ProviderInfo;
     using Lib for Lib.Status;
-    mapping(address => uint256) public balances;
 
     /**
      * @dev eBlocBroker constructor that sets the original `owner` of the
-     * contract to the msg.sender.
+     * contract to the msg.sender and minting.
      */
-    constructor() public {
+    constructor () ERC20("USDT", "USDT") public {
         owner = msg.sender;
+        _mint(msg.sender, 1000000000 * (10 ** uint256(decimals()) ));
     }
-
-    /* constructor() { */
-    /*     owner = msg.sender; */
-    /* } */
 
     /**
      * @dev Transfer ownership of the contract to a new account (`newOwner`).
@@ -58,18 +56,18 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         owner = newOwner;
     }
 
-    /**
-     * @dev Withdraws the balance using the withdrawal pattern.
-     */
-    function withdraw() public returns (bool) {
-        uint256 amount = balances[msg.sender].mul(1 gwei);
-        // set zero the balance before sending to prevent reentrancy attacks
-        delete balances[msg.sender]; // for gas refund
-        // forwards all available gas
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed"); // return value is checked
-        return true;
-    }
+    /* /\** */
+    /*  * @dev Withdraws the balance using the withdrawal pattern. */
+    /*  *\/ */
+    /* function withdraw() public returns (bool) { */
+    /*     uint256 amount = _balances[msg.sender].mul(1 gwei); */
+    /*     // set zero the balance before sending to prevent reentrancy attacks */
+    /*     delete _balances[msg.sender]; // for gas refund */
+    /*     // forwards all available gas */
+    /*     (bool success, ) = msg.sender.call{value: amount}(""); */
+    /*     require(success, "Transfer failed"); // return value is checked */
+    /*     return true; */
+    /* } */
 
     /**
      * @dev Refund funds the complete amount to client if requested job is still
@@ -97,15 +95,17 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
           If 'provider' is not mapped on '_provider' map  or its 'key' and 'index'
           is not mapped to a job , this will throw automatically and revert all changes
         */
+        _provider.jobStatus[key][index]._refund(provider,jobID, core, elapsedTime); /////////////////
+
         Lib.Status storage jobInfo = _provider.jobStatus[key][index];
-        require(jobInfo.jobInfo == keccak256(abi.encodePacked(core, elapsedTime)));
+        /* require(jobInfo.jobInfo == keccak256(abi.encodePacked(core, elapsedTime))); */
         Lib.Job storage job = jobInfo.jobs[jobID];
-        require(
-            (msg.sender == jobInfo.jobOwner || msg.sender == provider) &&
-                job.stateCode != Lib.JobStateCodes.COMPLETED &&
-                job.stateCode != Lib.JobStateCodes.REFUNDED &&
-                job.stateCode != Lib.JobStateCodes.CANCELLED
-        );
+        /* require( */
+        /*     (msg.sender == jobInfo.jobOwner || msg.sender == provider) && */
+        /*         job.stateCode != Lib.JobStateCodes.COMPLETED && */
+        /*         job.stateCode != Lib.JobStateCodes.REFUNDED && */
+        /*         job.stateCode != Lib.JobStateCodes.CANCELLED */
+        /* ); */
 
         uint256 amount;
         if (
@@ -120,7 +120,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             //: balance is zeroed out before the transfer
             jobInfo.received = 0;
             jobInfo.receivedRegisteredDataFee = 0;
-            balances[jobInfo.jobOwner] += amount;
+            _balances[jobInfo.jobOwner] += amount;
         } else if (job.stateCode == Lib.JobStateCodes.RUNNING) {
             job.stateCode = Lib.JobStateCodes.CANCELLED;
         } else {
@@ -220,7 +220,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             jobInfo.received = 0;
             jobInfo.receivedRegisteredDataFee = 0;
             // pay back newOwned(jobInfo.received) back to the requester, which is full refund
-            balances[jobInfo.jobOwner] += _refund;
+            _balances[jobInfo.jobOwner] += _refund;
             _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, _refund);
             return;
         }
@@ -235,10 +235,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         jobInfo.receivedRegisteredDataFee = 0;
         // unused core and bandwidth is refunded back to the client
         if (_refund > 0) {
-            balances[jobInfo.jobOwner] += _refund;
+            _balances[jobInfo.jobOwner] += _refund;
         }
         // transfer gained amount to the provider
-        balances[msg.sender] += gain;
+        _balances[msg.sender] += gain;
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
         return;
     }
@@ -257,7 +257,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         // required remaining time to cache should be 0
         require(jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
         _cleanJobStorage(jobSt);
-        balances[requester] += payment;
+        _balances[requester] += payment;
         emit LogDepositStorage(requester, payment);
         return true;
     }
@@ -269,7 +269,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         require(jobSt.isVerifiedUsed && jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
         uint256 payment = storageInfo.received;
         storageInfo.received = 0;
-        balances[msg.sender] += payment;
+        _balances[msg.sender] += payment;
         _cleanJobStorage(jobSt);
         emit LogDepositStorage(msg.sender, payment);
         return true;
@@ -634,7 +634,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
         if (msgValue != cost) {
             refunded = (msgValue - cost);
             // transfers excess payment (msg.value - sum), if any, back to requester (msg.sender)
-            balances[msg.sender] += refunded;
+            _balances[msg.sender] += refunded;
         }
         emitLogJob(key, uint32(priceBlockIndex), sourceCodeHash, args, refunded, msgValue);
         return;
@@ -782,7 +782,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
             if (temp > 0 && jobSt.receivedBlock + jobSt.storageDuration < block.number) {
                 storageInfo.received = 0;
                 address _provider = args.provider;
-                balances[_provider] += temp; // refund storage deposit back to provider
+                _balances[_provider] += temp; // refund storage deposit back to provider
                 _cleanJobStorage(jobSt);
                 emit LogDepositStorage(args.provider, temp);
             }
@@ -900,8 +900,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase {
 
      * @param owner The address of the requester or provider.
      */
-    function balanceOf(address owner) external view returns (uint256) {
-        return balances[owner];
+    function _balanceOf(address owner) external view returns (uint256) {
+        return _balances[owner];
     }
 
     /**

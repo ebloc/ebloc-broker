@@ -17,21 +17,23 @@ def run(port=8547, hardfork_name="istanbul"):
     https://stackoverflow.com/a/8375012/2402577
     """
     print(f"## Launching ganache-cli on port={port}")
+    cmd = [
+        "ganache-cli",
+        "--server.port",
+        port,
+        "--chain.hardfork",
+        hardfork_name,
+        "--miner.blockGasLimit",
+        "6721975",
+        "--wallet.totalAccounts",
+        "10",
+        # "--blockTime",
+        # cfg.BLOCK_DURATION,
+        "--chain.allowUnlimitedContractSize",
+    ]
+    cmd_str = " ".join(str(t) for t in cmd)
+    print(cmd_str)
     with daemon.DaemonContext():
-        cmd = [
-            "ganache-cli",
-            "--port",
-            port,
-            "--hardfork",
-            hardfork_name,
-            "--gasLimit",
-            "6721975",
-            "--accounts",
-            "10",
-            # "--blockTime",
-            # cfg.BLOCK_DURATION,
-            "--allowUnlimitedContractSize",
-        ]
         popen_communicate(cmd, env.GANACHE_LOG)
 
 

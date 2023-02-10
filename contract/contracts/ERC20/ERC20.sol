@@ -33,7 +33,7 @@ import "./Context.sol";
  * allowances. See {IERC20-approve}.
  */
 contract ERC20 is Context, IERC20, IERC20Metadata {
-    mapping(address => uint256) private _balances;
+    mapping(address => uint256) private balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
 
@@ -83,9 +83,12 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * NOTE: This information is only used for _display_ purposes: it in
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
+     *
+     * A dime = $0.10 = 1/10 of a dollar.
+     * A penny = $0.01 = 1/100 of a dollar.
      */
     function decimals() public view virtual override returns (uint8) {
-        return 18;
+        return 2;
     }
 
     /**
@@ -99,7 +102,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * @dev See {IERC20-balanceOf}.
      */
     function balanceOf(address account) public view virtual override returns (uint256) {
-        return _balances[account];
+        return balances[account];
     }
 
     /**
@@ -233,13 +236,13 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
         _beforeTokenTransfer(from, to, amount);
 
-        uint256 fromBalance = _balances[from];
+        uint256 fromBalance = balances[from];
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
-            _balances[from] = fromBalance - amount;
+            balances[from] = fromBalance - amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
             // decrementing then incrementing.
-            _balances[to] += amount;
+            balances[to] += amount;
         }
 
         emit Transfer(from, to, amount);
@@ -264,7 +267,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         _totalSupply += amount;
         unchecked {
             // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
-            _balances[account] += amount;
+            balances[account] += amount;
         }
         emit Transfer(address(0), account, amount);
 
@@ -287,10 +290,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        uint256 accountBalance = _balances[account];
+        uint256 accountBalance = balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
         unchecked {
-            _balances[account] = accountBalance - amount;
+            balances[account] = accountBalance - amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
             _totalSupply -= amount;
         }

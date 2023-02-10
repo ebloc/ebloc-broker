@@ -4,8 +4,7 @@ import os
 import sys
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict
-
+from typing import Dict  # noqa
 from broker import cfg
 from broker._utils.tools import log, mkdir, run
 from broker.config import env

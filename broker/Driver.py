@@ -169,7 +169,7 @@ class Driver:
 
     def __init__(self):
         """Create new Driver object."""
-        self.Ebb: "Contract.Contract" = Ebb
+        self.Ebb: "Contract.Contract" = Ebb  # type: ignore
         self.block_number: int = 0
         self.latest_block_number: int = 0
         self.logged_jobs_to_process = None
@@ -326,7 +326,7 @@ def run_driver(given_bn):
         from broker.imports import connect
 
         connect()
-        Ebb: "Contract.Contract" = cfg.Ebb
+        Ebb: "Contract.Contract" = cfg.Ebb  # type: ignore
         driver = Driver()
     except Exception as e:
         raise Terminate from e
