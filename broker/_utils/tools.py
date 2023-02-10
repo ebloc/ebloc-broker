@@ -59,16 +59,22 @@ def _timestamp(zone="Europe/Istanbul") -> int:
     return int(time.mktime(datetime.now(timezone(zone)).timetuple()))
 
 
-def _date(zone="Europe/Istanbul", _type=""):  # _date("UTC")
-    _zone = timezone(zone)
-    if _type == "year":
-        return datetime.now(_zone).strftime("%Y-%m-%d")
-    elif _type == "month":
-        return datetime.now(_zone).strftime("%m-%d")
-    elif _type == "hour":
-        return datetime.now(_zone).strftime("%H:%M:%S")
+def _date(zone="Europe/Istanbul", _type="", _format=""):
+    """Return latest time.
 
-    return datetime.now(_zone).strftime("%Y-%m-%d %H:%M:%S")
+    Zone could be: "UTC"
+    """
+    if _format:
+        return datetime.now(timezone(zone)).strftime(_format)
+    elif _type:
+        if _type == "year":
+            return datetime.now(timezone(zone)).strftime("%Y-%m-%d")
+        elif _type == "month-day":
+            return datetime.now(timezone(zone)).strftime("%m-%d")
+        elif _type == "hour":
+            return datetime.now(timezone(zone)).strftime("%H:%M:%S")
+
+    return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_dt_time(zone="Europe/Istanbul"):

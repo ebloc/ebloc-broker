@@ -36,6 +36,7 @@ custom_theme = Theme(
         "y": "yellow",
         "g": "green",
         "yob": "yellow on black blink",
+        "ib": "italic black",
     }
 )
 console = Console(

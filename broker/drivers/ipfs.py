@@ -41,7 +41,7 @@ class IpfsClass(Storage):
         log(f" * data_transfer_out={data_size_mb} MB | rounded={int(data_size_mb)} MB")
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
-        """Wrap ipfs get call."""
+        """Wrap ipfs-get call."""
         cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
         self.verified_data[ipfs_hash] = True
 
