@@ -16,6 +16,7 @@ from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log, zero_bytes3
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import gas_costs, mine, new_test
+from broker.eblocbroker_scripts.utils import Cent
 
 COMMITMENT_BLOCK_NUM = 600
 Contract.eblocbroker = Contract.Contract(is_brownie=True)
@@ -28,10 +29,10 @@ provider_gmail = "provider_test@gmail.com"
 fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 
 available_core = 128
-price_core_min = 1
-price_data_transfer_mb = 1
-price_storage_hr = 1
-price_cache_mb = 1
+price_core_min = Cent("1 cent")
+price_data_transfer_mb = Cent("1 cent")
+price_storage_hr = Cent("1 cent")
+price_cache_mb = Cent("1 cent")
 prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
 
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
@@ -112,12 +113,17 @@ def withdraw(address, amount):
     assert ebb.balanceOf(address) == 0
 
 
-def register_provider(price_core_min=1):
+def register_provider(price_core_min=Cent("1 cent"), prices=None):
     """Register Provider"""
     ebb = config.ebb
     mine(1)
-    web3.eth.defaultAccount = accounts[0]
-    prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
+    contract_owner = accounts[0]
+    provider_account = accounts[1]
+    # web3.eth.defaultAccount = accounts[0]
+    assert ebb.getOwner() != provider_account  # contract owner could not be a provider
+    if not prices:
+        prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
+
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
         provider_gmail,
@@ -126,7 +132,7 @@ def register_provider(price_core_min=1):
         available_core,
         prices,
         COMMITMENT_BLOCK_NUM,
-        {"from": accounts[0]},
+        {"from": provider_account},
     )
     append_gas_cost("registerProvider", tx)
     provider_registered_bn = tx.block_number
@@ -136,15 +142,15 @@ def register_provider(price_core_min=1):
     log(f"==> gpg_fingerprint={gpg_fingerprint}")
     orc_id = "0000-0001-7642-0442"
     orc_id_as_bytes = str.encode(orc_id)
-    assert not ebb.isOrcIDVerified(accounts[0]), "orc_id initial value should be false"
-    tx = ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+    assert not ebb.isOrcIDVerified(provider_account), "orc_id initial value should be false"
+    tx = ebb.authenticateOrcID(provider_account, orc_id_as_bytes, {"from": contract_owner})
     append_gas_cost("authenticateOrcID", tx)
-    assert ebb.isOrcIDVerified(accounts[0]), "isOrcIDVerified() is failed"
+    assert ebb.isOrcIDVerified(provider_account), "isOrcIDVerified() is failed"
     # orc_id should only set once for the same user
     with brownie.reverts():
-        tx = ebb.authenticateOrcID(accounts[0], orc_id_as_bytes, {"from": accounts[0]})
+        tx = ebb.authenticateOrcID(provider_account, orc_id_as_bytes, {"from": contract_owner})
 
-    assert orc_id == ebb.getOrcID(accounts[0]).decode("utf-8").replace("\x00", ""), "orc_id set false"
+    assert orc_id == ebb.getOrcID(provider_account).decode("utf-8").replace("\x00", ""), "orc_id set false"
     return provider_registered_bn
 
 
@@ -175,19 +181,40 @@ def register_requester(account):
     assert orc_id == ebb.getOrcID(account).decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
+def _transfer(to, amount):
+    ebb.transfer(to, Cent(amount), {"from": accounts[0]})
+
+
+# =========== testing starts ======================== #
+
+
+def test_initial_balances():
+    total_supply = "1000000000 usd"
+    assert ebb.balanceOf(accounts[0]) == Cent(total_supply)
+
+
 def test_register():
-    register_provider(100)
-    requester = accounts[1]
+    _prices = [Cent("0.5 usdt"), Cent("1 usdt"), Cent("4 cent"), Cent("0.1 usdt")]
+    register_provider(prices=_prices)
+    provider_price_info = ebb.getProviderInfo(accounts[1], 0)
+    assert provider_price_info[1][2:] == _prices
+    requester = accounts[2]
     register_requester(requester)
+
+    ebb.transfer(requester, Cent("100 usd"), {"from": accounts[0]})
+    assert ebb.balanceOf(requester) == Cent("100 usd")
 
 
 def test_stored_data_usage():
-    provider = accounts[0]
-    requester = accounts[1]
-    requester_1 = accounts[2]
-    register_provider(100)
+    provider = accounts[1]
+    requester = accounts[2]
+    requester_1 = accounts[3]
+    register_provider(Cent("10 cent"))
     register_requester(requester)
     register_requester(requester_1)
+
+    # ebb.transfer(accounts[1], amount, {"from": accounts[0]})
+
     job = Job()
     job.code_hashes.append(b"050e6cc8dd7e889bf7874689f1e1ead6")
     job.code_hashes.append(b"b6aaf03752dc68d625fc57b451faa2bf")
@@ -197,9 +224,11 @@ def test_stored_data_usage():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [1]
     job.run_time = [5]
-    job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PRIVATE.value]
+    job_price, cost = job.cost(provider, requester)
+    log(f"price={float(Cent(job_price).to('usd'))} usd")
     args = [
         provider,
         job.provider_price_bn,
@@ -209,21 +238,25 @@ def test_stored_data_usage():
         job.cores,
         job.run_time,
         job.data_transfer_out,
+        job_price,
     ]
-    job_price, cost = job.cost(provider, requester)
     # first time job is submitted with the data files
     # https://stackoverflow.com/a/12468284/2402577
+    ###############################
+    _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
         job.code_hashes[0],
         job.data_transfer_ins,
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": to_gwei(job_price)},
+        {"from": requester},
     )
+    assert Cent(ebb.balanceOf(requester)) == 0
+    # assert Cent(ebb.balanceOf(requester)).__add__(job_price) == Cent("100 usd")
     log(tx.events["LogDataStorageRequest"]["owner"])
     key = tx.events["LogJob"]["jobKey"]
-    assert tx.events["LogJob"]["received"] == 505
+    assert tx.events["LogJob"]["received"] == Cent(job_price)
     log(f"==> job_index={tx.events['LogJob']['index']} | key={key}")
     assert cost["storage"] == 2
     job_price, cost = job.cost(provider, requester)
@@ -231,18 +264,22 @@ def test_stored_data_usage():
     assert cost["storage"] == 0, "Since it is not verified yet cost of storage should be 2"
     assert cost["data_transfer"] == 1
     with brownie.reverts():
-        job_price_revert = 500  # data_transfer_in cost is ignored
+        #: job price is changed
+        job_price_minus_one = job_price - 1
+        _transfer(requester, Cent(job_price_minus_one))
+        args[-1] = job_price_minus_one  # data_transfer_in cost is ignored
         tx = ebb.submitJob(
             job.code_hashes[0],
             job.data_transfer_ins,
             args,
             job.storage_hours,
             job.code_hashes,
-            {"from": requester, "value": to_gwei(job_price_revert)},
+            {"from": requester},
         )
         # log(dict(tx.events["LogJob"]))
         # log(tx.events["LogJob"]["received"] - tx.events["LogJob"]["refunded"])
 
+    breakpoint()  # DEBUG
     log(f"#> measured_job_price={job_price}")
     tx = ebb.submitJob(
         job.code_hashes[0],
@@ -278,15 +315,11 @@ def test_ownership():
     assert ebb.getOwner() == accounts[1]
 
 
-def test_initial_balances():
-    assert ebb.balanceOf(accounts[0]) == 0
-
-
 def test_data_info():
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-    register_provider(100)
+    provider = accounts[1]
+    requester = accounts[2]
+    register_provider(Cent("100 cent"))
     register_requester(requester)
     job_key = b"9b3e9babb65d9c1aceea8d606fc55403"
     job.code_hashes = [job_key, b"9a4c0c1c9aadb203daf9367bd4df930b"]
@@ -299,7 +332,7 @@ def test_data_info():
     job.storage_hours = [0, 1]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_bn,
@@ -349,9 +382,9 @@ def test_data_info():
 
 def test_computational_refund():
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-    register_provider(100)
+    provider = accounts[1]
+    requester = accounts[2]
+    register_provider(Cent("100 cent"))
     register_requester(requester)
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.cores = [1]
@@ -363,7 +396,7 @@ def test_computational_refund():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_bn,
@@ -404,8 +437,8 @@ def test_computational_refund():
 
 def test_storage_refund():
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
     register_provider()
     register_requester(requester)
     job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
@@ -418,7 +451,7 @@ def test_storage_refund():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
     job.run_time = [10]
-    job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     job.data_prices_set_block_numbers = [0, 0]  # provider's registered data won't be used
@@ -591,9 +624,9 @@ def test_update_provider():
 
 def test_multiple_data():
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-    requester_1 = accounts[2]
+    provider = accounts[1]
+    requester = accounts[2]
+    requester_1 = accounts[3]
     register_provider()
     register_requester(requester)
     register_requester(requester_1)
@@ -608,7 +641,7 @@ def test_multiple_data():
     job.data_prices_set_block_numbers = [0, 0]
     job.cores = [2]
     job.run_time = [10]
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
     job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
     args = [
@@ -745,9 +778,9 @@ def test_multiple_data():
 
 def test_simple_submit():
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-    price_core_min = 100
+    provider = accounts[1]
+    requester = accounts[2]
+    price_core_min = Cent("1 cent")
     register_provider(price_core_min)
     register_requester(requester)
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
@@ -763,7 +796,7 @@ def test_simple_submit():
     job_price, cost = job.cost(provider, requester)
     args = [
         provider,
-        ebb.getProviderSetBlockNumbers(accounts[0])[-1],
+        ebb.getProviderSetBlockNumbers(provider)[-1],
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
@@ -818,8 +851,8 @@ def test_simple_submit():
 
 def test_submit_job():
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
     register_provider()
     register_requester(requester)
     fn = f"{cwd}/files/test.txt"
@@ -865,7 +898,7 @@ def test_submit_job():
             job.cache_types = [CacheType.PUBLIC.value]
             args = [
                 provider,
-                ebb.getProviderSetBlockNumbers(accounts[0])[-1],
+                ebb.getProviderSetBlockNumbers(provider)[-1],
                 job.storage_ids,
                 job.cache_types,
                 job.data_prices_set_block_numbers,
@@ -974,9 +1007,9 @@ def test_submit_job():
 def test_submit_n_data():
     gas_costs = []
     job = Job()
-    provider = accounts[0]
-    requester = accounts[1]
-    price_core_min = 100
+    provider = accounts[1]
+    requester = accounts[2]
+    price_core_min = Cent("100 cent")
     register_provider(price_core_min)
     register_requester(requester)
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
@@ -990,7 +1023,7 @@ def test_submit_n_data():
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_bn,
@@ -1023,7 +1056,7 @@ def test_submit_n_data():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_bn,
@@ -1060,7 +1093,7 @@ def test_submit_n_data():
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_bn,
@@ -1105,7 +1138,7 @@ def test_submit_n_data():
     job.storage_hours = [0, 0, 0, 1]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
-    provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         provider_price_bn,
@@ -1132,8 +1165,8 @@ def test_submit_n_data():
 
 
 def test_receive_registered_data_deposit():
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
     register_provider()
     register_requester(requester)
 
@@ -1162,7 +1195,7 @@ def test_receive_registered_data_deposit():
     job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]
-    job.provider_price_bn = ebb.getProviderSetBlockNumbers(accounts[0])[-1]
+    job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     args = [
         provider,
         job.provider_price_bn,

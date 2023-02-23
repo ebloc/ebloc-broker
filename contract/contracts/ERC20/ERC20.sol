@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
 
 pragma solidity ^0.8.0;
 
@@ -34,11 +35,8 @@ import "./Context.sol";
  */
 contract ERC20 is Context, IERC20, IERC20Metadata {
     mapping(address => uint256) private balances;
-
     mapping(address => mapping(address => uint256)) private _allowances;
-
     uint256 private _totalSupply;
-
     string private _name;
     string private _symbol;
 
@@ -121,6 +119,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
     /**
      * @dev See {IERC20-allowance}.
+     * Returns the remaining number of tokens that spender will be allowed to spend
+     * on behalf of owner through transferFrom.
+     * This is zero by default.
+     * This value changes when approve or transferFrom are called.
      */
     function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
@@ -246,7 +248,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         }
 
         emit Transfer(from, to, amount);
-
         _afterTokenTransfer(from, to, amount);
     }
 

@@ -31,3 +31,4 @@ Slurm status should be set on the receiveDeposit call not setJobStatus
 ** TODO Some code should go into utils.py
    Some functıons are public that should carried into ~utils.py~
 ** TODO for workflow visualization: https://github.com/mermaid-js/mermaid
+** TODO remove _balance? could be not needed.

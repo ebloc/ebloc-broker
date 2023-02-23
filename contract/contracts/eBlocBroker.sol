@@ -95,7 +95,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
           If 'provider' is not mapped on '_provider' map  or its 'key' and 'index'
           is not mapped to a job , this will throw automatically and revert all changes
         */
-        _provider.jobStatus[key][index]._refund(provider,jobID, core, elapsedTime); /////////////////
+        _provider.jobStatus[key][index]._refund(provider,jobID, core, elapsedTime); /////////////
 
         Lib.Status storage jobInfo = _provider.jobStatus[key][index];
         /* require(jobInfo.jobInfo == keccak256(abi.encodePacked(core, elapsedTime))); */
@@ -616,8 +616,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             info
         );
         cost = cost.add(_calculateComputingCost(info, args.core, args.runTime));
-        uint256 msgValue = msg.value.div(1 gwei);
-        require(msgValue >= cost);
+        require(args.jobPrice >= cost);
+        transfer(owner, cost); // transfer cost to contract
+
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();
         jobInfo.cacheCost = storageDuration[0];
@@ -631,12 +632,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         jobInfo.receivedRegisteredDataFee = refunded;
         //
         priceBlockIndex = provider.jobStatus[key].length - 1;
-        if (msgValue != cost) {
-            refunded = (msgValue - cost);
-            // transfers excess payment (msg.value - sum), if any, back to requester (msg.sender)
-            _balances[msg.sender] += refunded;
-        }
-        emitLogJob(key, uint32(priceBlockIndex), sourceCodeHash, args, refunded, msgValue);
+        emitLogJob(key, uint32(priceBlockIndex), sourceCodeHash, args, refunded, cost);
         return;
     }
 
@@ -876,7 +872,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         bytes32[] memory codeHashes,
         Lib.JobArgument memory args,
         uint256 refunded,
-        uint256 msgValue
+        uint256 cost
     ) internal {
         emit LogJob(
             args.provider,
@@ -888,12 +884,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             args.cacheType,
             args.core,
             args.runTime,
-            msgValue, // msg.value.div(1 gwei) == received
+            cost, // args.jobPrice,
             refunded
         );
     }
 
-    /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- PUBLIC GETTERS -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+    /* ## PUBLIC GETTERS ## */
     /**
      * @dev Return balance of the requested address in Gwei. It takes a
        provider's Ethereum address as parameter.

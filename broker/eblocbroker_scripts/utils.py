@@ -82,6 +82,12 @@ class Cent(int):
         except KeyError:
             raise TypeError(f'Cannot convert cent to unknown unit: "{unit}". ') from None
 
+    def decimals(self):
+        return 2
+
+    def usdt(self, balance):
+        return float(balance) * (10 ** self.decimals())
+
 
 def _to_cent(value: CentInputTypes) -> int:
     original = value

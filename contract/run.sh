@@ -15,7 +15,8 @@ $HOME/ebloc-broker/broker/_daemons/ganache.py 8547
 if [ $TEST_ALL -eq 1 ]; then
     pytest tests -s -x -vv --disable-pytest-warnings --log-level=INFO  # tests all cases
 else
-    pytest tests --capture=sys -s -x -k "test_transfer" --disable-pytest-warnings
+    pytest tests --capture=sys -s -x -k "test_overall_eblocbroker" --disable-pytest-warnings
+    # pytest tests --capture=sys -s -x -k "test_transfer" --disable-pytest-warnings
     # pytest tests --capture=sys -s -x -k "test_receive_registered_data_deposit" --disable-pytest-warnings
 fi
 rm -rf reports/
