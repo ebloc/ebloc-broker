@@ -8,8 +8,8 @@ def decimals():
     return 2
 
 
-def usdt(bal):
-    return float(bal) * (10 ** decimals())
+def usdt(balance):
+    return float(balance) * (10 ** decimals())
 
 
 def test_transfer(_Ebb):
