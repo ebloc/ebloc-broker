@@ -15,23 +15,13 @@ contract EBlocBrokerBase {
     using SafeMath for uint256;
     using SafeMath32 for uint32;
 
-    address public owner;
     address[] registeredProviders; // A dynamically-sized array of 'address' structs
     uint32 constant ONE_HOUR_BLOCK_DURATION = 600; // ~1 hour, average block time is 6 seconds
     mapping(address => uint32) requesterCommittedBlock; // Block number when provider is registered in order the watch provider's event activity
     mapping(address => Lib.Provider) providers;
     mapping(address => uint32[]) pricesSetBlockNum;
     mapping(address => bytes32) orcID; // Mapping from address of a requester or provider to its orcID
-    mapping(address => uint256) _balances;
-
     // mapping(string => mapping(uint32 => uint => Job) jobs;
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        require(msg.sender == owner); // dev: Sender must be owner
-        _;
-    }
 
     /**
      * @dev Modifier to make a function callable only when given key is not zero
@@ -96,18 +86,5 @@ contract EBlocBrokerBase {
     modifier whenOrcidNotVerified(address _user) {
         require(orcID[_user] == 0); // dev: OrcID is already verified
         _;
-    }
-
-    /**
-     * @dev Withdraws the balance using the withdrawal pattern.
-     */
-    function withdraw() public returns (bool) {
-        uint256 amount = _balances[msg.sender].mul(1 gwei);
-        // set zero the balance before sending to prevent reentrancy attacks
-        delete _balances[msg.sender]; // for gas refund
-        // forwards all available gas
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed"); // return value is checked
-        return true;
     }
 }

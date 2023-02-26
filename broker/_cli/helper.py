@@ -118,7 +118,8 @@ class Helper:
         obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
 
     def balance(self):
-        obj = self.subparsers.add_parser("balance", help="Returns user's earned money amount in Wei.")
+        # FIXME: return balance and convert it into usd
+        obj = self.subparsers.add_parser("balance", help="Returns user's earned money amount in USD token.")
         obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
 
 

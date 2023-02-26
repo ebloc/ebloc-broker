@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+"""
+Forked forked from https://github.com/eth-brownie/brownie/blob/master/brownie/convert/datatypes.py.
+"""
+
 # from copy import deepcopy
 from decimal import Decimal, getcontext
 from typing import Any, TypeVar
@@ -81,6 +85,12 @@ class Cent(int):
             return Fixed(self * Fixed(10) ** -UNITS[unit])
         except KeyError:
             raise TypeError(f'Cannot convert cent to unknown unit: "{unit}". ') from None
+
+    def decimals(self):
+        return 2
+
+    def usdt(self, balance):
+        return float(balance) * (10 ** self.decimals())
 
 
 def _to_cent(value: CentInputTypes) -> int:

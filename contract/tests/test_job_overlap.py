@@ -16,6 +16,7 @@ from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import mine, new_test
 from contract.tests.test_overall_eblocbroker import register_provider, register_requester
+from broker.eblocbroker_scripts.utils import Cent
 
 Contract.eblocbroker = Contract.Contract(is_brownie=True)
 
@@ -42,6 +43,11 @@ provider = None
 requester = None
 ebb = None
 chain = None
+OWNER = None
+
+
+def _transfer(to, amount):
+    ebb.transfer(to, Cent(amount), {"from": OWNER})
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -49,6 +55,7 @@ def my_own_session_run_at_beginning(_Ebb):
     global Ebb  # noqa
     global chain  # noqa
     global ebb  # noqa
+    global OWNER
 
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
@@ -60,6 +67,7 @@ def my_own_session_run_at_beginning(_Ebb):
         config.chain = Chain()
 
     chain = config.chain
+    OWNER = accounts[0]
 
 
 # @pytest.fixture(scope="module", autouse=True)
@@ -142,14 +150,16 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
         job.cores,
         job.run_time,
         job.data_transfer_out,
+        job_price,
     ]
+    _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
         job.key,
         job.data_transfer_ins,
         args,
         job.storage_hours,
         job.code_hashes,
-        {"from": requester, "value": web3.toWei(job_price, "gwei")},
+        {"from": requester},
     )
 
     tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_timestamp, {"from": provider})
@@ -162,8 +172,8 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     if is_print:
         log(f"==> process_payment received_gas_used={tx.__dict__['gas_used']}")
 
-    # received_sum = tx.events["LogProcessPayment"]["receivedGwei"]
-    # refunded_sum = tx.events["LogProcessPayment"]["refundedGwei"]
+    # received_sum = tx.events["LogProcessPayment"]["receivedCent"]
+    # refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     # withdraw(provider, received_sum)
     # withdraw(requester, refunded_sum)
     check_list(is_print)
@@ -179,8 +189,8 @@ def test_submit_job_gas():
     mine(1)
     mine(5)
 
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
 
     register_provider(100)
     register_requester(requester)
@@ -219,8 +229,8 @@ def test_test1():
     global provider
     global requester
 
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
 
     register_provider(100)
     register_requester(requester)
@@ -260,8 +270,8 @@ def test_test2():
     global provider
     global requester
 
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
 
     register_provider(100)
     register_requester(requester)
@@ -379,8 +389,8 @@ def test_test3():
     global provider
     global requester
 
-    provider = accounts[0]
-    requester = accounts[1]
+    provider = accounts[1]
+    requester = accounts[2]
 
     register_provider(100)
     register_requester(requester)

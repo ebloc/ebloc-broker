@@ -70,6 +70,7 @@ library Lib {
         uint16[] core;
         uint16[] runTime;
         uint32 dataTransferOut;
+        uint32 jobPrice;
     }
 
     struct JobIndexes {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
 
 pragma solidity ^0.8.0;
 
@@ -34,13 +35,40 @@ import "./Context.sol";
  */
 contract ERC20 is Context, IERC20, IERC20Metadata {
     mapping(address => uint256) private balances;
-
     mapping(address => mapping(address => uint256)) private _allowances;
-
     uint256 private _totalSupply;
-
     string private _name;
     string private _symbol;
+    address private _owner;
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(msg.sender == _owner); // dev: Sender must be owner
+        _;
+    }
+
+    /**
+     * @dev Return the owner of the eBlocBroker contract
+     */
+    function getOwner() public view virtual returns (address) {
+        return _owner;
+    }
+
+    /* event OwnershipTransferred(address indexed previousOwner, address indexed newOwner); */
+
+    /* /\** */
+    /*  * @dev Transfer ownership of the contract to a new account (`newOwner`). */
+    /*  * It can only be called by the current owner. */
+    /*  * @param newOwner The address to transfer ownership to. */
+    /*  *\/ */
+    /* function transferOwnership(address newOwner) public onlyOwner { */
+    /*     require(newOwner != address(0), "Zero address"); */
+    /*     emit OwnershipTransferred(_owner, newOwner); */
+    /*     _owner = newOwner; */
+    /*     // TODO: transfer owner's balance as well */
+    /* } */
 
     /**
      * @dev Sets the values for {name} and {symbol}.
@@ -119,8 +147,17 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         return true;
     }
 
+    function _distributeTransfer(address to, uint256 amount) internal virtual returns (bool) {
+        _transfer(_owner, to, amount);
+        return true;
+    }
+
     /**
      * @dev See {IERC20-allowance}.
+     * Returns the remaining number of tokens that spender will be allowed to spend
+     * on behalf of owner through transferFrom.
+     * This is zero by default.
+     * This value changes when approve or transferFrom are called.
      */
     function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
@@ -246,7 +283,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         }
 
         emit Transfer(from, to, amount);
-
         _afterTokenTransfer(from, to, amount);
     }
 
@@ -261,7 +297,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      */
     function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
-
+        _owner = account;
         _beforeTokenTransfer(address(0), account, amount);
 
         _totalSupply += amount;
@@ -299,7 +335,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         }
 
         emit Transfer(account, address(0), amount);
-
         _afterTokenTransfer(account, address(0), amount);
     }
 

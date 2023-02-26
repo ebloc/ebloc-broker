@@ -239,8 +239,8 @@ def get_job_info(
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
-                self.job_info.update({"received_gwei": logged_receipt.args["receivedGwei"]})
-                self.job_info.update({"refunded_gwei": logged_receipt.args["refundedGwei"]})
+                self.job_info.update({"received_gwei": logged_receipt.args["receivedCent"]})
+                self.job_info.update({"refunded_gwei": logged_receipt.args["refundedCent"]})
                 self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
