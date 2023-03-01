@@ -2,10 +2,11 @@
 
 import sys
 from contextlib import suppress
-from broker.errors import QuietExit
+
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
+from broker.errors import QuietExit
 from brownie.network.account import Account
 
 Ebb = cfg.Ebb

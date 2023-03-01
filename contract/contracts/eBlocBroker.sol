@@ -493,9 +493,8 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
     }
 
     /**
-     * @dev Perform a job submission through eBlocBroker by a requester. This
-       deposit is locked until the job is
-     * finalized or cancelled.
+     * @dev Perform a job submission through eBlocBroker by a requester.
+       This deposit is locked in the contract until the job is finalized or cancelled.
      *
      * @param key Contains a unique name for the requester’s job.
      * @param dataTransferIn An array of uint32 values that denote the amount of
@@ -1020,19 +1019,19 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         return pricesSetBlockNum[provider];
     }
 
-    // used for tests
-    // ==============
-    function getProviderReceiptNode(address provider, uint32 index)
-        external
-        view
-        returns (
-            uint32,
-            uint256,
-            int32
-        )
-    {
-        return providers[provider].receiptList.printIndex(index);
-    }
+    /* // used for tests */
+    /* // ============== */
+    /* function getProviderReceiptNode(address provider, uint32 index) */
+    /*     external */
+    /*     view */
+    /*     returns ( */
+    /*         uint32, */
+    /*         uint256, */
+    /*         int32 */
+    /*     ) */
+    /* { */
+    /*     return providers[provider].receiptList.printIndex(index); */
+    /* } */
 }
 
 /*

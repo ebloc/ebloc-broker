@@ -40,4 +40,9 @@ extract () {
     rename_all
 }
 
-# extract
+
+main() {
+    :
+    # extract
+}
+main "$@"

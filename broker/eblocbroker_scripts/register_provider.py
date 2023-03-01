@@ -13,6 +13,7 @@ from broker._utils.tools import get_ip, is_byte_str_zero, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.utils import start_ipfs_daemon
 
@@ -92,10 +93,15 @@ def register_provider_wrapper(yaml_fn):
     _args = args["cfg"]["provider"]
     available_core = _args["available_core"]
     commitment_blk = _args["prices"]["commitment_blk"]
-    price_core_min = _args["prices"]["price_core_min"]
-    price_data_transfer = _args["prices"]["price_data_transfer"]
-    price_storage = _args["prices"]["price_storage"]
-    price_cache = _args["prices"]["price_cache"]
+
+    try:
+        price_core_min = Cent(_args["prices"]["price_core_min"])
+        price_data_transfer = Cent(_args["prices"]["price_data_transfer"])
+        price_storage = Cent(_args["prices"]["price_storage"])
+        price_cache = Cent(_args["prices"]["price_cache"])
+    except Exception as e:
+        print_tb(e)
+
     exit_flag = False
     if env.PROVIDER_ID == Ebb.get_owner():
         log("E: Address cannot be same as owner's")

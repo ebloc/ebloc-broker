@@ -130,13 +130,6 @@ def data():
         print_tb(e)
 
 
-def withdraw():
-    try:
-        cfg.Ebb.withdraw(_args.eth_address)
-    except Exception as e:
-        print_tb(e)
-
-
 def balance():
     from broker._utils._log import log
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from brownie import accounts
 from broker.eblocbroker_scripts.utils import Cent
+from brownie import accounts
 
 
 def test_transfer(_Ebb):

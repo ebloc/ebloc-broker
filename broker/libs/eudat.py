@@ -97,10 +97,12 @@ def _login(fn, user, password_path) -> None:
     with open(password_path, "r") as content_file:
         passwd = content_file.read().strip()
 
+    message_no_color = f"Trying to login into owncloud user={user} ..."
     message = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
     for _ in range(cfg.RECONNECT_ATTEMPTS):
         try:
-            with Halo(text=message, spinner="line", placement="right"):  # https://github.com/manrajgrover/halo
+            #: https://github.com/manrajgrover/halo
+            with Halo(text=message_no_color, spinner="line", placement="right"):
                 config.oc.login(user, passwd)  # may take few minutes to connect
 
             passwd = ""
@@ -130,8 +132,9 @@ def login(user, password_path: Path, fn: str) -> None:
         f = open(fn, "rb")
         config.oc = pickle.load(f)
         try:
+            message_no_color = f"Login into owncloud from the dumped_object={fn} ..."
             message = f"[bold]Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
-            with Halo(text=message, spinner="line", placement="right"):
+            with Halo(text=message_no_color, spinner="line", placement="right"):
                 config.oc.get_config()
 
             log(message, success=True)

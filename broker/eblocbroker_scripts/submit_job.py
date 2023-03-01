@@ -5,6 +5,7 @@ import sys
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import log, print_tb
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
 from brownie.exceptions import TransactionError
@@ -101,6 +102,10 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     if job.price == 0:
         raise Exception("E: job.price is 0 ; something is wrong")
 
+    balance = self.get_balance(job.requester)
+    if job.price > Cent(balance):
+        raise Exception(f"E: Calculated job_price={job.price} is greater than requester's balance={Cent(balance)}")
+
 
 def submit_job(self, provider, key, job, requester=None, required_confs=1):
     """Submit job.
@@ -133,6 +138,7 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
         job.cores,
         job.run_time,
         job.data_transfer_out,
+        job.price,
     ]
     job.print_before_submit()
     try:

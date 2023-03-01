@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import pytest
+
 from brownie import accounts
 
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"

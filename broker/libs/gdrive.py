@@ -12,8 +12,7 @@ from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
 from broker.lib import echo_grep_awk, run, subprocess_call
-from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
-from broker.utils import is_program_valid
+from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, is_program_valid, log, print_tb
 
 
 def check_gdrive():

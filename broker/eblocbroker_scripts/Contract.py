@@ -47,13 +47,13 @@ class Base:
     from broker.eblocbroker_scripts.refund import refund  # type: ignore
     from broker.eblocbroker_scripts.register_provider import _register_provider  # type: ignore
     from broker.eblocbroker_scripts.register_requester import register_requester  # type: ignore
+    from broker.eblocbroker_scripts.transfer import transfer_tokens  # type: ignore
     from broker.eblocbroker_scripts.submit_job import (  # type: ignore
         check_before_submit,
         is_provider_valid,
         is_requester_valid,
         submit_job,
     )
-    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership  # type: ignore
     from broker.eblocbroker_scripts.update_provider_info import (  # type: ignore
         is_provider_info_match,
         update_provider_info,
@@ -141,6 +141,9 @@ class Contract(Base):
 
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.get_block_number())["timestamp"]
+
+    def to_gwei(self, value):
+        return self.w3.toWei(value, "gwei")
 
     def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_verbose=False) -> TxReceipt:
         """Wait till the tx is deployed."""
@@ -410,13 +413,6 @@ class Contract(Base):
 
         raise Exception("No valid Tx receipt is generated")
 
-    def withdraw(self, account) -> "TransactionReceipt":
-        """Withdraw payment."""
-        self.gas_price = GAS_PRICE
-        self._from = self.w3.toChecksumAddress(account)
-        self.required_confs = 1
-        return self.timeout_wrapper("withdraw")
-
     def deposit_storage(self, data_owner, code_hash, _from) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = self.w3.toChecksumAddress(_from)
@@ -440,6 +436,12 @@ class Contract(Base):
         self._from = _from
         self.required_confs = 1
         return self.timeout_wrapper("transferOwnership", new_owner)
+
+    def _transfer(self, _from, *args) -> "TransactionReceipt":
+        self.gas_price = GAS_PRICE
+        self._from = _from
+        self.required_confs = 1
+        return self.timeout_wrapper("transfer", *args)
 
     def _authenticate_orc_id(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE

@@ -24,6 +24,21 @@ run_worker_slurmd_nodes () {
     # sudo slurmd -N ocean2 -Dvvv
 }
 
+_kill () {
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        kill -9 $1;
+    else
+        if [[ $1 == "emacs" ]]; then
+            strings=("emacsclient" "flake8" "pylint" "pylsp");
+            for pattern in "${strings[@]}";
+            do
+                nocorrect sudo pkill -f -f "$pattern";
+            done;
+        fi;
+        sudo kill -9 "$(ps auxww | grep -E "$1" | grep -v -e "grep" -e "emacsclient" | awk '{print $2}')" > /dev/null 2>&1;
+    fi
+}
+
 if [[ $(whoami) == "root" ]] ; then
     echo -e "$PURPLE##$NC logname=$MA"$(logname)$NC
     echo -e "$PURPLE##$NC hostname=$MA"$(hostname -s)$NC
@@ -35,7 +50,8 @@ sudo systemctl --no-pager status mysql
 
 declare -a arr=("slurmd" "slurmdbd" "slurmctld")
 for i in "${arr[@]}"; do  # https://stackoverflow.com/a/8880633/2402577
-    sudo killall "$i" > /dev/null 2>&1
+    _kill "$i" > /dev/null 2>&1
+    # sudo killall "$i" > /dev/null 2>&1
 done
 
 sudo rm -f /var/run/slurmdbd.pid
@@ -57,6 +73,12 @@ sleep 1.0
 run_worker_slurmd_nodes
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 scontrol show node
+
+dir=$(/usr/bin/pwd)
+cd /home/"$(logname)"/ebloc-broker/broker/_slurm/example/
+sbatch slurm_test.sh
+cd $dir
+
 echo ""
 /usr/local/bin/sinfo -N -l
 
@@ -64,6 +86,11 @@ echo ""
 ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
     grep -v unattended-upgrade-shutdown | \
     grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox,.mypy_cache} -E "slurm";
+
+echo ""
+squeue
+
+
 
 #: verbose
 # sudo /usr/local/sbin/slurmctld -cDvvvvvv

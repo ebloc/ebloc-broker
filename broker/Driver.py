@@ -406,7 +406,7 @@ def run_driver(given_bn):
         f"==> account_balance={math.floor(gwei_balance)} Gwei | "
         f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} Eth"
     )
-    log(f"==> Ebb_balance={balance_temp}")
+    log(f"==> Ebb_balance={balance_temp} Cent")
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
@@ -421,10 +421,10 @@ def run_driver(given_bn):
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:
-                log(f"==> Since Driver started provider_gained_gwei={value}")
+                log(f"==> Since Driver started provider_gained_cent={value}")
 
         current_bn = Ebb.get_block_number()
-        log(f" * {get_date()} waiting new job to come since block_number={bn_read}")
+        log(f" * {get_date()} waiting new job to come since bn={bn_read}")
         log(f"==> current_block={current_bn} | sync_from={bn_read}")
         flag = True
         while current_bn < int(bn_read):
@@ -435,7 +435,7 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        log(f"==> [bold yellow]watching from block_number=[cyan]{bn_read}...")
+        log(f"==> [yellow]watching from bn=[cyan]{bn_read}...")
         bn_read = str(bn_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         try:
@@ -452,9 +452,10 @@ def run_driver(given_bn):
             log(f"E: {e}")
             if "Filter not found" in str(e) or "Read timed out" in str(e):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
-                log("## sleeping for 60 seconds...", end="")
-                time.sleep(60)
+                log("## sleeping for 5 seconds...", end="")
+                time.sleep(5)
                 log(ok())
+                # TODO: maybe restart?
             else:
                 print_tb(e)
 

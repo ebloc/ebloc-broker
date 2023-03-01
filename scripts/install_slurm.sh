@@ -1,5 +1,12 @@
 #!/bin/bash
 
+set-hostname () {
+    sudo hostnamectl set-hostname $1;
+    echo $(hostname -I | cut -d\  -f1) $(hostname) | sudo tee -a /etc/hosts;
+    hostnamectl;
+    exec zsh
+}
+
 mysql_init () {
     mysqld --initialize
     sudo /etc/init.d/mysql start
@@ -72,6 +79,7 @@ ls -ld /var/lib/munge
 # configurations
 # ==============
 sudo groupadd eblocbroker
+# set-hostname ocean
 
 FILE="/usr/local/etc/slurm.conf"
 [ ! -f $FILE ] && sudo cp ~/ebloc-broker/broker/_slurm/confs/slurm.conf $FILE
@@ -80,8 +88,8 @@ FILE="/usr/local/etc/slurmdbd.conf"
 [ ! -f $FILE ] && sudo cp ~/ebloc-broker/broker/_slurm/confs/slurmdbd.conf $FILE
 
 sudo chmod 664 /usr/local/etc/slurm.conf  # 0600 , 755 , 660 , 755
+sudo chmod 0600 /usr/local/etc/slurmdbd.conf
 # sudo chown $(whoami):root /usr/local/etc/slurm.conf
-# sudo chmod 0600 /usr/local/etc/slurmdbd.conf
 sudo chown $(whoami):root /usr/local/etc/slurmdbd.conf
 mkdir -p /tmp/run
 

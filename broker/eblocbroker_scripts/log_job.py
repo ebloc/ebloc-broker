@@ -58,7 +58,7 @@ def log_loop(event_filter, poll_interval: int = 2):
         since_time = datetime.timedelta(seconds=sleep_duration)
         sys.stdout.write(
             f"\r{Style.GREENB}##{Style.END} {Style.B}[{Style.E}"
-            f"{Style.YELLOWB}block_num{Style.END}={Style.CYANB}{block_num}{Style.END}{Style.B}]{Style.E} "
+            f"{Style.YELLOWB}bn{Style.END}={Style.CYANB}{block_num}{Style.END}{Style.B}]{Style.E} "
             f"waiting events for jobs since {Style.CYANB}{since_time}{Style.END} "
         )
         sys.stdout.flush()

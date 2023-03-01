@@ -80,10 +80,10 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     j["price_storage"] = job["price_storage"]
     j["expected_run_time_(min)"] = job["run_time"][0]
 
-    j["total_payment"] = job["submitJob_msg_value"]
+    j["total_payment"] = job["submitJob_received_job_price"]
 
-    j["refunded_gwei_to_requester"] = job["refunded_gwei"]
-    j["received_gwei_to_provider"] = job["received_gwei"]
+    j["refunded_cent_to_requester"] = job["refunded_cent"]
+    j["received_cent_to_provider"] = job["received_cent"]
     temp_list = []
     if len(job["code_hashes"]) > 1:
         for itm in sorted(job["code_hashes"]):
@@ -101,6 +101,7 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
 
     tx_receipt = Ebb.get_transaction_receipt(job["submitJob_tx_hash"])
     tx_by_block = Ebb.get_transaction_by_block(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
+    #: decode input arguments
     output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
     data_transfer_in_arg = str(output[1][1]).replace(" ", "").replace(",", ";")
     j["data_transfer_in_arg_(MB)"] = data_transfer_in_arg

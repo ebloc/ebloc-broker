@@ -11,7 +11,7 @@ rm .gpg_pass.txt
 rm .b2drop_client.txt
 rm -rf links
 rm -rf private
-rmdir *
+rmdir ./*
 #
 cd ~/TESTS
 tar -cvf ebb.tar.gz ebloc-broker

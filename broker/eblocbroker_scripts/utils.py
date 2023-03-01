@@ -8,12 +8,13 @@ Forked forked from https://github.com/eth-brownie/brownie/blob/master/brownie/co
 from decimal import Decimal, getcontext
 from typing import Any, TypeVar
 
+from hexbytes import HexBytes
+
 try:
     from vyper.exceptions import DecimalOverrideException
 except ImportError:
     DecimalOverrideException = BaseException  # regular catch blocks shouldn't catch
 
-from hexbytes import HexBytes
 
 UNITS = {
     "cent": 0,

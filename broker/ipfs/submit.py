@@ -3,13 +3,15 @@
 import os
 import sys
 from pathlib import Path
+
 from web3.logs import DISCARD
-from broker.errors import QuietExit
+
 from broker import cfg
 from broker._utils.tools import _remove, log
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.eblocbroker_scripts.job import Job
+from broker.errors import QuietExit
 from broker.lib import run
 from broker.link import check_link_folders
 from broker.utils import (
@@ -191,8 +193,8 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
-    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
+    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
     job.set_config(yaml_fn)
     submit_ipfs(job)
 

@@ -38,7 +38,6 @@ class Helper:
         self.register()
         self.submit()
         self.data()
-        self.withdraw()
         self.balance()
         self.subparsers.add_parser("providers", help="List of registered providers.")
         self.subparsers.add_parser("console", help="Load the console")
@@ -111,10 +110,6 @@ class Helper:
 
     def data(self):
         obj = self.subparsers.add_parser("data", help="List registered data files of the provider")
-        obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
-
-    def withdraw(self):
-        obj = self.subparsers.add_parser("withdraw", help="Withdraw collected gains")
         obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
 
     def balance(self):

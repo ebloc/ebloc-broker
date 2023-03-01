@@ -11,12 +11,12 @@ from broker._utils._log import br, console_ruler, log
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
+from broker.eblocbroker_scripts.utils import Cent
 from broker.utils import CacheType, StorageID
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import mine, new_test
 from contract.tests.test_overall_eblocbroker import register_provider, register_requester
-from broker.eblocbroker_scripts.utils import Cent
 
 Contract.eblocbroker = Contract.Contract(is_brownie=True)
 

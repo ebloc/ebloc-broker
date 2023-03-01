@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-import brownie
 import pytest
-from brownie import accounts
+
+import brownie
 from broker.eblocbroker_scripts.utils import Cent
+from brownie import accounts
 
 
 def test_sender_balance_decreases(accounts, _Ebb):

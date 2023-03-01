@@ -4,6 +4,7 @@ import sys
 
 from broker import cfg
 from broker._utils.tools import is_byte_str_zero, log, print_tb
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 
 
@@ -24,6 +25,10 @@ def get_requester_info(self, requester):
             fromBlock=int(block_read_from), toBlock=int(block_read_from) + 1
         )
         gpg_fingerprint = event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+
+        balance = self.get_balance(requester)
+        _b = int(Cent(balance).to("usd"))
+
         requester_info = {
             "address": requester.lower(),
             "block_read_from": block_read_from,
@@ -32,6 +37,7 @@ def get_requester_info(self, requester):
             "ipfs_address": event_filter.get_all_entries()[0].args["ipfsID"],
             "f_id": event_filter.get_all_entries()[0].args["fID"],
             "is_orcid_verified": self.is_orcid_verified(requester),
+            "balance_usd": _b,
         }
         if not is_byte_str_zero(orc_id):
             requester_info["orc_id"] = orc_id.decode("utf-8").replace("\x00", "")

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# ./deploy.sh | tee deploy_output.tex
+
 network="bloxberg"  # "eblocpoa"
 echo -e "## network="$network
 rm -rf build/

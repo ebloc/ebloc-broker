@@ -209,9 +209,6 @@ install_brownie () {
 }
 install_brownie
 
-gpg --gen-key
-gpg --list-keys
-
 mkdir -p ~/git ~/docker
 DIR=~/git/gdrive
 [[ ! -d $DIR ]] && git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
@@ -230,6 +227,9 @@ sudo apt-get install -f -y
 sudo apt --fix-broken install -y
 
 eblocbroker about
+
+gpg --gen-key
+gpg --list-keys
 
 # mount_oc () {
 #     sudo mkdir /oc

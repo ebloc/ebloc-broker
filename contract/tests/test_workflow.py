@@ -12,12 +12,12 @@ from broker._utils._log import console_ruler
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
+from broker.eblocbroker_scripts.utils import Cent
 from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log
 from brownie import accounts, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import gas_costs, mine, new_test
 from contract.tests.test_overall_eblocbroker import register_provider, register_requester
-from broker.eblocbroker_scripts.utils import Cent
 
 # from brownie.test import given, strategy
 
@@ -47,10 +47,6 @@ OWNER = None
 
 def append_gas_cost(func_n, tx):
     gas_costs[func_n].append(tx.__dict__["gas_used"])
-
-
-def to_gwei(value):
-    return web3.toWei(value, "gwei")
 
 
 def _transfer(to, amount):
@@ -100,16 +96,6 @@ def get_block_number():
 
 def get_block_timestamp():
     return web3.eth.getBlock(get_block_number()).timestamp
-
-
-def withdraw(address, amount):
-    temp = address.balance()
-    assert ebb.balanceOf(address) == amount
-    tx = ebb.withdraw({"from": address, "gas_price": 0})
-    append_gas_cost("withdraw", tx)
-    received = address.balance() - temp
-    assert to_gwei(amount) == received
-    assert ebb.balanceOf(address) == 0
 
 
 def test_workflow():

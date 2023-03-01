@@ -1,11 +1,12 @@
 #!/bin/bash
 
-first_char=$(head -c 1 abi.json)
+fn="abi.json"
+first_char=$(head -c 1 $fn)
 if  [ "$first_char" = "[" ]; then
     echo "already fixed"
-    exit;
+    exit
 fi
-sed -i 's/\"\[/\[/g' abi.json
-sed -i 's/\]\"/\]/g' abi.json
-sed -i 's/\\\"/\"/g' abi.json
+sed -i 's/\"\[/\[/g' $fn
+sed -i 's/\]\"/\]/g' $fn
+sed -i 's/\\\"/\"/g' $fn
 echo "[  OK  ]"

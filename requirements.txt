@@ -83,7 +83,7 @@ bitarray==2.6.0
     # via
     #   eth-account
     #   eth-brownie
-black==22.12.0
+black==22.10.0
     # via
     #   eth-brownie
 bleach==4.1.0

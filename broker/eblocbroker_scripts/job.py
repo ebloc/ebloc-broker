@@ -6,6 +6,7 @@ from ast import literal_eval as make_tuple
 from contextlib import suppress
 from pathlib import Path
 from typing import Dict, List  # noqa
+
 from broker import cfg, config
 from broker._utils._log import br
 from broker._utils.tools import _exit, _remove, log, print_tb
@@ -14,6 +15,7 @@ from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker_scripts.bloxber_calls import call
 from broker.eblocbroker_scripts.data import is_data_registered
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.lib import calculate_size
 from broker.libs import _git
@@ -301,7 +303,7 @@ class Job:
             log()
 
     def _search_best_provider(self, requester, is_verbose=False):
-        selected_provider = ""
+        selected_provider = None
         selected_price = 0
         price_to_select = sys.maxsize
         price_list = []
@@ -503,8 +505,8 @@ class JobPrices:
             log(f"==> price_data_transfer={self.price_data_transfer}")
             log(f"==> price_storage={self.price_storage}")
             log(f"==> price_cache={self.price_cache}")
-            log(f"[green]*[/green] [blue]job_price[/blue]={self.job_price}", "bold")
-            _c = "[green]|[/green]       [yellow]*[/yellow]"
+            log(f"[g]*[/g] [blue]job_price[/blue]={Cent(self.job_price).to('usd')} usd", "bold")
+            _c = "[g]|[/g]       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
                     log(f"[green]|[/green]   * {k}={v}", "bold")

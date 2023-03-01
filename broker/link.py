@@ -5,6 +5,7 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 from typing import Dict  # noqa
+
 from broker import cfg
 from broker._utils.tools import log, mkdir, run
 from broker.config import env
@@ -89,7 +90,7 @@ class Link:
                     log()
 
                 folder_new_hash = generate_md5sum(dest)
-                assert folder_hash == folder_new_hash, "hash of the original and the linked folder does not match"
+                assert folder_hash == folder_new_hash, "Hash of the original and the linked folder does not match"
 
 
 def check_link_folders(folders_to_share, registered_data_files, source_code_path, is_pass=False):

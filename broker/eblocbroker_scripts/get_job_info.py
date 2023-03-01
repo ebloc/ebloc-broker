@@ -105,9 +105,14 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 tx_by_block = Ebb.get_transaction_by_block(
                     self.job_info["submitJob_block_hash"], logged_job["transactionIndex"]
                 )
-                self.job_info.update({"submitJob_msg_value": int(tx_by_block["value"] / 10**9)})
-                output = Ebb.get_transaction_receipt(self.job_info["submitJob_tx_hash"])
-                self.job_info.update({"submitJob_gas_used": int(output["gasUsed"])})
+                self.job_info.update({"submitJob_received_job_price": int(tx_by_block["value"] / 10**9)})
+                tx_receipt = Ebb.get_transaction_receipt(self.job_info["submitJob_tx_hash"])
+                tx_by_block = Ebb.get_transaction_by_block(
+                    tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
+                )
+                output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
+                self.job_info.update({"storage_duration": output[1][3]})
+                self.job_info.update({"submitJob_gas_used": int(tx_receipt["gasUsed"])})
                 break
         else:
             log(f"E: failed to find and update job({job_key})")
@@ -206,15 +211,15 @@ def get_job_info(
             "actual_elapsed_time": None,
             "cloudStorageID": None,
             "result_ipfs_hash": "",
-            "refunded_gwei": None,
-            "received_gwei": None,
+            "refunded_cent": None,
+            "received_cent": None,
             "code_hashes": None,
             "data_transfer_in_to_download": None,
             "data_transfer_out_used": None,
             "storage_duration": None,
             "submitJob_block_hash": None,
             "submitJob_tx_hash": None,
-            "submitJob_msg_value": 0,
+            "submitJob_received_job_price": 0,
             "submitJob_gas_used": 0,
             "processPayment_block_hash": None,
             "processPayment_tx_hash": None,
@@ -239,8 +244,8 @@ def get_job_info(
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
-                self.job_info.update({"received_gwei": logged_receipt.args["receivedCent"]})
-                self.job_info.update({"refunded_gwei": logged_receipt.args["refundedCent"]})
+                self.job_info.update({"received_cent": logged_receipt.args["receivedCent"]})
+                self.job_info.update({"refunded_cent": logged_receipt.args["refundedCent"]})
                 self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
@@ -256,11 +261,15 @@ def get_job_info(
     except Exception as e:
         raise e
 
-    if str(self.job_info["core"]) == "0":
-        raise Exception("Failed to get_job_info: Out of index")
+    for _core in self.job_info["core"]:
+        if float(_core) == 0:
+            raise Exception("Failed to get_job_info: Out of index")
 
     if is_log_print:
         self.get_job_info_print(provider, job_key, index, received_bn)
+        if self.job_info["result_ipfs_hash"] == b"":
+            del self.job_info["result_ipfs_hash"]
+
         log(self.job_info)
     elif is_fetch_code_hashes:
         self.get_job_info_print(provider, job_key, index, received_bn, is_print=is_print)
