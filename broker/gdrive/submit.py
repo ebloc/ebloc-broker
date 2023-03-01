@@ -20,7 +20,6 @@ Ebb = cfg.Ebb
 
 
 def pre_check():
-    is_program_valid(["gdrive", "version"])
     check_gdrive()
 
 

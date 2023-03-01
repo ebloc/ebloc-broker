@@ -29,6 +29,7 @@ custom_theme = Theme(
         "alert": "bold red",
         "danger": "bold red",
         "bg": "bold green",
+        "ib": "italic black",
         "b": "bold",
         "m": "magenta",
         "w": "white",
@@ -37,6 +38,7 @@ custom_theme = Theme(
         "g": "green",
         "yob": "yellow on black blink",
         "ib": "italic black",
+        "ic": "italic cyan",
     }
 )
 console = Console(
@@ -238,7 +240,7 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
     else:
         text_to_write = ""
         if is_bullet:
-            text_to_write = f"[bold][{_color}]{is_r}{_text[:_len]}[/{_color}][/bold][bold]{_text[_len:]}[/bold]"
+            text_to_write = f"[bold][{_color}]{is_r}{_text[:_len]}[/{_color}][/bold]{_text[_len:]}"
         else:
             if _color:
                 text_to_write = f"[{_color}]{_text}[/{_color}]"

@@ -40,7 +40,7 @@ def connect():
 
 
 def _connect_to_web3() -> None:
-    """Connect to web3 of the corresponding ethereum blockchain.
+    """Connect to web3 of the corresponding Ethereum blockchain.
 
     * bloxberg:
     __ https://bloxberg.org
@@ -75,7 +75,7 @@ def connect_to_web3() -> None:
                     raise Exception("Web3ConnectError: try tunnelling: ssh -f -N -L 8545:localhost:8545 username@<ip>")
 
                 if env.IS_BLOXBERG:
-                    log("E: web3 is not connected into [green]BLOXBERG[/green]")
+                    log("E: web3 is not connected into [g]BLOXBERG[/g]")
                 else:
                     is_geth_on()
             except QuietExit:

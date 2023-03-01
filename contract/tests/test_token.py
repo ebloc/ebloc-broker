@@ -1,17 +1,12 @@
 #!/usr/bin/python3
 
 import brownie
-import pytest
-from brownie import accounts
-from broker.eblocbroker_scripts.utils import Cent
 
 
 def test_sender_balance_decreases(accounts, _Ebb):
     sender_balance = _Ebb.balanceOf(accounts[0])
     amount = sender_balance // 4
-
     _Ebb.transfer(accounts[1], amount, {"from": accounts[0]})
-
     assert _Ebb.balanceOf(accounts[0]) == sender_balance - amount
 
 

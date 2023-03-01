@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import pytest
-
-from broker.utils import ZERO_ADDRESS
 from brownie import accounts
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
 def test_ownership(Ebb):

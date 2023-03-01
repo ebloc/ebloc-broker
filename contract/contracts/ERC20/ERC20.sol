@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
+// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
 
 pragma solidity ^0.8.0;
 
@@ -33,14 +34,41 @@ import "./Context.sol";
  * allowances. See {IERC20-approve}.
  */
 contract ERC20 is Context, IERC20, IERC20Metadata {
-    mapping(address => uint256) private _balances;
-
+    mapping(address => uint256) private balances;
     mapping(address => mapping(address => uint256)) private _allowances;
-
     uint256 private _totalSupply;
-
     string private _name;
     string private _symbol;
+    address private _owner;
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(msg.sender == _owner); // dev: Sender must be owner
+        _;
+    }
+
+    /**
+     * @dev Return the owner of the eBlocBroker contract
+     */
+    function getOwner() public view virtual returns (address) {
+        return _owner;
+    }
+
+    /* event OwnershipTransferred(address indexed previousOwner, address indexed newOwner); */
+
+    /* /\** */
+    /*  * @dev Transfer ownership of the contract to a new account (`newOwner`). */
+    /*  * It can only be called by the current owner. */
+    /*  * @param newOwner The address to transfer ownership to. */
+    /*  *\/ */
+    /* function transferOwnership(address newOwner) public onlyOwner { */
+    /*     require(newOwner != address(0), "Zero address"); */
+    /*     emit OwnershipTransferred(_owner, newOwner); */
+    /*     _owner = newOwner; */
+    /*     // TODO: transfer owner's balance as well */
+    /* } */
 
     /**
      * @dev Sets the values for {name} and {symbol}.
@@ -83,9 +111,12 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * NOTE: This information is only used for _display_ purposes: it in
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
+     *
+     * A dime = $0.10 = 1/10 of a dollar.
+     * A penny = $0.01 = 1/100 of a dollar.
      */
     function decimals() public view virtual override returns (uint8) {
-        return 18;
+        return 2;
     }
 
     /**
@@ -99,7 +130,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * @dev See {IERC20-balanceOf}.
      */
     function balanceOf(address account) public view virtual override returns (uint256) {
-        return _balances[account];
+        return balances[account];
     }
 
     /**
@@ -116,8 +147,17 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         return true;
     }
 
+    function _distributeTransfer(address to, uint256 amount) internal virtual returns (bool) {
+        _transfer(_owner, to, amount);
+        return true;
+    }
+
     /**
      * @dev See {IERC20-allowance}.
+     * Returns the remaining number of tokens that spender will be allowed to spend
+     * on behalf of owner through transferFrom.
+     * This is zero by default.
+     * This value changes when approve or transferFrom are called.
      */
     function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
@@ -233,17 +273,16 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
         _beforeTokenTransfer(from, to, amount);
 
-        uint256 fromBalance = _balances[from];
+        uint256 fromBalance = balances[from];
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
-            _balances[from] = fromBalance - amount;
+            balances[from] = fromBalance - amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
             // decrementing then incrementing.
-            _balances[to] += amount;
+            balances[to] += amount;
         }
 
         emit Transfer(from, to, amount);
-
         _afterTokenTransfer(from, to, amount);
     }
 
@@ -258,13 +297,13 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      */
     function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
-
+        _owner = account;
         _beforeTokenTransfer(address(0), account, amount);
 
         _totalSupply += amount;
         unchecked {
             // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
-            _balances[account] += amount;
+            balances[account] += amount;
         }
         emit Transfer(address(0), account, amount);
 
@@ -287,16 +326,15 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        uint256 accountBalance = _balances[account];
+        uint256 accountBalance = balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
         unchecked {
-            _balances[account] = accountBalance - amount;
+            balances[account] = accountBalance - amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
             _totalSupply -= amount;
         }
 
         emit Transfer(account, address(0), amount);
-
         _afterTokenTransfer(account, address(0), amount);
     }
 

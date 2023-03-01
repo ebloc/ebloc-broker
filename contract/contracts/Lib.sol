@@ -70,6 +70,7 @@ library Lib {
         uint16[] core;
         uint16[] runTime;
         uint32 dataTransferOut;
+        uint32 jobPrice;
     }
 
     struct JobIndexes {
@@ -302,6 +303,18 @@ library Lib {
             currentNodeNext = self.items[currentNodeIndex].next;
             currentNodeCore = self.items[currentNodeIndex].core;
         } while (true);
+    }
+
+    function _refund(Status storage self, address provider, uint32 jobID, uint256[] memory core, uint256[] memory elapsedTime) internal returns (uint256 flag) {
+        require(self.jobInfo == keccak256(abi.encodePacked(core, elapsedTime)));
+        Job storage job = self.jobs[jobID];
+        require(
+            (msg.sender == self.jobOwner || msg.sender == provider) &&
+                job.stateCode != Lib.JobStateCodes.COMPLETED &&
+                job.stateCode != Lib.JobStateCodes.REFUNDED &&
+                job.stateCode != Lib.JobStateCodes.CANCELLED
+        );
+
     }
 
     function overlapCheck(LL storage self, IntervalArg memory _interval) internal returns (uint256 flag) {
