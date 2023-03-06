@@ -16,10 +16,18 @@ except ImportError:
     DecimalOverrideException = BaseException  # regular catch blocks shouldn't catch
 
 
+# UNITS = {
+#     "mill": 5,
+#     "cent": 6,
+#     "dime": 7,
+#     "usd": 8,
+# }
+
 UNITS = {
-    "cent": 0,
-    "dime": 1,
-    "usd": 2,
+    "mill": 6,
+    "cent": 6,
+    "dime": 7,
+    "usd": 8,
 }
 
 CentInputTypes = TypeVar("CentInputTypes", str, float, int, None)
@@ -88,7 +96,7 @@ class Cent(int):
             raise TypeError(f'Cannot convert cent to unknown unit: "{unit}". ') from None
 
     def decimals(self):
-        return 2
+        return 8
 
     def usdt(self, balance):
         return float(balance) * (10 ** self.decimals())

@@ -39,7 +39,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender and minting.
      */
-    constructor () ERC20("USDT", "USDT") public {
+    constructor () ERC20("USDT", "USDT") {
         _mint(msg.sender, 1000000000 * (10 ** uint256(decimals()) ));
     }
 
@@ -159,7 +159,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
             if (jobInfo.cacheCost > 0) {
                 // If job cache is not used full refund for cache
-                _refund = _refund.add(info.priceCache.mul(jobInfo.cacheCost));
+                _refund = _refund.add(jobInfo.cacheCost); // cacheCost is already multipled with priceCache
                 delete jobInfo.cacheCost;
             }
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
@@ -177,7 +177,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         );
         gain = gain.add(jobInfo.receivedRegisteredDataFee);
         //: computationalCostRefund
-        _refund = _refund.add(uint256(info.priceCoreMin).mul(core.mul((runTime.sub(uint256(args.elapsedTime))))));
+        _refund = _refund.add(info.priceCoreMin.mul(core.mul((runTime.sub(args.elapsedTime)))));
         require(gain.add(_refund) <= jobInfo.received);
         Lib.IntervalArg memory _interval;
         _interval.startTimestamp = job.startTimestamp;
@@ -572,14 +572,20 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         }
         require(args.priceBlockIndex == priceBlockIndex);
         Lib.ProviderInfo memory info = provider.info[priceBlockIndex];
+
         uint256 cost;
-        uint256 storageCost;
-        uint256 refunded;
+        uint256[3] memory tmp;
+        // tmp[0]: storageCost
+        // tmp[1]: cacheCost
+        // tmp[2]: refunded
+
+        /* uint256 storageCost; */
+        // uint256 refunded;
         // "storageDuration[0]" => As temp variable stores the calcualted cacheCost
         // "dataTransferIn[0]"  => As temp variable stores the overall dataTransferIn value,
         //                         decreased if there is caching for specific block
         // refunded => used as receivedRegisteredDataFee due to limit for local variables
-        (cost, dataTransferIn[0], storageCost, storageDuration[0], refunded) = _calculateCacheCost(
+        (cost, dataTransferIn[0], tmp[0], tmp[1], tmp[2]) = _calculateCacheCost(
             provider,
             args,
             sourceCodeHash,
@@ -593,15 +599,15 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
 
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();
-        jobInfo.cacheCost = storageDuration[0];
+        jobInfo.cacheCost = tmp[1];
         jobInfo.dataTransferIn = dataTransferIn[0];
         jobInfo.dataTransferOut = args.dataTransferOut;
         jobInfo.pricesSetBlockNum = uint32(priceBlockIndex);
-        jobInfo.received = cost.sub(storageCost);
+        jobInfo.received = cost.sub(tmp[0]);
         jobInfo.jobOwner = payable(msg.sender);
         jobInfo.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
         jobInfo.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
-        jobInfo.receivedRegisteredDataFee = refunded;
+        jobInfo.receivedRegisteredDataFee = tmp[2];
         priceBlockIndex = provider.jobStatus[key].length - 1;
         emitLogJob(key, uint32(priceBlockIndex), sourceCodeHash, args, cost);
         return;
@@ -736,7 +742,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             uint256 sum,
             uint32 _dataTransferIn,
             uint256 storageCost,
-            uint32 cacheCost,
+            uint256 cacheCost,
             uint256 temp
         )
     {
@@ -801,7 +807,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         //: priceDataTransfer * (dataTransferIn + dataTransferOut)
         sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(args.dataTransferOut)));
         sum = sum.add(storageCost).add(cacheCost);
-        return (sum, _dataTransferIn, uint32(storageCost), uint32(cacheCost), registerDataCostTemp);
+        return (sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp);
     }
 
     /**
@@ -1021,17 +1027,17 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
 
     /* // used for tests */
     /* // ============== */
-    /* function getProviderReceiptNode(address provider, uint32 index) */
-    /*     external */
-    /*     view */
-    /*     returns ( */
-    /*         uint32, */
-    /*         uint256, */
-    /*         int32 */
-    /*     ) */
-    /* { */
-    /*     return providers[provider].receiptList.printIndex(index); */
-    /* } */
+    function getProviderReceiptNode(address provider, uint32 index)
+        external
+        view
+        returns (
+            uint32,
+            uint256,
+            int32
+        )
+    {
+        return providers[provider].receiptList.printIndex(index);
+    }
 }
 
 /*

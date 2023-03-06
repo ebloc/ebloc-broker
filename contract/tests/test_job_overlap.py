@@ -132,7 +132,7 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     job.index = index
     job._id = 0
     job.cores = cores
-    job.run_time = [1]
+    job.run_time = [elapsed_time]
     job.data_transfer_ins = [1]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.B2DROP.value]
@@ -150,7 +150,7 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
         job.cores,
         job.run_time,
         job.data_transfer_out,
-        job_price,
+        Cent(job_price),
     ]
     _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -162,13 +162,17 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
         {"from": requester},
     )
 
+    # tx.events["LogJob"]
     tx = ebb.setJobStateRunning(job.key, job.index, job._id, start_timestamp, {"from": provider})
+    # assert ebb.balanceOf(requester) == 0
     rpc.sleep(60)
     mine(5)
     data_transfer_in = 0
     data_transfer_out = 0
     args = [job.index, job._id, end_timestamp, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1], True]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
+    # log(dict(tx.events["LogProcessPayment"]))
+
     if is_print:
         log(f"==> process_payment received_gas_used={tx.__dict__['gas_used']}")
 
@@ -192,18 +196,19 @@ def test_submit_job_gas():
     provider = accounts[1]
     requester = accounts[2]
 
-    register_provider(100)
+    prices = [Cent("99 cent"), Cent("99 cent"), Cent("99 cent"), Cent("99 cent")]
+    register_provider(prices=prices)
     register_requester(requester)
 
     start_timestamp = 10
-    end_timestamp = 20
-    cores = [127]
+    end_timestamp = 25
+    cores = [1]
     index = 0
     submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     start_timestamp = 10
-    end_timestamp = 25
-    cores = [1]
+    end_timestamp = 20
+    cores = [127]
     index = 1
     submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time=1)
     # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

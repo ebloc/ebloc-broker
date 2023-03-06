@@ -268,11 +268,11 @@ def test_stored_data_usage():
     key = tx.events["LogJob"]["jobKey"]
     assert tx.events["LogJob"]["received"] == Cent(job_price)
     log(f"==> job_index={tx.events['LogJob']['index']} | key={key}")
-    assert cost["storage"] == 2
+    assert cost["storage"] == 2 * Cent("1 cent")
     job_price, cost = job.cost(provider, requester)
     log(f"==> key={tx.events['LogJob']['jobKey']} | job_index={tx.events['LogJob']['index']}")
     assert cost["storage"] == 0, "Since it is not verified yet cost of storage should be 2"
-    assert cost["data_transfer"] == 1
+    assert cost["data_transfer"] == 1 * Cent("1 cent")
     with brownie.reverts():
         #: job price is changed
         job_price_minus_one = job_price - 1
@@ -438,7 +438,7 @@ def test_computational_refund():
     assert tx.events["LogProcessPayment"]["elapsedTime"] == run_time
     log(f"{received_sum} {refunded_sum}")
     assert received_sum + refunded_sum == job_price
-    assert received_sum == 104 and refunded_sum == 401
+    assert received_sum == 104 * Cent("1 cent") and refunded_sum == 401 * Cent("1 cent")
 
 
 def test_storage_refund():
@@ -495,7 +495,7 @@ def test_storage_refund():
     refunded_cent = tx.events["LogRefundRequest"]["refundedCent"]
     log(f"refunded_cent={refunded_cent}", "bold")
 
-    assert ebb.balanceOf(requester) == (320 + refunded)
+    assert ebb.balanceOf(requester) == 320 * Cent("1 cent") + refunded
     # withdraw(requester, refunded_cent)
     # VM Exception while processing transaction: invalid opcode
     with brownie.reverts():
@@ -513,7 +513,7 @@ def test_storage_refund():
     append_gas_cost("refundStorageDeposit", tx)
     refunded_cent = tx.events["LogDepositStorage"]["payment"]
     log(f"refunded_cent={refunded_cent}", "bold")
-    assert ebb.balanceOf(requester) == (420 + refunded)
+    assert ebb.balanceOf(requester) == 420 * Cent("1 cent") + refunded
     # withdraw(requester, refunded_cent)
     with brownie.reverts():
         tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester})
@@ -605,7 +605,9 @@ def test_update_provider():
     provider_info = ebb.getProviderInfo(provider, prices_set_block_number[-1])
     assert 4 == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
     provider_info = ebb.getProviderInfo(provider, prices_set_block_number[0])
-    assert 1 == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
+    assert (
+        1 * Cent("1 cent") == provider_info[1][2] == provider_info[1][3] == provider_info[1][4] == provider_info[1][5]
+    )
 
     available_core = 128
     tx = ebb.updateProviderPrices(available_core, COMMITMENT_BN, prices, {"from": provider})
@@ -680,7 +682,7 @@ def test_multiple_data():
         {"from": requester},
     )
     log(f"==> key={tx.events['LogJob']['jobKey']} | job_index={tx.events['LogJob']['index']}")
-    assert cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
+    assert cost["storage"] == 200 * Cent("1 cent"), "Since it is not verified yet cost of storage should be 200"
 
     # second time job is wanted to send by the same user  with the same data files
     job_price, cost = job.cost(provider, requester)
@@ -689,7 +691,7 @@ def test_multiple_data():
     # second time job is wanted to send by the differnt user  with the same data files
     job_price, cost = job.cost(provider, requester_1)
     log(f"==> cost={cost}")
-    assert cost["storage"] == 200, "Since it is not verified yet cost of storage should be 200"
+    assert cost["storage"] == 200 * Cent("1 cent"), "Since it is not verified yet cost of storage should be 200"
     # cluster verifies the given data files for the related job
     index = 0
     # is_verified_list = [True, True]
@@ -708,11 +710,15 @@ def test_multiple_data():
     assert cost["storage"] == 0, "Since it is verified storageCost should be 0"
     #: second time job is wanted to send by the differnt user  with the same data files
     job_price, cost = job.cost(provider, requester_1)
-    assert cost["storage"] == 100, "Since data1 is verified and public, its cost of storage should be 0"
+    assert cost["storage"] == 100 * Cent(
+        "1 cent"
+    ), "Since data1 is verified and public, its cost of storage should be 0"
     # ds = scripts.DataStorage(provider, code_hashes[1], True)
     job_price, cost = job.cost(provider, requester)
     assert cost["storage"] == 0, "Since it is paid on first job submittion it should be 0"
-    assert cost["data_transfer"] == job.data_transfer_out, "cost of data_transfer should cover only data_transfer_out"
+    assert cost["data_transfer"] == job.data_transfer_out * Cent(
+        "1 cent"
+    ), "cost of data_transfer should cover only data_transfer_out"
     args[-1] = job_price
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -754,7 +760,7 @@ def test_multiple_data():
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     log(f"received={received_sum} refunded={refunded_sum}", "bold")
-    assert received_sum == 320 and refunded_sum == 0
+    assert received_sum == 320 * Cent("1 cent") and refunded_sum == 0
     assert Cent(ebb.balanceOf(provider)) == received_sum
     assert Cent(ebb.balanceOf(requester)) == refunded_sum
 
@@ -790,7 +796,7 @@ def test_multiple_data():
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     log(f"#> received={received_sum} refunded={refunded_sum}")
-    assert received_sum == 120 and refunded_sum == 0
+    assert received_sum == 120 * Cent("1 cent") and refunded_sum == 0
     assert Cent(ebb.balanceOf(provider)) == received_sum
     assert Cent(ebb.balanceOf(requester)) == refunded_sum
 
@@ -865,7 +871,7 @@ def test_simple_submit():
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     # log(str(received_sum) + " " + str(refunded_sum))
-    assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5
+    assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5 * Cent("1 cent")
     assert Cent(ebb.balanceOf(provider)) == received_sum
     assert Cent(ebb.balanceOf(requester)) == refunded_sum
     assert Cent(ebb.balanceOf(OWNER)) == Cent("1000000000 usd").__sub__(job_price)

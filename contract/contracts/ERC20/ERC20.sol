@@ -112,11 +112,12 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      *
+     * A mill = $0.001 = 1/1000 of a dollar.
+     * A penny (cent) = $0.01 = 1/100 of a dollar.
      * A dime = $0.10 = 1/10 of a dollar.
-     * A penny = $0.01 = 1/100 of a dollar.
      */
     function decimals() public view virtual override returns (uint8) {
-        return 2;
+        return 8;
     }
 
     /**

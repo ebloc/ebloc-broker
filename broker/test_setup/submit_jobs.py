@@ -87,21 +87,20 @@ def create_cppr_job_script(idx):
         "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
         "0d6c3288ef71d89fb93734972d4eb903",  # A
         "4613abc322e8f2fdeae9a5dd10f17540",  # A
+        "050e6cc8dd7e889bf7874689f1e1ead6",  # A
     ]
     registered_data_hashes_medium[1] = [
-        "050e6cc8dd7e889bf7874689f1e1ead6",  # B
         "9d5d892a63b5758090258300a59eb389",  # B
         "779745f315060d1bc0cd44b7266fb4da",  # B
+        "dd0fbccccf7a198681ab838c67b68fbf",  # B
+        "45281dfec4618e5d20570812dea38760",  # B
     ]
     registered_data_hashes_medium[2] = [
-        "dd0fbccccf7a198681ab838c67b68fbf",  # C
-        "45281dfec4618e5d20570812dea38760",  # C
         "bfc83d9f6d5c3d68ca09499190851e86",  # C
-    ]
-    registered_data_hashes_medium[3] = [
-        "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
-        "1bfca57fe54bc46ba948023f754521d6",  # D
-        "f71df9d36cd519d80a3302114779741d",  # D
+        "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # C
+        "1bfca57fe54bc46ba948023f754521d6",  # C
+        "f71df9d36cd519d80a3302114779741d",  # C
+
     ]
     _list = registered_data_hashes_medium[idx]
     hash_medium_data_0 = random.choice(_list)

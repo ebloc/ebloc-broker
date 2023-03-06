@@ -11,7 +11,7 @@ def main():
     if len(sys.argv) == 2:
         address = str(sys.argv[1])
         balance = cfg.Ebb.get_balance(address)
-        print(f"{Cent(balance)} cent")
+        print(f"{Cent(balance)} cent ≈ {Cent(balance).to('usd')} usd")
     else:
         log("E: Provide an address as an argument")
 

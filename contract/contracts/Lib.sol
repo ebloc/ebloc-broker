@@ -70,7 +70,7 @@ library Lib {
         uint16[] core;
         uint16[] runTime;
         uint32 dataTransferOut;
-        uint32 jobPrice;
+        uint256 jobPrice;
     }
 
     struct JobIndexes {
@@ -114,10 +114,10 @@ library Lib {
 
     // Submitted Job's information
     struct Status {
-        uint32 cacheCost;
         uint32 dataTransferIn;
         uint32 dataTransferOut;
         uint32 pricesSetBlockNum; // When provider is submitted provider's most recent block number when its set or updated
+        uint256 cacheCost;
         uint256 received; // paid amount (new owned) by the requester
         address payable jobOwner; // Address of the client (msg.sender) has been stored
         bytes32 sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
@@ -131,10 +131,10 @@ library Lib {
         uint32 commitmentBlockDur;
         /* All the price varaibles are defined in Gwei.
            Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-        uint32 priceCoreMin; // Provider's price for core per minute
-        uint32 priceDataTransfer;
-        uint32 priceStorage;
-        uint32 priceCache;
+        uint256 priceCoreMin; // Provider's price for core per minute
+        uint256 priceDataTransfer;
+        uint256 priceStorage;
+        uint256 priceCache;
     }
 
     struct Provider {
