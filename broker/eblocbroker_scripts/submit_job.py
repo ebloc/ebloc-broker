@@ -7,9 +7,10 @@ from broker._utils._log import br
 from broker._utils.tools import log, print_tb
 from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
-from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
+from broker.utils import StorageID, is_ipfs_on, question_yes_no
 from brownie.exceptions import TransactionError
 
+Ebb = cfg.Ebb
 ipfs = cfg.ipfs
 
 
@@ -160,7 +161,7 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
     except TransactionError as e:
         log(f"warning: {e}")
         tx_hash = str(e).replace("Tx dropped without known replacement: ", "")
-        if is_transaction_valid(tx_hash):
+        if Ebb.is_transaction_valid(tx_hash):
             return tx_hash
         else:
             raise Exception(f"tx_hash={tx_hash} is not a valid transaction hash.") from e

@@ -84,6 +84,15 @@ wget -bqc https://vision.cs.uwaterloo.ca/files/liver.n6c100.tbz2
 wget -bqc https://vision.cs.uwaterloo.ca/files/bone.n26c10.tbz2
 #+end_src
 
+* To compile
+#+begin_src bash
+find KZ2-tsukuba -name "*.max" -print0 | while read -d $'\0' file
+do
+    cppr "$file"
+done
+#+end_src
+
+* To extract
 #+begin_src bash
 for i in `command ls *.tbz2` ; do tarx "$i" ; done
 #+end_src

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from broker import cfg
 from broker._utils import _log
-from broker._utils._log import _console_clear, console_ruler
+from broker._utils._log import _console_clear
 from broker._utils.tools import log, print_tb
 from broker.lib import state
 from broker.utils import bytes32_to_ipfs

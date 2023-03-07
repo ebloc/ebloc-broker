@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from contextlib import suppress
 
 from broker import cfg
 from broker._utils.tools import log
@@ -13,14 +14,28 @@ def get_msg_value(block_hash, tx_index):
     return float(tx_by_block["value"]) / 10**9
 
 
+def merge_two_dicts(x, y):
+    """Given two dictionaries, merge them into a new dict as a shallow copy."""
+    z = x.copy()
+    z.update(y)
+    return z
+
+
 def get_transaction_receipt(tx_hash):
     try:
         tx_receipt = Ebb.get_transaction_receipt(tx_hash)
-        log(tx_receipt)
-        log()
         tx_by_block = Ebb.get_transaction_by_block(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
-        log(tx_by_block)
-        print(get_msg_value(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]))
+        breakpoint()  # DEBUG
+        # log(tx_receipt)
+        # log(tx_by_block)
+        log(merge_two_dicts(tx_receipt, tx_by_block))
+        with suppress(Exception):
+            log(f"is_tx_passed={bool(tx_receipt['status'])}")
+
+        msg_value = get_msg_value(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
+        if msg_value > 0:
+            print()
+            print(f"msg_value={msg_value}")
     except Exception as e:
         log(f"E: {e}")
 

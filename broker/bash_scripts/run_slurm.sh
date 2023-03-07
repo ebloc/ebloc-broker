@@ -68,7 +68,7 @@ sleep 2.0
 sudo -u $USER mkdir -p /tmp/slurmstate
 sudo chown -R $USER /tmp/slurmstate
 # sudo systemctl --no-pager status --full systemd-journald
-sudo -u $USER /usr/local/sbin/slurmctld -c
+sudo -u $USER /usr/local/sbin/slurmctld -ic
 sleep 1.0
 run_worker_slurmd_nodes
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null

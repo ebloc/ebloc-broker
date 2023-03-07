@@ -5,7 +5,6 @@ import hashlib
 import json
 import ntpath
 import os
-import re
 import shlex
 import shutil
 import signal
@@ -217,19 +216,6 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
         error = error.decode("utf-8").rstrip()
 
     return p, output, error
-
-
-def is_transaction_valid(tx_hash) -> bool:
-    pattern = re.compile(r"^0x[a-fA-F0-9]{64}")
-    return bool(re.fullmatch(pattern, tx_hash))
-
-
-def is_transaction_passed(tx_hash) -> bool:
-    with suppress(Exception):
-        if cfg.w3.eth.get_transaction_receipt(tx_hash)["status"] == 1:
-            return True
-
-    return False
 
 
 def insert_character(string, index, char) -> str:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import sys
 import time
 from contextlib import suppress
@@ -205,6 +206,17 @@ class Contract(Base):
 
         return block_number
 
+    def is_transaction_passed(self, tx_hash) -> bool:
+        try:
+            return bool(self.get_transaction_receipt(tx_hash)["status"])
+        except Exception as e:
+            print_tb(e)
+            raise e
+
+    def is_transaction_valid(self, tx_hash) -> bool:
+        pattern = re.compile(r"^0x[a-fA-F0-9]{64}")
+        return bool(re.fullmatch(pattern, tx_hash))
+
     def get_transaction_by_block(self, block_hash, tx_index) -> dict:
         """Return the tx at the index specified by transaction_index from the block specified by block_identifier.
 
@@ -245,6 +257,7 @@ class Contract(Base):
             raise Exception(f"Invalid account {address} is provided")
 
     def _get_balance(self, account, eth_unit="ether"):
+        "Return ether balance"
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)
         else:
@@ -253,6 +266,7 @@ class Contract(Base):
         return self.w3.fromWei(self.w3.eth.get_balance(account), eth_unit)
 
     def transfer(self, amount, from_account, to_account, required_confs=1):
+        """Transfer acount's ether balance."""
         tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
         return self.tx_id(tx)
 

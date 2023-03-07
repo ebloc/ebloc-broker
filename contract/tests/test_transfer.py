@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 
-import pytest
-
 import brownie
-from broker.eblocbroker_scripts.utils import Cent
 from brownie import accounts
 
 
-def test_sender_balance_decreases(accounts, _Ebb):
+def test_sender_balance_decreases(_Ebb):
     sender_balance = _Ebb.balanceOf(accounts[0])
     amount = sender_balance // 4
 
@@ -16,7 +13,7 @@ def test_sender_balance_decreases(accounts, _Ebb):
     assert _Ebb.balanceOf(accounts[0]) == sender_balance - amount
 
 
-def test_receiver_balance_increases(accounts, _Ebb):
+def test_receiver_balance_increases(_Ebb):
     receiver_balance = _Ebb.balanceOf(accounts[1])
     amount = _Ebb.balanceOf(accounts[0]) // 4
 
@@ -25,7 +22,7 @@ def test_receiver_balance_increases(accounts, _Ebb):
     assert _Ebb.balanceOf(accounts[1]) == receiver_balance + amount
 
 
-def test_total_supply_not_affected(accounts, _Ebb):
+def test_total_supply_not_affected(_Ebb):
     total_supply = _Ebb.totalSupply()
     amount = _Ebb.balanceOf(accounts[0])
 
@@ -34,14 +31,14 @@ def test_total_supply_not_affected(accounts, _Ebb):
     assert _Ebb.totalSupply() == total_supply
 
 
-def test_returns_true(accounts, _Ebb):
+def test_returns_true(_Ebb):
     amount = _Ebb.balanceOf(accounts[0])
     tx = _Ebb.transfer(accounts[1], amount, {"from": accounts[0]})
 
     assert tx.return_value is True
 
 
-def test_transfer_full_balance(accounts, _Ebb):
+def test_transfer_full_balance(_Ebb):
     amount = _Ebb.balanceOf(accounts[0])
     receiver_balance = _Ebb.balanceOf(accounts[1])
 
@@ -51,7 +48,7 @@ def test_transfer_full_balance(accounts, _Ebb):
     assert _Ebb.balanceOf(accounts[1]) == receiver_balance + amount
 
 
-def test_transfer_zero__Ebbs(accounts, _Ebb):
+def test_transfer_zero__Ebbs(_Ebb):
     sender_balance = _Ebb.balanceOf(accounts[0])
     receiver_balance = _Ebb.balanceOf(accounts[1])
 
@@ -61,7 +58,7 @@ def test_transfer_zero__Ebbs(accounts, _Ebb):
     assert _Ebb.balanceOf(accounts[1]) == receiver_balance
 
 
-def test_transfer_to_self(accounts, _Ebb):
+def test_transfer_to_self(_Ebb):
     sender_balance = _Ebb.balanceOf(accounts[0])
     amount = sender_balance // 4
 
@@ -70,14 +67,14 @@ def test_transfer_to_self(accounts, _Ebb):
     assert _Ebb.balanceOf(accounts[0]) == sender_balance
 
 
-def test_insufficient_balance(accounts, _Ebb):
+def test_insufficient_balance(_Ebb):
     balance = _Ebb.balanceOf(accounts[0])
 
     with brownie.reverts():
         _Ebb.transfer(accounts[1], balance + 1, {"from": accounts[0]})
 
 
-def test_transfer_event_fires(accounts, _Ebb):
+def test_transfer_event_fires(_Ebb):
     amount = _Ebb.balanceOf(accounts[0])
     tx = _Ebb.transfer(accounts[1], amount, {"from": accounts[0]})
 

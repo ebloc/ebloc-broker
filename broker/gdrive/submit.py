@@ -11,7 +11,7 @@ from broker.lib import run
 from broker.libs import _git, gdrive
 from broker.libs.gdrive import check_gdrive
 from broker.link import check_link_folders
-from broker.utils import is_program_valid, print_tb
+from broker.utils import print_tb
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version

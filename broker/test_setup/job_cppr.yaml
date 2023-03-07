@@ -1,24 +1,24 @@
 config:
-  requester_address: "0x8b7356a95c8ba1846eb963fd127741730f666ba8"
-  provider_address: "0x51e2b36469cdbf58863db70cc38652da84d20c67"
-  source_code:
-    storage_id: b2drop
-    cache_type: public
-    path: ~/test_eblocbroker/run_cppr
-    storage_hours: 0
-  data:
-    data1:
-      hash: f71df9d36cd519d80a3302114779741d
-    data2:
-      hash: 1bfca57fe54bc46ba948023f754521d6
-    data3:
-      cache_type: public
-      path: ~/test_eblocbroker/dataset_zip/small/BL06-gargoyle-sml
-      storage_hours: 1
-      storage_id: b2drop
-  data_transfer_out: 5
-  jobs:
-    job1:
-      cores: 1
-      run_time: 60
-  provider_addr: "0x4934a70ba8c1c3acfa72e809118bdd9048563a24"
+    requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
+    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    source_code:
+        storage_id: ipfs
+        cache_type: public
+        path: ~/test_eblocbroker/run_cppr
+        storage_hours: 0
+    data:
+        data1:
+            hash: 0d6c3288ef71d89fb93734972d4eb903
+        data2:
+            hash: 4613abc322e8f2fdeae9a5dd10f17540
+        data3:
+            cache_type: public
+            path: /home/alper/TEST/dataset_zip/small/KZ2-sawtooth
+            storage_hours: 1
+            storage_id: ipfs
+    data_transfer_out: 5
+    jobs:
+        job1:
+            cores: 1
+            run_time: 60
+    provider_addr: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'

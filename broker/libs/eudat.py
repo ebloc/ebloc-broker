@@ -91,14 +91,13 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
         raise Exception(f"Upload results into cloud failed after {max_retries} tries")
 
 
-def _login(fn, user, password_path) -> None:
+def _login(fn, user, password_path, message) -> None:
     sleep_duration = 15
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     with open(password_path, "r") as content_file:
         passwd = content_file.read().strip()
 
     message_no_color = f"Trying to login into owncloud user={user} ..."
-    message = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
     for _ in range(cfg.RECONNECT_ATTEMPTS):
         try:
             #: https://github.com/manrajgrover/halo
@@ -124,6 +123,7 @@ def _login(fn, user, password_path) -> None:
 
 
 def login(user, password_path: Path, fn: str) -> None:
+    message = f"Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
     if not user:
         log("E: Given user is empty string")
         terminate()
@@ -133,16 +133,15 @@ def login(user, password_path: Path, fn: str) -> None:
         config.oc = pickle.load(f)
         try:
             message_no_color = f"Login into owncloud from the dumped_object={fn} ..."
-            message = f"[bold]Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
             with Halo(text=message_no_color, spinner="line", placement="right"):
                 config.oc.get_config()
 
             log(message, success=True)
         except subprocess.CalledProcessError as e:
             log(f"{message} FAILED.\n{e.output.decode('utf-8').strip()}")
-            _login(fn, user, password_path)
+            _login(fn, user, password_path, message)
     else:
-        _login(fn, user, password_path)
+        _login(fn, user, password_path, message)
 
 
 def share_single_folder(folder_name, f_id):

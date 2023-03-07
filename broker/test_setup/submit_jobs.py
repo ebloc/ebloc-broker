@@ -29,6 +29,7 @@ is_mini_test = True
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
+PROVIDER_MAIL = "alper.alimoglu.research2@gmail.com"
 
 benchmarks = ["nas", "cppr"]
 storage_ids = ["b2drop", "gdrive", "ipfs"]
@@ -37,20 +38,21 @@ ipfs_types = ["ipfs", "ipfs_gpg"]
 # for provider_addr in providers:
 #     mini_tests_submit(storage_ids, provider_addr)
 
-# if is_mini_test:
-#     benchmarks = ["cppr"]
-#     storage_ids = ["ipfs"]
-#     ipfs_types = ["ipfs"]
-#     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
+if is_mini_test:
+    benchmarks = ["cppr"]
+    storage_ids = ["ipfs"]
+    ipfs_types = ["ipfs"]
+    providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]  # noqa
 
 test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
+small_datasets_dir = Path.home() / "TEST" / "dataset_zip" / "small"
 
 
 def check_gdrive_user():
     try:
-        gdrive.check_gdrive_about("alper.alimoglu.research2@gmail.com")
+        gdrive.check_gdrive_about(PROVIDER_MAIL)
     except Exception as e:
         print_tb(e)
         sys.exit(1)
@@ -100,7 +102,6 @@ def create_cppr_job_script(idx):
         "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # C
         "1bfca57fe54bc46ba948023f754521d6",  # C
         "f71df9d36cd519d80a3302114779741d",  # C
-
     ]
     _list = registered_data_hashes_medium[idx]
     hash_medium_data_0 = random.choice(_list)
@@ -229,17 +230,16 @@ def run_job(counter) -> None:
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to provider=[green]{provider_addr}", "bold blue")
+            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to_provider=[green]{provider_addr}", "bold blue")
             yaml_cfg = Yaml(cppr_yam_fn)
             log(f"data_set_idx={idx}")
             hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_medium_data_0
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
-            small_datasets = Path.home() / "test_eblocbroker" / "dataset_zip" / "small"
-            dirs = [d for d in os.listdir(small_datasets) if os.path.isdir(os.path.join(small_datasets, d))]
+            dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
             dir_name = random.choice(dirs)
-            yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets / dir_name)
+            yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets_dir / dir_name)
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
         yaml_cfg["config"]["provider_address"] = provider_addr

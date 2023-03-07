@@ -7,6 +7,7 @@ from broker._utils._log import log
 from broker.config import env
 from broker.eblocbroker_scripts.get_data_price import get_data_price
 from broker.eblocbroker_scripts.register_data import _register_data
+from broker.eblocbroker_scripts.utils import Cent
 
 hashes_small = [
     "f1de03edab51f281815c3c1e5ecb88c6",
@@ -61,9 +62,9 @@ def register_data_files(data_price, hashes):
 
 def main():
     # register_data_files(data_price=1, hashes=hashes_small)
-    register_data_files(data_price=2, hashes=hashes_medium_1)
+    register_data_files(data_price=Cent("2 cent"), hashes=hashes_medium_1)
     log()
-    register_data_files(data_price=3, hashes=hashes_medium_2)
+    register_data_files(data_price=Cent("3 cent"), hashes=hashes_medium_2)
     log()
     print_prices(hashes_medium_1)
     log()

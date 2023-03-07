@@ -2,6 +2,7 @@
 
 """Driver for ebloc-broker."""
 
+from broker.eblocbroker_scripts.utils import Cent
 import math
 import os
 import sys
@@ -401,12 +402,13 @@ def run_driver(given_bn):
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     gwei_balance = Ebb.gwei_balance(env.PROVIDER_ID)
     wei_amount = Decimal(gwei_balance) * (Decimal(10) ** 9)
-    log(f"==> deployed_block_number={deployed_block_number}")
+    # log(f"==> deployed_block_number={deployed_block_number}")
     log(
-        f"==> account_balance={math.floor(gwei_balance)} Gwei | "
-        f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} Eth"
+        f"==> account_balance={math.floor(gwei_balance)} [blue]gwei[/blue] ≈ "
+        f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} [blue]ether"
     )
-    log(f"==> Ebb_balance={balance_temp} Cent")
+    log(f"==> Ebb_token_balance={Cent(balance_temp).to('usd')} [blue]usd")
+    first_iteration_flag = True
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
@@ -417,27 +419,33 @@ def run_driver(given_bn):
         if cfg.IS_THREADING_ENABLED:
             squeue()
 
-        console_ruler()
+        if not first_iteration_flag:
+            console_ruler()
+
         if isinstance(balance, int):
             value = int(balance) - int(balance_temp)
             if value > 0:
                 log(f"==> Since Driver started provider_gained_cent={value}")
 
         current_bn = Ebb.get_block_number()
-        log(f" * {get_date()} waiting new job to come since bn={bn_read}")
-        log(f"==> current_block={current_bn} | sync_from={bn_read}")
+        if not first_iteration_flag:
+            log(f" * {get_date()} waiting new job to come since bn={bn_read}")
+
+        log(f"==> current_block={current_bn} | sync_from={bn_read} | ", end="")
         flag = True
         while current_bn < int(bn_read):
             current_bn = Ebb.get_block_number()
             if flag:
+                log()
                 log(f"## Waiting block number to be updated, it remains constant at {current_bn}")
 
             flag = False
             time.sleep(2)
 
-        log(f"==> [yellow]watching from bn=[cyan]{bn_read}...")
+        log(f"[yellow]watching from bn=[cyan]{bn_read}")
         bn_read = str(bn_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
+        first_iteration_flag = False
         try:
             driver.logged_jobs_to_process = Ebb.run_log_job(bn_read, env.PROVIDER_ID)
             driver.process_logged_jobs()

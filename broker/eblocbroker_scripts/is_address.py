@@ -12,7 +12,8 @@ def is_address():
     else:
         address = "0x57b60037b82154ec7149142c606ba024fbb0f991"
 
-    print(Ebb.is_address(address))
+    is_address = Ebb.is_address(address)
+    print(f"is_address={is_address}")
 
 
 if __name__ == "__main__":

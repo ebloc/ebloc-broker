@@ -30,7 +30,6 @@ rename_all() {
     mv -v LB07-bunny-sml f82aa511f8631bfc9a82fe6fa30f4b52
     mv -v liver.n6c100 761691119cedfb9836a78a08742b14cc
     mv -v liver.n6c10 f93b9a9f63447e0e086322b8416d4a39
-
 }
 
 extract () {
@@ -39,7 +38,7 @@ extract () {
     cd /var/ebloc-broker/cache
     mv small/* .
     mv medium/* .
-    rmdir *
+    rmdir ./*
     rename_all
 }
 
@@ -48,4 +47,5 @@ main() {
     :
     # extract
 }
+
 main "$@"

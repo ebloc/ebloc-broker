@@ -29,6 +29,7 @@ def get_tx_status(tx_hash, is_verbose=False) -> TxReceipt:
                 del tx_receipt_dict["logsBloom"]
 
             log("tx=", "bold", end="")
+            del tx_receipt_dict["contractAddress"]  # not required
             log(tx_receipt_dict, max_depth=1)
             for idx, tx_log in enumerate(tx_receipt_dict["logs"]):  # all logs that are emitted under the Tx
                 tx_log = dict(tx_log)

@@ -57,6 +57,7 @@ if __name__ == "__main__":
 
     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
     f_id = env.OC_USER
+    log(f"## address=[m]{env.PROVIDER_ID}")
     log(f"## gmail=[m]{env.GMAIL}")
     log(f"## gpg_fingerprint={gpg_fingerprint}")
     log(f"## ipfs_address=[m]{ipfs_address}")

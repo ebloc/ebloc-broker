@@ -3,11 +3,11 @@
 # Example usage: ./transfer.py 0xa9fc23943e48a3efd35bbdd440932f123d05b697 "1 usd"
 
 import sys
+
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker.eblocbroker_scripts.utils import Cent
-
 
 Ebb = cfg.Ebb
 

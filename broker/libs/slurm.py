@@ -68,9 +68,9 @@ def get_idle_cores(is_print=True) -> int:
     return idle_cores
 
 
-def pending_jobs_check():
+def pending_jobs_check(is_print=True):
     """If there is no idle cores, waits for idle cores to be emerged."""
-    idle_cores = get_idle_cores()
+    idle_cores = get_idle_cores(is_print)
     print_flag = False
     while idle_cores is None:
         if not print_flag:
