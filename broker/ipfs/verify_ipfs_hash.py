@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import multihash
 import hashlib
+
+import multihash
+
 
 """
 # https://github.com/ivilata/pymultihash/issues/12#issuecomment-1460187266

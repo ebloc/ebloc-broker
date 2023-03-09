@@ -54,7 +54,7 @@ def pre_check(job: Job, requester):
     job.check_account_status(requester)
     is_bin_installed("ipfs")
     if not is_dpkg_installed("pigz"):
-        log("E: Install [green]pigz[/green].\nsudo apt install -y pigz")
+        log("E: Install [g]pigz[/g].\nsudo apt install -y pigz")
         sys.exit()
 
     if not os.path.isfile(env.GPG_PASS_FILE):

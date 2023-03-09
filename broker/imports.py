@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import subprocess  # For executing a shell command
 import sys
 
 from web3 import IPCProvider, Web3
@@ -11,7 +12,7 @@ from broker._utils.tools import log, print_tb, read_json
 from broker.config import env
 from broker.errors import QuietExit
 from broker.python_scripts import add_bloxberg_into_network_config
-from broker.utils import is_geth_on, run, terminate
+from broker.utils import is_geth_on, popen_communicate, run, terminate
 
 
 def read_abi_file():
@@ -20,6 +21,18 @@ def read_abi_file():
         return read_json(abi_file, is_dict=False)
     except Exception as e:
         raise Exception(f"unable to read the abi.json file: {abi_file}") from e
+
+
+def _ping(host) -> bool:
+    """
+    Return True if host (str) responds to a ping request.
+    Remember that a host may not respond to a ping (ICMP) request even if the host name is valid.
+    """
+    # Building the command. Ex: "ping -c 1 google.com"
+    cmd = ["ping", "-c", "1", host]
+    pr, output, e = popen_communicate(cmd)  # noqa
+    # print(output)
+    return pr.returncode == 0
 
 
 def connect():
@@ -47,7 +60,11 @@ def _connect_to_web3() -> None:
     """
     if env.IS_GETH_TUNNEL or not env.IS_EBLOCPOA:
         if env.IS_BLOXBERG:
-            cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
+            host = "https://core.bloxberg.org"
+            if not _ping(host.replace("https://", "")):
+                raise Exception(f"ping to {host} failed")
+
+            cfg.w3 = Web3(HTTPProvider(host))
         else:
             cfg.w3 = Web3(HTTPProvider(f"http://localhost:{env.RPC_PORT}"))
     else:
@@ -76,6 +93,7 @@ def connect_to_web3() -> None:
 
                 if env.IS_BLOXBERG:
                     log("E: web3 is not connected into [g]BLOXBERG[/g]")
+                    connect_to_web3()  #: trying again
                 else:
                     is_geth_on()
             except QuietExit:
@@ -90,7 +108,7 @@ def connect_to_web3() -> None:
                     "to /private/geth.ipc file doing: ",
                     end="",
                 )
-                log(f"sudo chown $(logname) {web3_ipc_fn}", "green")
+                log(f"sudo chown $(logname) {web3_ipc_fn}", "g")
                 log(f"#> running `sudo chown $(whoami) {web3_ipc_fn}`")
                 run(["sudo", "chown", env.WHOAMI, web3_ipc_fn])
         else:
@@ -125,7 +143,7 @@ def connect_to_eblocbroker() -> None:
                 add_bloxberg_into_network_config.main()
                 try:
                     log(
-                        "warning: [green]bloxberg[/green] key is added into the "
+                        "warning: [g]bloxberg[/g] key is added into the "
                         "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
                     )
                     network.connect("bloxberg")

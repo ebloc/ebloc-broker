@@ -2,7 +2,6 @@
 
 """Driver for ebloc-broker."""
 
-from broker.eblocbroker_scripts.utils import Cent
 import math
 import os
 import sys
@@ -26,7 +25,9 @@ from broker.drivers.b2drop import B2dropClass
 from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
+from broker.imports import connect_to_web3
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
@@ -85,13 +86,13 @@ def _tools(block_continue):  # noqa
             raise Terminate
 
         if env.IS_BLOXBERG:
-            log(":beer:  Connected into [green]BLOXBERG[/green]", "bold")
+            log(":beer:  Connected into [g]BLOXBERG[/g]", "bold")
 
         else:
             is_geth_on()
 
         if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-            log(f"warning: provider [green]{env.PROVIDER_ID}[/green]'s orcid id is not authenticated yet")
+            log(f"warning: provider [g]{env.PROVIDER_ID}[/g]'s orcid id is not authenticated yet")
             raise QuietExit
 
         slurm.is_on()
@@ -104,6 +105,7 @@ def _tools(block_continue):  # noqa
                 raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('cfg.yaml')}")
 
             eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
+            log(f"==> b2drop_username=[cyan]{env.OC_USER}")
 
         gmail = provider_info_contract["gmail"]
         log(f"==> provider_gmail=[m]{gmail}")
@@ -135,7 +137,7 @@ def _tools(block_continue):  # noqa
 
             start_ipfs_daemon()
 
-        exception_msg = "warning: Given information is not same with the provider's registered info"
+        exception_msg = "warning: Given information is not same with the provider's registered info, please update it."
         try:
             flag_error = False
             if provider_info_contract["f_id"] != env.OC_USER:
@@ -329,6 +331,7 @@ def run_driver(given_bn):
         connect()
         Ebb: "Contract.Contract" = cfg.Ebb  # type: ignore
         driver = Driver()
+        Ebb._is_web3_connected()
     except Exception as e:
         raise Terminate from e
 
@@ -381,7 +384,6 @@ def run_driver(given_bn):
     log(f"==> whoami={env.WHOAMI}")
     log(f"==> log_file={_log.DRIVER_LOG}")
     log(f"==> rootdir={os.getcwd()}")
-    log(f"==> is_web3_connected={Ebb.is_web3_connected()}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
@@ -407,13 +409,13 @@ def run_driver(given_bn):
         f"==> account_balance={math.floor(gwei_balance)} [blue]gwei[/blue] ≈ "
         f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} [blue]ether"
     )
-    log(f"==> Ebb_token_balance={Cent(balance_temp).to('usd')} [blue]usd")
+    log(f"==> Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
     first_iteration_flag = True
     while True:
         wait_until_idle_core_available()
         time.sleep(0.2)
         if not str(bn_read).isdigit():
-            raise Terminate(f"block_read_from={bn_read}")
+            raise Terminate(f"read_block_from={bn_read}")
 
         balance = Ebb.get_balance(env.PROVIDER_ID)
         if cfg.IS_THREADING_ENABLED:
@@ -421,17 +423,15 @@ def run_driver(given_bn):
 
         if not first_iteration_flag:
             console_ruler()
-
-        if isinstance(balance, int):
-            value = int(balance) - int(balance_temp)
-            if value > 0:
-                log(f"==> Since Driver started provider_gained_cent={value}")
+            if isinstance(balance, int):
+                cc = Cent(int(balance) - int(balance_temp))._to()
+                log(f"==> since driver started provider_gained_token={cc} usd")
 
         current_bn = Ebb.get_block_number()
         if not first_iteration_flag:
             log(f" * {get_date()} waiting new job to come since bn={bn_read}")
 
-        log(f"==> current_block={current_bn} | sync_from={bn_read} | ", end="")
+        log(f"==> current_block={current_bn} | sync_from={bn_read} ", end="")
         flag = True
         while current_bn < int(bn_read):
             current_bn = Ebb.get_block_number()
@@ -442,7 +442,7 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        log(f"[yellow]watching from bn=[cyan]{bn_read}")
+        log()
         bn_read = str(bn_read)  # reading events' block number has been updated
         slurm.pending_jobs_check()
         first_iteration_flag = False
@@ -457,14 +457,13 @@ def run_driver(given_bn):
                 bn_read = env.config["block_continue"] = current_bn
         except Exception as e:
             log()
-            log(f"E: {e}")
             if "Filter not found" in str(e) or "Read timed out" in str(e):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
-                log("## sleeping for 5 seconds...", end="")
+                first_iteration_flag = True
                 time.sleep(5)
-                log(ok())
-                # TODO: maybe restart?
+                connect_to_web3()  # connect check to web3
             else:
+                log(f"E: {e}")
                 print_tb(e)
 
 
@@ -479,8 +478,8 @@ def main(args):
         if args.is_thread is False:
             cfg.IS_THREADING_ENABLED = False
 
-        console_ruler("provider session starts")
-        log(f"* {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        console_ruler("provider session starts", color="white")
+        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}", highlight=False)
         with launch_ipdb_on_exception():  # if an exception is raised, then launch ipdb
             lock = None
             try:

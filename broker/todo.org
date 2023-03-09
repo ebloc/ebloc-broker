@@ -32,3 +32,8 @@ Slurm status should be set on the receiveDeposit call not setJobStatus
    Some functıons are public that should carried into ~utils.py~
 ** TODO for workflow visualization: https://github.com/mermaid-js/mermaid
 ** TODO remove _balance? could be not needed.
+** TODO BUGS
+#+begin_src python
+Failed to share file: googleapi: Error 403: Rate limit exceeded. User message: "Sorry, you have exceeded your sharing quota.", sharingRateLimitExceeded
+#+end_src
+** TODO fetch b2drop empty size

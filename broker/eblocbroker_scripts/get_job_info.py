@@ -65,7 +65,7 @@ def analyze_data(self, key, provider=None):
         log(" ", end="")
         log(f"is_cached={self.job_info['is_cached'][code_hash_str]}", "bold", end="")
         if ds.received_block > 0:
-            log(f" received_block={ds.received_block}", "bold", end="")
+            log(f" received_bn={ds.received_block}", "bold", end="")
 
         if ds.storage_duration > 0:
             log(f" storage_dur={ds.storage_duration}", "bold", end="")

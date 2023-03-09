@@ -19,7 +19,7 @@ cfg:
     available_core: 4
     prices:
       commitment_blk: 600
-      price_core_min: "1 cent"
-      price_data_transfer: "0.01 cent"
-      price_storage: "0.01 cent"
-      price_cache: "0.01 cent"
+      price_core_min: "0.001 usd"
+      price_data_transfer: "0.0001 cent"
+      price_storage: "0.0001 cent"
+      price_cache: "0.0001 cent"

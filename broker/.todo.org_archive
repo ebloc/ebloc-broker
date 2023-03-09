@@ -1,0 +1,19 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /home/alper/ebloc-broker/broker/todo.org
+
+
+* DONE Fix updateProviderPrices
+CLOSED: [2023-03-13 Mon 01:20]
+:PROPERTIES:
+:ARCHIVE_TIME: 2023-03-13 Mon 01:20
+:ARCHIVE_FILE: ~/ebloc-broker/broker/todo.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: todo
+:ARCHIVE_TODO: DONE
+:END:
+#+begin_src python
+TypeError: updateProviderPrices '['0.001 usd', '0.0001 cent', '0.0001 cent', '0.0001 cent']' - Cannot convert str '0.001 usd' to wei.
+An exception of type TypeError occurred. Arguments:
+#+end_src

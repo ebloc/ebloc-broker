@@ -1,21 +1,21 @@
 config:
-    requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+    requester_address: '0xc60409093861fe191ae851572a440deb42818a63'
+    provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
     source_code:
-        storage_id: ipfs
+        storage_id: gdrive
         cache_type: public
         path: ~/test_eblocbroker/run_cppr
         storage_hours: 0
     data:
         data1:
-            hash: 0d6c3288ef71d89fb93734972d4eb903
+            hash: f71df9d36cd519d80a3302114779741d
         data2:
-            hash: 4613abc322e8f2fdeae9a5dd10f17540
+            hash: 1bfca57fe54bc46ba948023f754521d6
         data3:
             cache_type: public
-            path: /home/alper/TEST/dataset_zip/small/KZ2-sawtooth
+            path: /home/alper/test_eblocbroker/small/BL06-gargoyle-sml
             storage_hours: 1
-            storage_id: ipfs
+            storage_id: gdrive
     data_transfer_out: 5
     jobs:
         job1:

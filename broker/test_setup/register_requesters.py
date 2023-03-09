@@ -14,6 +14,7 @@ def main():
         yaml_user = Yaml(yaml_fn)
         yaml_user["cfg"]["eth_address"] = user
         with suppress(Exception):
+            #: could also be used for updating requesters as well
             tx_hash = cfg.Ebb.register_requester(yaml_fn, is_question=False)
             if tx_hash:
                 get_tx_status(tx_hash)

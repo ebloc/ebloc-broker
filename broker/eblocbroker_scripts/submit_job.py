@@ -124,7 +124,7 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
     try:
         provider_info = self.get_provider_info(provider)
         log(f"provider's available_core_num={provider_info['available_core_num']}", "bold")
-        log(f"provider's price_core_min={provider_info['price_core_min']}", "bold")
+        log(f"provider's price_core_min={Cent(provider_info['price_core_min'])._to()} [blue]usd", "bold")
     except Exception as e:
         print_tb(e)
         raise e

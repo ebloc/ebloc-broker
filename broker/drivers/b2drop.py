@@ -100,7 +100,7 @@ class B2dropClass(Storage):
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(f"==> {folder_name} is already cached under the public directory", "bold green")
+                    log(f"==> {folder_name} is already cached under the public directory", "bg")
                     return True
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
@@ -129,7 +129,7 @@ class B2dropClass(Storage):
             self.folder_type_dict[folder_name] = "tar.gz"
             if generate_md5sum(cached_tar_fn) == folder_name:
                 # checking is already downloaded folder's hash matches with the given hash
-                log(f"==> {cached_tar_fn} is already cached", "bold green")
+                log(f"==> {cached_tar_fn} is already cached", "bg")
                 self.tar_downloaded_path[folder_name] = cached_tar_fn
                 self.folder_type_dict[folder_name] = "tar.gz"
                 return True
@@ -149,7 +149,7 @@ class B2dropClass(Storage):
         Always assumes job is submitted as .tar.gz file
         """
         cached_tar_fn = f"{results_folder_prev}/{folder_name}.tar.gz"
-        log("#> downloading [green]output.zip[/green] for:", end="")
+        log("#> downloading [g]output.zip[/g] for:", end="")
         log(f"{folder_name} => {cached_tar_fn} ", "bold")
         key = folder_name
         share_key = f"{folder_name}_{self.requester_id[:16]}"
@@ -291,7 +291,7 @@ class B2dropClass(Storage):
                 # TODO: if added before or some do nothing
                 if Ebb.mongo_broker.add_item_share_id(share_key, value["share_id"], value["share_token"]):
                     # adding into mongoDB for future usage
-                    log(f"#> [green]{share_key}[/green] is added into mongoDB{ok()}")
+                    log(f"#> [g]{share_key}[/g] is added into mongoDB{ok()}")
             except Exception as e:
                 print_tb(e)
                 log(f"E: {e}")

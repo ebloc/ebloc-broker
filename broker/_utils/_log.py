@@ -156,11 +156,8 @@ def br(text, color="white"):
         return f"[bold][[/bold]{text}[bold]][/bold]"
 
 
-def ok(text="OK"):
-    if text == "OK":
-        return "  " + br(f"  [green]{text}[/green]  ")
-    else:
-        return br(f"  [green]{text}[/green]  ")
+def ok():
+    return "  " + br("  [g]OK[/g]  ")
 
 
 def _console_clear():
@@ -372,7 +369,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = os.path.basename(frame.f_code.co_filename)
-    return f"[bold][green][[/green][blue]  {text}[/blue]:{frame.f_lineno}  [green]][/green][/bold]"
+    return f"[bold][g][[/g][blue]  {text}[/blue]:{frame.f_lineno}  [g]][/g][/bold]"
 
 
 ll = Log()

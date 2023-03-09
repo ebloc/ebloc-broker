@@ -145,10 +145,10 @@ class Storage(BaseClass):
 
     def check_already_cached(self, code_hash):
         if os.path.isfile(f"{self.private_dir}/{code_hash}.tar.gz"):
-            log(f":beer:  [green]{code_hash}[/green] is already cached in {self.private_dir}", "bold")
+            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.private_dir}", "bold")
             self.is_cached[code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{code_hash}.tar.gz"):
-            log(f":beer:  [green]{code_hash}[/green] is already cached in {self.public_dir}", "bold")
+            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.public_dir}", "bold")
             self.is_cached[code_hash] = True
 
     def full_refund(self) -> str:

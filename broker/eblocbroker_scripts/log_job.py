@@ -10,8 +10,10 @@ import sys
 import time
 from contextlib import suppress
 
+from halo import Halo
+
 from broker import cfg
-from broker._utils._log import Style, br, console_ruler
+from broker._utils._log import br, console_ruler
 from broker._utils.tools import log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
 
@@ -54,17 +56,13 @@ def log_loop(event_filter, poll_interval: int = 2):
     """
     sleep_duration = 0
     while True:
-        block_num = cfg.Ebb.get_block_number()
+        bn = cfg.Ebb.get_block_number()
         since_time = datetime.timedelta(seconds=sleep_duration)
-        sys.stdout.write(
-            f"\r{Style.GREENB}##{Style.END} {Style.B}[{Style.E}"
-            f"{Style.YELLOWB}bn{Style.END}={Style.CYANB}{block_num}{Style.END}{Style.B}]{Style.E} "
-            f"waiting events for jobs since {Style.CYANB}{since_time}{Style.END} "
-        )
+        sys.stdout.write(f"\r## [  bn={bn}  ] waiting job events since {since_time} ")
         sys.stdout.flush()
         logged_jobs = event_filter.get_new_entries()
         if len(logged_jobs) > 0:
-            log()
+            print()
             return logged_jobs
 
         sleep_duration += poll_interval

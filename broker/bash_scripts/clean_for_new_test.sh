@@ -2,8 +2,7 @@
 
 clean_gdrive () {
     echo "#> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
-    ~/ebloc-broker/broker/python_scripts/clean_gdrive.py
-    ~/ebloc-broker/broker/python_scripts/clean_gdrive.py
+    for i in {1..2}; do ~/ebloc-broker/broker/python_scripts/clean_gdrive.py; done
     echo "[  OK  ]"
 }
 
@@ -74,19 +73,18 @@ rm -rf docs/_build/
 rm -f /tmp/run/driver_popen.pid >/dev/null 2>&1
 rm -f ~/.ebloc-broker/.oc_client.pckl
 rm -f /var/ebloc-broker/cache/*.tar.gz
-# rm -f .oc.pckl
 
 # unpin and remove all IPFS content from my machine
 # ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm
 # ipfs repo gc
 rm -rf ~/.ipfs/badgerds
 
-# clean_gdrive
+clean_gdrive
 for i in `gpg --list-keys --with-colons --fingerprint | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
     gpg --batch --delete-key "$i" 2>/dev/null
 done
 
-$HOME/ebloc-broker/broker/libs/mongodb.py --delete-all
+~/ebloc-broker/broker/libs/mongodb.py --delete-all
 
 echo -e "\n$ ls /var/ebloc-broker"
 ls /var/ebloc-broker/

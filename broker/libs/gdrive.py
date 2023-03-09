@@ -132,12 +132,12 @@ def upload(folder_to_share, tmp_dir, is_source_code=False):
     is_file_exist = _list(tar_hash, is_folder=True)
     if is_file_exist:
         log(f"## requested folder {tar_hash} is already uploaded", "bold blue")
-        log(is_file_exist, "bold green")
+        log(is_file_exist, "bg")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
     else:
         key = _upload(dir_path, tar_hash, is_folder=True)
-        log(f"{_list(tar_hash)}", "bold green")
+        log(f"{_list(tar_hash)}", "bg")
 
     _remove(f"{dir_path}/{tar_hash}")  # created .tar.gz file is removed
     return key, is_already_uploaded, tar_hash, tar_hashes
@@ -162,7 +162,7 @@ def delete_all(_type="all"):
         for line in list_all().splitlines():
             if " dir   " in line:
                 try:
-                    log(f"Attempt to delete dir: {line.split()[0]} ", end="")
+                    log(f"Attempt to delete dir: {line.split()[0]} ", end="", highlight=False)
                     output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
                     print(output)
                 except Exception as e:
@@ -265,7 +265,7 @@ def get_data_key_ids(results_folder_prev) -> bool:
 def update_meta_data_gdrive(key, path):
     output = get_file_id(key)
     meta_data_key = fetch_grive_output(output, "meta_data.json")
-    log(f"`gdrive update {meta_data_key} {path}`", end="")
+    log(f"`gdrive update {meta_data_key} {path}`", highlight=False, end="")
     run(["gdrive", "update", meta_data_key, path])
 
 
@@ -300,7 +300,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     try:
         output = get_file_id(key)
         log(f"==> data_id=[m]{key}")
-        log(output, "bold green")
+        log(output, "bg")
         data_files_id = fetch_grive_output(output, "meta_data.json")
         if not data_files_id:
             raise Exception
@@ -338,7 +338,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
         # checks md5sum obtained from gdrive and given by the user
         raise Exception(f"md5sum does not match with the provided data {source_code_key}")
 
-    log(f"SUCCESS on folder={md5sum}", "bold green")
+    log(f"SUCCESS on folder={md5sum}", "bg")
     byte_size = int(get_file_info(gdrive_info, "Size"))
     log(f"## code_hashes[0] == {_source_code_hash} | size={byte_size} bytes")
     if not is_cached[code_hashes[0].decode("utf-8")]:
@@ -359,7 +359,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
                 data_key = fetch_grive_output(output, f"{k}.tar.gz")
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
-                log(f" * gdrive_info for [green]{k}[/green]:")
+                log(f" * gdrive_info for [g]{k}[/g]:")
                 parse_gdrive_info(gdrive_info)
                 idx += 1
             else:  # should start from the first index
@@ -373,7 +373,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
                     raise e
 
                 md5sum = get_file_info(gdrive_info, _type="Md5sum")
-                log(f" * gdrive_info for [green]{k}[/green]:")
+                log(f" * gdrive_info for [g]{k}[/g]:")
                 parse_gdrive_info(gdrive_info)
                 given_code_hash = code_hashes[idx].decode("utf-8")
                 log(f"==> given_code_hash={given_code_hash}  idx={idx}")

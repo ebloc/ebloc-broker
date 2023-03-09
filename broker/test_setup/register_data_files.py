@@ -49,11 +49,11 @@ hashes_medium_2 = [
 def print_prices(hashes):
     for code_hash in hashes:
         (price, _commitment_dur) = get_data_price(env.PROVIDER_ID, code_hash, is_verbose=False)
-        log(f"{code_hash}={price}")
+        log(f"{code_hash}={Cent(price)._to()} usd")
 
 
 def register_data_files(data_price, hashes):
-    log(f"#> registering data {len(hashes)} files")
+    log(f"#> registering data {len(hashes)} files", highlight=False)
     for code_hash in hashes:
         with suppress(Exception):
             _register_data(code_hash, data_price, commitment_dur=600)
@@ -62,12 +62,12 @@ def register_data_files(data_price, hashes):
 
 def main():
     # register_data_files(data_price=1, hashes=hashes_small)
-    register_data_files(data_price=Cent("2 cent"), hashes=hashes_medium_1)
-    log()
-    register_data_files(data_price=Cent("3 cent"), hashes=hashes_medium_2)
-    log()
+    register_data_files(data_price=Cent("0.0002 usd"), hashes=hashes_medium_1)
+    print()
+    register_data_files(data_price=Cent("0.0003 usd"), hashes=hashes_medium_2)
+    print()
     print_prices(hashes_medium_1)
-    log()
+    print()
     print_prices(hashes_medium_2)
 
 

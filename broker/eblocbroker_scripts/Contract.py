@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import re
+import subprocess
 import sys
 import time
 from contextlib import suppress
 from os.path import expanduser
 from typing import Union
 
+from halo import Halo
 from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
@@ -237,6 +239,19 @@ class Contract(Base):
             return dict(tx_receipt)
         else:
             return without_keys(tx_receipt, self.invalid)
+
+    def _is_web3_connected(self):
+        try:
+            message = "* is_web3_connected=True"
+            message_no_color = "* is_web3_connected="
+            with Halo(text=message_no_color, spinner="line", placement="right"):
+                if not Ebb.is_web3_connected():
+                    raise Exception
+
+            log(message)
+        except subprocess.CalledProcessError as e:
+            log(f"{message} FAILED.\n{e.output.decode('utf-8').strip()}")
+            self._is_web3_connected()
 
     def is_web3_connected(self):
         """Return whether web3 connected or not."""

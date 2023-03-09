@@ -14,7 +14,7 @@ class Helper:
     def __init__(self):
         """Initialize helper.
 
-        test: ./__main__.py -h
+        test: ./_cli/__main__.py -h
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
 
@@ -37,6 +37,7 @@ class Helper:
         self.daemon()
         self.register()
         self.submit()
+        self.authenticate_orc_id()
         self.data()
         self.balance()
         self.subparsers.add_parser("providers", help="List of registered providers.")
@@ -102,6 +103,10 @@ class Helper:
         register_requester.add_argument(
             "path", type=str, help="Full file path of Yaml file that contains the requester info"
         )
+
+    def authenticate_orc_id(self):
+        # FIXME: missing functionality
+        obj = self.subparsers.add_parser("auth_orc_id", help="Authenticate orcid")
 
     def submit(self):
         obj = self.subparsers.add_parser("submit", help="Submit job")

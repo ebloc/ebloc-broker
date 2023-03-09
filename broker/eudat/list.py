@@ -39,8 +39,9 @@ def main():
 
     try:
         oc.login(env.OC_USER, paswd)
-        print(oc.list("."))
-        oc.mkdir("dummy_dir")
+        folders_list = oc.list(".")  # takes long time to fetch
+        print(folders_list)
+        oc.mkdir("iam_dummy_folder")
     except Exception as e:
         print_tb(e)
 

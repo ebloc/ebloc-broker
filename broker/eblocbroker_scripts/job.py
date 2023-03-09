@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import decimal
 import os
 import sys
 from ast import literal_eval as make_tuple
@@ -311,7 +312,7 @@ class Job:
             try:
                 _price, *_ = self.cost(provider, requester, is_verbose)
                 price_list.append(_price)
-                log(f" * provider={provider} | price={_price}")
+                log(f" * provider={provider} | price={Cent(_price)._to()} usd")
                 if _price < price_to_select:
                     price_to_select = _price
                     selected_provider = provider
@@ -324,10 +325,11 @@ class Job:
         is_all_equal = all(x == price_list[0] for x in price_list)
         return selected_provider, selected_price, is_all_equal
 
-    def search_best_provider(self, requester, is_verbose=True):
-        if not self.provider_addr:
+    def search_best_provider(self, requester, is_verbose=True, is_force=False):
+        # is_verbose = False
+        if not is_force or not self.provider_addr:
             provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=is_verbose)
-        else:
+        else:  #: instead force the given provider address from `self.provider_addr`
             _price, *_ = self.cost(self.provider_addr, requester, is_verbose=True)
             best_price = _price
             is_all_equal = True
@@ -340,7 +342,7 @@ class Job:
         if is_all_equal:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
 
-        log(f"[green]##[/green] provider_to_share={provider_to_share} | price={best_price}", "bold")
+        log(f"[g]##[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd", "bold")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
 
@@ -418,6 +420,8 @@ class JobPrices:
     def set_storage_cost(self, is_verbose=False):
         """Calculate the cache cost."""
         self.registered_data_cost_list = {}
+        #: for logging purpose
+        self.registered_data_cost_list_usd = {}
         self.registered_data_cost = 0
         self.storage_cost = 0
         self.cache_cost = 0
@@ -443,7 +447,7 @@ class JobPrices:
             except:
                 _code_hash = bytes32_to_ipfs(code_hash, is_verbose=False)
 
-            if is_verbose:
+            if is_verbose and _code_hash:
                 log(f"==> is_private{br(_code_hash, 'blue')}={ds.is_private}")
 
             # print(received_block + storage_duration >= self.w3.eth.block_number)
@@ -474,6 +478,7 @@ class JobPrices:
                     )
                     self.storage_cost += data_price
                     self.registered_data_cost_list[_code_hash] = data_price
+                    self.registered_data_cost_list_usd[_code_hash] = self.to_usd(data_price, is_color=False)
                     self.registered_data_cost += data_price
                 elif not ds.received_deposit:  # and (received_block + storage_duration < w3.eth.block_number)
                     self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
@@ -488,6 +493,13 @@ class JobPrices:
         self.data_transfer_out_cost = self.price_data_transfer * self.job.data_transfer_out
         self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
 
+    def to_usd(self, amount, is_color=True) -> str:
+        if is_color:
+            _amount = str(decimal.Decimal(Cent(amount)._to()))[:8]
+            return f"{_amount} [blue]usd"
+        else:
+            return f"{Cent(amount)._to()} usd"
+
     def set_job_price(self, is_verbose=False) -> None:
         """Set job price in the object."""
         self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
@@ -497,27 +509,27 @@ class JobPrices:
         self.cost["data_transfer_in"] = self.data_transfer_in_cost
         self.cost["data_transfer_out"] = self.data_transfer_out_cost
         self.cost["data_transfer"] = self.data_transfer_cost
-        if self.registered_data_cost_list:
-            log(self.registered_data_cost_list)
-
         if is_verbose:
-            log(f"==> price_core_min={self.price_core_min}")
-            log(f"==> price_data_transfer={self.price_data_transfer}")
-            log(f"==> price_storage={self.price_storage}")
-            log(f"==> price_cache={self.price_cache}")
-            log(f"[g]*[/g] [blue]job_price[/blue]={Cent(self.job_price).to('usd')} usd", "bold")
+            log(f"==> price_core_min={self.to_usd(self.price_core_min)}")
+            log(f"==> price_data_transfer={self.to_usd(self.price_data_transfer)}")
+            log(f"==> price_storage={self.to_usd(self.price_storage)}")
+            log(f"==> price_cache={self.to_usd(self.price_cache)}")
+            log(f"[g]*[/g] [yellow]job_price[/yellow]={self.to_usd(self.job_price)}")
             _c = "[g]|[/g]       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
-                    log(f"[green]|[/green]   * {k}={v}", "bold")
+                    log(f"[g]|[/g]   * {k}={self.to_usd(v)}")
                     if k == "storage":
-                        log(f"{_c} in={self.cost['data_transfer_in']}", "bold")
+                        log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
                         if self.registered_data_cost > 0:
-                            log(f"{_c} registered_data={self.registered_data_cost}", "bold")
-                            log(f"[green]|[/green]         {self.registered_data_cost_list}")
+                            log(f"{_c} registered_data={self.to_usd(self.registered_data_cost)}")
+                            log(f"[g]|[/g]         {self.registered_data_cost_list_usd}")
 
                 if k == "data_transfer":
-                    log(f"{_c} in={self.cost['data_transfer_in']}", "bold")
-                    log(f"{_c} out={self.cost['data_transfer_out']}", "bold")
+                    log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
+                    log(f"{_c} out={self.to_usd(self.cost['data_transfer_out'])}")
 
             log()
+        else:
+            if self.registered_data_cost_list:
+                log(self.registered_data_cost_list)

@@ -9,6 +9,8 @@ from broker.config import env
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.errors import QuietExit
 
+ipfs = cfg.ipfs
+
 
 def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):
     try:
@@ -56,6 +58,8 @@ if __name__ == "__main__":
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL)
 
     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
+    ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
+
     f_id = env.OC_USER
     log(f"## address=[m]{env.PROVIDER_ID}")
     log(f"## gmail=[m]{env.GMAIL}")

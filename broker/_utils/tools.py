@@ -406,18 +406,18 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
             pid = out.strip().split()[1]
             if pid in pids:
                 if is_print:
-                    log(f"==> [green]{name}[/green] is already running on the background, its pid={pid}")
+                    log(f"==> [g]{name}[/g] is already running on the background, its pid={pid}")
 
                 return True
         else:
             if is_print:
-                log(f"==> [green]{name}[/green] is already running on the background")
+                log(f"==> [g]{name}[/g] is already running on the background")
 
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"[bold green]{name}[/bold green] is not running on the background  {WHERE(1)}")
+        print_tb(f"[bg]{name}[/bg] is not running on the background  {WHERE(1)}")
 
     return False
 

@@ -45,17 +45,17 @@ def main():
                 end="",
             )
             if env.IS_BLOXBERG:
-                log(f" | network=[green]BLOXBERG\n{providers}", "bold")
+                log(f" | network=[g]BLOXBERG\n{providers}", "bold")
 
             columns = 80
             columns_size = int(int(columns) / 2 - 12)
-            log("\r" + "=" * columns_size + "[bold cyan] providers [/bold cyan]" + "=" * columns_size, "green")
+            log("\r" + "=" * columns_size + "[bold cyan] providers [/bold cyan]" + "=" * columns_size, "g")
             for k, v in providers_info.items():
                 log(f"\r** provider_address={k}")
                 log(v)
 
             columns_size = int(int(columns) / 2 - 9)
-            log("\r" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size, "green")
+            log("\r" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size, "g")
             for job in jobs:
                 log(
                     f"\r==> {job['job_key']} {job['index']} {job['provider']} "

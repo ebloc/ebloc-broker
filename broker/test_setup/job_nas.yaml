@@ -1,8 +1,8 @@
 config:
-    requester_address: '0xe2969f599cb904e9a808ec7218bc14fcfa346965'
-    provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+    requester_address: '0x92086404471d0e5453f856363358967308b37cd5'
+    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
     source_code:
-        storage_id: ipfs_gpg
+        storage_id: gdrive
         cache_type: public
         path: ~/test_eblocbroker/NPB3.3-SER_source_code
         storage_hours: 0

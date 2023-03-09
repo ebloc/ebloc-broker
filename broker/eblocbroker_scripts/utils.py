@@ -81,6 +81,13 @@ class Cent(int):
     def __sub__(self, other: Any) -> "Cent":
         return Cent(super().__sub__(_to_cent(other)))
 
+    def _to(self, unit: str = "usd") -> str:
+        amount = self.to(unit)
+        if float(amount) == 0:
+            return "0"
+        else:
+            return str(self.to(unit)).rstrip("0")
+
     def to(self, unit: str) -> "Fixed":
         """
         Returns a converted denomination of the stored cent value.

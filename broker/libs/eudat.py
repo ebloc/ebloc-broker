@@ -173,7 +173,7 @@ def initialize_folder(folder_to_share, requester_name) -> str:
 
     try:
         tar_dst = f"{tar_hash}_{requester_name}/{tar_hash}.tar.gz"
-        log("## uploading into [green]B2DROP[/green] this may take some time depending on the file size...")
+        log("## uploading into [g]B2DROP[/g] this may take some time depending on the file size...")
         is_already_uploaded = False
         with suppress(Exception):
             # File is first time created
@@ -182,7 +182,7 @@ def initialize_folder(folder_to_share, requester_name) -> str:
             log(file_info, "bold")
             if float(file_info.attributes["{DAV:}getcontentlength"]) == size:
                 # check is it already uploaded or not via its file size
-                log(f"## {tar_source} is already uploaded into [green]B2DROP")
+                log(f"## {tar_source} is already uploaded into [g]B2DROP")
                 is_already_uploaded = True
 
         if not is_already_uploaded:

@@ -494,7 +494,7 @@ multimapping==4.1
 multipart==0.2.4
     # via
     #   zope-publisher
-mypy==0.991
+mypy==1.1.1
     # via
     #   flake8-mypy
 mypy-extensions==0.4.3
@@ -582,7 +582,7 @@ pillow==8.0.1
     #   imageio
     #   matplotlib
     #   reportlab
-pip-tools==6.11.0
+pip-tools==6.12.3
 pipenv==2020.11.15
 pipupgrade==1.10.1
 pkginfo==1.5.0.1
@@ -806,7 +806,7 @@ restrictedpython==5.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==13.3.1
+rich==13.3.2
 rlp==2.0.1
     # via
     #   eth-account

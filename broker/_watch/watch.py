@@ -48,7 +48,7 @@ def get_providers_info():
         providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
     providers = Ebb.get_providers()
-    log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "green")
+    log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "g")
     for k, v in providers_info.items():
         log(f"** provider_address={k}", end="\r")
         log(v, end="\r")
@@ -215,7 +215,7 @@ def _watch(eth_address, from_block, is_provider):
     if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
     else:
-        job_ruler = "[green]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/green]"
+        job_ruler = "[g]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/g]"
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
     is_connected = Ebb.is_web3_connected()

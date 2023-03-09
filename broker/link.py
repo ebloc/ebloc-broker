@@ -44,8 +44,8 @@ class Link:
         else:
             run(["ln", "-sfn", path, dest])
 
-        log(f" ┌── {path}", "bold green")
-        log(f" └─> {dest}", "bold yellow")
+        log(f" ┌── {path}", "g")
+        log(f" └─> {dest}", "yellow")
 
     def registered_data(self, data_hashes):
         for data_hash in data_hashes:
@@ -101,7 +101,7 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
             if isinstance(data_file, bytes):
                 data_file = data_file.decode("utf-8")
 
-            log(f"[blue] * [/blue][green]{data_file}[/green] => [yellow]../data_link/{data_file}[/yellow]", "bold")
+            log(f"[blue] * [/blue][g]{data_file}[/g] => [yellow]../data_link/{data_file}[/yellow]")
 
     if folders_to_share:
         is_continue = True
@@ -142,7 +142,7 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
     log()
     for key, value in link.data_map.items():
         # test_with_small_dataset(value)  # delete_me
-        log(f"[blue] * [/blue][green]{key}[/green] => [yellow]../data_link/{value}[/yellow]", "bold")
+        log(f"[blue] * [/blue][g]{key}[/g] => [yellow]../data_link/{value}[/yellow]")
 
     if not is_pass:
         print("")

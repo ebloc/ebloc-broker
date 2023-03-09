@@ -184,7 +184,7 @@ def is_bin_installed(name):
     try:
         run(["which", name])
     except Exception as e:
-        log(f"E: [green]{name}[/green] is not instelled")
+        log(f"E: [g]{name}[/g] is not instelled")
         raise e
 
 
@@ -410,8 +410,8 @@ def start_ipfs_daemon(_is_print=False) -> bool:
     except Exception as e:
         raise QuietExit from e
 
-    log("warning: [green]IPFS[/green] does not work on the background")
-    log("#> Starting [green]IPFS daemon[/green] on the background")
+    log("warning: [g]IPFS[/g] does not work on the background")
+    log("#> Starting [g]IPFS daemon[/g] on the background")
     output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     while True:
         time.sleep(1)
@@ -419,7 +419,7 @@ def start_ipfs_daemon(_is_print=False) -> bool:
             log(content_file.read().rstrip(), "bold blue")
             time.sleep(5)  # in case sleep for 5 seconds
             if output:
-                log(output.replace("==> Running IPFS daemon", "").rstrip(), "bold blue")
+                log(output.replace("==> Running IPFS daemon", "").rstrip(), "blue")
 
         if is_ipfs_on(is_print=True):
             return True
@@ -517,7 +517,7 @@ def question_yes_no(message, is_exit=False):
         else:
             log()
             log(
-                f"#> Please respond with [bold green]{br('y')}es[/bold green] or [bold green]{br('n')}o[/bold green]: ",
+                f"#> Please respond with [bg]{br('y')}es[/bg] or [bg]{br('n')}o[/bg]: ",
                 end="",
             )
 
