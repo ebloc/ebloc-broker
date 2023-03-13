@@ -264,7 +264,7 @@ class Storage(BaseClass):
             log(f"verify_data_list={verify_data_list}", "bold")
             tx = cfg.Ebb.set_data_verified(verify_data_list)
             tx_hash = cfg.Ebb.tx_id(tx)
-            log(f"verify_data tx_hash={tx_hash}", "bold")
+            log(f"verify_data tx_hash={tx_hash}")
 
     def sbatch_call(self):
         try:

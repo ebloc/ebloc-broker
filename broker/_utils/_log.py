@@ -306,12 +306,12 @@ def log(
     if isinstance(text, str) and "E: " in text[3:]:
         _text = text.replace("warning: ", "").replace("E: ", "")
         if "E: warning: " in text:
-            text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+            text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
         else:
             if "warning:" in text:
-                text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+                text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
             else:
-                text = f"{WHERE(back)}[bold red] E:[/bold red] [bold]{_text}"
+                text = f"{WHERE(back)}[bold red] E:[/bold red] {_text}"
 
     if "-=-=" in str(text):
         is_bold = True
@@ -369,7 +369,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = os.path.basename(frame.f_code.co_filename)
-    return f"[bold][g][[/g][blue]  {text}[/blue]:{frame.f_lineno}  [g]][/g][/bold]"
+    return f"[g][[/g][blue]  {text}[/blue]:{frame.f_lineno}  [g]][/g]"
 
 
 ll = Log()

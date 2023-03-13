@@ -18,7 +18,7 @@ from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
 from broker._utils import _log
-from broker._utils._log import console_ruler, log, ok
+from broker._utils._log import console_ruler, log
 from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
@@ -377,13 +377,8 @@ def run_driver(given_bn):
             is_traceback=False,
         )
 
-    if cfg.IS_THREADING_ENABLED:
-        log(f"==> is_threading={cfg.IS_THREADING_ENABLED}")
-
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
     log(f"==> whoami={env.WHOAMI}")
-    log(f"==> log_file={_log.DRIVER_LOG}")
-    log(f"==> rootdir={os.getcwd()}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
@@ -430,8 +425,8 @@ def run_driver(given_bn):
         current_bn = Ebb.get_block_number()
         if not first_iteration_flag:
             log(f" * {get_date()} waiting new job to come since bn={bn_read}")
+            log(f"==> current_block={current_bn} | sync_from={bn_read} ", end="")
 
-        log(f"==> current_block={current_bn} | sync_from={bn_read} ", end="")
         flag = True
         while current_bn < int(bn_read):
             current_bn = Ebb.get_block_number()
@@ -442,9 +437,13 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        log()
+        # log()
         bn_read = str(bn_read)  # reading events' block number has been updated
-        slurm.pending_jobs_check()
+        if not first_iteration_flag:
+            slurm.pending_jobs_check(is_print=False)
+        else:
+            slurm.pending_jobs_check()
+
         first_iteration_flag = False
         try:
             driver.logged_jobs_to_process = Ebb.run_log_job(bn_read, env.PROVIDER_ID)
@@ -456,12 +455,13 @@ def run_driver(given_bn):
             if not driver.is_provider_received_job:
                 bn_read = env.config["block_continue"] = current_bn
         except Exception as e:
-            log()
             if "Filter not found" in str(e) or "Read timed out" in str(e):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
                 first_iteration_flag = True
                 time.sleep(5)
-                connect_to_web3()  # connect check to web3
+                breakpoint()  # DEBUG
+                connect()
+                # connect_to_web3()  # connect check to web3
             else:
                 log(f"E: {e}")
                 print_tb(e)
@@ -479,7 +479,15 @@ def main(args):
             cfg.IS_THREADING_ENABLED = False
 
         console_ruler("provider session starts", color="white")
-        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}", highlight=False)
+        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- ", highlight=False, end="")
+        log(f"is_threading={cfg.IS_THREADING_ENABLED} -- ", highlight=False, end="")
+        log(f"pid={pid}", highlight=False)  # driver process pid
+        #
+        log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", highlight=False)
+        log(f"rootdir: {os.getcwd()}", highlight=False)
+        log(f"logfile: {_log.DRIVER_LOG}", highlight=False)
+        log("Attached to host RPC client listening at 'https://core.bloxberg.org'...", highlight=False)
+        log()
         with launch_ipdb_on_exception():  # if an exception is raised, then launch ipdb
             lock = None
             try:

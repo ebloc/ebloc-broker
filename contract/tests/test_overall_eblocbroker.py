@@ -729,7 +729,7 @@ def test_multiple_data():
         job.code_hashes,
         {"from": requester},
     )
-    log(f"job_index={tx.events['LogJob']['index']}", "bold")
+    # log(f"job_index={tx.events['LogJob']['index']}")
     # ===== provider side =====
     index = 0
     job_id = 0
@@ -950,8 +950,8 @@ def test_submit_jobs():
                 job.code_hashes,
                 {"from": requester},
             )
+            # log(f"job_index={tx.events['LogJob']['index']}")
             # log('submitJob => GasUsed:' + str(tx.__dict__['gas_used']) + '| blockNumber=' + str(tx.block_number))
-            log(f"job_index={tx.events['LogJob']['index']}", "bold")
             # log("Contract Balance after: " + str(web3.eth.balanceOf(accouts[0])))
             # log("Client Balance after: " + str(web3.eth.balanceOf(accounts[8])))
             # sys.stdout.write('jobInfo: ')

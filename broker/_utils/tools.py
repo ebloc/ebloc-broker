@@ -547,7 +547,7 @@ def get_ip():
 
 def countdown(seconds: int, is_verbose=False) -> None:
     if not is_verbose:
-        log(f"## sleep_time={seconds} seconds                                             ")
+        log(f"## sleep_time={seconds} seconds\t                                              ")
 
     while seconds:
         mins, secs = divmod(seconds, 60)
@@ -570,8 +570,8 @@ def squeue() -> None:
     # Get real info under the header after the first line
     if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
         # checks if the squeue output's line number is gretaer than 1
-        log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-        log(f"{squeue_output}  {ok()}", "bold")
+        log("view information about jobs located in the Slurm scheduling queue:", "yellow")
+        log(f"{squeue_output}{ok()}")
 
 
 def compare_files(fn1, fn2) -> bool:

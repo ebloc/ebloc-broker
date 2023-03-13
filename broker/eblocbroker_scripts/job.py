@@ -97,7 +97,7 @@ class Job:
         self.requester = requester
         self.check()
         if is_verbose:
-            log("==> Entered into the cost calculation...")
+            log(f"* Entered into the cost calculation for provider={provider}")
 
         jp = JobPrices(self)
         jp.set_computational_cost()
@@ -292,27 +292,40 @@ class Job:
 
     def print_before_submit(self):
         for idx, code_hash in enumerate(self.code_hashes_str):
-            log(
-                {
-                    "path": self.paths[idx],
-                    "code_hash": code_hash,
-                    "folder_size_mb": self.data_transfer_ins[idx],
-                    "storage_ids": StorageID(self.storage_ids[idx]).name,
-                    "cache_type": CacheType(self.cache_types[idx]).name,
-                }
-            )
-            log()
+            if StorageID(self.storage_ids[idx]).name == "NONE":
+                log(
+                    {
+                        "code_hash": code_hash,
+                        "storage_ids": StorageID(self.storage_ids[idx]).name,
+                    }
+                )
+            else:
+                log(
+                    {
+                        "path": self.paths[idx],
+                        "code_hash": code_hash,
+                        "folder_size_mb": self.data_transfer_ins[idx],
+                        "storage_ids": StorageID(self.storage_ids[idx]).name,
+                        "cache_type": CacheType(self.cache_types[idx]).name,
+                    }
+                )
 
     def _search_best_provider(self, requester, is_verbose=False):
         selected_provider = None
         selected_price = 0
         price_to_select = sys.maxsize
         price_list = []
-        for provider in self.Ebb.get_providers():
+        if cfg.TEST_PROVIDERS:
+            providers_list = cfg.TEST_PROVIDERS  # only wanted providers are looked into
+        else:
+            providers_list = self.Ebb.get_providers()
+
+        for provider in providers_list:
             try:
                 _price, *_ = self.cost(provider, requester, is_verbose)
                 price_list.append(_price)
-                log(f" * provider={provider} | price={Cent(_price)._to()} usd")
+                print()
+                # log(f" * provider={provider} | price={Cent(_price)._to()} usd")
                 if _price < price_to_select:
                     price_to_select = _price
                     selected_provider = provider
@@ -342,7 +355,7 @@ class Job:
         if is_all_equal:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
 
-        log(f"[g]##[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd", "bold")
+        log(f"[g]##[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
 
@@ -514,7 +527,7 @@ class JobPrices:
             log(f"==> price_data_transfer={self.to_usd(self.price_data_transfer)}")
             log(f"==> price_storage={self.to_usd(self.price_storage)}")
             log(f"==> price_cache={self.to_usd(self.price_cache)}")
-            log(f"[g]*[/g] [yellow]job_price[/yellow]={self.to_usd(self.job_price)}")
+            log(f"[g]*[/g] job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
             _c = "[g]|[/g]       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
@@ -528,8 +541,6 @@ class JobPrices:
                 if k == "data_transfer":
                     log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
                     log(f"{_c} out={self.to_usd(self.cost['data_transfer_out'])}")
-
-            log()
         else:
             if self.registered_data_cost_list:
                 log(self.registered_data_cost_list)

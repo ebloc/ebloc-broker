@@ -148,7 +148,7 @@ def share_single_folder(folder_name, f_id):
     """Share given folder path with the user."""
     if not config.oc.is_shared(folder_name):
         config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-        log(f"sharing with [yellow]{f_id}[/yellow]{ok()}", "bold")
+        log(f"sharing with [yellow]{f_id}[/yellow]{ok()}")
 
     log("## Requester folder is already shared")
 
@@ -179,7 +179,9 @@ def initialize_folder(folder_to_share, requester_name) -> str:
             # File is first time created
             size = calculate_size(tar_source, _type="bytes")
             file_info = config.oc.file_info(f"./{tar_dst}")
-            log(file_info, "bold")
+            if file_info:
+                log(file_info)
+
             if float(file_info.attributes["{DAV:}getcontentlength"]) == size:
                 # check is it already uploaded or not via its file size
                 log(f"## {tar_source} is already uploaded into [g]B2DROP")
@@ -259,9 +261,11 @@ def _share_folders(provider_info, requester_name, folders_hash):
 
             share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
         except Exception as e:
-            log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
             print_tb(e)
-            sys.exit(1)
+            log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
+            log("#> Maybe folder with same name is already shared?")
+            raise e
+            # sys.exit(1)
 
         time.sleep(0.25)
 
@@ -315,7 +319,10 @@ def _submit(provider, requester, job, required_confs=1):
     # print(job.code_hashes)
     try:
         if job.price == 0:
-            raise Exception("E: job.price is 0 ; something is wrong")
+            raise Exception(
+                "E: job.price is not set due to possible the account you tried to send "
+                "transaction from does not have enough funds."
+            )
 
         return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)
     except QuietExit:

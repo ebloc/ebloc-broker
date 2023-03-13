@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import subprocess  # For executing a shell command
 import sys
 
 from web3 import IPCProvider, Web3
@@ -61,8 +60,9 @@ def _connect_to_web3() -> None:
     if env.IS_GETH_TUNNEL or not env.IS_EBLOCPOA:
         if env.IS_BLOXBERG:
             host = "https://core.bloxberg.org"
-            if not _ping(host.replace("https://", "")):
-                raise Exception(f"ping to {host} failed")
+            _host = host.replace("https://", "")
+            if not _ping(_host):
+                raise Exception(f"ping to {_host} failed")
 
             cfg.w3 = Web3(HTTPProvider(host))
         else:
@@ -92,8 +92,9 @@ def connect_to_web3() -> None:
                     raise Exception("Web3ConnectError: try tunnelling: ssh -f -N -L 8545:localhost:8545 username@<ip>")
 
                 if env.IS_BLOXBERG:
-                    log("E: web3 is not connected into [g]BLOXBERG[/g]")
-                    connect_to_web3()  #: trying again
+                    log("warning: web3 is not connected into [g]BLOXBERG[/g]")
+                    log("Trying again...")
+                    # connect_to_web3()  #: trying again
                 else:
                     is_geth_on()
             except QuietExit:
@@ -117,6 +118,27 @@ def connect_to_web3() -> None:
         terminate(is_traceback=False)
 
 
+def connect_bloxberg():
+    from brownie import network
+
+    try:
+        network.connect("bloxberg")
+    except Exception as e:
+        if "Already connected to network" not in str(e):
+            add_bloxberg_into_network_config.main()
+            try:
+                log(
+                    "warning: [g]bloxberg[/g] key is added into the "
+                    "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
+                )
+                connect_bloxberg()
+                # network.connect("bloxberg")
+            except KeyError:
+                sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(1)
+
+
 def connect_to_eblocbroker() -> None:
     """Connect to eBlocBroker smart contract in the given private blockchain."""
     if config.ebb:
@@ -135,21 +157,9 @@ def connect_to_eblocbroker() -> None:
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
         elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
-            from brownie import network, project
+            from brownie import project
 
-            try:
-                network.connect("bloxberg")
-            except:
-                add_bloxberg_into_network_config.main()
-                try:
-                    log(
-                        "warning: [g]bloxberg[/g] key is added into the "
-                        "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
-                    )
-                    network.connect("bloxberg")
-                except KeyError:
-                    sys.exit(1)
-
+            connect_bloxberg()
             project = project.load(env.CONTRACT_PROJECT_PATH)
             config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)

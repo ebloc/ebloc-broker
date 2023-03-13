@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from broker.utils import print_tb
+import sys
 import time
 from os.path import expanduser
 from pathlib import Path
@@ -45,7 +47,7 @@ def _collect_all_into_base(account, min_balance_amount):
         log(tx)
         if _required_confs > 0:
             log(Ebb._get_balance(account))
-            log(f"## base_account={Ebb._get_balance(base_account)}")
+            log(f"## base_account({base_account})={Ebb._get_balance(base_account)}")
 
 
 def collect_all_into_base():
@@ -53,8 +55,8 @@ def collect_all_into_base():
     for account in requesters:
         _collect_all_into_base(account, min_balance_amount)
 
-    for account in providers:
-        _collect_all_into_base(account, min_balance_amount)
+    # for account in providers:
+    #     _collect_all_into_base(account, min_balance_amount)
 
     log(f"## base_account={Ebb._get_balance(base_account)}")
 
@@ -65,26 +67,36 @@ def transfer_eth(accounts, value):
         fn = Path(expanduser("~/.brownie/accounts")) / _account
         print(fn)
         account = Ebb.brownie_load_account(str(fn), "alper")
-        log(Ebb._get_balance(base_account, "gwei"))
-        log(Ebb.transfer(value, _base_account, account, required_confs=0))
+        if Ebb._get_balance(account, "gwei") == 0:
+            try:
+                log(Ebb.transfer(value, _base_account, account, required_confs=0))
+            except Exception as e:
+                log(str(e))
+                breakpoint()  # DEBUG
+
         # log(Ebb._get_balance(account))
         # log(Ebb._get_balance(base_account))
         time.sleep(2)
 
 
 def main():
-    log(f"## base_account={Ebb._get_balance(base_account)}\n")
+    log(f"## base_account_balance={Ebb._get_balance(base_account)}\n")
     owner = Ebb.get_owner()
     log(f"ower_balance ({owner.lower()})=", "bold", end="")
     balances([owner], is_verbose=True)
-    balances(providers)
-    balances(requesters)
+    # balances(providers)
+    # balances(requesters)
+    #
     # collect_all_into_base()
     # transfer_eth(["0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"], "0.5 ether")
     # transfer_eth(providers, "0.4 ether")
-    # transfer_eth(requesters, "0.1 ether")
+    transfer_eth(requesters, "0.11 ether")
     # transfer_eth(extra_users, "0.1 ether")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print_tb(e)
+        sys.exit(1)

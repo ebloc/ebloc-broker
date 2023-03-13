@@ -26,8 +26,8 @@ from brownie.network.transaction import TransactionReceipt
 
 # from brownie.network.gas.strategies import LinearScalingStrategy
 
-GAS_PRICE = 1.0
-EXIT_AFTER = 120
+GAS_PRICE = 1.13  # was 1
+EXIT_AFTER = 120  # seconds
 
 
 class Base:
@@ -272,7 +272,7 @@ class Contract(Base):
             raise Exception(f"Invalid account {address} is provided")
 
     def _get_balance(self, account, eth_unit="ether"):
-        "Return ether balance"
+        """Return ether balance of the account"""
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)
         else:
@@ -322,7 +322,7 @@ class Contract(Base):
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise Exception("Empty contract")
 
-        log(f"==> contract_address={contract_address.lower()}")
+        log(f"==> [y]contract_address[/y]=[cyan]{contract_address.lower()}", highlight=False)
         return True
 
     def print_contract_info(self):
@@ -423,13 +423,16 @@ class Contract(Base):
                 "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
                 "allow_revert": True,
-                "value": self.w3.toWei(job_price, "gwei"),
                 "required_confs": required_confs,
+                # "value": self.w3.toWei(job_price, "gwei"),  # not required anymore
             }
             try:
                 return self.timeout("submitJob", *args)
             except ValueError as e:
                 log(f"E: {e}")
+                if "Insufficient funds" in str(e):
+                    raise e
+
                 if "Execution reverted" in str(e):
                     raise e
 

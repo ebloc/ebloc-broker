@@ -47,7 +47,7 @@ def _submit(job, provider, key, requester, required_confs):
 def _share_folders(folder_ids_to_share, provider_gmail):
     for folder_id in folder_ids_to_share:
         cmd = ["gdrive", "share", folder_id, "--role", "writer", "--type", "user", "--email", provider_gmail]
-        log(f"share_output=[m]{run(cmd)}", "bold")
+        log(f"share_output=[m]{run(cmd)}")
 
 
 def submit_gdrive(job: Job, is_pass=False, required_confs=1):
@@ -77,9 +77,6 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     try:
         job.Ebb.is_provider_valid(provider_addr_to_submit)
         provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
-        # log(f"## provider_addr_to_submit=[m]{provider_addr_to_submit}")
-        log(f"==> provider's available_core_num={provider_info['available_core_num']}")
-        log(f"==> provider's price_core_min={provider_info['price_core_min']}")
         provider_gmail = provider_info["gmail"]
     except Exception as e:
         raise QuietExit from e

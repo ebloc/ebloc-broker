@@ -17,3 +17,30 @@ CLOSED: [2023-03-13 Mon 01:20]
 TypeError: updateProviderPrices '['0.001 usd', '0.0001 cent', '0.0001 cent', '0.0001 cent']' - Cannot convert str '0.001 usd' to wei.
 An exception of type TypeError occurred. Arguments:
 #+end_src
+
+* DONE
+CLOSED: [2023-03-15 Wed 02:16]
+:PROPERTIES:
+:ARCHIVE_TIME: 2023-03-15 Wed 02:16
+:ARCHIVE_FILE: ~/ebloc-broker/broker/todo.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: todo
+:ARCHIVE_TODO: DONE
+:END:
+#+begin_src bash
+provider's available_core_num=4
+provider's price_core_min=1.0E-7 usd
+ * trying to connect into /ip4/68.183.79.44/tcp/4001/p2p/12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548
+
+E: connection into provider's IPFS node via swarm is not accomplished.
+Try: nc <ip> 4001
+Traceback (most recent call last):
+  File "/home/alper/ebloc-broker/broker/libs/ipfs.py", line 234, in swarm_connect
+    raise Exception(e)
+Exception: Error: connect 12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548 failurfailed to dial 12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548:
+  * /ip4/68.183.79.44/tcp/4001 failed to negotiate security protocol: peer id mismatch: expected 12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548, but remote key matches
+12D3KooWP77QwRFYkEeat23hGNdDQ36VyCiEP56RaRf585QzauTD
+E: Error: connect 12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548 failurfailed to dial 12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548:
+  * /ip4/68.183.79.44/tcp/4001 failed to negotiate security protocol: peer id mismatch: expected 12D3KooWQ9eXnXRs5MeCP11tgvcWENsUs4JUMBBESfDX3QDGf548, but remote key matches
+12D3KooWP77QwRFYkEeat23hGNdDQ36VyCiEP56RaRf585QzauTD
+#+end_src

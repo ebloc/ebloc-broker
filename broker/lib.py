@@ -83,8 +83,6 @@ def session_start_msg(slurm_user, bn, pid):
     elif cfg.w3:
         PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
-    log(f"* driver_process_pid={pid}")
-    log(f"* provider_address={PROVIDER_ID.lower()}")
     log(f"* slurm_user={slurm_user}")
     log(f"* left_of_block_number={bn}")
     log(f"** latest_block_number={cfg.Ebb.get_block_number()}")

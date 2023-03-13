@@ -10,8 +10,6 @@ import sys
 import time
 from contextlib import suppress
 
-from halo import Halo
-
 from broker import cfg
 from broker._utils._log import br, console_ruler
 from broker._utils.tools import log

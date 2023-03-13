@@ -63,7 +63,7 @@ def start_call(key, index, slurm_job_id) -> None:
         try:
             tx = Ebb.set_job_state_running(key, index, job_id, start_ts)
             tx_hash = Ebb.tx_id(tx)
-            log(f"tx_hash={tx_hash}", "bold")
+            log(f"tx_hash={tx_hash}")
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log(f"==> set_job_state_running_started {start_ts} | attempt_date={d}")
             log("## mongo.set_job_state_running_tx", end="")

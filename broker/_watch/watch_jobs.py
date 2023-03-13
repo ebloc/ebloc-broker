@@ -17,7 +17,7 @@ is_compact = True  # to get the workload type
 
 def watch(eth_address="", from_block=None):
     """Log submitted jobs' information."""
-    from_block = 18813273
+    from_block = 19626469
     if not eth_address:
         log("E: eth_address is empty, run as: [m]./watch.py <eth_address>")
         sys.exit(1)
@@ -105,7 +105,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except KeyboardInterrupt:
-        sys.exit(1)
     except Exception as e:
         print_tb(e)
+    except KeyboardInterrupt:
+        sys.exit(1)

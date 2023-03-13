@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.eblocbroker_scripts.job import Job
 import sys
 
 from broker import cfg
@@ -108,10 +109,10 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         raise Exception(f"E: Calculated job_price={job.price} is greater than requester's balance={Cent(balance)}")
 
 
-def submit_job(self, provider, key, job, requester=None, required_confs=1):
+def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, is_verbose=False):
     """Submit job.
 
-    - How to get exception message in Python properly:
+    - How to properly get exception messages in Python:
     __ https://stackoverflow.com/a/45532289/2402577
     __ https://stackoverflow.com/a/24065533/2402577
     """
@@ -120,11 +121,12 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
 
     provider = self.w3.toChecksumAddress(provider)
     _from = self.w3.toChecksumAddress(requester)
-    log("==> Submitting the job")
+    log(f"==> Submitting the job({job.code_hashes_str[0]})")
     try:
         provider_info = self.get_provider_info(provider)
-        log(f"provider's available_core_num={provider_info['available_core_num']}", "bold")
-        log(f"provider's price_core_min={Cent(provider_info['price_core_min'])._to()} [blue]usd", "bold")
+        if is_verbose:
+            log(f"provider's available_core_num={provider_info['available_core_num']}")
+            log(f"provider's price_core_min={Cent(provider_info['price_core_min'])._to()} [blue]usd")
     except Exception as e:
         print_tb(e)
         raise e

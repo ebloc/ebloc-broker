@@ -169,7 +169,7 @@ class Ipfs:
         for attempt in range(5):
             try:
                 cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", recipient_gpg_fingerprint]
-                log(f"{br(attempt)} cmd: [m]{' '.join(cmd)}", "bold")
+                log(f"{br(attempt)} cmd: [w]{' '.join(cmd)}")
                 run(cmd, suppress_stderr=True)  # this may not work if it is requested too much in short time
                 break
             except Exception as e:

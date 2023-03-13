@@ -76,7 +76,7 @@ def register_requester(self, yaml_fn, is_question=True):
             log("## Same requester information is provided, nothing to do")
             raise QuietExit
 
-        log("==> [bold yellow]registered_requester_info:")
+        log("registered_requester_info=", "yellow", end="")
         log(requester_info)
         _requester_info = {
             "gmail": gmail,
@@ -84,7 +84,7 @@ def register_requester(self, yaml_fn, is_question=True):
             "gpg_fingerprint": gpg_fingerprint,
             "ipfs_address": ipfs_address,
         }
-        log("==> [bold yellow]new_requester_info:")
+        log("new_requester_info=", "yellow", end="")
         log(_requester_info)
         if is_question and not question_yes_no("#> Would you like to update requester info?"):
             return

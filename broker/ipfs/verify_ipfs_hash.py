@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import hashlib
-
 import multihash
 
 
@@ -15,6 +13,7 @@ instance:
 
 
 def main():
+    # import hashlib
     # data = "foo"
     # print(hashlib.sha1(data))
     mh = multihash.decode(b"QmRJzsvyCQyizr73Gmms8ZRtvNxmgqumxc2KUp71dfEmoj", "base58")  # hash of b'foo'

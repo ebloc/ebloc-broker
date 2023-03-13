@@ -26,6 +26,8 @@ from broker.utils import print_tb
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
+cfg.TX_LOG_VERBOSE = False
+cfg.TEST_PROVIDERS = providers
 is_mini_test = False
 
 mc = MongoClient()
@@ -35,14 +37,12 @@ PROVIDER_MAIL = "alper.alimoglu.research2@gmail.com"
 
 benchmarks = ["nas", "cppr"]
 storage_ids = ["b2drop", "gdrive", "ipfs"]
-storage_ids = ["gdrive"]
 ipfs_types = ["ipfs", "ipfs_gpg"]
 
 test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
 small_datasets_dir = Path.home() / "test_eblocbroker" / "small"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
-
 
 if is_mini_test:
     benchmarks = ["cppr"]
@@ -234,9 +234,10 @@ def run_job(counter) -> None:
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to_provider=[g]{provider_addr}", "bold blue")
+            print("                                                                   ")
+            log(f" * Submitting [cyan]job with cppr datasets[/cyan] data_set_idx={idx} ===========================\t")
+            # log(f" * Attempting to submit [cyan]job with cppr datasets[/cyan] to_provider=[g]{provider_addr}")
             yaml_cfg = Yaml(cppr_yam_fn)
-            log(f"data_set_idx={idx}")
             hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_medium_data_0
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
@@ -253,9 +254,9 @@ def run_job(counter) -> None:
             submission_timestamp = _timestamp()
             requester_address = random.choice(requesters).lower()
             yaml_cfg["config"]["requester_address"] = requester_address
-            log(f"requester={requester_address}", "bold")
+            log(f"requester={requester_address}")
             tx_hash = submit_base.submit(is_pass=True)
-            log(f"tx_hash={tx_hash}", "bold")
+            log(f"tx_hash={tx_hash}")
             tx_receipt = get_tx_status(tx_hash, is_verbose=True)
             if tx_receipt["status"] == 1:
                 processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
@@ -271,7 +272,7 @@ def run_job(counter) -> None:
                 ebb_mongo.add_item(tx_hash, job_result)
                 log(job_result)
 
-            countdown(seconds=5, is_verbose=True)
+            countdown(seconds=15, is_verbose=True)
         except Exception as e:
             print_tb(e)
 
@@ -282,7 +283,6 @@ def main():
 
     console_ruler("test session starts", color="white")
     log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- block_number={Ebb.get_block_number()}", highlight=False)
-    log()
     if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
 
@@ -292,17 +292,21 @@ def main():
     if is_mini_test:
         run_job(0)
     else:
-        counter = 0
-        for _ in range(80):
-            for _ in range(2):  # submitted as batch is faster
-                run_job(counter)
-                counter += 1
-                time.sleep(2)
+        try:
+            counter = 0
+            for _ in range(80):
+                for _ in range(2):  # submitted as batch is faster
+                    run_job(counter)
+                    counter += 1
+                    time.sleep(2)
 
-            sleep_duration = randint(250, 450)
-            countdown(sleep_duration)
+                sleep_duration = randint(250, 450)
+                countdown(sleep_duration)
 
-        log(f"#> number_of_submitted_jobs={counter}")
+            log(f"#> number_of_submitted_jobs={counter}")
+        except Exception as e:
+            print(str(e))
+            print_tb(e)
 
 
 if __name__ == "__main__":

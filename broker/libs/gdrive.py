@@ -265,7 +265,7 @@ def get_data_key_ids(results_folder_prev) -> bool:
 def update_meta_data_gdrive(key, path):
     output = get_file_id(key)
     meta_data_key = fetch_grive_output(output, "meta_data.json")
-    log(f"`gdrive update {meta_data_key} {path}`", highlight=False, end="")
+    log(f"\n\t`gdrive update {meta_data_key} {path}`", highlight=False, end="")
     run(["gdrive", "update", meta_data_key, path])
 
 
