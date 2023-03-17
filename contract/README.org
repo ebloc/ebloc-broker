@@ -50,3 +50,7 @@ function function(<type>[] memory dataTransferIn) internal { // does not have to
     dataTransferIn[0] = 0;
 }
 #+end_src
+
+* bloxberg
+** bootnode
+It takes around 10h to sync complete bloxberg data into bootnode.

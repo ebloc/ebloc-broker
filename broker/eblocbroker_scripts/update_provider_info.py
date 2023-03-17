@@ -22,7 +22,7 @@ def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):
             and provider_info["ipfs_address"] == ipfs_address
         ):
             log(provider_info)
-            raise QuietExit("warning: Given information is same as the cluster's saved info. Nothing to do.")
+            raise QuietExit("warning: Given information is same as the provider's saved info. Nothing to do.")
 
         tx = self._update_provider_info(f"0x{gpg_fingerprint}", gmail, f_id, ipfs_address)
         return self.tx_id(tx)

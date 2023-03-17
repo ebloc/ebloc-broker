@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from broker.eblocbroker_scripts.job import Job
 import sys
 
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import log, print_tb
+from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.utils import StorageID, is_ipfs_on, question_yes_no

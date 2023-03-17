@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker.utils import print_tb
 import sys
 import time
 from os.path import expanduser
@@ -9,6 +8,7 @@ from pathlib import Path
 from broker import cfg
 from broker._utils.tools import log
 from broker.test_setup.user_set import providers, requesters
+from broker.utils import print_tb
 
 # from broker.test_setup.user_set import extra_users
 

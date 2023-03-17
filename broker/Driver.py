@@ -27,7 +27,6 @@ from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
-from broker.imports import connect_to_web3
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
@@ -73,21 +72,20 @@ def _tools(block_continue):  # noqa
 
     :param block_continue: Continue from given the block number
     """
-    session_start_msg(env.SLURMUSER, block_continue, pid)
+    session_start_msg(block_continue)
     try:
         is_internet_on()
     except Exception as e:
         raise Terminate("Network connection is down. Please try again") from e
 
     try:
-        provider_info_contract = Ebb.get_provider_info(env.PROVIDER_ID)
         pre_check()
         if not check_ubuntu_packages():
             raise Terminate
 
+        provider_info_contract = Ebb.get_provider_info(env.PROVIDER_ID)
         if env.IS_BLOXBERG:
-            log(":beer:  Connected into [g]BLOXBERG[/g]", "bold")
-
+            log(":beer:  Connected into [g]bloxberg[/g]")
         else:
             is_geth_on()
 
@@ -108,7 +106,7 @@ def _tools(block_continue):  # noqa
             log(f"==> b2drop_username=[cyan]{env.OC_USER}")
 
         gmail = provider_info_contract["gmail"]
-        log(f"==> provider_gmail=[m]{gmail}")
+        log(f"==> [y]provider_gmail[/y]=[m]{gmail}", highlight=False)
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             if env.GDRIVE == "":
@@ -378,7 +376,6 @@ def run_driver(given_bn):
         )
 
     Ebb.is_eth_account_locked(env.PROVIDER_ID)
-    log(f"==> whoami={env.WHOAMI}")
     if not Ebb.does_provider_exist(env.PROVIDER_ID):
         # updated since cluster is not registered
         env.config["block_continue"] = Ebb.get_block_number()
@@ -405,6 +402,7 @@ def run_driver(given_bn):
         f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} [blue]ether"
     )
     log(f"==> Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
+    slurm.pending_jobs_check()
     first_iteration_flag = True
     while True:
         wait_until_idle_core_available()
@@ -437,12 +435,11 @@ def run_driver(given_bn):
             flag = False
             time.sleep(2)
 
-        # log()
         bn_read = str(bn_read)  # reading events' block number has been updated
         if not first_iteration_flag:
-            slurm.pending_jobs_check(is_print=False)
-        else:
             slurm.pending_jobs_check()
+        else:
+            slurm.pending_jobs_check(is_print=False)
 
         first_iteration_flag = False
         try:
@@ -459,9 +456,8 @@ def run_driver(given_bn):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
                 first_iteration_flag = True
                 time.sleep(5)
-                breakpoint()  # DEBUG
+                log(str(e))
                 connect()
-                # connect_to_web3()  # connect check to web3
             else:
                 log(f"E: {e}")
                 print_tb(e)
@@ -481,12 +477,14 @@ def main(args):
         console_ruler("provider session starts", color="white")
         log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- ", highlight=False, end="")
         log(f"is_threading={cfg.IS_THREADING_ENABLED} -- ", highlight=False, end="")
-        log(f"pid={pid}", highlight=False)  # driver process pid
+        log(f"pid={pid} -- ", highlight=False, end="")  # driver process pid
+        log(f"whoami={env.WHOAMI} -- ", highlight=False, end="")
+        log(f"slurm_user={env.SLURMUSER}", highlight=False)
         #
         log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", highlight=False)
         log(f"rootdir: {os.getcwd()}", highlight=False)
         log(f"logfile: {_log.DRIVER_LOG}", highlight=False)
-        log("Attached to host RPC client listening at 'https://core.bloxberg.org'...", highlight=False)
+        log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", highlight=False)
         log()
         with launch_ipdb_on_exception():  # if an exception is raised, then launch ipdb
             lock = None

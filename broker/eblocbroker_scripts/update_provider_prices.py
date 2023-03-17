@@ -34,7 +34,7 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
             and provider_info["price_cache"] == prices[3]
         ):
             log(provider_info)
-            raise QuietExit("warning: Given information is same with the cluster's latest set prices. Nothing to do.")
+            raise QuietExit("warning: Given information is same with the provider's latest set prices. Nothing to do.")
 
         tx = self._update_provider_prices(available_core, commitment_blk, prices)
         return self.tx_id(tx)

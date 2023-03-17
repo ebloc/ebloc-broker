@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from broker.utils import print_tb
 import sys
 import time
+
 from broker import cfg
 from broker._utils.tools import log
+from broker.utils import print_tb
 
 
 def main():

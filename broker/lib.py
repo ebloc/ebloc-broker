@@ -70,20 +70,14 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-def session_start_msg(slurm_user, bn, pid):
+def session_start_msg(bn):
     """Print message at the beginning of the driver process and connect into Web3."""
-    if not cfg.w3:
-        from broker.imports import connect_to_web3
-
-        connect_to_web3()
-
     PROVIDER_ID = cfg.ZERO_ADDRESS
     if env.PROVIDER_ID:
         PROVIDER_ID = env.PROVIDER_ID
     elif cfg.w3:
         PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
-    log(f"* slurm_user={slurm_user}")
     log(f"* left_of_block_number={bn}")
     log(f"** latest_block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:

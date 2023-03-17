@@ -68,11 +68,14 @@ rm -f $BASE/ipfs.out
 rm -f $BASE/modified_date.txt
 rm -f $BASE/package-lock.json
 
+rm -rf ~/ebloc-broker/contract/build
+rm -rf ~/ebloc-broker/contract/reports
 rm -rf docs/_build_html/
 rm -rf docs/_build/
 rm -f /tmp/run/driver_popen.pid >/dev/null 2>&1
 rm -f ~/.ebloc-broker/.oc_client.pckl
 rm -f /var/ebloc-broker/cache/*.tar.gz
+
 
 # unpin and remove all IPFS content from my machine
 # ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm

@@ -13,6 +13,7 @@ from broker._utils.tools import mkdir
 from broker._utils.yaml import Yaml
 from broker.env import ENV_BASE
 from broker.errors import QuietExit
+from broker.python_scripts.add_bloxberg_into_network_config import read_network_config
 
 logging.getLogger("filelock").setLevel(logging.ERROR)
 
@@ -71,6 +72,14 @@ class ENV(ENV_BASE):
         self.GDRIVE = self.cfg["gdrive"]
         self.DATADIR = Path(self.cfg["datadir"])
         self.LOG_DIR = Path(self.cfg["log_path"])
+
+        try:
+            self.BLOXBERG_HOST = read_network_config(Path.home() / ".brownie" / "network-config.yaml")
+        except:
+            self.BLOXBERG_HOST = "https://core.bloxberg.org"
+
+        # if "bloxberg_host" in self.cfg:
+        #     self.BLOXBERG_HOST = self.cfg["bloxberg_host"]
         self.config = Yaml(self.LOG_DIR.joinpath("config.yaml"))
         self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")

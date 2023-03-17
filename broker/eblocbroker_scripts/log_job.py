@@ -40,7 +40,7 @@ def handle_event(logged_jobs):
         console_ruler()
 
 
-def log_loop(event_filter, poll_interval: int = 2):
+def log_loop(event_filter, poll_interval: int = 6):
     """Return triggered job event.
 
     SIGALRM(14) Term Timer signal from alarm(2).  Note: This is by design; see

@@ -8,12 +8,24 @@ import ruamel.yaml
 from broker._utils._log import log
 
 
+def read_network_config(fn) -> str:
+    config_data, _, _ = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
+    for _config in config_data["live"]:
+        if _config["name"] == "Ethereum":
+            for network in _config["networks"]:
+                if "bloxberg" in network["name"]:
+                    return network["host"]
+
+    raise Exception
+
+
 def add_bloxberg_config(fn):
     bloxberg_config = {
         "name": "bloxberg (Bloxberg)",
         "id": "bloxberg",
         "chainid": 8995,
         "host": "https://core.bloxberg.org",
+        "_host": "http://alpy-bloxberg.duckdns.org:8545/",
         "explorer": "https://blockexplorer.bloxberg.org/api",
     }
     config_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))

@@ -14,7 +14,7 @@ def main():
     Ebb = cfg.Ebb
     is_write_to_file = False
     if len(sys.argv) == 2:
-        if sys.argv[1] in ("1", "True", "true"):
+        if sys.argv[1] in ("1", "True", "true", "t", "T"):
             is_write_to_file = True
 
     try:
@@ -22,7 +22,7 @@ def main():
         if is_write_to_file:
             env.config["block_continue"] = output
         else:
-            log(f"block_number={output}", "bold")
+            log(f"block_number={output}")
     except Exception as e:
         print_tb(e)
 
