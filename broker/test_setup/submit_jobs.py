@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from brownie import network
 import os.path
 import random
 import sys
@@ -7,13 +8,13 @@ import time
 from datetime import datetime
 from pathlib import Path
 from random import randint
-
+from broker.imports import nc
 from pymongo import MongoClient
 from web3.logs import DISCARD
-
+from contextlib import suppress
 from broker import cfg
 from broker._utils import _log
-from broker._utils._log import console_ruler
+from broker._utils._log import console_ruler, ok
 from broker._utils.tools import _date, _timestamp, countdown, is_process_on, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
@@ -22,12 +23,12 @@ from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
 from broker.test_setup.user_set import providers, requesters
 from broker.utils import print_tb
+from broker.config import env
 
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 cfg.TX_LOG_VERBOSE = False
-cfg.TEST_PROVIDERS = providers
 is_mini_test = False
 
 mc = MongoClient()
@@ -49,6 +50,10 @@ if is_mini_test:
     storage_ids = ["b2drop", "gdrive", "ipfs"]
     ipfs_types = ["ipfs", "ipfs_gpg"]
     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]  # noqa
+
+cfg.TEST_PROVIDERS = providers
+cfg.NETWORK_ID = "bloxberg_core"
+_ruler = "==========================="
 
 # for provider_addr in providers:
 #     mini_tests_submit(storage_ids, provider_addr)
@@ -216,12 +221,36 @@ def mini_tests_submit(storage_ids, provider_addr):
                     log(f"E: Tx({tx_hash}) is reverted")
 
 
+def reconnect():
+    log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
+    if cfg.NETWORK_ID == "bloxberg":
+        cfg.NETWORK_ID = "bloxberg_core"
+    elif cfg.NETWORK_ID == "bloxberg_core":
+        with suppress(Exception):
+            nc("alpy-bloxberg.duckdns.org", 8545)
+            cfg.NETWORK_ID = "bloxberg"
+
+    log(f"Trying at {cfg.NETWORK_ID} ...")
+    network.connect(cfg.NETWORK_ID)
+
+
+def check_connection():
+    if not network.is_connected():
+        reconnect()
+        if not network.is_connected():
+            time.sleep(15)
+    else:
+        log(f"#> bloxberg connection using network_id={cfg.NETWORK_ID}{ok()}", is_write=False)
+
+
 def run_job(counter) -> None:
     """Submit single job.
 
     :param counter: counter index to keep track of submitted job number
     """
     for idx, provider_addr in enumerate(providers):
+        check_connection()
+        breakpoint()  # DEBUG
         # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
         storage_id = (idx + counter) % len(storage_ids)
         selected_benchmark = random.choice(benchmarks)
@@ -230,12 +259,15 @@ def run_job(counter) -> None:
             storage = random.choice(ipfs_types)
 
         if selected_benchmark == "nas":
-            log(f" * Submitting job from [cyan]NAS Benchmark[/cyan] to [g]{provider_addr}", "bold blue")
+            log(
+                f"{_ruler} Submitting the job from [cyan]NAS Benchmark[/cyan] to [g]{provider_addr} {_ruler}",
+                "bold blue",
+            )
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
             print("                                                                   ")
-            log(f" * Submitting [cyan]job with cppr datasets[/cyan] data_set_idx={idx} ===========================\t")
+            log(f"{_ruler} Submitting [cyan]job with cppr datasets[/cyan] data_set_idx={idx} {_ruler}\t")
             # log(f" * Attempting to submit [cyan]job with cppr datasets[/cyan] to_provider=[g]{provider_addr}")
             yaml_cfg = Yaml(cppr_yam_fn)
             hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
@@ -282,19 +314,36 @@ def main():
         check_gdrive_user()
 
     console_ruler("test session starts", color="white")
-    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- block_number={Ebb.get_block_number()}", highlight=False)
+    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- block_number={Ebb.get_block_number()}", h=False)
     if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
 
-    for provider_addr in providers:
-        Ebb.is_provider_valid(provider_addr)
+    for address in providers:
+        Ebb.is_provider_valid(address)
+
+    prices_dict = {}
+    for address in providers:
+        *_, prices = Ebb._get_provider_info(address)
+        # prices_dict[address] = dict(prices[2:6])
+        prices_dict[address] = [
+            prices[2],
+            prices[3],
+            prices[4],
+            prices[5],
+        ]
+
+    log("prices_______coreMin_dataTransfer_storage_cache=", "yellow", end="")
+    log(prices_dict)
+
+    # for item in prices_dict:
+    #     breakpoint()  # DEBUG
 
     if is_mini_test:
         run_job(0)
     else:
         try:
             counter = 0
-            for _ in range(80):
+            for _ in range(160):
                 for _ in range(2):  # submitted as batch is faster
                     run_job(counter)
                     counter += 1

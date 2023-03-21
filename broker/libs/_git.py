@@ -215,7 +215,7 @@ def commit_changes(path):
             if len(changed_files) > 0:
                 log("==> adding changed files:")
                 for _file in changed_files:
-                    log(_file, "bold")
+                    log(_file, "blue")
 
                 repo.git.add(A=True)
 

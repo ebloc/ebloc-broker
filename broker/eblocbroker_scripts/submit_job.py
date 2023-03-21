@@ -171,4 +171,4 @@ def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, 
         if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
             raise QuietExit from None
 
-        raise e
+        raise e  # "No valid Tx receipt is generated"

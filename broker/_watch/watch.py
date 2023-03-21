@@ -18,8 +18,7 @@ from broker.lib import state
 
 Ebb = cfg.Ebb
 columns_size = 30
-is_while = True  # to get on-going results
-is_log_to_file = True
+is_while = True  # to fetch on-going results
 is_provider = True
 
 is_csv = False
@@ -122,19 +121,15 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
                 log(", ", end="")
 
     for idx, (k, v) in enumerate(j.items()):
-
         log(f"{v}", end="")
         if idx == len(j) - 1:
             log()
         else:
             log(", ", end="")
 
-    # breakpoint()  # DEBUG
-
 
 def _watch(eth_address, from_block, is_provider):
-    _log.ll.LOG_FILENAME = f"provider_{eth_address}.txt"
-    open(_log.ll.LOG_FILENAME, "w").close()
+    _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     bn = Ebb.get_block_number()
     if is_provider:
         _argument_filters = {"provider": eth_address}
@@ -146,7 +141,7 @@ def _watch(eth_address, from_block, is_provider):
         argument_filters=_argument_filters,
         toBlock="latest",
     )
-    header = f"   [bold yellow]{'{:<44}'.format('KEY')} INDEX STATUS[/bold yellow]"
+    header = f"  [yellow]{'{:<46}'.format('key')} index      status[/yellow]"
     job_full = ""
     job_count = 0
     completed_count = 0
@@ -197,13 +192,13 @@ def _watch(eth_address, from_block, is_provider):
         if not is_csv:
             if is_while:
                 job_full = (
-                    f" [bold blue]*[/bold blue] [bold white]{'{:<48}'.format(_hash)}[/bold white] "
-                    f"{_index} {workload_type} [bold {c}]{state_val}[/bold {c}]\n{job_full}"
+                    f"[bold blue]*[/bold blue] [white]{'{:<50}'.format(_hash)}[/white] "
+                    f"{_index} {'{:<4}'.format(workload_type)} [{c}]{state_val}[/{c}]\n{job_full}"
                 )
             else:
                 job_full = (
-                    f" [bold blue]*[/bold blue] [bold white]{'{:<48}'.format(_hash)}[/bold white] "
-                    f"{_index} {workload_type} [bold {c}]{state_val}[/bold {c}]"
+                    f"[bold blue]*[/bold blue] [bold white]{'{:<50}'.format(_hash)}[/bold white] "
+                    f"{_index} {'{:<4}'.format(workload_type)} [{c}]{state_val}[/{c}]"
                 )
                 log(job_full)
         else:
@@ -222,11 +217,8 @@ def _watch(eth_address, from_block, is_provider):
     if is_while:
         _console_clear()
 
-    log(
-        f"\r==> {_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
-        "bold",
-    )
-
+    open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
+    log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
     if analyze_long_test:
         log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}", "b")
         log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}", "b")
@@ -239,7 +231,6 @@ def watch(eth_address="", from_block=None):
     if not from_block:
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
-    from_block = 18813134
     if not eth_address:
         try:
             eth_address = get_eth_address_from_cfg()
@@ -247,20 +238,16 @@ def watch(eth_address="", from_block=None):
             log(f"E: {e}\neth_address is empty, run as: [m]./watch.py <eth_address>")
             sys.exit(1)
 
-    if is_log_to_file:
-        watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
-        open(watch_fn, "w").close()
-        _log.ll.LOG_FILENAME = watch_fn
-
+    watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
+    open(watch_fn, "w").close()
     _console_clear()
     if is_provider:
-        log(f" * starting for provider={eth_address} from_block: {from_block}")
+        log(f"* starting for provider={eth_address} from_block={from_block}")
 
     if is_while:
         while True:
             _watch(eth_address, from_block, is_provider)
-            log()
-            time.sleep(2)
+            time.sleep(30)
     else:
         _watch(eth_address, from_block, is_provider)
 
@@ -270,7 +257,8 @@ def main():
     if len(sys.argv) == 2:
         eth_address = sys.argv[1]
 
-    watch(eth_address)
+    from_block = 19874011
+    watch(eth_address, from_block)
 
 
 if __name__ == "__main__":

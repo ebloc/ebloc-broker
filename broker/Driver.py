@@ -18,7 +18,7 @@ from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
 from broker._utils import _log
-from broker._utils._log import console_ruler, log
+from broker._utils._log import console_ruler, log, ok
 from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
@@ -27,6 +27,7 @@ from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import HandlerException, JobException, QuietExit, Terminate
+from broker.imports import nc
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
@@ -45,6 +46,12 @@ from broker.utils import (
     start_ipfs_daemon,
     terminate,
 )
+from brownie import network
+
+# from urllib3.exceptions import (
+#     MaxRetryError,
+# )
+
 
 with suppress(Exception):
     from broker.eblocbroker_scripts import Contract
@@ -64,6 +71,7 @@ def wait_until_idle_core_available():
         if slurm.get_idle_cores(is_print=False) > 0:
             break
         else:
+            log("#> Slurm running node capacity is full.")
             sleep_timer(60)
 
 
@@ -103,10 +111,9 @@ def _tools(block_continue):  # noqa
                 raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('cfg.yaml')}")
 
             eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
-            log(f"==> b2drop_username=[cyan]{env.OC_USER}")
 
         gmail = provider_info_contract["gmail"]
-        log(f"==> [y]provider_gmail[/y]=[m]{gmail}", highlight=False)
+        log(f"==> [y]provider_gmail[/y]=[m]{gmail}", h=False)
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             if env.GDRIVE == "":
@@ -116,7 +123,7 @@ def _tools(block_continue):  # noqa
                 output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
             except Exception as e:
                 print_tb(e)
-                raise QuietExit from e
+                raise Terminate(e)
 
             if not output:
                 log(
@@ -221,11 +228,11 @@ class Driver:
         index = self.logged_job.args["index"]
         self.job_bn = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
-        log(f"## job_key=[m]{job_key}[/m] | index={index}", "b")
-        log(f"   received_bn={self.job_bn}", "b")
-        log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}", "b")
-        log(f"   provider={self.logged_job.args['provider']}", "b")
-        log(f"   received={self.logged_job.args['received']}", "b")
+        log(f"## job_key=[m]{job_key}[/m] | index={index}")
+        log(f"   received_bn={self.job_bn}")
+        log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}")
+        log(f"   provider={self.logged_job.args['provider']}")
+        log(f"   received={self.logged_job.args['received']}")
         if self.logged_job["blockNumber"] > self.latest_block_number:
             self.latest_block_number = self.logged_job["blockNumber"]
 
@@ -321,17 +328,15 @@ def run_driver(given_bn):
     # create users and submit the slurm job under another user
     run(["sudo", "printf", "hello"])
     kill_process_by_name("gpg-agent")
-    config.logging = setup_logger(_log.DRIVER_LOG)
     # driver_cancel_process = None
-    try:
-        from broker.imports import connect
+    from broker.imports import connect
 
-        connect()
-        Ebb: "Contract.Contract" = cfg.Ebb  # type: ignore
-        driver = Driver()
-        Ebb._is_web3_connected()
-    except Exception as e:
-        raise Terminate from e
+    connect()
+    Ebb: "Contract.Contract" = cfg.Ebb  # type: ignore
+    driver = Driver()
+    Ebb._is_web3_connected()
+    with suppress(Exception):
+        log(f"* active_network_id={network.show_active()}")
 
     if not env.PROVIDER_ID:
         raise Terminate(f"PROVIDER_ID is None in {env.LOG_DIR}/cfg.yaml")
@@ -351,21 +356,21 @@ def run_driver(given_bn):
         env.config["block_continue"] = deployed_block_number
 
     if given_bn > 0:
-        block_number_saved = int(given_bn)
+        bn_temp = int(given_bn)
     else:
-        block_number_saved = env.config["block_continue"]
+        bn_temp = env.config["block_continue"]
         if not isinstance(env.config["block_continue"], int):
             log("E: block_continue variable is empty or contains an invalid character")
             if not question_yes_no("#> Would you like to read from the contract's deployed block number?"):
                 terminate()
 
-            block_number_saved = deployed_block_number
+            bn_temp = deployed_block_number
             if deployed_block_number:
                 env.config["block_continue"] = deployed_block_number
             else:
                 raise Terminate(f"deployed_block_number={deployed_block_number} is invalid")
 
-    _tools(block_number_saved)
+    _tools(bn_temp)
     try:
         Ebb.is_contract_exists()
     except:
@@ -392,7 +397,7 @@ def run_driver(given_bn):
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
         raise QuietExit(f"provider's ({env.PROVIDER_ID}) ORCID is not verified")
 
-    bn_read = block_number_saved
+    bn_read = bn_temp
     balance_temp = Ebb.get_balance(env.PROVIDER_ID)
     gwei_balance = Ebb.gwei_balance(env.PROVIDER_ID)
     wei_amount = Decimal(gwei_balance) * (Decimal(10) ** 9)
@@ -454,18 +459,71 @@ def run_driver(given_bn):
         except Exception as e:
             if "Filter not found" in str(e) or "Read timed out" in str(e):
                 # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
+                try:
+                    log()
+                    nc(env.BLOXBERG_HOST, 8545)
+                except Exception:
+                    log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
+                    # TODO: try with different host? maybe rpc of bloxberg's own host
+
                 first_iteration_flag = True
-                time.sleep(5)
-                log(str(e))
-                connect()
-            else:
-                log(f"E: {e}")
+
+            log()
+            log(f"E: {e}")
+            raise e
+
+
+def reconnect():
+    log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
+    if cfg.NETWORK_ID == "bloxberg":
+        cfg.NETWORK_ID = "bloxberg_core"
+    elif cfg.NETWORK_ID == "bloxberg_core":
+        with suppress(Exception):
+            nc("alpy-bloxberg.duckdns.org", 8545)
+            cfg.NETWORK_ID = "bloxberg"
+
+    log(f"Trying at {cfg.NETWORK_ID} ...")
+    network.connect(cfg.NETWORK_ID)
+
+
+def check_connection():
+    if not network.is_connected():
+        reconnect()
+        if not network.is_connected():
+            time.sleep(15)
+    else:
+        log(f"bloxberg connection{ok()}", is_write=False)
+
+
+def _run_driver(given_bn, lock):
+    config.logging = setup_logger(_log.DRIVER_LOG)
+    while True:
+        try:
+            run_driver(given_bn)
+        except HandlerException:
+            pass
+        except QuietExit as e:
+            log(e, is_err=True)
+        except zc.lockfile.LockError:
+            log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
+        except Terminate as e:
+            terminate(str(e), lock)
+        except Exception as e:
+            if "Max retries exceeded with url" not in str(e):
                 print_tb(e)
+
+            check_connection()
+            console_ruler(character="*")
+            continue
+        finally:
+            with suppress(Exception):
+                if lock:
+                    lock.close()
 
 
 def main(args):
-    given_bn = 0
     try:
+        given_bn = 0
         if args.bn:
             given_bn = args.bn
         elif args.latest:
@@ -475,43 +533,36 @@ def main(args):
             cfg.IS_THREADING_ENABLED = False
 
         console_ruler("provider session starts", color="white")
-        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- ", highlight=False, end="")
-        log(f"is_threading={cfg.IS_THREADING_ENABLED} -- ", highlight=False, end="")
-        log(f"pid={pid} -- ", highlight=False, end="")  # driver process pid
-        log(f"whoami={env.WHOAMI} -- ", highlight=False, end="")
-        log(f"slurm_user={env.SLURMUSER}", highlight=False)
-        #
-        log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", highlight=False)
-        log(f"rootdir: {os.getcwd()}", highlight=False)
-        log(f"logfile: {_log.DRIVER_LOG}", highlight=False)
-        log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", highlight=False)
-        log()
-        with launch_ipdb_on_exception():  # if an exception is raised, then launch ipdb
-            lock = None
-            try:
-                is_driver_on(process_count=1, is_print=False)
-                try:
-                    lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
-                except PermissionError:
-                    print_tb("E: PermissionError is generated for the locked file")
-                    give_rwe_access(env.WHOAMI, "/tmp/run")
-                    lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+        log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- ", h=False, end="")
+        log(f"is_threading={cfg.IS_THREADING_ENABLED} -- ", h=False, end="")
+        log(f"pid={pid} -- ", h=False, end="")  # driver process pid
+        log(f"whoami={env.WHOAMI} -- ", h=False, end="")
+        log(f"slurm_user={env.SLURMUSER}", h=False)
+        log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", h=False)
+        if env.IS_B2DROP_USE:
+            log(f"b2drop_username: [cy]{env.OC_USER}", h=False)
 
-                run_driver(given_bn)
-            except HandlerException:
-                pass
-            except QuietExit as e:
-                log(e, is_err=True)
-            except zc.lockfile.LockError:
-                log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
-            except Terminate as e:
-                terminate(str(e), lock)
-            except Exception as e:
-                print_tb(e)
-                # breakpoint()  # DEBUG: end of program pressed CTRL-c
-            finally:
-                with suppress(Exception):
-                    if lock:
-                        lock.close()
+        log(f"rootdir: {os.getcwd()}", h=False)
+        log(f"logfile: {_log.DRIVER_LOG}", h=False)
+        log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", h=False)
+        print()
+        is_driver_on(process_count=1, is_print=False)
+        try:
+            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+        except PermissionError:
+            print_tb("E: PermissionError is generated for the locked file")
+            give_rwe_access(env.WHOAMI, "/tmp/run")
+            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+    except Exception as e:
+        print_tb(e)
+        sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
+
+    with launch_ipdb_on_exception():  # if an exception is raised, then launch ipdb
+        _run_driver(given_bn, lock)
+
+    # finally:
+    #     with suppress(Exception):
+    #         if lock:
+    #             lock.close()

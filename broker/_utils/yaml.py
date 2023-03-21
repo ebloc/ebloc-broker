@@ -103,7 +103,7 @@ class Yaml(comments.CommentedMap):
         self.path_temp = Path(f"{path}~")
         self.changed = False
         self.yaml = YAML()
-        self.yaml.indent(mapping=4, sequence=4, offset=2)
+        self.yaml.indent(mapping=2, sequence=4, offset=2)
         with FileLock(self.fp_lock, timeout=1):
             _remove(self.path_temp)
             if self.auto_dump:

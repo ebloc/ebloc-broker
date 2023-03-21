@@ -4,8 +4,10 @@ import argparse
 
 from pymongo import MongoClient
 from rich.pretty import pprint
-
+from broker._utils import _log
 from broker._utils._log import log
+
+_log.IS_WRITE = False
 
 
 class BaseMongoClass:

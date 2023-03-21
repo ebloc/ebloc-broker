@@ -38,7 +38,7 @@ FILE=$BASE/to_delete/slurm_mail_prog.sh # recover slurm_mail_prog.sh
 
 find /var/ebloc-broker/to_delete -name "*data_link*" | while read -r i
 do
-    sudo umount -f $i/*
+    sudo umount -f $i/* >/dev/null 2>&1
 done
 sudo rm -rf $BASE/to_delete
 rm -f /var/ebloc-broker/cache/*.tar.gz
@@ -89,5 +89,12 @@ done
 
 ~/ebloc-broker/broker/libs/mongodb.py --delete-all
 
-echo -e "\n$ ls /var/ebloc-broker"
-ls /var/ebloc-broker/
+if [ "$(hostname)" = "homevm" ]; then
+    echo "#> ln datasets for homevm"
+    ~/ebloc-broker/broker/test_setup/ln_medium_data.sh
+fi
+
+echo -e "\n/var/ebloc-broker/"
+CURRENT_DIR=$PWD
+cd /var/ebloc-broker && fdfind . | as-tree && cd ~
+cd $CURRENT_DIR

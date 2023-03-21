@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rm $HOME/.ebloc-broker/ipfs.out
-nohup ipfs daemon --enable-gc --routing=none >> $HOME/.ebloc-broker/ipfs.out 2>&1 &!
+nohup ipfs daemon --migrate --enable-gc --routing=none >> $HOME/.ebloc-broker/ipfs.out 2>&1 &!
 
 # SLEEP_DURATION=7
 # python ~/ebloc-broker/broker/_daemons/ipfs.py

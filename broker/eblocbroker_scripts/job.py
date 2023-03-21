@@ -294,20 +294,24 @@ class Job:
         for idx, code_hash in enumerate(self.code_hashes_str):
             if StorageID(self.storage_ids[idx]).name == "NONE":
                 log(
-                    {
-                        "code_hash": code_hash,
-                        "storage_ids": StorageID(self.storage_ids[idx]).name,
-                    }
+                    dict(
+                        {
+                            "code_hash": code_hash,
+                            "storage_ids": StorageID(self.storage_ids[idx]).name,
+                        }
+                    )
                 )
             else:
                 log(
-                    {
-                        "path": self.paths[idx],
-                        "code_hash": code_hash,
-                        "folder_size_mb": self.data_transfer_ins[idx],
-                        "storage_ids": StorageID(self.storage_ids[idx]).name,
-                        "cache_type": CacheType(self.cache_types[idx]).name,
-                    }
+                    dict(
+                        {
+                            "path": self.paths[idx],
+                            "code_hash": code_hash,
+                            "folder_size_mb": self.data_transfer_ins[idx],
+                            "storage_ids": StorageID(self.storage_ids[idx]).name,
+                            "cache_type": CacheType(self.cache_types[idx]).name,
+                        }
+                    )
                 )
 
     def _search_best_provider(self, requester, is_verbose=False):

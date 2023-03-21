@@ -98,7 +98,7 @@ def submit(_from, job):
             log(data_json)
 
         _id = None
-        for (*_, v) in data_json.items():
+        for *_, v in data_json.items():
             _id = v
             break
 
@@ -162,7 +162,7 @@ def delete_all(_type="all"):
         for line in list_all().splitlines():
             if " dir   " in line:
                 try:
-                    log(f"Attempt to delete dir: {line.split()[0]} ", end="", highlight=False)
+                    log(f"Attempt to delete dir: {line.split()[0]} ", end="", h=False)
                     output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
                     print(output)
                 except Exception as e:
@@ -265,7 +265,7 @@ def get_data_key_ids(results_folder_prev) -> bool:
 def update_meta_data_gdrive(key, path):
     output = get_file_id(key)
     meta_data_key = fetch_grive_output(output, "meta_data.json")
-    log(f"\n\t`gdrive update {meta_data_key} {path}`", highlight=False, end="")
+    log(f"\n\t`gdrive update {meta_data_key} {path}`", h=False, end="")
     run(["gdrive", "update", meta_data_key, path])
 
 
@@ -352,7 +352,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     data_key_dict = {}
     if len(meta_data.items()) > 1:
         idx = 0
-        for (k, v) in meta_data.items():
+        for k, v in meta_data.items():
             if idx == 0:  # first item is for the source-code itself
                 _key = str(v)
                 output = get_file_id(_key)

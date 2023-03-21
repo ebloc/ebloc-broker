@@ -44,7 +44,7 @@ def merge_two_dicts(x, y):
 def timenow() -> int:
     """Return UTC timestamp."""
     dt = datetime.utcnow()
-    log(f"UTC_now={dt.strftime('%Y-%m-%d %H:%M:%S')}", "bold")
+    log(f"UTC_now={dt.strftime('%Y-%m-%d %H:%M:%S')}")
     epoch = datetime(1970, 1, 1)
     return int((dt - epoch).total_seconds())
 
@@ -73,6 +73,10 @@ def _date(zone="Europe/Istanbul", _type="", _format=""):
             return datetime.now(timezone(zone)).strftime("%m-%d")
         elif _type == "hour":
             return datetime.now(timezone(zone)).strftime("%H:%M:%S")
+        elif _type == "tmux":
+            return datetime.now(timezone(zone)).strftime("%a %m/%d %H:%M:%S %p")
+        elif _type == "compact":
+            return datetime.now(timezone(zone)).strftime("%m/%d %H:%M:%S")
 
     return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -111,7 +115,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
     if message:
         if isinstance(message, QuietExit):
             if str(message):
-                log(message, "bold")
+                log(message)
 
             return
 
@@ -216,7 +220,7 @@ def _exit(msg="") -> None:
     os._exit() in Python is used to exit a process with a specified state
     without calling cleanup handlers, flushing stdio buffers, etc.
 
-    Note.  This method is typically used in a child process after the os.fork()
+    Note that this method is typically used in a child process after the os.fork()
     system call.  The standard way to exit a process is — this is the
     sys.exit(n) method.
     """
@@ -301,11 +305,10 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
             log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
         else:
             log(f"{abs(change)}({format(float(abs(percent)), '.2f')}%) ", color, end=end)
+    elif is_sign:
+        log(f"({format(float(percent), '.2f')}%) ", color, end=end)
     else:
-        if is_sign:
-            log(f"({format(float(percent), '.2f')}%) ", color, end=end)
-        else:
-            log(f"({format(float(abs(percent)), '.2f')}%) ", color, end=end)
+        log(f"({format(float(abs(percent)), '.2f')}%) ", color, end=end)
 
     return percent
 
@@ -315,9 +318,9 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         cmd = " ".join(cmd)
 
     if exc:
-        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "bold red")
-        log(f"[blue]$ [/blue][white]{cmd}", "bold")
-        log(exc.rstrip(), "bold red")
+        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "red")
+        log(f"[blue]$ [/blue][white]{cmd}", is_code=True)
+        log(exc.rstrip(), "red")
     else:
         if returncode:
             return_code_msg = f"returned non-zero exit status {returncode}"
@@ -325,7 +328,7 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         else:
             log("E: Failed command:")
 
-        log(cmd, "bold yellow", is_code=True)
+        log(cmd, "yellow", h=False, is_code=True)
 
 
 def pre_cmd_set(cmd):
@@ -351,9 +354,9 @@ def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
     except CalledProcessError as e:
         if not is_quiet:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
+            raise Exception from None  # prevents tree of trace
 
-        # prevent tree of trace
-        raise Exception from None
+        raise Exception from e
     except Exception as e:
         raise e
 
@@ -368,7 +371,7 @@ def constantly_print_popen(cmd):
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             ret += line.strip()
-            print(line, end="")  # process line here
+            print(line, end="\r")  # process line here
 
         return ret
 
@@ -462,8 +465,7 @@ def without_keys(d, keys):
 
 
 def quit_function(fn_name) -> None:
-    print("\nwarning: ", end="")
-    print("{0} took too long".format(fn_name), file=sys.stderr)
+    print("warning: {0} function took too long".format(fn_name), file=sys.stderr)
     # breakpoint()  # DEBUG
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
@@ -570,8 +572,8 @@ def squeue() -> None:
     # Get real info under the header after the first line
     if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
         # checks if the squeue output's line number is gretaer than 1
-        log("view information about jobs located in the Slurm scheduling queue:", "yellow")
-        log(f"{squeue_output}{ok()}")
+        # log("view information about jobs located in the Slurm scheduling queue:", "yellow")
+        log(f"{squeue_output}{ok()}\n")
 
 
 def compare_files(fn1, fn2) -> bool:
@@ -592,6 +594,7 @@ def touch(fn) -> None:
 def pid_exists(pid):
     if pid < 0:
         return False  # NOTE: pid == 0 returns True
+
     try:
         os.kill(pid, 0)
     except ProcessLookupError:  # errno.ESRCH

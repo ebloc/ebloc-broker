@@ -50,25 +50,25 @@ def analyze_data(self, key, provider=None):
                     # requested for cache for the first time
                     self.job_info["is_cached"][code_hash_str] = False
 
-        log(br(f"{idx}, {_type}"), "bold cyan", end="")
+        log(br(f"{idx}, {_type}"), "cyan", end="")
         if len(code_hash) <= 32:
-            log(f" {code_hash_str} bytes={code_hash} ", "bold", end="")
+            log(f" {code_hash_str} bytes={code_hash} ", end="")
         else:
             if _type == "ipfs_hash":
-                log(f" {code_hash_str} ", "bold", end="")
+                log(f" {code_hash_str} ", end="")
             else:
-                log(f" {code_hash_str} {code_hash} ", "bold", end="")
+                log(f" {code_hash_str} {code_hash} ", end="")
 
-        log(CacheType(self.job_info["cacheType"][idx]).name, "bold magenta", end="")
+        log(CacheType(self.job_info["cacheType"][idx]).name, "magenta", end="")
         log(" ", end="")
-        log(StorageID(self.job_info["cloudStorageID"][idx]).name, "bold", end="")
+        log(StorageID(self.job_info["cloudStorageID"][idx]).name, end="")
         log(" ", end="")
-        log(f"is_cached={self.job_info['is_cached'][code_hash_str]}", "bold", end="")
+        log(f"is_cached={self.job_info['is_cached'][code_hash_str]}", end="")
         if ds.received_block > 0:
-            log(f" received_bn={ds.received_block}", "bold", end="")
+            log(f" received_bn={ds.received_block}", end="")
 
         if ds.storage_duration > 0:
-            log(f" storage_dur={ds.storage_duration}", "bold", end="")
+            log(f" storage_dur={ds.storage_duration}", end="")
 
         log()
 
@@ -183,8 +183,8 @@ def get_job_info(
         if is_print:
             fn = self.EBB_SCRIPTS / "get_job_info.py"
             log(
-                f"[bold green]$[/bold green] {fn} {provider} {job_key} {index} {job_id} {received_bn}",
-                highlight=False,
+                f"[green]$[/green] {fn} {provider} {job_key} {index} {job_id} {received_bn}",
+                h=False,
                 is_code=True,
             )
 
@@ -223,6 +223,7 @@ def get_job_info(
             "submitJob_gas_used": 0,
             "processPayment_block_hash": None,
             "processPayment_tx_hash": None,
+            "processPayment_bn": 0,
             "processPayment_gas_used": 0,
         }
         received_bn = self.update_job_cores(provider, job_key, index, received_bn)
@@ -251,6 +252,7 @@ def get_job_info(
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"actual_elapsed_time": logged_receipt.args["elapsedTime"]})
                 self.job_info.update({"processPayment_tx_hash": logged_receipt["transactionHash"].hex()})
+                self.job_info.update({"processPayment_bn": logged_receipt["blockNumber"]})
                 if self.job_info["result_ipfs_hash"] == empty_bytes32:
                     self.job_info.update({"result_ipfs_hash": b""})
 

@@ -167,7 +167,7 @@ class B2dropClass(Storage):
                         f"https://b2drop.eudat.eu/s/{token}/download",
                         "-q",
                         "--show-progres",
-                        "--progress=bar:force",
+                        "--progress=bar:force:noscroll",
                     ]
                     log(" ".join(cmd), is_code=True, color="bold yellow")
                     run(cmd)

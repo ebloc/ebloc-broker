@@ -27,7 +27,6 @@ custom_theme = Theme(
     {
         "info": "bold magenta",  # "bold dim magenta"
         "alert": "bold red",
-        "danger": "bold red",
         "bg": "bold green",
         "b": "bold",
         "m": "magenta",
@@ -36,6 +35,7 @@ custom_theme = Theme(
         "y": "yellow",
         "g": "green",
         "r": "red",
+        "orange": "orange1",
         "yob": "yellow on black blink",
         "ib": "italic black",
         "ic": "italic cyan",
@@ -85,7 +85,7 @@ class Log:
     # def success() -> None:
     #     pass
 
-    def print_color(self, text: str, color=None, is_bold=True, end="\n") -> None:
+    def print_color(self, text: str, color=None, is_bold=True, end="\n", highlight=True) -> None:
         """Print string in color format."""
         if text[0:3] in self.inner_bullet_three:
             if color and text == "==> ":
@@ -95,16 +95,16 @@ class Log:
 
             text = text[3:]
         elif text[0:2] == "E:":
-            console.print("[bold red]E:[/bold red]", end="")
+            console.print("[alert]E:[/alert]", end="", highlight=highlight)
             text = text[2:]
 
         if is_bold:
-            console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end)
+            console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end, highlight=highlight)
         else:
             if color in ("white", "", None) and "[" not in text:
                 print(text, end=end)
             else:
-                console.print(f"[{color}]{text}[/{color}]", end=end)
+                console.print(f"[{color}]{text}[/{color}]", end=end, highlight=highlight)
 
     def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
@@ -214,7 +214,7 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
                     _msg = f"[bold][{_color}]{is_r}{text[:_len]}[/{_color}][/bold][{color}]{text[_len:]}[/{color}]"
                     console.print(_msg, end=end)
                 else:
-                    ll.print_color(str(text), color, is_bold=is_bold, end=end)
+                    ll.print_color(str(text), color, is_bold=is_bold, highlight=highlight, end=end)
 
         if is_bold:
             _text = f"[bold]{text[_len:]}[\bold]"
@@ -231,9 +231,9 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
                 )
             else:
                 if color:
-                    ll.console[fn].print(f"[{color}]{_text}[/{color}]", end=end, soft_wrap=True)
+                    ll.console[fn].print(f"[{color}]{_text}[/{color}]", end=end, highlight=highlight, soft_wrap=True)
                 else:
-                    ll.console[fn].print(_text, end=end, soft_wrap=True)
+                    ll.console[fn].print(_text, end=end, highlight=highlight, soft_wrap=True)
     else:
         text_to_write = ""
         if is_bullet:
@@ -261,7 +261,7 @@ def log(
     is_err=False,
     is_output=True,
     max_depth=None,
-    highlight=True,
+    h=True,
     success=False,
     back=0,
     end="\n",
@@ -276,8 +276,8 @@ def log(
     :param text: String to print
     :param color: Color of the complete string
     :param fn: Filename to write
-    :param highlight: Rich will highlight certain patterns in your output such
-        as numbers, strings, and other objects like IP addresses. You can
+    :param h: Stands for highlight. Rich will highlight certain patterns in your output
+        such as numbers, strings, and other objects like IP addresses. You can
         disable highlighting by setting highlight=False.
     """
     if isinstance(text, QuietExit):
@@ -311,15 +311,12 @@ def log(
             if "warning:" in text:
                 text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
             else:
-                text = f"{WHERE(back)}[bold red] E:[/bold red] {_text}"
-
-    if "-=-=" in str(text):
-        is_bold = True
+                text = f"{WHERE(back)}[alert] E:[/alert] {_text}"
 
     if is_code:
+        h = False
         base_str = ""
         if text[0:2] == "$ ":
-            # is_bold = False
             base_str = " \ \n      "
         else:
             base_str = " \ \n    "
@@ -358,7 +355,7 @@ def log(
         if is_write and IS_WRITE:
             ll.console[fn].print(text)
     else:
-        _log(text, color, is_bold, fn, end, is_write, is_output, highlight)
+        _log(text, color, is_bold, fn, end, is_write, is_output, h)
 
 
 def WHERE(back=0):

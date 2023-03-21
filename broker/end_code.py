@@ -138,9 +138,9 @@ class Gdrive(Common):
             raise Exception(f"{WHERE(1)} E: {key} does not have a match, meta_data={meta_data}. {e}") from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        log(f"mime_type=[m]{mime_type}", "bold")
+        log(f"mime_type=[m]{mime_type}")
         self.data_transfer_out += calculate_size(self.patch_file)
-        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB", "bold")
+        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type or "/zip" in mime_type:
@@ -179,7 +179,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
-        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue", is_code=True)
+        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "blue", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             log("E: given key and index are equal to each other")
@@ -531,7 +531,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             print_tb(e)
             raise e
 
-        log("## receive state of the running job  [  OK  ]", "bold green")
+        log("## receive state of the running job  [  OK  ]", "green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(
@@ -555,9 +555,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         if self.elapsed_time > int(run_time[self.job_id]):
             self.elapsed_time = run_time[self.job_id]
 
-        log(f"finalized_elapsed_time={self.elapsed_time}", "bold")
+        log(f"finalized_elapsed_time={self.elapsed_time}")
         log("## job_info=", "info", end="")
-        log(pprint.pformat(self.job_info), "bold")
+        log(pprint.pformat(self.job_info))
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()

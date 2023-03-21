@@ -5,7 +5,7 @@ import time
 from broker._utils._log import log, ok
 from broker._utils.tools import is_process_on
 from broker.config import env
-from broker.errors import BashCommandsException, QuietExit
+from broker.errors import BashCommandsException, QuietExit, Terminate
 from broker.lib import run
 from broker.utils import popen_communicate
 
@@ -89,7 +89,7 @@ def is_on() -> bool:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
             log("[  [red]failed[/red]  ]", "bold")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
-            raise QuietExit(
+            raise Terminate(
                 f"E: [bg]{process_name}[/bg] is not running in the background. Please run:\n"
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )

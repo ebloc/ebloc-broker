@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
 
 import sys
-
+from contextlib import suppress
 from broker import cfg, config
-from broker._utils.tools import log, print_tb, read_json
+from broker._utils.tools import log, print_tb, read_json, run
 from broker.config import env
 from broker.errors import QuietExit
 from broker.utils import popen_communicate, terminate
+
+
+def nc(url: str, port: int):
+    """Nc — arbitrary TCP and UDP connections and listens."""
+    try:
+        for string in ["http://", "https://", ":8545"]:
+            url = url.replace(string, "")
+
+        run(["nc", "-v", "-w", 1, url, port])
+    except Exception as e:
+        raise e
 
 
 def _ping(host) -> bool:
@@ -60,15 +71,29 @@ def connect_to_eblocbroker() -> None:
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
         elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
-            from brownie import network, project
+            from brownie import network
 
             try:
-                network.connect("bloxberg")
+                network.connect(cfg.NETWORK_ID)
                 if not network.is_connected():
-                    log(f"E: {network.show_active()} is not connected")
-                    terminate(is_traceback=False)
+                    log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
+                    if cfg.NETWORK_ID == "bloxberg":
+                        log(f"Switching network_id={cfg.NETWORK_ID} to [m]bloxberg_core")
+                        cfg.NETWORK_ID = "bloxberg_core"
+                    elif cfg.NETWORK_ID == "bloxberg_core":
+                        with suppress(Exception):
+                            nc("alpy-bloxberg.duckdns.org", 8545)
+                            log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg")
+                            cfg.NETWORK_ID = "bloxberg"
 
-                # log(network.show_active())
+                    log(f"Trying at {cfg.NETWORK_ID} ...")
+                    network.connect(cfg.NETWORK_ID)
+                    if not network.is_connected():
+                        terminate(
+                            f"E: {network.show_active()} is not connected through {cfg.NETWORK_ID}",
+                            is_traceback=False,
+                        )
+
                 cfg.w3 = network.web3
             except:
                 from broker.python_scripts import add_bloxberg_into_network_config
@@ -79,9 +104,11 @@ def connect_to_eblocbroker() -> None:
                         "warning: [green]bloxberg[/green] key is added into the "
                         "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
                     )
-                    network.connect("bloxberg")
+                    network.connect(cfg.NETWORK_ID)
                 except KeyError:
                     sys.exit(1)
+
+            from brownie import project
 
             project = project.load(env.CONTRACT_PROJECT_PATH)
             config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)

@@ -7,7 +7,7 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from typing import Union
-
+from broker.imports import nc
 from halo import Halo
 from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
@@ -74,7 +74,7 @@ class Contract(Base):
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         # self.gas_limit = "max"  # 300000
         self.ops = {}
-        self.max_retries = 20
+        self.max_retries = 10
         self.required_confs = 1
         self._from = ""
         #: tx cost exceeds current gas limit. Limit: 9990226, got:
@@ -153,33 +153,32 @@ class Contract(Base):
         if isinstance(tx_hash, TransactionReceipt):
             tx_hash = tx_hash.txid
 
-        tx_receipt = None
         attempt = 0
         poll_latency = 3
-        if not is_verbose:
-            log(f"## waiting for the transaction({tx_hash}) receipt... ", end="")
+        if is_verbose:
+            log(f"## waiting for the tx={tx_hash} receipt...", end="")
 
+        tx_receipt = None
         while True:
             try:
                 tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
             except TransactionNotFound as e:
-                log()
-                log(f"warning: {e}")
+                log(f"warning: TransactionNotFound tx={tx_hash} {e}")
             except Exception as e:
-                print_tb(str(e))
+                print_tb(e)
                 tx_receipt = None
 
             if tx_receipt and tx_receipt["blockHash"]:
                 break
 
-            if not is_verbose:
+            if is_verbose:
                 log()
                 log(f"## attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
 
             attempt += 1
             time.sleep(poll_latency)
 
-        if not is_verbose:
+        if is_verbose:
             log(ok())
 
         if compact:
@@ -222,7 +221,7 @@ class Contract(Base):
     def get_transaction_by_block(self, block_hash, tx_index) -> dict:
         """Return the tx at the index specified by transaction_index from the block specified by block_identifier.
 
-        __ web3py.readthedocs.io/en/stable/web3.eth.html?highlight=raw%20trace#web3.eth.Eth.get_transaction_by_block
+        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_by_block
         """
         return dict(self.w3.eth.get_transaction_by_block(block_hash, tx_index))
 
@@ -246,7 +245,7 @@ class Contract(Base):
             message_no_color = "* is_web3_connected="
             with Halo(text=message_no_color, spinner="line", placement="right"):
                 if not Ebb.is_web3_connected():
-                    raise Exception
+                    raise Exception("web3 is not connected")
 
             log(message)
         except subprocess.CalledProcessError as e:
@@ -322,7 +321,7 @@ class Contract(Base):
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise Exception("Empty contract")
 
-        log(f"==> [y]contract_address[/y]=[cyan]{contract_address.lower()}", highlight=False)
+        log(f"==> [y]contract_address[/y]=[cyan]{contract_address.lower()}", h=False)
         return True
 
     def print_contract_info(self):
@@ -342,6 +341,8 @@ class Contract(Base):
 
         geth usage:
         self.eBlocBroker.functions.submitJob(*args).transact(self.ops)
+
+        May give "warning: timeout took too long" in exit_after() functions.
         """
         method = None
         try:
@@ -354,7 +355,7 @@ class Contract(Base):
                 method = getattr(self.eBlocBroker.functions, func)
                 return method(*args).transact(self.ops)
         except AttributeError as e:
-            raise Exception(f"Method {method} not implemented") from e
+            raise Exception(f"Method {method} is not implemented") from e
 
     def timeout_wrapper(self, method, *args):
         for _ in range(self.max_retries):
@@ -368,6 +369,11 @@ class Contract(Base):
             try:
                 return self.timeout(method, *args)
             except ValueError as e:
+                try:
+                    nc(env.BLOXBERG_HOST, 8545)
+                except Exception:
+                    log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
+
                 if "Sequence has incorrect length" in str(e):
                     print_tb(e)
                     raise QuietExit from e
@@ -403,7 +409,7 @@ class Contract(Base):
                 log("warning: Timeout Awaiting Transaction in the mempool")
                 self.gas_price *= 1.13
             except Exception as e:
-                log(f"Exception: {e}", "bold")
+                log(f"Exception: {e}")
                 # brownie.exceptions.TransactionError: Tx dropped without known replacement
                 if "Tx dropped without known replacement" in str(e):
                     self.gas_price *= 1.13

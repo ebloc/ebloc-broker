@@ -1,24 +1,24 @@
 config:
-    requester_address: '0x02a07535bc88f180ecf9f7c6fd66c0c8941fd7ab'
-    provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
-    source_code:
-        storage_id: b2drop
-        cache_type: public
-        path: ~/test_eblocbroker/run_cppr
-        storage_hours: 0
-    data:
-        data1:
-            hash: 1bfca57fe54bc46ba948023f754521d6
-        data2:
-            hash: bfc83d9f6d5c3d68ca09499190851e86
-        data3:
-            cache_type: public
-            path: /home/alper/test_eblocbroker/small/KZ2-venus
-            storage_hours: 1
-            storage_id: b2drop
-    data_transfer_out: 5
-    jobs:
-        job1:
-            cores: 1
-            run_time: 60
-    provider_addr: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+  requester_address: '0x740fcbc6d4e7e5102b8cba29370b93c6de4c786e'
+  provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+  source_code:
+    storage_id: b2drop
+    cache_type: public
+    path: ~/test_eblocbroker/run_cppr
+    storage_hours: 0
+  data:
+    data1:
+      hash: f71df9d36cd519d80a3302114779741d
+    data2:
+      hash: 1bfca57fe54bc46ba948023f754521d6
+    data3:
+      cache_type: public
+      path: /home/alper/test_eblocbroker/small/KZ2-sawtooth
+      storage_hours: 1
+      storage_id: b2drop
+  data_transfer_out: 5
+  jobs:
+    job1:
+      cores: 1
+      run_time: 60
+  provider_addr: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'

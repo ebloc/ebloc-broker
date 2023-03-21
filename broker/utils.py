@@ -411,17 +411,27 @@ def start_ipfs_daemon(_is_print=False) -> bool:
         raise QuietExit from e
 
     log("warning: [g]IPFS[/g] does not work on the background")
-    log("#> Starting [g]IPFS daemon[/g] on the background")
+    log("#> Initializing [g]IPFS daemon[/g]...")
     output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read().rstrip(), "bold blue")
+            for line in content_file.read().splitlines():
+                if (
+                    "4001/quic" not in line
+                    and "Swarm listening on /ip4/172." not in line
+                    and "Swarm listening on /ip6/" not in line
+                    and "WebUI:" not in line
+                    and "Initializing" not in line
+                ):
+                    print(line)
+
+            # log(content_file.read().rstrip())
             time.sleep(5)  # in case sleep for 5 seconds
             if output:
                 log(output.replace("==> Running IPFS daemon", "").rstrip(), "blue")
 
-        if is_ipfs_on(is_print=True):
+        if is_ipfs_on(is_print=False):
             return True
 
     return False
@@ -453,11 +463,11 @@ def is_dpkg_installed(package) -> bool:
 def terminate(msg="", is_traceback=False, lock=None) -> None:
     """Terminate the program and exit."""
     if msg:
-        log(f"{WHERE(1)} Terminated: ", "bold red", end="")
+        log(f"{WHERE(1)} Terminated: ", "red", end="", h=False)
         if msg[:3] == "E: ":
-            log(msg[3:], "bold")
+            log(msg[3:])
         else:
-            log(msg, "bold")
+            log(msg)
 
     if is_traceback:
         print_tb()

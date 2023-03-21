@@ -38,3 +38,13 @@ Failed to share file: googleapi: Error 403: Rate limit exceeded. User message: "
 #+end_src
 ** TODO fetch b2drop empty size
 ** TODO investigate store web3 ebb object and read reread from it using picle
+** TODO
++ hide ipfs progress in submitting jobs
+
++ Failed to get about: Get "https://www.googleapis.com/drive/v3/about?alt=json&fields=maxImportSizes%2CmaxUploadSize%2CstorageQuota%2Cuser": oauth2: cannot fetch token: 400 Bad Request
+Response: {
+  "error": "invalid_grant",
+  "error_description": "Token has been expired or revoked."
+}
+
+** TODO during job submittion check web3 connection

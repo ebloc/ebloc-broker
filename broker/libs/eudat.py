@@ -153,17 +153,17 @@ def share_single_folder(folder_name, f_id):
     log("## Requester folder is already shared")
 
 
-def initialize_folder(folder_to_share, requester_name) -> str:
+def initialize_folder(folder_to_share, username) -> str:
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, *_ = compress_folder(folder_to_share)
     tar_source = f"{dir_path}/{tar_hash}.tar.gz"
     try:
-        config.oc.mkdir(f"{tar_hash}_{requester_name}")
+        config.oc.mkdir(f"{tar_hash}_{username}")
     except Exception as e:
         if "405" not in str(e):
-            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}_{requester_name}"):
+            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}_{username}"):
                 try:
-                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}_{requester_name}")
+                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}_{username}")
                 except Exception as e:
                     raise e
             else:
@@ -172,7 +172,7 @@ def initialize_folder(folder_to_share, requester_name) -> str:
             log("#> folder is already created")
 
     try:
-        tar_dst = f"{tar_hash}_{requester_name}/{tar_hash}.tar.gz"
+        tar_dst = f"{tar_hash}_{username}/{tar_hash}.tar.gz"
         log("## uploading into [g]B2DROP[/g] this may take some time depending on the file size...")
         is_already_uploaded = False
         with suppress(Exception):
@@ -193,12 +193,13 @@ def initialize_folder(folder_to_share, requester_name) -> str:
         os.remove(tar_source)
     except Exception as e:
         if type(e).__name__ == "HTTPResponseError":
+            # TODO: maybe try again
             try:
                 shutil.copyfile(tar_source, f"{env.OWNCLOUD_PATH}/{tar_dst}")
             except Exception as e:
                 raise e
         else:
-            raise Exception("oc could not connected in order to upload the file")  # noqa
+            raise Exception("oc could not connected in order to upload the file")  # type: ignore
 
     return tar_hash
 
@@ -248,24 +249,24 @@ def submit(provider, requester, job, required_confs=1):
         pass
     except Exception as e:
         print_tb(e)
+        raise e
 
     return tx_hash
 
 
-def _share_folders(provider_info, requester_name, folders_hash):
+def _share_folders(provider_info, username, folders_hash):
     """Share generated archived file with the corresponding provider."""
     for folder, folder_hash in folders_hash.items():
         try:
             if "@b2drop.eudat.eu" not in provider_info["f_id"]:
                 provider_info["f_id"] = provider_info["f_id"] + "@b2drop.eudat.eu"
 
-            share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
+            share_single_folder(f"{folder_hash}_{username}", provider_info["f_id"])
         except Exception as e:
             print_tb(e)
             log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
             log("#> Maybe folder with same name is already shared?")
             raise e
-            # sys.exit(1)
 
         time.sleep(0.25)
 
@@ -274,12 +275,11 @@ def _submit(provider, requester, job, required_confs=1):
     job.Ebb.is_requester_valid(requester)
     job.Ebb.is_eth_account_locked(requester)
     provider = cfg.w3.toChecksumAddress(provider)
-    requester_name = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
+    username = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
     try:
         _git.is_repo(job.folders_to_share)
-    except:
-        print_tb()
-        sys.exit(1)
+    except Exception as e:
+        raise e
 
     folders_hash = {}
     for idx, folder in enumerate(job.folders_to_share):
@@ -291,11 +291,10 @@ def _submit(provider, requester, job, required_confs=1):
             try:
                 _git.initialize_check(folder)
                 _git.commit_changes(folder)
-                folder_hash = initialize_folder(folder, requester_name)
+                folder_hash = initialize_folder(folder, username)
                 folders_hash[folder] = folder_hash
             except Exception as e:
-                print_tb(e)
-                sys.exit(1)
+                raise e
 
             if idx == 0:
                 job_key = folder_hash
@@ -315,7 +314,7 @@ def _submit(provider, requester, job, required_confs=1):
     provider_addr_to_submit = job.search_best_provider(requester)
     provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
     log(f"==> provider_fid=[m]{provider_info['f_id']}")
-    _share_folders(provider_info, requester_name, folders_hash)
+    _share_folders(provider_info, username, folders_hash)
     # print(job.code_hashes)
     try:
         if job.price == 0:
@@ -325,10 +324,5 @@ def _submit(provider, requester, job, required_confs=1):
             )
 
         return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)
-    except QuietExit:
-        sys.exit(1)
     except Exception as e:
-        print_tb(e)
-        # log(f"E: Unlock your Ethereum Account({requester})")
-        # log("#> In order to unlock an account you can use: ~/eBlocPOA/client.sh")
-        sys.exit(1)
+        raise e

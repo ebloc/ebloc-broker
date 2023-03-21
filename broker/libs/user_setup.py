@@ -66,7 +66,7 @@ def user_add(user_address, basedir, slurm_user):
     log(f"#> adding user=[m]{user_address}[/m]", end="")
     try:  # convert ethereum user address into 32-bits
         user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
-        log(f" | user_name={user_name}", "bold")
+        log(f" | user_name={user_name}")
     except Exception as e:
         log()
         log(f"warning: user_address={user_address}")
@@ -85,7 +85,7 @@ def user_add(user_address, basedir, slurm_user):
             run(["sudo", "userdel", "--force", user_name])
     else:
         if not os.path.isdir(user_dir):
-            log(f"{user_address} => {user_name} does not exist. Attempting to read the user", "bold yellow")
+            log(f"{user_address} => {user_name} does not exist. Attempting to read the user", "yellow")
             run(["sudo", "userdel", "--force", user_name])
             run(["sudo", "useradd", "-d", user_dir, "-m", user_name])
             set_folder_permission(user_dir, user_name, slurm_user)

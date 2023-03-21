@@ -69,6 +69,6 @@ if __name__ == "__main__":
     try:
         cfg.ipfs.is_gpg_published(gpg_fingerprint)
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_address)
-        receipt = get_tx_status(tx_hash)
+        get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)

@@ -141,7 +141,7 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
     link.link_folders(folders_target)
     log()
     for key, value in link.data_map.items():
-        # test_with_small_dataset(value)  # delete_me
+        # test_with_small_dataset(value)  # DELETEME
         log(f"[blue] * [/blue][g]{key}[/g] => [yellow]../data_link/{value}[/yellow]")
 
     if not is_pass:
@@ -159,7 +159,7 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
 
     if is_pass and cfg.IS_FULL_TEST and "run_cppr" in str(source_code_path):
         for key, value in link.data_map.items():
-            test_with_small_dataset(value)  # delete_me
+            test_with_small_dataset(value)  # DELETEME
 
 
 def main():
