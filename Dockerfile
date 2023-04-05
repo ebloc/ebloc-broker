@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 FROM golang:latest
 RUN apt-get install -y ca-certificates
-RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/v0.19.0/go-ipfs_v0.19.0_linux-amd64.tar.gz" \
- && tar -xf "go-ipfs_v0.19.0_linux-amd64.tar.gz" \
- && rm -f go-ipfs_v0.19.0_linux-amd64.tar.gz \
+ARG IPFS_TAG=v0.19.0
+RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/"${IPFS_TAG}"/go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
+ && tar -xf "go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
+ && rm -f go-ipfs_${IPFS_TAG}_linux-amd64.tar.gz \
  && cd go-ipfs \
  && make install \
  && ./install.sh
@@ -89,6 +90,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /workspace
 RUN git clone https://github.com/ebloc/ebloc-broker.git
 WORKDIR /workspace/ebloc-broker
+
 #: `pip install -e .` takes few minutes
 RUN git checkout dev >/dev/null 2>&1 \
  && git fetch --all --quiet >/dev/null 2>&1 \

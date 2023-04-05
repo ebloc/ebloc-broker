@@ -4,10 +4,7 @@ import argparse
 
 from pymongo import MongoClient
 from rich.pretty import pprint
-from broker._utils import _log
 from broker._utils._log import log
-
-_log.IS_WRITE = False
 
 
 class BaseMongoClass:
@@ -166,7 +163,7 @@ def main():
     if args.is_delete_all:
         ebb_mongo.delete_shared_ids()
         output = ebb_mongo.delete_all()
-        log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
+        log(f"mc['ebloc_broker']['cache'] is_deleted={output}", is_write=False)
     else:
         ebb_mongo.find_all_share_id()
         # output = ebb_mongo.get_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)

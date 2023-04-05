@@ -573,7 +573,7 @@ def squeue() -> None:
     if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
         # checks if the squeue output's line number is gretaer than 1
         # log("view information about jobs located in the Slurm scheduling queue:", "yellow")
-        log(f"{squeue_output}{ok()}\n")
+        log(f"{squeue_output} {ok()}\n")
 
 
 def compare_files(fn1, fn2) -> bool:

@@ -1,21 +1,21 @@
 config:
-  requester_address: '0x740fcbc6d4e7e5102b8cba29370b93c6de4c786e'
-  provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+  requester_address: '0x4c2aebf67f8cfce387ad0ee3774bb193c4a62ef6'
+  provider_address: '0x1926b36af775e1312fdebcc46303ecae50d945af'
   source_code:
-    storage_id: b2drop
+    storage_id: ipfs_gpg
     cache_type: public
     path: ~/test_eblocbroker/run_cppr
     storage_hours: 0
   data:
     data1:
-      hash: f71df9d36cd519d80a3302114779741d
+      hash: 779745f315060d1bc0cd44b7266fb4da
     data2:
-      hash: 1bfca57fe54bc46ba948023f754521d6
+      hash: 45281dfec4618e5d20570812dea38760
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/KZ2-sawtooth
+      path: /home/alper/test_eblocbroker/small/babyface.n6c10
       storage_hours: 1
-      storage_id: b2drop
+      storage_id: ipfs_gpg
   data_transfer_out: 5
   jobs:
     job1:

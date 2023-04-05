@@ -148,7 +148,7 @@ def share_single_folder(folder_name, f_id):
     """Share given folder path with the user."""
     if not config.oc.is_shared(folder_name):
         config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-        log(f"sharing with [yellow]{f_id}[/yellow]{ok()}")
+        log(f"sharing with [yellow]{f_id}[/yellow] {ok()}")
 
     log("## Requester folder is already shared")
 
@@ -240,7 +240,7 @@ def submit(provider, requester, job, required_confs=1):
                 log(vars(processed_logs[0].args))
                 try:
                     processed_logs[0].args["index"]
-                    # log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
+                    # log(f"[bold]job_index={processed_logs[0].args['index']} {ok()}")
                 except IndexError:
                     log(f"E: Tx({tx_hash}) is reverted")
         else:

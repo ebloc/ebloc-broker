@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.eblocbroker_scripts.utils import Cent
 import sys
 
 from broker import cfg
@@ -21,6 +22,8 @@ def main():
         output = Ebb.get_block_number()
         if is_write_to_file:
             env.config["block_continue"] = output
+            balance_temp = Ebb.get_balance(env.PROVIDER_ID)
+            env.config["token_balance"] = int(balance_temp)
         else:
             log(f"block_number={output}")
     except Exception as e:

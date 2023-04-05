@@ -423,6 +423,10 @@ def start_ipfs_daemon(_is_print=False) -> bool:
                     and "Swarm listening on /ip6/" not in line
                     and "WebUI:" not in line
                     and "Initializing" not in line
+                    and "Swarm." not in line
+                    and "ipfs swarm" not in line
+                    and "Computed default" not in line
+                    and line != ""
                 ):
                     print(line)
 

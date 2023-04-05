@@ -1,29 +1,31 @@
 #!/usr/bin/env python3
 
-from brownie import network
 import os.path
 import random
 import sys
 import time
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from random import randint
-from broker.imports import nc
+
 from pymongo import MongoClient
 from web3.logs import DISCARD
-from contextlib import suppress
+
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import console_ruler, ok
 from broker._utils.tools import _date, _timestamp, countdown, is_process_on, log, run
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
+from broker.config import env
+from broker.imports import nc
 from broker.libs import gdrive
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
 from broker.test_setup.user_set import providers, requesters
 from broker.utils import print_tb
-from broker.config import env
+from brownie import network
 
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
@@ -37,7 +39,7 @@ _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 PROVIDER_MAIL = "alper.alimoglu.research2@gmail.com"
 
 benchmarks = ["nas", "cppr"]
-storage_ids = ["b2drop", "gdrive", "ipfs"]
+storage_ids = ["gdrive", "ipfs", "b2drop"]
 ipfs_types = ["ipfs", "ipfs_gpg"]
 
 test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
@@ -53,7 +55,7 @@ if is_mini_test:
 
 cfg.TEST_PROVIDERS = providers
 cfg.NETWORK_ID = "bloxberg_core"
-_ruler = "==========================="
+_ruler = "======================="
 
 # for provider_addr in providers:
 #     mini_tests_submit(storage_ids, provider_addr)
@@ -240,7 +242,7 @@ def check_connection():
         if not network.is_connected():
             time.sleep(15)
     else:
-        log(f"#> bloxberg connection using network_id={cfg.NETWORK_ID}{ok()}", is_write=False)
+        log(f"#> bloxberg connection using network_id={cfg.NETWORK_ID} {ok()}", is_write=False)
 
 
 def run_job(counter) -> None:
@@ -249,8 +251,6 @@ def run_job(counter) -> None:
     :param counter: counter index to keep track of submitted job number
     """
     for idx, provider_addr in enumerate(providers):
-        check_connection()
-        breakpoint()  # DEBUG
         # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
         storage_id = (idx + counter) % len(storage_ids)
         selected_benchmark = random.choice(benchmarks)
@@ -260,14 +260,16 @@ def run_job(counter) -> None:
 
         if selected_benchmark == "nas":
             log(
-                f"{_ruler} Submitting the job from [cyan]NAS Benchmark[/cyan] to [g]{provider_addr} {_ruler}",
+                f"{_ruler} Submitting the job from [cyan]NAS Benchmark[/cyan] to [g]{provider_addr}[/g]\t",
                 "bold blue",
             )
+            check_connection()
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
             print("                                                                   ")
-            log(f"{_ruler} Submitting [cyan]job with cppr datasets[/cyan] data_set_idx={idx} {_ruler}\t")
+            log(f"{_ruler} Submitting [cyan]job[/cyan] with [cyan]cppr datasets[/cyan] data_set_idx={idx}\t")
+            check_connection()
             # log(f" * Attempting to submit [cyan]job with cppr datasets[/cyan] to_provider=[g]{provider_addr}")
             yaml_cfg = Yaml(cppr_yam_fn)
             hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
@@ -343,7 +345,7 @@ def main():
     else:
         try:
             counter = 0
-            for _ in range(160):
+            for _ in range(100):
                 for _ in range(2):  # submitted as batch is faster
                     run_job(counter)
                     counter += 1

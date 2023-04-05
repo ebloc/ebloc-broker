@@ -406,7 +406,7 @@ def run_driver(given_bn):
         f"==> account_balance={math.floor(gwei_balance)} [blue]gwei[/blue] ≈ "
         f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} [blue]ether"
     )
-    log(f"==> Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
+    log(f"==> Overall Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
     slurm.pending_jobs_check()
     first_iteration_flag = True
     while True:
@@ -422,7 +422,7 @@ def run_driver(given_bn):
         if not first_iteration_flag:
             console_ruler()
             if isinstance(balance, int):
-                cc = Cent(int(balance) - int(balance_temp))._to()
+                cc = Cent(int(balance) - int(env.config["token_balance"]))._to()
                 log(f"==> since driver started provider_gained_token={cc} usd")
 
         current_bn = Ebb.get_block_number()
@@ -488,7 +488,11 @@ def reconnect():
 
 def check_connection():
     if not network.is_connected():
-        reconnect()
+        try:
+            reconnect()
+        except Exception as e:
+            log(f"E: {e}")
+
         if not network.is_connected():
             time.sleep(15)
     else:

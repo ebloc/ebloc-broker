@@ -19,7 +19,10 @@ from broker.errors import QuietExit
 install()  # for rich, show_locals=True
 # pretty.install()
 
-IS_WRITE = True  # if False disable write into file for the process
+# if False disable write into file for the process
+# heads up applies this all libs imported this
+IS_WRITE = True
+
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
@@ -157,7 +160,7 @@ def br(text, color="white"):
 
 
 def ok():
-    return "  " + br("  [g]OK[/g]  ")
+    return " " + br("  [g]OK[/g]  ")
 
 
 def _console_clear():

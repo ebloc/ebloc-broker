@@ -39,12 +39,21 @@ Failed to share file: googleapi: Error 403: Rate limit exceeded. User message: "
 ** TODO fetch b2drop empty size
 ** TODO investigate store web3 ebb object and read reread from it using picle
 ** TODO
-+ hide ipfs progress in submitting jobs
-
-+ Failed to get about: Get "https://www.googleapis.com/drive/v3/about?alt=json&fields=maxImportSizes%2CmaxUploadSize%2CstorageQuota%2Cuser": oauth2: cannot fetch token: 400 Bad Request
+*** hide ipfs progress in submitting jobs
+*** Failed to get about:
+#+begin_src bash
+Get "https://www.googleapis.com/drive/v3/about?alt=json&fields=maxImportSizes%2CmaxUploadSize%2CstorageQuota%2Cuser": oauth2: cannot fetch token: 400 Bad Request
 Response: {
   "error": "invalid_grant",
   "error_description": "Token has been expired or revoked."
 }
+#+end_src
 
-** TODO during job submittion check web3 connection
+** TODO freeze at
+#+begin_src bash
+==> since driver started provider_gained_token=0 usd
+ * 2023-04-06 08:34:46 waiting new job to come since bn=19922833
+==> current_block=19922819 | sync_from=19922833
+## Waiting block number to be updated, it remains constant at 19922819
+Downloading meta_data.json -> /var/ebloc-broker/b68d6462f9762cfed7bbc7f90e6c6c7f/1KFwXV2UWnJwj25HS3wdrjcQxartboQAW_0/meta_data.json
+#+end_src

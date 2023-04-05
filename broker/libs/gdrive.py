@@ -131,7 +131,7 @@ def upload(folder_to_share, tmp_dir, is_source_code=False):
 
     is_file_exist = _list(tar_hash, is_folder=True)
     if is_file_exist:
-        log(f"## requested folder {tar_hash} is already uploaded", "bold blue")
+        log(f"## requested folder {tar_hash} is already uploaded", "blue")
         log(is_file_exist, "bg")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
@@ -288,7 +288,7 @@ def parse_gdrive_info(gdrive_info):
 
         log(_dict)
     except:
-        log(gdrive_info, "bold yellow")
+        log(gdrive_info, "yellow")
 
 
 def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_hashes, is_cached):

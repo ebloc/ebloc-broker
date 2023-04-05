@@ -7,7 +7,7 @@ import time
 from contextlib import suppress
 from os.path import expanduser
 from typing import Union
-from broker.imports import nc
+
 from halo import Halo
 from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
@@ -19,6 +19,7 @@ from broker._utils.tools import exit_after, log, print_tb, without_keys
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit, Web3NotConnected
+from broker.imports import nc
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, terminate
 from brownie.network.account import Account, LocalAccount

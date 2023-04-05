@@ -24,25 +24,28 @@ for user in $(members eblocbroker | tr " " "\n"); do
 done
 
 BASE="/var/ebloc-broker"
-mkdir -p $BASE/to_delete
+if [[ -d $BASE ]]; then
+    mkdir -p $BASE/to_delete
 
-mv $BASE/* $BASE/to_delete >/dev/null 2>&1
-DIR=$BASE/to_delete/public
-[ -d $DIR ] && mv $BASE/to_delete/public $BASE/
+    mv $BASE/* $BASE/to_delete >/dev/null 2>&1
+    DIR=$BASE/to_delete/public
+    [ -d $DIR ] && mv $BASE/to_delete/public $BASE/
 
-DIR=$BASE/to_delete/cache  # do not delete files in /var/ebloc-broker/cache/
-[ -d $DIR ] && mv $DIR $BASE/
+    DIR=$BASE/to_delete/cache  # do not delete files in /var/ebloc-broker/cache/
+    [ -d $DIR ] && mv $DIR $BASE/
 
-FILE=$BASE/to_delete/slurm_mail_prog.sh # recover slurm_mail_prog.sh
-[ -f $FILE ] && mv $FILE $BASE/
+    FILE=$BASE/to_delete/slurm_mail_prog.sh # recover slurm_mail_prog.sh
+    [ -f $FILE ] && mv $FILE $BASE/
 
-find /var/ebloc-broker/to_delete -name "*data_link*" | while read -r i
-do
-    sudo umount -f $i/* >/dev/null 2>&1
-done
-sudo rm -rf $BASE/to_delete
-rm -f /var/ebloc-broker/cache/*.tar.gz
-mkdir -p $BASE/cache
+    find /var/ebloc-broker/to_delete -name "*data_link*" | while read -r i
+    do
+        sudo umount -f $i/* >/dev/null 2>&1
+    done
+    sudo rm -rf $BASE/to_delete
+    rm -f /var/ebloc-broker/cache/*.tar.gz
+    mkdir -p $BASE/cache
+fi
+
 find $HOME/.ebloc-broker/*/* -mindepth 1 ! \
      -regex '^./private\(/.*\)?' -delete >/dev/null 2>&1
 
@@ -62,11 +65,11 @@ rm -f $HOME/.ebloc-broker/ipfs.out
 rm -f $HOME/.ebloc-broker/ganache.out
 rm -f $HOME/.ebloc-broker/*.yaml~
 
-rm -f $BASE/geth_server.out
-rm -f $BASE/.node-xmlhttprequest*
-rm -f $BASE/ipfs.out
-rm -f $BASE/modified_date.txt
-rm -f $BASE/package-lock.json
+rm -f $HOME/.ebloc-broker/geth_server.out
+rm -f $HOME/.ebloc-broker/.node-xmlhttprequest*
+rm -f $HOME/.ebloc-broker/ipfs.out
+rm -f $HOME/.ebloc-broker/modified_date.txt
+rm -f $HOME/.ebloc-broker/package-lock.json
 
 rm -rf ~/ebloc-broker/contract/build
 rm -rf ~/ebloc-broker/contract/reports
@@ -91,10 +94,12 @@ done
 
 if [ "$(hostname)" = "homevm" ]; then
     echo "#> ln datasets for homevm"
-    ~/ebloc-broker/broker/test_setup/ln_medium_data.sh
+    ~/ebloc-broker/broker/bash_scripts/ln_medium_data.sh
 fi
 
-echo -e "\n/var/ebloc-broker/"
-CURRENT_DIR=$PWD
-cd /var/ebloc-broker && fdfind . | as-tree && cd ~
-cd $CURRENT_DIR
+if [[ -d $BASE ]]; then
+    echo -e "\n/var/ebloc-broker/"
+    CURRENT_DIR=$PWD
+    cd /var/ebloc-broker && fdfind . | as-tree && cd ~
+    cd $CURRENT_DIR
+fi

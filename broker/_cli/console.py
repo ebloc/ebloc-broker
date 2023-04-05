@@ -27,7 +27,7 @@ def my_inline_function():
 
 app = VulcanoApp()
 Ebb = cfg.Ebb
-_log.IS_WRITE = False
+_log.IS_WRITE = False  # applies this all libs imported this
 t1 = threading.Thread(target=my_inline_function)
 t1.start()
 
