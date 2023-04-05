@@ -1,6 +1,5 @@
 #    -*- mode: org -*-
 
-
 Archived entries from file /home/alper/ebloc-broker/broker/todo.org
 
 
@@ -17,6 +16,89 @@ CLOSED: [2023-03-13 Mon 01:20]
 TypeError: updateProviderPrices '['0.001 usd', '0.0001 cent', '0.0001 cent', '0.0001 cent']' - Cannot convert str '0.001 usd' to wei.
 An exception of type TypeError occurred. Arguments:
 #+end_src
+* DONE
+CLOSED: [2022-04-04 Mon 10:34]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-04-04 Mon 10:34
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+__ https://stackoverflow.com/a/29243206/2402577
+
+#+begin_src python
+import zlib
+
+a = "this string needs compressing"
+a = zlib.compress(a.encode())
+print(zlib.decompress(a).decode())
+#+end_src
+* DONE
+CLOSED: [2022-05-26 Thu 09:56]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-05-26 Thu 09:56
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+carry `run_with_output` into tools
+
+convert all ~run(~ into ~run_with_output(~
+* DONE remove all /home/username
+CLOSED: [2022-06-20 Mon 20:01]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-06-20 Mon 20:01
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+* DONE re-run the tests
+CLOSED: [2022-07-02 Sat 11:55]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-07-02 Sat 11:55
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+* DONE check before submitting job from the requester
+CLOSED: [2022-07-14 Thu 12:46]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-07-14 Thu 12:46
+:ARCHIVE_FILE: ~/ebloc-broker/broker/gpg/README.org
+:ARCHIVE_OLPATH: GNU Privacy
+:ARCHIVE_CATEGORY: README
+:ARCHIVE_TODO: DONE
+:END:
+#+begin_src bash
+# key=$(~/ebloc-broker/broker/bash_scripts/get_gpg_fingerprint.sh)
+key=$(gpg --list-secret-keys --keyid-format LONG <email>)
+echo $key && gpg --list-keys $key
+gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys $key
+#+end_src
+* DONE if registered data requested data_in for that has should be 0
+CLOSED: [2022-11-13 Sun 11:28]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-11-13 Sun 11:28
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
+
+* DONE replace ~eudat~ with ~b2drop~
+CLOSED: [2023-01-01 Sun 20:26]
+:PROPERTIES:
+:ARCHIVE_TIME: 2023-01-01 Sun 20:26
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:
 
 * DONE
 CLOSED: [2023-03-15 Wed 02:16]
