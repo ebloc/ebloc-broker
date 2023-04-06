@@ -169,14 +169,14 @@ class B2dropClass(Storage):
                         "--show-progres",
                         "--progress=bar:force:noscroll",
                     ]
-                    log(" ".join(cmd), is_code=True, color="bold yellow")
+                    log(" ".join(cmd), is_code=True, color="yellow")
                     run(cmd)
                     with cd(results_folder_prev):
                         run(["unzip", "-o", "-j", download_fn])
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
-                    log(f"## download file from B2DROP{ok()}")
+                    log(f"## download file from B2DROP {ok()}")
                     return
             except:
                 log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
@@ -291,7 +291,7 @@ class B2dropClass(Storage):
                 # TODO: if added before or some do nothing
                 if Ebb.mongo_broker.add_item_share_id(share_key, value["share_id"], value["share_token"]):
                     # adding into mongoDB for future usage
-                    log(f"#> [g]{share_key}[/g] is added into mongoDB{ok()}")
+                    log(f"#> [g]{share_key}[/g] is added into mongoDB {ok()}")
             except Exception as e:
                 print_tb(e)
                 log(f"E: {e}")
@@ -370,7 +370,7 @@ class B2dropClass(Storage):
             time.sleep(0.25)
 
     def _run(self) -> bool:
-        log(f"{br(get_date())} new job has been received through B2DROP: {self.job_key} {self.index} ", "bold cyan")
+        log(f"{br(get_date())} new job has been received through B2DROP: {self.job_key} {self.index} ", "cyan")
         # TODO: refund check
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
@@ -422,7 +422,7 @@ class B2dropClass(Storage):
                 except KeyError:
                     try:
                         shared_id = Ebb.mongo_broker.find_shareid_item(key=share_key)
-                        log(f"#> reading from mongo_broker{ok()}")
+                        log(f"#> reading from mongo_broker {ok()}")
                         log(shared_id)
                     except Exception as e:
                         print_tb(e)

@@ -107,6 +107,7 @@ class Helper:
     def authenticate_orc_id(self):
         # FIXME: missing functionality
         obj = self.subparsers.add_parser("auth_orc_id", help="Authenticate orcid")
+        obj.add_argument("eth_address", type=str, help="Ethereum address of the user")
 
     def submit(self):
         obj = self.subparsers.add_parser("submit", help="Submit job")

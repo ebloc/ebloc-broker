@@ -47,7 +47,7 @@ def start_call(key, index, slurm_job_id) -> None:
     p2.stdout.close()  # type: ignore
     date = p3.communicate()[0].decode("utf-8").strip()
     start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
-    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {job_id} {start_ts}", "bold white")
+    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {job_id} {start_ts}", is_code=True)
     log(f"#> pid={pid}")
     for attempt in range(10):
         if attempt > 0:

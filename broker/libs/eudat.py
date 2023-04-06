@@ -6,7 +6,6 @@ import os.path
 import pickle
 import shutil
 import subprocess
-import sys
 import time
 from contextlib import suppress
 from pathlib import Path

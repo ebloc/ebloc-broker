@@ -101,9 +101,6 @@ class Contract(Base):
                 self.eBlocBroker, self.w3, self._eblocbroker = connect()
             except Exception as e:
                 print_tb(e)
-                sys.exit(1)
-
-    ebb = None  # contract object
 
     def brownie_load_account(self, fn="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""

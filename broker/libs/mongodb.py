@@ -4,6 +4,7 @@ import argparse
 
 from pymongo import MongoClient
 from rich.pretty import pprint
+
 from broker._utils._log import log
 
 
@@ -149,6 +150,9 @@ class MongoBroker(BaseMongoClass):
 
 
 def main():
+    # from broker._utils import _log
+
+    # _log.IS_WRITE = False
     mc = MongoClient()
     ebb_mongo = MongoBroker(mc, mc["ebloc_broker"]["cache"])
     parser = argparse.ArgumentParser(description="Process MongoDB.")

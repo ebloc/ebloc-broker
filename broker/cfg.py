@@ -24,7 +24,7 @@ IPFS_TIMEOUT: int = 300
 IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 TEST_PROVIDERS = None
 TX_LOG_VERBOSE = False
-NETWORK_ID = "bloxberg"
+NETWORK_ID = "bloxberg"  # "bloxberg_core"
 
 
 class EBB:

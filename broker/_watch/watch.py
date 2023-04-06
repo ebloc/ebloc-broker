@@ -21,6 +21,7 @@ columns_size = 30
 is_while = True  # to fetch on-going results
 is_provider = True
 
+cfg.NETWORK_ID = "bloxberg_core"
 is_csv = False
 analyze_long_test = False
 
@@ -257,7 +258,7 @@ def main():
     if len(sys.argv) == 2:
         eth_address = sys.argv[1]
 
-    from_block = 19874011
+    from_block = 19926110
     watch(eth_address, from_block)
 
 

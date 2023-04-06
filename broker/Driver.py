@@ -496,7 +496,7 @@ def check_connection():
         if not network.is_connected():
             time.sleep(15)
     else:
-        log(f"bloxberg connection{ok()}", is_write=False)
+        log(f"bloxberg connection {ok()}", is_write=False)
 
 
 def _run_driver(given_bn, lock):

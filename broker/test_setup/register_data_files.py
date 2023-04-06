@@ -63,7 +63,7 @@ def register_data_files(data_price, hashes):
 
 
 def main():
-    ## register_data_files(data_price=1, hashes=hashes_small)
+    # register_data_files(data_price=1, hashes=hashes_small)
     # register_data_files(data_price=Cent("0.0002 usd"), hashes=hashes_medium_1)
     # register_data_files(data_price=Cent("0.0003 usd"), hashes=hashes_medium_2)
 

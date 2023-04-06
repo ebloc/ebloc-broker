@@ -8,22 +8,19 @@ providers=("0x29e613b04125c16db3f3613563bfdd0ba24cb629"
 
 num=$(ps aux | grep -E "[w]atch.py" | grep -v -e "grep" -e "emacsclient" -e "flycheck_" | wc -l)
 if [ $num -ge 1 ]; then
-    echo "warning: `watch.py` is already running"
+    echo -e "#> 'watch' process is already running"
 else
     rm -f ~/.ebloc-broker/watch.out ~/.ebloc-broker/watch_*.out \
        ~/ebloc-broker/broker/_watch/provider_*.txt
     for i in "${!providers[@]}"; do
+        touch ~/.ebloc-broker/watch_${providers[$i]}.out
         ~/ebloc-broker/broker/_watch/watch.py "${providers[$i]}" >/dev/null &
+        sleep 1
     done
 fi
 
-watch --color head -n 15 \
+clear
+watch --color head -n 16 \
       ~/.ebloc-broker/watch_${providers[0]}.out \
       ~/.ebloc-broker/watch_${providers[1]}.out \
       ~/.ebloc-broker/watch_${providers[2]}.out
-
-: ' commented
-cat ~/.ebloc-broker/watch_$provider_1.out
-cat ~/.ebloc-broker/watch_$provider_2.out
-cat ~/.ebloc-broker/watch_$provider_3.out
-'

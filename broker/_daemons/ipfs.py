@@ -53,7 +53,7 @@ def main():
         cfg.ipfs.remove_lock_files()
         _run()
     else:
-        log(f"## [g]IPFS[/g] daemon is already running{ok()}")
+        log(f"## [g]IPFS[/g] daemon is already running {ok()}")
         sys.exit(100)
 
 

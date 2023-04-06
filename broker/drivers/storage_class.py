@@ -222,7 +222,7 @@ class Storage(BaseClass):
                 .strip()
             )
             if output.count("/") == 1:
-                log(f"[m]./run.sh[/m] exists under the parent folder{ok()}", "bold")
+                log(f"[m]./run.sh[/m] exists under the parent folder {ok()}", "bold")
                 return True
             else:
                 log("E: run.sh does not exist under the parent folder")

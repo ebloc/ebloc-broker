@@ -97,14 +97,14 @@ def connect_to_eblocbroker() -> None:
 
                 cfg.w3 = network.web3
             except:
-                from broker.python_scripts import add_bloxberg_into_network_config
+                # from broker.python_scripts import add_bloxberg_into_network_config
 
-                add_bloxberg_into_network_config.main()
+                # add_bloxberg_into_network_config.main()
                 try:
-                    log(
-                        "warning: [green]bloxberg[/green] key is added into the "
-                        "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
-                    )
+                    # log(
+                    #     "warning: [green]bloxberg[/green] key is added into the "
+                    #     "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
+                    # )
                     network.connect(cfg.NETWORK_ID)
                 except KeyError:
                     sys.exit(1)

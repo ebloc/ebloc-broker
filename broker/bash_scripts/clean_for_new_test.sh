@@ -103,3 +103,6 @@ if [[ -d $BASE ]]; then
     cd /var/ebloc-broker && fdfind . | as-tree && cd ~
     cd $CURRENT_DIR
 fi
+
+echo ""
+cat ~/.brownie/network-config.yaml| grep bloxberg

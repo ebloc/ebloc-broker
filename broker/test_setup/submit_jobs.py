@@ -356,7 +356,6 @@ def main():
 
             log(f"#> number_of_submitted_jobs={counter}")
         except Exception as e:
-            print(str(e))
             print_tb(e)
 
 
@@ -365,5 +364,6 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         print_tb(e)
+        log("end")
     except KeyboardInterrupt:
         sys.exit(1)
