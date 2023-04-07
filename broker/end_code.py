@@ -556,7 +556,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.elapsed_time = run_time[self.job_id]
 
         log(f"finalized_elapsed_time={self.elapsed_time}")
-        log("## job_info=", "info", end="")
+        log("job_info=", end="")
         log(pprint.pformat(self.job_info))
         try:
             self.get_cloud_storage_class(0).initialize(self)

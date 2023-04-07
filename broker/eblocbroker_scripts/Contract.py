@@ -14,7 +14,7 @@ from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
 from broker import cfg
-from broker._utils._log import ok
+from broker._utils._log import WHERE, ok
 from broker._utils.tools import exit_after, log, print_tb, without_keys
 from broker._utils.yaml import Yaml
 from broker.config import env
@@ -25,10 +25,11 @@ from broker.utils import ipfs_to_bytes32, terminate
 from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
+# from brownie.network.gas.strategies import GasNowStrategy
 # from brownie.network.gas.strategies import LinearScalingStrategy
 
-GAS_PRICE = 1.13  # was 1
-EXIT_AFTER = 120  # seconds
+GAS_PRICE = 1.14  # was 1 => 1.13
+EXIT_AFTER = 180  # seconds
 
 
 class Base:
@@ -75,7 +76,7 @@ class Contract(Base):
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         # self.gas_limit = "max"  # 300000
         self.ops = {}
-        self.max_retries = 10
+        self.max_retries = 3
         self.required_confs = 1
         self._from = ""
         #: tx cost exceeds current gas limit. Limit: 9990226, got:
@@ -356,7 +357,8 @@ class Contract(Base):
             raise Exception(f"Method {method} is not implemented") from e
 
     def timeout_wrapper(self, method, *args):
-        for _ in range(self.max_retries):
+        idx = 0
+        while idx < self.max_retries:
             self.ops = {
                 "from": self._from,
                 "gas": self.gas,
@@ -385,6 +387,7 @@ class Contract(Base):
 
                 if "Try increasing the gas price" in str(e):
                     self.gas_price *= 1.13
+                    continue
 
                 if "Execution reverted" in str(e) or "Insufficient funds" in str(e):
                     print_tb(e)
@@ -406,6 +409,7 @@ class Contract(Base):
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
                 self.gas_price *= 1.13
+                continue
             except Exception as e:
                 log(f"Exception: {e}")
                 # brownie.exceptions.TransactionError: Tx dropped without known replacement
@@ -413,40 +417,51 @@ class Contract(Base):
                     self.gas_price *= 1.13
                     log("Sleep 15 seconds, will try again...")
                     time.sleep(15)
-                else:
-                    raise e
+                    continue
+
+                raise e
+
+            idx += 1
 
     ################
     # Transactions #
     ################
     def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
+        method_name = "submitJob"
+        idx = 0
+        while idx < self.max_retries:
             self.ops = {
                 "gas": self.gas,
                 "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
                 "allow_revert": True,
                 "required_confs": required_confs,
-                # "value": self.w3.toWei(job_price, "gwei"),  # not required anymore
             }
             try:
-                return self.timeout("submitJob", *args)
+                return self.timeout(method_name, *args)
             except ValueError as e:
-                log(f"E: {e}")
-                if "Insufficient funds" in str(e):
-                    raise e
-
-                if "Execution reverted" in str(e):
+                log(f"E: {WHERE()} {e}")
+                if "Insufficient funds" in str(e) or "Execution reverted" in str(e):
                     raise e
 
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
-            except KeyboardInterrupt as e:
+                    continue
+
+                if "Try increasing the gas price" in str(e):
+                    self.gas_price *= 1.13
+                    continue
+            except KeyboardInterrupt as e:  # acts as Exception
+                if str(e):
+                    log(f"E: {WHERE()} {e}", is_wrap=True)
+
                 if "Awaiting Transaction in the mempool" in str(e):
                     log("warning: Timeout Awaiting Transaction in the mempool")
                     self.gas_price *= 1.13
+                    continue
 
+            idx += 1
         raise Exception("No valid Tx receipt is generated")
 
     def deposit_storage(self, data_owner, code_hash, _from) -> "TransactionReceipt":

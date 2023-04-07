@@ -41,13 +41,6 @@ def main():
     if len(sys.argv) == 2:
         port = int(sys.argv[1])
 
-    # try:
-    #     npm_package = "ganache-cli"
-    #     if not is_npm_installed(npm_package):
-    #         log(f"E: {npm_package} is not installed within npm")
-    #         sys.exit()
-    # except Exception as e:
-    #     print_tb(e)
     if not is_ganache_on(8547):
         run(port)
 

@@ -27,9 +27,9 @@ class Timeout(Exception):
     """Timeout."""
 
 
-class Web3NotConnected(Exception):
-    """Web3 is not connected."""
-
-
 class QuietExit(Exception):
     """Exit quietly without printing the trace."""
+
+
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""

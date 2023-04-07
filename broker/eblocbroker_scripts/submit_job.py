@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import log, print_tb
@@ -88,7 +86,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     if is_use_ipfs:
         if not is_ipfs_on():
-            sys.exit()
+            raise Exception("ipfs daemon is not running in the background")
 
         try:
             ipfs.swarm_connect(provider_info["ipfs_address"])

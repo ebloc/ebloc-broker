@@ -494,7 +494,7 @@ multimapping==4.1
 multipart==0.2.4
     # via
     #   zope-publisher
-mypy==1.1.1
+mypy==1.2.0
     # via
     #   flake8-mypy
 mypy-extensions==1.0.0

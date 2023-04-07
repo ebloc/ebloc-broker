@@ -1,19 +1,19 @@
 config:
-    requester_address: '0x0636278CBD420368b1238ab204b1073df9cC1c5c'
-    provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
-    source_code:
-        cache_type: public
-        path: ~/test_eblocbroker/test_data/base/source_code
-        storage_hours: 0
-        storage_id: ipfs
-    data:
-        data1:
-            cache_type: public
-            path: ~/test_eblocbroker/test_data/base/data/data1
-            storage_hours: 1
-            storage_id: ipfs
-    data_transfer_out: 2
-    jobs:
-        job1:
-            cores: 1
-            run_time: 1
+  requester_address: '0x0636278CBD420368b1238ab204b1073df9cC1c5c'
+  provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+  source_code:
+    cache_type: public
+    path: ~/test_eblocbroker/test_data/base/source_code
+    storage_hours: 0
+    storage_id: ipfs
+  data:
+    data1:
+      cache_type: public
+      path: ~/test_eblocbroker/test_data/base/data/data1
+      storage_hours: 1
+      storage_id: ipfs
+  data_transfer_out: 2
+  jobs:
+    job1:
+      cores: 1
+      run_time: 1

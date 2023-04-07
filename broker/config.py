@@ -72,9 +72,8 @@ class ENV(ENV_BASE):
         self.GDRIVE = self.cfg["gdrive"]
         self.DATADIR = Path(self.cfg["datadir"])
         self.LOG_DIR = Path(self.cfg["log_path"])
-
         try:
-            self.BLOXBERG_HOST = read_network_config(Path.home() / ".brownie" / "network-config.yaml")
+            self.BLOXBERG_HOST = read_network_config(cfg.NETWORK_ID)
         except:
             self.BLOXBERG_HOST = "https://core.bloxberg.org"
 

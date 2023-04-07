@@ -12,8 +12,8 @@ done
 
 killall python 2> /dev/null
 killall python3 2> /dev/null
-echo "## killall all jobs in squeue"
-squeue
+
+timeout 2 squeue && echo "## killall all jobs in squeue"
 if [ $? -eq 0 ]; then
     squeue | tail -n+2 | awk '{print $1}' | ifne xargs scancel 2> /dev/null
 fi

@@ -1,21 +1,21 @@
 config:
-  requester_address: '0x4c2aebf67f8cfce387ad0ee3774bb193c4a62ef6'
-  provider_address: '0x1926b36af775e1312fdebcc46303ecae50d945af'
+  requester_address: '0x378181ce7b07e8dd749c6f42772574441b20e35f'
+  provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
   source_code:
-    storage_id: ipfs_gpg
+    storage_id: ipfs
     cache_type: public
     path: ~/test_eblocbroker/run_cppr
     storage_hours: 0
   data:
     data1:
-      hash: 779745f315060d1bc0cd44b7266fb4da
+      hash: 0d6c3288ef71d89fb93734972d4eb903
     data2:
-      hash: 45281dfec4618e5d20570812dea38760
+      hash: fe801973c5b22ef6861f2ea79dc1eb9c
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/babyface.n6c10
+      path: /home/alper/test_eblocbroker/small/LB07-bunny-sml
       storage_hours: 1
-      storage_id: ipfs_gpg
+      storage_id: ipfs
   data_transfer_out: 5
   jobs:
     job1:

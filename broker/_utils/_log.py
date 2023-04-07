@@ -327,7 +327,7 @@ def log(
         text = base_str.join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
 
     if is_wrap:
-        text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
+        text = "\n".join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
 
     if is_write and IS_WRITE:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:

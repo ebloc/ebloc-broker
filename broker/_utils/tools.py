@@ -112,6 +112,7 @@ def PrintException() -> str:
 
 def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
+    log(f"{WHERE()} ", end="")
     if message:
         if isinstance(message, QuietExit):
             if str(message):

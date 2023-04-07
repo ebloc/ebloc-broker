@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 from os.path import expanduser
 
 from broker import cfg
-from broker._utils.tools import print_tb
 
 
 def add_to_ipfs(results_folder):
@@ -14,8 +12,7 @@ def add_to_ipfs(results_folder):
         result_ipfs_hash = cfg.ipfs.add(results_folder)
         print(result_ipfs_hash)
     except Exception as e:
-        print_tb(e)
-        sys.exit()
+        raise e
 
     if os.path.isdir(results_folder):
         basename = os.path.basename(os.path.normpath(results_folder))

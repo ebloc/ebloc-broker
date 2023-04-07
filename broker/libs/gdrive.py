@@ -4,7 +4,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 from contextlib import suppress
 from pathlib import Path
 
@@ -59,8 +58,8 @@ def submit(_from, job):
                     job.keys[tar_hash] = folder_key
 
             if job.tmp_dir == "":
-                print_tb("job.tmp_dir is empty")
-                sys.exit()
+                # print_tb("job.tmp_dir is empty")
+                raise Exception("'job.tmp_dir' is empty")
 
             _dump_dict_to_file(data_files_json_path, job.keys)
             data_json = read_json(data_files_json_path)
@@ -103,7 +102,7 @@ def submit(_from, job):
             break
 
         if _id:
-            log("## updating meta_data ", end="")
+            log("## updating meta_data ")
             update_meta_data_gdrive(_id, data_files_json_path)
             log(ok())
 
@@ -166,7 +165,8 @@ def delete_all(_type="all"):
                     output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
                     print(output)
                 except Exception as e:
-                    log(f"E {e}")
+                    if str(e) != "":
+                        log(f"E: {e}")
             # else:
             #     with suppress(Exception):
             #         run(["gdrive", "delete", line.split()[0]])
@@ -265,7 +265,7 @@ def get_data_key_ids(results_folder_prev) -> bool:
 def update_meta_data_gdrive(key, path):
     output = get_file_id(key)
     meta_data_key = fetch_grive_output(output, "meta_data.json")
-    log(f"\n\t`gdrive update {meta_data_key} {path}`", h=False, end="")
+    log(f"$ gdrive update {meta_data_key} {path}", is_code=True, h=False, end="")
     run(["gdrive", "update", meta_data_key, path])
 
 

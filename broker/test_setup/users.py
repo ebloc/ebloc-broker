@@ -84,13 +84,13 @@ def main():
     owner = Ebb.get_owner()
     log(f"ower_balance ({owner.lower()})=", "bold", end="")
     balances([owner], is_verbose=True)
-    # balances(providers)
-    # balances(requesters)
+    balances(providers)
+    balances(requesters)
     #
     # collect_all_into_base()
     # transfer_eth(["0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"], "0.5 ether")
     # transfer_eth(providers, "0.4 ether")
-    transfer_eth(requesters, "0.11 ether")
+    # transfer_eth(requesters, "0.11 ether")
     # transfer_eth(extra_users, "0.1 ether")
 
 

@@ -15,7 +15,7 @@ clean_gdrive () {
 
 # update block.continue.txt with the current block number
 python3 -uB $HOME/ebloc-broker/broker/eblocbroker_scripts/get_block_number.py True
-squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
+# timeout 2 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 
 # remove created users users
 for user in $(members eblocbroker | tr " " "\n"); do
@@ -78,7 +78,6 @@ rm -rf docs/_build/
 rm -f /tmp/run/driver_popen.pid >/dev/null 2>&1
 rm -f ~/.ebloc-broker/.oc_client.pckl
 rm -f /var/ebloc-broker/cache/*.tar.gz
-
 
 # unpin and remove all IPFS content from my machine
 # ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm

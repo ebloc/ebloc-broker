@@ -54,8 +54,7 @@ def pre_check(job: Job, requester):
     job.check_account_status(requester)
     is_bin_installed("ipfs")
     if not is_dpkg_installed("pigz"):
-        log("E: Install [g]pigz[/g].\nsudo apt install -y pigz")
-        sys.exit()
+        raise Exception("E: Install [g]pigz[/g].\nsudo apt install -y pigz")
 
     if not os.path.isfile(env.GPG_PASS_FILE):
         log(f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption", is_wrap=True)
@@ -111,13 +110,12 @@ def _submit(provider_addr, job, requester, targets, required_confs):
 
 
 def submit_ipfs(job: Job, is_pass=False, required_confs=1):
-    log(f"==> attemptting to submit job ({job.source_code_path})")
+    log(f"==> attemptting to submit job ({job.source_code_path}) using [green]ipfs[/green]")
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     try:
         pre_check(job, requester)
     except Exception as e:
-        print_tb(e)
-        sys.exit()
+        raise e
 
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
@@ -127,8 +125,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
     elif main_storage_id == StorageID.IPFS_GPG:
         log("==> submitting source code through [blue]IPFS_GPG[/blue]")
     else:
-        log("E: Please provide IPFS or IPFS_GPG storage type for the source code")
-        sys.exit(1)
+        raise Exception("Please provide IPFS or IPFS_GPG storage type for the source code")
 
     # provider_info = Ebb.get_provider_info(job.provider_addr)
     targets = []
@@ -155,8 +152,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
         provider_info = Ebb.get_provider_info(provider_addr)
         provider_gpg_fingerprint = provider_info["gpg_fingerprint"]
         if not provider_gpg_fingerprint:
-            log("E: Provider did not register any GPG fingerprint")
-            sys.exit(1)
+            raise Exception("E: Provider did not register any GPG fingerprint")
 
         log(f"==> provider_gpg_fingerprint={provider_gpg_fingerprint}")
         for idx, folder in enumerate(job.folders_to_share):
@@ -171,8 +167,7 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                         log(f"==> gpg_file={target}")
                         targets.append(target)  #: created gpg file will be removed since its already in ipfs
                     except Exception as e:
-                        print_tb(e)
-                        sys.exit(1)
+                        raise e
 
                 job = _ipfs_add(job, target, idx)
             else:
@@ -203,6 +198,6 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        sys.exit(1)
+        pass
     except Exception as e:
         print_tb(e)

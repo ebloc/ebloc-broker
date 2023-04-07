@@ -14,12 +14,14 @@ from functools import partial
 from typing import List
 
 import zc.lockfile
+from halo import Halo
 from ipdb import launch_ipdb_on_exception
 
 from broker import cfg, config
+from broker._import import check_connection
 from broker._utils import _log
-from broker._utils._log import console_ruler, log, ok
-from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
+from broker._utils._log import console_ruler, log
+from broker._utils.tools import _date, is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
 from broker.drivers.gdrive import GdriveClass
@@ -31,6 +33,7 @@ from broker.imports import nc
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
+from broker.python_scripts.add_bloxberg_into_network_config import read_network_config
 from broker.utils import (
     StorageID,
     check_ubuntu_packages,
@@ -259,7 +262,9 @@ class Driver:
             log("==> [yellow]job_info:", "bold")
             log(self.job_info)
         except Exception as e:
-            print_tb(e)
+            if "Max retries exceeded with url" not in str(e):
+                print_tb(e)
+
             return
 
         for job in range(1, len(self.job_info["core"])):
@@ -317,9 +322,19 @@ class Driver:
             except JobException as e:
                 log(str(e))
             except Exception as e:
-                print_tb(e)
+                if "Max retries exceeded with url" not in str(e):
+                    print_tb(e)
+
                 log(str(e))
                 # breakpoint()  # DEBUG
+
+
+def check_bn_progress(current_bn, bn_read):
+    while current_bn < int(bn_read):
+        current_bn = Ebb.get_block_number()
+        time.sleep(4)
+
+    return current_bn
 
 
 def run_driver(given_bn):
@@ -430,15 +445,10 @@ def run_driver(given_bn):
             log(f" * {get_date()} waiting new job to come since bn={bn_read}")
             log(f"==> current_block={current_bn} | sync_from={bn_read} ", end="")
 
-        flag = True
-        while current_bn < int(bn_read):
-            current_bn = Ebb.get_block_number()
-            if flag:
-                log()
-                log(f"## Waiting block number to be updated, it remains constant at {current_bn}")
-
-            flag = False
-            time.sleep(2)
+        if current_bn < int(bn_read):
+            msg = f"warning: waiting block number to be updated, it remains constant at {current_bn} "
+            with Halo(text=msg, text_color="yellow", spinner="line", placement="right"):
+                current_bn = check_bn_progress(current_bn, bn_read)
 
         bn_read = str(bn_read)  # reading events' block number has been updated
         if not first_iteration_flag:
@@ -458,9 +468,8 @@ def run_driver(given_bn):
                 bn_read = env.config["block_continue"] = current_bn
         except Exception as e:
             if "Filter not found" in str(e) or "Read timed out" in str(e):
-                # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
                 try:
-                    log()
+                    # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
                     nc(env.BLOXBERG_HOST, 8545)
                 except Exception:
                     log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
@@ -471,32 +480,6 @@ def run_driver(given_bn):
             log()
             log(f"E: {e}")
             raise e
-
-
-def reconnect():
-    log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
-    if cfg.NETWORK_ID == "bloxberg":
-        cfg.NETWORK_ID = "bloxberg_core"
-    elif cfg.NETWORK_ID == "bloxberg_core":
-        with suppress(Exception):
-            nc("alpy-bloxberg.duckdns.org", 8545)
-            cfg.NETWORK_ID = "bloxberg"
-
-    log(f"Trying at {cfg.NETWORK_ID} ...")
-    network.connect(cfg.NETWORK_ID)
-
-
-def check_connection():
-    if not network.is_connected():
-        try:
-            reconnect()
-        except Exception as e:
-            log(f"E: {e}")
-
-        if not network.is_connected():
-            time.sleep(15)
-    else:
-        log(f"bloxberg connection {ok()}", is_write=False)
 
 
 def _run_driver(given_bn, lock):
@@ -517,7 +500,7 @@ def _run_driver(given_bn, lock):
                 print_tb(e)
 
             check_connection()
-            console_ruler(character="*")
+            log(f"#> -=-=-=-=-=-=-=-=-=- [g]RESTARTING[/g] {_date()} -=-=-=-=-=-=-=-=-=- [blue]<#", is_write=False)
             continue
         finally:
             with suppress(Exception):
@@ -548,7 +531,9 @@ def main(args):
 
         log(f"rootdir: {os.getcwd()}", h=False)
         log(f"logfile: {_log.DRIVER_LOG}", h=False)
-        log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", h=False)
+        bloxberg_host = read_network_config(cfg.NETWORK_ID)
+        log(f"Attached to host RPC client listening at '{bloxberg_host}'", h=False)
+
         print()
         is_driver_on(process_count=1, is_print=False)
         try:
