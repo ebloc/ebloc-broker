@@ -532,19 +532,20 @@ class JobPrices:
             log(f"==> price_storage={self.to_usd(self.price_storage)}")
             log(f"==> price_cache={self.to_usd(self.price_cache)}")
             log(f"[g]*[/g] job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
-            _c = "[g]|[/g]       [yellow]*[/yellow]"
+            _c1 = "[g]|[/g]       [yellow]*[/yellow]"
+            _c2 = "[g]*[/g]       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
                     log(f"[g]|[/g]   * {k}={self.to_usd(v)}")
                     if k == "storage":
-                        log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
+                        log(f"{_c1} in={self.to_usd(self.cost['data_transfer_in'])}")
                         if self.registered_data_cost > 0:
-                            log(f"{_c} registered_data={self.to_usd(self.registered_data_cost)}")
+                            log(f"{_c1} registered_data={self.to_usd(self.registered_data_cost)}")
                             log(f"[g]|[/g]         {self.registered_data_cost_list_usd}")
 
                 if k == "data_transfer":
-                    log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
-                    log(f"{_c} out={self.to_usd(self.cost['data_transfer_out'])}")
+                    log(f"{_c1} in={self.to_usd(self.cost['data_transfer_in'])}")
+                    log(f"{_c2} out={self.to_usd(self.cost['data_transfer_out'])}")
         else:
             if self.registered_data_cost_list:
                 log(self.registered_data_cost_list)

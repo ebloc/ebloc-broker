@@ -100,12 +100,13 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 self.job_info.update({"run_time": logged_job.args["runTime"]})
                 self.job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 self.job_info.update({"cacheType": logged_job.args["cacheType"]})
+                self.job_info.update({"submitJob_received_job_price": logged_job.args["received"]})  ##
                 self.job_info.update({"submitJob_tx_hash": logged_job["transactionHash"].hex()})
                 self.job_info.update({"submitJob_block_hash": logged_job["blockHash"].hex()})
                 tx_by_block = Ebb.get_transaction_by_block(
                     self.job_info["submitJob_block_hash"], logged_job["transactionIndex"]
                 )
-                self.job_info.update({"submitJob_received_job_price": int(tx_by_block["value"] / 10**9)})
+                # self.job_info.update({"submitJob_received_job_price": int(tx_by_block["value"] / 10**9)})
                 tx_receipt = Ebb.get_transaction_receipt(self.job_info["submitJob_tx_hash"])
                 tx_by_block = Ebb.get_transaction_by_block(
                     tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
@@ -197,7 +198,7 @@ def get_job_info(
             "cacheType": None,
             "stateCode": job[0],
             "start_timestamp": job[1],
-            "received": received,
+            "submitJob_received_job_price": 0,
             "data_transfer_in": data_transfer_in,
             "data_transfer_out": data_transfer_out,
             "commitment_block_duration": job_prices[1],
@@ -219,7 +220,7 @@ def get_job_info(
             "storage_duration": None,
             "submitJob_block_hash": None,
             "submitJob_tx_hash": None,
-            "submitJob_received_job_price": 0,
+            # "submitJob_received_job_price": 0,
             "submitJob_gas_used": 0,
             "processPayment_block_hash": None,
             "processPayment_tx_hash": None,

@@ -2,6 +2,7 @@
 
 """Job watcher for the end of test."""
 
+from broker.eblocbroker_scripts.utils import Cent
 import os
 import sys
 import time
@@ -16,14 +17,19 @@ from broker._watch.test_info import data_hashes
 from broker.errors import QuietExit
 from broker.lib import state
 
+cfg.NETWORK_ID = "bloxberg_core"
 Ebb = cfg.Ebb
 columns_size = 30
 is_while = True  # to fetch on-going results
 is_provider = True
 
-cfg.NETWORK_ID = "bloxberg_core"
-is_csv = False
+#: fetch results into google-sheets
+is_csv = True
 analyze_long_test = False
+
+if is_csv:
+    is_while = False
+    analyze_long_test = True
 
 
 def get_eth_address_from_cfg():
@@ -74,16 +80,16 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     j["elapsed_time_(min)"] = job["actual_elapsed_time"]
     j["used_registed_data"] = "None"
     #
-    j["price_cache"] = job["price_cache"]
-    j["price_core_min"] = job["price_core_min"]
-    j["price_data_transfer"] = job["price_data_transfer"]
-    j["price_storage"] = job["price_storage"]
+    j["price_core_min_usd"] = Cent(job["price_core_min"])._to()
+    j["price_data_transfer_cent"] = Cent(job["price_data_transfer"])._to("cent")
+    j["price_storage_cent"] = Cent(job["price_storage"])._to("cent")
+    j["price_cache_cent"] = Cent(job["price_cache"])._to("cent")
     j["expected_run_time_(min)"] = job["run_time"][0]
 
-    j["total_payment"] = job["submitJob_received_job_price"]
+    j["total_payment_usd"] = Cent(job["submitJob_received_job_price"])._to()
 
-    j["refunded_cent_to_requester"] = job["refunded_cent"]
-    j["received_cent_to_provider"] = job["received_cent"]
+    j["refunded_usd_to_requester"] = Cent(job["refunded_cent"])._to()
+    j["received_usd_to_provider"] = Cent(job["received_cent"])._to()
     temp_list = []
     if len(job["code_hashes"]) > 1:
         for itm in sorted(job["code_hashes"]):
@@ -115,18 +121,20 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     if title_flag:
         title_flag = False
         for idx, (k, v) in enumerate(j.items()):
-            log(f"{k}", end="")
+            log(f"{k}", h=False, end="")
             if idx == len(j) - 1:
                 log()
             else:
                 log(", ", end="")
 
     for idx, (k, v) in enumerate(j.items()):
-        log(f"{v}", end="")
+        log(f"{v}", h=False, end="")
         if idx == len(j) - 1:
             log()
         else:
             log(", ", end="")
+
+    breakpoint()  # DEBUG
 
 
 def _watch(eth_address, from_block, is_provider):
@@ -218,11 +226,13 @@ def _watch(eth_address, from_block, is_provider):
     if is_while:
         _console_clear()
 
-    open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
+    if not is_csv:
+        open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
+
     log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
     if analyze_long_test:
-        log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}", "b")
-        log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}", "b")
+        log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}")
+        log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}")
 
     # get_providers_info()
     log(job_full, is_output=False)
