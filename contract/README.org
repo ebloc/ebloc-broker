@@ -1,15 +1,4 @@
-* How to do some upgrades
-
-** MAC solc upgrade
-
-#+begin_src bash
-brew update
-brew upgrade
-brew tap ethereum/ethereum
-brew install solidity
-#+end_src
-
-* Brownie
+* eth-brownie
 
 #+begin_src bash
 source $HOME/venv/bin/activate
@@ -19,7 +8,6 @@ brownie console --network eblocpoa
 #+end_src
 
 ** Get API
-
 Paste following to get abi into console (~brownie console~):
 
 ~cd ~/ebloc-broker/contract~
@@ -31,7 +19,6 @@ with open('../broker/eblocbroker_scripts/abi.json','w') as fp:
 #+end_src
 
 ** compile all
-
 #+begin_src bash
 source $HOME/venv/bin/activate
 rm -rf build/
@@ -39,7 +26,7 @@ brownie compile --all
 #+end_src
 * Accounts
 
-- Path: ~$HOME/.brownie/accounts~
+- Path: ~~/.brownie/accounts~
 
 #+begin_src bash
 $ brownie console --network bloxberg
@@ -50,7 +37,20 @@ $ brownie console --network bloxberg
 #+end_src
 
 * Extract private key
-
 #+begin_src bash
 brownie accounts import alper ~/.eblocpoa/keystore/UTC--2020-03-18T13-02-58.306094822Z--d118b6ef83ccf11b34331f1e7285542ddf70bc49
 #+end_src
+
+* solidity notes
+
+** <type>[] memory <name> acts as function pointer
+#+begin_src solidity
+function function(<type>[] memory dataTransferIn) internal { // does not have to be internal
+    // makes change on the location it called from; acts like a function poinrter
+    dataTransferIn[0] = 0;
+}
+#+end_src
+
+* bloxberg
+** bootnode
+It takes around 10h to sync complete bloxberg data into bootnode.

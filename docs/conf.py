@@ -97,6 +97,7 @@ exclude_patterns = ["_build"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 
+
 # custom solidity lexer
 def setup(sphinx):
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))

@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# install: npm install -g ethlint --force
-# npm install -g --save-dev prettier prettier-plugin-solidity
 # https://github.com/duaraghav8/solium-plugin-security
+# install:
+# npm install -g ethlint --force
+# npm install -g --save-dev prettier prettier-plugin-solidity
 
-# MAC
+# macOS
 # $HOME/node_modules/.bin/prettier --write contracts/**/*.sol --config .prettierrce
 
 # Linux

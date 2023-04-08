@@ -3,6 +3,7 @@
 import os.path
 import random
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from random import randint
@@ -11,6 +12,7 @@ from pymongo import MongoClient
 from web3.logs import DISCARD
 
 from broker import cfg
+from broker._import import check_connection
 from broker._utils import _log
 from broker._utils._log import console_ruler
 from broker._utils.tools import _date, _timestamp, countdown, is_process_on, log, run
@@ -24,33 +26,42 @@ from broker.utils import print_tb
 
 Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
-is_mini_test = True
+cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
+cfg.TX_LOG_VERBOSE = False
+is_mini_test = False
 
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
+PROVIDER_MAIL = "alper.alimoglu.research2@gmail.com"
 
 benchmarks = ["nas", "cppr"]
-storage_ids = ["eudat", "gdrive", "ipfs"]
+storage_ids = ["ipfs", "gdrive", "b2drop"]
 ipfs_types = ["ipfs", "ipfs_gpg"]
+
+test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
+small_datasets_dir = Path.home() / "test_eblocbroker" / "small"
+nas_yaml_fn = test_dir / "job_nas.yaml"
+cppr_yam_fn = test_dir / "job_cppr.yaml"
+
+if is_mini_test:
+    benchmarks = ["cppr"]
+    storage_ids = ["b2drop", "gdrive", "ipfs"]
+    ipfs_types = ["ipfs", "ipfs_gpg"]
+    providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]  # noqa
+
+cfg.TEST_PROVIDERS = providers
+# cfg.NETWORK_ID = "bloxberg_core"
+_ruler = "======================="
+FIRST_CYCLE = True
 
 # for provider_addr in providers:
 #     mini_tests_submit(storage_ids, provider_addr)
 
-# if is_mini_test:
-#     benchmarks = ["cppr"]
-#     storage_ids = ["ipfs"]
-#     ipfs_types = ["ipfs"]
-#     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]
-
-test_dir = Path.home() / "ebloc-broker" / "broker" / "test_setup"
-nas_yaml_fn = test_dir / "job_nas.yaml"
-cppr_yam_fn = test_dir / "job_cppr.yaml"
-
 
 def check_gdrive_user():
     try:
-        gdrive.check_gdrive_about("alper.alimoglu.research2@gmail.com")
+        gdrive.check_gdrive_about(PROVIDER_MAIL)
     except Exception as e:
         print_tb(e)
         sys.exit(1)
@@ -87,21 +98,19 @@ def create_cppr_job_script(idx):
         "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
         "0d6c3288ef71d89fb93734972d4eb903",  # A
         "4613abc322e8f2fdeae9a5dd10f17540",  # A
+        "050e6cc8dd7e889bf7874689f1e1ead6",  # A
     ]
     registered_data_hashes_medium[1] = [
-        "050e6cc8dd7e889bf7874689f1e1ead6",  # B
         "9d5d892a63b5758090258300a59eb389",  # B
         "779745f315060d1bc0cd44b7266fb4da",  # B
+        "dd0fbccccf7a198681ab838c67b68fbf",  # B
+        "45281dfec4618e5d20570812dea38760",  # B
     ]
     registered_data_hashes_medium[2] = [
-        "dd0fbccccf7a198681ab838c67b68fbf",  # C
-        "45281dfec4618e5d20570812dea38760",  # C
         "bfc83d9f6d5c3d68ca09499190851e86",  # C
-    ]
-    registered_data_hashes_medium[3] = [
-        "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
-        "1bfca57fe54bc46ba948023f754521d6",  # D
-        "f71df9d36cd519d80a3302114779741d",  # D
+        "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # C
+        "1bfca57fe54bc46ba948023f754521d6",  # C
+        "f71df9d36cd519d80a3302114779741d",  # C
     ]
     _list = registered_data_hashes_medium[idx]
     hash_medium_data_0 = random.choice(_list)
@@ -212,35 +221,44 @@ def mini_tests_submit(storage_ids, provider_addr):
                     log(f"E: Tx({tx_hash}) is reverted")
 
 
-def run_job(counter) -> None:
+def run_job(counter, cycleid) -> None:
     """Submit single job.
 
     :param counter: counter index to keep track of submitted job number
     """
+    global FIRST_CYCLE  # type: ignore
     for idx, provider_addr in enumerate(providers):
         # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
         storage_id = (idx + counter) % len(storage_ids)
         selected_benchmark = random.choice(benchmarks)
         storage = storage_ids[storage_id]
         if storage == "ipfs":
-            storage = random.choice(ipfs_types)
+            if FIRST_CYCLE:
+                storage = "ipfs"
+                selected_benchmark = "cppr"
+            else:
+                storage = random.choice(ipfs_types)
+
+        if not FIRST_CYCLE:
+            print("                                                                                                   ")
 
         if selected_benchmark == "nas":
-            log(f" * Submitting job from [cyan]NAS Benchmark[/cyan] to [green]{provider_addr}", "bold blue")
+            log(f"{_ruler} Submitting the job from [c]NAS Benchmark[/c] to [g]{provider_addr}[/g] cycle={cycleid}\t")
+            check_connection()
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f" * Submitting [cyan]job with cppr datasets[/cyan] to provider=[green]{provider_addr}", "bold blue")
+            log(f"{_ruler} Submitting [c]job[/c] with [c]cppr datasets[/c] data_set_idx={idx} cycle={cycleid}\t")
+            check_connection()
+            # log(f" * Attempting to submit [cyan]job with cppr datasets[/cyan] to_provider=[g]{provider_addr}")
             yaml_cfg = Yaml(cppr_yam_fn)
-            log(f"data_set_idx={idx}")
             hash_medium_data_0, hash_medium_data = create_cppr_job_script(idx)
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_medium_data_0
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
-            small_datasets = Path.home() / "test_eblocbroker" / "dataset_zip" / "small"
-            dirs = [d for d in os.listdir(small_datasets) if os.path.isdir(os.path.join(small_datasets, d))]
+            dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
             dir_name = random.choice(dirs)
-            yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets / dir_name)
+            yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets_dir / dir_name)
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
         yaml_cfg["config"]["provider_address"] = provider_addr
@@ -248,11 +266,16 @@ def run_job(counter) -> None:
             submit_base = SubmitBase(yaml_cfg.path)
             submission_date = _date()
             submission_timestamp = _timestamp()
-            requester_address = random.choice(requesters).lower()
-            yaml_cfg["config"]["requester_address"] = requester_address
-            log(f"requester={requester_address}", "bold")
+            if FIRST_CYCLE:
+                requester = requesters[0].lower()
+                FIRST_CYCLE = False
+            else:
+                requester = random.choice(requesters).lower()
+
+            yaml_cfg["config"]["requester_address"] = requester
+            log(f"requester={requester}")
             tx_hash = submit_base.submit(is_pass=True)
-            log(f"tx_hash={tx_hash}", "bold")
+            log(f"tx_hash={tx_hash}")
             tx_receipt = get_tx_status(tx_hash, is_verbose=True)
             if tx_receipt["status"] == 1:
                 processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
@@ -268,7 +291,7 @@ def run_job(counter) -> None:
                 ebb_mongo.add_item(tx_hash, job_result)
                 log(job_result)
 
-            countdown(seconds=5, is_verbose=True)
+            countdown(seconds=15, is_verbose=True)
         except Exception as e:
             print_tb(e)
 
@@ -277,25 +300,56 @@ def main():
     if "gdrive" in storage_ids:
         check_gdrive_user()
 
-    console_ruler(f"NEW_TEST {Ebb.get_block_number()}")
-    log(f" * {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    if not is_process_on("mongod"):
+    console_ruler("test session starts", color="white")
+    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- block_number={Ebb.get_block_number()}", h=False)
+    if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
 
-    counter = 0
-    for _ in range(80):
-        for _ in range(2):  # submitted as batch is faster
-            run_job(counter)
-            counter += 1
+    for address in providers:
+        Ebb.is_provider_valid(address)
 
-        sleep_duration = randint(250, 450)
-        countdown(sleep_duration)
+    prices_dict = {}
+    for address in providers:
+        *_, prices = Ebb._get_provider_info(address)
+        # prices_dict[address] = dict(prices[2:6])
+        prices_dict[address] = [
+            prices[2],
+            prices[3],
+            prices[4],
+            prices[5],
+        ]
 
-    log(f"#> number_of_submitted_jobs={counter}")
+    log("prices_______coreMin_dataTransfer_storage_cache=", "yellow", end="")
+    log(prices_dict)
+
+    # for item in prices_dict:
+    #     breakpoint()  # DEBUG
+
+    if is_mini_test:
+        run_job(0, cycleid=0)
+    else:
+        try:
+            counter = 0
+            for idx in range(80):
+                for _ in range(2):  # submitted as batch is faster
+                    run_job(counter, idx)
+                    counter += 1
+                    time.sleep(2)
+
+                sleep_duration = randint(250, 450)
+                countdown(sleep_duration)
+
+            log(f"#> number_of_submitted_jobs={counter}")
+        except Exception as e:
+            print_tb(e)
+            check_connection()
 
 
 if __name__ == "__main__":
     try:
         main()
+    except Exception as e:
+        print_tb(e)
+        log("end")
     except KeyboardInterrupt:
         sys.exit(1)

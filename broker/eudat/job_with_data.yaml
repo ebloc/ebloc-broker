@@ -2,7 +2,7 @@ config:
   requester_address: "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
   provider_address: "0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea"
   source_code:
-    storage_id: eudat
+    storage_id: b2drop
     cache_type: public
     path: ~/test_eblocbroker/source_code
     storage_hours: 1

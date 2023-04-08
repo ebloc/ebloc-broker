@@ -4,6 +4,7 @@ import decimal
 import errno
 import json
 import linecache
+import math
 import os
 import re
 import shutil
@@ -43,10 +44,10 @@ def merge_two_dicts(x, y):
 
 def timenow() -> int:
     """Return UTC timestamp."""
-    d = datetime.utcnow()
-    log(f"UTC_timestamp={d}", "bold")
+    dt = datetime.utcnow()
+    log(f"UTC_now={dt.strftime('%Y-%m-%d %H:%M:%S')}")
     epoch = datetime(1970, 1, 1)
-    return int((d - epoch).total_seconds())
+    return int((dt - epoch).total_seconds())
 
 
 def unix_time_millis(dt) -> int:
@@ -59,16 +60,26 @@ def _timestamp(zone="Europe/Istanbul") -> int:
     return int(time.mktime(datetime.now(timezone(zone)).timetuple()))
 
 
-def _date(zone="Europe/Istanbul", _type=""):  # _date("UTC")
-    _zone = timezone(zone)
-    if _type == "year":
-        return datetime.now(_zone).strftime("%Y-%m-%d")
-    elif _type == "month":
-        return datetime.now(_zone).strftime("%m-%d")
-    elif _type == "hour":
-        return datetime.now(_zone).strftime("%H:%M:%S")
+def _date(zone="Europe/Istanbul", _type="", _format=""):
+    """Return latest time.
 
-    return datetime.now(_zone).strftime("%Y-%m-%d %H:%M:%S")
+    Zone could be: "UTC"
+    """
+    if _format:
+        return datetime.now(timezone(zone)).strftime(_format)
+    elif _type:
+        if _type == "year":
+            return datetime.now(timezone(zone)).strftime("%Y-%m-%d")
+        elif _type == "month-day":
+            return datetime.now(timezone(zone)).strftime("%m-%d")
+        elif _type == "hour":
+            return datetime.now(timezone(zone)).strftime("%H:%M:%S")
+        elif _type == "tmux":
+            return datetime.now(timezone(zone)).strftime("%a %m/%d %H:%M:%S %p")
+        elif _type == "compact":
+            return datetime.now(timezone(zone)).strftime("%m/%d %H:%M:%S")
+
+    return datetime.now(timezone(zone)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_dt_time(zone="Europe/Istanbul"):
@@ -78,7 +89,7 @@ def get_dt_time(zone="Europe/Istanbul"):
 
 def timestamp_to_local(posix_time: int, zone="Europe/Istanbul"):
     """Return date in %Y-%m-%d %H:%M:%S format."""
-    ts = posix_time / 1000.0
+    ts = posix_time / 1000
     tz = timezone(zone)
     return datetime.fromtimestamp(ts, tz).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -91,7 +102,7 @@ def utc_to_local(utc_dt, zone="Europe/Istanbul"):
 
 
 def PrintException() -> str:
-    exc_type, exc_obj, tb = sys.exc_info()  # noqa
+    _, _, tb = sys.exc_info()  # returns: exc_type, exc_obj, tb
     f = tb.tb_frame
     lineno = tb.tb_lineno
     fn = f.f_code.co_filename
@@ -102,10 +113,13 @@ def PrintException() -> str:
 
 def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
+    if type(message) != QuietExit:
+        log(f"{WHERE()} ", end="")
+
     if message:
         if isinstance(message, QuietExit):
             if str(message):
-                log(message, "bold")
+                log(message)
 
             return
 
@@ -119,7 +133,7 @@ def print_tb(message=None, is_print_exc=True) -> None:
         tb_text = tb_text.split(sep_terminate, 1)[0] + "raise [m]Terminate[/m]()"
 
     if is_print_exc and tb_text != "NoneType: None\n":
-        log(tb_text.rstrip(), "bold", back=1)
+        log(tb_text.rstrip(), back=1)
 
     if message and "An exception of type Exception occurred" not in message:
         log(message, back=1)
@@ -182,6 +196,10 @@ def decimal_count(value, is_drop_trailing_zeros=True) -> int:
     return abs(d.as_tuple().exponent)
 
 
+def truncate_decimal(f, n):
+    return math.floor(f * 10**n) / 10**n
+
+
 def round_float(v, ndigits=2) -> float:
     """Limit floats to two decimal points.
 
@@ -200,8 +218,7 @@ def _sys_exit(msg="") -> None:
         else:
             log(msg)
 
-        log("#> exiting")
-
+    log(f"#> Exiting {_date()}[w]...")
     sys.exit()
 
 
@@ -211,7 +228,7 @@ def _exit(msg="") -> None:
     os._exit() in Python is used to exit a process with a specified state
     without calling cleanup handlers, flushing stdio buffers, etc.
 
-    Note.  This method is typically used in a child process after the os.fork()
+    Note that this method is typically used in a child process after the os.fork()
     system call.  The standard way to exit a process is — this is the
     sys.exit(n) method.
     """
@@ -252,11 +269,18 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
 
 def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True, is_print=True):
     """Calculate the changed percent."""
+    if change == 0:
+        log("warning: percent_change() <change> is given as 0")
+        return 0
+
+    if initial == 0:
+        raise Exception("warning: <initial> is given as 0")
+
     try:
         initial = float(initial)
         change = format(float(change), ".8f")
-    except ValueError:
-        return None
+    except ValueError as e:
+        raise e
 
     percent = _percent_change(initial=initial, change=change, decimal=_decimal)
     if not is_print:
@@ -269,9 +293,8 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
     elif percent > 0:
         if not color:
             color = "green"
-    else:
-        if not color:
-            color = "red"
+    elif not color:
+        color = "red"
 
     if abs(float(change)) < 0.1:
         change = format(float(change), ".8f")
@@ -290,11 +313,10 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
             log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
         else:
             log(f"{abs(change)}({format(float(abs(percent)), '.2f')}%) ", color, end=end)
+    elif is_sign:
+        log(f"({format(float(percent), '.2f')}%) ", color, end=end)
     else:
-        if is_sign:
-            log(f"({format(float(percent), '.2f')}%) ", color, end=end)
-        else:
-            log(f"({format(float(abs(percent)), '.2f')}%) ", color, end=end)
+        log(f"({format(float(abs(percent)), '.2f')}%) ", color, end=end)
 
     return percent
 
@@ -304,9 +326,9 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         cmd = " ".join(cmd)
 
     if exc:
-        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "bold red")
-        log(f"[blue]$ [/blue][white]{cmd}", "bold")
-        log(exc.rstrip(), "bold red")
+        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "red")
+        log(f"[blue]$ [/blue][white]{cmd}", is_code=True)
+        log(exc.rstrip(), "red")
     else:
         if returncode:
             return_code_msg = f"returned non-zero exit status {returncode}"
@@ -314,35 +336,35 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         else:
             log("E: Failed command:")
 
-        log(cmd, "bold yellow", is_code=True)
+        log(cmd, "yellow", h=False, is_code=True)
 
 
 def pre_cmd_set(cmd):
-    if not isinstance(cmd, str):
+    if isinstance(cmd, str):
+        return [cmd]
+    else:
         if isinstance(cmd, PosixPath):
             return str(cmd)
         else:
             return list(map(str, cmd))  # all items should be string
-    else:
-        return [cmd]
 
 
 def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
     cmd = pre_cmd_set(cmd)
     try:
         if env is None:
-            if not suppress_stderr:
-                return check_output(cmd).decode("utf-8").strip()
-            else:
+            if suppress_stderr:
                 return check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
+            else:
+                return check_output(cmd).decode("utf-8").strip()
         else:
             return check_output(cmd, env=env).decode("utf-8").strip()
     except CalledProcessError as e:
         if not is_quiet:
             print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
+            raise Exception from None  # prevents tree of trace
 
-        # prevent tree of trace
-        raise Exception from None
+        raise Exception from e
     except Exception as e:
         raise e
 
@@ -357,7 +379,7 @@ def constantly_print_popen(cmd):
     with Popen(cmd, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             ret += line.strip()
-            print(line, end="")  # process line here
+            print(line, end="\r")  # process line here
 
         return ret
 
@@ -395,18 +417,18 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
             pid = out.strip().split()[1]
             if pid in pids:
                 if is_print:
-                    log(f"==> [green]{name}[/green] is already running on the background, its pid={pid}")
+                    log(f"==> [g]{name}[/g] is already running on the background, its pid={pid}")
 
                 return True
         else:
             if is_print:
-                log(f"==> [green]{name}[/green] is already running on the background")
+                log(f"==> [g]{name}[/g] is already running on the background")
 
             return True
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"[bold green]{name}[/bold green] is not running on the background  {WHERE(1)}")
+        print_tb(f"[bg]{name}[/bg] is not running on the background  {WHERE(1)}")
 
     return False
 
@@ -451,8 +473,7 @@ def without_keys(d, keys):
 
 
 def quit_function(fn_name) -> None:
-    print("\nwarning: ", end="")
-    print("{0} took too long".format(fn_name), file=sys.stderr)
+    print("warning: {0} function took too long".format(fn_name), file=sys.stderr)
     # breakpoint()  # DEBUG
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
@@ -534,6 +555,18 @@ def get_ip():
     return data["ip"]
 
 
+def countdown(seconds: int, is_verbose=False) -> None:
+    if not is_verbose:
+        log(f"## sleep_time={seconds} seconds\t                                              ")
+
+    while seconds:
+        mins, secs = divmod(seconds, 60)
+        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
+        print(f" * {_date()} | {timer}", end="\r")
+        time.sleep(1)
+        seconds -= 1
+
+
 def squeue() -> None:
     try:
         squeue_output = run(["squeue"])
@@ -547,8 +580,8 @@ def squeue() -> None:
     # Get real info under the header after the first line
     if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
         # checks if the squeue output's line number is gretaer than 1
-        log("view information about jobs located in the Slurm scheduling queue:", "bold yellow")
-        log(f"{squeue_output}  {ok()}", "bold")
+        # log("view information about jobs located in the Slurm scheduling queue:", "yellow")
+        log(f"{squeue_output} {ok()}\n")
 
 
 def compare_files(fn1, fn2) -> bool:
@@ -562,13 +595,14 @@ def compare_files(fn1, fn2) -> bool:
 
 
 def touch(fn) -> None:
-    """Create empthy file."""
+    """Create empthy file, ex: touch fn."""
     open(fn, "a").close()
 
 
 def pid_exists(pid):
     if pid < 0:
         return False  # NOTE: pid == 0 returns True
+
     try:
         os.kill(pid, 0)
     except ProcessLookupError:  # errno.ESRCH
@@ -579,6 +613,14 @@ def pid_exists(pid):
         return True  # no error, we can send a signal to the process
 
 
+def is_dir(path) -> bool:
+    if not os.path.isdir(path):
+        log(f"warning: {path} folder does not exist")
+        return False
+
+    return True
+
+
 def remove_ansi_escape_sequence(string):
     """Remove the ANSI escape sequences from a string.
 
@@ -586,15 +628,3 @@ def remove_ansi_escape_sequence(string):
     """
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", string)
-
-
-def countdown(seconds: int, is_verbose=False) -> None:
-    if not is_verbose:
-        log(f"## sleep_time={seconds} seconds                                             ")
-
-    while seconds:
-        mins, secs = divmod(seconds, 60)
-        timer = "sleeping for {:02d}:{:02d}".format(mins, secs)
-        print(f" * {_date()} | {timer}", end="\r")
-        time.sleep(1)
-        seconds -= 1

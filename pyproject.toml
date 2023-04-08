@@ -31,3 +31,6 @@ exclude = '''
   | orcid-authentication
 )/
 '''
+
+[tool.mypy]
+disable_error_code = "annotation-unchecked"

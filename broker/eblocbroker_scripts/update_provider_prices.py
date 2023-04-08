@@ -10,6 +10,7 @@ from broker._utils.tools import print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 
 
@@ -33,7 +34,7 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
             and provider_info["price_cache"] == prices[3]
         ):
             log(provider_info)
-            raise QuietExit("warning: Given information is same with the cluster's latest set prices. Nothing to do.")
+            raise QuietExit("warning: Given information is same with the provider's latest set prices. Nothing to do.")
 
         tx = self._update_provider_prices(available_core, commitment_blk, prices)
         return self.tx_id(tx)
@@ -53,11 +54,12 @@ if __name__ == "__main__":
     _args = args["cfg"]["provider"]
     available_core = _args["available_core"]
     commitment_blk = _args["prices"]["commitment_blk"]
-    price_core_min = _args["prices"]["price_core_min"]
-    price_data_transfer = _args["prices"]["price_data_transfer"]
-    price_storage = _args["prices"]["price_storage"]
-    price_cache = _args["prices"]["price_cache"]
-    prices = [price_core_min, price_data_transfer, price_storage, price_cache]
+    prices = [
+        Cent(_args["prices"]["price_core_min"]),
+        Cent(_args["prices"]["price_data_transfer"]),
+        Cent(_args["prices"]["price_storage"]),
+        Cent(_args["prices"]["price_cache"]),
+    ]
     try:
         tx_hash = Ebb.update_provider_prices(available_core, commitment_blk, prices)
         receipt = get_tx_status(tx_hash)

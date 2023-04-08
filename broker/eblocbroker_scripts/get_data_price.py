@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from broker import cfg
-from broker.utils import log
+from broker._utils._log import log
 
 Ebb = cfg.Ebb
 
@@ -52,9 +52,9 @@ def get_latest_data_price(provider, source_code_hash, is_verbose=True):
         provider, code_hash_bytes, registered_data_bn_list[-1]
     )
     if is_verbose:
-        log(f" * price={price}")
-        log(f" * commitment_block_dur={commitment_block_dur}")
-        log(f" * registered_data_bn_list={registered_data_bn_list}")
+        log(f"* price={price}")
+        log(f"* commitment_block_dur={commitment_block_dur}")
+        log(f"* registered_data_bn_list={registered_data_bn_list}")
 
     return price, commitment_block_dur
 

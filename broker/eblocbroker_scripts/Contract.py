@@ -1,30 +1,35 @@
 #!/usr/bin/env python3
 
+import re
+import subprocess
 import sys
 import time
 from contextlib import suppress
 from os.path import expanduser
 from typing import Union
 
+from halo import Halo
 from pymongo import MongoClient
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
 from broker import cfg
-from broker._utils._log import ok
+from broker._utils._log import WHERE, ok
 from broker._utils.tools import exit_after, log, print_tb, without_keys
 from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.errors import QuietExit, Web3NotConnected
+from broker.imports import nc
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, terminate
 from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
+# from brownie.network.gas.strategies import GasNowStrategy
 # from brownie.network.gas.strategies import LinearScalingStrategy
 
-GAS_PRICE = 1.0
-EXIT_AFTER = 120
+GAS_PRICE = 1.14  # was 1 => 1.13
+EXIT_AFTER = 180  # seconds
 
 
 class Base:
@@ -47,13 +52,13 @@ class Base:
     from broker.eblocbroker_scripts.refund import refund  # type: ignore
     from broker.eblocbroker_scripts.register_provider import _register_provider  # type: ignore
     from broker.eblocbroker_scripts.register_requester import register_requester  # type: ignore
+    from broker.eblocbroker_scripts.transfer import transfer_tokens  # type: ignore
     from broker.eblocbroker_scripts.submit_job import (  # type: ignore
         check_before_submit,
         is_provider_valid,
         is_requester_valid,
         submit_job,
     )
-    from broker.eblocbroker_scripts.transfer_ownership import transfer_ownership  # type: ignore
     from broker.eblocbroker_scripts.update_provider_info import (  # type: ignore
         is_provider_info_match,
         update_provider_info,
@@ -71,10 +76,10 @@ class Contract(Base):
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
         # self.gas_limit = "max"  # 300000
         self.ops = {}
-        self.max_retries = 20
+        self.max_retries = 3
         self.required_confs = 1
         self._from = ""
-        #: Transaction cost exceeds current gas limit. Limit: 9990226, got:
+        #: tx cost exceeds current gas limit. Limit: 9990226, got:
         #  10000000. Try decreasing supplied gas.
         self.gas = 9980000
         self.gas_price = GAS_PRICE
@@ -97,15 +102,12 @@ class Contract(Base):
                 self.eBlocBroker, self.w3, self._eblocbroker = connect()
             except Exception as e:
                 print_tb(e)
-                sys.exit(1)
-
-    ebb = None  # contract object
 
     def brownie_load_account(self, fn="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
         from brownie import accounts
 
-        cfg = Yaml(env.LOG_PATH / ".bloxberg_account.yaml")
+        cfg = Yaml(env.LOG_DIR / ".bloxberg_account.yaml")
         if not fn:
             fn = cfg["config"]["name"]
 
@@ -142,38 +144,40 @@ class Contract(Base):
     def timenow(self) -> int:
         return self.w3.eth.get_block(self.get_block_number())["timestamp"]
 
+    def to_gwei(self, value):
+        return self.w3.toWei(value, "gwei")
+
     def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_verbose=False) -> TxReceipt:
         """Wait till the tx is deployed."""
         if isinstance(tx_hash, TransactionReceipt):
             tx_hash = tx_hash.txid
 
-        tx_receipt = None
         attempt = 0
         poll_latency = 3
-        if not is_verbose:
-            log(f"## waiting for the transaction({tx_hash}) receipt... ", end="")
+        if is_verbose:
+            log(f"## waiting for the tx={tx_hash} receipt...", end="")
 
+        tx_receipt = None
         while True:
             try:
                 tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
             except TransactionNotFound as e:
-                log()
-                log(f"warning: {e}")
+                log(f"warning: TransactionNotFound tx={tx_hash} {e}")
             except Exception as e:
-                print_tb(str(e))
+                print_tb(e)
                 tx_receipt = None
 
             if tx_receipt and tx_receipt["blockHash"]:
                 break
 
-            if not is_verbose:
+            if is_verbose:
                 log()
                 log(f"## attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
 
             attempt += 1
             time.sleep(poll_latency)
 
-        if not is_verbose:
+        if is_verbose:
             log(ok())
 
         if compact:
@@ -202,26 +206,50 @@ class Contract(Base):
 
         return block_number
 
-    def get_transaction_by_block(self, block_hash, tx_index):
+    def is_transaction_passed(self, tx_hash) -> bool:
+        try:
+            return bool(self.get_transaction_receipt(tx_hash)["status"])
+        except Exception as e:
+            print_tb(e)
+            raise e
+
+    def is_transaction_valid(self, tx_hash) -> bool:
+        pattern = re.compile(r"^0x[a-fA-F0-9]{64}")
+        return bool(re.fullmatch(pattern, tx_hash))
+
+    def get_transaction_by_block(self, block_hash, tx_index) -> dict:
         """Return the tx at the index specified by transaction_index from the block specified by block_identifier.
 
-        __ web3py.readthedocs.io/en/stable/web3.eth.html?highlight=raw%20trace#web3.eth.Eth.get_transaction_by_block
+        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_by_block
         """
         return dict(self.w3.eth.get_transaction_by_block(block_hash, tx_index))
 
     def get_transaction_receipt(self, tx, compact=False):
-        """Get transaction receipt.
+        """Get the transaction receipt.
 
         Returns the transaction receipt specified by transactionHash.
         If the transaction has not yet been mined returns 'None'
 
-        __ https://web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_receipt
+        __ web3py.readthedocs.io/en/stable/web3.eth.html#web3.eth.Eth.get_transaction_receipt
         """
         tx_receipt = self.w3.eth.get_transaction_receipt(tx)
         if not compact:
             return dict(tx_receipt)
         else:
             return without_keys(tx_receipt, self.invalid)
+
+    def _is_web3_connected(self):
+        try:
+            message = "* is_web3_connected=True"
+            message_no_color = "* is_web3_connected="
+            with Halo(text=message_no_color, spinner="line", placement="right"):
+                if not Ebb.is_web3_connected():
+                    raise Exception("web3 is not connected")
+
+            log(message)
+        except subprocess.CalledProcessError as e:
+            log(f"{message} FAILED.\n{e.output.decode('utf-8').strip()}")
+            self._is_web3_connected()
 
     def is_web3_connected(self):
         """Return whether web3 connected or not."""
@@ -242,6 +270,7 @@ class Contract(Base):
             raise Exception(f"Invalid account {address} is provided")
 
     def _get_balance(self, account, eth_unit="ether"):
+        """Return ether balance of the account"""
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)
         else:
@@ -250,8 +279,13 @@ class Contract(Base):
         return self.w3.fromWei(self.w3.eth.get_balance(account), eth_unit)
 
     def transfer(self, amount, from_account, to_account, required_confs=1):
+        """Transfer acount's ether balance."""
         tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
         return self.tx_id(tx)
+
+    def get_block(self, block_number: int):
+        """Return block."""
+        return self.w3.eth.get_block(block_number)
 
     def get_block_number(self):
         """Return block number."""
@@ -286,7 +320,7 @@ class Contract(Base):
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise Exception("Empty contract")
 
-        log(f"==> contract_address={contract_address.lower()}")
+        log(f"==> [y]contract_address[/y]=[cyan]{contract_address.lower()}", h=False)
         return True
 
     def print_contract_info(self):
@@ -306,6 +340,8 @@ class Contract(Base):
 
         geth usage:
         self.eBlocBroker.functions.submitJob(*args).transact(self.ops)
+
+        May give "warning: timeout took too long" in exit_after() functions.
         """
         method = None
         try:
@@ -318,10 +354,11 @@ class Contract(Base):
                 method = getattr(self.eBlocBroker.functions, func)
                 return method(*args).transact(self.ops)
         except AttributeError as e:
-            raise Exception(f"Method {method} not implemented") from e
+            raise Exception(f"Method {method} is not implemented") from e
 
     def timeout_wrapper(self, method, *args):
-        for _ in range(self.max_retries):
+        idx = 0
+        while idx < self.max_retries:
             self.ops = {
                 "from": self._from,
                 "gas": self.gas,
@@ -332,6 +369,11 @@ class Contract(Base):
             try:
                 return self.timeout(method, *args)
             except ValueError as e:
+                try:
+                    nc(env.BLOXBERG_HOST, 8545)
+                except Exception:
+                    log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
+
                 if "Sequence has incorrect length" in str(e):
                     print_tb(e)
                     raise QuietExit from e
@@ -345,6 +387,7 @@ class Contract(Base):
 
                 if "Try increasing the gas price" in str(e):
                     self.gas_price *= 1.13
+                    continue
 
                 if "Execution reverted" in str(e) or "Insufficient funds" in str(e):
                     print_tb(e)
@@ -366,52 +409,60 @@ class Contract(Base):
             except KeyboardInterrupt:
                 log("warning: Timeout Awaiting Transaction in the mempool")
                 self.gas_price *= 1.13
+                continue
             except Exception as e:
-                log(f"Exception: {e}", "bold")
+                log(f"Exception: {e}")
                 # brownie.exceptions.TransactionError: Tx dropped without known replacement
                 if "Tx dropped without known replacement" in str(e):
                     self.gas_price *= 1.13
                     log("Sleep 15 seconds, will try again...")
                     time.sleep(15)
-                else:
-                    raise e
+                    continue
+
+                raise e
+
+            idx += 1
 
     ################
     # Transactions #
     ################
     def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
-        for _ in range(self.max_retries):
+        method_name = "submitJob"
+        idx = 0
+        while idx < self.max_retries:
             self.ops = {
                 "gas": self.gas,
                 "gas_price": f"{self.gas_price} gwei",
                 "from": requester,
                 "allow_revert": True,
-                "value": self.w3.toWei(job_price, "gwei"),
                 "required_confs": required_confs,
             }
             try:
-                return self.timeout("submitJob", *args)
+                return self.timeout(method_name, *args)
             except ValueError as e:
-                log(f"E: {e}")
-                if "Execution reverted" in str(e):
+                log(f"E: {WHERE()} {e}")
+                if "Insufficient funds" in str(e) or "Execution reverted" in str(e):
                     raise e
 
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
-            except KeyboardInterrupt as e:
+                    continue
+
+                if "Try increasing the gas price" in str(e):
+                    self.gas_price *= 1.13
+                    continue
+            except KeyboardInterrupt as e:  # acts as Exception
+                if str(e):
+                    log(f"E: {WHERE()} {e}", is_wrap=True)
+
                 if "Awaiting Transaction in the mempool" in str(e):
                     log("warning: Timeout Awaiting Transaction in the mempool")
                     self.gas_price *= 1.13
+                    continue
 
+            idx += 1
         raise Exception("No valid Tx receipt is generated")
-
-    def withdraw(self, account) -> "TransactionReceipt":
-        """Withdraw payment."""
-        self.gas_price = GAS_PRICE
-        self._from = self.w3.toChecksumAddress(account)
-        self.required_confs = 1
-        return self.timeout_wrapper("withdraw")
 
     def deposit_storage(self, data_owner, code_hash, _from) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
@@ -436,6 +487,12 @@ class Contract(Base):
         self._from = _from
         self.required_confs = 1
         return self.timeout_wrapper("transferOwnership", new_owner)
+
+    def _transfer(self, _from, *args) -> "TransactionReceipt":
+        self.gas_price = GAS_PRICE
+        self._from = _from
+        self.required_confs = 1
+        return self.timeout_wrapper("transfer", *args)
 
     def _authenticate_orc_id(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE

@@ -5,9 +5,22 @@ import sys
 from os.path import expanduser
 from pathlib import Path
 
-import broker.libs._git as git
+import broker.libs._git as git  # noqa
+from broker import cfg
 from broker._utils.tools import print_tb
 from broker.utils import extract_gzip, log, popen_communicate
+
+ipfs = cfg.ipfs
+
+
+def analyze_patch(base_dir, ipfs_hash):
+    ipfs.get(ipfs_hash, base_dir)
+    for fn in os.listdir(base_dir):
+        patch_file = f"{base_dir}/{fn}"
+        if patch_file.endswith(".diff.gz"):
+            extract_gzip(patch_file)
+
+    log(f"To see the results run:\n[white]cat {base_dir}/* | less")
 
 
 def appy_patch(base_dir, patch_fn):
@@ -50,5 +63,14 @@ def main(base_dir, patch_fn):
 
 if __name__ == "__main__":
     base_dir = expanduser("~/test_eblocbroker/test_data/base/source_code")
-    patch_fn = "patch~f5fae5edf523c00f3f033af668f78663bf331091~QmYhNZrnG9Tj2ay5HbRWxp4Lr8i4pbiDV3ddWz32u4Cvzb~0.diff.gz"
-    main(base_dir, patch_fn)
+    base_dir_results = expanduser("~/test_eblocbroker/test_data/base/source_code/results")
+    patch_fn = (
+        "patch~a4fb77ea35ea6dfeed7aa300879a73b76268c136~QmTDHuL6HPC6WMWSRHwHmboasfWsrjpLJEvh9D9pUuRqiy~11.diff.gz"
+    )
+    # main(base_dir, patch_fn)
+    #
+
+    ipfs_hash = ""
+    if len(sys.argv) == 2:
+        ipfs_hash = sys.argv[1]
+        analyze_patch(base_dir_results, ipfs_hash)

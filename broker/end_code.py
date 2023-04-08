@@ -17,7 +17,7 @@ import psutil
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
-from broker._utils.tools import _remove, exit_after, mkdirs, pid_exists, read_json
+from broker._utils.tools import _remove, exit_after, is_dir, mkdirs, pid_exists, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.errors import QuietExit
@@ -25,7 +25,6 @@ from broker.imports import connect
 from broker.lib import (
     calculate_size,
     eblocbroker_function_call,
-    is_dir,
     remove_files,
     run,
     run_stdout_to_file,
@@ -86,14 +85,14 @@ class IpfsGPG(Common):
             raise e
 
 
-class Eudat(Common):
+class B2drop(Common):
     def __init__(self) -> None:
-        self.encoded_share_tokens = {}  # type: Dict[str, str]
+        self.encoded_share_tokens: Dict[str, str] = {}
         self.patch_dir: Path = Path("")
 
     def initialize(self):
         with suppress(Exception):
-            eudat.login(env.OC_USER, env.LOG_PATH.joinpath(".eudat_client.txt"), env.OC_CLIENT)
+            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
 
         try:
             self.get_shared_tokens()
@@ -122,9 +121,10 @@ class Eudat(Common):
 
 class Gdrive(Common):
     def upload(self, key, is_job_key):
-        """Upload generated result into gdrive.
+        """Upload the generated result into gdrive.
 
         :param key: key of the shared gdrive file
+        :param is_job_key: is the provided key string is job's main key
         :returns: True if upload is successful
         """
         try:
@@ -138,9 +138,9 @@ class Gdrive(Common):
             raise Exception(f"{WHERE(1)} E: {key} does not have a match, meta_data={meta_data}. {e}") from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
-        log(f"mime_type=[m]{mime_type}", "bold")
+        log(f"mime_type=[m]{mime_type}")
         self.data_transfer_out += calculate_size(self.patch_file)
-        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB", "bold")
+        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type or "/zip" in mime_type:
@@ -155,7 +155,7 @@ class Gdrive(Common):
             raise Exception("gdrive could not upload the file") from e
 
 
-class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
+class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
     def __init__(self, **kwargs) -> None:
         args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
         self.job_key: str = kwargs.pop("job_key")
@@ -163,7 +163,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.received_bn: int = kwargs.pop("received_bn")
         self.folder_name: str = kwargs.pop("folder_name")
         self.slurm_job_id: int = kwargs.pop("slurm_job_id")
-        self.share_tokens = {}  # type: Dict[str, str]
+        self.share_tokens: Dict[str, str] = {}
         self.requester_id_address = ""
         self.data_transfer_in = 0
         self.data_transfer_out = 0
@@ -174,15 +174,15 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         self.requester_gpg_fingerprint: str = ""
         self.end_timestamp = ""
         self.modified_date = None
-        self.encoded_share_tokens = {}  # type: Dict[str, str]
-        #: Set environment variables: https://stackoverflow.com/a/5971326/2402577
+        self.encoded_share_tokens: Dict[str, str] = {}
+        #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
-        _log.ll.LOG_FILENAME = Path(env.LOG_PATH) / "end_code_output" / f"{self.job_key}_{self.index}.log"
+        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
-        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "bold blue", is_code=True)
+        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "blue", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
-            log("E: Given key and index are equal to each other")
+            log("E: given key and index are equal to each other")
             sys.exit(1)
 
         try:
@@ -230,8 +230,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
         with suppress(Exception):
-            p = psutil.Process(int(self.job_state_running_pid))
-            log(p)
+            log(psutil.Process(int(self.job_state_running_pid)))
             while True:
                 if not pid_exists(self.job_state_running_pid):
                     break
@@ -246,21 +245,21 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         with suppress(Exception):
             share_ids = read_json(f"{self.private_dir}/{self.job_key}_share_id.json")
 
-        for source_code_hash in self.code_hashes_to_process:
+        for code_hash in self.code_hashes_to_process:
             try:
-                share_token = share_ids[source_code_hash]["share_token"]
-                self.share_tokens[source_code_hash] = share_token
-                self.encoded_share_tokens[source_code_hash] = base64.b64encode(
-                    (f"{share_token}:").encode("utf-8")
-                ).decode("utf-8")
+                share_token = share_ids[code_hash]["share_token"]
+                self.share_tokens[code_hash] = share_token
+                self.encoded_share_tokens[code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
+                    "utf-8"
+                )
             except KeyError:
                 try:
                     shared_id = Ebb.mongo_broker.find_shareid_item(f"{self.job_key}_{self.requester_id_address[:16]}")
                     share_token = shared_id["share_token"]
-                    self.share_tokens[source_code_hash] = share_token
-                    self.encoded_share_tokens[source_code_hash] = base64.b64encode(
-                        (f"{share_token}:").encode("utf-8")
-                    ).decode("utf-8")
+                    self.share_tokens[code_hash] = share_token
+                    self.encoded_share_tokens[code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
+                        "utf-8"
+                    )
                 except Exception as e:
                     log(f"E: share_id cannot be detected from key={self.job_key}")
                     raise e
@@ -281,8 +280,8 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             return Ipfs
         if self.storage_ids[_id] == StorageID.IPFS_GPG:
             return IpfsGPG
-        if self.storage_ids[_id] == StorageID.EUDAT:
-            return Eudat
+        if self.storage_ids[_id] == StorageID.B2DROP:
+            return B2drop
         if self.storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 
@@ -354,7 +353,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             log(f"==> base_patch={self.patch_dir}")
             log(f"==> source_code_patch={name}")
         else:
-            log(f"==> datafile_patch={name}")
+            log(f"==> data_file_patch={name}")
 
         try:
             if storage_class is Ipfs or storage_class is IpfsGPG:
@@ -373,14 +372,13 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
                     raise e
         except Exception as e:
             print_tb(e)
-            raise Exception("Problem on the git_diff_patch_and_upload() function") from e
+            raise Exception("problem on the git_diff_patch_and_upload() function") from e
 
     def upload_driver(self):
         self.clean_before_upload()
         try:
             storage_class = self.get_cloud_storage_class(0)
             self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
-
         except Exception as e:
             raise e
 
@@ -533,7 +531,7 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
             print_tb(e)
             raise e
 
-        log("## receive state of the running job  [  OK  ]", "bold green")
+        log("## receive state of the running job  [  OK  ]", "green")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(
@@ -557,9 +555,9 @@ class ENDCODE(IpfsGPG, Ipfs, Eudat, Gdrive):
         if self.elapsed_time > int(run_time[self.job_id]):
             self.elapsed_time = run_time[self.job_id]
 
-        log(f"finalized_elapsed_time={self.elapsed_time}", "bold")
-        log("## job_info=", "info", end="")
-        log(pprint.pformat(self.job_info), "bold")
+        log(f"finalized_elapsed_time={self.elapsed_time}")
+        log("job_info=", end="")
+        log(pprint.pformat(self.job_info))
         try:
             self.get_cloud_storage_class(0).initialize(self)
             self.upload_driver()

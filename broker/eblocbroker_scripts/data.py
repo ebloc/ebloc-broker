@@ -6,14 +6,14 @@ from contextlib import suppress
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
+from broker.errors import QuietExit
 from brownie.network.account import Account
 
 Ebb = cfg.Ebb
 
 
 def pre_check_data(provider):
-    """Return the provider information."""
-
+    """Return the provider's information."""
     if not isinstance(provider, Account):
         provider = Ebb.w3.toChecksumAddress(provider)
 
@@ -26,13 +26,21 @@ def pre_check_data(provider):
 
 def is_data_registered(provider, registered_data_hash) -> bool:
     if not isinstance(registered_data_hash, bytes):
-        raise Exception(f"registered_data_hash {registered_data_hash} is not in bytes")
+        raise QuietExit(f"#> requested data={registered_data_hash} is not in `bytes` instance")
 
     with suppress(Exception):
         cfg.Ebb.get_registered_data_price(provider, registered_data_hash, 0)
         return True
 
     return False
+
+
+def data_output_verbose(provider_data):
+    """Print only data hash and its price without color."""
+    print()
+    print("data_hash, price")
+    for k, v in sorted(provider_data.items()):
+        print(f"{k.decode('utf-8')}, {v['price']}")
 
 
 def get_data_info(self, provider) -> None:
@@ -57,9 +65,11 @@ def get_data_info(self, provider) -> None:
                     "registered_block_number": entry["blockNumber"],
                 }
 
-        for k, v in provider_data.items():
+        for k, v in sorted(provider_data.items()):
             log(f" * registered_data_hash={k.decode('utf-8')}")
             log(f"\t{v}")
+
+        # data_output_verbose(provider_data)
     except Exception as e:
         raise e
 

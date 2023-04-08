@@ -8,18 +8,19 @@ cfg:
   log_path: ~/.ebloc-broker
   ebloc_path: ~/ebloc-broker
   gdrive: /usr/local/bin/gdrive
+  bloxberg_host: https://core.bloxberg.org # http://alpy-bloxberg.duckdns.org:8545/
   rpc_port: 8545
   provider:
     slurm_user: slurm
     is_bloxberg: true
     is_thread: true
     is_ipfs_use: true
-    is_eudat_use: true
+    is_b2drop_use: true
     is_gdrive_use: true
     available_core: 4
     prices:
       commitment_blk: 600
-      price_core_min: 10
-      price_data_transfer: 1
-      price_storage: 1
-      price_cache: 1
+      price_core_min: "0.001 usd"
+      price_data_transfer: "0.0001 cent"
+      price_storage: "0.0001 cent"
+      price_cache: "0.0001 cent"

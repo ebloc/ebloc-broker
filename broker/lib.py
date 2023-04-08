@@ -22,24 +22,24 @@ class State:
     """Set state code of the Slurm jobs and add their keys into the hashmap.
 
     * Hashmap keys:
-        - SUBMITTED: Initial state of the job.
+    - SUBMITTED: Initial state of the job.
 
-        - PENDING: Indicates when a request is receieved by the provider. The
-          job is waiting for resource allocation. It will eventually run.
+    - PENDING: Indicates when a request is receieved by the provider. The
+      job is waiting for resource allocation. It will eventually run.
 
-        - RUNNING: The job currently is allocated to a node and is running.
-          Corresponding data files are downloaded and verified.
+    - RUNNING: The job currently is allocated to a node and is running.
+      Corresponding data files are downloaded and verified.
 
-        - REFUNDED: The job has refunded.
+    - REFUNDED: The job has refunded.
 
-        - CANCELLED: The job was explicitly cancelled by the requester or system
-          administrator.  The job may or may not have been initiated.  Set by
-          the requester.
+    - CANCELLED: The job was explicitly cancelled by the requester or system
+      administrator.  The job may or may not have been initiated.  Set by
+     the requester.
 
-        - COMPLETED: The job has completed successfully and deposit is paid to
-          the provider.
+    - COMPLETED: The job has completed successfully and deposit is paid to
+      the provider.
 
-        - TIMEOUT: The job has terminated upon reaching its time limit.
+    - TIMEOUT: The job has terminated upon reaching its time limit.
 
     __ https://slurm.schedmd.com/squeue.html
     """
@@ -52,7 +52,7 @@ class State:
         "CANCELLED": 4,
         "COMPLETED": 5,
         "TIMEOUT": 6,
-        "COMPLETED_WAITING_ADDITIONAL_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
+        "COMPLETED_AND_WAITING_ADDITIONAL_TRANSFER_OUT_DEPOSIT": 7,  # TODO: check
     }
     inv_code = {value: key for key, value in code.items()}
 
@@ -61,7 +61,7 @@ state = State()
 
 
 def enum(*sequential, **named):
-    """Set reverse map for the Enum.
+    """Set reverse map dict for the Enum.
 
     __ https://stackoverflow.com/a/1695250/2402577
     """
@@ -70,24 +70,16 @@ def enum(*sequential, **named):
     return type("Enum", (), enums)
 
 
-def session_start_msg(slurm_user, bn, pid):
-    """Print message at the beginning of Driver process and connect into web3."""
-    if not cfg.w3:
-        from broker.imports import connect_to_web3
-
-        connect_to_web3()
-
+def session_start_msg(bn):
+    """Print message at the beginning of the driver process and connect into Web3."""
     PROVIDER_ID = cfg.ZERO_ADDRESS
     if env.PROVIDER_ID:
         PROVIDER_ID = env.PROVIDER_ID
     elif cfg.w3:
         PROVIDER_ID = cfg.w3.toChecksumAddress(os.getenv("PROVIDER_ID"))
 
-    log(f" * driver_process_pid={pid}")
-    log(f" * provider_address={PROVIDER_ID}")
-    log(f" * slurm_user={slurm_user}")
-    log(f" * left_of_block_number={bn}")
-    log(f" *  latest_block_number={cfg.Ebb.get_block_number()}")
+    log(f"* left_of_block_number={bn}")
+    log(f"** latest_block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:
         raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
 
@@ -105,7 +97,7 @@ def calculate_size(path, _type="MB") -> float:
 
 
 def subprocess_call(cmd, attempt=1, sleep_time=1):
-    """Run subprocess."""
+    """Run the subprocess."""
     error_msg = ""
     cmd = list(map(str, cmd))  # type of the cmd should be `str`
     for count in range(attempt):
@@ -134,7 +126,7 @@ def subprocess_call(cmd, attempt=1, sleep_time=1):
 
 
 def run_stdout_to_file(cmd, path, mode="w") -> None:
-    """Run command pipe output into give file."""
+    """Run command pipe output into the given file."""
     p, output, error = popen_communicate(cmd, stdout_fn=path, mode=mode)
     if p.returncode != 0 or (isinstance(error, str) and "error:" in error):
         _cmd = " ".join(cmd)
@@ -189,16 +181,8 @@ def eblocbroker_function_call(func, max_retries):
     raise Exception("eblocbroker_function_call completed all the attempts  [  ABORT  ]")
 
 
-def is_dir(path) -> bool:
-    if not os.path.isdir(path):
-        log(f"warning: {path} folder does not exist")
-        return False
-
-    return True
-
-
 def run_storage_thread(storage_class):
-    """Run storage driver as thread.
+    """Run the storage driver as thread.
 
     Consider giving the thread a name (add name=...), then you could
     use ThreadFilter(threadname=...) to select on all messages with that name
@@ -222,26 +206,31 @@ def run_storage_process(storage_class):
     try:
         storage_process = Process(target=storage_class.run)
         storage_process.start()
-        storage_process.join()  # waits until the job is completed
+        storage_process.join()  # waits until the job completes
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
         sys.exit(1)
-
-
-def pre_check():
-    mkdir(env.LOG_PATH / "private")
-    mkdir(env.LOG_PATH / "links")
-    mkdir(env.LOG_PATH / "transactions")
-    mkdir(env.LOG_PATH / "drivers_output")
-    mkdir(env.LOG_PATH / "end_code_output")
-    if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception(f"slurm_mail_prog.sh scripts is not located in the {env.PROGRAM_PATH}")
 
 
 def run_driver_cancel():
     """Run driver_cancel daemon on the background."""
     if not is_process_on("python.*[d]river_cancel", "driver_cancel"):
         config.driver_cancel_process = subprocess.Popen(["python3", "driver_cancel.py"])
+
+
+def pre_check():
+    folders = [
+        env.LOG_DIR / "links",
+        env.LOG_DIR / "private",
+        env.LOG_DIR / "transactions",
+        env.LOG_DIR / "drivers_output",
+        env.LOG_DIR / "end_code_output",
+    ]
+    for folder in folders:
+        mkdir(folder)
+
+    if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
+        raise Exception(f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}")
 
 
 # from broker.utils StorageID
@@ -252,7 +241,7 @@ def run_driver_cancel():
 #     if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
 #         if not key:
 #             return False
-#     elif int(file_type) == StorageID.EUDAT:
+#     elif int(file_type) == StorageID.B2DROP:
 #         pass
 #     elif int(file_type) == StorageID.GDRIVE:
 #         pass

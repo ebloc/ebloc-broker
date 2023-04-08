@@ -7,6 +7,7 @@ from broker._utils._log import log
 from broker.config import env
 from broker.eblocbroker_scripts.get_data_price import get_data_price
 from broker.eblocbroker_scripts.register_data import _register_data
+from broker.eblocbroker_scripts.utils import Cent
 
 hashes_small = [
     "f1de03edab51f281815c3c1e5ecb88c6",
@@ -30,43 +31,44 @@ hashes_medium_1 = [
     "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
     "0d6c3288ef71d89fb93734972d4eb903",  # A
     "4613abc322e8f2fdeae9a5dd10f17540",  # A
+    "050e6cc8dd7e889bf7874689f1e1ead6",  # A
 ]
 
 hashes_medium_2 = [
-    "050e6cc8dd7e889bf7874689f1e1ead6",  # B
     "9d5d892a63b5758090258300a59eb389",  # B
     "779745f315060d1bc0cd44b7266fb4da",  # B
-    "dd0fbccccf7a198681ab838c67b68fbf",  # C
-    "45281dfec4618e5d20570812dea38760",  # C
+    "dd0fbccccf7a198681ab838c67b68fbf",  # B
+    "45281dfec4618e5d20570812dea38760",  # B
     "bfc83d9f6d5c3d68ca09499190851e86",  # C
-    "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # D
-    "1bfca57fe54bc46ba948023f754521d6",  # D
-    "f71df9d36cd519d80a3302114779741d",  # D
+    "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # C
+    "1bfca57fe54bc46ba948023f754521d6",  # C
+    "f71df9d36cd519d80a3302114779741d",  # C
 ]
 
 
 def print_prices(hashes):
     for code_hash in hashes:
         (price, _commitment_dur) = get_data_price(env.PROVIDER_ID, code_hash, is_verbose=False)
-        log(f"{code_hash}={price}")
+        log(f"{code_hash}={Cent(price)._to()} usd")
 
 
 def register_data_files(data_price, hashes):
-    log(f"#> registering data {len(hashes)} files")
+    log(f"#> registering data {len(hashes)} files", h=False)
     for code_hash in hashes:
         with suppress(Exception):
             _register_data(code_hash, data_price, commitment_dur=600)
             time.sleep(1)
 
+    print()
+
 
 def main():
     # register_data_files(data_price=1, hashes=hashes_small)
-    register_data_files(data_price=20, hashes=hashes_medium_1)
-    log()
-    register_data_files(data_price=30, hashes=hashes_medium_2)
-    log()
+    # register_data_files(data_price=Cent("0.0002 usd"), hashes=hashes_medium_1)
+    # register_data_files(data_price=Cent("0.0003 usd"), hashes=hashes_medium_2)
+
     print_prices(hashes_medium_1)
-    log()
+    print()
     print_prices(hashes_medium_2)
 
 

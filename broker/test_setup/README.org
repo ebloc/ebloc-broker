@@ -3,8 +3,7 @@
 ** gdrive
 
 - *For providers:* Download from ~My Driver~ as folders.
-:IMPORTANT: DO NOT download from ~Storage~ section, it download ~meta_data.json~ separately
-
+:IMPORTANT: DO NOT download from ~Storage~ section, it download ~meta_data.json~ separately.
 - *For requesters:* Download from ~Storage~ zipped patches
 
 ----------------------------------------------------------------------------

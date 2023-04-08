@@ -4,7 +4,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 from contextlib import suppress
 from pathlib import Path
 
@@ -12,11 +11,12 @@ from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
 from broker.lib import echo_grep_awk, run, subprocess_call
-from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, log, print_tb
+from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, is_program_valid, log, print_tb
 
 
 def check_gdrive():
     """Check whether `gdrive about` returns a valid output."""
+    is_program_valid(["gdrive", "version"])
     try:
         output = run(["gdrive", "about"])
     except:
@@ -58,8 +58,8 @@ def submit(_from, job):
                     job.keys[tar_hash] = folder_key
 
             if job.tmp_dir == "":
-                print_tb("job.tmp_dir is empty")
-                sys.exit()
+                # print_tb("job.tmp_dir is empty")
+                raise Exception("'job.tmp_dir' is empty")
 
             _dump_dict_to_file(data_files_json_path, job.keys)
             data_json = read_json(data_files_json_path)
@@ -97,12 +97,12 @@ def submit(_from, job):
             log(data_json)
 
         _id = None
-        for (*_, v) in data_json.items():
+        for *_, v in data_json.items():
             _id = v
             break
 
         if _id:
-            log("## updating meta_data ", end="")
+            log("## updating meta_data ")
             update_meta_data_gdrive(_id, data_files_json_path)
             log(ok())
 
@@ -130,13 +130,13 @@ def upload(folder_to_share, tmp_dir, is_source_code=False):
 
     is_file_exist = _list(tar_hash, is_folder=True)
     if is_file_exist:
-        log(f"## requested folder {tar_hash} is already uploaded", "bold blue")
-        log(is_file_exist, "bold green")
+        log(f"## requested folder {tar_hash} is already uploaded", "blue")
+        log(is_file_exist, "bg")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
     else:
         key = _upload(dir_path, tar_hash, is_folder=True)
-        log(f"{_list(tar_hash)}", "bold green")
+        log(f"{_list(tar_hash)}", "bg")
 
     _remove(f"{dir_path}/{tar_hash}")  # created .tar.gz file is removed
     return key, is_already_uploaded, tar_hash, tar_hashes
@@ -156,16 +156,17 @@ def delete_all(_type="all"):
                 try:
                     run(["gdrive", "delete", line.split()[0]])
                 except Exception as e:
-                    log(f"E {e}")
+                    log(f"E: {e}")
 
         for line in list_all().splitlines():
             if " dir   " in line:
                 try:
-                    log(f"Attempt to delete dir: {line.split()[0]} ", end="")
+                    log(f"Attempt to delete dir: {line.split()[0]} ", end="", h=False)
                     output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
                     print(output)
                 except Exception as e:
-                    log(f"E {e}")
+                    if str(e) != "":
+                        log(f"E: {e}")
             # else:
             #     with suppress(Exception):
             #         run(["gdrive", "delete", line.split()[0]])
@@ -264,7 +265,7 @@ def get_data_key_ids(results_folder_prev) -> bool:
 def update_meta_data_gdrive(key, path):
     output = get_file_id(key)
     meta_data_key = fetch_grive_output(output, "meta_data.json")
-    log(f"`gdrive update {meta_data_key} {path}`", end="")
+    log(f"$ gdrive update {meta_data_key} {path}", is_code=True, h=False, end="")
     run(["gdrive", "update", meta_data_key, path])
 
 
@@ -287,7 +288,7 @@ def parse_gdrive_info(gdrive_info):
 
         log(_dict)
     except:
-        log(gdrive_info, "bold yellow")
+        log(gdrive_info, "yellow")
 
 
 def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_hashes, is_cached):
@@ -299,7 +300,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     try:
         output = get_file_id(key)
         log(f"==> data_id=[m]{key}")
-        log(output, "bold green")
+        log(output, "bg")
         data_files_id = fetch_grive_output(output, "meta_data.json")
         if not data_files_id:
             raise Exception
@@ -337,7 +338,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
         # checks md5sum obtained from gdrive and given by the user
         raise Exception(f"md5sum does not match with the provided data {source_code_key}")
 
-    log(f"SUCCESS on folder={md5sum}", "bold green")
+    log(f"SUCCESS on folder={md5sum}", "bg")
     byte_size = int(get_file_info(gdrive_info, "Size"))
     log(f"## code_hashes[0] == {_source_code_hash} | size={byte_size} bytes")
     if not is_cached[code_hashes[0].decode("utf-8")]:
@@ -351,14 +352,14 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     data_key_dict = {}
     if len(meta_data.items()) > 1:
         idx = 0
-        for (k, v) in meta_data.items():
+        for k, v in meta_data.items():
             if idx == 0:  # first item is for the source-code itself
                 _key = str(v)
                 output = get_file_id(_key)
                 data_key = fetch_grive_output(output, f"{k}.tar.gz")
                 cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
                 gdrive_info = subprocess_call(cmd, 10)
-                log(f" * gdrive_info for [green]{k}[/green]:")
+                log(f" * gdrive_info for [g]{k}[/g]:")
                 parse_gdrive_info(gdrive_info)
                 idx += 1
             else:  # should start from the first index
@@ -372,7 +373,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
                     raise e
 
                 md5sum = get_file_info(gdrive_info, _type="Md5sum")
-                log(f" * gdrive_info for [green]{k}[/green]:")
+                log(f" * gdrive_info for [g]{k}[/g]:")
                 parse_gdrive_info(gdrive_info)
                 given_code_hash = code_hashes[idx].decode("utf-8")
                 log(f"==> given_code_hash={given_code_hash}  idx={idx}")

@@ -14,7 +14,7 @@ class Helper:
     def __init__(self):
         """Initialize helper.
 
-        Test: ./__main__.py -h
+        test: ./_cli/__main__.py -h
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
 
@@ -33,11 +33,12 @@ class Helper:
         self.subparsers.add_parser("about", help="ebloc-broker metadata")
         self.init()
         self.driver()
+        # self.bloxberg()
         self.daemon()
         self.register()
         self.submit()
+        self.authenticate_orc_id()
         self.data()
-        self.withdraw()
         self.balance()
         self.subparsers.add_parser("providers", help="List of registered providers.")
         self.subparsers.add_parser("console", help="Load the console")
@@ -72,6 +73,12 @@ class Helper:
         ).completer = EnvironCompleter
         obj.set_defaults(is_thread=None)
 
+    # def bloxberg(self):
+    #     obj = self.subparsers.add_parser("bloxberg", help="Interact with bloxberg blockchain")
+    #     obj.add_argument(
+    #         "tx-receipt", type=str, default=0, help="Return transaction receipt"
+    #     ).completer = EnvironCompleter
+
     def daemon(self):
         """Select daemon program to run.
 
@@ -97,6 +104,11 @@ class Helper:
             "path", type=str, help="Full file path of Yaml file that contains the requester info"
         )
 
+    def authenticate_orc_id(self):
+        # FIXME: missing functionality
+        obj = self.subparsers.add_parser("auth_orc_id", help="Authenticate orcid")
+        obj.add_argument("eth_address", type=str, help="Ethereum address of the user")
+
     def submit(self):
         obj = self.subparsers.add_parser("submit", help="Submit job")
         obj.add_argument("path", type=str, help="Full file path of Yaml file that contains the job info")
@@ -106,12 +118,9 @@ class Helper:
         obj = self.subparsers.add_parser("data", help="List registered data files of the provider")
         obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
 
-    def withdraw(self):
-        obj = self.subparsers.add_parser("withdraw", help="Withdraw collected gains")
-        obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
-
     def balance(self):
-        obj = self.subparsers.add_parser("balance", help="Returns user's earned money amount in Wei.")
+        # FIXME: return balance and convert it into usd
+        obj = self.subparsers.add_parser("balance", help="Returns user's earned money amount in USD token.")
         obj.add_argument("eth_address", type=str, help="Ethereum address of the provider")
 
 

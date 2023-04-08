@@ -10,16 +10,16 @@ pragma solidity >=0.7.0 <0.9.0;
 
 library Lib {
     enum CacheType {
-        PUBLIC, /* 0 */
-        PRIVATE /* 1 */
+        PUBLIC, // 0
+        PRIVATE // 1
     }
 
     enum CloudStorageID {
-        IPFS, /* 0 */
-        IPFS_GPG, /* 1 */
-        NONE, /* 2 Request to use from registered/cached data */
-        EUDAT, /* 3 */
-        GDRIVE /* 4 */
+        IPFS, // 0
+        IPFS_GPG, // 1
+        NONE, // 2 Request to use from registered or cached data
+        B2DROP, // 3
+        GDRIVE // 4
     }
 
     /* Status of the submitted job Enum */
@@ -55,7 +55,7 @@ library Lib {
          * provider set its prices most recent. */
         uint32 priceBlockIndex;
         /* An array of uint8 values that denote whether the requester’s data is
-           stored and shared using either IPFS, EUDAT, IPFS (with GPG
+           stored and shared using either IPFS, B2DROP, IPFS (with GPG
            encryption), or Google Drive. */
         uint8[] cloudStorageID;
         /* An array of uint8 values that denote whether the requester’s data
@@ -70,6 +70,7 @@ library Lib {
         uint16[] core;
         uint16[] runTime;
         uint32 dataTransferOut;
+        uint256 jobPrice;
     }
 
     struct JobIndexes {
@@ -113,14 +114,15 @@ library Lib {
 
     // Submitted Job's information
     struct Status {
-        uint32 cacheCost;
         uint32 dataTransferIn;
         uint32 dataTransferOut;
         uint32 pricesSetBlockNum; // When provider is submitted provider's most recent block number when its set or updated
-        uint256 received; // Paid amount (new owned) by the client
+        uint256 cacheCost;
+        uint256 received; // paid amount (new owned) by the requester
         address payable jobOwner; // Address of the client (msg.sender) has been stored
         bytes32 sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
         bytes32 jobInfo;
+        uint256 receivedRegisteredDataFee;
         mapping(uint256 => Job) jobs;
     }
 
@@ -129,10 +131,10 @@ library Lib {
         uint32 commitmentBlockDur;
         /* All the price varaibles are defined in Gwei.
            Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-        uint32 priceCoreMin; // Provider's price for core per minute
-        uint32 priceDataTransfer;
-        uint32 priceStorage;
-        uint32 priceCache;
+        uint256 priceCoreMin; // Provider's price for core per minute
+        uint256 priceDataTransfer;
+        uint256 priceStorage;
+        uint256 priceCache;
     }
 
     struct Provider {
@@ -182,9 +184,9 @@ library Lib {
         int32 core,
         uint32 idx
     ) internal {
+        self.items[idx].next = uint32(next);
         self.items[idx].endpoint = endpoint;
         self.items[idx].core = core;
-        self.items[idx].next = uint32(next);
     }
 
     function _recursive(Interval storage self)
@@ -278,8 +280,7 @@ library Lib {
                 if (_interval.endTimestamp == currentNodeEndpoint) {
                     temp = currentNodeCore + int32(_interval.core);
                     carriedSum += currentNodeCore;
-                    if (carriedSum > _interval.availableCore || temp > _interval.availableCore)
-                        return (0, _addr, 0, 0, 0, 0);
+                    if (carriedSum > _interval.availableCore || temp > _interval.availableCore) return (0, _addr, 0, 0, 0, 0);
 
                     if (temp != 0) {
                         flag = 2; // helps to prevent pushing since it is already added
@@ -302,6 +303,18 @@ library Lib {
             currentNodeNext = self.items[currentNodeIndex].next;
             currentNodeCore = self.items[currentNodeIndex].core;
         } while (true);
+    }
+
+    function _refund(Status storage self, address provider, uint32 jobID, uint256[] memory core, uint256[] memory elapsedTime) internal returns (uint256 flag) {
+        require(self.jobInfo == keccak256(abi.encodePacked(core, elapsedTime)));
+        Job storage job = self.jobs[jobID];
+        require(
+            (msg.sender == self.jobOwner || msg.sender == provider) &&
+                job.stateCode != Lib.JobStateCodes.COMPLETED &&
+                job.stateCode != Lib.JobStateCodes.REFUNDED &&
+                job.stateCode != Lib.JobStateCodes.CANCELLED
+        );
+
     }
 
     function overlapCheck(LL storage self, IntervalArg memory _interval) internal returns (uint256 flag) {
@@ -362,7 +375,15 @@ library Lib {
     }
 
     /* used for test getReceiptListSize */
-    function printIndex(LL storage self, uint32 index) external view returns (uint32, uint256 idx, int32) {
+    function printIndex(LL storage self, uint32 index)
+        external
+        view
+        returns (
+            uint32,
+            uint256 idx,
+            int32
+        )
+    {
         idx = self.tail;
         for (uint256 i = 0; i < index; i++) {
             idx = self.items[idx].next;

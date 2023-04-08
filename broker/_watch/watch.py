@@ -12,13 +12,18 @@ from broker._utils import _log
 from broker._utils._log import _console_clear
 from broker._utils.tools import _date, log, print_tb
 from broker._utils.yaml import Yaml
+from broker._watch.test_info import data_hashes
 from broker.errors import QuietExit
 from broker.lib import state
 
 Ebb = cfg.Ebb
 columns_size = 30
-is_get_ongoing_test_results = False
-is_log_to_file = True
+is_while = True  # to fetch on-going results
+is_provider = True
+
+cfg.NETWORK_ID = "bloxberg_core"
+is_csv = False
+analyze_long_test = False
 
 
 def get_eth_address_from_cfg():
@@ -43,13 +48,89 @@ def get_providers_info():
         providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
     providers = Ebb.get_providers()
-    log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "green")
+    log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "g")
     for k, v in providers_info.items():
         log(f"** provider_address={k}", end="\r")
         log(v, end="\r")
 
 
+def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title_flag):
+    j = {}
+    j["id"] = f"j{_id + 1}"
+    j["hash"] = _hash
+    j["index"] = _index
+    j["workload"] = workload_type
+    j["state"] = state_val
+    j["core"] = job["core"][0]
+
+    received_bn = job["received_bn"]
+    j["received_bn"] = received_bn
+    block = Ebb.get_block(received_bn)
+    #
+    j["received_block_ts"] = block["timestamp"]
+    j["start_ts"] = job["start_timestamp"]
+    j["wait_time_(sec)"] = max(j["start_ts"] - j["received_block_ts"], 0)
+    #
+    j["elapsed_time_(min)"] = job["actual_elapsed_time"]
+    j["used_registed_data"] = "None"
+    #
+    j["price_cache"] = job["price_cache"]
+    j["price_core_min"] = job["price_core_min"]
+    j["price_data_transfer"] = job["price_data_transfer"]
+    j["price_storage"] = job["price_storage"]
+    j["expected_run_time_(min)"] = job["run_time"][0]
+
+    j["total_payment"] = job["submitJob_received_job_price"]
+
+    j["refunded_cent_to_requester"] = job["refunded_cent"]
+    j["received_cent_to_provider"] = job["received_cent"]
+    temp_list = []
+    if len(job["code_hashes"]) > 1:
+        for itm in sorted(job["code_hashes"]):
+            try:
+                data_hash = itm.decode("utf-8")
+                if data_hash in data_hashes:
+                    data_alias = data_hashes[data_hash]
+                    temp_list.append(data_alias)
+                    j["used_registed_data"] = data_alias
+            except:
+                pass
+
+    if temp_list:
+        j["used_registed_data"] = ";".join(temp_list)
+
+    tx_receipt = Ebb.get_transaction_receipt(job["submitJob_tx_hash"])
+    tx_by_block = Ebb.get_transaction_by_block(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
+    #: decode input arguments
+    output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
+    data_transfer_in_arg = str(output[1][1]).replace(" ", "").replace(",", ";")
+    j["data_transfer_in_arg_(MB)"] = data_transfer_in_arg
+    j["data_transfer_out_expected_(MB)"] = output[1][2][7]
+    #
+    j["submitJob_tx_hash"] = job["submitJob_tx_hash"]
+    j["submitJob_gas_used"] = job["submitJob_gas_used"]
+    j["processPayment_tx_hash"] = job["processPayment_tx_hash"]
+    j["processPayment_gas_used"] = job["processPayment_gas_used"]
+    #
+    if title_flag:
+        title_flag = False
+        for idx, (k, v) in enumerate(j.items()):
+            log(f"{k}", end="")
+            if idx == len(j) - 1:
+                log()
+            else:
+                log(", ", end="")
+
+    for idx, (k, v) in enumerate(j.items()):
+        log(f"{v}", end="")
+        if idx == len(j) - 1:
+            log()
+        else:
+            log(", ", end="")
+
+
 def _watch(eth_address, from_block, is_provider):
+    _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     bn = Ebb.get_block_number()
     if is_provider:
         _argument_filters = {"provider": eth_address}
@@ -61,7 +142,7 @@ def _watch(eth_address, from_block, is_provider):
         argument_filters=_argument_filters,
         toBlock="latest",
     )
-    header = f"   [bold yellow]{'{:<44}'.format('KEY')} INDEX STATUS[/bold yellow]"
+    header = f"  [yellow]{'{:<46}'.format('key')} index      status[/yellow]"
     job_full = ""
     job_count = 0
     completed_count = 0
@@ -69,7 +150,8 @@ def _watch(eth_address, from_block, is_provider):
     workload_nas_completed = 0
     workload_cppr_count = 0
     workload_nas_count = 0
-    for job in enumerate(event_filter.get_all_entries()):
+    title_flag = True
+    for idx, job in enumerate(event_filter.get_all_entries()):
         job_count += 1
         try:
             _args = job["args"]
@@ -92,6 +174,7 @@ def _watch(eth_address, from_block, is_provider):
             c = "green"
             completed_count += 1
 
+        workload_type = ""
         if len(_job["code_hashes"]) == 4:
             workload_cppr_count += 1
             workload_type = "cppr"
@@ -105,36 +188,42 @@ def _watch(eth_address, from_block, is_provider):
         else:
             print("ALERT")
 
-        if is_get_ongoing_test_results:
-            job_full = (
-                f" [bold blue]*[/bold blue] [bold white]{'{:<48}'.format(_job['job_key'])}[/bold white] "
-                f"{_job['index']} {workload_type} [bold {c}]{state_val}[/bold {c}]\n{job_full}"
-            )
+        _hash = _job["job_key"]
+        _index = _job["index"]
+        if not is_csv:
+            if is_while:
+                job_full = (
+                    f"[bold blue]*[/bold blue] [white]{'{:<50}'.format(_hash)}[/white] "
+                    f"{_index} {'{:<4}'.format(workload_type)} [{c}]{state_val}[/{c}]\n{job_full}"
+                )
+            else:
+                job_full = (
+                    f"[bold blue]*[/bold blue] [bold white]{'{:<50}'.format(_hash)}[/bold white] "
+                    f"{_index} {'{:<4}'.format(workload_type)} [{c}]{state_val}[/{c}]"
+                )
+                log(job_full)
         else:
-            job_full = (
-                f" [bold blue]*[/bold blue] [bold white]{'{:<48}'.format(_job['job_key'])}[/bold white] "
-                f"{_job['index']} {workload_type} [bold {c}]{state_val}[/bold {c}]"
-            )
-            log(job_full)
+            print_in_csv_format(_job, idx, state_val, workload_type, _hash, _index, title_flag)
+            title_flag = False
 
         time.sleep(0.2)
 
-    if is_get_ongoing_test_results:
+    if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
     else:
-        job_ruler = "[green]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/green]"
+        job_ruler = "[g]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/g]"
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
     is_connected = Ebb.is_web3_connected()
-    if is_get_ongoing_test_results:
+    if is_while:
         _console_clear()
 
-    log(
-        f"\r==> {_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}",
-        "bold",
-    )
-    log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}", "b")
-    log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}", "b")
+    open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
+    log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
+    if analyze_long_test:
+        log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}", "b")
+        log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}", "b")
+
     # get_providers_info()
     log(job_full, is_output=False)
 
@@ -143,28 +232,23 @@ def watch(eth_address="", from_block=None):
     if not from_block:
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
-    from_block = 15867616
     if not eth_address:
         try:
             eth_address = get_eth_address_from_cfg()
         except Exception as e:
-            log(f"E: {e}\neth_address is empty, run as: ./watch.py <eth_address>")
+            log(f"E: {e}\neth_address is empty, run as: [m]./watch.py <eth_address>")
             sys.exit(1)
 
-    if is_log_to_file:
-        watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
-        open(watch_fn, "w").close()
-        _log.ll.LOG_FILENAME = watch_fn
-
+    watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
+    open(watch_fn, "w").close()
     _console_clear()
-    print(f" * starting for provider={eth_address}")
-    is_provider = True
+    if is_provider:
+        log(f"* starting for provider={eth_address} from_block={from_block}")
 
-    if is_get_ongoing_test_results:
+    if is_while:
         while True:
             _watch(eth_address, from_block, is_provider)
-            log()
-            time.sleep(2)
+            time.sleep(30)
     else:
         _watch(eth_address, from_block, is_provider)
 
@@ -174,7 +258,8 @@ def main():
     if len(sys.argv) == 2:
         eth_address = sys.argv[1]
 
-    watch(eth_address)
+    from_block = 19962696
+    watch(eth_address, from_block)
 
 
 if __name__ == "__main__":

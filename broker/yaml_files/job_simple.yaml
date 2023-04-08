@@ -2,7 +2,7 @@ config:
   requester_address: "0x378181ce7b07e8dd749c6f42772574441b20e35f"
   provider_address: "0xeaB50158e8e51DE21616307a99C9604C1c453a02"
   source_code:
-    storage_id: ipfs # examples: ipfs | ipfs_cfg | eudat | gdrive
+    storage_id: ipfs # examples: ipfs | ipfs_cfg | b2drop | gdrive
     cache_type: public
     path: ~/test_eblocbroker/test_data/base/source_code
     size_mb: 1

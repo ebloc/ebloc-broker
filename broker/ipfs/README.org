@@ -1,4 +1,5 @@
-* Enable Port Google-Instance
+* DOC
+** Enable Port Google-Instance
 
 Helpful conversation:
 - [[https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c?permalink_comment_id=4022998#gistcomment-4022998]]
@@ -9,21 +10,7 @@ say either
 
 ---------------------------------------
 
-- ~Navigation Menu~ => ~VPN Network~ => ~Firewall~ => ~Create Firewall Rule~
-- Name: ~ipfs~
-- Logs: ~Off~
-- Type: ~Ingress~
-- Priority: ~1000~
-- Targets => ~All instances in the network~
-- Source IP ranges: ~0.0.0.0/0~
-- TCP: ~4001~
-- Action: ~Allow~
-- default
-- Off
-- Open instance, Edit, network tags => add ~ipfs~
-- ~sudo service network-manager restart~ or reboot in case
-
-* Setup Private Network
+** Setup Private Network
 
 - [[https://github.com/ipfs/go-ipfs/blob/master/docs/experimental-features.md#private-networks][Guide]]
 - [[https://www.geekdecoder.com/setting-up-a-private-ipfs-network-with-ipfs-and-ipfs-cluster][Guide_1]]
@@ -42,8 +29,7 @@ export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon
 ipfs swarm addrs
 #+end_src
 
-* Google Node
-
+** Google Node
 #+begin_src bash
 sudo firewall-cmd --add-port=4001/tcp --permanent
 sudo firewall-cmd --reload
@@ -64,21 +50,16 @@ public
   rich rules:
 #+end_src
 
-* All other nodes
-
+** All other nodes
 - Port check: ~nc -v <ip> 4001~
 - ~nc gateway-int.ipfs.io 4001~
 
 #+begin_src bash
-# sudo netstat -lptn | grep 4001
-# ipfs config Addresses
-$ gcloud compute firewall-rules list | grep 'ipfs'
-default-ipfs            default  INGRESS    1000      tcp:4001
+sudo netstat -lptn | grep 4001
+ipfs config Addresses
 #+end_src
 
-- https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578
-
---------------------------
+- [[https://stackoverflow.com/questions/21065922/how-to-open-a-specific-port-such-as-9090-in-google-compute-engine/27675578#27675578]]
 
 #+begin_src bash
 killall ipfs
@@ -86,6 +67,7 @@ DIR=~/.ipfs
 if [[ ! -d "$DIR" ]]; then
 	ipfs init
 fi
+
 ipfs bootstrap rm --all
 ipfs config show | grep "PeerID" | awk '{print $2}' | tr -d \"
 ipfs bootstrap add /ip4/35.240.104.228/tcp/4001/p2p/12D3KooWLqjUfi8fjz5tncRJXet4gUiK75VRJnB5E16Z8mVJ9c8N
@@ -108,7 +90,7 @@ ipfs swarm connect /ip4/192.168.1.245/tcp/4001/p2p/12D3KooWEx4tD1xKp4Pr1xUnA3e2Z
 
 ----------------------------------------
 
-# Helpful commands for garbage collection
+** helpful commands for garbage collection
 
 #+begin_src bash
 ipfs pin ls --type recursive
@@ -119,7 +101,7 @@ ipfs repo gc
 ** Private IPFS Setup:
 
 #+begin_src bash
-connect_private_ipfs () {
+connect_to_private_ipfs () {
     export IPFS_PATH=~/.ipfs
     cat ~/ebloc-broker/scripts/ipfs_swarm.key | tr -d ' ' > $IPFS_PATH"/swarm.key"
     ipfs bootstrap rm --all
@@ -128,7 +110,7 @@ connect_private_ipfs () {
 }
 go install github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen@latest
 ipfs init
-connect_private_ipfs
+connect_to_private_ipfs
 #+end_src
 
 --------------------------------
@@ -137,4 +119,24 @@ connect_private_ipfs
 ipfs daemon --routing=none &
 ipfs repo gc
 time ipfs cat QmaSSwsS2nAjExnxrqwKtmK5rLLhmqpju1HCsnPSigtHmV > /dev/null
+#+end_src
+
+** Google Instance
+- ~Navigation Menu~ => ~VPN Network~ => ~Firewall~ => ~Create Firewall Rule~
+- Name: ~ipfs~
+- Logs: ~Off~
+- Type: ~Ingress~
+- Priority: ~1000~
+- Targets => ~All instances in the network~
+- Source IP ranges: ~0.0.0.0/0~
+- TCP: ~4001~
+- Action: ~Allow~
+- default
+- Off
+- Open instance, Edit, network tags => add ~ipfs~
+- ~sudo service network-manager restart~ or reboot in case
+
+#+begin_src bash
+$ gcloud compute firewall-rules list | grep 'ipfs'
+default-ipfs            default  INGRESS    1000      tcp:4001
 #+end_src

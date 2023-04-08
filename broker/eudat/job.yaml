@@ -1,19 +1,19 @@
 config:
-    requester_address: '0x17b4ec0bcd6a8f386b354becd44b3c4813448184'
-    provider_address: '0x1926b36AF775E1312FDEbCc46303eCAe50d945aF'
+    requester_address: '0xa9fc23943e48a3efd35bbdd440932f123d05b697'
+    provider_address: '0xE2e146d6B456760150d78819af7d276a1223A6d4'
     source_code:
         cache_type: private
         path: ~/test_eblocbroker/test_data/base/source_code
         size_mb: 1
         storage_hours: 1
-        storage_id: eudat
+        storage_id: b2drop
     data:
         data1:
             cache_type: public
             path: ~/test_eblocbroker/test_data/base/data/data1
             size_mb: 1
             storage_hours: 1
-            storage_id: eudat
+            storage_id: b2drop
     data_transfer_out: 1
     jobs:
         job1:

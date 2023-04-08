@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+import decimal
 import os
 import sys
 from ast import literal_eval as make_tuple
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List  # noqa
 
 from broker import cfg, config
 from broker._utils._log import br
@@ -15,6 +16,7 @@ from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker_scripts.bloxber_calls import call
 from broker.eblocbroker_scripts.data import is_data_registered
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.lib import calculate_size
 from broker.libs import _git
@@ -95,7 +97,7 @@ class Job:
         self.requester = requester
         self.check()
         if is_verbose:
-            log("==> Entered into the cost calculation...")
+            log(f"* Entered into the cost calculation for provider={provider}")
 
         jp = JobPrices(self)
         jp.set_computational_cost()
@@ -263,7 +265,8 @@ class Job:
                         self.data_prices_set_block_numbers.append(0)
 
                 if is_data_hash and not is_data_registered(self.provider_addr, data_hash):
-                    raise Exception(f"requested data={data_hash} is not registered into the provider")
+                    d = data_hash.decode("utf-8")
+                    raise QuietExit(f"Requested data={d} is not registered into the provider.")
 
         self.cores = []
         self.run_time = []
@@ -289,27 +292,44 @@ class Job:
 
     def print_before_submit(self):
         for idx, code_hash in enumerate(self.code_hashes_str):
-            log(
-                {
-                    "path": self.paths[idx],
-                    "code_hash": code_hash,
-                    "folder_size_mb": self.data_transfer_ins[idx],
-                    "storage_ids": StorageID(self.storage_ids[idx]).name,
-                    "cache_type": CacheType(self.cache_types[idx]).name,
-                }
-            )
-            log()
+            if StorageID(self.storage_ids[idx]).name == "NONE":
+                log(
+                    dict(
+                        {
+                            "code_hash": code_hash,
+                            "storage_ids": StorageID(self.storage_ids[idx]).name,
+                        }
+                    )
+                )
+            else:
+                log(
+                    dict(
+                        {
+                            "path": self.paths[idx],
+                            "code_hash": code_hash,
+                            "folder_size_mb": self.data_transfer_ins[idx],
+                            "storage_ids": StorageID(self.storage_ids[idx]).name,
+                            "cache_type": CacheType(self.cache_types[idx]).name,
+                        }
+                    )
+                )
 
     def _search_best_provider(self, requester, is_verbose=False):
-        selected_provider = ""
+        selected_provider = None
         selected_price = 0
         price_to_select = sys.maxsize
         price_list = []
-        for provider in self.Ebb.get_providers():
+        if cfg.TEST_PROVIDERS:
+            providers_list = cfg.TEST_PROVIDERS  # only wanted providers are looked into
+        else:
+            providers_list = self.Ebb.get_providers()
+
+        for provider in providers_list:
             try:
                 _price, *_ = self.cost(provider, requester, is_verbose)
                 price_list.append(_price)
-                log(f" * provider={provider} | price={_price}")
+                print()
+                # log(f" * provider={provider} | price={Cent(_price)._to()} usd")
                 if _price < price_to_select:
                     price_to_select = _price
                     selected_provider = provider
@@ -322,8 +342,16 @@ class Job:
         is_all_equal = all(x == price_list[0] for x in price_list)
         return selected_provider, selected_price, is_all_equal
 
-    def search_best_provider(self, requester):
-        provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=True)
+    def search_best_provider(self, requester, is_verbose=True, is_force=False):
+        # is_verbose = False
+        if not is_force or not self.provider_addr:
+            provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=is_verbose)
+        else:  #: instead force the given provider address from `self.provider_addr`
+            _price, *_ = self.cost(self.provider_addr, requester, is_verbose=True)
+            best_price = _price
+            is_all_equal = True
+            provider_to_share = self.provider_addr
+
         self.price, *_ = self.cost(provider_to_share, requester)
         if self.price != best_price:
             raise Exception(f"job_price={self.price} and best_price={best_price} does not match")
@@ -331,7 +359,7 @@ class Job:
         if is_all_equal:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
 
-        log(f"[green]##[/green] provider_to_share={provider_to_share} | price={best_price}", "bold")
+        log(f"[g]##[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
 
@@ -409,11 +437,18 @@ class JobPrices:
     def set_storage_cost(self, is_verbose=False):
         """Calculate the cache cost."""
         self.registered_data_cost_list = {}
+        #: for logging purpose
+        self.registered_data_cost_list_usd = {}
         self.registered_data_cost = 0
         self.storage_cost = 0
         self.cache_cost = 0
         self.data_transfer_in_sum = 0
         bn = self.Ebb.get_block_number()
+        #: pre-check set zero if extra data-transfer-in is given
+        for idx, code_hash in enumerate(self.job.code_hashes):
+            if self.job.storage_ids[idx] == StorageID.NONE:
+                self.job.data_transfer_ins[idx] = 0
+
         for idx, code_hash in enumerate(self.job.code_hashes):
             if self.is_brownie:
                 ds = self.create_data_storage(code_hash)
@@ -429,7 +464,7 @@ class JobPrices:
             except:
                 _code_hash = bytes32_to_ipfs(code_hash, is_verbose=False)
 
-            if is_verbose:
+            if is_verbose and _code_hash:
                 log(f"==> is_private{br(_code_hash, 'blue')}={ds.is_private}")
 
             # print(received_block + storage_duration >= self.w3.eth.block_number)
@@ -460,6 +495,7 @@ class JobPrices:
                     )
                     self.storage_cost += data_price
                     self.registered_data_cost_list[_code_hash] = data_price
+                    self.registered_data_cost_list_usd[_code_hash] = self.to_usd(data_price, is_color=False)
                     self.registered_data_cost += data_price
                 elif not ds.received_deposit:  # and (received_block + storage_duration < w3.eth.block_number)
                     self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
@@ -474,6 +510,13 @@ class JobPrices:
         self.data_transfer_out_cost = self.price_data_transfer * self.job.data_transfer_out
         self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
 
+    def to_usd(self, amount, is_color=True) -> str:
+        if is_color:
+            _amount = str(decimal.Decimal(Cent(amount)._to()))[:8]
+            return f"{_amount} [blue]usd"
+        else:
+            return f"{Cent(amount)._to()} usd"
+
     def set_job_price(self, is_verbose=False) -> None:
         """Set job price in the object."""
         self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
@@ -483,27 +526,25 @@ class JobPrices:
         self.cost["data_transfer_in"] = self.data_transfer_in_cost
         self.cost["data_transfer_out"] = self.data_transfer_out_cost
         self.cost["data_transfer"] = self.data_transfer_cost
-        if self.registered_data_cost_list:
-            log(self.registered_data_cost_list)
-
         if is_verbose:
-            log(f"==> price_core_min={self.price_core_min}")
-            log(f"==> price_data_transfer={self.price_data_transfer}")
-            log(f"==> price_storage={self.price_storage}")
-            log(f"==> price_cache={self.price_cache}")
-            log(f"[green]*[/green] [blue]job_price[/blue]={self.job_price}", "bold")
-            _c = "[green]|[/green]       [yellow]*[/yellow]"
+            log(f"==> price_core_min={self.to_usd(self.price_core_min)}")
+            log(f"==> price_data_transfer={self.to_usd(self.price_data_transfer)}")
+            log(f"==> price_storage={self.to_usd(self.price_storage)}")
+            log(f"==> price_cache={self.to_usd(self.price_cache)}")
+            log(f"[g]*[/g] job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
+            _c = "[g]|[/g]       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
-                    log(f"[green]|[/green]   * {k}={v}", "bold")
+                    log(f"[g]|[/g]   * {k}={self.to_usd(v)}")
                     if k == "storage":
-                        log(f"{_c} in={self.cost['data_transfer_in']}", "bold")
+                        log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
                         if self.registered_data_cost > 0:
-                            log(f"{_c} registered_data={self.registered_data_cost}", "bold")
-                            log(f"[green]|[/green]         {self.registered_data_cost_list}")
+                            log(f"{_c} registered_data={self.to_usd(self.registered_data_cost)}")
+                            log(f"[g]|[/g]         {self.registered_data_cost_list_usd}")
 
                 if k == "data_transfer":
-                    log(f"{_c} in={self.cost['data_transfer_in']}", "bold")
-                    log(f"{_c} out={self.cost['data_transfer_out']}", "bold")
-
-            log()
+                    log(f"{_c} in={self.to_usd(self.cost['data_transfer_in'])}")
+                    log(f"{_c} out={self.to_usd(self.cost['data_transfer_out'])}")
+        else:
+            if self.registered_data_cost_list:
+                log(self.registered_data_cost_list)

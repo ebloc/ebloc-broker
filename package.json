@@ -1,7 +1,7 @@
 {
   "name": "ebloc-broker",
   "version": "2.0.0",
-  "description": "## eBlocBroker is a blockchain based autonomous computational resource broker",
+  "description": "## ebloc-broker is a blockchain based autonomous computational resource broker",
   "license": "UNLICENSED",
   "main": "Driver.py",
   "directories": {

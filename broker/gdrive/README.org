@@ -36,7 +36,7 @@ Copy the ~Client ID~ and ~Secret~ into ~handlers_drive.go~ lines 17 and 18 and c
 
 *Note:* Generated token expires in 7 days.
 
-finally:
+Finally:
 - https://console.cloud.google.com/apis/credentials/consent
   ~PUBLISH APP~
 
@@ -44,24 +44,17 @@ finally:
 $ emacs -nw handlers_drive.go
 #+end_src
 
-Delete the old ~.gdrive/token_v2.json~
-
-#+begin_src bash
-rm -f ~/.gdrive/token_v2.json
-#+end_src
-
 ** Build
 
 Open terminal and go to the folder where the ~handerls_drive.go~ is.
 
 #+begin_src bash
+rm -f ~/.gdrive/token_v2.json  # delete the old token
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive  # go install github.com/prasmussen/gdrive@latest
-#
 go build -ldflags "-w -s"
 sudo cp gdrive /usr/local/bin/gdrive
-rm -f ~/.gdrive/token_v2.json
-gdrive about
+./gdrive about
 #+end_src
 
 Go to the following url in your browser:

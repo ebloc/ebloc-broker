@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
-
 from broker import cfg
 from broker._utils._log import br
 from broker._utils.tools import log, print_tb
+from broker.eblocbroker_scripts.job import Job
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
-from broker.utils import StorageID, is_ipfs_on, is_transaction_valid, question_yes_no
+from broker.utils import StorageID, is_ipfs_on, question_yes_no
 from brownie.exceptions import TransactionError
 
+Ebb = cfg.Ebb
 ipfs = cfg.ipfs
 
 
@@ -78,12 +79,14 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     for cache_type in job.cache_types:
         if cache_type > 1:
-            # cache_type should be {0: private, 1: public}
-            raise Exception(f"cache_type ({cache_type}) provided greater than 1. Please provide smaller value")
+            raise Exception(
+                f"cache_type ({cache_type}) provided greater than 1,"
+                "where it should be `0: PUBLIC` or `1: PRIVATE`. Please provide smaller value"
+            )
 
     if is_use_ipfs:
         if not is_ipfs_on():
-            sys.exit()
+            raise Exception("ipfs daemon is not running in the background")
 
         try:
             ipfs.swarm_connect(provider_info["ipfs_address"])
@@ -96,11 +99,18 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         if source_code_hash == "":
             raise Exception(f"source_code_hash{br(idx)} should not be empty string")
 
+    if job.price == 0:
+        raise Exception("E: job.price is 0 ; something is wrong")
 
-def submit_job(self, provider, key, job, requester=None, required_confs=1):
+    balance = self.get_balance(job.requester)
+    if job.price > Cent(balance):
+        raise Exception(f"E: Calculated job_price={job.price} is greater than requester's balance={Cent(balance)}")
+
+
+def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, is_verbose=False):
     """Submit job.
 
-    How to get exception message in Python properly:
+    - How to properly get exception messages in Python:
     __ https://stackoverflow.com/a/45532289/2402577
     __ https://stackoverflow.com/a/24065533/2402577
     """
@@ -109,26 +119,27 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
 
     provider = self.w3.toChecksumAddress(provider)
     _from = self.w3.toChecksumAddress(requester)
-    log("==> Submitting the job")
+    log(f"==> Submitting the job({job.code_hashes_str[0]})")
     try:
         provider_info = self.get_provider_info(provider)
-        log(f"provider's available_core_num={provider_info['available_core_num']}", "bold")
-        log(f"provider's price_core_min={provider_info['price_core_min']}", "bold")
+        if is_verbose:
+            log(f"provider's available_core_num={provider_info['available_core_num']}")
+            log(f"provider's price_core_min={Cent(provider_info['price_core_min'])._to()} [blue]usd")
     except Exception as e:
         print_tb(e)
         raise e
 
     self.check_before_submit(provider, _from, provider_info, key, job)
-    provider_price_block_number = self._get_provider_set_block_numbers(provider)
     args = [
         provider,
-        provider_price_block_number,
+        self._get_provider_set_block_numbers(provider),
         job.storage_ids,
         job.cache_types,
         job.data_prices_set_block_numbers,
         job.cores,
         job.run_time,
         job.data_transfer_out,
+        job.price,
     ]
     job.print_before_submit()
     try:
@@ -150,7 +161,7 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
     except TransactionError as e:
         log(f"warning: {e}")
         tx_hash = str(e).replace("Tx dropped without known replacement: ", "")
-        if is_transaction_valid(tx_hash):
+        if Ebb.is_transaction_valid(tx_hash):
             return tx_hash
         else:
             raise Exception(f"tx_hash={tx_hash} is not a valid transaction hash.") from e
@@ -158,4 +169,4 @@ def submit_job(self, provider, key, job, requester=None, required_confs=1):
         if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
             raise QuietExit from None
 
-        raise e
+        raise e  # "No valid Tx receipt is generated"

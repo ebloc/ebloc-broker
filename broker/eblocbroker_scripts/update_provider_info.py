@@ -9,6 +9,8 @@ from broker.config import env
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.errors import QuietExit
 
+ipfs = cfg.ipfs
+
 
 def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):
     try:
@@ -20,7 +22,7 @@ def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):
             and provider_info["ipfs_address"] == ipfs_address
         ):
             log(provider_info)
-            raise QuietExit("warning: Given information is same as the cluster's saved info. Nothing to do.")
+            raise QuietExit("warning: Given information is same as the provider's saved info. Nothing to do.")
 
         tx = self._update_provider_info(f"0x{gpg_fingerprint}", gmail, f_id, ipfs_address)
         return self.tx_id(tx)
@@ -56,7 +58,10 @@ if __name__ == "__main__":
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL)
 
     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
+    ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
+
     f_id = env.OC_USER
+    log(f"## address=[m]{env.PROVIDER_ID}")
     log(f"## gmail=[m]{env.GMAIL}")
     log(f"## gpg_fingerprint={gpg_fingerprint}")
     log(f"## ipfs_address=[m]{ipfs_address}")
@@ -64,6 +69,6 @@ if __name__ == "__main__":
     try:
         cfg.ipfs.is_gpg_published(gpg_fingerprint)
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_address)
-        receipt = get_tx_status(tx_hash)
+        get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)

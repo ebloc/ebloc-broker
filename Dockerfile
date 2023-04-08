@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 FROM golang:latest
 RUN apt-get install -y ca-certificates
-RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/v0.13.0/go-ipfs_v0.13.0_linux-amd64.tar.gz" \
- && tar -xf "go-ipfs_v0.13.0_linux-amd64.tar.gz" \
- && rm -f go-ipfs_v0.13.0_linux-amd64.tar.gz \
+ARG IPFS_TAG=v0.19.0
+RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/"${IPFS_TAG}"/go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
+ && tar -xf "go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
+ && rm -f go-ipfs_${IPFS_TAG}_linux-amd64.tar.gz \
  && cd go-ipfs \
  && make install \
  && ./install.sh
@@ -34,7 +35,7 @@ ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini
 RUN chmod +x /tini
 
 # Install mongodb
-RUN curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
  && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
  && apt-get update \
  && apt-get install -y mongodb-org \
@@ -63,7 +64,8 @@ RUN apt-get update \
     nodejs \
     python3-venv \
     sudo \
-    netcat \
+    davfs2 \
+    netcat-traditional \
     supervisor \
     nano \
     less \
@@ -88,6 +90,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /workspace
 RUN git clone https://github.com/ebloc/ebloc-broker.git
 WORKDIR /workspace/ebloc-broker
+
 #: `pip install -e .` takes few minutes
 RUN git checkout dev >/dev/null 2>&1 \
  && git fetch --all --quiet >/dev/null 2>&1 \

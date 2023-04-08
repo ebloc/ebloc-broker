@@ -62,4 +62,4 @@ for i in list(G.nodes):
 for i in list(G.nodes):
     print(i + " " + str(job_ids[i]))
 
-# jid4=$(sbatch  --dependency=afterany:$jid2:$jid3 job4.sh
+# jid4=$(sbatch --dependency=afterany:$jid2:$jid3 job4.sh)

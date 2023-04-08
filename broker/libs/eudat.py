@@ -6,12 +6,12 @@ import os.path
 import pickle
 import shutil
 import subprocess
-import sys
 import time
 from contextlib import suppress
 from pathlib import Path
 
 import owncloud
+from halo import Halo
 from web3.logs import DISCARD
 
 from broker import cfg, config
@@ -27,7 +27,7 @@ Ebb = cfg.Ebb
 
 
 def _upload_results(encoded_share_token, output_file_name):
-    r"""Upload results into Eudat using curl.
+    r"""Upload results into b2drop using curl.
 
     * How to upload files into shared b2drop.eudat(owncloud) repository using curl?
     __ https://stackoverflow.com/a/44556541/2402577
@@ -78,10 +78,10 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
                 log(error)
 
             if "warning: Couldn't read data from file" in error:
-                raise Exception("Eudat repository did not successfully uploaded")
+                raise Exception("b2drop repository did not successfully uploaded")
 
             if p.returncode != 0 or "<d:error" in output:
-                log("Eudat repository did not successfully uploaded")
+                log("b2drop repository did not successfully uploaded")
                 log(f"   curl is failed. {p.returncode} => {br(error)} {output}")
                 time.sleep(1)  # wait 1 second for next step retry to upload
             else:  # success on upload
@@ -90,24 +90,24 @@ def upload_results(encoded_share_token, output_file_name, path, max_retries=1):
         raise Exception(f"Upload results into cloud failed after {max_retries} tries")
 
 
-def _login(fn, user, password_path) -> None:
+def _login(fn, user, password_path, message) -> None:
     sleep_duration = 15
     config.oc = owncloud.Client("https://b2drop.eudat.eu/")
     with open(password_path, "r") as content_file:
         passwd = content_file.read().strip()
 
+    message_no_color = f"Trying to login into owncloud user={user} ..."
     for _ in range(cfg.RECONNECT_ATTEMPTS):
         try:
-            status_str = f"[bold]Trying to login into owncloud user=[yellow]{user}[/yellow] ...[/bold]"
-            with cfg.console.status(status_str):
-                # may take few minutes to connect
-                config.oc.login(user, passwd)
+            #: https://github.com/manrajgrover/halo
+            with Halo(text=message_no_color, spinner="line", placement="right"):
+                config.oc.login(user, passwd)  # may take few minutes to connect
 
             passwd = ""
             f = open(fn, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(f"  {status_str} {ok()}", "bold")
+            log(message, success=True)
             return
         except Exception as e:
             log(str(e))
@@ -122,6 +122,7 @@ def _login(fn, user, password_path) -> None:
 
 
 def login(user, password_path: Path, fn: str) -> None:
+    message = f"Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
     if not user:
         log("E: Given user is empty string")
         terminate()
@@ -130,38 +131,38 @@ def login(user, password_path: Path, fn: str) -> None:
         f = open(fn, "rb")
         config.oc = pickle.load(f)
         try:
-            status_str = f"[bold]Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
-            with cfg.console.status(status_str):
+            message_no_color = f"Login into owncloud from the dumped_object={fn} ..."
+            with Halo(text=message_no_color, spinner="line", placement="right"):
                 config.oc.get_config()
 
-            log(f" {status_str}{ok()}")
+            log(message, success=True)
         except subprocess.CalledProcessError as e:
-            log(f"FAILED. {e.output.decode('utf-8').strip()}")
-            _login(fn, user, password_path)
+            log(f"{message} FAILED.\n{e.output.decode('utf-8').strip()}")
+            _login(fn, user, password_path, message)
     else:
-        _login(fn, user, password_path)
+        _login(fn, user, password_path, message)
 
 
 def share_single_folder(folder_name, f_id):
     """Share given folder path with the user."""
     if not config.oc.is_shared(folder_name):
         config.oc.share_file_with_user(folder_name, f_id, remote_user=True, perms=31)
-        log(f"sharing with [yellow]{f_id}[/yellow]{ok()}", "bold")
+        log(f"sharing with [yellow]{f_id}[/yellow] {ok()}")
 
     log("## Requester folder is already shared")
 
 
-def initialize_folder(folder_to_share, requester_name) -> str:
+def initialize_folder(folder_to_share, username) -> str:
     dir_path = os.path.dirname(folder_to_share)
     tar_hash, *_ = compress_folder(folder_to_share)
     tar_source = f"{dir_path}/{tar_hash}.tar.gz"
     try:
-        config.oc.mkdir(f"{tar_hash}_{requester_name}")
+        config.oc.mkdir(f"{tar_hash}_{username}")
     except Exception as e:
         if "405" not in str(e):
-            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}_{requester_name}"):
+            if not os.path.exists(f"{env.OWNCLOUD_PATH}/{tar_hash}_{username}"):
                 try:
-                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}_{requester_name}")
+                    os.makedirs(f"{env.OWNCLOUD_PATH}/{tar_hash}_{username}")
                 except Exception as e:
                     raise e
             else:
@@ -170,17 +171,19 @@ def initialize_folder(folder_to_share, requester_name) -> str:
             log("#> folder is already created")
 
     try:
-        tar_dst = f"{tar_hash}_{requester_name}/{tar_hash}.tar.gz"
-        log("## uploading into [green]EUDAT B2DROP[/green] this may take some time depending on the file size...")
+        tar_dst = f"{tar_hash}_{username}/{tar_hash}.tar.gz"
+        log("## uploading into [g]B2DROP[/g] this may take some time depending on the file size...")
         is_already_uploaded = False
         with suppress(Exception):
             # File is first time created
             size = calculate_size(tar_source, _type="bytes")
             file_info = config.oc.file_info(f"./{tar_dst}")
-            log(file_info, "bold")
+            if file_info:
+                log(file_info)
+
             if float(file_info.attributes["{DAV:}getcontentlength"]) == size:
                 # check is it already uploaded or not via its file size
-                log(f"## {tar_source} is already uploaded into [green]EUDAT B2DROP")
+                log(f"## {tar_source} is already uploaded into [g]B2DROP")
                 is_already_uploaded = True
 
         if not is_already_uploaded:
@@ -189,12 +192,13 @@ def initialize_folder(folder_to_share, requester_name) -> str:
         os.remove(tar_source)
     except Exception as e:
         if type(e).__name__ == "HTTPResponseError":
+            # TODO: maybe try again
             try:
                 shutil.copyfile(tar_source, f"{env.OWNCLOUD_PATH}/{tar_dst}")
             except Exception as e:
                 raise e
         else:
-            raise Exception("oc could not connected in order to upload the file")  # noqa
+            raise Exception("oc could not connected in order to upload the file")  # type: ignore
 
     return tar_hash
 
@@ -215,7 +219,7 @@ def is_oc_mounted() -> bool:
 
     if "b2drop.eudat.eu/remote.php/webdav/" not in output:
         print(
-            "Mount a folder in order to access EUDAT(https://b2drop.eudat.eu/remote.php/webdav/).\n"
+            "Mount a folder in order to access B2DROP(https://b2drop.eudat.eu/remote.php/webdav/).\n"
             "Please do: \n"
             "sudo mkdir -p /mnt/oc \n"
             "sudo mount.davfs https://b2drop.eudat.eu/remote.php/webdav/ /mnt/oc"
@@ -235,7 +239,7 @@ def submit(provider, requester, job, required_confs=1):
                 log(vars(processed_logs[0].args))
                 try:
                     processed_logs[0].args["index"]
-                    # log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
+                    # log(f"[bold]job_index={processed_logs[0].args['index']} {ok()}")
                 except IndexError:
                     log(f"E: Tx({tx_hash}) is reverted")
         else:
@@ -244,22 +248,24 @@ def submit(provider, requester, job, required_confs=1):
         pass
     except Exception as e:
         print_tb(e)
+        raise e
 
     return tx_hash
 
 
-def _share_folders(provider_info, requester_name, folders_hash):
+def _share_folders(provider_info, username, folders_hash):
     """Share generated archived file with the corresponding provider."""
     for folder, folder_hash in folders_hash.items():
         try:
             if "@b2drop.eudat.eu" not in provider_info["f_id"]:
                 provider_info["f_id"] = provider_info["f_id"] + "@b2drop.eudat.eu"
 
-            share_single_folder(f"{folder_hash}_{requester_name}", provider_info["f_id"])
+            share_single_folder(f"{folder_hash}_{username}", provider_info["f_id"])
         except Exception as e:
-            log(f"E: Failed sharing folder with [yellow]{provider_info['f_id']}")
             print_tb(e)
-            sys.exit(1)
+            log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
+            log("#> Maybe folder with same name is already shared?")
+            raise e
 
         time.sleep(0.25)
 
@@ -268,12 +274,11 @@ def _submit(provider, requester, job, required_confs=1):
     job.Ebb.is_requester_valid(requester)
     job.Ebb.is_eth_account_locked(requester)
     provider = cfg.w3.toChecksumAddress(provider)
-    requester_name = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
+    username = hashlib.md5(requester.lower().encode("utf-8")).hexdigest()[:16]
     try:
         _git.is_repo(job.folders_to_share)
-    except:
-        print_tb()
-        sys.exit(1)
+    except Exception as e:
+        raise e
 
     folders_hash = {}
     for idx, folder in enumerate(job.folders_to_share):
@@ -285,11 +290,10 @@ def _submit(provider, requester, job, required_confs=1):
             try:
                 _git.initialize_check(folder)
                 _git.commit_changes(folder)
-                folder_hash = initialize_folder(folder, requester_name)
+                folder_hash = initialize_folder(folder, username)
                 folders_hash[folder] = folder_hash
             except Exception as e:
-                print_tb(e)
-                sys.exit(1)
+                raise e
 
             if idx == 0:
                 job_key = folder_hash
@@ -303,18 +307,21 @@ def _submit(provider, requester, job, required_confs=1):
             job.code_hashes.append(code_hash)
             job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-    # provider_addr_to_submit = provider
+    # provider_addr_to_submit = job.Ebb.w3.toChecksumAddress(provider)
+    # job.price, *_ = job.cost(provider_addr_to_submit, requester)
+    #
     provider_addr_to_submit = job.search_best_provider(requester)
     provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
     log(f"==> provider_fid=[m]{provider_info['f_id']}")
-    _share_folders(provider_info, requester_name, folders_hash)
+    _share_folders(provider_info, username, folders_hash)
     # print(job.code_hashes)
     try:
+        if job.price == 0:
+            raise Exception(
+                "E: job.price is not set due to possible the account you tried to send "
+                "transaction from does not have enough funds."
+            )
+
         return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)
-    except QuietExit:
-        sys.exit(1)
     except Exception as e:
-        print_tb(e)
-        # log(f"E: Unlock your Ethereum Account({requester})")
-        # log("#> In order to unlock an account you can use: ~/eBlocPOA/client.sh")
-        sys.exit(1)
+        raise e

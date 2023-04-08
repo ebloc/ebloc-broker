@@ -4,7 +4,7 @@ import os
 import sys
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict
+from typing import Dict  # noqa
 
 from broker import cfg
 from broker._utils.tools import log, mkdir, run
@@ -44,8 +44,8 @@ class Link:
         else:
             run(["ln", "-sfn", path, dest])
 
-        log(f" ┌── {path}", "bold green")
-        log(f" └─> {dest}", "bold yellow")
+        log(f" ┌── {path}", "g")
+        log(f" └─> {dest}", "yellow")
 
     def registered_data(self, data_hashes):
         for data_hash in data_hashes:
@@ -90,7 +90,7 @@ class Link:
                     log()
 
                 folder_new_hash = generate_md5sum(dest)
-                assert folder_hash == folder_new_hash, "hash of the original and the linked folder does not match"
+                assert folder_hash == folder_new_hash, "Hash of the original and the linked folder does not match"
 
 
 def check_link_folders(folders_to_share, registered_data_files, source_code_path, is_pass=False):
@@ -101,7 +101,7 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
             if isinstance(data_file, bytes):
                 data_file = data_file.decode("utf-8")
 
-            log(f"[blue] * [/blue][green]{data_file}[/green] => [yellow]../data_link/{data_file}[/yellow]", "bold")
+            log(f"[blue] * [/blue][g]{data_file}[/g] => [yellow]../data_link/{data_file}[/yellow]")
 
     if folders_to_share:
         is_continue = True
@@ -110,15 +110,14 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
         for folder in folders_to_share:
             if not os.path.isdir(folder):
                 log(f"E: {folder} path does not exist")
-    else:
-        if is_continue:
-            print("")
-            if not is_pass:
-                question_yes_no(
-                    "#> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
-                    "If no, please feel free to update your run.sh file and continue",
-                    is_exit=True,
-                )
+    elif is_continue:
+        print()
+        if not is_pass:
+            question_yes_no(
+                "#> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
+                "If no, please feel free to update your run.sh file and continue",
+                is_exit=True,
+            )
 
 
 def test_with_small_dataset(value):
@@ -142,8 +141,8 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
     link.link_folders(folders_target)
     log()
     for key, value in link.data_map.items():
-        # test_with_small_dataset(value)  # delete_me
-        log(f"[blue] * [/blue][green]{key}[/green] => [yellow]../data_link/{value}[/yellow]", "bold")
+        # test_with_small_dataset(value)  # DELETEME
+        log(f"[blue] * [/blue][g]{key}[/g] => [yellow]../data_link/{value}[/yellow]")
 
     if not is_pass:
         print("")
@@ -160,7 +159,7 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
 
     if is_pass and cfg.IS_FULL_TEST and "run_cppr" in str(source_code_path):
         for key, value in link.data_map.items():
-            test_with_small_dataset(value)  # delete_me
+            test_with_small_dataset(value)  # DELETEME
 
 
 def main():

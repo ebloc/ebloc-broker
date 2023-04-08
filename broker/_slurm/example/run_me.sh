@@ -1,5 +1,6 @@
 #!/bin/bash
 
+dir=$(/usr/bin/pwd)
 is_internet () {
     output=$(ping -c 1 -q google.com >&/dev/null; echo $?)
     if [ $output -eq 0 ]
@@ -13,6 +14,8 @@ is_internet () {
 }
 
 is_internet
-echo is_internet=$(is_internet) >> completed.txt
+echo is_internet=$(is_internet) >> $dir/completed.txt
+echo $dir >> $dir/completed.txt
 g++ helloworld.cpp -o hello
 ./hello
+sleep 10

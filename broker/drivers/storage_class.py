@@ -74,7 +74,7 @@ class Storage(BaseClass):
         self.private_dir = self.requester_home / "cache"
         self.public_dir = self.PROGRAM_PATH / "cache"
         self.patch_dir = self.results_folder_prev / "patch"
-        self.drivers_log_path = f"{env.LOG_PATH}/drivers_output/{self.job_key}_{self.index}.log"
+        self.drivers_log_path = f"{env.LOG_DIR}/drivers_output/{self.job_key}_{self.index}.log"
         self.start_timestamp = None
         self.data_transfer_in_to_download: int = 0
         _log.thread_log_files[self.thread_name] = self.drivers_log_path
@@ -145,10 +145,10 @@ class Storage(BaseClass):
 
     def check_already_cached(self, code_hash):
         if os.path.isfile(f"{self.private_dir}/{code_hash}.tar.gz"):
-            log(f":beer:  [green]{code_hash}[/green] is already cached in {self.private_dir}", "bold")
+            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.private_dir}", "bold")
             self.is_cached[code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{code_hash}.tar.gz"):
-            log(f":beer:  [green]{code_hash}[/green] is already cached in {self.public_dir}", "bold")
+            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.public_dir}", "bold")
             self.is_cached[code_hash] = True
 
     def full_refund(self) -> str:
@@ -173,7 +173,7 @@ class Storage(BaseClass):
     def is_md5sum_matches(self, path, name, _id, folder_type, cache_type) -> bool:
         if generate_md5sum(path) == name:
             # checking is already downloaded folder's hash matches with the given hash
-            if self.whoami() == "EudatClass" and folder_type != "":
+            if self.whoami() == "B2dropClass" and folder_type != "":
                 self.folder_type_dict[name] = folder_type
 
             self.cache_type[_id] = cache_type
@@ -202,7 +202,7 @@ class Storage(BaseClass):
             cached_tar_fn = f"{cache_folder}.tar.gz"
 
         if os.path.isfile(cached_tar_fn):
-            if self.whoami() == "EudatClass":
+            if self.whoami() == "B2dropClass":
                 self.folder_type_dict[name] = "tar.gz"
 
             return self.is_md5sum_matches(cached_tar_fn, name, _id, "", _cache_type)
@@ -222,7 +222,7 @@ class Storage(BaseClass):
                 .strip()
             )
             if output.count("/") == 1:
-                log(f"[m]./run.sh[/m] exists under the parent folder{ok()}", "bold")
+                log(f"[m]./run.sh[/m] exists under the parent folder {ok()}", "bold")
                 return True
             else:
                 log("E: run.sh does not exist under the parent folder")
@@ -264,7 +264,7 @@ class Storage(BaseClass):
             log(f"verify_data_list={verify_data_list}", "bold")
             tx = cfg.Ebb.set_data_verified(verify_data_list)
             tx_hash = cfg.Ebb.tx_id(tx)
-            log(f"verify_data tx_hash={tx_hash}", "bold")
+            log(f"verify_data tx_hash={tx_hash}")
 
     def sbatch_call(self):
         try:

@@ -11,8 +11,8 @@ import time
 from contextlib import suppress
 
 from broker import cfg
-from broker._utils._log import Style, br, console_ruler
-from broker._utils.tools import log
+from broker._utils._log import br, console_ruler
+from broker._utils.tools import _date, log
 from broker.utils import CacheType, StorageID, bytes32_to_ipfs
 
 
@@ -40,7 +40,13 @@ def handle_event(logged_jobs):
         console_ruler()
 
 
-def log_loop(event_filter, poll_interval: int = 2):
+def watch_bn():
+    with suppress(Exception):
+        bn = cfg.Ebb.get_block_number()
+        sys.stdout.write(f"\r## [  bn={bn}  ]")
+
+
+def log_loop(event_filter, poll_interval: int = 6):
     """Return triggered job event.
 
     SIGALRM(14) Term Timer signal from alarm(2).  Note: This is by design; see
@@ -52,19 +58,25 @@ def log_loop(event_filter, poll_interval: int = 2):
     just before the sleep() call is about to be entered, the handler will only
     be run when the underlying OS sleep() call returns 10 s later.
     """
+    bn = None
+    with suppress(Exception):
+        bn = cfg.Ebb.get_block_number()
+
+    print()
     sleep_duration = 0
     while True:
-        block_num = cfg.Ebb.get_block_number()
+        # watch_bn()  # this may cause timeout error over time
         since_time = datetime.timedelta(seconds=sleep_duration)
-        sys.stdout.write(
-            f"\r{Style.GREENB}##{Style.END} {Style.B}[{Style.E}"
-            f"{Style.YELLOWB}block_num{Style.END}={Style.CYANB}{block_num}{Style.END}{Style.B}]{Style.E} "
-            f"waiting events for jobs since {Style.CYANB}{since_time}{Style.END} "
-        )
+        d = _date(_type="tmux")
+        if bn:
+            sys.stdout.write(f"\r[  {d}  ] waiting job events since bn={bn} -- counter={since_time} ... ")
+        else:
+            sys.stdout.write(f"\r[  {d}  ] waiting job events since {since_time} ")
+
         sys.stdout.flush()
         logged_jobs = event_filter.get_new_entries()
         if len(logged_jobs) > 0:
-            log()
+            print()
             return logged_jobs
 
         sleep_duration += poll_interval

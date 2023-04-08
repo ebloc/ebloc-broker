@@ -7,7 +7,7 @@ import textwrap
 import threading
 from typing import Dict, Union
 
-from rich import pretty, print, print_json  # noqa
+from rich import pretty, print_json  # noqa # print
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
@@ -19,20 +19,29 @@ from broker.errors import QuietExit
 install()  # for rich, show_locals=True
 # pretty.install()
 
-IS_WRITE = True  # if False disable write into file for the process
+# if False disable write into file for the process
+# heads up applies this all libs imported this
+IS_WRITE = True
+
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
 custom_theme = Theme(
     {
         "info": "bold magenta",  # "bold dim magenta"
-        "danger": "bold red",
+        "alert": "bold red",
+        "bg": "bold green",
         "b": "bold",
         "m": "magenta",
         "w": "white",
         "cy": "cyan",
         "y": "yellow",
         "g": "green",
+        "r": "red",
+        "orange": "orange1",
+        "yob": "yellow on black blink",
+        "ib": "italic black",
+        "ic": "italic cyan",
     }
 )
 console = Console(
@@ -70,10 +79,18 @@ class Log:
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
         self.console: Dict[str, Console] = {}
+        self.inner_bullet_three = ["==>", "#> ", "## ", " * ", "###", "** ", "***", " **"]
 
-    def print_color(self, text: str, color=None, is_bold=True, end="\n") -> None:
+    # def halo_decorator(self):
+    #     with Halo(text="Loading", spinner="line", placement="right"):
+    #         time.sleep(6)
+
+    # def success() -> None:
+    #     pass
+
+    def print_color(self, text: str, color=None, is_bold=True, end="\n", highlight=True) -> None:
         """Print string in color format."""
-        if text[0:3] in ["==>", "#> ", "## "]:
+        if text[0:3] in self.inner_bullet_three:
             if color and text == "==> ":
                 console.print(f"[bold][{color}]{text[0:3]}[{color}][/bold]", end="")
             else:
@@ -81,13 +98,16 @@ class Log:
 
             text = text[3:]
         elif text[0:2] == "E:":
-            console.print("[bold red]E:[/bold red]", end="")
+            console.print("[alert]E:[/alert]", end="", highlight=highlight)
             text = text[2:]
 
         if is_bold:
-            console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end)
+            console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end, highlight=highlight)
         else:
-            console.print(f"[{color}]{text}[/{color}]", end=end)
+            if color in ("white", "", None) and "[" not in text:
+                print(text, end=end)
+            else:
+                console.print(f"[{color}]{text}[/{color}]", end=end, highlight=highlight)
 
     def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
@@ -101,7 +121,7 @@ class Log:
 
         if text.lower() in ["[ ok ]", "[  ok  ]"]:
             text = "[  [bold green]OK[/bold green]  ]"
-        elif text[:3] in ["==>", "#> ", "## ", " * ", "###", "** ", "***"]:
+        elif text[:3] in self.inner_bullet_three:
             _len = 3
             is_bullet = True
             if not color:
@@ -139,11 +159,9 @@ def br(text, color="white"):
         return f"[bold][[/bold]{text}[bold]][/bold]"
 
 
-def ok(text="OK"):
-    if text == "OK":
-        return "  " + br(f"  [green]{text}[/green]  ")
-    else:
-        return br(f"  [green]{text}[/green]  ")
+def ok():
+    """Done."""
+    return " " + br("  [g]OK[/g]  ")
 
 
 def _console_clear():
@@ -177,7 +195,7 @@ def console_ruler(msg="", character="=", color="cyan", fn=""):
         ll.console[fn].rule(characters=character)
 
 
-def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
+def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, highlight=True):
     if not is_output:
         is_print = is_output
     else:
@@ -193,14 +211,14 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
     else:
         _text = text
 
-    if color:
+    if color and color != "white":
         if is_print:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
                 if is_bullet:
                     _msg = f"[bold][{_color}]{is_r}{text[:_len]}[/{_color}][/bold][{color}]{text[_len:]}[/{color}]"
                     console.print(_msg, end=end)
                 else:
-                    ll.print_color(str(text), color, is_bold=is_bold, end=end)
+                    ll.print_color(str(text), color, is_bold=is_bold, highlight=highlight, end=end)
 
         if is_bold:
             _text = f"[bold]{text[_len:]}[\bold]"
@@ -217,13 +235,13 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
                 )
             else:
                 if color:
-                    ll.console[fn].print(f"[bold][{color}]{_text}[/{color}][/bold]", end=end, soft_wrap=True)
+                    ll.console[fn].print(f"[{color}]{_text}[/{color}]", end=end, highlight=highlight, soft_wrap=True)
                 else:
-                    ll.console[fn].print(_text, end=end, soft_wrap=True)
+                    ll.console[fn].print(_text, end=end, highlight=highlight, soft_wrap=True)
     else:
         text_to_write = ""
         if is_bullet:
-            text_to_write = f"[bold][{_color}]{is_r}{_text[:_len]}[/{_color}][/bold][bold]{_text[_len:]}[/bold]"
+            text_to_write = f"[bold][{_color}]{is_r}{_text[:_len]}[/{_color}][/bold]{_text[_len:]}"
         else:
             if _color:
                 text_to_write = f"[{_color}]{_text}[/{_color}]"
@@ -231,34 +249,40 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True):
                 text_to_write = _text
 
         if is_print:
-            console.print(text_to_write, end=end)
+            console.print(text_to_write, highlight=highlight, end=end)
 
         if is_write and IS_WRITE:
-            ll.console[fn].print(text_to_write, end=end, soft_wrap=True)
+            ll.console[fn].print(text_to_write, end=end, highlight=highlight, soft_wrap=True)
 
 
 def log(
     text="",
     color=None,
     fn=None,
-    end="\n",
     is_write=True,
     is_code=False,
     is_wrap=False,
     is_err=False,
     is_output=True,
     max_depth=None,
+    h=True,
+    success=False,
     back=0,
+    end="\n",
 ):
     """Log output with the own settings.
 
-    * colors:
+    * Emojis: python -m rich.emoji | less
+    * Colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
 
     :param end: (str, optional) Character to write at end of output. Defaults to "\\n".
     :param text: String to print
     :param color: Color of the complete string
     :param fn: Filename to write
+    :param h: Stands for highlight. Rich will highlight certain patterns in your output
+        such as numbers, strings, and other objects like IP addresses. You can
+        disable highlighting by setting highlight=False.
     """
     if isinstance(text, QuietExit):
         text = str(text)
@@ -273,29 +297,42 @@ def log(
         if text:
             if "E: " not in text[3] and "warning:" not in text.lower():
                 text = f"E: {text}"
+            elif "E: warning: " in text:
+                text = f"E: {text.replace('E: warning: ', '')}"
         else:
             return
 
         text = text.replace("E: warning:", "warning:")
 
-    if isinstance(text, str) and "E: " in text[3:]:
-        _text = text.replace("warning: ", "").replace("E: ", "")
-        if "E: warning: " not in text:
-            if "warning:" in text:
-                text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
-            else:
-                text = f"{WHERE(back)}[bold red] E:[/bold red] [bold]{_text}"
-        else:
-            text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] [bold]{_text}"
+    if success:
+        text = f"{text} {ok()}"
 
-    if "-=-=" in str(text):
-        is_bold = True
+    if isinstance(text, str):
+        if "E: " == text[:3]:
+            text = f"{WHERE(back, bracket_c='red')}[alert] E:[/alert] {text[3:]}"
+        elif "E: " in text[3:]:
+            _text = text.replace("warning: ", "").replace("E: ", "")
+            text = f"{WHERE(back)} {_text}"
+            if "E: warning: " in text:
+                text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
+            else:
+                if "warning:" in text:
+                    text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
+                else:
+                    text = f"{WHERE(back)}[alert] E:[/alert] {_text}"
 
     if is_code:
-        text = " \ \n  ".join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
+        h = False
+        base_str = ""
+        if text[0:2] == "$ ":
+            base_str = " \ \n      "
+        else:
+            base_str = " \ \n    "
+
+        text = base_str.join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
 
     if is_wrap:
-        text = "\n".join(textwrap.wrap(text, 80, break_long_words=False, break_on_hyphens=False))
+        text = "\n".join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
 
     if is_write and IS_WRITE:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
@@ -326,10 +363,10 @@ def log(
         if is_write and IS_WRITE:
             ll.console[fn].print(text)
     else:
-        _log(text, color, is_bold, fn, end, is_write, is_output)
+        _log(text, color, is_bold, fn, end, is_write, is_output, h)
 
 
-def WHERE(back=0):
+def WHERE(back=0, bracket_c="green"):
     """Return line number where the command is called."""
     try:
         frame = sys._getframe(back + 2)
@@ -337,7 +374,7 @@ def WHERE(back=0):
         frame = sys._getframe(1)
 
     text = os.path.basename(frame.f_code.co_filename)
-    return f"[bold][green][[/green][blue]  {text}[/blue]:{frame.f_lineno}  [green]][/green][/bold]"
+    return f"[{bracket_c}][[/{bracket_c}][blue]  {text}[/blue]:{frame.f_lineno}  [{bracket_c}]][/{bracket_c}]"
 
 
 ll = Log()

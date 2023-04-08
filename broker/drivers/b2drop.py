@@ -21,7 +21,7 @@ from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, pr
 Ebb = cfg.Ebb
 
 
-class EudatClass(Storage):
+class B2dropClass(Storage):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.share_token = None
@@ -100,7 +100,7 @@ class EudatClass(Storage):
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(f"==> {folder_name} is already cached under the public directory", "bold green")
+                    log(f"==> {folder_name} is already cached under the public directory", "bg")
                     return True
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
@@ -129,7 +129,7 @@ class EudatClass(Storage):
             self.folder_type_dict[folder_name] = "tar.gz"
             if generate_md5sum(cached_tar_fn) == folder_name:
                 # checking is already downloaded folder's hash matches with the given hash
-                log(f"==> {cached_tar_fn} is already cached", "bold green")
+                log(f"==> {cached_tar_fn} is already cached", "bg")
                 self.tar_downloaded_path[folder_name] = cached_tar_fn
                 self.folder_type_dict[folder_name] = "tar.gz"
                 return True
@@ -144,18 +144,18 @@ class EudatClass(Storage):
         return True
 
     def _download_folder(self, results_folder_prev, folder_name):
-        """Download corresponding folder from the EUDAT.
+        """Download corresponding folder from the B2DROP.
 
         Always assumes job is submitted as .tar.gz file
         """
         cached_tar_fn = f"{results_folder_prev}/{folder_name}.tar.gz"
-        log("#> downloading [green]output.zip[/green] for:", end="")
+        log("#> downloading [g]output.zip[/g] for:", end="")
         log(f"{folder_name} => {cached_tar_fn} ", "bold")
         key = folder_name
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         for attempt in range(1):
             try:
-                log("## Trying [blue]wget[/blue] approach...")
+                log("==> Trying [blue]wget[/blue] approach...")
                 token = self.share_id[share_key]["share_token"]
                 if token:
                     download_fn = f"{cached_tar_fn.replace('.tar.gz', '')}_{self.requester_id}.download"
@@ -167,19 +167,19 @@ class EudatClass(Storage):
                         f"https://b2drop.eudat.eu/s/{token}/download",
                         "-q",
                         "--show-progres",
-                        "--progress=bar:force",
+                        "--progress=bar:force:noscroll",
                     ]
-                    log(" ".join(cmd), is_code=True, color="bold yellow")
+                    log(" ".join(cmd), is_code=True, color="yellow")
                     run(cmd)
                     with cd(results_folder_prev):
                         run(["unzip", "-o", "-j", download_fn])
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
-                    log(f"## download file from eudat{ok()}")
+                    log(f"## download file from B2DROP {ok()}")
                     return
             except:
-                log("E: Failed to download eudat file via wget.\nTrying `config.oc.get_file()` approach...")
+                log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
                 if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_fn):
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(ok())
@@ -187,7 +187,7 @@ class EudatClass(Storage):
                 else:
                     log(f"E: Something is wrong, oc could not retrieve the file [attempt:{attempt}]")
 
-        raise Exception("Eudat download error")
+        raise Exception("b2drop download error")
 
     def download_folder(self, cache_folder, folder_name):
         """Wrap download folder function."""
@@ -204,7 +204,7 @@ class EudatClass(Storage):
     def get_file_size(self, fn, folder_name):
         # accept_given_shares()
         try:
-            log(f"## trying to get {fn} file info from EUDAT")
+            log(f"## trying to get {fn} file info from B2DROP")
             #: DAV/Properties/getcontentlength the number of bytes of a resource
             return config.oc.file_info(fn).get_size()
         except Exception as e:
@@ -227,9 +227,9 @@ class EudatClass(Storage):
                 return config.oc.file_info(fn).get_size()
 
             log(str(e))
-            raise Exception("failed all the attempts to get file info at eudat") from e
+            raise Exception("failed all the attempts to get file info at B2DROP") from e
 
-    def total_size_to_download(self):
+    def total_size_to_download(self) -> None:
         data_transfer_in_to_download = 0  # total size to download in bytes
         for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
@@ -259,8 +259,8 @@ class EudatClass(Storage):
                 source_fn = f"{folder_name}/{folder_name}.tar.gz"
                 if os.path.isdir(env.OWNCLOUD_PATH / f"{folder_name}"):
                     log(
-                        f"## eudat shared folder({folder_name}) is already accepted and "
-                        "exists on the eudat's mounted folder"
+                        f"## B2DROP shared folder({folder_name}) is already accepted and "
+                        "exists on the B2DROP's mounted folder"
                     )
                     if os.path.isfile(f"{env.OWNCLOUD_PATH}/{source_fn}"):
                         self.folder_type_dict[folder_name] = "tar.gz"
@@ -291,7 +291,7 @@ class EudatClass(Storage):
                 # TODO: if added before or some do nothing
                 if Ebb.mongo_broker.add_item_share_id(share_key, value["share_id"], value["share_token"]):
                     # adding into mongoDB for future usage
-                    log(f"#> [green]{share_key}[/green] is added into mongoDB{ok()}")
+                    log(f"#> [g]{share_key}[/g] is added into mongoDB {ok()}")
             except Exception as e:
                 print_tb(e)
                 log(f"E: {e}")
@@ -301,7 +301,7 @@ class EudatClass(Storage):
                 share_list = config.oc.list_open_remote_share()
                 break
             except Exception as e:
-                log(f"E: Failed to list_open_remote_share eudat [attempt={attempt}]")
+                log(f"E: Failed to list_open_remote_share B2DROP [attempt={attempt}]")
                 print_tb(e)
                 time.sleep(1)
             else:
@@ -370,7 +370,7 @@ class EudatClass(Storage):
             time.sleep(0.25)
 
     def _run(self) -> bool:
-        log(f"{br(get_date())} new job has been received through EUDAT: {self.job_key} {self.index} ", "bold cyan")
+        log(f"{br(get_date())} new job has been received through B2DROP: {self.job_key} {self.index} ", "cyan")
         # TODO: refund check
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
@@ -422,7 +422,7 @@ class EudatClass(Storage):
                 except KeyError:
                     try:
                         shared_id = Ebb.mongo_broker.find_shareid_item(key=share_key)
-                        log(f"#> reading from mongo_broker{ok()}")
+                        log(f"#> reading from mongo_broker {ok()}")
                         log(shared_id)
                     except Exception as e:
                         print_tb(e)

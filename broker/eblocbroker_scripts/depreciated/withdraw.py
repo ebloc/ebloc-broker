@@ -9,6 +9,18 @@ from broker.errors import QuietExit
 from broker.utils import print_tb
 
 
+"""#: at tests/test_*
+def withdraw(address, amount):
+    temp = address.balance()
+    assert ebb.balanceOf(address) == amount
+    tx = ebb.withdraw({"from": address, "gas_price": 0})
+    append_gas_cost("withdraw", tx)
+    received = address.balance() - temp
+    assert to_gwei(amount) == received
+    assert ebb.balanceOf(address) == 0
+"""
+
+
 def _withdraw():
     Ebb = cfg.Ebb
     if len(sys.argv) == 2:

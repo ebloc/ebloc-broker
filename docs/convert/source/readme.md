@@ -193,7 +193,7 @@ gasBandwidthOut = 100
 storageType     = 0 # Please note that '0' stands for IPFS repository share.
 ```
 
-#### **2. How to submit a job using EUDAT**
+#### **2. How to submit a job using B2DROP**
 
 Before doing this you have to be sure that you have shared your folder with cluster's FID. Please
 [follow](https://github.com/avatar-lavventura/someCode/issues/4). Otherwise your job will not be
@@ -208,7 +208,7 @@ coreGasHour     = 0
 coreGasMin      = 10
 gasBandwidthIn  = 100
 gasBandwidthOut = 100
-storageType     = 1 # Please note that '1' stands for EUDAT repository share.
+storageType     = 1 # Please note that '1' stands for B2DROP repository share.
 ```
 
 #### **3. How to submit a job using IPFS with GPG**

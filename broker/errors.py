@@ -8,7 +8,7 @@ class BashCommandsException(Exception):
 
 
 class JobException(Exception):
-    """Generate fetch job info exception to prevent trace to be printed."""
+    """Generate job info exception to prevent to print the trace."""
 
 
 class HandlerException(Exception):
@@ -27,9 +27,9 @@ class Timeout(Exception):
     """Timeout."""
 
 
-class Web3NotConnected(Exception):
-    """Web3 is not connected."""
-
-
 class QuietExit(Exception):
     """Exit quietly without printing the trace."""
+
+
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""

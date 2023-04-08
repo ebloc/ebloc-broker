@@ -28,7 +28,7 @@ def start_call(key, index, slurm_job_id) -> None:
     job_id = 0  # TODO: should be obtained from the user's input
     #: save pid of the process as soon as possible
     Ebb.mongo_broker.set_job_state_pid(str(key), int(index), pid)
-    _log.ll.LOG_FILENAME = env.LOG_PATH / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}.txt"
+    _log.ll.LOG_FILENAME = env.LOG_DIR / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}.txt"
     # _log.ll.IS_PRINT = False
     log(f"~/ebloc-broker/broker/start_code.py {key} {index} {slurm_job_id}", "info")
     _, _, error = popen_communicate(["scontrol", "show", "job", slurm_job_id])
@@ -47,7 +47,7 @@ def start_call(key, index, slurm_job_id) -> None:
     p2.stdout.close()  # type: ignore
     date = p3.communicate()[0].decode("utf-8").strip()
     start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
-    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {job_id} {start_ts}", "bold white")
+    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {job_id} {start_ts}", is_code=True)
     log(f"#> pid={pid}")
     for attempt in range(10):
         if attempt > 0:
@@ -63,7 +63,7 @@ def start_call(key, index, slurm_job_id) -> None:
         try:
             tx = Ebb.set_job_state_running(key, index, job_id, start_ts)
             tx_hash = Ebb.tx_id(tx)
-            log(f"tx_hash={tx_hash}", "bold")
+            log(f"tx_hash={tx_hash}")
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log(f"==> set_job_state_running_started {start_ts} | attempt_date={d}")
             log("## mongo.set_job_state_running_tx", end="")
@@ -84,7 +84,7 @@ def start_call(key, index, slurm_job_id) -> None:
 
             log(f"## attempt={attempt}: {e}")
 
-    log("E: all of the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]")
+    log("E: all the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]")
     sys.exit(1)
 
 

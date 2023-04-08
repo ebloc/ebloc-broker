@@ -18,15 +18,14 @@ def mount_ipfs():
 
 
 def _run():
-    """Run ipfs daemon.
+    """Run IPFS daemon.
 
-    cmd: ipfs daemon --enable-gc --routing=none  # --mount
+    cmd: ipfs daemon --migrate --enable-gc --routing=none  # --mount
     __ https://stackoverflow.com/a/8375012/2402577
     __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
     ipfs_init_folder = Path.home().joinpath(".ipfs")
-    log("Running IPFS daemon")
     if not os.path.isfile(config.env.IPFS_LOG):
         open(config.env.IPFS_LOG, "a").close()
 
@@ -36,7 +35,7 @@ def _run():
         else:
             env = {"IPFS_PATH": ipfs_init_folder}
 
-        cmd = [IPFS_BIN, "daemon", "--enable-gc", "--routing=none"]
+        cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc", "--routing=none"]
         popen_communicate(cmd, stdout_fn=config.env.IPFS_LOG, env=env)
 
     # mount_ipfs()
@@ -54,7 +53,7 @@ def main():
         cfg.ipfs.remove_lock_files()
         _run()
     else:
-        log(f"## [green]IPFS[/green] daemon is already running{ok()}")
+        log(f"## [g]IPFS[/g] daemon is already running {ok()}")
         sys.exit(100)
 
 

@@ -8,14 +8,34 @@ import ruamel.yaml
 from broker._utils._log import log
 
 
+def read_network_config(network_id, fn=Path.home() / ".brownie" / "network-config.yaml") -> str:
+    config_data, _, _ = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
+    for _config in config_data["live"]:
+        if _config["name"] == "Ethereum":
+            for network in _config["networks"]:
+                if network_id in network["id"]:
+                    return network["host"]
+
+    raise Exception
+
+
 def add_bloxberg_config(fn):
     bloxberg_config = {
         "name": "bloxberg (Bloxberg)",
         "id": "bloxberg",
         "chainid": 8995,
+        "host": "http://alpy-bloxberg.duckdns.org:8545",
+        "explorer": "https://blockexplorer.bloxberg.org/api",
+    }
+
+    bloxberg_config_core = {
+        "name": "bloxberg (Bloxberg)",
+        "id": "bloxberg_core",
+        "chainid": 8995,
         "host": "https://core.bloxberg.org",
         "explorer": "https://blockexplorer.bloxberg.org/api",
     }
+
     config_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
     is_bloxberg_added = False
     for _config in config_data["live"]:
@@ -34,6 +54,7 @@ def add_bloxberg_config(fn):
 
             if not is_bloxberg_added:
                 _config["networks"].append(bloxberg_config)
+                _config["networks"].append(bloxberg_config_core)
 
     yaml = ruamel.yaml.YAML()
     yaml.indent(mapping=ind, sequence=ind, offset=bsi)

@@ -10,6 +10,7 @@ from subprocess import check_output
 
 import ipfshttpclient
 from cid import make_cid
+from halo import Halo
 
 from broker import cfg
 from broker._utils._log import br, ok
@@ -168,7 +169,7 @@ class Ipfs:
         for attempt in range(5):
             try:
                 cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", recipient_gpg_fingerprint]
-                log(f"{br(attempt)} cmd: [m]{' '.join(cmd)}", "bold")
+                log(f"{br(attempt)} cmd: [w]{' '.join(cmd)}")
                 run(cmd, suppress_stderr=True)  # this may not work if it is requested too much in short time
                 break
             except Exception as e:
@@ -254,11 +255,15 @@ class Ipfs:
         if _is_ipfs_on and not is_ipfs_on():
             raise IpfsNotConnected
 
-        with cfg.console.status(f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s"):
+        msg = f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s "
+        with Halo(text=msg, spinner="line", placement="right"):
             return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
+        # with cfg.console.status(msg):
+        #     return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
+
     def is_hash_exists_online(self, ipfs_hash: str, ipfs_address=None, is_verbose=False):
-        log(f"## attempting to check IPFS file [green]{ipfs_hash}[/green] ... ")
+        log(f"## attempting to check IPFS file [g]{ipfs_hash}[/g] ... ")
         if not is_ipfs_on():
             raise IpfsNotConnected
 
@@ -287,7 +292,7 @@ class Ipfs:
         except Exception as e:
             raise Exception(f"Timeout, failed to find ipfs file: {ipfs_hash}") from e
 
-    def get(self, ipfs_hash, path, is_storage_paid):
+    def get(self, ipfs_hash, path, is_storage_paid=False):
         if not is_ipfs_on():
             raise IpfsNotConnected
 
@@ -363,7 +368,7 @@ class Ipfs:
         print(f"==> Trying to connect into {peer_address} using swarm connect")
         output = self.client.swarm.connect(peer_address)
         if ("connect" and "success") in str(output):
-            log(str(output), "bold green")
+            log(str(output), "bg")
             return True
 
         return False
@@ -413,9 +418,12 @@ class Ipfs:
         #     print_tb(e)
         #     raise e
 
-    def publish_gpg(self, gpg_fingerprint):
+    def publish_gpg(self, gpg_fingerprint, is_verbose=True):
         # log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
-        run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+        if is_verbose:
+            run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+        else:
+            run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
 
     def is_gpg_published(self, gpg_fingerprint):
         try:

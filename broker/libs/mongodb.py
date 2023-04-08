@@ -28,20 +28,21 @@ class BaseMongoClass:
         res = self.collection.replace_one({"key": key}, item, True)
         return res.acknowledged
 
-    def find_all(self, sort_str="", is_return=False):
-        """Find all records."""
+    def find_all(self, sort_str="", is_print=False, is_compact=False):
+        """Find all the records."""
         if sort_str:
             cursor = self.collection.find({}, {"_id": False}).sort(sort_str)
         else:
             cursor = self.collection.find({}, {"_id": False})
 
-        if is_return:
-            return cursor
-        else:
+        if is_print:
             for document in cursor:
-                log(document)
+                if is_compact:
+                    log(f"{document['key']} [m]=>[/m] {document['value']}")
+                else:
+                    log(document)
 
-            return cursor
+        return cursor
 
 
 class MongoBroker(BaseMongoClass):
@@ -123,7 +124,7 @@ class MongoBroker(BaseMongoClass):
         res = self.share_id_coll.replace_one({"job_key": key}, item, True)  # , "index": 0
         return res.acknowledged
 
-    def get_job_block_number(self, requester_addr, key, index) -> int:
+    def get_job_bn(self, requester_addr, key, index) -> int:
         cursor = self.collection.find({"requester_addr": requester_addr.lower(), "job_key": key, "index": index})
         for document in cursor:
             return document["received_bn"]
@@ -149,6 +150,9 @@ class MongoBroker(BaseMongoClass):
 
 
 def main():
+    # from broker._utils import _log
+
+    # _log.IS_WRITE = False
     mc = MongoClient()
     ebb_mongo = MongoBroker(mc, mc["ebloc_broker"]["cache"])
     parser = argparse.ArgumentParser(description="Process MongoDB.")
@@ -163,7 +167,7 @@ def main():
     if args.is_delete_all:
         ebb_mongo.delete_shared_ids()
         output = ebb_mongo.delete_all()
-        log(f"mc['ebloc_broker']['cache'] is_deleted={output}")
+        log(f"mc['ebloc_broker']['cache'] is_deleted={output}", is_write=False)
     else:
         ebb_mongo.find_all_share_id()
         # output = ebb_mongo.get_job_state_running_tx("QmRD841sowPfgz8u2bMBGA5bYAAMPXxUb4J95H7YjngU4K", 37)

@@ -41,7 +41,7 @@ class IpfsClass(Storage):
         log(f" * data_transfer_out={data_size_mb} MB | rounded={int(data_size_mb)} MB")
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
-        """Wrap ipfs get call."""
+        """Wrap ipfs-get call."""
         cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
         self.verified_data[ipfs_hash] = True
 
@@ -57,9 +57,9 @@ class IpfsClass(Storage):
         start_ipfs_daemon()
         log(f"{br(get_date())} job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
-            log("[bold green]IPFS")
+            log("[bg]IPFS")
         else:
-            log("[bold green]IPFS_GPG")
+            log("[bg]IPFS_GPG")
 
         if not is_ipfs_on():
             return False

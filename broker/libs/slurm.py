@@ -2,12 +2,12 @@
 
 import time
 
-from broker._utils._log import ok
+from broker._utils._log import log, ok
 from broker._utils.tools import is_process_on
 from broker.config import env
-from broker.errors import BashCommandsException, QuietExit
+from broker.errors import BashCommandsException, QuietExit, Terminate
 from broker.lib import run
-from broker.utils import log, popen_communicate
+from broker.utils import popen_communicate
 
 
 def add_account_to_slurm(user):
@@ -56,10 +56,10 @@ def get_idle_cores(is_print=True) -> int:
         total_cores = int(core_info[3])
         if is_print:
             log(
-                f"==> [green]allocated_cores=[/green]{allocated_cores} | "
-                f"[green]idle_cores=[/green]{idle_cores} | "
-                f"[green]other_cores=[/green]{other_cores} | "
-                f"[green]total_cores=[/green]{total_cores}"
+                f"==> [g]allocated_cores=[/g]{allocated_cores} | "
+                f"[g]idle_cores=[/g]{idle_cores} | "
+                f"[g]other_cores=[/g]{other_cores} | "
+                f"[g]total_cores=[/g]{total_cores}"
             )
     else:
         log("E: sinfo return emptry string")
@@ -68,9 +68,9 @@ def get_idle_cores(is_print=True) -> int:
     return idle_cores
 
 
-def pending_jobs_check():
+def pending_jobs_check(is_print=True):
     """If there is no idle cores, waits for idle cores to be emerged."""
-    idle_cores = get_idle_cores()
+    idle_cores = get_idle_cores(is_print)
     print_flag = False
     while idle_cores is None:
         if not print_flag:
@@ -89,8 +89,8 @@ def is_on() -> bool:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):
             log("[  [red]failed[/red]  ]", "bold")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
-            raise QuietExit(
-                f"E: [bold green]{process_name}[/bold green] is not running in the background. Please run:\n"
+            raise Terminate(
+                f"E: [bg]{process_name}[/bg] is not running in the background. Please run:\n"
                 f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
             )
 

@@ -46,7 +46,7 @@ def new_test():
     print(f"\x1b[6;30;43m{line}\x1b[0m")
 
 
-def mine(block_number):
+def mine(bn):
     """Mine give block number in the brownie testing.
 
     You can only advance the time by whole seconds.
@@ -54,19 +54,19 @@ def mine(block_number):
     __ https://stackoverflow.com/a/775075/2402577
     __ https://stackoverflow.com/a/775095/2402577
     """
-    if block_number == cfg.ONE_HOUR_BLOCK_DURATION:
+    if bn == cfg.ONE_HOUR_BLOCK_DURATION:
         log(f"## mining for {cfg.ONE_HOUR_BLOCK_DURATION} blocks...")
 
-    seconds = block_number * cfg.BLOCK_DURATION
+    seconds = bn * cfg.BLOCK_DURATION
     height = w3.eth.blockNumber
     timestamp_temp = w3.eth.getBlock(height)["timestamp"]
-    timedelta = cfg.BLOCK_DURATION * block_number
-    config.chain.mine(blocks=int(block_number), timedelta=timedelta)
+    timedelta = cfg.BLOCK_DURATION * bn
+    config.chain.mine(blocks=int(bn), timedelta=timedelta)
     timestamp_after = w3.eth.getBlock(w3.eth.blockNumber)["timestamp"]
     log(
-        f"==> Mined {block_number} empty blocks | {datetime.timedelta(seconds=seconds)} | "
+        f"==> mined {bn} empty blocks | {datetime.timedelta(seconds=seconds)} | "
         f"{height} => {w3.eth.blockNumber} | "
         f"{timestamp_temp} => {timestamp_after} diff={timestamp_after - timestamp_temp}",
         "bold",
     )
-    assert w3.eth.blockNumber == height + block_number and (timestamp_after - timestamp_temp) + 1 >= timedelta
+    assert w3.eth.blockNumber == height + bn and (timestamp_after - timestamp_temp) + 1 >= timedelta

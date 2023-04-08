@@ -14,12 +14,17 @@ IS_BREAKPOINT = False
 IS_THREAD_JOIN = False
 TX_TIMEOUT = 1800
 IS_THREAD_JOIN = False
-IS_FULL_TEST = False  # check whether full-long test is applied
+IS_FULL_TEST = False  # check whether the full-long test is applied
 RECONNECT_ATTEMPTS: int = 5
 BLOCK_DURATION: int = 6
 ONE_HOUR_BLOCK_DURATION: int = int(3600 / BLOCK_DURATION)
 ONE_DAY_BLOCK_DURATION: int = ONE_HOUR_BLOCK_DURATION * 24
 IPFS_TIMEOUT: int = 300
+#
+IS_SEARCH_BEST_PROVIDER_VERBOSE = True
+TEST_PROVIDERS = None
+TX_LOG_VERBOSE = False
+NETWORK_ID = "bloxberg"  # "bloxberg_core"
 
 
 class EBB:

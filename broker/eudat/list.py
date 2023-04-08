@@ -34,13 +34,14 @@ def share_list(oc):
 
 def main():
     oc = owncloud.Client("https://b2drop.eudat.eu/")
-    with open(env.LOG_PATH.joinpath(".eudat_client.txt"), "r") as content_file:
+    with open(env.LOG_DIR.joinpath(".b2drop_client.txt"), "r") as content_file:
         paswd = content_file.read().strip()
 
     try:
         oc.login(env.OC_USER, paswd)
-        print(oc.list("."))
-        oc.mkdir("dummy_dir")
+        folders_list = oc.list(".")  # takes long time to fetch
+        print(folders_list)
+        oc.mkdir("iam_dummy_folder")
     except Exception as e:
         print_tb(e)
 

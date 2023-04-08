@@ -130,19 +130,27 @@ sudo apt install python3.7 -y
 
 # mongodb
 # =======
-curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | \
-    sudo tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | \
-    sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
-sudo apt-get update
-sudo apt-get install -y mongodb-org
-sudo chown -R mongodb. /var/log/mongodb
-sudo chown -R mongodb. /var/lib/mongodb
-sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
-sudo systemctl start mongod.service
-sudo systemctl unmask mongodb
-sudo systemctl enable mongod
-sudo systemctl --no-pager status --full mongod
+install-mongo () {
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/6.0 multiverse" | \
+        sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+    sudo apt-get update
+    sudo apt-get install -y mongodb-org
+    sudo mkdir -p /data/db
+    sudo chown $(id -u) /data/db
+    sudo mkdir -p /var/log/mongodb /var/lib/mongodb
+    sudo chown -R mongodb. /var/log/mongodb
+    sudo chown -R mongodb. /var/lib/mongodb
+    sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
+    sudo systemctl unmask mongod
+    sudo service mongod start
+
+    sudo systemctl start mongod.service
+    sudo systemctl unmask mongodb
+    sudo systemctl enable mongod
+    sudo systemctl --no-pager status --full mongod
+    sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
+    mongo --eval 'db.runCommand({ connectionStatus: 1 })'
+}
 
 install_ebb_pip_packages () {
     VENV=$HOME/venv
@@ -161,6 +169,8 @@ install_ebb_pip_packages () {
         mkdir -p $HOME/.cache/black/$black_version
     fi
 }
+
+install-mongo
 install_ebb_pip_packages
 
 # solc
@@ -209,11 +219,10 @@ install_brownie () {
 }
 install_brownie
 
-gpg --gen-key
-gpg --list-keys
-
 mkdir -p ~/git ~/docker
-git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
+DIR=~/git/gdrive
+[[ ! -d $DIR ]] && git clone https://github.com/prasmussen/gdrive.git ~/git/gdrive
+
 go env -w GO111MODULE=auto
 go get github.com/prasmussen/gdrive
 
@@ -228,6 +237,9 @@ sudo apt-get install -f -y
 sudo apt --fix-broken install -y
 
 eblocbroker about
+
+gpg --gen-key
+gpg --list-keys
 
 # mount_oc () {
 #     sudo mkdir /oc

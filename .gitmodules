@@ -1,3 +1,6 @@
 [submodule "orcid-authentication"]
 	path = orcid-authentication
 	url = https://github.com/avatar-lavventura/orcid-authentication
+[submodule "bloxbergBootnodeSetup"]
+	path = bloxbergBootnodeSetup
+	url = https://github.com/avatar-lavventura/bloxbergBootnodeSetup

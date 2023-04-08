@@ -9,7 +9,7 @@ from broker.config import env
 
 
 def main():
-    f = open(expanduser("~/.ebloc-broker/.eudat_client.txt"), "r")
+    f = open(expanduser("~/.ebloc-broker/.b2drop_client.txt"), "r")
     passw = f.read().rstrip().strip(" ")
     f.close()
     oc = owncloud.Client("https://b2drop.eudat.eu/")

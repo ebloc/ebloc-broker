@@ -215,12 +215,12 @@ def commit_changes(path):
             if len(changed_files) > 0:
                 log("==> adding changed files:")
                 for _file in changed_files:
-                    log(_file, "bold")
+                    log(_file, "blue")
 
                 repo.git.add(A=True)
 
             if len(repo.index.diff("HEAD")) == 0:
-                log(f"==> {path}\n    is committed with the given changes using git")
+                log(f"==> {path} is\n    committed with the given changes using git")
 
         try:
             add_all(repo)
@@ -237,6 +237,10 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
 
     __ https://stackoverflow.com/a/15375869/2402577
     """
+    if os.stat(patch_file).st_size == 0:
+        log(f"warning: patch_file={patch_file} is empty")
+        return
+
     if is_gpg:
         cfg.ipfs.decrypt_using_gpg(patch_file)
 
@@ -261,6 +265,7 @@ def apply_patch(git_folder, patch_file, is_gpg=False):
             "--whitespace=fix",
             "--ignore-space-change",
             "--ignore-whitespace",
+            # "--allow-empty",
             "--verbose",
             patch_file,
         ]

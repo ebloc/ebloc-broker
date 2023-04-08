@@ -3,7 +3,7 @@
 from web3.logs import DISCARD
 
 from broker import cfg
-from broker._utils._log import ok
+from broker._utils._log import log, ok
 from broker._utils.web3_tools import get_tx_status
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
@@ -11,7 +11,7 @@ from broker.lib import run
 from broker.libs import _git, gdrive
 from broker.libs.gdrive import check_gdrive
 from broker.link import check_link_folders
-from broker.utils import is_program_valid, log, print_tb
+from broker.utils import print_tb
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
@@ -20,7 +20,6 @@ Ebb = cfg.Ebb
 
 
 def pre_check():
-    is_program_valid(["gdrive", "version"])
     check_gdrive()
 
 
@@ -32,7 +31,7 @@ def _submit(job, provider, key, requester, required_confs):
             processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             log(vars(processed_logs[0].args))
             try:
-                log(f"[bold]job_index={processed_logs[0].args['index']}{ok()}")
+                log(f"job_index={processed_logs[0].args['index']} {ok()}")
             except IndexError:
                 log(f"E: Tx({tx_hash}) is reverted")
     except Exception as e:
@@ -48,7 +47,7 @@ def _submit(job, provider, key, requester, required_confs):
 def _share_folders(folder_ids_to_share, provider_gmail):
     for folder_id in folder_ids_to_share:
         cmd = ["gdrive", "share", folder_id, "--role", "writer", "--type", "user", "--email", provider_gmail]
-        log(f"share_output=[m]{run(cmd)}", "bold")
+        log(f"share_output=[m]{run(cmd)}")
 
 
 def submit_gdrive(job: Job, is_pass=False, required_confs=1):
@@ -78,9 +77,6 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     try:
         job.Ebb.is_provider_valid(provider_addr_to_submit)
         provider_info = job.Ebb.get_provider_info(provider_addr_to_submit)
-        # log(f"## provider_addr_to_submit=[m]{provider_addr_to_submit}")
-        log(f"==> provider's available_core_num={provider_info['available_core_num']}")
-        log(f"==> provider's price_core_min={provider_info['price_core_min']}")
         provider_gmail = provider_info["gmail"]
     except Exception as e:
         raise QuietExit from e

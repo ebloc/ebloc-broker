@@ -22,16 +22,17 @@ repos:
         entry: bash -c 'mypy "$@" || true' --
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0 # Replace by any tag/version: https://github.com/psf/black/tags
+    rev: 23.3.0 # Replace by any tag/version: https://github.com/psf/black/tags
     hooks:
       - id: black
         name: black
-        exclude: ^.old_work/
+        exclude: ^.depreciated/
 
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.3
     hooks:
       - id: flake8
+exclude: ".depreciated/.*|.old_work/.*"
 
 default_language_version:
   python: python3

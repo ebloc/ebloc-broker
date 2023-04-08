@@ -12,13 +12,6 @@ config:
             path: ~/test_eblocbroker/test_data/base/data/data1
             storage_hours: 1
             storage_id: ipfs
-        data2:
-            hash: fe801973c5b22ef6861f2ea79dc1eb9d
-  # data3:
-  #     cache_type: public
-  #     path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
-  #     storage_hours: 1
-  #     storage_id: ipfs
     data_transfer_out: 2
     jobs:
         job1:

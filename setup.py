@@ -13,11 +13,11 @@ with open("requirements.txt", "r") as f:
 setup(
     name="ebloc-broker",
     packages=find_packages(),
-    setup_requires=["wheel", "eth-brownie"],
+    setup_requires=["wheel", "eth-brownie", "ipdb"],
     version=__version__,
     license="MIT",
     description=(  # noqa: E501
-        "A Python framework to communicate with ebloc-broker, which is "
+        "A Python framework to communicate with ebloc-broker that is "
         "a blockchain based autonomous computational resource broker."
     ),
     long_description=long_description,

@@ -1,4 +1,4 @@
-* Eudat
+* B2DROP
 
 ** B2DROP-support: https://eudat.eu/support-request?service=B2DROP
 __ [[https://eudat.eu/services/userdoc/b2drop]]
@@ -26,7 +26,7 @@ git apply ../patch.txt
 git checkout .  # => undo changes
 #+end_src
 
-[[https://b2access.eudat.eu/saml-idp/saml2idp-web-entry?signInId=4cadb9de-1d0e-4548-ab9b-2a3654066aac][Sign up into B2ACESS EUDAT]]
+[[https://b2access.eudat.eu/saml-idp/saml2idp-web-entry?signInId=4cadb9de-1d0e-4548-ab9b-2a3654066aac][Sign up into B2ACESS]]
 
 #+begin_src python
 # token_ format:

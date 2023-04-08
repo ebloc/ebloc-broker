@@ -5,7 +5,6 @@ import hashlib
 import json
 import ntpath
 import os
-import re
 import shlex
 import shutil
 import signal
@@ -55,7 +54,7 @@ class StorageID(BaseEnum):
     IPFS = 0
     IPFS_GPG = 1
     NONE = 2
-    EUDAT = 3
+    B2DROP = 3
     GDRIVE = 4
 
 
@@ -67,7 +66,7 @@ CACHE_TYPES = {
 STORAGE_IDs = {
     "ipfs": StorageID.IPFS,
     "ipfs_gpg": StorageID.IPFS_GPG,
-    "eudat": StorageID.EUDAT,
+    "b2drop": StorageID.B2DROP,
     "gdrive": StorageID.GDRIVE,
     "none": StorageID.NONE,
 }
@@ -153,8 +152,8 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         raise e
 
 
-def sleep_timer(sleep_duration):
-    log(f"#> sleeping for {sleep_duration} seconds, called from {WHERE(1)}")
+def sleep_timer(sleep_duration, msg=""):
+    log(f"{WHERE(1)} sleeping for {sleep_duration} seconds {msg}")
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))
@@ -185,7 +184,7 @@ def is_bin_installed(name):
     try:
         run(["which", name])
     except Exception as e:
-        log(f"E: [green]{name}[/green] is not instelled")
+        log(f"E: [g]{name}[/g] is not instelled")
         raise e
 
 
@@ -217,19 +216,6 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
         error = error.decode("utf-8").rstrip()
 
     return p, output, error
-
-
-def is_transaction_valid(tx_hash) -> bool:
-    pattern = re.compile(r"^0x[a-fA-F0-9]{64}")
-    return bool(re.fullmatch(pattern, tx_hash))
-
-
-def is_transaction_passed(tx_hash) -> bool:
-    with suppress(Exception):
-        if cfg.w3.eth.get_transaction_receipt(tx_hash)["status"] == 1:
-            return True
-
-    return False
 
 
 def insert_character(string, index, char) -> str:
@@ -400,11 +386,6 @@ def is_driver_on(process_count=1, is_print=True):
         raise QuietExit
 
 
-def is_ganache_on(port) -> bool:
-    """Check whether Ganache CLI runs on the background."""
-    return is_process_on("node.*[g]anache-cli", "Ganache CLI", process_count=0, port=port)
-
-
 def is_geth_on():
     """Check whether geth runs on the background."""
     process_name = f"geth@{env.RPC_PORT}"
@@ -412,6 +393,11 @@ def is_geth_on():
         log(f"E: geth is not running on the background, {process_name}. Please run:")
         log("sudo ~/eBlocPOA/server.sh", "bold yellow")
         raise QuietExit
+
+
+def is_ganache_on(port) -> bool:
+    """Check whether ganache-cli runs on the background."""
+    return is_process_on("node.*[g]anache-cli", "ganache-cli", process_count=0, port=port)
 
 
 def start_ipfs_daemon(_is_print=False) -> bool:
@@ -424,18 +410,32 @@ def start_ipfs_daemon(_is_print=False) -> bool:
     except Exception as e:
         raise QuietExit from e
 
-    log("warning: [green]IPFS[/green] does not work on the background")
-    log("#> Starting [green]IPFS daemon[/green] on the background")
+    log("warning: [g]IPFS[/g] does not work on the background")
+    log("#> Initializing [g]IPFS daemon[/g]...")
     output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     while True:
         time.sleep(1)
         with open(env.IPFS_LOG, "r") as content_file:
-            log(content_file.read().rstrip(), "bold blue")
+            for line in content_file.read().splitlines():
+                if (
+                    "4001/quic" not in line
+                    and "Swarm listening on /ip4/172." not in line
+                    and "Swarm listening on /ip6/" not in line
+                    and "WebUI:" not in line
+                    and "Initializing" not in line
+                    and "Swarm." not in line
+                    and "ipfs swarm" not in line
+                    and "Computed default" not in line
+                    and line != ""
+                ):
+                    print(line)
+
+            # log(content_file.read().rstrip())
             time.sleep(5)  # in case sleep for 5 seconds
             if output:
-                log(output.replace("==> Running IPFS daemon", "").rstrip(), "bold blue")
+                log(output.replace("==> Running IPFS daemon", "").rstrip(), "blue")
 
-        if is_ipfs_on(is_print=True):
+        if is_ipfs_on(is_print=False):
             return True
 
     return False
@@ -464,14 +464,14 @@ def is_dpkg_installed(package) -> bool:
         return False
 
 
-def terminate(msg="", is_traceback=False, lock=None):
-    """Exit."""
+def terminate(msg="", is_traceback=False, lock=None) -> None:
+    """Terminate the program and exit."""
     if msg:
-        log(f"{WHERE(1)} Terminated: ", "bold red", end="")
+        log(f"{WHERE(1)} Terminated: ", "red", end="", h=False)
         if msg[:3] == "E: ":
-            log(msg[3:], "bold")
+            log(msg[3:])
         else:
-            log(msg, "bold")
+            log(msg)
 
     if is_traceback:
         print_tb()
@@ -531,7 +531,7 @@ def question_yes_no(message, is_exit=False):
         else:
             log()
             log(
-                f"#> Please respond with [bold green]{br('y')}es[/bold green] or [bold green]{br('n')}o[/bold green]: ",
+                f"#> Please respond with [bg]{br('y')}es[/bg] or [bg]{br('n')}o[/bg]: ",
                 end="",
             )
 

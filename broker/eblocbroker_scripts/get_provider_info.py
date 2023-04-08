@@ -6,6 +6,7 @@ from contextlib import suppress
 from broker import cfg
 from broker._utils.tools import is_byte_str_zero, log, print_tb
 from broker.config import env
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from brownie.network.account import Account
 
@@ -88,6 +89,9 @@ def main():
 
     provider_info = Ebb.get_provider_info(provider)
     log("provider_info=", "bold", end="")
+    for _price in ["price_core_min", "price_data_transfer", "price_storage", "price_cache"]:
+        provider_info[_price] = f"{Cent(provider_info[_price])._to()} usd"
+
     log(provider_info)
 
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from broker import cfg
-from broker.utils import log, print_tb
+from broker._utils._log import log
+from broker.utils import print_tb
 
 
 def is_contract_exists():
