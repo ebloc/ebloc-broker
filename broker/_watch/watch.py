@@ -61,35 +61,33 @@ def get_providers_info():
 
 
 def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title_flag):
-    j = {}
-    j["id"] = f"j{_id + 1}"
-    j["hash"] = _hash
-    j["index"] = _index
-    j["workload"] = workload_type
-    j["state"] = state_val
-    j["core"] = job["core"][0]
+    _job = {}
+    _job["id"] = f"j{_id + 1}"
+    _job["hash"] = _hash
+    _job["index"] = _index
+    _job["workload"] = workload_type
+    _job["state"] = state_val
+    _job["core"] = job["core"][0]
 
     received_bn = job["received_bn"]
-    j["received_bn"] = received_bn
+    _job["received_bn"] = received_bn
     block = Ebb.get_block(received_bn)
     #
-    j["received_block_ts"] = block["timestamp"]
-    j["start_ts"] = job["start_timestamp"]
-    j["wait_time_(sec)"] = max(j["start_ts"] - j["received_block_ts"], 0)
+    _job["received_block_ts"] = block["timestamp"]
+    _job["start_ts"] = job["start_timestamp"]
+    _job["wait_time_(sec)"] = max(_job["start_ts"] - _job["received_block_ts"], 0)
     #
-    j["elapsed_time_(min)"] = job["actual_elapsed_time"]
-    j["used_registed_data"] = "None"
+    _job["elapsed_time_(min)"] = job["actual_elapsed_time"]
+    _job["used_registed_data"] = "None"
     #
-    j["price_core_min_usd"] = Cent(job["price_core_min"])._to()
-    j["price_data_transfer_cent"] = Cent(job["price_data_transfer"])._to("cent")
-    j["price_storage_cent"] = Cent(job["price_storage"])._to("cent")
-    j["price_cache_cent"] = Cent(job["price_cache"])._to("cent")
-    j["expected_run_time_(min)"] = job["run_time"][0]
-
-    j["total_payment_usd"] = Cent(job["submitJob_received_job_price"])._to()
-
-    j["refunded_usd_to_requester"] = Cent(job["refunded_cent"])._to()
-    j["received_usd_to_provider"] = Cent(job["received_cent"])._to()
+    _job["price_core_min_usd"] = Cent(job["price_core_min"])._to()
+    _job["price_data_transfer_cent"] = Cent(job["price_data_transfer"])._to("cent")
+    _job["price_storage_cent"] = Cent(job["price_storage"])._to("cent")
+    _job["price_cache_cent"] = Cent(job["price_cache"])._to("cent")
+    _job["expected_run_time_(min)"] = job["run_time"][0]
+    _job["total_payment_usd"] = Cent(job["submitJob_received_job_price"])._to()
+    _job["refunded_usd_to_requester"] = Cent(job["refunded_cent"])._to()
+    _job["received_usd_to_provider"] = Cent(job["received_cent"])._to()
     temp_list = []
     if len(job["code_hashes"]) > 1:
         for itm in sorted(job["code_hashes"]):
@@ -98,42 +96,45 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
                 if data_hash in data_hashes:
                     data_alias = data_hashes[data_hash]
                     temp_list.append(data_alias)
-                    j["used_registed_data"] = data_alias
+                    _job["used_registed_data"] = data_alias
             except:
                 pass
 
     if temp_list:
-        j["used_registed_data"] = ";".join(temp_list)
+        _job["used_registed_data"] = ";".join(temp_list)
 
     tx_receipt = Ebb.get_transaction_receipt(job["submitJob_tx_hash"])
     tx_by_block = Ebb.get_transaction_by_block(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
     #: decode input arguments
     output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
     data_transfer_in_arg = str(output[1][1]).replace(" ", "").replace(",", ";")
-    j["data_transfer_in_arg_(MB)"] = data_transfer_in_arg
-    j["data_transfer_out_expected_(MB)"] = output[1][2][7]
+    _job["data_transfer_in_arg_(MB)"] = data_transfer_in_arg
+    _job["data_transfer_out_expected_(MB)"] = output[1][2][7]
     #
-    j["submitJob_tx_hash"] = job["submitJob_tx_hash"]
-    j["submitJob_gas_used"] = job["submitJob_gas_used"]
-    j["processPayment_tx_hash"] = job["processPayment_tx_hash"]
-    j["processPayment_gas_used"] = job["processPayment_gas_used"]
+    _job["submitJob_tx_hash"] = job["submitJob_tx_hash"]
+    _job["submitJob_gas_used"] = job["submitJob_gas_used"]
+    _job["processPayment_tx_hash"] = job["processPayment_tx_hash"]
+    _job["processPayment_gas_used"] = job["processPayment_gas_used"]
     #
     if title_flag:
         title_flag = False
-        for idx, (k, v) in enumerate(j.items()):
+        for idx, (k, v) in enumerate(_job.items()):
             log(f"{k}", h=False, end="")
-            if idx == len(j) - 1:
+            if idx == len(_job) - 1:
                 log()
             else:
                 log(", ", end="")
 
-    for idx, (k, v) in enumerate(j.items()):
+    for idx, (k, v) in enumerate(_job.items()):
         log(f"{v}", h=False, end="")
-        if idx == len(j) - 1:
+        if idx == len(_job) - 1:
             log()
         else:
             log(", ", end="")
 
+    value = float(_job["total_payment_usd"])
+    spent = float(_job["refunded_usd_to_requester"]) + float(_job["received_usd_to_provider"])
+    # "%0.8f" %  (value -spend)
     breakpoint()  # DEBUG
 
 

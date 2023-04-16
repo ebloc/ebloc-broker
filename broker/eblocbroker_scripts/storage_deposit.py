@@ -53,7 +53,7 @@ def deposit_storage(eth_address, is_provider=False):
                 data_owner = Ebb.w3.toChecksumAddress(job_info["owner"])
                 deposit, output = Ebb.get_storage_info(code_hash, provider, data_owner)
                 flag_check.append(output[3])
-                log(f"deposit={deposit}, {output}", "bold")
+                log(f"deposit={deposit}, {output}")
 
         if deposit > 0 and not any(flag_check):  # if not any(i for i in flag_check):
             is_verified_list = [True, True]

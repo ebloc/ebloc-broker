@@ -1,0 +1,19 @@
+* Cost Calculation
+
+#+begin_src bash
+{ job_price=0.061157 usd for provider=0x29e613b04125c16db3f3613563bfdd0ba24cb629
+|   * computational=0.06 usd
+|   * cache=0.000001 usd
+|   * storage=0.000775 usd
+|       * in=0.000376 usd
+|       * registered_data=0.0004 usd
+|         {'0d6c3288ef71d89fb93734972d4eb903': '0.0002 usd', '4613abc322e8f2fdeae9a5dd10f17540': '0.0002 usd'}
+|   * data_transfer=0.000381 usd
+|       * in=0.000376 usd
+}       * out=0.000005 usd
+
+=> price_core_min=0.001 usd
+=> price_data_transfer=0.000001 usd
+=> price_storage=0.000001 usd
+=> price_cache=0.000001 usd
+#+end_src

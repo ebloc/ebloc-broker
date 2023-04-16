@@ -32,6 +32,11 @@ from broker.utils import (
 )
 
 
+b_open = "[bold]{[/bold]"
+b_close = "[bold]}[/bold]"
+straight_line = "[green]│[/green]"
+
+
 class DataStorage:
     """Data strage class."""
 
@@ -531,21 +536,23 @@ class JobPrices:
             log(f"==> price_data_transfer={self.to_usd(self.price_data_transfer)}")
             log(f"==> price_storage={self.to_usd(self.price_storage)}")
             log(f"==> price_cache={self.to_usd(self.price_cache)}")
-            log(f"[g]*[/g] job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
-            _c1 = "[g]|[/g]       [yellow]*[/yellow]"
-            _c2 = "[g]*[/g]       [yellow]*[/yellow]"
+            log(f"{b_open}")
+            log(f"{straight_line} job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
+            c1 = f"{straight_line}       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
-                    log(f"[g]|[/g]   * {k}={self.to_usd(v)}")
+                    log(f"{straight_line}   * {k}={self.to_usd(v)}")
                     if k == "storage":
-                        log(f"{_c1} in={self.to_usd(self.cost['data_transfer_in'])}")
+                        log(f"{c1} in={self.to_usd(self.cost['data_transfer_in'])}")
                         if self.registered_data_cost > 0:
-                            log(f"{_c1} registered_data={self.to_usd(self.registered_data_cost)}")
-                            log(f"[g]|[/g]         {self.registered_data_cost_list_usd}")
+                            log(f"{c1} registered_data={self.to_usd(self.registered_data_cost)}")
+                            log(f"{straight_line}         {self.registered_data_cost_list_usd}")
 
                 if k == "data_transfer":
-                    log(f"{_c1} in={self.to_usd(self.cost['data_transfer_in'])}")
-                    log(f"{_c2} out={self.to_usd(self.cost['data_transfer_out'])}")
+                    log(f"{c1} in={self.to_usd(self.cost['data_transfer_in'])}")
+                    log(f"{c1} out={self.to_usd(self.cost['data_transfer_out'])}")
+
+            log(f"{b_close}")
         else:
             if self.registered_data_cost_list:
                 log(self.registered_data_cost_list)

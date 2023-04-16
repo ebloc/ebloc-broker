@@ -298,7 +298,8 @@ def main():
         if len(sys.argv) == 6:
             received_bn = int(sys.argv[5])
     else:
-        log("E: Provide <provider, [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments")
+        log("E: Provide <[m]provider[/m], [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments", h=False)
+        # E: ./get_job_info.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629 QmeHL7LvHwQs4xrzPqvkA8fH9T8XGya7BgiLKWb7XG6w71 0
         sys.exit(1)
 
     Ebb.get_job_info(provider, job_key, index, job_id, received_bn, is_log_print=True)

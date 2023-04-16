@@ -42,6 +42,7 @@ custom_theme = Theme(
         "yob": "yellow on black blink",
         "ib": "italic black",
         "ic": "italic cyan",
+        "or": "orange1",  # o does not work
     }
 )
 console = Console(
@@ -49,6 +50,12 @@ console = Console(
     force_terminal=True,  # https://rich.readthedocs.io/en/latest/console.html#terminal-detection
     # force_interactive=False,
 )
+
+
+class Chars:
+    b_open = "[bold]{[/bold]"  # {
+    b_close = "[bold]}[/bold]"  # }
+    straight_line = "[green]│[/green]"  # │
 
 
 class Style:
