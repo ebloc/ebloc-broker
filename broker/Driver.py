@@ -120,17 +120,17 @@ def _tools(block_continue):  # noqa
                 raise Terminate(f"E: gdrive_path='{env.GDRIVE}' please set a valid path in the cfg.yaml file")
 
             try:
-                output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
+                check_output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
+                if not check_output:
+                    log(
+                        f"E: provider's registered gmail=[m]{gmail}[/m] does not match with the set gdrive's gmail=[m]{gdrive_gmail}[/m]",
+                        is_code=True,
+                        h=False,
+                    )
+                    raise QuietExit
             except Exception as e:
                 print_tb(e)
                 raise Terminate(e)
-
-            if not output:
-                log(
-                    f"E: provider's registered gmail=[m]{gmail}[/m] does not match\n"
-                    f"   with the set gdrive's gmail=[m]{gdrive_gmail}[/m]"
-                )
-                raise QuietExit
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):

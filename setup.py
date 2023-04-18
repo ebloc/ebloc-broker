@@ -13,7 +13,7 @@ with open("requirements.txt", "r") as f:
 setup(
     name="ebloc-broker",
     packages=find_packages(),
-    setup_requires=["wheel", "eth-brownie", "ipdb"],
+    setup_requires=["wheel", "eth-brownie", "ipdb", "rich"],
     version=__version__,
     license="MIT",
     description=(  # noqa: E501

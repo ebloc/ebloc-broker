@@ -27,6 +27,7 @@ is_provider = True
 is_csv = True
 analyze_long_test = False
 
+# latest: 20070624
 if is_csv:
     is_while = False
     analyze_long_test = True
@@ -117,6 +118,7 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     _job["processPayment_gas_used"] = job["processPayment_gas_used"]
     #
     if title_flag:
+        log("", is_write=False)
         title_flag = False
         for idx, (k, v) in enumerate(_job.items()):
             log(f"{k}", h=False, end="")
@@ -134,7 +136,10 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
 
     value = float(_job["total_payment_usd"])
     spent = float(_job["refunded_usd_to_requester"]) + float(_job["received_usd_to_provider"])
-    # "%0.8f" %  (value -spend)
+    if value != spent:
+        delta = "%0.8f" % (value - spent)
+        log(f"warning: {delta}")
+    #
     breakpoint()  # DEBUG
 
 
@@ -151,7 +156,7 @@ def _watch(eth_address, from_block, is_provider):
         argument_filters=_argument_filters,
         toBlock="latest",
     )
-    header = f"  [yellow]{'{:<46}'.format('key')} index      status[/yellow]"
+    header = f"  [y]{'{:<46}'.format('key')} index      status[/y]"
     job_full = ""
     job_count = 0
     completed_count = 0
@@ -219,7 +224,7 @@ def _watch(eth_address, from_block, is_provider):
 
     if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
-    else:
+    elif not is_csv:
         job_ruler = "[g]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/g]"
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
@@ -229,6 +234,9 @@ def _watch(eth_address, from_block, is_provider):
 
     if not is_csv:
         open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
+
+    if is_csv:
+        log()
 
     log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
     if analyze_long_test:
@@ -246,8 +254,8 @@ def watch(eth_address="", from_block=None):
     if not eth_address:
         try:
             eth_address = get_eth_address_from_cfg()
-        except Exception as e:
-            log(f"E: {e}\neth_address is empty, run as: [m]./watch.py <eth_address>")
+        except Exception:
+            log("E: eth_address is empty, run as: [m]./watch.py <eth_address>", h=False)
             sys.exit(1)
 
     watch_fn = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"

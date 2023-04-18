@@ -218,6 +218,9 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
     else:
         _text = text
 
+    if end == "\r" and text:
+        text = f"{text}"
+
     if color and color != "white":
         if is_print:
             if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":

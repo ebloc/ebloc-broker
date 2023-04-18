@@ -209,7 +209,7 @@ docopt==0.6.2
 docstring-to-markdown==0.11
     # via
     #   python-lsp-server
-docutils==0.19
+docutils==0.18
     # via
     #   python-daemon
     #   readme-renderer
@@ -290,7 +290,7 @@ extensionclass==4.5.1
     #   persistence
 ezenv==0.91
 fasteners==0.14.1
-filelock==3.6.0
+filelock==3.11.0
     # via
     #   gdown
     #   tox
@@ -313,10 +313,10 @@ frozenlist==1.3.1
     #   aiohttp
     #   aiosignal
     #   eth-brownie
-gdown==3.12.2
+gdown==4.7.1
     # via
     #   gshell
-git-filter-repo==2.33.0
+git-filter-repo==2.38.0
 gitdb==4.0.2
     # via
     #   gitpython
@@ -889,7 +889,7 @@ sphinx==6.1.3
     #   sphinx-rtd-theme
 sphinx-autobuild==2021.3.14
 sphinx-rtd-dark-mode==1.2.4
-sphinx-rtd-theme==1.0.0
+sphinx-rtd-theme==1.2.0
     # via
     #   sphinx-rtd-dark-mode
 sphinxcontrib-applehelp==1.0.2

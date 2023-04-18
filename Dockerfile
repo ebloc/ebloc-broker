@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM golang:latest
 RUN apt-get install -y ca-certificates
-ARG IPFS_TAG=v0.19.0
+ARG IPFS_TAG=v0.19.1
 RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/"${IPFS_TAG}"/go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
  && tar -xf "go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
  && rm -f go-ipfs_${IPFS_TAG}_linux-amd64.tar.gz \
@@ -34,9 +34,10 @@ ENV PATH /go/bin:/usr/local/go/bin:$PATH
 ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini
 RUN chmod +x /tini
 
-# Install mongodb
-RUN curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
- && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
+# Installing mongodb
+ARG MONGODB_TAG=6.0
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-${MONGODB_TAG}.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
+ && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/"${MONGODB_TAG}" multiverse" | tee /etc/apt/sources.list.d/mongodb-org-${MONGODB_TAG}.list \
  && apt-get update \
  && apt-get install -y mongodb-org \
  && mkdir -p /data/db \

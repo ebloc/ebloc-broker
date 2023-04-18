@@ -245,11 +245,11 @@ def get_job_info(
         )
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
+                breakpoint()  # DEBUG
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
                 self.job_info.update({"received_cent": logged_receipt.args["receivedCent"]})
                 self.job_info.update({"refunded_cent": logged_receipt.args["refundedCent"]})
                 self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
-                self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
                 self.job_info.update({"actual_elapsed_time": logged_receipt.args["elapsedTime"]})
                 self.job_info.update({"processPayment_tx_hash": logged_receipt["transactionHash"].hex()})

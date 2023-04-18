@@ -93,7 +93,7 @@ def remove_zeros_gpg_fingerprint(_gpg_fingerprint):
 
 
 def get_block_number():
-    log(f"block_number={web3.eth.blockNumber} | contract_bn={web3.eth.blockNumber + 1}", "bold")
+    log(f"bn={web3.eth.blockNumber} | contract_bn={web3.eth.blockNumber + 1}")
     return web3.eth.blockNumber
 
 
@@ -1275,5 +1275,5 @@ def test_receive_registered_data_deposit():
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     received = tx.events["LogProcessPayment"]["receivedCent"]
     refunded = tx.events["LogProcessPayment"]["refundedCent"]
-    log(f"received={received} refunded={refunded}", "bold")
+    log(f"received={received} refunded={refunded}")
     assert job_price == received + refunded

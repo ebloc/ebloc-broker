@@ -507,14 +507,14 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log("E: modified_date.txt file could not be read")
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
-        log("\njob owner's info\n================", "bold green")
+        log("\njob owner's info\n================", "green")
         log(f"==> gmail=[white]{self.requester_info['gmail']}")
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
         log(f"==> ipfs_address={self.requester_info['ipfs_address']}")
         log(f"==> f_id={self.requester_info['f_id']}")
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
             self.get_job_info()
-            log(":beer: job is already completed and its money is received", "bold green")
+            log(":beer: job is already completed and its money is received", "green")
             raise QuietExit
 
         run_time = self.job_info["run_time"]
@@ -531,7 +531,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             print_tb(e)
             raise e
 
-        log("## receive state of the running job  [  OK  ]", "green")
+        log(f"## receive state of the running job  {ok()}")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(

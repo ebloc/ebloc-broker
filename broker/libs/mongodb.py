@@ -13,6 +13,11 @@ class BaseMongoClass:
         self.mc = mc
         self.collection = collection
 
+    # # FIXME
+    # def value(self, key):
+    #     output = self.collection.find_one({key: key})
+    #     return output["value"]
+
     def delete_all(self):
         return self.collection.delete_many({}).acknowledged
 

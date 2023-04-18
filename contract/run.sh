@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_ALL=1
+TEST_ALL=0
 source $HOME/venv/bin/activate
 brownie compile
 $HOME/ebloc-broker/broker/_daemons/ganache.py 8547
@@ -15,7 +15,8 @@ if [ $TEST_ALL -eq 1 ]; then
     pytest tests -s -x -vv --disable-pytest-warnings --log-level=INFO  # tests all cases
 else
     #: gives priority
-    pytest tests --capture=sys -s -x -k " test_simple_submit" --disable-pytest-warnings
+    # pytest tests --capture=sys -s -x -k " test_simple_submit" --disable-pytest-warnings
+    pytest tests --capture=sys -s -x -k "test_cost" --disable-pytest-warnings -vv
 
     # pytest tests --capture=sys -s -x -k "test_overall_eblocbroker" --disable-pytest-warnings -vv
     # pytest tests --capture=sys -s -x -k "test_transfer" --disable-pytest-warnings
