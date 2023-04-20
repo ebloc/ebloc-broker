@@ -324,10 +324,10 @@ def log(
             _text = text.replace("warning: ", "").replace("E: ", "")
             text = f"{WHERE(back)} {_text}"
             if "E: warning: " in text:
-                text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
+                text = f"{WHERE(back)}[yellow] warning:[/yellow] {_text}"
             else:
                 if "warning:" in text:
-                    text = f"{WHERE(back)}[bold yellow] warning:[/bold yellow] {_text}"
+                    text = f"{WHERE(back)}[yellow] warning:[/yellow] {_text}"
                 else:
                     text = f"{WHERE(back)}[alert] E:[/alert] {_text}"
 

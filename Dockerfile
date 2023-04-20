@@ -51,10 +51,10 @@ RUN apt-get update \
     build-essential \
     aptitude \
     libdbus-1-dev \
-    libdbus-glib-1-dev \
+    libdbus-glib-1-dev     \
     libgirepository1.0-dev \
-    libssl-dev \
-    gcc \
+    libssl-dev             \
+    gcc                    \
     members \
     pv \
     rsync \
@@ -116,7 +116,7 @@ RUN ipfs version \
  && ipfs init \
  && ipfs config Reprovider.Strategy roots \
  && ipfs config Routing.Type none \
- && ganache --version \
+ # && ganache --version \
  && gdrive version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
  && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc \

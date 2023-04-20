@@ -101,7 +101,7 @@ def get_block_timestamp():
     return web3.eth.getBlock(get_block_number()).timestamp
 
 
-def register_provider(price_core_min=Cent("1 cent"), prices=None):
+def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None, prices=None):
     """Register Provider"""
     ebb = config.ebb
     global OWNER
@@ -113,6 +113,9 @@ def register_provider(price_core_min=Cent("1 cent"), prices=None):
     assert ebb.getOwner() != provider_account  # contract owner could not be a provider
     if not prices:
         prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
+
+    if _available_core:
+        available_core = _available_core
 
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
@@ -911,7 +914,6 @@ def test_submit_jobs():
             job.run_time = [core_min]
             # time.sleep(1)
             # rpc.mine(int(arguments[0]))
-
             job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
             data_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
             code_hash = ipfs_to_bytes32(data_key)

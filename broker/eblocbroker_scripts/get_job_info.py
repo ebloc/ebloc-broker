@@ -100,7 +100,7 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 self.job_info.update({"run_time": logged_job.args["runTime"]})
                 self.job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
                 self.job_info.update({"cacheType": logged_job.args["cacheType"]})
-                self.job_info.update({"submitJob_received_job_price": logged_job.args["received"]})  ##
+                self.job_info.update({"submitJob_received_job_price": logged_job.args["received"]})  #
                 self.job_info.update({"submitJob_tx_hash": logged_job["transactionHash"].hex()})
                 self.job_info.update({"submitJob_block_hash": logged_job["blockHash"].hex()})
                 tx_by_block = Ebb.get_transaction_by_block(
@@ -112,7 +112,11 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                     tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
                 )
                 output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
-                self.job_info.update({"storage_duration": output[1][3]})
+                if output:
+                    self.job_info.update({"data_transfer_in_input": output[1][1]})
+                    self.job_info.update({"data_transfer_out_input": output[1][2][-2]})
+                    self.job_info.update({"storage_duration": output[1][3]})
+
                 self.job_info.update({"submitJob_gas_used": int(tx_receipt["gasUsed"])})
                 break
         else:
@@ -199,6 +203,8 @@ def get_job_info(
             "stateCode": job[0],
             "start_timestamp": job[1],
             "submitJob_received_job_price": 0,
+            "data_transfer_in_input": None,
+            "data_transfer_out_input": None,
             "data_transfer_in": data_transfer_in,
             "data_transfer_out": data_transfer_out,
             "commitment_block_duration": job_prices[1],
@@ -245,7 +251,6 @@ def get_job_info(
         )
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
-                breakpoint()  # DEBUG
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
                 self.job_info.update({"received_cent": logged_receipt.args["receivedCent"]})
                 self.job_info.update({"refunded_cent": logged_receipt.args["refundedCent"]})

@@ -2,7 +2,9 @@
 
 TEST_ALL=0
 source $HOME/venv/bin/activate
-brownie compile
+echo -n "brownie compile "
+brownie compile >/dev/null 2>&1
+echo "done"
 $HOME/ebloc-broker/broker/_daemons/ganache.py 8547
 # pytest tests --capture=sys -s -x -k "test_multiple_data" --disable-pytest-warnings
 # pytest tests --capture=sys -s -x -k " test_data_info" --disable-pytest-warnings

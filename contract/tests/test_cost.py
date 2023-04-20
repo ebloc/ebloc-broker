@@ -6,9 +6,7 @@ from os import path
 
 import pytest
 
-import brownie
 from broker import cfg, config
-from broker._utils._log import console_ruler
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
@@ -17,7 +15,7 @@ from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log
 from brownie import accounts, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import gas_costs, mine, new_test
-from contract.tests.test_overall_eblocbroker import register_provider, register_requester
+from contract.tests.test_overall_eblocbroker import register_provider, register_requester, set_transfer
 
 # from brownie.test import given, strategy
 
@@ -29,13 +27,6 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
 provider_gmail = "provider_test@gmail.com"
 fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-
-available_core = 128
-price_core_min = Cent("0.001 usd")
-price_data_transfer = Cent("0.0001 cent")
-price_storage = Cent("0.0001 cent")
-price_cache = Cent("0.0001 cent")
-prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
 ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
@@ -99,9 +90,51 @@ def get_block_timestamp():
 
 
 def test_cost():
-    job = Job()
+    p_core_min = Cent("0.001 usd")
+    p_data_transfer = Cent("0.0001 cent")
+    p_storage = Cent("0.0001 cent")
+    p_cache = Cent("0.0001 cent")
+    prices = [p_core_min, p_data_transfer, p_storage, p_cache]
     provider = accounts[1]
     requester = accounts[2]
-    register_provider()
+    register_provider(_available_core=4, prices=prices)
     register_requester(requester)
-    job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+
+    job = Job()
+    # job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+    job.code_hashes = [
+        "QmeHL7LvHwQs4xrzPqvkA8fH9T8XGya7BgiLKWb7XG6w71",
+        b"9613abc322e8f2fdeae9a5dd10f17540",
+        b"0d6c3288ef71d89fb93734972d4eb903",
+        b"4613abc322e8f2fdeae9a5dd10f17540",
+    ]
+    job.key = job.code_hashes[0]
+    job.cores = [1]
+    job.run_time = [60]
+    job.data_transfer_ins = [1, 375, 0, 0]
+    job.data_transfer_out = 5
+    job.storage_ids = [0, 0, 2, 2]
+    job.cache_types = [0, 0, 0, 0]
+    job.storage_hours = [0, 1, 0, 0]
+    job.data_prices_set_block_numbers = [0, 0]
+    job_price, cost = job.cost(provider, requester)
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+    ]
+    set_transfer(requester, Cent(job_price))
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester},
+    )
