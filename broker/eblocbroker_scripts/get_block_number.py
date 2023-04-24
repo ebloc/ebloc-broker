@@ -8,7 +8,7 @@ from broker.config import env, setup_logger
 from broker.utils import print_tb
 
 logging = setup_logger()
-cfg.NETWORK_ID = "bloxberg_core"
+cfg.NETWORK_ID = "bloxberg"
 
 
 def main():

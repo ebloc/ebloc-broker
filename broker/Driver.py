@@ -72,7 +72,8 @@ def wait_until_idle_core_available():
         if slurm.get_idle_cores(is_print=False) > 0:
             break
         else:
-            sleep_timer(60, "Slurm running node capacity is full.")
+            log("#> Slurm running node capacity is full.")
+            sleep_timer(60)
 
 
 def _tools(block_continue):  # noqa
@@ -479,8 +480,9 @@ def run_driver(given_bn):
                 bn_read = env.config["block_continue"] = current_bn
         except Exception as e:
             if "Filter not found" in str(e) or "Read timed out" in str(e):
+                # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
                 try:
-                    # HTTPSConnectionPool(host='core.bloxberg.org', port=443): Read timed out. (read timeout=10)
+                    log()
                     nc(env.BLOXBERG_HOST, 8545)
                 except Exception:
                     log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
@@ -491,6 +493,19 @@ def run_driver(given_bn):
             log()
             log(f"E: {e}")
             raise e
+
+
+def reconnect():
+    log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
+    if cfg.NETWORK_ID == "bloxberg":
+        cfg.NETWORK_ID = "bloxberg_core"
+    elif cfg.NETWORK_ID == "bloxberg_core":
+        with suppress(Exception):
+            nc("berg-cmpe-boun.duckdns.org", 8545)
+            cfg.NETWORK_ID = "bloxberg"
+
+    log(f"Trying at {cfg.NETWORK_ID} ...")
+    network.connect(cfg.NETWORK_ID)
 
 
 def _run_driver(given_bn, lock):
@@ -510,8 +525,12 @@ def _run_driver(given_bn, lock):
             if "Max retries exceeded with url" not in str(e):
                 print_tb(e)
 
-            check_connection()
-            log(f"#> -=-=-=-=-=-=-=-=-=- [g]RESTARTING[/g] {_date()} -=-=-=-=-=-=-=-=-=- [blue]<#", is_write=False)
+            if not network.is_connected():
+                reconnect()
+                if not network.is_connected():
+                    time.sleep(15)
+
+            console_ruler(character="*")
             continue
         finally:
             with suppress(Exception):
@@ -537,14 +556,9 @@ def main(args):
         log(f"whoami={env.WHOAMI} -- ", h=False, end="")
         log(f"slurm_user={env.SLURMUSER}", h=False)
         log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", h=False)
-        if env.IS_B2DROP_USE:
-            log(f"b2drop_username: [cy]{env.OC_USER}", h=False)
-
         log(f"rootdir: {os.getcwd()}", h=False)
         log(f"logfile: {_log.DRIVER_LOG}", h=False)
-        bloxberg_host = read_network_config(cfg.NETWORK_ID)
-        log(f"Attached to host RPC client listening at '{bloxberg_host}'", h=False)
-
+        log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", h=False)
         print()
         is_driver_on(process_count=1, is_print=False)
         try:

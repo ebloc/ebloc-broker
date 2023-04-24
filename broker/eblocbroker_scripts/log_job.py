@@ -62,7 +62,6 @@ def log_loop(event_filter, poll_interval: int = 6):
     with suppress(Exception):
         bn = cfg.Ebb.get_block_number()
 
-    print()
     sleep_duration = 0
     while True:
         # watch_bn()  # this may cause timeout error over time

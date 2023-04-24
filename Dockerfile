@@ -34,10 +34,9 @@ ENV PATH /go/bin:/usr/local/go/bin:$PATH
 ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini
 RUN chmod +x /tini
 
-# Installing mongodb
-ARG MONGODB_TAG=6.0
-RUN curl -fsSL https://www.mongodb.org/static/pgp/server-${MONGODB_TAG}.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
- && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/"${MONGODB_TAG}" multiverse" | tee /etc/apt/sources.list.d/mongodb-org-${MONGODB_TAG}.list \
+# Install mongodb
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | tee /etc/apt/trusted.gpg.d/mongodb.asc > /dev/null \
+ && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
  && apt-get update \
  && apt-get install -y mongodb-org \
  && mkdir -p /data/db \
@@ -48,32 +47,31 @@ RUN curl -fsSL https://www.mongodb.org/static/pgp/server-${MONGODB_TAG}.asc | te
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --assume-yes apt-utils \
  && apt-get install -y --no-install-recommends --assume-yes \
-    build-essential \
-    aptitude \
-    libdbus-1-dev \
-    libdbus-glib-1-dev     \
-    libgirepository1.0-dev \
-    libssl-dev             \
-    gcc                    \
-    members \
-    pv \
-    rsync \
-    pigz \
-    zlib1g-dev \
-    make \
-    npm \
-    nodejs \
-    python3-venv \
-    sudo \
-    davfs2 \
-    netcat-traditional \
-    supervisor \
-    nano \
-    less \
-    software-properties-common \
-    unzip \
-    python3-dev \
- && apt-get clean
+        build-essential \
+        aptitude \
+        libdbus-1-dev \
+        libdbus-glib-1-dev \
+        libgirepository1.0-dev \
+        libssl-dev \
+        gcc \
+        members \
+        pv \
+        rsync \
+        pigz \
+        zlib1g-dev \
+        make \
+        npm \
+        nodejs \
+        python3-venv \
+        sudo \
+        netcat \
+        supervisor \
+        nano \
+        less \
+        software-properties-common \
+        unzip \
+        python3-dev && \
+    apt-get clean
 
 RUN npm config set fund false \
  && npm config set update-notifier false \
@@ -91,7 +89,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /workspace
 RUN git clone https://github.com/ebloc/ebloc-broker.git
 WORKDIR /workspace/ebloc-broker
-
 #: `pip install -e .` takes few minutes
 RUN git checkout dev >/dev/null 2>&1 \
  && git fetch --all --quiet >/dev/null 2>&1 \
@@ -124,19 +121,19 @@ RUN ipfs version \
 
 ## slurm
 RUN apt-get install -y --no-install-recommends --assume-yes \
-    munge \
-    libmunge-dev \
-    libboost-all-dev \
-    libmunge2 \
-    default-mysql-server \
-    default-mysql-client \
-    default-libmysqlclient-dev \
-    mariadb-server \
-    mailutils \
-    libmariadbd-dev \
- && apt-get clean
+        munge \
+        libmunge-dev \
+        libboost-all-dev \
+        libmunge2 \
+        default-mysql-server \
+        default-mysql-client \
+        default-libmysqlclient-dev \
+        mariadb-server \
+        mailutils \
+        libmariadbd-dev && \
+    apt-get clean
 
-# Compile, build and install Slurm from Git source
+# Compile, build and install Slurm from git source
 ARG SLURM_TAG=slurm-22-05-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
@@ -166,8 +163,8 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/Sched
 
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
 COPY --chown=slurm docker/provider/create-munge-key /sbin/
-RUN /sbin/create-munge-key \
- && chown munge:munge -R /run/munge
+# RUN /sbin/create-munge-key \
+#  && chown munge:munge -R /run/munge
 
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor

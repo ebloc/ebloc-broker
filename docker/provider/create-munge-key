@@ -11,15 +11,15 @@ randomfile=/dev/urandom
 #Usage message
 usage="Try \`$0 -h' for more information."
 
-#Help message
+# Help message
 needhelp() {
-echo Usage: create-munge-key [OPTION]...
-echo Generates a random key for munged
-echo List of options
-echo "  -f            force overwriting existing old key"
-echo "  -r            specify /dev/random as random file for key generation"
-echo "                default is /dev/urandom"
-echo "  -h            display this help and exit"
+    echo Usage: create-munge-key [OPTION]...
+    echo Generates a random key for munged
+    echo List of options
+    echo "  -f            force overwriting existing old key"
+    echo "  -r            specify /dev/random as random file for key generation"
+    echo "                default is /dev/urandom"
+    echo "  -h            display this help and exit"
 }
 
 #Parsing command line options

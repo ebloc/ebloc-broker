@@ -14,10 +14,10 @@ if __name__ == "__main__":
         if len(providers) == 0:
             log("E: There is no registered provider")
         else:
-            log("providers:", "bold green")
+            log("providers:", "green")
 
         for provider in providers:
-            log(provider.lower())
+            log(f"\t{provider.lower()}", "cyan", h=False)
     except QuietExit:
         sys.exit(1)
     except Exception as e:

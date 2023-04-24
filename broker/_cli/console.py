@@ -113,11 +113,11 @@ def get_requester_info(address):
     log(Ebb.get_requester_info(address))
 
 
-@app.command("timenow", "Returns Bloxberg's signer node's time")
+@app.command("timenow", "Returns the latests bloxberg's signer node's time")
 def _timenow():
     t1.join()
     print_timenow()
-    log(f"#> bloxberg_latest_block_number={Ebb.get_block_number()}")
+    log(f"==> bloxberg_latest_block_number={Ebb.get_block_number()}")
 
 
 @app.command("register_requester", "Registers requester info")

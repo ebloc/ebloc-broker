@@ -1,7 +1,5 @@
 * NOTES
-
 ** PUSH
-
 NOTE: Now in order to push the image just make sure the path which you are using must have your
 username included in the tag, [[https://hub.docker.com/u/ebloc][docker-hub]].
 
@@ -13,40 +11,18 @@ docker push ebloc/ebloc-broker
 #+end_src
 
 ** Size
-
 #+begin_src bash
 docker history --human --format "{{.CreatedBy}}: {{.Size}}" ebb
 docker images ebb:latest --format "{{.Repository}}:{{.Tag}} -> {{.Size}}"
 #+end_src
 
-** Remove cache
-
-- to delete all containers including its volumes use: ~docker rm -vf $(docker ps -aq)~
-- to delete all the images: ~docker rmi -f $(docker images -aq)~
-
+** Build
 #+begin_src bash
-remove_dangling () {
-    docker images -qa -f 'dangling=true' | ifne docker rmi $(docker images -qa -f 'dangling=true') --force
-    docker image ls
-}
-remove_dangling
-
 # sudo systemctl start docker
 # sudo docker run eblocbroker
 # doocker run --name test -it eblocbroker bash
 docker run --hostname slurmctl -it ebb bash
 #+end_src
-
-** Clean complete docker cache
-
-#+begin_src bash
-docker kill $(docker ps -q)
-docker rmi $(docker images -a --filter=dangling=true -q) --force
-docker rm $(docker ps --filter=status=exited --filter=status=created -q) --force
-docker rmi $(docker images -a -q) --force
-#+end_src
-
-** Build
 
 #+begin_src bash
 docker build -t ebb:latest --progress plain .
@@ -69,7 +45,6 @@ docker-compose up --build
 #+end_src
 
 * bash to container
-
 #+begin_src bash
 docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 #+end_src

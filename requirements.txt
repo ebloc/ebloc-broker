@@ -675,7 +675,7 @@ pyjwt==1.7.1
     # via
     #   eth-brownie
     #   pythx
-pylint==2.17.1
+pylint==2.17.3
 pymultihash==0.8.2
 pymongo==4.3.3
 pymy==0.0.8
@@ -722,7 +722,7 @@ pytest-xdist==1.34.0
 python-baseconv==1.2.2
     # via
     #   py-multibase
-python-daemon==2.3.0
+python-daemon==3.0.1
 python-dateutil==2.8.1
     # via
     #   dateparser

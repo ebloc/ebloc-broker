@@ -107,7 +107,7 @@ def _login(fn, user, password_path, message) -> None:
             f = open(fn, "wb")
             pickle.dump(config.oc, f)
             f.close()
-            log(message, success=True)
+            log(f"{message} {ok()}")
             return
         except Exception as e:
             log(str(e))
@@ -135,7 +135,7 @@ def login(user, password_path: Path, fn: str) -> None:
             with Halo(text=message_no_color, spinner="line", placement="right"):
                 config.oc.get_config()
 
-            log(message, success=True)
+            log(f"{message} {ok()}")
         except subprocess.CalledProcessError as e:
             log(f"{message} FAILED.\n{e.output.decode('utf-8').strip()}")
             _login(fn, user, password_path, message)

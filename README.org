@@ -128,7 +128,7 @@ Each provider should run ~eblocbroker driver~ for start running the Python scrip
 #+HTML: </details>
 
 
-** 🎬  Demonstration
+** 🎬 Demonstration
 
 - [[https://asciinema.org/a/551809]]
 - [[https://asciinema.org/a/551843]]

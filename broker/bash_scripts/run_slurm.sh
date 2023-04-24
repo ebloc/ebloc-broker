@@ -3,8 +3,7 @@
 MA="\033[33;35m"; RED="\033[1;31m"; GREEN="\033[1;32m"; PURPLE="\033[1;34m"; NC="\033[0m"
 alias sudo='nocorrect sudo'
 USER=$(whoami)
-VERBOSE=true
-
+# VERBOSE=true
 run_worker_slurmd_nodes () {
     echo "#> running worker slurmd nodes"
     ## https://slurm.schedmd.com/faq.html#multi_slurmd
@@ -89,8 +88,6 @@ ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
 
 echo ""
 squeue
-
-
 
 #: verbose
 # sudo /usr/local/sbin/slurmctld -cDvvvvvv

@@ -2,7 +2,6 @@
 
 import sys
 from contextlib import suppress
-
 from broker import cfg, config
 from broker._utils.tools import log, print_tb, read_json, run
 from broker.config import env
@@ -75,20 +74,22 @@ def connect_to_eblocbroker() -> None:
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
         elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
+            from brownie import network
+
             try:
                 network.connect(cfg.NETWORK_ID)
                 if not network.is_connected():
                     log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
                     if cfg.NETWORK_ID == "bloxberg":
-                        log(f"Switching network_id={cfg.NETWORK_ID} to [m]bloxberg_core")
+                        log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg_core. ", end="")
                         cfg.NETWORK_ID = "bloxberg_core"
                     elif cfg.NETWORK_ID == "bloxberg_core":
                         with suppress(Exception):
-                            nc("alpy-bloxberg.duckdns.org", 8545)
-                            log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg")
+                            nc("berg-cmpe-boun.duckdns.org", 8545)
+                            log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg. ", end="")
                             cfg.NETWORK_ID = "bloxberg"
 
-                    log(f"Trying at {cfg.NETWORK_ID} ...")
+                    log(f"Trying at [blue]{cfg.NETWORK_ID}[/blue] ...")
                     network.connect(cfg.NETWORK_ID)
                     if not network.is_connected():
                         terminate(
@@ -102,10 +103,10 @@ def connect_to_eblocbroker() -> None:
 
                 # add_bloxberg_into_network_config.main()
                 try:
-                    # log(
-                    #     "warning: [green]bloxberg[/green] key is added into the "
-                    #     "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
-                    # )
+                    log(
+                        "warning: [green]bloxberg[/green] key is added into the "
+                        "[m]~/.brownie/network-config.yaml[/m] file. Please try again."
+                    )
                     network.connect(cfg.NETWORK_ID)
                 except KeyError:
                     sys.exit(1)

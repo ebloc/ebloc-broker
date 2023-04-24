@@ -8,9 +8,9 @@ from broker._utils.tools import timenow
 def print_timenow():
     _timenow = cfg.Ebb.timenow()
     system_time = timenow()
-    log(f"#> bloxberg_time={_timenow}")
-    log(f"#> machine_time={system_time}")
-    log(f"\tdifference_in_seconds={system_time - _timenow}", "bold")
+    log(f"==> bloxberg_time={_timenow}")
+    log(f"==> machine_time={system_time}")
+    log(f"\tdifference_in_seconds={system_time - _timenow}")
 
 
 def main():

@@ -40,7 +40,7 @@ function start_service {
 }
 
 function check_cluster () {
-    echo "#> waiting for the cluster to become available"
+    echo "==> waiting for the cluster to become available"
     for count in {10..0}; do
         if ! grep -E "up.*idle" <(timeout 1 sinfo); then
             sleep 1
@@ -94,6 +94,7 @@ echo "#> starting supervisord process manager"
 sudo chown munge:munge -R /run/munge  # double check
 nohup sudo -u munge munged -F > /var/log/munged.log &!
 # munged: Info: Unauthorized credential for client UID=0 GID=0 // but works
+
 for service in mysqld slurmdbd slurmctld slurmd_1 slurmd_2 mongod ipfs; do
     start_service $service
 done
