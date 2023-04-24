@@ -92,9 +92,6 @@ class Log:
     #     with Halo(text="Loading", spinner="line", placement="right"):
     #         time.sleep(6)
 
-    # def success() -> None:
-    #     pass
-
     def print_color(self, text: str, color=None, is_bold=True, end="\n", highlight=True) -> None:
         """Print string in color format."""
         if text[0:3] in self.inner_bullet_three:
@@ -276,7 +273,7 @@ def log(
     is_output=True,
     max_depth=None,
     h=True,
-    success=False,
+    _ok=False,
     back=0,
     end="\n",
 ):
@@ -314,7 +311,7 @@ def log(
 
         text = text.replace("E: warning:", "warning:")
 
-    if success:
+    if _ok:
         text = f"{text} {ok()}"
 
     if isinstance(text, str):
