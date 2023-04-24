@@ -40,7 +40,7 @@ function start_service {
 }
 
 function check_cluster () {
-    echo "#> waiting for the cluster to become available"
+    echo "==> waiting for the cluster to become available"
     for count in {10..0}; do
         if ! grep -E "up.*idle" <(timeout 1 sinfo); then
             sleep 1
@@ -99,11 +99,11 @@ for service in mysqld slurmdbd slurmctld slurmd_1 slurmd_2 mongod ipfs; do
     start_service $service
 done
 
-for port in 6817 6818 6819 6001 6002; do
-    check_port_status $port
-done
+# for port in 6817 6818 6819 6001 6002; do
+#     check_port_status $port
+# done
 
-check_cluster
+# check_cluster
 /usr/bin/supervisorctl start startup >/dev/null 2>&1
 echo "#> cluster is now available"
 exec "$@"

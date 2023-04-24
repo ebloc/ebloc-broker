@@ -204,3 +204,29 @@ Traceback (most recent call last):
     elif lock.acquire(block, timeout):
 KeyboardInterrupt
 #+end_src
+
+
+** TODO dbus error in docker
+
+#+begin_src bash
+root@home:/var/log/slurm$ slurmd -N linux2 -Dvvvvvvv
+slurmd: debug:  Log file re-opened
+slurmd: debug2: hwloc_topology_init
+slurmd: debug2: hwloc_topology_load
+slurmd: debug2: hwloc_topology_export_xml
+slurmd: debug:  CPUs:4 Boards:1 Sockets:4 CoresPerSocket:1 ThreadsPerCore:1
+slurmd: debug4: CPU map[0]=>0 S:C:T 0:0:0
+slurmd: debug4: CPU map[1]=>1 S:C:T 1:0:0
+slurmd: debug4: CPU map[2]=>2 S:C:T 2:0:0
+slurmd: debug4: CPU map[3]=>3 S:C:T 3:0:0
+slurmd: error: Node configuration differs from hardware: CPUs=0:4(hw) Boards=0:1(hw) SocketsPerBoard=0:4(hw) CoresPerSocket=0:1(hw) ThreadsPerCore=0:1(hw)
+slurmd: debug3: Trying to load plugin /usr/lib64/slurm/cgroup_v2.so
+slurmd: debug3: plugin_load_from_file->_verify_syms: found Slurm plugin name:Cgroup v2 plugin type:cgroup/v2 version:0x160502
+slurmd: error: cgroup_dbus_attach_to_scope: cannot connect to dbus system daemon: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory
+slurmd: error: _init_new_scope_dbus: scope and/or cgroup directory for slurmstepd could not be set.
+slurmd: error: cannot initialize cgroup directory for stepds
+slurmd: error: Couldn't load specified plugin name for cgroup/v2: Plugin init() callback failed
+slurmd: error: cannot create cgroup context for cgroup/v2
+slurmd: error: Unable to initialize cgroup plugin
+slurmd: error: slurmd initialization failed
+#+end_src

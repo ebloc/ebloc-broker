@@ -51,6 +51,7 @@ RUN apt-get update \
         coreutils \
         build-essential \
         aptitude \
+        libpython3-dev \
         libdbus-1-dev \
         libdbus-glib-1-dev \
         libgirepository1.0-dev \
@@ -73,6 +74,7 @@ RUN apt-get update \
         less \
         software-properties-common \
         unzip \
+        dbus \
         python3-dev && \
     apt-get clean
 
@@ -136,7 +138,7 @@ RUN apt-get install -y --no-install-recommends --assume-yes \
         libmariadbd-dev && \
     apt-get clean
 
-# Compile, build and install Slurm from Git source
+# Compile, build and install Slurm from git source
 ARG SLURM_TAG=slurm-22-05-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
@@ -159,6 +161,8 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/Sched
     /var/spool/slurmctld \
     /var/spool/slurmd.slurmctl1 \
     /var/spool/slurmd.slurmctl2 \
+    /var/spool/slurmd.linux1 \
+    /var/spool/slurmd.linux2 \
     /var/log/slurm \
     /var/run/slurm \
  && chown -R slurm:slurm /var/spool/slurmd \
@@ -171,21 +175,23 @@ COPY --chown=slurm docker/provider/create-munge-key /sbin/
 RUN /sbin/create-munge-key
 
 WORKDIR /run/munge
-RUN chown munge:munge -R /run/munge # patliyor
+RUN chown munge:munge -R /run/munge
 
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
 COPY docker/provider/supervisord.conf /etc/
 
 # mark externally mounted volumes
+COPY --chown=slurm docker/provider/cgroup.conf /etc/slurm/cgroup.conf
 COPY --chown=slurm docker/provider/slurm.conf /etc/slurm/slurm.conf
 COPY --chown=slurm docker/provider/slurmdbd.conf /etc/slurm/slurmdbd.conf
+
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
 EXPOSE 3306 6001 6002 6817 6818 6819 6820
-
 COPY docker/provider/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-# define command at startup
+
+#: define command at startup
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker
 CMD ["/bin/bash"]

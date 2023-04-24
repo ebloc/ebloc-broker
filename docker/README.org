@@ -32,7 +32,7 @@ docker image ls
 # sudo systemctl start docker
 # sudo docker run eblocbroker
 # doocker run --name test -it eblocbroker bash
-docker run --hostname slurmctl -it ebb bash
+docker run --hostname slurmctl -it ebb bash  # build and bash into
 #+end_src
 
 ** Clean complete docker cache
