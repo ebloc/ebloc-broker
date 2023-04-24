@@ -48,32 +48,33 @@ RUN curl -fsSL https://www.mongodb.org/static/pgp/server-${MONGODB_TAG}.asc | te
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --assume-yes apt-utils \
  && apt-get install -y --no-install-recommends --assume-yes \
-    build-essential \
-    aptitude \
-    libdbus-1-dev \
-    libdbus-glib-1-dev     \
-    libgirepository1.0-dev \
-    libssl-dev             \
-    gcc                    \
-    members \
-    pv \
-    rsync \
-    pigz \
-    zlib1g-dev \
-    make \
-    npm \
-    nodejs \
-    python3-venv \
-    sudo \
-    davfs2 \
-    netcat-traditional \
-    supervisor \
-    nano \
-    less \
-    software-properties-common \
-    unzip \
-    python3-dev \
- && apt-get clean
+        coreutils \
+        build-essential \
+        aptitude \
+        libdbus-1-dev \
+        libdbus-glib-1-dev \
+        libgirepository1.0-dev \
+        libssl-dev \
+        gcc \
+        members \
+        pv \
+        rsync \
+        pigz \
+        zlib1g-dev \
+        make \
+        npm \
+        nodejs \
+        python3-venv \
+        sudo \
+        davfs2 \
+        netcat-traditional \
+        supervisor \
+        nano \
+        less \
+        software-properties-common \
+        unzip \
+        python3-dev && \
+    apt-get clean
 
 RUN npm config set fund false \
  && npm config set update-notifier false \
@@ -116,7 +117,6 @@ RUN ipfs version \
  && ipfs init \
  && ipfs config Reprovider.Strategy roots \
  && ipfs config Routing.Type none \
- # && ganache --version \
  && gdrive version \
  && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
  && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc \
@@ -124,17 +124,17 @@ RUN ipfs version \
 
 ## slurm
 RUN apt-get install -y --no-install-recommends --assume-yes \
-    munge \
-    libmunge-dev \
-    libboost-all-dev \
-    libmunge2 \
-    default-mysql-server \
-    default-mysql-client \
-    default-libmysqlclient-dev \
-    mariadb-server \
-    mailutils \
-    libmariadbd-dev \
- && apt-get clean
+        munge \
+        libmunge-dev \
+        libboost-all-dev \
+        libmunge2 \
+        default-mysql-server \
+        default-mysql-client \
+        default-libmysqlclient-dev \
+        mariadb-server \
+        mailutils \
+        libmariadbd-dev && \
+    apt-get clean
 
 # Compile, build and install Slurm from Git source
 ARG SLURM_TAG=slurm-22-05-2-1
@@ -157,6 +157,8 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/Sched
  && mkdir -p /etc/sysconfig/slurm \
     /var/spool/slurmd \
     /var/spool/slurmctld \
+    /var/spool/slurmd.slurmctl1 \
+    /var/spool/slurmd.slurmctl2 \
     /var/log/slurm \
     /var/run/slurm \
  && chown -R slurm:slurm /var/spool/slurmd \
@@ -166,8 +168,10 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/Sched
 
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
 COPY --chown=slurm docker/provider/create-munge-key /sbin/
-RUN /sbin/create-munge-key \
- && chown munge:munge -R /run/munge
+RUN /sbin/create-munge-key
+
+WORKDIR /run/munge
+RUN chown munge:munge -R /run/munge # patliyor
 
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor

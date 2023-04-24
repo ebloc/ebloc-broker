@@ -19,23 +19,20 @@ def read_network_config(network_id, fn=Path.home() / ".brownie" / "network-confi
     raise Exception
 
 
+def bloxberg_dict(_id, url):
+    config = {
+        "name": "bloxberg (Bloxberg)",
+        "id": _id,
+        "chainid": 8995,
+        "host": url,
+        "explorer": "https://blockexplorer.bloxberg.org/api",
+    }
+    return config
+
+
 def add_bloxberg_config(fn):
-    bloxberg_config = {
-        "name": "bloxberg (Bloxberg)",
-        "id": "bloxberg",
-        "chainid": 8995,
-        "host": "http://alpy-bloxberg.duckdns.org:8545",
-        "explorer": "https://blockexplorer.bloxberg.org/api",
-    }
-
-    bloxberg_config_core = {
-        "name": "bloxberg (Bloxberg)",
-        "id": "bloxberg_core",
-        "chainid": 8995,
-        "host": "https://core.bloxberg.org",
-        "explorer": "https://blockexplorer.bloxberg.org/api",
-    }
-
+    bloxberg_config = bloxberg_dict("bloxberg", "http://alpy-bloxberg.duckdns.org:8545")
+    bloxberg_config_core = bloxberg_dict("bloxberg_core", "https://core.bloxberg.org")
     config_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
     is_bloxberg_added = False
     for _config in config_data["live"]:

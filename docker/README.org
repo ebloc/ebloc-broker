@@ -25,11 +25,9 @@ docker images ebb:latest --format "{{.Repository}}:{{.Tag}} -> {{.Size}}"
 - to delete all the images: ~docker rmi -f $(docker images -aq)~
 
 #+begin_src bash
-remove_dangling () {
-    docker images -qa -f 'dangling=true' | ifne docker rmi $(docker images -qa -f 'dangling=true') --force
-    docker image ls
-}
-remove_dangling
+#: remove_dangling
+docker images -qa -f 'dangling=true' | ifne docker rmi $(docker images -qa -f 'dangling=true') --force
+docker image ls
 
 # sudo systemctl start docker
 # sudo docker run eblocbroker
