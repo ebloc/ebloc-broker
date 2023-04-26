@@ -12,14 +12,16 @@ from datetime import datetime
 from decimal import Decimal
 from functools import partial
 from typing import List
+
 import zc.lockfile
 from halo import Halo
 from ipdb import launch_ipdb_on_exception
+
 from broker import cfg, config
 from broker._import import check_connection
 from broker._utils import _log
 from broker._utils._log import console_ruler, log
-from broker._utils.tools import _date, is_process_on, kill_process_by_name, print_tb, squeue
+from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
 from broker.drivers.gdrive import GdriveClass
@@ -31,7 +33,6 @@ from broker.imports import nc
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.user_setup import give_rwe_access, user_add
-from broker.python_scripts.add_bloxberg_into_network_config import read_network_config
 from broker.utils import (
     StorageID,
     check_ubuntu_packages,
@@ -66,7 +67,7 @@ if not cfg.IS_BREAKPOINT:
     os.environ["PYTHONBREAKPOINT"] = "0"
 
 
-def wait_until_idle_core_available():
+def wait_until_idle_core_is_available():
     """Wait until an idle core becomes available."""
     while True:
         if slurm.get_idle_cores(is_print=False) > 0:
@@ -76,12 +77,13 @@ def wait_until_idle_core_available():
             sleep_timer(60)
 
 
-def _tools(block_continue):  # noqa
+def tools(bn):
     """Check whether the required functions are running on the background.
 
-    :param block_continue: Continue from given the block number
+    :param bn: Continue from given the block number
+
     """
-    session_start_msg(block_continue)
+    session_start_msg(bn)
     try:
         is_internet_on()
     except Exception as e:
@@ -222,7 +224,7 @@ class Driver:
         """Process logged job one by one."""
         self.storage_duration = []
         self.received_block = []
-        wait_until_idle_core_available()
+        wait_until_idle_core_is_available()
         self.is_provider_received_job = True
         console_ruler(idx, character="-")
         job_key = self.logged_job.args["jobKey"]
@@ -393,7 +395,7 @@ def run_driver(given_bn):
             else:
                 raise Terminate(f"deployed_block_number={deployed_block_number} is invalid")
 
-    _tools(bn_temp)
+    tools(bn_temp)
     try:
         Ebb.is_contract_exists()
     except:
@@ -433,7 +435,7 @@ def run_driver(given_bn):
     slurm.pending_jobs_check()
     first_iteration_flag = True
     while True:
-        wait_until_idle_core_available()
+        wait_until_idle_core_is_available()
         time.sleep(0.2)
         if not str(bn_read).isdigit():
             raise Terminate(f"read_block_from={bn_read}")

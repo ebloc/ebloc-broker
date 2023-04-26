@@ -679,7 +679,7 @@ pylint==2.17.3
 pymultihash==0.8.2
 pymongo==4.3.3
 pymy==0.0.8
-pymysql==0.9.3
+pymysql==1.0.3
     # via
     #   pymy
 pynacl==1.4.0

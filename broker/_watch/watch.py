@@ -2,7 +2,6 @@
 
 """Job watcher for the end of test."""
 
-from broker.eblocbroker_scripts.utils import Cent
 import os
 import sys
 import time
@@ -14,6 +13,7 @@ from broker._utils._log import _console_clear
 from broker._utils.tools import _date, log, print_tb
 from broker._utils.yaml import Yaml
 from broker._watch.test_info import data_hashes
+from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.lib import state
 

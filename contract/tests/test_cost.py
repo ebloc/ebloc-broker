@@ -6,22 +6,23 @@ from os import path
 
 import pytest
 
+import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
-from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log
+from broker.utils import log
 from brownie import accounts, web3
 from brownie.network.state import Chain
-from contract.scripts.lib import gas_costs, mine, new_test
-from contract.tests.test_overall_eblocbroker import register_provider, register_requester, set_transfer
+from contract.scripts.lib import new_test
+from contract.tests.test_overall_eblocbroker import register_provider, register_requester  # , set_transfer
+from contract.scripts.lib import mine
 
 # from brownie.test import given, strategy
 
 COMMITMENT_BLOCK_NUM = 600
 Contract.eblocbroker = Contract.Contract(is_brownie=True)
-
 setup_logger("", True)
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
@@ -33,35 +34,58 @@ ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3U
 Ebb = None
 chain = None
 ebb = None
-OWNER = None
 
 
-def append_gas_cost(func_n, tx):
-    gas_costs[func_n].append(tx.__dict__["gas_used"])
+class Prices:
+    def __init__(self):
+        self.core_min: "Cent" = 0
+        self.data_transfer: "Cent" = 0
+        self.storage: "Cent" = 0
+        self.cache: "Cent" = 0
+
+    def set_core_min(self, value):
+        self.core_min = Cent(value)
+
+    def set_data_transfer(self, value):
+        self.data_transfer = Cent(value)
+
+    def set_storage(self, value):
+        self.storage = Cent(value)
+
+    def set_cache(self, value):
+        self.core_min = Cent(value)
+
+    def get(self):
+        return [self.core_min, self.data_transfer, self.storage, self.cache]
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": OWNER})
+    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+
+
+def set_transfer(to, amount):
+    """Empty balance and transfer given amount."""
+    balance = ebb.balanceOf(to)
+    ebb.approve(accounts[0], balance, {"from": to})
+    ebb.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
+    assert ebb.balanceOf(to) == 0
+    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
 
 
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb  # noqa
-    global chain  # noqa
-    global ebb  # noqa
-    global OWNER
-
+    global Ebb, chain, ebb  # noqa
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
     config.ebb = _Ebb
     cfg.Ebb.eBlocBroker = Contract.eblocbroker.eBlocBroker = _Ebb
-    ebb = _Ebb
+    _cfg.ebb = ebb = _Ebb
     Ebb.w3 = web3
     if not config.chain:
         config.chain = Chain()
 
     chain = config.chain
-    OWNER = accounts[0]
+    _cfg.OWNER = accounts[0]
 
 
 @pytest.fixture(autouse=True)
@@ -81,7 +105,7 @@ def remove_zeros_gpg_fingerprint(_gpg_fingerprint):
 
 
 def get_block_number():
-    log(f"bn={web3.eth.blockNumber} | contract_bn={web3.eth.blockNumber + 1}")
+    log(f"bn={web3.eth.blockNumber} | bn_for_contract={web3.eth.blockNumber + 1}")
     return web3.eth.blockNumber
 
 
@@ -90,20 +114,24 @@ def get_block_timestamp():
 
 
 def test_cost():
-    p_core_min = Cent("0.001 usd")
-    p_data_transfer = Cent("0.0001 cent")
-    p_storage = Cent("0.0001 cent")
-    p_cache = Cent("0.0001 cent")
-    prices = [p_core_min, p_data_transfer, p_storage, p_cache]
+    _prices = Prices()
+    _prices.set_core_min("0.001 usd")
+    _prices.set_data_transfer("0.0001 cent")
+    _prices.set_storage("0.0001 cent")
+    _prices.set_cache("0.0001 cent")
+    prices = _prices.get()
     provider = accounts[1]
     requester = accounts[2]
     register_provider(_available_core=4, prices=prices)
     register_requester(requester)
+    for data_hash in [b"0d6c3288ef71d89fb93734972d4eb903", b"4613abc322e8f2fdeae9a5dd10f17540"]:
+        ebb.registerData(data_hash, Cent("0.0002 usd"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+        assert ebb.getRegisteredDataPrice(provider, data_hash, 0)[0] == Cent("0.0002 usd")
+        mine(1)
 
     job = Job()
-    # job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
     job.code_hashes = [
-        "QmeHL7LvHwQs4xrzPqvkA8fH9T8XGya7BgiLKWb7XG6w71",
+        b"0000abc322e8f2fdeae9a5dd10f17540",
         b"9613abc322e8f2fdeae9a5dd10f17540",
         b"0d6c3288ef71d89fb93734972d4eb903",
         b"4613abc322e8f2fdeae9a5dd10f17540",
@@ -116,8 +144,8 @@ def test_cost():
     job.storage_ids = [0, 0, 2, 2]
     job.cache_types = [0, 0, 0, 0]
     job.storage_hours = [0, 1, 0, 0]
-    job.data_prices_set_block_numbers = [0, 0]
-    job_price, cost = job.cost(provider, requester)
+    job.data_prices_set_block_numbers = [0, 0, 0, 0]
+    job_price, cost = job.cost(provider, requester, is_verbose=True)
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],

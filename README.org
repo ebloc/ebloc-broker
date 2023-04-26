@@ -81,8 +81,7 @@ $ eblocbroker submit job.yaml
 
 **** Example yaml file in order to define a job to submit.
 
-~job.yaml~:
-
+=job.yaml=\:
 #+begin_src yaml
 config:
     provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'

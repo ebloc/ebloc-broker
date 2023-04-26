@@ -33,6 +33,11 @@ def test(name):  # shared module on write time
 
 
 def thread_function(name):
+    """Create thread.
+
+    :param name: name of the thread
+    """
+
     # A dedicated per-thread handler
     # thread_file_handler = f"/tmp/threadlogfile-{threading.get_ident()}.log"
     thread_file_handler = f"/tmp/threadlogfile{name}.log"

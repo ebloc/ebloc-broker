@@ -1,12 +1,9 @@
 #!/bin/bash
-
 RED="\033[1;31m"; NC="\033[0m"
-
 if [ "$#" -ne 1 ]; then
     echo -e "${RED}E:${NC} Illegal number of parameters, provide <email>"
     exit 1
 fi
-
 keyid=$(gpg --list-secret-keys --keyid-format LONG $1 | sed -n '2p' | tr -d " \t\r")
 output=$(gpg --with-colons --fingerprint $keyid | grep fpr | cut -d ':' -f 10 | grep $keyid)
 echo $output

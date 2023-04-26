@@ -6,6 +6,7 @@ from os import path
 
 import pytest
 
+import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker._utils._log import br, console_ruler, log
 from broker.config import setup_logger
@@ -43,11 +44,10 @@ provider = None
 requester = None
 ebb = None
 chain = None
-OWNER = None
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": OWNER})
+    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -55,7 +55,6 @@ def my_own_session_run_at_beginning(_Ebb):
     global Ebb  # noqa
     global chain  # noqa
     global ebb  # noqa
-    global OWNER
 
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
@@ -67,7 +66,7 @@ def my_own_session_run_at_beginning(_Ebb):
         config.chain = Chain()
 
     chain = config.chain
-    OWNER = accounts[0]
+    _cfg.OWNER = accounts[0]
 
 
 # @pytest.fixture(scope="module", autouse=True)

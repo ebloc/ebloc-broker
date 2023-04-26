@@ -40,7 +40,7 @@ custom_theme = Theme(
         "r": "red",
         "orange": "orange1",
         "yob": "yellow on black blink",
-        "ib": "italic black",
+        "ib": "italic #6272a4",
         "ic": "italic cyan",
         "or": "orange1",  # o does not work
     }
@@ -281,6 +281,7 @@ def log(
     * Emojis: python -m rich.emoji | less
     * Colors:
     __ https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
+    __ https://github.com/dracula/dracula-theme
 
     :param end: (str, optional) Character to write at end of output. Defaults to "\\n".
     :param text: String to print

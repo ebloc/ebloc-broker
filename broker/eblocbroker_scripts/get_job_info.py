@@ -116,6 +116,7 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                     self.job_info.update({"data_transfer_in_input": output[1][1]})
                     self.job_info.update({"data_transfer_out_input": output[1][2][-2]})
                     self.job_info.update({"storage_duration": output[1][3]})
+                    self.job_info.update({"data_prices_set_block_numbers": output[1][2][4]})
 
                 self.job_info.update({"submitJob_gas_used": int(tx_receipt["gasUsed"])})
                 break
@@ -226,7 +227,7 @@ def get_job_info(
             "storage_duration": None,
             "submitJob_block_hash": None,
             "submitJob_tx_hash": None,
-            # "submitJob_received_job_price": 0,
+            "data_prices_set_block_numbers": None,
             "submitJob_gas_used": 0,
             "processPayment_block_hash": None,
             "processPayment_tx_hash": None,

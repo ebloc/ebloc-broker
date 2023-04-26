@@ -7,6 +7,7 @@ from os import path
 import pytest
 
 import brownie
+import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker._utils._log import console_ruler
 from broker.config import setup_logger
@@ -42,7 +43,6 @@ ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3U
 Ebb = None
 chain = None
 ebb = None
-OWNER = None
 
 
 def append_gas_cost(func_n, tx):
@@ -50,7 +50,7 @@ def append_gas_cost(func_n, tx):
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": OWNER})
+    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -58,7 +58,6 @@ def my_own_session_run_at_beginning(_Ebb):
     global Ebb  # noqa
     global chain  # noqa
     global ebb  # noqa
-    global OWNER
 
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
@@ -70,7 +69,7 @@ def my_own_session_run_at_beginning(_Ebb):
         config.chain = Chain()
 
     chain = config.chain
-    OWNER = accounts[0]
+    _cfg.OWNER = accounts[0]
 
 
 @pytest.fixture(autouse=True)

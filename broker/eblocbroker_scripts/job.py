@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, List  # noqa
 
 from broker import cfg, config
-from broker._utils._log import br
+from broker._utils._log import br, console_ruler
 from broker._utils.tools import _exit, _remove, log, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
@@ -30,7 +30,6 @@ from broker.utils import (
     is_geth_account_locked,
     run,
 )
-
 
 b_open = "[bold]{[/bold]"
 b_close = "[bold]}[/bold]"
@@ -108,6 +107,9 @@ class Job:
         jp.set_computational_cost()
         jp.set_storage_cost(is_verbose)
         jp.set_job_price(is_verbose)
+        if is_verbose:
+            console_ruler(character="+")
+
         return jp.job_price, jp.cost
 
     def analyze_tx_status(self, tx_hash) -> bool:
@@ -454,6 +456,7 @@ class JobPrices:
             if self.job.storage_ids[idx] == StorageID.NONE:
                 self.job.data_transfer_ins[idx] = 0
 
+        _is_private_dict = {}
         for idx, code_hash in enumerate(self.job.code_hashes):
             if self.is_brownie:
                 ds = self.create_data_storage(code_hash)
@@ -470,7 +473,11 @@ class JobPrices:
                 _code_hash = bytes32_to_ipfs(code_hash, is_verbose=False)
 
             if is_verbose and _code_hash:
-                log(f"==> is_private{br(_code_hash, 'blue')}={ds.is_private}")
+                _is_private_dict[_code_hash] = ds.is_private
+
+            if idx == len(self.job.code_hashes) - 1:
+                log("[green]**[/green] is_private=", end="")
+                log(_is_private_dict)
 
             # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_deposit > 0 or
@@ -480,7 +487,7 @@ class JobPrices:
                 and ds.is_verified_used
             ):
                 if is_verbose:
-                    log(f"==> for {bytes32_to_ipfs(code_hash)} cost of storage is not paid")
+                    log(f"** for {bytes32_to_ipfs(code_hash)} cost of storage is not paid")
             else:
                 if self.job.data_prices_set_block_numbers[idx] > 0 or self.job.storage_ids[idx] == StorageID.NONE:
                     if self.job.data_prices_set_block_numbers[idx] == 0:
@@ -532,10 +539,10 @@ class JobPrices:
         self.cost["data_transfer_out"] = self.data_transfer_out_cost
         self.cost["data_transfer"] = self.data_transfer_cost
         if is_verbose:
-            log(f"==> price_core_min={self.to_usd(self.price_core_min)}")
-            log(f"==> price_data_transfer={self.to_usd(self.price_data_transfer)}")
-            log(f"==> price_storage={self.to_usd(self.price_storage)}")
-            log(f"==> price_cache={self.to_usd(self.price_cache)}")
+            log(f"** price_core_min={self.to_usd(self.price_core_min)}")
+            log(f"** price_data_transfer={self.to_usd(self.price_data_transfer)}")
+            log(f"** price_storage={self.to_usd(self.price_storage)}")
+            log(f"** price_cache={self.to_usd(self.price_cache)}")
             log(f"{b_open}")
             log(f"{straight_line} job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
             c1 = f"{straight_line}       [yellow]*[/yellow]"

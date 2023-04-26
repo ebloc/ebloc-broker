@@ -7,6 +7,7 @@ from os import path
 import pytest
 
 import brownie
+import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker._utils._log import console_ruler
 from broker.config import setup_logger
@@ -40,7 +41,6 @@ ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3U
 Ebb = None
 chain = None
 ebb = None
-OWNER = None
 
 # @pytest.fixture(scope="session", autouse=True)
 # def cleanup():
@@ -59,7 +59,6 @@ def my_own_session_run_at_beginning(_Ebb):
     global Ebb  # type: ignore
     global chain  # noqa
     global ebb  # noqa
-    global OWNER
 
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
@@ -73,7 +72,7 @@ def my_own_session_run_at_beginning(_Ebb):
         config.chain = Chain()
 
     chain = config.chain
-    OWNER = accounts[0]
+    _cfg.OWNER = accounts[0]
 
 
 @pytest.fixture(autouse=True)
@@ -104,9 +103,8 @@ def get_block_timestamp():
 def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None, prices=None):
     """Register Provider"""
     ebb = config.ebb
-    global OWNER
-    if not OWNER:
-        OWNER = accounts[0]
+    if not _cfg.OWNER:
+        _cfg.OWNER = accounts[0]
 
     mine(1)
     provider_account = accounts[1]
@@ -138,12 +136,12 @@ def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None
 
     assert ebb.isOrcIDVerified(provider_account) is False, "orc_id initial value should be false"
 
-    tx = ebb.authenticateOrcID(provider_account, orc_id_as_bytes, {"from": OWNER})
+    tx = ebb.authenticateOrcID(provider_account, orc_id_as_bytes, {"from": _cfg.OWNER})
     append_gas_cost("authenticateOrcID", tx)
     assert ebb.isOrcIDVerified(provider_account) is True, "isOrcIDVerified() is failed"
     # orc_id should only set once for the same user
     with brownie.reverts():
-        tx = ebb.authenticateOrcID(provider_account, orc_id_as_bytes, {"from": OWNER})
+        tx = ebb.authenticateOrcID(provider_account, orc_id_as_bytes, {"from": _cfg.OWNER})
 
     assert orc_id == ebb.getOrcID(provider_account).decode("utf-8").replace("\x00", ""), "orc_id set false"
     return provider_registered_bn
@@ -152,9 +150,8 @@ def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None
 def register_requester(account):
     """Register requester."""
     ebb = config.ebb
-    global OWNER
-    if not OWNER:
-        OWNER = accounts[0]
+    if not _cfg.OWNER:
+        _cfg.OWNER = accounts[0]
 
     tx = ebb.registerRequester(
         GPG_FINGERPRINT,
@@ -171,26 +168,26 @@ def register_requester(account):
     orc_id_as_bytes = str.encode(orc_id)
     assert ebb.isOrcIDVerified(account) is False, "orc_id initial value should be false"
     #
-    tx = ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": OWNER})  # ORCID should be registered.
+    tx = ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": _cfg.OWNER})  # ORCID should be registered.
     assert ebb.isOrcIDVerified(account), "isOrcIDVerified is failed"
     assert not ebb.isOrcIDVerified(accounts[9]), "isOrcIDVerified is failed"
     with brownie.reverts():  # orc_id should only set once for the same user
-        ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": OWNER})
+        ebb.authenticateOrcID(account, orc_id_as_bytes, {"from": _cfg.OWNER})
 
     assert orc_id == ebb.getOrcID(account).decode("utf-8").replace("\x00", ""), "orc_id set false"
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": OWNER})
+    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
 
 
 def set_transfer(to, amount):
     """Empty balance and transfer given amount."""
     balance = ebb.balanceOf(to)
     ebb.approve(accounts[0], balance, {"from": to})
-    ebb.transferFrom(to, accounts[0], balance, {"from": OWNER})
+    ebb.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
     assert ebb.balanceOf(to) == 0
-    ebb.transfer(to, Cent(amount), {"from": OWNER})
+    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
 
 
 # @pytest.mark.skip(reason="skip")
@@ -203,7 +200,7 @@ def test_dummy():
 
 def test_total_supply():
     total_supply = "1000000000 usd"
-    assert ebb.balanceOf(OWNER) == Cent(total_supply)
+    assert ebb.balanceOf(_cfg.OWNER) == Cent(total_supply)
 
 
 def test_register():
@@ -227,7 +224,6 @@ def test_stored_data_usage():
     register_requester(requester_1)
 
     # ebb.transfer(accounts[1], amount, {"from": accounts[0]})
-
     job = Job()
     job.code_hashes.append(b"050e6cc8dd7e889bf7874689f1e1ead6")
     job.code_hashes.append(b"b6aaf03752dc68d625fc57b451faa2bf")
@@ -842,7 +838,7 @@ def test_simple_submit():
         job.code_hashes,
         {"from": requester},
     )
-    assert Cent(ebb.balanceOf(OWNER)) == Cent("1000000000 usd")
+    assert Cent(ebb.balanceOf(_cfg.OWNER)) == Cent("1000000000 usd")
     log(f"submit_job_gas_used={tx.__dict__['gas_used']}")
     index = 0
     job_id = 0
@@ -877,7 +873,7 @@ def test_simple_submit():
     assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5 * Cent("1 cent")
     assert Cent(ebb.balanceOf(provider)) == received_sum
     assert Cent(ebb.balanceOf(requester)) == refunded_sum
-    assert Cent(ebb.balanceOf(OWNER)) == Cent("1000000000 usd").__sub__(job_price)
+    assert Cent(ebb.balanceOf(_cfg.OWNER)) == Cent("1000000000 usd").__sub__(job_price)
 
 
 def test_submit_jobs():
@@ -992,7 +988,7 @@ def test_submit_jobs():
             core = int(arguments[2])
             job.cores = [core]
             job.run_time = [core_min]
-            log(f"contract_balance={Cent(ebb.balanceOf(OWNER))}", "bold")
+            log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}", "bold")
             job_id = 0
             elapsed_time = int(arguments[1]) - int(arguments[0])
             end_ts = int(arguments[1])
@@ -1018,7 +1014,7 @@ def test_submit_jobs():
             assert Cent(ebb.balanceOf(requester)) == refunded
             log(f"received={received} | refunded={refunded}", "bold")
 
-    log(f"contract_balance={Cent(ebb.balanceOf(OWNER))}", "bold")
+    log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}", "bold")
     for idx in range(0, ebb.getProviderReceiptNode(provider, index)[0]):
         # prints finalize version of the linked list
         log(ebb.getProviderReceiptNode(provider, idx))
