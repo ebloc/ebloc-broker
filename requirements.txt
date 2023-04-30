@@ -508,7 +508,6 @@ netaddr==0.8.0
     # via
     #   eth-brownie
     #   multiaddr
-netifaces==0.10.4
 networkx==2.6.3
 neurotools==0.3.1
 ng==1.2.0
@@ -689,7 +688,8 @@ pynspector==0.0.4
     # via
     #   vulcano
 pyocclient==0.6
-pyopenssl==23.0.0
+types-pyOpenSSL==23.0.0.4
+pyopenssl==23.1.1
 pypandoc==1.6.3
 pyparsing==3.0.9
     # via
@@ -976,6 +976,7 @@ types-pytz==2021.1.2
 types-pyyaml==6.0.0
 types-requests==2.27.14
 types-termcolor==1.1.1
+types-setuptools==67.4.0.1
 types-urllib3==1.26.15
     # via
     #   types-requests
@@ -1212,6 +1213,7 @@ zope-testing==4.9
 zope-traversing==4.4.1
     # via
     #   z3c-pt
+
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

@@ -19,7 +19,7 @@ from broker.utils import byte_to_mb, popen_communicate, run
 
 
 class State:
-    """Set state code of the Slurm jobs and add their keys into the hashmap.
+    """Set state code of the slurm jobs and add their keys link in the hashmap.
 
     * Hashmap keys:
     - SUBMITTED: Initial state of the job.
@@ -30,7 +30,7 @@ class State:
     - RUNNING: The job currently is allocated to a node and is running.
       Corresponding data files are downloaded and verified.
 
-    - REFUNDED: The job has refunded.
+    - REFUNDED: The ob has been refunded.
 
     - CANCELLED: The job was explicitly cancelled by the requester or system
       administrator.  The job may or may not have been initiated.  Set by

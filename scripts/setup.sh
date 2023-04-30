@@ -156,9 +156,7 @@ install_ebb_pip_packages () {
     VENV=$HOME/venv
     [ ! -d $VENV ] && python3 -m venv $VENV
     source $VENV/bin/activate
-    $VENV/bin/python3 -m pip install --upgrade pip
-    python3 -m pip install --no-use-pep517 cm-rgb
-    $VENV/bin/python3 -m pip install wheel
+    $VENV/bin/python3 -m pip install --upgrade pip wheel
     cd ~/ebloc-broker
     $VENV/bin/python3 -m pip install -e . --use-deprecated=legacy-resolver
     mkdir -p $HOME/.cache/black

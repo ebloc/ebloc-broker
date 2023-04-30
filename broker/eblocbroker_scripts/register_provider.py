@@ -93,7 +93,6 @@ def register_provider_wrapper(yaml_fn):
     _args = args["cfg"]["provider"]
     available_core = _args["available_core"]
     commitment_blk = _args["prices"]["commitment_blk"]
-
     try:
         price_core_min = Cent(_args["prices"]["price_core_min"])
         price_data_transfer = Cent(_args["prices"]["price_data_transfer"])

@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
+from broker.utils import zero_bytes32
 import os
 import sys
 from os import path
-
 import pytest
-
 import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker.config import setup_logger
@@ -41,22 +40,22 @@ class Prices:
         self.core_min: "Cent" = 0
         self.data_transfer: "Cent" = 0
         self.storage: "Cent" = 0
-        self.cache: "Cent" = 0
+        self.cache_min: "Cent" = 0
 
     def set_core_min(self, value):
-        self.core_min = Cent(value)
+        self.core_min = Cent(str(value))
 
     def set_data_transfer(self, value):
-        self.data_transfer = Cent(value)
+        self.data_transfer = Cent(str(value))
 
     def set_storage(self, value):
-        self.storage = Cent(value)
+        self.storage = Cent(str(value))
 
     def set_cache(self, value):
-        self.core_min = Cent(value)
+        self.cache_min = Cent(str(value))
 
     def get(self):
-        return [self.core_min, self.data_transfer, self.storage, self.cache]
+        return [self.core_min, self.data_transfer, self.storage, self.cache_min]
 
 
 def _transfer(to, amount):
@@ -166,3 +165,13 @@ def test_cost():
         job.code_hashes,
         {"from": requester},
     )
+    assert Cent(ebb.balanceOf(requester)) == 0
+
+    start_ts = 1579524978
+    tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
+
+    args = [0, 0, 1579524998, 2, 0, job.run_time, job.cores, [5], True]
+    tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
+    received_sum = tx.events["LogProcessPayment"]["receivedCent"]
+    refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
+    breakpoint()  # DEBUG

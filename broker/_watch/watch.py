@@ -138,7 +138,7 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     spent = float(_job["refunded_usd_to_requester"]) + float(_job["received_usd_to_provider"])
     if value != spent:
         delta = "%0.8f" % (value - spent)
-        log(f"warning: {delta}")
+        log(f"warning: {delta} value={value} spent={spent}")
     #
     breakpoint()  # DEBUG
 

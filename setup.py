@@ -2,7 +2,7 @@
 
 from setuptools import find_packages, setup
 
-from broker import __version__
+# from broker import __version__
 
 with open("README.org", "r") as fh:
     long_description = fh.read()
@@ -13,8 +13,8 @@ with open("requirements.txt", "r") as f:
 setup(
     name="ebloc-broker",
     packages=find_packages(),
-    setup_requires=["wheel", "eth-brownie", "ipdb", "rich"],
-    version=__version__,
+    setup_requires=["wheel", "eth-brownie", "ipdb", "rich", "dbus-python"],
+    version="2.2.0",  # don't change this manually, use bumpversion instead
     license="MIT",
     description=(  # noqa: E501
         "A Python framework to communicate with ebloc-broker that is "

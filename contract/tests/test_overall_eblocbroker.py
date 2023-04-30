@@ -127,7 +127,7 @@ def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None
     )
     append_gas_cost("registerProvider", tx)
     provider_registered_bn = tx.block_number
-    log(f"block number when the provider is registered={provider_registered_bn}", "bold")
+    log(f"block number when the provider is registered={provider_registered_bn}")
     gpg_fingerprint = remove_zeros_gpg_fingerprint(tx.events["LogProviderInfo"]["gpgFingerprint"])
     assert gpg_fingerprint == GPG_FINGERPRINT
     log(f"==> gpg_fingerprint={gpg_fingerprint}")
