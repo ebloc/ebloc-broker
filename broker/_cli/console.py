@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import sys
 import threading
-
 from vulcano.app import VulcanoApp
 from vulcano.app.lexer import MonokaiTheme
 

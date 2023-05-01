@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-
 from web3.logs import DISCARD
 
 from broker import cfg

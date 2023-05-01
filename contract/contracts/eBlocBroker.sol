@@ -138,8 +138,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         uint256 runTime = args.runTime[args.jobID];
         if (args.dataTransferIn > 0) {
             // if dataTransferIn contains a positive value, then its the first submitted job
-            if (jobInfo.cacheCost > 0) {
-                // checking data transferring cost
+            if (jobInfo.cacheCost > 0) { //: checking data transferring cost
                 gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
                 _refund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); // cache cost to refund
                 require(gain.add(_refund) <= jobInfo.cacheCost);
@@ -159,7 +158,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
             if (jobInfo.cacheCost > 0) {
                 // If job cache is not used full refund for cache
-                _refund = _refund.add(jobInfo.cacheCost); // cacheCost is already multipled with priceCache
+                _refund = _refund.add(jobInfo.cacheCost); // cacheCost for storage is already multiplied with priceCache
                 delete jobInfo.cacheCost;
             }
             if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
@@ -240,7 +239,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         require(jobSt.isVerifiedUsed && jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
         uint256 payment = storageInfo.received;
         storageInfo.received = 0;
-
         _distributeTransfer(msg.sender, payment);
         _cleanJobStorage(jobSt);
         emit LogDepositStorage(msg.sender, payment);
@@ -413,7 +411,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         emit LogRequester(msg.sender, gpgFingerprint, gmail, fcID, ipfsAddress);
         return true;
     }
-
     /**
      * @dev Register a given data's sourceCodeHash by the cluster
      *
@@ -585,7 +582,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         // "dataTransferIn[0]"  => As temp variable stores the overall dataTransferIn value,
         //                         decreased if there is caching for specific block
         // refunded => used as receivedRegisteredDataFee due to limit for local variables
-        (cost, dataTransferIn[0], tmp[0], tmp[1], tmp[2]) = _calculateCacheCost(
+        // sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp
+        //  |          |            |          /         /
+        (cost, dataTransferIn[0], tmp[0], tmp[1],    tmp[2]) = _calculateCacheCost(
             provider,
             args,
             sourceCodeHash,
@@ -596,7 +595,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         cost = cost.add(_calculateComputingCost(info, args.core, args.runTime));
         require(args.jobPrice >= cost);
         transfer(getOwner(), cost); // transfer cost to contract
-
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();
         jobInfo.cacheCost = tmp[1];
@@ -795,7 +793,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                     // communication cost should be applied
                     _dataTransferIn = _dataTransferIn.add(dataTransferIn[i]);
                     // owner of the sourceCodeHash is also detected, first time usage
-                    emit LogDataStorageRequest(args.provider, msg.sender, codeHash);
+                    emit LogDataStorageRequest(args.provider, msg.sender, codeHash, storageInfo.received);
                 } else {
                     sum = sum.add(temp); // now used to keep track of registerDataCost
                     emit LogRegisteredDataRequestToUse(args.provider, codeHash);

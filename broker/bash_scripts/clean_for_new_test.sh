@@ -1,9 +1,16 @@
 #!/bin/bash
 
+iterative_clean_gdrive () {
+    for i in `gpg --list-keys --with-colons --fingerprint | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
+        gpg --batch --delete-key "$i" 2>/dev/null
+    done
+}
+
 clean_gdrive () {
     echo "#> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
     for i in {1..2}; do ~/ebloc-broker/broker/python_scripts/clean_gdrive.py; done
     echo "[  OK  ]"
+    iterative_clean_gdrive
 }
 
 #if [[ "$EUID" -eq 0 ]]; then
@@ -14,8 +21,12 @@ clean_gdrive () {
 # ~/personalize/bin/swap_space.sh >/dev/null 2>&1
 
 # update block.continue.txt with the current block number
-python3 -uB $HOME/ebloc-broker/broker/eblocbroker_scripts/get_block_number.py True
-# timeout 2 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
+python3 -uB $HOME/ebloc-broker/broker/eblocbroker_scripts/get_block_number.py True >/dev/null 2>&1
+echo "#> eblocbroker_scripts/get_block_number.py done"
+
+printf "#> kill squeue ... "
+timeout 2 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
+echo "done"
 
 # remove created users users
 for user in $(members eblocbroker | tr " " "\n"); do
@@ -26,7 +37,6 @@ done
 BASE="/var/ebloc-broker"
 if [[ -d $BASE ]]; then
     mkdir -p $BASE/to_delete
-
     mv $BASE/* $BASE/to_delete >/dev/null 2>&1
     DIR=$BASE/to_delete/public
     [ -d $DIR ] && mv $BASE/to_delete/public $BASE/
@@ -48,8 +58,6 @@ fi
 
 find $HOME/.ebloc-broker/*/* -mindepth 1 ! \
      -regex '^./private\(/.*\)?' -delete >/dev/null 2>&1
-
-killall.sh
 
 rm -rf $HOME/.ebloc-broker/transactions/*
 rm -f $HOME/.ebloc-broker/end_code_output/*
@@ -84,12 +92,8 @@ rm -f /var/ebloc-broker/cache/*.tar.gz
 # ipfs repo gc
 rm -rf ~/.ipfs/badgerds
 
-clean_gdrive
-for i in `gpg --list-keys --with-colons --fingerprint | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
-    gpg --batch --delete-key "$i" 2>/dev/null
-done
-
-~/ebloc-broker/broker/libs/mongodb.py --delete-all
+systemctl status mongod && \
+    ~/ebloc-broker/broker/libs/mongodb.py --delete-all
 
 # if [ "$(hostname)" = "homevm" ]; then
 #     echo "#> ln datasets for homevm"
@@ -104,4 +108,6 @@ if [[ -d $BASE ]]; then
 fi
 
 echo ""
-cat ~/.brownie/network-config.yaml| grep bloxberg
+gdrive about &&  clean_gdrive
+echo ""
+cat $HOME/.brownie/network-config.yaml | grep --color bloxberg | sed 's/ *//'

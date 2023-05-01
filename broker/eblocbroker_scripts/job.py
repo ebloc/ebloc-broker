@@ -95,7 +95,7 @@ class Job:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def cost(self, provider, requester, is_verbose=False):
+    def cost(self, provider, requester, is_verbose=False, is_ruler=True):
         """Calcualte cost related to the given job."""
         self.provider = provider
         self.requester = requester
@@ -107,7 +107,7 @@ class Job:
         jp.set_computational_cost()
         jp.set_storage_cost(is_verbose)
         jp.set_job_price(is_verbose)
-        if is_verbose:
+        if is_verbose and is_ruler:
             console_ruler(character="+")
 
         return jp.job_price, jp.cost

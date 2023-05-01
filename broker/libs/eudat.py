@@ -3,15 +3,14 @@
 import hashlib
 import os
 import os.path
+import owncloud
 import pickle
 import shutil
 import subprocess
 import time
 from contextlib import suppress
-from pathlib import Path
-
-import owncloud
 from halo import Halo
+from pathlib import Path
 from web3.logs import DISCARD
 
 from broker import cfg, config

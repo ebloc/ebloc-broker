@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import time
-
 import consoledraw
+import time
 
 from broker import cfg
 from broker._utils.tools import _date, log

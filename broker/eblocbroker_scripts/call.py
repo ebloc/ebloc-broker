@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-import time
-
 import psutil
+import time
 
 from broker._utils._log import br, log
 from broker.config import env

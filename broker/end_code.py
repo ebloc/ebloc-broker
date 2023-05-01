@@ -4,6 +4,7 @@ import base64
 import getpass
 import os
 import pprint
+import psutil
 import shutil
 import sys
 import time
@@ -11,8 +12,6 @@ from contextlib import suppress
 from pathlib import Path
 from time import sleep
 from typing import Dict, List
-
-import psutil
 
 from broker import cfg
 from broker._utils import _log

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 
-import sys
-
 import matplotlib.pyplot as plt
 import networkx as nx
+import sys
 
 g = nx.Graph()
 G = nx.DiGraph()

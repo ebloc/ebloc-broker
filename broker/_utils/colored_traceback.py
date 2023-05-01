@@ -18,8 +18,8 @@ class Colorizer:
         self.debug = debug
 
     def colorize_traceback(self, _type, value, tb):
-        import traceback
         import pygments.lexers
+        import traceback
 
         tb_text = "".join(traceback.format_exception(_type, value, tb))
         lexer = pygments.lexers.get_lexer_by_name("pytb", stripall=True)
@@ -37,8 +37,8 @@ class Colorizer:
             fmt_options = {"bg": self.style}
         else:
             fmt_options = {"bg": "dark"}
-        from pygments.formatters import get_formatter_by_name
         import pygments.util
+        from pygments.formatters import get_formatter_by_name
 
         # fmt_alias = 'terminal' if colors == 256 else 'terminal'
         fmt_alias = "terminal"

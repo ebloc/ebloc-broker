@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
+import ipfshttpclient
 import os
 import re
 import signal
 import sys
 import time
-from contextlib import suppress
-from subprocess import check_output
-
-import ipfshttpclient
 from cid import make_cid
+from contextlib import suppress
 from halo import Halo
+from subprocess import check_output
 
 from broker import cfg
 from broker._utils._log import br, ok

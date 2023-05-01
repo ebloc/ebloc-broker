@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 import contract.tests.cfg as _cfg
@@ -28,8 +27,6 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
 provider_gmail = "provider_test@gmail.com"
 fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-
-available_core = 128
 price_core_min = Cent("1 cent")
 price_data_transfer_mb = Cent("1 cent")
 price_storage_hr = Cent("1 cent")
@@ -100,7 +97,7 @@ def get_block_timestamp():
     return web3.eth.getBlock(get_block_number()).timestamp
 
 
-def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None, prices=None):
+def register_provider(price_core_min=Cent("1 cent"), available_core: int = None, prices=None):
     """Register Provider"""
     ebb = config.ebb
     if not _cfg.OWNER:
@@ -111,9 +108,6 @@ def register_provider(price_core_min=Cent("1 cent"), _available_core: int = None
     assert ebb.getOwner() != provider_account  # contract owner could not be a provider
     if not prices:
         prices = [price_core_min, price_data_transfer_mb, price_storage_hr, price_cache_mb]
-
-    if _available_core:
-        available_core = _available_core
 
     tx = config.ebb.registerProvider(
         GPG_FINGERPRINT,
@@ -205,7 +199,7 @@ def test_total_supply():
 
 def test_register():
     _prices = [Cent("0.5 usdt"), Cent("1 usdt"), Cent("4 cent"), Cent("0.1 usdt")]
-    register_provider(prices=_prices)
+    register_provider(prices=_prices, available_core=128)
     provider_price_info = ebb.getProviderInfo(accounts[1], 0)
     assert provider_price_info[1][2:] == _prices
     requester = accounts[2]
@@ -219,7 +213,7 @@ def test_stored_data_usage():
     provider = accounts[1]
     requester = accounts[2]
     requester_1 = accounts[3]
-    register_provider(Cent("10 cent"))
+    register_provider(Cent("10 cent"), available_core=128)
     register_requester(requester)
     register_requester(requester_1)
 
@@ -321,7 +315,7 @@ def test_data_info():
     job = Job()
     provider = accounts[1]
     requester = accounts[2]
-    register_provider(Cent("100 cent"))
+    register_provider(Cent("100 cent"), available_core=128)
     register_requester(requester)
     job_key = b"9b3e9babb65d9c1aceea8d606fc55403"
     job.code_hashes = [job_key, b"9a4c0c1c9aadb203daf9367bd4df930b"]
@@ -389,7 +383,7 @@ def test_computational_refund():
     job = Job()
     provider = accounts[1]
     requester = accounts[2]
-    register_provider(Cent("100 cent"))
+    register_provider(Cent("100 cent"), available_core=128)
     register_requester(requester)
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.cores = [1]
@@ -444,7 +438,7 @@ def test_storage_refund():
     job = Job()
     provider = accounts[1]
     requester = accounts[2]
-    register_provider()
+    register_provider(available_core=128)
     register_requester(requester)
     job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
     job.code_hashes.append(ipfs_to_bytes32(job_key))
@@ -583,7 +577,7 @@ def test_storage_refund():
 def test_update_provider():
     provider = accounts[1]
     mine(5)
-    provider_registered_bn = register_provider()
+    provider_registered_bn = register_provider(available_core=128)
     tx = ebb.updateProviderInfo(GPG_FINGERPRINT, provider_gmail, fid, ipfs_address, {"from": provider})
     append_gas_cost("updateProviderInfo", tx)
     log(ebb.getUpdatedProviderPricesBlocks(provider))
@@ -640,7 +634,7 @@ def test_multiple_data():
     provider = accounts[1]
     requester = accounts[2]
     requester_1 = accounts[3]
-    register_provider()
+    register_provider(available_core=128)
     register_requester(requester)
     register_requester(requester_1)
     job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
@@ -805,7 +799,7 @@ def test_simple_submit():
     provider = accounts[1]
     requester = accounts[2]
     price_core_min = Cent("1 cent")
-    register_provider(price_core_min)
+    register_provider(price_core_min, available_core=128)
     register_requester(requester)
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.key = job.code_hashes[0]
@@ -880,7 +874,8 @@ def test_submit_jobs():
     job = Job()
     provider = accounts[1]
     requester = accounts[2]
-    register_provider()
+    a_core = 128
+    register_provider(available_core=a_core)
     register_requester(requester)
     fn = f"{cwd}/files/test.txt"
     # fn = f"{cwd}/files/_test.txt"
@@ -894,7 +889,7 @@ def test_submit_jobs():
     # price_data_transfer_mb = _provider_price_info[3]
     # price_storage_hr = _provider_price_info[4]
     # price_cache_mb = _provider_price_info[5]
-    log(f"provider_available_core={available_core}")
+    log(f"provider_available_core={a_core}")
     log(f"provider_price_core_min={price_core_min}")
     log(provider_price_info)
     job_price_sum = 0
@@ -1040,7 +1035,7 @@ def test_submit_n_data():
     provider = accounts[1]
     requester = accounts[2]
     price_core_min = Cent("100 cent")
-    register_provider(price_core_min)
+    register_provider(price_core_min, available_core=128)
     register_requester(requester)
     job.code_hashes = [b"9b3e9babb65d9c1aceea8d606fc55403"]
     job.key = job.code_hashes[0]
@@ -1202,7 +1197,8 @@ def test_submit_n_data():
 def test_receive_registered_data_deposit():
     provider = accounts[1]
     requester = accounts[2]
-    register_provider()
+    a_core = 128
+    register_provider(available_core=a_core)
     register_requester(requester)
 
     data_hash = "0x68b8d8218e730fc2957bcb12119cb204"

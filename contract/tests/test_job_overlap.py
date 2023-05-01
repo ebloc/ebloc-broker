@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import contract.tests.cfg as _cfg
 from broker import cfg, config
@@ -196,7 +195,7 @@ def test_submit_job_gas():
     requester = accounts[2]
 
     prices = [Cent("99 cent"), Cent("99 cent"), Cent("99 cent"), Cent("99 cent")]
-    register_provider(prices=prices)
+    register_provider(prices=prices, available_core=128)
     register_requester(requester)
 
     start_timestamp = 10
@@ -236,7 +235,7 @@ def test_test1():
     provider = accounts[1]
     requester = accounts[2]
 
-    register_provider(100)
+    register_provider(100, available_core=128)
     register_requester(requester)
 
     start_timestamp = 10
@@ -277,7 +276,7 @@ def test_test2():
     provider = accounts[1]
     requester = accounts[2]
 
-    register_provider(100)
+    register_provider(100, available_core=128)
     register_requester(requester)
 
     start_timestamp = 10
@@ -396,7 +395,7 @@ def test_test3():
     provider = accounts[1]
     requester = accounts[2]
 
-    register_provider(100)
+    register_provider(100, available_core=128)
     register_requester(requester)
 
     start_timestamp = 10

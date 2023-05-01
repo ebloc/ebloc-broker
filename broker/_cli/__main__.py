@@ -28,6 +28,7 @@ def driver():
 def init():
     import git
     from pathlib import Path
+
     from broker._utils.tools import constantly_print_popen
 
     try:
@@ -44,6 +45,7 @@ def init():
 
 def about():
     from os.path import expanduser
+
     from broker._utils._log import log
 
     try:
@@ -76,6 +78,7 @@ def daemon():
     if _args.daemon_type[0] == "slurm":
         import git
         import pathlib
+
         from broker._utils.tools import constantly_print_popen
 
         try:

@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
 import os
+import pytest
 import sys
 from os import path
-
-import pytest
 
 import brownie
 import contract.tests.cfg as _cfg
@@ -101,7 +100,7 @@ def test_workflow():
     job = Job()
     provider = accounts[1]
     requester = accounts[2]
-    register_provider()
+    register_provider(available_core=128)
     register_requester(requester)
     job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
     code_hash = ipfs_to_bytes32(job_key)

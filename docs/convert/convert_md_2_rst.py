@@ -14,9 +14,8 @@ sys.path.insert(0, os.path.abspath('.'))
 """
 
 import os
-from os.path import expanduser
-
 import pypandoc
+from os.path import expanduser
 
 
 def setup(app):

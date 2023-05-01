@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import argparse
-from argparse import RawTextHelpFormatter
-
 # PYTHON_ARGCOMPLETE_OK
 import argcomplete
+import argparse
 from argcomplete.completers import EnvironCompleter
+from argparse import RawTextHelpFormatter
 
 
 class Helper:

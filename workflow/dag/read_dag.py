@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import random
-
 import networkx as nx
+import random
 
 job_ids = {}
 

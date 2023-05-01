@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import base58
 import binascii
 import hashlib
 import json
@@ -15,8 +16,6 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, Popen, check_output
-
-import base58
 
 from broker import cfg, config
 from broker._utils import _log

@@ -5,13 +5,12 @@ import pathlib
 import sys
 import textwrap
 import threading
-from typing import Dict, Union
-
 from rich import pretty, print_json  # noqa # print
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
 from rich.traceback import install
+from typing import Dict, Union
 
 from broker import cfg
 from broker.errors import QuietExit
@@ -22,7 +21,6 @@ install()  # for rich, show_locals=True
 # if False disable write into file for the process
 # heads up applies this all libs imported this
 IS_WRITE = True
-
 DRIVER_LOG = None
 IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}

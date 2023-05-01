@@ -233,6 +233,10 @@ def get_job_info(
             "processPayment_tx_hash": None,
             "processPayment_bn": 0,
             "processPayment_gas_used": 0,
+            "processPayment_inputs": None,
+            "processPayment_dataTransferIn_input": None,
+            "processPayment_dataTransferOut_input": None,
+            "processPayment_elapsedTime_input": None,
         }
         received_bn = self.update_job_cores(provider, job_key, index, received_bn)
         if not received_bn or received_bn == self.deployed_block_number:
@@ -264,8 +268,18 @@ def get_job_info(
                     self.job_info.update({"result_ipfs_hash": b""})
 
                 self.job_info.update({"processPayment_block_hash": logged_receipt["blockHash"].hex()})
-                output = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
-                self.job_info.update({"processPayment_gas_used": int(output["gasUsed"])})
+                tx_receipt = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
+                self.job_info.update({"processPayment_gas_used": int(tx_receipt["gasUsed"])})
+                #
+                tx_by_block = Ebb.get_transaction_by_block(
+                    tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
+                )
+                #: fetching input arguments of the processPayment
+                output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
+                self.job_info.update({"processPayment_inputs": output[1][1]})
+                self.job_info.update({"processPayment_dataTransferIn_input": output[1][1][3]})
+                self.job_info.update({"processPayment_dataTransferOut_input": output[1][1][4]})
+                self.job_info.update({"processPayment_elapsedTime_input": output[1][1][5]})
                 break
     except Exception as e:
         raise e

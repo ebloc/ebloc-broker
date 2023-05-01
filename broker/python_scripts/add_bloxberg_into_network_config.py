@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import json
-from pathlib import Path
-
 import ruamel.yaml
+from pathlib import Path
 
 from broker._utils._log import log
 

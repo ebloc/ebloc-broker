@@ -143,7 +143,6 @@ install-mongo () {
     sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
     sudo systemctl unmask mongod
     sudo service mongod start
-
     sudo systemctl start mongod.service
     sudo systemctl unmask mongodb
     sudo systemctl enable mongod

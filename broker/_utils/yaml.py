@@ -2,11 +2,10 @@
 
 import os
 import shutil
-from contextlib import suppress
-from pathlib import Path
-
 from atomicwrites import atomic_write
+from contextlib import suppress
 from filelock import FileLock
+from pathlib import Path
 from ruamel.yaml import YAML, comments, representer
 
 from broker._utils.tools import _remove, print_tb

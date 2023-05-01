@@ -72,6 +72,7 @@ base58==2.1.1
     # via
     #   eth-brownie
     #   multiaddr
+bump2version==1.0.1
 bcrypt==3.1.7
     # via
     #   paramiko

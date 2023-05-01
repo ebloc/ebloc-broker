@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from typing import List
-
+from typing import List  # noqa: F401
 from web3.logs import DISCARD
 
 from broker import cfg

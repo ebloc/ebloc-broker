@@ -8,7 +8,6 @@ from broker._utils.web3_tools import get_tx_status
 from broker.errors import QuietExit
 from broker.utils import print_tb
 
-
 """#: at tests/test_*
 def withdraw(address, amount):
     temp = address.balance()
