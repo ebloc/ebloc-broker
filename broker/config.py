@@ -4,7 +4,6 @@ import logging
 import threading
 from logging import Filter
 from pathlib import Path
-
 from web3.contract import Contract
 
 from broker import cfg

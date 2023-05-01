@@ -7,6 +7,7 @@ import linecache
 import math
 import os
 import re
+import requests
 import shutil
 import signal
 import subprocess
@@ -18,10 +19,8 @@ from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from pathlib import PosixPath
-from subprocess import PIPE, CalledProcessError, Popen, check_output
-
-import requests
 from pytz import timezone, utc
+from subprocess import PIPE, CalledProcessError, Popen, check_output
 
 from broker._utils._log import WHERE, br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate

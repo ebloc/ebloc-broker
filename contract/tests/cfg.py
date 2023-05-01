@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+ZERO = "0x0000000000000000000000000000000000000000000000000000000000000000"
 Ebb = None
 chain = None
 ebb = None

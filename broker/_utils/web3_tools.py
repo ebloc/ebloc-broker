@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from contextlib import suppress
-
 from web3._utils.threads import Timeout
 from web3.types import TxReceipt
 

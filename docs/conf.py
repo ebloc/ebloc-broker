@@ -14,10 +14,10 @@
 
 import doctest
 import os
-import sys
 
 # -------
 import sphinx_rtd_theme
+import sys
 
 # if extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -101,8 +101,8 @@ pygments_style = "sphinx"
 # custom solidity lexer
 def setup(sphinx):
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-    from solidity_lexer import SolidityLexer
     from pygments.lexer import __all__ as pygments_lexers
+    from solidity_lexer import SolidityLexer
 
     pygments_lexers.append(SolidityLexer)
     sphinx.add_lexer("solidity", SolidityLexer())

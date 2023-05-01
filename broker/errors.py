@@ -11,12 +11,12 @@ class JobException(Exception):
     """Generate job info exception to prevent to print the trace."""
 
 
-class HandlerException(Exception):
-    """Generate HandlerException."""
-
-
 class IpfsNotConnected(Exception):
     """Attempt to connect to IPFS is failed."""
+
+
+class HandlerException(Exception):
+    """Generate HandlerException."""
 
 
 class Terminate(Exception):

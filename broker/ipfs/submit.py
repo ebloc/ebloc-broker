@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-
 from web3.logs import DISCARD
 
 from broker import cfg

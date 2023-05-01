@@ -1,6 +1,5 @@
-import binascii
-
 import base58
+import binascii
 
 Qm = b"\x12 "
 

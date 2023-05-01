@@ -2,9 +2,8 @@
 
 import asyncio
 import logging
-from contextlib import suppress
-
 import quart.flask_patch  # noqa
+from contextlib import suppress
 from flask import abort, request
 from quart import Quart
 

@@ -7,15 +7,14 @@ import os
 import sys
 import textwrap
 import time
+import zc.lockfile
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
 from functools import partial
-from typing import List
-
-import zc.lockfile
 from halo import Halo
 from ipdb import launch_ipdb_on_exception
+from typing import List
 
 from broker import cfg, config
 from broker._import import check_connection

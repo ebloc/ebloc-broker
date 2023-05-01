@@ -6,9 +6,8 @@ Forked forked from https://github.com/eth-brownie/brownie/blob/master/brownie/co
 
 # from copy import deepcopy
 from decimal import Decimal, getcontext
-from typing import Any, TypeVar
-
 from hexbytes import HexBytes
+from typing import Any, TypeVar
 
 try:
     from vyper.exceptions import DecimalOverrideException

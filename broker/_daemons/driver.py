@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-
 from daemons.prefab import run
 
 from broker._utils import tools

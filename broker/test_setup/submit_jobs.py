@@ -6,9 +6,8 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from random import randint
-
 from pymongo import MongoClient
+from random import randint
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -28,8 +27,6 @@ Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 cfg.TX_LOG_VERBOSE = False
-is_mini_test = False
-
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
@@ -44,11 +41,12 @@ small_datasets_dir = Path.home() / "test_eblocbroker" / "small"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
-if is_mini_test:
-    benchmarks = ["cppr"]
-    storage_ids = ["b2drop", "gdrive", "ipfs"]
-    ipfs_types = ["ipfs", "ipfs_gpg"]
-    providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]  # noqa
+# is_mini_test = False
+# if is_mini_test:
+#     benchmarks = ["cppr"]
+#     storage_ids = ["b2drop", "gdrive", "ipfs"]
+#     ipfs_types = ["ipfs", "ipfs_gpg"]
+#     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]  # noqa
 
 cfg.TEST_PROVIDERS = providers
 # cfg.NETWORK_ID = "bloxberg_core"
@@ -325,24 +323,25 @@ def main():
     # for item in prices_dict:
     #     breakpoint()  # DEBUG
 
-    if is_mini_test:
-        run_job(0, cycleid=0)
-    else:
-        try:
-            counter = 0
-            for idx in range(80):
-                for _ in range(2):  # submitted as batch is faster
-                    run_job(counter, idx)
-                    counter += 1
-                    time.sleep(2)
+    # if is_mini_test:
+    #     run_job(0, cycleid=0)
+    # else:
+    try:
+        counter = 0
+        for idx in range(80):
+            for _ in range(2):  # submitted as batch is faster
+                log(f"#> latest number_of_submitted_jobs={counter}", is_write=False)
+                run_job(counter, 69 + idx)
+                counter += 1
+                time.sleep(2)
 
-                sleep_duration = randint(250, 450)
-                countdown(sleep_duration)
+            sleep_duration = randint(250, 450)
+            countdown(sleep_duration)
 
-            log(f"#> number_of_submitted_jobs={counter}")
-        except Exception as e:
-            print_tb(e)
-            check_connection()
+        log(f"#> total number_of_submitted_jobs={counter}")
+    except Exception as e:
+        print_tb(e)
+        check_connection()
 
 
 if __name__ == "__main__":

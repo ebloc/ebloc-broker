@@ -113,16 +113,33 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 )
                 output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
                 if output:
-                    self.job_info.update({"data_transfer_in_input": output[1][1]})
-                    self.job_info.update({"data_transfer_out_input": output[1][2][-2]})
-                    self.job_info.update({"storage_duration": output[1][3]})
-                    self.job_info.update({"data_prices_set_block_numbers": output[1][2][4]})
+                    output = output[1]
+                    self.job_info.update({"data_transfer_in_input": output[1]})
+                    self.job_info.update({"data_transfer_out_input": output[2][-2]})
+                    self.job_info.update({"storage_duration": output[3]})
+                    self.job_info.update({"data_prices_set_block_numbers": output[2][4]})
 
                 self.job_info.update({"submitJob_gas_used": int(tx_receipt["gasUsed"])})
                 break
         else:
             log(f"E: failed to find and update job({job_key})")
 
+        # log("LogDataStorageRequest ------------------------------------", "yellow")
+        event_filter = self._eblocbroker.events.LogDataStorageRequest.createFilter(
+            # argument_filters={"provider": str(provider)},
+            fromBlock=int(tx_by_block["blockNumber"]),
+            toBlock=int(tx_by_block["blockNumber"]),
+        )
+
+        log_data_storage_request_list = []
+        for logged_job in event_filter.get_all_entries():
+            if tx_by_block["hash"] == logged_job["transactionHash"]:
+                log_data_storage_request_list.append(dict(logged_job["args"]))
+
+        if log_data_storage_request_list:
+            self.job_info.update({"submitJob_LogDataStorageRequest": log_data_storage_request_list})
+
+        # log("----------------------------------------------------------", "yellow")
         return received_bn
     except Exception as e:
         print_tb(f"E: Failed to update job cores.\n{e}")
@@ -229,10 +246,15 @@ def get_job_info(
             "submitJob_tx_hash": None,
             "data_prices_set_block_numbers": None,
             "submitJob_gas_used": 0,
+            "submitJob_LogDataStorageRequest": [],
             "processPayment_block_hash": None,
             "processPayment_tx_hash": None,
             "processPayment_bn": 0,
             "processPayment_gas_used": 0,
+            "processPayment_inputs": None,
+            "processPayment_dataTransferIn_input": None,
+            "processPayment_dataTransferOut_input": None,
+            "processPayment_elapsedTime_input": None,
         }
         received_bn = self.update_job_cores(provider, job_key, index, received_bn)
         if not received_bn or received_bn == self.deployed_block_number:
@@ -264,8 +286,18 @@ def get_job_info(
                     self.job_info.update({"result_ipfs_hash": b""})
 
                 self.job_info.update({"processPayment_block_hash": logged_receipt["blockHash"].hex()})
-                output = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
-                self.job_info.update({"processPayment_gas_used": int(output["gasUsed"])})
+                tx_receipt = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
+                self.job_info.update({"processPayment_gas_used": int(tx_receipt["gasUsed"])})
+                #
+                tx_by_block = Ebb.get_transaction_by_block(
+                    tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
+                )
+                #: fetching input arguments of the processPayment
+                output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
+                self.job_info.update({"processPayment_inputs": output[1][1]})
+                self.job_info.update({"processPayment_dataTransferIn_input": output[1][1][3]})
+                self.job_info.update({"processPayment_dataTransferOut_input": output[1][1][4]})
+                self.job_info.update({"processPayment_elapsedTime_input": output[1][1][5]})
                 break
     except Exception as e:
         raise e
@@ -305,7 +337,7 @@ def main():
             received_bn = int(sys.argv[5])
     else:
         log("E: Provide <[m]provider[/m], [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments", h=False)
-        # E: ./get_job_info.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629 QmeHL7LvHwQs4xrzPqvkA8fH9T8XGya7BgiLKWb7XG6w71 0
+        # ./get_job_info.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629 QmeHL7LvHwQs4xrzPqvkA8fH9T8XGya7BgiLKWb7XG6w71 0
         sys.exit(1)
 
     Ebb.get_job_info(provider, job_key, index, job_id, received_bn, is_log_print=True)

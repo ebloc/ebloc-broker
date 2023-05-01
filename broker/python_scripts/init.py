@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 import getpass
+import git
 import os
 import sys
 from inspect import getsourcefile
 from os.path import abspath, expanduser
 from pathlib import Path
-
-import git
 
 from broker._utils.yaml import Yaml
 

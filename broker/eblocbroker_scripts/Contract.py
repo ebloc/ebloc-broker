@@ -5,11 +5,10 @@ import subprocess
 import sys
 import time
 from contextlib import suppress
-from os.path import expanduser
-from typing import Union
-
 from halo import Halo
+from os.path import expanduser
 from pymongo import MongoClient
+from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
 
@@ -52,13 +51,13 @@ class Base:
     from broker.eblocbroker_scripts.refund import refund  # type: ignore
     from broker.eblocbroker_scripts.register_provider import _register_provider  # type: ignore
     from broker.eblocbroker_scripts.register_requester import register_requester  # type: ignore
-    from broker.eblocbroker_scripts.transfer import transfer_tokens  # type: ignore
     from broker.eblocbroker_scripts.submit_job import (  # type: ignore
         check_before_submit,
         is_provider_valid,
         is_requester_valid,
         submit_job,
     )
+    from broker.eblocbroker_scripts.transfer import transfer_tokens  # type: ignore
     from broker.eblocbroker_scripts.update_provider_info import (  # type: ignore
         is_provider_info_match,
         update_provider_info,
@@ -282,6 +281,9 @@ class Contract(Base):
         """Transfer acount's ether balance."""
         tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
         return self.tx_id(tx)
+
+    def fetch_logs(self):
+        pass
 
     def get_block(self, block_number: int):
         """Return block."""

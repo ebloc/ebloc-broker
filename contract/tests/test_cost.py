@@ -1,33 +1,32 @@
 #!/usr/bin/python3
 
-from broker.utils import zero_bytes32
 import os
+import pytest
 import sys
 from os import path
-import pytest
+
 import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
-from broker.utils import log
+from broker.utils import log, zero_bytes32
 from brownie import accounts, web3
 from brownie.network.state import Chain
-from contract.scripts.lib import new_test
+from contract.scripts.lib import mine, new_test
 from contract.tests.test_overall_eblocbroker import register_provider, register_requester  # , set_transfer
-from contract.scripts.lib import mine
 
 # from brownie.test import given, strategy
 
 COMMITMENT_BLOCK_NUM = 600
+verbose = True
 Contract.eblocbroker = Contract.Contract(is_brownie=True)
 setup_logger("", True)
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 cwd = os.getcwd()
 provider_gmail = "provider_test@gmail.com"
 fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
-
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
 ipfs_address = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf"
 Ebb = None
@@ -121,7 +120,7 @@ def test_cost():
     prices = _prices.get()
     provider = accounts[1]
     requester = accounts[2]
-    register_provider(_available_core=4, prices=prices)
+    register_provider(available_core=4, prices=prices)
     register_requester(requester)
     for data_hash in [b"0d6c3288ef71d89fb93734972d4eb903", b"4613abc322e8f2fdeae9a5dd10f17540"]:
         ebb.registerData(data_hash, Cent("0.0002 usd"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
@@ -144,7 +143,7 @@ def test_cost():
     job.cache_types = [0, 0, 0, 0]
     job.storage_hours = [0, 1, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
-    job_price, cost = job.cost(provider, requester, is_verbose=True)
+    job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -167,11 +166,43 @@ def test_cost():
     )
     assert Cent(ebb.balanceOf(requester)) == 0
 
+    paid_storage = 0
+    counter = 0
+    while True:
+        try:
+            log_data_storage_request = dict(tx.events["LogDataStorageRequest"][counter])
+            counter += 1
+            paid_storage += log_data_storage_request["paid"]
+            if verbose:
+                log(log_data_storage_request)
+        except:
+            break
+
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
-
-    args = [0, 0, 1579524998, 2, 0, job.run_time, job.cores, [5], True]
+    args = [0, 0, 1681003991, 0, 0, 7, job.cores, [60], True]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
-    received_sum = tx.events["LogProcessPayment"]["receivedCent"]
-    refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
-    breakpoint()  # DEBUG
+    log_process_payment = dict(tx.events["LogProcessPayment"])
+    if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
+        del log_process_payment["resultIpfsHash"]
+
+    received_sum = log_process_payment["receivedCent"]
+    refunded_sum = log_process_payment["refundedCent"]
+    total_spent = received_sum + refunded_sum
+    spent = Cent(abs(total_spent + paid_storage)).to("cent")
+    value = Cent(abs(job_price)).to("cent")
+    delta = value.__sub__(spent)  # noqa
+    if verbose:
+        log("log_process_payment=", end="")
+        log(log_process_payment)
+
+    if delta == 0:
+        delta = int(delta)
+
+    if abs(delta) > 0:
+        log("warning: ", end="")
+
+    log(f"spent={spent} , value={value} | delta={delta}")
+    log(f" * received={received_sum}")
+    log(f" * refunded={refunded_sum}")
+    assert delta == 0

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
-
 import daemon
+import sys
 
 from broker.config import env
 from broker.utils import is_ganache_on, popen_communicate
