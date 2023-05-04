@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_ALL=1
+TEST_ALL=0
 source $HOME/venv/bin/activate
 echo -n "brownie compile "
 brownie compile >/dev/null 2>&1

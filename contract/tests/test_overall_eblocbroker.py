@@ -486,7 +486,7 @@ def test_storage_refund():
     append_gas_cost("refund", tx)
     log(ebb.getJobInfo(provider, job_key, index, job_id))
     refunded_cent = tx.events["LogRefundRequest"]["refundedCent"]
-    log(f"refunded_cent={refunded_cent}", "bold")
+    log(f"refunded_cent={refunded_cent}")
 
     assert ebb.balanceOf(requester) == 320 * Cent("1 cent") + refunded
     # withdraw(requester, refunded_cent)
@@ -505,7 +505,7 @@ def test_storage_refund():
     tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester})
     append_gas_cost("refundStorageDeposit", tx)
     refunded_cent = tx.events["LogDepositStorage"]["payment"]
-    log(f"refunded_cent={refunded_cent}", "bold")
+    log(f"refunded_cent={refunded_cent}")
     assert ebb.balanceOf(requester) == 420 * Cent("1 cent") + refunded
     # withdraw(requester, refunded_cent)
     with brownie.reverts():
