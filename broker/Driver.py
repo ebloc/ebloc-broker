@@ -2,6 +2,7 @@
 
 """Driver for ebloc-broker."""
 
+import copy
 import math
 import os
 import sys
@@ -258,8 +259,9 @@ class Driver:
             Ebb.analyze_data(job_key, env.PROVIDER_ID)
             self.job_infos.append(self.job_info)
             log(f"==> requester={self.requester_id}")
-            log("==> [yellow]job_info:", "bold")
-            log(self.job_info)
+            log("==> [yellow]job_info=", end="")
+            job_info_temp = copy.deepcopy(self.job_info)
+            log(job_info_temp)
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):
                 print_tb(e)

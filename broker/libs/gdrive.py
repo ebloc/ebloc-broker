@@ -102,7 +102,7 @@ def submit(_from, job):
             break
 
         if _id:
-            log("## updating meta_data ")
+            log("## updating meta_data ", end="")
             update_meta_data_gdrive(_id, data_files_json_path)
             log(ok())
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from contextlib import suppress
-
+from broker.utils import print_tb
+import sys
 from broker import cfg
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
@@ -13,12 +13,15 @@ def main():
     for idx, user in enumerate(requesters):
         yaml_user = Yaml(yaml_fn)
         yaml_user["cfg"]["eth_address"] = user
-        with suppress(Exception):
+        try:
             #: could also be used for updating requesters as well
-            print(f"[  counter={idx}  ] ", end="")
+            print(f"[  counter={idx}  ] user={user}")
             tx_hash = cfg.Ebb.register_requester(yaml_fn, is_question=False)
             if tx_hash:
                 get_tx_status(tx_hash)
+        except Exception as e:
+            print_tb(e)
+            sys.exit(1)
 
 
 if __name__ == "__main__":

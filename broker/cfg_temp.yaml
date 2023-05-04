@@ -8,8 +8,7 @@ cfg:
   log_path: ~/.ebloc-broker
   ebloc_path: ~/ebloc-broker
   gdrive: /usr/local/bin/gdrive
-  bloxberg_host: https://core.bloxberg.org # http://alpy-bloxberg.duckdns.org:8545/
-  rpc_port: 8545
+  bloxberg_host: https://core.bloxberg.org
   provider:
     slurm_user: slurm
     is_bloxberg: true

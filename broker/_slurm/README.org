@@ -13,6 +13,8 @@
 #+end_src
 
 *** working only --enable-front-end ~slurm-19-05-8-1~
+
+! hostname never should ended with a number. For example, =goo1= wrong should be =goo1goo=.
 #+begin_src bash
 NodeName=instance[1-2] NodeHostName=localhost NodeAddr=127.0.0.1 CPUs=1 RealMemory=7954
 PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP Shared=FORCE:1

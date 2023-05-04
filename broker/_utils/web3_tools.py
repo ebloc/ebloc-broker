@@ -40,7 +40,7 @@ def get_tx_status(tx_hash, is_verbose=False) -> TxReceipt:
                     log(f"[blue]log_{idx}[/blue]=", end="")
                     log(tx_log)
 
-            log("#> Is transaction successfully deployed?", end="")
+            log("#> Is transaction successfully deployed? ", end="")
 
         if tx_receipt["status"] == 1:
             if not is_verbose:

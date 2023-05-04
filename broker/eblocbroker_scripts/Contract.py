@@ -747,6 +747,14 @@ class Contract(Base):
         """Return account balance in Gwei."""
         return self.w3.fromWei(self.w3.eth.get_balance(account), "gwei")
 
+    def _pre_check(self, requester):
+        balance = Ebb.get_balance(requester)
+        if balance == 0:
+            raise QuietExit("Requester's balance is zero")
+
+        if len(Ebb.get_providers()) == 0:
+            raise QuietExit("There is no provider registered to submit jobs.")
+
     def get_balance(self, account):
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)

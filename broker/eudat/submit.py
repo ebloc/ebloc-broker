@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.errors import QuietExit
 import sys
 
 from broker import cfg
@@ -16,6 +17,7 @@ def submit_b2drop(job: Job, is_pass=False, required_confs=1):
     log("==> Submitting source code through [blue]B2DROP[/blue]")
     Ebb = cfg.Ebb
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
+    Ebb._pre_check(requester)
     oc_client = env.OC_USER
     connect()
     try:
@@ -39,5 +41,7 @@ if __name__ == "__main__":
         submit_b2drop(job)
     except KeyboardInterrupt:
         sys.exit(1)
+    except QuietExit as e:
+        log(f"#> {e}")
     except Exception as e:
         print_tb(str(e))

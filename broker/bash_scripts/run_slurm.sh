@@ -87,6 +87,7 @@ ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
     grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox,.mypy_cache} -E "slurm";
 
 echo ""
+sinfo | grep idle
 squeue
 
 #: verbose

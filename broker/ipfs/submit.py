@@ -109,8 +109,9 @@ def _submit(provider_addr, job, requester, targets, required_confs):
 
 
 def submit_ipfs(job: Job, is_pass=False, required_confs=1):
-    log(f"==> attemptting to submit job ({job.source_code_path}) using [green]ipfs[/green]")
+    log(f"==> attemptting to submit job ({job.source_code_path}) using [g]IPFS[/g]")
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
+    Ebb._pre_check(requester)
     try:
         pre_check(job, requester)
     except Exception as e:
@@ -179,8 +180,6 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
     try:
         return _submit(provider_addr, job, requester, targets, required_confs)
-    except QuietExit:
-        pass
     except Exception as e:
         raise e
 
@@ -196,6 +195,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except QuietExit as e:
+        log(f"#> {e}")
     except KeyboardInterrupt:
         pass
     except Exception as e:

@@ -10,8 +10,10 @@ from broker.test_setup.user_set import requesters
 Ebb = cfg.Ebb
 owner = Ebb.get_owner()
 
+"""Distribute user tokens."""
 
-def _transfer_tokens(accounts, is_verbose=False):
+
+def distribute_tokens(accounts, is_verbose=False):
     """Print balance of all the users located under ~/.brownie/accounts."""
     amount_to_send = "2000 usd"
     for account in requesters:
@@ -19,7 +21,7 @@ def _transfer_tokens(accounts, is_verbose=False):
         if balance:
             log(f"{account} = {Cent(balance).to('usd')} usd")
         else:
-            log(f"{account} = 0")
+            log(f"{account} => balance=0")
 
         if Cent(amount_to_send) != Cent(balance):
             _amount = Cent(amount_to_send).__sub__(balance)
@@ -38,10 +40,9 @@ def _transfer_tokens(accounts, is_verbose=False):
 
 def main():
     balance = cfg.Ebb.get_balance(owner)
-    log(f"ower_balance ({owner}):", "bold")
+    log(f"ower_balance ({owner}):")
     log(f"\t{Cent(balance)} cent ≈ {Cent(balance).to('usd')} usd")
-
-    _transfer_tokens(requesters)
+    distribute_tokens(requesters)
 
     # balances([owner], is_verbose=True)
     # balances(providers)

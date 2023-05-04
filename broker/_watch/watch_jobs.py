@@ -81,7 +81,7 @@ def watch(eth_address="", from_block=None):
         if is_print_only_ipfs_result_hashes:
             if "result_ipfs_hash" in _job:
                 _ipfs_hash = bytes32_to_ipfs(_job["result_ipfs_hash"])
-                log(f" result_ipfs_hash={_ipfs_hash}")
+                log(f" result_ipfs_hash={_ipfs_hash} ", end="")
                 # log(f"{_job['job_key']} {_job['index']} {result_ipfs_hash}")
             else:
                 log()

@@ -52,11 +52,12 @@ def _share_folders(folder_ids_to_share, provider_gmail):
 
 def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     log("==> Submitting source code through [blue]GDRIVE[/blue]")
+    requester = Ebb.w3.toChecksumAddress(job.requester_addr)
+    Ebb._pre_check(requester)
     pre_check()
     job.folders_to_share = job.paths
     check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
     _git.generate_git_repo(job.folders_to_share)
-    requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     job.clean_before_submit()
     job, folder_ids_to_share = gdrive.submit(requester, job)
     for folder_to_share in job.folders_to_share:

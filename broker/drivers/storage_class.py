@@ -260,11 +260,11 @@ class Storage(BaseClass):
                     elif is_ipfs_hash_valid(k):
                         verify_data_list.append(ipfs_to_bytes32(k))
 
-        if len(verify_data_list) > 0:
-            log(f"verify_data_list={verify_data_list}", "bold")
+        if len(verify_data_list) > 0 and verify_data_list:
+            log(f"verify_data_list={verify_data_list}")
             tx = cfg.Ebb.set_data_verified(verify_data_list)
             tx_hash = cfg.Ebb.tx_id(tx)
-            log(f"verify_data tx_hash={tx_hash}")
+            log(f"verified_data_tx_hash={tx_hash}")
 
     def sbatch_call(self):
         try:

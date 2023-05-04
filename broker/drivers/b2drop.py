@@ -176,7 +176,8 @@ class B2dropClass(Storage):
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
-                    log(f"## download file from B2DROP {ok()}")
+                    # TODO: if Folder contains zipped file like .tar.gz unzip that too // investigate
+                    log(f"## download file from [blue]B2DROP[/blue] {ok()}")
                     return
             except:
                 log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")

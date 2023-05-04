@@ -179,6 +179,35 @@ def _try(func):
         raise e
 
 
+def delete_none(_dict, is_delete_zero=False):
+    """Delete None values recursively from all of the dictionaries, tuples, lists, sets.
+
+    __ https://stackoverflow.com/a/66127889/2402577
+    """
+    if isinstance(_dict, dict):
+        for key, value in list(_dict.items()):
+            if isinstance(value, (list, dict, tuple, set)):
+                if value == []:
+                    del _dict[key]
+                else:
+                    _dict[key] = delete_none(value)
+            else:
+                if key == "storage_duration":
+                    breakpoint()  # DEBUG
+
+                if is_delete_zero:
+                    if not value or key is None or value == "" or value == 0:
+                        del _dict[key]
+                else:
+                    if not value or key is None or value == "":
+                        del _dict[key]
+
+    elif isinstance(_dict, (list, set, tuple)):
+        _dict = type(_dict)(delete_none(item) for item in _dict if item is not None)
+
+    return _dict
+
+
 def is_bin_installed(name):
     try:
         run(["which", name])
@@ -512,7 +541,7 @@ def question_yes_no(message, is_exit=False):
     if "[Y/n]:" not in message:
         message = f"{message} [Y/n]: "
 
-    log(text=message, end="")
+    log(message, end="")
     getch = _Getch()
     while True:
         choice = getch().lower()

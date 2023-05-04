@@ -13,7 +13,7 @@ from broker._utils.web3_tools import get_tx_status
 def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
     """Authenticate orc_id.
 
-    cmd: ./authenticate_orc_id.py 0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 0000-0001-7642-0552
+    cmd: ./authenticate_orc_id.py 0x29e613B04125c16db3f3613563bFdd0BA24Cb629 0000-0001-7642-0552
     """
     address = self.w3.toChecksumAddress(address)
     log(f"## authenticating user={address}")

@@ -27,6 +27,8 @@ Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 cfg.TX_LOG_VERBOSE = False
+IS_MINI_TEST = True
+
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
@@ -41,20 +43,21 @@ small_datasets_dir = Path.home() / "test_eblocbroker" / "small"
 nas_yaml_fn = test_dir / "job_nas.yaml"
 cppr_yam_fn = test_dir / "job_cppr.yaml"
 
-# is_mini_test = False
-# if is_mini_test:
-#     benchmarks = ["cppr"]
-#     storage_ids = ["b2drop", "gdrive", "ipfs"]
-#     ipfs_types = ["ipfs", "ipfs_gpg"]
-#     providers = ["0x29e613b04125c16db3f3613563bfdd0ba24cb629"]  # noqa
-
 cfg.TEST_PROVIDERS = providers
+if IS_MINI_TEST:
+    import broker.test_setup.user_set as _user_set
+
+    benchmarks = ["cppr"]
+    storage_ids = ["b2drop", "gdrive", "ipfs"]
+    ipfs_types = ["ipfs", "ipfs_gpg"]
+    _user_set.providers = cfg.TEST_PROVIDERS = ["0x29e613B04125c16db3f3613563bFdd0BA24Cb629"]
+    # for provider_addr in providers:
+    #     mini_tests_submit(storage_ids, provider_addr)
+
+
 # cfg.NETWORK_ID = "bloxberg_core"
 _ruler = "======================="
 FIRST_CYCLE = True
-
-# for provider_addr in providers:
-#     mini_tests_submit(storage_ids, provider_addr)
 
 
 def check_gdrive_user():
@@ -130,7 +133,7 @@ def create_cppr_job_script(idx):
     f.write("current_date=$(LANG=en_us_88591; date)\n")
     f.write(f"DATA_HASH='{hash_medium_data_0}'\n")
     f.write("DATA1_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("echo ' * '$current_date > output.log\n")
+    f.write("echo '=================== 1 =================== '$current_date > output.log\n")
     f.write("find $DATA1_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
@@ -138,25 +141,26 @@ def create_cppr_job_script(idx):
     f.write("done\n")
     f.write(f"DATA_HASH='{hash_medium_data}'\n")
     f.write("DATA2_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("echo ' * '$current_date >> output.log\n")
+    f.write("current_date=$(LANG=en_us_88591; date)\n")
+    f.write("echo '=================== 2 =================== '$current_date > output.log\n")
     f.write("find $DATA2_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
     f.write("    (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("done\n")
 
-    # adding cppr to run with data hashes
+    # adding cppr to run with data-hashes
     f.write("DATA_HASH='change_folder_hash'\n")
     f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
     f.write("    DATA3_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("    echo ' * '$current_date >> output.log\n")
+    f.write("    echo '=================== 3 =================== '$current_date >> output.log\n")
     f.write("    find $DATA3_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("    do\n")
     f.write("        echo $file >> output.log\n")
     f.write("        (/usr/bin/time -v cppr -a pr $file) >> output.log 2>&1\n")
     f.write("    done\n")
     f.write("fi\n")
-    f.write("echo '  [  DONE  ]  ' >> output.log\n")
+    f.write("echo 'done 🍺' >> output.log\n")
     f.close()
     run(["sed", "-i", r"s/\x0//g", fn])  # remove NULL characters from the SBATCH file
     return hash_medium_data_0, hash_medium_data
@@ -225,7 +229,7 @@ def run_job(counter, cycleid) -> None:
     :param counter: counter index to keep track of submitted job number
     """
     global FIRST_CYCLE  # type: ignore
-    for idx, provider_addr in enumerate(providers):
+    for idx, provider_addr in enumerate(cfg.TEST_PROVIDERS):
         # yaml_cfg["config"]["data"]["data3"]["storage_id"] = random.choice(storage_ids)
         storage_id = (idx + counter) % len(storage_ids)
         selected_benchmark = random.choice(benchmarks)
@@ -255,7 +259,12 @@ def run_job(counter, cycleid) -> None:
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
             dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
-            dir_name = random.choice(dirs)
+            if IS_MINI_TEST:
+                dir_name = "LB07-bunny-sml"
+                yaml_cfg["config"]["data"]["data3"]["storage_hours"] = 1
+            else:
+                dir_name = random.choice(dirs)
+
             yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets_dir / dir_name)
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
@@ -303,11 +312,11 @@ def main():
     if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
 
-    for address in providers:
+    for address in cfg.TEST_PROVIDERS:
         Ebb.is_provider_valid(address)
 
     prices_dict = {}
-    for address in providers:
+    for address in cfg.TEST_PROVIDERS:
         *_, prices = Ebb._get_provider_info(address)
         # prices_dict[address] = dict(prices[2:6])
         prices_dict[address] = [
@@ -323,9 +332,10 @@ def main():
     # for item in prices_dict:
     #     breakpoint()  # DEBUG
 
-    # if is_mini_test:
-    #     run_job(0, cycleid=0)
-    # else:
+    if IS_MINI_TEST:
+        run_job(0, cycleid=0)
+        return
+
     try:
         counter = 0
         for idx in range(80):

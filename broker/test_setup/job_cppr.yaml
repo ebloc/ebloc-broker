@@ -1,21 +1,21 @@
 config:
-  requester_address: '0x4cd57387cc4414be8cece4e6ab84a7dd641eab25'
-  provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+  requester_address: '0x378181ce7b07e8dd749c6f42772574441b20e35f'
+  provider_address: '0x29e613B04125c16db3f3613563bFdd0BA24Cb629'
   source_code:
-    storage_id: gdrive
+    storage_id: b2drop
     cache_type: public
     path: ~/test_eblocbroker/run_cppr
     storage_hours: 0
   data:
     data1:
-      hash: 4613abc322e8f2fdeae9a5dd10f17540
+      hash: fe801973c5b22ef6861f2ea79dc1eb9c
     data2:
       hash: 050e6cc8dd7e889bf7874689f1e1ead6
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/BVZ-sawtooth
+      path: /home/alper/test_eblocbroker/small/LB07-bunny-sml
       storage_hours: 1
-      storage_id: gdrive
+      storage_id: b2drop
   data_transfer_out: 5
   jobs:
     job1:

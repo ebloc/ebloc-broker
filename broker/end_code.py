@@ -573,7 +573,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self._get_tx_status(tx_hash)
         self.get_job_info()
         log("SUCCESS")
-        # self.remove_job_folder()
+        # self.remove_job_folder()  # FIXME: TESTING
 
 
 if __name__ == "__main__":

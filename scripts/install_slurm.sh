@@ -17,13 +17,12 @@ mysql_init () {
 
 compile_slurm () {
     scontrol --version && return
-
-    # Compile, build and install SLURM from Git source
+    # compile, build and install SLURM from Git source
     SLURM_TAG="slurm-22-05-2-1"
-    sudo mkdir -p /var/log/slurm
+    sudo mkdir -p /var/log/slurm ~/git
     sudo chown $(whoami) -R /var/log/slurm
-    git clone --depth 1 -b $SLURM_TAG --single-branch https://github.com/SchedMD/slurm.git ~/slurm
-    cd ~/slurm
+    git clone --depth 1 -b $SLURM_TAG --single-branch https://github.com/SchedMD/slurm.git ~/git/slurm
+    cd ~/git/slurm
     sudo rm -rf /usr/local/lib/slurm/ /tmp/slurmstate/
     make clean >/dev/null 2>&1
     git reset --hard
@@ -38,7 +37,6 @@ compile_slurm () {
 
     sudo install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example
     sudo install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh
-
     scontrol --version
     if [ $? -ne 0 ]; then
        echo "scontrol  [  FAIL  ]"
@@ -49,12 +47,14 @@ compile_slurm () {
 after_slurmdbd () {
     # run following commands if slurmdbd is successfully open
     mysql_init
-    sudo slurmdbd && sleep 1
+    sudo slurmdbd && sleep 1.13
     USER=$(whoami)
     sacctmgr add cluster eblocbroker --immediate
     sacctmgr add account $USER --immediate
     sacctmgr create user $USER defaultaccount=$USER adminlevel=None --immediate
 }
+
+pkill -f slurm
 
 sudo apt-get update
 sudo apt --fix-broken install -y
@@ -83,6 +83,7 @@ sudo groupadd eblocbroker
 
 FILE="/usr/local/etc/slurm.conf"
 [ ! -f $FILE ] && sudo cp ~/ebloc-broker/broker/_slurm/confs/slurm.conf $FILE
+sudo sed -i 's/homevm/'$(hostname)'/g' $FILE
 
 FILE="/usr/local/etc/slurmdbd.conf"
 [ ! -f $FILE ] && sudo cp ~/ebloc-broker/broker/_slurm/confs/slurmdbd.conf $FILE
@@ -99,3 +100,4 @@ echo ""
 sudo mkdir -p /etc/sysconfig/slurm /var/spool/slurmd /var/spool/slurmctld /var/log/slurm /var/run/slurm
 sudo chown -R $(whoami):$(whoami) /var/spool/slurmd /var/spool/slurmctld /var/log/slurm /var/run/slurm
 sudo slurmdbd && after_slurmdbd
+squeue

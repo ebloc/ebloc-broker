@@ -95,10 +95,10 @@ rm -rf ~/.ipfs/badgerds
 systemctl status mongod && \
     ~/ebloc-broker/broker/libs/mongodb.py --delete-all
 
-# if [ "$(hostname)" = "homevm" ]; then
-#     echo "#> ln datasets for homevm"
-#     ~/ebloc-broker/broker/bash_scripts/ln_medium_data.sh
-# fi
+if [ "$(hostname)" = "homevm" ]; then
+    echo "#> ln datasets for homevm"
+    ~/ebloc-broker/broker/bash_scripts/ln_medium_data.sh
+fi
 
 if [[ -d $BASE ]]; then
     echo -e "\n/var/ebloc-broker/"

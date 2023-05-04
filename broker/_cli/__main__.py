@@ -155,15 +155,18 @@ def submit():
         print_tb(e)
 
 
+def get_tag_version() -> str:
+    from subprocess import check_output
+
+    __version__ = check_output(["git", "describe", "--tags", "--abbrev=0"])
+    return __version__.decode("utf-8").replace("\n", "")
+
+
 def main():  # noqa
     try:
         globals()[_args.command]()
     except KeyError:
-        from subprocess import check_output
-
-        __version__ = check_output(["git", "describe", "--tags", "--abbrev=0"])
-        __version__ = __version__.decode("utf-8").replace("\n", "")
-        print(f"ebloc-broker {__version__} - Blockchain based autonomous computational resource broker\n")
+        print(f"ebloc-broker {get_tag_version()} - Blockchain based autonomous computational resource broker\n")
         parser.print_help()
     except Exception as e:
         print_tb(e)

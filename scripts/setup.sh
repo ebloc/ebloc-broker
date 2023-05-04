@@ -115,7 +115,6 @@ sudo apt-get -y install ethereum
 # ======
 sudo apt install libgirepository1.0-dev -y
 sudo apt install libcairo2-dev -y
-
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt install software-properties-common -y
 sudo apt-get update

@@ -28,6 +28,10 @@ custom_theme = Theme(
     {
         "info": "bold magenta",  # "bold dim magenta"
         "alert": "bold red",
+        "yellow": "#f1fa8c",
+        "red": "#ff5555",
+        "purple": "#bd93f9",
+        "orange": "#ffb86c",
         "bg": "bold green",
         "b": "bold",
         "m": "magenta",
@@ -36,11 +40,11 @@ custom_theme = Theme(
         "y": "yellow",
         "g": "green",
         "r": "red",
-        "orange": "orange1",
         "yob": "yellow on black blink",
         "ib": "italic #6272a4",
         "ic": "italic cyan",
         "or": "orange1",  # o does not work
+        "pink": "#ff79c6",
     }
 )
 console = Console(
@@ -84,14 +88,14 @@ class Log:
         self.IS_PRINT = True
         self.LOG_FILENAME: Union[str, pathlib.Path] = ""
         self.console: Dict[str, Console] = {}
-        self.inner_bullet_three = ["==>", "#> ", "## ", " * ", "###", "** ", "***", " **"]
+        self.inner_bullets = ["==>", "#> ", "## ", " * ", "###", "** ", "***", " **"]
 
     # def halo_decorator(self):
     #     with Halo(text="Loading", spinner="line", placement="right"):
     #         time.sleep(6)
     def print_color(self, text: str, color=None, is_bold=True, end="\n", highlight=True) -> None:
         """Print string in color format."""
-        if text[0:3] in self.inner_bullet_three:
+        if text[0:3] in self.inner_bullets:
             if color and text == "==> ":
                 console.print(f"[bold][{color}]{text[0:3]}[{color}][/bold]", end="")
             else:
@@ -122,11 +126,14 @@ class Log:
 
         if text.lower() in ["[ ok ]", "[  ok  ]"]:
             text = "[  [bold green]OK[/bold green]  ]"
-        elif text[:3] in self.inner_bullet_three:
+        elif text[:3] in self.inner_bullets:
             _len = 3
             is_bullet = True
             if not color:
-                color = "blue"
+                if text[:3] == "#> ":
+                    color = "pink"
+                else:
+                    color = "blue"
         elif text[:8].lower() == "warning:":
             _len = 8
             is_bullet = True
@@ -155,14 +162,14 @@ class Log:
 
 def br(text, color="white"):
     if color != "white":
-        return f"[bold][[/bold][{color}]{text}[/{color}][bold]][/bold]"
+        return f"[bold][[/bold][{color}]  {text}  [/{color}][bold]][/bold]"
     else:
-        return f"[bold][[/bold]{text}[bold]][/bold]"
+        return f"[bold][[/bold]  {text}  [bold]][/bold]"
 
 
 def ok():
     """Done."""
-    return " " + br("  [g]OK[/g]  ")
+    return " " + br("[g]OK[/g]")
 
 
 def _console_clear():

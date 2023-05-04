@@ -191,8 +191,12 @@ def add_all(repo=None):
 
         if changed_file_len > 0:
             log("Record changes to the repository", end="")
-            repo.git.commit("-m", "update")
-            log(ok())
+            try:
+                repo.git.commit("-m", "update")
+                log(ok())
+            except Exception as e:
+                if "nothing to commit" not in str(e):
+                    raise e
     except Exception as e:
         print_tb(e)
         raise e
