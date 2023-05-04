@@ -178,7 +178,6 @@ def test_cost():
         except:
             break
 
-    #
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
     args = [0, 0, 1681003991, 0, 0, 7, job.cores, [60], True]
@@ -201,7 +200,7 @@ def test_cost():
         delta = int(delta)
 
     if abs(delta) > 0:
-        log("warning: ")
+        log("warning: ", end="")
 
     log(f"spent={spent} , value={value} | delta={delta}")
     log(f" * received={received_sum}")
