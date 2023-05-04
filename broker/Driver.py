@@ -13,8 +13,9 @@ from datetime import datetime
 from decimal import Decimal
 from functools import partial
 from halo import Halo
-from typing import List
 from ipdb import launch_ipdb_on_exception
+from typing import List
+
 from broker import cfg, config
 from broker._import import check_connection
 from broker._utils import _log
