@@ -9,14 +9,16 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from typing import List
-
+from broker.lib import (
+    calculate_size,
+)
 from broker import cfg, config
 from broker._utils._log import br, log, ok
 from broker._utils.tools import _remove, bytes_to_mb, mkdir, read_json
 from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import run
-from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, print_tb, untar
+from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, print_tb, untar, getsize
 
 Ebb = cfg.Ebb
 
@@ -171,13 +173,16 @@ class B2dropClass(Storage):
                     ]
                     log(" ".join(cmd), is_code=True, color="yellow")
                     run(cmd)
+                    size_of_the_downloaded_file = calculate_size(download_fn)
+                    self.data_transfer_in_to_download_mb += size_of_the_downloaded_file
+                    log(f"==> downloaded_file_size={size_of_the_downloaded_file}")
                     with cd(results_folder_prev):
                         run(["unzip", "-o", "-j", download_fn])
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     # TODO: if Folder contains zipped file like .tar.gz unzip that too // investigate
-                    log(f"## download file from [blue]B2DROP[/blue] {ok()}")
+                    log(f"## Download datafile from [blue]B2DROP[/blue] {ok()}")
                     return
             except:
                 log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
@@ -230,21 +235,21 @@ class B2dropClass(Storage):
             log(str(e))
             raise Exception("failed all the attempts to get file info at B2DROP") from e
 
-    def total_size_to_download(self) -> None:
-        """Calculate total size to be downloaded from cloud storage."""
-        data_transfer_in_to_download = 0  # total size to download in bytes
-        for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
-            if self.cloudStorageID[idx] != StorageID.NONE:
-                folder_name = source_code_hash_text
-                if folder_name not in self.is_cached:
-                    fn = f"/{folder_name}/{folder_name}.tar.gz"
-                    data_transfer_in_to_download += self.get_file_size(fn, folder_name)
+    # def total_size_to_download(self) -> None:
+    #     """Calculate total size to be downloaded from cloud storage."""
+    #     data_transfer_in_to_download = 0  # total size to download in bytes
+    #     for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
+    #         if self.cloudStorageID[idx] != StorageID.NONE:
+    #             folder_name = source_code_hash_text
+    #             if folder_name not in self.is_cached:
+    #                 fn = f"/{folder_name}/{folder_name}.tar.gz"
+    #                 data_transfer_in_to_download += self.get_file_size(fn, folder_name)
 
-        self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
-        log(
-            f"## total size to download {data_transfer_in_to_download} bytes == "
-            f"{self.data_transfer_in_to_download_mb} MB"
-        )
+    #     self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
+    #     log(
+    #         f"## total size to download {data_transfer_in_to_download} bytes == "
+    #         f"{self.data_transfer_in_to_download_mb} MB"
+    #     )
 
     def get_share_token(self, f_id):
         """Check key is already shared or not."""
@@ -351,7 +356,7 @@ class B2dropClass(Storage):
         else:
             raise Exception("share_id is empty")
 
-        self.total_size_to_download()
+        # self.total_size_to_download()
 
     def run(self) -> bool:
         self.start_timestamp = time.time()

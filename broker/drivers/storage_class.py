@@ -353,13 +353,14 @@ class Storage(BaseClass):
             job_info,
         )
         # TODO: update as used_data_transfer_in value
-        breakpoint()  # DEBUG
         data_transfer_in_json = self.results_folder_prev / "data_transfer_in.json"
         data = {}
         try:
             data = read_json(data_transfer_in_json)
         except:
-            data["data_transfer_in"] = self.data_transfer_in_to_download_mb
+            log(f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB")
+            data["data_transfer_in"] = int(self.data_transfer_in_to_download_mb)
+            breakpoint()  # DEBUG
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
 

@@ -338,7 +338,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
         # checks md5sum obtained from gdrive and given by the user
         raise Exception(f"md5sum does not match with the provided data {source_code_key}")
 
-    log(f":beeer: folder={md5sum}", "bg")
+    log(f":beer: folder={md5sum}", "bg")
     byte_size = int(get_file_info(gdrive_info, "Size"))
     log(f"## code_hashes[0] == {_source_code_hash} | size={byte_size} bytes")
     if not is_cached[code_hashes[0].decode("utf-8")]:
@@ -386,7 +386,9 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
 
                 data_key_dict[md5sum] = data_key
                 _size = int(get_file_info(gdrive_info, "Size"))
-                log(f"==> code_hashes{br(idx)} == {code_hashes[idx].decode('utf-8')} size={_size} bytes")
+                log(
+                    f"==> code_hashes{br(idx)} == {code_hashes[idx].decode('utf-8')} size={_size} bytes ~= {byte_to_mb(_size)} MB"
+                )
                 byte_size += _size
                 if not is_cached[code_hashes[idx].decode("utf-8")]:
                     size_to_download += _size
@@ -399,7 +401,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
             raise Exception("Something is wrong; data_key_dict is empty")
 
     output = byte_to_mb(size_to_download)
-    log(f"total_size={byte_size} bytes | size to download={size_to_download} bytes => {output} MB", "bold")
+    log(f"total_size={byte_size} bytes | size to download={size_to_download} bytes ~= {output} MB")
     return output, data_key_dict, source_code_key
 
 

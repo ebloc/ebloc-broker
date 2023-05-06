@@ -49,11 +49,6 @@ class GdriveClass(Storage):
                 raise Exception(f"folder ({downloaded_folder_path}) is not downloaded successfully")
 
             self.data_transfer_in_requested = calculate_size(downloaded_folder_path)
-            log(
-                f"data_transfer_in_requested={self.data_transfer_in_requested} MB | "
-                f"rounded={int(self.data_transfer_in_requested)} MB",
-                "bold",
-            )
         else:
             try:
                 folder = self.folder_path_to_download[code_hash]
@@ -72,11 +67,12 @@ class GdriveClass(Storage):
             p1.stdout.close()  # type: ignore
             # returns downloaded files size in bytes
             self.data_transfer_in_requested = byte_to_mb(p2.communicate()[0].decode("utf-8").strip())
-            log(
-                f"data_transfer_in_requested={self.data_transfer_in_requested} MB | "
-                f"rounded={int(self.data_transfer_in_requested)} MB",
-                "bold",
-            )
+
+        log(
+            f"downloaded_data_transfer_in={self.data_transfer_in_requested} MB | "
+            f"rounded={int(self.data_transfer_in_requested)} MB"
+        )
+        self.data_transfer_in_to_download_mb += self.data_transfer_in_requested
 
     def download_folder(self, name, key, code_hash, _id, cache_folder) -> None:
         self._download_folder(name, key, code_hash, _id, cache_folder)
