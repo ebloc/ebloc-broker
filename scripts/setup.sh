@@ -4,7 +4,7 @@ git clone https://github.com/ebloc/ebloc-broker
 cd ebloc-broker
 git checkout dev && source scripts/setup.sh
 '
-RED="\033[1;31m"; GREEN="\033[1;32m"; BLUE="\033[1;36m"; NC="\033[0m"
+GREEN="\033[1;32m";
 
 yes_or_no () {
     while true; do
@@ -18,8 +18,66 @@ yes_or_no () {
     done
 }
 
-# general
-# =======
+open_port_4001 () {  # ufw does not work on digital-ocean
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
+    sudo firewall-cmd --add-port=4001/tcp --permanent
+    sudo firewall-cmd --reload
+    # sudo firewall-cmd --list-all
+    sudo firewall-cmd --list-all --zone=docker
+    sudo nmap localhost
+}
+
+install_ipfs_updater() {
+    cd ~/git
+    wget https://dist.ipfs.tech/ipfs-update/v1.9.0/ipfs-update_v1.9.0_linux-amd64.tar.gz
+    tar -xvzf ipfs-update_v1.9.0_linux-amd64.tar.gz
+    cd ipfs-update
+    sudo bash install.sh
+    ipfs-update --version
+}
+
+install_ipfs () {
+    install_ipfs_updater
+    #
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
+    sudo firewall-cmd --add-port=4001/tcp --permanent
+    sudo firewall-cmd --reload
+    sudo firewall-cmd --list-all
+    sudo nmap localhost
+
+    ipfs_current_version=""
+    command -v ipfs &>/dev/null
+    if [ $? -eq 0 ]; then
+        killall ipfs &>/dev/null
+        ipfs_current_version=$(ipfs version | awk '{ print $3 }')
+        echo ipfs_current_version=v$ipfs_current_version
+    fi
+    version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | \
+                  grep -oP 'Release v\K.*?(?= )' | head -n1)
+    echo "version_to_download=v"$version
+    if [[ "$ipfs_current_version" == "$version" ]]; then
+        echo "## Latest version is already downloaded"
+    else
+        cd /tmp
+        arch=$(dpkg --print-architecture)
+        wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
+        tar -xvf "go-ipfs_v"$version"_linux-"$arch".tar.gz"
+        cd go-ipfs
+        make install
+        sudo ./install.sh
+        cd ..
+        rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
+        rm -rf go-ipfs/
+        ipfs version
+        sudo sysctl -w net.core.rmem_max=2500000
+        ipfs init --profile=server,badgerds
+        ipfs config Reprovider.Strategy roots
+        ipfs config Routing.Type none
+    fi
+}
+
 sudo add-apt-repository ppa:git-core/ppa -y
 sudo apt-get update
 sudo apt-get install -y git
@@ -56,58 +114,11 @@ go version
 
 # ipfs
 # =======
-# alternative use snap to install ipfs:
-# sudo snap install ipfs
 # ipfs init && sudo mount --bind ~/.ipfs ~/snap/ipfs/common
-open_port_4001 () {  # ufw does not work on digital-ocean
-    sudo systemctl start firewalld
-    sudo systemctl enable firewalld
-    sudo firewall-cmd --add-port=4001/tcp --permanent
-    sudo firewall-cmd --reload
-    # sudo firewall-cmd --list-all
-    sudo firewall-cmd --list-all --zone=docker
-    sudo nmap localhost
-}
-
-install_ipfs () {
-    ipfs_current_version=""
-    which ipfs &>/dev/null
-    if [ $? -eq 0 ]; then
-        killall ipfs &>/dev/null
-        ipfs_current_version=$(ipfs version | awk '{ print $3 }')
-        echo ipfs_current_version=v$ipfs_current_version
-    fi
-    cd /tmp
-    version="0.13.0"
-    echo "version_to_download=v"$version
-    if [[ "$ipfs_current_version" == "$version" ]]; then
-        echo "$GREEN##$NC Latest version is already downloaded"
-    else
-        kill -9 $(ps auxww | grep -E "[i]pfs"  | awk '{print $2}') > /dev/null 2>&1;
-        arch=$(dpkg --print-architecture)
-        wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
-        tar -xvf "go-ipfs_v"$version"_linux-"$arch".tar.gz"
-        cd go-ipfs
-        make install
-        sudo ./install.sh
-        cd /tmp
-        rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
-        rm -rf go-ipfs/
-        ipfs version
-        cd
-    fi
-    # https://github.com/ipfs/go-ipfs/issues/5534#issuecomment-425216890
-    # https://github.com/ipfs/go-ipfs/issues/5013#issuecomment-389910309
-    # set net.core.rmem_max: https://github.com/lucas-clemente/quic-go/wiki/UDP-Receive-Buffer-Size
-    sudo sysctl -w net.core.rmem_max=2500000
-    ipfs init --profile=server,badgerds
-    ipfs config Reprovider.Strategy roots
-    ipfs config Routing.Type none
-    open_port_4001
-}
 # echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 # sudo sysctl -p
 install_ipfs
+open_port_4001
 sudo add-apt-repository -y ppa:ethereum/ethereum
 sudo apt-get -y install ethereum
 

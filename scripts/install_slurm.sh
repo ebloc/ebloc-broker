@@ -54,8 +54,7 @@ after_slurmdbd () {
     sacctmgr create user $USER defaultaccount=$USER adminlevel=None --immediate
 }
 
-pkill -f slurm
-
+sudo kill -9 $(ps auxww | grep -E "$1" | grep -v -e "grep" -e "install_slurm.sh" | awk '{print $2}') > /dev/null 2>&1
 sudo apt-get update
 sudo apt --fix-broken install -y
 xargs -a <(awk '! /^ *(#|$)/' ~/ebloc-broker/scripts/package_slurm.list) -r -- \
