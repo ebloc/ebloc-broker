@@ -300,7 +300,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     try:
         output = get_file_id(key)
         log(f"==> data_id=[m]{key}")
-        log(output, "bg")
+        log(output, "green")
         data_files_id = fetch_grive_output(output, "meta_data.json")
         if not data_files_id:
             raise Exception
@@ -338,7 +338,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
         # checks md5sum obtained from gdrive and given by the user
         raise Exception(f"md5sum does not match with the provided data {source_code_key}")
 
-    log(f"SUCCESS on folder={md5sum}", "bg")
+    log(f":beeer: folder={md5sum}", "bg")
     byte_size = int(get_file_info(gdrive_info, "Size"))
     log(f"## code_hashes[0] == {_source_code_hash} | size={byte_size} bytes")
     if not is_cached[code_hashes[0].decode("utf-8")]:

@@ -2,7 +2,6 @@
 
 """Driver for ebloc-broker."""
 
-import copy
 import math
 import os
 import sys
@@ -260,8 +259,8 @@ class Driver:
             self.job_infos.append(self.job_info)
             log(f"==> requester={self.requester_id}")
             log("==> [yellow]job_info=", end="")
-            job_info_temp = copy.deepcopy(self.job_info)
-            log(job_info_temp)
+            #: https://stackoverflow.com/a/33797147/2402577
+            log({k: v for k, v in self.job_info.items() if v is not None})
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):
                 print_tb(e)

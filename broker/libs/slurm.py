@@ -120,7 +120,7 @@ def get_elapsed_time(slurm_job_id) -> int:
     except Exception as e:
         raise QuietExit from e
 
-    log(f"elapsed_time={elapsed_time} | ", "bold", end="")
+    log(f"==> elapsed_time={elapsed_time} => ", end="")
     elapsed_time = elapsed_time.split(":")
     elapsed_day = "0"
     elapsed_hour = elapsed_time[0].strip()
@@ -131,7 +131,7 @@ def get_elapsed_time(slurm_job_id) -> int:
         elapsed_hour = elapsed_hour[1]
 
     elapsed_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
-    log(f"[cyan]{elapsed_time}[/cyan] mins", "bold")
+    log(f"[cyan]{elapsed_time}[/cyan] minuntes")
     return elapsed_time
 
 

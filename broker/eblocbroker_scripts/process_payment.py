@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from typing import Any, Union
+from typing import Any, Union  # noqa
 
 from broker import cfg
 from broker._utils.tools import log, print_tb
@@ -35,7 +35,8 @@ def process_payment(
         f"~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {_result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
         f" '{run_time}'",
-        "bold blue",
+        "blue",
+        is_code=True,
     )
 
     for cloud_storage_id in cloud_storage_ids:

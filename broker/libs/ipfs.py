@@ -283,10 +283,10 @@ class Ipfs:
                     output_stat = line.split(":")
                     _stat[output_stat[0]] = int(output_stat[1])
 
-            log("ipfs_object_stat=", "b", end="")
+            log("ipfs_object_stat=", "yellow", end="")
             log(_stat, "b")
             cumulative_size = int(output.split("\n")[4].split(":")[1].replace(" ", ""))
-            log(f"cumulative_size={cumulative_size}", "bold")
+            log(f"cumulative_size={cumulative_size}")
             return output, cumulative_size
         except Exception as e:
             raise Exception(f"Timeout, failed to find ipfs file: {ipfs_hash}") from e

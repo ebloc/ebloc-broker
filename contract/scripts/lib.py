@@ -4,7 +4,7 @@
 
 import datetime
 from os import popen
-from typing import Dict, List
+from typing import Dict, List  # noqa
 
 from broker import cfg, config
 from broker._utils.tools import log

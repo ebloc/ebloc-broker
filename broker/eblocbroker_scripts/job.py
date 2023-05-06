@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, List  # noqa
 
 from broker import cfg, config
-from broker._utils._log import br, console_ruler
+from broker._utils._log import console_ruler
 from broker._utils.tools import _exit, _remove, log, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
@@ -108,7 +108,7 @@ class Job:
         jp.set_storage_cost(is_verbose)
         jp.set_job_price(is_verbose)
         if is_verbose and is_ruler:
-            console_ruler(character="+", style="yellow")
+            console_ruler(character="-=", style="yellow")
 
         return jp.job_price, jp.cost
 

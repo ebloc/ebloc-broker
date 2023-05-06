@@ -231,14 +231,14 @@ class B2dropClass(Storage):
             raise Exception("failed all the attempts to get file info at B2DROP") from e
 
     def total_size_to_download(self) -> None:
+        """Calculate total size to be downloaded from cloud storage."""
         data_transfer_in_to_download = 0  # total size to download in bytes
         for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
             if self.cloudStorageID[idx] != StorageID.NONE:
                 folder_name = source_code_hash_text
                 if folder_name not in self.is_cached:
-                    data_transfer_in_to_download += self.get_file_size(
-                        f"/{folder_name}/{folder_name}.tar.gz", folder_name
-                    )
+                    fn = f"/{folder_name}/{folder_name}.tar.gz"
+                    data_transfer_in_to_download += self.get_file_size(fn, folder_name)
 
         self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
         log(
@@ -351,7 +351,7 @@ class B2dropClass(Storage):
         else:
             raise Exception("share_id is empty")
 
-        # self.total_size_to_download()
+        self.total_size_to_download()
 
     def run(self) -> bool:
         self.start_timestamp = time.time()

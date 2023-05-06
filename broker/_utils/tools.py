@@ -524,7 +524,8 @@ def handler(signum, frame):
     __  https://docs.python.org/3/library/signal.html#example
     """
     if any(
-        x in str(frame) for x in ["subprocess.py", "ssl.py", "log_job", "connection.py", "threading.py", "utils.py"]
+        x in str(frame)
+        for x in ["subprocess.py", "ssl.py", "log_job", "connection.py", "threading.py", "utils.py", "tools.py"]
     ):
         pass
     else:

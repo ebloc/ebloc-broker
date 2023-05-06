@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from broker.errors import QuietExit
 import sys
 
 from broker import cfg
 from broker._utils._log import log
 from broker.config import env
 from broker.eblocbroker_scripts.job import Job
+from broker.errors import QuietExit
 from broker.imports import connect
 from broker.libs.eudat import login, submit
 from broker.link import check_link_folders

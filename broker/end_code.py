@@ -530,7 +530,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             print_tb(e)
             raise e
 
-        log(f"## receive state of the running job  {ok()}")
+        log(f"## receive state of the running job {ok()}")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(
