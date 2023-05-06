@@ -42,7 +42,7 @@ f93b9a9f63447e0e086322b8416d4a39  liver.n6c10.tbz2
 bfc83d9f6d5c3d68ca09499190851e86  bone.n26c10.tbz2
 #+end_src
 
-*
+
 * REQUESTERS
 
 ** Medium size data-sets
@@ -60,6 +60,15 @@ dd0fbccccf7a198681ab838c67b68fbf  bone.n6c100.tbz2
 #+end_src
 
 ** Download all Medium data files using ~wget~
+
+#+begin_src bash
+cd /var/ebloc-broker/cache
+# download all using below wget script
+
+for fn in `command ls *.tbz2` ; do tarx "$fn" ; done && rm -rf *.tbz2
+rename_all
+#+end_src
+
 
 #+begin_src bash
 wget -bqc https://vision.cs.uwaterloo.ca/files/adhead.n6c100.tbz2

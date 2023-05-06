@@ -1,6 +1,6 @@
 config:
-  requester_address: '0x5affc0638b7b311be40a0e27ed5cd7c133c16e64'
-  provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+  requester_address: '0x446aa04436809c130eab8e33ce9f5d3c80564fb7'
+  provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
   source_code:
     storage_id: gdrive
     cache_type: public

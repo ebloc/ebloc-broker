@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rename_all() {
+rename_all () {
     # medium
     mv -v babyface.n26c10 fe801973c5b22ef6861f2ea79dc1eb9c
     mv -v BL06-camel-lrg 0d6c3288ef71d89fb93734972d4eb903

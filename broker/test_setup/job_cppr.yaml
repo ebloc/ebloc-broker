@@ -13,7 +13,7 @@ config:
       hash: 050e6cc8dd7e889bf7874689f1e1ead6
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/LB07-bunny-sml
+      path: /home/alper/test_eblocbroker/small/BL06-gargoyle-sml
       storage_hours: 1
       storage_id: b2drop
   data_transfer_out: 5

@@ -34,13 +34,14 @@ _kill () {
                 nocorrect sudo pkill -f -f "$pattern";
             done;
         fi;
-        sudo kill -9 "$(ps auxww | grep -E "$1" | grep -v -e "grep" -e "emacsclient" | awk '{print $2}')" > /dev/null 2>&1;
+        sudo kill -9 \
+             "$(ps auxww | grep -E "$1" | grep -v -e "grep" -e "emacsclient" | awk '{print $2}')" \
+             > /dev/null 2>&1;
     fi
 }
 
 if [[ $(whoami) == "root" ]] ; then
-    echo -e "$PURPLE##$NC logname=$MA"$(logname)$NC
-    echo -e "$PURPLE##$NC hostname=$MA"$(hostname -s)$NC
+    echo -e "$PURPLE##$NC logname=$MA"$(logname)$NC "hostname=$MA"$(hostname -s)$NC $(scontrol --version)
     USER=$(logname)
 fi
 
@@ -76,6 +77,9 @@ scontrol show node
 dir=$(/usr/bin/pwd)
 cd /home/"$(logname)"/ebloc-broker/broker/_slurm/example/
 sbatch slurm_test.sh
+sbatch slurm_test.sh
+sbatch slurm_test.sh
+sbatch slurm_test.sh
 cd $dir
 
 echo ""
@@ -88,6 +92,7 @@ ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
 
 echo ""
 sinfo | grep idle
+sleep 2
 squeue
 
 #: verbose

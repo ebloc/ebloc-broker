@@ -2,9 +2,8 @@
 
 import sys
 from web3.logs import DISCARD
-
 from broker import cfg
-from broker._utils._log import log
+from broker._utils._log import log, console_ruler
 
 
 def main():
@@ -19,12 +18,12 @@ def main():
     if event == "LogJob":
         processed_logs = cfg.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
         log(vars(processed_logs[0].args))
-        log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+        console_ruler(character="-=", style="yellow")
 
     if event == "LogReceipt":
         processed_logs = cfg.Ebb.eBlocBroker.events.LogReceipt().processReceipt(tx_receipt, errors=DISCARD)
         log(vars(processed_logs[0].args))
-        log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+        console_ruler(character="-=", style="yellow")
 
 
 if __name__ == "__main__":

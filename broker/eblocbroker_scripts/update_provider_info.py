@@ -61,8 +61,8 @@ if __name__ == "__main__":
     ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
 
     f_id = env.OC_USER
-    log(f"## address=[m]{env.PROVIDER_ID}")
-    log(f"## gmail=[m]{env.GMAIL}")
+    log(f"## address=[m]{env.PROVIDER_ID}", h=False)
+    log(f"## gmail=[m]{env.GMAIL}", h=False)
     log(f"## gpg_fingerprint={gpg_fingerprint}")
     log(f"## ipfs_address=[m]{ipfs_address}")
     log(f"## fid=[m]{f_id}")

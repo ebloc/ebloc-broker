@@ -169,14 +169,14 @@ def br(text, color="white"):
 
 def ok():
     """Done."""
-    return " " + br("[g]OK[/g]")
+    return " [[g]ok[/g]]"
 
 
 def _console_clear():
     console.clear()
 
 
-def console_ruler(msg="", character="=", color="cyan", fn=""):
+def console_ruler(msg="", character="=", color="cyan", style="green", fn=""):
     """Draw console ruler.
 
     Indicate rich console to write into given fn
@@ -196,11 +196,11 @@ def console_ruler(msg="", character="=", color="cyan", fn=""):
         ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
 
     if msg:
-        console.rule(f"[bold][{color}]{msg}", characters=character)
-        ll.console[fn].rule(f"[bold][{color}]{msg}", characters=character)
+        console.rule(f"[bold][{color}]{msg}", characters=character, style=style)
+        ll.console[fn].rule(f"[bold][{color}]{msg}", characters=character, style=style)
     else:
-        console.rule(characters=character)
-        ll.console[fn].rule(characters=character)
+        console.rule(characters=character, style=style)
+        ll.console[fn].rule(characters=character, style=style)
 
 
 def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, highlight=True):

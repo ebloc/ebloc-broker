@@ -38,8 +38,9 @@ install_ipfs_updater() {
 }
 
 install_ipfs () {
-    install_ipfs_updater
+    ipfs version && return
     #
+    install_ipfs_updater
     sudo systemctl start firewalld
     sudo systemctl enable firewalld
     sudo firewall-cmd --add-port=4001/tcp --permanent
@@ -67,7 +68,7 @@ install_ipfs () {
         cd go-ipfs
         make install
         sudo ./install.sh
-        cd ..
+        cd ../
         rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
         rm -rf go-ipfs/
         ipfs version

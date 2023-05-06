@@ -507,7 +507,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
         log("\njob owner's info\n================", "green")
-        log(f"==> gmail=[white]{self.requester_info['gmail']}")
+        log(f"==> gmail={self.requester_info['gmail']}", h=False)
         log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
         log(f"==> ipfs_address={self.requester_info['ipfs_address']}")
         log(f"==> f_id={self.requester_info['f_id']}")
@@ -573,7 +573,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self._get_tx_status(tx_hash)
         self.get_job_info()
         log("SUCCESS")
-        # self.remove_job_folder()  # FIXME: TESTING
+        # self.remove_job_folder()  # FIXME: TESTING also remove dependent data files
 
 
 if __name__ == "__main__":

@@ -448,8 +448,11 @@ def run_driver(given_bn):
         if not first_iteration_flag:
             console_ruler()
             if isinstance(balance, int):
-                cc = Cent(int(balance) - int(env.config["token_balance"]))._to()
-                log(f"==> since driver started provider_gained_token={cc} usd")
+                try:
+                    cc = Cent(int(balance) - int(env.config["token_balance"]))._to()
+                    log(f"==> since driver started provider_gained_token={cc} usd")
+                except Exception as e:
+                    log(f"warning: {e}")
 
         current_bn = Ebb.get_block_number()
         if not first_iteration_flag:

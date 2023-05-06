@@ -156,3 +156,10 @@ docker exec -it ebloc-broker_slurm_1 /bin/bash
 - [[https://github.com/GRomR1/docker-slurmbase/blob/master/Dockerfile]]
 - [[https://github.com/SciDAS/slurm-in-docker/blob/master/base/Dockerfile]]
 - [[https://stackoverflow.com/questions/42597739/accessing-docker-container-mysql-databases]]
+
+
+** Debug
+
+#+begin_src bash
+scontrol show -dd job <id> | grep Reason
+#+end_src

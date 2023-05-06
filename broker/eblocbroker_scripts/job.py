@@ -108,7 +108,7 @@ class Job:
         jp.set_storage_cost(is_verbose)
         jp.set_job_price(is_verbose)
         if is_verbose and is_ruler:
-            console_ruler(character="+")
+            console_ruler(character="+", style="yellow")
 
         return jp.job_price, jp.cost
 

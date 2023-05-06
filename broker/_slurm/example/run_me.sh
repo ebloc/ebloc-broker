@@ -18,4 +18,4 @@ echo is_internet=$(is_internet) >> $dir/completed.txt
 echo $dir >> $dir/completed.txt
 g++ helloworld.cpp -o hello
 ./hello
-sleep 10
+sleep 20

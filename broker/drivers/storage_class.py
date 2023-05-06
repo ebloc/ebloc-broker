@@ -145,10 +145,10 @@ class Storage(BaseClass):
 
     def check_already_cached(self, code_hash):
         if os.path.isfile(f"{self.private_dir}/{code_hash}.tar.gz"):
-            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.private_dir}", "bold")
+            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.private_dir}")
             self.is_cached[code_hash] = True
         elif os.path.isfile(f"{self.public_dir}/{code_hash}.tar.gz"):
-            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.public_dir}", "bold")
+            log(f":beer:  [g]{code_hash}[/g] is already cached in {self.public_dir}")
             self.is_cached[code_hash] = True
 
     def full_refund(self) -> str:
@@ -222,7 +222,7 @@ class Storage(BaseClass):
                 .strip()
             )
             if output.count("/") == 1:
-                log(f"[m]./run.sh[/m] exists under the parent folder {ok()}", "bold")
+                log(f"[m]./run.sh[/m] exists under the parent folder {ok()}")
                 return True
             else:
                 log("E: run.sh does not exist under the parent folder")
@@ -339,9 +339,9 @@ class Storage(BaseClass):
         p2 = subprocess.Popen(["date", "+%s"], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()  # noqa
         timestamp = p2.communicate()[0].decode("utf-8").strip()
-        log(f"timestamp={timestamp}, ", "bold", end="")
+        log(f"timestamp={timestamp}, ", end="")
         write_to_file(self.results_folder_prev / "timestamp.txt", timestamp)
-        log(f"job_received_bn={job_bn}", "bold")
+        log(f"job_received_bn={job_bn}")
         log("## Adding recevied job into the mongoDB database")
         self.Ebb.mongo_broker.add_item(
             job_key,

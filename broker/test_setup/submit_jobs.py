@@ -142,7 +142,7 @@ def create_cppr_job_script(idx):
     f.write(f"DATA_HASH='{hash_medium_data}'\n")
     f.write("DATA2_DIR='../data_link/'$DATA_HASH'/'\n")
     f.write("current_date=$(LANG=en_us_88591; date)\n")
-    f.write("echo '=================== 2 =================== '$current_date > output.log\n")
+    f.write("echo '=================== 2 =================== '$current_date >> output.log\n")
     f.write("find $DATA2_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
@@ -260,7 +260,8 @@ def run_job(counter, cycleid) -> None:
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
             dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
             if IS_MINI_TEST:
-                dir_name = "LB07-bunny-sml"
+                # dir_name = "LB07-bunny-sml"
+                dir_name = "BL06-gargoyle-sml"
                 yaml_cfg["config"]["data"]["data3"]["storage_hours"] = 1
             else:
                 dir_name = random.choice(dirs)

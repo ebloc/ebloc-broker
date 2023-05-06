@@ -134,7 +134,7 @@ RUN apt-get install -y --no-install-recommends --assume-yes \
     apt-get clean
 
 # Compile, build and install Slurm from git source
-ARG SLURM_TAG=slurm-22-05-2-1
+ARG SLURM_TAG=slurm-23-02-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
 RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
