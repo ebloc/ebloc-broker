@@ -11,7 +11,7 @@ from broker.utils import popen_communicate, terminate
 
 
 def nc(url: str, port: int):
-    """Nc — arbitrary TCP and UDP connections and listens."""
+    """Nc: arbitrary TCP and UDP connections and listens."""
     try:
         for string in ["http://", "https://", ":8545"]:
             url = url.replace(string, "")
@@ -75,8 +75,6 @@ def connect_to_eblocbroker() -> None:
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
         elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
-            from brownie import network
-
             try:
                 network.connect(cfg.NETWORK_ID)
                 if not network.is_connected():

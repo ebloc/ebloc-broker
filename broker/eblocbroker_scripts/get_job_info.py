@@ -14,7 +14,7 @@ Ebb = cfg.Ebb
 
 
 def analyze_data(self, key, provider=None):
-    """Obtain the information related to code data."""
+    """Obtain the information related to data file."""
     current_bn = Ebb.get_block_number()
     self.received_block = []
     self.storage_duration = []
@@ -50,7 +50,7 @@ def analyze_data(self, key, provider=None):
                     # requested for cache for the first time
                     self.job_info["is_cached"][code_hash_str] = False
 
-        log(br(f"{idx}, {_type}"), "cyan", end="")
+        log(br(f"{idx},{_type}"), "cyan", end="")
         if len(code_hash) <= 32:
             log(f" {code_hash_str} bytes={code_hash} ", end="")
         else:
@@ -63,7 +63,11 @@ def analyze_data(self, key, provider=None):
         log(" ", end="")
         log(StorageID(self.job_info["cloudStorageID"][idx]).name, end="")
         log(" ", end="")
-        log(f"is_cached={self.job_info['is_cached'][code_hash_str]}", end="")
+        if StorageID(self.job_info["cloudStorageID"][idx]).name.lower() != "none":
+            log(f"is_cached={self.job_info['is_cached'][code_hash_str]}", end="")
+        else:
+            log("dataset", "yellow", end="")
+
         if ds.received_block > 0:
             log(f" received_bn={ds.received_block}", end="")
 
@@ -82,6 +86,22 @@ def set_job_received_bn(self, received_bn):
 
     if int(received_bn) > int(self.job_info["received_bn"]):
         self.job_info["received_bn"] = received_bn
+
+
+def fetch_log_data_storage_request(self, tx_by_block):
+    event_filter = self._eblocbroker.events.LogDataStorageRequest.createFilter(
+        # argument_filters={"provider": str(provider)},
+        fromBlock=int(tx_by_block["blockNumber"]),
+        toBlock=int(tx_by_block["blockNumber"]),
+    )
+
+    log_data_storage_request_list = []
+    for logged_job in event_filter.get_all_entries():
+        if tx_by_block["hash"] == logged_job["transactionHash"]:
+            log_data_storage_request_list.append(dict(logged_job["args"]))
+
+    if log_data_storage_request_list:
+        self.job_info.update({"submitJob_LogDataStorageRequest": log_data_storage_request_list})
 
 
 def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
@@ -116,6 +136,7 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                     output = output[1]
                     self.job_info.update({"data_transfer_in_input": output[1]})
                     self.job_info.update({"data_transfer_out_input": output[2][-2]})
+                    self.job_info.update({"received": output[2][-1]})
                     self.job_info.update({"storage_duration": output[3]})
                     self.job_info.update({"data_prices_set_block_numbers": output[2][4]})
 
@@ -124,22 +145,7 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
         else:
             log(f"E: failed to find and update job({job_key})")
 
-        # log("LogDataStorageRequest ------------------------------------", "yellow")
-        event_filter = self._eblocbroker.events.LogDataStorageRequest.createFilter(
-            # argument_filters={"provider": str(provider)},
-            fromBlock=int(tx_by_block["blockNumber"]),
-            toBlock=int(tx_by_block["blockNumber"]),
-        )
-
-        log_data_storage_request_list = []
-        for logged_job in event_filter.get_all_entries():
-            if tx_by_block["hash"] == logged_job["transactionHash"]:
-                log_data_storage_request_list.append(dict(logged_job["args"]))
-
-        if log_data_storage_request_list:
-            self.job_info.update({"submitJob_LogDataStorageRequest": log_data_storage_request_list})
-
-        # log("----------------------------------------------------------", "yellow")
+        self.fetch_log_data_storage_request(tx_by_block)
         return received_bn
     except Exception as e:
         print_tb(f"E: Failed to update job cores.\n{e}")
@@ -232,6 +238,7 @@ def get_job_info(
             "price_cache": job_prices[5],
             "received_bn": received_bn,
             "core": None,
+            "received": None,
             "run_time": None,
             "actual_elapsed_time": None,
             "cloudStorageID": None,

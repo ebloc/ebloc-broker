@@ -168,7 +168,6 @@ class Storage(BaseClass):
             return tx_hash
         except Exception as e:
             print_tb(e)
-            raise e
 
     def is_md5sum_matches(self, path, name, _id, folder_type, cache_type) -> bool:
         if generate_md5sum(path) == name:
@@ -260,13 +259,15 @@ class Storage(BaseClass):
                     elif is_ipfs_hash_valid(k):
                         verify_data_list.append(ipfs_to_bytes32(k))
 
-        if len(verify_data_list) > 0 and verify_data_list:
-            log(f"verify_data_list={verify_data_list}")
+        if verify_data_list:
+            log("verify_data_list=", end="")
+            log(verify_data_list)
             tx = cfg.Ebb.set_data_verified(verify_data_list)
             tx_hash = cfg.Ebb.tx_id(tx)
             log(f"verified_data_tx_hash={tx_hash}")
 
     def sbatch_call(self):
+        breakpoint()  # DELETEME
         try:
             link = Link(self.results_data_folder, self.results_data_link)
             if len(self.registered_data_hashes) > 0:
@@ -358,7 +359,9 @@ class Storage(BaseClass):
         try:
             data = read_json(data_transfer_in_json)
         except:
-            data["data_transfer_in"] = self.data_transfer_in_to_download_mb
+            log(f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB")
+            data["data_transfer_in"] = int(self.data_transfer_in_to_download_mb)
+            breakpoint()  # DEBUG
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
 

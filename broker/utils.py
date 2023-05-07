@@ -182,6 +182,7 @@ def _try(func):
 def delete_none(_dict, is_delete_zero=False):
     """Delete None values recursively from all of the dictionaries, tuples, lists, sets.
 
+    Note that deletes from original dict as well.
     __ https://stackoverflow.com/a/66127889/2402577
     """
     if isinstance(_dict, dict):
@@ -192,9 +193,6 @@ def delete_none(_dict, is_delete_zero=False):
                 else:
                     _dict[key] = delete_none(value)
             else:
-                if key == "storage_duration":
-                    breakpoint()  # DEBUG
-
                 if is_delete_zero:
                     if not value or key is None or value == "" or value == 0:
                         del _dict[key]
@@ -639,6 +637,6 @@ def compress_folder(folder_path, is_exclude_git=False):
     return tar_hash, f"{dir_path}/{tar_fn}"
 
 
-def dump_dict_to_file(fn, job_keys):
+def dump_dict_to_file(fn, job_keys) -> None:
     with open(fn, "w") as f:
         json.dump(job_keys, f)

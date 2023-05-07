@@ -38,6 +38,7 @@ class Base:
     from broker.eblocbroker_scripts.data import get_data_info  # type: ignore
     from broker.eblocbroker_scripts.get_job_info import (  # type: ignore
         analyze_data,
+        fetch_log_data_storage_request,
         get_job_code_hashes,
         get_job_info,
         get_job_info_print,
@@ -482,6 +483,7 @@ class Contract(Base):
         self.gas_price = GAS_PRICE
         self._from = _from
         self.required_confs = 1
+        # TODO: raise RPCRequestError causes driver to crash does not continue, why?
         return self.timeout_wrapper("refund", *args)
 
     def _transfer_ownership(self, _from, new_owner) -> "TransactionReceipt":

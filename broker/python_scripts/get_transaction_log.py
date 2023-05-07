@@ -2,8 +2,9 @@
 
 import sys
 from web3.logs import DISCARD
+
 from broker import cfg
-from broker._utils._log import log, console_ruler
+from broker._utils._log import console_ruler, log
 
 
 def main():

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from broker.utils import print_tb
 import sys
+
 from broker import cfg
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.test_setup.user_set import requesters
+from broker.utils import print_tb
 
 
 def main():

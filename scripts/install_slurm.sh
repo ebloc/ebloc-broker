@@ -16,9 +16,9 @@ mysql_init () {
 }
 
 install_slurm () {
-    scontrol --version && return
     # compile, build and install SLURM from Git source
     SLURM_TAG="slurm-23-02-2-1"
+    scontrol --version && return
     sudo mkdir -p /var/log/slurm ~/git
     sudo chown $(whoami) -R /var/log/slurm
     git clone --depth 1 -b $SLURM_TAG --single-branch https://github.com/SchedMD/slurm.git ~/git/slurm
@@ -42,6 +42,8 @@ install_slurm () {
        echo "scontrol  [  FAIL  ]"
        exit 1
     fi
+    echo ""
+    # rm -rf ~/git/slurm
 }
 
 after_slurmdbd () {
@@ -94,7 +96,7 @@ sudo chown $(whoami):root /usr/local/etc/slurmdbd.conf
 mkdir -p /tmp/run
 
 install_slurm
-echo ""
+
 # sudo sed -i 's/^root:.*$/root:*:16231:0:99999:7:::/' /etc/shadow
 sudo mkdir -p /etc/sysconfig/slurm /var/spool/slurmd /var/spool/slurmctld /var/log/slurm /var/run/slurm
 sudo chown -R $(whoami):$(whoami) /var/spool/slurmd /var/spool/slurmctld /var/log/slurm /var/run/slurm

@@ -102,19 +102,19 @@ class Ipfs:
 
         gpg_file_link = f"{gpg_file}.gpg"
         tar_fn = f"{gpg_file}.tar.gz"
-        cmd = [
-            "gpg",
-            "--verbose",
-            "--batch",
-            "--yes",
-            f"--output={tar_fn}",
-            "--pinentry-mode",
-            "loopback",
-            f"--passphrase-file={env.GPG_PASS_FILE}",
-            "--decrypt",
-            gpg_file_link,
-        ]
         try:
+            cmd = [
+                "gpg",
+                "--verbose",
+                "--batch",
+                "--yes",
+                f"--output={tar_fn}",
+                "--pinentry-mode",
+                "loopback",
+                f"--passphrase-file={env.GPG_PASS_FILE}",
+                "--decrypt",
+                gpg_file_link,
+            ]
             run(cmd, suppress_stderr=True)
             log(f"#> GPG decrypt {ok()}")
             _remove(gpg_file)
@@ -124,6 +124,7 @@ class Ipfs:
             raise e
         # finally:
         #     os.unlink(gpg_file_link)
+
         if extract_target:
             try:
                 untar(tar_fn, extract_target)
@@ -135,8 +136,8 @@ class Ipfs:
                 _remove(tar_fn)
 
     def remove_lock_files(self):
-        _remove(f"{env.HOME}/.ipfs/repo.lock")
-        _remove(f"{env.HOME}/.ipfs/datastore/LOCK")
+        for name in ["repo.lock", "datastore/LOCK"]:
+            _remove(f"{env.HOME}/.ipfs/{name}")
 
     def gpg_encrypt(self, from_gpg_fingerprint, recipient_gpg_fingerprint, target):
         if from_gpg_fingerprint == recipient_gpg_fingerprint:
@@ -258,8 +259,7 @@ class Ipfs:
         with Halo(text=msg, spinner="line", placement="right"):
             return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
 
-        # with cfg.console.status(msg):
-        #     return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
+        log()
 
     def is_hash_exists_online(self, ipfs_hash: str, ipfs_address=None, is_verbose=False):
         log(f"## attempting to check IPFS file [g]{ipfs_hash}[/g] ... ")
@@ -283,10 +283,10 @@ class Ipfs:
                     output_stat = line.split(":")
                     _stat[output_stat[0]] = int(output_stat[1])
 
-            log("ipfs_object_stat=", "b", end="")
+            log("ipfs_object_stat=", "yellow", end="")
             log(_stat, "b")
             cumulative_size = int(output.split("\n")[4].split(":")[1].replace(" ", ""))
-            log(f"cumulative_size={cumulative_size}", "bold")
+            log(f"cumulative_size={cumulative_size}")
             return output, cumulative_size
         except Exception as e:
             raise Exception(f"Timeout, failed to find ipfs file: {ipfs_hash}") from e

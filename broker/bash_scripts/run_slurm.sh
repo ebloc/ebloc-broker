@@ -75,7 +75,7 @@ squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 scontrol show node
 
 dir=$(/usr/bin/pwd)
-cd /home/"$(logname)"/ebloc-broker/broker/_slurm/example/
+cd /home/"$(logname)"/ebloc-broker/broker/_slurm/
 sbatch slurm_test.sh
 sbatch slurm_test.sh
 sbatch slurm_test.sh

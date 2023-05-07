@@ -38,7 +38,7 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
-        log(f" * data_transfer_out={data_size_mb} MB | rounded={int(data_size_mb)} MB")
+        log(f" * data_transfer_in={data_size_mb} MB | rounded={int(data_size_mb)} MB")
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
         """Wrap ipfs-get call."""

@@ -12,10 +12,10 @@ from typing import List
 
 from broker import cfg, config
 from broker._utils._log import br, log, ok
-from broker._utils.tools import _remove, bytes_to_mb, mkdir, read_json
+from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
 from broker.drivers.storage_class import Storage
-from broker.lib import run
+from broker.lib import calculate_size, run
 from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, print_tb, untar
 
 Ebb = cfg.Ebb
@@ -171,13 +171,16 @@ class B2dropClass(Storage):
                     ]
                     log(" ".join(cmd), is_code=True, color="yellow")
                     run(cmd)
+                    size_of_the_downloaded_file = calculate_size(download_fn)
+                    self.data_transfer_in_to_download_mb += size_of_the_downloaded_file
+                    log(f"==> downloaded_file_size={size_of_the_downloaded_file}")
                     with cd(results_folder_prev):
                         run(["unzip", "-o", "-j", download_fn])
 
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     # TODO: if Folder contains zipped file like .tar.gz unzip that too // investigate
-                    log(f"## download file from [blue]B2DROP[/blue] {ok()}")
+                    log(f"## Download datafile from [blue]B2DROP[/blue] {ok()}")
                     return
             except:
                 log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
@@ -195,7 +198,7 @@ class B2dropClass(Storage):
         self._download_folder(cache_folder, folder_name)
         self.check_downloaded_folder_hash(cache_folder / f"{folder_name}.tar.gz", folder_name)
 
-    def accept_given_shares(self):
+    def accept_given_shares(self) -> None:
         for *_, v in self.share_id.items():
             try:
                 config.oc.accept_remote_share(int(v["share_id"]))
@@ -212,10 +215,10 @@ class B2dropClass(Storage):
             log(f"warning: {e}")
             if "HTTP error: 404" in str(e):
                 try:
-                    _folder_fn = folder_name
-                    _list = fnmatch.filter(os.listdir(env.OWNCLOUD_PATH), f"{_folder_fn} *")
+                    folder_fn = folder_name
+                    _list = fnmatch.filter(os.listdir(env.OWNCLOUD_PATH), f"{folder_fn} *")
                     for _dir in _list:
-                        shutil.move(f"{env.OWNCLOUD_PATH}/{_dir}", f"{env.OWNCLOUD_PATH}/{_folder_fn}")
+                        shutil.move(f"{env.OWNCLOUD_PATH}/{_dir}", f"{env.OWNCLOUD_PATH}/{folder_fn}")
 
                     return config.oc.file_info(fn).get_size()
                 except Exception as e:
@@ -227,24 +230,24 @@ class B2dropClass(Storage):
 
                 return config.oc.file_info(fn).get_size()
 
-            log(str(e))
+            log(f"E: {e}")
             raise Exception("failed all the attempts to get file info at B2DROP") from e
 
-    def total_size_to_download(self) -> None:
-        data_transfer_in_to_download = 0  # total size to download in bytes
-        for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
-            if self.cloudStorageID[idx] != StorageID.NONE:
-                folder_name = source_code_hash_text
-                if folder_name not in self.is_cached:
-                    data_transfer_in_to_download += self.get_file_size(
-                        f"/{folder_name}/{folder_name}.tar.gz", folder_name
-                    )
+    # def total_size_to_download(self) -> None:
+    #     """Calculate total size to be downloaded from cloud storage."""
+    #     data_transfer_in_to_download = 0  # total size to download in bytes
+    #     for idx, source_code_hash_text in enumerate(self.code_hashes_to_process):
+    #         if self.cloudStorageID[idx] != StorageID.NONE:
+    #             folder_name = source_code_hash_text
+    #             if folder_name not in self.is_cached:
+    #                 fn = f"/{folder_name}/{folder_name}.tar.gz"
+    #                 data_transfer_in_to_download += self.get_file_size(fn, folder_name)
 
-        self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
-        log(
-            f"## total size to download {data_transfer_in_to_download} bytes == "
-            f"{self.data_transfer_in_to_download_mb} MB"
-        )
+    #     self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
+    #     log(
+    #         f"## total size to download {data_transfer_in_to_download} bytes == "
+    #         f"{self.data_transfer_in_to_download_mb} MB"
+    #     )
 
     def get_share_token(self, f_id):
         """Check key is already shared or not."""
