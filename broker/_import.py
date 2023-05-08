@@ -12,6 +12,8 @@ from brownie import network
 
 
 def reconnect():
+    """Attemp to reconnect."""
+
     log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
     if cfg.NETWORK_ID == "bloxberg":
         cfg.NETWORK_ID = "bloxberg_core"
