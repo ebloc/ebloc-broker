@@ -2,6 +2,8 @@
 
 # Watch ongoing tests during their run time
 
+rm -f ~/.ebloc-broker/*.yaml.lock
+rm -f ~/.ebloc-broker/.*.yaml.lock
 providers=("0x29e613b04125c16db3f3613563bfdd0ba24cb629"
            "0x1926b36af775e1312fdebcc46303ecae50d945af"
            "0x4934a70ba8c1c3acfa72e809118bdd9048563a24")
@@ -19,8 +21,12 @@ else
     done
 fi
 
+_watch () {
+    command watch --color head -n 27 \
+            ~/.ebloc-broker/watch_${providers[0]}.out \
+            ~/.ebloc-broker/watch_${providers[1]}.out \
+            ~/.ebloc-broker/watch_${providers[2]}.out
+}
+
+_watch
 clear
-watch --color head -n 16 \
-      ~/.ebloc-broker/watch_${providers[0]}.out \
-      ~/.ebloc-broker/watch_${providers[1]}.out \
-      ~/.ebloc-broker/watch_${providers[2]}.out

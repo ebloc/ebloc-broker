@@ -3,7 +3,6 @@
 import os.path
 import random
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 from pymongo import MongoClient
@@ -27,7 +26,7 @@ Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 cfg.TX_LOG_VERBOSE = False
-IS_MINI_TEST = True
+IS_MINI_TEST = False
 
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
@@ -48,15 +47,13 @@ if IS_MINI_TEST:
     import broker.test_setup.user_set as _user_set
 
     benchmarks = ["cppr"]
-    storage_ids = ["b2drop", "gdrive", "ipfs"]
-    ipfs_types = ["ipfs", "ipfs_gpg"]
+    storage_ids = ["ipfs"]
     _user_set.providers = cfg.TEST_PROVIDERS = ["0x29e613B04125c16db3f3613563bFdd0BA24Cb629"]
     # for provider_addr in providers:
     #     mini_tests_submit(storage_ids, provider_addr)
 
-
 # cfg.NETWORK_ID = "bloxberg_core"
-_ruler = "======================="
+_ruler = "[pink]=======================[/pink]"
 FIRST_CYCLE = True
 
 
@@ -260,12 +257,12 @@ def run_job(counter, cycleid) -> None:
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
             dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
             if IS_MINI_TEST:
-                # dir_name = "LB07-bunny-sml"
-                dir_name = "BL06-gargoyle-sml"
+                dir_name = "LB07-bunny-sml"
                 yaml_cfg["config"]["data"]["data3"]["storage_hours"] = 1
             else:
                 dir_name = random.choice(dirs)
 
+            dir_name = "LB07-bunny-sml"
             yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets_dir / dir_name)
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
@@ -344,9 +341,9 @@ def main():
                 log(f"#> latest number_of_submitted_jobs={counter}", is_write=False)
                 run_job(counter, 69 + idx)
                 counter += 1
-                time.sleep(2)
+                countdown(20)
 
-            sleep_duration = randint(250, 450)
+            sleep_duration = randint(300, 500)
             countdown(sleep_duration)
 
         log(f"#> total number_of_submitted_jobs={counter}")

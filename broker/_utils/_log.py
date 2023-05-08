@@ -337,6 +337,7 @@ def log(
         h = False
         base_str = ""
         if text[0:2] == "$ ":
+            text = "[bg]$[/bg] " + text[2:]
             base_str = " \ \n      "
         else:
             base_str = " \ \n    "

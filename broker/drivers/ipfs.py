@@ -9,7 +9,6 @@ from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
-from broker.lib import calculate_size
 from broker.libs import _git
 from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, start_ipfs_daemon
 
@@ -38,6 +37,10 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
+        if not cfg.ipfs.is_hash_locally_cached(ipfs_hash):
+            #: total data to be downloaded is saved
+            self.data_transfer_in_to_download_mb += data_size_mb
+
         log(f" * data_transfer_in={data_size_mb} MB | rounded={int(data_size_mb)} MB")
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
@@ -57,14 +60,14 @@ class IpfsClass(Storage):
         start_ipfs_daemon()
         log(f"{br(get_date())} job's source code has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
-            log("[bg]IPFS")
+            log("IPFS", "bg")
         else:
-            log("[bg]IPFS_GPG")
+            log("IPFS_GPG", "bg")
 
         if not is_ipfs_on():
             return False
 
-        log(f"==> is_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
+        log(f"==> is_ipfs_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -86,13 +89,13 @@ class IpfsClass(Storage):
                     except:
                         return False
 
-        initial_folder_size = calculate_size(self.results_folder)
+        # initial_folder_size = calculate_size(self.results_folder)
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists online
-            is_hashed = False
+            # is_cached = False
             log(f"## attempting to get IPFS file: {ipfs_hash} ... ", end="")
             if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
-                is_hashed = True
+                # is_cached = True
                 log(ok("already cached"))
             else:
                 log()
@@ -123,10 +126,10 @@ class IpfsClass(Storage):
             except Exception as e:
                 raise e
 
-            if not is_hashed:
-                folder_size = calculate_size(self.results_folder)
-                self.data_transfer_in_to_download_mb += folder_size - initial_folder_size
-                initial_folder_size = folder_size
+            # if not is_cached:
+            #     folder_size = calculate_size(self.results_folder)
+            #     self.data_transfer_in_to_download_mb += folder_size - initial_folder_size
+            #     initial_folder_size = folder_size
 
             if idx == 0 and not self.check_run_sh():
                 self.full_refund()

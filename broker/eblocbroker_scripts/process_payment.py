@@ -32,11 +32,12 @@ def process_payment(
         _result_ipfs_hash = result_ipfs_hash
 
     log(
-        f"~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
-        f" {_result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {data_transfer_in} {data_transfer_out} '{core}'"
+        f"$ ~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
+        f" {_result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {int(data_transfer_in)} {data_transfer_out} '{core}'"
         f" '{run_time}'",
-        "blue",
+        "pink",
         is_code=True,
+        h=False,
     )
 
     for cloud_storage_id in cloud_storage_ids:
@@ -73,7 +74,6 @@ def process_payment(
         ]
         tx = self._process_payment(job_key, args, result_ipfs_hash)
     except Exception as e:
-        print_tb(e)
         raise e
 
     return self.tx_id(tx)
@@ -124,8 +124,11 @@ def main():
             run_time,
         )
         log(f"tx_hash={tx_hash}", "bold")
-    except:
-        sys.exit(1)
+    except Exception as e:
+        if "reverted transaction" in str(e):
+            log(f"E: [green]{e}")
+        else:
+            print_tb(e)
 
 
 if __name__ == "__main__":

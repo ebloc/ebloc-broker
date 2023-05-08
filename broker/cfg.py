@@ -15,6 +15,9 @@ IS_THREAD_JOIN = False
 TX_TIMEOUT = 1800
 IS_THREAD_JOIN = False
 IS_FULL_TEST = False  # check whether the full-long test is applied
+
+TEST_JOB_COUNTER = 0
+
 RECONNECT_ATTEMPTS: int = 5
 BLOCK_DURATION: int = 6
 ONE_HOUR_BLOCK_DURATION: int = int(3600 / BLOCK_DURATION)

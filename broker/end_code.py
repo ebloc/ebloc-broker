@@ -3,7 +3,6 @@
 import base64
 import getpass
 import os
-import pprint
 import psutil
 import shutil
 import sys
@@ -139,7 +138,11 @@ class Gdrive(Common):
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
         log(f"mime_type=[m]{mime_type}")
         self.data_transfer_out += calculate_size(self.patch_file)
-        log(f"data_transfer_out={self.data_transfer_out} MB =>" f" rounded={int(self.data_transfer_out)} MB")
+        if self.data_transfer_out > 0:
+            log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
+        else:
+            log(f"data_transfer_out={self.data_transfer_out} MB")
+
         if "folder" in mime_type:
             cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
         elif "gzip" in mime_type or "/zip" in mime_type:
@@ -308,25 +311,20 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.data_transfer_out += data_transfer_out
 
     def process_payment_tx(self):
-        try:
-            tx_hash = Ebb.process_payment(
-                self.job_key,
-                self.index,
-                self.job_id,
-                self.elapsed_time,
-                self.result_ipfs_hash,
-                self.storage_ids,
-                self.end_timestamp,
-                self.data_transfer_in,
-                self.data_transfer_out,
-                self.job_info["core"],
-                self.job_info["run_time"],
-                self.received_bn,
-            )
-        except Exception as e:
-            print_tb(e)
-            sys.exit(1)
-
+        tx_hash = Ebb.process_payment(
+            self.job_key,
+            self.index,
+            self.job_id,
+            self.elapsed_time,
+            self.result_ipfs_hash,
+            self.storage_ids,
+            self.end_timestamp,
+            self.data_transfer_in,
+            self.data_transfer_out,
+            self.job_info["core"],
+            self.job_info["run_time"],
+            self.received_bn,
+        )
         log(f"==> [white]process_payment {self.job_key} {self.index}")
         return tx_hash
 
@@ -555,19 +553,18 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.elapsed_time = run_time[self.job_id]
 
         log(f"finalized_elapsed_time={self.elapsed_time}")
-        log("job_info=", end="")
-        log(pprint.pformat(self.job_info))
-        try:
-            self.get_cloud_storage_class(0).initialize(self)
-            self.upload_driver()
-        except Exception as e:
-            print_tb(e)
-            sys.exit(1)
-
+        log("==> [yellow]job_info=", end="")
+        log({k: v for k, v in self.job_info.items() if v is not None})
+        self.get_cloud_storage_class(0).initialize(self)
+        self.upload_driver()
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
-        log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
-        log(f"==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
         log(f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB")
+        log(f"    ==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
+        if self.data_transfer_out > 0:
+            log(f"    ==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
+        else:
+            log(f"    ==> data_transfer_out={self.data_transfer_out} MB")
+
         tx_hash = self.process_payment_tx()
         time.sleep(1)
         self._get_tx_status(tx_hash)
@@ -590,4 +587,7 @@ if __name__ == "__main__":
     except QuietExit:
         pass
     except Exception as e:
-        print_tb(e)
+        if "reverted transaction" in str(e):
+            log(f"Exception: [green]{e}", is_wrap=True)
+        else:
+            print_tb(e)

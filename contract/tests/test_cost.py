@@ -137,7 +137,7 @@ def test_cost():
     job.key = job.code_hashes[0]
     job.cores = [1]
     job.run_time = [60]
-    job.data_transfer_ins = [1, 375, 0, 0]
+    job.data_transfer_ins = [5, 375, 0, 0]
     job.data_transfer_out = 5
     job.storage_ids = [0, 0, 2, 2]
     job.cache_types = [0, 0, 0, 0]
@@ -180,7 +180,12 @@ def test_cost():
 
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
-    args = [0, 0, 1681003991, 0, 0, 7, job.cores, [60], True]
+
+    _dataTransferIn = 4
+    _dataTransferOut = 5
+    #  index jobId endTimestamp endTimestamp
+    #      \   |       |       /
+    args = [0, 0, 1681003991, 0, _dataTransferIn, _dataTransferOut, job.cores, [60], True]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:

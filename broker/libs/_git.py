@@ -14,7 +14,7 @@ from broker._utils.tools import remove_ansi_escape_sequence
 from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
 
 
-def _git_init():
+def git_init():
     log("Creating an empty Git repository using 'git init'", end="")
     run(["git", "init", "--initial-branch=master"])
     run(["git", "reflog", "expire", "--all", "--expire=now"])
@@ -28,7 +28,7 @@ def initialize_check(path):
         if not is_initialized(path):
             try:
                 log(f"## git_repo_dir=\n{path}", is_code=True)
-                _git_init()
+                git_init()
                 add_all()
             except Exception as e:
                 log(f"E: {e}")
@@ -131,7 +131,7 @@ def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
 
         patch_upload_fn = f"{patch_name}.gz"  # file to be uploaded as zip
         patch_file = f"{target_path}/{patch_upload_fn}"
-        log(f"patch_path=[m]{patch_upload_fn}")
+        log(f"patch_path=[m]{patch_upload_fn}", h=False)
         try:
             run(["env", f"HOME={home_dir}", "git", "add", "-A"])
             diff_and_gzip(patch_file, home_dir)
@@ -291,7 +291,7 @@ def is_repo(folders) -> None:
             with cd(folder):
                 if not is_initialized(folder):
                     log(f"warning: {folder} doesn't have a git repository. ", end="")
-                    _git_init()
+                    git_init()
 
 
 def _generate_git_repo(folder):

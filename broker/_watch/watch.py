@@ -23,8 +23,8 @@ columns_size = 30
 is_while = True  # to fetch on-going results
 is_provider = True
 
-#: fetch results into google-sheets
-is_csv = True
+#: fetch results into google-sheets and analyze
+is_csv = False
 analyze_long_test = False
 
 # latest: 20070624
@@ -73,14 +73,12 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     received_bn = job["received_bn"]
     _job["received_bn"] = received_bn
     block = Ebb.get_block(received_bn)
-    #
+
     _job["received_block_ts"] = block["timestamp"]
     _job["start_ts"] = job["start_timestamp"]
     _job["wait_time_(sec)"] = max(_job["start_ts"] - _job["received_block_ts"], 0)
-    #
     _job["elapsed_time_(min)"] = job["actual_elapsed_time"]
-    _job["used_registed_data"] = "None"
-    #
+    _job["used_registed_data"] = None
     _job["price_core_min_usd"] = Cent(job["price_core_min"])._to()
     _job["price_data_transfer_cent"] = Cent(job["price_data_transfer"])._to("cent")
     _job["price_storage_cent"] = Cent(job["price_storage"])._to("cent")
@@ -143,8 +141,8 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     if value != spent:
         delta = "%0.8f" % (delta)
         log(f"delta={delta} value={value} spent={spent}")
-    #
-    breakpoint()  # DEBUG
+
+    # breakpoint()  # DEBUG
 
 
 def _watch(eth_address, from_block, is_provider):
@@ -160,7 +158,7 @@ def _watch(eth_address, from_block, is_provider):
         argument_filters=_argument_filters,
         toBlock="latest",
     )
-    header = f"  [y]{'{:<46}'.format('key')} index      status[/y]"
+    header = f"  [y]{'{:<46}'.format('key')} index       status[/y]"
     job_full = ""
     job_count = 0
     completed_count = 0
@@ -212,12 +210,12 @@ def _watch(eth_address, from_block, is_provider):
             if is_while:
                 job_full = (
                     f"[bold blue]*[/bold blue] [white]{'{:<50}'.format(_hash)}[/white] "
-                    f"{_index} {'{:<4}'.format(workload_type)} [{c}]{state_val}[/{c}]\n{job_full}"
+                    f"{_index} {'{:<4}'.format(workload_type)}  [{c}]{state_val}[/{c}]\n{job_full}"
                 )
             else:
                 job_full = (
                     f"[bold blue]*[/bold blue] [bold white]{'{:<50}'.format(_hash)}[/bold white] "
-                    f"{_index} {'{:<4}'.format(workload_type)} [{c}]{state_val}[/{c}]"
+                    f"{_index} {'{:<4}'.format(workload_type)}  [{c}]{state_val}[/{c}]"
                 )
                 log(job_full)
         else:
@@ -281,7 +279,7 @@ def main():
     if len(sys.argv) == 2:
         eth_address = sys.argv[1]
 
-    from_block = 19962696
+    from_block = 20361560
     watch(eth_address, from_block)
 
 

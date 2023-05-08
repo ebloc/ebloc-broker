@@ -267,7 +267,6 @@ class Storage(BaseClass):
             log(f"verified_data_tx_hash={tx_hash}")
 
     def sbatch_call(self):
-        breakpoint()  # DELETEME
         try:
             link = Link(self.results_data_folder, self.results_data_link)
             if len(self.registered_data_hashes) > 0:
@@ -361,7 +360,7 @@ class Storage(BaseClass):
         except:
             log(f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB")
             data["data_transfer_in"] = int(self.data_transfer_in_to_download_mb)
-            breakpoint()  # DEBUG
+            # breakpoint()  # DEBUG
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
 

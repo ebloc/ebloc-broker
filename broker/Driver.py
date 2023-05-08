@@ -168,7 +168,7 @@ def tools(bn):
             if flag_error:
                 raise QuietExit(exception_msg)
         except Exception as e:
-            log(f"E: {e}", is_err=True)
+            log(f"E: [green]{e}", is_err=True)
             raise QuietExit from e
     except QuietExit as e:
         raise e
@@ -467,6 +467,8 @@ def run_driver(given_bn):
                 with Halo(text=msg, text_color="yellow", spinner="line", placement="right"):
                     current_bn = check_block_number_sync(current_bn, bn_read)
 
+            log()
+
         bn_read = str(bn_read)  # reading events' block number has been updated
         if not first_iteration_flag:
             slurm.pending_jobs_check()
@@ -496,7 +498,7 @@ def run_driver(given_bn):
                 first_iteration_flag = True
 
             log()
-            log(f"E: {e}")
+            log(f"E: [green]{e}")
             raise e
 
 

@@ -475,8 +475,8 @@ class JobPrices:
             if is_verbose and _code_hash:
                 _is_private_dict[_code_hash] = ds.is_private
 
-            if idx == len(self.job.code_hashes) - 1:
-                log("[green]**[/green] is_private=", end="")
+            if idx == len(self.job.code_hashes) - 1 and _is_private_dict:
+                log("[pink]**[/pink] is_private=", end="")
                 log(_is_private_dict)
 
             # print(received_block + storage_duration >= self.w3.eth.block_number)

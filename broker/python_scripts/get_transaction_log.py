@@ -18,13 +18,12 @@ def main():
     tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
     if event == "LogJob":
         processed_logs = cfg.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
-        log(vars(processed_logs[0].args))
-        console_ruler(character="-=", style="yellow")
 
     if event == "LogReceipt":
         processed_logs = cfg.Ebb.eBlocBroker.events.LogReceipt().processReceipt(tx_receipt, errors=DISCARD)
-        log(vars(processed_logs[0].args))
-        console_ruler(character="-=", style="yellow")
+
+    log(vars(processed_logs[0].args))
+    console_ruler(character="-=", style="yellow")
 
 
 if __name__ == "__main__":
