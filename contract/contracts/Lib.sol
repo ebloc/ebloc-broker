@@ -82,7 +82,6 @@ library Lib {
         uint32 elapsedTime;
         uint256[] core;
         uint256[] runTime;
-        bool endJob;
     }
 
     struct DataInfo {

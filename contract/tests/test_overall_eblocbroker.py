@@ -424,7 +424,7 @@ def test_computational_refund():
     rpc.sleep(60)
     mine(5)
     run_time = 1
-    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5], True]
+    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5]]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
@@ -855,7 +855,6 @@ def test_simple_submit():
         elapsed_time,
         job.cores,
         [1],
-        True,
     ]
     out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
     tx = ebb.processPayment(job.key, args, out_hash, {"from": provider})
@@ -996,7 +995,6 @@ def test_submit_jobs():
                 elapsed_time,
                 job.cores,
                 job.run_time,
-                True,
             ]
             set_transfer(provider, Cent(0))  # clean provider balance
             set_transfer(requester, Cent(0))  # clean requester balance
@@ -1265,7 +1263,7 @@ def test_receive_registered_data_deposit():
     #
     data_transfer_in_sum = 1
     data_transfer_out = 0
-    args = [index, job._id, end_ts, data_transfer_in_sum, data_transfer_out, elapsed_time, job.cores, [1], True]
+    args = [index, job._id, end_ts, data_transfer_in_sum, data_transfer_out, elapsed_time, job.cores, [1]]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     received = tx.events["LogProcessPayment"]["receivedCent"]
     refunded = tx.events["LogProcessPayment"]["refundedCent"]

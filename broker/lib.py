@@ -174,7 +174,7 @@ def eblocbroker_function_call(func, max_retries):
         try:
             return func()
         except Exception as e:
-            log(f"E: {e}")
+            log(f"E: [g]{e}")
             log("sleep 15 seconds, will try again...")
             time.sleep(15)
 

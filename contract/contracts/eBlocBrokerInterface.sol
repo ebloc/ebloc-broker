@@ -41,7 +41,7 @@ interface eBlocBrokerInterface {
         uint8[] cacheType,
         uint16[] core,
         uint16[] runTime,
-        uint256 received,
+        uint256 received,  // equal to estimated cost
         uint256 refunded
     );
 

@@ -53,7 +53,7 @@ def get_tx_status(tx_hash, is_verbose=False) -> TxReceipt:
 
         return tx_receipt
     except Timeout as e:
-        log(f"E: {e}")
+        log(f"E: [g]{e}")
         raise e
     except Exception as e:
         raise e

@@ -37,7 +37,7 @@ def get_transaction_receipt(tx_hash):
             print()
             print(f"msg_value={msg_value}")
     except Exception as e:
-        log(f"E: {e}")
+        log(f"E: [g]{e}")
 
 
 def main():

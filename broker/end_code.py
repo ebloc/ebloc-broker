@@ -203,7 +203,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
         except Exception as e:
-            log(f"E: {e}")
+            log(f"E: [g]{e}")
             sys.exit(1)
 
         self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address

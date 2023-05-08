@@ -354,7 +354,7 @@ if __name__ == "__main__":
     try:
         main()
     except QuietExit as e:
-        log(f"E: {e}")
+        log(f"E: [g]{e}")
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

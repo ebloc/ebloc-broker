@@ -147,7 +147,7 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
     except socket.error as e:
-        log(f"E: {e}")
+        log(f"E: [g]{e}")
         raise e
 
 
