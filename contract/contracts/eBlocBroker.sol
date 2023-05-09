@@ -78,12 +78,17 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         uint256 core = args.core[args.jobID];
         uint256 runTime = args.runTime[args.jobID];
         if (jobInfo.cacheCost > 0) { //: checking data transferring cost
-            gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
-            _refund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); // cache cost to refund
-            delete jobInfo.cacheCost; // prevents additional cacheCost to be requested, can request cache cost only one time
+            if (jobInfo.cacheCost > gain) {
+                gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
+                _refund = jobInfo.cacheCost - gain;
+            }
+            else {
+                gain = jobInfo.cacheCost;
+            }
+            delete jobInfo.cacheCost;
         }
-        // check data transferring cost
-        if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {
+
+        if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {  // check data transferring cost
             //: data transfer refund
             _refund = _refund.add(
                 info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
@@ -104,8 +109,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                 _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
                 delete jobInfo.dataTransferIn;
             }
-            // Prevents additional dataTransfer profit to be request for dataTransferOut
-            delete jobInfo.dataTransferOut;
         }
         gain = gain.add(
             uint256(info.priceCoreMin).mul(core.mul(args.elapsedTime)).add( // computationalCost
@@ -147,6 +150,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         if (_refund > 0) { // unused core and bandwidth is refunded back to the client
             _distributeTransfer(jobInfo.jobOwner, _refund);
         }
+
         _distributeTransfer(msg.sender, gain);  // transfer gained amount to the provider
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
         return;
@@ -801,7 +805,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         } // for-loop ended
         uint registerDataCostTemp = sum;
         // sum already contains the registered data cost fee
-        //: priceDataTransfer * (dataTransferIn + dataTransferOut)
         sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(args.dataTransferOut)));
         sum = sum.add(storageCost).add(cacheCost);
         return (sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp);

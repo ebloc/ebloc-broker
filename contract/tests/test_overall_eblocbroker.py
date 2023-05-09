@@ -746,7 +746,6 @@ def test_multiple_data():
         elapsed_time,
         job.cores,
         job.run_time,
-        False,
     ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
@@ -771,17 +770,7 @@ def test_multiple_data():
     append_gas_cost("setJobStateRunning", tx)
     mine(60 * elapsed_time / cfg.BLOCK_DURATION)
     end_ts = start_ts + 60 * elapsed_time
-    args = [
-        index,
-        job_id,
-        end_ts,
-        data_transfer[0],
-        data_transfer[1],
-        elapsed_time,
-        job.cores,
-        job.run_time,
-        False,
-    ]
+    args = [index, job_id, end_ts, data_transfer[0], data_transfer[1], elapsed_time, job.cores, job.run_time]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     append_gas_cost("processPayment", tx)
