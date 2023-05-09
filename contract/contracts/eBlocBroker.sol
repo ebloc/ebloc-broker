@@ -44,6 +44,119 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
     }
 
     /**
+       @dev
+       * Following function is a general-purpose mechanism for performing payment withdrawal
+       * by the provider provider and paying of unused core, cache, and dataTransfer usage cost
+       * back to the client
+       * @param key Uniqu ID for the given job.
+       * @param args The index of the job and ID of the job to identify for workflow {index, jobID, endTimestamp}.
+       * => elapsedTime Execution time in minutes of the completed job.
+       * @param resultIpfsHash Ipfs hash of the generated output files.
+       */
+    function processPayment(
+        string memory key,
+        Lib.JobIndexes memory args,
+        bytes32 resultIpfsHash
+    ) public whenProviderRunning {
+        require(args.endTimestamp <= block.timestamp, "Ahead now");
+        /* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
+           is not mapped to a job, this will throw automatically and revert all changes */
+        Lib.Provider storage provider = providers[msg.sender];
+        Lib.Status storage jobInfo = provider.jobStatus[key][args.index];
+        require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.runTime)));
+        Lib.Job storage job = jobInfo.jobs[args.jobID]; /* used as a pointer to a storage */
+        require(
+            job.stateCode == Lib.JobStateCodes.RUNNING && // job should be in running state if positive execution duration is provided
+                args.elapsedTime > 0 &&
+                args.elapsedTime <= args.runTime[args.jobID] && // provider cannot request more execution time of the job that is already requested
+                args.dataTransferIn <= jobInfo.dataTransferIn && // provider cannot request more than the job's given dataTransferIn
+                args.dataTransferOut <= jobInfo.dataTransferOut // provider cannot request more than the job's given dataTransferOut
+        );
+        Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
+        uint256 gain;
+        uint256 _refund;
+        uint256 core = args.core[args.jobID];
+        uint256 runTime = args.runTime[args.jobID];
+        if (jobInfo.cacheCost > 0) { //: checking data transferring cost
+            gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
+            if (jobInfo.cacheCost > gain) {
+                _refund = jobInfo.cacheCost - gain;
+            }
+            else {
+                gain = jobInfo.cacheCost;
+            }
+            delete jobInfo.cacheCost;
+        }
+
+        if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {  // check data transferring cost
+            //: data transfer refund
+            _refund = _refund.add(
+                info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
+            );
+            // Prevents additional cacheCost to be requested
+            delete jobInfo.dataTransferIn;
+        }
+
+        if (jobInfo.dataTransferOut > 0 && args.dataTransferOut != jobInfo.dataTransferOut) {
+            _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
+            if (jobInfo.cacheCost > 0) {
+                // If job cache is not used full refund for cache
+                _refund = _refund.add(jobInfo.cacheCost); // cacheCost for storage is already multiplied with priceCache
+                delete jobInfo.cacheCost;
+            }
+            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
+                // If job data transfer is not used full refund for cache
+                _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
+                delete jobInfo.dataTransferIn;
+            }
+        }
+        gain = gain.add(
+            uint256(info.priceCoreMin).mul(core.mul(args.elapsedTime)).add( // computationalCost
+                info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut))) // dataTransferCost
+            )
+        );
+        gain = gain.add(jobInfo.receivedRegisteredDataFee);
+        //: computationalCostRefund
+        _refund = _refund.add(info.priceCoreMin.mul(core.mul((runTime.sub(args.elapsedTime)))));
+        // require(gain.add(_refund) <= jobInfo.received); // UNCOMMENT
+        Lib.IntervalArg memory _interval;
+        _interval.startTimestamp = job.startTimestamp;
+        _interval.endTimestamp = uint32(args.endTimestamp);
+        _interval.availableCore = int32(info.availableCore);
+        _interval.core = int32(int256(core)); // int32(core);
+        if (provider.receiptList.overlapCheck(_interval) == 0) {
+            // Important to check already refunded job or not, prevents double spending
+            job.stateCode = Lib.JobStateCodes.REFUNDED;
+            _refund = jobInfo.received;
+            _refund.add(jobInfo.receivedRegisteredDataFee);
+            jobInfo.received = 0;
+            jobInfo.receivedRegisteredDataFee = 0;
+            // pay back newOwned(jobInfo.received) back to the requester, which is full refund
+            _distributeTransfer(jobInfo.jobOwner, _refund);
+            _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, _refund);
+            return;
+        }
+        if (job.stateCode == Lib.JobStateCodes.CANCELLED) {
+            // prevents double spending used as a reentrancy guard
+            job.stateCode = Lib.JobStateCodes.REFUNDED;
+        } else {
+            // prevents double spending used as a reentrancy guard
+            job.stateCode = Lib.JobStateCodes.COMPLETED;
+        }
+
+        // jobInfo.received = jobInfo.received.sub(gain.add(_refund));
+
+        jobInfo.receivedRegisteredDataFee = 0;
+        if (_refund > 0) { // unused core and bandwidth is refunded back to the client
+            _distributeTransfer(jobInfo.jobOwner, _refund);
+        }
+
+        _distributeTransfer(msg.sender, gain);  // transfer gained amount to the provider
+        _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
+        return;
+    }
+
+    /**
      * @dev Refund funds the complete amount to client if requested job is still
      * in the pending state or is not completed one hour after its required
      * time.  If the job is in the running state, it triggers LogRefund event on
@@ -102,116 +215,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         return true;
     }
 
-    /**
-       @dev
-       * Following function is a general-purpose mechanism for performing payment withdrawal
-       * by the provider provider and paying of unused core, cache, and dataTransfer usage cost
-       * back to the client
-       * @param key Uniqu ID for the given job.
-       * @param args The index of the job and ID of the job to identify for workflow {index, jobID, endTimestamp}.
-       * => elapsedTime Execution time in minutes of the completed job.
-       * @param resultIpfsHash Ipfs hash of the generated output files.
-       */
-    function processPayment(
-        string memory key,
-        Lib.JobIndexes memory args,
-        bytes32 resultIpfsHash
-    ) public whenProviderRunning {
-        require(args.endTimestamp <= block.timestamp, "Ahead now");
-        /* If "msg.sender" is not mapped on 'provider' struct or its "key" and "index"
-           is not mapped to a job, this will throw automatically and revert all changes */
-        Lib.Provider storage provider = providers[msg.sender];
-        Lib.Status storage jobInfo = provider.jobStatus[key][args.index];
-        require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.runTime)));
-        Lib.Job storage job = jobInfo.jobs[args.jobID]; /* used as a pointer to a storage */
-        require(
-            job.stateCode == Lib.JobStateCodes.RUNNING && // job should be in running state if positive execution duration is provided
-                args.elapsedTime > 0 &&
-                args.elapsedTime <= args.runTime[args.jobID] && // provider cannot request more execution time of the job that is already requested
-                args.dataTransferIn <= jobInfo.dataTransferIn && // provider cannot request more than the job's given dataTransferIn
-                args.dataTransferOut <= jobInfo.dataTransferOut // provider cannot request more than the job's given dataTransferOut
-        );
-        Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
-        uint256 gain;
-        uint256 _refund;
-        uint256 core = args.core[args.jobID];
-        uint256 runTime = args.runTime[args.jobID];
-        if (args.dataTransferIn > 0) {
-            // if dataTransferIn contains a positive value, then its the first submitted job
-            if (jobInfo.cacheCost > 0) { //: checking data transferring cost
-                gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
-                _refund = info.priceCache.mul(jobInfo.dataTransferIn.sub(args.dataTransferIn)); // cache cost to refund
-                require(gain.add(_refund) <= jobInfo.cacheCost);
-                delete jobInfo.cacheCost; // prevents additional cacheCost to be requested, can request cache cost only one time
-            }
-            // check data transferring cost
-            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {
-                //: data transfer refund
-                _refund = _refund.add(
-                    info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
-                );
-                // Prevents additional cacheCost to be requested
-                delete jobInfo.dataTransferIn;
-            }
-        }
-        if (jobInfo.dataTransferOut > 0 && args.endJob == true && args.dataTransferOut != jobInfo.dataTransferOut) {
-            _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
-            if (jobInfo.cacheCost > 0) {
-                // If job cache is not used full refund for cache
-                _refund = _refund.add(jobInfo.cacheCost); // cacheCost for storage is already multiplied with priceCache
-                delete jobInfo.cacheCost;
-            }
-            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
-                // If job data transfer is not used full refund for cache
-                _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
-                delete jobInfo.dataTransferIn;
-            }
-            // Prevents additional dataTransfer profit to be request for dataTransferOut
-            delete jobInfo.dataTransferOut;
-        }
-        gain = gain.add(
-            uint256(info.priceCoreMin).mul(core.mul(args.elapsedTime)).add( // computationalCost
-                info.priceDataTransfer.mul((args.dataTransferIn.add(args.dataTransferOut))) // dataTransferCost
-            )
-        );
-        gain = gain.add(jobInfo.receivedRegisteredDataFee);
-        //: computationalCostRefund
-        _refund = _refund.add(info.priceCoreMin.mul(core.mul((runTime.sub(args.elapsedTime)))));
-        require(gain.add(_refund) <= jobInfo.received);
-        Lib.IntervalArg memory _interval;
-        _interval.startTimestamp = job.startTimestamp;
-        _interval.endTimestamp = uint32(args.endTimestamp);
-        _interval.availableCore = int32(info.availableCore);
-        _interval.core = int32(int256(core)); // int32(core);
-        if (provider.receiptList.overlapCheck(_interval) == 0) {
-            // Important to check already refunded job or not, prevents double spending
-            job.stateCode = Lib.JobStateCodes.REFUNDED;
-            _refund = jobInfo.received;
-            _refund.add(jobInfo.receivedRegisteredDataFee);
-            jobInfo.received = 0;
-            jobInfo.receivedRegisteredDataFee = 0;
-            // pay back newOwned(jobInfo.received) back to the requester, which is full refund
-            _distributeTransfer(jobInfo.jobOwner, _refund);
-            _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, _refund);
-            return;
-        }
-        if (job.stateCode == Lib.JobStateCodes.CANCELLED) {
-            // prevents double spending used as a reentrancy guard
-            job.stateCode = Lib.JobStateCodes.REFUNDED;
-        } else {
-            // prevents double spending used as a reentrancy guard
-            job.stateCode = Lib.JobStateCodes.COMPLETED;
-        }
-        jobInfo.received = jobInfo.received.sub(gain.add(_refund));
-        jobInfo.receivedRegisteredDataFee = 0;
-        // unused core and bandwidth is refunded back to the client
-        if (_refund > 0) {
-            _distributeTransfer(jobInfo.jobOwner, _refund);
-        }
-        _distributeTransfer(msg.sender, gain);  // transfer gained amount to the provider
-        _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
-        return;
-    }
 
     function refundStorageDeposit(
         address provider,
@@ -569,19 +572,15 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         }
         require(args.priceBlockIndex == priceBlockIndex);
         Lib.ProviderInfo memory info = provider.info[priceBlockIndex];
-
         uint256 cost;
         uint256[3] memory tmp;
-        // tmp[0]: storageCost
-        // tmp[1]: cacheCost
-        // tmp[2]: refunded
-
         /* uint256 storageCost; */
         // uint256 refunded;
         // "storageDuration[0]" => As temp variable stores the calcualted cacheCost
         // "dataTransferIn[0]"  => As temp variable stores the overall dataTransferIn value,
         //                         decreased if there is caching for specific block
         // refunded => used as receivedRegisteredDataFee due to limit for local variables
+
         // sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp
         //  |          |            |          /         /
         (cost, dataTransferIn[0], tmp[0], tmp[1],    tmp[2]) = _calculateCacheCost(
@@ -593,8 +592,12 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             info
         );
         cost = cost.add(_calculateComputingCost(info, args.core, args.runTime));
+
+        // @args.jobPrice : paid
+        // @cost : calculated
         require(args.jobPrice >= cost);
         transfer(getOwner(), cost); // transfer cost to contract
+
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();
         jobInfo.cacheCost = tmp[1];
@@ -768,7 +771,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                 // temp used for returned bool value True or False
                 temp = _checkRegisteredData(args.cloudStorageID[i], registeredData);
                 if (temp == 0) {
-                    // If returned value of _checkRegisteredData is False move on to next condition
+                    // if returned value of _checkRegisteredData is False move on to next condition
                     if (jobSt.receivedBlock + jobSt.storageDuration < block.number) {
                         if (storageDuration[i] > 0) {
                             jobSt.receivedBlock = uint32(block.number);
@@ -790,7 +793,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                         // checks whether the user is owner of the data file
                         cacheCost = cacheCost.add(info.priceCache.mul(dataTransferIn[i]));
                     }
-                    // communication cost should be applied
+                    //: communication cost should be applied
                     _dataTransferIn = _dataTransferIn.add(dataTransferIn[i]);
                     // owner of the sourceCodeHash is also detected, first time usage
                     emit LogDataStorageRequest(args.provider, msg.sender, codeHash, storageInfo.received);
@@ -802,7 +805,6 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         } // for-loop ended
         uint registerDataCostTemp = sum;
         // sum already contains the registered data cost fee
-        //: priceDataTransfer * (dataTransferIn + dataTransferOut)
         sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(args.dataTransferOut)));
         sum = sum.add(storageCost).add(cacheCost);
         return (sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp);
@@ -945,12 +947,13 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             uint256,
             address,
             uint256,
+            uint256,
             uint256
         )
     {
         Lib.Status storage jobInfo = providers[provider].jobStatus[key][index];
         // Lib.Job storage job = jobInfo.jobs[jobID];
-        return (jobInfo.jobs[jobID], jobInfo.received, jobInfo.jobOwner, jobInfo.dataTransferIn, jobInfo.dataTransferOut);
+        return (jobInfo.jobs[jobID], jobInfo.received, jobInfo.jobOwner, jobInfo.dataTransferIn, jobInfo.cacheCost, jobInfo.dataTransferOut);
     }
 
     function getProviderPrices(

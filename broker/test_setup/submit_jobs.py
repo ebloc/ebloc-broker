@@ -258,11 +258,10 @@ def run_job(counter, cycleid) -> None:
             dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
             if IS_MINI_TEST:
                 dir_name = "LB07-bunny-sml"
-                yaml_cfg["config"]["data"]["data3"]["storage_hours"] = 1
             else:
                 dir_name = random.choice(dirs)
 
-            dir_name = "LB07-bunny-sml"
+            yaml_cfg["config"]["data"]["data3"]["storage_hours"] = 1
             yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets_dir / dir_name)
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
@@ -343,7 +342,7 @@ def main():
                 counter += 1
                 countdown(20)
 
-            sleep_duration = randint(300, 500)
+            sleep_duration = randint(240, 480)
             countdown(sleep_duration)
 
         log(f"#> total number_of_submitted_jobs={counter}")

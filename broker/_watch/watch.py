@@ -279,7 +279,7 @@ def main():
     if len(sys.argv) == 2:
         eth_address = sys.argv[1]
 
-    from_block = 20361560
+    from_block = 20375030
     watch(eth_address, from_block)
 
 

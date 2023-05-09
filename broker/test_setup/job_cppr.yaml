@@ -1,21 +1,21 @@
 config:
-  requester_address: '0xf6d9f88fa98d4dc427ffdb1bdf01860fd12c98c7'
-  provider_address: '0x4934a70ba8c1c3acfa72e809118bdd9048563a24'
+  requester_address: '0x378181ce7b07e8dd749c6f42772574441b20e35f'
+  provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
   source_code:
-    storage_id: ipfs_gpg
+    storage_id: ipfs
     cache_type: public
     path: ~/test_eblocbroker/run_cppr
     storage_hours: 0
   data:
     data1:
-      hash: 1bfca57fe54bc46ba948023f754521d6
+      hash: 050e6cc8dd7e889bf7874689f1e1ead6
     data2:
-      hash: 8f6faf6cfd245cae1b5feb11ae9eb3cf
+      hash: 4613abc322e8f2fdeae9a5dd10f17540
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/LB07-bunny-sml
+      path: /home/alper/test_eblocbroker/small/BL06-gargoyle-med
       storage_hours: 1
-      storage_id: ipfs_gpg
+      storage_id: ipfs
   data_transfer_out: 5
   jobs:
     job1:

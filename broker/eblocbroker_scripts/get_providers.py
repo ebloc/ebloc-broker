@@ -12,7 +12,7 @@ if __name__ == "__main__":
     try:
         providers = Ebb.get_providers()
         if len(providers) == 0:
-            log("E: There is no registered provider")
+            log("E: [green]There is no registered provider")
         else:
             log("providers:", "green")
 

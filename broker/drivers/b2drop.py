@@ -146,10 +146,25 @@ class B2dropClass(Storage):
     def _download_folder(self, results_folder_prev, folder_name):
         """Download corresponding folder from the B2DROP.
 
-        Always assumes job is submitted as .tar.gz file
+        Always assumes job is submitted as 'tar.gz' file
+
+        __ https://stackoverflow.com/a/6986302/2402577
+
+        Then the server isn't telling you the size for `Content-Length`.
+        Probably not.  If the server wanted to give you the size, it would use
+        Content-Length to do so.  Consider that the thing you're looking at
+        might not be a file with a defined size; it might be the the of some
+        program.  In that case, the only way to know the size is to download the
+        data and count the bytes.
+
+        #> Thanks.  I was looking for a way to predict the size before of the
+        file before download aiming if the size of the data is large I halt the
+        download process.  Maybe I can check the downloaded size while wget
+        actively downloads it, where add a download limit to wget, hence if
+        exceeds the limit stop the download process.
         """
         cached_tar_fn = f"{results_folder_prev}/{folder_name}.tar.gz"
-        log("#> downloading [g]output.zip[/g] for:", end="")
+        log("#> downloading [g]output.zip[/g] for: ", end="")
         log(f"{folder_name} => {cached_tar_fn} ", "bold")
         key = folder_name
         share_key = f"{folder_name}_{self.requester_id[:16]}"
@@ -169,7 +184,7 @@ class B2dropClass(Storage):
                         "--show-progres",
                         "--progress=bar:force:noscroll",
                     ]
-                    log(" ".join(cmd), is_code=True, color="yellow")
+                    log(" ".join(cmd), is_code=True, color="pink")
                     run(cmd)
                     size_of_the_downloaded_file = calculate_size(download_fn)
                     self.data_transfer_in_to_download_mb += size_of_the_downloaded_file
@@ -222,7 +237,7 @@ class B2dropClass(Storage):
 
                     return config.oc.file_info(fn).get_size()
                 except Exception as e:
-                    log(f"E: {e}")
+                    log(f"E: [g]{e}")
                     _list = config.oc.list(".")
                     for path in _list:
                         if folder_name in path.get_name() and folder_name != path.get_name:
@@ -230,7 +245,7 @@ class B2dropClass(Storage):
 
                 return config.oc.file_info(fn).get_size()
 
-            log(f"E: {e}")
+            log(f"E: [g]{e}")
             raise Exception("failed all the attempts to get file info at B2DROP") from e
 
     # def total_size_to_download(self) -> None:
@@ -298,7 +313,7 @@ class B2dropClass(Storage):
                     log(f"#> [g]{share_key}[/g] is added into mongoDB {ok()}")
             except Exception as e:
                 print_tb(e)
-                log(f"E: {e}")
+                log(f"E: [g]{e}")
 
         for attempt in range(cfg.RECONNECT_ATTEMPTS):
             try:
@@ -331,7 +346,7 @@ class B2dropClass(Storage):
                         self.accept_flag += 1
                     except Exception as e:
                         if "warning: " not in str(e):
-                            log(f"E: {e}")
+                            log(f"E: [g]{e}")
                         else:
                             log(str(e))
 

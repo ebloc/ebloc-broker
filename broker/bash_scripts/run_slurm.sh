@@ -92,7 +92,9 @@ ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
 
 echo ""
 sinfo | grep idle
-sleep 2
+squeue
+echo "Sleeping for 5 seconds..."
+sleep 5
 squeue
 
 #: verbose

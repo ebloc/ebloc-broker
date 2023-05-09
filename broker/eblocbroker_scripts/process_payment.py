@@ -38,6 +38,7 @@ def process_payment(
         "pink",
         is_code=True,
         h=False,
+        width=100,
     )
 
     for cloud_storage_id in cloud_storage_ids:
@@ -60,7 +61,7 @@ def process_payment(
         else:
             result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
 
-        final_job = True  # true only for the final job
+        # final_job = True  # true only for the final job
         args = [
             int(index),
             int(job_id),
@@ -69,8 +70,8 @@ def process_payment(
             int(data_transfer_out),
             int(elapsed_time),
             core,
-            run_time,
-            final_job,
+            run_time
+            # final_job,
         ]
         tx = self._process_payment(job_key, args, result_ipfs_hash)
     except Exception as e:
@@ -123,7 +124,7 @@ def main():
             core,
             run_time,
         )
-        log(f"tx_hash={tx_hash}", "bold")
+        log(f"tx_hash={tx_hash}")
     except Exception as e:
         if "reverted transaction" in str(e):
             log(f"E: [green]{e}")

@@ -167,7 +167,7 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     mine(5)
     data_transfer_in = 0
     data_transfer_out = 0
-    args = [job.index, job._id, end_timestamp, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1], True]
+    args = [job.index, job._id, end_timestamp, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1]]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     # log(dict(tx.events["LogProcessPayment"]))
 

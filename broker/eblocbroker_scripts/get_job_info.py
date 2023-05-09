@@ -199,7 +199,7 @@ def get_job_info(
     try:
         provider = cfg.w3.toChecksumAddress(provider)
         try:
-            job, received, job_owner, data_transfer_in, data_transfer_out = self._get_job_info(
+            job, received, job_owner, data_transfer_in, _cacheCost, data_transfer_out = self._get_job_info(
                 provider, job_key, int(index), int(job_id)
             )
         except Exception as e:
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     try:
         main()
     except QuietExit as e:
-        log(f"E: {e}")
+        log(f"E: [g]{e}")
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:

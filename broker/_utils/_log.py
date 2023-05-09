@@ -280,6 +280,7 @@ def log(
     _ok=False,
     back=0,
     end="\n",
+    width=120,
 ):
     """Log output with the own settings.
 
@@ -342,10 +343,10 @@ def log(
         else:
             base_str = " \ \n    "
 
-        text = base_str.join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
+        text = base_str.join(textwrap.wrap(text, width, break_long_words=False, break_on_hyphens=False))
 
     if is_wrap:
-        text = "\n".join(textwrap.wrap(text, 120, break_long_words=False, break_on_hyphens=False))
+        text = "\n".join(textwrap.wrap(text, width, break_long_words=False, break_on_hyphens=False))
 
     if is_write and IS_WRITE:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:

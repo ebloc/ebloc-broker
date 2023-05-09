@@ -488,38 +488,37 @@ class JobPrices:
             ):
                 if is_verbose:
                     log(f"** for {bytes32_to_ipfs(code_hash)} cost of storage is not paid")
-            else:
-                if self.job.data_prices_set_block_numbers[idx] > 0 or self.job.storage_ids[idx] == StorageID.NONE:
-                    if self.job.data_prices_set_block_numbers[idx] == 0:
-                        registered_data_bn_list = self.Ebb.get_registered_data_bn(self.job.provider, code_hash)
-                        if bn > registered_data_bn_list[-1]:
-                            data_fee_set_bn = registered_data_bn_list[-1]
-                        else:
-                            data_fee_set_bn = registered_data_bn_list[-2]
+            elif self.job.data_prices_set_block_numbers[idx] > 0 or self.job.storage_ids[idx] == StorageID.NONE:
+                if self.job.data_prices_set_block_numbers[idx] == 0:
+                    registered_data_bn_list = self.Ebb.get_registered_data_bn(self.job.provider, code_hash)
+                    if bn > registered_data_bn_list[-1]:
+                        data_fee_set_bn = registered_data_bn_list[-1]
                     else:
-                        data_fee_set_bn = self.job.data_prices_set_block_numbers[idx]
+                        data_fee_set_bn = registered_data_bn_list[-2]
+                else:
+                    data_fee_set_bn = self.job.data_prices_set_block_numbers[idx]
 
-                    # if true, registered data's price should be considered for storage
-                    (data_price, *_) = self.Ebb.get_registered_data_price(
-                        self.job.provider,
-                        code_hash,
-                        data_fee_set_bn,
+                # if true, registered data's price should be considered for storage
+                (data_price, *_) = self.Ebb.get_registered_data_price(
+                    self.job.provider,
+                    code_hash,
+                    data_fee_set_bn,
+                )
+                self.storage_cost += data_price
+                self.registered_data_cost_list[_code_hash] = data_price
+                self.registered_data_cost_list_usd[_code_hash] = self.to_usd(data_price, is_color=False)
+                self.registered_data_cost += data_price
+            elif not ds.received_deposit:  # and (received_block + storage_duration < w3.eth.block_number)
+                self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
+                if self.job.storage_hours[idx] > 0:
+                    self.storage_cost += (
+                        self.price_storage * self.job.data_transfer_ins[idx] * self.job.storage_hours[idx]
                     )
-                    self.storage_cost += data_price
-                    self.registered_data_cost_list[_code_hash] = data_price
-                    self.registered_data_cost_list_usd[_code_hash] = self.to_usd(data_price, is_color=False)
-                    self.registered_data_cost += data_price
-                elif not ds.received_deposit:  # and (received_block + storage_duration < w3.eth.block_number)
-                    self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
-                    if self.job.storage_hours[idx] > 0:
-                        self.storage_cost += (
-                            self.price_storage * self.job.data_transfer_ins[idx] * self.job.storage_hours[idx]
-                        )
-                    else:
-                        self.cache_cost += self.price_cache * self.job.data_transfer_ins[idx]
+                else:
+                    self.cache_cost += self.price_cache * self.job.data_transfer_ins[idx]
 
-        self.data_transfer_in_cost = self.price_data_transfer * self.data_transfer_in_sum
-        self.data_transfer_out_cost = self.price_data_transfer * self.job.data_transfer_out
+        self.data_transfer_in_cost = self.data_transfer_in_sum * self.price_data_transfer
+        self.data_transfer_out_cost = self.job.data_transfer_out * self.price_data_transfer
         self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
 
     def to_usd(self, amount, is_color=True) -> str:

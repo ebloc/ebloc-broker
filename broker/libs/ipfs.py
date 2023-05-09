@@ -81,7 +81,7 @@ class Ipfs:
         #     check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=DEVNULL)
         #     return True
         # except:
-        #     # log(f"E: {e}")
+        #     # log(f"E: [g]{e}")
         #     return False
         # TODO: check may return true even its not exist
 
@@ -226,7 +226,7 @@ class Ipfs:
                 else:
                     log()
                     if "failure: dial to self attempted" in e:
-                        log(f"E: {e}")
+                        log(f"E: [g]{e}")
                         if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
                             raise QuietExit
                     else:

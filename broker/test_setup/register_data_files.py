@@ -64,9 +64,9 @@ def register_data_files(data_price, hashes):
 
 
 def main():
-    # register_data_files(data_price=Cent("0.0002 usd"), hashes=hashes_medium_1)
-    # register_data_files(data_price=Cent("0.0003 usd"), hashes=hashes_medium_2)
-    # time.sleep(2)
+    register_data_files(data_price=Cent("0.0002 usd"), hashes=hashes_medium_1)
+    register_data_files(data_price=Cent("0.0003 usd"), hashes=hashes_medium_2)
+    time.sleep(2)
     try:
         print_prices(hashes_medium_1)
         print()

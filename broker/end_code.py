@@ -108,7 +108,7 @@ class B2drop(Common):
 
         try:
             _data_transfer_out = calculate_size(self.patch_file)
-            log(f"==> {br(code_hash)}.data_transfer_out={_data_transfer_out}MB")
+            log(f"==> {br(code_hash)}.data_transfer_out={_data_transfer_out} MB")
             self.data_transfer_out += _data_transfer_out
             eudat.upload_results(
                 self.encoded_share_tokens[code_hash], self.patch_upload_fn, self.patch_dir, max_retries=5
@@ -203,7 +203,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
         except Exception as e:
-            log(f"E: {e}")
+            log(f"E: [g]{e}")
             sys.exit(1)
 
         self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
@@ -227,7 +227,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * job_key={self.job_key}")
         log(f" * index={self.index}")
         log(f" * storage_ids={self.storage_ids}")
-        log(f" * folder_name=[white]{self.folder_name}")
+        log(f" * [yellow]folder_name[/yellow]={self.folder_name}", h=False)
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
@@ -274,7 +274,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 _share_token = share_ids[key]["share_token"]
                 encoded_value = base64.b64encode((f"{_share_token}:").encode("utf-8")).decode("utf-8")
 
-            log(f"## shared_tokens: {key} => {value['share_token']} | encoded={encoded_value}")
+            log(f"## shared_tokens: {key} => {value['share_token']} | encoded=[m]{encoded_value}", h=False)
 
     def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""
@@ -554,6 +554,10 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         log(f"finalized_elapsed_time={self.elapsed_time}")
         log("==> [yellow]job_info=", end="")
+
+        for item in ["processPayment_bn", "processPayment_gas_used", "result_ipfs_hash"]:
+            del self.job_info[item]
+
         log({k: v for k, v in self.job_info.items() if v is not None})
         self.get_cloud_storage_class(0).initialize(self)
         self.upload_driver()
