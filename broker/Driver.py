@@ -156,9 +156,10 @@ def tools(bn):
                 gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
                 _ipfs_address = get_ipfs_address()
                 if provider_info_contract["ipfs_address"] != _ipfs_address:
-                    log("warning: [m]ipfs_address[/m] does not match with the registered info.")
-                    log(f"\t{provider_info_contract['ipfs_address']} != {_ipfs_address}")
-                    flag_error = True
+                    if provider_info_contract["ipfs_address"].split("p2p", 1)[1] != _ipfs_address.split("p2p", 1)[1]:
+                        log("warning: [m]ipfs_address[/m] does not match with the registered info.")
+                        log(f"\t{provider_info_contract['ipfs_address']} != {_ipfs_address}")
+                        flag_error = True
 
                 if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
                     log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
@@ -527,6 +528,9 @@ def _run_driver(given_bn, lock):
         except zc.lockfile.LockError:
             log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
         except Terminate as e:
+            sleep_dur = 20
+            log(f"#> Sleeping for {sleep_dur} seconds before termination")
+            time.sleep(sleep_dur)
             terminate(str(e), lock)
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):

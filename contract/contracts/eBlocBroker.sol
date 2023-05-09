@@ -78,7 +78,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         uint256 core = args.core[args.jobID];
         uint256 runTime = args.runTime[args.jobID];
         if (jobInfo.cacheCost > 0) { //: checking data transferring cost
-            gain = info.priceCache.mul(args.dataTransferIn); // cache cost to receive
+            gain = info.priceCache.mul(args.dataTransferIn); // cache payment to receive
             if (jobInfo.cacheCost > gain) {
                 _refund = jobInfo.cacheCost - gain;
             }

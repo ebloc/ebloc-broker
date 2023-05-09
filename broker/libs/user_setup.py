@@ -76,7 +76,7 @@ def user_add(user_address, basedir, slurm_user):
     add_user_to_slurm(user_name)
     if username_check(user_name):
         run(["sudo", "useradd", "-d", user_dir, "-m", user_name, "--shell", "/bin/bash"])
-        log(f"{user_address} => {user_name}) added as user", "yellow")
+        log(f"[pink]{user_address}[/pink] => [yellow]{user_name}[/yellow]) added as user", h=False)
         try:
             set_folder_permission(user_dir, user_name, slurm_user)
             add_user_to_slurm(user_name)

@@ -16,7 +16,7 @@ import traceback
 from contextlib import suppress
 from enum import IntEnum
 from subprocess import PIPE, Popen, check_output
-
+from broker._utils.tools import bytes_to_mb
 from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
@@ -631,8 +631,10 @@ def compress_folder(folder_path, is_exclude_git=False):
         tar_hash = generate_md5sum(tar_base)
         tar_fn = f"{tar_hash}.tar.gz"
         shutil.move(tar_base, tar_fn)
-        log(f"==> created_tar_fn={dir_path}/{tar_fn}")
+        fn = f"{dir_path}/{tar_fn}"
         log(f"==> tar_hash={tar_hash}")
+        log(f"==> created_tar_fn={fn}")
+        log(f"==> tar_size={bytes_to_mb(getsize(fn))} MB")
 
     return tar_hash, f"{dir_path}/{tar_fn}"
 

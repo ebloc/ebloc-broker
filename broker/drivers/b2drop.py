@@ -168,9 +168,13 @@ class B2dropClass(Storage):
         log(f"{folder_name} => {cached_tar_fn} ", "bold")
         key = folder_name
         share_key = f"{folder_name}_{self.requester_id[:16]}"
-        for attempt in range(1):
+        for attempt in range(5):
             try:
-                log("==> Trying [blue]wget[/blue] approach...")
+                if attempt == 0:
+                    log("==> Trying [blue]wget[/blue] approach...")
+                else:
+                    log(f"==> Trying [blue]wget[/blue] approach, attempt={attempt}...")
+
                 token = self.share_id[share_key]["share_token"]
                 if token:
                     download_fn = f"{cached_tar_fn.replace('.tar.gz', '')}_{self.requester_id}.download"
@@ -197,14 +201,19 @@ class B2dropClass(Storage):
                     # TODO: if Folder contains zipped file like .tar.gz unzip that too // investigate
                     log(f"## Download datafile from [blue]B2DROP[/blue] {ok()}")
                     return
-            except:
+            except Exception as e:
+                print_tb(e)
                 log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
+                log("#> Sleeping for 30 seconds")
+                time.sleep(30)
+                """Since config.oc.get_file is not mounted in current test
                 if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_fn):
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(ok())
                     return
                 else:
                     log(f"E: Something is wrong, oc could not retrieve the file [attempt:{attempt}]")
+                """
 
         raise Exception("b2drop download error")
 

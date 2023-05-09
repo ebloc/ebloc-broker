@@ -1,5 +1,35 @@
 #!/bin/bash
 
+ipfs_update () {
+    CURRENT_DIR=$PWD
+    version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
+    ipfs_current_version=""
+    command -v ipfs &>/dev/null
+    if [ $? -eq 0 ]; then
+        # killall ipfs &>/dev/null
+        ipfs_current_version=$(ipfs version | awk '{ print $3 }')
+        # echo ipfs_current_version=v$ipfs_current_version
+        if [[ "$ipfs_current_version" == "$version" ]]; then
+            echo "Already have version v"$version" for ipfs installed, skipping."
+        else
+            killall ipfs &>/dev/null
+            echo "version_to_download=v"$version
+            cd /tmp
+            arch=$(dpkg --print-architecture)
+            wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
+            tar -xvf "go-ipfs_v"$version"_linux-"$arch".tar.gz"
+            cd go-ipfs
+            make install
+            sudo ./install.sh
+            cd ..
+            rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
+            rm -rf go-ipfs/
+            ipfs version
+        fi
+        cd $CURRENT_DIR
+    fi
+}
+
 iterative_clean_gdrive () {
     for i in `gpg --list-keys --with-colons --fingerprint | sed -n 's/^fpr:::::::::\([[:alnum:]]\+\):/\1/p'`; do
         gpg --batch --delete-key "$i" 2>/dev/null
@@ -12,6 +42,8 @@ clean_gdrive () {
     echo "[  OK  ]"
     iterative_clean_gdrive
 }
+
+ipfs_update
 
 #if [[ "$EUID" -eq 0 ]]; then
 #    echo "This script must be run as non-root. Please run without 'sudo'."

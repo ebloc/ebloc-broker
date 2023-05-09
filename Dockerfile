@@ -110,7 +110,7 @@ RUN brownie init \
 
 ## finally
 RUN ipfs version \
- && ipfs init \
+ && ipfs init --profile=lowpower \
  && ipfs config Reprovider.Strategy roots \
  && ipfs config Routing.Type none \
  # && ganache --version \

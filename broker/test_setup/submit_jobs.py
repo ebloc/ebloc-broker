@@ -130,7 +130,7 @@ def create_cppr_job_script(idx):
     f.write("current_date=$(LANG=en_us_88591; date)\n")
     f.write(f"DATA_HASH='{hash_medium_data_0}'\n")
     f.write("DATA1_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("echo '=================== 1 =================== '$current_date > output.log\n")
+    f.write("echo '=================== 0 =================== '$current_date > output.log\n")
     f.write("find $DATA1_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
@@ -139,7 +139,7 @@ def create_cppr_job_script(idx):
     f.write(f"DATA_HASH='{hash_medium_data}'\n")
     f.write("DATA2_DIR='../data_link/'$DATA_HASH'/'\n")
     f.write("current_date=$(LANG=en_us_88591; date)\n")
-    f.write("echo '=================== 2 =================== '$current_date >> output.log\n")
+    f.write("echo '=================== 1 =================== '$current_date >> output.log\n")
     f.write("find $DATA2_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
@@ -150,7 +150,7 @@ def create_cppr_job_script(idx):
     f.write("DATA_HASH='change_folder_hash'\n")
     f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
     f.write("    DATA3_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("    echo '=================== 3 =================== '$current_date >> output.log\n")
+    f.write("    echo '=================== 2 =================== '$current_date >> output.log\n")
     f.write("    find $DATA3_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("    do\n")
     f.write("        echo $file >> output.log\n")
@@ -304,8 +304,9 @@ def main():
     if "gdrive" in storage_ids:
         check_gdrive_user()
 
-    console_ruler("test session starts", color="white")
-    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')} -- block_number={Ebb.get_block_number()}", h=False)
+    bn = Ebb.get_block_number()
+    console_ruler(f"test session starts -- bn={bn}", color="white")
+    log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}", h=False)
     if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
 

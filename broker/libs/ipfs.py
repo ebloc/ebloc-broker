@@ -17,7 +17,17 @@ from broker._utils.tools import _remove, constantly_print_popen, handler, log, p
 from broker.config import env
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.lib import subprocess_call
-from broker.utils import _try, compress_folder, is_ipfs_on, popen_communicate, question_yes_no, raise_error, run, untar
+from broker.utils import (
+    _try,
+    compress_folder,
+    is_ipfs_on,
+    popen_communicate,
+    question_yes_no,
+    raise_error,
+    run,
+    untar,
+    start_ipfs_daemon,
+)
 
 
 class Ipfs:
@@ -152,15 +162,13 @@ class Ipfs:
                 is_delete = True
             except Exception as e:
                 print_tb(e)
-                sys.exit(1)
         else:
             if os.path.isfile(target):
                 encrypt_target = target
                 encrypted_file_target = f"{target}.gpg"
                 is_delete = True
             else:
-                log(f"{target} does not exist")
-                sys.exit(1)
+                log(f"E: {target} does not exist")
 
         if os.path.isfile(encrypted_file_target):
             log(f"## gpg_file: {encrypted_file_target} is already created")
@@ -208,7 +216,9 @@ class Ipfs:
     def swarm_connect(self, ipfs_address: str, is_verbose=False):
         """Swarm connect into the ipfs node."""
         if not is_ipfs_on():
-            raise IpfsNotConnected
+            start_ipfs_daemon()
+            if is_ipfs_on():
+                raise IpfsNotConnected
 
         # TODO: check is valid IPFS id
         try:
@@ -252,8 +262,11 @@ class Ipfs:
         This function *may* run for an indetermined time. Returns a dict with the
         size of the block with the given hash.
         """
-        if _is_ipfs_on and not is_ipfs_on():
-            raise IpfsNotConnected
+        if _is_ipfs_on:
+            if not is_ipfs_on():
+                start_ipfs_daemon()
+                if is_ipfs_on():
+                    raise IpfsNotConnected
 
         msg = f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s "
         with Halo(text=msg, spinner="line", placement="right"):
@@ -264,7 +277,9 @@ class Ipfs:
     def is_hash_exists_online(self, ipfs_hash: str, ipfs_address=None, is_verbose=False):
         log(f"## attempting to check IPFS file [g]{ipfs_hash}[/g] ... ")
         if not is_ipfs_on():
-            raise IpfsNotConnected
+            start_ipfs_daemon()
+            if is_ipfs_on():
+                raise IpfsNotConnected
 
         if not cfg.IS_THREADING_ENABLED:
             signal.signal(signal.SIGALRM, handler)
@@ -293,7 +308,9 @@ class Ipfs:
 
     def get(self, ipfs_hash, path, is_storage_paid=False):
         if not is_ipfs_on():
-            raise IpfsNotConnected
+            start_ipfs_daemon()
+            if is_ipfs_on():
+                raise IpfsNotConnected
 
         output = constantly_print_popen(["ipfs", "get", ipfs_hash, f"--output={path}"])
         log(output)
@@ -304,7 +321,9 @@ class Ipfs:
 
     def get_cumulative_size(self, ipfs_hash: str):
         if not is_ipfs_on():
-            raise IpfsNotConnected
+            start_ipfs_daemon()
+            if is_ipfs_on():
+                raise IpfsNotConnected
 
         output = self.stat(ipfs_hash)
         if output:
@@ -350,7 +369,9 @@ class Ipfs:
     def connect_to_bootstrap_node(self):
         """Connect into return addresses of the currently connected peers."""
         if not is_ipfs_on():
-            raise IpfsNotConnected
+            start_ipfs_daemon()
+            if is_ipfs_on():
+                raise IpfsNotConnected
 
         # cmd = ["ipfs", "bootstrap", "list"]
         # output = run(cmd)

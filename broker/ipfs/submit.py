@@ -75,7 +75,7 @@ def _ipfs_add(job, target, idx, is_verbose=False):
         run(["ipfs", "refs", ipfs_hash])
     except Exception as e:
         print_tb(e)
-        sys.exit(1)
+        raise e
 
     if idx == 0:
         job.key = ipfs_hash

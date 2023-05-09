@@ -33,8 +33,7 @@ def appy_patch(base_dir, patch_fn):
     diff_file_name = f"{base_dir}/{base_name}"
     if not os.path.isfile(diff_file_name):
         if not os.path.isfile(patch_file):
-            print(f"E: {patch_file} file does not exist")
-            sys.exit(1)
+            raise Exception(f"E: {patch_file} file does not exist")
 
         if patch_file.endswith(".diff.gz"):
             extract_gzip(patch_file)
@@ -68,8 +67,6 @@ if __name__ == "__main__":
         "patch~a4fb77ea35ea6dfeed7aa300879a73b76268c136~QmTDHuL6HPC6WMWSRHwHmboasfWsrjpLJEvh9D9pUuRqiy~11.diff.gz"
     )
     # main(base_dir, patch_fn)
-    #
-
     ipfs_hash = ""
     if len(sys.argv) == 2:
         ipfs_hash = sys.argv[1]

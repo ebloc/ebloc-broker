@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.errors import IpfsNotConnected
 import base64
 import getpass
 import os
@@ -303,6 +304,8 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log(f"==> result_ipfs_hash={self.result_ipfs_hash}")
             ipfs.pin(self.result_ipfs_hash)
             data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
+        # except IpfsNotConnected:
+        #     breakpoint()  # DEBUG
         except Exception as e:
             print_tb(e)
             raise e

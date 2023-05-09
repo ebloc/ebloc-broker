@@ -28,19 +28,39 @@ open_port_4001 () {  # ufw does not work on digital-ocean
     sudo nmap localhost
 }
 
-install_ipfs_updater() {
-    cd ~/git
-    wget https://dist.ipfs.tech/ipfs-update/v1.9.0/ipfs-update_v1.9.0_linux-amd64.tar.gz
-    tar -xvzf ipfs-update_v1.9.0_linux-amd64.tar.gz
-    cd ipfs-update
-    sudo bash install.sh
-    ipfs-update --version
+ipfs_update () {
+    CURRENT_DIR=$PWD
+    version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | grep -oP 'Release v\K.*?(?= )' | head -n1)
+    ipfs_current_version=""
+    command -v ipfs &>/dev/null
+    if [ $? -eq 0 ]; then
+        # killall ipfs &>/dev/null
+        ipfs_current_version=$(ipfs version | awk '{ print $3 }')
+        # echo ipfs_current_version=v$ipfs_current_version
+        if [[ "$ipfs_current_version" == "$version" ]]; then
+            echo "Already have version v"$version" for ipfs installed, skipping."
+        else
+            killall ipfs &>/dev/null
+            echo "version_to_download=v"$version
+            cd /tmp
+            arch=$(dpkg --print-architecture)
+            wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
+            tar -xvf "go-ipfs_v"$version"_linux-"$arch".tar.gz"
+            cd go-ipfs
+            make install
+            sudo ./install.sh
+            cd ..
+            rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
+            rm -rf go-ipfs/
+            ipfs version
+        fi
+        cd $CURRENT_DIR
+    fi
 }
 
 install_ipfs () {
     ipfs version && return
     #
-    install_ipfs_updater
     sudo systemctl start firewalld
     sudo systemctl enable firewalld
     sudo firewall-cmd --add-port=4001/tcp --permanent
@@ -48,35 +68,12 @@ install_ipfs () {
     sudo firewall-cmd --list-all
     sudo nmap localhost
 
-    ipfs_current_version=""
-    command -v ipfs &>/dev/null
-    if [ $? -eq 0 ]; then
-        killall ipfs &>/dev/null
-        ipfs_current_version=$(ipfs version | awk '{ print $3 }')
-        echo ipfs_current_version=v$ipfs_current_version
-    fi
-    version=$(curl -L -s https://github.com/ipfs/go-ipfs/releases/latest | \
-                  grep -oP 'Release v\K.*?(?= )' | head -n1)
-    echo "version_to_download=v"$version
-    if [[ "$ipfs_current_version" == "$version" ]]; then
-        echo "## Latest version is already downloaded"
-    else
-        cd /tmp
-        arch=$(dpkg --print-architecture)
-        wget "https://dist.ipfs.io/go-ipfs/v"$version"/go-ipfs_v"$version"_linux-"$arch".tar.gz"
-        tar -xvf "go-ipfs_v"$version"_linux-"$arch".tar.gz"
-        cd go-ipfs
-        make install
-        sudo ./install.sh
-        cd ../
-        rm -f "go-ipfs_v"$version"_linux-"$arch".tar.gz"
-        rm -rf go-ipfs/
-        ipfs version
-        sudo sysctl -w net.core.rmem_max=2500000
-        ipfs init --profile=server,badgerds
-        ipfs config Reprovider.Strategy roots
-        ipfs config Routing.Type none
-    fi
+    ipfs_update
+
+    sudo sysctl -w net.core.rmem_max=2500000
+    ipfs init --profile=server,badgerds
+    ipfs config Reprovider.Strategy roots
+    ipfs config Routing.Type none
 }
 
 sudo add-apt-repository ppa:git-core/ppa -y
