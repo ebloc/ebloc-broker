@@ -79,7 +79,7 @@ To Run
 
 .. code:: bash
 
-   parity --warp --geth --force-ui --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --jsonrpc-cors all --author "0x75..." --unlock $COINBASE --password /home/ubuntu/EBloc/password.txt
+   parity --warp --geth --force-ui --chain parity.json --network-id 23422 --reserved-peers myPrivateNetwork.txt --jsonrpc-apis web3,eth,net,parity,parity_accounts,traces,rpc,parity_set --jsonrpc-cors all --author "0x75..." --unlock $COINBASE --password ~/EBloc/password.txt
 
 To attach ``geth`` console to ``Parity`` do: ``geth attach``
 

@@ -144,9 +144,9 @@ To check your account using ``geth``:
 
    [geth]> primary = eth.accounts[0]
    "0x42760ddded01a938666a34444e478b710d43cb5a"]
-   [geth] web3.fromWei(web3.eth.getBalance(primary));
+   [geth] web3.fromWei(web3.eth.getBalance(primary), "gwei");
    0                             //Your balance will increase when you mine.
-   [geth]> web3.fromWei(web3.eth.getBalance("0xda1e61e853bb8d63b1426295f59cb45a34425b63"));
+   [geth]> web3.fromWei(web3.eth.getBalance("0xda1e61e853bb8d63b1426295f59cb45a34425b63"), "gwei");
    46221.847517764296887374      //This is the some account active on the Blockchain. If you are connected into eBloc, you should see it.
 
 If you would like to start your miner, just type following inside

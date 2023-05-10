@@ -14,14 +14,14 @@ $HOME/ebloc-broker/broker/_daemons/ganache.py 8547
 # -s -v  // verbose
 # pytest tests --capture=sys -s -x -k "test_test3" --disable-pytest-warnings
 if [ $TEST_ALL -eq 1 ]; then
-    pytest tests -s -x -vv --disable-pytest-warnings --log-level=INFO  # tests all cases
+    pytest tests -s -x --disable-pytest-warnings --log-level=INFO -v --tb=line # tests all cases
 else
     #: gives priority
-    # pytest tests --capture=sys -s -x -k " test_simple_submit" --disable-pytest-warnings
-    pytest tests --capture=sys -s -x -k "test_cost" --disable-pytest-warnings -vv
+    # pytest tests --capture=sys -s -x -k " test_simple_submit" --disable-pytest-warnings -v --tb=line
+    pytest tests --capture=sys -s -x -k "test_cost" --disable-pytest-warnings -vv # --tb=line
 
-    # pytest tests --capture=sys -s -x -k "test_overall_eblocbroker" --disable-pytest-warnings -vv
-    # pytest tests --capture=sys -s -x -k "test_transfer" --disable-pytest-warnings
-    # pytest tests --capture=sys -s -x -k "test_receive_registered_data_deposit" --disable-pytest-warnings
+    # pytest tests --capture=sys -s -x -k "test_overall_eblocbroker" --disable-pytest-warnings -v --tb=line
+    # pytest tests --capture=sys -s -x -k "test_transfer" --disable-pytest-warnings -v --tb=line
+    # pytest tests --capture=sys -s -x -k "test_receive_registered_data_deposit" --disable-pytest-warnings -v --tb=line
 fi
 rm -rf reports/

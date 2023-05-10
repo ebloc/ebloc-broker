@@ -1,9 +1,13 @@
 #!/bin/bash
 
-wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
-mv geth.md source/geth.md
-cp $HOME/ebloc-broker/README.md ~/ebloc-broker/docs/convert/source/readme.md
-./convert_md_2_rst.py
+DIR=~/ebloc-broker/
+org-ruby --translate markdown $DIR/README.org > $DIR/docs/convert/source/readme.md
 
-mv source/readme.rst ../quickstart.rst
-mv source/geth.rst   ../connect.rst
+
+# wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
+# mv geth.md source/geth.md
+# cp $HOME/ebloc-broker/README.md ~/ebloc-broker/docs/convert/source/readme.md
+# ./convert_md_2_rst.py
+
+# mv source/readme.rst ../quickstart.rst
+# mv source/geth.rst   ../connect.rst

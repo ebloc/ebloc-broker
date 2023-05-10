@@ -18,6 +18,7 @@ import os
 # -------
 import sphinx_rtd_theme
 import sys
+from typing import Dict, List
 
 # if extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -32,7 +33,8 @@ import sys
 # add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx_rtd_dark_mode"]
+# extensions: List = ["sphinx.ext.intersphinx"]
+# extensions = ["sphinx_rtd_dark_mode"]
 
 # add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

@@ -47,19 +47,4 @@ Response: {
   "error_description": "Token has been expired or revoked."
 }
 
-** TODO  ipfs lock
-#+begin_src bash
-Exception in thread 44d29fef9df148628e2b6ee50b695866:
-Traceback (most recent call last):
-  File "/usr/lib/python3.8/threading.py", line 932, in _bootstrap_inner
-    self.run()
-  File "/usr/lib/python3.8/threading.py", line 870, in run
-    self._target(*self._args, **self._kwargs)
-  File "/home/alper/ebloc-broker/broker/drivers/ipfs.py", line 70, in run
-    log(f"==> is_ipfs_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
-  File "/home/alper/ebloc-broker/broker/libs/ipfs.py", line 72, in is_hash_locally_cached
-    ipfs_refs_local = run(["ipfs", "refs", "local"]).split("\n")
-  File "/home/alper/ebloc-broker/broker/_utils/tools.py", line 364, in run
-    raise Exception from None  # prevents tree of trace
-Exception
-#+end_src
+** TODO apply reverse proxy for the docs at kama
