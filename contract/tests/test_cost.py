@@ -111,7 +111,203 @@ def get_block_timestamp():
     return web3.eth.getBlock(get_block_number()).timestamp
 
 
-def test_cost():
+def result_check(delta, spent, value, received_sum, refunded_sum):
+    if delta == 0:
+        delta = int(delta)
+
+    if abs(delta) > 0:
+        log("warning: ", end="")
+
+    log(f"spent={spent} , job_price={value} | delta={delta}")
+    log(f" * received={received_sum}")
+    log(f" * refunded={refunded_sum}")
+    assert delta == 0
+
+
+def test_cost_0():
+    _prices = Prices()
+    _prices.set_core_min("0.001 usd")
+    _prices.set_data_transfer("0.0001 cent")
+    _prices.set_storage("0.0001 cent")
+    _prices.set_cache("0.0001 cent")
+    prices = _prices.get()
+    provider = accounts[1]
+    requester = accounts[2]
+    register_provider(available_core=4, prices=prices)
+    register_requester(requester)
+    for data_hash in [b"dd0fbccccf7a198681ab838c67b68fbf", b"45281dfec4618e5d20570812dea38760"]:
+        ebb.registerData(data_hash, Cent("0.0002 usd"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+        assert ebb.getRegisteredDataPrice(provider, data_hash, 0)[0] == Cent("0.0002 usd")
+        mine(1)
+
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- job_0
+    job = Job()
+    job.code_hashes = [
+        b"8bac529584c469c34d40ee45caf1f96f",
+        b"02440c95f0eff2a76e6ee88627f58778",
+        b"dd0fbccccf7a198681ab838c67b68fbf",
+        b"45281dfec4618e5d20570812dea38760",
+    ]
+    job.key = job.code_hashes[0]
+    job.cores = [1]
+    job.run_time = [60]
+    job.data_transfer_ins = [9, 171, 0, 0]
+    job.data_transfer_out = 5
+    job.storage_ids = [0, 0, 2, 2]
+    job.cache_types = [0, 0, 0, 0]
+    job.storage_hours = [0, 1, 0, 0]
+    job.data_prices_set_block_numbers = [0, 0, 0, 0]
+    job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+    ]
+    set_transfer(requester, Cent(job_price))
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester},
+    )
+    cost = tx.events["LogJob"]["received"]
+    log(f"estimated_cost={cost}")
+    assert cost == job_price
+    assert Cent(ebb.balanceOf(requester)) == 0
+    output = ebb.getJobInfo(provider, job.key, 0, 0)
+    print(output)
+    assert int(output[-2] / _prices.get()[-1]) >= job.data_transfer_ins[0]
+    paid_storage = 0
+    counter = 0
+    while True:
+        try:
+            log_data_storage_request = dict(tx.events["LogDataStorageRequest"][counter])
+            counter += 1
+            paid_storage += log_data_storage_request["paid"]
+            if verbose:
+                log(log_data_storage_request)
+        except:
+            break
+
+    # ----------------------------------------------------------------------------------------------
+    start_ts = 1579524978
+    tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
+    elapsed_time = 7
+    _dataTransferIn = 140
+    _dataTransferOut = 0
+    #  index jobId endTimestamp
+    #      \   |       |
+    args = [0, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
+    tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
+    log_process_payment = dict(tx.events["LogProcessPayment"])
+    if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
+        del log_process_payment["resultIpfsHash"]
+
+    received_sum = log_process_payment["receivedCent"]
+    refunded_sum = log_process_payment["refundedCent"]
+    total_spent = received_sum + refunded_sum
+    spent = Cent(abs(total_spent + paid_storage)).to("cent")
+    value = Cent(abs(job_price)).to("cent")
+    delta = value.__sub__(spent)  # type: ignore
+    if verbose:
+        log("log_process_payment=", end="")
+        log(log_process_payment)
+
+    result_check(delta, spent, value, received_sum, refunded_sum)
+
+    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- job_1
+    job = Job()
+    job.code_hashes = [
+        b"8bac529584c469c34d40ee45caf1f96f",
+        b"02440c95f0eff2a76e6ee88627f58778",
+        b"dd0fbccccf7a198681ab838c67b68fbf",
+        b"45281dfec4618e5d20570812dea38760",
+    ]
+    job.key = job.code_hashes[0]
+    job.cores = [1]
+    job.run_time = [60]
+    job.data_transfer_ins = [9, 171, 0, 0]
+    job.data_transfer_out = 5
+    job.storage_ids = [0, 0, 2, 2]
+    job.cache_types = [0, 0, 0, 0]
+    job.storage_hours = [0, 1, 0, 0]
+    job.data_prices_set_block_numbers = [0, 0, 0, 0]
+    job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+    ]
+    set_transfer(requester, Cent(job_price))
+    tx = ebb.submitJob(
+        job.key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester},
+    )
+    cost = tx.events["LogJob"]["received"]
+    log(f"estimated_cost={cost}")
+    assert cost == job_price
+    assert Cent(ebb.balanceOf(requester)) == 0
+    output = ebb.getJobInfo(provider, job.key, 0, 0)
+    print(output)
+    assert int(output[-2] / _prices.get()[-1]) >= job.data_transfer_ins[0]
+    paid_storage = 0
+    counter = 0
+    while True:
+        try:
+            log_data_storage_request = dict(tx.events["LogDataStorageRequest"][counter])
+            counter += 1
+            paid_storage += log_data_storage_request["paid"]
+            if verbose:
+                log(log_data_storage_request)
+        except:
+            break
+
+    # ----------------------------------------------------------------------------------------------
+    start_ts = 1579524978
+    tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
+    elapsed_time = 7
+    _dataTransferIn = 140
+    _dataTransferOut = 0
+    #  index jobId endTimestamp
+    #      \   |       |
+    args = [0, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
+    tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
+    log_process_payment = dict(tx.events["LogProcessPayment"])
+    if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
+        del log_process_payment["resultIpfsHash"]
+
+    received_sum = log_process_payment["receivedCent"]
+    refunded_sum = log_process_payment["refundedCent"]
+    total_spent = received_sum + refunded_sum
+    spent = Cent(abs(total_spent + paid_storage)).to("cent")
+    value = Cent(abs(job_price)).to("cent")
+    delta = value.__sub__(spent)  # type: ignore
+    if verbose:
+        log("log_process_payment=", end="")
+        log(log_process_payment)
+
+    result_check(delta, spent, value, received_sum, refunded_sum)
+
+
+def test_cost_1():
     _prices = Prices()
     _prices.set_core_min("0.001 usd")
     _prices.set_data_transfer("0.0001 cent")
@@ -208,19 +404,10 @@ def test_cost():
         log("log_process_payment=", end="")
         log(log_process_payment)
 
-    if delta == 0:
-        delta = int(delta)
-
-    if abs(delta) > 0:
-        log("warning: ", end="")
-
-    log(f"spent={spent} , job_price={value} | delta={delta}")
-    log(f" * received={received_sum}")
-    log(f" * refunded={refunded_sum}")
-    assert delta == 0
+    result_check(delta, spent, value, received_sum, refunded_sum)
 
 
-def test_cost_1():
+def test_cost_2():
     _prices = Prices()
     _prices.set_core_min("0.001 usd")
     _prices.set_data_transfer("0.0001 cent")
@@ -317,13 +504,4 @@ def test_cost_1():
         log("log_process_payment=", end="")
         log(log_process_payment)
 
-    if delta == 0:
-        delta = int(delta)
-
-    if abs(delta) > 0:
-        log("warning: ", end="")
-
-    log(f"spent={spent} , job_price={value} | delta={delta}")
-    log(f" * received={received_sum}")
-    log(f" * refunded={refunded_sum}")
-    assert delta == 0
+    result_check(delta, spent, value, received_sum, refunded_sum)

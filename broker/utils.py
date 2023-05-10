@@ -431,11 +431,6 @@ def start_ipfs_daemon(_is_print=False) -> bool:
     if is_ipfs_on(_is_print):
         return True
 
-    try:
-        output = run(["/usr/local/bin/ipfs", "repo", "stat"])
-    except Exception as e:
-        raise QuietExit from e
-
     log("warning: [g]IPFS[/g] does not work on the background")
     log("#> Initializing [g]IPFS daemon[/g]...")
     output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
@@ -462,7 +457,17 @@ def start_ipfs_daemon(_is_print=False) -> bool:
                 log(output.replace("==> Running IPFS daemon", "").rstrip(), "blue")
 
         if is_ipfs_on(is_print=False):
+            try:
+                output = run(["/usr/local/bin/ipfs", "repo", "stat"])
+            except Exception as e:
+                raise QuietExit from e
+
             return True
+
+    try:
+        output = run(["/usr/local/bin/ipfs", "repo", "stat"])
+    except Exception as e:
+        raise QuietExit from e
 
     return False
 

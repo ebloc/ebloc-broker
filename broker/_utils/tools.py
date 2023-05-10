@@ -330,6 +330,7 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         log(exc.rstrip(), "red")
     else:
         if returncode:
+            print_tb()
             return_code_msg = f"returned non-zero exit status {returncode}"
             log(f"E: Failed command {br(return_code_msg)}:")
         else:

@@ -43,12 +43,9 @@ clean_gdrive () {
     iterative_clean_gdrive
 }
 
+pkill -f ipfs
 ipfs_update
-
-#if [[ "$EUID" -eq 0 ]]; then
-#    echo "This script must be run as non-root. Please run without 'sudo'."
-#    exit
-#fi
+ipfs repo stat && echo ""
 
 # ~/personalize/bin/swap_space.sh >/dev/null 2>&1
 
@@ -142,4 +139,4 @@ fi
 echo ""
 gdrive about &&  clean_gdrive
 echo ""
-cat $HOME/.brownie/network-config.yaml | grep --color bloxberg | sed 's/ *//'
+< $HOME/.brownie/network-config.yaml grep --color bloxberg | sed 's/ *//'
