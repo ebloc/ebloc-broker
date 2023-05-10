@@ -250,7 +250,7 @@ def test_cost_0():
         job.cores,
         job.run_time,
         job.data_transfer_out,
-        job_price,
+        job_price + 10000,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -263,11 +263,16 @@ def test_cost_0():
     )
     cost = tx.events["LogJob"]["received"]
     log(f"estimated_cost={cost}")
+    index = 1
+    output = ebb.getJobInfo(provider, job.key, index, 0)
+    print(output)
+    calculated_cache_cost = output[-2]
+    assert calculated_cache_cost > 0
     assert cost == job_price
     assert Cent(ebb.balanceOf(requester)) == 0
-    output = ebb.getJobInfo(provider, job.key, 0, 0)
-    print(output)
-    assert int(output[-2] / _prices.get()[-1]) >= job.data_transfer_ins[0]
+
+    considered_cache = int(calculated_cache_cost / _prices.get()[-1])
+    assert considered_cache >= job.data_transfer_ins[0]
     paid_storage = 0
     counter = 0
     while True:
@@ -282,13 +287,13 @@ def test_cost_0():
 
     # ----------------------------------------------------------------------------------------------
     start_ts = 1579524978
-    tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
+    tx = ebb.setJobStateRunning(job.code_hashes[0], index, 0, start_ts, {"from": provider})
     elapsed_time = 7
-    _dataTransferIn = 140
+    _dataTransferIn = 9  # if its > 9 fails
     _dataTransferOut = 0
     #  index jobId endTimestamp
     #      \   |       |
-    args = [0, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
+    args = [index, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:

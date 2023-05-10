@@ -46,6 +46,7 @@ clean_gdrive () {
 pkill -f ipfs
 ipfs_update
 ipfs repo stat && echo ""
+ipfs refs local| tail -n1
 
 # ~/personalize/bin/swap_space.sh >/dev/null 2>&1
 

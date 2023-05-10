@@ -6,7 +6,7 @@ It applies blockchain technology to provide a market for computational and data 
 # For more info see: ...
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
-# - [[http://ebloc.cmpe.boun.edu.tr:3003/index.html][Documentation]]
+- [[http://ebloc-broker-readthedocs.duckdns.org:8000/index.html][Documentation]]
 
 ** Prerequisites
 

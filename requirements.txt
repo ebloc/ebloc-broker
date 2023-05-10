@@ -210,7 +210,7 @@ docopt==0.6.2
 docstring-to-markdown==0.11
     # via
     #   python-lsp-server
-docutils==0.18
+docutils==0.18.1
     # via
     #   python-daemon
     #   readme-renderer
@@ -884,7 +884,7 @@ sortedcontainers==2.4.0
 soupsieve==2.2.1
     # via
     #   beautifulsoup4
-sphinx==6.1.3
+Sphinx==7.0.0
     # via
     #   sphinx-autobuild
     #   sphinx-rtd-theme
@@ -1214,7 +1214,7 @@ zope-testing==4.9
 zope-traversing==4.4.1
     # via
     #   z3c-pt
-
+sphinx-autobuild==2021.3.14
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
