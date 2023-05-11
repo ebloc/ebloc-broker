@@ -569,7 +569,13 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         else:
             log(f"    ==> data_transfer_out={self.data_transfer_out} MB")
 
-        tx_hash = self.process_payment_tx()
+        try:
+            tx_hash = self.process_payment_tx()
+        except Exception as e:
+            breakpoint()  # DEBUG
+            print_tb(e)
+            raise e
+
         time.sleep(1)
         self._get_tx_status(tx_hash)
         self.get_job_info()

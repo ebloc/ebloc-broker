@@ -76,23 +76,18 @@ class Ipfs:
 
         Run `ipfs --offline refs -r` or `ipfs --offline block stat` etc even if your normal daemon is running.
         With that you can check if something is available locally or no.
+
+        __ https://stackoverflow.com/questions/69929289/how-to-check-is-the-given-ipfs-hash-is-already-fully-downloaded-or-not
         """
-        if not ipfs_refs_local:
-            ipfs_refs_local = run(["ipfs", "refs", "local"]).split("\n")
-
-        for _hash in ipfs_refs_local:
-            if ipfs_hash == _hash:
-                return True
-
-        return False
-
-        # try:
-        #     check_output(["ipfs", "--offline", "block", "stat", ipfs_hash], stderr=DEVNULL)
-        #     return True
-        # except:
-        #     # log(f"E: [g]{e}")
-        #     return False
-        # TODO: check may return true even its not exist
+        output = run(["ipfs", "files", "stat", "--with-local", "--size", f"/ipfs/{ipfs_hash}"])
+        if "(100.00%)" in output:
+            log("already fully cached", "green")
+            log(output)
+            return True
+        else:
+            log("not fully cached", "red")
+            log(output)
+            return False
 
     def pin(self, ipfs_hash: str) -> bool:
         return run(["ipfs", "pin", "add", ipfs_hash])

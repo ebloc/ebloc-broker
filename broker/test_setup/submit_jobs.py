@@ -257,7 +257,7 @@ def run_job(counter, cycleid) -> None:
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
             dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
             if IS_MINI_TEST:
-                dir_name = "LB07-bunny-sml"
+                dir_name = "BVZ-venus"
             else:
                 dir_name = random.choice(dirs)
 

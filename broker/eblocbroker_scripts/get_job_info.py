@@ -19,6 +19,7 @@ def analyze_data(self, key, provider=None):
     self.received_block = []
     self.storage_duration = []
     self.job_info["is_cached"] = {}
+    self.job_info["is_storage_bn_equal_when_job_submitted_bn"] = {}
     for idx, code_hash in enumerate(self.job_info["code_hashes"]):
         if self.job_info["cloudStorageID"][idx] in (StorageID.IPFS, StorageID.IPFS_GPG):
             _type = "ipfs_hash"
@@ -39,6 +40,12 @@ def analyze_data(self, key, provider=None):
         self.job_info["is_cached"][code_hash_str] = False  # FIXME double check
         # if remaining time to cache is 0, then caching is requested for the
         # related code_hash
+
+        if ds.received_block == self.job_info["received_bn"]:
+            self.job_info["is_storage_bn_equal_when_job_submitted_bn"][code_hash_str] = True
+        else:
+            self.job_info["is_storage_bn_equal_when_job_submitted_bn"][code_hash_str] = False
+
         if ds.received_block + ds.storage_duration >= current_bn:
             if ds.received_block < current_bn:
                 self.job_info["is_cached"][code_hash_str] = True
@@ -173,7 +180,7 @@ def get_job_code_hashes(self, provider, job_key, index, received_bn=0):
         raise e
 
 
-def get_job_info_print(self, provider, job_key, index, received_bn, is_print=True):
+def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True):
     result_ipfs_hash = ""
     if self.job_info["result_ipfs_hash"] != empty_bytes32 and self.job_info["result_ipfs_hash"] != "":
         result_ipfs_hash = bytes32_to_ipfs(self.job_info["result_ipfs_hash"])
@@ -185,9 +192,9 @@ def get_job_info_print(self, provider, job_key, index, received_bn, is_print=Tru
             if result_ipfs_hash:
                 log(f"==> result_ipfs_hash={result_ipfs_hash}")
 
-        Ebb.get_job_code_hashes(provider, job_key, index, received_bn)
+        Ebb.get_job_code_hashes(provider, _hash, index, received_bn)
         if is_print:
-            self.analyze_data(job_key, provider)
+            self.analyze_data(_hash, provider)
     elif is_print:
         print(self.job_info)
 

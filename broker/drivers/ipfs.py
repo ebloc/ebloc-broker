@@ -5,7 +5,7 @@ import shutil
 import time
 
 from broker import cfg
-from broker._utils._log import br, ok
+from broker._utils._log import br
 from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
@@ -20,7 +20,8 @@ class IpfsClass(Storage):
         self.cache_type = CacheType.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
-        self.requester_info = self.Ebb.get_requester_info(self.job_infos[0]["job_owner"])
+        self.job_info = self.job_infos[0]
+        self.requester_info = self.Ebb.get_requester_info(self.job_info["job_owner"])
 
     def check(self, ipfs_hash) -> None:
         """Check whether ipfs-hash is online."""
@@ -37,11 +38,23 @@ class IpfsClass(Storage):
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
         data_size_mb = byte_to_mb(cumulative_size)
+        is_storage_payment = self.job_info["is_cached"][ipfs_hash]
+        is_storage_payment_received_when_job_submitted = self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
+            ipfs_hash
+        ]
+        log(f"# Is already stored hash={ipfs_hash} -> {is_storage_payment} ", end="")
         if not cfg.ipfs.is_hash_locally_cached(ipfs_hash):
-            #: total data to be downloaded is saved
-            self.data_transfer_in_to_download_mb += data_size_mb
+            if not is_storage_payment:
+                self.data_transfer_in_to_download_mb += data_size_mb
+            else:
+                if is_storage_payment_received_when_job_submitted:
+                    # already stored data size should now be included
+                    #: total data to be downloaded is saved
+                    self.data_transfer_in_to_download_mb += data_size_mb
 
-        log(f" * data_transfer_in={data_size_mb} MB | rounded={int(data_size_mb)} MB")
+        log(
+            f" * data_transfer_in={data_size_mb} MB | rounded={int(data_size_mb)} MB | data_transfer_in_to_download_mb={self.data_transfer_in_to_download_mb}"
+        )
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
         """Wrap ipfs-get call."""
@@ -67,7 +80,7 @@ class IpfsClass(Storage):
         if not is_ipfs_on():
             return False
 
-        log(f"==> is_ipfs_hash_locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
+        log(f"==> Is ipfs_hash={self.job_key} locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -92,14 +105,8 @@ class IpfsClass(Storage):
         # initial_folder_size = calculate_size(self.results_folder)
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists online
-            # is_cached = False
             log(f"## attempting to get IPFS file: {ipfs_hash} ... ", end="")
-            if cfg.ipfs.is_hash_locally_cached(ipfs_hash):
-                # is_cached = True
-                log(ok("already cached"))
-            else:
-                log()
-
+            cfg.ipfs.is_hash_locally_cached(ipfs_hash)
             if idx == 0:
                 target = self.results_folder
             else:
@@ -125,11 +132,6 @@ class IpfsClass(Storage):
                 _git.initialize_check(target)
             except Exception as e:
                 raise e
-
-            # if not is_cached:
-            #     folder_size = calculate_size(self.results_folder)
-            #     self.data_transfer_in_to_download_mb += folder_size - initial_folder_size
-            #     initial_folder_size = folder_size
 
             if idx == 0 and not self.check_run_sh():
                 self.full_refund()

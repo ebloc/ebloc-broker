@@ -8,12 +8,12 @@ config:
     storage_hours: 0
   data:
     data1:
-      hash: fe801973c5b22ef6861f2ea79dc1eb9c
+      hash: 050e6cc8dd7e889bf7874689f1e1ead6
     data2:
       hash: 4613abc322e8f2fdeae9a5dd10f17540
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/liver.n6c100
+      path: /home/alper/test_eblocbroker/small/LB07-bunny-med
       storage_hours: 1
       storage_id: ipfs
   data_transfer_out: 5
