@@ -140,7 +140,7 @@ Provider
 Each provider should run ``eblocbroker driver`` for start running the
 Python script.
 
-file:/gui1.png
+file:/docs/gui1.png
 
 🎬 Demonstration
 ----------------

@@ -16,6 +16,7 @@ Brownie
     :maxdepth: 2
 
     install.rst
+    gdrive_readme.rst
     ..
        init.rst
        structure.rst
