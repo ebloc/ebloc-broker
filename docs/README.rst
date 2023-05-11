@@ -4,7 +4,7 @@ eBlocBroker
 About
 -----
 
-eeBlocBroker is a blockchain based autonomous computational resource broker.
+eBlocBroker is a blockchain based autonomous computational resource broker.
 
 Website: `http://ebloc.cmpe.boun.edu.tr <http://ebloc.cmpe.boun.edu.tr>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,4 +144,4 @@ Provider should run: `./eblocbroker.py <./eblocbroker.py>`_ driver Python script
 1.7.1 Screenshot of provider GUI:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: /docs/gui1.png
+.. image:: /gui1.png
