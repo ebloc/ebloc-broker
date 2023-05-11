@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
 from broker import cfg
 from broker._utils.tools import log
 from broker.errors import QuietExit

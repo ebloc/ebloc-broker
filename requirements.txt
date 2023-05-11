@@ -675,7 +675,7 @@ pyjwt==1.7.1
     # via
     #   eth-brownie
     #   pythx
-pylint==2.17.3
+pylint==2.17.4
 pymultihash==0.8.2
 pymongo==4.3.3
 pymy==0.0.8

@@ -166,7 +166,6 @@ class B2dropClass(Storage):
         cached_tar_fn = f"{results_folder_prev}/{folder_name}.tar.gz"
         log("#> downloading [g]output.zip[/g] for: ", end="")
         log(f"{folder_name} => {cached_tar_fn} ", "bold")
-        key = folder_name
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         for attempt in range(5):
             try:
@@ -207,7 +206,7 @@ class B2dropClass(Storage):
                 log("#> Sleeping for 30 seconds")
                 time.sleep(30)
                 """Since config.oc.get_file is not mounted in current test
-                if config.oc.get_file(f"/{key}/{folder_name}.tar.gz", cached_tar_fn):
+                if config.oc.get_file(f"/{folder_name}/{folder_name}.tar.gz", cached_tar_fn):
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     log(ok())
                     return

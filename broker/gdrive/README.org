@@ -108,8 +108,6 @@ gdrive upload --parent $shareId README.md
 gdrive upload --parent --recursive $shareId folder  # upload folder
 #+end_src
 
-  ** TODO:
-
-- [[https://github.com/prasmussen/gdrive/issues/621#issuecomment-1184700808][Google Cloud: OAuth
-  clients in test mode that are using the OAuth OOB flow]]
-  solution forked: https://github.com/msfjarvis/gdrive
+** Notes:
+- [[https://github.com/prasmussen/gdrive/issues/621#issuecomment-1184700808][Google Cloud: OAuth clients in test mode that are using the OAuth OOB flow]] solution forked: https://github.com/msfjarvis/gdrive.
+  # TODO
