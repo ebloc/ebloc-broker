@@ -22,7 +22,7 @@ else
 fi
 
 _watch () {
-    command watch --color head -n 27 \
+    command watch --color head -n 28 \
             ~/.ebloc-broker/watch_${providers[0]}.out \
             ~/.ebloc-broker/watch_${providers[1]}.out \
             ~/.ebloc-broker/watch_${providers[2]}.out

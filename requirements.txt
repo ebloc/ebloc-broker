@@ -321,7 +321,7 @@ git-filter-repo==2.38.0
 gitdb==4.0.2
     # via
     #   gitpython
-gitpython==3.1.31
+GitPython==3.1.31
 grip==4.5.2
 gshell==5.5.2
 gunicorn==20.0.4

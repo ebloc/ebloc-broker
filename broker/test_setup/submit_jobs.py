@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.libs.gdrive import refresh_gdrive_token
 import os.path
 import random
 import sys
@@ -301,6 +302,7 @@ def run_job(counter, cycleid) -> None:
 
 
 def main():
+    refresh_gdrive_token()
     if "gdrive" in storage_ids:
         check_gdrive_user()
 
@@ -339,7 +341,7 @@ def main():
         for idx in range(80):
             for _ in range(2):  # submitted as batch is faster
                 log(f"#> latest number_of_submitted_jobs={counter}", is_write=False)
-                run_job(counter, 69 + idx)
+                run_job(counter, idx)
                 counter += 1
                 countdown(20)
 

@@ -2,6 +2,7 @@
 
 """Driver for ebloc-broker."""
 
+from broker.libs.gdrive import refresh_gdrive_token
 import math
 import os
 import sys
@@ -118,6 +119,7 @@ def tools(bn):
         log(f"==> [y]provider_gmail[/y]=[m]{gmail}", h=False)
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
+            refresh_gdrive_token()
             if env.GDRIVE == "":
                 raise Terminate(f"E: gdrive_path='{env.GDRIVE}' please set a valid path in the cfg.yaml file")
 
@@ -499,7 +501,6 @@ def run_driver(given_bn):
                 first_iteration_flag = True
 
             log()
-            log(f"E: [green]{e}")
             raise e
 
 
@@ -541,7 +542,7 @@ def _run_driver(given_bn, lock):
                 if not network.is_connected():
                     time.sleep(15)
 
-            console_ruler(character="*")
+            console_ruler(character="^")
             continue
         finally:
             with suppress(Exception):

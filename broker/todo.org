@@ -1,4 +1,4 @@
-                            *outline*
+                                    *outline*
 * TASKS
 ** TODO log ~dataTransferIn~ in the contract
 - self.eBlocBroker.decode_input(input)

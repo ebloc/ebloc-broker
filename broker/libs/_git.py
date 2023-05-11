@@ -177,6 +177,26 @@ def add_all_(_env):
         raise e
 
 
+def commit_m_update(repo):
+    log("Running: 'git commit -m update' ", end="")
+    for attempt in range(10):
+        try:
+            repo.git.commit("-m", "update")  # here
+            log(ok())
+        except Exception as e:
+            if "nothing to commit" in str(e):
+                return
+
+            log(f"E: {e} | attempt={attempt}")
+            if attempt == 9:
+                print_tb(e)
+            else:
+                time.sleep(5)
+
+    # to continue test do not raise Exception
+    # raise Exception("Exception for: 'git commit -m update'")
+
+
 def add_all(repo=None):
     """Add all into git."""
     try:
@@ -196,13 +216,8 @@ def add_all(repo=None):
             )
 
         if changed_file_len > 0:
-            log("Record changes to the repository", end="")
-            try:
-                repo.git.commit("-m", "update")
-                log(ok())
-            except Exception as e:
-                if "nothing to commit" not in str(e):
-                    raise e
+            log("Record changes to the repository...")
+            commit_m_update(repo)
     except Exception as e:
         print_tb(e)
         raise e

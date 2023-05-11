@@ -14,17 +14,21 @@ from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, is_program_valid, log, print_tb
 
 
+def refresh_gdrive_token():
+    with open(Path.home() / ".gdrive" / "token_v2.json", "r") as f:
+        output = json.load(f)
+
+    log("#> Trying: gdrive about --refresh-token <id>")
+    run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
+
+
 def check_gdrive():
     """Check whether `gdrive about` returns a valid output."""
     is_program_valid(["gdrive", "version"])
     try:
         output = run(["gdrive", "about"])
     except:
-        with open(Path.home() / ".gdrive" / "token_v2.json", "r") as f:
-            output = json.load(f)
-
-        log("#> Trying: gdrive about --refresh-token <id>")
-        run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
+        refresh_gdrive_token()
         output = run(["gdrive", "about"])  # re-try
 
     return output
