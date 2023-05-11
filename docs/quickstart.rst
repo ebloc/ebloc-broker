@@ -1,343 +1,363 @@
-How to Use eBlocBroker
+.. _quickstart:
+
+==========
+Quickstart
+==========
+
+This page provides a quick overview of how to use Brownie. It relies mostly on examples and assumes a level of familiarity with Python and smart contract development. For more in-depth content, you should read the documentation sections under "Getting Started" in the table of contents.
+
+If you have any questions about how to use Brownie, feel free to ask on `Ethereum StackExchange <https://ethereum.stackexchange.com/>`_ or join us on `Gitter <https://gitter.im/eth-brownie/community>`_.
+
+Creating a New Project
 ======================
 
-About
------
+    `Main article:` :ref:`init`
 
-*eBlocBroker* is a blockchain based autonomous computational resource
-broker.
+The first step to using Brownie is to initialize a new project. To do this, create an empty folder and then type:
 
--  **Website:** http://ebloc.cmpe.boun.edu.tr or
-   `http://ebloc.org <http://ebloc.cmpe.boun.edu.tr>`__
--  `Documentation <http://ebloc.cmpe.boun.edu.tr:3003/index.html>`__
+::
 
-Build dependencies
-------------------
+    $ brownie init
 
-`Geth <https://github.com/ethereum/go-ethereum/wiki/geth>`__,
-`IPFS <https://ipfs.io/docs/install/>`__,
-`Slurm <https://github.com/SchedMD/slurm>`__
+You can also initialize "`Brownie mixes <https://github.com/brownie-mix>`_", simple templates to build your project upon. For the examples in this document we will use the `token <https://github.com/brownie-mix/token-mix>`_ mix, which is a very basic ERC-20 implementation:
 
-How to connect into Private Ethereum Blockchain (eBloc)
--------------------------------------------------------
+::
 
--  Connect into `eBlocPOA <https://github.com/ebloc/eBlocPOA>`__
--  Connect into `eBlocPOW <https://github.com/ebloc/eBlocPOW>`__
+    $ brownie bake token
 
-How to use eBlocBroker inside an Amazon EC2 Instance
-----------------------------------------------------
+This will create a ``token/`` subdirectory, and download the template project within it.
 
-An Amazon image (**AMI Name:** ``eBloc``, **AMI ID:** ``ami-f5c47f8a``)
-is also available that contains ``geth`` setup to connect to our
-Ethereum based private proof-of-authority blockchain network
-(*eBlocPOA*).
+Exploring the Project
+=====================
 
-Create an Ethereum Account
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+    `Main article:` :ref:`structure`
 
-**Creating an account:**
+Each Brownie project uses the following structure:
 
-.. code:: bash
+    * ``contracts/``: Contract sources
+    * ``interfaces/``: Interface sources
+    * ``scripts/``: Scripts for deployment and interaction
+    * ``tests/``: Scripts for testing the project
 
-   $ cd eBlocPOA
-   $ eblocPath="$PWD"
-   $ geth --datadir="$eblocPath" account new
-   Your new account is locked with a password. Please give a password. Do not forget this password.
-   Passphrase:
-   Repeat passphrase:
-   Address: {a0a50a64cac0744dea5287d1025b8ef28aeff36e}
+The following directories are also created, and used internally by Brownie for managing the project. You should not edit or delete files within these folders.
 
-Your new account is locked with a password. Please give a password. Do
-not forget this password. Please enter a difficult passphrase for your
-account.
+    * ``build/``: Project data such as compiler artifacts and unit test results
+    * ``reports/``: JSON report files for use in the GUI
 
-You should see your ``Keystore File (UTC / JSON)``\ under ``keystore``
-directory.
+Compiling your Contracts
+========================
 
-.. code:: bash
+    `Main article:` :ref:`compile`
 
-   [~/eBlocPOA]$ ls keystore
-   UTC--2018-02-14T10-46-54.423218000Z--a0a50a64cac0744dea5287d1025b8ef28aeff36e
+To compile your project:
 
-**On the console, use:**
+::
 
-You can also create your Ethereum account inside your ``geth-client``.
-Here your Keystore
-File\ ``will be created with root permission,``\ eBlocWallet\` will not
-able to unlock it.
+    $ brownie compile
 
-.. code:: bash
+You will see the following output:
 
-   > personal.newAccount()
-   Passphrase:
-   Repeat passphrase:
-   "0x7d334606c71417f944ff8ba5c09e3672066244f8"
-   > eth.accounts
-   ["0x7d334606c71417f944ff8ba5c09e3672066244f8"]
+::
 
-Now you should see your ``Keystore File (UTC / JSON)`` under
-``private/keystore`` directory.
+    Brownie - Python development framework for Ethereum
 
-.. code:: bash
+    Compiling contracts...
+    Optimizer: Enabled  Runs: 200
+    - Token.sol...
+    - SafeMath.sol...
+    Brownie project has been compiled at token/build/contracts
 
-   [~/eBlocPOA]$ ls private/keystore
-   UTC--2018-02-14T11-00-59.995395000Z--7d334606c71417f944ff8ba5c09e3672066244f8
+You can change the compiler version and optimization settings by editting the :ref:`config file <config-solc>`.
 
-To give open acccess to the keystore file:
+.. note::
 
-.. code:: bash
+    Brownie automatically compiles any new or changed source files each time it is loaded. You do not need to manually run the compiler.
 
-   sudo chown -R $(whoami) private/keystore/UTC--...
+Core Functionality
+==================
 
--  Afterwards, open the following file: ``$HOME/eBlocBroker/.profile``
-   and set ``COINBASE`` with your created Ethereum Address.
+The console is useful when you want to interact directly with contracts deployed on a non-local chain, or for quick testing as you develop. It's also a great starting point to familiarize yourself with Brownie's functionality.
 
---------------
+The console feels very similar to a regular python interpreter. From inside a project directory, load it by typing:
 
-Later, please do following inside your Amazon instance.
+::
 
-.. code:: bash
+    $ brownie console
 
-   # To run eBloc Etheruem Node
-   $ eblocServer
+Brownie will compile your contracts, start the local RPC client, and give you a command prompt. From here you may interact with the network with the full range of functionality offered by the :ref:`api`.
 
-   # To run eBlocBroker Driver
-   $ cd $HOME/eBlocBroker
-   $ bash initialize.sh # do it only once
-   $ sudo ./Driver.sh
+.. hint::
 
-Start Running Cluster using eBlocBroker
----------------------------------------
+    You can call the builtin :func:`dir <dir>` method to see available methods and attributes for any class. Classes, methods and attributes are highlighted in different colors.
 
-Cluster Side: How to register a cluster
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    You can also call :func:`help <help>` on any class or method to view information on it's functionality.
 
-Please note the following:
+Accounts
+--------
 
--  If you do not have any ``Federated Cloud ID`` give an empty string:
-   ``""``. You can use ``./registerCluster.py`` to submit your jobs.
+    `Main article:` :ref:`core-accounts`
 
-.. code:: bash
+Access to local accounts is through :func:`accounts <brownie.network.account.Accounts>`, a list-like object that contains :func:`Account <brownie.network.account.Account>` objects capable of making transactions.
 
-   coreNumber         = 128;
-   clusterEmail       = "ebloc@gmail.com";
-   federationCloudId  = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu";
-   corePriceMinuteWei = 100;
-   ipfsID             = "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf";
+Here is an example of checking a balance and transfering some ether:
 
-   ./registerCluster.py $coreNumber $clusterEmail $federationCloudId $corePriceMinuteWei $ipfsID
+.. code-block:: python
 
--  A Python daemon program called *Driver* is responsible for
-   facilitating the communication between the eBlocBroker smart contract
-   and the Slurm resource manager. After the cluster is registered
-   please run: ``./Driver.py``
+    >>> accounts[0]
+    <Account object '0xC0BcE0346d4d93e30008A1FE83a2Cf8CfB9Ed301'>
 
-.. raw:: html
+    >>> accounts[1].balance()
+    100000000000000000000
 
-   <!---
-   ### Slurm Setup:
-   Slurm should run on the background. Please run:
+    >>> accounts[0].transfer(accounts[1], "10 ether")
 
-   ```bash
-   sudo ./bash_scripts/run_slurm.sh
-   ```
+    Transaction sent: 0x124ba3f9f9e5a8c5e7e559390bebf8dfca998ef32130ddd114b7858f255f6369
+    Transaction confirmed - block: 1   gas spent: 21000
+    <Transaction object '0x124ba3f9f9e5a8c5e7e559390bebf8dfca998ef32130ddd114b7858f255f6369'>
 
-   Following example should successfully submit the job:
+    >>> accounts[1].balance()
+    110000000000000000000
 
-   ```bash
-   cd eBlocBroker/slurmJobExample
-   sbatch -N1 run.sh
-   Submitted batch job 1
-   ```
-   -->
+Contracts
+---------
 
---------------
+    `Main article:` :ref:`core-contracts`
 
-Client Side: How to obtain IPFS Hash of the job:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Brownie provides a :func:`ContractContainer <brownie.network.contract.ContractContainer>` object for each deployable contract in your project. They are list-like objects used to deploy new contracts.
 
-It is important that first you should run IPFS daemon on the background:
-``ipfs daemon &``. If it is not running, cluster is not able to get the
-IPFS object from the client’s node.
+.. code-block:: python
 
-Example code could be seen under ``eBlocBroker/slurmJobExample``
-directory:
+    >>> Token
+    []
 
-Client should put his Slurm script inside a file called ``run.sh``.
-Please note that you do not have to identify ``-n`` and ``-t``
-parameters, since they will be overwritten with arguments provided by
-the client on the cluster end
+    >>> Token.deploy
+    <ContractConstructor object 'Token.constructor(string _symbol, string _name, uint256 _decimals, uint256 _totalSupply)'>
 
-Target into the folder you want to submit and do: ``ipfs add -r .`` You
-will see something similiar with following output:
+    >>> t = Token.deploy("Test Token", "TST", 18, 1e21, {'from': accounts[1]})
 
-.. code:: bash
+    Transaction sent: 0x2e3cab83342edda14141714ced002e1326ecd8cded4cd0cf14b2f037b690b976
+    Transaction confirmed - block: 1   gas spent: 594186
+    Contract deployed at: 0x5419710735c2D6c3e4db8F30EF2d361F70a4b380
+    <Token Contract object '0x5419710735c2D6c3e4db8F30EF2d361F70a4b380'>
 
-   added QmYsUBd5F8FA1vcUsMAHCGrN8Z92TdpNBAw6rMxWwmQeMJ simpleSlurmJob/helloworld.cpp
-   added QmbTzBprmFEABAWwmw1VojGLMf3nv7Z16eSgec55DYdbiX simpleSlurmJob/run.sh
-   added QmXsCmg5jZDvQBYWtnAsz7rukowKJP3uuDuxfS8yXvDb8B simpleSlurmJob
+    >>> t
+    <Token Contract object '0x5419710735c2D6c3e4db8F30EF2d361F70a4b380'>
 
--  Main folder’s IPFS hash (for
-   example:\ ``QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Vd``) would
-   be used as key to the submitted ``jobKey`` to the ``eBlocBroker`` by
-   the client.
+When a contact is deployed you are returned a :func:`Contract <brownie.network.contract.ProjectContract>` object that can be used to interact with it. This object is also added to the :func:`ContractContainer <brownie.network.contract.ContractContainer>`.
 
-**How to return available Clusters Addresses**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:func:`Contract <brownie.network.contract.ProjectContract>` objects contain class methods for performing calls and transactions. In this example we are checking a token balance and transfering tokens:
 
-.. code:: bash
+.. code-block:: python
 
-   ./getClusterAddresses.py
+    >>> t
+    <Token Contract object '0x5419710735c2D6c3e4db8F30EF2d361F70a4b380'>
 
---------------
+    >>> t.balanceOf(accounts[1])
+    1000000000000000000000
 
-**How to Submit a Job**
-~~~~~~~~~~~~~~~~~~~~~~~
+    >>> t.transfer
+    <ContractTx object 'transfer(address _to, uint256 _value)'>
 
-In order to submit your job each user should already registered into
-eBlocBroker.You can use ``./registerUser.py`` to register. Please update
-followin arguments inside ``registerUser.py`` file.
+    >>> t.transfer(accounts[2], 1e20, {'from': accounts[1]})
 
-``account``, ``userEmail``, ``federationCloudID``, and ``ipfsAddress``.
+    Transaction sent: 0xcd98225a77409b8d81023a3a4be15832e763cd09c74ff431236bfc6d56a74532
+    Transaction confirmed - block: 2   gas spent: 51241
+    <Transaction object '0xcd98225a77409b8d81023a3a4be15832e763cd09c74ff431236bfc6d56a74532'>
 
-After registiration is done, each user should authenticate their ORCID
-iD using the following
-`link <http://ebloc.cmpe.boun.edu.tr/orcid-authentication/index.php>`__.
+    >>> t.balanceOf(accounts[1])
+    900000000000000000000
 
---------------
+    >>> t.balanceOf(accounts[2])
+    100000000000000000000
 
-Later, you can use ``./submit_job.py`` to submit your jobs.
+When a contract source includes `NatSpec documentation <https://solidity.readthedocs.io/en/latest/natspec-format.html>`_, you can view it via the :func:`ContractCall.info <ContractCall.info>` method:
 
-**1. How to submit a job using IPFS**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: python
 
-Please update following arguments inside ``submit_job.py`` file.
+    >>> t.transfer.info()
+    transfer(address _to, uint256 _value)
+      @dev transfer token for a specified address
+      @param _to The address to transfer to.
+      @param _value The amount to be transferred.
 
-.. code:: python
+Transactions
+------------
 
-   clusterAddress  = "0x4e4a0750350796164D8DefC442a712B7557BF282"
-   ipfsHash        = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-   coreNum         = 1;
-   coreGasDay      = 0
-   coreGasHour     = 0
-   coreGasMin      = 10
-   gasBandwidthIn  = 100
-   gasBandwidthOut = 100
-   storageType     = 0 # Please note that '0' stands for IPFS repository share.
+    `Main article:` :ref:`core-transactions`
 
-**2. How to submit a job using EUDAT**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The :func:`TransactionReceipt <brownie.network.transaction.TransactionReceipt>` object contains all relevant information about a transaction, as well as various methods to aid in debugging.
 
-Before doing this you have to be sure that you have shared your folder
-with cluster’s FID. Please
-`follow <https://github.com/avatar-lavventura/someCode/issues/4>`__.
-Otherwise your job will not be accepted. Please update following
-arguments inside ``submit_job.py`` file.
+.. code-block:: python
 
-.. code:: python
+    >>> tx = Token[0].transfer(accounts[1], 1e18, {'from': accounts[0]})
 
-   clusterAddress  = "0x4e4a0750350796164D8DefC442a712B7557BF282"
-   jobKey          = "folderName"
-   coreNum         = 1
-   coreGasDay      = 0
-   coreGasHour     = 0
-   coreGasMin      = 10
-   gasBandwidthIn  = 100
-   gasBandwidthOut = 100
-   storageType     = 1 # Please note that '1' stands for EUDAT repository share.
+    Transaction sent: 0x0d96e8ceb555616fca79dd9d07971a9148295777bb767f9aa5b34ede483c9753
+    Token.transfer confirmed - block: 2   gas used: 51019 (33.78%)
 
-**3. How to submit a job using IPFS with GPG**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    >>> tx
+    <Transaction object '0x0d96e8ceb555616fca79dd9d07971a9148295777bb767f9aa5b34ede483c9753'>
 
-Please update following arguments inside ``submit_job.py`` file.
+Use :func:`TransactionReceipt.events <TransactionReceipt.events>` to examine the events that fired:
 
-.. code:: python
+.. code-block:: python
 
-   clusterID       = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID you would like to submit.
-   jobKey          = "QmefdYEriRiSbeVqGvLx15DKh4WqSMVL8nT4BwvsgVZ7a5"
-   coreNum         = 1
-   coreGasDay      = 0
-   coreGasHour     = 0
-   coreGasMin      = 10
-   gasBandwidthIn  = 100
-   gasBandwidthOut = 100
-   storageType     = 2 # Please note 2 stands for IPFS with GPG repository share.
+    >>> len(tx.events)
+    1
 
-**4. How to submit a job using Google-Drive**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    >>> 'Transfer' in tx.events
+    True
 
-`gdrive <https://github.com/prasmussen/gdrive>`__ install:
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    >>> tx.events['Transfer']
+    {
+        'from': "0x4fe357adbdb4c6c37164c54640851d6bff9296c8",
+        'to': "0xfae9bc8a468ee0d8c84ec00c8345377710e0f0bb",
+        'value': "1000000000000000000",
+    }
 
-.. code:: bash
+To inspect the transaction trace:
 
-   $ go get github.com/prasmussen/gdrive
-   $ gopath=$(go env | grep 'GOPATH' | cut -d "=" -f 2 | tr -d '"')
-   $ echo 'export PATH=$PATH:$gopath/bin' >> ~/.profile
-   $ source .profile
-   $ gdrive about # This line authenticates the user only once on the same node.
-   Authentication needed
-   Go to the following url in your browser:
-   https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=...e=state
-   Enter verification code:
+.. code-block:: python
 
-First you have to share your folder with the cluster:
+    >>> tx.call_trace()
+    Call trace for '0x0d96e8ceb555616fca79dd9d07971a9148295777bb767f9aa5b34ede483c9753':
+    Token.transfer 0:244  (0x4A32104371b05837F2A36dF6D850FA33A92a178D)
+      ├─Token.transfer 72:226
+      ├─SafeMath.sub 100:114
+      └─SafeMath.add 149:165
 
-.. code:: bash
+For information on why a transaction reverted:
 
-   folderPath='/home/prc/multiple/workingTestIpfs'
-   folderName='ipfs'
-   clusterToShare='aalimog1@binghamton.edu'
-   gdrive upload --recursive $folderPath/$folderName
-   jobKey=$(gdrive list | grep $folderName | awk '{print $1}')
-   echo $jobKey # This is jobKey
-   gdrive share $jobKey  --role writer --type user --email $clusterToShare
+.. code-block:: python
 
-If your work is compressed under folder name such as
-``folder_path/folderName,/RUN.zip``; please name it ``RUN.zip`` or
-``RUN.tar.gz``.
+    >>> tx = Token[0].transfer(accounts[1], 1e18, {'from': accounts[3]})
 
---------------
+    Transaction sent: 0x5ff198f3a52250856f24792889b5251c120a9ecfb8d224549cb97c465c04262a
+    Token.transfer confirmed (reverted) - block: 2   gas used: 23858 (19.26%)
+    <Transaction object '0x5ff198f3a52250856f24792889b5251c120a9ecfb8d224549cb97c465c04262a'>
 
-Please update following arguments inside ``submit_job.py`` file.
+    >>> tx.traceback()
+    Traceback for '0x5ff198f3a52250856f24792889b5251c120a9ecfb8d224549cb97c465c04262a':
+    Trace step 99, program counter 1699:
+      File "contracts/Token.sol", line 67, in Token.transfer:
+        balances[msg.sender] = balances[msg.sender].sub(_value);
+    Trace step 110, program counter 1909:
+      File "contracts/SafeMath.sol", line 9, in SafeMath.sub:
+        require(b <= a);
 
-.. code:: python
+Writing Scripts
+===============
 
-   clusterID       = "0xda1e61e853bb8d63b1426295f59cb45a34425b63" # clusterID you would like to submit.
-   jobKey          = "1-R0MoQj7Xfzu3pPnTqpfLUzRMeCTg6zG" # Please write file-Id of the uploaded file
-   coreNum         = 1
-   coreGasDay      = 0
-   coreGasHour     = 0
-   coreGasMin      = 10
-   gasBandwidthIn  = 100
-   gasBandwidthOut = 100
-   storageType     = 4 # Please note that 4 stands for gdrive repository share.
+    `Main article:` :ref:`scripts`
 
-**How to Obtain Submitted Job’s Information:**
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You can write scripts to automate contract deployment and interaction. By placing ``from brownie import *`` at the beginning of your script, you can access objects identically to how you would in the console.
 
-You can use ``./getJobInfo.py`` to submit your jobs.
+To execute the ``main`` function in a script, store it in the ``scripts/`` folder and type:
 
-.. code:: bash
+::
 
-   clusterID = "0x4e4a0750350796164D8DefC442a712B7557BF282" # clusterID that you have submitted your job.
-   jobKey    = "6a6783e74a655aad01bf2d1202362685"
-   index     = 0
-   ./getJobInfo.py $clusterID $jobKey $index
+    $ brownie run [script name]
 
--  Status of the job could be ``QUEUED``, ``REFUNDED``, ``RUNNING``,
-   ``PENDING``, or ``COMPLETED``.
+Within the token project, you will find an example script at `scripts/token.py <https://github.com/brownie-mix/token-mix/blob/master/scripts/token.py>`_ that is used for deployment:
 
---------------
+.. code-block:: python
+    :linenos:
 
-Events
-~~~~~~
+    from brownie import *
 
-Keep track of logged received jobs and their status
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    def main():
+        Token.deploy("Test Token", "TEST", 18, 1e23, {'from': accounts[0]})
 
-.. code:: bash
+Testing your Project
+====================
 
-   clusterAddress="0x57b60037b82154ec7149142c606ba024fbb0f991"
-   fromBlock=1000000
-   logTestResults/getLogJobs.py $clusterAddress $fromBlock
+    `Main article:` :ref:`pytest`
+
+Brownie uses the ``pytest`` framework for contract testing.
+
+Tests should be stored in the ``tests/`` folder.  To run the full suite:
+
+::
+
+    $ brownie test
+
+Fixtures
+--------
+
+Brownie provides ``pytest`` fixtures to allow you to interact with your project and to aid in testing. To use a fixture, add an argument with the same name to the inputs of your test function.
+
+Here is an example test function using Brownie's automatically generated fixtures:
+
+.. code-block:: python
+    :linenos:
+
+    def test_transfer(Token, accounts):
+        token = Token.deploy("Test Token", "TST", 18, 1e20, {'from': accounts[0]})
+        assert token.totalSupply() == 1e20
+
+        token.transfer(accounts[1], 1e19, {'from': accounts[0]})
+        assert token.balanceOf(accounts[1]) == 1e19
+        assert token.balanceOf(accounts[0]) == 9e19
+
+See the :ref:`Pytest Fixtures <pytest-fixtures-reference>` section for a complete list of fixtures.
+
+Handling Reverted Transactions
+------------------------------
+
+Transactions that revert raise a :func:`VirtualMachineError <brownie.exceptions.VirtualMachineError>` exception. To write assertions around this you can use :func:`brownie.reverts <brownie.test.plugin.RevertContextManager>` as a context manager, which functions very similarly to :func:`pytest.raises <pytest.raises>`:
+
+.. code-block:: python
+    :linenos:
+
+    import brownie
+
+    def test_transfer_reverts(accounts, Token):
+        token = accounts[0].deploy(Token, "Test Token", "TST", 18, 1e23)
+        with brownie.reverts():
+            token.transfer(accounts[1], 1e24, {'from': accounts[0]})
+
+You may optionally include a string as an argument. If given, the error string returned by the transaction must match it in order for the test to pass.
+
+.. code-block:: python
+    :linenos:
+
+    import brownie
+
+    def test_transfer_reverts(accounts, Token):
+        token = accounts[0].deploy(Token, "Test Token", "TST", 18, 1e23)
+        with brownie.reverts("Insufficient Balance"):
+            token.transfer(accounts[1], 1e24, {'from': accounts[0]})
+
+Isolating Tests
+---------------
+
+Test isolation is handled through the :func:`module_isolation <fixtures.module_isolation>` and :func:`fn_isolation <fixtures.fn_isolation>` fixtures:
+
+* :func:`module_isolation <fixtures.module_isolation>` resets the local chain before and after completion of the module, ensuring a clean environment for this module and that the results of it will not affect subsequent modules.
+* :func:`fn_isolation <fixtures.fn_isolation>` additionally takes a snapshot of the chain before running each test, and reverts to it when the test completes. This allows you to define a common state for each test, reducing repetitive transactions.
+
+This example uses isolation and a shared setup fixture. Because the ``token`` fixture uses a session scope, the transaction to deploy the contract is only executed once.
+
+.. code-block:: python
+    :linenos:
+
+    import pytest
+    from brownie import accounts
+
+
+    @pytest.fixture(scope="module")
+    def token(Token):
+        yield Token.deploy("Test Token", "TST", 18, 1e20, {'from': accounts[0]})
+
+
+    def test_transferFrom(fn_isolation, token):
+        token.approve(accounts[1], 6e18, {'from': accounts[0]})
+        token.transferFrom(accounts[0], accounts[2], 5e18, {'from': accounts[1]})
+
+        assert token.balanceOf(accounts[2]) == 5e18
+        assert token.balanceOf(accounts[0]) == 9.5e19
+        assert token.allowance(accounts[0], accounts[1]) == 1e18
+
+
+    def test_balance_allowance(fn_isolation, token):
+        assert token.balanceOf(accounts[0]) == 1e20
+        assert token.allowance(accounts[0], accounts[1]) == 0
