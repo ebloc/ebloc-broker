@@ -25,8 +25,8 @@ from broker.utils import (
     question_yes_no,
     raise_error,
     run,
-    untar,
     start_ipfs_daemon,
+    untar,
 )
 
 

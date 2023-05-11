@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker.errors import IpfsNotConnected
 import base64
 import getpass
 import os
@@ -19,7 +18,7 @@ from broker._utils._log import WHERE, br, log, ok
 from broker._utils.tools import _remove, exit_after, is_dir, mkdirs, pid_exists, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
-from broker.errors import QuietExit
+from broker.errors import IpfsNotConnected, QuietExit
 from broker.imports import connect
 from broker.lib import (
     calculate_size,
