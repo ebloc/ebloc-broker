@@ -37,7 +37,7 @@ macOS:
     ethminer version 1.3.0 | Build: ETH_BUILD_PLATFORM/ETH_BUILD_TYPE
 
 **To Mine:** This code will use full horse
-power:\ ``sudo ./ethminer -F http://localhost:8545``.
+power:``sudo ./ethminer -F http://localhost:8545``.
 
    -t, –mining-threads Limit number of CPU/GPU miners to n (default: use
    everything available on selected platform)
