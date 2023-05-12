@@ -1,8 +1,8 @@
 config:
-  requester_address: '0x4b419991c9b949b20556ab9ad13c5d54354f601f'
+  requester_address: '0x378181ce7b07e8dd749c6f42772574441b20e35f'
   provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
   source_code:
-    storage_id: ipfs_gpg
+    storage_id: ipfs
     cache_type: public
     path: ~/test_eblocbroker/run_cppr
     storage_hours: 0
@@ -10,12 +10,12 @@ config:
     data1:
       hash: 4613abc322e8f2fdeae9a5dd10f17540
     data2:
-      hash: 0d6c3288ef71d89fb93734972d4eb903
+      hash: 050e6cc8dd7e889bf7874689f1e1ead6
     data3:
       cache_type: public
-      path: /home/alper/test_eblocbroker/small/BL06-camel-med
+      path: /home/alper/test_eblocbroker/small/BVZ-venus
       storage_hours: 1
-      storage_id: ipfs_gpg
+      storage_id: ipfs
   data_transfer_out: 5
   jobs:
     job1:

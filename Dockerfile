@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM golang:latest
 RUN apt-get install -y ca-certificates
-ARG IPFS_TAG=v0.19.1
+ARG IPFS_TAG=v0.20.0
 RUN wget --no-check-certificate -q "https://dist.ipfs.io/go-ipfs/"${IPFS_TAG}"/go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
  && tar -xf "go-ipfs_"${IPFS_TAG}"_linux-amd64.tar.gz" \
  && rm -f go-ipfs_${IPFS_TAG}_linux-amd64.tar.gz \

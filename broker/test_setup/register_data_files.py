@@ -27,23 +27,30 @@ hashes_small = [
     "761691119cedfb9836a78a08742b14cc",
 ]
 
-hashes_medium_1 = [
-    "fe801973c5b22ef6861f2ea79dc1eb9c",  # A
-    "0d6c3288ef71d89fb93734972d4eb903",  # A
-    "4613abc322e8f2fdeae9a5dd10f17540",  # A
-    "050e6cc8dd7e889bf7874689f1e1ead6",  # A
+A = [
+    "fe801973c5b22ef6861f2ea79dc1eb9c",
+    "0d6c3288ef71d89fb93734972d4eb903",
+    "4613abc322e8f2fdeae9a5dd10f17540",
+    "050e6cc8dd7e889bf7874689f1e1ead6",
 ]
 
-hashes_medium_2 = [
-    "9d5d892a63b5758090258300a59eb389",  # B
-    "779745f315060d1bc0cd44b7266fb4da",  # B
-    "dd0fbccccf7a198681ab838c67b68fbf",  # B
-    "45281dfec4618e5d20570812dea38760",  # B
-    "bfc83d9f6d5c3d68ca09499190851e86",  # C
-    "8f6faf6cfd245cae1b5feb11ae9eb3cf",  # C
-    "1bfca57fe54bc46ba948023f754521d6",  # C
-    "f71df9d36cd519d80a3302114779741d",  # C
+B = [
+    "9d5d892a63b5758090258300a59eb389",
+    "779745f315060d1bc0cd44b7266fb4da",
+    "dd0fbccccf7a198681ab838c67b68fbf",
+    "45281dfec4618e5d20570812dea38760",
 ]
+
+
+C = [
+    "bfc83d9f6d5c3d68ca09499190851e86",
+    "8f6faf6cfd245cae1b5feb11ae9eb3cf",
+    "1bfca57fe54bc46ba948023f754521d6",
+    "f71df9d36cd519d80a3302114779741d",
+]
+
+hashes_medium_1 = A
+hashes_medium_2 = B + C
 
 
 def print_prices(hashes):

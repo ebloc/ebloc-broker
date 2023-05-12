@@ -27,7 +27,7 @@ from brownie.network.transaction import TransactionReceipt
 # from brownie.network.gas.strategies import GasNowStrategy
 # from brownie.network.gas.strategies import LinearScalingStrategy
 
-GAS_PRICE = 1.14  # was 1 => 1.13
+GAS_PRICE = 1.20  # was 1 => 1.13
 EXIT_AFTER = 180  # seconds
 
 

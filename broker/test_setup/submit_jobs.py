@@ -53,13 +53,14 @@ if IS_MINI_TEST:
     # for provider_addr in providers:
     #     mini_tests_submit(storage_ids, provider_addr)
 
-# cfg.NETWORK_ID = "bloxberg_core"
+cfg.NETWORK_ID = "bloxberg_core"
 _ruler = "[pink]=======================[/pink]"
 FIRST_CYCLE = True
 
 
 def check_gdrive_user():
     try:
+        refresh_gdrive_token()
         gdrive.check_gdrive_about(PROVIDER_MAIL)
     except Exception as e:
         print_tb(e)
@@ -302,12 +303,12 @@ def run_job(counter, cycleid) -> None:
 
 
 def main():
-    refresh_gdrive_token()
     if "gdrive" in storage_ids:
         check_gdrive_user()
 
     bn = Ebb.get_block_number()
     console_ruler(f"test session starts -- bn={bn}", color="white")
+    log(f"networ_id={cfg.NETWORK_ID}")
     log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}", h=False)
     if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
@@ -328,10 +329,6 @@ def main():
 
     log("prices_______coreMin_dataTransfer_storage_cache=", "yellow", end="")
     log(prices_dict)
-
-    # for item in prices_dict:
-    #     breakpoint()  # DEBUG
-
     if IS_MINI_TEST:
         run_job(0, cycleid=0)
         return

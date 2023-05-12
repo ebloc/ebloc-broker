@@ -1,8 +1,8 @@
 config:
-  requester_address: '0x6b781119b8ff1c7585f97caf779be6a80a88daf0'
+  requester_address: '0xf767b0567a2c4c6c4b4d071746b68198dddb7202'
   provider_address: '0x1926b36af775e1312fdebcc46303ecae50d945af'
   source_code:
-    storage_id: b2drop
+    storage_id: gdrive
     cache_type: public
     path: ~/test_eblocbroker/NPB3.3-SER_source_code
     storage_hours: 0

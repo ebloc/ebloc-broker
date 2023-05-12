@@ -18,7 +18,7 @@ def refresh_gdrive_token():
     with open(Path.home() / ".gdrive" / "token_v2.json", "r") as f:
         output = json.load(f)
 
-    log("#> Trying: gdrive about --refresh-token <id>")
+    log("#> Running: gdrive about --refresh-token <id>", h=False)
     run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
 
 
