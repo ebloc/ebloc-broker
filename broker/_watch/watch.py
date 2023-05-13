@@ -24,13 +24,15 @@ is_while = True  # to fetch on-going results
 is_provider = True
 
 #: fetch results into google-sheets and analyze
-is_csv = False
-analyze_long_test = False
+EXPORT_CSV = True
+SUPPRESS_WARNING = True  # used to investigate delta changes between spent and paid
 
 # latest: 20070624
-if is_csv:
+if EXPORT_CSV:
     is_while = False
     analyze_long_test = True
+else:
+    analyze_long_test = False
 
 
 def get_eth_address_from_cfg():
@@ -61,6 +63,15 @@ def get_providers_info():
         log(v, end="\r")
 
 
+def print_job_items(_job):
+    for idx, (k, v) in enumerate(_job.items()):
+        log(f"{v}", h=False, end="")
+        if idx == len(_job) - 1:
+            log()
+        else:
+            log(", ", end="")
+
+
 def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title_flag):
     _job = {}
     _job["id"] = f"j{_id + 1}"
@@ -87,6 +98,7 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     _job["total_payment_usd"] = Cent(job["submitJob_received_job_price"])._to()
     _job["refunded_usd_to_requester"] = Cent(job["refunded_cent"])._to()
     _job["received_usd_to_provider"] = Cent(job["received_cent"])._to()
+    _job["delta"] = None
     temp_list = []
     if len(job["code_hashes"]) > 1:
         for itm in sorted(job["code_hashes"]):
@@ -109,12 +121,10 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     data_transfer_in_arg = str(output[1][1]).replace(" ", "").replace(",", ";")
     _job["data_transfer_in_arg_(MB)"] = data_transfer_in_arg
     _job["data_transfer_out_expected_(MB)"] = output[1][2][7]
-    #
     _job["submitJob_tx_hash"] = job["submitJob_tx_hash"]
     _job["submitJob_gas_used"] = job["submitJob_gas_used"]
     _job["processPayment_tx_hash"] = job["processPayment_tx_hash"]
     _job["processPayment_gas_used"] = job["processPayment_gas_used"]
-    #
     if title_flag:
         log("", is_write=False)
         title_flag = False
@@ -125,24 +135,24 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
             else:
                 log(", ", end="")
 
-    for idx, (k, v) in enumerate(_job.items()):
-        log(f"{v}", h=False, end="")
-        if idx == len(_job) - 1:
-            log()
-        else:
-            log(", ", end="")
-
     value = float(_job["total_payment_usd"])
     spent = float(_job["refunded_usd_to_requester"]) + float(_job["received_usd_to_provider"])
     delta = value - spent
-    if abs(delta) > 0:
-        log("warning: ", end="")
+    _delta = "%0.10f" % (delta)
+    if SUPPRESS_WARNING:
+        if abs(float(_delta)) == 0:
+            _job["delta"] = 0
+        else:
+            _job["delta"] = _delta.rstrip("0")
+    else:
+        if abs(delta) > 0:
+            log("warning: ", end="")
 
-    if value != spent:
-        delta = "%0.8f" % (delta)
-        log(f"delta={delta} value={value} spent={spent}")
+        if value != spent:
+            delta = "%0.16f" % (delta)
+            log(f"delta={delta} value={value} spent={spent}")
 
-    # breakpoint()  # DEBUG
+    print_job_items(_job)
 
 
 def _watch(eth_address, from_block, is_provider):
@@ -206,15 +216,15 @@ def _watch(eth_address, from_block, is_provider):
 
         _hash = _job["job_key"]
         _index = _job["index"]
-        if not is_csv:
+        if not EXPORT_CSV:
             if is_while:
                 job_full = (
-                    f"[bold blue]*[/bold blue] [white]{'{:<50}'.format(_hash)}[/white] "
+                    f"[bb]*[/bb] [white]{'{:<50}'.format(_hash)}[/white] "
                     f"{_index} {'{:<4}'.format(workload_type)}  [{c}]{state_val}[/{c}]\n{job_full}"
                 )
             else:
                 job_full = (
-                    f"[bold blue]*[/bold blue] [bold white]{'{:<50}'.format(_hash)}[/bold white] "
+                    f"[bb]*[/bb] [bold white]{'{:<50}'.format(_hash)}[/bold white] "
                     f"{_index} {'{:<4}'.format(workload_type)}  [{c}]{state_val}[/{c}]"
                 )
                 log(job_full)
@@ -226,7 +236,7 @@ def _watch(eth_address, from_block, is_provider):
 
     if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
-    elif not is_csv:
+    elif not EXPORT_CSV:
         job_ruler = "[g]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/g]"
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
@@ -234,16 +244,16 @@ def _watch(eth_address, from_block, is_provider):
     if is_while:
         _console_clear()
 
-    if not is_csv:
+    if not EXPORT_CSV:
         open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
 
-    if is_csv:
+    if EXPORT_CSV:
         log()
 
     log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
     if analyze_long_test:
-        log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}")
         log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}")
+        log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}")
 
     # get_providers_info()
     log(job_full, is_output=False)
@@ -275,9 +285,10 @@ def watch(eth_address="", from_block=None):
 
 
 def main():
-    eth_address = None
     if len(sys.argv) == 2:
         eth_address = sys.argv[1]
+    else:
+        eth_address = None
 
     from_block = 20401501
     watch(eth_address, from_block)

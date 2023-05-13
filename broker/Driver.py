@@ -2,7 +2,6 @@
 
 """Driver for ebloc-broker."""
 
-from broker.libs.gdrive import refresh_gdrive_token
 import math
 import os
 import sys
@@ -32,6 +31,7 @@ from broker.errors import HandlerException, JobException, QuietExit, Terminate
 from broker.imports import nc
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
+from broker.libs.gdrive import refresh_gdrive_token
 from broker.libs.user_setup import give_rwe_access, user_add
 from broker.utils import (
     StorageID,
@@ -332,6 +332,7 @@ class Driver:
 
 
 def check_block_number_sync(current_bn, bn_read):
+    """Check whether the latest block number is synced."""
     time.sleep(6)
     current_bn = Ebb.get_block_number()
     flag = False

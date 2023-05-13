@@ -26,14 +26,17 @@ IS_THREADING_MODE_PRINT = False
 thread_log_files: Dict[str, str] = {}
 custom_theme = Theme(
     {
+        "b": "bold",
         "info": "bold magenta",  # "bold dim magenta"
         "alert": "bold red",
+        "green": "#50fa7b",
         "yellow": "#f1fa8c",
         "red": "#ff5555",
         "purple": "#bd93f9",
         "orange": "#ffb86c",
+        "cyan": "#8be9fd",
         "bg": "bold green",
-        "b": "bold",
+        "bb": "bold blue",
         "m": "magenta",
         "w": "white",
         "cy": "cyan",
@@ -99,7 +102,7 @@ class Log:
             if color and text == "==> ":
                 console.print(f"[bold][{color}]{text[0:3]}[{color}][/bold]", end="")
             else:
-                console.print(f"[bold blue]{text[0:3]}[/bold blue]", end="")
+                console.print(f"[bb]{text[0:3]}[/bb]", end="")
 
             text = text[3:]
         elif text[0:2] == "E:":

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from broker.libs.gdrive import refresh_gdrive_token
 import os.path
 import random
 import sys
@@ -18,6 +17,7 @@ from broker._utils.tools import _date, _timestamp, countdown, is_process_on, log
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.libs import gdrive
+from broker.libs.gdrive import refresh_gdrive_token
 from broker.libs.mongodb import BaseMongoClass
 from broker.submit_base import SubmitBase
 from broker.test_setup.user_set import providers, requesters

@@ -209,6 +209,7 @@ def run_storage_process(storage_class):
         storage_process.join()  # waits until the job completes
     except (KeyboardInterrupt, SystemExit):
         storage_process.terminate()
+        # termination is done on the thread base
         sys.exit(1)
 
 

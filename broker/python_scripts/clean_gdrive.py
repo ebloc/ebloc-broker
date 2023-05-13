@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 from broker.lib import run
-from broker.libs.gdrive import delete_all
+from broker.libs.gdrive import delete_all, refresh_gdrive_token
 from broker.utils import is_program_valid, print_tb
-from broker.libs.gdrive import refresh_gdrive_token
 
 
 def main():
