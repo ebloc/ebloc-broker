@@ -38,9 +38,9 @@ with Path(__file__).parent.joinpath("../setup.py").open() as fp:
 # -- Project information -----------------------------------------------------
 
 
-project = "Brownie"
-copyright = "2020"
-author = "Ben Hauser"
+project = "ebloc-broker"
+copyright = "2017"
+author = "Alper Alimoglu"
 
 # The short X.Y version
 version = setup_version
@@ -123,7 +123,7 @@ html_js_files = ["js/toggle.js"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "Browniedoc"
+htmlhelp_basename = "ebloc-brokerdoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -146,14 +146,14 @@ latex_elements: Dict = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
-latex_documents = [(master_doc, "Brownie.tex", "Brownie Documentation", "Ben Hauser", "manual")]
+latex_documents = [(master_doc, "ebloc-broker.tex", "ebloc-broker Documentation", "Alper Alimoglu", "manual")]
 
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "brownie", "Brownie Documentation", [author], 1)]
+man_pages = [(master_doc, "ebloc-broker", "ebloc-broker Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -164,12 +164,11 @@ man_pages = [(master_doc, "brownie", "Brownie Documentation", [author], 1)]
 texinfo_documents = [
     (
         master_doc,
-        "Brownie",
-        "Brownie Documentation",
+        "ebloc-broker",
+        "ebloc-broker Documentation",
         author,
-        "Brownie",
-        "A simple python framework for testing, deploying"
-        " and interacting with ethereum smart contracts.",
+        "ebloc-broker",
+        "Blockchain based autonomous computational resource broker.",
         "Solidity",
     )
 ]

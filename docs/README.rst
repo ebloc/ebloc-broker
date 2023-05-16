@@ -6,7 +6,8 @@ and sharing data resource broker based on blockchain for e-Science. It
 applies blockchain technology to provide a market for computational and
 data resources to research communities.
 
--  `Documentation <http://ebloc-broker-readthedocs.duckdns.org:8000/index.html>`__
+For more info see:
+`documentation <http://ebloc-broker-readthedocs.duckdns.org:8000/index.html>`__
 
 Prerequisites
 -------------

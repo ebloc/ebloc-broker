@@ -1,147 +1,160 @@
-eBlocBroker
-===========
+ebloc-broker
+============
 
-About
------
+``eBlocBroker`` is a smart contract as an autonomous volunteer computing
+and sharing data resource broker based on blockchain for e-Science. It
+applies blockchain technology to provide a market for computational and
+data resources to research communities.
 
-eBlocBroker is a blockchain based autonomous computational resource broker.
-
-Website: `http://ebloc.cmpe.boun.edu.tr <http://ebloc.cmpe.boun.edu.tr>`_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For more info see:
+`documentation <http://ebloc-broker-readthedocs.duckdns.org:8000/index.html>`__
 
 Prerequisites
-~~~~~~~~~~~~~
+-------------
 
-- `Slurm <https://github.com/SchedMD/slurm>`_,`Geth <https://geth.ethereum.org/docs/getting-started>`_,
-  `IPFS <https://ipfs.io>`_,
-  `prasmussen/gdrive <https://github.com/prasmussen/gdrive>`_,
-  `owncloud/pyocclient <https://github.com/owncloud/pyocclient>`_,
-  `eth-brownie <https://github.com/eth-brownie/brownie>`_,
-  `ganache-cli <https://github.com/trufflesuite/ganache>`_
+-  `Slurm <https://github.com/SchedMD/slurm>`__,
+   `IPFS <https://ipfs.io>`__,
+   `eth-brownie <https://github.com/eth-brownie/brownie>`__,
+   `prasmussen/gdrive <https://github.com/prasmussen/gdrive>`__,
+   `owncloud/pyocclient <https://github.com/owncloud/pyocclient>`__,
+   `ganache-cli <https://github.com/trufflesuite/ganache>`__.
 
 Using Docker
-~~~~~~~~~~~~
+------------
 
-You can use a sandbox container provided in the `./docker-compose.yml <./docker-compose.yml>`_ file for testing inside a Docker
-environment.
+You can use a sandbox container provided in the
+`./docker-compose.yml <./docker-compose.yml>`__ file for testing inside
+a Docker environment.
 
-This container provides everything you need to test using a Python 3.7 interpreter.
-
-Start the test environment:
-
-.. code:: bash
-
-    docker build -t ebb:latest . --progress plain
-    docker-compose up -d
-
-To enter the shell of the running container in interactive mode, run:
+This container provides everything you need to test using a
+``Python 3.7`` interpreter. Start the test environment:
 
 .. code:: bash
 
-    docker exec -it ebloc-broker_slurm_1 /bin/bash
+   docker-compose up -d
 
-To stop the cluster container, run:
+To enter the shell of the running container in the interactive mode,
+run:
 
 .. code:: bash
 
-    docker-compose down
+   docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
+
+To stop the container, run:
+
+.. code:: bash
+
+   docker-compose down
 
 Cloud Storages
-~~~~~~~~~~~~~~
+--------------
 
-EUDAT
-^^^^^
+B2DROP
+~~~~~~
 
 Create B2ACCESS user account and login into B2DROP:
-:::::::::::::::::::::::::::::::::::::::::::::::::::
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, from `B2ACCESS home page <https://b2access.eudat.eu/home/>`_
+First, from `B2ACCESS home page <https://b2access.eudat.eu/home/>`__
 
-``No account? Signup`` => ``Create B2ACCESS user account (username) only``
+``No account SignUp`` =>
+``Create B2ACCESS user account (username) only``
 
-- `B2DROP login site <https://b2drop.eudat.eu/>`_
+-  `B2DROP login site <https://b2drop.eudat.eu/>`__
 
-1.4.1.2 Create app password
-:::::::::::::::::::::::::::
+Create app password
+^^^^^^^^^^^^^^^^^^^
 
 ``Settings`` => ``Security`` => ``Create new app password`` and save it.
 
-1.5 How to install required packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to install required packages
+--------------------------------
 
-We have a helper script, which you can use to install all required external dependencies:
+We have a helper script, which you can use to install all required
+external dependencies:
 
 .. code:: bash
 
-    source ./scripts/setup.sh
+   source ./scripts/setup.sh
 
 Next, type ``eblocbroker --help`` for basic usage information.
 
-1.6 Requester
-~~~~~~~~~~~~~
+Requester
+---------
 
-1.6.1 Submit Job
-^^^^^^^^^^^^^^^^
+Submit Job
+~~~~~~~~~~
 
-In order to submit your job each user should already registered into eBlocBroker.
-You can use `./broker/eblocbroker/register_requester.py <./broker/eblocbroker/register_requester.py>`_ to register.
-Please update following arguments inside ``register.yaml``.
+In order to submit your job each user should already registered into
+eBlocBroker using
+``eblocbroker register_provider ~/.ebloc-broker/cfg.yaml`` After
+registration is done, each user should authenticate their ORCID iD using
+the following http://eblocbroker.duckdns.org/.
 
-After registration is done, each user should authenticate their ORCID iD using the following `http://eblocbroker.duckdns.org/ <http://eblocbroker.duckdns.org/>`_.
+.. code:: bash
 
-``$ ./eblocbroker.py submit job.yaml``
+   $ eblocbroker submit job.yaml
 
-1.6.1.1 Example yaml file in order to define a job to submit.
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+Example yaml file in order to define a job to submit.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``job.yaml``:
 
 .. code:: yaml
 
-    config:
-        provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
-        source_code:
-    	cache_type: public
-    	path: ~/test_eblocbroker/source_code
-    	storage_hours: 0
-    	storage_id: ipfs
-        base_data_path: ~/test_eblocbroker/test_data/base/
-        data:
-    	data1:
-    	    cache_type: public
-    	    path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
-    	    storage_hours: 1
-    	    storage_id: ipfs
-    	data2:
-    	    cache_type: public
-    	    path: ~/test_eblocbroker/test_data/base/data/data1
-    	    storage_hours: 0
-    	    storage_id: ipfs
-    	data3:
-    	    hash: f13d75bc60898f0823566347e380a34b
-        data_transfer_out: 1
-        jobs:
-    	job1:
-    	    cores: 1
-    	    run_time: 1
+   config:
+       provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+       source_code:
+           cache_type: public
+           path: ~/test_eblocbroker/source_code
+           storage_hours: 0
+           storage_id: ipfs
+       data:
+           data1:
+               cache_type: public
+               path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
+               storage_hours: 1
+               storage_id: ipfs
+           data2:
+               cache_type: public
+               path: ~/test_eblocbroker/test_data/base/data/data1
+               storage_hours: 0
+               storage_id: ipfs
+           data3:
+               hash: f13d75bc60898f0823566347e380a34b
+       data_transfer_out: 1
+       jobs:
+           job1:
+               cores: 1
+               run_time: 1
 
-- ``path`` should represented as full path of the corresponding folder.
+-  ``path`` should represented as full path of the corresponding folder.
+-  ``cache_type`` should be variable from [ ``public``, ``private`` ]
+-  ``storage_id`` should be variable from [ ``ipfs``, ``ipfs_gpg``,
+   ``none``, ``b2drop``, ``gdrive`` ]
 
-- ``cache_type`` should be variable from [ ``public``, ``private`` ]
+--------------
 
-- ``storaage_id`` should be variable from [ ``ipfs``, ``ipfs_gpg``, ``none``, ``eudat``, ``gdrive`` ]
+Provider
+--------
 
+Each provider should run ``eblocbroker driver`` for start running the
+Python script.
 
-------------
+file:/gui1.png
 
-1.7 Provider
-~~~~~~~~~~~~
+🎬 Demonstration
+----------------
 
-Provider should run: `./eblocbroker.py <./eblocbroker.py>`_ driver Python script.
+-  https://asciinema.org/a/551809
+-  https://asciinema.org/a/551843
 
-``$ ./eblocbroker.py driver``
+Acknowledgement
+---------------
 
-1.7.1 Screenshot of provider GUI:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This work is supported by the Turkish Directorate of Strategy and Budget
+under the TAM Project number 2007K12-873.
 
-.. image:: /gui1.png
+Developed by Alper Alimoglu and Can Ozturan from Bogazici University,
+Istanbul. Contact alper.alimoglu@boun.edu.tr, ozturaca@boun.edu.tr if
+necessary.

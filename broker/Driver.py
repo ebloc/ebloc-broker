@@ -19,7 +19,7 @@ from typing import List
 from broker import cfg, config
 from broker._import import check_connection
 from broker._utils import _log
-from broker._utils._log import console_ruler, log
+from broker._utils._log import console_ruler, log, console
 from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
@@ -133,7 +133,8 @@ def tools(bn):
                     )
                     raise QuietExit
             except Exception as e:
-                print_tb(e)
+                print_tb(e, is_print_exc=False)
+                console.print_exception(word_wrap=True, extra_lines=1)
                 raise Terminate(e)
 
         if env.IS_IPFS_USE:
@@ -266,7 +267,8 @@ class Driver:
             log({k: v for k, v in self.job_info.items() if v is not None})
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):
-                print_tb(e)
+                print_tb(e, is_print_exc=False)
+                console.print_exception(word_wrap=True, extra_lines=1)
 
             return
 
@@ -299,6 +301,7 @@ class Driver:
                     eudat.login(env.OC_USER, f"{env.LOG_DIR}/.b2drop_client.txt", env.OC_CLIENT)
                 except Exception as e:
                     print_tb(e)
+                    console.print_exception(word_wrap=True)
                     sys.exit(1)
 
             storage_class = B2dropClass(**kwargs)
@@ -327,6 +330,7 @@ class Driver:
             except Exception as e:
                 if "Max retries exceeded with url" not in str(e):
                     print_tb(e)
+                    console.print_exception(word_wrap=True)
 
                 log(str(e))
 
@@ -536,7 +540,8 @@ def _run_driver(given_bn, lock):
             terminate(str(e), lock)
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):
-                print_tb(e)
+                print_tb(e, is_print_exc=False)
+                console.print_exception(word_wrap=True, extra_lines=1)
 
             if not network.is_connected():
                 reconnect()
@@ -578,10 +583,12 @@ def main(args):
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
         except PermissionError:
             print_tb("E: PermissionError is generated for the locked file")
+            console.print_exception(word_wrap=True, extra_lines=1)
             give_rwe_access(env.WHOAMI, "/tmp/run")
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
     except Exception as e:
-        print_tb(e)
+        print_tb(e, is_print_exc=False)
+        console.print_exception(word_wrap=True, extra_lines=1)
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)

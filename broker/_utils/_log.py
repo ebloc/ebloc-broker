@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
-import os
 import pathlib
-import sys
 import textwrap
 import threading
 from rich import pretty, print_json  # noqa # print
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
-from rich.traceback import install
 from typing import Dict, Union
 
-from broker import cfg
-from broker.errors import QuietExit
+from rich.traceback import install
 
 install()  # for rich, show_locals=True
 # pretty.install()
@@ -55,6 +51,10 @@ console = Console(
     force_terminal=True,  # https://rich.readthedocs.io/en/latest/console.html#terminal-detection
     # force_interactive=False,
 )
+
+
+class QuietExit(Exception):
+    """Exit quietly without printing the trace."""
 
 
 class Chars:
@@ -141,7 +141,7 @@ class Log:
             _len = 8
             is_bullet = True
             if not color:
-                color = "yellow"
+                color = "orange"
         elif text[:2] == "E:":
             _len = 2
             is_bullet = True
@@ -185,6 +185,8 @@ def console_ruler(msg="", character="=", color="cyan", style="green", fn=""):
     Indicate rich console to write into given fn
     __ https://stackoverflow.com/a/6826099/2402577
     """
+    from broker import cfg
+
     if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
         fn = thread_log_files[threading.current_thread().name]
     elif not fn:
@@ -330,10 +332,10 @@ def log(
             _text = text.replace("warning: ", "").replace("E: ", "")
             text = f"{WHERE(back)} {_text}"
             if "E: warning: " in text:
-                text = f"{WHERE(back)}[yellow] warning:[/yellow] {_text}"
+                text = f"{WHERE(back)}[orange] warning:[/orange] {_text}"
             else:
                 if "warning:" in text:
-                    text = f"{WHERE(back)}[yellow] warning:[/yellow] {_text}"
+                    text = f"{WHERE(back)}[orange] warning:[/orange] {_text}"
                 else:
                     text = f"{WHERE(back)}[alert] E:[/alert] {_text}"
 
@@ -384,6 +386,9 @@ def log(
 
 
 def WHERE(back=0, bracket_c="green"):
+    import os
+    import sys
+
     """Return line number where the command is called."""
     try:
         frame = sys._getframe(back + 2)

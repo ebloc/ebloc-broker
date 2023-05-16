@@ -83,7 +83,7 @@ $ cat ~/.gdfuse/me/config | grep shared_with_me
 shared_with_me=true
 #+end_src
 
-** Load:
+** Load
 
 #+begin_src bash
 folder_name='ipfs'

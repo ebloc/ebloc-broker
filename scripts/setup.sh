@@ -19,12 +19,14 @@ yes_or_no () {
 }
 
 open_port_4001 () {  # ufw does not work on digital-ocean
+    PORT=4001
+    sudo systemctl enable ufw
+    #
     sudo systemctl start firewalld
     sudo systemctl enable firewalld
-    sudo firewall-cmd --add-port=4001/tcp --permanent
+    sudo firewall-cmd --add-port=$PORT/tcp --permanent
     sudo firewall-cmd --reload
-    # sudo firewall-cmd --list-all
-    sudo firewall-cmd --list-all --zone=docker
+    sudo firewall-cmd --list-all # --zone=docker
     sudo nmap localhost
 }
 

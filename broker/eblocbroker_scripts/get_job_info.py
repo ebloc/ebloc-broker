@@ -13,6 +13,14 @@ from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
 Ebb = cfg.Ebb
 
 
+def get_storage_total_paid(self, job) -> int:
+    storage_paid = 0
+    for item in job["submitJob_LogDataStorageRequest"]:
+        storage_paid += item["paid"]
+
+    return storage_paid
+
+
 def analyze_data(self, key, provider=None):
     """Obtain the information related to data file."""
     current_bn = Ebb.get_block_number()
@@ -76,7 +84,8 @@ def analyze_data(self, key, provider=None):
             log("dataset", "yellow", end="")
 
         if ds.received_block > 0:
-            log(f" received_bn={ds.received_block}", end="")
+            log()
+            log(f"\t\t\t\t\t\treceived_bn={ds.received_block}", end="")
 
         if ds.storage_duration > 0:
             log(f" storage_dur={ds.storage_duration}", end="")
@@ -109,6 +118,20 @@ def fetch_log_data_storage_request(self, tx_by_block):
 
     if log_data_storage_request_list:
         self.job_info.update({"submitJob_LogDataStorageRequest": log_data_storage_request_list})
+
+    storage_payment_list = []
+    sum_storage_payment = 0
+    for item in log_data_storage_request_list:
+        sum_storage_payment += item["paid"]
+        _paid = item["paid"] / 10**8
+        if _paid == 0:
+            _paid = int(0.0)
+
+        storage_payment_list.append(_paid)
+
+    sum_storage_paid_cent = sum_storage_payment / 10**8
+    self.job_info.update({"_LogDataStorageRequest": storage_payment_list})
+    self.job_info.update({"submitJob_sum_storage_payment_cent": sum_storage_paid_cent})
 
 
 def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
@@ -256,11 +279,13 @@ def get_job_info(
             "data_transfer_in_to_download": None,
             "data_transfer_out_used": None,
             "storage_duration": None,
+            "submitJob_sum_storage_payment_cent": None,
             "submitJob_block_hash": None,
             "submitJob_tx_hash": None,
             "data_prices_set_block_numbers": None,
             "submitJob_gas_used": 0,
             "submitJob_LogDataStorageRequest": [],
+            "_LogDataStorageRequest": None,
             "processPayment_block_hash": None,
             "processPayment_tx_hash": None,
             "processPayment_bn": 0,

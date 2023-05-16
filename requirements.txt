@@ -1215,7 +1215,7 @@ zope-traversing==4.4.1
     # via
     #   z3c-pt
 sphinx-autobuild==2021.3.14
-
+watchdog==3.0.0
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools

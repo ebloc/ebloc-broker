@@ -593,8 +593,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         );
         cost = cost.add(_calculateComputingCost(info, args.core, args.runTime));
 
-        // @args.jobPrice : paid
-        // @cost : calculated
+        // @args.jobPrice: paid, @cost: calculated
         require(args.jobPrice >= cost);
         transfer(getOwner(), cost); // transfer cost to contract
 

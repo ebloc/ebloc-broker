@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-"""Job watcher for the end of test."""
+"""Job watcher for the end of test.
+
+Conditions only to get results:
+- ./watch.py 0x4934a70ba8c1c3acfa72e809118bdd9048563a24
+- ./watch.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629
+- ./watch.py 0x1926b36af775e1312fdebcc46303ecae50d945af
+"""
 
 import os
 import sys
@@ -9,7 +15,7 @@ from pathlib import Path
 
 from broker import cfg
 from broker._utils import _log
-from broker._utils._log import _console_clear
+from broker._utils._log import _console_clear, console
 from broker._utils.tools import _date, log, print_tb
 from broker._utils.yaml import Yaml
 from broker._watch.test_info import data_hashes
@@ -17,20 +23,24 @@ from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.lib import state
 
-cfg.NETWORK_ID = "bloxberg_core"
+cfg.NETWORK_ID = "bloxberg"
 Ebb = cfg.Ebb
 columns_size = 30
-is_while = True  # to fetch on-going results
 is_provider = True
+is_while = False  # to fetch on-going results
 
 #: fetch results into google-sheets and analyze
-EXPORT_CSV = True
-SUPPRESS_WARNING = True  # used to investigate delta changes between spent and paid
+EXPORT_CSV = False
 
-# latest: 20070624
+VERBOSE = True
+if VERBOSE:
+    EXPORT_CSV = True
+    is_while = False
+
 if EXPORT_CSV:
     is_while = False
     analyze_long_test = True
+    #: used to investigate delta changes between spent and paid
 else:
     analyze_long_test = False
 
@@ -63,8 +73,25 @@ def get_providers_info():
         log(v, end="\r")
 
 
+def value_color(v, idx) -> str:
+    if idx == 0:
+        return "bold green"
+    elif v == "nas":
+        return "blue"
+    elif v == "cppr":
+        return "pink"
+    elif v == "REFUNDED":
+        return "red"
+    elif v == "SUBMITTED":
+        return "orange"
+
+    return "white"
+
+
 def print_job_items(_job):
     for idx, (k, v) in enumerate(_job.items()):
+        c = value_color(v, idx)
+        v = f"[{c}]{v}[/{c}]"
         log(f"{v}", h=False, end="")
         if idx == len(_job) - 1:
             log()
@@ -75,7 +102,7 @@ def print_job_items(_job):
 def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title_flag):
     _job = {}
     _job["id"] = f"j{_id + 1}"
-    _job["hash"] = _hash
+    _job["sourceCodeHash"] = _hash
     _job["index"] = _index
     _job["workload"] = workload_type
     _job["state"] = state_val
@@ -98,7 +125,9 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     _job["total_payment_usd"] = Cent(job["submitJob_received_job_price"])._to()
     _job["refunded_usd_to_requester"] = Cent(job["refunded_cent"])._to()
     _job["received_usd_to_provider"] = Cent(job["received_cent"])._to()
-    _job["delta"] = None
+    _job["sum_storage_payment_cent"] = job["submitJob_sum_storage_payment_cent"]
+    _job["LogDataStorageRequest_paid"] = str(job["_LogDataStorageRequest"]).replace(" ", "").replace(",", ";")
+    _job["delta=(paid-spent)"] = None
     temp_list = []
     if len(job["code_hashes"]) > 1:
         for itm in sorted(job["code_hashes"]):
@@ -137,25 +166,31 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
 
     value = float(_job["total_payment_usd"])
     spent = float(_job["refunded_usd_to_requester"]) + float(_job["received_usd_to_provider"])
+    if float(spent) == 0:
+        spent = 0
+
     delta = value - spent
     _delta = "%0.10f" % (delta)
-    if SUPPRESS_WARNING:
-        if abs(float(_delta)) == 0:
-            _job["delta"] = 0
-        else:
-            _job["delta"] = _delta.rstrip("0")
+    if abs(float(_delta)) == 0:
+        _job["delta=(paid-spent)"] = 0
     else:
+        _job["delta=(paid-spent)"] = _delta.rstrip("0")
+
+    if VERBOSE:
+        print_job_items(_job)
         if abs(delta) > 0:
-            log("warning: ", end="")
+            storage_paid_cent = job["submitJob_sum_storage_payment_cent"]
+            if storage_paid_cent != float(_delta):
+                if not (float(_delta) == float(value) and spent == 0):
+                    log("warning: ", end="")
+                    value = ("%0.10f" % (value)).rstrip("0")
+                    spent = ("%0.10f" % (spent)).rstrip("0")
+                    if value != spent:
+                        log(f"delta={_delta.rstrip('0')} value={value} spent={spent}")
+                        breakpoint()  # DEBUG
 
-        if value != spent:
-            delta = "%0.16f" % (delta)
-            log(f"delta={delta} value={value} spent={spent}")
 
-    print_job_items(_job)
-
-
-def _watch(eth_address, from_block, is_provider):
+def _watch(eth_address, from_block, is_provider, to_block="latest"):
     _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / f"watch_{eth_address}.out"
     bn = Ebb.get_block_number()
     if is_provider:
@@ -166,7 +201,7 @@ def _watch(eth_address, from_block, is_provider):
     event_filter = Ebb._eblocbroker.events.LogJob.createFilter(
         fromBlock=int(from_block),
         argument_filters=_argument_filters,
-        toBlock="latest",
+        toBlock=to_block,
     )
     header = f"  [y]{'{:<46}'.format('key')} index       status[/y]"
     job_full = ""
@@ -216,7 +251,10 @@ def _watch(eth_address, from_block, is_provider):
 
         _hash = _job["job_key"]
         _index = _job["index"]
-        if not EXPORT_CSV:
+        if EXPORT_CSV:
+            print_in_csv_format(_job, idx, state_val, workload_type, _hash, _index, title_flag)
+            title_flag = False
+        else:
             if is_while:
                 job_full = (
                     f"[bb]*[/bb] [white]{'{:<50}'.format(_hash)}[/white] "
@@ -228,9 +266,6 @@ def _watch(eth_address, from_block, is_provider):
                     f"{_index} {'{:<4}'.format(workload_type)}  [{c}]{state_val}[/{c}]"
                 )
                 log(job_full)
-        else:
-            print_in_csv_format(_job, idx, state_val, workload_type, _hash, _index, title_flag)
-            title_flag = False
 
         time.sleep(0.2)
 
@@ -259,8 +294,11 @@ def _watch(eth_address, from_block, is_provider):
     log(job_full, is_output=False)
 
 
-def watch(eth_address="", from_block=None):
-    if not from_block:
+def watch(eth_address="", from_block=None, to_block="latest"):
+    if to_block is None:
+        to_block = "latest"
+
+    if not from_block:  # start fetching from 1 day behind
         from_block = Ebb.get_block_number() - cfg.ONE_DAY_BLOCK_DURATION
 
     if not eth_address:
@@ -274,11 +312,11 @@ def watch(eth_address="", from_block=None):
     open(watch_fn, "w").close()
     _console_clear()
     if is_provider:
-        log(f"* starting for provider={eth_address} from_block={from_block}")
+        log(f"* provider={eth_address} from_block={from_block}")
 
     if is_while:
         while True:
-            _watch(eth_address, from_block, is_provider)
+            _watch(eth_address, from_block, is_provider, to_block)
             time.sleep(30)
     else:
         _watch(eth_address, from_block, is_provider)
@@ -291,7 +329,10 @@ def main():
         eth_address = None
 
     from_block = 20401501
-    watch(eth_address, from_block)
+    to_block = "latest"
+    # to_block = 20070624
+
+    watch(eth_address, from_block, to_block)
 
 
 if __name__ == "__main__":
@@ -300,4 +341,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as e:
-        print_tb(e)
+        print_tb(e, is_print_exc=False)
+        console.print_exception(word_wrap=True, extra_lines=1)

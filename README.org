@@ -3,20 +3,12 @@
 =eBlocBroker= is a smart contract as an autonomous volunteer computing and sharing data resource broker based on blockchain for e-Science.
 It applies blockchain technology to provide a market for computational and data resources to research communities.
 
-# For more info see: ...
+For more info see: [[http://ebloc-broker-readthedocs.duckdns.org:8000/index.html][documentation]]
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
-- [[http://ebloc-broker-readthedocs.duckdns.org:8000/index.html][Documentation]]
 
 ** Prerequisites
-
-- [[https://github.com/SchedMD/slurm][Slurm]],
-  [[https://ipfs.io][IPFS]],
-  [[https://github.com/eth-brownie/brownie][eth-brownie]],
-  [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]],
-  [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]],
-  [[https://github.com/trufflesuite/ganache][ganache-cli]].
-# [[https://geth.ethereum.org/docs/getting-started][Geth]]
+- [[https://github.com/SchedMD/slurm][Slurm]], [[https://ipfs.io][IPFS]], [[https://github.com/eth-brownie/brownie][eth-brownie]], [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]], [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]], [[https://github.com/trufflesuite/ganache][ganache-cli]].
 
 ** Using Docker
 

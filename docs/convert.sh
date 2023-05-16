@@ -4,14 +4,15 @@ CURRENT_DIR=$(PWD)
 DIR=~/ebloc-broker/
 org-ruby --translate markdown $DIR/README.org > $DIR/docs/convert/source/readme.md
 org-ruby --translate markdown $DIR/broker/gdrive/README.org > $DIR/docs/convert/source/gdrive_readme.md
-
+# cp /Users/alper/Documents/research/TSC_eBlocPOA/lkmpg/main.md $DIR/docs/convert/source/cost_example.md
 
 # finally
 cd $DIR/docs/convert/
 python3 -tt convert_md_2_rst.py
 
-cp source/readme.rst ../
+cp source/readme.rst ../index.rst
 cp source/gdrive_readme.rst ../
+cp source/cost_example.rst ../
 
 # wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
 # mv geth.md source/geth.md
@@ -20,3 +21,5 @@ cp source/gdrive_readme.rst ../
 
 # mv source/readme.rst ../quickstart.rst
 # mv source/geth.rst   ../connect.rst
+
+echo "[ok]"

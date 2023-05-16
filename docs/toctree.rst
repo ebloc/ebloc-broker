@@ -1,5 +1,5 @@
 =======
-Brownie
+ebloc-broker
 =======
 
 .. toctree::
@@ -15,8 +15,10 @@ Brownie
     :caption: Getting Started
     :maxdepth: 2
 
-    install.rst
+    ..
+       install.rst
     gdrive_readme.rst
+    cost_example.rst
     ..
        init.rst
        structure.rst

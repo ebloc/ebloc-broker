@@ -5,16 +5,11 @@
 
 @tellowkrinkle's [comment](https://github.com/prasmussen/gdrive/commit/31d0829c180795d17e00b7a354fffe4d72be712b#commitcomment-45165924) help me to solve the issue:
 
-> Probably yes. I have the old binary and Google blocks it from authenticating,
-saying that it's dangerous and they blocked it for my safety (thanks a
-lot). It looks like Google now requires you to let them review applications
-that want to access sensitive information through their API
+> Google now requires you to let them review applications that want to access sensitive information through their API.
 
 > If you want to use it for yourself, you will need to:
 
 ```markdown
-> Doo
-
 1. Go to https://console.developers.google.com and create a new project for yourself
 2. Search for the **Google Drive API** in the search box at the top, and click manage this app
 3. Click `OAuth` consent screen on the left and set it up.
@@ -86,7 +81,7 @@ $ cat ~/.gdfuse/me/config | grep shared_with_me
 shared_with_me=true
 ```
 
-## Load:
+## Load
 
 ```bash
 folder_name='ipfs'
@@ -111,8 +106,5 @@ gdrive upload --parent $shareId README.md
 gdrive upload --parent --recursive $shareId folder  # upload folder
 ```
 
-** TODO:
-
- * [Google Cloud: OAuth
-clients in test mode that are using the OAuth OOB flow](https://github.com/prasmussen/gdrive/issues/621#issuecomment-1184700808)
-solution forked: https://github.com/msfjarvis/gdrive
+## Notes:
+ * [Google Cloud: OAuth clients in test mode that are using the OAuth OOB flow](https://github.com/prasmussen/gdrive/issues/621#issuecomment-1184700808) solution forked: https://github.com/msfjarvis/gdrive.

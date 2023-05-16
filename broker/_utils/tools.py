@@ -22,6 +22,7 @@ from pathlib import PosixPath
 from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
+from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
 
@@ -112,7 +113,7 @@ def PrintException() -> str:
 
 def print_tb(message=None, is_print_exc=True) -> None:
     """Log the traceback."""
-    if type(message) != QuietExit:
+    if is_print_exc and type(message) != QuietExit:
         log(f"{WHERE()} ", end="")
 
     if message:

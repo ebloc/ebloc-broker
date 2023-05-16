@@ -4,7 +4,8 @@
 Installing Brownie
 ==================
 
-The recommended way to install Brownie is via `pipx <https://github.com/pipxproject/pipx>`_. Pipx is a tool to help you install and run end-user applications written in Python. It's roughly similar to macOS's ``brew``, JavaScript's ``npx``, and Linux's ``apt``.
+The recommended way to install Brownie is via `pipx <https://github.com/pipxproject/pipx>`_.
+Pipx is a tool to help you install and run end-user applications written in Python. It's roughly similar to macOS's ``brew``, JavaScript's ``npx``, and Linux's ``apt``.
 
 ``pipx`` installs Brownie into a virtual environment and makes it available directly from the commandline. Once installed, you will never have to activate a virtual environment prior to using Brownie.
 
