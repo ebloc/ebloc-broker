@@ -7,9 +7,10 @@ from rich import pretty, print_json  # noqa # print
 from rich.console import Console
 from rich.pretty import pprint
 from rich.theme import Theme
+from rich.traceback import install
 from typing import Dict, Union
 
-from rich.traceback import install
+from broker import cfg
 
 install()  # for rich, show_locals=True
 # pretty.install()

@@ -19,7 +19,7 @@ from typing import List
 from broker import cfg, config
 from broker._import import check_connection
 from broker._utils import _log
-from broker._utils._log import console_ruler, log, console
+from broker._utils._log import console, console_ruler, log
 from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
