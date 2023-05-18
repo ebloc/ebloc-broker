@@ -101,7 +101,7 @@ def print_job_items(_job):
 
 def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title_flag):
     _job = {}
-    _job["id"] = f"j{_id + 1}"
+    _job["id"] = f"J{_id + 1}"
     _job["sourceCodeHash"] = _hash
     _job["index"] = _index
     _job["workload"] = workload_type

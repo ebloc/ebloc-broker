@@ -22,7 +22,6 @@ from pathlib import PosixPath
 from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
-from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
 
