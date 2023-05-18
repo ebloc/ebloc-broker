@@ -15,6 +15,7 @@ IS_THREAD_JOIN = False
 TX_TIMEOUT = 1800
 IS_THREAD_JOIN = False
 IS_FULL_TEST = False  # check whether the full-long test is applied
+IS_FIRST_CYCLE = True
 
 TEST_JOB_COUNTER = 0
 
