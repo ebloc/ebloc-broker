@@ -19,7 +19,7 @@ from typing import List
 from broker import cfg, config
 from broker._import import check_connection
 from broker._utils import _log
-from broker._utils._log import console_ruler, log, console
+from broker._utils._log import console, console_ruler, log
 from broker._utils.tools import is_process_on, kill_process_by_name, print_tb, squeue
 from broker.config import env, setup_logger
 from broker.drivers.b2drop import B2dropClass
@@ -60,6 +60,7 @@ with suppress(Exception):
 
 
 cfg.IS_BREAKPOINT = True
+
 pid = os.getpid()
 Ebb: "Contract.Contract" = cfg.Ebb  # type: ignore
 
@@ -119,7 +120,15 @@ def tools(bn):
         log(f"==> [y]provider_gmail[/y]=[m]{gmail}", h=False)
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
-            refresh_gdrive_token()
+            try:
+                refresh_gdrive_token()
+            except Exception as e:
+                if cfg.IS_FIRST_CYCLE:
+                    console.print_exception(word_wrap=True, extra_lines=1)
+                    sys.exit()
+                else:
+                    raise e
+
             if env.GDRIVE == "":
                 raise Terminate(f"E: gdrive_path='{env.GDRIVE}' please set a valid path in the cfg.yaml file")
 
@@ -441,6 +450,7 @@ def run_driver(given_bn):
     )
     log(f"==> Overall Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
     slurm.pending_jobs_check()
+    cfg.IS_FIRST_CYCLE = False
     first_iteration_flag = True
     while True:
         wait_until_idle_core_is_available()
@@ -548,7 +558,8 @@ def _run_driver(given_bn, lock):
                 if not network.is_connected():
                     time.sleep(15)
 
-            console_ruler(character="^")
+            breakpoint()  # DEBUG
+            console_ruler(character="^", style="#6272a4")
             continue
         finally:
             with suppress(Exception):

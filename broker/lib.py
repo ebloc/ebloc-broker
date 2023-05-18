@@ -19,7 +19,7 @@ from broker.utils import byte_to_mb, popen_communicate, run
 
 
 class State:
-    """Set state code of the slurm jobs and add their keys link in the hashmap.
+    """Set state code of slurm jobs and add their keys link in the hashmap.
 
     * Hashmap keys:
     - SUBMITTED: Initial state of the job.

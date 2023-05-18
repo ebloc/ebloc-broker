@@ -136,7 +136,9 @@ sudo apt install python3-dev -y
 sudo apt install python3-pip -y
 sudo apt install python3-venv -y
 sudo apt install python3-virtualenv -y
-sudo apt install python3.7 -y
+sudo apt install python3.8 -y
+sudo apt install python3.8-dev -y
+sudo apt install python3.8-venv -y
 
 # mongodb
 # =======
@@ -161,20 +163,24 @@ install-mongo () {
     mongo --eval 'db.runCommand({ connectionStatus: 1 })'
 }
 
-install_ebb_pip_packages () {
-    VENV=$HOME/venv
-    [ ! -d $VENV ] && python3 -m venv $VENV
-    source $VENV/bin/activate
-    $VENV/bin/python3 -m pip install --upgrade pip wheel
-    cd ~/ebloc-broker
-    $VENV/bin/python3 -m pip install -e . --use-deprecated=legacy-resolver
+fix-black-package () {
     mkdir -p $HOME/.cache/black
-    sudo chown $(logname) -R $HOME/.cache/black
+    # sudo chown $(logname) -R $HOME/.cache/black
     black_version=$(pip freeze | grep black | sed 's|black==||g')
     if [ "$black_version" != "" ]; then
         rm -rf $HOME/.cache/black/*
         mkdir -p $HOME/.cache/black/$black_version
     fi
+}
+
+install_ebb_pip_packages () {
+    VENV=$HOME/venv
+    [ ! -d $VENV ] && command python3.8 -m venv $VENV
+    source $VENV/bin/activate
+    $VENV/bin/python3 -m pip install --upgrade pip wheel dbus-python
+    cd ~/ebloc-broker && \
+        $VENV/bin/python3 -m pip install -e . --use-deprecated=legacy-resolver && \
+        fix-black-package
 }
 
 install-mongo
