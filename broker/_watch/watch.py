@@ -3,9 +3,9 @@
 """Job watcher for the end of test.
 
 Conditions only to get results:
-- ./watch.py 0x4934a70ba8c1c3acfa72e809118bdd9048563a24
-- ./watch.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629
-- ./watch.py 0x1926b36af775e1312fdebcc46303ecae50d945af
+- ./watch.py 0x4934a70ba8c1c3acfa72e809118bdd9048563a24 | sJ_gas: 262131, pP_gas: 144735
+- ./watch.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629 | sJ_gas: 268500, pP_gas: 143269
+- ./watch.py 0x1926b36af775e1312fdebcc46303ecae50d945af | sJ_gas: 264269, PP_gas: 143703
 """
 
 import os
@@ -31,6 +31,9 @@ is_while = False  # to fetch on-going results
 
 #: fetch results into google-sheets and analyze
 EXPORT_CSV = False
+
+sum_submitJob_gas_used = sum_processPayment_gas_used = 0
+counter_submitJob_gas_used = counter_processPayment_gas_used = 0
 
 VERBOSE = True
 if VERBOSE:
@@ -100,6 +103,9 @@ def print_job_items(_job):
 
 
 def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title_flag):
+    global sum_submitJob_gas_used, sum_processPayment_gas_used
+    global counter_submitJob_gas_used, counter_processPayment_gas_used
+
     _job = {}
     _job["id"] = f"J{_id + 1}"
     _job["sourceCodeHash"] = _hash
@@ -176,6 +182,12 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     else:
         _job["delta=(paid-spent)"] = _delta.rstrip("0")
 
+    if job["processPayment_gas_used"] > 0:
+        sum_processPayment_gas_used += job["processPayment_gas_used"]
+        counter_processPayment_gas_used += 1
+
+    sum_submitJob_gas_used += job["submitJob_gas_used"]
+    counter_submitJob_gas_used += 1
     if VERBOSE:
         print_job_items(_job)
         if abs(delta) > 0:
@@ -187,7 +199,6 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
                     spent = ("%0.10f" % (spent)).rstrip("0")
                     if value != spent:
                         log(f"delta={_delta.rstrip('0')} value={value} spent={spent}")
-                        breakpoint()  # DEBUG
 
 
 def _watch(eth_address, from_block, is_provider, to_block="latest"):
@@ -289,6 +300,8 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
     if analyze_long_test:
         log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}")
         log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}")
+        log(f"avg_processPayment_gas_consumption={int(sum_processPayment_gas_used / counter_processPayment_gas_used)}")
+        log(f"avge_submitJob_gas_consumption={int(sum_submitJob_gas_used / counter_submitJob_gas_used)}")
 
     # get_providers_info()
     log(job_full, is_output=False)
