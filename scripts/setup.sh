@@ -136,7 +136,9 @@ sudo apt install python3-dev -y
 sudo apt install python3-pip -y
 sudo apt install python3-venv -y
 sudo apt install python3-virtualenv -y
-sudo apt install python3.7 -y
+sudo apt install python3.8 -y
+sudo apt install python3.8-dev -y
+sudo apt install python3.8-venv -y
 
 # mongodb
 # =======
@@ -172,7 +174,6 @@ fix-black-package () {
 }
 
 install_ebb_pip_packages () {
-    command python3 --version
     VENV=$HOME/venv
     [ ! -d $VENV ] && command python3.8 -m venv $VENV
     source $VENV/bin/activate

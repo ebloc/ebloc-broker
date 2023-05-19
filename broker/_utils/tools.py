@@ -111,7 +111,10 @@ def PrintException() -> str:
 
 
 def print_tb(message=None, is_print_exc=True) -> None:
-    """Log the traceback."""
+    """Log the traceback.
+
+    Alternative code: console.print_exception(word_wrap=True, extra_lines=1)
+    """
     if is_print_exc and type(message) != QuietExit:
         log(f"{WHERE()} ", end="")
 
