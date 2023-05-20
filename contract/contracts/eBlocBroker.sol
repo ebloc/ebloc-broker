@@ -39,7 +39,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender and minting.
      */
-    constructor () ERC20("USDT", "USDT") {
+    constructor () ERC20("USDmy", "USDmy") {
         _mint(msg.sender, 1000000000 * (10 ** uint256(decimals()) ));
     }
 
@@ -118,7 +118,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         gain = gain.add(jobInfo.receivedRegisteredDataFee);
         //: computationalCostRefund
         _refund = _refund.add(info.priceCoreMin.mul(core.mul((runTime.sub(args.elapsedTime)))));
-        // require(gain.add(_refund) <= jobInfo.received); // UNCOMMENT
+        require(gain.add(_refund) <= jobInfo.received);
         Lib.IntervalArg memory _interval;
         _interval.startTimestamp = job.startTimestamp;
         _interval.endTimestamp = uint32(args.endTimestamp);
@@ -581,9 +581,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         //                         decreased if there is caching for specific block
         // refunded => used as receivedRegisteredDataFee due to limit for local variables
 
-        // sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp
-        //  |          |            |          /         /
-        (cost, dataTransferIn[0], tmp[0], tmp[1],    tmp[2]) = _calculateCacheCost(
+        // sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit
+        //  |          |            |          /      ___/
+        //  |          |            |         /      |
+        (cost, dataTransferIn[0], tmp[0], tmp[1], tmp[2]) = _calculateCacheCost(
             provider,
             args,
             sourceCodeHash,
@@ -797,16 +798,16 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                     // owner of the sourceCodeHash is also detected, first time usage
                     emit LogDataStorageRequest(args.provider, msg.sender, codeHash, storageInfo.received);
                 } else {
-                    sum = sum.add(temp); // now used to keep track of registerDataCost
+                    sum = sum.add(temp); // keeps track of deposit for dataset fees for data
                     emit LogRegisteredDataRequestToUse(args.provider, codeHash);
                 }
             }
         } // for-loop ended
-        uint registerDataCostTemp = sum;
+        uint sumRegisterDataDeposit = sum;
         // sum already contains the registered data cost fee
         sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(args.dataTransferOut)));
         sum = sum.add(storageCost).add(cacheCost);
-        return (sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp);
+        return (sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit);
     }
 
     /**

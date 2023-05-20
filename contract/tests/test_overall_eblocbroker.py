@@ -44,10 +44,13 @@ ebb = None
 
 def print_gas_costs():
     """Cleanup a testing directory once we are finished."""
+    log("average_gas_costs=",end="")
+    gas_costs_items_temp = {}
     for k, v in gas_costs.items():
         if v:
-            # print(f"{k} => {v}")
-            log(f"#> {k} => {int(sum(v) / len(v))}")
+            gas_costs_items_temp[k] = int(sum(v) / len(v))
+
+    log(dict(gas_costs_items_temp))
 
 
 def append_gas_cost(func_n, tx):
@@ -1182,7 +1185,7 @@ def test_submit_n_data():
         {"from": requester},
     )
     gas_costs.append(tx.__dict__["gas_used"])
-    log("#> submit_job data number gas differences:", "[yellow]")
+    log("#> submit_job data number gas differences:")
     print(gas_costs)
     for idx in range(0, 3):
         print(gas_costs[idx + 1] - gas_costs[idx])

@@ -190,15 +190,20 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     counter_submitJob_gas_used += 1
     if VERBOSE:
         print_job_items(_job)
+        # check_1
+        value = ("%0.10f" % (value)).rstrip("0")
+        spent = ("%0.10f" % (spent)).rstrip("0")
+        _delta = ("%0.10f" % (delta)).rstrip("0")
+        if float(("%0.10f" % (float(_delta) + float(spent)))) > float(value):
+            log("warning: something is wrong 'delta + spent > value'")
+
+        # check_2
         if abs(delta) > 0:
             storage_paid_cent = job["submitJob_sum_storage_payment_cent"]
             if storage_paid_cent != float(_delta):
                 if not (float(_delta) == float(value) and spent == 0):
-                    log("warning: ", end="")
-                    value = ("%0.10f" % (value)).rstrip("0")
-                    spent = ("%0.10f" % (spent)).rstrip("0")
-                    if value != spent:
-                        log(f"delta={_delta.rstrip('0')} value={value} spent={spent}")
+                    if (float(value) != float(spent)) and (float(delta) != float(value)):
+                        log(f"warning: delta={_delta.rstrip('0')} value={value} spent={spent}")
 
 
 def _watch(eth_address, from_block, is_provider, to_block="latest"):
@@ -301,7 +306,7 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
         log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}")
         log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}")
         log(f"avg_processPayment_gas_consumption={int(sum_processPayment_gas_used / counter_processPayment_gas_used)}")
-        log(f"avge_submitJob_gas_consumption={int(sum_submitJob_gas_used / counter_submitJob_gas_used)}")
+        log(f"avg_submitJob_gas_consumption={int(sum_submitJob_gas_used / counter_submitJob_gas_used)}")
 
     # get_providers_info()
     log(job_full, is_output=False)
